@@ -63,11 +63,16 @@ old_english:
 
   # Claim limits & economy
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
-  need_vault: "&c❌ Thy coffers hold less than &e${AMOUNT}&c gold."
-  cost_deducted: "&e💰 Tribute of &6${AMOUNT}&e hath been rendered."
+  need_vault: "&c❌ Thy coffers hold less than &e{AMOUNT}&c gold."
+  cost_deducted: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered."
   items_deducted: "&e💰 Tribute of &6{AMOUNT} {ITEM}&e hath been rendered."
   vault_refund: "&e💰 Recompense of &6${AMOUNT}&e ({PERCENT}%) hath been returned to thee."
   item_refund: "&e💰 Recompense of &6{AMOUNT} {ITEM}&e ({PERCENT}%) bestowed."
+
+  # --- NEW: Upkeep ---
+  upkeep_paid: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered for thy plot's upkeep."
+  upkeep_failed_warning: "&c❌ Warning! Thy coffers are empty. Tribute for thy plot's upkeep is due."
+  plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
 
   # Claim lifecycle
   plot_created: "&a✔ Verily, thy land is now shielded under Aegis Guard."
@@ -85,7 +90,17 @@ old_english:
   settings_menu_title: "&9⚙ Thine Settings"
   button_claim_land: "&a🛡 Lay Claim to Land"
   button_trusted_players: "&eTrusted Companions"
-  button_settings: "&9⚙ Configure Thine Protections"
+  
+  # --- MODIFIED ---
+  button_settings: "&9⚙ Thine Protections" # Old key, now used for Plot Flags
+  button_plot_flags: "&6Plot Flags"
+  plot_flags_lore:
+    - "&7Govern the laws (PvP, Mobs, etc)"
+    - "&7for thy claim."
+  button_player_settings: "&ePlayer Settings"
+  player_settings_lore:
+    - "&7Toggle thy personal sounds & language."
+  
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Seek wisdom within the Codex and protect thy holdings."
   claim_land_lore:
@@ -148,7 +163,9 @@ old_english:
   # Generic toggle feedback (used if needed)
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
 
-  # Trusted GUI basics (short set; expand as needed)
+  # Trusted GUI basics
+  trusted_plot_selector_title: "&bSelect a Dominion to Manage"
+  trusted_head_name: "&a{PLAYER}"
   trusted_menu_title: "&eTrusted Companions"
   add_trusted_title: "&aAdd a Companion"
   remove_trusted_title: "&cRemove a Companion"
@@ -166,8 +183,10 @@ old_english:
   info_trusted_lore:
     - "&7Trusted may build and interact in thy claim."
 
-  # Admin GUI bits (kept concise)
+  # Admin GUI bits
   admin_menu_title: "&c⚙ High Guardian Tools"
+  admin_reloading: "&7Reloading ancient scrolls and edicts..."
+  admin_reload_complete: "&a✔ The scrolls are refreshed."
   button_admin_auto_remove: "&6Auto-Purge Banned"
   admin_auto_remove_lore:
     - "&7Remove lands of the banished."
@@ -184,6 +203,11 @@ old_english:
   admin_broadcast_enabled: "&a✔ Proclamations shall be heard."
   admin_broadcast_disabled: "&c✖ Proclamations silenced."
   admin_removed_banned: "&ePurged plots of the banished: {PLAYER}"
+
+  # --- NEW: Admin Plot List ---
+  admin_plot_list_title: "&cAll Known Dominions"
+  admin_plot_teleport: "&eThou hast been spirited to the dominion of {PLAYER}."
+  admin_plot_deleted: "&c✖ The dominion of {PLAYER} hath been struck from the records."
 
   # Help
   help_header: "&b⚔ &nThe Guardian’s Scroll of Instruction&r"
@@ -219,6 +243,11 @@ hybrid_english:
   vault_refund: "&e💰 Refund of &6${AMOUNT}&e ({PERCENT}%) returned."
   item_refund: "&e💰 Refund of &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
 
+  # --- NEW: Upkeep ---
+  upkeep_paid: "&e💰 Payment of &6{AMOUNT}&e received for thy plot's upkeep."
+  upkeep_failed_warning: "&c❌ Warning! Payment is due for thy plot's upkeep."
+  plot_expired_upkeep: "&c❌ Thy plot has been unclaimed due to failed upkeep!"
+
   plot_created: "&a✔ Thy claim is secured by the Aegis."
   plot_unclaimed: "&e⚠ Thy claim is now unbound."
   no_plot_here: "&c❌ Thou standest on no claim of thine."
@@ -232,7 +261,17 @@ hybrid_english:
   settings_menu_title: "&9⚙ Thy Settings"
   button_claim_land: "&a🛡 Claim Land"
   button_trusted_players: "&eTrusted Companions"
-  button_settings: "&9⚙ Configure Protections"
+  
+  # --- MODIFIED ---
+  button_settings: "&9⚙ Configure Protections" # Old key, now used for Plot Flags
+  button_plot_flags: "&6Plot Flags"
+  plot_flags_lore:
+    - "&7Manage rules (PvP, Mobs, etc)"
+    - "&7for your plot."
+  button_player_settings: "&ePlayer Settings"
+  player_settings_lore:
+    - "&7Toggle your personal sounds & language."
+  
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Study the Codex to learn and secure thy holdings."
   claim_land_lore:
@@ -290,6 +329,8 @@ hybrid_english:
 
   flag_toggled: "&e⚙ {FLAG} protection is now &f{STATUS}&e."
 
+  trusted_plot_selector_title: "&bSelect Plot to Manage"
+  trusted_head_name: "&a{PLAYER}"
   trusted_menu_title: "&eTrusted Companions"
   add_trusted_title: "&aAdd a Companion"
   remove_trusted_title: "&cRemove a Companion"
@@ -308,6 +349,8 @@ hybrid_english:
     - "&7Trusted may build and interact within thy claim."
 
   admin_menu_title: "&c⚙ High Guardian Tools"
+  admin_reloading: "&7Reloading configurations..."
+  admin_reload_complete: "&a✔ Reload complete!"
   button_admin_auto_remove: "&6Auto-Remove Banned"
   admin_auto_remove_lore:
     - "&7Purge lands of banned players."
@@ -324,6 +367,11 @@ hybrid_english:
   admin_broadcast_enabled: "&a✔ Broadcasts enabled."
   admin_broadcast_disabled: "&c✖ Broadcasts disabled."
   admin_removed_banned: "&eRemoved plots of banned player: {PLAYER}"
+
+  # --- NEW: Admin Plot List ---
+  admin_plot_list_title: "&cAll Server Plots"
+  admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
+  admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
@@ -350,11 +398,16 @@ modern_english:
   must_select: "&c❌ Select two corners with the Scepter first."
   max_claims_reached: "&c❌ You can only have {AMOUNT} claim(s)."
 
-  need_vault: "&c❌ You need &e${AMOUNT}&c to claim."
-  cost_deducted: "&e💰 Charged &6${AMOUNT}&e for claiming."
+  need_vault: "&c❌ You need &e{AMOUNT}&c to claim."
+  cost_deducted: "&e💰 Charged &6{AMOUNT}&e for claiming."
   items_deducted: "&e💰 Consumed &6{AMOUNT} {ITEM}&e for claiming."
-  vault_refund: "&e💰 Refunded &6${AMOUNT}&e ({PERCENT}%)."
+  vault_refund: "&e💰 Refunded &6{AMOUNT}&e ({PERCENT}%)."
   item_refund: "&e💰 Refunded &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
+
+  # --- NEW: Upkeep ---
+  upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for your plot's upkeep."
+  upkeep_failed_warning: "&c❌ Warning! Payment for your plot's upkeep is due. Your plot is now in a grace period."
+  plot_expired_upkeep: "&c❌ Your plot has been unclaimed for failure to pay upkeep!"
 
   plot_created: "&a✔ Your claim has been created and protected."
   plot_unclaimed: "&e⚠ Your land has been unclaimed."
@@ -369,7 +422,17 @@ modern_english:
   settings_menu_title: "&9⚙ Settings"
   button_claim_land: "&a🛡 Claim Land"
   button_trusted_players: "&eTrusted Players"
-  button_settings: "&9⚙ Protection Settings"
+  
+  # --- MODIFIED ---
+  button_settings: "&9⚙ Protection Settings" # Old key, now used for Plot Flags
+  button_plot_flags: "&6Plot Flags"
+  plot_flags_lore:
+    - "&7Manage rules (PvP, Mobs, etc)"
+    - "&7for your plot."
+  button_player_settings: "&ePlayer Settings"
+  player_settings_lore:
+    - "&7Toggle your personal sounds & language."
+
   button_info: "&6📜 Info"
   info_message: "&7Open the Codex to manage protections and learn commands."
   claim_land_lore:
@@ -427,6 +490,8 @@ modern_english:
 
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
+  trusted_plot_selector_title: "&bSelect Plot to Manage"
+  trusted_head_name: "&a{PLAYER}"
   trusted_menu_title: "&eTrusted Players"
   add_trusted_title: "&aAdd Trusted"
   remove_trusted_title: "&cRemove Trusted"
@@ -445,6 +510,8 @@ modern_english:
     - "&7Trusted players can build and interact in your claim."
 
   admin_menu_title: "&c⚙ Admin Tools"
+  admin_reloading: "&7Reloading configurations..."
+  admin_reload_complete: "&a✔ Reload complete!"
   button_admin_auto_remove: "&6Auto-Remove Banned Players"
   admin_auto_remove_lore:
     - "&7Automatically purge plots of banned players."
@@ -461,6 +528,11 @@ modern_english:
   admin_broadcast_enabled: "&a✔ Broadcasts enabled."
   admin_broadcast_disabled: "&c✖ Broadcasts disabled."
   admin_removed_banned: "&eRemoved plots for banned player: {PLAYER}"
+
+  # --- NEW: Admin Plot List ---
+  admin_plot_list_title: "&cAll Server Plots"
+  admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
+  admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
   help_header: "&b⚔ Guardian Codex Help"
   help_lines:

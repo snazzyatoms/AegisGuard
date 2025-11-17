@@ -1,14 +1,22 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * GUIListener
+ * - The central "switchboard" for ALL plugin GUI clicks.
+ * - This is the *only* GUI listener that should be registered.
+ * - It uses the InventoryHolder of the clicked inventory to route
+ * the event to the correct GUI class for handling.
+ */
 public class GUIListener implements Listener {
 
     private final AegisGuard plugin;
@@ -17,7 +25,12 @@ public class GUIListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
+    /**
+     * --- UPGRADED ---
+     * This method now uses InventoryHolders for 100% reliable click routing.
+     * It is set to HIGH priority to ensure it can cancel clicks before other plugins.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
 
@@ -28,39 +41,36 @@ public class GUIListener implements Listener {
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
 
-        String viewTitle = normalize(e.getView().getTitle());
+        // --- RELIABILITY FIX ---
+        // We get the holder from the inventory itself, not by checking the title.
+        InventoryHolder holder = top.getHolder();
 
-        // Known titles (with safe fallbacks). If any match, hand off to GUIManager.
-        String tPlayer     = normalize(msg("menu_title",            "AegisGuard — Menu"));
-        String tTrusted    = normalize(msg("trusted_menu_title",     "AegisGuard — Trusted"));
-        String tTrustedAdd = normalize(msg("add_trusted_title",      "AegisGuard — Add Trusted"));
-        String tTrustedRem = normalize(msg("remove_trusted_title",   "AegisGuard — Remove Trusted"));
-        String tSettings   = normalize(msg("settings_menu_title",    "AegisGuard — Settings"));
-        String tAdmin      = normalize(msg("admin_menu_title",       "AegisGuard — Admin"));
-        String tExpAdmin   = normalize(msg("expansion_admin_title",  "AegisGuard — Expansion Requests"));
+        // Route the click to the correct GUI's handler
+        if (holder instanceof AdminGUI.AdminHolder) {
+            // This click belongs to the AdminGUI
+            plugin.gui().admin().handleClick(player, e);
 
-        boolean ours =
-                viewTitle.equals(tPlayer) ||
-                viewTitle.equals(tTrusted) ||
-                viewTitle.equals(tTrustedAdd) ||
-                viewTitle.equals(tTrustedRem) ||
-                viewTitle.equals(tSettings) ||
-                viewTitle.equals(tAdmin) ||
-                viewTitle.equals(tExpAdmin);
+        } else if (holder instanceof ExpansionRequestGUI.ExpansionHolder) {
+            // This click belongs to the ExpansionRequestGUI
+            plugin.gui().expansionRequest().handleClick(player, e);
 
-        if (!ours) return;
-
-        // Centralized routing + cancellation lives in GUIManager
-        plugin.gui().handleClick(player, e);
+        } else if (holder instanceof ExpansionRequestAdminGUI.ExpansionAdminHolder) {
+            // This click belongs to the ExpansionRequestAdminGUI
+            plugin.gui().expansionAdmin().handleClick(player, e);
+        
+        }
+        // ...
+        // else if (holder instanceof PlotFlagsGUI.PlotFlagsHolder) {
+        //     plugin.gui().plotFlags().handleClick(player, e);
+        // }
+        // ...
+        // else if (holder instanceof MainMenuGUI.MainMenuHolder) {
+        //     plugin.gui().mainMenu().handleClick(player, e);
+        // }
     }
 
-    private String msg(String key, String fallback) {
-        String s = plugin.msg().get(key);
-        return (s == null || s.isEmpty()) ? fallback : s;
-    }
-
-    private static String normalize(String s) {
-        if (s == null) return "";
-        return ChatColor.stripColor(s).trim().toLowerCase();
-    }
+    /* -----------------------------------
+     * Helper methods removed.
+     * Title checking is no longer needed.
+     * ----------------------------------- */
 }

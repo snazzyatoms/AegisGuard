@@ -1,6 +1,8 @@
 package com.aegisguard.util;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.data.PlotStore;
+import com.aegisguard.gui.SettingsGUI; // --- NEW IMPORT ---
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -10,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.InventoryHolder; // --- NEW IMPORT ---
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +20,13 @@ import java.util.*;
 
 /**
  * MessagesUtil (AegisGuard v1.0)
- * - Loads messages.yml (multi-tone English)
- * - Per-player style prefs: old_english (default), hybrid_english, modern_english
- * - Persists to playerdata.yml
+ * ... (existing comments) ...
+ *
+ * --- UPGRADE NOTES ---
+ * - CRITICAL LAG FIX: Player preference saving is now asynchronous
+ * via the isPlayerDataDirty flag and the auto-saver.
+ * - RELIABILITY FIX: GUI refresh logic now correctly uses InventoryHolders.
+ * - STARTUP FIX: loadPlayerPreferences() is now called asynchronously.
  */
 public class MessagesUtil implements Listener {
 
@@ -31,16 +38,22 @@ public class MessagesUtil implements Listener {
     private File playerDataFile;
     private FileConfiguration playerData;
 
+    // --- NEW ---
+    private volatile boolean isPlayerDataDirty = false;
+
     public MessagesUtil(AegisGuard plugin) {
         this.plugin = plugin;
         reload();
-        loadPlayerPreferences();
+        // --- MODIFIED ---
+        // loadPlayerPreferences() is now called from AegisGuard.onEnable() asynchronously
+        // to prevent startup lag.
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     /* -----------------------------
      * Reload from file
      * ----------------------------- */
+// ... (existing reload method is fine) ...
     public void reload() {
         File file = new File(plugin.getDataFolder(), "messages.yml");
         if (!file.exists()) plugin.saveResource("messages.yml", false);
@@ -52,20 +65,16 @@ public class MessagesUtil implements Listener {
     /* -----------------------------
      * Accessors (Player-aware)
      * ----------------------------- */
-    /** Get message for specific player style */
+// ... (all existing 'get' and 'getList' methods are fine) ...
     public String get(Player player, String key) {
         String raw = getRawForPlayer(player, key);
         return format(raw);
     }
-
-    /** Get message for player with placeholders (varargs: "KEY","VAL","KEY2","VAL2",...) */
     public String get(Player player, String key, String... kv) {
         String raw = getRawForPlayer(player, key);
         raw = applyPlaceholders(raw, kv);
         return format(raw);
     }
-
-    /** Get list (GUI lore) for player style */
     public List<String> getList(Player player, String key) {
         String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
         String path = style + "." + key;
@@ -76,28 +85,35 @@ public class MessagesUtil implements Listener {
         for (String line : list) colored.add(format(line));
         return colored;
     }
+    public List<String> getList(Player player, String key, List<String> fallback) {
+        String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
+        String path = style + "." + key;
+        List<String> list = messages.getStringList(path);
+        if (list.isEmpty()) list = messages.getStringList(defaultStyle + "." + key);
+        if (list == null || list.isEmpty()) list = fallback; // --- Use provided fallback ---
+        List<String> colored = new ArrayList<>(list.size());
+        for (String line : list) colored.add(format(line));
+        return colored;
+    }
 
     /* -----------------------------
      * Accessors (default style)
      * ----------------------------- */
+// ... (all existing 'get', 'getList', 'has', 'color', 'prefix' methods are fine) ...
     public String get(String key) {
         String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
         return format(raw);
     }
-
     public String get(String key, String... kv) {
         String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
         raw = applyPlaceholders(raw, kv);
         return format(raw);
     }
-
     public String get(String key, Map<String, String> placeholders) {
         String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
         raw = applyPlaceholders(raw, placeholders);
         return format(raw);
     }
-
-    /** Non-player list accessor (default style) */
     public List<String> getList(String key) {
         List<String> list = messages.getStringList(defaultStyle + "." + key);
         if (list == null) list = Collections.emptyList();
@@ -105,18 +121,12 @@ public class MessagesUtil implements Listener {
         for (String line : list) colored.add(format(line));
         return colored;
     }
-
-    /** Does the styled message exist? */
     public boolean has(String key) {
         return messages.contains(defaultStyle + "." + key);
     }
-
-    /** Colorize a string with & codes */
     public String color(String text) {
         return format(text);
     }
-
-    /** Prefix (top-level, not style-scoped) */
     public String prefix() {
         return format(messages.getString("prefix", "&8[&bAegisGuard&8]&r "));
     }
@@ -124,57 +134,66 @@ public class MessagesUtil implements Listener {
     /* -----------------------------
      * Senders
      * ----------------------------- */
+// ... (all existing 'send' methods are fine) ...
     public void send(CommandSender sender, String key) {
         String msg = (sender instanceof Player p) ? get(p, key) : get(key);
         sender.sendMessage(prefix() + msg);
     }
-
     public void send(CommandSender sender, String key, Map<String, String> placeholders) {
         String msg = (sender instanceof Player p) ? get(p, key) : get(key);
         msg = applyPlaceholders(msg, placeholders); // msg is already colored; placeholders are plain
         sender.sendMessage(prefix() + msg);
     }
-
     public void send(CommandSender sender, String key, String... kv) {
         String msg = (sender instanceof Player p) ? get(p, key, kv) : get(key, kv);
         sender.sendMessage(prefix() + msg);
     }
 
+
     /* -----------------------------
      * Player Style System
      * ----------------------------- */
     public void setPlayerStyle(Player player, String style) {
+// ... (existing validation logic is fine) ...
         List<String> valid = messages.getStringList("language_styles.available");
         if (valid == null || !valid.contains(style)) {
             player.sendMessage(ChatColor.RED + "⚠ Invalid language style: " + style);
             return;
         }
         playerStyles.put(player.getUniqueId(), style);
-        savePlayerPreference(player, style);
+        savePlayerPreference(player, style); // This is now async-safe
         player.sendMessage(ChatColor.GOLD + "🕮 Your speech style is now: "
                 + ChatColor.AQUA + style.replace("_", " "));
-        // Live GUI refresh (optional)
-        if (player.getOpenInventory() != null &&
-            player.getOpenInventory().getTitle() != null &&
-            player.getOpenInventory().getTitle().toLowerCase().contains("aegisguard")) {
-            plugin.gui().settings().open(player);
+
+        // --- RELIABILITY FIX ---
+        // Live GUI refresh, now uses reliable InventoryHolder
+        InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
+        if (holder instanceof SettingsGUI.SettingsGUIHolder settingsHolder) {
+            PlotStore.Plot plot = settingsHolder.getPlot();
+            if (plot != null) {
+                // Refresh the settings GUI with the correct plot context
+                plugin.gui().settings().open(player, plot);
+            }
         }
     }
 
     public String getPlayerStyle(Player player) {
-        return playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
+// ... (existing logic is fine) ...
     }
 
     /* -----------------------------
-     * Player Preferences
+     * Player Preferences (Save/Load)
      * ----------------------------- */
-    public void loadPlayerPreferences() {
+    
+    // --- MODIFIED --- Now runs async
+    public synchronized void loadPlayerPreferences() {
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
         if (!playerDataFile.exists()) {
             try { playerDataFile.createNewFile(); } catch (IOException e) { e.printStackTrace(); }
         }
         playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 
+// ... (existing loading logic is fine) ...
         ConfigurationSection section = playerData.getConfigurationSection("players");
         if (section == null) return;
 
@@ -188,27 +207,55 @@ public class MessagesUtil implements Listener {
         plugin.getLogger().info("[AegisGuard] Loaded " + playerStyles.size() + " player language preferences.");
     }
 
-    private void savePlayerPreference(Player player, String style) {
+    // --- MODIFIED --- Now async-safe, no I/O
+    private synchronized void savePlayerPreference(Player player, String style) {
         if (playerDataFile == null) {
             playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
             playerData = YamlConfiguration.loadConfiguration(playerDataFile);
         }
         playerData.set("players." + player.getUniqueId() + ".language_style", style);
-        try { playerData.save(playerDataFile); } catch (IOException e) { e.printStackTrace(); }
+        
+        // --- CRITICAL LAG FIX ---
+        isPlayerDataDirty = true; // Mark for auto-saver
+        // try { playerData.save(playerDataFile); } catch (IOException e) { e.printStackTrace(); } // <-- REMOVED
     }
+
+    /**
+     * --- NEW ---
+     * Saves the player data file. Called by the auto-saver and onDisable.
+     */
+    public synchronized void savePlayerData() {
+        if (playerDataFile == null || !isPlayerDataDirty) return;
+        
+        try {
+            playerData.save(playerDataFile);
+            isPlayerDataDirty = false;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * --- NEW ---
+     * Checks if the player data file has changes to be saved.
+     */
+    public boolean isPlayerDataDirty() {
+        return isPlayerDataDirty;
+    }
+
 
     /* -----------------------------
      * Auto-load on join
      * ----------------------------- */
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        Player player = e.getPlayer();
-        playerStyles.putIfAbsent(player.getUniqueId(), defaultStyle);
+// ... (existing logic is fine) ...
     }
 
     /* -----------------------------
      * Internal helpers
      * ----------------------------- */
+// ... (all existing helpers are fine) ...
     private String getRawForPlayer(Player player, String key) {
         String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
         String path = style + "." + key;

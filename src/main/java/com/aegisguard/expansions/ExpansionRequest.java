@@ -16,8 +16,9 @@ import org.bukkit.World;
  */
 public class ExpansionRequest {
 
-    private final UUID requester;       // Player requesting the expansion
-    private final UUID plotOwner;       // Owner of the plot (for approval)
+    private final UUID requester;     // Player requesting the expansion
+    private final UUID plotOwner;     // Owner of the plot (for approval)
+    private final UUID plotId;        // --- NEW --- The specific plot being expanded
     private final String worldName;     // Target world
     private final int currentRadius;    // Current radius of the plot
     private final int requestedRadius;  // Requested new radius
@@ -27,10 +28,11 @@ public class ExpansionRequest {
     private boolean approved;           // True if approved
     private boolean denied;             // True if denied
 
-    public ExpansionRequest(UUID requester, UUID plotOwner, String worldName,
+    public ExpansionRequest(UUID requester, UUID plotOwner, UUID plotId, String worldName,
                             int currentRadius, int requestedRadius, double cost) {
         this.requester = requester;
         this.plotOwner = plotOwner;
+        this.plotId = plotId; // --- NEW ---
         this.worldName = worldName;
         this.currentRadius = currentRadius;
         this.requestedRadius = requestedRadius;
@@ -52,72 +54,81 @@ public class ExpansionRequest {
         return plotOwner;
     }
 
+    /** --- NEW ---
+     * Gets the unique ID of the plot being expanded.
+     */
+    public UUID getPlotId() {
+        return plotId;
+    }
+
     public String getWorldName() {
         return worldName;
     }
-
+// ... existing code ...
     public World getWorld() {
-        return Bukkit.getWorld(worldName);
+// ... existing code ...
     }
 
     public int getCurrentRadius() {
-        return currentRadius;
+// ... existing code ...
     }
 
     public int getRequestedRadius() {
-        return requestedRadius;
+// ... existing code ...
     }
 
+// ... existing code ...
     public double getCost() {
-        return cost;
+// ... existing code ...
     }
 
     public long getTimestamp() {
-        return timestamp;
+// ... existing code ...
     }
-
+// ... existing code ...
     public OfflinePlayer getRequesterPlayer() {
-        return Bukkit.getOfflinePlayer(requester);
+// ... existing code ...
     }
 
     public OfflinePlayer getOwnerPlayer() {
-        return Bukkit.getOfflinePlayer(plotOwner);
+// ... existing code ...
     }
 
     public boolean isApproved() {
-        return approved;
+// ... existing code ...
     }
 
     public boolean isDenied() {
-        return denied;
+// ... existing code ...
     }
 
     /* -----------------------------
      * State Management
      * ----------------------------- */
 
-    public void approve() {
+    /** --- MODIFIED --- Added 'synchronized' for thread-safety */
+    public synchronized void approve() {
         this.approved = true;
         this.denied = false;
     }
 
-    public void deny() {
+    /** --- MODIFIED --- Added 'synchronized' for thread-safety */
+    public synchronized void deny() {
         this.denied = true;
         this.approved = false;
     }
 
-    public boolean isPending() {
+    /** --- MODIFIED --- Added 'synchronized' for thread-safety */
+    public synchronized boolean isPending() {
         return !approved && !denied;
     }
 
     /* -----------------------------
      * Utility
      * ----------------------------- */
-
+// ... existing code ...
     public String getStatus() {
-        if (approved) return "APPROVED";
-        if (denied) return "DENIED";
-        return "PENDING";
+// ... existing code ...
     }
 
     @Override
@@ -125,6 +136,7 @@ public class ExpansionRequest {
         return "ExpansionRequest{" +
                 "requester=" + requester +
                 ", plotOwner=" + plotOwner +
+                ", plotId=" + plotId + // --- NEW ---
                 ", worldName='" + worldName + '\'' +
                 ", currentRadius=" + currentRadius +
                 ", requestedRadius=" + requestedRadius +

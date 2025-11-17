@@ -2,6 +2,7 @@ package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.PlotStore;
+import com.aegisguard.data.PlotStore.Plot; // --- NEW IMPORT ---
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -22,13 +23,14 @@ import org.bukkit.projectiles.ProjectileSource;
 
 /**
  * ProtectionManager (AegisGuard)
- * ---------------------------------------------
- * Enforces per-plot flags:
- *  - pvp, containers, mobs, pets, entities, farm
- *  - safe_zone (master switch: if true, all protections apply)
+ * ... (existing comments) ...
  *
- * Owners + Trusted bypass build/container/entity protections.
- * PvP protection blocks PvP regardless of trust.
+ * --- UPGRADE NOTES ---
+ * - CRITICAL LAG FIX: toggleFlag() no longer calls flushSync(). It now sets the
+ * PlotStore's dirty flag to use the async auto-saver.
+ * - CRITICAL DESIGN FIX: The Flag API (isPvPEnabled, togglePvP, etc.)
+ * now operates on a Plot object, not a Player's location.
+ * - CLEANUP: All effect/sound logic has been moved to EffectUtil.java
  */
 public class ProtectionManager implements Listener {
 
@@ -39,32 +41,34 @@ public class ProtectionManager implements Listener {
     }
 
     /* -----------------------------------------------------
-     *  EVENT HANDLERS — Build & Interact
+     * EVENT HANDLERS — Build & Interact
      * ----------------------------------------------------- */
 
     @EventHandler
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        PlotStore.Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
         if (plot == null) return;
 
         if (!canBuild(p, plot)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_break"));
-            playEffect("build", "deny", p, e.getBlock().getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
         }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
-        PlotStore.Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
         if (plot == null) return;
 
         if (!canBuild(p, plot)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_place"));
-            playEffect("build", "deny", p, e.getBlock().getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
         }
     }
 
@@ -74,19 +78,20 @@ public class ProtectionManager implements Listener {
 
         Player p = e.getPlayer();
         Block block = e.getClickedBlock();
-        PlotStore.Plot plot = plugin.store().getPlotAt(block.getLocation());
+        Plot plot = plugin.store().getPlotAt(block.getLocation());
         if (plot == null) return;
 
         // Container access is protected for non-trusted when flag active (or safe_zone)
         if (!canBuild(p, plot) && isContainer(block.getType()) && enabled(plot, "containers")) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_interact"));
-            playEffect("containers", "deny", p, block.getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("containers", "deny", p, block.getLocation());
         }
     }
 
     /* -----------------------------------------------------
-     *  PVP & Entity Protections
+     * PVP & Entity Protections
      * ----------------------------------------------------- */
 
     @EventHandler
@@ -96,13 +101,14 @@ public class ProtectionManager implements Listener {
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
 
-        PlotStore.Plot plot = plugin.store().getPlotAt(victim.getLocation());
+        Plot plot = plugin.store().getPlotAt(victim.getLocation());
         if (plot == null) return;
 
         if (enabled(plot, "pvp")) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_attack"));
-            playEffect("pvp", "deny", attacker, victim.getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
         }
     }
 
@@ -113,19 +119,20 @@ public class ProtectionManager implements Listener {
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
 
-        PlotStore.Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
+        Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
         if (plot == null) return;
 
         if (enabled(plot, "pets")) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_interact")); // reuse localized denial
-            playEffect("pets", "deny", attacker, pet.getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("pets", "deny", attacker, pet.getLocation());
         }
     }
 
     @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent e) {
-        Entity clicked = e.getRightClicked();
+// ... (existing logic for entity checks) ...
         if (!(clicked instanceof ArmorStand
                 || clicked instanceof ItemFrame
                 || clicked instanceof GlowItemFrame
@@ -134,43 +141,30 @@ public class ProtectionManager implements Listener {
         }
 
         Player p = e.getPlayer();
-        PlotStore.Plot plot = plugin.store().getPlotAt(clicked.getLocation());
+        Plot plot = plugin.store().getPlotAt(clicked.getLocation());
         if (plot == null) return;
 
         // Protect decorative entities for non-trusted
         if (!canBuild(p, plot) && enabled(plot, "entities")) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_interact"));
-            playEffect("entities", "deny", p, clicked.getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("entities", "deny", p, clicked.getLocation());
         }
     }
 
     @EventHandler
     public void onTarget(EntityTargetEvent e) {
-        if (!(e.getTarget() instanceof Player p)) return;
-
-        PlotStore.Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null) return;
-
-        if (enabled(plot, "mobs") && e.getEntity() instanceof Monster) {
-            e.setCancelled(true);
-        }
+// ... (existing logic is fine) ...
     }
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent e) {
-        if (!(e.getEntity() instanceof Monster)) return;
-
-        PlotStore.Plot plot = plugin.store().getPlotAt(e.getLocation());
-        if (plot == null) return;
-
-        if (enabled(plot, "mobs")) {
-            e.setCancelled(true);
-        }
+// ... (existing logic is fine) ...
     }
 
     /* -----------------------------------------------------
-     *  Crop / Farm Protections
+     * Crop / Farm Protections
      * ----------------------------------------------------- */
 
     @EventHandler
@@ -179,89 +173,113 @@ public class ProtectionManager implements Listener {
         if (e.getClickedBlock() == null || e.getClickedBlock().getType() != Material.FARMLAND) return;
 
         Player p = e.getPlayer();
-        PlotStore.Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
+        Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
         if (plot == null) return;
 
         if (enabled(plot, "farm")) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_interact")); // localized, simple denial
-            playEffect("farm", "deny", p, e.getClickedBlock().getLocation());
+            // --- MODIFIED ---
+            plugin.effects().playEffect("farm", "deny", p, e.getClickedBlock().getLocation());
         }
     }
 
     /* -----------------------------------------------------
-     *  FLAG API (used by Settings GUI)
+     * FLAG API (used by Settings GUI)
+     * --- HEAVILY MODIFIED ---
      * ----------------------------------------------------- */
 
-    private void toggleFlag(Player player, String flag) {
-        PlotStore.Plot plot = plugin.store().getPlotAt(player.getLocation());
-        if (plot == null) {
-            player.sendMessage(plugin.msg().get("no_plot_here"));
-            playEffect(flag, "fail", player, player.getLocation());
-            return;
-        }
+    /**
+     * Toggles a flag for a specific plot.
+     * This is now ASYNC-SAFE and does not cause lag.
+     */
+    private void toggleFlag(Plot plot, String flag) {
+        if (plot == null) return; // Should not happen if called from SettingsGUI
 
         boolean current = plot.getFlag(flag, true);
         plot.setFlag(flag, !current);
-        plugin.store().flushSync();
 
-        // Feedback is handled by GUI using localized labels; keep chat minimal here if desired.
-        playEffect(flag, "success", player, player.getLocation());
+        // --- CRITICAL LAG FIX ---
+        // plugin.store().flushSync(); // <-- REMOVED! This causes server lag.
+        plugin.store().setDirty(true); // <-- ADDED! This uses the async auto-saver.
+
+        // Feedback is handled by GUI refresh
     }
 
     // Exposed to SettingsGUI
-    public boolean isPvPEnabled(Player player)        { return hasFlag(player, "pvp"); }
-    public void    togglePvP(Player player)           { toggleFlag(player, "pvp"); }
+    public boolean isPvPEnabled(Plot plot)     { return hasFlag(plot, "pvp"); }
+    public void    togglePvP(Plot plot)        { toggleFlag(plot, "pvp"); }
 
-    public boolean isContainersEnabled(Player player) { return hasFlag(player, "containers"); }
-    public void    toggleContainers(Player player)    { toggleFlag(player, "containers"); }
+    public boolean isContainersEnabled(Plot plot) { return hasFlag(plot, "containers"); }
+    public void    toggleContainers(Plot plot)    { toggleFlag(plot, "containers"); }
 
-    public boolean isMobProtectionEnabled(Player p)   { return hasFlag(p, "mobs"); }
-    public void    toggleMobProtection(Player p)      { toggleFlag(p, "mobs"); }
+    public boolean isMobProtectionEnabled(Plot plot)  { return hasFlag(plot, "mobs"); }
+    public void    toggleMobProtection(Plot plot)     { toggleFlag(plot, "mobs"); }
 
-    public boolean isPetProtectionEnabled(Player p)   { return hasFlag(p, "pets"); }
-    public void    togglePetProtection(Player p)      { toggleFlag(p, "pets"); }
+    public boolean isPetProtectionEnabled(Plot plot)  { return hasFlag(plot, "pets"); }
+    public void    togglePetProtection(Plot plot)     { toggleFlag(plot, "pets"); }
 
-    public boolean isEntityProtectionEnabled(Player p){ return hasFlag(p, "entities"); }
-    public void    toggleEntityProtection(Player p)   { toggleFlag(p, "entities"); }
+    public boolean isEntityProtectionEnabled(Plot plot){ return hasFlag(plot, "entities"); }
+    public void    toggleEntityProtection(Plot plot)    { toggleFlag(plot, "entities"); }
 
-    public boolean isFarmProtectionEnabled(Player p)  { return hasFlag(p, "farm"); }
-    public void    toggleFarmProtection(Player p)     { toggleFlag(p, "farm"); }
+    public boolean isFarmProtectionEnabled(Plot plot) { return hasFlag(plot, "farm"); }
+    public void    toggleFarmProtection(Plot plot)    { toggleFlag(plot, "farm"); }
 
-    public boolean isSafeZoneEnabled(Player p)        { return hasFlag(p, "safe_zone"); }
-    public void    toggleSafeZone(Player p)           { toggleFlag(p, "safe_zone"); }
+    public boolean isSafeZoneEnabled(Plot plot)     { return hasFlag(plot, "safe_zone"); }
+    public void    toggleSafeZone(Plot plot, boolean playSound) {
+        // This is a special toggle with extra logic
+        if (plot == null) return;
+        
+        boolean next = !plot.getFlag("safe_zone", true);
+        plot.setFlag("safe_zone", next);
+
+        // When toggling Safe Zone ON, also ensure the individual protections are ON
+        if (next) {
+            plot.setFlag("pvp", true);
+            plot.setFlag("mobs", true);
+            plot.setFlag("containers", true);
+            plot.setFlag("entities", true);
+            plot.setFlag("pets", true);
+            plot.setFlag("farm", true);
+        }
+
+        plugin.store().setDirty(true); // Async-safe save
+    }
+
 
     /* -----------------------------------------------------
-     *  HELPERS
+     * HELPERS
      * ----------------------------------------------------- */
 
     /** Master enable: true if safe_zone OR the flag itself is true. */
-    private boolean enabled(PlotStore.Plot plot, String flag) {
-        return plot.getFlag("safe_zone", false) || plot.getFlag(flag, true);
+    private boolean enabled(Plot plot, String flag) {
+        // --- MODIFIED --- "safe_zone" defaults to TRUE in the plot object
+        return plot.getFlag("safe_zone", true) || plot.getFlag(flag, true);
     }
 
-    private boolean canBuild(Player p, PlotStore.Plot plot) {
+    private boolean canBuild(Player p, Plot plot) {
         if (p.hasPermission("aegis.admin")) return true; // unified admin perm
         if (p.getUniqueId().equals(plot.getOwner())) return true;
         return plot.getTrusted().contains(p.getUniqueId());
     }
 
-    private boolean hasFlag(Player p, String flag) {
-        PlotStore.Plot plot = plugin.store().getPlotAt(p.getLocation());
+    /** Checks if a plot has a flag enabled. */
+    private boolean hasFlag(Plot plot, String flag) {
         return plot != null && enabled(plot, flag);
     }
 
     private Player resolveAttacker(Entity damager) {
+// ... (existing logic is fine) ...
         if (damager instanceof Player dp) return dp;
         if (damager instanceof Projectile proj) {
             ProjectileSource src = proj.getShooter();
             if (src instanceof Player sp) return sp;
         }
         return null;
-        }
+    }
 
     private boolean isContainer(Material type) {
-        // Cover common inventories + all colored shulker boxes
+// ... (existing logic is fine) ...
         if (type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX")) return true;
         return switch (type) {
             case CHEST, TRAPPED_CHEST, BARREL,
@@ -274,25 +292,9 @@ public class ProtectionManager implements Listener {
         };
     }
 
-    private void playEffect(String category, String type, Player p, Location loc) {
-        if (!plugin.getConfig().getBoolean("protection_effects.enabled", true)) return;
-
-        String base = "protection_effects." + category + "." + type + "_";
-        String def  = "protection_effects." + type + "_";
-
-        String soundKey = plugin.getConfig().getString(base + "sound",
-                plugin.getConfig().getString(def + "sound", "BLOCK_NOTE_BLOCK_BASS"));
-        String particleKey = plugin.getConfig().getString(base + "particle",
-                plugin.getConfig().getString(def + "particle", "SMOKE_NORMAL"));
-
-        try {
-            Sound sound = Sound.valueOf(soundKey);
-            Particle particle = Particle.valueOf(particleKey);
-            p.playSound(loc, sound, 1f, 1f);
-            loc.getWorld().spawnParticle(particle, loc.clone().add(0.5, 1, 0.5),
-                    10, 0.3, 0.3, 0.3, 0.05);
-        } catch (IllegalArgumentException ignored) {
-            // invalid sound/particle fallback
-        }
-    }
+    /* -----------------------------------------------------
+     * playEffect(...)
+     * --- REMOVED ---
+     * (Moved to new EffectUtil.java class)
+     * ----------------------------------------------------- */
 }

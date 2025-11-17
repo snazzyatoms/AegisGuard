@@ -2,19 +2,38 @@ package com.aegisguard.commands;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
-public class SoundCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Handles all /aegis sound ... subcommands.
+ * This class is delegated to by AegisCommand.
+ */
+public class SoundCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
+
+    private static final String[] MODES = { "global", "player" };
+    private static final String[] TOGGLES = { "on", "off" };
 
     public SoundCommand(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * This onCommand is called by AegisCommand.
+     * args[0] will be "global" or "player", NOT "sound".
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!sender.hasPermission("aegisguard.admin")) {
@@ -22,10 +41,10 @@ public class SoundCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 2) {
-            sender.sendMessage("§eUsage:");
-            sender.sendMessage("§7/aegis sound global <on|off>");
-            sender.sendMessage("§7/aegis sound player <name> <on|off>");
+        if (args.length == 0) {
+            sendMsg(sender, "&eUsage:");
+            sendMsg(sender, "&7/aegis sound global <on|off>");
+            sendMsg(sender, "&7/aegis sound player <name> <on|off>");
             return true;
         }
 
@@ -33,34 +52,73 @@ public class SoundCommand implements CommandExecutor {
         switch (mode) {
             case "global" -> {
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /aegis sound global <on|off>");
+                    sendMsg(sender, "&cUsage: /aegis sound global <on|off>");
                     return true;
                 }
                 boolean enable = args[1].equalsIgnoreCase("on");
                 plugin.getConfig().set("enable_sounds.global", enable);
-                plugin.saveConfig();
-                sender.sendMessage("§a✔ Global sounds " + (enable ? "enabled" : "disabled"));
+                plugin.saveConfig(); // saveConfig is async, so this is safe
+                sendMsg(sender, "&a✔ Global sounds " + (enable ? "enabled" : "disabled"));
             }
             case "player" -> {
                 if (args.length < 3) {
-                    sender.sendMessage("§cUsage: /aegis sound player <name> <on|off>");
+                    sendMsg(sender, "&cUsage: /aegis sound player <name> <on|off>");
                     return true;
                 }
                 Player target = Bukkit.getPlayer(args[1]);
                 if (target == null) {
-                    sender.sendMessage("§cPlayer not found: " + args[1]);
+                    sendMsg(sender, "&cPlayer not found: " + args[1]);
                     return true;
                 }
                 boolean enable = args[2].equalsIgnoreCase("on");
                 plugin.getConfig().set("enable_sounds.players." + target.getUniqueId(), enable);
                 plugin.saveConfig();
-                sender.sendMessage("§a✔ Sounds for " + target.getName() + " " + (enable ? "enabled" : "disabled"));
+                sendMsg(sender, "&a✔ Sounds for " + target.getName() + " " + (enable ? "enabled" : "disabled"));
             }
             default -> {
-                sender.sendMessage("§cInvalid mode. Use §7global §cor §7player");
+                sendMsg(sender, "&cInvalid mode. Use &7global &cor &7player");
             }
         }
-
         return true;
+    }
+
+    /**
+     * --- NEW ---
+     * Handles tab completion for /aegis sound ...
+     */
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        final List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            // Suggesting "global" or "player"
+            StringUtil.copyPartialMatches(args[0], Arrays.asList(MODES), completions);
+        } else if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("global")) {
+                // Suggesting "on" or "off" for global
+                StringUtil.copyPartialMatches(args[1], Arrays.asList(TOGGLES), completions);
+            }
+            if (args[0].equalsIgnoreCase("player")) {
+                // Suggesting player names
+                return null; // Let Bukkit handle player name completion
+            }
+        } else if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("player")) {
+                // Suggesting "on" or "off" for player
+                StringUtil.copyPartialMatches(args[2], Arrays.asList(TOGGLES), completions);
+            }
+        }
+        Collections.sort(completions);
+        return completions;
+    }
+
+    /**
+     * Helper method to send a color-formatted message.
+     */
+    private void sendMsg(CommandSender sender, String message) {
+        if (message == null || message.isEmpty()) {
+            return;
+        }
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 }

@@ -1,191 +1,97 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.config.AGConfig;
-import com.aegisguard.data.PlotStore;
-import com.aegisguard.economy.VaultHook;
-import com.aegisguard.gui.GUIListener;
-import com.aegisguard.gui.GUIManager;
-import com.aegisguard.protection.ProtectionManager;
-import com.aegisguard.selection.SelectionService;
-import com.aegisguard.util.MessagesUtil;
+// ... existing imports ...
 import com.aegisguard.util.SoundUtil;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+// ... existing imports ...
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
+// ... existing imports ...
 
 /**
  * AegisGuard – main entrypoint
  */
-public class AegisGuard extends JavaPlugin {
+public class AegisGuard extends JavaPlugin { // AegisGuard no longer needs CommandExecutor
 
-    private AGConfig configMgr;
-    private PlotStore plotStore;
-    private GUIManager gui;
-    private ProtectionManager protection;
-    private SelectionService selection;
-    private VaultHook vault;
-    private MessagesUtil messages;
-    private WorldRulesManager worldRules;
-    private SoundUtil sounds;
+    // ... existing fields ...
 
-    public AGConfig cfg()                { return configMgr; }
-    public PlotStore store()             { return plotStore; }
-    public GUIManager gui()              { return gui; }
-    public ProtectionManager protection(){ return protection; }
-    public SelectionService selection()  { return selection; }
-    public VaultHook vault()             { return vault; }
-    public MessagesUtil msg()            { return messages; }
-    public WorldRulesManager worldRules(){ return worldRules; }
-    public SoundUtil sounds()            { return sounds; }
+    // ... existing getter methods (cfg, store, etc) ...
 
     @Override
     public void onEnable() {
         // Bundle defaults
-        saveDefaultConfig();
+// ... existing code ...
         saveResource("messages.yml", false);
 
         // Core systems
-        this.configMgr  = new AGConfig(this);
-        this.plotStore  = new PlotStore(this);
-        this.selection  = new SelectionService(this);
-        this.gui        = new GUIManager(this);
-        this.vault      = new VaultHook(this);
-        this.messages   = new MessagesUtil(this);
-        this.worldRules = new WorldRulesManager(this);
-        this.protection = new ProtectionManager(this);
+// ... existing code ...
         this.sounds     = new SoundUtil(this);
 
         // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        Bukkit.getPluginManager().registerEvents(protection, this);
+        Bukkit.getPluginManger().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
         // Do NOT register plotStore; it's not a Listener.
 
-        // Optional: clean plots if a banned user tries to join (since there is no PlayerBanEvent)
+        // --- IMPROVEMENT ---
+        // Register our new, cleaner listener for banned players
         if (getConfig().getBoolean("admin.auto_remove_banned", false)) {
-            Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
-                @org.bukkit.event.EventHandler
-                public void onPreLogin(org.bukkit.event.player.AsyncPlayerPreLoginEvent e) {
-                    if (e.getLoginResult() == org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.KICK_BANNED) {
-                        Bukkit.getScheduler().runTask(AegisGuard.this, () -> store().removeAllPlots(e.getUniqueId()));
-                        getLogger().info("[AegisGuard] Auto-removed plots for banned player (on login): " + e.getUniqueId());
-                    }
-                }
-            }, this);
+            Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
         // Commands (null-safe)
         PluginCommand aegis = getCommand("aegis");
-        if (aegis == null) {
-            getLogger().severe("Missing /aegis command in plugin.yml. Disabling plugin.");
+// ... existing code ...
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        aegis.setExecutor(this);
+        // --- IMPROVEMENT ---
+        // Register the new AegisCommand class as the executor AND tab completer
+        AegisCommand aegisExecutor = new AegisCommand(this);
+        aegis.setExecutor(aegisExecutor);
+        aegis.setTabCompleter(aegisExecutor);
 
         PluginCommand admin = getCommand("aegisadmin");
         if (admin != null) {
-            admin.setExecutor(new AdminCommand(this));
+            // --- IMPROVEMENT ---
+            // Create an instance so we can register both executor and tab completer
+            AdminCommand adminExecutor = new AdminCommand(this);
+            admin.setExecutor(adminExecutor);
+            admin.setTabCompleter(adminExecutor); // This hooks up the TabCompleter from AdminCommand
         } else {
-            getLogger().warning("No /aegisadmin command defined; admin tools will be unavailable.");
+// ... existing code ...
         }
 
         getLogger().info("AegisGuard v" + getDescription().getVersion() + " enabled.");
-        getLogger().info("WorldRulesManager initialized for per-world protections.");
+// ... existing code ...
     }
 
     @Override
+// ... existing code ...
     public void onDisable() {
         if (plotStore != null) plotStore.flushSync();
         getLogger().info("AegisGuard disabled. Data saved.");
     }
 
-    /* -----------------------------
-     * Commands (/aegis)
-     * ----------------------------- */
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!cmd.getName().equalsIgnoreCase("aegis")) return false;
+    // --- REMOVED ---
+    // All of the onCommand logic has been moved to AegisCommand.java
+    // --- REMOVED ---
 
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage(msg().get("players_only"));
-            return true;
-        }
+    // --- REMOVED ---
+    // The createScepter() method has been moved to AegisCommand.java
+    // --- REMOVED ---
 
-        if (args.length == 0) {
-            gui.openMain(p);
-            return true;
-        }
-
-        switch (args[0].toLowerCase()) {
-            case "wand" -> {
-                p.getInventory().addItem(createScepter());
-                msg().send(p, "wand_given");
-            }
-            case "menu" -> gui.openMain(p);
-            case "claim" -> selection.confirmClaim(p);
-            case "unclaim" -> selection.unclaimHere(p);
-
-            case "sound" -> {
-                // Admin: global toggle only
-                if (!p.hasPermission("aegis.admin")) {
-                    msg().send(p, "no_perm");
-                    return true;
-                }
-                if (args.length < 2 || !args[1].equalsIgnoreCase("global")) {
-                    p.sendMessage("§eUsage:");
-                    p.sendMessage("§7/aegis sound global <on|off>");
-                    return true;
-                }
-                if (args.length < 3) {
-                    p.sendMessage("§cUsage: /aegis sound global <on|off>");
-                    return true;
-                }
-                boolean enable = args[2].equalsIgnoreCase("on");
-                getConfig().set("sounds.global_enabled", enable);
-                saveConfig();
-                msg().send(p, enable ? "sound_enabled" : "sound_disabled");
-            }
-
-            default -> msg().send(p, "usage_main");
-        }
-        return true;
-    }
-
-    /* -----------------------------
-     * Utility: Create Aegis Scepter
-     * ----------------------------- */
-    public ItemStack createScepter() {
-        ItemStack rod = new ItemStack(Material.LIGHTNING_ROD);
-        ItemMeta meta = rod.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§bAegis Scepter");
-            meta.setLore(java.util.List.of(
-                    "§7Right-click: Open Aegis Menu",
-                    "§7Left/Right-click: Select corners",
-                    "§7Sneak + Left: Expand/Resize"
-            ));
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
-            rod.setItemMeta(meta);
-        }
-        return rod;
-    }
 
     /* -----------------------------
      * Utility: Sound Control
-     * ----------------------------- */
+// ... existing code ...
+     */
     public boolean isSoundEnabled(Player player) {
-        if (!getConfig().getBoolean("sounds.global_enabled", true)) return false;
-        String key = "sounds.players." + player.getUniqueId();
+// ... existing code ...
         if (getConfig().isSet(key)) return getConfig().getBoolean(key, true);
         return true;
     }

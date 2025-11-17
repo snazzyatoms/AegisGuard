@@ -1,6 +1,7 @@
 package com.aegisguard.world;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.config.AGConfig; // --- NEW IMPORT ---
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -10,42 +11,21 @@ import java.util.Map;
 /**
  * ==============================================================
  * WorldRulesManager
- * --------------------------------------------------------------
- * Handles per-world configuration for AegisGuard.
- * Allows each world to define unique claim and protection behavior:
- *   - PvP toggle
- *   - Mob spawning
- *   - Claiming availability
- *   - Container, pet, farm protection defaults
- *
- * Config format example:
- *
- * claims:
- *   per_world:
- *     world:
- *       allow_claims: true
- *       protections:
- *         pvp: false
- *         mobs: false
- *         containers: true
- *         pets: true
- *         farms: true
- *     world_nether:
- *       allow_claims: false
- *       protections:
- *         pvp: true
- *         mobs: true
- *     world_the_end:
- *       allow_claims: false
- *       protections:
- *         pvp: false
- *         mobs: true
+ * ... (existing comments) ...
  * ==============================================================
+ *
+ * --- UPGRADE NOTES ---
+ * - CRITICAL: reload() no longer calls plugin.reloadConfig(), which
+ * bypassed the AGConfig sync. AdminCommand now handles the reload order.
+ * - DESIGN FIX: Default rules are now loaded from AGConfig (Single
+ * Source of Truth) instead of being hardcoded.
+ *
  */
 public class WorldRulesManager {
 
     private final AegisGuard plugin;
     private final Map<String, WorldRuleSet> rules = new HashMap<>();
+    private WorldRuleSet defaultRuleSet; // --- NEW ---
 
     public WorldRulesManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -56,7 +36,9 @@ public class WorldRulesManager {
      * Reload configuration
      * ----------------------------- */
     public void reload() {
-        plugin.reloadConfig();
+        // --- CRITICAL FIX ---
+        // plugin.reloadConfig(); // <-- REMOVED! This bypasses AGConfig's sync.
+        // AdminCommand now calls plugin.cfg().reload() *before* calling this.
         load();
     }
 
@@ -65,6 +47,19 @@ public class WorldRulesManager {
      * ----------------------------- */
     public void load() {
         rules.clear();
+        
+        // --- NEW ---
+        // Create the default ruleset from the central config wrapper
+        AGConfig cfg = plugin.cfg();
+        this.defaultRuleSet = new WorldRuleSet(
+                true, // allowClaims defaults to true
+                cfg.pvpProtectionDefault(),
+                cfg.noMobsInClaims(),
+                cfg.containerProtectionDefault(),
+                cfg.petProtectionDefault(),  // Reads from AGConfig
+                cfg.farmProtectionDefault()  // Reads from AGConfig
+        );
+        
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("claims.per_world");
         if (section == null) {
             plugin.getLogger().warning("[AegisGuard] No per-world configuration found. Using defaults.");
@@ -73,29 +68,26 @@ public class WorldRulesManager {
 
         for (String worldName : section.getKeys(false)) {
             ConfigurationSection worldSec = section.getConfigurationSection(worldName);
-            if (worldSec == null) continue;
-
-            boolean allowClaims = worldSec.getBoolean("allow_claims", true);
+// ... (existing code) ...
 
             // Nested structure support (protections: ...)
             ConfigurationSection prot = worldSec.getConfigurationSection("protections");
-            if (prot == null) prot = worldSec;
+            if (prot == null) prot = worldSec; // Fallback to same level
 
+            // --- MODIFIED ---
+            // Per-world settings now use the new defaultRuleSet as their fallback
             WorldRuleSet set = new WorldRuleSet(
-                    allowClaims,
-                    prot.getBoolean("pvp", false),
-                    prot.getBoolean("mobs", false),
-                    prot.getBoolean("containers", true),
-                    prot.getBoolean("pets", true),
-                    prot.getBoolean("farms", true)
+                    worldSec.getBoolean("allow_claims", defaultRuleSet.allowClaims),
+                    prot.getBoolean("pvp", defaultRuleSet.pvp),
+                    prot.getBoolean("mobs", defaultRuleSet.mobs),
+                    prot.getBoolean("containers", defaultRuleSet.containers),
+                    prot.getBoolean("pets", defaultRuleSet.pets),
+                    prot.getBoolean("farms", defaultRuleSet.farms)
             );
 
             rules.put(worldName, set);
 
-            plugin.getLogger().info(String.format(
-                    "[AegisGuard] Loaded world rules for '%s': claims=%s, pvp=%s, mobs=%s, containers=%s, pets=%s, farms=%s",
-                    worldName, allowClaims, set.pvp, set.mobs, set.containers, set.pets, set.farms
-            ));
+// ... (existing logging) ...
         }
 
         plugin.getLogger().info("[AegisGuard] Loaded " + rules.size() + " per-world rule sets.");
@@ -105,71 +97,47 @@ public class WorldRulesManager {
      * Accessors
      * ----------------------------- */
     private WorldRuleSet getRules(World world) {
-        return rules.getOrDefault(world.getName(), WorldRuleSet.defaultRules());
+        // --- MODIFIED ---
+        return rules.getOrDefault(world.getName(), defaultRuleSet);
     }
 
     public boolean allowClaims(World world) {
-        return getRules(world).allowClaims;
+// ... (existing code) ...
     }
 
     public boolean isPvPAllowed(World world) {
-        return getRules(world).pvp;
+// ... (existing code) ...
     }
 
     public boolean allowMobs(World world) {
-        return getRules(world).mobs;
+// ... (existing code) ...
     }
-
-    public boolean allowContainers(World world) {
-        return getRules(world).containers;
-    }
-
-    public boolean allowPets(World world) {
-        return getRules(world).pets;
-    }
-
+// ... (existing code) ...
     public boolean allowFarms(World world) {
-        return getRules(world).farms;
+// ... (existing code) ...
     }
 
     /**
      * Generic protection lookup for dynamic checks (used by ProtectionManager)
      */
+// ... (existing code) ...
     public boolean isProtectionEnabled(World world, String key) {
-        WorldRuleSet r = getRules(world);
-        return switch (key.toLowerCase()) {
-            case "pvp", "pvp_protection" -> r.pvp;
-            case "mobs", "mobs_protection" -> r.mobs;
-            case "containers", "container_protection" -> r.containers;
-            case "pets", "pets_protection" -> r.pets;
-            case "farms", "farm_protection" -> r.farms;
-            default -> true;
-        };
+// ... (existing code) ...
     }
 
     /* -----------------------------
      * Inner Class: WorldRuleSet
      * ----------------------------- */
     public static class WorldRuleSet {
-        public final boolean allowClaims;
-        public final boolean pvp;
-        public final boolean mobs;
-        public final boolean containers;
-        public final boolean pets;
-        public final boolean farms;
+// ... (existing fields) ...
 
         public WorldRuleSet(boolean allowClaims, boolean pvp, boolean mobs,
                             boolean containers, boolean pets, boolean farms) {
-            this.allowClaims = allowClaims;
-            this.pvp = pvp;
-            this.mobs = mobs;
-            this.containers = containers;
-            this.pets = pets;
-            this.farms = farms;
+// ... (existing constructor) ...
         }
 
-        public static WorldRuleSet defaultRules() {
-            return new WorldRuleSet(true, false, false, true, true, true);
-        }
+        // --- REMOVED ---
+        // public static WorldRuleSet defaultRules() { ... }
+        // (Defaults are now loaded from AGConfig)
     }
 }

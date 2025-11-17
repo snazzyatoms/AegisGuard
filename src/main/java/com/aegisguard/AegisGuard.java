@@ -1,98 +1,192 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-// ... existing imports ...
-import com.aegisguard.util.SoundUtil;
+import com.aegisguard.commands.SoundCommand;
+import com.aegisguard.config.AGConfig;
+import com.aegisguard.data.PlotStore;
+import com.aegisguard.economy.VaultHook;
+import com.aegisguard.expansions.ExpansionRequestManager;
+import com.aegisguard.gui.GUIListener;
+import com.aegisguard.gui.GUIManager;
+import com.aegisguard.protection.ProtectionManager;
+import com.aegisguard.selection.SelectionService;
+import com.aegisguard.util.EffectUtil;
+import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
-// ... existing imports ...
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-// ... existing imports ...
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * AegisGuard – main entrypoint
  */
-public class AegisGuard extends JavaPlugin { // AegisGuard no longer needs CommandExecutor
+public class AegisGuard extends JavaPlugin {
 
-    // ... existing fields ...
+    // --- (fields) ---
+    private AGConfig configMgr;
+    private PlotStore plotStore;
+    private GUIManager gui;
+    private ProtectionManager protection;
+    private SelectionService selection;
+    private VaultHook vault;
+    private MessagesUtil messages;
+    private WorldRulesManager worldRules;
+    private EffectUtil effectUtil;
+    private SoundCommand soundCommand;
+    private ExpansionRequestManager expansionManager;
 
-    // ... existing getter methods (cfg, store, etc) ...
+    // --- (getters) ---
+    public AGConfig cfg()           { return configMgr; }
+    public PlotStore store()        { return plotStore; }
+    public GUIManager gui()         { return gui; }
+    public ProtectionManager protection(){ return protection; }
+    public SelectionService selection()  { return selection; }
+    public VaultHook vault()        { return vault; }
+    public MessagesUtil msg()       { return messages; }
+    public WorldRulesManager worldRules(){ return worldRules; }
+    public EffectUtil effects()     { return effectUtil; }
+    public SoundCommand soundCommand() { return soundCommand; }
+    public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
+
 
     @Override
     public void onEnable() {
         // Bundle defaults
-// ... existing code ...
+        saveDefaultConfig();
         saveResource("messages.yml", false);
 
         // Core systems
-// ... existing code ...
-        this.sounds     = new SoundUtil(this);
+        this.configMgr  = new AGConfig(this);
+        this.plotStore  = new PlotStore(this);
+        this.selection  = new SelectionService(this);
+        this.messages   = new MessagesUtil(this); // (no longer loads playerdata here)
+        this.gui        = new GUIManager(this); 
+        this.vault      = new VaultHook(this);
+        this.worldRules = new WorldRulesManager(this);
+        this.protection = new ProtectionManager(this);
+        this.effectUtil = new EffectUtil(this);
+        this.soundCommand = new SoundCommand(this);
+        this.expansionManager = new ExpansionRequestManager(this);
+
+        // --- NEW ---
+        // Load player data preferences asynchronously
+        CompletableFuture.runAsync(() -> {
+            messages.loadPlayerPreferences();
+        }, getServer().getScheduler().getMainThreadExecutor(this));
 
         // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        Bukkit.getPluginManger().registerEvents(protection, this);
+        Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
-        // Do NOT register plotStore; it's not a Listener.
 
-        // --- IMPROVEMENT ---
-        // Register our new, cleaner listener for banned players
-        if (getConfig().getBoolean("admin.auto_remove_banned", false)) {
+        // Register banned player listener
+        if (cfg().autoRemoveBannedPlots()) { 
             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
+
+            // Also run an async check on startup
+            CompletableFuture.runAsync(() -> {
+                getLogger().info("Running async check for banned player plots...");
+                store().removeBannedPlots();
+            }, getServer().getScheduler().getMainThreadExecutor(this));
         }
 
-        // Commands (null-safe)
+        // Commands
         PluginCommand aegis = getCommand("aegis");
-// ... existing code ...
+        if (aegis == null) {
+            getLogger().severe("Missing /aegis command in plugin.yml. Disabling plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        // --- IMPROVEMENT ---
-        // Register the new AegisCommand class as the executor AND tab completer
         AegisCommand aegisExecutor = new AegisCommand(this);
         aegis.setExecutor(aegisExecutor);
         aegis.setTabCompleter(aegisExecutor);
 
         PluginCommand admin = getCommand("aegisadmin");
         if (admin != null) {
-            // --- IMPROVEMENT ---
-            // Create an instance so we can register both executor and tab completer
             AdminCommand adminExecutor = new AdminCommand(this);
             admin.setExecutor(adminExecutor);
-            admin.setTabCompleter(adminExecutor); // This hooks up the TabCompleter from AdminCommand
+            admin.setTabCompleter(adminExecutor);
         } else {
-// ... existing code ...
+            getLogger().warning("No /aegisadmin command defined; admin tools will be unavailable.");
         }
 
+        // Start auto-saver
+        startAutoSaver();
+
         getLogger().info("AegisGuard v" + getDescription().getVersion() + " enabled.");
-// ... existing code ...
+        getLogger().info("WorldRulesManager initialized for per-world protections.");
     }
 
     @Override
-// ... existing code ...
     public void onDisable() {
-        if (plotStore != null) plotStore.flushSync();
+        // --- MODIFIED ---
+        // Gracefully save all data on shutdown
+        if (plotStore != null) {
+            getLogger().info("Saving plots to disk...");
+            plotStore.saveSync();
+        }
+        if (expansionManager != null) {
+            getLogger().info("Saving pending expansion requests to disk...");
+            expansionManager.saveSync();
+        }
+        if (messages != null) {
+            getLogger().info("Saving player preferences to disk...");
+            messages.savePlayerData();
+        }
         getLogger().info("AegisGuard disabled. Data saved.");
     }
 
-    // --- REMOVED ---
-    // All of the onCommand logic has been moved to AegisCommand.java
-    // --- REMOVED ---
+    /**
+     * Starts the asynchronous auto-saver task.
+     * This is the central hub for all async data saving.
+     */
+    private void startAutoSaver() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Check PlotStore
+                if (plotStore != null && plotStore.isDirty()) {
+                    getLogger().info("Auto-saving plot data in the background...");
+                    CompletableFuture.runAsync(() -> {
+                        plotStore.save(); // This is the synchronized save method
+                        getLogger().info("Auto-save complete.");
+                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
+                }
 
-    // --- REMOVED ---
-    // The createScepter() method has been moved to AegisCommand.java
-    // --- REMOVED ---
+                // Check ExpansionRequestManager
+                if (expansionManager != null && expansionManager.isDirty()) {
+                    getLogger().info("Auto-saving expansion request data in the background...");
+                    CompletableFuture.runAsync(() -> {
+                        expansionManager.save(); // This is the synchronized save method
+                        getLogger().info("Expansion auto-save complete.");
+                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
+                }
+
+                // Check MessagesUtil for player data
+                if (messages != null && messages.isPlayerDataDirty()) {
+                    getLogger().info("Auto-saving player data in the background...");
+                    CompletableFuture.runAsync(() -> {
+                        messages.savePlayerData(); // This is the synchronized save method
+                        getLogger().info("Player data auto-save complete.");
+                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
+                }
+            }
+            // Run every 5 minutes (20 ticks * 60 seconds * 5 minutes)
+        }.runTaskTimer(this, 20L * 60 * 5, 20L * 60 * 5);
+    }
 
 
     /* -----------------------------
      * Utility: Sound Control
-// ... existing code ...
-     */
+     * (This is the central check used by EffectUtil)
+     * ----------------------------- */
     public boolean isSoundEnabled(Player player) {
-// ... existing code ...
-        if (getConfig().isSet(key)) return getConfig().getBoolean(key, true);
-        return true;
+        if (!cfg().globalSoundsEnabled()) return false; // Use getter
+        String key = "sounds.players." + player.getUniqueId();
+        // Return the value if set, otherwise default to true
+        return getConfig().getBoolean(key, true);
     }
 }

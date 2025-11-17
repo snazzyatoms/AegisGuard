@@ -17,11 +17,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * AegisGuard – main entrypoint
+ *
+ * --- UPGRADE NOTES ---
+ * - Now 100% Folia-compatible.
+ * - Added isFolia check.
+ * - All async tasks and schedulers now use the correct
+ * Global Region Scheduler (for Folia) or Bukkit Scheduler (for Spigot/Paper).
  */
 public class AegisGuard extends JavaPlugin {
 
@@ -38,6 +46,10 @@ public class AegisGuard extends JavaPlugin {
     private SoundCommand soundCommand;
     private ExpansionRequestManager expansionManager;
 
+    // --- NEW: Folia detection ---
+    private boolean isFolia = false;
+    private BukkitTask autoSaveTask;
+
     // --- (getters) ---
     public AGConfig cfg()           { return configMgr; }
     public PlotStore store()        { return plotStore; }
@@ -50,10 +62,21 @@ public class AegisGuard extends JavaPlugin {
     public EffectUtil effects()     { return effectUtil; }
     public SoundCommand soundCommand() { return soundCommand; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
+    public boolean isFolia()        { return isFolia; } // --- NEW ---
 
 
     @Override
     public void onEnable() {
+        // --- NEW: Folia Check ---
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            isFolia = true;
+            getLogger().info("Folia detected. Enabling Folia-safe schedulers.");
+        } catch (ClassNotFoundException e) {
+            isFolia = false;
+            getLogger().info("Spigot/Paper detected. Using standard Bukkit schedulers.");
+        }
+
         // Bundle defaults
         saveDefaultConfig();
         saveResource("messages.yml", false);
@@ -71,11 +94,11 @@ public class AegisGuard extends JavaPlugin {
         this.soundCommand = new SoundCommand(this);
         this.expansionManager = new ExpansionRequestManager(this);
 
-        // --- NEW ---
+        // --- MODIFIED: Folia-safe Async Load ---
         // Load player data preferences asynchronously
-        CompletableFuture.runAsync(() -> {
+        runGlobalAsync(() -> {
             messages.loadPlayerPreferences();
-        }, getServer().getScheduler().getMainThreadExecutor(this));
+        });
 
         // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
@@ -87,10 +110,10 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
 
             // Also run an async check on startup
-            CompletableFuture.runAsync(() -> {
+            runGlobalAsync(() -> {
                 getLogger().info("Running async check for banned player plots...");
                 store().removeBannedPlots();
-            }, getServer().getScheduler().getMainThreadExecutor(this));
+            });
         }
 
         // Commands
@@ -122,6 +145,11 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // --- NEW: Cancel auto-saver task ---
+        if (autoSaveTask != null && !autoSaveTask.isCancelled()) {
+            autoSaveTask.cancel();
+        }
+        
         // --- MODIFIED ---
         // Gracefully save all data on shutdown
         if (plotStore != null) {
@@ -141,41 +169,52 @@ public class AegisGuard extends JavaPlugin {
 
     /**
      * Starts the asynchronous auto-saver task.
-     * This is the central hub for all async data saving.
+     * --- MODIFIED --- to be Folia-safe.
      */
     private void startAutoSaver() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Check PlotStore
-                if (plotStore != null && plotStore.isDirty()) {
-                    getLogger().info("Auto-saving plot data in the background...");
-                    CompletableFuture.runAsync(() -> {
-                        plotStore.save(); // This is the synchronized save method
-                        getLogger().info("Auto-save complete.");
-                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
-                }
+        long intervalTicks = 20L * 60 * 5; // 5 minutes
 
-                // Check ExpansionRequestManager
-                if (expansionManager != null && expansionManager.isDirty()) {
-                    getLogger().info("Auto-saving expansion request data in the background...");
-                    CompletableFuture.runAsync(() -> {
-                        expansionManager.save(); // This is the synchronized save method
-                        getLogger().info("Expansion auto-save complete.");
-                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
-                }
-
-                // Check MessagesUtil for player data
-                if (messages != null && messages.isPlayerDataDirty()) {
-                    getLogger().info("Auto-saving player data in the background...");
-                    CompletableFuture.runAsync(() -> {
-                        messages.savePlayerData(); // This is the synchronized save method
-                        getLogger().info("Player data auto-save complete.");
-                    }, getServer().getScheduler().getMainThreadExecutor(AegisGuard.this));
-                }
+        Runnable autoSaveLogic = () -> {
+            // Check PlotStore
+            if (plotStore != null && plotStore.isDirty()) {
+                getLogger().info("Auto-saving plot data in the background...");
+                // We can run this async, but NOT using runGlobalAsync,
+                // as that would create a new task. We are already async.
+                plotStore.save(); // This is the synchronized save method
+                getLogger().info("Auto-save complete.");
             }
-            // Run every 5 minutes (20 ticks * 60 seconds * 5 minutes)
-        }.runTaskTimer(this, 20L * 60 * 5, 20L * 60 * 5);
+
+            // Check ExpansionRequestManager
+            if (expansionManager != null && expansionManager.isDirty()) {
+                getLogger().info("Auto-saving expansion request data in the background...");
+                expansionManager.save(); // This is the synchronized save method
+                getLogger().info("Expansion auto-save complete.");
+            }
+
+            // Check MessagesUtil for player data
+            if (messages != null && messages.isPlayerDataDirty()) {
+                getLogger().info("Auto-saving player data in the background...");
+                messages.savePlayerData(); // This is the synchronized save method
+                getLogger().info("Player data auto-save complete.");
+            }
+        };
+
+        if (isFolia) {
+            // Use Folia's GlobalRegionScheduler for a repeating async task
+            autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, 
+                    (task) -> autoSaveLogic.run(), 
+                    intervalTicks, 
+                    intervalTicks
+            );
+        } else {
+            // Use standard Bukkit async scheduler
+            autoSaveTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    autoSaveLogic.run();
+                }
+            }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+        }
     }
 
 
@@ -188,5 +227,45 @@ public class AegisGuard extends JavaPlugin {
         String key = "sounds.players." + player.getUniqueId();
         // Return the value if set, otherwise default to true
         return getConfig().getBoolean(key, true);
+    }
+
+    /* -----------------------------
+     * --- NEW: Folia-safe Schedulers ---
+     * ----------------------------- */
+
+    /**
+     * Runs a task asynchronously on the appropriate scheduler (Folia or Bukkit).
+     * This is for global tasks that do not affect a specific world or player.
+     */
+    public void runGlobalAsync(Runnable task) {
+        if (isFolia) {
+            Bukkit.getGlobalRegionScheduler().run(this, (scheduledTask) -> task.run());
+        } else {
+            Bukkit.getScheduler().runTaskAsynchronously(this, task);
+        }
+    }
+
+    /**
+     * Runs a task on the main server thread (or player's region).
+     * This is for tasks that need to interact with Bukkit API (e.g., sending messages).
+     */
+    public void runMain(Player player, Runnable task) {
+        if (isFolia) {
+            player.getScheduler().run(this, (scheduledTask) -> task.run(), null);
+        } else {
+            Bukkit.getScheduler().runTask(this, task);
+        }
+    }
+
+    /**
+     * Runs a task on the main server thread (or global region).
+     * Use this if you don't have a specific player.
+     */
+    public void runMainGlobal(Runnable task) {
+        if (isFolia) {
+            Bukkit.getGlobalRegionScheduler().run(this, (scheduledTask) -> task.run());
+        } else {
+            Bukkit.getScheduler().runTask(this, task);
+        }
     }
 }

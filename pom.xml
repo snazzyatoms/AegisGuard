@@ -1,83 +1,115 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.aegisguard</groupId>
-  <artifactId>aegisguard</artifactId>
-  <version>1.0.0</version>
-  <name>AegisGuard</name>
-  <description>Lightweight, friendly land protection with GUIs</description>
+    <groupId>com.aegisguard</groupId>
+    <artifactId>aegisguard</artifactId>
+    <version>1.0.0</version>
+    <name>AegisGuard</name>
+    <description>Lightweight, friendly land protection with GUIs</description>
 
-  <properties>
-    <maven.compiler.release>17</maven.compiler.release>
-    <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
-    <vaultapi.version>1.7</vaultapi.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
+        <vaultapi.version>1.7</vaultapi.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-  <repositories>
-    <repository>
-      <id>papermc-repo</id>
-      <url>https://repo.papermc.io/repository/maven-public/</url>
-    </repository>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
+    <repositories>
+        <repository>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
-  <dependencies>
-    <!-- Paper API -->
-    <dependency>
-      <groupId>io.papermc.paper</groupId>
-      <artifactId>paper-api</artifactId>
-      <version>${paper.version}</version>
-      <scope>provided</scope>
-    </dependency>
+    <dependencies>
+        <!-- Paper API -->
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>${paper.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
-    <!-- Vault API -->
-    <dependency>
-      <groupId>com.github.MilkBowl</groupId>
-      <artifactId>VaultAPI</artifactId>
-      <version>${vaultapi.version}</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
+        <!-- Vault API -->
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>${vaultapi.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
-  <build>
-    <finalName>AegisGuard-${project.version}</finalName>
-    <plugins>
-      <!-- ✅ Works with older Maven (≥ 3.2.5) -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
-        <configuration>
-          <release>${maven.compiler.release}</release>
-        </configuration>
-      </plugin>
+    <build>
+        <finalName>AegisGuard-${project.version}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
 
-      <!-- Copy plugin.yml, messages.yml, config.yml -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
-        <configuration>
-          <encoding>UTF-8</encoding>
-        </configuration>
-      </plugin>
-    </plugins>
+            <!-- --- NEW: Maven Shade Plugin ---
+                 This is essential. It bundles any external libraries (like a database driver)
+                 into your plugin JAR and "relocates" them to prevent conflicts
+                 with other plugins. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <relocations>
+                        <!--
+                        EXAMPLE: If you add a database library (like HikariCP),
+                        you would uncomment this to move it from
+                        'com.zaxxer.hikari' to 'com.aegisguard.lib.hikari'.
+                        This prevents all plugin conflicts.
 
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>false</filtering>
-        <includes>
-          <include>plugin.yml</include>
-          <include>messages.yml</include>
-          <include>config.yml</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
+                        <relocation>
+                            <pattern>com.zaxxer.hikari</pattern>
+                            <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
+                        </relocation>
+                        -->
+                    </relocations>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <!-- --- MODIFIED: Resource Filtering ---
+             This is split into two parts.
+             1. Filtering is ENABLED for plugin.yml to replace ${project.version}.
+             2. Filtering is DISABLED for config.yml/messages.yml to
+                prevent it from accidentally corrupting them. -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
 </project>

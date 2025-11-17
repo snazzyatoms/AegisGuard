@@ -10,21 +10,21 @@
 # 🗣️ Message & Language System
 # ======================================
 messages:
-  language_style: "old_english"        # Default tone: old_english / hybrid_english / modern_english
-  allow_runtime_switch: true           # If true, allows live switching via GUI or command
+  language_style: "old_english"      # Default tone: old_english / hybrid_english / modern_english
+  allow_runtime_switch: true       # If true, allows live switching via GUI or command
   show_language_button_in_gui: true    # Displays the “Language Tone” selector in Settings GUI
 
 # ======================================
 # 💰 Economy (Global Defaults)
 # ======================================
-use_vault: true                        # Use Vault economy for claims
-claim_cost: 100.0                      # Cost (Vault currency) per claim
-item_cost:                             # Alternative cost if use_vault = false
+use_vault: true                     # Use Vault economy for claims
+claim_cost: 100.0                   # Cost (Vault currency) per claim
+item_cost:                          # Alternative cost if use_vault = false
   type: DIAMOND
   amount: 5
 
-refund_on_unclaim: false               # Enable refunding upon unclaim
-refund_percent: 0                      # Refund percentage (0 = none, 50 = half, etc.)
+refund_on_unclaim: false              # Enable refunding upon unclaim
+refund_percent: 0                   # Refund percentage (0 = none, 50 = half, etc.)
 
 # ======================================
 # 🧱 Claims & World Rules
@@ -41,6 +41,7 @@ claims:
   per_world:
     # 🏰 Overworld – balanced protection
     world:
+      allow_claims: true # --- ADDED --- (Required by WorldRulesManager)
       use_vault: true
       vault_cost: 200.0
       item_cost:
@@ -62,6 +63,7 @@ claims:
 
     # 🔥 Nether – harsh realm, PvP & mobs allowed
     world_nether:
+      allow_claims: true # --- ADDED ---
       use_vault: false
       item_cost:
         type: GOLD_INGOT
@@ -82,6 +84,7 @@ claims:
 
     # 🌌 The End – unclaimable and mysterious realm
     world_the_end:
+      allow_claims: false # --- ADDED ---
       max_claims_per_player: 0
       protections:
         pvp_protection: true
@@ -96,43 +99,85 @@ claims:
 # ======================================
 protections:
   pvp_protection: true
+  no_mobs_in_claims: true
   container_protection: true
   pets_protection: true
   entities_protection: true
   farm_protection: true
+  
+  # --- ADDED: ---
+  # These defaults are now read by AGConfig
+  pet_protection: true
+  farm_protection: true
 
 # ======================================
 # 🔊 Sounds & Immersion
+# --- SECTION UPDATED ---
 # ======================================
 sounds:
-  global_enabled: true                 # Global sound toggle
-  players: {}                          # Per-player overrides (auto-managed)
+  global_enabled: true             # Global sound toggle
+  players: {}                      # Per-player overrides (auto-managed)
+
+  # --- ADDED: Configurable UI Sounds ---
+  # (These are the defaults read by EffectUtil.java)
+  menu_open:
+    sound: BLOCK_CHEST_OPEN
+    volume: 0.7
+    pitch: 1.0
+  menu_flip:
+    sound: UI_BUTTON_CLICK
+    volume: 0.7
+    pitch: 1.2
+  menu_close:
+    sound: BLOCK_CHEST_CLOSE
+    volume: 0.7
+    pitch: 1.0
+  confirm:
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 0.7
+    pitch: 1.2
+  error:
+    sound: BLOCK_NOTE_BLOCK_BASS
+    volume: 1.0
+    pitch: 0.8
+  claim_success:
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 1.0
+    pitch: 1.2
+  unclaim:
+    sound: ENTITY_VILLAGER_NO
+    volume: 0.8
+    pitch: 0.9
 
 # ======================================
 # 🧾 Expansion Requests (Future System)
 # ======================================
 expansions:
-  enabled: true                        # Master toggle
-  approval_required: true              # Requires admin approval
+  enabled: true                    # Master toggle
+  approval_required: true          # Requires admin approval
   cost:
     use_vault: true
     amount: 250.0
-  cooldown_minutes: 30                 # Cooldown before next request
-  notify_admins: true                  # Notify admins of new requests
-  persistence: true                    # Keep requests across restarts
+  cooldown_minutes: 30             # Cooldown before next request
+  notify_admins: true              # Notify admins of new requests
+  persistence: true                # Keep requests across restarts
 
 # ======================================
 # 🛡️ Protection Effects (Feedback Visuals)
 # ======================================
 protection_effects:
   enabled: true
+  # This 'defaults' block is now correctly read by EffectUtil.java
   defaults:
     deny_sound: BLOCK_NOTE_BLOCK_BASS
     deny_particle: SMOKE_NORMAL
+    deny_volume: 1.0
+    deny_pitch: 1.0
     success_sound: ENTITY_EXPERIENCE_ORB_PICKUP
     success_particle: VILLAGER_HAPPY
     fail_sound: BLOCK_ANVIL_LAND
     fail_particle: SMOKE_NORMAL
+  # Per-category overrides
   pvp:
     deny_sound: ENTITY_ENDERMAN_TELEPORT
     deny_particle: REDSTONE
@@ -156,7 +201,7 @@ protection_effects:
 # 🧩 Admin Options
 # ======================================
 admin:
-  auto_remove_banned: false            # Remove all plots of banned players
-  bypass_claim_limit: false            # Admins ignore claim limit
-  broadcast_admin_actions: false       # Show admin actions globally
-  allow_language_command: true         # Enable /aegis language <style>
+  auto_remove_banned: false        # Remove all plots of banned players
+  bypass_claim_limit: false        # Admins ignore claim limit
+  broadcast_admin_actions: false   # Show admin actions globally
+  allow_language_command: true     # Enable /aegis language <style>

@@ -35,85 +35,64 @@ public class ExpansionRequestAdminGUI {
     /* -----------------------------
      * Title helper (fallback-safe)
      * ----------------------------- */
+// ... existing code ...
     private String title(Player player) {
-        String raw = plugin.msg().get(player, "expansion_admin_title");
-        if (raw != null && !raw.contains("Missing:")) {
-            return raw;
-        }
+// ... existing code ...
+        // ... existing code ...
         return "§b🛡 AegisGuard — Expansion Admin";
     }
 
     /* -----------------------------
      * Filler (subtle glass styling)
      * ----------------------------- */
+// ... existing code ...
     private ItemStack filler() {
-        ItemStack pane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = pane.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" ");
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
-            pane.setItemMeta(meta);
-        }
+// ... existing code ...
+        // ... existing code ...
         return pane;
     }
 
     /* -----------------------------
      * Open GUI
      * ----------------------------- */
+// ... existing code ...
     public void open(Player player) {
-        if (!player.hasPermission("aegis.admin")) {
-            plugin.msg().send(player, "no_perm");
-            return;
-        }
-
+// ... existing code ...
+        // ... existing code ...
         Inventory inv = Bukkit.createInventory(null, 27, title(player));
 
         // Fill background first for a polished look
-        ItemStack bg = filler();
+// ... existing code ...
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg);
 
         boolean enabled = plugin.getConfig().getBoolean("expansions.enabled", false);
 
-        // Toggle (left)
+        // Toggle (left) - SLOT 10
         inv.setItem(10, GUIManager.icon(
-                enabled ? Material.AMETHYST_SHARD : Material.GRAY_DYE,
-                enabled
-                        ? "§aExpansion Requests: Enabled"
-                        : "§7Expansion Requests: Disabled",
-                List.of(
-                        "§7Toggle acceptance of expansion requests.",
-                        "§8(Placeholder; full system arrives later)"
-                )
+// ... existing code ...
+        // ... existing code ...
         ));
 
-        // About (center)
+        // About (center) - SLOT 13
         inv.setItem(13, GUIManager.icon(
-                Material.BOOK,
-                "§bAbout Expansions",
-                List.of(
-                        "§7This is a preview panel.",
-                        "§7The complete Expansion workflow",
-                        "§7(approve/deny/review/costing) will",
-                        "§7ship in a future premium version."
-                )
+// ... existing code ...
+        // ... existing code ...
         ));
 
-        // Back (right)
+        // Back (right) - SLOT 16
         inv.setItem(16, GUIManager.icon(
-                Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
+// ... existing code ...
+        // ... existing code ...
         ));
 
-        // Exit (bottom-center)
+        // Exit (bottom-center) - SLOT 22
         inv.setItem(22, GUIManager.icon(
-                Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")
+// ... existing code ...
+        // ... existing code ...
         ));
 
         player.openInventory(inv);
-        plugin.sounds().playMenuOpen(player);
+// ... existing code ...
     }
 
     /* -----------------------------
@@ -123,34 +102,40 @@ public class ExpansionRequestAdminGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        switch (e.getCurrentItem().getType()) {
-            case AMETHYST_SHARD, GRAY_DYE -> {
+        // --- IMPROVEMENT ---
+        // Switched from Material to Slot for 100% reliability.
+        switch (e.getSlot()) {
+            case 10 -> { // Toggle (AMETHYST_SHARD or GRAY_DYE)
                 boolean cur = plugin.getConfig().getBoolean("expansions.enabled", false);
+
+                // --- IMPROVEMENT ---
+                // Set the value on the main thread
                 plugin.getConfig().set("expansions.enabled", !cur);
-                plugin.saveConfig();
+                // Save the config to disk on an async thread to prevent lag
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                    plugin.saveConfig();
+                });
+
                 plugin.sounds().playMenuFlip(player); // safe method that exists today
                 open(player); // refresh
             }
-            case BOOK -> {
+            case 13 -> { // About (BOOK)
                 // Mirror the "About" lore into chat for clarity
-                List<String> about = List.of(
-                        "§b[Expansions] §7This is a preview.",
-                        "§7The complete Expansion workflow (approve/deny/review/costing)",
-                        "§7will be available in a future premium release."
-                );
+// ... existing code ...
+                // ... existing code ...
                 for (String line : about) player.sendMessage(line);
                 plugin.sounds().playMenuFlip(player);
             }
-            case ARROW -> {
+            case 16 -> { // Back (ARROW)
                 // Return to Admin menu
-                plugin.gui().admin().open(player);
+                plugin.gui().admin().open(player); // This assumes plugin.gui() has an admin() getter
                 plugin.sounds().playMenuFlip(player);
             }
-            case BARRIER -> {
+            case 22 -> { // Exit (BARRIER)
                 player.closeInventory();
                 plugin.sounds().playMenuClose(player);
             }
-            default -> { /* ignore */ }
+            default -> { /* ignore clicks on filler glass */ }
         }
     }
 }

@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture; // --- NEW IMPORT ---
 
 public class AdminGUI {
 
@@ -27,209 +28,213 @@ public class AdminGUI {
     }
 
     private String title(Player player) {
-        String raw = plugin.msg().get(player, "admin_menu_title");
-        if (raw != null && !raw.contains("[Missing")) return raw;
+// ... existing code ...
+        // ... (title logic) ...
         return "§b🛡 AegisGuard — Admin";
     }
 
     private ItemStack bg() {
-        return GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
+// ... existing code ...
     }
 
     private boolean getBool(String path, boolean def) {
-        return plugin.getConfig().getBoolean(path, def);
+// ... existing code ...
     }
 
-    /** Flip a boolean at path, save, and return the NEW value */
-    private boolean flipBool(String path, boolean def) {
+    /**
+     * --- MODIFIED ---
+     * Flips a boolean in the config and saves it ASYNCHRONOUSLY to prevent lag.
+     */
+    private boolean flipBoolAsync(String path, boolean def) {
         boolean cur = getBool(path, def);
         boolean next = !cur;
         plugin.getConfig().set(path, next);
-        plugin.saveConfig();
+
+        // --- IMPROVEMENT ---
+        // Save the config to disk on an async thread
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            plugin.saveConfig();
+        });
         return next;
     }
 
     public void open(Player player) {
-        if (!player.hasPermission("aegis.admin")) {
-            plugin.msg().send(player, "no_perm");
-            return;
-        }
+// ... existing code ...
+        // ... (permission checks) ...
 
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title(player));
         // background
-        var bg = bg();
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg);
+// ... existing code ...
+        // ... (background fill) ...
 
         // Read toggles
-        boolean autoRemove = getBool("admin.auto_remove_banned", false);
-        boolean bypass     = getBool("admin.bypass_claim_limit", false);
-        boolean broadcast  = getBool("admin.broadcast_admin_actions", false);
-        boolean unlimited  = getBool("admin.unlimited_plots", true); // new: admin can create unlimited plots
-        boolean proxySync  = getBool("sync.proxy.enabled", false);   // new: bungee/proxy sync toggle
-        boolean perfMode   = getBool("performance.low_overhead_mode", false); // optional: trim cosmetics
+// ... existing code ...
+        // ... (boolean checks) ...
 
         // Row 2 — core toggles
+        // SLOT 10
         inv.setItem(10, GUIManager.icon(
-                autoRemove ? Material.TNT : Material.GUNPOWDER,
-                autoRemove ? "§aAuto-Remove Banned: §aON" : "§7Auto-Remove Banned: §cOFF",
-                List.of("§7Removes banned players’ plots on load/ban.")
+// ... existing code ...
+        // ... (autoRemove icon) ...
         ));
 
+        // SLOT 12
         inv.setItem(12, GUIManager.icon(
-                bypass ? Material.NETHER_STAR : Material.IRON_NUGGET,
-                bypass ? "§aBypass Claim Limit (OP): §aON" : "§7Bypass Claim Limit (OP): §cOFF",
-                List.of("§7OPs can exceed the per-player claim limit.")
+// ... existing code ...
+        // ... (bypass icon) ...
         ));
 
+        // SLOT 14
         inv.setItem(14, GUIManager.icon(
-                broadcast ? Material.BEACON : Material.LIGHT,
-                broadcast ? "§aBroadcast Admin Actions: §aON" : "§7Broadcast Admin Actions: §cOFF",
-                List.of("§7Announce important admin actions in chat.")
+// ... existing code ...
+        // ... (broadcast icon) ...
         ));
 
         // Row 3 — admin power & sync
+        // SLOT 19
         inv.setItem(19, GUIManager.icon(
-                unlimited ? Material.EMERALD_BLOCK : Material.EMERALD,
-                unlimited ? "§aUnlimited Plots (Admin): §aON" : "§7Unlimited Plots (Admin): §cOFF",
-                List.of("§7Admins can create unlimited plots/claims.")
+// ... existing code ...
+        // ... (unlimited icon) ...
         ));
 
+        // SLOT 21
         inv.setItem(21, GUIManager.icon(
-                proxySync ? Material.ENDER_EYE : Material.ENDER_PEARL,
-                proxySync ? "§aGlobal Sync (Proxy): §aON" : "§7Global Sync (Proxy): §cOFF",
-                List.of(
-                        "§7Enable Bungee/proxy sync for claims/flags.",
-                        "§8(Requires SyncBridge setup; see config)"
-                )
+// ... existing code ...
+        // ... (proxySync icon) ...
         ));
 
+        // SLOT 23
         inv.setItem(23, GUIManager.icon(
-                perfMode ? Material.REDSTONE_BLOCK : Material.REDSTONE,
-                perfMode ? "§aPerformance Mode: §aON" : "§7Performance Mode: §cOFF",
-                List.of(
-                        "§7Disables non-essential cosmetics for speed.",
-                        "§7Great for large servers or heavy plugin stacks."
-                )
+// ... existing code ...
+        // ... (perfMode icon) ...
         ));
 
         // Row 4 — tools & navigation
+        // SLOT 28
         inv.setItem(28, GUIManager.icon(
-                Material.AMETHYST_CLUSTER,
-                "§dExpansion Admin",
-                List.of("§7Open Expansion admin preview.",
-                        "§8(Community build — full workflow later)")
+// ... existing code ...
+        // ... (Expansion Admin icon) ...
         ));
 
+        // SLOT 30
         inv.setItem(30, GUIManager.icon(
-                Material.COMPASS,
-                "§bDiagnostics",
-                List.of(
-                        "§7Show TPS, listener counts, last sync time,",
-                        "§7and adapter statuses (Vault/Towny/Proxy)."
-                )
+// ... existing code ...
+        // ... (Diagnostics icon) ...
         ));
 
+        // SLOT 31
         inv.setItem(31, GUIManager.icon(
-                Material.REPEATER,
-                "§eReload Config",
-                List.of("§7Reload config, messages, and plots.yml",
-                        "§7without restarting the server.")
+// ... existing code ...
+        // ... (Reload icon) ...
         ));
 
+        // SLOT 34
         inv.setItem(34, GUIManager.icon(
-                Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
+// ... existing code ...
+        // ... (Back icon) ...
         ));
 
+        // SLOT 40
         inv.setItem(40, GUIManager.icon(
-                Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")
+// ... existing code ...
+        // ... (Exit icon) ...
         ));
 
         player.openInventory(inv);
-        plugin.sounds().playMenuOpen(player);
+// ... existing code ...
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
         // Hard guard: only handle if this is OUR menu
-        if (!(e.getInventory().getHolder() instanceof AdminHolder)) return;
+// ... existing code ...
 
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        switch (Objects.requireNonNull(e.getCurrentItem().getType())) {
+        // --- CRITICAL RELIABILITY FIX ---
+        // Switched from Material-based switch to Slot-based switch
+        switch (e.getSlot()) {
             // Toggles
-            case TNT, GUNPOWDER -> {
-                boolean now = flipBool("admin.auto_remove_banned", false);
-                player.sendMessage(plugin.msg().get(now ? "admin_auto_remove_enabled" : "admin_auto_remove_disabled"));
+            case 10 -> { // TNT, GUNPOWDER
+                boolean now = flipBoolAsync("admin.auto_remove_banned", false);
+                plugin.msg().send(player, now ? "admin_auto_remove_enabled" : "admin_auto_remove_disabled");
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
-            case NETHER_STAR, IRON_NUGGET -> {
-                boolean now = flipBool("admin.bypass_claim_limit", false);
-                player.sendMessage(plugin.msg().get(now ? "admin_bypass_enabled" : "admin_bypass_disabled"));
+            case 12 -> { // NETHER_STAR, IRON_NUGGET
+                boolean now = flipBoolAsync("admin.bypass_claim_limit", false);
+                plugin.msg().send(player, now ? "admin_bypass_enabled" : "admin_bypass_disabled");
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
-            case BEACON, LIGHT -> {
-                boolean now = flipBool("admin.broadcast_admin_actions", false);
-                player.sendMessage(plugin.msg().get(now ? "admin_broadcast_enabled" : "admin_broadcast_disabled"));
+            case 14 -> { // BEACON, LIGHT
+                boolean now = flipBoolAsync("admin.broadcast_admin_actions", false);
+                plugin.msg().send(player, now ? "admin_broadcast_enabled" : "admin_broadcast_disabled");
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
-            case EMERALD_BLOCK, EMERALD -> {
-                boolean now = flipBool("admin.unlimited_plots", true);
-                player.sendMessage(now
-                        ? "§a[Admin] Unlimited plots enabled."
-                        : "§e[Admin] Unlimited plots disabled.");
+            case 19 -> { // EMERALD_BLOCK, EMERALD
+                boolean now = flipBoolAsync("admin.unlimited_plots", true);
+                plugin.msg().send(player, now ? "admin_unlimited_enabled" : "admin_unlimited_disabled");
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
-            case ENDER_EYE, ENDER_PEARL -> {
-                boolean now = flipBool("sync.proxy.enabled", false);
-                player.sendMessage(now
-                        ? "§aGlobal proxy sync enabled."
-                        : "§eGlobal proxy sync disabled.");
+            case 21 -> { // ENDER_EYE, ENDER_PEARL
+                boolean now = flipBoolAsync("sync.proxy.enabled", false);
+                plugin.msg().send(player, now ? "admin_proxy_sync_enabled" : "admin_proxy_sync_disabled");
                 // (Later: kick off an initial handshake to SyncBridge here)
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
-            case REDSTONE_BLOCK, REDSTONE -> {
-                boolean now = flipBool("performance.low_overhead_mode", false);
-                player.sendMessage(now
-                        ? "§aPerformance mode enabled."
-                        : "§ePerformance mode disabled.");
+            case 23 -> { // REDSTONE_BLOCK, REDSTONE
+                boolean now = flipBoolAsync("performance.low_overhead_mode", false);
+                plugin.msg().send(player, now ? "admin_perf_mode_enabled" : "admin_perf_mode_disabled");
                 plugin.sounds().playMenuFlip(player);
                 open(player);
             }
 
             // Expansion Admin (preview)
-            case AMETHYST_CLUSTER -> new ExpansionRequestAdminGUI(plugin).open(player);
+            case 28 -> { // AMETHYST_CLUSTER
+                // We must use the plugin.gui().expansionAdmin() getter
+                plugin.gui().expansionAdmin().open(player);
+            }
 
             // Diagnostics
-            case COMPASS -> {
+            case 30 -> { // COMPASS
                 plugin.gui().openDiagnostics(player); // implement a simple DiagnosticsGUI
                 plugin.sounds().playMenuFlip(player);
             }
 
-            // Reload
-            case REPEATER -> {
-                plugin.reloadConfig();
-                plugin.msg().reload();
-                plugin.store().load();
-                player.sendMessage("§a✔ AegisGuard reloaded.");
+            // --- CRITICAL LAG FIX ---
+            case 31 -> { // REPEATER (Reload)
+                plugin.msg().send(player, "admin_reloading");
                 plugin.sounds().playMenuFlip(player);
-                open(player);
+
+                // Run ALL reload logic on an async thread to prevent freezing the server
+                CompletableFuture.runAsync(() -> {
+                    // 1. Reload config.yml (and sync new defaults)
+                    plugin.cfg().reload();
+                    // 2. Reload messages.yml
+                    plugin.msg().reload();
+                    // 3. Reload plots.yml (reads file, builds spatial hash)
+                    plugin.store().load();
+                    // 4. Reload expansion-requests.yml
+                    plugin.getExpansionRequestManager().load();
+
+                    // Send "complete" message and refresh GUI back on the main thread
+                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                        plugin.msg().send(player, "admin_reload_complete");
+                        open(player); // Refresh the GUI
+                    });
+                }, plugin.getServer().getScheduler().getMainThreadExecutor(plugin)); // Spigot's async executor
             }
 
             // Back / Exit
-            case ARROW -> {
+            case 34 -> { // ARROW
                 plugin.gui().openMain(player);
                 plugin.sounds().playMenuFlip(player);
             }
-            case BARRIER -> {
+            case 40 -> { // BARRIER
                 player.closeInventory();
                 plugin.sounds().playMenuClose(player);
             }

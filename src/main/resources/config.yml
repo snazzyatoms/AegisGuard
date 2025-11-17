@@ -27,6 +27,31 @@ refund_on_unclaim: false              # Enable refunding upon unclaim
 refund_percent: 0                   # Refund percentage (0 = none, 50 = half, etc.)
 
 # ======================================
+# ✨ Plot Upkeep / Rent
+# ======================================
+# This system automatically charges players to "rent" their claimed plots.
+# If they fail to pay, their plot will be automatically unclaimed.
+# This is a great way to clear abandoned plots and add an economy sink.
+upkeep:
+  enabled: false                    # Set to true to enable the plot upkeep system.
+  
+  # How often (in hours) the plugin should check every plot.
+  # A longer time (like 6 or 24) is better for performance.
+  check_interval_hours: 24
+  
+  # The cost (in Vault currency) per plot, per interval.
+  # Example: If interval is 24h and cost is 100, it costs 100 per day.
+  cost_per_plot: 100.0
+  
+  # How long (in days) a player has to pay for an overdue plot
+  # before it is automatically unclaimed.
+  grace_period_days: 7
+  
+  # (Item-based upkeep is not supported, as it would require
+  # the player to be online, which defeats the purpose).
+
+
+# ======================================
 # 🧱 Claims & World Rules
 # ======================================
 claims:
@@ -41,7 +66,7 @@ claims:
   per_world:
     # 🏰 Overworld – balanced protection
     world:
-      allow_claims: true # --- ADDED --- (Required by WorldRulesManager)
+      allow_claims: true
       use_vault: true
       vault_cost: 200.0
       item_cost:
@@ -63,7 +88,7 @@ claims:
 
     # 🔥 Nether – harsh realm, PvP & mobs allowed
     world_nether:
-      allow_claims: true # --- ADDED ---
+      allow_claims: true
       use_vault: false
       item_cost:
         type: GOLD_INGOT
@@ -84,7 +109,7 @@ claims:
 
     # 🌌 The End – unclaimable and mysterious realm
     world_the_end:
-      allow_claims: false # --- ADDED ---
+      allow_claims: false
       max_claims_per_player: 0
       protections:
         pvp_protection: true
@@ -104,21 +129,15 @@ protections:
   pets_protection: true
   entities_protection: true
   farm_protection: true
-  
-  # --- ADDED: ---
-  # These defaults are now read by AGConfig
-  pet_protection: true
-  farm_protection: true
 
 # ======================================
 # 🔊 Sounds & Immersion
-# --- SECTION UPDATED ---
 # ======================================
 sounds:
   global_enabled: true             # Global sound toggle
   players: {}                      # Per-player overrides (auto-managed)
 
-  # --- ADDED: Configurable UI Sounds ---
+  # --- Configurable UI Sounds ---
   # (These are the defaults read by EffectUtil.java)
   menu_open:
     sound: BLOCK_CHEST_OPEN
@@ -148,6 +167,22 @@ sounds:
     sound: ENTITY_VILLAGER_NO
     volume: 0.8
     pitch: 0.9
+
+# ======================================
+# ✨ Plot Visualization
+# ======================================
+visualization:
+  enabled: true
+  
+  # Particle to show for plot borders.
+  # Good values: FLAME, VILLAGER_HAPPY, END_ROD, REDSTONE
+  particle: "FLAME"
+  
+  # Color to use (R,G,B) IF particle is set to REDSTONE
+  color: "0,255,255" # A nice cyan
+  
+  # How often to refresh the particles (in ticks). 20 ticks = 1 second.
+  interval_ticks: 40 # 2 seconds
 
 # ======================================
 # 🧾 Expansion Requests (Future System)

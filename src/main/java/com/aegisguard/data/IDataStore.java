@@ -17,6 +17,8 @@ import java.util.UUID;
  * --- UPGRADE NOTES (Ultimate) ---
  * - Added getPlotsForSale() for the marketplace.
  * - Added getPlotsForAuction() for the auction system.
+ * - Added changePlotOwner() for the marketplace.
+ * - Added logWildernessBlock() and revertWildernessBlocks().
  */
 public interface IDataStore {
 
@@ -119,7 +121,28 @@ public interface IDataStore {
     void removePlayerRole(Plot plot, UUID playerUUID);
 
     /**
+     * --- NEW ---
+     * Atomically changes the owner of a plot.
+     * This must update the in-memory cache AND the database.
+     */
+    void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
+
+    /**
      * Runs the admin task to remove all plots owned by banned players.
      */
     void removeBannedPlots();
+    
+    // --- NEW: Wilderness Revert Methods ---
+    
+    /**
+     * Logs a block change in the wilderness to the database.
+     * This method MUST be called asynchronously.
+     */
+    void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
+    
+    /**
+     * Queries and reverts a batch of expired wilderness blocks.
+     * This method MUST be called asynchronously.
+     */
+    void revertWildernessBlocks(long timestamp, int limit);
 }

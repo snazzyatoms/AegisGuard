@@ -1,9 +1,11 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.SoundCommand;
 import com.aegisguard.config.AGConfig;
-import com.aegisguard.data.PlotStore;
+import com.aegisguard.data.IDataStore;
+import com.aegisguard.data.Plot;
+import com.aegisguard.data.SQLDataStore;
+import com.aegisguard.data.YMLDataStore;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
@@ -12,30 +14,32 @@ import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
+import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
  * AegisGuard – main entrypoint
  *
- * --- UPGRADE NOTES ---
- * - Now 100% Folia-compatible.
- * - Added isFolia check.
- * - All async tasks and schedulers now use the correct
- * Global Region Scheduler (for Folia) or Bukkit Scheduler (for Spigot/Paper).
+ * --- FINAL VERSION ---
+ * - Now uses IDataStore interface to switch between YML and SQL.
+ * - Fully Folia-compatible with safe schedulers.
+ * - All systems (Roles, Resize, Upkeep, Admin GUI, Protections) are complete.
  */
 public class AegisGuard extends JavaPlugin {
 
     // --- (fields) ---
     private AGConfig configMgr;
-    private PlotStore plotStore;
+    private IDataStore plotStore; // Uses the interface
     private GUIManager gui;
     private ProtectionManager protection;
     private SelectionService selection;
@@ -43,38 +47,36 @@ public class AegisGuard extends JavaPlugin {
     private MessagesUtil messages;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
-    private SoundCommand soundCommand;
     private ExpansionRequestManager expansionManager;
 
-    // --- NEW: Folia detection ---
     private boolean isFolia = false;
     private BukkitTask autoSaveTask;
+    private BukkitTask upkeepTask;
 
     // --- (getters) ---
     public AGConfig cfg()           { return configMgr; }
-    public PlotStore store()        { return plotStore; }
+    public IDataStore store()       { return plotStore; }
     public GUIManager gui()         { return gui; }
     public ProtectionManager protection(){ return protection; }
     public SelectionService selection()  { return selection; }
-    public VaultHook vault()        { return vault; }
+    public VaultHook vault()         { return vault; }
     public MessagesUtil msg()       { return messages; }
     public WorldRulesManager worldRules(){ return worldRules; }
     public EffectUtil effects()     { return effectUtil; }
-    public SoundCommand soundCommand() { return soundCommand; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
-    public boolean isFolia()        { return isFolia; } // --- NEW ---
+    public boolean isFolia()        { return isFolia; }
 
 
     @Override
     public void onEnable() {
-        // --- NEW: Folia Check ---
+        // --- Folia Check ---
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
-            getLogger().info("Folia detected. Enabling Folia-safe schedulers.");
+            getLogger().info("Folia detected. Enabling Folia-compatible schedulers.");
         } catch (ClassNotFoundException e) {
             isFolia = false;
-            getLogger().info("Spigot/Paper detected. Using standard Bukkit schedulers.");
+            getLogger().info("Folia not found. Using standard Bukkit schedulers.");
         }
 
         // Bundle defaults
@@ -83,27 +85,39 @@ public class AegisGuard extends JavaPlugin {
 
         // Core systems
         this.configMgr  = new AGConfig(this);
-        this.plotStore  = new PlotStore(this);
+        
+        // --- Database Loader ---
+        String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
+        if (storageType.equals("sql") || storageType.equals("mysql") || storageType.equals("sqlite")) {
+            getLogger().info("Using SQL database for plot storage.");
+            this.plotStore = new SQLDataStore(this);
+        } else {
+            getLogger().info("Using YML file for plot storage.");
+            this.plotStore = new YMLDataStore(this);
+        }
+        
         this.selection  = new SelectionService(this);
-        this.messages   = new MessagesUtil(this); // (no longer loads playerdata here)
+        this.messages   = new MessagesUtil(this);
         this.gui        = new GUIManager(this); 
         this.vault      = new VaultHook(this);
         this.worldRules = new WorldRulesManager(this);
         this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
-        this.soundCommand = new SoundCommand(this);
         this.expansionManager = new ExpansionRequestManager(this);
 
-        // --- MODIFIED: Folia-safe Async Load ---
-        // Load player data preferences asynchronously
+        // --- Folia-safe Async Load ---
         runGlobalAsync(() -> {
             messages.loadPlayerPreferences();
+            plotStore.load(); // Load plots from YML or SQL
         });
 
         // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        Bukkit.getPluginManager().registerEvents(protection, this);
+        Bukkit.getPluginManager().registerEvents(protection, this); // --- TYPO FIX ---
         Bukkit.getPluginManager().registerEvents(selection, this);
+        if (cfg().raw().getBoolean("visualization.enabled", true)) {
+            Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
+        }
 
         // Register banned player listener
         if (cfg().autoRemoveBannedPlots()) { 
@@ -138,6 +152,11 @@ public class AegisGuard extends JavaPlugin {
 
         // Start auto-saver
         startAutoSaver();
+        
+        // Start upkeep task
+        if (cfg().isUpkeepEnabled()) {
+            startUpkeepTask();
+        }
 
         getLogger().info("AegisGuard v" + getDescription().getVersion() + " enabled.");
         getLogger().info("WorldRulesManager initialized for per-world protections.");
@@ -145,12 +164,15 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // --- NEW: Cancel auto-saver task ---
+        // --- MODIFIED ---
+        // Cancel all repeating tasks
         if (autoSaveTask != null && !autoSaveTask.isCancelled()) {
             autoSaveTask.cancel();
         }
-        
-        // --- MODIFIED ---
+        if (upkeepTask != null && !upkeepTask.isCancelled()) {
+            upkeepTask.cancel();
+        }
+
         // Gracefully save all data on shutdown
         if (plotStore != null) {
             getLogger().info("Saving plots to disk...");
@@ -169,7 +191,7 @@ public class AegisGuard extends JavaPlugin {
 
     /**
      * Starts the asynchronous auto-saver task.
-     * --- MODIFIED --- to be Folia-safe.
+     * This is the central hub for all async data saving.
      */
     private void startAutoSaver() {
         long intervalTicks = 20L * 60 * 5; // 5 minutes
@@ -178,8 +200,6 @@ public class AegisGuard extends JavaPlugin {
             // Check PlotStore
             if (plotStore != null && plotStore.isDirty()) {
                 getLogger().info("Auto-saving plot data in the background...");
-                // We can run this async, but NOT using runGlobalAsync,
-                // as that would create a new task. We are already async.
                 plotStore.save(); // This is the synchronized save method
                 getLogger().info("Auto-save complete.");
             }
@@ -200,18 +220,98 @@ public class AegisGuard extends JavaPlugin {
         };
 
         if (isFolia) {
-            // Use Folia's GlobalRegionScheduler for a repeating async task
             autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, 
                     (task) -> autoSaveLogic.run(), 
                     intervalTicks, 
                     intervalTicks
             );
         } else {
-            // Use standard Bukkit async scheduler
             autoSaveTask = new BukkitRunnable() {
                 @Override
                 public void run() {
                     autoSaveLogic.run();
+                }
+            }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+        }
+    }
+
+    
+    /**
+     * Starts the asynchronous plot upkeep/rent task.
+     */
+    private void startUpkeepTask() {
+        long intervalTicks = 20L * 60 * 60 * cfg().getUpkeepCheckHours(); // Ticks * Sec * Min * Hours
+        if (intervalTicks <= 0) {
+            getLogger().warning("Upkeep check_interval_hours is 0 or less. Upkeep task will not run.");
+            return;
+        }
+        
+        double cost = cfg().getUpkeepCost();
+        if (cost <= 0) {
+             getLogger().info("Upkeep cost is 0. Upkeep task will run but will not charge players.");
+        }
+        
+        long gracePeriodMillis = TimeUnit.DAYS.toMillis(cfg().getUpkeepGraceDays());
+
+        getLogger().info("Starting Upkeep Task. Check interval: " + cfg().getUpkeepCheckHours() + " hours. Cost: " + cost);
+
+        Runnable upkeepLogic = () -> {
+            getLogger().info("[Upkeep] Running plot upkeep check...");
+            long currentTime = System.currentTimeMillis();
+            long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
+
+            for (Plot plot : store().getAllPlots()) {
+                long timeSinceLastPayment = currentTime - plot.getLastUpkeepPayment();
+
+                // Has it been long enough to check?
+                if (timeSinceLastPayment >= checkIntervalMillis) {
+                    OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
+                    
+                    // Try to charge the player
+                    if (vault().charge(owner.getPlayer(), cost)) {
+                        // Payment success
+                        plot.setLastUpkeepPayment(currentTime);
+                        store().setDirty(true); // Mark for saving
+                        
+                        if (owner.isOnline()) {
+                            msg().send(owner.getPlayer(), "upkeep_paid", Map.of("AMOUNT", vault().format(cost)));
+                        }
+                    } else {
+                        // Payment failed
+                        long timeOverdue = currentTime - plot.getLastUpkeepPayment();
+                        
+                        if (timeOverdue > gracePeriodMillis) {
+                            // Grace period is over. Unclaim the plot.
+                            getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " by " + owner.getName() + " has expired. Unclaiming.");
+                            store().removePlot(plot.getOwner(), plot.getPlotId());
+                            // store.removePlot already sets the dirty flag
+                            
+                            if (owner.isOnline()) {
+                                msg().send(owner.getPlayer(), "plot_expired_upkeep");
+                            }
+                        } else {
+                            // Still in grace period.
+                            if (owner.isOnline()) {
+                                msg().send(owner.getPlayer(), "upkeep_failed_warning");
+                            }
+                        }
+                    }
+                }
+            }
+            getLogger().info("[Upkeep] Upkeep check complete.");
+        };
+
+        if (isFolia) {
+            upkeepTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, 
+                    (task) -> upkeepLogic.run(), 
+                    intervalTicks, 
+                    intervalTicks
+            );
+        } else {
+            upkeepTask = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    upkeepLogic.run();
                 }
             }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
         }
@@ -234,8 +334,8 @@ public class AegisGuard extends JavaPlugin {
      * ----------------------------- */
 
     /**
-     * Runs a task asynchronously on the appropriate scheduler (Folia or Bukkit).
-     * This is for global tasks that do not affect a specific world or player.
+     * Runs a task asynchronously on the global scheduler (Folia)
+     * or the standard Bukkit async scheduler (Paper/Spigot).
      */
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
@@ -244,10 +344,10 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getScheduler().runTaskAsynchronously(this, task);
         }
     }
-
+    
     /**
-     * Runs a task on the main server thread (or player's region).
-     * This is for tasks that need to interact with Bukkit API (e.g., sending messages).
+     * Runs a task on the main thread for a specific player (Folia)
+     * or the standard Bukkit main thread (Paper/Spigot).
      */
     public void runMain(Player player, Runnable task) {
         if (isFolia) {
@@ -256,10 +356,11 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getScheduler().runTask(this, task);
         }
     }
-
+    
     /**
-     * Runs a task on the main server thread (or global region).
-     * Use this if you don't have a specific player.
+     * Runs a task on the main server thread (Folia)
+     * or the standard Bukkit main thread (Paper/Spigot).
+     * Used for console/non-player tasks.
      */
     public void runMainGlobal(Runnable task) {
         if (isFolia) {

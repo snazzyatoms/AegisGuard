@@ -10,6 +10,9 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.hooks.AegisPAPIExpansion;
+import com.aegisguard.hooks.DynmapHook;
+import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -23,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -48,23 +52,26 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
+    private DynmapHook dynmapHook;
 
     private boolean isFolia = false;
     private BukkitTask autoSaveTask;
     private BukkitTask upkeepTask;
+    private BukkitTask wildernessRevertTask;
+
 
     // --- (getters) ---
-    public AGConfig cfg()           { return configMgr; }
-    public IDataStore store()       { return plotStore; }
-    public GUIManager gui()         { return gui; }
-    public ProtectionManager protection(){ return protection; }
-    public SelectionService selection()  { return selection; }
-    public VaultHook vault()         { return vault; }
-    public MessagesUtil msg()       { return messages; }
-    public WorldRulesManager worldRules(){ return worldRules; }
-    public EffectUtil effects()     { return effectUtil; }
+    public AGConfig cfg() { return configMgr; }
+    public IDataStore store() { return plotStore; }
+    public GUIManager gui() { return gui; }
+    public ProtectionManager protection() { return protection; }
+    public SelectionService selection() { return selection; }
+    public VaultHook vault() { return vault; }
+    public MessagesUtil msg() { return messages; }
+    public WorldRulesManager worldRules() { return worldRules; }
+    public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
-    public boolean isFolia()        { return isFolia; }
+    public boolean isFolia() { return isFolia; }
 
 
     @Override
@@ -84,31 +91,35 @@ public class AegisGuard extends JavaPlugin {
         saveResource("messages.yml", false);
 
         // Core systems
-        this.configMgr  = new AGConfig(this);
+        this.configMgr = new AGConfig(this);
         
         // --- Database Loader ---
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.equals("sql") || storageType.equals("mysql") || storageType.equals("sqlite")) {
-            getLogger().info("Using SQL database for plot storage.");
             this.plotStore = new SQLDataStore(this);
+            getLogger().info("Using SQL data store.");
         } else {
-            getLogger().info("Using YML file for plot storage.");
             this.plotStore = new YMLDataStore(this);
+            getLogger().info("Using YML data store.");
         }
         
-        this.selection  = new SelectionService(this);
-        this.messages   = new MessagesUtil(this);
-        this.gui        = new GUIManager(this); 
-        this.vault      = new VaultHook(this);
+        this.selection = new SelectionService(this);
+        this.messages = new MessagesUtil(this);
+        this.gui = new GUIManager(this);
+        this.vault = new VaultHook(this);
         this.worldRules = new WorldRulesManager(this);
         this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
 
-        // --- Folia-safe Async Load ---
+        // --- CRITICAL: Load data BEFORE registering listeners ---
+        // Load plot data (YML or SQL) synchronously to prevent race conditions.
+        this.plotStore.load();
+        
+        // Load non-essential data asynchronously
         runGlobalAsync(() -> {
             messages.loadPlayerPreferences();
-            plotStore.load(); // Load plots from YML or SQL
+            expansionManager.load();
         });
 
         // Listeners
@@ -120,7 +131,7 @@ public class AegisGuard extends JavaPlugin {
         }
 
         // Register banned player listener
-        if (cfg().autoRemoveBannedPlots()) { 
+        if (cfg().autoRemoveBannedPlots()) {
             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
 
             // Also run an async check on startup
@@ -150,27 +161,59 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("No /aegisadmin command defined; admin tools will be unavailable.");
         }
 
-        // Start auto-saver
+        // --- Start All Background Tasks ---
         startAutoSaver();
         
-        // Start upkeep task
         if (cfg().isUpkeepEnabled()) {
             startUpkeepTask();
         }
+        
+        if (cfg().raw().getBoolean("wilderness_revert.enabled", false)) {
+            startWildernessRevertTask();
+        }
+        
+        // --- Initialize Plugin Hooks (PAPI, Dynmap) ---
+        initializeHooks();
 
         getLogger().info("AegisGuard v" + getDescription().getVersion() + " enabled.");
         getLogger().info("WorldRulesManager initialized for per-world protections.");
     }
+    
+    /**
+     * Initializes all plugin hooks (Dynmap, PAPI) safely.
+     */
+    private void initializeHooks() {
+        // Init Dynmap
+        try {
+             this.dynmapHook = new DynmapHook(this);
+        } catch (Exception e) {
+            getLogger().severe("Failed to initialize Dynmap hook!");
+            e.printStackTrace();
+        }
+        
+        // Init PlaceholderAPI
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            try {
+                new AegisPAPIExpansion(this).register();
+                getLogger().info("Successfully hooked into PlaceholderAPI.");
+            } catch (Exception e) {
+                getLogger().severe("Failed to initialize PlaceholderAPI hook!");
+                e.printStackTrace();
+            }
+        }
+    }
 
     @Override
     public void onDisable() {
-        // --- MODIFIED ---
         // Cancel all repeating tasks
         if (autoSaveTask != null && !autoSaveTask.isCancelled()) {
             autoSaveTask.cancel();
         }
         if (upkeepTask != null && !upkeepTask.isCancelled()) {
             upkeepTask.cancel();
+        }
+        if (wildernessRevertTask != null && !wildernessRevertTask.isCancelled()) {
+            wildernessRevertTask.cancel();
         }
 
         // Gracefully save all data on shutdown
@@ -190,6 +233,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     /**
+     * --- CRITICAL LAG FIX ---
      * Starts the asynchronous auto-saver task.
      * This is the central hub for all async data saving.
      */
@@ -197,11 +241,13 @@ public class AegisGuard extends JavaPlugin {
         long intervalTicks = 20L * 60 * 5; // 5 minutes
 
         Runnable autoSaveLogic = () -> {
+            // This code runs on an ASYNC thread
+            
             // Check PlotStore
             if (plotStore != null && plotStore.isDirty()) {
                 getLogger().info("Auto-saving plot data in the background...");
                 plotStore.save(); // This is the synchronized save method
-                getLogger().info("Auto-save complete.");
+                getLogger().info("Plot data auto-save complete.");
             }
 
             // Check ExpansionRequestManager
@@ -220,9 +266,9 @@ public class AegisGuard extends JavaPlugin {
         };
 
         if (isFolia) {
-            autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, 
-                    (task) -> autoSaveLogic.run(), 
-                    intervalTicks, 
+            autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this,
+                    (task) -> autoSaveLogic.run(),
+                    intervalTicks,
                     intervalTicks
             );
         } else {
@@ -237,10 +283,12 @@ public class AegisGuard extends JavaPlugin {
 
     
     /**
+     * --- CRITICAL LAG FIX ---
      * Starts the asynchronous plot upkeep/rent task.
+     * Handles EXPIRED -> AUCTION -> SOLD/DELETED lifecycle.
      */
     private void startUpkeepTask() {
-        long intervalTicks = 20L * 60 * 60 * cfg().getUpkeepCheckHours(); // Ticks * Sec * Min * Hours
+        long intervalTicks = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours()); // Ticks * Sec * Min * Hours
         if (intervalTicks <= 0) {
             getLogger().warning("Upkeep check_interval_hours is 0 or less. Upkeep task will not run.");
             return;
@@ -252,49 +300,112 @@ public class AegisGuard extends JavaPlugin {
         }
         
         long gracePeriodMillis = TimeUnit.DAYS.toMillis(cfg().getUpkeepGraceDays());
+        long auctionDurationMillis = TimeUnit.DAYS.toMillis(cfg().raw().getLong("auction.duration_days", 3));
 
         getLogger().info("Starting Upkeep Task. Check interval: " + cfg().getUpkeepCheckHours() + " hours. Cost: " + cost);
 
         Runnable upkeepLogic = () -> {
+            // This code runs on an ASYNC thread
             getLogger().info("[Upkeep] Running plot upkeep check...");
             long currentTime = System.currentTimeMillis();
             long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
 
-            for (Plot plot : store().getAllPlots()) {
+            // We must iterate over a snapshot, as removePlot can cause concurrent modification
+            for (Plot plot : new ArrayList<>(store().getAllPlots())) {
+                
+                // Skip Server Zones
+                if (plot.isServerZone()) continue;
+                
                 long timeSinceLastPayment = currentTime - plot.getLastUpkeepPayment();
+                OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
 
-                // Has it been long enough to check?
-                if (timeSinceLastPayment >= checkIntervalMillis) {
-                    OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-                    
-                    // Try to charge the player
+                // --- State 1: ACTIVE Plot ---
+                if (plot.getPlotStatus().equals("ACTIVE")) {
+                    if (timeSinceLastPayment < checkIntervalMillis) {
+                        continue; // Not time to check yet
+                    }
+
                     if (vault().charge(owner.getPlayer(), cost)) {
                         // Payment success
                         plot.setLastUpkeepPayment(currentTime);
-                        store().setDirty(true); // Mark for saving
-                        
+                        store().setDirty(true);
                         if (owner.isOnline()) {
-                            msg().send(owner.getPlayer(), "upkeep_paid", Map.of("AMOUNT", vault().format(cost)));
+                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_paid", Map.of("AMOUNT", vault().format(cost))));
                         }
                     } else {
-                        // Payment failed
-                        long timeOverdue = currentTime - plot.getLastUpkeepPayment();
-                        
-                        if (timeOverdue > gracePeriodMillis) {
-                            // Grace period is over. Unclaim the plot.
-                            getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " by " + owner.getName() + " has expired. Unclaiming.");
-                            store().removePlot(plot.getOwner(), plot.getPlotId());
-                            // store.removePlot already sets the dirty flag
+                        // Payment failed. Set to EXPIRED.
+                        plot.setPlotStatus("EXPIRED");
+                        // We reset the upkeep time to mark the *start* of the grace period
+                        plot.setLastUpkeepPayment(currentTime);
+                        store().setDirty(true);
+                        getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " by " + owner.getName() + " has expired. Grace period started.");
+                        if (owner.isOnline()) {
+                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_failed_warning"));
+                        }
+                    }
+                }
+                // --- State 2: EXPIRED Plot (Grace Period) ---
+                else if (plot.getPlotStatus().equals("EXPIRED")) {
+                    long timeInGrace = currentTime - plot.getLastUpkeepPayment();
+
+                    // Check if owner paid their debt (e.g., /ag payupkeep command - for now, just re-check balance)
+                    if (vault().charge(owner.getPlayer(), cost)) {
+                         plot.setPlotStatus("ACTIVE");
+                         plot.setLastUpkeepPayment(currentTime);
+                         store().setDirty(true);
+                         getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " by " + owner.getName() + " has been reclaimed.");
+                         if (owner.isOnline()) {
+                             runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_paid"));
+                         }
+                    } else if (timeInGrace > gracePeriodMillis) {
+                        // Grace period is over. Put up for AUCTION.
+                        plot.setPlotStatus("AUCTION");
+                        plot.setLastUpkeepPayment(currentTime); // Reset timer for auction duration
+                        plot.setCurrentBid(0, null); // Reset bids
+                        store().setDirty(true);
+                        getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " by " + owner.getName() + " is now for auction.");
+                        if (owner.isOnline()) {
+                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "plot-now-auctioned"));
+                        }
+                    }
+                }
+                // --- State 3: AUCTION Plot ---
+                else if (plot.getPlotStatus().equals("AUCTION")) {
+                    long timeInAuction = currentTime - plot.getLastUpkeepPayment();
+                    
+                    if (timeInAuction > auctionDurationMillis) {
+                        // Auction is OVER
+                        UUID winnerUUID = plot.getCurrentBidder();
+                        if (winnerUUID != null) {
+                            // We have a winner!
+                            OfflinePlayer winner = Bukkit.getOfflinePlayer(winnerUUID);
+                            double finalBid = plot.getCurrentBid();
                             
+                            // Pay owner cut (if any)
+                            double ownerCutPercent = plugin.cfg().raw().getDouble("auction.owner_cut_percent", 50);
+                            double ownerCut = finalBid * (ownerCutPercent / 100.0);
+                            plugin.vault().give(owner, ownerCut);
+                            
+                            // Transfer ownership
+                            getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " auction won by " + winner.getName() + " for " + finalBid);
+                            store().changePlotOwner(plot, winnerUUID, winner.getName());
+                            
+                            // Notify relevant parties
                             if (owner.isOnline()) {
-                                msg().send(owner.getPlayer(), "plot_expired_upkeep");
+                                runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "auction-sold", Map.of("PLAYER", winner.getName(), "AMOUNT", vault().format(ownerCut))));
+                            }
+                            if (winner.isOnline()) {
+                                runMain(winner.getPlayer(), () -> msg().send(winner.getPlayer(), "auction-won", Map.of("PLOT_OWNER", owner.getName(), "AMOUNT", vault().format(finalBid))));
                             }
                         } else {
-                            // Still in grace period.
+                            // No bids. Unclaim the plot.
+                            getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " expired with no bids. Unclaiming.");
+                            store().removePlot(plot.getOwner(), plot.getPlotId());
                             if (owner.isOnline()) {
-                                msg().send(owner.getPlayer(), "upkeep_failed_warning");
+                                runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "plot_expired_upkeep"));
                             }
                         }
+                        // store.changePlotOwner/removePlot already setDirty(true)
                     }
                 }
             }
@@ -302,9 +413,9 @@ public class AegisGuard extends JavaPlugin {
         };
 
         if (isFolia) {
-            upkeepTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, 
-                    (task) -> upkeepLogic.run(), 
-                    intervalTicks, 
+            upkeepTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this,
+                    (task) -> upkeepLogic.run(),
+                    intervalTicks,
                     intervalTicks
             );
         } else {
@@ -313,8 +424,20 @@ public class AegisGuard extends JavaPlugin {
                 public void run() {
                     upkeepLogic.run();
                 }
-            }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+            }.runTaskTimerAsynchronously(this, 20L * 60, intervalTicks); // 1-minute initial delay
         }
+    }
+    
+    /**
+     * Starts the asynchronous wilderness revert task.
+     */
+    private void startWildernessRevertTask() {
+        long intervalTicks = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
+        if (intervalTicks <= 0) intervalTicks = 20L * 60 * 10;
+        
+        // This task is fully async-safe and handles its own logic
+        wildernessRevertTask = new WildernessRevertTask(this, store)
+            .runTaskTimerAsynchronously(this, 20L * 60, intervalTicks); // 1-minute initial delay
     }
 
 
@@ -350,6 +473,11 @@ public class AegisGuard extends JavaPlugin {
      * or the standard Bukkit main thread (Paper/Spigot).
      */
     public void runMain(Player player, Runnable task) {
+        if (player == null) {
+            runMainGlobal(task);
+            return;
+        }
+        
         if (isFolia) {
             player.getScheduler().run(this, (scheduledTask) -> task.run(), null);
         } else {

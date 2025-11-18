@@ -1,8 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
-import com.aegisguard.data.PlotStore.Plot;
+import com.aegisguard.data.Plot; // --- FIX: Correct import ---
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -64,7 +63,11 @@ public class AdminPlotListGUI {
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / (double) PLOTS_PER_PAGE);
         if (page < 0) page = 0;
-        if (page >= maxPages) page = maxPages - 1;
+        if (page >= maxPages && maxPages > 0) { // Fix for empty list
+             page = maxPages - 1;
+        } else if (maxPages == 0) {
+            page = 0;
+        }
 
         String title = GUIManager.safeText(plugin.msg().get(player, "admin_plot_list_title"), "§cAll Plots")
                 + " §8(Page " + (page + 1) + "/" + Math.max(1, maxPages) + ")";
@@ -88,7 +91,13 @@ public class AdminPlotListGUI {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                meta.setOwningPlayer(owner);
+                // SetOwningPlayer can fail on offline/unknown players, fallback gracefully
+                try {
+                     meta.setOwningPlayer(owner);
+                } catch (Exception e) {
+                    // Use default steve head
+                }
+               
                 meta.setDisplayName("§bPlot by: §f" + plot.getOwnerName());
                 meta.setLore(List.of(
                         "§7ID: §e" + plot.getPlotId().toString().substring(0, 8),
@@ -155,12 +164,16 @@ public class AdminPlotListGUI {
 
             if (e.getClick().isLeftClick()) {
                 // Teleport
-                Location loc = new Location(
-                        Bukkit.getWorld(plot.getWorld()),
-                        (plot.getX1() + plot.getX2()) / 2.0,
-                        player.getLocation().getY(), // Keep admin's Y level
-                        (plot.getZ1() + plot.getZ2()) / 2.0
-                );
+                Location loc = plot.getCenter(plugin);
+                if (loc == null) {
+                     plugin.msg().send(player, "admin-plot-tp-fail-world");
+                     plugin.effects().playError(player);
+                     return;
+                }
+                
+                // Get a safe Y-level
+                loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1.5);
+                
                 player.teleport(loc);
                 player.closeInventory();
                 plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));

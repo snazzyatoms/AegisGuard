@@ -24,6 +24,16 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <!-- --- NEW: Dynmap Repo --- -->
+        <repository>
+            <id>dynmap-repo</id>
+            <url>https://repo.dynmap.us/mvn/</url>
+        </repository>
+        <!-- --- NEW: PlaceholderAPI Repo --- -->
+        <repository>
+            <id>placeholderapi-repo</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -42,6 +52,39 @@
             <version>${vaultapi.version}</version>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- --- NEW: Dynmap API --- -->
+        <dependency>
+            <groupId>us.dynmap</groupId>
+            <artifactId>dynmap-api</artifactId>
+            <version>3.7-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- --- NEW: PlaceholderAPI --- -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.6</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- --- NEW: HikariCP for SQL connection pooling (MUST BE SHADED) --- -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        
+        <!-- --- NEW: SQLite Driver (MUST BE SHADED) --- -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.45.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        
     </dependencies>
 
     <build>
@@ -56,10 +99,7 @@
                 </configuration>
             </plugin>
 
-            <!-- --- NEW: Maven Shade Plugin ---
-                 This is essential. It bundles any external libraries (like a database driver)
-                 into your plugin JAR and "relocates" them to prevent conflicts
-                 with other plugins. -->
+            <!-- --- CRITICAL: Maven Shade Plugin --- -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -74,27 +114,22 @@
                 </executions>
                 <configuration>
                     <relocations>
-                        <!--
-                        EXAMPLE: If you add a database library (like HikariCP),
-                        you would uncomment this to move it from
-                        'com.zaxxer.hikari' to 'com.aegisguard.lib.hikari'.
-                        This prevents all plugin conflicts.
-
+                        <!-- Relocate HikariCP -->
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
                             <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
                         </relocation>
-                        -->
+                        <!-- Relocate SQLite Driver -->
+                        <relocation>
+                            <pattern>org.sqlite</pattern>
+                            <shadedPattern>com.aegisguard.lib.sqlite</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
             </plugin>
         </plugins>
 
-        <!-- --- MODIFIED: Resource Filtering ---
-             This is split into two parts.
-             1. Filtering is ENABLED for plugin.yml to replace ${project.version}.
-             2. Filtering is DISABLED for config.yml/messages.yml to
-                prevent it from accidentally corrupting them. -->
+        <!-- --- MODIFIED: Resource Filtering --- -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

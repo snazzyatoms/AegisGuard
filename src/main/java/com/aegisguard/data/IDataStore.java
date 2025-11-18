@@ -13,6 +13,10 @@ import java.util.UUID;
  * IDataStore (Interface)
  * - This is a "contract" that all data storage systems must follow.
  * - This allows AegisGuard to switch between YML and SQL seamlessly.
+ *
+ * --- UPGRADE NOTES (Ultimate) ---
+ * - Added getPlotsForSale() for the marketplace.
+ * - Added getPlotsForAuction() for the auction system.
  */
 public interface IDataStore {
 
@@ -57,6 +61,20 @@ public interface IDataStore {
      * Gets all plots from all owners.
      */
     Collection<Plot> getAllPlots();
+
+    /**
+     * --- NEW ---
+     * Gets all plots that are currently for sale.
+     * @return A collection of plots.
+     */
+    Collection<Plot> getPlotsForSale();
+
+    /**
+     * --- NEW ---
+     * Gets all plots that are currently for auction.
+     * @return A collection of plots.
+     */
+    Collection<Plot> getPlotsForAuction();
 
     /**
      * Finds the plot at a specific Bukkit Location.

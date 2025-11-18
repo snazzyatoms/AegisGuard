@@ -18,6 +18,11 @@ import java.util.List;
 /**
  * Handles all /aegis sound ... subcommands.
  * This class is delegated to by AegisCommand.
+ *
+ * --- UPGRADE NOTES ---
+ * - PERMISSION FIX: Now uses correct "aegis.admin" permission.
+ * - CONFIG FIX: Now writes to correct "sounds.global_enabled" path.
+ * - LAG FIX: Now saves config asynchronously using Folia-safe scheduler.
  */
 public class SoundCommand implements CommandExecutor, TabCompleter {
 
@@ -36,7 +41,8 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!sender.hasPermission("aegisguard.admin")) {
+        // --- PERMISSION FIX ---
+        if (!sender.hasPermission("aegis.admin")) {
             plugin.msg().send(sender, "no_perm");
             return true;
         }
@@ -56,8 +62,13 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 boolean enable = args[1].equalsIgnoreCase("on");
-                plugin.getConfig().set("enable_sounds.global", enable);
-                plugin.saveConfig(); // saveConfig is async, so this is safe
+                
+                // --- CONFIG FIX ---
+                plugin.getConfig().set("sounds.global_enabled", enable);
+                
+                // --- LAG FIX ---
+                plugin.runGlobalAsync(plugin::saveConfig);
+                
                 sendMsg(sender, "&a✔ Global sounds " + (enable ? "enabled" : "disabled"));
             }
             case "player" -> {
@@ -71,8 +82,13 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 boolean enable = args[2].equalsIgnoreCase("on");
-                plugin.getConfig().set("enable_sounds.players." + target.getUniqueId(), enable);
-                plugin.saveConfig();
+
+                // --- CONFIG FIX ---
+                plugin.getConfig().set("sounds.players." + target.getUniqueId(), enable);
+                
+                // --- LAG FIX ---
+                plugin.runGlobalAsync(plugin::saveConfig);
+                
                 sendMsg(sender, "&a✔ Sounds for " + target.getName() + " " + (enable ? "enabled" : "disabled"));
             }
             default -> {
@@ -83,7 +99,6 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * --- NEW ---
      * Handles tab completion for /aegis sound ...
      */
     @Override

@@ -1,5 +1,6 @@
 package com.aegisguard;
 
+import com.aegisguard.selection.SelectionService;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -10,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -19,15 +21,17 @@ import java.util.List;
 
 /**
  * Handles all player-facing /aegis commands.
- * Replaces the onCommand logic from the main plugin class.
+ * --- UPGRADE NOTES ---
+ * - Added new "resize" subcommand.
  */
 public class AegisCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
 
-    // Subcommands for tab completion
-    private static final String[] SUB_COMMANDS = { "wand", "menu", "claim", "unclaim" };
-    private static final String[] ADMIN_SUB_COMMANDS = { "wand", "menu", "claim", "unclaim", "sound" };
+    // --- MODIFIED ---
+    private static final String[] SUB_COMMANDS = { "wand", "menu", "claim", "unclaim", "resize" };
+    private static final String[] ADMIN_SUB_COMMANDS = { "wand", "menu", "claim", "unclaim", "sound", "resize" };
+    private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
 
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
@@ -46,17 +50,58 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase()) {
-            case "wand" -> {
+            case "wand": {
                 p.getInventory().addItem(createScepter());
                 plugin.msg().send(p, "wand_given");
+                break;
             }
-            case "menu" -> plugin.gui().openMain(p);
-            case "claim" -> plugin.selection().confirmClaim(p);
-            case "unclaim" -> plugin.selection().unclaimHere(p);
+            case "menu": {
+                plugin.gui().openMain(p);
+                break;
+            }
+            case "claim": {
+                plugin.selection().confirmClaim(p);
+                break;
+            }
+            case "unclaim": {
+                plugin.selection().unclaimHere(p);
+                break;
+            }
+            
+            // --- NEW: Resize Command ---
+            case "resize": {
+                if (args.length < 3) {
+                    sendMsg(p, "&cUsage: /aegis resize <direction> <amount>");
+                    sendMsg(p, "&eDirections: &f" + String.join(", ", RESIZE_DIRECTIONS));
+                    return true;
+                }
+                String direction = args[1].toLowerCase();
+                int amount;
+                try {
+                    amount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    sendMsg(p, "&cAmount must be a number.");
+                    return true;
+                }
+                
+                if (amount <= 0) {
+                    sendMsg(p, "&cAmount must be positive.");
+                    return true;
+                }
 
-            case "sound" -> {
+                if (!Arrays.asList(RESIZE_DIRECTIONS).contains(direction)) {
+                    sendMsg(p, "&cInvalid direction. Use: &f" + String.join(", ", RESIZE_DIRECTIONS));
+                    return true;
+                }
+
+                // Let SelectionService handle the logic
+                plugin.selection().resizePlot(p, direction, amount);
+                break;
+            }
+
+            case "sound": {
                 // Admin: global toggle only
-                if (!p.hasPermission("aegisguard.admin")) {
+                if (!p.hasPermission("aegis.admin")) {
                     plugin.msg().send(p, "no_perm");
                     return true;
                 }
@@ -73,22 +118,21 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 plugin.getConfig().set("sounds.global_enabled", enable);
                 plugin.saveConfig();
                 plugin.msg().send(p, enable ? "sound_enabled" : "sound_disabled");
+                break;
             }
 
-            default -> plugin.msg().send(p, "usage_main");
+            default:
+                plugin.msg().send(p, "usage_main");
         }
         return true;
     }
 
-    /**
-     * Handles tab completion for /aegis
-     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             final List<String> completions = new ArrayList<>();
             // Use different command lists based on permission
-            List<String> commands = sender.hasPermission("aegisguard.admin") ?
+            List<String> commands = sender.hasPermission("aegis.admin") ?
                     Arrays.asList(ADMIN_SUB_COMMANDS) :
                     Arrays.asList(SUB_COMMANDS);
 
@@ -97,11 +141,21 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return completions;
         }
 
-        if (args.length == 2 && args[0].equalsIgnoreCase("sound") && sender.hasPermission("aegisguard.admin")) {
-            return Arrays.asList("global");
+        // --- NEW: Tab Completion for Resize ---
+        if (args.length == 2 && args[0].equalsIgnoreCase("resize")) {
+            final List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
+            return completions;
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("resize")) {
+            return Arrays.asList("1", "2", "3", "4", "5", "10");
         }
 
-        if (args.length == 3 && args[0].equalsIgnoreCase("sound") && args[1].equalsIgnoreCase("global") && sender.hasPermission("aegisguard.admin")) {
+        // --- (existing sound tab complete) ---
+        if (args.length == 2 && args[0].equalsIgnoreCase("sound") && sender.hasPermission("aegis.admin")) {
+            return Arrays.asList("global");
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("sound") && args[1].equalsIgnoreCase("global") && sender.hasPermission("aegis.admin")) {
             return Arrays.asList("on", "off");
         }
 
@@ -111,6 +165,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     /**
      * Utility: Create Aegis Scepter
      * (Moved from main class)
+     * Now adds a PersistentDataContainer tag to the wand.
      */
     private ItemStack createScepter() {
         ItemStack rod = new ItemStack(Material.LIGHTNING_ROD);
@@ -124,6 +179,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                     ChatColor.translateAlternateColorCodes('&', "&7Sneak + Left: Expand/Resize")
             ));
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+
+            // --- NEW ---
+            // Add the persistent NBT tag so we can identify this item reliably
+            meta.getPersistentDataContainer().set(SelectionService.WAND_KEY, PersistentDataType.BYTE, (byte) 1);
+
             rod.setItemMeta(meta);
         }
         return rod;

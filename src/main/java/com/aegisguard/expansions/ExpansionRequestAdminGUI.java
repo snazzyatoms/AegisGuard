@@ -1,176 +1,398 @@
 package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.GUIManager;
+import com.aegisguard.data.Plot; // --- FIX: Now imports the correct Plot class ---
+import com.aegisguard.economy.VaultHook;
+import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder; // --- NEW IMPORT ---
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * ExpansionRequestAdminGUI (Community v1.0.0)
+ * ExpansionRequestManager
  * ... (existing comments) ...
  *
  * --- UPGRADE NOTES ---
- * - CRITICAL: Added InventoryHolder for GUIListener to detect clicks.
- * - LAG FIX: Switched to Folia-safe async scheduler.
- * - SOUND FIX: Now uses plugin.effects() instead of plugin.sounds().
+ * - Now uses the correct `Plot.java` data class.
+ * - All data logic is async-safe.
  */
-public class ExpansionRequestAdminGUI {
+public class ExpansionRequestManager {
 
     private final AegisGuard plugin;
+    private final Map<UUID, ExpansionRequest> activeRequests = new ConcurrentHashMap<>();
 
-    public ExpansionRequestAdminGUI(AegisGuard plugin) {
+    // --- (fields for persistence) ---
+    private final File file;
+    private FileConfiguration data;
+    private volatile boolean isDirty = false;
+
+    public ExpansionRequestManager(AegisGuard plugin) {
         this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "expansion-requests.yml");
+        // load() is now called async from AegisGuard.java
+    }
+
+    /* -----------------------------
+     * Create Request
+     * ----------------------------- */
+    public boolean createRequest(Player requester, Plot plot, int newRadius) {
+        if (plot == null) {
+            plugin.msg().send(requester, "no_plot_here");
+            return false;
+        }
+
+        // Only owners may expand
+        if (!plot.getOwner().equals(requester.getUniqueId())) {
+            plugin.msg().send(requester, "no_perm");
+            return false;
+        }
+
+        // Check if this player already has a pending expansion
+        if (hasActiveRequest(requester.getUniqueId())) {
+            plugin.msg().send(requester, "expansion_exists");
+            return false;
+        }
+
+        // Check per-world rules
+        WorldRulesManager rules = plugin.worldRules();
+        if (!rules.allowClaims(requester.getWorld())) {
+            // We can re-use this message key from config.yml
+            plugin.msg().send(requester, "admin-zone-no-claims");
+            return false;
+        }
+
+        // Logic to handle plot-radius conflict. We assume plots are squares.
+        int currentRadius = (plot.getX2() - plot.getX1()) / 2;
+        if (newRadius <= currentRadius) {
+            plugin.msg().send(requester, "expansion_radius_too_small", Map.of("RADIUS", String.valueOf(currentRadius)));
+            return false;
+        }
+
+        // Calculate cost dynamically
+        double cost = calculateCost(requester.getWorld().getName(), currentRadius, newRadius);
+
+        // Create request record
+        ExpansionRequest request = new ExpansionRequest(
+                requester.getUniqueId(),
+                plot.getOwner(),
+                plot.getPlotId(), // <-- CRITICAL FIX
+                requester.getWorld().getName(),
+                currentRadius,
+                newRadius,
+                cost
+        );
+
+        activeRequests.put(requester.getUniqueId(), request);
+        setDirty(true); // Mark for saving
+
+        Map<String, String> placeholders = Map.of(
+                "PLAYER", requester.getName(),
+                "AMOUNT", String.format("%.2f", cost)
+        );
+
+        plugin.msg().send(requester, "expansion_submitted", placeholders);
+        plugin.getLogger().info("[AegisGuard] Expansion request submitted by " + requester.getName() +
+                " -> Radius: " + currentRadius + " -> " + newRadius);
+        return true;
+    }
+
+    /* -----------------------------
+     * Approve Request
+     * ----------------------------- */
+    public boolean approveRequest(ExpansionRequest req) {
+        if (req == null) return false;
+
+        OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
+
+        // Charge cost
+        if (!chargePlayer(requester, req.getCost(), req.getWorldName())) {
+            // Deny if payment fails
+            denyRequest(req);
+            // Notify admin if they are online
+            Player admin = Bukkit.getPlayer(req.getPlotOwner()); // Assuming admin is the plot owner
+            if (admin != null) {
+                plugin.msg().send(admin, "expansion_payment_failed", Map.of("PLAYER", requester.getName()));
+            }
+            return false;
+        }
+
+        // Apply expansion
+        Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
+        if (oldPlot == null) {
+            // Plot was deleted after request, refund and deny
+            plugin.getLogger().warning("Plot " + req.getPlotId() + " not found for approval. Refunding player.");
+            refundPlayer(requester, req.getCost(), req.getWorldName());
+            denyRequest(req);
+            return false;
+        }
+
+        // We must remove the old plot and create a new one
+        if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
+            // Failed to expand (e.g., overlap), refund and deny
+            plugin.getLogger().warning("Failed to apply expansion for " + req.getPlotId() + ". Refunding player.");
+            refundPlayer(requester, req.getCost(), req.getWorldName());
+            denyRequest(req);
+            return false;
+        }
+
+        req.approve();
+        activeRequests.remove(req.getRequester()); // Request is complete
+        setDirty(true); // Save the removal
+
+        // Notify requester (if online)
+        if (requester.isOnline()) {
+            plugin.msg().send(requester.getPlayer(), "expansion_approved", Map.of("PLAYER", "Admin"));
+        }
+
+        plugin.getLogger().info("[AegisGuard] Expansion approved for " + requester.getName() +
+                " (" + req.getCurrentRadius() + " -> " + req.getRequestedRadius() + ")");
+        return true;
     }
 
     /**
-     * --- NEW: Reliable Inventory Holder ---
+     * Helper method to replace the old plot with a new, larger one.
      */
-    public static class ExpansionAdminHolder implements InventoryHolder {
-        @Override
-        public Inventory getInventory() {
-            return null;
+    private boolean applyExpansion(Plot oldPlot, int newRadius) {
+        World world = Bukkit.getWorld(oldPlot.getWorld());
+        if (world == null) return false;
+
+        // 1. Find center
+        int cX = oldPlot.getX1() + (oldPlot.getX2() - oldPlot.getX1()) / 2;
+        int cZ = oldPlot.getZ1() + (oldPlot.getZ2() - oldPlot.getZ1()) / 2;
+
+        // 2. Define new corners
+        Location c1 = new Location(world, cX - newRadius, 0, cZ - newRadius);
+        Location c2 = new Location(world, cX + newRadius, 0, cZ + newRadius);
+        
+        // 3. Check for overlap
+        if (plugin.store().isAreaOverlapping(oldPlot, oldPlot.getWorld(), c1.getBlockX(), c1.getBlockZ(), c2.getBlockX(), c2.getBlockZ())) {
+            return false;
         }
+
+        // 4. Remove old plot
+        plugin.store().removePlot(oldPlot.getOwner(), oldPlot.getPlotId());
+
+        // 5. Create new plot (with all data from old plot)
+        Plot newPlot = new Plot(
+            oldPlot.getPlotId(), // Keep same ID
+            oldPlot.getOwner(),
+            oldPlot.getOwnerName(),
+            oldPlot.getWorld(),
+            c1.getBlockX(), c1.getBlockZ(),
+            c2.getBlockX(), c2.getBlockZ(),
+            oldPlot.getLastUpkeepPayment()
+        );
+        
+        // --- Restore all data ---
+        oldPlot.getFlags().forEach(newPlot::setFlag);
+        oldPlot.getPlayerRoles().forEach(newPlot::setRole);
+        newPlot.setSpawnLocation(oldPlot.getSpawnLocation());
+        newPlot.setWelcomeMessage(oldPlot.getWelcomeMessage());
+        newPlot.setFarewellMessage(oldPlot.getFarewellMessage());
+        // (Market/Auction/Cosmetic data is also preserved)
+        
+        plugin.store().addPlot(newPlot);
+        return true;
+    }
+
+
+    /* -----------------------------
+     * Deny Request
+     * ----------------------------- */
+    public boolean denyRequest(ExpansionRequest req) {
+        if (req == null) return false;
+
+        req.deny();
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(req.getRequester());
+        if (target.isOnline()) {
+            plugin.msg().send(target.getPlayer(), "expansion_denied", Map.of("PLAYER", "Admin"));
+        }
+
+        plugin.getLogger().info("[AegisGuard] Expansion request denied for " + target.getName());
+        activeRequests.remove(req.getRequester());
+        setDirty(true); // Save the removal
+        return true;
     }
 
     /* -----------------------------
-     * Title helper (fallback-safe)
+     * Cost Logic
      * ----------------------------- */
-    private String title(Player player) {
-        String raw = plugin.msg().get(player, "expansion_admin_title");
-        if (raw != null && !raw.contains("Missing:")) {
-            return raw;
-        }
-        return "§b🛡 AegisGuard — Expansion Admin";
+    private double calculateCost(String world, int currentRadius, int newRadius) {
+        // This is a placeholder. A real system would be more complex.
+        double baseCost = plugin.cfg().raw().getDouble("expansions.cost.amount", 250.0);
+        int delta = newRadius - currentRadius;
+        return Math.max(baseCost * delta, 0);
     }
 
-    /* -----------------------------
-     * Filler (subtle glass styling)
-     * ----------------------------- */
-    private ItemStack filler() {
-        ItemStack pane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = pane.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" ");
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
-            pane.setItemMeta(meta);
+    private boolean chargePlayer(OfflinePlayer player, double amount, String worldName) {
+        if (amount <= 0) return true;
+
+        if (plugin.cfg().useVault(player.getPlayer().getWorld())) {
+            VaultHook vault = plugin.vault();
+            if (!player.isOnline()) {
+                plugin.getLogger().warning("Vault charge failed: Player " + player.getName() + " is offline.");
+                return false;
+            }
+            return vault.charge(player.getPlayer(), amount);
+        } else {
+            // Item-based payment
+            if (!player.isOnline()) {
+                plugin.getLogger().warning("Item charge failed: Player " + player.getName() + " is offline.");
+                return false;
+            }
+            Player onlinePlayer = player.getPlayer();
+            if (onlinePlayer == null) return false;
+
+            Material item = plugin.cfg().getWorldItemCostType(player.getPlayer().getWorld());
+            int amountRequired = plugin.cfg().getWorldItemCostAmount(player.getPlayer().getWorld());
+
+            ItemStack costItem = new ItemStack(item, amountRequired);
+            if (!onlinePlayer.getInventory().containsAtLeast(costItem, amountRequired)) return false;
+
+            onlinePlayer.getInventory().removeItem(costItem);
+            return true;
         }
-        return pane;
     }
 
-    /* -----------------------------
-     * Open GUI
-     * ----------------------------- */
-    public void open(Player player) {
-        if (!player.hasPermission("aegis.admin")) {
-            plugin.msg().send(player, "no_perm");
-            return;
+    private void refundPlayer(OfflinePlayer player, double amount, String worldName) {
+        if (amount <= 0) return;
+
+        if (plugin.cfg().useVault(player.getPlayer().getWorld())) {
+            plugin.vault().give(player, amount);
+        } else {
+            if (!player.isOnline()) {
+                plugin.getLogger().warning("Could not refund items to " + player.getName() + ": Player is offline.");
+                return;
+            }
+            Player onlinePlayer = player.getPlayer();
+            if (onlinePlayer == null) return;
+
+            Material item = plugin.cfg().getWorldItemCostType(player.getPlayer().getWorld());
+            int amountToGive = plugin.cfg().getWorldItemCostAmount(player.getPlayer().getWorld());
+            ItemStack costItem = new ItemStack(item, amountToGive);
+
+            onlinePlayer.getInventory().addItem(costItem).forEach((index, itemStack) -> {
+                onlinePlayer.getWorld().dropItemNaturally(onlinePlayer.getLocation(), itemStack);
+            });
         }
-
-        // --- MODIFIED: Added InventoryHolder ---
-        Inventory inv = Bukkit.createInventory(new ExpansionAdminHolder(), 27, title(player));
-
-        // Fill background first for a polished look
-        ItemStack bg = filler();
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg);
-
-        boolean enabled = plugin.getConfig().getBoolean("expansions.enabled", false);
-
-        // Toggle (left) - SLOT 10
-        inv.setItem(10, GUIManager.icon(
-                enabled ? Material.AMETHYST_SHARD : Material.GRAY_DYE,
-                enabled
-                        ? "§aExpansion Requests: Enabled"
-                        : "§7Expansion Requests: Disabled",
-                List.of(
-                        "§7Toggle acceptance of expansion requests.",
-                        "§8(Placeholder; full system arrives later)"
-                )
-        ));
-
-        // About (center) - SLOT 13
-        inv.setItem(13, GUIManager.icon(
-                Material.BOOK,
-                "§bAbout Expansions",
-                List.of(
-                        "§7This is a preview panel.",
-                        "§7The complete Expansion workflow",
-                        "§7(approve/deny/review/costing) will",
-                        "§7ship in a future premium version."
-                )
-        ));
-
-        // Back (right) - SLOT 16
-        inv.setItem(16, GUIManager.icon(
-                Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
-        ));
-
-        // Exit (bottom-center) - SLOT 22
-        inv.setItem(22, GUIManager.icon(
-                Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")
-        ));
-
-        player.openInventory(inv);
-        plugin.effects().playMenuOpen(player); // --- SOUND FIX ---
     }
 
+
     /* -----------------------------
-     * Handle Clicks
-     * (This is called by GUIListener)
+     * Utilities
      * ----------------------------- */
-    public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+    public boolean hasActiveRequest(UUID requesterId) {
+        return activeRequests.containsKey(requesterId);
+    }
+    
+    public ExpansionRequest getRequest(UUID requesterId) {
+        return activeRequests.get(requesterId);
+    }
 
-        // Switched from Material to Slot for 100% reliability.
-        switch (e.getSlot()) {
-            case 10 -> { // Toggle (AMETHYST_SHARD or GRAY_DYE)
-                boolean cur = plugin.getConfig().getBoolean("expansions.enabled", false);
+    /**
+     * This is a placeholder. A real GUI would store this in the item's NBT.
+     */
+    public UUID getRequesterFromItem(ItemStack item) {
+        // This logic is obsolete as ExpansionRequestListener is no longer used.
+        return null;
+    }
 
-                // Set the value on the main thread
-                plugin.getConfig().set("expansions.enabled", !cur);
-                
-                // --- FOLIA FIX ---
-                // Save the config to disk on an async thread
-                plugin.runGlobalAsync(() -> {
-                    plugin.saveConfig();
-                });
 
-                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
-                open(player); // refresh
+    /* -----------------------------
+     * Persistence (NEW)
+     * ----------------------------- */
+    public boolean isDirty() {
+        return isDirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.isDirty = dirty;
+    }
+
+    public void saveSync() {
+        save();
+    }
+
+    public synchronized void load() {
+        try {
+            if (!file.exists()) {
+                file.getParentFile().mkdirs();
+                file.createNewFile();
             }
-            case 13 -> { // About (BOOK)
-                // Mirror the "About" lore into chat for clarity
-                List<String> about = List.of(
-                        "§b[Expansions] §7This is a preview.",
-                        "§7The complete Expansion workflow (approve/deny/review/costing)",
-                        "§7will be available in a future premium release."
-                );
-                for (String line : about) player.sendMessage(line);
-                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        data = YamlConfiguration.loadConfiguration(file);
+        activeRequests.clear();
+
+        if (data.isConfigurationSection("requests")) {
+            for (String requesterIdStr : data.getConfigurationSection("requests").getKeys(false)) {
+                try {
+                    UUID requesterId = UUID.fromString(requesterIdStr);
+                    String path = "requests." + requesterIdStr;
+
+                    ExpansionRequest req = new ExpansionRequest(
+                            requesterId,
+                            UUID.fromString(data.getString(path + ".owner")),
+                            UUID.fromString(data.getString(path + ".plotId")),
+                            data.getString(path + ".world"),
+                            data.getInt(path + ".currentRadius"),
+                            data.getInt(path + ".requestedRadius"),
+                            data.getDouble(path + ".cost")
+                    );
+
+                    // Restore state
+                    String status = data.getString(path + ".status", "PENDING");
+                    if (status.equals("APPROVED")) req.approve();
+                    if (status.equals("DENIED")) req.deny();
+
+                    // Only load pending requests into memory
+                    if (req.isPending()) {
+                        activeRequests.put(requesterId, req);
+                    }
+
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to load expansion request for: " + requesterIdStr);
+                }
             }
-            case 16 -> { // Back (ARROW)
-                // Return to Admin menu
-                plugin.gui().admin().open(player);
-                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
-            }
-            case 22 -> { // Exit (BARRIER)
-                player.closeInventory();
-                plugin.effects().playMenuClose(player); // --- SOUND FIX ---
-            }
-            default -> { /* ignore clicks on filler glass */ }
+        }
+    }
+
+    public synchronized void save() {
+        // Clear old data
+        data.set("requests", null);
+
+        for (ExpansionRequest req : activeRequests.values()) {
+            // We only save PENDING requests. Approved/Denied are removed.
+            if (!req.isPending()) continue;
+
+            String path = "requests." + req.getRequester().toString();
+            data.set(path + ".owner", req.getPlotOwner().toString());
+            data.set(path + ".plotId", req.getPlotId().toString());
+            data.set(path + ".world", req.getWorldName());
+            data.set(path + ".currentRadius", req.getCurrentRadius());
+            data.set(path + ".requestedRadius", req.getRequestedRadius());
+            data.set(path + ".cost", req.getCost());
+            data.set(path + ".status", req.getStatus());
+        }
+
+        try {
+            data.save(file);
+            isDirty = false;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -1,43 +1,65 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.aegisguard</groupId>
     <artifactId>aegisguard</artifactId>
     <version>1.0.0</version>
+    <packaging>jar</packaging>
+
     <name>AegisGuard</name>
     <description>Lightweight, friendly land protection with GUIs</description>
 
+    <!-- =========================
+         Properties
+    ========================== -->
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <!-- Compile with Java 21 (matches your jitpack.yml JDK) -->
+        <maven.compiler.release>21</maven.compiler.release>
+
+        <!-- Paper / plugin deps -->
         <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
         <vaultapi.version>1.7</vaultapi.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <!-- =========================
+         Repositories
+    ========================== -->
     <repositories>
+        <!-- PaperMC -->
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
+
+        <!-- JitPack (for VaultAPI, etc.) -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <!-- --- NEW: Dynmap Repo --- -->
+
+        <!-- Dynmap -->
         <repository>
             <id>dynmap-repo</id>
             <url>https://repo.dynmap.us/mvn/</url>
         </repository>
-        <!-- --- NEW: PlaceholderAPI Repo --- -->
+
+        <!-- PlaceholderAPI -->
         <repository>
             <id>placeholderapi-repo</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
     </repositories>
 
+    <!-- =========================
+         Dependencies
+    ========================== -->
     <dependencies>
-        <!-- Paper API -->
+        <!-- Paper API (provided by the server) -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -45,51 +67,55 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Vault API -->
+        <!-- Vault API (from JitPack, provided by server) -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
             <version>${vaultapi.version}</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- --- NEW: Dynmap API --- -->
+
+        <!-- Dynmap API (provided by server) -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
             <version>3.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- --- NEW: PlaceholderAPI --- -->
+
+        <!-- PlaceholderAPI (provided by server) -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.6</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- --- NEW: HikariCP for SQL connection pooling (MUST BE SHADED) --- -->
+
+        <!-- HikariCP (SHADED into your plugin) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
             <scope>compile</scope>
         </dependency>
-        
-        <!-- --- NEW: SQLite Driver (MUST BE SHADED) --- -->
+
+        <!-- SQLite Driver (SHADED into your plugin) -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.45.1.0</version>
             <scope>compile</scope>
         </dependency>
-        
     </dependencies>
 
+    <!-- =========================
+         Build & Plugins
+    ========================== -->
     <build>
         <finalName>AegisGuard-${project.version}</finalName>
+
         <plugins>
+            <!-- Java compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -99,7 +125,7 @@
                 </configuration>
             </plugin>
 
-            <!-- --- CRITICAL: Maven Shade Plugin --- -->
+            <!-- Shade plugin: bundles HikariCP + SQLite and relocates them -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -110,26 +136,28 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <!-- Only shade non-provided dependencies (HikariCP + sqlite) -->
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <relocations>
+                                <!-- Relocate HikariCP -->
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
+                                </relocation>
+                                <!-- Relocate SQLite Driver -->
+                                <relocation>
+                                    <pattern>org.sqlite</pattern>
+                                    <shadedPattern>com.aegisguard.lib.sqlite</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <relocations>
-                        <!-- Relocate HikariCP -->
-                        <relocation>
-                            <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
-                        </relocation>
-                        <!-- Relocate SQLite Driver -->
-                        <relocation>
-                            <pattern>org.sqlite</pattern>
-                            <shadedPattern>com.aegisguard.lib.sqlite</shadedPattern>
-                        </relocation>
-                    </relocations>
-                </configuration>
             </plugin>
         </plugins>
 
-        <!-- --- MODIFIED: Resource Filtering --- -->
+        <!-- Resource filtering for plugin.yml only -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

@@ -1,0 +1,11 @@
+# jitpack.yml
+jdk:
+  - openjdk21
+
+before_install:
+  # Just for logging / sanity check (optional)
+  - mvn -version
+
+install:
+  # Build and install to local Maven repo so JitPack can publish it
+  - mvn -B -DskipTests clean install

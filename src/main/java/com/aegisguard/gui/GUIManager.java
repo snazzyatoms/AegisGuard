@@ -1,7 +1,6 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import org.bukkit.Material;
@@ -15,13 +14,14 @@ import java.util.List;
 /**
  * GUIManager
  * - Central hub for all plugin GUIs.
- * - Provides access to GUI instances.
- * - Contains static helper methods for creating icons
- * to reduce code duplication (DRY principle).
+ * - Provides access to all GUI instances.
+ * - Contains static helper methods for creating icons.
  *
  * --- UPGRADE NOTES ---
- * - Removed the title-based handleClick() method. This logic is now
- * handled *exclusively* by GUIListener.java using reliable InventoryHolders.
+ * - This is the "Ultimate" version.
+ * - Removed the title-based handleClick() method (now handled by GUIListener).
+ * - Removed obsolete TrustedGUI.
+ * - Added all new GUIs (Roles, Flags, Cosmetics, Market, Auction, AdminList).
  */
 public class GUIManager {
 
@@ -29,36 +29,49 @@ public class GUIManager {
 
     // Sub GUIs
     private final PlayerGUI playerGUI;
-    private final TrustedGUI trustedGUI;
     private final SettingsGUI settingsGUI;
     private final AdminGUI adminGUI;
-    private final ExpansionRequestGUI expansionRequestGUI; // --- ADDED ---
+    private final ExpansionRequestGUI expansionRequestGUI;
     private final ExpansionRequestAdminGUI expansionAdminGUI;
+    private final RolesGUI rolesGUI;
+    private final PlotFlagsGUI plotFlagsGUI;
+    private final AdminPlotListGUI adminPlotListGUI;
+    private final PlotCosmeticsGUI plotCosmeticsGUI;
+    private final PlotMarketGUI plotMarketGUI;
+    private final PlotAuctionGUI plotAuctionGUI;
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         this.playerGUI = new PlayerGUI(plugin);
-        this.trustedGUI = new TrustedGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
-        this.expansionRequestGUI = new ExpansionRequestGUI(plugin); // --- ADDED ---
+        this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
         this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
+        this.rolesGUI = new RolesGUI(plugin); // Replaces TrustedGUI
+        this.plotFlagsGUI = new PlotFlagsGUI(plugin);
+        this.adminPlotListGUI = new AdminPlotListGUI(plugin);
+        this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
+        this.plotMarketGUI = new PlotMarketGUI(plugin);
+        this.plotAuctionGUI = new PlotAuctionGUI(plugin);
     }
 
     // --- Accessors ---
     public PlayerGUI player() { return playerGUI; }
-    public TrustedGUI trusted() { return trustedGUI; }
     public SettingsGUI settings() { return settingsGUI; }
     public AdminGUI admin() { return adminGUI; }
-    public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; } // --- ADDED ---
+    public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }
     public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
+    public RolesGUI roles() { return rolesGUI; }
+    public PlotFlagsGUI flags() { return plotFlagsGUI; }
+    public AdminPlotListGUI plotList() { return adminPlotListGUI; }
+    public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
+    public PlotMarketGUI market() { return plotMarketGUI; }
+    public PlotAuctionGUI auction() { return plotAuctionGUI; }
 
     /* -----------------------------
      * Open Main Menu (Player GUI)
      * ----------------------------- */
     public void openMain(Player player) {
-        // --- MODIFIED ---
-        // This is now the main entry point for /aegis
         playerGUI.open(player);
     }
 
@@ -79,15 +92,13 @@ public class GUIManager {
         if (meta != null) {
             meta.setDisplayName(name);
             if (lore != null) meta.setLore(lore);
-            // --- IMPROVEMENT --- Added all flags
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ITEM_SPECIFICS);
             item.setItemMeta(meta);
         }
         return item;
     }
 
     /**
-     * --- NEW ---
      * Safely gets a message string or returns a fallback.
      * Prevents [Missing message] from appearing in GUIs.
      */

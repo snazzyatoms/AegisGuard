@@ -18,8 +18,7 @@ import java.util.stream.Collectors;
  * YMLDataStore
  * - This is your old PlotStore, refactored to implement IDataStore.
  * - It manages plot data storage using plots.yml.
- * - All logic is now identical to SQLDataStore's cache, but this one
- * reads from and saves to YAML.
+ * - This is the "Ultimate" version, supporting all features.
  */
 public class YMLDataStore implements IDataStore {
 
@@ -88,6 +87,24 @@ public class YMLDataStore implements IDataStore {
                     if (world == null) continue; // skip corrupt entries
 
                     Plot plot = new Plot(plotId, owner, ownerName, world, x1, z1, x2, z2, lastUpkeep);
+
+                    // --- Load ALL Ultimate Fields ---
+                    plot.setSpawnLocationFromString(data.getString(path + ".spawn-location"));
+                    plot.setWelcomeMessage(data.getString(path + ".welcome-message"));
+                    plot.setFarewellMessage(data.getString(path + ".farewell-message"));
+                    
+                    plot.setForSale(data.getBoolean(path + ".market.is-for-sale", false), data.getDouble(path + ".market.sale-price", 0.0));
+                    plot.setForRent(data.getBoolean(path + ".market.is-for-rent", false), data.getDouble(path + ".market.rent-price", 0.0));
+                    plot.setRenter(data.getString(path + ".market.renter-uuid") != null ? UUID.fromString(data.getString(path + ".market.renter-uuid")) : null, data.getLong(path + ".market.rent-expires", 0L));
+
+                    plot.setPlotStatus(data.getString(path + ".plot-status", "ACTIVE"));
+                    plot.setCurrentBid(data.getDouble(path + ".auction.current-bid", 0.0),
+                                   data.getString(path + ".auction.current-bidder") != null ? UUID.fromString(data.getString(path + ".auction.current-bidder")) : null);
+
+                    plot.setBorderParticle(data.getString(path + ".cosmetics.border-particle"));
+                    plot.setAmbientParticle(data.getString(path + ".cosmetics.ambient-particle"));
+                    plot.setEntryEffect(data.getString(path + ".cosmetics.entry-effect"));
+
 
                     // --- MIGRATION & LOADING LOGIC ---
                     if (data.isConfigurationSection(path + ".trusted")) {
@@ -190,6 +207,31 @@ public class YMLDataStore implements IDataStore {
                 data.set(path + ".z2", plot.getZ2());
                 data.set(path + ".last-upkeep", plot.getLastUpkeepPayment());
 
+                // --- Save Welcome/TP ---
+                data.set(path + ".spawn-location", plot.getSpawnLocationString());
+                data.set(path + ".welcome-message", plot.getWelcomeMessage());
+                data.set(path + ".farewell-message", plot.getFarewellMessage());
+                
+                // --- Save Marketplace ---
+                data.set(path + ".market.is-for-sale", plot.isForSale() ? true : null); // null = delete if false
+                data.set(path + ".market.sale-price", plot.isForSale() ? plot.getSalePrice() : null);
+                data.set(path + ".market.is-for-rent", plot.isForRent() ? true : null);
+                data.set(path + ".market.rent-price", plot.isForRent() ? plot.getRentPrice() : null);
+                data.set(path + ".market.renter-uuid", plot.getCurrentRenter() != null ? plot.getCurrentRenter().toString() : null);
+                data.set(path + ".market.rent-expires", plot.getCurrentRenter() != null ? plot.getRentExpires() : null);
+                
+                // --- Save Status ---
+                data.set(path + ".plot-status", plot.getPlotStatus().equals("ACTIVE") ? null : plot.getPlotStatus());
+                
+                // --- Save Auction ---
+                data.set(path + ".auction.current-bid", plot.getCurrentBid() > 0 ? plot.getCurrentBid() : null);
+                data.set(path + ".auction.current-bidder", plot.getCurrentBidder() != null ? plot.getCurrentBidder().toString() : null);
+                
+                // --- Save Cosmetics ---
+                data.set(path + ".cosmetics.border-particle", plot.getBorderParticle());
+                data.set(path + ".cosmetics.ambient-particle", plot.getAmbientParticle());
+                data.set(path + ".cosmetics.entry-effect", plot.getEntryEffect());
+
                 // --- MODIFIED: Save Roles ---
                 data.set(path + ".trusted", null); // Clear the old "trusted" section
                 data.set(path + ".roles", null);   // Clear roles before saving
@@ -288,6 +330,20 @@ public class YMLDataStore implements IDataStore {
     public Collection<Plot> getAllPlots() {
         return plotsByOwner.values().stream()
                 .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Collection<Plot> getPlotsForSale() {
+        return getAllPlots().stream()
+                .filter(plot -> plot.isForSale() && "ACTIVE".equals(plot.getPlotStatus()))
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Collection<Plot> getPlotsForAuction() {
+        return getAllPlots().stream()
+                .filter(plot -> "AUCTION".equals(plot.getPlotStatus()))
                 .collect(Collectors.toList());
     }
 
@@ -391,7 +447,34 @@ public class YMLDataStore implements IDataStore {
             isDirty = true;
         }
     }
+    
+    @Override
+    public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
+        UUID oldOwner = plot.getOwner();
+        
+        // 1. Remove from old owner's list
+        List<Plot> oldList = plotsByOwner.get(oldOwner);
+        if (oldList != null) {
+            oldList.remove(plot);
+            if (oldList.isEmpty()) {
+                plotsByOwner.remove(oldOwner);
+            }
+        }
+        
+        // 2. Update plot object internals
+        plot.internalSetOwner(newOwner, newOwnerName);
+        
+        // 3. Add to new owner's list
+        plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
+        
+        // 4. Mark for save
+        isDirty = true;
+    }
 
+    /* -----------------------------
+     * Role Management API
+     * ----------------------------- */
+     
     @Override
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
         plot.setRole(playerUUID, role);
@@ -404,10 +487,26 @@ public class YMLDataStore implements IDataStore {
         isDirty = true;
     }
 
+    /* -----------------------------
+     * Admin Helpers
+     * ----------------------------- */
+     
     @Override
     public void removeBannedPlots() {
         for (OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
         }
+    }
+    
+    // --- NEW: Wilderness Revert Methods (STUBS) ---
+    
+    @Override
+    public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
+        // Not supported in YML mode.
+    }
+
+    @Override
+    public void revertWildernessBlocks(long timestamp, int limit) {
+        // Not supported in YML mode.
     }
 }

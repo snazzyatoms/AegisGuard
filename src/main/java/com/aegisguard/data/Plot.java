@@ -6,7 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 
-import java.util.Collections; // --- NEW IMPORT ---
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,19 +15,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Plot (Data Class)
- * - This class is now extracted from PlotStore to be used by all
- * data storage types (YML, SQL, etc).
- * - It represents a single protected plot.
- *
- * --- UPGRADE NOTES (Ultimate) ---
- * - Added fields for Plot Marketplace (sale/rent).
- * - Added fields for Plot Auctions (status).
- * - Added fields for Plot Cosmetics (particles/effects).
+ * - This is the "Ultimate" version of the Plot class.
+ * - It contains all fields for all plugin features.
  */
 public class Plot {
+    
+    // --- NEW: Special UUID for server-owned plots ---
+    public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     // --- Core Fields ---
     private final UUID plotId;
-    private final UUID owner;
+    private UUID owner; // No longer final, to allow for plot selling
     private String ownerName;
     private final String world;
     private final int x1, z1, x2, z2;
@@ -44,7 +42,7 @@ public class Plot {
     private String welcomeMessage;
     private String farewellMessage;
     
-    // --- NEW: Marketplace Fields ---
+    // --- Marketplace Fields ---
     private boolean isForSale;
     private double salePrice;
     private boolean isForRent;
@@ -52,10 +50,12 @@ public class Plot {
     private UUID currentRenter;
     private long rentExpires;
     
-    // --- NEW: Auction/Expiry Field ---
+    // --- Auction/Expiry Fields ---
     private String plotStatus; // "ACTIVE", "EXPIRED", "AUCTION"
+    private double currentBid; // --- ADDED ---
+    private UUID currentBidder; // --- ADDED ---
     
-    // --- NEW: Cosmetic Fields ---
+    // --- Cosmetic Fields ---
     private String borderParticle;
     private String ambientParticle;
     private String entryEffect;
@@ -87,7 +87,11 @@ public class Plot {
         flags.put("fire-spread", true);
         flags.put("piston-use", true);
         
-        // --- NEW: Initialize new fields ---
+        // --- ADDED: Default flags for Server Zones ---
+        flags.put("build", true);      // Default: Allow building
+        flags.put("interact", true);   // Default: Allow interaction
+
+        // --- Initialize new fields ---
         this.spawnLocation = null;
         this.welcomeMessage = null;
         this.farewellMessage = null;
@@ -100,6 +104,8 @@ public class Plot {
         this.rentExpires = 0L;
         
         this.plotStatus = "ACTIVE";
+        this.currentBid = 0.0; // --- ADDED ---
+        this.currentBidder = null; // --- ADDED ---
         
         this.borderParticle = null;
         this.ambientParticle = null;
@@ -130,6 +136,25 @@ public class Plot {
         double cZ = (z1 + z2) / 2.0;
         return new Location(world, cX, 64, cZ); // Y-level is arbitrary
     }
+    
+    // --- NEW: Server Zone Check ---
+    public boolean isServerZone() {
+        return owner.equals(SERVER_OWNER_UUID);
+    }
+    
+    // --- NEW: Internal Owner Set (for marketplace) ---
+    /**
+     * Internal method to transfer ownership.
+     * Clears all roles and sets the new owner.
+     */
+    public void internalSetOwner(UUID newOwner, String newOwnerName) {
+        this.owner = newOwner;
+        this.ownerName = newOwnerName;
+        // Clear all old roles
+        this.playerRoles.clear();
+        // Add the new owner
+        this.playerRoles.put(newOwner, "owner");
+    }
 
     // --- Role Methods ---
     public Map<UUID, String> getPlayerRoles() { return playerRoles; }
@@ -153,7 +178,7 @@ public class Plot {
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
         if (owner.equals(playerUUID)) return true; // Owner bypasses
         
-        // --- NEW: Check for Renter ---
+        // Check for Renter
         if (currentRenter != null && currentRenter.equals(playerUUID) && System.currentTimeMillis() < rentExpires) {
             // Renter gets "member" permissions
             if (plugin.cfg().getRolePermissions("member").contains(permission.toUpperCase())) {
@@ -187,7 +212,9 @@ public class Plot {
 
     public String getSpawnLocationString() {
         if (spawnLocation == null) return null;
-        return String.format("%.2f:%.2f:%.2f:%.2f:%.2f",
+        // Save world name as well
+        return String.format("%s:%.2f:%.2f:%.2f:%.2f:%.2f",
+                spawnLocation.getWorld().getName(),
                 spawnLocation.getX(),
                 spawnLocation.getY(),
                 spawnLocation.getZ(),
@@ -203,21 +230,37 @@ public class Plot {
         }
         try {
             String[] parts = s.split(":");
-            double x = Double.parseDouble(parts[0]);
-            double y = Double.parseDouble(parts[1]);
-            double z = Double.parseDouble(parts[2]);
-            float yaw = Float.parseFloat(parts[3]);
-            float pitch = Float.parseFloat(parts[4]);
-            World plotWorld = Bukkit.getWorld(this.world);
-            if (plotWorld != null) {
-                this.spawnLocation = new Location(plotWorld, x, y, z, yaw, pitch);
+            if (parts.length != 6) { // Backwards compatibility check
+                // Old format: x:y:z:yaw:pitch
+                if (parts.length == 5) {
+                     double x = Double.parseDouble(parts[0]);
+                     double y = Double.parseDouble(parts[1]);
+                     double z = Double.parseDouble(parts[2]);
+                     float yaw = Float.parseFloat(parts[3]);
+                     float pitch = Float.parseFloat(parts[4]);
+                     World plotWorld = Bukkit.getWorld(this.world); // Use plot's world
+                     if (plotWorld != null) {
+                         this.spawnLocation = new Location(plotWorld, x, y, z, yaw, pitch);
+                     }
+                }
+                return;
+            }
+            // New format: world:x:y:z:yaw:pitch
+            World world = Bukkit.getWorld(parts[0]);
+            if (world != null) {
+                double x = Double.parseDouble(parts[1]);
+                double y = Double.parseDouble(parts[2]);
+                double z = Double.parseDouble(parts[3]);
+                float yaw = Float.parseFloat(parts[4]);
+                float pitch = Float.parseFloat(parts[5]);
+                this.spawnLocation = new Location(world, x, y, z, yaw, pitch);
             }
         } catch (Exception e) {
             this.spawnLocation = null;
         }
     }
     
-    // --- NEW: Marketplace Getters/Setters ---
+    // --- Marketplace Getters/Setters ---
     public boolean isForSale() { return isForSale; }
     public void setForSale(boolean forSale, double price) {
         this.isForSale = forSale;
@@ -239,11 +282,18 @@ public class Plot {
         this.rentExpires = expirationTime;
     }
     
-    // --- NEW: Auction Getters/Setters ---
+    // --- Auction Getters/Setters ---
     public String getPlotStatus() { return plotStatus; }
     public void setPlotStatus(String status) { this.plotStatus = status; }
+    // --- ADDED ---
+    public double getCurrentBid() { return currentBid; }
+    public UUID getCurrentBidder() { return currentBidder; }
+    public void setCurrentBid(double bid, UUID bidder) {
+        this.currentBid = bid;
+        this.currentBidder = bidder;
+    }
 
-    // --- NEW: Cosmetic Getters/Setters ---
+    // --- Cosmetic Getters/Setters ---
     public String getBorderParticle() { return borderParticle; }
     public void setBorderParticle(String particle) { this.borderParticle = particle; }
     public String getAmbientParticle() { return ambientParticle; }

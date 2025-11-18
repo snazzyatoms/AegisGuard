@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder; // --- NEW IMPORT ---
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -15,14 +16,12 @@ import java.util.List;
 
 /**
  * ExpansionRequestAdminGUI (Community v1.0.0)
- * ------------------------------------------------------------
- * - Safe, self-contained, and compiles without any expansion backend.
- * - Lets admins toggle a single config switch: expansions.enabled
- * - Shows a polished "About" panel. No references to radius or managers.
- * - Uses only stable APIs (no msg().has()), with sensible fallbacks.
+ * ... (existing comments) ...
  *
- * NOTE: Keep the real AdminGUI class in com.aegisguard.gui.AdminGUI ONLY.
- * Do NOT duplicate this class name in AdminGUI.java.
+ * --- UPGRADE NOTES ---
+ * - CRITICAL: Added InventoryHolder for GUIListener to detect clicks.
+ * - LAG FIX: Switched to Folia-safe async scheduler.
+ * - SOUND FIX: Now uses plugin.effects() instead of plugin.sounds().
  */
 public class ExpansionRequestAdminGUI {
 
@@ -32,108 +31,144 @@ public class ExpansionRequestAdminGUI {
         this.plugin = plugin;
     }
 
+    /**
+     * --- NEW: Reliable Inventory Holder ---
+     */
+    public static class ExpansionAdminHolder implements InventoryHolder {
+        @Override
+        public Inventory getInventory() {
+            return null;
+        }
+    }
+
     /* -----------------------------
      * Title helper (fallback-safe)
      * ----------------------------- */
-// ... existing code ...
     private String title(Player player) {
-// ... existing code ...
-        // ... existing code ...
+        String raw = plugin.msg().get(player, "expansion_admin_title");
+        if (raw != null && !raw.contains("Missing:")) {
+            return raw;
+        }
         return "§b🛡 AegisGuard — Expansion Admin";
     }
 
     /* -----------------------------
      * Filler (subtle glass styling)
      * ----------------------------- */
-// ... existing code ...
     private ItemStack filler() {
-// ... existing code ...
-        // ... existing code ...
+        ItemStack pane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = pane.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
+            pane.setItemMeta(meta);
+        }
         return pane;
     }
 
     /* -----------------------------
      * Open GUI
      * ----------------------------- */
-// ... existing code ...
     public void open(Player player) {
-// ... existing code ...
-        // ... existing code ...
-        Inventory inv = Bukkit.createInventory(null, 27, title(player));
+        if (!player.hasPermission("aegis.admin")) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+
+        // --- MODIFIED: Added InventoryHolder ---
+        Inventory inv = Bukkit.createInventory(new ExpansionAdminHolder(), 27, title(player));
 
         // Fill background first for a polished look
-// ... existing code ...
+        ItemStack bg = filler();
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg);
 
         boolean enabled = plugin.getConfig().getBoolean("expansions.enabled", false);
 
         // Toggle (left) - SLOT 10
         inv.setItem(10, GUIManager.icon(
-// ... existing code ...
-        // ... existing code ...
+                enabled ? Material.AMETHYST_SHARD : Material.GRAY_DYE,
+                enabled
+                        ? "§aExpansion Requests: Enabled"
+                        : "§7Expansion Requests: Disabled",
+                List.of(
+                        "§7Toggle acceptance of expansion requests.",
+                        "§8(Placeholder; full system arrives later)"
+                )
         ));
 
         // About (center) - SLOT 13
         inv.setItem(13, GUIManager.icon(
-// ... existing code ...
-        // ... existing code ...
+                Material.BOOK,
+                "§bAbout Expansions",
+                List.of(
+                        "§7This is a preview panel.",
+                        "§7The complete Expansion workflow",
+                        "§7(approve/deny/review/costing) will",
+                        "§7ship in a future premium version."
+                )
         ));
 
         // Back (right) - SLOT 16
         inv.setItem(16, GUIManager.icon(
-// ... existing code ...
-        // ... existing code ...
+                Material.ARROW,
+                plugin.msg().get(player, "button_back"),
+                plugin.msg().getList(player, "back_lore")
         ));
 
         // Exit (bottom-center) - SLOT 22
         inv.setItem(22, GUIManager.icon(
-// ... existing code ...
-        // ... existing code ...
+                Material.BARRIER,
+                plugin.msg().get(player, "button_exit"),
+                plugin.msg().getList(player, "exit_lore")
         ));
 
         player.openInventory(inv);
-// ... existing code ...
+        plugin.effects().playMenuOpen(player); // --- SOUND FIX ---
     }
 
     /* -----------------------------
      * Handle Clicks
+     * (This is called by GUIListener)
      * ----------------------------- */
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        // --- IMPROVEMENT ---
         // Switched from Material to Slot for 100% reliability.
         switch (e.getSlot()) {
             case 10 -> { // Toggle (AMETHYST_SHARD or GRAY_DYE)
                 boolean cur = plugin.getConfig().getBoolean("expansions.enabled", false);
 
-                // --- IMPROVEMENT ---
                 // Set the value on the main thread
                 plugin.getConfig().set("expansions.enabled", !cur);
-                // Save the config to disk on an async thread to prevent lag
-                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                
+                // --- FOLIA FIX ---
+                // Save the config to disk on an async thread
+                plugin.runGlobalAsync(() -> {
                     plugin.saveConfig();
                 });
 
-                plugin.sounds().playMenuFlip(player); // safe method that exists today
+                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
                 open(player); // refresh
             }
             case 13 -> { // About (BOOK)
                 // Mirror the "About" lore into chat for clarity
-// ... existing code ...
-                // ... existing code ...
+                List<String> about = List.of(
+                        "§b[Expansions] §7This is a preview.",
+                        "§7The complete Expansion workflow (approve/deny/review/costing)",
+                        "§7will be available in a future premium release."
+                );
                 for (String line : about) player.sendMessage(line);
-                plugin.sounds().playMenuFlip(player);
+                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
             }
             case 16 -> { // Back (ARROW)
                 // Return to Admin menu
-                plugin.gui().admin().open(player); // This assumes plugin.gui() has an admin() getter
-                plugin.sounds().playMenuFlip(player);
+                plugin.gui().admin().open(player);
+                plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
             }
             case 22 -> { // Exit (BARRIER)
                 player.closeInventory();
-                plugin.sounds().playMenuClose(player);
+                plugin.effects().playMenuClose(player); // --- SOUND FIX ---
             }
             default -> { /* ignore clicks on filler glass */ }
         }

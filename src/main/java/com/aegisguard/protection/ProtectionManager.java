@@ -2,35 +2,48 @@ package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.PlotStore;
-import com.aegisguard.data.PlotStore.Plot; // --- NEW IMPORT ---
+import com.aegisguard.data.PlotStore.Plot;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace; // --- NEW IMPORT ---
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority; // --- NEW IMPORT ---
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockIgniteEvent; // --- NEW IMPORT ---
+import org.bukkit.event.block.BlockPistonExtendEvent; // --- NEW IMPORT ---
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent; // --- NEW IMPORT ---
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.ArrayList; // --- NEW IMPORT ---
+import java.util.List;
+
 /**
  * ProtectionManager (AegisGuard)
- * ... (existing comments) ...
+ * ---------------------------------------------
+ * Enforces per-plot flags:
+ * - pvp, containers, mobs, pets, entities, farm
+ * - safe_zone (master switch: if true, all protections apply)
  *
- * --- UPGRADE NOTES ---
- * - CRITICAL LAG FIX: toggleFlag() no longer calls flushSync(). It now sets the
- * PlotStore's dirty flag to use the async auto-saver.
- * - CRITICAL DESIGN FIX: The Flag API (isPvPEnabled, togglePvP, etc.)
- * now operates on a Plot object, not a Player's location.
- * - CLEANUP: All effect/sound logic has been moved to EffectUtil.java
+ * --- UPGRADE NOTES (Roles) ---
+ * - CRITICAL: Replaced all `canBuild(p, plot)` calls with the new
+ * granular `plot.hasPermission(uuid, "PERMISSION", plugin)` system.
+ * - This file now correctly uses the new Role-Based-Access-Control (RBAC).
+ *
+ * --- UPGRADE NOTES (Advanced Protections) ---
+ * - Added new handlers for TNT/Creeper explosions (onEntityExplode).
+ * - Added new handler for Fire Spread (onBlockIgnite).
+ * - Added new handler for Piston Griefing (onBlockPistonExtend).
+ * - Added new toggle methods for these flags.
  */
 public class ProtectionManager implements Listener {
 
@@ -42,6 +55,7 @@ public class ProtectionManager implements Listener {
 
     /* -----------------------------------------------------
      * EVENT HANDLERS — Build & Interact
+     * --- HEAVILY MODIFIED ---
      * ----------------------------------------------------- */
 
     @EventHandler
@@ -50,10 +64,10 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
         if (plot == null) return;
 
-        if (!canBuild(p, plot)) {
+        // --- MODIFIED ---
+        if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_break"));
-            // --- MODIFIED ---
             plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
         }
     }
@@ -64,10 +78,10 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
         if (plot == null) return;
 
-        if (!canBuild(p, plot)) {
+        // --- MODIFIED ---
+        if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_place"));
-            // --- MODIFIED ---
             plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
         }
     }
@@ -81,25 +95,34 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(block.getLocation());
         if (plot == null) return;
 
-        // Container access is protected for non-trusted when flag active (or safe_zone)
-        if (!canBuild(p, plot) && isContainer(block.getType()) && enabled(plot, "containers")) {
-            e.setCancelled(true);
-            p.sendMessage(plugin.msg().get("cannot_interact"));
-            // --- MODIFIED ---
-            plugin.effects().playEffect("containers", "deny", p, block.getLocation());
+        // --- MODIFIED ---
+        // Check for container permission
+        if (isContainer(block.getType())) {
+            if (enabled(plot, "containers") && !plot.hasPermission(p.getUniqueId(), "CONTAINERS", plugin)) {
+                e.setCancelled(true);
+                p.sendMessage(plugin.msg().get("cannot_interact"));
+                plugin.effects().playEffect("containers", "deny", p, block.getLocation());
+            }
+        // Check for basic interact permission (doors, buttons, etc)
+        } else if (isInteractable(block.getType())) {
+            if (enabled(plot, "interact") && !plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
+                 e.setCancelled(true);
+                 p.sendMessage(plugin.msg().get("cannot_interact"));
+                 plugin.effects().playEffect("interact", "deny", p, block.getLocation());
+            }
         }
     }
 
     /* -----------------------------------------------------
      * PVP & Entity Protections
+     * --- HEAVILY MODIFIED ---
      * ----------------------------------------------------- */
 
     @EventHandler
     public void onPvP(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
-
         Player attacker = resolveAttacker(e.getDamager());
-        if (attacker == null) return;
+        if (attacker == null || attacker.equals(victim)) return; // No self-harm
 
         Plot plot = plugin.store().getPlotAt(victim.getLocation());
         if (plot == null) return;
@@ -107,7 +130,6 @@ public class ProtectionManager implements Listener {
         if (enabled(plot, "pvp")) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_attack"));
-            // --- MODIFIED ---
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
         }
     }
@@ -118,21 +140,26 @@ public class ProtectionManager implements Listener {
 
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
+        
+        // Prevent player from harming their own pet
+        if (pet.getOwner() != null && pet.getOwner().getUniqueId().equals(attacker.getUniqueId())) {
+            return; 
+        }
 
         Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
         if (plot == null) return;
 
-        if (enabled(plot, "pets")) {
+        // --- MODIFIED ---
+        if (enabled(plot, "pets") && !plot.hasPermission(attacker.getUniqueId(), "PET_DAMAGE", plugin)) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_interact")); // reuse localized denial
-            // --- MODIFIED ---
             plugin.effects().playEffect("pets", "deny", attacker, pet.getLocation());
         }
     }
 
     @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent e) {
-// ... (existing logic for entity checks) ...
+        Entity clicked = e.getRightClicked();
         if (!(clicked instanceof ArmorStand
                 || clicked instanceof ItemFrame
                 || clicked instanceof GlowItemFrame
@@ -144,27 +171,42 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(clicked.getLocation());
         if (plot == null) return;
 
-        // Protect decorative entities for non-trusted
-        if (!canBuild(p, plot) && enabled(plot, "entities")) {
+        // --- MODIFIED ---
+        // Protect decorative entities for non-role players
+        if (enabled(plot, "entities") && !plot.hasPermission(p.getUniqueId(), "ENTITY_INTERACT", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_interact"));
-            // --- MODIFIED ---
             plugin.effects().playEffect("entities", "deny", p, clicked.getLocation());
         }
     }
 
     @EventHandler
     public void onTarget(EntityTargetEvent e) {
-// ... (existing logic is fine) ...
+        if (!(e.getTarget() instanceof Player p)) return;
+
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) return;
+
+        if (enabled(plot, "mobs") && e.getEntity() instanceof Monster) {
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent e) {
-// ... (existing logic is fine) ...
+        if (!(e.getEntity() instanceof Monster)) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getLocation());
+        if (plot == null) return;
+
+        if (enabled(plot, "mobs")) {
+            e.setCancelled(true);
+        }
     }
 
     /* -----------------------------------------------------
      * Crop / Farm Protections
+     * --- HEAVILY MODIFIED ---
      * ----------------------------------------------------- */
 
     @EventHandler
@@ -176,17 +218,93 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
         if (plot == null) return;
 
-        if (enabled(plot, "farm")) {
+        // --- MODIFIED ---
+        if (enabled(plot, "farm") && !plot.hasPermission(p.getUniqueId(), "FARM_TRAMPLE", plugin)) {
             e.setCancelled(true);
-            p.sendMessage(plugin.msg().get("cannot_interact")); // localized, simple denial
-            // --- MODIFIED ---
+            // Don't send a message, it's too spammy
             plugin.effects().playEffect("farm", "deny", p, e.getClickedBlock().getLocation());
         }
     }
 
     /* -----------------------------------------------------
+     * --- NEW: Advanced Protections ---
+     * ----------------------------------------------------- */
+
+    /**
+     * Prevents blocks from being destroyed by explosions (TNT, Creepers)
+     * if the 'tnt-damage' flag is enabled.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent e) {
+        // Iterate over a copy of the list to avoid errors while removing
+        for (Block block : new ArrayList<>(e.blockList())) {
+            Plot plot = plugin.store().getPlotAt(block.getLocation());
+            if (plot != null && enabled(plot, "tnt-damage")) {
+                // Remove this block from the list of blocks to be destroyed
+                e.blockList().remove(block);
+            }
+        }
+    }
+
+    /**
+     * Prevents fire from spreading or starting in a claim
+     * if the 'fire-spread' flag is enabled.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockIgnite(BlockIgniteEvent e) {
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+
+        // We only care about fire spread, not players using flint/steel
+        if (e.getCause() == BlockIgniteEvent.IgniteCause.SPREAD || e.getCause() == BlockIgniteEvent.IgniteCause.LAVA) {
+            if (enabled(plot, "fire-spread")) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    /**
+     * Prevents pistons from pushing blocks out of or pulling blocks into
+     * a protected claim, if the 'piston-use' flag is enabled.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockPistonExtend(BlockPistonExtendEvent e) {
+        Plot pistonPlot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        BlockFace direction = e.getDirection();
+
+        for (Block block : e.getBlocks()) {
+            // Get the location this block will be *moved to*
+            Location targetLoc = block.getLocation().add(direction.getModX(), direction.getModY(), direction.getModZ());
+            Plot targetPlot = plugin.store().getPlotAt(targetLoc);
+
+            // Case 1: Piston is OUTSIDE, pushing IN
+            if (pistonPlot == null && targetPlot != null) {
+                if (enabled(targetPlot, "piston-use")) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+            // Case 2: Piston is INSIDE, pushing OUT
+            else if (pistonPlot != null && targetPlot == null) {
+                if (enabled(pistonPlot, "piston-use")) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+            // Case 3: Piston is INSIDE, pushing INSIDE (different plot)
+            else if (pistonPlot != null && targetPlot != null && !pistonPlot.equals(targetPlot)) {
+                 if (enabled(pistonPlot, "piston-use") || enabled(targetPlot, "piston-use")) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+        }
+    }
+
+
+    /* -----------------------------------------------------
      * FLAG API (used by Settings GUI)
-     * --- HEAVILY MODIFIED ---
+     * --- MODIFIED ---
      * ----------------------------------------------------- */
 
     /**
@@ -247,21 +365,30 @@ public class ProtectionManager implements Listener {
     }
 
 
+    // --- NEW: Toggles for Advanced Protections ---
+    public boolean isTntDamageEnabled(Plot plot) { return hasFlag(plot, "tnt-damage"); }
+    public void    toggleTntDamage(Plot plot)    { toggleFlag(plot, "tnt-damage"); }
+    
+    public boolean isFireSpreadEnabled(Plot plot) { return hasFlag(plot, "fire-spread"); }
+    public void    toggleFireSpread(Plot plot)    { toggleFlag(plot, "fire-spread"); }
+    
+    public boolean isPistonUseEnabled(Plot plot) { return hasFlag(plot, "piston-use"); }
+    public void    togglePistonUse(Plot plot)    { toggleFlag(plot, "piston-use"); }
+
+
     /* -----------------------------------------------------
      * HELPERS
      * ----------------------------------------------------- */
 
     /** Master enable: true if safe_zone OR the flag itself is true. */
     private boolean enabled(Plot plot, String flag) {
-        // --- MODIFIED --- "safe_zone" defaults to TRUE in the plot object
+        // "safe_zone" defaults to TRUE in the plot object
         return plot.getFlag("safe_zone", true) || plot.getFlag(flag, true);
     }
 
-    private boolean canBuild(Player p, Plot plot) {
-        if (p.hasPermission("aegis.admin")) return true; // unified admin perm
-        if (p.getUniqueId().equals(plot.getOwner())) return true;
-        return plot.getTrusted().contains(p.getUniqueId());
-    }
+    // --- REMOVED ---
+    // private boolean canBuild(Player p, Plot plot) { ... }
+    // (This is now replaced by the plot.hasPermission() logic)
 
     /** Checks if a plot has a flag enabled. */
     private boolean hasFlag(Plot plot, String flag) {
@@ -269,7 +396,6 @@ public class ProtectionManager implements Listener {
     }
 
     private Player resolveAttacker(Entity damager) {
-// ... (existing logic is fine) ...
         if (damager instanceof Player dp) return dp;
         if (damager instanceof Projectile proj) {
             ProjectileSource src = proj.getShooter();
@@ -279,7 +405,7 @@ public class ProtectionManager implements Listener {
     }
 
     private boolean isContainer(Material type) {
-// ... (existing logic is fine) ...
+        // Cover common inventories + all colored shulker boxes
         if (type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX")) return true;
         return switch (type) {
             case CHEST, TRAPPED_CHEST, BARREL,
@@ -290,6 +416,15 @@ public class ProtectionManager implements Listener {
                  CHISELED_BOOKSHELF -> true;
             default -> false;
         };
+    }
+    
+    // --- NEW ---
+    private boolean isInteractable(Material type) {
+        String name = type.name();
+        if (name.endsWith("_DOOR") || name.endsWith("_GATE") || name.endsWith("_BUTTON") || type == Material.LEVER || type == Material.DAYLIGHT_DETECTOR) {
+            return true;
+        }
+        return false;
     }
 
     /* -----------------------------------------------------

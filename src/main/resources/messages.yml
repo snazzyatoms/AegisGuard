@@ -78,7 +78,37 @@ old_english:
   upkeep_paid: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered for thy plot's upkeep."
   upkeep_failed_warning: "&c❌ Warning! Thy coffers are empty. Tribute for thy plot's upkeep is due."
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
+  plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
+  # --- NEW: Plot Auction ---
+  plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
+  auction-gui-title: "&6Dominion Auctions"
+  auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
+  auction-already-highest: "&eThou art already the highest bidder."
+  auction-outbid: "&e{PLAYER} hath outbid thee for a dominion!"
+  auction-bid-success: "&a✔ Thou hast bid &6{AMOUNT}&a! Thou art now the highest bidder."
+  auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
+  auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
+  
+  # --- NEW: Plot Marketplace ---
+  market-gui-title: "&2Dominion Marketplace"
+  market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
+  market-buy-own: "&cThou canst not purchase thine own dominion."
+  market-buy-success: "&a✔ Thou hast purchased {PLAYER}'s dominion for &6{PRICE}&a!"
+  market-sold: "&a✔ {PLAYER} hath purchased thy dominion for &6{PRICE}&a!"
+  market-for-sale: "&a✔ Thy dominion is now for sale for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
+  market-rent-soon: "&ePlot renting shall be decreed in a future age."
+
+  # --- NEW: Welcome / TP ---
+  home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
+  home-fail-outside: "&c❌ Thou must stand within thy dominion to set its arrival point."
+  home-fail-no-spawn: "&c❌ Thine arrival point hath not yet been set! Use /ag setspawn."
+  welcome-set: "&a✔ Thy plot's welcome message hath been writ."
+  welcome-cleared: "&e✔ Thy plot's welcome message hath been erased."
+  farewell-set: "&a✔ Thy plot's farewell message hath been writ."
+  farewell-cleared: "&e✔ Thy plot's farewell message hath been erased."
+  
   # Claim lifecycle
   plot_created: "&a✔ Verily, thy land is now shielded under Aegis Guard."
   plot_unclaimed: "&e⚠ Thy claim hath been released unto the wilds."
@@ -105,7 +135,7 @@ old_english:
     - "&7Govern the laws (PvP, Mobs, etc)"
     - "&7for thy claim."
     
-  button_roles: "&ePlot Roles"
+  button_roles: "&eManage Roles"
   roles_lore:
     - "&7Grant roles to thy companions."
     
@@ -183,6 +213,14 @@ old_english:
     - "&7(PvP, mobs, containers, entities, pets, crops)"
   safe_zone_enabled: "&a🛡 Sanctuary is declared. All within is protected."
   safe_zone_disabled: "&c⚠ Sanctuary withdrawn. Individual wards now apply."
+  
+  # --- NEW: Cosmetics ---
+  button_cosmetics: "&dPlot Cosmetics"
+  cosmetics_lore:
+    - "&7Apply wondrous effects to thy plot."
+  cosmetics_gui_title: "&dDominion Cosmetics"
+  cosmetics_border_none: "&cDefault Particles"
+  cosmetic_purchased: "&a✔ Cosmetic unlocked and applied!"
 
   # Generic toggle feedback (used if needed)
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
@@ -227,6 +265,25 @@ old_english:
   admin_plot_teleport: "&eThou hast been spirited to the dominion of {PLAYER}."
   admin_plot_deleted: "&c✖ The dominion of {PLAYER} hath been struck from the records."
 
+  # --- NEW: Server Zones ---
+  admin-zone-created: "&a✔ A new Server Zone hath been decreed."
+  admin-zone-deleted: "&c✖ The Server Zone hath been dissolved."
+  admin-zone-not-found: "&c❌ Thou standest in no Server Zone."
+  admin_zone_flags_title: "&cServer Zone Wards"
+  flag_build_lore:
+    - "&7If ON, all players may build/break."
+    - "&cIf OFF, no players may build/break."
+  flag_containers_lore:
+    - "&7If ON, all players may use containers."
+    - "&cIf OFF, no players may use containers."
+  flag_interact_lore:
+    - "&7If ON, all players may use doors/buttons."
+    - "&cIf OFF, no players may use doors/buttons."
+    
+  # --- NEW: Wilderness Revert ---
+  wilderness_revert_start: "[AegisGuard] The spirits of the wild begin their work, cleansing the land of mortal scars..."
+  wilderness_revert_end: "[AegisGuard] The spirits have restored {AMOUNT} scars."
+
   # Help
   help_header: "&b⚔ &nThe Guardian’s Scroll of Instruction&r"
   help_lines:
@@ -236,6 +293,14 @@ old_english:
     - "&e/aegis claim &7- Bind land to thy will"
     - "&e/aegis unclaim &7- Release thine claim"
     - "&e/aegis resize <dir> <amt> &7- Expand thy dominion"
+    - "&e/aegis home &7- Travel to thy plot's arrival point"
+    - "&e/aegis setspawn &7- Set thy plot's arrival point"
+    - "&e/aegis welcome [msg] &7- Set a welcome message"
+    - "&e/aegis farewell [msg] &7- Set a farewell message"
+    - "&e/aegis sell <price> &7- Put thy plot up for sale"
+    - "&e/aegis unsell &7- Remove thy plot from the market"
+    - "&e/aegis market &7- View dominions for sale"
+    - "&e/aegis auction &7- View dominions for auction"
     - "&e/aegis help &7- Study this sacred guide"
     - "&7--------------------------------------"
 
@@ -271,6 +336,36 @@ hybrid_english:
   upkeep_paid: "&e💰 Payment of &6{AMOUNT}&e received for thy plot's upkeep."
   upkeep_failed_warning: "&c❌ Warning! Payment is due for thy plot's upkeep."
   plot_expired_upkeep: "&c❌ Thy plot has been unclaimed due to failed upkeep!"
+  plot-is-locked: "&c❌ This plot is locked and cannot be modified."
+
+  # --- NEW: Plot Auction ---
+  plot-now-auctioned: "&e⚠ Thy plot is now up for public auction!"
+  auction-gui-title: "&6Plot Auctions"
+  auction-bid-own: "&cThou canst not bid on thine own plot."
+  auction-already-highest: "&eThou art already the highest bidder."
+  auction-outbid: "&e{PLAYER} hath outbid you for a plot!"
+  auction-bid-success: "&a✔ Thou hast bid &6{AMOUNT}&a! You are now the highest bidder."
+  auction-sold: "&a✔ Thy plot was sold at auction to {PLAYER}. You received &6{AMOUNT}&a."
+  auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old plot for &6{AMOUNT}&a!"
+
+  # --- NEW: Plot Marketplace ---
+  market-gui-title: "&2Plot Marketplace"
+  market-teleport: "&eTeleporting you to {PLAYER}'s plot..."
+  market-buy-own: "&cYou can't buy your own plot."
+  market-buy-success: "&a✔ You bought {PLAYER}'s plot for &6{PRICE}&a!"
+  market-sold: "&a✔ {PLAYER} bought your plot for &6{PRICE}&a!"
+  market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Your plot is no longer for sale."
+  market-rent-soon: "&ePlot renting is coming soon."
+
+  # --- NEW: Welcome / TP ---
+  home-set-success: "&a✔ Plot spawn point set to your location."
+  home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
+  home-fail-no-spawn: "&c❌ You have not set a plot spawn! Use /ag setspawn."
+  welcome-set: "&a✔ Plot welcome message set."
+  welcome-cleared: "&e✔ Plot welcome message cleared."
+  farewell-set: "&a✔ Plot farewell message set."
+  farewell-cleared: "&e✔ Plot farewell message cleared."
 
   plot_created: "&a✔ Thy claim is secured by the Aegis."
   plot_unclaimed: "&e⚠ Thy claim is now unbound."
@@ -370,6 +465,14 @@ hybrid_english:
   safe_zone_enabled: "&a🛡 Safe Zone is enabled. All is protected."
   safe_zone_disabled: "&c⚠ Safe Zone disabled. Individual protections apply."
 
+  # --- NEW: Cosmetics ---
+  button_cosmetics: "&dPlot Cosmetics"
+  cosmetics_lore:
+    - "&7Apply cosmetic effects to thy plot."
+  cosmetics_gui_title: "&dPlot Cosmetics"
+  cosmetics_border_none: "&cDefault Particles"
+  cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
+
   flag_toggled: "&e⚙ {FLAG} protection is now &f{STATUS}&e."
 
   # --- MODIFIED: Roles GUI ---
@@ -412,6 +515,25 @@ hybrid_english:
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
+  # --- NEW: Server Zones ---
+  admin-zone-created: "&a✔ Server Zone created."
+  admin-zone-deleted: "&c✖ Server Zone deleted."
+  admin-zone-not-found: "&c❌ You are not in a Server Zone."
+  admin_zone_flags_title: "&cServer Zone Flags"
+  flag_build_lore:
+    - "&7If ON, all players may build/break."
+    - "&cIf OFF, no players may build/break."
+  flag_containers_lore:
+    - "&7If ON, all players may use containers."
+    - "&cIf OFF, no players may use containers."
+  flag_interact_lore:
+    - "&7If ON, all players may use doors/buttons."
+    - "&cIf OFF, no players may use doors/buttons."
+
+  # --- NEW: Wilderness Revert ---
+  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
+  wilderness_revert_end: "[AegisGuard] Successfully reverted {AMOUNT} blocks."
+
   # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
@@ -420,6 +542,14 @@ hybrid_english:
     - "&e/aegis claim &7- Claim thy chosen land"
     - "&e/aegis unclaim &7- Release thy claim"
     - "&e/aegis resize <dir> <amt> &7- Expand your plot"
+    - "&e/aegis home &7- Teleport to your plot's spawn"
+    - "&e/aegis setspawn &7- Set your plot's spawn point"
+    - "&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)"
+    - "&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)"
+    - "&e/aegis sell <price> &7- Sell your plot"
+    - "&e/aegis unsell &7- Stop selling your plot"
+    - "&e/aegis market &7- View plots for sale"
+    - "&e/aegis auction &7- View plots for auction"
     - "&e/aegis help &7- Learn the Codex commands"
 
 # ======================================
@@ -454,7 +584,37 @@ modern_english:
   upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for your plot's upkeep."
   upkeep_failed_warning: "&c❌ Warning! Payment for your plot's upkeep is due. Your plot is now in a grace period."
   plot_expired_upkeep: "&c❌ Your plot has been unclaimed for failure to pay upkeep!"
+  plot-is-locked: "&c❌ This plot is locked and cannot be modified."
 
+  # --- NEW: Plot Auction ---
+  plot-now-auctioned: "&e⚠ Your plot is now up for public auction!"
+  auction-gui-title: "&6Plot Auctions"
+  auction-bid-own: "&cYou cannot bid on your own plot."
+  auction-already-highest: "&eYou are already the highest bidder."
+  auction-outbid: "&e{PLAYER} has outbid you for a plot!"
+  auction-bid-success: "&a✔ You bid &6{AMOUNT}&a! You are now the highest bidder."
+  auction-sold: "&a✔ Your plot was sold at auction to {PLAYER}. You received &6{AMOUNT}&a."
+  auction-won: "&a✔ You won the auction for {PLOT_OWNER}'s old plot for &6{AMOUNT}&a!"
+
+  # --- NEW: Plot Marketplace ---
+  market-gui-title: "&2Plot Marketplace"
+  market-teleport: "&eTeleporting you to {PLAYER}'s plot..."
+  market-buy-own: "&cYou can't buy your own plot."
+  market-buy-success: "&a✔ You bought {PLAYER}'s plot for &6{PRICE}&a!"
+  market-sold: "&a✔ {PLAYER} bought your plot for &6{PRICE}&a!"
+  market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Your plot is no longer for sale."
+  market-rent-soon: "&ePlot renting is coming soon."
+
+  # --- NEW: Welcome / TP ---
+  home-set-success: "&a✔ Plot spawn point set to your location."
+  home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
+  home-fail-no-spawn: "&c❌ You have not set a plot spawn! Use /ag setspawn."
+  welcome-set: "&a✔ Plot welcome message set."
+  welcome-cleared: "&e✔ Plot welcome message cleared."
+  farewell-set: "&a✔ Plot farewell message set."
+  farewell-cleared: "&e✔ Plot farewell message cleared."
+  
   plot_created: "&a✔ Your claim has been created and protected."
   plot_unclaimed: "&e⚠ Your land has been unclaimed."
   no_plot_here: "&c❌ You’re not standing in your own claim."
@@ -554,6 +714,14 @@ modern_english:
   safe_zone_enabled: "&a🛡 Safe Zone: ON — this claim is fully protected."
   safe_zone_disabled: "&c⚠ Safe Zone: OFF — individual flags apply."
 
+  # --- NEW: Cosmetics ---
+  button_cosmetics: "&dPlot Cosmetics"
+  cosmetics_lore:
+    - "&7Apply cosmetic effects to your plot."
+  cosmetics_gui_title: "&dPlot Cosmetics"
+  cosmetics_border_none: "&cDefault Particles"
+  cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
+  
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
   # --- MODIFIED: Roles GUI ---
@@ -596,6 +764,25 @@ modern_english:
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
+  # --- NEW: Server Zones ---
+  admin-zone-created: "&a✔ Server Zone created."
+  admin-zone-deleted: "&c✖ Server Zone deleted."
+  admin-zone-not-found: "&c❌ You are not in a Server Zone."
+  admin_zone_flags_title: "&cServer Zone Flags"
+  flag_build_lore:
+    - "&7If ON, all players may build/break."
+    - "&cIf OFF, no players may build/break."
+  flag_containers_lore:
+    - "&7If ON, all players may use containers."
+    - "&cIf OFF, no players may use containers."
+  flag_interact_lore:
+    - "&7If ON, all players may use doors/buttons."
+    - "&cIf OFF, no players may use doors/buttons."
+
+  # --- NEW: Wilderness Revert ---
+  wilderness_revert_start: "[AegisGuard] Starting wilderness revert task..."
+  wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
+
   # Help
   help_header: "&b⚔ Guardian Codex Help"
   help_lines:
@@ -604,4 +791,12 @@ modern_english:
     - "&e/aegis claim &7- Claim land"
     - "&e/aegis unclaim &7- Unclaim your land"
     - "&e/aegis resize <dir> <amt> &7- Expand your plot"
+    - "&e/aegis home &7- Teleport to your plot's spawn"
+    - "&e/aegis setspawn &7- Set your plot's spawn point"
+    - "&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)"
+    - "&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)"
+    - "&e/aegis sell <price> &7- Sell your plot"
+    - "&e/aegis unsell &7- Stop selling your plot"
+    - "&e/aegis market &7- View plots for sale"
+    - "&e/aegis auction &7- View plots for auction"
     - "&e/aegis help &7- Show help"

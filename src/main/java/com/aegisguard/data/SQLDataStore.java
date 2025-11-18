@@ -4,8 +4,10 @@ import com.aegisguard.AegisGuard;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -15,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * SQLDataStore
  * - An implementation of IDataStore that uses SQL (SQLite or MySQL).
- * - All data is loaded into memory on startup and saved periodically.
+ * - This is the "Ultimate" version, supporting all features.
  * - This is a "write-through cache" implementation.
  */
 public class SQLDataStore implements IDataStore {
@@ -32,8 +35,6 @@ public class SQLDataStore implements IDataStore {
     private HikariDataSource hikari;
 
     // --- In-Memory Cache ---
-    // These are identical to YMLDataStore. All operations happen
-    // on this cache, and the database is updated.
     private final Map<UUID, List<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
     private volatile boolean isDirty = false;
@@ -51,29 +52,99 @@ public class SQLDataStore implements IDataStore {
             z2 INT NOT NULL,
             last_upkeep BIGINT NOT NULL,
             flags TEXT,
-            roles TEXT
+            roles TEXT,
+            spawn_location TEXT,
+            welcome_msg TEXT,
+            farewell_msg TEXT,
+            is_for_sale BOOLEAN DEFAULT false,
+            sale_price DOUBLE DEFAULT 0.0,
+            is_for_rent BOOLEAN DEFAULT false,
+            rent_price DOUBLE DEFAULT 0.0,
+            renter_uuid CHAR(36),
+            rent_expires BIGINT DEFAULT 0,
+            plot_status VARCHAR(16) DEFAULT 'ACTIVE',
+            border_particle VARCHAR(64),
+            ambient_particle VARCHAR(64),
+            entry_effect VARCHAR(64),
+            current_bid DOUBLE DEFAULT 0.0,
+            current_bidder CHAR(36)
         );
         """;
     private static final String CREATE_INDEXES = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid); CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world);";
     
+    // --- Wilderness Log Table ---
+    private static final String CREATE_WILDERNESS_TABLE = """
+        CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            world VARCHAR(64) NOT NULL,
+            x INT NOT NULL,
+            y INT NOT NULL,
+            z INT NOT NULL,
+            old_material VARCHAR(64) NOT NULL,
+            new_material VARCHAR(64) NOT NULL,
+            timestamp BIGINT NOT NULL,
+            player_uuid CHAR(36) NOT NULL
+        );
+        """;
+    private static final String CREATE_WILDERNESS_INDEX = "CREATE INDEX IF NOT EXISTS idx_wilderness_timestamp ON aegis_wilderness_log (timestamp);";
+
+    // --- Alter Table (for updates) ---
+    private static final String[] ALTER_TABLES = {
+        "ALTER TABLE aegis_plots ADD COLUMN spawn_location TEXT;",
+        "ALTER TABLE aegis_plots ADD COLUMN welcome_msg TEXT;",
+        "ALTER TABLE aegis_plots ADD COLUMN farewell_msg TEXT;",
+        "ALTER TABLE aegis_plots ADD COLUMN is_for_sale BOOLEAN DEFAULT false;",
+        "ALTER TABLE aegis_plots ADD COLUMN sale_price DOUBLE DEFAULT 0.0;",
+        "ALTER TABLE aegis_plots ADD COLUMN is_for_rent BOOLEAN DEFAULT false;",
+        "ALTER TABLE aegis_plots ADD COLUMN rent_price DOUBLE DEFAULT 0.0;",
+        "ALTER TABLE aegis_plots ADD COLUMN renter_uuid CHAR(36);",
+        "ALTER TABLE aegis_plots ADD COLUMN rent_expires BIGINT DEFAULT 0;",
+        "ALTER TABLE aegis_plots ADD COLUMN plot_status VARCHAR(16) DEFAULT 'ACTIVE';",
+        "ALTER TABLE aegis_plots ADD COLUMN border_particle VARCHAR(64);",
+        "ALTER TABLE aegis_plots ADD COLUMN ambient_particle VARCHAR(64);",
+        "ALTER TABLE aegis_plots ADD COLUMN entry_effect VARCHAR(64);",
+        "ALTER TABLE aegis_plots ADD COLUMN current_bid DOUBLE DEFAULT 0.0;",
+        "ALTER TABLE aegis_plots ADD COLUMN current_bidder CHAR(36);"
+    };
+    
     private static final String LOAD_PLOTS = "SELECT * FROM aegis_plots";
     
     private static final String UPSERT_PLOT = """
-        INSERT INTO aegis_plots (plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, last_upkeep, flags, roles)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO aegis_plots (
+            plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, last_upkeep, flags, roles, 
+            spawn_location, welcome_msg, farewell_msg,
+            is_for_sale, sale_price, is_for_rent, rent_price, renter_uuid, rent_expires,
+            plot_status, border_particle, ambient_particle, entry_effect,
+            current_bid, current_bidder
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(plot_id) DO UPDATE SET
         owner_name = EXCLUDED.owner_name,
-        x1 = EXCLUDED.x1,
-        z1 = EXCLUDED.z1,
-        x2 = EXCLUDED.x2,
-        z2 = EXCLUDED.z2,
+        x1 = EXCLUDED.x1, z1 = EXCLUDED.z1, x2 = EXCLUDED.x2, z2 = EXCLUDED.z2,
         last_upkeep = EXCLUDED.last_upkeep,
-        flags = EXCLUDED.flags,
-        roles = EXCLUDED.roles;
+        flags = EXCLUDED.flags, roles = EXCLUDED.roles,
+        spawn_location = EXCLUDED.spawn_location,
+        welcome_msg = EXCLUDED.welcome_msg, farewell_msg = EXCLUDED.farewell_msg,
+        is_for_sale = EXCLUDED.is_for_sale, sale_price = EXCLUDED.sale_price,
+        is_for_rent = EXCLUDED.is_for_rent, rent_price = EXCLUDED.rent_price,
+        renter_uuid = EXCLUDED.renter_uuid, rent_expires = EXCLUDED.rent_expires,
+        plot_status = EXCLUDED.plot_status,
+        border_particle = EXCLUDED.border_particle,
+        ambient_particle = EXCLUDED.ambient_particle,
+        entry_effect = EXCLUDED.entry_effect,
+        current_bid = EXCLUDED.current_bid,
+        current_bidder = EXCLUDED.current_bidder;
         """;
         
     private static final String DELETE_PLOT = "DELETE FROM aegis_plots WHERE plot_id = ?";
     private static final String DELETE_PLOTS_BY_OWNER = "DELETE FROM aegis_plots WHERE owner_uuid = ?";
+    private static final String UPDATE_PLOT_OWNER = "UPDATE aegis_plots SET owner_uuid = ?, owner_name = ?, roles = ?, is_for_sale = ? WHERE plot_id = ?";
+
+    // --- Wilderness Log Queries ---
+    private static final String LOG_WILDERNESS_BLOCK = "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String GET_REVERTABLE_BLOCKS = "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log WHERE timestamp < ? LIMIT ?";
+    private static final String DELETE_REVERTED_BLOCKS = "DELETE FROM aegis_wilderness_log WHERE id = ?";
+
 
     public SQLDataStore(AegisGuard plugin) {
         this.plugin = plugin;
@@ -104,7 +175,6 @@ public class SQLDataStore implements IDataStore {
                 hikari.setJdbcUrl(String.format("jdbc:mysql://%s:%d/%s", host, port, dbName));
                 hikari.setUsername(user);
                 hikari.setPassword(pass);
-                // Add MySQL specific properties
                 hikari.addDataSourceProperty("useSSL", dbConfig.getBoolean("useSSL", false));
                 hikari.addDataSourceProperty("cachePrepStmts", "true");
                 hikari.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -122,14 +192,29 @@ public class SQLDataStore implements IDataStore {
 
         // Create tables
         try (Connection conn = hikari.getConnection();
-             PreparedStatement psPlots = conn.prepareStatement(CREATE_PLOTS_TABLE);
-             PreparedStatement psIndexes = conn.prepareStatement(CREATE_INDEXES)) {
-            psPlots.execute();
-            psIndexes.execute();
+             Statement s = conn.createStatement()) {
+            
+            s.execute(CREATE_PLOTS_TABLE);
+            s.execute(CREATE_INDEXES);
+            s.execute(CREATE_WILDERNESS_TABLE);
+            s.execute(CREATE_WILDERNESS_INDEX);
+            
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create database tables: " + e.getMessage());
             e.printStackTrace();
             Bukkit.getPluginManager().disablePlugin(plugin);
+            return;
+        }
+        
+        // Update tables (add new columns if they don't exist)
+        for (String alterQuery : ALTER_TABLES) {
+            try (Connection conn = hikari.getConnection();
+                 Statement s = conn.createStatement()) {
+                s.execute(alterQuery);
+            } catch (SQLException e) {
+                // This is (usually) okay. It just means the column already exists.
+                // A better system would check metadata, but this is fine for SQLite/MySQL.
+            }
         }
     }
 
@@ -155,6 +240,23 @@ public class SQLDataStore implements IDataStore {
                     rs.getLong("last_upkeep")
                 );
 
+                // --- Load ALL Ultimate Fields ---
+                plot.setSpawnLocationFromString(rs.getString("spawn_location"));
+                plot.setWelcomeMessage(rs.getString("welcome_msg"));
+                plot.setFarewellMessage(rs.getString("farewell_msg"));
+                
+                plot.setForSale(rs.getBoolean("is_for_sale"), rs.getDouble("sale_price"));
+                plot.setForRent(rs.getBoolean("is_for_rent"), rs.getDouble("rent_price"));
+                plot.setRenter(rs.getString("renter_uuid") != null ? UUID.fromString(rs.getString("renter_uuid")) : null, rs.getLong("rent_expires"));
+
+                plot.setPlotStatus(rs.getString("plot_status"));
+                plot.setCurrentBid(rs.getDouble("current_bid"),
+                                   rs.getString("current_bidder") != null ? UUID.fromString(rs.getString("current_bidder")) : null);
+
+                plot.setBorderParticle(rs.getString("border_particle"));
+                plot.setAmbientParticle(rs.getString("ambient_particle"));
+                plot.setEntryEffect(rs.getString("entry_effect"));
+
                 // De-serialize flags and roles from TEXT
                 deserializeFlags(plot, rs.getString("flags"));
                 deserializeRoles(plot, rs.getString("roles"));
@@ -171,13 +273,10 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void save() {
-        // This is now a "write-through" method.
-        // It's called by the async auto-saver.
         if (!isDirty) return;
         
         plugin.getLogger().info("Saving all plot data to database...");
         
-        // We only save plots that are still in memory
         Collection<Plot> plotsToSave = getAllPlots();
         
         try (Connection conn = hikari.getConnection();
@@ -195,6 +294,27 @@ public class SQLDataStore implements IDataStore {
                 ps.setLong(9, plot.getLastUpkeepPayment());
                 ps.setString(10, serializeFlags(plot));
                 ps.setString(11, serializeRoles(plot));
+                
+                ps.setString(12, plot.getSpawnLocationString());
+                ps.setString(13, plot.getWelcomeMessage());
+                ps.setString(14, plot.getFarewellMessage());
+                
+                ps.setBoolean(15, plot.isForSale());
+                ps.setDouble(16, plot.getSalePrice());
+                ps.setBoolean(17, plot.isForRent());
+                ps.setDouble(18, plot.getRentPrice());
+                ps.setString(19, plot.getCurrentRenter() != null ? plot.getCurrentRenter().toString() : null);
+                ps.setLong(20, plot.getRentExpires());
+                
+                ps.setString(21, plot.getPlotStatus());
+                
+                ps.setString(22, plot.getBorderParticle());
+                ps.setString(23, plot.getAmbientParticle());
+                ps.setString(24, plot.getEntryEffect());
+                
+                ps.setDouble(25, plot.getCurrentBid());
+                ps.setString(26, plot.getCurrentBidder() != null ? plot.getCurrentBidder().toString() : null);
+                
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -208,8 +328,6 @@ public class SQLDataStore implements IDataStore {
     
     @Override
     public void saveSync() {
-        // In this model, save() is already synchronous *relative to the calling thread*.
-        // The auto-saver calls it async, onDisable calls it sync.
         save();
     }
 
@@ -241,6 +359,20 @@ public class SQLDataStore implements IDataStore {
     public Collection<Plot> getAllPlots() {
         return plotsByOwner.values().stream()
                 .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Collection<Plot> getPlotsForSale() {
+        return getAllPlots().stream()
+                .filter(plot -> plot.isForSale() && "ACTIVE".equals(plot.getPlotStatus()))
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Collection<Plot> getPlotsForAuction() {
+        return getAllPlots().stream()
+                .filter(plot -> "AUCTION".equals(plot.getPlotStatus()))
                 .collect(Collectors.toList());
     }
 
@@ -326,6 +458,9 @@ public class SQLDataStore implements IDataStore {
         
         if (toRemove != null) {
             owned.remove(toRemove);
+            if (owned.isEmpty()) {
+                plotsByOwner.remove(owner);
+            }
             deIndexPlot(toRemove);
             isDirty = true;
             // Also delete from DB immediately
@@ -363,6 +498,47 @@ public class SQLDataStore implements IDataStore {
             });
         }
     }
+    
+    @Override
+    public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
+        UUID oldOwner = plot.getOwner();
+        
+        // 1. Update in-memory cache
+        List<Plot> oldList = plotsByOwner.get(oldOwner);
+        if (oldList != null) {
+            oldList.remove(plot);
+            if (oldList.isEmpty()) {
+                plotsByOwner.remove(oldOwner);
+            }
+        }
+        
+        plot.internalSetOwner(newOwner, newOwnerName);
+        plot.setForSale(false, 0); // No longer for sale
+        
+        plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
+        
+        // 2. Update database
+        plugin.runGlobalAsync(() -> {
+            try (Connection conn = hikari.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(UPDATE_PLOT_OWNER)) {
+                
+                ps.setString(1, newOwner.toString());
+                ps.setString(2, newOwnerName);
+                ps.setString(3, serializeRoles(plot)); // Save new roles (owner)
+                ps.setBoolean(4, false); // Not for sale
+                ps.setString(5, plot.getPlotId().toString());
+                ps.executeUpdate();
+
+            } catch (SQLException e) {
+                plugin.getLogger().severe("Failed to change plot owner in database: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /* -----------------------------
+     * Role Management API
+     * ----------------------------- */
 
     @Override
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
@@ -376,10 +552,12 @@ public class SQLDataStore implements IDataStore {
         isDirty = true;
     }
 
+    /* -----------------------------
+     * Admin Helpers
+     * ----------------------------- */
+     
     @Override
     public void removeBannedPlots() {
-        // This logic is fine, as it operates on the cache.
-        // The removeAllPlots method will trigger the DB delete.
         for (OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
         }
@@ -469,5 +647,102 @@ public class SQLDataStore implements IDataStore {
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to parse roles for plot " + plot.getPlotId());
         }
+    }
+    
+    /* -----------------------------
+     * --- NEW: Wilderness Revert API ---
+     * ----------------------------- */
+
+    @Override
+    public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
+        // This is called from an async task in ProtectionManager
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement(LOG_WILDERNESS_BLOCK)) {
+            
+            ps.setString(1, loc.getWorld().getName());
+            ps.setInt(2, loc.getBlockX());
+            ps.setInt(3, loc.getBlockY());
+            ps.setInt(4, loc.getBlockZ());
+            ps.setString(5, oldMat);
+            ps.setString(6, newMat);
+            ps.setLong(7, System.currentTimeMillis());
+            ps.setString(8, playerUUID.toString());
+            ps.executeUpdate();
+            
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Failed to log wilderness block: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void revertWildernessBlocks(long timestamp, int limit) {
+        // This runs on the WildernessRevertTask thread
+        
+        Map<Integer, Location> blocksToRevert = new HashMap<>();
+        Map<Integer, Material> materialsToSet = new HashMap<>();
+        
+        // 1. Fetch blocks to revert
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement(GET_REVERTABLE_BLOCKS)) {
+            
+            ps.setLong(1, timestamp);
+            ps.setInt(2, limit);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    World world = Bukkit.getWorld(rs.getString("world"));
+                    if (world == null) continue;
+                    
+                    Location loc = new Location(world, rs.getInt("x"), rs.getInt("y"), rs.getInt("z"));
+                    Material oldMat = Material.matchMaterial(rs.getString("old_material"));
+                    
+                    if (oldMat != null) {
+                        blocksToRevert.put(id, loc);
+                        materialsToSet.put(id, oldMat);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to query wilderness blocks for revert: " + e.getMessage());
+            return;
+        }
+        
+        if (blocksToRevert.isEmpty()) {
+            return; // Nothing to do
+        }
+        
+        plugin.getLogger().info("Reverting " + blocksToRevert.size() + " wilderness blocks...");
+
+        // 2. Revert blocks (on main thread) and delete from log
+        plugin.runMainGlobal(() -> {
+            try (Connection conn = hikari.getConnection();
+                 PreparedStatement psDelete = conn.prepareStatement(DELETE_REVERTED_BLOCKS)) {
+
+                for (Map.Entry<Integer, Location> entry : blocksToRevert.entrySet()) {
+                    int id = entry.getKey();
+                    Location loc = entry.getValue();
+                    Material mat = materialsToSet.get(id);
+                    
+                    // Revert the block
+                    if (loc.isWorldLoaded() && loc.getChunk().isLoaded()) {
+                        Block b = loc.getBlock();
+                        if (b.getType() != mat) {
+                            b.setType(mat, true); // True to apply physics
+                        }
+                    }
+                    
+                    // Add to delete batch
+                    psDelete.setInt(1, id);
+                    psDelete.addBatch();
+                }
+                
+                // 3. Delete all processed entries
+                psDelete.executeBatch();
+                
+            } catch (SQLException e) {
+                 plugin.getLogger().severe("Failed to delete reverted blocks from log: " + e.getMessage());
+            }
+        });
     }
 }

@@ -49,7 +49,7 @@ old_english:
   # General & usage
   no_perm: "&cThou hast not the authority for such an act."
   players_only: "&cOnly mortals of flesh may wield this command."
-  usage_main: "&eSpeak thus: /aegis <wand|menu|claim|unclaim|help>"
+  usage_main: "&eSpeak thus: /aegis <wand|menu|claim|unclaim|resize|help>"
 
   # Sounds (global toggle feedback)
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
@@ -60,6 +60,11 @@ old_english:
   corner1_set: "&a⚡ Thy first boundary is marked at &e{X}, {Z}."
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
+
+  # --- NEW: Resize ---
+  resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
+  resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
+  resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
 
   # Claim limits & economy
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
@@ -87,30 +92,33 @@ old_english:
 
   # Menu & buttons
   menu_title: "&b⚔ The Guardian Codex ⚔"
-  settings_menu_title: "&9⚙ Thine Settings"
-  button_claim_land: "&a🛡 Lay Claim to Land"
-  button_trusted_players: "&eTrusted Companions"
   
-  # --- MODIFIED ---
-  button_settings: "&9⚙ Thine Protections" # Old key, now used for Plot Flags
-  button_plot_flags: "&6Plot Flags"
+  # --- MODIFIED: Player & Plot GUIs ---
+  button_claim_land: "&a🛡 Lay Claim to Land"
+  claim_land_lore:
+    - "&7Bind a region to thy will."
+    - "&7Select two corners with the Scepter."
+  
+  button_plot_flags: "&6Plot Wards"
+  plot_flags_title: "&9⚙ Thine Wards"
   plot_flags_lore:
     - "&7Govern the laws (PvP, Mobs, etc)"
     - "&7for thy claim."
-  button_player_settings: "&ePlayer Settings"
+    
+  button_roles: "&ePlot Roles"
+  roles_lore:
+    - "&7Grant roles to thy companions."
+    
+  button_player_settings: "&9Thine Preferences"
   player_settings_lore:
     - "&7Toggle thy personal sounds & language."
   
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Seek wisdom within the Codex and protect thy holdings."
-  claim_land_lore:
-    - "&7Bind a region to thy will."
-    - "&7Select two corners with the Scepter."
-  trusted_players_lore:
-    - "&7Name companions thou trusteth."
-  settings_lore:
-    - "&7Change wards and preferences here."
 
+  # --- Settings GUI (Player Prefs) ---
+  settings_menu_title: "&9⚙ Thine Preferences"
+  
   # Sounds buttons & lore
   button_sounds_on: "&a🔊 Sounds: Awake"
   button_sounds_off: "&c🔇 Sounds: Silent"
@@ -120,6 +128,7 @@ old_english:
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
 
+  # --- Plot Flags GUI ---
   # Individual flags (buttons + lore)
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
@@ -150,6 +159,21 @@ old_english:
   button_farm_off: "&c🌾 Harvest Ward: Silent"
   farm_toggle_lore:
     - "&7Spare thy crops from trampling."
+    
+  button_tnt_on: "&a💥 Blast Ward: Awake"
+  button_tnt_off: "&c💥 Blast Ward: Silent"
+  tnt_toggle_lore:
+    - "&7Shield thy claim from all explosions."
+    
+  button_fire_on: "&a🔥 Flame Ward: Awake"
+  button_fire_off: "&c🔥 Flame Ward: Silent"
+  fire_toggle_lore:
+    - "&7Quench the spread of wayward flames."
+    
+  button_piston_on: "&a🔩 Piston Ward: Awake"
+  button_piston_off: "&c🔩 Piston Ward: Silent"
+  piston_toggle_lore:
+    - "&7Halt the movement of blocks across thy borders."
 
   # Safe Zone (master)
   button_safe_on: "&a🛡 Sanctuary: Awakened"
@@ -163,26 +187,20 @@ old_english:
   # Generic toggle feedback (used if needed)
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
 
-  # Trusted GUI basics
+  # --- MODIFIED: Roles GUI ---
+  roles_gui_title: "&eManage Plot Roles"
+  roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect a Dominion to Manage"
-  trusted_head_name: "&a{PLAYER}"
-  trusted_menu_title: "&eTrusted Companions"
   add_trusted_title: "&aAdd a Companion"
-  remove_trusted_title: "&cRemove a Companion"
-  trusted_menu_lore:
-    - "&7Click a head to unbind trust."
+  button_add_trusted: "&aAdd Player"
   add_trusted_lore:
-    - "&7Click a head to grant trust."
-  remove_trusted_lore:
-    - "&7Click a head to remove trust."
-  button_add_trusted: "&aAdd Trusted"
-  button_remove_trusted: "&cRemove Trusted"
-  button_roles: "&bRoles (Soon)"
-  roles_lore:
-    - "&7Decorative for now."
-  info_trusted_lore:
-    - "&7Trusted may build and interact in thy claim."
-
+    - "&7Click a head to grant a role."
+  button_remove_trusted: "&cRemove From Plot"
+  role_self: "&cThou mayest not change thine own role."
+  role_is_owner: "&cThou mayest not change the owner's role."
+  role_set_to: "&a✔ {PLAYER} hath been granted the role of {ROLE}."
+  role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
+  
   # Admin GUI bits
   admin_menu_title: "&c⚙ High Guardian Tools"
   admin_reloading: "&7Reloading ancient scrolls and edicts..."
@@ -217,6 +235,7 @@ old_english:
     - "&e/aegis menu &7- Summon the Guardian Codex"
     - "&e/aegis claim &7- Bind land to thy will"
     - "&e/aegis unclaim &7- Release thine claim"
+    - "&e/aegis resize <dir> <amt> &7- Expand thy dominion"
     - "&e/aegis help &7- Study this sacred guide"
     - "&7--------------------------------------"
 
@@ -226,7 +245,7 @@ old_english:
 hybrid_english:
   no_perm: "&cThou lacketh permission for this command."
   players_only: "&cOnly living adventurers may wield this."
-  usage_main: "&eCommand thus: /aegis <wand|menu|claim|unclaim|help>"
+  usage_main: "&eCommand thus: /aegis <wand|menu|claim|unclaim|resize|help>"
 
   sound_global_enabled: "&a✔ The realm hears Aegis once more."
   sound_global_disabled: "&c✖ Aegis is silent for all."
@@ -236,6 +255,11 @@ hybrid_english:
   corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two points with the Scepter."
   max_claims_reached: "&c❌ Thou canst hold only {AMOUNT} claim(s)."
+
+  # --- NEW: Resize ---
+  resize-success: "&a✔ Thy plot has expanded {DIRECTION} by {AMOUNT} blocks."
+  resize-fail-overlap: "&c❌ Thou canst not expand! Thy plot would overlap another."
+  resize-fail-max-area: "&c❌ Thou canst not expand! Thy plot would exceed the {AMOUNT} block limit."
 
   need_vault: "&c❌ Thou lacketh &e${AMOUNT}&c in gold."
   cost_deducted: "&e💰 Tribute of &6${AMOUNT}&e rendered."
@@ -258,29 +282,31 @@ hybrid_english:
   cannot_attack: "&c❌ PvP is forbidden in this claim."
 
   menu_title: "&b⚔ The Guardian Codex ⚔"
-  settings_menu_title: "&9⚙ Thy Settings"
-  button_claim_land: "&a🛡 Claim Land"
-  button_trusted_players: "&eTrusted Companions"
   
-  # --- MODIFIED ---
-  button_settings: "&9⚙ Configure Protections" # Old key, now used for Plot Flags
+  # --- MODIFIED: Player & Plot GUIs ---
+  button_claim_land: "&a🛡 Claim Land"
+  claim_land_lore:
+    - "&7Bind a region using two corners."
+  
   button_plot_flags: "&6Plot Flags"
+  plot_flags_title: "&9⚙ Plot Flags"
   plot_flags_lore:
     - "&7Manage rules (PvP, Mobs, etc)"
     - "&7for your plot."
-  button_player_settings: "&ePlayer Settings"
+    
+  button_roles: "&eManage Roles"
+  roles_lore:
+    - "&7Grant or revoke roles for players."
+    
+  button_player_settings: "&9Player Settings"
   player_settings_lore:
     - "&7Toggle your personal sounds & language."
   
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Study the Codex to learn and secure thy holdings."
-  claim_land_lore:
-    - "&7Bind a region using two corners."
-  trusted_players_lore:
-    - "&7Grant or revoke trusted companions."
-  settings_lore:
-    - "&7Adjust wards and preferences."
 
+  # --- Settings GUI (Player Prefs) ---
+  settings_menu_title: "&9⚙ Thy Settings"
   button_sounds_on: "&a🔊 Sounds: On"
   button_sounds_off: "&c🔇 Sounds: Off"
   button_sounds_disabled_global: "&7🔇 Sounds: Globally Disabled"
@@ -289,6 +315,7 @@ hybrid_english:
   sounds_toggle_global_disabled_lore:
     - "&7A decree hath silenced all sound."
 
+  # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
   button_pvp_off: "&c⚔ PvP: Off"
   pvp_toggle_lore:
@@ -319,6 +346,22 @@ hybrid_english:
   farm_toggle_lore:
     - "&7Prevent farmland trampling."
 
+  button_tnt_on: "&a💥 Explosions: On"
+  button_tnt_off: "&c💥 Explosions: Off"
+  tnt_toggle_lore:
+    - "&7Protect thy claim from explosions."
+    
+  button_fire_on: "&a🔥 Fire Spread: On"
+  button_fire_off: "&c🔥 Fire Spread: Off"
+  fire_toggle_lore:
+    - "&7Prevent fire from spreading."
+    
+  button_piston_on: "&a🔩 Pistons: On"
+  button_piston_off: "&c🔩 Pistons: Off"
+  piston_toggle_lore:
+    - "&7Prevent pistons from moving blocks"
+    - "&7across thy plot borders."
+
   button_safe_on: "&a🛡 Safe Zone: Enabled"
   button_safe_off: "&c🛡 Safe Zone: Disabled"
   safe_toggle_lore:
@@ -329,25 +372,21 @@ hybrid_english:
 
   flag_toggled: "&e⚙ {FLAG} protection is now &f{STATUS}&e."
 
+  # --- MODIFIED: Roles GUI ---
+  roles_gui_title: "&eManage Plot Roles"
+  roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
-  trusted_head_name: "&a{PLAYER}"
-  trusted_menu_title: "&eTrusted Companions"
   add_trusted_title: "&aAdd a Companion"
-  remove_trusted_title: "&cRemove a Companion"
-  trusted_menu_lore:
-    - "&7Click a head to remove trust."
+  button_add_trusted: "&aAdd Player"
   add_trusted_lore:
-    - "&7Click a head to add trust."
-  remove_trusted_lore:
-    - "&7Click a head to remove trust."
-  button_add_trusted: "&aAdd Trusted"
-  button_remove_trusted: "&cRemove Trusted"
-  button_roles: "&bRoles (Soon)"
-  roles_lore:
-    - "&7Decorative for now."
-  info_trusted_lore:
-    - "&7Trusted may build and interact within thy claim."
-
+    - "&7Click a head to assign a role."
+  button_remove_trusted: "&cRemove From Plot"
+  role_self: "&cThou mayest not change thine own role."
+  role_is_owner: "&cThou mayest not change the owner's role."
+  role_set_to: "&a✔ {PLAYER} hath been assigned as {ROLE}."
+  role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
+  
+  # Admin GUI
   admin_menu_title: "&c⚙ High Guardian Tools"
   admin_reloading: "&7Reloading configurations..."
   admin_reload_complete: "&a✔ Reload complete!"
@@ -373,12 +412,14 @@ hybrid_english:
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
+  # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Receive the Scepter"
     - "&e/aegis menu &7- Open the Guardian Codex"
     - "&e/aegis claim &7- Claim thy chosen land"
     - "&e/aegis unclaim &7- Release thy claim"
+    - "&e/aegis resize <dir> <amt> &7- Expand your plot"
     - "&e/aegis help &7- Learn the Codex commands"
 
 # ======================================
@@ -387,7 +428,7 @@ hybrid_english:
 modern_english:
   no_perm: "&cYou don’t have permission to do that."
   players_only: "&cOnly players can use this command."
-  usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|help>"
+  usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
 
   sound_global_enabled: "&a✔ Global sounds are now ON."
   sound_global_disabled: "&c✖ Global sounds are now OFF."
@@ -397,6 +438,11 @@ modern_english:
   corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
   must_select: "&c❌ Select two corners with the Scepter first."
   max_claims_reached: "&c❌ You can only have {AMOUNT} claim(s)."
+
+  # --- NEW: Resize ---
+  resize-success: "&a✔ Your plot has expanded {DIRECTION} by {AMOUNT} blocks."
+  resize-fail-overlap: "&c❌ You can't expand! Your plot would overlap another claim."
+  resize-fail-max-area: "&c❌ You can't expand! Your plot would exceed the {AMOUNT} block area limit."
 
   need_vault: "&c❌ You need &e{AMOUNT}&c to claim."
   cost_deducted: "&e💰 Charged &6{AMOUNT}&e for claiming."
@@ -419,29 +465,32 @@ modern_english:
   cannot_attack: "&c❌ PvP is disabled in this claim."
 
   menu_title: "&b⚔ Guardian Codex"
-  settings_menu_title: "&9⚙ Settings"
+
+  # --- MODIFIED: Player & Plot GUIs ---
   button_claim_land: "&a🛡 Claim Land"
-  button_trusted_players: "&eTrusted Players"
-  
-  # --- MODIFIED ---
-  button_settings: "&9⚙ Protection Settings" # Old key, now used for Plot Flags
+  claim_land_lore:
+    - "&7Select two corners and claim."
+    
   button_plot_flags: "&6Plot Flags"
+  plot_flags_title: "&9Plot Flags"
   plot_flags_lore:
     - "&7Manage rules (PvP, Mobs, etc)"
     - "&7for your plot."
-  button_player_settings: "&ePlayer Settings"
+    
+  button_roles: "&eManage Roles"
+  roles_lore:
+    - "&7Manage who can build"
+    - "&7on your plot."
+    
+  button_player_settings: "&9Player Settings"
   player_settings_lore:
     - "&7Toggle your personal sounds & language."
-
+    
   button_info: "&6📜 Info"
   info_message: "&7Open the Codex to manage protections and learn commands."
-  claim_land_lore:
-    - "&7Select two corners and claim."
-  trusted_players_lore:
-    - "&7Add or remove trusted players."
-  settings_lore:
-    - "&7Toggle protections and preferences."
 
+  # --- Settings GUI (Player Prefs) ---
+  settings_menu_title: "&9⚙ Settings"
   button_sounds_on: "&a🔊 Sounds: On"
   button_sounds_off: "&c🔇 Sounds: Off"
   button_sounds_disabled_global: "&7🔇 Sounds: Globally Disabled"
@@ -450,6 +499,7 @@ modern_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
 
+  # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
   button_pvp_off: "&c⚔ PvP: Off"
   pvp_toggle_lore:
@@ -480,6 +530,22 @@ modern_english:
   farm_toggle_lore:
     - "&7Prevent crop trampling."
 
+  button_tnt_on: "&a💥 Explosions: ON"
+  button_tnt_off: "&c💥 Explosions: OFF"
+  tnt_toggle_lore:
+    - "&7Protect your claim from explosions."
+    
+  button_fire_on: "&a🔥 Fire Spread: ON"
+  button_fire_off: "&c🔥 Fire Spread: OFF"
+  fire_toggle_lore:
+    - "&7Prevent fire from spreading."
+    
+  button_piston_on: "&a🔩 Pistons: ON"
+  button_piston_off: "&c🔩 Pistons: OFF"
+  piston_toggle_lore:
+    - "&7Prevent pistons from moving blocks"
+    - "&7across your plot borders."
+
   button_safe_on: "&a🛡 Safe Zone: ON"
   button_safe_off: "&c🛡 Safe Zone: OFF"
   safe_toggle_lore:
@@ -490,25 +556,21 @@ modern_english:
 
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
+  # --- MODIFIED: Roles GUI ---
+  roles_gui_title: "&eManage Plot Roles"
+  roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
-  trusted_head_name: "&a{PLAYER}"
-  trusted_menu_title: "&eTrusted Players"
-  add_trusted_title: "&aAdd Trusted"
-  remove_trusted_title: "&cRemove Trusted"
-  trusted_menu_lore:
-    - "&7Click a head to remove trust."
+  add_trusted_title: "&aAdd Player"
+  button_add_trusted: "&aAdd Player"
   add_trusted_lore:
-    - "&7Click a head to add trust."
-  remove_trusted_lore:
-    - "&7Click a head to remove trust."
-  button_add_trusted: "&aAdd Trusted"
-  button_remove_trusted: "&cRemove Trusted"
-  button_roles: "&bRoles (Soon)"
-  roles_lore:
-    - "&7Decorative for now."
-  info_trusted_lore:
-    - "&7Trusted players can build and interact in your claim."
+    - "&7Click a head to assign a role."
+  button_remove_trusted: "&cRemove From Plot"
+  role_self: "&cYou can't change your own role."
+  role_is_owner: "&cYou can't change the owner's role."
+  role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
+  role_removed: "&e✔ {PLAYER} has been removed from your plot."
 
+  # Admin GUI
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."
   admin_reload_complete: "&a✔ Reload complete!"
@@ -534,10 +596,12 @@ modern_english:
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
 
+  # Help
   help_header: "&b⚔ Guardian Codex Help"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
     - "&e/aegis menu &7- Open the main menu"
     - "&e/aegis claim &7- Claim land"
     - "&e/aegis unclaim &7- Unclaim your land"
+    - "&e/aegis resize <dir> <amt> &7- Expand your plot"
     - "&e/aegis help &7- Show help"

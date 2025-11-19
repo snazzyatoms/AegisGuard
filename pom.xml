@@ -9,9 +9,9 @@
     <description>Lightweight, friendly land protection with GUIs</description>
 
     <properties>
-        <!-- --- MODIFIED: Upgraded to Java 21 --- -->
+        <!-- MODIFIED: Upgraded to Java 21 -->
         <maven.compiler.release>21</maven.compiler.release>
-        <paper.version>1.20.6-R0.1-SNAPSHOT</paper-version>
+        <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
         <vaultapi.version>1.7</vaultapi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -25,12 +25,12 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        <!-- --- NEW: Dynmap Repo --- -->
+        <!-- NEW: Dynmap Repo -->
         <repository>
             <id>dynmap-repo</id>
             <url>https://repo.dynmap.us/mvn/</url>
         </repository>
-        <!-- --- NEW: PlaceholderAPI Repo --- -->
+        <!-- NEW: PlaceholderAPI Repo -->
         <repository>
             <id>placeholderapi-repo</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
@@ -54,7 +54,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- --- NEW: Dynmap API (for map visualization) --- -->
+        <!-- NEW: Dynmap API (for map visualization) -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
@@ -62,7 +62,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- --- NEW: PlaceholderAPI (for server integration) --- -->
+        <!-- NEW: PlaceholderAPI (for server integration) -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -70,7 +70,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- --- CRITICAL: HikariCP for SQL connection pooling (SHADED) --- -->
+        <!-- CRITICAL: HikariCP for SQL connection pooling (SHADED) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
@@ -78,7 +78,7 @@
             <scope>compile</scope>
         </dependency>
         
-        <!-- --- CRITICAL: SQLite Driver (SHADED) --- -->
+        <!-- CRITICAL: SQLite Driver (SHADED) -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -89,7 +89,7 @@
     </dependencies>
 
     <!-- =========================
-         Build & Plugins
+         Build and Plugins
     ========================== -->
     <build>
         <finalName>AegisGuard-${project.version}</finalName>
@@ -105,7 +105,7 @@
                 </configuration>
             </plugin>
 
-            <!-- --- CRITICAL: Maven Shade Plugin (Bundles DB drivers and prevents conflicts) --- -->
+            <!-- CRITICAL: Maven Shade Plugin (Bundles DB drivers and prevents conflicts) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -135,7 +135,7 @@
             </plugin>
         </plugins>
 
-        <!-- --- MODIFIED: Resource Filtering --- -->
+        <!-- MODIFIED: Resource Filtering -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

@@ -1,10 +1,12 @@
 package com.aegisguard.selection;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
+import com.aegisguard.data.Plot;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey; // --- NEW IMPORT ---
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,7 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType; // --- NEW IMPORT ---
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,17 +23,13 @@ import java.util.UUID;
 
 /**
  * SelectionService
- * ... (existing comments) ...
+ * - Handles Aegis Scepter interactions, claiming, unclaiming, and resizing plots.
  *
- * --- UPGRADE NOTES ---
- * - CRITICAL LAG FIX: Removed the redundant setFlag() calls and the
- * 'flushSync()' call from confirmClaim(). PlotStore constructor
- * and createPlot() already handle this.
- * - ARCHITECTURE FIX: All plugin.getConfig() calls have been
- * replaced with plugin.cfg() calls to use the config wrapper.
- * - RELIABILITY FIX: Wand now uses a PersistentDataContainer (NBT tag)
- * instead of a display name to be 100% reliable.
- * - CLEANUP: Updated plugin.sounds() to plugin.effects()
+ * --- FINAL VERSION ---
+ * - Handles all commands: /ag claim, /ag unclaim, /ag resize, /ag setspawn, /ag home.
+ * - Uses the secure PersistentDataContainer (NBT tag) for the wand.
+ * - Lag-free: Removes all obsolete, lag-inducing manual flag setting.
+ * - Server Zones: Contains claimServerZone logic.
  */
 public class SelectionService implements Listener {
 
@@ -39,7 +37,6 @@ public class SelectionService implements Listener {
     private final Map<UUID, Location> corner1 = new HashMap<>();
     private final Map<UUID, Location> corner2 = new HashMap<>();
 
-    // --- NEW ---
     // Public key so AegisCommand can add this tag and this class can check it.
     public static NamespacedKey WAND_KEY;
 
@@ -59,7 +56,6 @@ public class SelectionService implements Listener {
         ItemStack item = e.getItem();
         if (item == null || item.getType() != Material.LIGHTNING_ROD) return;
 
-        // --- RELIABILITY FIX ---
         // Identify our wand by a hidden tag (PDC), not its display name.
         ItemMeta meta = item.getItemMeta();
         if (meta == null || !meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE)) {
@@ -72,152 +68,351 @@ public class SelectionService implements Listener {
         if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
             corner1.put(p.getUniqueId(), loc);
             plugin.msg().send(p, "corner1_set",
-                    java.util.Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
-            plugin.effects().playMenuFlip(p); // --- MODIFIED ---
+                    Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
+            plugin.effects().playMenuFlip(p);
             e.setCancelled(true);
         } else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             corner2.put(p.getUniqueId(), loc);
             plugin.msg().send(p, "corner2_set",
-                    java.util.Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
-            plugin.effects().playMenuFlip(p); // --- MODIFIED ---
+                    Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
+            plugin.effects().playMenuFlip(p);
             e.setCancelled(true);
         }
     }
 
     /* -----------------------------
-     * Confirm Claim
+     * Claiming & Unclaiming Logic
      * ----------------------------- */
+
     public void confirmClaim(Player p) {
         UUID id = p.getUniqueId();
-        String worldName = p.getWorld().getName();
-
-        // --- ARCHITECTURE FIX ---
-        // Use the AGConfig wrapper (plugin.cfg()) not plugin.getConfig()
-        int maxClaims = plugin.cfg().getMaxClaimsPerPlayer(); // Simpler lookup
-
-        int currentClaims = plugin.store().getPlots(id).size();
-        if (currentClaims >= maxClaims && maxClaims > 0) {
-            plugin.msg().send(p, "max_claims_reached", java.util.Map.of("AMOUNT", String.valueOf(maxClaims)));
-            plugin.effects().playError(p); // --- MODIFIED ---
-            return;
-        }
-
+        
+        // 1. Check Selections
         if (!corner1.containsKey(id) || !corner2.containsKey(id)) {
             plugin.msg().send(p, "must_select");
-            plugin.effects().playError(p); // --- MODIFIED ---
+            plugin.effects().playError(p);
             return;
-        }
-
-        // --- ARCHITECTURE FIX ---
-        boolean useVault = plugin.cfg().useVault();
-        double cost = plugin.cfg().getClaimCost();
-        String itemType = plugin.cfg().getItemCostType();
-        int itemAmount = plugin.cfg().getItemCostAmount();
-        // (Note: Your per-world config logic was good, but this example uses
-        // the global defaults from AGConfig. You can expand AGConfig to
-        // handle per-world overrides if needed.)
-
-        if (useVault && cost > 0 && !plugin.vault().charge(p, cost)) {
-            plugin.msg().send(p, "need_vault", java.util.Map.of("AMOUNT", plugin.vault().format(cost)));
-            plugin.effects().playError(p); // --- MODIFIED ---
-            return;
-        } else if (!useVault && itemAmount > 0) {
-            Material mat = Material.matchMaterial(itemType);
-            if (mat != null) {
-                if (!p.getInventory().containsAtLeast(new ItemStack(mat), itemAmount)) {
-                    plugin.msg().send(p, "need_items",
-                            java.util.Map.of("AMOUNT", String.valueOf(itemAmount), "ITEM", itemType));
-                    plugin.effects().playError(p); // --- MODIFIED ---
-                    return;
-                }
-                p.getInventory().removeItem(new ItemStack(mat, itemAmount));
-            }
         }
 
         Location c1 = corner1.get(id);
         Location c2 = corner2.get(id);
+        
+        if (!c1.getWorld().equals(c2.getWorld())) {
+            // Fallback message if key missing: "Worlds must match!"
+            p.sendMessage("§cError: Corner worlds do not match."); 
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        if (plugin.store().isAreaOverlapping(null, c1.getWorld().getName(), c1.getBlockX(), c1.getBlockZ(), c2.getBlockX(), c2.getBlockZ())) {
+            plugin.msg().send(p, "resize-fail-overlap"); // Reuse overlap message
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        // 2. Check Limits (Admin Bypass)
+        int maxClaims = plugin.cfg().getWorldMaxClaims(p.getWorld());
+        int currentClaims = plugin.store().getPlots(id).size();
+        if (currentClaims >= maxClaims && maxClaims > 0 && !p.hasPermission("aegis.admin.bypass_claim_limit")) {
+            plugin.msg().send(p, "max_claims_reached", Map.of("AMOUNT", String.valueOf(maxClaims)));
+            plugin.effects().playError(p);
+            return;
+        }
 
-        // Save claim (This is now async-safe and sets all defaults)
+        // 3. Economy Check
+        if (!processPayment(p)) {
+            return;
+        }
+
+        // 4. Create Plot
         plugin.store().createPlot(id, c1, c2);
 
-        // --- CRITICAL LAG FIX ---
-        // The entire block below is REMOVED.
-        // 1. The Plot constructor already sets these flags.
-        // 2. createPlot() already sets the 'isDirty' flag.
-        // 3. flushSync() causes massive server lag.
-        /*
-        PlotStore.Plot newPlot = plugin.store().getPlotAt(c1);
-        if (newPlot != null) {
-            newPlot.setFlag("safe_zone", true);
-            ...
-            plugin.store().flushSync(); // <--- REMOVED
-        }
-        */
-
+        // 5. Cleanup & Feedback
+        corner1.remove(id);
+        corner2.remove(id);
+        
         plugin.msg().send(p, "plot_created");
-        plugin.msg().send(p, "safe_zone_enabled"); // tell the player explicitly
+        plugin.msg().send(p, "safe_zone_enabled");
+        plugin.effects().playClaimSuccess(p);
 
-        if (useVault && cost > 0) {
-            plugin.msg().send(p, "cost_deducted", java.util.Map.of("AMOUNT", plugin.vault().format(cost)));
-        } else if (!useVault && itemAmount > 0) {
-            plugin.msg().send(p, "items_deducted",
-                    java.util.Map.of("AMOUNT", String.valueOf(itemAmount), "ITEM", itemType));
-        }
-
-        plugin.effects().playClaimSuccess(p); // --- MODIFIED ---
-
-        if (plugin.cfg().lightningOnClaim()) { // --- ARCHITECTURE FIX ---
+        if (plugin.cfg().lightningOnClaim()) {
             p.getWorld().strikeLightningEffect(c1);
         }
     }
 
-    /* -----------------------------
-     * Unclaim (only plot you’re standing in)
-     * ----------------------------- */
     public void unclaimHere(Player p) {
         UUID id = p.getUniqueId();
-        PlotStore.Plot plot = plugin.store().getPlotAt(p.getLocation());
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
 
         if (plot == null || !plot.getOwner().equals(id)) {
             plugin.msg().send(p, "no_plot_here");
-            plugin.effects().playError(p); // --- MODIFIED ---
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        if (plot.isServerZone()) {
+             // Admin zone protection message
+             p.sendMessage("§cYou cannot unclaim a Server Zone with this command.");
+             plugin.effects().playError(p);
+             return;
+        }
+        
+        // Refund logic
+        double refundAmount = calculateRefund(p.getWorld());
+        if (refundAmount > 0) {
+            plugin.vault().give(p, refundAmount); 
+            plugin.msg().send(p, "vault_refund",
+                    Map.of("AMOUNT", plugin.vault().format(refundAmount), "PERCENT", String.valueOf(plugin.cfg().getRefundPercent(p.getWorld()))));
+        }
+
+        // Remove plot (async-safe)
+        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+        plugin.msg().send(p, "plot_unclaimed");
+        plugin.effects().playUnclaim(p);
+    }
+    
+    /* -----------------------------
+     * Resizing Logic
+     * ----------------------------- */
+    
+    public void resizePlot(Player p, String direction, int amount) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        // 1. Calculate new coordinates
+        int x1 = plot.getX1();
+        int z1 = plot.getZ1();
+        int x2 = plot.getX2();
+        int z2 = plot.getZ2();
+        
+        // Apply the resize delta
+        switch (direction.toLowerCase()) {
+            case "north" -> z1 -= amount;
+            case "south" -> z2 += amount;
+            case "east" -> x2 += amount;
+            case "west" -> x1 -= amount;
+        }
+        
+        int newArea = (x2 - x1 + 1) * (z2 - z1 + 1);
+        int maxArea = plugin.cfg().getWorldMaxArea(p.getWorld());
+        
+        // 2. Check Limits & Overlap
+        if (newArea > maxArea && !p.hasPermission("aegis.admin.bypass_claim_limit")) {
+            plugin.msg().send(p, "resize-fail-max-area", Map.of("AMOUNT", String.valueOf(maxArea)));
+            plugin.effects().playError(p);
+            return;
+        }
+        if (plugin.store().isAreaOverlapping(plot, plot.getWorld(), x1, z1, x2, z2)) {
+            plugin.msg().send(p, "resize-fail-overlap");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        // 3. Process Payment (only charge for net expansion)
+        // Simple calculation: cost per block * amount of new blocks (width * amount)
+        // This is an approximation. For exact area math:
+        int oldArea = (plot.getX2() - plot.getX1() + 1) * (plot.getZ2() - plot.getZ1() + 1);
+        int addedArea = newArea - oldArea;
+        double cost = addedArea * plugin.cfg().getResizeCostPerBlock();
+        
+        if (cost > 0 && plugin.cfg().useVault(p.getWorld())) {
+            if (!plugin.vault().charge(p, cost)) {
+                plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
+                plugin.effects().playError(p);
+                return;
+            }
+        }
+        
+        // 4. Create new plot object and add to store (removes old)
+        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+        
+        Plot newPlot = new Plot(
+            plot.getPlotId(),
+            plot.getOwner(),
+            plot.getOwnerName(),
+            plot.getWorld(),
+            x1, z1, x2, z2,
+            plot.getLastUpkeepPayment()
+        );
+        // Copy all flags, roles, and ultimate features to the new plot object
+        plot.getFlags().forEach(newPlot::setFlag);
+        plot.getPlayerRoles().forEach(newPlot::setRole);
+        
+        newPlot.setSpawnLocation(plot.getSpawnLocation());
+        newPlot.setWelcomeMessage(plot.getWelcomeMessage());
+        newPlot.setFarewellMessage(plot.getFarewellMessage());
+        
+        newPlot.setForSale(plot.isForSale(), plot.getSalePrice());
+        newPlot.setForRent(plot.isForRent(), plot.getRentPrice());
+        newPlot.setRenter(plot.getCurrentRenter(), plot.getRentExpires());
+        
+        newPlot.setPlotStatus(plot.getPlotStatus());
+        newPlot.setCurrentBid(plot.getCurrentBid(), plot.getCurrentBidder());
+        
+        newPlot.setBorderParticle(plot.getBorderParticle());
+        newPlot.setAmbientParticle(plot.getAmbientParticle());
+        newPlot.setEntryEffect(plot.getEntryEffect());
+        
+        plugin.store().addPlot(newPlot);
+        
+        // 5. Feedback
+        plugin.msg().send(p, "resize-success", Map.of("DIRECTION", direction, "AMOUNT", String.valueOf(amount)));
+        if (cost > 0) {
+            plugin.msg().send(p, "cost_deducted", Map.of("AMOUNT", plugin.vault().format(cost)));
+        }
+        plugin.effects().playConfirm(p);
+    }
+    
+    /* -----------------------------
+     * Admin/Utility Methods
+     * ----------------------------- */
+     
+    public boolean hasBothCorners(UUID playerID) {
+        return corner1.containsKey(playerID) && corner2.containsKey(playerID);
+    }
+    
+    public void claimServerZone(Player admin) {
+        UUID id = admin.getUniqueId();
+        
+        // We use the selection service's stored corners
+        Location c1 = corner1.get(id);
+        Location c2 = corner2.get(id);
+        
+        // Create a plot owned by the special server UUID
+        Plot plot = new Plot(
+            UUID.randomUUID(),
+            Plot.SERVER_OWNER_UUID,
+            "Server Zone: " + admin.getName(), // Owner name for logging
+            c1.getWorld().getName(),
+            c1.getBlockX(), c1.getBlockZ(),
+            c2.getBlockX(), c2.getBlockZ()
+        );
+        
+        // Default Server Zone flags are set in Plot constructor. 
+        // Admin must use /ag admin flags to configure further.
+        // Force them off initially for safety/customization:
+        plot.setFlag("safe_zone", false); 
+        plot.setFlag("build", false);     
+        plot.setFlag("pvp", false);       
+        plot.setFlag("containers", false);
+        plot.setFlag("interact", true);   
+        
+        plugin.store().addPlot(plot);
+        
+        // Clear selection
+        corner1.remove(id);
+        corner2.remove(id);
+    }
+    
+    /* -----------------------------
+     * Welcome/TP Commands
+     * ----------------------------- */
+    
+    public void setPlotSpawn(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
             return;
         }
 
-        // String worldName = p.getWorld().getName(); // Not needed if using global cfg
-
-        // --- ARCHITECTURE FIX ---
-        boolean refundEnabled = plugin.cfg().refundOnUnclaim();
-        int refundPercent = plugin.cfg().getRefundPercent();
-        boolean useVault = plugin.cfg().useVault();
-        double vaultCost = plugin.cfg().getClaimCost();
-        String itemType = plugin.cfg().getItemCostType();
-        int itemAmount = plugin.cfg().getItemCostAmount();
-
-        if (refundEnabled && refundPercent > 0) {
-            if (useVault && vaultCost > 0) {
-                double refundAmount = (vaultCost * refundPercent) / 100.0;
-                plugin.vault().give(p, refundAmount); // give() supports OfflinePlayer
-                plugin.msg().send(p, "vault_refund",
-                        java.util.Map.of("AMOUNT", plugin.vault().format(refundAmount), "PERCENT", String.valueOf(refundPercent)));
-            } else {
-                Material mat = Material.matchMaterial(itemType);
-                if (mat != null && itemAmount > 0) {
-                    int refundCount = (int) Math.floor((itemAmount * refundPercent) / 100.0);
-                    if (refundCount > 0) {
-                        p.getInventory().addItem(new ItemStack(mat, refundCount));
-                        plugin.msg().send(p, "item_refund",
-                                java.util.Map.of("AMOUNT", String.valueOf(refundCount),
-                                        "ITEM", itemType, "PERCENT", String.valueOf(refundPercent)));
-                    }
-                }
-            }
+        if (!plot.isInside(p.getLocation())) {
+             plugin.msg().send(p, "home-fail-outside");
+             plugin.effects().playError(p);
+             return;
         }
 
-        // This is now async-safe
-        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
-        plugin.msg().send(p, "plot_unclaimed");
+        plot.setSpawnLocation(p.getLocation());
+        plugin.store().setDirty(true);
+        plugin.msg().send(p, "home-set-success");
+        plugin.effects().playConfirm(p);
+    }
+    
+    public void teleportToHome(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            // Try to find *any* plot they own if they aren't standing in one
+            // (Simplified: just error for now, could check getPlots(p.getUniqueId()))
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        if (plot.getSpawnLocation() == null) {
+            plugin.msg().send(p, "home-fail-no-spawn");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        p.teleport(plot.getSpawnLocation());
+        plugin.effects().playConfirm(p);
+    }
+    
+    public void setWelcomeMessage(Player p, String message) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        plot.setWelcomeMessage(message);
+        plugin.store().setDirty(true);
+        plugin.msg().send(p, message == null ? "welcome-cleared" : "welcome-set");
+        plugin.effects().playMenuFlip(p);
+    }
+    
+    public void setFarewellMessage(Player p, String message) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        
+        plot.setFarewellMessage(message);
+        plugin.store().setDirty(true);
+        plugin.msg().send(p, message == null ? "farewell-cleared" : "farewell-set");
+        plugin.effects().playMenuFlip(p);
+    }
 
-        plugin.effects().playUnclaim(p); // --- MODIFIED ---
+    /* -----------------------------
+     * Payment Helpers
+     * ----------------------------- */
+     
+    private boolean processPayment(Player p) {
+        // This logic handles payment for initial claims.
+        boolean useVault = plugin.cfg().useVault(p.getWorld());
+        double cost = plugin.cfg().getWorldClaimCost(p.getWorld());
+        Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
+        int itemAmount = plugin.cfg().getWorldItemCostAmount(p.getWorld());
+
+        if (useVault && cost > 0) {
+            if (!plugin.vault().charge(p, cost)) {
+                plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
+                plugin.effects().playError(p);
+                return false;
+            }
+        } else if (!useVault && itemAmount > 0) {
+            if (mat != null) {
+                if (!p.getInventory().containsAtLeast(new ItemStack(mat), itemAmount)) {
+                    plugin.msg().send(p, "need_items", Map.of("AMOUNT", String.valueOf(itemAmount), "ITEM", mat.toString()));
+                    plugin.effects().playError(p);
+                    return false;
+                }
+                p.getInventory().removeItem(new ItemStack(mat, itemAmount));
+            }
+        }
+        return true;
+    }
+    
+    private double calculateRefund(org.bukkit.World world) {
+        double initialCost = plugin.cfg().getWorldClaimCost(world);
+        int percent = plugin.cfg().getRefundPercent(world);
+        return (initialCost * percent) / 100.0;
     }
 }

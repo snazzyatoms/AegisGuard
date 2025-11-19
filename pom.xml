@@ -9,7 +9,7 @@
     <description>Lightweight, friendly land protection with GUIs</description>
 
     <properties>
-        <!-- Java 21 for modern Paper/Folia servers -->
+        <!-- MODIFIED: Upgraded to Java 21 -->
         <maven.compiler.release>21</maven.compiler.release>
         <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
         <vaultapi.version>1.7</vaultapi.version>
@@ -26,7 +26,7 @@
             <url>https://jitpack.io</url>
         </repository>
         
-        <!-- --- FIXED: Used MikePrimm Repo (Official Dynmap Source) --- -->
+        <!-- FIXED: Used MikePrimm Repo (Official Dynmap Source) -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
@@ -39,7 +39,7 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API -->
+        <!-- Paper API (required for Minecraft server interaction) -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -47,7 +47,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Vault API -->
+        <!-- Vault API (required for economy features) -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -55,7 +55,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- Dynmap API -->
+        <!-- NEW: Dynmap API (for map visualization) -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
@@ -63,7 +63,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- PlaceholderAPI -->
+        <!-- NEW: PlaceholderAPI (for server integration) -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -71,7 +71,7 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- HikariCP (Shaded) -->
+        <!-- CRITICAL: HikariCP for SQL connection pooling (SHADED) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
@@ -79,7 +79,7 @@
             <scope>compile</scope>
         </dependency>
         
-        <!-- SQLite Driver (Shaded) -->
+        <!-- CRITICAL: SQLite Driver (SHADED) -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -89,6 +89,9 @@
         
     </dependencies>
 
+    <!-- =========================
+         Build & Plugins
+    ========================== -->
     <build>
         <finalName>AegisGuard-${project.version}</finalName>
         <plugins>
@@ -103,7 +106,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Shade Plugin -->
+            <!-- CRITICAL: Maven Shade Plugin (Bundles DB drivers and prevents conflicts) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -133,6 +136,7 @@
             </plugin>
         </plugins>
 
+        <!-- MODIFIED: Resource Filtering -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

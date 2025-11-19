@@ -9,7 +9,6 @@
     <description>Lightweight, friendly land protection with GUIs</description>
 
     <properties>
-        <!-- Java 21 for modern Paper/Folia servers -->
         <maven.compiler.release>21</maven.compiler.release>
         <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
         <vaultapi.version>1.7</vaultapi.version>
@@ -25,13 +24,11 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-        
-        <!-- FIXED: Official Dynmap Repository -->
+        <!-- FIXED: Official Dynmap Repo -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
-        
         <repository>
             <id>placeholderapi-repo</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
@@ -39,71 +36,56 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Vault API -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
             <version>${vaultapi.version}</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- FIXED: Dynmap API (Stable Version) -->
+        <!-- FIXED: Stable Dynmap Version -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
             <version>3.6</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- PlaceholderAPI -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.6</version>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- HikariCP (Shaded) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
             <scope>compile</scope>
         </dependency>
-        
-        <!-- SQLite Driver (Shaded) -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.45.1.0</version>
             <scope>compile</scope>
         </dependency>
-        
     </dependencies>
 
     <build>
         <finalName>AegisGuard-${project.version}</finalName>
         <plugins>
-            <!-- Java compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
                     <release>${maven.compiler.release}</release>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
                 </configuration>
             </plugin>
-
-            <!-- Shade Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -118,12 +100,10 @@
                 </executions>
                 <configuration>
                     <relocations>
-                        <!-- Relocate HikariCP -->
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
                             <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
                         </relocation>
-                        <!-- Relocate SQLite Driver -->
                         <relocation>
                             <pattern>org.sqlite</pattern>
                             <shadedPattern>com.aegisguard.lib.sqlite</shadedPattern>
@@ -132,7 +112,6 @@
                 </configuration>
             </plugin>
         </plugins>
-
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

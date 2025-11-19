@@ -1,8 +1,8 @@
 package com.aegisguard.util;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
-import com.aegisguard.gui.SettingsGUI; // --- NEW IMPORT ---
+import com.aegisguard.data.Plot; // FIXED: Import Plot, not PlotStore
+import com.aegisguard.gui.SettingsGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.InventoryHolder; // --- NEW IMPORT ---
+import org.bukkit.inventory.InventoryHolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +75,11 @@ public class MessagesUtil implements Listener {
         raw = applyPlaceholders(raw, kv);
         return format(raw);
     }
+    public String get(Player player, String key, Map<String, String> placeholders) {
+        String raw = getRawForPlayer(player, key);
+        return format(applyPlaceholders(raw, placeholders));
+    }
+
     public List<String> getList(Player player, String key) {
         String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
         String path = style + "." + key;
@@ -140,8 +145,8 @@ public class MessagesUtil implements Listener {
         sender.sendMessage(prefix() + msg);
     }
     public void send(CommandSender sender, String key, Map<String, String> placeholders) {
-        String msg = (sender instanceof Player p) ? get(p, key) : get(key);
-        msg = applyPlaceholders(msg, placeholders); // msg is already colored; placeholders are plain
+        String msg = (sender instanceof Player p) ? get(p, key, placeholders) : get(key, placeholders);
+        // Note: get() handles formatting and placeholders, so we just prefix it here.
         sender.sendMessage(prefix() + msg);
     }
     public void send(CommandSender sender, String key, String... kv) {
@@ -154,7 +159,6 @@ public class MessagesUtil implements Listener {
      * Player Style System
      * ----------------------------- */
     public void setPlayerStyle(Player player, String style) {
-// ... (existing validation logic is fine) ...
         List<String> valid = messages.getStringList("language_styles.available");
         if (valid == null || !valid.contains(style)) {
             player.sendMessage(ChatColor.RED + "⚠ Invalid language style: " + style);
@@ -167,18 +171,19 @@ public class MessagesUtil implements Listener {
 
         // --- RELIABILITY FIX ---
         // Live GUI refresh, now uses reliable InventoryHolder
-        InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
-        if (holder instanceof SettingsGUI.SettingsGUIHolder settingsHolder) {
-            PlotStore.Plot plot = settingsHolder.getPlot();
-            if (plot != null) {
-                // Refresh the settings GUI with the correct plot context
-                plugin.gui().settings().open(player, plot);
-            }
+        if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
+             InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
+             if (holder instanceof SettingsGUI.SettingsGUIHolder settingsHolder) {
+                 com.aegisguard.data.Plot plot = settingsHolder.getPlot();
+                 // Refresh the settings GUI with the correct plot context
+                 // Must run on main thread
+                 plugin.runMain(player, () -> plugin.gui().settings().open(player, plot));
+             }
         }
     }
 
     public String getPlayerStyle(Player player) {
-// ... (existing logic is fine) ...
+        return playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
     }
 
     /* -----------------------------
@@ -193,7 +198,6 @@ public class MessagesUtil implements Listener {
         }
         playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 
-// ... (existing loading logic is fine) ...
         ConfigurationSection section = playerData.getConfigurationSection("players");
         if (section == null) return;
 
@@ -249,13 +253,13 @@ public class MessagesUtil implements Listener {
      * ----------------------------- */
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-// ... (existing logic is fine) ...
+        Player player = e.getPlayer();
+        playerStyles.putIfAbsent(player.getUniqueId(), defaultStyle);
     }
 
     /* -----------------------------
      * Internal helpers
      * ----------------------------- */
-// ... (all existing helpers are fine) ...
     private String getRawForPlayer(Player player, String key) {
         String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
         String path = style + "." + key;

@@ -137,16 +137,18 @@ public class EffectUtil {
         if (!plugin.getConfig().getBoolean("protection_effects.enabled", true)) return;
         if (!isSoundEnabled(p)) return; // Respect player's personal sound toggle
 
-        String base = "protection_effects." + category + "." + type + "_";
-        String def = "protection_effects." + type + "_";
+        String base = "protection_effects." + category + "." + type;
+        String def = "protection_effects.defaults." + type;
 
-        String soundKey = plugin.getConfig().getString(base + "sound",
-                plugin.getConfig().getString(def + "sound", "BLOCK_NOTE_BLOCK_BASS"));
-        String particleKey = plugin.getConfig().getString(base + "particle",
-                plugin.getConfig().getString(def + "particle", "SMOKE_NORMAL"));
+        String soundKey = plugin.getConfig().getString(base + "_sound",
+                plugin.getConfig().getString(def + "_sound", "BLOCK_NOTE_BLOCK_BASS"));
+        String particleKey = plugin.getConfig().getString(base + "_particle",
+                plugin.getConfig().getString(def + "_particle", "SMOKE_NORMAL"));
         
-        float volume = (float) plugin.getConfig().getDouble(base + "volume", 1.0);
-        float pitch = (float) plugin.getConfig().getDouble(base + "pitch", 1.0);
+        float volume = (float) plugin.getConfig().getDouble(base + "_volume",
+                plugin.getConfig().getDouble(def + "_volume", 1.0));
+        float pitch = (float) plugin.getConfig().getDouble(base + "_pitch",
+                plugin.getConfig().getDouble(def + "_pitch", 1.0));
 
         try {
             Sound sound = Sound.valueOf(soundKey.toUpperCase());
@@ -163,11 +165,32 @@ public class EffectUtil {
             // invalid particle in config
         }
     }
-}            Particle particle = Particle.valueOf(particleKey.toUpperCase());
-            loc.getWorld().spawnParticle(particle, loc.clone().add(0.5, 1, 0.5),
-                    10, 0.3, 0.3, 0.3, 0.05);
-        } catch (IllegalArgumentException ignored) {
-            // invalid particle in config
+    
+    /**
+     * --- NEW ---
+     * Plays a custom effect defined in the cosmetics section of config.
+     */
+    public void playCustomEffect(Player p, String effectName, Location loc) {
+        if (!plugin.getConfig().getBoolean("protection_effects.enabled", true)) return;
+        if (!isSoundEnabled(p)) return;
+
+        String base = "cosmetics.entry_effects." + effectName;
+        
+        String soundKey = plugin.getConfig().getString(base + ".sound");
+        String particleKey = plugin.getConfig().getString(base + ".particle");
+        
+        if (soundKey != null) {
+            try {
+                Sound sound = Sound.valueOf(soundKey.toUpperCase());
+                p.playSound(loc, sound, 1.0f, 1.0f);
+            } catch (IllegalArgumentException ignored) {}
+        }
+        
+        if (particleKey != null) {
+            try {
+                Particle particle = Particle.valueOf(particleKey.toUpperCase());
+                loc.getWorld().spawnParticle(particle, loc.clone().add(0.5, 1, 0.5), 20, 0.5, 0.5, 0.5, 0.1);
+            } catch (IllegalArgumentException ignored) {}
         }
     }
 }

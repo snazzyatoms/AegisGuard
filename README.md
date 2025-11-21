@@ -2,8 +2,8 @@
 
 ### The Next Generation of Land Protection & Economy
 
-\<div align="center"\>
-\<img width="600" src="[https://github.com/user-attachments/assets/35382bff-2b51-41c5-aee4-b1bce4673522](https://github.com/user-attachments/assets/35382bff-2b51-41c5-aee4-b1bce4673522)" alt="AegisGuard Banner" /\>
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/6a07c316-e172-45d8-8ca8-9c43a90f7241" />
+
 
 <br>
 

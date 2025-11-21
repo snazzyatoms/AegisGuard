@@ -1,15 +1,11 @@
 # 🔮 The Oracle: Roadmap to AegisGuard 2.0
 
-\<div align="center"\>
-\<img width="100%" src="[https://capsule-render.vercel.app/api?type=waving\&color=000000\&height=120\&section=header\&text=Future%20Visions\&fontSize=40\&fontColor=ffffff\&animation=fadeIn](https://www.google.com/search?q=https://capsule-render.vercel.app/api%3Ftype%3Dwaving%26color%3D000000%26height%3D120%26section%3Dheader%26text%3DFuture%2520Visions%26fontSize%3D40%26fontColor%3Dffffff%26animation%3DfadeIn)" alt="Header" /\>
 
-<br>
 
 [](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
 [](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
 [](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
 
-\</div\>
 
 -----
 

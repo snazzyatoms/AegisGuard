@@ -1,9 +1,3 @@
-Here is a polished, professional, and stylish `README.md` file.
-
-I have blended your "Lore/RPG" introduction with clear, technical features to appeal to both roleplay servers and technical server owners. It highlights the **Folia compatibility** and **Economy features** which are your biggest selling points.
-
------
-
 # 🛡️ AegisGuard
 
 ### The Next Generation of Land Protection & Economy

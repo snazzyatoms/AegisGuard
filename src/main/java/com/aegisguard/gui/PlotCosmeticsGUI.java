@@ -2,8 +2,8 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import org.bukkit.Bukkit; // --- FIX: Added missing import ---
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -30,6 +30,7 @@ public class PlotCosmeticsGUI {
 
     /**
      * Reliable holder that stores the plot being edited.
+     * Must be PUBLIC static so GUIListener can access it.
      */
     public static class CosmeticsHolder implements InventoryHolder {
         private final Plot plot;
@@ -168,17 +169,12 @@ public class PlotCosmeticsGUI {
             for (String key : borderSection.getKeys(false)) {
                 String displayName = GUIManager.safeText(borderSection.getString(key + ".display-name"), "");
                 
-                if (displayName.equals(clicked.getItemMeta().getDisplayName())) {
+                if (clicked.getItemMeta() != null && displayName.equals(clicked.getItemMeta().getDisplayName())) {
                     String particleName = borderSection.getString(key + ".particle", "FLAME");
                     double price = borderSection.getDouble(key + ".price", 0.0);
 
                     // --- Transaction Logic ---
                     if (price > 0 && !player.hasPermission("aegis.admin")) {
-                        // We'll add a "cosmetic" permission system later.
-                        // For now, let's assume if they bought it once, they own it.
-                        // A real system would check a "player.getOwnedCosmetics()" list.
-                        
-                        // For this example, we'll charge them every time.
                         if (!plugin.vault().charge(player, price)) {
                             plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.vault().format(price)));
                             plugin.effects().playError(player);

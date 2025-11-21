@@ -11,7 +11,6 @@
 [](https://papermc.io/software/folia)
 [](https://www.google.com/search?q=LICENSE)
 
-\</div\>
 
 -----
 

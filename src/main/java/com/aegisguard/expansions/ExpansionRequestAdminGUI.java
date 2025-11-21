@@ -12,7 +12,12 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ExpansionRequestAdminGUI {
 
@@ -22,25 +27,41 @@ public class ExpansionRequestAdminGUI {
         this.plugin = plugin;
     }
 
+    /**
+     * Holder for identifying the Admin GUI and mapping slots to Request IDs.
+     */
     public static class ExpansionAdminHolder implements InventoryHolder {
         private final Map<Integer, UUID> slotMap = new HashMap<>();
-        public void addRequest(int slot, UUID requesterId) { slotMap.put(slot, requesterId); }
-        public UUID getRequesterId(int slot) { return slotMap.get(slot); }
-        @Override public Inventory getInventory() { return null; }
+
+        public void addRequest(int slot, UUID requesterId) {
+            slotMap.put(slot, requesterId);
+        }
+
+        public UUID getRequesterId(int slot) {
+            return slotMap.get(slot);
+        }
+
+        @Override
+        public Inventory getInventory() {
+            return null;
+        }
     }
 
     public void open(Player player) {
         ExpansionAdminHolder holder = new ExpansionAdminHolder();
         Inventory inv = Bukkit.createInventory(holder, 54, "§8Expansion Requests");
 
+        // This method must exist in ExpansionRequestManager (I added it in the previous fix)
         Collection<ExpansionRequest> requests = plugin.getExpansionRequestManager().getActiveRequests();
         
         if (requests.isEmpty()) {
-            inv.setItem(22, GUIManager.icon(Material.BARRIER, "§cNo Pending Requests", List.of("§7There are no requests to review.")));
+            inv.setItem(22, GUIManager.icon(Material.BARRIER, "§cNo Pending Requests", 
+                List.of("§7There are no requests to review.")));
         } else {
             int slot = 0;
             for (ExpansionRequest req : requests) {
                 if (slot >= 45) break;
+
                 OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
                 String name = requester.getName() != null ? requester.getName() : "Unknown";
 
@@ -57,23 +78,30 @@ public class ExpansionRequestAdminGUI {
                 slot++;
             }
         }
+
+        // Back Button
         inv.setItem(49, GUIManager.icon(Material.ARROW, "§fBack", List.of("§7Return to Admin Menu")));
+
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
         if (!(e.getInventory().getHolder() instanceof ExpansionAdminHolder holder)) return;
+
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
         int slot = e.getSlot();
+
+        // Handle Back Button
         if (slot == 49) {
             plugin.gui().admin().open(player);
             plugin.effects().playMenuFlip(player);
             return;
         }
 
+        // Handle Request Click
         UUID requesterId = holder.getRequesterId(slot);
         if (requesterId == null) return;
 
@@ -82,23 +110,28 @@ public class ExpansionRequestAdminGUI {
 
         if (req == null) {
             plugin.msg().send(player, "request_expired");
-            open(player);
+            open(player); // Refresh
             return;
         }
 
         if (e.getClick().isLeftClick()) {
+            // Approve
             if (manager.approveRequest(req)) {
-                plugin.msg().send(player, "admin_request_approved", Map.of("PLAYER", Bukkit.getOfflinePlayer(requesterId).getName()));
+                plugin.msg().send(player, "admin_request_approved", 
+                    Map.of("PLAYER", Bukkit.getOfflinePlayer(requesterId).getName()));
                 plugin.effects().playConfirm(player);
             } else {
                 plugin.msg().send(player, "admin_request_fail");
                 plugin.effects().playError(player);
             }
         } else if (e.getClick().isRightClick()) {
+            // Deny
             manager.denyRequest(req);
-            plugin.msg().send(player, "admin_request_denied", Map.of("PLAYER", Bukkit.getOfflinePlayer(requesterId).getName()));
+            plugin.msg().send(player, "admin_request_denied", 
+                Map.of("PLAYER", Bukkit.getOfflinePlayer(requesterId).getName()));
             plugin.effects().playUnclaim(player);
         }
-        open(player);
+
+        open(player); // Refresh GUI
     }
 }

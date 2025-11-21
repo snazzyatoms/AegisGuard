@@ -1,8 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
-import com.aegisguard.data.PlotStore.Plot;
+import com.aegisguard.data.Plot; // --- FIX: Use the standalone Plot class ---
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -16,7 +15,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * RolesGUI
@@ -33,16 +31,16 @@ public class RolesGUI {
     }
 
     /* -----------------------------
-     * Inventory Holders
+     * Inventory Holders (Must be PUBLIC)
      * ----------------------------- */
     
     // Holder for the Plot Selector GUI
-    private static class PlotSelectorHolder implements InventoryHolder {
+    public static class PlotSelectorHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }
 
     // Holder for the Main Roles GUI (shows player heads)
-    private static class RolesMenuHolder implements InventoryHolder {
+    public static class RolesMenuHolder implements InventoryHolder {
         private final Plot plot;
         public RolesMenuHolder(Plot plot) { this.plot = plot; }
         public Plot getPlot() { return plot; }
@@ -50,7 +48,7 @@ public class RolesGUI {
     }
 
     // Holder for the "Add Player" GUI (shows online players)
-    private static class RoleAddHolder implements InventoryHolder {
+    public static class RoleAddHolder implements InventoryHolder {
         private final Plot plot;
         public RoleAddHolder(Plot plot) { this.plot = plot; }
         public Plot getPlot() { return plot; }
@@ -58,7 +56,7 @@ public class RolesGUI {
     }
     
     // Holder for the "Manage Player" GUI (shows roles to assign)
-    private static class RoleManageHolder implements InventoryHolder {
+    public static class RoleManageHolder implements InventoryHolder {
         private final Plot plot;
         private final OfflinePlayer target;
         public RoleManageHolder(Plot plot, OfflinePlayer target) { 

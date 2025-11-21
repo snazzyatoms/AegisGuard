@@ -22,6 +22,7 @@ public class ExpansionRequestGUI {
     }
 
     // This tells the plugin "This inventory belongs to the Expansion GUI"
+    // Must be PUBLIC STATIC so GUIListener can access it
     public static class ExpansionHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }

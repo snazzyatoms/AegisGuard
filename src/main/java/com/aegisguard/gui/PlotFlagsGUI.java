@@ -1,8 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.PlotStore;
-import com.aegisguard.data.PlotStore.Plot;
+import com.aegisguard.data.Plot; // --- FIX: Corrected import for standalone Plot class ---
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,6 +25,7 @@ public class PlotFlagsGUI {
 
     /**
      * Reliable InventoryHolder that stores the plot being edited.
+     * Must be PUBLIC so GUIListener can access it.
      */
     public static class PlotFlagsHolder implements InventoryHolder {
         private final Plot plot;
@@ -162,31 +162,50 @@ public class PlotFlagsGUI {
         int slot = e.getRawSlot();
         switch (slot) {
             // --- ALL TOGGLES use the ProtectionManager API and are ASYNC-SAFE ---
-            case 11: { plugin.protection().togglePvP(plot);               plugin.effects().playMenuFlip(player); break; }
-            case 12: { plugin.protection().toggleContainers(plot);        plugin.effects().playMenuFlip(player); break; }
-            case 13: { plugin.protection().toggleMobProtection(plot);   plugin.effects().playMenuFlip(player); break; }
-            case 14: { plugin.protection().togglePetProtection(plot);   plugin.effects().playMenuFlip(player); break; }
-            case 15: { plugin.protection().toggleEntityProtection(plot);  plugin.effects().playMenuFlip(player); break; }
-            case 16: { plugin.protection().toggleFarmProtection(plot);  plugin.effects().playMenuFlip(player); break; }
+            case 11: 
+                plugin.protection().togglePvP(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
+            case 12: 
+                plugin.protection().toggleContainers(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
+            case 13: 
+                plugin.protection().toggleMobProtection(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
+            case 14: 
+                plugin.protection().togglePetProtection(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
+            case 15: 
+                plugin.protection().toggleEntityProtection(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
+            case 16: 
+                plugin.protection().toggleFarmProtection(plot); 
+                plugin.effects().playMenuFlip(player); 
+                break;
 
-            case 17: { // Safe Zone master toggle
+            case 17: // Safe Zone master toggle
                 plugin.protection().toggleSafeZone(plot, true);
                 plugin.msg().send(player, plot.getFlag("safe_zone", true) ? "safe_zone_enabled" : "safe_zone_disabled");
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
 
-            case 48: { // Back
+            case 48: // Back
                 plugin.gui().openMain(player); // Go back to the main menu
                 plugin.effects().playMenuFlip(player);
                 return; // Do not refresh
-            }
-            case 49: { // Exit
+
+            case 49: // Exit
                 player.closeInventory();
                 plugin.effects().playMenuClose(player);
                 return; // Do not refresh
-            }
-            default: { /* ignore filler */ }
+
+            default: 
+                /* ignore filler */
+                break;
         }
 
         open(player, plot); // Refresh GUI instantly

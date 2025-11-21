@@ -1,11 +1,8 @@
-package com.aegisguard;
+package com.aegisguard; // Make sure this matches your actual package structure (e.g. com.aegisguard.listeners)
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Handles logic related to banned players, specifically auto-removing plots.
@@ -27,18 +24,16 @@ public class BannedPlayerListener implements Listener {
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.KICK_BANNED) {
 
-            // --- IMPROVEMENT ---
-            // The event is already async, but we want to run our *own* async task
-            // to avoid holding up the login thread, and to be consistent
-            // with the /aegis admin cleanup command.
-            CompletableFuture.runAsync(() -> {
-                // This is now running on a separate thread
-                plugin.store().removeAllPlots(e.getUniqueId());
+            // --- FIX: Use plugin's internal helper ---
+            // This replaces the incompatible "getMainThreadExecutor" call.
+            // It automatically handles Folia vs Bukkit scheduling.
+            plugin.runGlobalAsync(() -> {
+                
+                // Remove plots from data store
+                plugin.store().removePlots(e.getUniqueId()); // Ensure method name matches IDataStore (removePlots vs removeAllPlots)
 
-                // Logging is thread-safe
                 plugin.getLogger().info("[AegisGuard] Auto-removed plots for banned player (on login): " + e.getUniqueId());
-
-            }, plugin.getServer().getScheduler().getMainThreadExecutor(plugin)); // Spigot's async executor
+            });
         }
     }
 }

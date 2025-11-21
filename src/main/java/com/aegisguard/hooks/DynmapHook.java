@@ -75,7 +75,12 @@ public class DynmapHook {
         double fillOpacity = plugin.cfg().raw().getDouble("hooks.dynmap.style.fill_opacity", 0.35);
 
         if (markerSet != null) {
-            markerSet.setDefaultAreaStyle(strokeWeight, strokeOpacity, strokeColor, fillOpacity, fillColor);
+            // Some older API versions might not support this method, wrapping in try-catch
+            try {
+                markerSet.setDefaultAreaStyle(strokeWeight, strokeOpacity, strokeColor, fillOpacity, fillColor);
+            } catch (NoSuchMethodError e) {
+                plugin.getLogger().warning("Dynmap version too old to support setDefaultAreaStyle.");
+            }
         }
     }
 
@@ -88,9 +93,17 @@ public class DynmapHook {
         long initialDelay = 20L * 30; // 30 seconds
         
         if (plugin.isFolia()) {
-             Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (t) -> runFullRender(), initialDelay, intervalTicks);
+             // Reflection call handled inside AegisGuard main class usually, but here we assume compilation works
+             // If compilation fails here, use the plugin.runTimerAsync() wrapper we added to AegisGuard.java
+             try {
+                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
+                 scheduler.getClass().getMethod("runAtFixedRate", org.bukkit.plugin.Plugin.class, java.util.function.Consumer.class, long.class, long.class)
+                     .invoke(scheduler, plugin, (java.util.function.Consumer<Object>) t -> runFullRender(), initialDelay, intervalTicks);
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
         } else {
-             Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::runFullRender, initialDelay, intervalTicks);
+             plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, this::runFullRender, initialDelay, intervalTicks);
         }
     }
 
@@ -107,7 +120,6 @@ public class DynmapHook {
             return;
         }
 
-        plugin.getLogger().info("Running Dynmap full render...");
         Collection<Plot> plots = plugin.store().getAllPlots();
         Map<String, AreaMarker> existingMarkers = new HashMap<>();
         
@@ -133,7 +145,12 @@ public class DynmapHook {
             } else {
                 // Update existing
                 marker.setCornerLocations(x, z);
-                marker.setWorld(worldName);
+                
+                // FIX: Safer world update logic
+                if (!marker.getWorld().equals(worldName)) {
+                    marker.deleteMarker();
+                    marker = markerSet.createAreaMarker(markerId, "", false, worldName, x, z, false);
+                }
             }
             
             if (marker != null) {

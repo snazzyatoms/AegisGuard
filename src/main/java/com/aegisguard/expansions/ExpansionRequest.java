@@ -1,56 +1,71 @@
 package com.aegisguard.expansions;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
-import com.aegisguard.gui.GUIManager;
+import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta; // --- FIX: Added Import ---
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 
-import java.util.List;
+public class ExpansionRequest {
 
-public class ExpansionRequestGUI {
+    private final UUID requester;
+    private final UUID plotOwner;
+    private final UUID plotId;
+    private final String worldName;
+    private final int currentRadius;
+    private final int requestedRadius;
+    private final double cost;
+    private final long timestamp;
 
-    private final AegisGuard plugin;
+    private boolean approved;
+    private boolean denied;
 
-    public ExpansionRequestGUI(AegisGuard plugin) {
-        this.plugin = plugin;
+    public ExpansionRequest(UUID requester, UUID plotOwner, UUID plotId, String worldName,
+                            int currentRadius, int requestedRadius, double cost) {
+        this.requester = requester;
+        this.plotOwner = plotOwner;
+        this.plotId = plotId;
+        this.worldName = worldName;
+        this.currentRadius = currentRadius;
+        this.requestedRadius = requestedRadius;
+        this.cost = cost;
+        this.timestamp = System.currentTimeMillis();
+        this.approved = false;
+        this.denied = false;
     }
 
-    // --- Public Holder for GUIListener ---
-    public static class ExpansionHolder implements InventoryHolder {
-        @Override public Inventory getInventory() { return null; }
+    // --- Getters ---
+    public UUID getRequester() { return requester; }
+    public UUID getPlotOwner() { return plotOwner; }
+    public UUID getPlotId() { return plotId; }
+    public String getWorldName() { return worldName; }
+    public int getCurrentRadius() { return currentRadius; }
+    public int getRequestedRadius() { return requestedRadius; }
+    public double getCost() { return cost; }
+    public long getTimestamp() { return timestamp; }
+
+    // --- Helper Methods ---
+    public World getWorld() { return Bukkit.getWorld(worldName); }
+    public OfflinePlayer getRequesterPlayer() { return Bukkit.getOfflinePlayer(requester); }
+    public OfflinePlayer getOwnerPlayer() { return Bukkit.getOfflinePlayer(plotOwner); }
+
+    // --- Status Logic ---
+    public synchronized boolean isApproved() { return approved; }
+    public synchronized boolean isDenied() { return denied; }
+    public synchronized boolean isPending() { return !approved && !denied; }
+
+    public synchronized void approve() {
+        this.approved = true;
+        this.denied = false;
     }
 
-    public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, "§bExpand Plot");
-
-        // Simple Placeholder for now
-        ItemStack item = new ItemStack(Material.DIAMOND_PICKAXE);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§aSubmit Expansion Request");
-            meta.setLore(List.of("§7Click to request a plot expansion.", "§7(Feature in development)"));
-            item.setItemMeta(meta);
-        }
-        inv.setItem(13, item);
-
-        inv.setItem(22, GUIManager.icon(Material.BARRIER, "§cClose", null));
-
-        player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+    public synchronized void deny() {
+        this.denied = true;
+        this.approved = false;
     }
 
-    public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true);
-        if (e.getSlot() == 22) {
-            player.closeInventory();
-        }
-        // Logic for submission would go here
+    public synchronized String getStatus() {
+        if (approved) return "APPROVED";
+        if (denied) return "DENIED";
+        return "PENDING";
     }
 }

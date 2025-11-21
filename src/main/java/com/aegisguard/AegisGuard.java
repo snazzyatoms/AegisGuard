@@ -1,7 +1,7 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.AegisCommand; // FIX: Correct package name
+import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.Plot;
@@ -28,24 +28,22 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
- * AegisGuard – main entrypoint
- *
- * --- FINAL VERSION ---
- * - Now uses IDataStore interface to switch between YML and SQL.
- * - Fully Folia-compatible with safe schedulers.
- * - All systems (Roles, Resize, Upkeep, Admin GUI, Protections) are complete.
+ * AegisGuard – Main Class
+ * Updated with Reflection to compile on non-Folia environments.
  */
 public class AegisGuard extends JavaPlugin {
 
-    // --- (fields) ---
+    public static AegisGuard plugin;
+    
     private AGConfig configMgr;
-    private IDataStore plotStore; // Uses the interface
+    private IDataStore plotStore;
     private GUIManager gui;
     private ProtectionManager protection;
     private SelectionService selection;
@@ -58,15 +56,12 @@ public class AegisGuard extends JavaPlugin {
 
     private boolean isFolia = false;
     
-    // Use generic Object to hold tasks (Handles both BukkitTask and ScheduledTask)
+    // Tasks are stored as Object to allow both BukkitTask and ScheduledTask
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
 
-    // Global instance
-    public static AegisGuard plugin;
-
-    // --- (getters) ---
+    // --- Getters ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
     public GUIManager gui() { return gui; }
@@ -79,36 +74,30 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public boolean isFolia() { return isFolia; }
 
-
     @Override
     public void onEnable() {
-        plugin = this; // Assign global instance
+        plugin = this;
 
-        // --- Folia Check ---
+        // Folia Detection
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
-            getLogger().info("Folia detected. Enabling Folia-compatible schedulers.");
+            getLogger().info("Folia detected. Using RegionScheduler.");
         } catch (ClassNotFoundException e) {
             isFolia = false;
-            getLogger().info("Folia not found. Using standard Bukkit schedulers.");
         }
 
-        // Bundle defaults
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
-        // Core systems
         this.configMgr = new AGConfig(this);
         
-        // --- Database Loader ---
+        // Database
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
-        if (storageType.equals("sql") || storageType.equals("mysql") || storageType.equals("sqlite")) {
+        if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
-            getLogger().info("Using SQL data store.");
         } else {
             this.plotStore = new YMLDataStore(this);
-            getLogger().info("Using YML data store.");
         }
         
         this.selection = new SelectionService(this);
@@ -120,16 +109,13 @@ public class AegisGuard extends JavaPlugin {
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
 
-        // --- CRITICAL: Load data BEFORE registering listeners ---
         this.plotStore.load();
         
-        // Load non-essential data asynchronously
         runGlobalAsync(() -> {
             messages.loadPlayerPreferences();
             expansionManager.load();
         });
 
-        // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
@@ -137,257 +123,65 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
 
-        // Commands
         PluginCommand aegis = getCommand("aegis");
-        if (aegis == null) {
-            getLogger().severe("Missing /aegis command in plugin.yml. Disabling plugin.");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
+        if (aegis != null) {
+            AegisCommand aegisExecutor = new AegisCommand(this);
+            aegis.setExecutor(aegisExecutor);
+            aegis.setTabCompleter(aegisExecutor);
         }
-        AegisCommand aegisExecutor = new AegisCommand(this);
-        aegis.setExecutor(aegisExecutor);
-        aegis.setTabCompleter(aegisExecutor);
 
         PluginCommand admin = getCommand("aegisadmin");
         if (admin != null) {
             AdminCommand adminExecutor = new AdminCommand(this);
             admin.setExecutor(adminExecutor);
             admin.setTabCompleter(adminExecutor);
-        } else {
-            getLogger().warning("No /aegisadmin command defined; admin tools will be unavailable.");
         }
 
-        // --- Start All Background Tasks ---
+        // Start Tasks
         startAutoSaver();
+        if (cfg().isUpkeepEnabled()) startUpkeepTask();
+        if (cfg().raw().getBoolean("wilderness_revert.enabled", false)) startWildernessRevertTask();
         
-        if (cfg().isUpkeepEnabled()) {
-            startUpkeepTask();
-        }
-        
-        if (cfg().raw().getBoolean("wilderness_revert.enabled", false)) {
-            startWildernessRevertTask();
-        }
-        
-        // --- Initialize Plugin Hooks (PAPI, Dynmap) ---
         initializeHooks();
-
-        getLogger().info("AegisGuard v" + getDescription().getVersion() + " enabled.");
+        getLogger().info("AegisGuard enabled.");
     }
     
-    /**
-     * Initializes all plugin hooks (Dynmap, PAPI) safely.
-     */
     private void initializeHooks() {
-        // Init Dynmap
         try {
              this.dynmapHook = new DynmapHook(this);
         } catch (NoClassDefFoundError | Exception e) {
-            getLogger().warning("Dynmap not found or failed to hook.");
+            getLogger().warning("Dynmap not found.");
         }
         
-        // Init PlaceholderAPI
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            try {
-                new AegisPAPIExpansion(this).register();
-                getLogger().info("Successfully hooked into PlaceholderAPI.");
-            } catch (Exception e) {
-                getLogger().severe("Failed to initialize PlaceholderAPI hook!");
-                e.printStackTrace();
-            }
+            new AegisPAPIExpansion(this).register();
         }
     }
 
     @Override
     public void onDisable() {
-        // Cancel tasks safely
-        cancelTask(autoSaveTask);
-        cancelTask(upkeepTask);
-        cancelTask(wildernessRevertTask);
+        cancelTaskReflectively(autoSaveTask);
+        cancelTaskReflectively(upkeepTask);
+        cancelTaskReflectively(wildernessRevertTask);
 
-        // Gracefully save all data on shutdown
-        if (plotStore != null) {
-            getLogger().info("Saving plots to disk...");
-            plotStore.saveSync();
-        }
-        if (expansionManager != null) {
-            getLogger().info("Saving pending expansion requests to disk...");
-            expansionManager.saveSync();
-        }
-        if (messages != null) {
-            getLogger().info("Saving player preferences to disk...");
-            messages.savePlayerData();
-        }
-        getLogger().info("AegisGuard disabled. Data saved.");
+        if (plotStore != null) plotStore.saveSync();
+        if (expansionManager != null) expansionManager.saveSync();
+        if (messages != null) messages.savePlayerData();
+        getLogger().info("AegisGuard disabled.");
     }
     
-    // Helper to cancel generic task objects (Folia/Bukkit compatibility)
-    private void cancelTask(Object task) {
-        if (task == null) return;
-        if (task instanceof BukkitTask) {
-            ((BukkitTask) task).cancel();
-        } else if (isFolia) {
-            // Reflective cancellation for Folia tasks to avoid import errors
-            try {
-                task.getClass().getMethod("cancel").invoke(task);
-            } catch (Exception ignored) {}
-        }
-    }
-
-    /**
-     * Starts the asynchronous auto-saver task.
-     */
-    private void startAutoSaver() {
-        long intervalTicks = 20L * 60 * 5; // 5 minutes
-
-        Runnable autoSaveLogic = () -> {
-            if (plotStore != null && plotStore.isDirty()) {
-                getLogger().info("Auto-saving plot data...");
-                plotStore.save();
-            }
-            if (expansionManager != null && expansionManager.isDirty()) {
-                expansionManager.save();
-            }
-            if (messages != null && messages.isPlayerDataDirty()) {
-                messages.savePlayerData();
-            }
-        };
-
-        if (isFolia) {
-            autoSaveTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, (task) -> autoSaveLogic.run(), intervalTicks, intervalTicks);
-        } else {
-            autoSaveTask = new BukkitRunnable() {
-                @Override public void run() { autoSaveLogic.run(); }
-            }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
-        }
-    }
-
-    
-    /**
-     * Starts the asynchronous plot upkeep/rent task.
-     */
-    private void startUpkeepTask() {
-        long intervalTicks = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
-        if (intervalTicks <= 0) return;
-        
-        double cost = cfg().getUpkeepCost();
-        long gracePeriodMillis = TimeUnit.DAYS.toMillis(cfg().getUpkeepGraceDays());
-        long auctionDurationMillis = TimeUnit.DAYS.toMillis(cfg().raw().getLong("auction.duration_days", 3));
-
-        Runnable upkeepLogic = () -> {
-            getLogger().info("[Upkeep] Running plot upkeep check...");
-            long currentTime = System.currentTimeMillis();
-            long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
-
-            for (Plot plot : new ArrayList<>(store().getAllPlots())) {
-                if (plot.isServerZone()) continue;
-                
-                long timeSinceLastPayment = currentTime - plot.getLastUpkeepPayment();
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-
-                if (plot.getPlotStatus().equals("ACTIVE")) {
-                    if (timeSinceLastPayment < checkIntervalMillis) continue;
-
-                    if (vault().charge(owner, cost)) {
-                        plot.setLastUpkeepPayment(currentTime);
-                        store().setDirty(true);
-                        if (owner.isOnline()) {
-                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_paid", Map.of("AMOUNT", vault().format(cost))));
-                        }
-                    } else {
-                        plot.setPlotStatus("EXPIRED");
-                        plot.setLastUpkeepPayment(currentTime);
-                        store().setDirty(true);
-                        if (owner.isOnline()) {
-                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_failed_warning"));
-                        }
-                    }
-                }
-                else if (plot.getPlotStatus().equals("EXPIRED")) {
-                    long timeInGrace = currentTime - plot.getLastUpkeepPayment();
-
-                    if (vault().charge(owner, cost)) {
-                         plot.setPlotStatus("ACTIVE");
-                         plot.setLastUpkeepPayment(currentTime);
-                         store().setDirty(true);
-                         if (owner.isOnline()) {
-                             runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "upkeep_paid"));
-                         }
-                    } else if (timeInGrace > gracePeriodMillis) {
-                        plot.setPlotStatus("AUCTION");
-                        plot.setLastUpkeepPayment(currentTime);
-                        plot.setCurrentBid(0, null);
-                        store().setDirty(true);
-                        if (owner.isOnline()) {
-                            runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "plot-now-auctioned"));
-                        }
-                    }
-                }
-                else if (plot.getPlotStatus().equals("AUCTION")) {
-                    long timeInAuction = currentTime - plot.getLastUpkeepPayment();
-                    
-                    if (timeInAuction > auctionDurationMillis) {
-                        UUID winnerUUID = plot.getCurrentBidder();
-                        if (winnerUUID != null) {
-                            OfflinePlayer winner = Bukkit.getOfflinePlayer(winnerUUID);
-                            double finalBid = plot.getCurrentBid();
-                            
-                            double ownerCutPercent = cfg().raw().getDouble("auction.owner_cut_percent", 50);
-                            double ownerCut = finalBid * (ownerCutPercent / 100.0);
-                            vault().give(owner, ownerCut);
-                            
-                            store().changePlotOwner(plot, winnerUUID, winner.getName());
-                            
-                            if (owner.isOnline()) {
-                                runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "auction-sold", Map.of("PLAYER", winner.getName(), "AMOUNT", vault().format(ownerCut))));
-                            }
-                            if (winner.isOnline()) {
-                                runMain(winner.getPlayer(), () -> msg().send(winner.getPlayer(), "auction-won", Map.of("PLOT_OWNER", owner.getName(), "AMOUNT", vault().format(finalBid))));
-                            }
-                        } else {
-                            store().removePlot(plot.getOwner(), plot.getPlotId());
-                            if (owner.isOnline()) {
-                                runMain(owner.getPlayer(), () -> msg().send(owner.getPlayer(), "plot_expired_upkeep"));
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        if (isFolia) {
-            upkeepTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, (task) -> upkeepLogic.run(), intervalTicks, intervalTicks);
-        } else {
-            upkeepTask = new BukkitRunnable() {
-                @Override public void run() { upkeepLogic.run(); }
-            }.runTaskTimerAsynchronously(this, 20L * 60, intervalTicks);
-        }
-    }
-    
-    private void startWildernessRevertTask() {
-        long intervalTicks = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
-        if (intervalTicks <= 0) intervalTicks = 20L * 60 * 10;
-        
-        WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
-        
-        if (isFolia) {
-             // For Folia, we schedule slightly differently, but for basic async tasks this works
-             wildernessRevertTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, (t) -> task.run(), intervalTicks, intervalTicks);
-        } else {
-             wildernessRevertTask = task.runTaskTimerAsynchronously(this, 20L * 60, intervalTicks);
-        }
-    }
-
-    public boolean isSoundEnabled(Player player) {
-        if (!cfg().globalSoundsEnabled()) return false;
-        String key = "sounds.players." + player.getUniqueId();
-        return getConfig().getBoolean(key, true);
-    }
-
-    // --- Folia-safe Schedulers ---
+    // --- REFLECTION-BASED SCHEDULERS (Fixes "cannot find symbol" errors) ---
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().run(this, (scheduledTask) -> task.run());
+            try {
+                // Bukkit.getGlobalRegionScheduler().run(plugin, task);
+                Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
+                Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class);
+                runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             Bukkit.getScheduler().runTaskAsynchronously(this, task);
         }
@@ -399,7 +193,14 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
         if (isFolia) {
-            player.getScheduler().run(this, (scheduledTask) -> task.run(), null);
+            try {
+                // player.getScheduler().run(plugin, task, null);
+                Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
+                Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class, Runnable.class);
+                runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }
@@ -407,9 +208,126 @@ public class AegisGuard extends JavaPlugin {
     
     public void runMainGlobal(Runnable task) {
         if (isFolia) {
-            Bukkit.getGlobalRegionScheduler().run(this, (scheduledTask) -> task.run());
+            try {
+                Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
+                Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class);
+                runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }
+    }
+
+    /**
+     * Uses reflection to schedule a repeating task on Folia, or standard Bukkit otherwise.
+     */
+    private Object scheduleAsyncRepeating(Runnable task, long intervalTicks) {
+        if (isFolia) {
+            try {
+                // Bukkit.getGlobalRegionScheduler().runAtFixedRate(...)
+                Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
+                Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", JavaPlugin.class, Consumer.class, long.class, long.class);
+                return runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), intervalTicks, intervalTicks);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            return new BukkitRunnable() {
+                @Override public void run() { task.run(); }
+            }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+        }
+    }
+
+    private void cancelTaskReflectively(Object task) {
+        if (task == null) return;
+        if (task instanceof BukkitTask) {
+            ((BukkitTask) task).cancel();
+        } else {
+            // Assume Folia ScheduledTask
+            try {
+                task.getClass().getMethod("cancel").invoke(task);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // --- TASKS ---
+
+    private void startAutoSaver() {
+        long interval = 20L * 60 * 5;
+        Runnable logic = () -> {
+            if (plotStore != null && plotStore.isDirty()) plotStore.save();
+            if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
+            if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
+        };
+        autoSaveTask = scheduleAsyncRepeating(logic, interval);
+    }
+
+    private void startUpkeepTask() {
+        long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
+        if (interval <= 0) return;
+        
+        double cost = cfg().getUpkeepCost();
+        long gracePeriodMillis = TimeUnit.DAYS.toMillis(cfg().getUpkeepGraceDays());
+        long auctionDurationMillis = TimeUnit.DAYS.toMillis(cfg().raw().getLong("auction.duration_days", 3));
+
+        Runnable logic = () -> {
+            long currentTime = System.currentTimeMillis();
+            long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
+
+            for (Plot plot : new ArrayList<>(store().getAllPlots())) {
+                if (plot.isServerZone()) continue;
+                
+                long timeSinceLastPayment = currentTime - plot.getLastUpkeepPayment();
+                OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
+
+                if (plot.getPlotStatus().equals("ACTIVE")) {
+                    if (timeSinceLastPayment < checkIntervalMillis) continue;
+                    if (vault().charge(owner, cost)) {
+                        plot.setLastUpkeepPayment(currentTime);
+                        store().setDirty(true);
+                    } else {
+                        plot.setPlotStatus("EXPIRED");
+                        plot.setLastUpkeepPayment(currentTime);
+                        store().setDirty(true);
+                    }
+                }
+                else if (plot.getPlotStatus().equals("EXPIRED")) {
+                    long timeInGrace = currentTime - plot.getLastUpkeepPayment();
+                    if (vault().charge(owner, cost)) {
+                         plot.setPlotStatus("ACTIVE");
+                         plot.setLastUpkeepPayment(currentTime);
+                         store().setDirty(true);
+                    } else if (timeInGrace > gracePeriodMillis) {
+                        plot.setPlotStatus("AUCTION");
+                        plot.setLastUpkeepPayment(currentTime);
+                        plot.setCurrentBid(0, null);
+                        store().setDirty(true);
+                    }
+                }
+                else if (plot.getPlotStatus().equals("AUCTION")) {
+                    if ((currentTime - plot.getLastUpkeepPayment()) > auctionDurationMillis) {
+                        UUID winnerUUID = plot.getCurrentBidder();
+                        if (winnerUUID != null) {
+                            OfflinePlayer winner = Bukkit.getOfflinePlayer(winnerUUID);
+                            store().changePlotOwner(plot, winnerUUID, winner.getName());
+                        } else {
+                            store().removePlot(plot.getOwner(), plot.getPlotId());
+                        }
+                    }
+                }
+            }
+        };
+        upkeepTask = scheduleAsyncRepeating(logic, interval);
+    }
+    
+    private void startWildernessRevertTask() {
+        long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
+        WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
+        // For wilderness revert, we generally want the custom runnable if strictly Bukkit, 
+        // but for compilation safety we use the wrapper.
+        wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
     }
 }

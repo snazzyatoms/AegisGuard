@@ -1,7 +1,7 @@
 package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot; // --- FIX: Correct import (using standalone Plot) ---
+import com.aegisguard.data.Plot;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -21,11 +21,10 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent; // --- NEW IMPORT ---
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,18 +34,11 @@ import java.util.concurrent.TimeUnit;
  * ProtectionManager (AegisGuard)
  * ---------------------------------------------
  * Enforces per-plot flags and coordinates event flow.
- *
- * --- UPGRADE NOTES (Final Sync) ---
- * - Handles Server Zones: Checks global flags if owner is SERVER_OWNER_UUID.
- * - Handles Plot Status: Prevents interaction on EXPIRED/AUCTIONED plots.
- * - Handles Welcome/Farewell messages on PlayerMoveEvent.
- * - Handles Wilderness Revert logging (if enabled in config).
  */
 public class ProtectionManager implements Listener {
 
     private final AegisGuard plugin;
-    private final boolean wildernessRevertEnabled; // For logging changes
-    private final Map<UUID, UUID> lastPlotMap = new ConcurrentHashMap<>(); // PlayerUUID -> LastPlotID
+    private final boolean wildernessRevertEnabled; 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
 
     public ProtectionManager(AegisGuard plugin) {
@@ -55,12 +47,11 @@ public class ProtectionManager implements Listener {
     }
 
     /* -----------------------------------------------------
-     * PLOT MOVEMENT & MESSAGES (Welcome/Farewell/Ambient)
+     * PLOT MOVEMENT & MESSAGES
      * ----------------------------------------------------- */
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
-        // Only check when crossing a block boundary
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
             e.getFrom().getBlockY() == e.getTo().getBlockY() &&
             e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
@@ -71,23 +62,16 @@ public class ProtectionManager implements Listener {
         Plot plotTo = plugin.store().getPlotAt(e.getTo());
         Plot plotFrom = plugin.store().getPlotAt(e.getFrom());
 
-        // --- Handle Ambient Particles ---
-        handleAmbientParticles(p, plotTo);
-
-        // --- Plot Entry/Exit Logic ---
         if (plotTo != null && !plotTo.equals(plotFrom)) {
-            // Entered a new plot
             if (!plotTo.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, plotTo.getWelcomeMessage(), plotTo.getOwnerName(), "welcome");
             }
-            // Check for entry effects
             if (plotTo.getEntryEffect() != null) {
                 plugin.effects().playCustomEffect(p, plotTo.getEntryEffect(), plotTo.getCenter(plugin));
             }
         }
         
         if (plotFrom != null && !plotFrom.equals(plotTo)) {
-            // Left a plot
             if (!plotFrom.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, plotFrom.getFarewellMessage(), plotFrom.getOwnerName(), "farewell");
             }
@@ -95,15 +79,13 @@ public class ProtectionManager implements Listener {
     }
 
     private void handleAmbientParticles(Player p, Plot plot) {
-        // To be implemented: A repeating task should check for ambient particles.
-        // For now, this is a placeholder check.
+        // Placeholder for ambient particles
     }
     
     private void sendPlotMessage(Player p, String message, String ownerName, String type) {
-        if (message == null || message.isBlank()) return;
+        if (message == null || message.isEmpty()) return;
 
         long currentTime = System.currentTimeMillis();
-        // Cooldown: only allow a message every 5 seconds per player to prevent spam
         if (messageCooldowns.getOrDefault(p.getUniqueId(), 0L) > currentTime) {
             return;
         }
@@ -117,7 +99,6 @@ public class ProtectionManager implements Listener {
 
     /* -----------------------------------------------------
      * EVENT HANDLERS — Build & Interact
-     * --- MODIFIED (Wilderness Revert & Server Zones) ---
      * ----------------------------------------------------- */
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -126,7 +107,7 @@ public class ProtectionManager implements Listener {
         Block block = e.getBlock();
         Plot plot = plugin.store().getPlotAt(block.getLocation());
 
-        // --- NEW: Wilderness Revert Log (Runs on success) ---
+        // Wilderness Revert Log
         if (plot == null && wildernessRevertEnabled) {
             final String oldMat = block.getType().toString();
             final UUID uuid = p.getUniqueId();
@@ -138,12 +119,11 @@ public class ProtectionManager implements Listener {
         }
         
         if (plot == null) return;
-        
         if (p.hasPermission("aegis.admin")) return;
 
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("build", false)) { // Check "build" flag, default FALSE
+            if (!plot.getFlag("build", false)) {
                 e.setCancelled(true);
                 p.sendMessage(plugin.msg().get("cannot_break"));
                 plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
@@ -151,7 +131,7 @@ public class ProtectionManager implements Listener {
             return;
         }
         
-        // --- Player Plot Logic (Status & Roles) ---
+        // Status Check
         if (checkPlotStatus(p, plot)) { 
             e.setCancelled(true); 
             p.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -159,7 +139,7 @@ public class ProtectionManager implements Listener {
             return; 
         }
 
-        // Check Role Permission
+        // Role Permission
         if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_break"));
@@ -173,7 +153,7 @@ public class ProtectionManager implements Listener {
         Block block = e.getBlock();
         Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
 
-        // --- NEW: Wilderness Revert Log (Runs on success) ---
+        // Wilderness Revert Log
         if (plot == null && wildernessRevertEnabled) {
             final String oldMat = e.getBlockReplacedState().getType().toString();
             final String newMat = block.getType().toString();
@@ -186,12 +166,11 @@ public class ProtectionManager implements Listener {
         }
         
         if (plot == null) return;
-        
         if (p.hasPermission("aegis.admin")) return;
         
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("build", false)) { // Check "build" flag, default FALSE
+            if (!plot.getFlag("build", false)) { 
                 e.setCancelled(true);
                 p.sendMessage(plugin.msg().get("cannot_place"));
                 plugin.effects().playEffect("build", "deny", p, e.getBlock().getLocation());
@@ -199,7 +178,7 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Player Plot Logic (Status & Roles) ---
+        // Status Check
         if (checkPlotStatus(p, plot)) { 
             e.setCancelled(true); 
             p.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -207,7 +186,7 @@ public class ProtectionManager implements Listener {
             return; 
         }
         
-        // Check Role Permission
+        // Role Permission
         if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_place"));
@@ -226,7 +205,7 @@ public class ProtectionManager implements Listener {
         
         if (p.hasPermission("aegis.admin")) return;
         
-        // --- NEW: Status Check ---
+        // Status Check
         if (checkPlotStatus(p, plot)) { 
             e.setCancelled(true); 
             p.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -234,16 +213,16 @@ public class ProtectionManager implements Listener {
             return; 
         }
         
-        // --- Server Zone Logic ---
+        // Server Zone
         if (plot.isServerZone()) {
             if (isContainer(block.getType())) {
-                if (!plot.getFlag("containers", false)) { // Check "containers" flag
+                if (!plot.getFlag("containers", false)) {
                     e.setCancelled(true);
                     p.sendMessage(plugin.msg().get("cannot_interact"));
                     plugin.effects().playEffect("containers", "deny", p, block.getLocation());
                 }
             } else if (isInteractable(block.getType())) {
-                if (!plot.getFlag("interact", true)) { // Check "interact" flag
+                if (!plot.getFlag("interact", true)) {
                     e.setCancelled(true);
                     p.sendMessage(plugin.msg().get("cannot_interact"));
                     plugin.effects().playEffect("interact", "deny", p, block.getLocation());
@@ -252,7 +231,7 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Player Plot Logic (Roles) ---
+        // Player Plot Logic
         if (isContainer(block.getType())) {
             if (enabled(plot, "containers") && !plot.hasPermission(p.getUniqueId(), "CONTAINERS", plugin)) {
                 e.setCancelled(true);
@@ -283,7 +262,7 @@ public class ProtectionManager implements Listener {
         
         if (attacker.hasPermission("aegis.admin")) return;
 
-        // --- NEW: Status Check ---
+        // Status Check
         if (checkPlotStatus(attacker, plot) || checkPlotStatus(victim, plot)) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -291,9 +270,9 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("pvp", false)) { // Check "pvp" flag
+            if (!plot.getFlag("pvp", false)) {
                 e.setCancelled(true);
                 attacker.sendMessage(plugin.msg().get("cannot_attack"));
                 plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -301,8 +280,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Player Plot Logic ---
-        if (enabled(plot, "pvp")) { // Player plot PvP flag
+        // Player Plot Logic
+        if (enabled(plot, "pvp")) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_attack"));
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -324,7 +303,7 @@ public class ProtectionManager implements Listener {
 
         if (attacker.hasPermission("aegis.admin")) return;
         
-        // --- NEW: Status Check ---
+        // Status Check
         if (checkPlotStatus(attacker, plot)) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -332,9 +311,9 @@ public class ProtectionManager implements Listener {
             return;
         }
         
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("pets", false)) { // Check "pets" flag
+            if (!plot.getFlag("pets", false)) {
                 e.setCancelled(true);
                 attacker.sendMessage(plugin.msg().get("cannot_interact"));
                 plugin.effects().playEffect("pets", "deny", attacker, pet.getLocation());
@@ -342,7 +321,7 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Player Plot Logic ---
+        // Player Plot Logic
         if (enabled(plot, "pets") && !plot.hasPermission(attacker.getUniqueId(), "PET_DAMAGE", plugin)) {
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_interact"));
@@ -366,7 +345,7 @@ public class ProtectionManager implements Listener {
         
         if (p.hasPermission("aegis.admin")) return;
 
-        // --- NEW: Status Check ---
+        // Status Check
         if (checkPlotStatus(p, plot)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("plot-is-locked"));
@@ -374,9 +353,9 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("entities", true)) { // Check "entities" flag
+            if (!plot.getFlag("entities", true)) {
                 e.setCancelled(true);
                 p.sendMessage(plugin.msg().get("cannot_interact"));
                 plugin.effects().playEffect("entities", "deny", p, clicked.getLocation());
@@ -384,7 +363,7 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // --- Player Plot Logic ---
+        // Player Plot Logic
         if (enabled(plot, "entities") && !plot.hasPermission(p.getUniqueId(), "ENTITY_INTERACT", plugin)) {
             e.setCancelled(true);
             p.sendMessage(plugin.msg().get("cannot_interact"));
@@ -431,15 +410,15 @@ public class ProtectionManager implements Listener {
 
         if (p.hasPermission("aegis.admin")) return;
         
-        // --- NEW: Status Check ---
+        // Status Check
         if (checkPlotStatus(p, plot)) {
             e.setCancelled(true);
-            return; // Don't spam message for trampling
+            return; 
         }
         
-        // --- Server Zone Check (Global Rules) ---
+        // Server Zone
         if (plot.isServerZone()) {
-            if (!plot.getFlag("farm", true)) { // Check "farm" flag
+            if (!plot.getFlag("farm", true)) {
                 e.setCancelled(true);
             }
             return;
@@ -457,13 +436,10 @@ public class ProtectionManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent e) {
-        // Iterate over a copy of the list to avoid errors while removing
         for (Block block : new ArrayList<>(e.blockList())) {
             Plot plot = plugin.store().getPlotAt(block.getLocation());
             if (plot == null) continue;
             
-            // --- MODIFIED ---
-            // Check server zone OR player zone flag
             String flag = "tnt-damage";
             if (plot.isServerZone()) {
                 if (!plot.getFlag(flag, false)) {
@@ -480,10 +456,7 @@ public class ProtectionManager implements Listener {
         Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
         if (plot == null) return;
 
-        // We only care about fire spread, not players using flint/steel
         if (e.getCause() == BlockIgniteEvent.IgniteCause.SPREAD || e.getCause() == BlockIgniteEvent.IgniteCause.LAVA) {
-            
-            // --- MODIFIED ---
             String flag = "fire-spread";
             if (plot.isServerZone()) {
                 if (!plot.getFlag(flag, false)) {
@@ -501,24 +474,19 @@ public class ProtectionManager implements Listener {
         BlockFace direction = e.getDirection();
 
         for (Block block : e.getBlocks()) {
-            // Get the location this block will be *moved to*
             Location targetLoc = block.getLocation().add(direction.getModX(), direction.getModY(), direction.getModZ());
             Plot targetPlot = plugin.store().getPlotAt(targetLoc);
 
-            // --- MODIFIED ---
             String flag = "piston-use";
             boolean pistonPlotBlocked = pistonPlot != null && (pistonPlot.isServerZone() ? !pistonPlot.getFlag(flag, false) : enabled(pistonPlot, flag));
             boolean targetPlotBlocked = targetPlot != null && (targetPlot.isServerZone() ? !targetPlot.getFlag(flag, false) : enabled(targetPlot, flag));
 
-            // Case 1: Piston OUTSIDE, pushing IN
             if (pistonPlot == null && targetPlotBlocked) {
                 e.setCancelled(true); return;
             }
-            // Case 2: Piston INSIDE, pushing OUT
             else if (pistonPlotBlocked && targetPlot == null) {
                 e.setCancelled(true); return;
             }
-            // Case 3: Piston INSIDE, pushing INSIDE (different plot)
             else if (pistonPlot != null && targetPlot != null && !pistonPlot.equals(targetPlot)) {
                  if (pistonPlotBlocked || targetPlotBlocked) {
                     e.setCancelled(true); return;
@@ -527,27 +495,45 @@ public class ProtectionManager implements Listener {
         }
     }
 
-
     /* -----------------------------------------------------
-     * FLAG API (used by PlotFlagsGUI)
+     * STATUS & FLAG API
      * ----------------------------------------------------- */
 
     /**
-     * Toggles a flag for a specific plot.
-     * This is now ASYNC-SAFE and does not cause lag.
+     * CRITICAL FIX: This method checks if a plot is "locked" due to status.
+     * Returns true if interaction should be BLOCKED.
      */
-    private void toggleFlag(Plot plot, String flag) {
-        if (plot == null) return; // Should not happen if called from SettingsGUI
+    public boolean checkPlotStatus(Player player, Plot plot) {
+        if (plot == null) return false;
+        
+        // Admins override locks
+        if (player.hasPermission("aegis.admin")) return false;
+        
+        // Active plots are not locked
+        if (plot.getPlotStatus().equalsIgnoreCase("ACTIVE")) return false;
+        
+        // Expired or Auctioned plots are locked
+        return true;
+    }
 
+    /**
+     * CRITICAL FIX: Required for PlaceholderAPI expansion.
+     * Wraps the internal check.
+     */
+    public boolean isFlagEnabled(Plot plot, String flag) {
+        return hasFlag(plot, flag);
+    }
+
+    private void toggleFlag(Plot plot, String flag) {
+        if (plot == null) return;
         boolean current = plot.getFlag(flag, true);
         plot.setFlag(flag, !current);
-
-        plugin.store().setDirty(true); // This uses the async auto-saver.
+        plugin.store().setDirty(true);
     }
 
     // Exposed to SettingsGUI
-    public boolean isPvPEnabled(Plot plot)     { return hasFlag(plot, "pvp"); }
-    public void    togglePvP(Plot plot)        { toggleFlag(plot, "pvp"); }
+    public boolean isPvPEnabled(Plot plot)         { return hasFlag(plot, "pvp"); }
+    public void    togglePvP(Plot plot)            { toggleFlag(plot, "pvp"); }
 
     public boolean isContainersEnabled(Plot plot) { return hasFlag(plot, "containers"); }
     public void    toggleContainers(Plot plot)    { toggleFlag(plot, "containers"); }
@@ -559,20 +545,18 @@ public class ProtectionManager implements Listener {
     public void    togglePetProtection(Plot plot)     { toggleFlag(plot, "pets"); }
 
     public boolean isEntityProtectionEnabled(Plot plot){ return hasFlag(plot, "entities"); }
-    public void    toggleEntityProtection(Plot plot)    { toggleFlag(plot, "entities"); }
+    public void    toggleEntityProtection(Plot plot)     { toggleFlag(plot, "entities"); }
 
     public boolean isFarmProtectionEnabled(Plot plot) { return hasFlag(plot, "farm"); }
     public void    toggleFarmProtection(Plot plot)    { toggleFlag(plot, "farm"); }
 
-    public boolean isSafeZoneEnabled(Plot plot)     { return hasFlag(plot, "safe_zone"); }
+    public boolean isSafeZoneEnabled(Plot plot)      { return hasFlag(plot, "safe_zone"); }
     public void    toggleSafeZone(Plot plot, boolean playSound) {
-        // This is a special toggle with extra logic
         if (plot == null) return;
         
         boolean next = !plot.getFlag("safe_zone", true);
         plot.setFlag("safe_zone", next);
 
-        // When toggling Safe Zone ON, also ensure the individual protections are ON
         if (next) {
             plot.setFlag("pvp", true);
             plot.setFlag("mobs", true);
@@ -581,12 +565,9 @@ public class ProtectionManager implements Listener {
             plot.setFlag("pets", true);
             plot.setFlag("farm", true);
         }
-
-        plugin.store().setDirty(true); // Async-safe save
+        plugin.store().setDirty(true);
     }
 
-
-    // --- NEW: Toggles for Advanced Protections ---
     public boolean isTntDamageEnabled(Plot plot) { return hasFlag(plot, "tnt-damage"); }
     public void    toggleTntDamage(Plot plot)    { toggleFlag(plot, "tnt-damage"); }
     
@@ -601,13 +582,10 @@ public class ProtectionManager implements Listener {
      * HELPERS
      * ----------------------------------------------------- */
 
-    /** Master enable: true if safe_zone OR the flag itself is true. */
     private boolean enabled(Plot plot, String flag) {
-        // "safe_zone" defaults to TRUE in the plot object
         return plot.getFlag("safe_zone", true) || plot.getFlag(flag, true);
     }
 
-    /** Checks if a plot has a flag enabled. */
     private boolean hasFlag(Plot plot, String flag) {
         return plot != null && enabled(plot, flag);
     }
@@ -622,7 +600,6 @@ public class ProtectionManager implements Listener {
     }
 
     private boolean isContainer(Material type) {
-        // Cover common inventories + all colored shulker boxes
         if (type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX")) return true;
         return switch (type) {
             case CHEST, TRAPPED_CHEST, BARREL,
@@ -635,7 +612,6 @@ public class ProtectionManager implements Listener {
         };
     }
     
-    // --- NEW ---
     private boolean isInteractable(Material type) {
         String name = type.name();
         if (name.endsWith("_DOOR") || name.endsWith("_GATE") || name.endsWith("_BUTTON") || type == Material.LEVER || type == Material.DAYLIGHT_DETECTOR) {

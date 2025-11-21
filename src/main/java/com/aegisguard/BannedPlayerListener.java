@@ -1,13 +1,13 @@
-package com.aegisguard; // Make sure this matches your actual package structure (e.g. com.aegisguard.listeners)
+package com.aegisguard;
 
+import com.aegisguard.data.Plot;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-/**
- * Handles logic related to banned players, specifically auto-removing plots.
- * This cleans up the main plugin class.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class BannedPlayerListener implements Listener {
 
     private final AegisGuard plugin;
@@ -16,23 +16,24 @@ public class BannedPlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    /**
-     * Listens for a banned player trying to log in.
-     * When detected, this will fire an ASYNC task to remove their plots.
-     */
     @EventHandler
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.KICK_BANNED) {
 
-            // --- FIX: Use plugin's internal helper ---
-            // This replaces the incompatible "getMainThreadExecutor" call.
-            // It automatically handles Folia vs Bukkit scheduling.
             plugin.runGlobalAsync(() -> {
+                // FIX: Use standard iteration instead of missing 'removePlots' method
+                List<Plot> plots = plugin.store().getPlots(e.getUniqueId());
                 
-                // Remove plots from data store
-                plugin.store().removePlots(e.getUniqueId()); // Ensure method name matches IDataStore (removePlots vs removeAllPlots)
-
-                plugin.getLogger().info("[AegisGuard] Auto-removed plots for banned player (on login): " + e.getUniqueId());
+                if (plots != null && !plots.isEmpty()) {
+                    // Create a copy to avoid concurrent modification exceptions
+                    List<Plot> toRemove = new ArrayList<>(plots);
+                    
+                    for (Plot plot : toRemove) {
+                        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+                    }
+                    
+                    plugin.getLogger().info("[AegisGuard] Auto-removed " + toRemove.size() + " plots for banned player: " + e.getUniqueId());
+                }
             });
         }
     }

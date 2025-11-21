@@ -31,13 +31,10 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID; // --- FIX: Added missing import ---
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/**
- * AegisGuard – Main Class
- * Updated with Reflection to compile on non-Folia environments.
- */
 public class AegisGuard extends JavaPlugin {
 
     public static AegisGuard plugin;
@@ -55,13 +52,10 @@ public class AegisGuard extends JavaPlugin {
     private DynmapHook dynmapHook;
 
     private boolean isFolia = false;
-    
-    // Tasks are stored as Object to allow both BukkitTask and ScheduledTask
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
 
-    // --- Getters ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
     public GUIManager gui() { return gui; }
@@ -78,11 +72,10 @@ public class AegisGuard extends JavaPlugin {
     public void onEnable() {
         plugin = this;
 
-        // Folia Detection
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
-            getLogger().info("Folia detected. Using RegionScheduler.");
+            getLogger().info("Folia detected.");
         } catch (ClassNotFoundException e) {
             isFolia = false;
         }
@@ -92,7 +85,6 @@ public class AegisGuard extends JavaPlugin {
 
         this.configMgr = new AGConfig(this);
         
-        // Database
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -123,6 +115,10 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
 
+        if (cfg().autoRemoveBannedPlots()) {
+             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
+        }
+
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
             AegisCommand aegisExecutor = new AegisCommand(this);
@@ -137,7 +133,6 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
-        // Start Tasks
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         if (cfg().raw().getBoolean("wilderness_revert.enabled", false)) startWildernessRevertTask();
@@ -170,37 +165,33 @@ public class AegisGuard extends JavaPlugin {
         getLogger().info("AegisGuard disabled.");
     }
     
-    // --- REFLECTION-BASED SCHEDULERS (Fixes "cannot find symbol" errors) ---
+    // --- FIX: Added missing method used by SettingsGUI/EffectUtil ---
+    public boolean isSoundEnabled(Player player) {
+        if (!cfg().globalSoundsEnabled()) return false;
+        String key = "sounds.players." + player.getUniqueId();
+        return getConfig().getBoolean(key, true);
+    }
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
             try {
-                // Bukkit.getGlobalRegionScheduler().run(plugin, task);
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         } else {
             Bukkit.getScheduler().runTaskAsynchronously(this, task);
         }
     }
     
     public void runMain(Player player, Runnable task) {
-        if (player == null) {
-            runMainGlobal(task);
-            return;
-        }
+        if (player == null) { runMainGlobal(task); return; }
         if (isFolia) {
             try {
-                // player.getScheduler().run(plugin, task, null);
                 Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
                 Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class, Runnable.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) {}
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }
@@ -212,28 +203,19 @@ public class AegisGuard extends JavaPlugin {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("run", JavaPlugin.class, Consumer.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }
     }
 
-    /**
-     * Uses reflection to schedule a repeating task on Folia, or standard Bukkit otherwise.
-     */
     private Object scheduleAsyncRepeating(Runnable task, long intervalTicks) {
         if (isFolia) {
             try {
-                // Bukkit.getGlobalRegionScheduler().runAtFixedRate(...)
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", JavaPlugin.class, Consumer.class, long.class, long.class);
                 return runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), intervalTicks, intervalTicks);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            } catch (Exception e) { return null; }
         } else {
             return new BukkitRunnable() {
                 @Override public void run() { task.run(); }
@@ -246,14 +228,11 @@ public class AegisGuard extends JavaPlugin {
         if (task instanceof BukkitTask) {
             ((BukkitTask) task).cancel();
         } else {
-            // Assume Folia ScheduledTask
             try {
                 task.getClass().getMethod("cancel").invoke(task);
             } catch (Exception ignored) {}
         }
     }
-
-    // --- TASKS ---
 
     private void startAutoSaver() {
         long interval = 20L * 60 * 5;
@@ -279,7 +258,6 @@ public class AegisGuard extends JavaPlugin {
 
             for (Plot plot : new ArrayList<>(store().getAllPlots())) {
                 if (plot.isServerZone()) continue;
-                
                 long timeSinceLastPayment = currentTime - plot.getLastUpkeepPayment();
                 OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
 
@@ -324,10 +302,8 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void startWildernessRevertTask() {
-        long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
+        long interval = 20L * 60 * 10;
         WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
-        // For wilderness revert, we generally want the custom runnable if strictly Bukkit, 
-        // but for compilation safety we use the wrapper.
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
     }
 }

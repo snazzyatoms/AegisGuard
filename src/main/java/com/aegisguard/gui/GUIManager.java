@@ -15,13 +15,6 @@ import java.util.List;
  * GUIManager
  * - Central hub for all plugin GUIs.
  * - Provides access to all GUI instances.
- * - Contains static helper methods for creating icons.
- *
- * --- UPGRADE NOTES ---
- * - This is the "Ultimate" version.
- * - Removed the title-based handleClick() method (now handled by GUIListener).
- * - Removed obsolete TrustedGUI.
- * - Added all new GUIs (Roles, Flags, Cosmetics, Market, Auction, AdminList).
  */
 public class GUIManager {
 
@@ -42,12 +35,16 @@ public class GUIManager {
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
+        
+        // Initialize all GUIs
+        // Note: If any of these classes are missing in your folder, the build will fail.
+        // Ensure you have created the files for all of them.
         this.playerGUI = new PlayerGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
         this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
         this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
-        this.rolesGUI = new RolesGUI(plugin); // Replaces TrustedGUI
+        this.rolesGUI = new RolesGUI(plugin); 
         this.plotFlagsGUI = new PlotFlagsGUI(plugin);
         this.adminPlotListGUI = new AdminPlotListGUI(plugin);
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
@@ -72,7 +69,9 @@ public class GUIManager {
      * Open Main Menu (Player GUI)
      * ----------------------------- */
     public void openMain(Player player) {
-        playerGUI.open(player);
+        if (playerGUI != null) {
+            playerGUI.open(player);
+        }
     }
 
     /* -----------------------------
@@ -92,7 +91,12 @@ public class GUIManager {
         if (meta != null) {
             meta.setDisplayName(name);
             if (lore != null) meta.setLore(lore);
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ITEM_SPECIFICS);
+            
+            // FIX: Removed HIDE_POTION_EFFECTS / HIDE_ITEM_SPECIFICS
+            // These cause errors on older Spigot versions.
+            // HIDE_ATTRIBUTES and HIDE_ENCHANTS are safe on all versions.
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
+            
             item.setItemMeta(meta);
         }
         return item;

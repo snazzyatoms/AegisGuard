@@ -8,19 +8,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
 /**
  * PlayerGUI
  * - The main player-facing menu for AegisGuard.
- * - This is the "Ultimate" version, featuring all player-facing GUIs.
- *
- * --- UPGRADE NOTES ---
- * - Slots updated for full 27-slot menu (Flags, Market, Auction, Roles, Settings).
- * - Calls are now synchronized to the correct classes (Roles, PlotFlags, Market).
- * - All sound calls use plugin.effects().
+ * - Features all player-facing GUIs (Flags, Market, Auction, Roles, Settings).
  */
 public class PlayerGUI {
 
@@ -32,8 +26,9 @@ public class PlayerGUI {
 
     /**
      * Tag holder so click handler only reacts to this GUI.
+     * Must be PUBLIC for GUIListener.
      */
-    private static class PlayerMenuHolder implements InventoryHolder {
+    public static class PlayerMenuHolder implements InventoryHolder {
         @Override
         public Inventory getInventory() {
             return null;
@@ -77,7 +72,7 @@ public class PlayerGUI {
                 plugin.msg().getList(player, "market_lore", List.of("§7Buy, sell, and rent plots."))
         ));
         
-        // --- NEW: Plot Auctions (if enabled) --- SLOT 18
+        // Plot Auctions (if enabled) - SLOT 18
         if (plugin.cfg().isUpkeepEnabled()) {
              inv.setItem(18, GUIManager.icon(
                 Material.LAVA_BUCKET,
@@ -86,7 +81,7 @@ public class PlayerGUI {
             ));
         }
         
-        // --- NEW: Player Settings (Personal) --- SLOT 20
+        // Player Settings (Personal) - SLOT 20
         inv.setItem(20, GUIManager.icon(
                 Material.COMPARATOR,
                 GUIManager.safeText(plugin.msg().get(player, "button_player_settings"), "§9Player Settings"),
@@ -123,14 +118,13 @@ public class PlayerGUI {
         Plot plot = plugin.store().getPlotAt(player.getLocation());
 
         switch (e.getSlot()) {
-            case 10: { // LIGHTNING_ROD (Claim)
+            case 10: // Claim
                 player.closeInventory();
                 plugin.selection().confirmClaim(player);
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
             
-            case 12: { // OAK_SIGN (Plot Flags)
+            case 12: // Plot Flags
                 if (plot == null || !plot.getOwner().equals(player.getUniqueId())) {
                     plugin.msg().send(player, "no_plot_here");
                     plugin.effects().playError(player);
@@ -139,45 +133,42 @@ public class PlayerGUI {
                 plugin.gui().flags().open(player, plot);
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
             
-            case 14: { // PLAYER_HEAD (Plot Roles)
-                plugin.gui().roles().open(player); // Opens the new RolesGUI
+            case 14: // Plot Roles
+                plugin.gui().roles().open(player);
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
             
-            case 16: { // GOLD_INGOT (Marketplace)
+            case 16: // Marketplace
                 plugin.gui().market().open(player, 0);
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
             
-            case 18: { // LAVA_BUCKET (Auction)
+            case 18: // Auction
                  if (plugin.cfg().isUpkeepEnabled()) {
                     plugin.gui().auction().open(player, 0);
                     plugin.effects().playMenuFlip(player);
                 }
                 break;
-            }
             
-            case 20: { // COMPARATOR (Player Settings)
-                // SettingsGUI can handle a null plot, but we pass it if available
-                plugin.gui().settings().open(player, plot);
+            case 20: // Player Settings
+                // SettingsGUI handles null plot gracefully, but we pass it if available
+                plugin.gui().settings().open(player);
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
-            case 24: { // WRITABLE_BOOK (Info)
+
+            case 24: // Info
                 plugin.msg().send(player, "info_message", "§7AegisGuard: lightweight land protection...");
                 plugin.effects().playMenuFlip(player);
                 break;
-            }
-            case 26: { // BARRIER (Exit)
+
+            case 26: // Exit
                 player.closeInventory();
                 plugin.effects().playMenuClose(player);
                 break;
-            }
-            default: { /* ignore other slots */ }
+
+            default: 
+                break;
         }
     }
 }

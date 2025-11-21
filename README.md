@@ -70,27 +70,26 @@ Turn land into a valuable asset.
 
 -----
 
-## ❓ Frequently Asked Questions (FAQ)
+❓ Frequently Asked Questions
+Q: Is this compatible with Paper/Spigot?
 
-\<details\>
-\<summary\>\<b\>Is this compatible with Paper/Spigot?\</b\>\</summary\>
-Yes\! AegisGuard works on all modern versions of Spigot, Paper, Purpur, and Pufferfish. It detects your server software automatically.
-\</details\>
+Yes. AegisGuard works on all modern versions of Spigot, Paper, Purpur, and Pufferfish (1.16+). It automatically detects your server software to optimize performance.
 
-\<details\>
-\<summary\>\<b\>Does it work on Folia?\</b\>\</summary\>
-Yes\! AegisGuard is one of the few protection plugins natively designed for Folia's threaded region system.
-\</details\>
+Q: Does it really work on Folia?
 
-\<details\>
-\<summary\>\<b\>Can I disable the Economy features?\</b\>\</summary\>
-Absolutely. If you don't use Vault, AegisGuard automatically switches to "Free Mode." You can also toggle specific features like Upkeep or Auctions in the `config.yml`.
-\</details\>
+Yes. AegisGuard is natively designed for Folia. It uses the GlobalRegionScheduler and proper threading to ensure it never locks up your regions, making it safe for high-performance multi-threaded networks.
 
-\<details\>
-\<summary\>\<b\>Where do I get support?\</b\>\</summary\>
-If the spirits of the machine are acting up, please open an Issue on GitHub or join our Discord community for support.
-\</details\>
+Q: Can I disable the Economy features?
+
+Absolutely. If you do not use Vault, AegisGuard automatically switches to "Free Mode." You can also toggle specific economy features (like Upkeep taxes or Auctions) individually in the config.yml.
+
+Q: Does it support SQL?
+
+Yes. You can switch between flat-file YAML (default) and MySQL / SQLite / MariaDB in the config. We use HikariCP for high-performance database connections.
+
+Q: Where do I get support?
+
+If the spirits of the machine are acting up, please open an Issue on the GitHub repository or join our community Discord. We are steadfast in our updates.
 
 -----
 

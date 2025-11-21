@@ -1,7 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot; // --- FIX: Correct import ---
+import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,22 +9,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.List;
 
 /**
- * ==============================================================
  * SettingsGUI
- * - This menu handles *personal* player preferences (sounds, language).
- * - It requires the plot context to open the Language Style Selector correctly.
- * ==============================================================
- *
- * --- UPGRADE NOTES ---
- * - Corrected Plot import.
- * - Switched all sound calls to plugin.effects().
- * - Switched all flag API calls to take the Plot object (even though they are player prefs).
- * - Fixed lag-inducing config save by using runGlobalAsync.
+ * - Handles *personal* player preferences (sounds, language).
  */
 public class SettingsGUI {
 
@@ -36,6 +24,7 @@ public class SettingsGUI {
 
     /**
      * Tag holder that stores the plot being edited (or null).
+     * Must be PUBLIC for GUIListener.
      */
     public static class SettingsGUIHolder implements InventoryHolder {
         private final Plot plot;
@@ -58,8 +47,6 @@ public class SettingsGUI {
      * Open Settings Menu
      * ----------------------------- */
     public void open(Player player, Plot plot) {
-        // We pass the plot here, even though this is a player menu, so the
-        // language style toggles can pass the plot back if needed for refresh.
         Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54,
                 GUIManager.safeText(plugin.msg().get(player, "settings_menu_title"), "§bAegisGuard — Settings")
         );
@@ -83,10 +70,6 @@ public class SettingsGUI {
         }
 
         // --- Protection Dummies (Show global defaults, but don't toggle) ---
-        // NOTE: These buttons are now non-functional placeholders in THIS menu,
-        // as the actual toggles live in PlotFlagsGUI.
-        
-        // --- MODIFIED: Icons use global defaults ---
         inv.setItem(11, GUIManager.icon(Material.IRON_SWORD, "§7PvP Protection (Global Default)", plugin.msg().getList(player, "pvp_toggle_lore")));
         inv.setItem(12, GUIManager.icon(Material.CHEST, "§7Container Protection (Global Default)", plugin.msg().getList(player, "container_toggle_lore")));
         inv.setItem(13, GUIManager.icon(Material.ZOMBIE_HEAD, "§7Mob Protection (Global Default)", plugin.msg().getList(player, "mob_toggle_lore")));
@@ -100,11 +83,12 @@ public class SettingsGUI {
          * Language Style Selection
          * ----------------------------- */
         String currentStyle = plugin.msg().getPlayerStyle(player);
-        Material icon = switch (currentStyle) {
-            case "modern_english" -> Material.BOOK;
-            case "hybrid_english" -> Material.ENCHANTED_BOOK;
-            default -> Material.WRITABLE_BOOK;
-        };
+        Material icon;
+        switch (currentStyle) {
+            case "modern_english": icon = Material.BOOK; break;
+            case "hybrid_english": icon = Material.ENCHANTED_BOOK; break;
+            default: icon = Material.WRITABLE_BOOK; break;
+        }
 
         inv.setItem(31, GUIManager.icon(
                 icon,
@@ -127,7 +111,12 @@ public class SettingsGUI {
         ));
 
         player.openInventory(inv);
-        plugin.effects().playMenuFlip(player); // --- SOUND FIX ---
+        plugin.effects().playMenuFlip(player);
+    }
+    
+    // Overload for convenience
+    public void open(Player player) {
+        open(player, null);
     }
 
     /* -----------------------------
@@ -138,15 +127,14 @@ public class SettingsGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        // --- MODIFIED --- Get Plot from Holder for Refresh Context
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) {
             return;
         }
-        Plot plot = holder.getPlot(); // Can be null if player is not in a plot
+        Plot plot = holder.getPlot();
 
         int slot = e.getRawSlot();
         switch (slot) {
-            case 10: { // Sounds Toggle
+            case 10: // Sounds Toggle
                 boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
                 if (!globalEnabled) {
                     plugin.effects().playError(player);
@@ -154,7 +142,7 @@ public class SettingsGUI {
                     boolean currentlyEnabled = plugin.isSoundEnabled(player);
                     plugin.getConfig().set("sounds.players." + player.getUniqueId(), !currentlyEnabled);
 
-                    // --- CRITICAL LAG FIX (FOLIA-SAFE) ---
+                    // Save Async
                     plugin.runGlobalAsync(() -> {
                         plugin.saveConfig();
                     });
@@ -162,15 +150,14 @@ public class SettingsGUI {
                     plugin.effects().playMenuFlip(player);
                 }
                 break;
-            }
-            // Slots 11-17 are now non-functional display buttons.
-            case 11: case 12: case 13: case 14: case 15: case 16: case 17: {
+            
+            // Slots 11-17 are dummy buttons
+            case 11: case 12: case 13: case 14: case 15: case 16: case 17:
                 plugin.effects().playError(player);
                 plugin.msg().send(player, "settings_gui_not_toggle");
                 break;
-            }
             
-            case 31: { // Language cycle
+            case 31: // Language cycle
                 if (!plugin.cfg().raw().getBoolean("messages.allow_runtime_switch", true)) {
                     plugin.effects().playError(player);
                     plugin.msg().send(player, "language_switch_disabled");
@@ -178,47 +165,40 @@ public class SettingsGUI {
                 }
                 
                 String current = plugin.msg().getPlayerStyle(player);
-                String next = switch (current) {
-                    case "old_english" -> "hybrid_english";
-                    case "hybrid_english" -> "modern_english";
-                    default -> "old_english";
-                };
+                String next;
+                if (current.equals("old_english")) next = "hybrid_english";
+                else if (current.equals("hybrid_english")) next = "modern_english";
+                else next = "old_english";
                 
                 plugin.msg().setPlayerStyle(player, next);
                 plugin.effects().playMenuFlip(player);
                 
-                // Refresh the GUI with the plot context, if available
                 open(player, plot); 
                 return; 
-            }
 
-            case 48: { // Back
+            case 48: // Back
                 plugin.gui().openMain(player);
                 plugin.effects().playMenuFlip(player);
                 return; 
-            }
-            case 49: { // Exit
+            
+            case 49: // Exit
                 player.closeInventory();
                 plugin.effects().playMenuClose(player);
                 return;
-            }
-            default: { /* ignore filler */ }
+            
+            default: 
+                /* ignore filler */
+                break;
         }
 
         open(player, plot); // Refresh GUI instantly
     }
 
-    /* -----------------------------
-     * Helpers
-     * ----------------------------- */
-    
     private String formatStyle(String style) {
-        return switch (style) {
-            case "modern_english" -> "§aModern English";
-            case "hybrid_english" -> "§eHybrid English";
-            default -> "§dOld English";
-        };
+        switch (style) {
+            case "modern_english": return "§aModern English";
+            case "hybrid_english": return "§eHybrid English";
+            default: return "§dOld English";
+        }
     }
-
-    // --- All other helpers removed / moved to ProtectionManager ---
 }

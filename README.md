@@ -111,7 +111,7 @@ If the spirits of the machine are acting up, please open an Issue on the GitHub 
 ### 🛡️ Forged by Aegis Divine 🛡️
 *Protecting realms with code and spirit.*
 
-[**Support Discord**]([https://discord.gg/Y2NpuR7UZE) &nbsp;•&nbsp; [**Spigot Page**](#) &nbsp;•&nbsp; [**Report an Issue**](#)
+[**Support Discord**][https://discord.gg/Y2NpuR7UZE) &nbsp;•&nbsp; [**Spigot Page**](#) &nbsp;•&nbsp; [**Report an Issue**](#)
 
 <br/>
 

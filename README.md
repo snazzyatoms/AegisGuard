@@ -71,6 +71,7 @@ Turn land into a valuable asset.
 -----
 
 ❓ Frequently Asked Questions
+
 Q: Is this compatible with Paper/Spigot?
 
 Yes. AegisGuard works on all modern versions of Spigot, Paper, Purpur, and Pufferfish (1.16+). It automatically detects your server software to optimize performance.

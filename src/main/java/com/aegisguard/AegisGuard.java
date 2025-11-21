@@ -1,6 +1,10 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
+// Check these two imports match your folder structure
+import com.aegisguard.command.AegisCommand; 
+import com.aegisguard.listeners.BannedPlayerListener;
+
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.Plot;
@@ -23,11 +27,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +65,8 @@ public class AegisGuard extends JavaPlugin {
     private BukkitTask upkeepTask;
     private BukkitTask wildernessRevertTask;
 
+    // Global instance
+    public static AegisGuard plugin;
 
     // --- (getters) ---
     public AGConfig cfg() { return configMgr; }
@@ -76,6 +84,8 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        plugin = this; // Assign global instance
+
         // --- Folia Check ---
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
@@ -124,7 +134,7 @@ public class AegisGuard extends JavaPlugin {
 
         // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        Bukkit.getPluginManager().registerEvents(protection, this); // --- TYPO FIX ---
+        Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
@@ -382,9 +392,9 @@ public class AegisGuard extends JavaPlugin {
                             double finalBid = plot.getCurrentBid();
                             
                             // Pay owner cut (if any)
-                            double ownerCutPercent = plugin.cfg().raw().getDouble("auction.owner_cut_percent", 50);
+                            double ownerCutPercent = cfg().raw().getDouble("auction.owner_cut_percent", 50);
                             double ownerCut = finalBid * (ownerCutPercent / 100.0);
-                            plugin.vault().give(owner, ownerCut);
+                            vault().give(owner, ownerCut);
                             
                             // Transfer ownership
                             getLogger().info("[Upkeep] Plot " + plot.getPlotId() + " auction won by " + winner.getName() + " for " + finalBid);
@@ -436,7 +446,8 @@ public class AegisGuard extends JavaPlugin {
         if (intervalTicks <= 0) intervalTicks = 20L * 60 * 10;
         
         // This task is fully async-safe and handles its own logic
-        wildernessRevertTask = new WildernessRevertTask(this, store)
+        // FIX: changed 'store' to 'plotStore'
+        wildernessRevertTask = new WildernessRevertTask(this, plotStore)
             .runTaskTimerAsynchronously(this, 20L * 60, intervalTicks); // 1-minute initial delay
     }
 

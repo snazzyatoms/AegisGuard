@@ -104,7 +104,12 @@ If the spirits of the machine are acting up, please open an Issue on the GitHub 
 
 -----
 
-\<div align="center"\>
-\<b\>Made with ❤️ by Aegis Divine\</b\><br>
-\<i\>Simple. Steadfast. Eternal.\</i\>
-\</div\>
+🛡️ Forged by Aegis Divine 🛡️
+Protecting realms with code and spirit.
+
+Support Discord  •  Spigot Page  •  Report an Issue
+
+"Simple. Steadfast. Eternal."
+
+
+Made with ❤️ for the Minecraft Community.

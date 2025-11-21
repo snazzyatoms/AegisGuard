@@ -107,10 +107,6 @@ For servers that desire conflict. Completely optional.
 
 -----
 
-\<div align="center"\>
-<br>
-\<i\>Have a vision for the Aegis? Submit a Feature Request in our Issues tab.\</i\>
-<br>
-<br>
-\<img src="[https://capsule-render.vercel.app/api?type=waving\&color=000000\&height=60\&section=footer](https://www.google.com/search?q=https://capsule-render.vercel.app/api%3Ftype%3Dwaving%26color%3D000000%26height%3D60%26section%3Dfooter)" alt="Footer" /\>
-\</div\>
+
+Have a vision for the Aegis? Submit a Feature Request in our Issues tab.
+

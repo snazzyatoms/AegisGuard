@@ -1,81 +1,73 @@
 package com.aegisguard.visualization;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.selection.SelectionService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Manages the starting and stopping of PlotVisualizerTasks
- * based on whether a player is holding the Aegis Scepter.
- */
 public class WandEquipListener implements Listener {
 
     private final AegisGuard plugin;
-    private final Map<UUID, BukkitTask> activeVisualizers = new HashMap<>();
+    private final Map<UUID, Object> activeTasks = new HashMap<>();
 
     public WandEquipListener(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent e) {
-        stopVisualizer(e.getPlayer());
+    public void onSlotChange(PlayerItemHeldEvent e) {
+        Player p = e.getPlayer();
+        boolean isWand = false;
+        if (p.getInventory().getItem(e.getNewSlot()) != null) {
+            if (p.getInventory().getItem(e.getNewSlot()).getType() == Material.GOLDEN_HOE) {
+                isWand = true;
+            }
+        }
+
+        if (isWand) {
+            startVisualizer(p);
+        } else {
+            stopVisualizer(p);
+        }
     }
 
     @EventHandler
-    public void onPlayerChangeItem(PlayerItemHeldEvent e) {
-        Player player = e.getPlayer();
-        ItemStack newItem = player.getInventory().getItem(e.getNewSlot());
+    public void onQuit(PlayerQuitEvent e) {
+        stopVisualizer(e.getPlayer());
+    }
 
-        if (isAegisWand(newItem)) {
-            startVisualizer(player);
+    private void startVisualizer(Player p) {
+        if (activeTasks.containsKey(p.getUniqueId())) return;
+
+        PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
+        
+        if (plugin.isFolia()) {
+            // Folia: Run it, don't store the specific Task object to avoid type mismatch
+            runnable.runTaskTimer(plugin, 0L, 20L);
+            activeTasks.put(p.getUniqueId(), runnable); 
         } else {
-            stopVisualizer(player);
+            // Bukkit: Store the BukkitTask
+            BukkitTask task = runnable.runTaskTimerAsynchronously(plugin, 0L, 20L);
+            activeTasks.put(p.getUniqueId(), task);
         }
     }
 
-    private boolean isAegisWand(ItemStack item) {
-        if (item == null || item.getType() != Material.LIGHTNING_ROD) {
-            return false;
-        }
-        ItemMeta meta = item.getItemMeta();
-        return meta != null && meta.getPersistentDataContainer().has(SelectionService.WAND_KEY, PersistentDataType.BYTE);
-    }
-
-    private void startVisualizer(Player player) {
-        // Don't start if one is already running
-        if (activeVisualizers.containsKey(player.getUniqueId())) {
-            return;
-        }
-
-        // Create the task
-        PlotVisualizerTask task = new PlotVisualizerTask(plugin, player);
-
-        // Schedule it (Folia-safe, since this event is on the player's thread)
-        long interval = plugin.cfg().raw().getLong("visualization.interval_ticks", 40L); // 2 seconds
-        
-        task.runTaskTimer(plugin, 0L, interval);
-        
-        activeVisualizers.put(player.getUniqueId(), task);
-    }
-
-    private void stopVisualizer(Player player) {
-        BukkitTask existingTask = activeVisualizers.remove(player.getUniqueId());
-        if (existingTask != null) {
-            existingTask.cancel();
+    private void stopVisualizer(Player p) {
+        Object task = activeTasks.remove(p.getUniqueId());
+        if (task != null) {
+            if (task instanceof BukkitTask) {
+                ((BukkitTask) task).cancel();
+            } else if (task instanceof PlotVisualizerTask) {
+                ((PlotVisualizerTask) task).cancel();
+            }
         }
     }
 }

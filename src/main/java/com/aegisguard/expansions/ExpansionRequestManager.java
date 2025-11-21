@@ -1,14 +1,14 @@
 package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot; // --- FIX: Now imports the correct Plot class ---
+import com.aegisguard.data.Plot;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.World; // --- FIX: Added missing import ---
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -21,18 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ExpansionRequestManager
- * ... (existing comments) ...
- *
- * --- UPGRADE NOTES ---
- * - Now uses the correct `Plot.java` data class.
- * - All data logic is async-safe.
+ * - Handles the creation, approval, and denial of plot expansion requests.
+ * - Manages data persistence to expansion-requests.yml.
  */
 public class ExpansionRequestManager {
 
     private final AegisGuard plugin;
     private final Map<UUID, ExpansionRequest> activeRequests = new ConcurrentHashMap<>();
 
-    // --- (fields for persistence) ---
+    // --- Persistence ---
     private final File file;
     private FileConfiguration data;
     private volatile boolean isDirty = false;
@@ -40,7 +37,11 @@ public class ExpansionRequestManager {
     public ExpansionRequestManager(AegisGuard plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "expansion-requests.yml");
-        // load() is now called async from AegisGuard.java
+        // load() is called async from AegisGuard.java
+    }
+
+    public Collection<ExpansionRequest> getActiveRequests() {
+        return Collections.unmodifiableCollection(activeRequests.values());
     }
 
     /* -----------------------------
@@ -67,7 +68,6 @@ public class ExpansionRequestManager {
         // Check per-world rules
         WorldRulesManager rules = plugin.worldRules();
         if (!rules.allowClaims(requester.getWorld())) {
-            // We can re-use this message key from config.yml
             plugin.msg().send(requester, "admin-zone-no-claims");
             return false;
         }
@@ -86,7 +86,7 @@ public class ExpansionRequestManager {
         ExpansionRequest request = new ExpansionRequest(
                 requester.getUniqueId(),
                 plot.getOwner(),
-                plot.getPlotId(), // <-- CRITICAL FIX
+                plot.getPlotId(),
                 requester.getWorld().getName(),
                 currentRadius,
                 newRadius,
@@ -94,7 +94,7 @@ public class ExpansionRequestManager {
         );
 
         activeRequests.put(requester.getUniqueId(), request);
-        setDirty(true); // Mark for saving
+        setDirty(true);
 
         Map<String, String> placeholders = Map.of(
                 "PLAYER", requester.getName(),
@@ -120,15 +120,17 @@ public class ExpansionRequestManager {
             // Deny if payment fails
             denyRequest(req);
             // Notify admin if they are online
-            Player admin = Bukkit.getPlayer(req.getPlotOwner()); // Assuming admin is the plot owner
+            Player admin = Bukkit.getPlayer(req.getPlotOwner()); 
             if (admin != null) {
-                plugin.msg().send(admin, "expansion_payment_failed", Map.of("PLAYER", requester.getName()));
+                plugin.msg().send(admin, "expansion_payment_failed", Map.of("PLAYER", requester.getName() != null ? requester.getName() : "Unknown"));
             }
             return false;
         }
 
-        // Apply expansion
+        // Get Old Plot
+        // Note: Assuming store has a method to get plot by ID or we search for it
         Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
+        
         if (oldPlot == null) {
             // Plot was deleted after request, refund and deny
             plugin.getLogger().warning("Plot " + req.getPlotId() + " not found for approval. Refunding player.");
@@ -200,7 +202,7 @@ public class ExpansionRequestManager {
         newPlot.setSpawnLocation(oldPlot.getSpawnLocation());
         newPlot.setWelcomeMessage(oldPlot.getWelcomeMessage());
         newPlot.setFarewellMessage(oldPlot.getFarewellMessage());
-        // (Market/Auction/Cosmetic data is also preserved)
+        // (Market/Auction/Cosmetic data is also preserved if passed correctly)
         
         plugin.store().addPlot(newPlot);
         return true;
@@ -239,13 +241,10 @@ public class ExpansionRequestManager {
     private boolean chargePlayer(OfflinePlayer player, double amount, String worldName) {
         if (amount <= 0) return true;
 
-        if (plugin.cfg().useVault(player.getPlayer().getWorld())) {
+        if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
             VaultHook vault = plugin.vault();
-            if (!player.isOnline()) {
-                plugin.getLogger().warning("Vault charge failed: Player " + player.getName() + " is offline.");
-                return false;
-            }
-            return vault.charge(player.getPlayer(), amount);
+            // FIX: Pass OfflinePlayer directly to avoid NPE
+            return vault.charge(player, amount);
         } else {
             // Item-based payment
             if (!player.isOnline()) {
@@ -269,7 +268,7 @@ public class ExpansionRequestManager {
     private void refundPlayer(OfflinePlayer player, double amount, String worldName) {
         if (amount <= 0) return;
 
-        if (plugin.cfg().useVault(player.getPlayer().getWorld())) {
+        if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
             plugin.vault().give(player, amount);
         } else {
             if (!player.isOnline()) {
@@ -305,13 +304,12 @@ public class ExpansionRequestManager {
      * This is a placeholder. A real GUI would store this in the item's NBT.
      */
     public UUID getRequesterFromItem(ItemStack item) {
-        // This logic is obsolete as ExpansionRequestListener is no longer used.
         return null;
     }
 
 
     /* -----------------------------
-     * Persistence (NEW)
+     * Persistence
      * ----------------------------- */
     public boolean isDirty() {
         return isDirty;

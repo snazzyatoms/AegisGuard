@@ -104,12 +104,22 @@ If the spirits of the machine are acting up, please open an Issue on the GitHub 
 
 -----
 
-🛡️ Forged by Aegis Divine 🛡️
-Protecting realms with code and spirit.
+<div align="center">
 
-Support Discord  •  Spigot Page  •  Report an Issue
+<br/>
 
-"Simple. Steadfast. Eternal."
+### 🛡️ Forged by Aegis Divine 🛡️
+*Protecting realms with code and spirit.*
+
+[**Support Discord**]([https://discord.gg/YOUR_INVITE_CODE](https://discord.gg/Y2NpuR7UZE)) &nbsp;•&nbsp; [**Spigot Page**](#) &nbsp;•&nbsp; [**Report an Issue**](#)
+
+<br/>
+
+*"Simple. Steadfast. Eternal."*
+<br/>
+Made with ❤️ for the Minecraft Community.
+
+</div>
 
 
 Made with ❤️ for the Minecraft Community.

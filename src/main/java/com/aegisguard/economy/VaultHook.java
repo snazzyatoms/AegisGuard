@@ -5,10 +5,9 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.server.PluginDisableEvent; // --- NEW IMPORT ---
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -25,7 +24,6 @@ public class VaultHook implements Listener {
     public VaultHook(AegisGuard plugin) {
         this.plugin = plugin;
 
-        // --- IMPROVEMENT ---
         // Don't bother hooking if the user disabled it in the config
         if (!plugin.cfg().useVault()) {
             plugin.getLogger().info("Economy features disabled via config.yml (free mode).");
@@ -34,23 +32,22 @@ public class VaultHook implements Listener {
 
         // Try immediately (softdepend ensures order, but this keeps it resilient)
         setupEconomy();
+        
         // Also watch for Vault loading/unloading later
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    /** Re-try when Vault enables after us */
+    /** * Re-try when Vault enables after us 
+     */
     @EventHandler
     public void onPluginEnable(PluginEnableEvent e) {
-        // --- MODIFIED ---
-        // Added config check
         if (economy == null && "Vault".equalsIgnoreCase(e.getPlugin().getName())) {
             if (!plugin.cfg().useVault()) return; // Check again in case of /ag reload
             setupEconomy();
         }
     }
 
-    /** --- NEW ---
-     * Un-hook if Vault is disabled during runtime
+    /** * Un-hook if Vault is disabled during runtime
      */
     @EventHandler
     public void onPluginDisable(PluginDisableEvent e) {
@@ -62,58 +59,64 @@ public class VaultHook implements Listener {
 
     private void setupEconomy() {
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
-// ... existing code ...
-        // ... existing code ...
             economy = null;
             return;
         }
-// ... existing code ...
-        // ... existing code ...
+
+        // FIX: Defined 'rsp' which was missing in your snippet
+        RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
+        
         if (rsp != null) {
             this.economy = rsp.getProvider();
-// ... existing code ...
+            plugin.getLogger().info("Vault hooked successfully. Economy enabled.");
         } else {
-// ... existing code ...
+            this.economy = null;
         }
     }
 
     public boolean isEnabled() {
-// ... existing code ...
+        return economy != null;
     }
 
-    /** Nicely format currency for messages. Falls back to plain amount. */
+    /** * Nicely format currency for messages. Falls back to plain amount. 
+     */
     public String format(double amount) {
-// ... existing code ...
-        // ... existing code ...
-        return String.format("$%,.2f", amount);
+        if (economy == null) {
+            return String.format("$%,.2f", amount);
+        }
+        return economy.format(amount);
     }
 
     public double balance(OfflinePlayer p) {
-// ... existing code ...
+        if (economy == null) return 0.0;
+        return economy.getBalance(p);
     }
 
-    /** Charge a player. Returns true on success. Free if Vault missing or amount <= 0. */
-    public boolean charge(Player p, double amount) {
-// ... existing code ...
-        // ... existing code ...
-        if (!economy.has(op, amount)) return false;
+    /** * Charge a player. Returns true on success. 
+     * Free if Vault missing or amount <= 0. 
+     */
+    public boolean charge(OfflinePlayer p, double amount) {
+        if (economy == null) return true; // Free mode
+        if (amount <= 0) return true;
 
-        EconomyResponse res = economy.withdrawPlayer(op, amount);
-// ... existing code ...
-        // ... existing code ...
-        return true;
+        // FIX: Used 'p' directly instead of undefined 'op'
+        if (!economy.has(p, amount)) {
+            return false;
+        }
+
+        EconomyResponse res = economy.withdrawPlayer(p, amount);
+        return res.transactionSuccess();
     }
 
     /**
      * Give money to a player (no-op if Vault missing or amount <= 0).
-     * --- MODIFIED --- to support offline players for refunds.
      */
-    public void give(OfflinePlayer op, double amount) {
+    public void give(OfflinePlayer p, double amount) {
         if (economy == null || amount <= 0 || !Double.isFinite(amount)) return;
-        // OfflinePlayer op = p; // No longer needed
-        EconomyResponse res = economy.depositPlayer(op, amount);
+
+        EconomyResponse res = economy.depositPlayer(p, amount);
         if (!res.transactionSuccess()) {
-            plugin.getLogger().warning("[Vault] deposit failed for " + op.getName() + ": " + res.errorMessage);
+            plugin.getLogger().warning("[Vault] deposit failed for " + p.getName() + ": " + res.errorMessage);
         }
     }
 }

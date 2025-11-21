@@ -1,75 +1,120 @@
-🔮 The Oracle: Roadmap to AegisGuard 2.0
-"The Aegis has secured the present, but the future calls for expansion. We gaze now toward the horizon, where realms unite and cities rise."
+# 🔮 The Oracle: Roadmap to AegisGuard 2.0
 
-This document outlines the planned features for AegisGuard 2.0. Our focus is shifting from single-plot management to Network Ecosystems and Social Economy.
+\<div align="center"\>
+\<img width="100%" src="[https://capsule-render.vercel.app/api?type=waving\&color=000000\&height=120\&section=header\&text=Future%20Visions\&fontSize=40\&fontColor=ffffff\&animation=fadeIn](https://www.google.com/search?q=https://capsule-render.vercel.app/api%3Ftype%3Dwaving%26color%3D000000%26height%3D120%26section%3Dheader%26text%3DFuture%2520Visions%26fontSize%3D40%26fontColor%3Dffffff%26animation%3DfadeIn)" alt="Header" /\>
 
-🌐 Flagship Feature: The "Empire" Sync
-Status: [High Priority] • Target: v2.0.0
+<br>
 
-We are breaking the walls between servers. If you run a BungeeCord or Velocity network, AegisGuard will become a singular, unified system.
+[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
+[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
+[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
 
-💬 Global Plot Chat (The "Private Frequency")
-No longer shall plot coordination spam the global chat.
+\</div\>
 
-The Feature: A dedicated, cross-server chat channel restricted to the members of a specific plot.
+-----
 
-How it works:
+> *"The Aegis has secured the present, but the future calls for expansion. We gaze now toward the horizon, where realms unite and cities rise from the dust."*
 
-Players toggle it with /ag chat or /ag c.
+This document outlines the planned evolution of **AegisGuard**. Our focus is shifting from single-plot management to **Network Ecosystems**, **Social Economy**, and **Visual Immersion**.
 
-Messages sent here are only seen by trusted members of that plot, even if they are on different servers in the network.
+-----
 
-Why: Keeps global chat clean for admins and allows factions/groups to coordinate raids, builds, and economy secretly.
+## 🌐 The "Empire" Sync (Cross-Server)
 
-🔗 Unified Limits
-Global Claim Blocks: A player's claim limit tracks across the entire network. Claiming a plot on Survival uses up slots that reflect on Creative, preventing economy exploits.
+### *Breaking the walls between worlds.*
 
-🏙️ The Township System
-Status: [Planned] • Target: v2.1.0
+> **Status:** `[High Priority]`  •  **Target:** `v2.0.0`
 
-Transform from a simple plot owner into a Landlord.
+If you run a **BungeeCord** or **Velocity** network, AegisGuard will become a singular, unified system. No more isolated gameplay.
 
-Sub-Zoning: Use the Golden Hoe to define smaller areas inside your main plot (e.g., "Shop A", "Apartment 4B").
+### 💬 The "Aegis Frequency" (Global Plot Chat)
 
-Rent Automation: List these sub-zones on the Marketplace. Other players can rent just that room from you.
+We are solving the chaos of global chat spam.
 
-Tax Collection: The plugin automatically collects rent from tenants and deposits it into the landlord's Vault account.
+  * **The Problem:** Players coordinating builds or raids clutter the main chat, annoying others.
+  * **The Solution:** A dedicated, cross-server channel restricted to plot members.
+  * **Command:** `/ag chat` toggles a private frequency.
+  * **Result:** A player farming on *Survival* can strategize instantly with their architect on *Creative* without whispering or using Discord.
 
-💎 The Nexus: Plot Progression
-Status: [Concept] • Target: v2.2.0
+### 🔗 Unified Player Data
 
-Land should not be static; it should grow in power.
+  * **Global Claim Blocks:** A player's claim limit tracks across the entire network.
+  * **Economy Sync:** Upkeep paid on one server updates the status on all others.
 
-The Core: Every plot gains a "Nexus" block.
+<br>
 
-Leveling Up: Owners can invest XP and Money into the Nexus to level up the plot.
+-----
 
-Unlockable Perks:
+## 🏙️ The Township System
 
-Lvl 5: Flight within plot borders.
+### *From Owner to Landlord.*
 
-Lvl 10: permanent Haste/Speed II beacon effects (no beacon required).
+> **Status:** `[In Design]`  •  **Target:** `v2.1.0`
 
-Lvl 20: Increased member slots and radius expansion limits.
+Current plots are static. Townships allow for a "Real Estate" economy within a single claim.
 
-⚔️ The Siege Module (Optional)
-Status: [Concept] • Target: v2.3.0
+  * **Sub-Zoning:** Use the Golden Hoe to define smaller areas *inside* your main plot (e.g., "Shop A", "Apartment 4B").
+  * **Rent Automation:** List these sub-zones on the Marketplace. Other players can rent *just that room* from you.
+  * **Tax Collection:** The plugin automatically collects rent from tenants and deposits it into the landlord's Vault account.
 
-For servers that desire conflict amidst the order.
+<br>
 
-Siege Banners: An expensive item that can be placed on an enemy border.
+-----
 
-The Mechanic: Once placed, a timer begins. If the defenders fail to destroy the banner within 15 minutes, the plot's PVP and Container protections drop for 1 hour.
+## 💎 The Nexus: Plot Progression
 
-Balance: Completely optional config toggle. Perfect for Factions-Lite or Semi-Anarchy servers.
+### *Land that grows in power.*
 
-🔮 Augmented Reality (Visuals)
-Status: [Planned] • Target: v2.0.0
+> **Status:** `[Concept]`  •  **Target:** `v2.2.0`
 
-Moving away from chat spam and towards modern UI.
+Give players a reason to stay and grind. Every plot gains a "Nexus" block that acts as its heart.
 
-Holographic Info: Entering a plot displays a floating Title/Subtitle or Hologram (via DecentHolograms) showing the Owner and Plot Name.
+  * **Leveling Up:** Owners invest XP, Money, or custom items into the Nexus.
+  * **Unlockable Perks:**
+      * **Lvl 5:** 🕊️ Flight enabled within plot borders.
+      * **Lvl 10:** ⚡ Permanent Haste/Speed II beacon effects (no beacon required).
+      * **Lvl 20:** 🛡️ Increased member slots and radius expansion limits.
 
-For Sale Signs: Plots listed on the marketplace will automatically project a floating hologram above their center, showing the Price and Seller.
+<br>
 
-<div align="center"> <i>Have a vision for the Aegis? Submit a Feature Request in our Issues tab.</i> </div>
+-----
+
+## 🔮 Augmented Reality (Visuals)
+
+### *Information without the clutter.*
+
+> **Status:** `[Planned]`  •  **Target:** `v2.0.0`
+
+We are moving away from chat spam and towards modern, holographic interfaces.
+
+  * **Holographic Entry:** Entering a plot displays a floating Title/Subtitle or Hologram showing the **Owner** and **Plot Name**.
+  * **Smart Borders:** Hovering over a border with the Scepter projects a floating label indicating the cardinal direction.
+  * **"For Sale" Signs:** Plots listed on the marketplace will automatically project a floating hologram above their center, showing the **Price** and **Seller**.
+
+<br>
+
+-----
+
+## ⚔️ The Siege Module (Optional)
+
+### *Conflict amidst order.*
+
+> **Status:** `[Concept]`  •  **Target:** `v2.3.0`
+
+For servers that desire conflict. Completely optional.
+
+  * **Siege Banners:** An expensive, craftable item that can be placed on an enemy border.
+  * **The Mechanic:** Once placed, a timer begins (e.g., 15 minutes).
+  * **The Raid:** If the defenders fail to destroy the banner in time, the plot's **PVP** and **Container** protections drop for 1 hour.
+
+<br>
+
+-----
+
+\<div align="center"\>
+<br>
+\<i\>Have a vision for the Aegis? Submit a Feature Request in our Issues tab.\</i\>
+<br>
+<br>
+\<img src="[https://capsule-render.vercel.app/api?type=waving\&color=000000\&height=60\&section=footer](https://www.google.com/search?q=https://capsule-render.vercel.app/api%3Ftype%3Dwaving%26color%3D000000%26height%3D60%26section%3Dfooter)" alt="Footer" /\>
+\</div\>

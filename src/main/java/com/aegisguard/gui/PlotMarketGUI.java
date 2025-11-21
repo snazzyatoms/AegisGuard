@@ -16,12 +16,10 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * PlotMarketGUI
  * - A paginated GUI for players to browse and buy plots for sale.
- * - This is part of the "Ultimate Upgrades".
  */
 public class PlotMarketGUI {
 
@@ -34,6 +32,7 @@ public class PlotMarketGUI {
 
     /**
      * Reliable holder that stores the plot list and current page.
+     * Must be PUBLIC STATIC for GUIListener.
      */
     public static class PlotMarketHolder implements InventoryHolder {
         private final int page;
@@ -62,7 +61,7 @@ public class PlotMarketGUI {
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / (double) PLOTS_PER_PAGE);
         if (page < 0) page = 0;
-        if (page >= maxPages) page = maxPages - 1;
+        if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
         String title = GUIManager.safeText(plugin.msg().get(player, "market_gui_title"), "§2Plot Marketplace")
                 + " §8(Page " + (page + 1) + "/" + Math.max(1, maxPages) + ")";
@@ -197,11 +196,6 @@ public class PlotMarketGUI {
         plugin.vault().give(seller, price);
 
         // 5. Transfer ownership
-        // This is complex. We must remove the plot from the seller's list
-        // and add it to the buyer's list, all while keeping the same Plot object and ID.
-        
-        // This is an advanced data operation, so we'll just ask the IDataStore to do it.
-        // We'll add a new method: `changePlotOwner`
         plugin.store().changePlotOwner(plot, buyer.getUniqueId(), buyer.getName());
         
         // 6. Notify players

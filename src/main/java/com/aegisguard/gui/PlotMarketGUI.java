@@ -104,6 +104,10 @@ public class PlotMarketGUI {
         if (page > 0) {
             inv.setItem(45, GUIManager.icon(Material.ARROW, "§aPrevious Page", List.of("§7Go to page " + page)));
         }
+        
+        // --- FIX: Add Back Button (Slot 48) ---
+        inv.setItem(48, GUIManager.icon(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to the main AegisGuard menu.")));
+
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.icon(Material.ARROW, "§aNext Page", List.of("§7Go to page " + (page + 2))));
         }
@@ -130,6 +134,14 @@ public class PlotMarketGUI {
             plugin.effects().playMenuFlip(player);
             return;
         }
+        
+        // --- FIX: Handle Back to Menu ---
+        if (slot == 48 && e.getCurrentItem().getType() == Material.NETHER_STAR) {
+            plugin.gui().openMain(player);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        
         if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { // Next Page
             open(player, currentPage + 1);
             plugin.effects().playMenuFlip(player);

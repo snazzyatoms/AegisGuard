@@ -1,112 +1,110 @@
-package com.aegisguard.gui;
+package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.expansions.ExpansionRequestAdminGUI;
-import com.aegisguard.expansions.ExpansionRequestGUI;
+import com.aegisguard.gui.GUIManager;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 
 import java.util.List;
 
 /**
- * GUIManager
- * - Central hub for all plugin GUIs.
- * - Provides access to all GUI instances.
+ * ExpansionRequestGUI
+ * - Menu for players to submit a request for a manual plot expansion.
  */
-public class GUIManager {
+public class ExpansionRequestGUI {
 
     private final AegisGuard plugin;
 
-    // Sub GUIs
-    private final PlayerGUI playerGUI;
-    private final SettingsGUI settingsGUI;
-    private final AdminGUI adminGUI;
-    private final ExpansionRequestGUI expansionRequestGUI;
-    private final ExpansionRequestAdminGUI expansionAdminGUI;
-    private final RolesGUI rolesGUI;
-    private final PlotFlagsGUI plotFlagsGUI;
-    private final AdminPlotListGUI adminPlotListGUI;
-    private final PlotCosmeticsGUI plotCosmeticsGUI;
-    private final PlotMarketGUI plotMarketGUI;
-    private final PlotAuctionGUI plotAuctionGUI;
-    private final InfoGUI infoGUI; // --- FIX: Added Info GUI Field ---
-
-    public GUIManager(AegisGuard plugin) {
+    public ExpansionRequestGUI(AegisGuard plugin) {
         this.plugin = plugin;
-        
-        // Initialize all GUIs
-        this.playerGUI = new PlayerGUI(plugin);
-        this.settingsGUI = new SettingsGUI(plugin);
-        this.adminGUI = new AdminGUI(plugin);
-        this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
-        this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
-        this.rolesGUI = new RolesGUI(plugin); 
-        this.plotFlagsGUI = new PlotFlagsGUI(plugin);
-        this.adminPlotListGUI = new AdminPlotListGUI(plugin);
-        this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
-        this.plotMarketGUI = new PlotMarketGUI(plugin);
-        this.plotAuctionGUI = new PlotAuctionGUI(plugin);
-        this.infoGUI = new InfoGUI(plugin); // --- FIX: Initialized Info GUI ---
-    }
-
-    // --- Accessors ---
-    public PlayerGUI player() { return playerGUI; }
-    public SettingsGUI settings() { return settingsGUI; }
-    public AdminGUI admin() { return adminGUI; }
-    public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }
-    public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
-    public RolesGUI roles() { return rolesGUI; }
-    public PlotFlagsGUI flags() { return plotFlagsGUI; }
-    public AdminPlotListGUI plotList() { return adminPlotListGUI; }
-    public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
-    public PlotMarketGUI market() { return plotMarketGUI; }
-    public PlotAuctionGUI auction() { return plotAuctionGUI; }
-    public InfoGUI info() { return infoGUI; } // --- FIX: Added Info GUI Getter ---
-
-    /* -----------------------------
-     * Open Main Menu (Player GUI)
-     * ----------------------------- */
-    public void openMain(Player player) {
-        if (playerGUI != null) {
-            playerGUI.open(player);
-        }
-    }
-
-    /* -----------------------------
-     * Placeholder for /ag admin diag
-     * ----------------------------- */
-    public void openDiagnostics(Player player) {
-        plugin.msg().send(player, "admin_diagnostics_placeholder");
-    }
-
-    /* -----------------------------
-     * Helper: Build Icon
-     * (Used by all GUIs)
-     * ----------------------------- */
-    public static ItemStack icon(Material mat, String name, List<String> lore) {
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(name);
-            if (lore != null) meta.setLore(lore);
-            
-            // Standard ItemFlags for clean look
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
-            
-            item.setItemMeta(meta);
-        }
-        return item;
     }
 
     /**
-     * Safely gets a message string or returns a fallback.
+     * Tag holder so click handler only reacts to this GUI.
+     * Must be PUBLIC for GUIListener.
      */
-    public static String safeText(String fromMsg, String fallback) {
-        if (fromMsg == null) return fallback;
-        if (fromMsg.contains("[Missing")) return fallback;
-        return fromMsg;
+    public static class ExpansionHolder implements InventoryHolder {
+        @Override
+        public Inventory getInventory() { return null; }
+    }
+
+    public void open(Player player) {
+        String title = GUIManager.safeText(
+                plugin.msg().get(player, "expansion_gui_title"),
+                "§d§lLand Expansion Request"
+        );
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, title);
+
+        // --- REQUEST BUTTON (Slot 12) ---
+        // FIX: Using the icon method that strips attributes for a clean GUI look.
+        inv.setItem(12, GUIManager.icon(
+                Material.DIAMOND_PICKAXE,
+                GUIManager.safeText(plugin.msg().get(player, "button_submit_request"), "§aSubmit Expansion Request"),
+                plugin.msg().getList(player, "submit_request_lore", List.of(
+                    "§7Allows you to request an increase to",
+                    "§7your maximum allowed plot size.",
+                    " ",
+                    "§cFeatures in Development." // Temporary text
+                ))
+        ));
+        
+        // --- ADMIN VIEW BUTTON (Slot 14) ---
+        if (player.hasPermission("aegisguard.admin")) {
+            inv.setItem(14, GUIManager.icon(
+                Material.COMPASS,
+                GUIManager.safeText(plugin.msg().get(player, "button_view_requests_admin"), "§cView Pending Requests (Admin)"),
+                plugin.msg().getList(player, "view_requests_admin_lore")
+            ));
+        }
+
+        // --- NAVIGATION ---
+        // NEW: Back Button (Slot 22)
+        inv.setItem(22, GUIManager.icon(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to the main AegisGuard menu.")));
+        
+        // Exit Button (Slot 26)
+        inv.setItem(26, GUIManager.icon(
+                Material.BARRIER,
+                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"),
+                plugin.msg().getList(player, "exit_lore")
+        ));
+
+        player.openInventory(inv);
+        plugin.effects().playMenuOpen(player);
+    }
+
+    public void handleClick(Player player, InventoryClickEvent e) {
+        e.setCancelled(true);
+        if (e.getCurrentItem() == null) return;
+        
+        switch (e.getSlot()) {
+            case 12: // Submit Expansion Request
+                plugin.msg().send(player, "expansion-not-available");
+                plugin.effects().playError(player);
+                break;
+                
+            case 14: // Admin View Requests
+                if (player.hasPermission("aegisguard.admin")) {
+                    plugin.gui().expansionRequestAdmin().open(player, 0);
+                    plugin.effects().playMenuFlip(player);
+                }
+                break;
+                
+            case 22: // NEW: Back Button
+                plugin.gui().openMain(player);
+                plugin.effects().playMenuFlip(player);
+                break;
+
+            case 26: // Exit
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
+                break;
+
+            default:
+                break;
+        }
     }
 }

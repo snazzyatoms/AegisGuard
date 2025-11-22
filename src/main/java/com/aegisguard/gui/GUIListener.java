@@ -1,17 +1,24 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-// --- IMPORTS FOR HOLDERS ---
+
+// --- IMPORTS FOR ALL HOLDERS ---
 import com.aegisguard.gui.AdminGUI.AdminHolder;
+import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
+import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
 import com.aegisguard.gui.RolesGUI.PlotSelectorHolder;
 import com.aegisguard.gui.RolesGUI.RolesMenuHolder;
 import com.aegisguard.gui.RolesGUI.RoleAddHolder;
 import com.aegisguard.gui.RolesGUI.RoleManageHolder;
-// Import these if you have created the files. If not, keep them commented or compilation will fail.
-// import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
-// import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
-// import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
-// import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
+import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsHolder;
+import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
+import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
+import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
+
+// Expansions (Note the different package!)
+import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
+import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
+import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder; // Assuming this exists
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,6 +32,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * GUIListener
  * - The central "switchboard" for ALL plugin GUI clicks.
+ * - NOW FULLY ENABLED.
  */
 public class GUIListener implements Listener {
 
@@ -38,62 +46,85 @@ public class GUIListener implements Listener {
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
 
-        // Only handle clicks in the TOP inventory
+        // Ensure we are clicking the top GUI, not our own inventory
         Inventory top = player.getOpenInventory().getTopInventory();
         if (e.getClickedInventory() == null || !e.getClickedInventory().equals(top)) return;
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
 
-        // Get the Holder to identify which GUI this is
         InventoryHolder holder = top.getHolder();
         if (holder == null) return;
 
-        // --- ROUTING ---
-
-        // 1. Admin GUI (Fixed)
-        if (holder instanceof AdminHolder) {
-            // We instantiate a new instance to handle the logic safely
-            new AdminGUI(plugin).handleClick(player, e);
-            return;
+        // ==============================================================
+        // 1. PLAYER MAIN MENU
+        // ==============================================================
+        if (holder instanceof PlayerMenuHolder) {
+            // This fixes "Codex of Knowledge" moving around
+            new PlayerGUI(plugin).handleClick(player, e);
         }
 
-        // 2. Roles GUIs (Fixed)
-        if (holder instanceof PlotSelectorHolder castHolder) {
+        // ==============================================================
+        // 2. PERSONAL SETTINGS
+        // ==============================================================
+        else if (holder instanceof SettingsGUIHolder) {
+            new SettingsGUI(plugin).handleClick(player, e);
+        }
+
+        // ==============================================================
+        // 3. ADMIN MENU
+        // ==============================================================
+        else if (holder instanceof AdminHolder) {
+            new AdminGUI(plugin).handleClick(player, e);
+        }
+
+        // ==============================================================
+        // 4. ROLES & PERMISSIONS (Multi-Stage)
+        // ==============================================================
+        else if (holder instanceof PlotSelectorHolder castHolder) {
             new RolesGUI(plugin).handlePlotSelectorClick(player, e, castHolder);
-            return;
         } 
         else if (holder instanceof RolesMenuHolder castHolder) {
             new RolesGUI(plugin).handleRolesMenuClick(player, e, castHolder);
-            return;
         } 
         else if (holder instanceof RoleAddHolder castHolder) {
             new RolesGUI(plugin).handleAddTrustedClick(player, e, castHolder);
-            return;
         } 
         else if (holder instanceof RoleManageHolder castHolder) {
             new RolesGUI(plugin).handleManageRoleClick(player, e, castHolder);
-            return;
         }
 
-        /* * --- UNCOMMENT THE BLOCKS BELOW AS YOU FIX/ADD THESE FILES ---
-         * ensuring the Holder classes inside them are "public static"
-         */
+        // ==============================================================
+        // 5. PLOT MANAGEMENT (Flags, Cosmetics)
+        // ==============================================================
+        else if (holder instanceof PlotFlagsHolder castHolder) {
+            new PlotFlagsGUI(plugin).handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof CosmeticsHolder castHolder) {
+            new PlotCosmeticsGUI(plugin).handleClick(player, e, castHolder);
+        }
 
-        // if (holder instanceof PlayerMenuHolder) {
-        //     plugin.gui().player().handleClick(player, e);
-        // }
-        
-        // else if (holder instanceof SettingsGUIHolder) {
-        //     plugin.gui().settings().handleClick(player, e);
-        // }
+        // ==============================================================
+        // 6. ECONOMY (Market, Auction)
+        // ==============================================================
+        else if (holder instanceof PlotMarketHolder castHolder) {
+            new PlotMarketGUI(plugin).handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof PlotAuctionHolder castHolder) {
+            new PlotAuctionGUI(plugin).handleClick(player, e, castHolder);
+        }
 
-        // else if (holder instanceof PlotFlagsHolder) {
-        //     plugin.gui().flags().handleClick(player, e, (PlotFlagsHolder) holder);
-        // }
-
-        // else if (holder instanceof ExpansionHolder) {
-        //     // plugin.gui().expansionRequest().handleClick(player, e);
-        // }
+        // ==============================================================
+        // 7. EXPANSIONS & ADMIN LISTS
+        // ==============================================================
+        else if (holder instanceof ExpansionHolder) {
+            new com.aegisguard.expansions.ExpansionRequestGUI(plugin).handleClick(player, e);
+        }
+        else if (holder instanceof ExpansionAdminHolder) {
+            new com.aegisguard.expansions.ExpansionRequestAdminGUI(plugin).handleClick(player, e);
+        }
+        else if (holder instanceof PlotListHolder castHolder) {
+            new AdminPlotListGUI(plugin).handleClick(player, e, castHolder);
+        }
     }
 }

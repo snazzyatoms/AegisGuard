@@ -32,13 +32,12 @@ public class GUIManager {
     private final PlotCosmeticsGUI plotCosmeticsGUI;
     private final PlotMarketGUI plotMarketGUI;
     private final PlotAuctionGUI plotAuctionGUI;
+    private final InfoGUI infoGUI; // --- FIX: Added Info GUI Field ---
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         
         // Initialize all GUIs
-        // Note: If any of these classes are missing in your folder, the build will fail.
-        // Ensure you have created the files for all of them.
         this.playerGUI = new PlayerGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
@@ -50,6 +49,7 @@ public class GUIManager {
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
         this.plotMarketGUI = new PlotMarketGUI(plugin);
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
+        this.infoGUI = new InfoGUI(plugin); // --- FIX: Initialized Info GUI ---
     }
 
     // --- Accessors ---
@@ -64,6 +64,7 @@ public class GUIManager {
     public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
+    public InfoGUI info() { return infoGUI; } // --- FIX: Added Info GUI Getter ---
 
     /* -----------------------------
      * Open Main Menu (Player GUI)
@@ -92,9 +93,7 @@ public class GUIManager {
             meta.setDisplayName(name);
             if (lore != null) meta.setLore(lore);
             
-            // FIX: Removed HIDE_POTION_EFFECTS / HIDE_ITEM_SPECIFICS
-            // These cause errors on older Spigot versions.
-            // HIDE_ATTRIBUTES and HIDE_ENCHANTS are safe on all versions.
+            // Standard ItemFlags for clean look
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
             
             item.setItemMeta(meta);
@@ -104,7 +103,6 @@ public class GUIManager {
 
     /**
      * Safely gets a message string or returns a fallback.
-     * Prevents [Missing message] from appearing in GUIs.
      */
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;

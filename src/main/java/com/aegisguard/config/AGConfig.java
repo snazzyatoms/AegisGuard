@@ -3,9 +3,8 @@ package com.aegisguard.config;
 import com.aegisguard.AegisGuard;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AGConfig {
@@ -26,9 +25,46 @@ public class AGConfig {
     public FileConfiguration raw() {
         return config;
     }
-    
-    // --- NEW METHODS FOR SELECTION SERVICE ---
 
+    // --- Economy ---
+    public boolean useVault(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".use_vault";
+            if (config.isSet(path)) return config.getBoolean(path);
+        }
+        return config.getBoolean("economy.use_vault", true);
+    }
+    
+    // FIX: Added overload for no-arg call (Global default)
+    public boolean useVault() {
+        return config.getBoolean("economy.use_vault", true);
+    }
+
+    public double getWorldVaultCost(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".vault_cost";
+            if (config.isSet(path)) return config.getDouble(path);
+        }
+        return config.getDouble("economy.claim_cost", 100.0);
+    }
+
+    public org.bukkit.Material getWorldItemCostType(World world) {
+        String path = "economy.item_cost.type";
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.type")) {
+            path = "claims.per_world." + world.getName() + ".item_cost.type";
+        }
+        return org.bukkit.Material.matchMaterial(config.getString(path, "DIAMOND"));
+    }
+    
+    public int getWorldItemCostAmount(World world) {
+        String path = "economy.item_cost.amount";
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.amount")) {
+            path = "claims.per_world." + world.getName() + ".item_cost.amount";
+        }
+        return config.getInt(path, 5);
+    }
+
+    // --- Claims ---
     public int getWorldMaxRadius(World world) {
         if (world != null) {
             String path = "claims.per_world." + world.getName() + ".max_radius";
@@ -53,75 +89,31 @@ public class AGConfig {
         return config.getInt("claims.max_claims_per_player", 1);
     }
 
-    public double getWorldVaultCost(World world) {
-        if (world != null) {
-            String path = "claims.per_world." + world.getName() + ".vault_cost";
-            if (config.isSet(path)) return config.getDouble(path);
+    // --- Upkeep ---
+    public boolean isUpkeepEnabled() { return config.getBoolean("upkeep.enabled", false); }
+    public long getUpkeepCheckHours() { return config.getLong("upkeep.check_interval_hours", 24); }
+    public double getUpkeepCost() { return config.getDouble("upkeep.cost_per_plot", 100.0); }
+    public int getUpkeepGraceDays() { return config.getInt("upkeep.grace_period_days", 7); }
+    
+    // --- Roles ---
+    public List<String> getRoleNames() {
+        if (config.isConfigurationSection("roles")) {
+             return new ArrayList<>(config.getConfigurationSection("roles").getKeys(false));
         }
-        return config.getDouble("economy.claim_cost", 100.0);
-    }
-    
-    // --- Existing Helpers ---
-
-    public boolean useVault(World world) {
-        if (world != null) {
-            String path = "claims.per_world." + world.getName() + ".use_vault";
-            if (config.isSet(path)) return config.getBoolean(path);
-        }
-        return config.getBoolean("economy.use_vault", true);
+        return List.of("co-owner", "member", "guest");
     }
 
-    public boolean isUpkeepEnabled() {
-        return config.getBoolean("upkeep.enabled", false);
-    }
-    
-    public long getUpkeepCheckHours() {
-        return config.getLong("upkeep.check_interval_hours", 24);
-    }
-    
-    public double getUpkeepCost() {
-        return config.getDouble("upkeep.cost_per_plot", 100.0);
-    }
-    
-    public int getUpkeepGraceDays() {
-        return config.getInt("upkeep.grace_period_days", 7);
-    }
-    
-    public boolean autoRemoveBannedPlots() {
-        return config.getBoolean("admin.auto_remove_banned", false);
-    }
-    
-    public boolean globalSoundsEnabled() {
-        return config.getBoolean("sounds.global_enabled", true);
+    // FIX: Added missing method for Plot.java
+    public List<String> getRolePermissions(String role) {
+        return config.getStringList("roles." + role);
     }
 
+    // --- Misc ---
+    public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
+    public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
     public boolean pvpProtectionDefault() { return config.getBoolean("protections.pvp_protection", true); }
     public boolean noMobsInClaims() { return config.getBoolean("protections.no_mobs_in_claims", true); }
     public boolean containerProtectionDefault() { return config.getBoolean("protections.container_protection", true); }
     public boolean petProtectionDefault() { return config.getBoolean("protections.pets_protection", true); }
     public boolean farmProtectionDefault() { return config.getBoolean("protections.farm_protection", true); }
-    
-    // Item Cost Helpers
-    public org.bukkit.Material getWorldItemCostType(World world) {
-        String path = "economy.item_cost.type";
-        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.type")) {
-            path = "claims.per_world." + world.getName() + ".item_cost.type";
-        }
-        return org.bukkit.Material.matchMaterial(config.getString(path, "DIAMOND"));
-    }
-    
-    public int getWorldItemCostAmount(World world) {
-        String path = "economy.item_cost.amount";
-        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.amount")) {
-            path = "claims.per_world." + world.getName() + ".item_cost.amount";
-        }
-        return config.getInt(path, 5);
-    }
-    
-    public List<String> getRoleNames() {
-        if (config.isConfigurationSection("roles")) {
-             return new java.util.ArrayList<>(config.getConfigurationSection("roles").getKeys(false));
-        }
-        return List.of("co-owner", "member", "guest");
-    }
 }

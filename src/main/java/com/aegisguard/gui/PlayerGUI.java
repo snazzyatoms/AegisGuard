@@ -152,13 +152,13 @@ public class PlayerGUI {
                 break;
             
             case 20: // Player Settings
-                // SettingsGUI handles null plot gracefully, but we pass it if available
                 plugin.gui().settings().open(player);
                 plugin.effects().playMenuFlip(player);
                 break;
 
-            case 24: // Info
-                plugin.msg().send(player, "info_message", "§7AegisGuard: lightweight land protection...");
+            case 24: // Info (Codex)
+                // FIX: Opens the new menu instead of sending chat text
+                plugin.gui().info().open(player); 
                 plugin.effects().playMenuFlip(player);
                 break;
 

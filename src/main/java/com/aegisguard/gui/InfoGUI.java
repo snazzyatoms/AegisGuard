@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -80,12 +79,13 @@ public class InfoGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true);
-        if (e.getSlot() == 22) { // Back button
+        e.setCancelled(true); // Locks ALL items in the top inventory
+        
+        if (e.getSlot() == 22) { // Back button (Slot 22)
             plugin.gui().openMain(player);
             plugin.effects().playMenuFlip(player);
         } else if (e.getSlot() >= 10 && e.getSlot() <= 16) {
-            // Keep player here for reading the page
+            // Acknowledge the chapter click
             plugin.effects().playMenuFlip(player);
         }
     }

@@ -11,10 +11,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-/**
- * AdminGUI
- * The main control panel for server operators.
- */
 public class AdminGUI {
 
     private final AegisGuard plugin;
@@ -27,40 +23,26 @@ public class AdminGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    private String title(Player player) {
-        // Fallback title if message key is missing
-        return GUIManager.safeText(plugin.msg().get(player, "admin_menu_title"), "§c§lHigh Guardian Tools");
-    }
+    private ItemStack bg() { return GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null); }
 
-    private ItemStack bg() {
-        return GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null);
-    }
+    private boolean getBool(String path, boolean def) { return plugin.getConfig().getBoolean(path, def); }
 
-    private boolean getBool(String path, boolean def) {
-        return plugin.getConfig().getBoolean(path, def);
-    }
-
-    private boolean flipBoolAsync(String path, boolean def) {
-        boolean cur = getBool(path, def);
-        boolean next = !cur;
+    private void flipBoolAsync(String path, boolean def) {
+        boolean next = !getBool(path, def);
         plugin.getConfig().set(path, next);
         plugin.runGlobalAsync(() -> plugin.saveConfig());
-        return next;
     }
 
     public void open(Player player) {
-        // Security Check using the new isAdmin helper
         if (!plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             return;
         }
 
-        Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title(player));
+        Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, "§c§lHigh Guardian Tools");
         
-        ItemStack bg = bg();
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg);
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, bg());
 
-        // Toggles
         boolean autoRemove = getBool("admin.auto_remove_banned", false);
         boolean bypass     = getBool("admin.bypass_claim_limit", false);
         boolean broadcast  = getBool("admin.broadcast_admin_actions", false);
@@ -68,40 +50,21 @@ public class AdminGUI {
         boolean proxySync  = getBool("sync.proxy.enabled", false);
         boolean perfMode   = getBool("performance.low_overhead_mode", false);
 
-        // Row 2 — Core Toggles
         inv.setItem(10, GUIManager.icon(autoRemove ? Material.TNT : Material.GUNPOWDER, autoRemove ? "§aAuto-Remove Banned: ON" : "§7Auto-Remove Banned: OFF", plugin.msg().getList(player, "admin_auto_remove_lore")));
         inv.setItem(12, GUIManager.icon(bypass ? Material.NETHER_STAR : Material.IRON_NUGGET, bypass ? "§aBypass Limits: ON" : "§7Bypass Limits: OFF", plugin.msg().getList(player, "admin_bypass_limit_lore")));
         inv.setItem(14, GUIManager.icon(broadcast ? Material.BEACON : Material.LIGHT, broadcast ? "§aBroadcast Actions: ON" : "§7Broadcast Actions: OFF", plugin.msg().getList(player, "admin_broadcast_lore")));
 
-        // Row 3 — Advanced
         inv.setItem(19, GUIManager.icon(unlimited ? Material.EMERALD_BLOCK : Material.EMERALD, unlimited ? "§aUnlimited Plots: ON" : "§7Unlimited Plots: OFF", List.of("§7Admins can create unlimited plots.")));
-        inv.setItem(21, GUIManager.icon(proxySync ? Material.ENDER_EYE : Material.ENDER_PEARL, proxySync ? "§aGlobal Sync: ON" : "§7Global Sync: OFF", List.of("§7Sync data across BungeeCord.", "§8(Requires database)")));
+        inv.setItem(21, GUIManager.icon(proxySync ? Material.ENDER_EYE : Material.ENDER_PEARL, proxySync ? "§aGlobal Sync: ON" : "§7Global Sync: OFF", List.of("§7Sync data across network.")));
         inv.setItem(23, GUIManager.icon(perfMode ? Material.REDSTONE_BLOCK : Material.REDSTONE, perfMode ? "§aPerformance Mode: ON" : "§7Performance Mode: OFF", List.of("§7Disable cosmetics for speed.")));
 
-        // Row 4 — Tools
-        // --- FIX: This button now links to the real menu ---
-        inv.setItem(28, GUIManager.icon(
-                Material.AMETHYST_CLUSTER,
-                "§dExpansion Admin",
-                List.of("§7Review pending land requests.")
-        ));
-
+        // --- TOOLS ---
+        inv.setItem(28, GUIManager.icon(Material.AMETHYST_CLUSTER, "§dExpansion Admin", List.of("§7Review pending land requests.")));
         inv.setItem(30, GUIManager.icon(Material.COMPASS, "§bDiagnostics", List.of("§7View system stats.")));
         inv.setItem(31, GUIManager.icon(Material.REPEATER, "§eReload Config", List.of("§7Reload all settings.")));
 
-        // Navigation
-        // Note: These look for "button_back" in messages.yml. If missing, see Step 2 below.
-        inv.setItem(34, GUIManager.icon(
-                Material.ARROW,
-                GUIManager.safeText(plugin.msg().get(player, "button_back"), "§fBack to Menu"),
-                plugin.msg().getList(player, "back_lore")
-        ));
-
-        inv.setItem(40, GUIManager.icon(
-                Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"),
-                plugin.msg().getList(player, "exit_lore")
-        ));
+        inv.setItem(34, GUIManager.icon(Material.ARROW, "§fBack to Menu", List.of("§7Return to main menu.")));
+        inv.setItem(40, GUIManager.icon(Material.BARRIER, "§cExit", List.of("§7Close menu.")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -120,18 +83,18 @@ public class AdminGUI {
             case 21: flipBoolAsync("sync.proxy.enabled", false); open(player); break;
             case 23: flipBoolAsync("performance.low_overhead_mode", false); open(player); break;
 
-            // --- FIX: Expansion Admin Button ---
+            // --- FIX: NOW OPENS THE ACTUAL MENUS ---
             case 28: 
-                plugin.gui().expansionAdmin().open(player);
+                plugin.gui().expansionAdmin().open(player); 
                 plugin.effects().playMenuFlip(player);
                 break;
 
             case 30: 
-                plugin.gui().openDiagnostics(player); // Ensure this method exists in GUIManager
+                plugin.gui().openDiagnostics(player); 
                 plugin.effects().playMenuFlip(player);
                 break;
 
-            case 31: // Reload
+            case 31: 
                 plugin.msg().send(player, "admin_reloading");
                 plugin.runGlobalAsync(() -> {
                     plugin.cfg().reload();
@@ -145,15 +108,8 @@ public class AdminGUI {
                 });
                 break;
 
-            case 34: // Back
-                plugin.gui().openMain(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-
-            case 40: // Exit
-                player.closeInventory();
-                plugin.effects().playMenuClose(player);
-                break;
+            case 34: plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); break;
+            case 40: player.closeInventory(); plugin.effects().playMenuClose(player); break;
         }
     }
 }

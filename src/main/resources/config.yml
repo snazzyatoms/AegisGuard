@@ -96,6 +96,7 @@ auction:
   min_bid_increase: 100.0
   
   # What % of the final bid is given to the original owner.
+  # The rest is removed from the economy (server cut).
   owner_cut_percent: 50 # 50%
 
 # ======================================
@@ -131,12 +132,11 @@ claims:
   max_area: 16000
   preview_seconds: 10
 
-  # --- Wand Consumption Settings (NEW) ---
+  # --- Wand Consumption Settings ---
   # Should the Aegis Scepter be removed from the inventory after a successful claim?
   consume_wand_on_claim: true
   
   # If true, players with 'aegis.admin' keep their wand even after claiming.
-  # They can use /ag consume to destroy it manually.
   admin_keep_wand: true
 
   # --- Optional Per-World Settings ---
@@ -300,6 +300,7 @@ visualization:
 # ======================================
 # 🎨 Plot Cosmetics
 # ======================================
+# Define cosmetic border particles that players can buy/apply.
 cosmetics:
   border_particles:
     flame:
@@ -324,9 +325,11 @@ cosmetics:
       price: 3000.0
     
   ambient_particles:
+    # (Example for later)
     pass
 
   entry_effects:
+    # (Example for later)
     pass
 
 # ======================================
@@ -390,6 +393,18 @@ protection_effects:
   farm:
     deny_sound: BLOCK_CROP_BREAK
     deny_particle: VILLAGER_ANGRY
+
+# ======================================
+# 🛡️ Active Mob Barrier (NEW)
+# ======================================
+# Automatically removes hostile mobs that enter "Safe Zones"
+# or "Server Zones" (Spawn/Market).
+mob_barrier:
+  enabled: true
+  # How often to check for intruders (in ticks). 60 ticks = 3 seconds.
+  check_interval_ticks: 60
+  # Play a smoke effect when a mob is removed?
+  remove_particles: true
 
 # ======================================
 # 🧩 Admin Options

@@ -2,18 +2,13 @@ package com.aegisguard.world;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.config.AGConfig;
+import com.aegisguard.data.Plot; // FIX: Added import
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * WorldRulesManager
- * -----------------------------------
- * Handles per-world settings for claim creation and protections.
- * Uses AGConfig for defaults and loads overrides from config.yml.
- */
 public class WorldRulesManager {
 
     private final AegisGuard plugin;
@@ -25,24 +20,16 @@ public class WorldRulesManager {
         load();
     }
 
-    /**
-     * Reload configuration.
-     * Note: AGConfig reload happens in AdminCommand before calling this.
-     */
     public void reload() {
         load();
     }
 
-    /**
-     * Load world-specific rules.
-     */
     public void load() {
         rules.clear();
         
-        // Create default ruleset from AGConfig
         AGConfig cfg = plugin.cfg();
         this.defaultRuleSet = new WorldRuleSet(
-                true, // allowClaims defaults to true
+                true,
                 cfg.pvpProtectionDefault(),
                 cfg.noMobsInClaims(),
                 cfg.containerProtectionDefault(),
@@ -60,9 +47,8 @@ public class WorldRulesManager {
             ConfigurationSection worldSec = section.getConfigurationSection(worldName);
             if (worldSec == null) continue;
 
-            // Nested structure support (protections: ...)
             ConfigurationSection prot = worldSec.getConfigurationSection("protections");
-            if (prot == null) prot = worldSec; // Fallback to same level if flat structure
+            if (prot == null) prot = worldSec;
 
             WorldRuleSet set = new WorldRuleSet(
                     worldSec.getBoolean("allow_claims", defaultRuleSet.allowClaims),
@@ -79,10 +65,21 @@ public class WorldRulesManager {
         plugin.getLogger().info("[AegisGuard] Loaded " + rules.size() + " per-world rule sets.");
     }
 
-    /* -----------------------------
-     * Accessors
-     * ----------------------------- */
-    
+    // --- NEW: Apply Defaults to Plot ---
+    public void applyDefaults(Plot plot) {
+        WorldRuleSet set = getRules(org.bukkit.Bukkit.getWorld(plot.getWorld()));
+        
+        plot.setFlag("pvp", set.pvp);
+        plot.setFlag("mobs", set.mobs);
+        plot.setFlag("containers", set.containers);
+        plot.setFlag("pets", set.pets);
+        plot.setFlag("farm", set.farms);
+        // Also add other safe defaults
+        plot.setFlag("tnt-damage", false);
+        plot.setFlag("fire-spread", false);
+        plot.setFlag("piston-use", false);
+    }
+
     private WorldRuleSet getRules(World world) {
         if (world == null) return defaultRuleSet;
         return rules.getOrDefault(world.getName(), defaultRuleSet);
@@ -92,29 +89,12 @@ public class WorldRulesManager {
         return getRules(world).allowClaims;
     }
 
-    public boolean isPvPAllowed(World world) {
-        return getRules(world).pvp;
-    }
+    public boolean isPvPAllowed(World world) { return getRules(world).pvp; }
+    public boolean allowMobs(World world) { return getRules(world).mobs; }
+    public boolean allowContainers(World world) { return getRules(world).containers; }
+    public boolean allowPets(World world) { return getRules(world).pets; }
+    public boolean allowFarms(World world) { return getRules(world).farms; }
 
-    public boolean allowMobs(World world) {
-        return getRules(world).mobs;
-    }
-    
-    public boolean allowContainers(World world) {
-        return getRules(world).containers;
-    }
-    
-    public boolean allowPets(World world) {
-        return getRules(world).pets;
-    }
-
-    public boolean allowFarms(World world) {
-        return getRules(world).farms;
-    }
-
-    /**
-     * Generic protection lookup for dynamic checks.
-     */
     public boolean isProtectionEnabled(World world, String key) {
         WorldRuleSet set = getRules(world);
         return switch (key.toLowerCase()) {
@@ -127,11 +107,7 @@ public class WorldRulesManager {
         };
     }
 
-    /* -----------------------------
-     * Inner Class: WorldRuleSet
-     * ----------------------------- */
     public static class WorldRuleSet {
-        // These MUST be public for access by the manager
         public boolean allowClaims;
         public boolean pvp;
         public boolean mobs;
@@ -149,7 +125,6 @@ public class WorldRulesManager {
             this.farms = farms;
         }
         
-        // Default constructor for fallback/empty init
         public WorldRuleSet() {
             this(true, true, true, true, true, true);
         }

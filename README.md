@@ -44,63 +44,7 @@ Turn land into a valuable asset.
   * **Dynmap Integration:** Real-time, asynchronous map rendering of all claims.
   * **Language Styles:** Players can switch between **"Modern English"** and **"Roleplay Style"** messages personally\!
 
------
 
-## 📜 Commands
-
-### Player Commands
-
-| Command | Permission | Description |
-| :--- | :--- | :--- |
-| `/ag wand` | `aegis.claim` | Receive the Aegis Scepter (Claiming Tool). |
-| `/ag claim` | `aegis.claim` | Confirm your selection to claim land. |
-| `/ag menu` | `aegis.use` | Open the main management GUI. |
-| `/ag resize <dir> <amt>` | `aegis.resize` | Expand or shrink your plot boundaries. |
-| `/ag sell <price>` | `aegis.market` | List your current plot on the marketplace. |
-| `/ag setspawn` | `aegis.home` | Set the teleport point for your plot. |
-| `/ag home` | `aegis.home` | Teleport to your plot's spawn. |
-
-### Admin Commands
-
-| Command | Permission | Description |
-| :--- | :--- | :--- |
-| `/agadmin reload` | `aegis.admin` | Reload config, messages, and storage. |
-| `/agadmin menu` | `aegis.admin` | Open the Admin Control Panel. |
-| `/agadmin bypass` | `aegis.admin` | Toggle admin bypass mode (break anywhere). |
-
------
-
-❓ Frequently Asked Questions
-
-Q: Is this compatible with Paper/Spigot?
-
-Yes. AegisGuard works on all modern versions of Spigot, Paper, Purpur, and Pufferfish (1.16+). It automatically detects your server software to optimize performance.
-
-Q: Does it really work on Folia?
-
-Yes. AegisGuard is natively designed for Folia. It uses the GlobalRegionScheduler and proper threading to ensure it never locks up your regions, making it safe for high-performance multi-threaded networks.
-
-Q: Can I disable the Economy features?
-
-Absolutely. If you do not use Vault, AegisGuard automatically switches to "Free Mode." You can also toggle specific economy features (like Upkeep taxes or Auctions) individually in the config.yml.
-
-Q: Does it support SQL?
-
-Yes. You can switch between flat-file YAML (default) and MySQL / SQLite / MariaDB in the config. We use HikariCP for high-performance database connections.
-
-Q: Where do I get support?
-
-If the spirits of the machine are acting up, please open an Issue on the GitHub repository or join our community Discord. We are steadfast in our updates.
-
------
-
-## 🔧 Installation
-
-1.  **Download** the `AegisGuard.jar`.
-2.  **Drop** it into your `/plugins` folder.
-3.  *(Optional)* Install **Vault** and an Economy plugin (EssentialsX, EcoBits) for economy features.
-4.  *(Optional)* Install **Dynmap** for web map integration.
-5.  **Restart** your server. The spirits will handle the rest.
 
 -----
 

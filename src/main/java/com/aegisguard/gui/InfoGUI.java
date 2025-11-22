@@ -72,7 +72,11 @@ public class InfoGUI {
         ));
         
         // --- NAVIGATION ---
-        inv.setItem(22, GUIManager.icon(Material.ARROW, "§fBack", List.of("§7Return to Main Menu")));
+        // Slot 22: Back Button
+        inv.setItem(22, GUIManager.icon(Material.ARROW, "§fBack to Menu", List.of("§7Return to Main Menu")));
+        
+        // NEW: Slot 24: Exit Button
+        inv.setItem(24, GUIManager.icon(Material.BARRIER, "§cExit Codex", List.of("§7Close this menu.")));
         
         player.openInventory(inv);
         plugin.effects().playMenuFlip(player);
@@ -81,17 +85,27 @@ public class InfoGUI {
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true); // Locks ALL items 
         
-        if (e.getSlot() == 22) { // Back button (Slot 22)
-            try {
-                plugin.gui().openMain(player); // Attempt to open the main menu
+        switch (e.getSlot()) {
+            case 22: // Back button
+                plugin.gui().openMain(player);
                 plugin.effects().playMenuFlip(player);
-            } catch (Exception ex) {
-                plugin.getLogger().severe("AegisGuard Menu Crash: Failed to open main menu from Codex. See stacktrace below.");
-                player.closeInventory(); // Close the broken menu safely
-                ex.printStackTrace();
-            }
-        } else if (e.getSlot() >= 10 && e.getSlot() <= 16) {
-            plugin.effects().playMenuFlip(player);
+                break;
+            
+            case 24: // NEW: Exit button
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
+                break;
+                
+            case 10: 
+            case 12: 
+            case 14: 
+            case 16:
+                // Acknowledge the chapter click
+                plugin.effects().playMenuFlip(player);
+                break;
+                
+            default:
+                break;
         }
     }
 }

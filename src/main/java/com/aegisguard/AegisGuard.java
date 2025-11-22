@@ -31,7 +31,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.UUID; // --- FIX: Added missing import ---
+import java.util.UUID; 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -52,6 +52,7 @@ public class AegisGuard extends JavaPlugin {
     private DynmapHook dynmapHook;
 
     private boolean isFolia = false;
+    
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
@@ -72,6 +73,7 @@ public class AegisGuard extends JavaPlugin {
     public void onEnable() {
         plugin = this;
 
+        // Folia Check
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
@@ -85,6 +87,7 @@ public class AegisGuard extends JavaPlugin {
 
         this.configMgr = new AGConfig(this);
         
+        // Database
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -108,17 +111,20 @@ public class AegisGuard extends JavaPlugin {
             expansionManager.load();
         });
 
+        // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
-
+        
+        // Banned Player Listener
         if (cfg().autoRemoveBannedPlots()) {
              Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
+        // Commands
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
             AegisCommand aegisExecutor = new AegisCommand(this);
@@ -133,9 +139,10 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
+        // Tasks
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
-        if (cfg().raw().getBoolean("wilderness_revert.enabled", false)) startWildernessRevertTask();
+        startWildernessRevertTask(); // Logic handled inside method
         
         initializeHooks();
         getLogger().info("AegisGuard enabled.");
@@ -165,12 +172,13 @@ public class AegisGuard extends JavaPlugin {
         getLogger().info("AegisGuard disabled.");
     }
     
-    // --- FIX: Added missing method used by SettingsGUI/EffectUtil ---
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
         return getConfig().getBoolean(key, true);
     }
+
+    // --- SCHEDULERS ---
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
@@ -233,6 +241,8 @@ public class AegisGuard extends JavaPlugin {
             } catch (Exception ignored) {}
         }
     }
+
+    // --- TASKS ---
 
     private void startAutoSaver() {
         long interval = 20L * 60 * 5;
@@ -302,7 +312,17 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void startWildernessRevertTask() {
-        long interval = 20L * 60 * 10;
+        // 1. Check Config
+        if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
+
+        // 2. Check Storage Type (CRITICAL FIX: Prevent crash on YAML)
+        String storage = cfg().raw().getString("storage.type", "yml");
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql")) {
+            getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
+            return; 
+        }
+
+        long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
         WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
     }

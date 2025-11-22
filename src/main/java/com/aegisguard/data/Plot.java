@@ -7,7 +7,7 @@ import org.bukkit.World;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet; // Added
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Plot {
     
-    // --- NEW: Special UUID for server-owned plots ---
+    // Special UUID for server-owned plots
     public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     // --- Core Fields ---
@@ -28,7 +28,7 @@ public class Plot {
     private UUID owner; 
     private String ownerName;
     private final String world;
-    private int x1, z1, x2, z2; // Not final to allow resize
+    private int x1, z1, x2, z2; 
     
     // --- Flags & Roles ---
     private final Map<String, Boolean> flags = new HashMap<>();
@@ -89,7 +89,7 @@ public class Plot {
         flags.put("build", true);       
         flags.put("interact", true);   
 
-        // --- Initialize new fields ---
+        // Initialize fields
         this.spawnLocation = null;
         this.welcomeMessage = null;
         this.farewellMessage = null;
@@ -110,7 +110,6 @@ public class Plot {
         this.entryEffect = null;
     }
     
-    // Overloaded constructor for new plots
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
         this(plotId, owner, ownerName, world, x1, z1, x2, z2, System.currentTimeMillis());
     }
@@ -142,9 +141,16 @@ public class Plot {
         return new Location(world, cX, 64, cZ); 
     }
     
-    // --- NEW: Server Zone Check ---
     public boolean isServerZone() {
         return owner.equals(SERVER_OWNER_UUID);
+    }
+
+    // --- FIX: Re-added missing method for Marketplace ---
+    public void internalSetOwner(UUID newOwner, String newOwnerName) {
+        this.owner = newOwner;
+        this.ownerName = newOwnerName;
+        this.playerRoles.clear();
+        this.playerRoles.put(newOwner, "owner");
     }
     
     // --- Role Methods ---
@@ -167,19 +173,15 @@ public class Plot {
     }
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
-        if (owner.equals(playerUUID)) return true; // Owner bypasses
+        if (owner.equals(playerUUID)) return true; 
         
-        // Check for Renter
         if (currentRenter != null && currentRenter.equals(playerUUID) && System.currentTimeMillis() < rentExpires) {
-            // Renter gets "member" permissions
             if (plugin.cfg().getRolePermissions("member").contains(permission.toUpperCase())) {
                 return true;
             }
         }
         
         String role = getRole(playerUUID);
-        
-        // FIX: Convert List from config to Set here to avoid type error
         Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
         
         return permissions.contains(permission.toUpperCase());
@@ -222,10 +224,7 @@ public class Plot {
         }
         try {
             String[] parts = s.split(":");
-            if (parts.length != 6) { 
-                // Old format fallback logic omitted for brevity
-                return;
-            }
+            if (parts.length != 6) return;
             World world = Bukkit.getWorld(parts[0]);
             if (world != null) {
                 double x = Double.parseDouble(parts[1]);
@@ -280,8 +279,6 @@ public class Plot {
     public String getEntryEffect() { return entryEffect; }
     public void setEntryEffect(String effect) { this.entryEffect = effect; }
 
-    
-    // --- Util Methods ---
     public boolean isInside(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(world)) return false;

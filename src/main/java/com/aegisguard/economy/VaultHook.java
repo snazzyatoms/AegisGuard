@@ -37,7 +37,8 @@ public class VaultHook implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    /** * Re-try when Vault enables after us 
+    /**
+     * Re-try when Vault enables after us
      */
     @EventHandler
     public void onPluginEnable(PluginEnableEvent e) {
@@ -47,7 +48,8 @@ public class VaultHook implements Listener {
         }
     }
 
-    /** * Un-hook if Vault is disabled during runtime
+    /**
+     * Un-hook if Vault is disabled during runtime
      */
     @EventHandler
     public void onPluginDisable(PluginDisableEvent e) {
@@ -63,7 +65,6 @@ public class VaultHook implements Listener {
             return;
         }
 
-        // FIX: Defined 'rsp' which was missing in your snippet
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
         
         if (rsp != null) {
@@ -78,7 +79,8 @@ public class VaultHook implements Listener {
         return economy != null;
     }
 
-    /** * Nicely format currency for messages. Falls back to plain amount. 
+    /**
+     * Nicely format currency for messages. Falls back to plain amount.
      */
     public String format(double amount) {
         if (economy == null) {
@@ -92,14 +94,14 @@ public class VaultHook implements Listener {
         return economy.getBalance(p);
     }
 
-    /** * Charge a player. Returns true on success. 
-     * Free if Vault missing or amount <= 0. 
+    /**
+     * Charge a player. Returns true on success.
+     * Free if Vault missing or amount <= 0.
      */
     public boolean charge(OfflinePlayer p, double amount) {
         if (economy == null) return true; // Free mode
         if (amount <= 0) return true;
 
-        // FIX: Used 'p' directly instead of undefined 'op'
         if (!economy.has(p, amount)) {
             return false;
         }
@@ -118,5 +120,14 @@ public class VaultHook implements Listener {
         if (!res.transactionSuccess()) {
             plugin.getLogger().warning("[Vault] deposit failed for " + p.getName() + ": " + res.errorMessage);
         }
+    }
+
+    /**
+     * --- FIX: ADDED MISSING METHOD ---
+     * Checks if a player has enough money without charging them.
+     */
+    public boolean has(OfflinePlayer p, double amount) {
+        if (economy == null) return true; // Free mode = always has enough
+        return economy.has(p, amount);
     }
 }

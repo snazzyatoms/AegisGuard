@@ -21,40 +21,71 @@ public class ExpansionRequestGUI {
         this.plugin = plugin;
     }
 
-    // This tells the plugin "This inventory belongs to the Expansion GUI"
-    // Must be PUBLIC STATIC so GUIListener can access it
     public static class ExpansionHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, "§bExpand Plot");
+        String title = GUIManager.safeText(
+            plugin.msg().get(player, "expansion_gui_title"),
+            "§d§lLand Expansion Request"
+        );
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, title);
 
-        // The Icon
-        ItemStack item = new ItemStack(Material.DIAMOND_PICKAXE);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName("§aSubmit Expansion Request");
-            meta.setLore(List.of("§7Click to request a plot expansion.", "§7(Feature in development)"));
-            item.setItemMeta(meta);
-        }
-        inv.setItem(13, item);
+        // --- REQUEST BUTTON (Slot 13) ---
+        // Item is clean because GUIManager.icon strips attributes
+        inv.setItem(13, GUIManager.icon(
+                Material.DIAMOND_PICKAXE,
+                GUIManager.safeText(plugin.msg().get(player, "button_submit_request"), "§aSubmit Expansion Request"),
+                plugin.msg().getList(player, "submit_request_lore", List.of(
+                    "§7Allows you to request an increase to",
+                    "§7your maximum allowed plot size.",
+                    " ",
+                    "§cFeatures in Development."
+                ))
+        ));
 
-        // Close Button
-        inv.setItem(22, GUIManager.icon(Material.BARRIER, "§cClose", null));
+        // --- NAVIGATION ---
+        // Slot 22: BACK Button (Returns to Main Menu)
+        inv.setItem(22, GUIManager.icon(
+                Material.ARROW, 
+                GUIManager.safeText(plugin.msg().get(player, "button_back"), "§fBack to Menu"), 
+                plugin.msg().getList(player, "back_lore")
+        ));
+        
+        // Slot 26: EXIT Button (Closes Inventory)
+        inv.setItem(26, GUIManager.icon(
+                Material.BARRIER, 
+                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), 
+                plugin.msg().getList(player, "exit_lore")
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true); // Stop them from taking items
+        e.setCancelled(true); 
+        if (e.getCurrentItem() == null) return;
         
-        if (e.getSlot() == 22) {
-            player.closeInventory();
-            plugin.effects().playMenuClose(player);
+        switch (e.getSlot()) {
+            case 13: // Submit Request (Placeholder Logic)
+                plugin.msg().send(player, "expansion-not-available");
+                plugin.effects().playError(player);
+                break;
+
+            case 22: // BACK Button (Returns to PlayerGUI)
+                plugin.gui().openMain(player);
+                plugin.effects().playMenuFlip(player);
+                break;
+                
+            case 26: // Exit Button (Closes Menu)
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
+                break;
+                
+            default:
+                break;
         }
-        
-        // Logic to actually submit the request would go here when you implement it
     }
 }

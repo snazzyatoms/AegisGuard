@@ -14,12 +14,12 @@ import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsHolder;
 import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
-import com.aegisguard.gui.gui.InfoGUI.InfoHolder; // <--- NEW IMPORT for the Codex
+import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder; 
+import com.aegisguard.gui.InfoGUI.InfoHolder; // <--- CORRECTED FIX
 
 // Expansions (Note the different package!)
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
-import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder; // Assuming this exists
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,6 +29,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+
+// ... (Rest of the class file)
 
 /**
  * GUIListener

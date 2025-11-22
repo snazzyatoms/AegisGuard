@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World; // --- FIX: Added missing import ---
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -39,9 +39,15 @@ public class ExpansionRequestManager {
         this.file = new File(plugin.getDataFolder(), "expansion-requests.yml");
         // load() is called async from AegisGuard.java
     }
-
+    
+    // Getter for GUI
     public Collection<ExpansionRequest> getActiveRequests() {
         return Collections.unmodifiableCollection(activeRequests.values());
+    }
+    
+    // Utility for GUI
+    public ExpansionRequest getRequest(UUID requesterId) {
+        return activeRequests.get(requesterId);
     }
 
     /* -----------------------------
@@ -94,7 +100,7 @@ public class ExpansionRequestManager {
         );
 
         activeRequests.put(requester.getUniqueId(), request);
-        setDirty(true);
+        setDirty(true); // Mark for saving
 
         Map<String, String> placeholders = Map.of(
                 "PLAYER", requester.getName(),
@@ -127,8 +133,7 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // Get Old Plot
-        // Note: Assuming store has a method to get plot by ID or we search for it
+        // Apply expansion
         Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
         
         if (oldPlot == null) {
@@ -202,7 +207,6 @@ public class ExpansionRequestManager {
         newPlot.setSpawnLocation(oldPlot.getSpawnLocation());
         newPlot.setWelcomeMessage(oldPlot.getWelcomeMessage());
         newPlot.setFarewellMessage(oldPlot.getFarewellMessage());
-        // (Market/Auction/Cosmetic data is also preserved if passed correctly)
         
         plugin.store().addPlot(newPlot);
         return true;
@@ -232,7 +236,6 @@ public class ExpansionRequestManager {
      * Cost Logic
      * ----------------------------- */
     private double calculateCost(String world, int currentRadius, int newRadius) {
-        // This is a placeholder. A real system would be more complex.
         double baseCost = plugin.cfg().raw().getDouble("expansions.cost.amount", 250.0);
         int delta = newRadius - currentRadius;
         return Math.max(baseCost * delta, 0);
@@ -240,26 +243,20 @@ public class ExpansionRequestManager {
 
     private boolean chargePlayer(OfflinePlayer player, double amount, String worldName) {
         if (amount <= 0) return true;
-
+        // Safe vault call
         if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
-            VaultHook vault = plugin.vault();
-            // FIX: Pass OfflinePlayer directly to avoid NPE
-            return vault.charge(player, amount);
+            return plugin.vault().charge(player, amount);
         } else {
             // Item-based payment
-            if (!player.isOnline()) {
-                plugin.getLogger().warning("Item charge failed: Player " + player.getName() + " is offline.");
-                return false;
-            }
+            if (!player.isOnline()) return false;
             Player onlinePlayer = player.getPlayer();
             if (onlinePlayer == null) return false;
 
             Material item = plugin.cfg().getWorldItemCostType(player.getPlayer().getWorld());
             int amountRequired = plugin.cfg().getWorldItemCostAmount(player.getPlayer().getWorld());
-
             ItemStack costItem = new ItemStack(item, amountRequired);
+            
             if (!onlinePlayer.getInventory().containsAtLeast(costItem, amountRequired)) return false;
-
             onlinePlayer.getInventory().removeItem(costItem);
             return true;
         }
@@ -271,10 +268,7 @@ public class ExpansionRequestManager {
         if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
             plugin.vault().give(player, amount);
         } else {
-            if (!player.isOnline()) {
-                plugin.getLogger().warning("Could not refund items to " + player.getName() + ": Player is offline.");
-                return;
-            }
+            if (!player.isOnline()) return;
             Player onlinePlayer = player.getPlayer();
             if (onlinePlayer == null) return;
 
@@ -296,18 +290,6 @@ public class ExpansionRequestManager {
         return activeRequests.containsKey(requesterId);
     }
     
-    public ExpansionRequest getRequest(UUID requesterId) {
-        return activeRequests.get(requesterId);
-    }
-
-    /**
-     * This is a placeholder. A real GUI would store this in the item's NBT.
-     */
-    public UUID getRequesterFromItem(ItemStack item) {
-        return null;
-    }
-
-
     /* -----------------------------
      * Persistence
      * ----------------------------- */
@@ -351,16 +333,13 @@ public class ExpansionRequestManager {
                             data.getDouble(path + ".cost")
                     );
 
-                    // Restore state
                     String status = data.getString(path + ".status", "PENDING");
                     if (status.equals("APPROVED")) req.approve();
                     if (status.equals("DENIED")) req.deny();
 
-                    // Only load pending requests into memory
                     if (req.isPending()) {
                         activeRequests.put(requesterId, req);
                     }
-
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to load expansion request for: " + requesterIdStr);
                 }
@@ -369,11 +348,12 @@ public class ExpansionRequestManager {
     }
 
     public synchronized void save() {
-        // Clear old data
+        // FIX: Prevent NullPointerException if load() failed or didn't run yet
+        if (data == null) return;
+
         data.set("requests", null);
 
         for (ExpansionRequest req : activeRequests.values()) {
-            // We only save PENDING requests. Approved/Denied are removed.
             if (!req.isPending()) continue;
 
             String path = "requests." + req.getRequester().toString();

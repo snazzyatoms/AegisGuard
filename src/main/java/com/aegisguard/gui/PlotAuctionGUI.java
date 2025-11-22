@@ -21,7 +21,6 @@ import java.util.UUID;
 /**
  * PlotAuctionGUI
  * - A paginated GUI for players to browse and bid on expired plots.
- * - This is part of the "Legacy Upgrades".
  */
 public class PlotAuctionGUI {
 
@@ -34,6 +33,7 @@ public class PlotAuctionGUI {
 
     /**
      * Reliable holder that stores the plot list and current page.
+     * Must be PUBLIC STATIC for GUIListener.
      */
     public static class PlotAuctionHolder implements InventoryHolder {
         private final int page;
@@ -62,7 +62,7 @@ public class PlotAuctionGUI {
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / (double) PLOTS_PER_PAGE);
         if (page < 0) page = 0;
-        if (page >= maxPages) page = maxPages - 1;
+        if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
         String title = GUIManager.safeText(plugin.msg().get(player, "auction_gui_title"), "§6Plot Auctions")
                 + " §8(Page " + (page + 1) + "/" + Math.max(1, maxPages) + ")";
@@ -109,6 +109,10 @@ public class PlotAuctionGUI {
         if (page > 0) {
             inv.setItem(45, GUIManager.icon(Material.ARROW, "§aPrevious Page", List.of("§7Go to page " + page)));
         }
+        
+        // --- FIX: Back Button (Slot 48) ---
+        inv.setItem(48, GUIManager.icon(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to the main AegisGuard menu.")));
+
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.icon(Material.ARROW, "§aNext Page", List.of("§7Go to page " + (page + 2))));
         }
@@ -135,6 +139,14 @@ public class PlotAuctionGUI {
             plugin.effects().playMenuFlip(player);
             return;
         }
+        
+        // --- FIX: Handle Back to Menu ---
+        if (slot == 48 && e.getCurrentItem().getType() == Material.NETHER_STAR) {
+            plugin.gui().openMain(player);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+
         if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { // Next Page
             open(player, currentPage + 1);
             plugin.effects().playMenuFlip(player);

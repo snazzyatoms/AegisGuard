@@ -327,21 +327,10 @@ cosmetics:
     
   ambient_particles:
     # (Example for later)
-    # snow:
-    #   material: SNOWBALL
-    #   particle: SNOWFLAKE
-    #   display-name: "&fAmbient Snow"
-    #   price: 10000.0
     pass
 
   entry_effects:
     # (Example for later)
-    # levelup:
-    #   material: EXPERIENCE_BOTTLE
-    #   sound: ENTITY_PLAYER_LEVELUP
-    #   particle: TOTEM_OF_UNDYING
-    #   display-name: "&eHero's Welcome"
-    #   price: 7500.0
     pass
 
 # ======================================
@@ -415,3 +404,9 @@ admin:
   broadcast_admin_actions: false    # Show admin actions globally
   allow_language_command: true      # Enable /aegis language <style>
   unlimited_plots: true             # Allow admins to create unlimited plots
+
+  # --- SECURITY: Operator Trust ---
+  # If set to TRUE: Players with /op automatically get full access to AegisGuard.
+  # If set to FALSE: OPs are treated like normal players unless they have the 'aegis.admin' permission.
+  # Recommended: FALSE (Prevents rogue OPs from deleting plots easily).
+  trust_operators: true

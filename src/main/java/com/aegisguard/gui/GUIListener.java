@@ -14,6 +14,7 @@ import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsHolder;
 import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
+import com.aegisguard.gui.gui.InfoGUI.InfoHolder; // <--- NEW IMPORT for the Codex
 
 // Expansions (Note the different package!)
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
@@ -32,7 +33,6 @@ import org.bukkit.inventory.ItemStack;
 /**
  * GUIListener
  * - The central "switchboard" for ALL plugin GUI clicks.
- * - NOW FULLY ENABLED.
  */
 public class GUIListener implements Listener {
 
@@ -60,26 +60,32 @@ public class GUIListener implements Listener {
         // 1. PLAYER MAIN MENU
         // ==============================================================
         if (holder instanceof PlayerMenuHolder) {
-            // This fixes "Codex of Knowledge" moving around
             new PlayerGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 2. PERSONAL SETTINGS
+        // 2. CODEX / INFO MENU
+        // ==============================================================
+        else if (holder instanceof InfoGUI.InfoHolder) { // <--- THIS WAS THE MISSING LINK
+            new InfoGUI(plugin).handleClick(player, e);
+        }
+
+        // ==============================================================
+        // 3. PERSONAL SETTINGS
         // ==============================================================
         else if (holder instanceof SettingsGUIHolder) {
             new SettingsGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 3. ADMIN MENU
+        // 4. ADMIN MENU
         // ==============================================================
         else if (holder instanceof AdminHolder) {
             new AdminGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 4. ROLES & PERMISSIONS (Multi-Stage)
+        // 5. ROLES & PERMISSIONS (Multi-Stage)
         // ==============================================================
         else if (holder instanceof PlotSelectorHolder castHolder) {
             new RolesGUI(plugin).handlePlotSelectorClick(player, e, castHolder);
@@ -95,7 +101,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 5. PLOT MANAGEMENT (Flags, Cosmetics)
+        // 6. PLOT MANAGEMENT (Flags, Cosmetics)
         // ==============================================================
         else if (holder instanceof PlotFlagsHolder castHolder) {
             new PlotFlagsGUI(plugin).handleClick(player, e, castHolder);
@@ -105,7 +111,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 6. ECONOMY (Market, Auction)
+        // 7. ECONOMY (Market, Auction)
         // ==============================================================
         else if (holder instanceof PlotMarketHolder castHolder) {
             new PlotMarketGUI(plugin).handleClick(player, e, castHolder);
@@ -115,7 +121,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 7. EXPANSIONS & ADMIN LISTS
+        // 8. EXPANSIONS & ADMIN LISTS
         // ==============================================================
         else if (holder instanceof ExpansionHolder) {
             new com.aegisguard.expansions.ExpansionRequestGUI(plugin).handleClick(player, e);
@@ -126,5 +132,8 @@ public class GUIListener implements Listener {
         else if (holder instanceof PlotListHolder castHolder) {
             new AdminPlotListGUI(plugin).handleClick(player, e, castHolder);
         }
+        // ==============================================================
+        // If the code reaches here, the item is locked but the click is ignored.
+        // The original problem of the button not working should now be fixed!
     }
 }

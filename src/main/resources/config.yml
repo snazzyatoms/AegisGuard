@@ -71,24 +71,18 @@ resize-cost-per-block: 10.0         # Vault cost for each new block when using /
 # ======================================
 # This system automatically charges players to "rent" their claimed plots.
 # If they fail to pay, their plot will be automatically unclaimed.
-# This is a great way to clear abandoned plots and add an economy sink.
 upkeep:
   enabled: false                    # Set to true to enable the plot upkeep system.
   
   # How often (in hours) the plugin should check every plot.
-  # A longer time (like 6 or 24) is better for performance.
   check_interval_hours: 24
   
   # The cost (in Vault currency) per plot, per interval.
-  # Example: If interval is 24h and cost is 100, it costs 100 per day.
   cost_per_plot: 100.0
   
   # How long (in days) a player has to pay for an overdue plot
   # before it is automatically auctioned.
   grace_period_days: 7
-  
-  # (Item-based upkeep is not supported, as it would require
-  # the player to be online, which defeats the purpose).
 
 # ======================================
 # ⚖️ Plot Auctions
@@ -96,14 +90,12 @@ upkeep:
 # Settings for when a plot's grace period expires.
 auction:
   # How long (in days) an expired plot stays up for auction.
-  # After this, if no bids, the plot is unclaimed.
   duration_days: 3
   
   # The minimum amount a bid must be raised by.
   min_bid_increase: 100.0
   
   # What % of the final bid is given to the original owner.
-  # The rest is removed from the economy (server cut).
   owner_cut_percent: 50 # 50%
 
 # ======================================
@@ -138,6 +130,14 @@ claims:
   max_radius: 32
   max_area: 16000
   preview_seconds: 10
+
+  # --- Wand Consumption Settings (NEW) ---
+  # Should the Aegis Scepter be removed from the inventory after a successful claim?
+  consume_wand_on_claim: true
+  
+  # If true, players with 'aegis.admin' keep their wand even after claiming.
+  # They can use /ag consume to destroy it manually.
+  admin_keep_wand: true
 
   # --- Optional Per-World Settings ---
   per_world:
@@ -223,7 +223,6 @@ protections:
 # 🏳️ Plot Roles
 # ======================================
 # Define the permissions for each plot role.
-# These are the permissions a plot owner can grant to others.
 # Available permissions:
 #   BUILD, CONTAINERS, INTERACT, PET_DAMAGE, ENTITY_INTERACT, FARM_TRAMPLE
 roles:
@@ -301,7 +300,6 @@ visualization:
 # ======================================
 # 🎨 Plot Cosmetics
 # ======================================
-# Define cosmetic border particles that players can buy/apply.
 cosmetics:
   border_particles:
     flame:
@@ -326,15 +324,13 @@ cosmetics:
       price: 3000.0
     
   ambient_particles:
-    # (Example for later)
     pass
 
   entry_effects:
-    # (Example for later)
     pass
 
 # ======================================
-# 🧾 Expansion Requests (Updated Logic)
+# 🧾 Expansion Requests (Anti-Abuse Logic)
 # ======================================
 expansions:
   enabled: true                     # Master toggle

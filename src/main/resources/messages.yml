@@ -33,14 +33,13 @@ language_style_lore:
   - "&f • &aModern English &8(You have...)"
   - "&eClick to cycle instantly."
 
+# --- Shared Buttons ---
 button_back: "&eBack"
 button_exit: "&cExit"
-
 back_lore:
-  - "&7Return to the Guardian Codex"
-
+  - "&7Return to the previous menu"
 exit_lore:
-  - "&7Close the Codex and return to your realm"
+  - "&7Close this menu"
 
 # ======================================
 # OLD ENGLISH STYLE (Default)
@@ -100,6 +99,27 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
+  # --- NEW: Expansion Requests ---
+  expansion_gui_title: "&d§lLand Expansion Request"
+  button_expand: "&dRequest Expansion"
+  expand_lore:
+    - "&7Petition the High Council"
+    - "&7for greater lands."
+  button_submit_request: "&aSubmit Request"
+  submit_request_lore:
+    - "&7Select the magnitude of thy request."
+  button_view_requests_admin: "&cReview Petitions (Admin)"
+  view_requests_admin_lore:
+    - "&7Judge the pleas of thy subjects."
+  expansion_submitted: "&a✔ Thy petition for expansion hath been sent to the Council."
+  expansion_exists: "&c❌ Thou already hast a petition pending."
+  expansion_approved: "&a✔ Rejoice! Thy petition hath been granted by {PLAYER}."
+  expansion_denied: "&c❌ Alas, thy petition hath been denied by {PLAYER}."
+  expansion_payment_failed: "&c❌ Thy petition failed; thy coffers lack the tribute."
+  expansion_limit_reached: "&c❌ Thou hast reached the absolute limit of expansion ({LIMIT})."
+  expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
+  expansion_invalid_size: "&c❌ The new size must be greater than the old."
+
   # --- NEW: Welcome / TP ---
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
   home-fail-outside: "&c❌ Thou must stand within thy dominion to set its arrival point."
@@ -123,7 +143,6 @@ old_english:
   # Menu & buttons
   menu_title: "&b⚔ The Guardian Codex ⚔"
   
-  # --- MODIFIED: Player & Plot GUIs ---
   button_claim_land: "&a🛡 Lay Claim to Land"
   claim_land_lore:
     - "&7Bind a region to thy will."
@@ -143,7 +162,17 @@ old_english:
   player_settings_lore:
     - "&7Toggle thy personal sounds & language."
   
+  button_market: "&eDominion Marketplace"
+  market_lore:
+    - "&7Trade lands with others."
+    
+  button_auction: "&cDominion Auctions"
+  auction_lore:
+    - "&7Bid on lost lands."
+  
   button_info: "&6📜 Codex of Knowledge"
+  info_lore:
+    - "&7Seek wisdom within the Codex."
   info_message: "&7Seek wisdom within the Codex and protect thy holdings."
 
   # --- Settings GUI (Player Prefs) ---
@@ -157,9 +186,9 @@ old_english:
     - "&7Toggle Aegis’s whispers for thyself."
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
+  settings_gui_not_toggle: "&cThese are but examples. Change them in Plot Flags."
 
   # --- Plot Flags GUI ---
-  # Individual flags (buttons + lore)
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
@@ -205,7 +234,6 @@ old_english:
   piston_toggle_lore:
     - "&7Halt the movement of blocks across thy borders."
 
-  # Safe Zone (master)
   button_safe_on: "&a🛡 Sanctuary: Awakened"
   button_safe_off: "&c🛡 Sanctuary: Slumbering"
   safe_toggle_lore:
@@ -222,7 +250,6 @@ old_english:
   cosmetics_border_none: "&cDefault Particles"
   cosmetic_purchased: "&a✔ Cosmetic unlocked and applied!"
 
-  # Generic toggle feedback (used if needed)
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
 
   # --- MODIFIED: Roles GUI ---
@@ -259,12 +286,12 @@ old_english:
   admin_broadcast_enabled: "&a✔ Proclamations shall be heard."
   admin_broadcast_disabled: "&c✖ Proclamations silenced."
   admin_removed_banned: "&ePurged plots of the banished: {PLAYER}"
-
+  
   # --- NEW: Admin Plot List ---
   admin_plot_list_title: "&cAll Known Dominions"
   admin_plot_teleport: "&eThou hast been spirited to the dominion of {PLAYER}."
   admin_plot_deleted: "&c✖ The dominion of {PLAYER} hath been struck from the records."
-
+  
   # --- NEW: Server Zones ---
   admin-zone-created: "&a✔ A new Server Zone hath been decreed."
   admin-zone-deleted: "&c✖ The Server Zone hath been dissolved."
@@ -357,6 +384,27 @@ hybrid_english:
   market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
   market-not-for-sale: "&e✔ Your plot is no longer for sale."
   market-rent-soon: "&ePlot renting is coming soon."
+  
+  # --- NEW: Expansion Requests ---
+  expansion_gui_title: "&d§lLand Expansion Request"
+  button_expand: "&dRequest Expansion"
+  expand_lore:
+    - "&7Petition the High Council"
+    - "&7for greater lands."
+  button_submit_request: "&aSubmit Request"
+  submit_request_lore:
+    - "&7Select the magnitude of thy request."
+  button_view_requests_admin: "&cReview Petitions (Admin)"
+  view_requests_admin_lore:
+    - "&7Judge the pleas of thy subjects."
+  expansion_submitted: "&a✔ Thy petition for expansion hath been sent."
+  expansion_exists: "&c❌ Thou already hast a petition pending."
+  expansion_approved: "&a✔ Rejoice! Thy petition hath been granted."
+  expansion_denied: "&c❌ Alas, thy petition hath been denied."
+  expansion_payment_failed: "&c❌ Thy petition failed; funds missing."
+  expansion_limit_reached: "&c❌ Thou hast reached the absolute limit."
+  expansion_overlap_fail: "&c❌ Thou canst not expand here."
+  expansion_invalid_size: "&c❌ New size must be greater."
 
   # --- NEW: Welcome / TP ---
   home-set-success: "&a✔ Plot spawn point set to your location."
@@ -397,8 +445,18 @@ hybrid_english:
   player_settings_lore:
     - "&7Toggle your personal sounds & language."
   
+  button_market: "&ePlot Market"
+  market_lore:
+    - "&7Buy and sell plots."
+  
+  button_auction: "&cAuctions"
+  auction_lore:
+    - "&7Bid on expired plots."
+  
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Study the Codex to learn and secure thy holdings."
+  info_lore:
+    - "&7Read the guide."
 
   # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Thy Settings"
@@ -409,6 +467,7 @@ hybrid_english:
     - "&7Toggle Aegis whispers for thyself."
   sounds_toggle_global_disabled_lore:
     - "&7A decree hath silenced all sound."
+  settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
 
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
@@ -529,7 +588,7 @@ hybrid_english:
   flag_interact_lore:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
-
+    
   # --- NEW: Wilderness Revert ---
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Successfully reverted {AMOUNT} blocks."
@@ -606,6 +665,26 @@ modern_english:
   market-not-for-sale: "&e✔ Your plot is no longer for sale."
   market-rent-soon: "&ePlot renting is coming soon."
 
+  # --- NEW: Expansion Requests ---
+  expansion_gui_title: "&d§lLand Expansion Request"
+  button_expand: "&dRequest Expansion"
+  expand_lore:
+    - "&7Request a bigger plot limit."
+  button_submit_request: "&aSubmit Request"
+  submit_request_lore:
+    - "&7Select request size."
+  button_view_requests_admin: "&cReview Requests (Admin)"
+  view_requests_admin_lore:
+    - "&7Approve or Deny requests."
+  expansion_submitted: "&a✔ Request submitted."
+  expansion_exists: "&c❌ You already have a pending request."
+  expansion_approved: "&a✔ Your request was approved by {PLAYER}."
+  expansion_denied: "&c❌ Your request was denied by {PLAYER}."
+  expansion_payment_failed: "&c❌ Request failed; insufficient funds."
+  expansion_limit_reached: "&c❌ You reached the expansion limit."
+  expansion_overlap_fail: "&c❌ Cannot expand; neighbors too close."
+  expansion_invalid_size: "&c❌ New size must be bigger."
+
   # --- NEW: Welcome / TP ---
   home-set-success: "&a✔ Plot spawn point set to your location."
   home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
@@ -646,8 +725,18 @@ modern_english:
   player_settings_lore:
     - "&7Toggle your personal sounds & language."
     
+  button_market: "&ePlot Market"
+  market_lore:
+    - "&7Buy and sell plots."
+  
+  button_auction: "&cAuctions"
+  auction_lore:
+    - "&7Bid on expired plots."
+  
   button_info: "&6📜 Info"
   info_message: "&7Open the Codex to manage protections and learn commands."
+  info_lore:
+    - "&7Read the guide."
 
   # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Settings"
@@ -658,6 +747,7 @@ modern_english:
     - "&7Toggle Aegis sounds for yourself."
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
+  settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
 
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
@@ -737,7 +827,7 @@ modern_english:
   role_is_owner: "&cYou can't change the owner's role."
   role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
   role_removed: "&e✔ {PLAYER} has been removed from your plot."
-
+  
   # Admin GUI
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."
@@ -778,13 +868,13 @@ modern_english:
   flag_interact_lore:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
-
+    
   # --- NEW: Wilderness Revert ---
-  wilderness_revert_start: "[AegisGuard] Starting wilderness revert task..."
+  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
   # Help
-  help_header: "&b⚔ Guardian Codex Help"
+  help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
     - "&e/aegis menu &7- Open the main menu"

@@ -73,6 +73,7 @@ public class AegisGuard extends JavaPlugin {
     public void onEnable() {
         plugin = this;
 
+        // Folia Check
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
@@ -86,6 +87,7 @@ public class AegisGuard extends JavaPlugin {
 
         this.configMgr = new AGConfig(this);
         
+        // Database
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -109,6 +111,7 @@ public class AegisGuard extends JavaPlugin {
             expansionManager.load();
         });
 
+        // Listeners
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
@@ -116,10 +119,12 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
         
+        // Banned Player Listener
         if (cfg().autoRemoveBannedPlots()) {
              Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
+        // Commands
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
             AegisCommand aegisExecutor = new AegisCommand(this);
@@ -134,9 +139,10 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
+        // Tasks
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
-        startWildernessRevertTask(); 
+        startWildernessRevertTask(); // Logic handled inside method
         
         initializeHooks();
         getLogger().info("AegisGuard enabled.");
@@ -171,7 +177,7 @@ public class AegisGuard extends JavaPlugin {
         String key = "sounds.players." + player.getUniqueId();
         return getConfig().getBoolean(key, true);
     }
-
+    
     // --- SECURITY: Admin Check ---
     public boolean isAdmin(Player player) {
         // If trust_operators is FALSE, ignore OP status. Only check permission.
@@ -316,8 +322,10 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void startWildernessRevertTask() {
+        // 1. Check Config
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
 
+        // 2. Check Storage Type (CRITICAL FIX: Prevent crash on YAML)
         String storage = cfg().raw().getString("storage.type", "yml");
         if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql")) {
             getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");

@@ -14,7 +14,6 @@ import java.util.List;
 /**
  * PlayerGUI
  * - The main player-facing menu for AegisGuard.
- * - Features all player-facing GUIs (Flags, Market, Auction, Roles, Settings).
  */
 public class PlayerGUI {
 
@@ -24,162 +23,95 @@ public class PlayerGUI {
         this.plugin = plugin;
     }
 
-    /**
-     * Tag holder so click handler only reacts to this GUI.
-     * Must be PUBLIC for GUIListener.
-     */
     public static class PlayerMenuHolder implements InventoryHolder {
-        @Override
-        public Inventory getInventory() {
-            return null;
-        }
+        @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player) {
-        String title = GUIManager.safeText(
-                plugin.msg().get(player, "menu_title"),
-                "§b§lAegisGuard §7— Menu"
-        );
+        String title = GUIManager.safeText(plugin.msg().get(player, "menu_title"), "§b§lAegisGuard §7— Menu");
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 27, title);
 
-        // --- ROW 2: FEATURES ---
-        
         // Claim Land - SLOT 10
-        inv.setItem(10, GUIManager.icon(
-                Material.LIGHTNING_ROD,
-                GUIManager.safeText(plugin.msg().get(player, "button_claim_land"), "§aClaim Land"),
-                plugin.msg().getList(player, "claim_land_lore")
-        ));
+        inv.setItem(10, GUIManager.icon(Material.LIGHTNING_ROD, 
+            GUIManager.safeText(plugin.msg().get(player, "button_claim_land"), "§aClaim Land"), 
+            plugin.msg().getList(player, "claim_land_lore")));
 
         // Plot Flags - SLOT 12
-        inv.setItem(12, GUIManager.icon(
-                Material.OAK_SIGN,
-                GUIManager.safeText(plugin.msg().get(player, "button_plot_flags"), "§6Plot Flags"),
-                plugin.msg().getList(player, "plot_flags_lore")
-        ));
+        inv.setItem(12, GUIManager.icon(Material.OAK_SIGN, 
+            GUIManager.safeText(plugin.msg().get(player, "button_plot_flags"), "§6Plot Flags"), 
+            plugin.msg().getList(player, "plot_flags_lore")));
 
         // Plot Roles - SLOT 14
-        inv.setItem(14, GUIManager.icon(
-                Material.PLAYER_HEAD,
-                GUIManager.safeText(plugin.msg().get(player, "button_roles"), "§bManage Roles"),
-                plugin.msg().getList(player, "roles_lore")
-        ));
+        inv.setItem(14, GUIManager.icon(Material.PLAYER_HEAD, 
+            GUIManager.safeText(plugin.msg().get(player, "button_roles"), "§bManage Roles"), 
+            plugin.msg().getList(player, "roles_lore")));
         
         // Plot Marketplace - SLOT 16
-        inv.setItem(16, GUIManager.icon(
-                Material.GOLD_INGOT,
-                GUIManager.safeText(plugin.msg().get(player, "button_market"), "§ePlot Marketplace"),
-                plugin.msg().getList(player, "market_lore", List.of("§7Buy, sell, and rent plots."))
-        ));
+        inv.setItem(16, GUIManager.icon(Material.GOLD_INGOT, 
+            GUIManager.safeText(plugin.msg().get(player, "button_market"), "§ePlot Marketplace"), 
+            plugin.msg().getList(player, "market_lore", List.of("§7Buy, sell, and rent plots."))));
         
-        // Plot Auctions (if enabled) - SLOT 18
+        // Plot Auctions - SLOT 18
         if (plugin.cfg().isUpkeepEnabled()) {
-             inv.setItem(18, GUIManager.icon(
-                Material.LAVA_BUCKET,
-                GUIManager.safeText(plugin.msg().get(player, "button_auction"), "§cPlot Auctions"),
-                plugin.msg().getList(player, "auction_lore", List.of("§7Bid on expired plots."))
-            ));
+             inv.setItem(18, GUIManager.icon(Material.LAVA_BUCKET, 
+                GUIManager.safeText(plugin.msg().get(player, "button_auction"), "§cPlot Auctions"), 
+                plugin.msg().getList(player, "auction_lore", List.of("§7Bid on expired plots."))));
         }
         
-        // Player Settings (Personal) - SLOT 20
-        inv.setItem(20, GUIManager.icon(
-                Material.COMPARATOR,
-                GUIManager.safeText(plugin.msg().get(player, "button_player_settings"), "§9Player Settings"),
-                plugin.msg().getList(player, "player_settings_lore")
-        ));
+        // Player Settings - SLOT 20
+        inv.setItem(20, GUIManager.icon(Material.COMPARATOR, 
+            GUIManager.safeText(plugin.msg().get(player, "button_player_settings"), "§9Player Settings"), 
+            plugin.msg().getList(player, "player_settings_lore")));
 
-        // --- NEW: Expansion Request - SLOT 22 ---
-        inv.setItem(22, GUIManager.icon(
-                Material.DIAMOND_PICKAXE,
-                GUIManager.safeText(plugin.msg().get(player, "button_expand"), "§dRequest Land Expansion"),
-                plugin.msg().getList(player, "expand_lore", List.of("§7Apply to increase your claim size."))
-        ));
-
+        // Expansion Request - SLOT 22
+        inv.setItem(22, GUIManager.icon(Material.DIAMOND_PICKAXE, 
+            GUIManager.safeText(plugin.msg().get(player, "button_expand"), "§dRequest Land Expansion"), 
+            plugin.msg().getList(player, "expand_lore", List.of("§7Apply to increase your claim size."))));
 
         // Info - SLOT 24
-        inv.setItem(24, GUIManager.icon(
-                Material.WRITABLE_BOOK,
-                GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fInfo"),
-                plugin.msg().getList(player, "info_lore")
-        ));
+        inv.setItem(24, GUIManager.icon(Material.WRITABLE_BOOK, 
+            GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fInfo"), 
+            plugin.msg().getList(player, "info_lore")));
 
-        // Exit - SLOT 26
-        inv.setItem(26, GUIManager.icon(
-                Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"),
-                plugin.msg().getList(player, "exit_lore")
-        ));
+        // --- ADMIN PANEL (Slot 26) ---
+        // FIX: Now uses isAdmin() check to respect 'trust_operators' config
+        if (plugin.isAdmin(player)) {
+            inv.setItem(26, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
+        } else {
+            inv.setItem(26, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), plugin.msg().getList(player, "exit_lore")));
+        }
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    /**
-     * This method is called by GUIListener.
-     */
     public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true); // prevent item pickup/move
+        e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        // Get plot context for flags/settings
         Plot plot = plugin.store().getPlotAt(player.getLocation());
+        boolean isOwner = plot != null && plot.getOwner().equals(player.getUniqueId());
 
         switch (e.getSlot()) {
-            case 10: // Claim
-                player.closeInventory();
-                plugin.selection().confirmClaim(player);
-                plugin.effects().playMenuFlip(player);
-                break;
+            case 10: player.closeInventory(); plugin.selection().confirmClaim(player); plugin.effects().playMenuFlip(player); break;
+            case 12: 
+                if (!isOwner) { plugin.msg().send(player, "no_plot_here"); plugin.effects().playError(player); return; }
+                plugin.gui().flags().open(player, plot); plugin.effects().playMenuFlip(player); break;
+            case 14: plugin.gui().roles().open(player); plugin.effects().playMenuFlip(player); break;
+            case 16: plugin.gui().market().open(player, 0); plugin.effects().playMenuFlip(player); break;
+            case 18: if (plugin.cfg().isUpkeepEnabled()) { plugin.gui().auction().open(player, 0); plugin.effects().playMenuFlip(player); } break;
+            case 20: plugin.gui().settings().open(player); plugin.effects().playMenuFlip(player); break;
+            case 22: plugin.gui().expansionRequest().open(player); plugin.effects().playMenuFlip(player); break;
+            case 24: plugin.gui().info().open(player); plugin.effects().playMenuFlip(player); break;
             
-            case 12: // Plot Flags
-                if (plot == null || !plot.getOwner().equals(player.getUniqueId())) {
-                    plugin.msg().send(player, "no_plot_here");
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.gui().flags().open(player, plot);
-                plugin.effects().playMenuFlip(player);
-                break;
-            
-            case 14: // Plot Roles
-                plugin.gui().roles().open(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-            
-            case 16: // Marketplace
-                plugin.gui().market().open(player, 0);
-                plugin.effects().playMenuFlip(player);
-                break;
-            
-            case 18: // Auction
-                 if (plugin.cfg().isUpkeepEnabled()) {
-                    plugin.gui().auction().open(player, 0);
+            case 26: 
+                if (plugin.isAdmin(player)) {
+                    plugin.gui().admin().open(player);
                     plugin.effects().playMenuFlip(player);
+                } else {
+                    player.closeInventory();
+                    plugin.effects().playMenuClose(player);
                 }
-                break;
-            
-            case 20: // Player Settings
-                plugin.gui().settings().open(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-            
-            case 22: // NEW: Expansion Request
-                plugin.gui().expansionRequest().open(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-
-
-            case 24: // Info (Codex)
-                plugin.gui().info().open(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-
-            case 26: // Exit
-                player.closeInventory();
-                plugin.effects().playMenuClose(player);
-                break;
-
-            default: 
                 break;
         }
     }

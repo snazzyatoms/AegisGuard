@@ -79,13 +79,18 @@ public class InfoGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true); // Locks ALL items in the top inventory
+        e.setCancelled(true); // Locks ALL items 
         
         if (e.getSlot() == 22) { // Back button (Slot 22)
-            plugin.gui().openMain(player);
-            plugin.effects().playMenuFlip(player);
+            try {
+                plugin.gui().openMain(player); // Attempt to open the main menu
+                plugin.effects().playMenuFlip(player);
+            } catch (Exception ex) {
+                plugin.getLogger().severe("AegisGuard Menu Crash: Failed to open main menu from Codex. See stacktrace below.");
+                player.closeInventory(); // Close the broken menu safely
+                ex.printStackTrace();
+            }
         } else if (e.getSlot() >= 10 && e.getSlot() <= 16) {
-            // Acknowledge the chapter click
             plugin.effects().playMenuFlip(player);
         }
     }

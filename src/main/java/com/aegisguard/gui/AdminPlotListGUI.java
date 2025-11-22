@@ -1,7 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot; // --- FIX: Correct import ---
+import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -22,7 +22,6 @@ import java.util.UUID;
  * AdminPlotListGUI
  * - A paginated GUI for admins to view all plots on the server.
  * - Allows admins to teleport to or delete any plot.
- * - This is feature #4 from the next-steps list.
  */
 public class AdminPlotListGUI {
 
@@ -63,10 +62,10 @@ public class AdminPlotListGUI {
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / (double) PLOTS_PER_PAGE);
         if (page < 0) page = 0;
-        if (page >= maxPages && maxPages > 0) { // Fix for empty list
+        if (page >= maxPages && maxPages > 0) {
              page = maxPages - 1;
         } else if (maxPages == 0) {
-            page = 0;
+             page = 0;
         }
 
         String title = GUIManager.safeText(plugin.msg().get(player, "admin_plot_list_title"), "§cAll Plots")
@@ -95,9 +94,9 @@ public class AdminPlotListGUI {
                 try {
                      meta.setOwningPlayer(owner);
                 } catch (Exception e) {
-                    // Use default steve head
+                     // Use default steve head
                 }
-               
+                
                 meta.setDisplayName("§bPlot by: §f" + plot.getOwnerName());
                 meta.setLore(List.of(
                         "§7ID: §e" + plot.getPlotId().toString().substring(0, 8),
@@ -165,14 +164,15 @@ public class AdminPlotListGUI {
             if (e.getClick().isLeftClick()) {
                 // Teleport
                 Location loc = plot.getCenter(plugin);
-                if (loc == null) {
+                if (loc == null || loc.getWorld() == null) {
                      plugin.msg().send(player, "admin-plot-tp-fail-world");
                      plugin.effects().playError(player);
                      return;
                 }
                 
-                // Get a safe Y-level
-                loc.setY(loc.getWorld().getHighestBlockYAt(loc) + 1.5);
+                // FIX: Get safe Y-level (Highest non-air block Y + 1.0 to prevent suffocation)
+                int highestY = loc.getWorld().getHighestBlockYAt(loc);
+                loc.setY(highestY + 1.0); 
                 
                 player.teleport(loc);
                 player.closeInventory();

@@ -118,6 +118,15 @@ wilderness_revert:
   check_interval_minutes: 10
   # How many blocks to revert in one batch.
   revert_batch_size: 500
+  
+# =============================================================
+# 🧪 DEMO MODE (For Public Test Servers)
+# =============================================================
+# WARNING: If enabled, plots will be AUTOMATICALLY DELETED after
+# the specified time limit. Do not use on a real survival server.
+demo_mode:
+  enabled: false
+  plot_lifetime_minutes: 180  # 3 Hours
 
 # ======================================
 # 🧱 Claims & World Rules
@@ -206,9 +215,9 @@ protections:
   pets_protection: true
   entities_protection: true
   farm_protection: true
-  tnt-damage: true     # Prevents explosions from breaking blocks
-  fire-spread: true    # Prevents fire from spreading
-  piston-use: true     # Prevents pistons from pushing/pulling blocks into/out of claims
+  tnt-damage: true      # Prevents explosions from breaking blocks
+  fire-spread: true     # Prevents fire from spreading
+  piston-use: true      # Prevents pistons from pushing/pulling blocks into/out of claims
 
 # ======================================
 # 🏳️ Plot Roles
@@ -240,8 +249,8 @@ roles:
 # 🔊 Sounds & Immersion
 # ======================================
 sounds:
-  global_enabled: true             # Global sound toggle
-  players: {}                      # Per-player overrides (auto-managed)
+  global_enabled: true              # Global sound toggle
+  players: {}                       # Per-player overrides (auto-managed)
 
   # --- Configurable UI Sounds ---
   menu_open:
@@ -279,11 +288,11 @@ sounds:
 visualization:
   enabled: true
   
-  # Particle to show for plot borders.
+  # Default particle for plot borders.
   # Good values: FLAME, VILLAGER_HAPPY, END_ROD, REDSTONE
   particle: "FLAME"
   
-  # Color to use (R,G,B) IF particle is set to REDSTONE
+  # Color to use (R,G,B) IF particle is set to REDSTONE/DUST
   color: "0,255,255" # A nice cyan
   
   # How often to refresh the particles (in ticks). 20 ticks = 1 second.
@@ -336,24 +345,38 @@ cosmetics:
     pass
 
 # ======================================
-# 🧾 Expansion Requests (Future System)
+# 🧾 Expansion Requests (Updated Logic)
 # ======================================
 expansions:
-  enabled: true                    # Master toggle
-  approval_required: true          # Requires admin approval
-  cost:
-    use_vault: true
-    amount: 250.0
-  cooldown_minutes: 30             # Cooldown before next request
-  notify_admins: true              # Notify admins of new requests
-  persistence: true                # Keep requests across restarts
+  enabled: true                     # Master toggle
+  approval_required: true           # Requires admin approval (Recommended)
+  notify_admins: true               # Alert admins when a request is made
+  
+  # --- Limits & Rules ---
+  # The absolute maximum radius a plot can ever reach via expansion.
+  # Example: 100 means a 200x200 plot.
+  max_radius_global: 100
+  
+  # Minimum distance (blocks) required between the new expanded border
+  # and any neighbor. Prevents "touching" claims.
+  buffer_zone: 5
+
+  # --- Economy / Cost Logic ---
+  # Base cost per block of radius increase.
+  # Example: Increasing radius by 10 blocks = 10 * 5.0 = $50.
+  cost_per_block: 5.0
+  
+  # Exponential Multiplier (Anti-Abuse)
+  # If a player requests a massive jump (more than 10 blocks at once),
+  # the cost is multiplied by this amount.
+  # Set to 1.0 to disable (Linear pricing).
+  cost_multiplier: 1.5
 
 # ======================================
 # 🛡️ Protection Effects (Feedback Visuals)
 # ======================================
 protection_effects:
   enabled: true
-  # This 'defaults' block is now correctly read by EffectUtil.java
   defaults:
     deny_sound: BLOCK_NOTE_BLOCK_BASS
     deny_particle: SMOKE_NORMAL
@@ -387,7 +410,8 @@ protection_effects:
 # 🧩 Admin Options
 # ======================================
 admin:
-  auto_remove_banned: false        # Remove all plots of banned players
-  bypass_claim_limit: false        # Admins ignore claim limit
-  broadcast_admin_actions: false   # Show admin actions globally
-  allow_language_command: true     # Enable /aegis language <style>
+  auto_remove_banned: false         # Remove all plots of banned players
+  bypass_claim_limit: false         # Admins ignore claim limit
+  broadcast_admin_actions: false    # Show admin actions globally
+  allow_language_command: true      # Enable /aegis language <style>
+  unlimited_plots: true             # Allow admins to create unlimited plots

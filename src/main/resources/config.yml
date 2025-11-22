@@ -118,7 +118,7 @@ wilderness_revert:
 # WARNING: If enabled, plots will be AUTOMATICALLY DELETED after
 # the specified time limit. Do not use on a real survival server.
 demo_mode:
-  enabled: false
+  enabled: true
   plot_lifetime_minutes: 180  # 3 Hours
 
 # ======================================
@@ -420,4 +420,4 @@ admin:
   # If set to TRUE: Players with /op automatically get full access to AegisGuard.
   # If set to FALSE: OPs are treated like normal players unless they have the 'aegis.admin' permission.
   # Recommended: FALSE (Prevents rogue OPs from deleting plots easily).
-  trust_operators: true
+  trust_operators: false

@@ -409,4 +409,4 @@ admin:
   # If set to TRUE: Players with /op automatically get full access to AegisGuard.
   # If set to FALSE: OPs are treated like normal players unless they have the 'aegis.admin' permission.
   # Recommended: FALSE (Prevents rogue OPs from deleting plots easily).
-  trust_operators: true
+  trust_operators: false

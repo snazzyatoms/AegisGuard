@@ -88,6 +88,13 @@ public class PlayerGUI {
                 plugin.msg().getList(player, "player_settings_lore")
         ));
 
+        // --- NEW: Expansion Request - SLOT 22 ---
+        inv.setItem(22, GUIManager.icon(
+                Material.DIAMOND_PICKAXE,
+                GUIManager.safeText(plugin.msg().get(player, "button_expand"), "§dRequest Land Expansion"),
+                plugin.msg().getList(player, "expand_lore", List.of("§7Apply to increase your claim size."))
+        ));
+
 
         // Info - SLOT 24
         inv.setItem(24, GUIManager.icon(
@@ -155,10 +162,15 @@ public class PlayerGUI {
                 plugin.gui().settings().open(player);
                 plugin.effects().playMenuFlip(player);
                 break;
+            
+            case 22: // NEW: Expansion Request
+                plugin.gui().expansionRequest().open(player);
+                plugin.effects().playMenuFlip(player);
+                break;
+
 
             case 24: // Info (Codex)
-                // FIX: Opens the new menu instead of sending chat text
-                plugin.gui().info().open(player); 
+                plugin.gui().info().open(player);
                 plugin.effects().playMenuFlip(player);
                 break;
 

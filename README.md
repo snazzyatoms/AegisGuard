@@ -55,7 +55,7 @@ Turn land into a valuable asset.
 ### 🛡️ Forged by Aegis Divine 🛡️
 *Protecting realms with code and spirit.*
 
-[**Support Discord**](https://discord.gg/Y2NPUR7UZE) &nbsp;•&nbsp; [**Spigot Page**](#) &nbsp;•&nbsp; [**Report an Issue**](#)
+[**Support Discord**](https://discord.gg/s8WPjJPfQU) &nbsp;•&nbsp; [**Spigot Page**](#) &nbsp;•&nbsp; [**Report an Issue**](#)
 
 <br/>
 

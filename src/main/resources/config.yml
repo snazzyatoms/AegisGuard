@@ -118,7 +118,7 @@ wilderness_revert:
 # WARNING: If enabled, plots will be AUTOMATICALLY DELETED after
 # the specified time limit. Do not use on a real survival server.
 demo_mode:
-  enabled: true
+  enabled: false
   plot_lifetime_minutes: 180  # 3 Hours
 
 # ======================================

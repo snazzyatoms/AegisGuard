@@ -63,7 +63,6 @@ public class AGConfig {
         return config.getInt(path, 5);
     }
 
-    // --- NEW: Flight Cost (Fixes Build Error) ---
     public double getFlightCost() {
         return config.getDouble("economy.flag_costs.fly", 5000.0);
     }
@@ -91,6 +90,17 @@ public class AGConfig {
             if (config.isSet(path)) return config.getInt(path);
         }
         return config.getInt("claims.max_claims_per_player", 1);
+    }
+
+    // --- Travel System (NEW) ---
+    public boolean isTravelSystemEnabled() { 
+        return config.getBoolean("travel_system.enabled", true); 
+    }
+    public boolean allowHomeTeleport() { 
+        return config.getBoolean("travel_system.allow_home_teleport", true); 
+    }
+    public boolean allowVisitTeleport() { 
+        return config.getBoolean("travel_system.allow_visit_teleport", true); 
     }
 
     // --- Upkeep ---
@@ -121,7 +131,6 @@ public class AGConfig {
     public boolean petProtectionDefault() { return config.getBoolean("protections.pets_protection", true); }
     public boolean farmProtectionDefault() { return config.getBoolean("protections.farm_protection", true); }
     
-    // --- NEW: Feature Defaults (Fixes Build Error) ---
     public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
     public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
 }

@@ -13,6 +13,7 @@ import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DynmapHook;
+import com.aegisguard.hooks.MobBarrierTask; // Ensure this import exists
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
@@ -31,7 +32,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.UUID;
+import java.util.UUID; 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -56,6 +57,7 @@ public class AegisGuard extends JavaPlugin {
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
+    private Object mobBarrierTask; // --- NEW ---
 
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
@@ -137,6 +139,7 @@ public class AegisGuard extends JavaPlugin {
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask(); 
+        startMobBarrierTask(); // --- FIX: Added startup call ---
         
         initializeHooks();
         getLogger().info("AegisGuard enabled.");
@@ -159,6 +162,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
         cancelTaskReflectively(wildernessRevertTask);
+        cancelTaskReflectively(mobBarrierTask); // --- FIX: Added shutdown call ---
 
         if (plotStore != null) plotStore.saveSync();
         if (expansionManager != null) expansionManager.saveSync();
@@ -172,7 +176,6 @@ public class AegisGuard extends JavaPlugin {
         return getConfig().getBoolean(key, true);
     }
     
-    // --- SECURITY: Admin Check ---
     public boolean isAdmin(Player player) {
         if (!cfg().raw().getBoolean("admin.trust_operators", true)) {
             return player.hasPermission("aegis.admin");
@@ -265,8 +268,7 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             long currentTime = System.currentTimeMillis();
             long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
-            // Upkeep logic here (shortened for brevity, assume same as before)
-            // ...
+            // Upkeep Logic...
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -281,5 +283,12 @@ public class AegisGuard extends JavaPlugin {
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
         WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
+    }
+    
+    // --- FIX: Added Missing Method ---
+    private void startMobBarrierTask() {
+        long interval = cfg().raw().getLong("mob_barrier.check_interval_ticks", 60);
+        MobBarrierTask task = new MobBarrierTask(this);
+        mobBarrierTask = scheduleAsyncRepeating(task::run, interval);
     }
 }

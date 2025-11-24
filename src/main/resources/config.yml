@@ -96,7 +96,6 @@ auction:
   min_bid_increase: 100.0
   
   # What % of the final bid is given to the original owner.
-  # The rest is removed from the economy (server cut).
   owner_cut_percent: 50 # 50%
 
 # ======================================
@@ -218,13 +217,15 @@ protections:
   tnt-damage: true      # Prevents explosions from breaking blocks
   fire-spread: true     # Prevents fire from spreading
   piston-use: true      # Prevents pistons from pushing/pulling blocks into/out of claims
+  
+  # --- Flags ---
+  fly: false
+  entry: true
 
 # ======================================
 # 🏳️ Plot Roles
 # ======================================
 # Define the permissions for each plot role.
-# Available permissions:
-#   BUILD, CONTAINERS, INTERACT, PET_DAMAGE, ENTITY_INTERACT, FARM_TRAMPLE
 roles:
   co-owner:
     - BUILD
@@ -241,7 +242,6 @@ roles:
   guest:
     - INTERACT
   default:
-    # Permissions for players with no role (e.g., visitors)
     - INTERACT
 
 # ======================================
@@ -288,7 +288,6 @@ visualization:
   enabled: true
   
   # Default particle for plot borders.
-  # Good values: FLAME, VILLAGER_HAPPY, END_ROD, REDSTONE
   particle: "FLAME"
   
   # Color to use (R,G,B) IF particle is set to REDSTONE/DUST
@@ -300,7 +299,6 @@ visualization:
 # ======================================
 # 🎨 Plot Cosmetics
 # ======================================
-# Define cosmetic border particles that players can buy/apply.
 cosmetics:
   border_particles:
     flame:
@@ -325,43 +323,29 @@ cosmetics:
       price: 3000.0
     
   ambient_particles:
-    # (Example for later)
     pass
 
   entry_effects:
-    # (Example for later)
     pass
 
 # ======================================
-# 🧾 Expansion Requests (Anti-Abuse Logic)
+# 🧾 Expansion Requests
 # ======================================
 expansions:
-  enabled: true                     # Master toggle
-  approval_required: true           # Requires admin approval (Recommended)
-  notify_admins: true               # Alert admins when a request is made
+  enabled: true                     
+  approval_required: true           
+  notify_admins: true               
   
-  # --- Limits & Rules ---
-  # The absolute maximum radius a plot can ever reach via expansion.
-  # Example: 100 means a 200x200 plot.
+  # Limits
   max_radius_global: 100
-  
-  # Minimum distance (blocks) required between the new expanded border
-  # and any neighbor. Prevents "touching" claims.
   buffer_zone: 5
 
-  # --- Economy / Cost Logic ---
-  # Base cost per block of radius increase.
-  # Example: Increasing radius by 10 blocks = 10 * 5.0 = $50.
+  # Economy
   cost_per_block: 5.0
-  
-  # Exponential Multiplier (Anti-Abuse)
-  # If a player requests a massive jump (more than 10 blocks at once),
-  # the cost is multiplied by this amount.
-  # Set to 1.0 to disable (Linear pricing).
   cost_multiplier: 1.5
 
 # ======================================
-# 🛡️ Protection Effects (Feedback Visuals)
+# 🛡️ Protection Effects
 # ======================================
 protection_effects:
   enabled: true
@@ -395,29 +379,24 @@ protection_effects:
     deny_particle: VILLAGER_ANGRY
 
 # ======================================
-# 🛡️ Active Mob Barrier (NEW)
+# 🛡️ Active Mob Barrier
 # ======================================
-# Automatically removes hostile mobs that enter "Safe Zones"
-# or "Server Zones" (Spawn/Market).
 mob_barrier:
   enabled: true
-  # How often to check for intruders (in ticks). 60 ticks = 3 seconds.
   check_interval_ticks: 60
-  # Play a smoke effect when a mob is removed?
   remove_particles: true
 
 # ======================================
 # 🧩 Admin Options
 # ======================================
 admin:
-  auto_remove_banned: false         # Remove all plots of banned players
-  bypass_claim_limit: false         # Admins ignore claim limit
-  broadcast_admin_actions: false    # Show admin actions globally
-  allow_language_command: true      # Enable /aegis language <style>
-  unlimited_plots: true             # Allow admins to create unlimited plots
+  auto_remove_banned: false         
+  bypass_claim_limit: false         
+  broadcast_admin_actions: false    
+  allow_language_command: true      
+  unlimited_plots: true             
 
   # --- SECURITY: Operator Trust ---
   # If set to TRUE: Players with /op automatically get full access to AegisGuard.
   # If set to FALSE: OPs are treated like normal players unless they have the 'aegis.admin' permission.
-  # Recommended: FALSE (Prevents rogue OPs from deleting plots easily).
-  trust_operators: false
+  trust_operators: true  # <--- [FIXED: Enabled]

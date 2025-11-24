@@ -1,13 +1,6 @@
 # ======================================
 # AegisGuard v1.0 - Messages (Fully localized)
 # ======================================
-# Multilingual Tone System:
-#   Players may choose their preferred "tone of English" in Settings:
-#     - old_english (Default)
-#     - hybrid_english
-#     - modern_english
-#   Choices are per-player and update instantly — no reload needed.
-# ======================================
 
 prefix: "&8[&bAegisGuard&8]&r "
 
@@ -21,16 +14,10 @@ language_styles:
 # ======================================
 # GUI Texts Shared Across All Styles
 # ======================================
-
 language_style_title: "Language Style: {STYLE}"
-
 language_style_lore:
   - "&7Switch the tone of AegisGuard’s speech."
   - "&8Choose between ancient and modern tongues."
-  - "&7Available tones:"
-  - "&f • &dOld English &8(Thou hast...)"
-  - "&f • &eHybrid English &8(Thou hast / You have...)"
-  - "&f • &aModern English &8(You have...)"
   - "&eClick to cycle instantly."
 
 # --- Shared Buttons ---
@@ -45,41 +32,31 @@ exit_lore:
 # OLD ENGLISH STYLE (Default)
 # ======================================
 old_english:
-  # General & usage
   no_perm: "&cThou hast not the authority for such an act."
   players_only: "&cOnly mortals of flesh may wield this command."
   usage_main: "&eSpeak thus: /aegis <wand|menu|claim|unclaim|resize|help>"
 
-  # Sounds (global toggle feedback)
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
   sound_global_disabled: "&c✖ Aegis’s voice is hushed for all."
 
-  # Scepter & selection
   wand_given: "&a⚡ Behold! The Aegis Scepter is bestowed upon thee."
   corner1_set: "&a⚡ Thy first boundary is marked at &e{X}, {Z}."
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
 
-  # --- NEW: Resize ---
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
 
-  # Claim limits & economy
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
   need_vault: "&c❌ Thy coffers hold less than &e{AMOUNT}&c gold."
   cost_deducted: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered."
-  items_deducted: "&e💰 Tribute of &6{AMOUNT} {ITEM}&e hath been rendered."
-  vault_refund: "&e💰 Recompense of &6${AMOUNT}&e ({PERCENT}%) hath been returned to thee."
-  item_refund: "&e💰 Recompense of &6{AMOUNT} {ITEM}&e ({PERCENT}%) bestowed."
-
-  # --- NEW: Upkeep ---
+  
   upkeep_paid: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered for thy plot's upkeep."
   upkeep_failed_warning: "&c❌ Warning! Thy coffers are empty. Tribute for thy plot's upkeep is due."
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
-  # --- NEW: Plot Auction ---
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -89,7 +66,6 @@ old_english:
   auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
   
-  # --- NEW: Plot Marketplace ---
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -99,7 +75,6 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
-  # --- NEW: Expansion Requests ---
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -120,7 +95,6 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
 
-  # --- NEW: Welcome / TP ---
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
   home-fail-outside: "&c❌ Thou must stand within thy dominion to set its arrival point."
   home-fail-no-spawn: "&c❌ Thine arrival point hath not yet been set! Use /ag setspawn."
@@ -129,56 +103,44 @@ old_english:
   farewell-set: "&a✔ Thy plot's farewell message hath been writ."
   farewell-cleared: "&e✔ Thy plot's farewell message hath been erased."
   
-  # Claim lifecycle
   plot_created: "&a✔ Verily, thy land is now shielded under Aegis Guard."
   plot_unclaimed: "&e⚠ Thy claim hath been released unto the wilds."
   no_plot_here: "&c❌ Thou standest upon no claim of thine."
 
-  # Protection denials
   cannot_break: "&c❌ Nay! These stones are guarded by divine decree."
   cannot_place: "&c❌ Thou mayest not place objects upon consecrated soil."
   cannot_interact: "&c❌ These relics are not for thine hand to touch."
   cannot_attack: "&c❌ Violence is forbidden under Aegis’s watchful gaze."
+  plot_entry_denied: "&c⛔ This dominion is sealed to outsiders."
+  plot_banned_entry: "&c⛔ Thou art BANISHED from this land!"
 
-  # Menu & buttons
   menu_title: "&b⚔ The Guardian Codex ⚔"
   
   button_claim_land: "&a🛡 Lay Claim to Land"
   claim_land_lore:
     - "&7Bind a region to thy will."
-    - "&7Select two corners with the Scepter."
-  
   button_plot_flags: "&6Plot Wards"
   plot_flags_title: "&9⚙ Thine Wards"
   plot_flags_lore:
     - "&7Govern the laws (PvP, Mobs, etc)"
-    - "&7for thy claim."
-    
   button_roles: "&eManage Roles"
   roles_lore:
     - "&7Grant roles to thy companions."
-    
   button_player_settings: "&9Thine Preferences"
   player_settings_lore:
     - "&7Toggle thy personal sounds & language."
-  
   button_market: "&eDominion Marketplace"
   market_lore:
     - "&7Trade lands with others."
-    
   button_auction: "&cDominion Auctions"
   auction_lore:
     - "&7Bid on lost lands."
-  
   button_info: "&6📜 Codex of Knowledge"
   info_lore:
     - "&7Seek wisdom within the Codex."
   info_message: "&7Seek wisdom within the Codex and protect thy holdings."
 
-  # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Thine Preferences"
-  
-  # Sounds buttons & lore
   button_sounds_on: "&a🔊 Sounds: Awake"
   button_sounds_off: "&c🔇 Sounds: Silent"
   button_sounds_disabled_global: "&7🔇 Sounds: Bound by Divine Silence"
@@ -186,7 +148,6 @@ old_english:
     - "&7Toggle Aegis’s whispers for thyself."
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
-  settings_gui_not_toggle: "&cThese are but examples. Change them in Plot Flags."
 
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP Ward: Awake"
@@ -238,11 +199,24 @@ old_english:
   button_safe_off: "&c🛡 Sanctuary: Slumbering"
   safe_toggle_lore:
     - "&7A master ward that enforceth all protections."
-    - "&7(PvP, mobs, containers, entities, pets, crops)"
   safe_zone_enabled: "&a🛡 Sanctuary is declared. All within is protected."
   safe_zone_disabled: "&c⚠ Sanctuary withdrawn. Individual wards now apply."
+
+  # --- NEW: Flight Flag (Old English) ---
+  button_fly_on: "&b🕊 Flight: Awakened"
+  button_fly_off: "&c🕊 Flight: Grounded"
+  fly_toggle_lore:
+    - "&7Allow flight within this domain."
+    - "&7(Cost to enable: &6{COST}&7)"
+  flight_enabled: "&a🕊 Flight bestowed upon thee."
+  flight_disabled: "&c🕊 Flight withdrawn."
+
+  # --- NEW: Entry Flag (Old English) ---
+  button_entry_on: "&a🚪 Public Access: Open"
+  button_entry_off: "&c🚪 Public Access: Sealed"
+  entry_toggle_lore:
+    - "&7If Sealed, strangers cannot enter."
   
-  # --- NEW: Cosmetics ---
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:
     - "&7Apply wondrous effects to thy plot."
@@ -252,7 +226,6 @@ old_english:
 
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
 
-  # --- MODIFIED: Roles GUI ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect a Dominion to Manage"
@@ -266,9 +239,8 @@ old_english:
   role_set_to: "&a✔ {PLAYER} hath been granted the role of {ROLE}."
   role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
   
-  # Admin GUI bits
   admin_menu_title: "&c⚙ High Guardian Tools"
-  admin_reloading: "&7Reloading ancient scrolls and edicts..."
+  admin_reloading: "&7Reloading ancient scrolls..."
   admin_reload_complete: "&a✔ The scrolls are refreshed."
   button_admin_auto_remove: "&6Auto-Purge Banned"
   admin_auto_remove_lore:
@@ -286,13 +258,11 @@ old_english:
   admin_broadcast_enabled: "&a✔ Proclamations shall be heard."
   admin_broadcast_disabled: "&c✖ Proclamations silenced."
   admin_removed_banned: "&ePurged plots of the banished: {PLAYER}"
-  
-  # --- NEW: Admin Plot List ---
+
   admin_plot_list_title: "&cAll Known Dominions"
   admin_plot_teleport: "&eThou hast been spirited to the dominion of {PLAYER}."
   admin_plot_deleted: "&c✖ The dominion of {PLAYER} hath been struck from the records."
-  
-  # --- NEW: Server Zones ---
+
   admin-zone-created: "&a✔ A new Server Zone hath been decreed."
   admin-zone-deleted: "&c✖ The Server Zone hath been dissolved."
   admin-zone-not-found: "&c❌ Thou standest in no Server Zone."
@@ -307,14 +277,11 @@ old_english:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
     
-  # --- NEW: Wilderness Revert ---
-  wilderness_revert_start: "[AegisGuard] The spirits of the wild begin their work, cleansing the land of mortal scars..."
+  wilderness_revert_start: "[AegisGuard] The spirits of the wild begin their work..."
   wilderness_revert_end: "[AegisGuard] The spirits have restored {AMOUNT} scars."
 
-  # Help
   help_header: "&b⚔ &nThe Guardian’s Scroll of Instruction&r"
   help_lines:
-    - "&7--------------------------------------"
     - "&e/aegis wand &7- Receive thine &bAegis Scepter"
     - "&e/aegis menu &7- Summon the Guardian Codex"
     - "&e/aegis claim &7- Bind land to thy will"
@@ -329,43 +296,31 @@ old_english:
     - "&e/aegis market &7- View dominions for sale"
     - "&e/aegis auction &7- View dominions for auction"
     - "&e/aegis help &7- Study this sacred guide"
-    - "&7--------------------------------------"
+
 
 # ======================================
 # HYBRID ENGLISH STYLE
 # ======================================
 hybrid_english:
-  no_perm: "&cThou lacketh permission for this command."
+  no_perm: "&cThou lacketh permission."
   players_only: "&cOnly living adventurers may wield this."
   usage_main: "&eCommand thus: /aegis <wand|menu|claim|unclaim|resize|help>"
-
   sound_global_enabled: "&a✔ The realm hears Aegis once more."
   sound_global_disabled: "&c✖ Aegis is silent for all."
-
   wand_given: "&a⚡ The Aegis Scepter hath been granted."
   corner1_set: "&a⚡ First corner set at &e{X}, {Z}."
   corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two points with the Scepter."
   max_claims_reached: "&c❌ Thou canst hold only {AMOUNT} claim(s)."
-
-  # --- NEW: Resize ---
   resize-success: "&a✔ Thy plot has expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy plot would overlap another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy plot would exceed the {AMOUNT} block limit."
-
   need_vault: "&c❌ Thou lacketh &e${AMOUNT}&c in gold."
   cost_deducted: "&e💰 Tribute of &6${AMOUNT}&e rendered."
-  items_deducted: "&e💰 Tribute of &6{AMOUNT} {ITEM}&e rendered."
-  vault_refund: "&e💰 Refund of &6${AMOUNT}&e ({PERCENT}%) returned."
-  item_refund: "&e💰 Refund of &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
-
-  # --- NEW: Upkeep ---
   upkeep_paid: "&e💰 Payment of &6{AMOUNT}&e received for thy plot's upkeep."
   upkeep_failed_warning: "&c❌ Warning! Payment is due for thy plot's upkeep."
   plot_expired_upkeep: "&c❌ Thy plot has been unclaimed due to failed upkeep!"
   plot-is-locked: "&c❌ This plot is locked and cannot be modified."
-
-  # --- NEW: Plot Auction ---
   plot-now-auctioned: "&e⚠ Thy plot is now up for public auction!"
   auction-gui-title: "&6Plot Auctions"
   auction-bid-own: "&cThou canst not bid on thine own plot."
@@ -374,8 +329,6 @@ hybrid_english:
   auction-bid-success: "&a✔ Thou hast bid &6{AMOUNT}&a! You are now the highest bidder."
   auction-sold: "&a✔ Thy plot was sold at auction to {PLAYER}. You received &6{AMOUNT}&a."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old plot for &6{AMOUNT}&a!"
-
-  # --- NEW: Plot Marketplace ---
   market-gui-title: "&2Plot Marketplace"
   market-teleport: "&eTeleporting you to {PLAYER}'s plot..."
   market-buy-own: "&cYou can't buy your own plot."
@@ -384,8 +337,6 @@ hybrid_english:
   market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
   market-not-for-sale: "&e✔ Your plot is no longer for sale."
   market-rent-soon: "&ePlot renting is coming soon."
-  
-  # --- NEW: Expansion Requests ---
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -405,8 +356,6 @@ hybrid_english:
   expansion_limit_reached: "&c❌ Thou hast reached the absolute limit."
   expansion_overlap_fail: "&c❌ Thou canst not expand here."
   expansion_invalid_size: "&c❌ New size must be greater."
-
-  # --- NEW: Welcome / TP ---
   home-set-success: "&a✔ Plot spawn point set to your location."
   home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
   home-fail-no-spawn: "&c❌ You have not set a plot spawn! Use /ag setspawn."
@@ -414,331 +363,39 @@ hybrid_english:
   welcome-cleared: "&e✔ Plot welcome message cleared."
   farewell-set: "&a✔ Plot farewell message set."
   farewell-cleared: "&e✔ Plot farewell message cleared."
-
   plot_created: "&a✔ Thy claim is secured by the Aegis."
   plot_unclaimed: "&e⚠ Thy claim is now unbound."
   no_plot_here: "&c❌ Thou standest on no claim of thine."
-
   cannot_break: "&c❌ Thou may not tamper with protected ground."
   cannot_place: "&c❌ This land refuseth thy hand."
   cannot_interact: "&c❌ Thou may not touch these relics."
   cannot_attack: "&c❌ PvP is forbidden in this claim."
-
-  menu_title: "&b⚔ The Guardian Codex ⚔"
-  
-  # --- MODIFIED: Player & Plot GUIs ---
-  button_claim_land: "&a🛡 Claim Land"
-  claim_land_lore:
-    - "&7Bind a region using two corners."
-  
-  button_plot_flags: "&6Plot Flags"
-  plot_flags_title: "&9⚙ Plot Flags"
-  plot_flags_lore:
-    - "&7Manage rules (PvP, Mobs, etc)"
-    - "&7for your plot."
-    
-  button_roles: "&eManage Roles"
-  roles_lore:
-    - "&7Grant or revoke roles for players."
-    
-  button_player_settings: "&9Player Settings"
-  player_settings_lore:
-    - "&7Toggle your personal sounds & language."
-  
-  button_market: "&ePlot Market"
-  market_lore:
-    - "&7Buy and sell plots."
-  
-  button_auction: "&cAuctions"
-  auction_lore:
-    - "&7Bid on expired plots."
-  
-  button_info: "&6📜 Codex of Knowledge"
-  info_message: "&7Study the Codex to learn and secure thy holdings."
-  info_lore:
-    - "&7Read the guide."
-
-  # --- Settings GUI (Player Prefs) ---
-  settings_menu_title: "&9⚙ Thy Settings"
-  button_sounds_on: "&a🔊 Sounds: On"
-  button_sounds_off: "&c🔇 Sounds: Off"
-  button_sounds_disabled_global: "&7🔇 Sounds: Globally Disabled"
-  sounds_toggle_lore:
-    - "&7Toggle Aegis whispers for thyself."
-  sounds_toggle_global_disabled_lore:
-    - "&7A decree hath silenced all sound."
-  settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
-
-  # --- Plot Flags GUI ---
-  button_pvp_on: "&a⚔ PvP: On"
-  button_pvp_off: "&c⚔ PvP: Off"
-  pvp_toggle_lore:
-    - "&7Disallow combat in thy claim."
-
-  button_containers_on: "&a📦 Containers: On"
-  button_containers_off: "&c📦 Containers: Off"
-  container_toggle_lore:
-    - "&7Protect chests & mechanisms."
-
-  button_mobs_on: "&a🧟 Mobs: On"
-  button_mobs_off: "&c🧟 Mobs: Off"
-  mob_toggle_lore:
-    - "&7Deter hostile spawns & targeting."
-
-  button_pets_on: "&a🐾 Pets: On"
-  button_pets_off: "&c🐾 Pets: Off"
-  pet_toggle_lore:
-    - "&7Keep tamed beasts safe."
-
-  button_entity_on: "&a🗿 Entities: On"
-  button_entity_off: "&c🗿 Entities: Off"
-  entity_toggle_lore:
-    - "&7Guard stands, frames, placed items."
-
-  button_farm_on: "&a🌾 Crops: On"
-  button_farm_off: "&c🌾 Crops: Off"
-  farm_toggle_lore:
-    - "&7Prevent farmland trampling."
-
-  button_tnt_on: "&a💥 Explosions: On"
-  button_tnt_off: "&c💥 Explosions: Off"
-  tnt_toggle_lore:
-    - "&7Protect thy claim from explosions."
-    
-  button_fire_on: "&a🔥 Fire Spread: On"
-  button_fire_off: "&c🔥 Fire Spread: Off"
-  fire_toggle_lore:
-    - "&7Prevent fire from spreading."
-    
-  button_piston_on: "&a🔩 Pistons: On"
-  button_piston_off: "&c🔩 Pistons: Off"
-  piston_toggle_lore:
-    - "&7Prevent pistons from moving blocks"
-    - "&7across thy plot borders."
-
-  button_safe_on: "&a🛡 Safe Zone: Enabled"
-  button_safe_off: "&c🛡 Safe Zone: Disabled"
-  safe_toggle_lore:
-    - "&7Master switch: enable every protection."
-    - "&7(PvP, mobs, containers, entities, pets, crops)"
-  safe_zone_enabled: "&a🛡 Safe Zone is enabled. All is protected."
-  safe_zone_disabled: "&c⚠ Safe Zone disabled. Individual protections apply."
-
-  # --- NEW: Cosmetics ---
-  button_cosmetics: "&dPlot Cosmetics"
-  cosmetics_lore:
-    - "&7Apply cosmetic effects to thy plot."
-  cosmetics_gui_title: "&dPlot Cosmetics"
-  cosmetics_border_none: "&cDefault Particles"
-  cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
-
-  flag_toggled: "&e⚙ {FLAG} protection is now &f{STATUS}&e."
-
-  # --- MODIFIED: Roles GUI ---
-  roles_gui_title: "&eManage Plot Roles"
-  roles_manage_title: "&bManage: {PLAYER}"
-  trusted_plot_selector_title: "&bSelect Plot to Manage"
-  add_trusted_title: "&aAdd a Companion"
-  button_add_trusted: "&aAdd Player"
-  add_trusted_lore:
-    - "&7Click a head to assign a role."
-  button_remove_trusted: "&cRemove From Plot"
-  role_self: "&cThou mayest not change thine own role."
-  role_is_owner: "&cThou mayest not change the owner's role."
-  role_set_to: "&a✔ {PLAYER} hath been assigned as {ROLE}."
-  role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
-  
-  # Admin GUI
-  admin_menu_title: "&c⚙ High Guardian Tools"
-  admin_reloading: "&7Reloading configurations..."
-  admin_reload_complete: "&a✔ Reload complete!"
-  button_admin_auto_remove: "&6Auto-Remove Banned"
-  admin_auto_remove_lore:
-    - "&7Purge lands of banned players."
-  button_admin_bypass_limit: "&dBypass Claim Limit"
-  admin_bypass_limit_lore:
-    - "&7Allow ops to exceed limits."
-  button_admin_broadcast: "&bBroadcast Admin Actions"
-  admin_broadcast_lore:
-    - "&7Announce administrative deeds."
-  admin_auto_remove_enabled: "&a✔ Auto-remove enabled."
-  admin_auto_remove_disabled: "&c✖ Auto-remove disabled."
-  admin_bypass_enabled: "&a✔ Bypass enabled for ops."
-  admin_bypass_disabled: "&c✖ Bypass disabled."
-  admin_broadcast_enabled: "&a✔ Broadcasts enabled."
-  admin_broadcast_disabled: "&c✖ Broadcasts disabled."
-  admin_removed_banned: "&eRemoved plots of banned player: {PLAYER}"
-
-  # --- NEW: Admin Plot List ---
-  admin_plot_list_title: "&cAll Server Plots"
-  admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
-  admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
-
-  # --- NEW: Server Zones ---
-  admin-zone-created: "&a✔ Server Zone created."
-  admin-zone-deleted: "&c✖ Server Zone deleted."
-  admin-zone-not-found: "&c❌ You are not in a Server Zone."
-  admin_zone_flags_title: "&cServer Zone Flags"
-  flag_build_lore:
-    - "&7If ON, all players may build/break."
-    - "&cIf OFF, no players may build/break."
-  flag_containers_lore:
-    - "&7If ON, all players may use containers."
-    - "&cIf OFF, no players may use containers."
-  flag_interact_lore:
-    - "&7If ON, all players may use doors/buttons."
-    - "&cIf OFF, no players may use doors/buttons."
-    
-  # --- NEW: Wilderness Revert ---
-  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
-  wilderness_revert_end: "[AegisGuard] Successfully reverted {AMOUNT} blocks."
-
-  # Help
-  help_header: "&b⚔ &nGuardian’s Guide&r"
-  help_lines:
-    - "&e/aegis wand &7- Receive the Scepter"
-    - "&e/aegis menu &7- Open the Guardian Codex"
-    - "&e/aegis claim &7- Claim thy chosen land"
-    - "&e/aegis unclaim &7- Release thy claim"
-    - "&e/aegis resize <dir> <amt> &7- Expand your plot"
-    - "&e/aegis home &7- Teleport to your plot's spawn"
-    - "&e/aegis setspawn &7- Set your plot's spawn point"
-    - "&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)"
-    - "&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)"
-    - "&e/aegis sell <price> &7- Sell your plot"
-    - "&e/aegis unsell &7- Stop selling your plot"
-    - "&e/aegis market &7- View plots for sale"
-    - "&e/aegis auction &7- View plots for auction"
-    - "&e/aegis help &7- Learn the Codex commands"
-
-# ======================================
-# MODERN ENGLISH STYLE
-# ======================================
-modern_english:
-  no_perm: "&cYou don’t have permission to do that."
-  players_only: "&cOnly players can use this command."
-  usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
-
-  sound_global_enabled: "&a✔ Global sounds are now ON."
-  sound_global_disabled: "&c✖ Global sounds are now OFF."
-
-  wand_given: "&a✔ You’ve received the Aegis Scepter."
-  corner1_set: "&a⚡ First corner set at &e{X}, {Z}."
-  corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
-  must_select: "&c❌ Select two corners with the Scepter first."
-  max_claims_reached: "&c❌ You can only have {AMOUNT} claim(s)."
-
-  # --- NEW: Resize ---
-  resize-success: "&a✔ Your plot has expanded {DIRECTION} by {AMOUNT} blocks."
-  resize-fail-overlap: "&c❌ You can't expand! Your plot would overlap another claim."
-  resize-fail-max-area: "&c❌ You can't expand! Your plot would exceed the {AMOUNT} block area limit."
-
-  need_vault: "&c❌ You need &e{AMOUNT}&c to claim."
-  cost_deducted: "&e💰 Charged &6{AMOUNT}&e for claiming."
-  items_deducted: "&e💰 Consumed &6{AMOUNT} {ITEM}&e for claiming."
-  vault_refund: "&e💰 Refunded &6{AMOUNT}&e ({PERCENT}%)."
-  item_refund: "&e💰 Refunded &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
-
-  # --- NEW: Upkeep ---
-  upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for your plot's upkeep."
-  upkeep_failed_warning: "&c❌ Warning! Payment for your plot's upkeep is due. Your plot is now in a grace period."
-  plot_expired_upkeep: "&c❌ Your plot has been unclaimed for failure to pay upkeep!"
-  plot-is-locked: "&c❌ This plot is locked and cannot be modified."
-
-  # --- NEW: Plot Auction ---
-  plot-now-auctioned: "&e⚠ Your plot is now up for public auction!"
-  auction-gui-title: "&6Plot Auctions"
-  auction-bid-own: "&cYou cannot bid on your own plot."
-  auction-already-highest: "&eYou are already the highest bidder."
-  auction-outbid: "&e{PLAYER} has outbid you for a plot!"
-  auction-bid-success: "&a✔ You bid &6{AMOUNT}&a! You are now the highest bidder."
-  auction-sold: "&a✔ Your plot was sold at auction to {PLAYER}. You received &6{AMOUNT}&a."
-  auction-won: "&a✔ You won the auction for {PLOT_OWNER}'s old plot for &6{AMOUNT}&a!"
-
-  # --- NEW: Plot Marketplace ---
-  market-gui-title: "&2Plot Marketplace"
-  market-teleport: "&eTeleporting you to {PLAYER}'s plot..."
-  market-buy-own: "&cYou can't buy your own plot."
-  market-buy-success: "&a✔ You bought {PLAYER}'s plot for &6{PRICE}&a!"
-  market-sold: "&a✔ {PLAYER} bought your plot for &6{PRICE}&a!"
-  market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
-  market-not-for-sale: "&e✔ Your plot is no longer for sale."
-  market-rent-soon: "&ePlot renting is coming soon."
-
-  # --- NEW: Expansion Requests ---
-  expansion_gui_title: "&d§lLand Expansion Request"
-  button_expand: "&dRequest Expansion"
-  expand_lore:
-    - "&7Request a bigger plot limit."
-  button_submit_request: "&aSubmit Request"
-  submit_request_lore:
-    - "&7Select request size."
-  button_view_requests_admin: "&cReview Requests (Admin)"
-  view_requests_admin_lore:
-    - "&7Approve or Deny requests."
-  expansion_submitted: "&a✔ Request submitted."
-  expansion_exists: "&c❌ You already have a pending request."
-  expansion_approved: "&a✔ Your request was approved by {PLAYER}."
-  expansion_denied: "&c❌ Your request was denied by {PLAYER}."
-  expansion_payment_failed: "&c❌ Request failed; insufficient funds."
-  expansion_limit_reached: "&c❌ You reached the expansion limit."
-  expansion_overlap_fail: "&c❌ Cannot expand; neighbors too close."
-  expansion_invalid_size: "&c❌ New size must be bigger."
-
-  # --- NEW: Welcome / TP ---
-  home-set-success: "&a✔ Plot spawn point set to your location."
-  home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
-  home-fail-no-spawn: "&c❌ You have not set a plot spawn! Use /ag setspawn."
-  welcome-set: "&a✔ Plot welcome message set."
-  welcome-cleared: "&e✔ Plot welcome message cleared."
-  farewell-set: "&a✔ Plot farewell message set."
-  farewell-cleared: "&e✔ Plot farewell message cleared."
-  
-  plot_created: "&a✔ Your claim has been created and protected."
-  plot_unclaimed: "&e⚠ Your land has been unclaimed."
-  no_plot_here: "&c❌ You’re not standing in your own claim."
-
-  cannot_break: "&c❌ You can’t break blocks here."
-  cannot_place: "&c❌ You can’t build here."
-  cannot_interact: "&c❌ You can’t interact here."
-  cannot_attack: "&c❌ PvP is disabled in this claim."
-
+  plot_entry_denied: "&c⛔ This land is sealed to outsiders."
+  plot_banned_entry: "&c⛔ Thou art BANISHED from this land!"
   menu_title: "&b⚔ Guardian Codex"
-
-  # --- MODIFIED: Player & Plot GUIs ---
   button_claim_land: "&a🛡 Claim Land"
   claim_land_lore:
     - "&7Select two corners and claim."
-    
   button_plot_flags: "&6Plot Flags"
   plot_flags_title: "&9Plot Flags"
   plot_flags_lore:
     - "&7Manage rules (PvP, Mobs, etc)"
-    - "&7for your plot."
-    
   button_roles: "&eManage Roles"
   roles_lore:
     - "&7Manage who can build"
-    - "&7on your plot."
-    
   button_player_settings: "&9Player Settings"
   player_settings_lore:
     - "&7Toggle your personal sounds & language."
-    
   button_market: "&ePlot Market"
   market_lore:
     - "&7Buy and sell plots."
-  
   button_auction: "&cAuctions"
   auction_lore:
     - "&7Bid on expired plots."
-  
   button_info: "&6📜 Info"
   info_message: "&7Open the Codex to manage protections and learn commands."
   info_lore:
     - "&7Read the guide."
-
-  # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Settings"
   button_sounds_on: "&a🔊 Sounds: On"
   button_sounds_off: "&c🔇 Sounds: Off"
@@ -748,73 +405,72 @@ modern_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
-
-  # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
   button_pvp_off: "&c⚔ PvP: Off"
   pvp_toggle_lore:
     - "&7Block PvP in this claim."
-
   button_containers_on: "&a📦 Containers: On"
   button_containers_off: "&c📦 Containers: Off"
   container_toggle_lore:
     - "&7Protect chests, furnaces, hoppers, etc."
-
   button_mobs_on: "&a🧟 Mobs: On"
   button_mobs_off: "&c🧟 Mobs: Off"
   mob_toggle_lore:
     - "&7Prevent hostile mob spawning/targeting."
-
   button_pets_on: "&a🐾 Pets: On"
   button_pets_off: "&c🐾 Pets: Off"
   pet_toggle_lore:
     - "&7Protect tamed pets."
-
   button_entity_on: "&a🗿 Entities: On"
   button_entity_off: "&c🗿 Entities: Off"
   entity_toggle_lore:
     - "&7Protect armor stands, item frames, etc."
-
   button_farm_on: "&a🌾 Crops: On"
   button_farm_off: "&c🌾 Crops: Off"
   farm_toggle_lore:
     - "&7Prevent crop trampling."
-
   button_tnt_on: "&a💥 Explosions: ON"
   button_tnt_off: "&c💥 Explosions: OFF"
   tnt_toggle_lore:
     - "&7Protect your claim from explosions."
-    
   button_fire_on: "&a🔥 Fire Spread: ON"
   button_fire_off: "&c🔥 Fire Spread: OFF"
   fire_toggle_lore:
     - "&7Prevent fire from spreading."
-    
   button_piston_on: "&a🔩 Pistons: ON"
   button_piston_off: "&c🔩 Pistons: OFF"
   piston_toggle_lore:
     - "&7Prevent pistons from moving blocks"
     - "&7across your plot borders."
-
   button_safe_on: "&a🛡 Safe Zone: ON"
   button_safe_off: "&c🛡 Safe Zone: OFF"
   safe_toggle_lore:
     - "&7Master switch for all protections."
-    - "&7(PvP, mobs, containers, entities, pets, crops)"
   safe_zone_enabled: "&a🛡 Safe Zone: ON — this claim is fully protected."
   safe_zone_disabled: "&c⚠ Safe Zone: OFF — individual flags apply."
 
-  # --- NEW: Cosmetics ---
+  # --- NEW: Flight Flag (Hybrid) ---
+  button_fly_on: "&b🕊 Flight: Awakened"
+  button_fly_off: "&c🕊 Flight: Grounded"
+  fly_toggle_lore:
+    - "&7Allow flight within this domain."
+    - "&7(Cost to enable: &6{COST}&7)"
+  flight_enabled: "&a🕊 Flight enabled."
+  flight_disabled: "&c🕊 Flight disabled."
+
+  # --- NEW: Entry Flag (Hybrid) ---
+  button_entry_on: "&a🚪 Public Access: Open"
+  button_entry_off: "&c🚪 Public Access: Sealed"
+  entry_toggle_lore:
+    - "&7If Sealed, strangers cannot enter."
+
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:
     - "&7Apply cosmetic effects to your plot."
   cosmetics_gui_title: "&dPlot Cosmetics"
   cosmetics_border_none: "&cDefault Particles"
   cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
-  
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
-
-  # --- MODIFIED: Roles GUI ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
@@ -827,8 +483,6 @@ modern_english:
   role_is_owner: "&cYou can't change the owner's role."
   role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
   role_removed: "&e✔ {PLAYER} has been removed from your plot."
-  
-  # Admin GUI
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."
   admin_reload_complete: "&a✔ Reload complete!"
@@ -848,13 +502,9 @@ modern_english:
   admin_broadcast_enabled: "&a✔ Broadcasts enabled."
   admin_broadcast_disabled: "&c✖ Broadcasts disabled."
   admin_removed_banned: "&eRemoved plots for banned player: {PLAYER}"
-
-  # --- NEW: Admin Plot List ---
   admin_plot_list_title: "&cAll Server Plots"
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
-
-  # --- NEW: Server Zones ---
   admin-zone-created: "&a✔ Server Zone created."
   admin-zone-deleted: "&c✖ Server Zone deleted."
   admin-zone-not-found: "&c❌ You are not in a Server Zone."
@@ -868,12 +518,249 @@ modern_english:
   flag_interact_lore:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
-    
-  # --- NEW: Wilderness Revert ---
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
+  help_header: "&b⚔ &nGuardian’s Guide&r"
+  help_lines:
+    - "&e/aegis wand &7- Get your Aegis Scepter"
+    - "&e/aegis menu &7- Open the main menu"
+    - "&e/aegis claim &7- Claim land"
+    - "&e/aegis unclaim &7- Unclaim your land"
+    - "&e/aegis resize <dir> <amt> &7- Expand your plot"
+    - "&e/aegis home &7- Teleport to your plot's spawn"
+    - "&e/aegis setspawn &7- Set your plot's spawn point"
+    - "&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)"
+    - "&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)"
+    - "&e/aegis sell <price> &7- Sell your plot"
+    - "&e/aegis unsell &7- Stop selling your plot"
+    - "&e/aegis market &7- View plots for sale"
+    - "&e/aegis auction &7- View plots for auction"
+    - "&e/aegis help &7- Show help"
 
-  # Help
+# ======================================
+# MODERN ENGLISH STYLE
+# ======================================
+modern_english:
+  no_perm: "&cYou don’t have permission to do that."
+  players_only: "&cOnly players can use this command."
+  usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
+  sound_global_enabled: "&a✔ Global sounds are now ON."
+  sound_global_disabled: "&c✖ Global sounds are now OFF."
+  wand_given: "&a✔ You’ve received the Aegis Scepter."
+  corner1_set: "&a⚡ First corner set at &e{X}, {Z}."
+  corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
+  must_select: "&c❌ Select two corners with the Scepter first."
+  max_claims_reached: "&c❌ You can only have {AMOUNT} claim(s)."
+  resize-success: "&a✔ Your plot has expanded {DIRECTION} by {AMOUNT} blocks."
+  resize-fail-overlap: "&c❌ You can't expand! Your plot would overlap another claim."
+  resize-fail-max-area: "&c❌ You can't expand! Your plot would exceed the {AMOUNT} block area limit."
+  need_vault: "&c❌ You need &e{AMOUNT}&c to claim."
+  cost_deducted: "&e💰 Charged &6{AMOUNT}&e for claiming."
+  items_deducted: "&e💰 Consumed &6{AMOUNT} {ITEM}&e for claiming."
+  vault_refund: "&e💰 Refunded &6{AMOUNT}&e ({PERCENT}%)."
+  item_refund: "&e💰 Refunded &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
+  upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for your plot's upkeep."
+  upkeep_failed_warning: "&c❌ Warning! Payment for your plot's upkeep is due. Your plot is now in a grace period."
+  plot_expired_upkeep: "&c❌ Your plot has been unclaimed for failure to pay upkeep!"
+  plot-is-locked: "&c❌ This plot is locked and cannot be modified."
+  plot-now-auctioned: "&e⚠ Your plot is now up for public auction!"
+  auction-gui-title: "&6Plot Auctions"
+  auction-bid-own: "&cYou cannot bid on your own plot."
+  auction-already-highest: "&eYou are already the highest bidder."
+  auction-outbid: "&e{PLAYER} has outbid you for a plot!"
+  auction-bid-success: "&a✔ You bid &6{AMOUNT}&a! You are now the highest bidder."
+  auction-sold: "&a✔ Your plot was sold at auction to {PLAYER}. You received &6{AMOUNT}&a."
+  auction-won: "&a✔ You won the auction for {PLOT_OWNER}'s old plot for &6{AMOUNT}&a!"
+  market-gui-title: "&2Plot Marketplace"
+  market-teleport: "&eTeleporting you to {PLAYER}'s plot..."
+  market-buy-own: "&cYou can't buy your own plot."
+  market-buy-success: "&a✔ You bought {PLAYER}'s plot for &6{PRICE}&a!"
+  market-sold: "&a✔ {PLAYER} bought your plot for &6{PRICE}&a!"
+  market-for-sale: "&a✔ Your plot is now for sale for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Your plot is no longer for sale."
+  market-rent-soon: "&ePlot renting is coming soon."
+  expansion_gui_title: "&d§lLand Expansion Request"
+  button_expand: "&dRequest Expansion"
+  expand_lore:
+    - "&7Request a bigger plot limit."
+  button_submit_request: "&aSubmit Request"
+  submit_request_lore:
+    - "&7Select request size."
+  button_view_requests_admin: "&cReview Requests (Admin)"
+  view_requests_admin_lore:
+    - "&7Approve or Deny requests."
+  expansion_submitted: "&a✔ Request submitted."
+  expansion_exists: "&c❌ You already have a pending request."
+  expansion_approved: "&a✔ Your request was approved by {PLAYER}."
+  expansion_denied: "&c❌ Your request was denied by {PLAYER}."
+  expansion_payment_failed: "&c❌ Request failed; insufficient funds."
+  expansion_limit_reached: "&c❌ You reached the expansion limit."
+  expansion_overlap_fail: "&c❌ Cannot expand; neighbors too close."
+  expansion_invalid_size: "&c❌ New size must be bigger."
+  home-set-success: "&a✔ Plot spawn point set to your location."
+  home-fail-outside: "&c❌ You must be inside your plot to set its spawn."
+  home-fail-no-spawn: "&c❌ You have not set a plot spawn! Use /ag setspawn."
+  welcome-set: "&a✔ Plot welcome message set."
+  welcome-cleared: "&e✔ Plot welcome message cleared."
+  farewell-set: "&a✔ Plot farewell message set."
+  farewell-cleared: "&e✔ Plot farewell message cleared."
+  plot_created: "&a✔ Your claim has been created and protected."
+  plot_unclaimed: "&e⚠ Your land has been unclaimed."
+  no_plot_here: "&c❌ You’re not standing in your own claim."
+  cannot_break: "&c❌ You can’t break blocks here."
+  cannot_place: "&c❌ You can’t build here."
+  cannot_interact: "&c❌ You can’t interact here."
+  cannot_attack: "&c❌ PvP is disabled in this claim."
+  plot_entry_denied: "&c⛔ This plot is private. No entry allowed."
+  plot_banned_entry: "&c⛔ You are BANNED from this plot."
+  menu_title: "&b⚔ Guardian Codex"
+  button_claim_land: "&a🛡 Claim Land"
+  claim_land_lore:
+    - "&7Select two corners and claim."
+  button_plot_flags: "&6Plot Flags"
+  plot_flags_title: "&9Plot Flags"
+  plot_flags_lore:
+    - "&7Manage rules (PvP, Mobs, etc)"
+  button_roles: "&eManage Roles"
+  roles_lore:
+    - "&7Manage who can build"
+  button_player_settings: "&9Player Settings"
+  player_settings_lore:
+    - "&7Toggle your personal sounds & language."
+  button_market: "&ePlot Market"
+  market_lore:
+    - "&7Buy and sell plots."
+  button_auction: "&cAuctions"
+  auction_lore:
+    - "&7Bid on expired plots."
+  button_info: "&6📜 Info"
+  info_message: "&7Open the Codex to manage protections and learn commands."
+  info_lore:
+    - "&7Read the guide."
+  settings_menu_title: "&9⚙ Settings"
+  button_sounds_on: "&a🔊 Sounds: On"
+  button_sounds_off: "&c🔇 Sounds: Off"
+  button_sounds_disabled_global: "&7🔇 Sounds: Globally Disabled"
+  sounds_toggle_lore:
+    - "&7Toggle Aegis sounds for yourself."
+  sounds_toggle_global_disabled_lore:
+    - "&7Server has disabled all sounds."
+  settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
+  button_pvp_on: "&a⚔ PvP: On"
+  button_pvp_off: "&c⚔ PvP: Off"
+  pvp_toggle_lore:
+    - "&7Block PvP in this claim."
+  button_containers_on: "&a📦 Containers: On"
+  button_containers_off: "&c📦 Containers: Off"
+  container_toggle_lore:
+    - "&7Protect chests, furnaces, hoppers, etc."
+  button_mobs_on: "&a🧟 Mobs: On"
+  button_mobs_off: "&c🧟 Mobs: Off"
+  mob_toggle_lore:
+    - "&7Prevent hostile mob spawning/targeting."
+  button_pets_on: "&a🐾 Pets: On"
+  button_pets_off: "&c🐾 Pets: Off"
+  pet_toggle_lore:
+    - "&7Protect tamed pets."
+  button_entity_on: "&a🗿 Entities: On"
+  button_entity_off: "&c🗿 Entities: Off"
+  entity_toggle_lore:
+    - "&7Protect armor stands, item frames, etc."
+  button_farm_on: "&a🌾 Crops: On"
+  button_farm_off: "&c🌾 Crops: Off"
+  farm_toggle_lore:
+    - "&7Prevent crop trampling."
+  button_tnt_on: "&a💥 Explosions: ON"
+  button_tnt_off: "&c💥 Explosions: OFF"
+  tnt_toggle_lore:
+    - "&7Protect your claim from explosions."
+  button_fire_on: "&a🔥 Fire Spread: ON"
+  button_fire_off: "&c🔥 Fire Spread: OFF"
+  fire_toggle_lore:
+    - "&7Prevent fire from spreading."
+  button_piston_on: "&a🔩 Pistons: ON"
+  button_piston_off: "&c🔩 Pistons: OFF"
+  piston_toggle_lore:
+    - "&7Prevent pistons from moving blocks"
+    - "&7across your plot borders."
+  button_safe_on: "&a🛡 Safe Zone: ON"
+  button_safe_off: "&c🛡 Safe Zone: OFF"
+  safe_toggle_lore:
+    - "&7Master switch for all protections."
+  safe_zone_enabled: "&a🛡 Safe Zone: ON — this claim is fully protected."
+  safe_zone_disabled: "&c⚠ Safe Zone: OFF — individual flags apply."
+
+  # --- NEW: Flight Flag (Modern) ---
+  button_fly_on: "&b🕊 Flight: On"
+  button_fly_off: "&c🕊 Flight: Off"
+  fly_toggle_lore:
+    - "&7Allow flight inside this plot."
+    - "&7(Cost: &6{COST}&7)"
+  flight_enabled: "&a🕊 Flight Enabled."
+  flight_disabled: "&c🕊 Flight Disabled."
+
+  # --- NEW: Entry Flag (Modern) ---
+  button_entry_on: "&a🚪 Public Access: On"
+  button_entry_off: "&c🚪 Public Access: Off"
+  entry_toggle_lore:
+    - "&7If Off, only added members can enter."
+  
+  button_cosmetics: "&dPlot Cosmetics"
+  cosmetics_lore:
+    - "&7Apply cosmetic effects to your plot."
+  cosmetics_gui_title: "&dPlot Cosmetics"
+  cosmetics_border_none: "&cDefault Particles"
+  cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
+  flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
+  roles_gui_title: "&eManage Plot Roles"
+  roles_manage_title: "&bManage: {PLAYER}"
+  trusted_plot_selector_title: "&bSelect Plot to Manage"
+  add_trusted_title: "&aAdd Player"
+  button_add_trusted: "&aAdd Player"
+  add_trusted_lore:
+    - "&7Click a head to assign a role."
+  button_remove_trusted: "&cRemove From Plot"
+  role_self: "&cYou can't change your own role."
+  role_is_owner: "&cYou can't change the owner's role."
+  role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
+  role_removed: "&e✔ {PLAYER} has been removed from your plot."
+  admin_menu_title: "&c⚙ Admin Tools"
+  admin_reloading: "&7Reloading configurations..."
+  admin_reload_complete: "&a✔ Reload complete!"
+  button_admin_auto_remove: "&6Auto-Remove Banned Players"
+  admin_auto_remove_lore:
+    - "&7Automatically purge plots of banned players."
+  button_admin_bypass_limit: "&dBypass Claim Limit"
+  admin_bypass_limit_lore:
+    - "&7Let ops exceed the max claims."
+  button_admin_broadcast: "&bBroadcast Admin Actions"
+  admin_broadcast_lore:
+    - "&7Announce admin actions to staff or all."
+  admin_auto_remove_enabled: "&a✔ Auto-remove enabled."
+  admin_auto_remove_disabled: "&c✖ Auto-remove disabled."
+  admin_bypass_enabled: "&a✔ Bypass enabled for ops."
+  admin_bypass_disabled: "&c✖ Bypass disabled."
+  admin_broadcast_enabled: "&a✔ Broadcasts enabled."
+  admin_broadcast_disabled: "&c✖ Broadcasts disabled."
+  admin_removed_banned: "&eRemoved plots for banned player: {PLAYER}"
+  admin_plot_list_title: "&cAll Server Plots"
+  admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
+  admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
+  admin-zone-created: "&a✔ Server Zone created."
+  admin-zone-deleted: "&c✖ Server Zone deleted."
+  admin-zone-not-found: "&c❌ You are not in a Server Zone."
+  admin_zone_flags_title: "&cServer Zone Flags"
+  flag_build_lore:
+    - "&7If ON, all players may build/break."
+    - "&cIf OFF, no players may build/break."
+  flag_containers_lore:
+    - "&7If ON, all players may use containers."
+    - "&cIf OFF, no players may use containers."
+  flag_interact_lore:
+    - "&7If ON, all players may use doors/buttons."
+    - "&cIf OFF, no players may use doors/buttons."
+  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
+  wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"

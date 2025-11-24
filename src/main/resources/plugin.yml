@@ -1,23 +1,23 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.0.0
+version: 1.0.1
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
 authors: ["(snazzyatoms)"]
-website: "https://discord.gg/q7F5mAHyRS"   
-softdepend: [Vault]
+website: "https://discord.gg/q7F5mAHyRS"    
+softdepend: [Vault, Dynmap, PlaceholderAPI]
 folia-supported: true
 
 commands:
   aegis:
     description: Main AegisGuard command
-    usage: "/aegis <menu|wand|claim|unclaim|sound>"
+    usage: "/aegis <menu|wand|claim|unclaim|resize|kick|ban|consume>"
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
     description: AegisGuard admin menu & tools
-    usage: "/aegisadmin [reload]"
+    usage: "/aegisadmin [reload|bypass|menu]"
     aliases: [agadmin]
     permission: aegis.admin
 
@@ -29,8 +29,9 @@ permissions:
       aegis.user: true
       aegis.admin: true
 
+  # --- PLAYER PERMISSIONS ---
   aegis.user:
-    description: Player functionality
+    description: Standard player functionality
     default: true
     children:
       aegis.use: true
@@ -38,15 +39,30 @@ permissions:
       aegis.wand: true
       aegis.claim: true
       aegis.unclaim: true
+      aegis.resize: true
+      aegis.home: true
+      aegis.setspawn: true
+      aegis.welcome: true
+      aegis.farewell: true
+      aegis.market: true
+      aegis.sell: true
+      aegis.unsell: true
+      aegis.auction: true
+      # Plot Moderation (Owners managing their own plot)
+      aegis.kick: true
+      aegis.ban: true
+      aegis.unban: true
 
+  # --- ADMIN PERMISSIONS ---
   aegis.admin:
     description: Admin / management features
     default: op
     children:
       aegis.reload: true
-      aegis.claim.other: true
-      aegis.unclaim.other: true
+      aegis.bypass: true
+      aegis.consume: true     # <-- NEW: Allows manual wand disposal
 
+  # --- INDIVIDUAL NODES ---
   aegis.use:
     description: Use /aegis
     default: true
@@ -62,12 +78,37 @@ permissions:
   aegis.unclaim:
     description: Unclaim your own chunks/regions
     default: true
+  aegis.resize:
+    description: Expand or shrink claims
+    default: true
+  aegis.consume:
+    description: Manually destroy the scepter via command
+    default: op
+  aegis.kick:
+    description: Kick players from your claim
+    default: true
+  aegis.ban:
+    description: Ban players from your claim
+    default: true
+  aegis.unban:
+    description: Unban players from your claim
+    default: true
+  
+  # Economy
+  aegis.market:
+    description: Access the marketplace
+    default: true
+  aegis.sell:
+    description: Sell a plot
+    default: true
+  aegis.auction:
+    description: Access auctions
+    default: true
+
+  # Admin Specifics
   aegis.reload:
     description: Reload AegisGuard config
     default: op
-  aegis.claim.other:
-    description: Claim on behalf of others
-    default: op
-  aegis.unclaim.other:
-    description: Unclaim others' claims
+  aegis.bypass:
+    description: Bypass all protection checks
     default: op

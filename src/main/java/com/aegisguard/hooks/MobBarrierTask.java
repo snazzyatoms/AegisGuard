@@ -11,14 +11,6 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Slime;
 
-import java.util.Collection;
-
-/**
- * MobBarrierTask
- * - Scans "Safe Zone" and "Server Zone" plots.
- * - Vaporizes any hostile mobs that wander inside.
- * - More efficient than listening to EntityMoveEvent (which lags servers).
- */
 public class MobBarrierTask implements Runnable {
 
     private final AegisGuard plugin;
@@ -29,22 +21,25 @@ public class MobBarrierTask implements Runnable {
 
     @Override
     public void run() {
+        // --- FIX: Check if feature is enabled in config first! ---
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) {
+            return;
+        }
+
         // Iterate over all known plots
         for (Plot plot : plugin.store().getAllPlots()) {
-            // We only care about Server Zones (Spawn/Market) or Plots with "Safe Zone" enabled
-            // OR plots where the user explicitly denied "mobs" flag
             boolean isServer = plot.isServerZone();
             boolean noMobs = !plot.getFlag("mobs", true); // true = mobs allowed, false = denied
-
+            
+            // We only care about Server Zones, Safe Zones, or plots where mobs are explicitly denied
             if (!isServer && !plugin.protection().isSafeZoneEnabled(plot) && !noMobs) {
-                continue; // Skip normal plots that allow mobs
+                continue; 
             }
 
             World world = Bukkit.getWorld(plot.getWorld());
             if (world == null) continue;
 
             // Scan the entities in the plot's general area
-            // Optimization: We scan the chunks the plot touches
             int minChunkX = plot.getX1() >> 4;
             int minChunkZ = plot.getZ1() >> 4;
             int maxChunkX = plot.getX2() >> 4;
@@ -54,15 +49,15 @@ public class MobBarrierTask implements Runnable {
                 for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                     if (!world.isChunkLoaded(cx, cz)) continue;
                     
-                    Chunk chunk = world.getChunkAt(cx, cz);
-                    for (Entity entity : chunk.getEntities()) {
-                        // Target Hostile Mobs (Monsters, Slimes, Phantoms)
+                    for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
                         if (entity instanceof Monster || entity instanceof Slime || entity instanceof Phantom) {
-                            // Precise check: Is the mob ACTUALLY inside the plot boundary?
                             if (plot.isInside(entity.getLocation())) {
-                                // VAPORIZE IT
                                 entity.remove();
-                                world.spawnParticle(Particle.SMOKE_NORMAL, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.05);
+                                
+                                // Optional: Check if particles are enabled in config
+                                if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
+                                    world.spawnParticle(Particle.SMOKE_NORMAL, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.05);
+                                }
                             }
                         }
                     }

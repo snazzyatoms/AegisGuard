@@ -20,6 +20,11 @@ public class AGConfig {
     public void reload() {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
+        
+        // --- AUTO-UPDATE LOGIC ---
+        // This ensures missing keys are added automatically without deleting the file.
+        this.config.options().copyDefaults(true);
+        plugin.saveConfig();
     }
 
     public FileConfiguration raw() {
@@ -63,6 +68,7 @@ public class AGConfig {
         return config.getInt(path, 5);
     }
 
+    // --- Feature Costs ---
     public double getFlightCost() {
         return config.getDouble("economy.flag_costs.fly", 5000.0);
     }
@@ -92,7 +98,7 @@ public class AGConfig {
         return config.getInt("claims.max_claims_per_player", 1);
     }
 
-    // --- Travel System (NEW) ---
+    // --- Travel System ---
     public boolean isTravelSystemEnabled() { 
         return config.getBoolean("travel_system.enabled", true); 
     }

@@ -3,8 +3,10 @@ package com.aegisguard.commands;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,7 +28,21 @@ import java.util.stream.Collectors;
 public class AegisCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
-    private static final String[] SUB_COMMANDS = { "wand", "menu", "claim", "unclaim", "resize", "help", "setspawn", "home", "welcome", "farewell", "sell", "unsell", "market", "auction" };
+
+    private static final String[] SUB_COMMANDS = {
+        "wand", "menu", "claim", "unclaim", "resize", "help",
+        "setspawn", "home", "welcome", "farewell",
+        "sell", "unsell", "rent", "unrent", "market", "auction",
+        "consume", "kick", "ban", "unban"
+    };
+    
+    private static final String[] ADMIN_SUB_COMMANDS = {
+        "wand", "menu", "claim", "unclaim", "resize", "help",
+        "setspawn", "home", "welcome", "farewell",
+        "sell", "unsell", "rent", "unrent", "market", "auction",
+        "consume", "kick", "ban", "unban", "sound"
+    };
+    
     private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
 
     public AegisCommand(AegisGuard plugin) {
@@ -36,7 +52,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("§cOnly players can use this command.");
+            plugin.msg().send(sender, "players_only");
             return true;
         }
 
@@ -50,81 +66,272 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 p.getInventory().addItem(createScepter());
                 plugin.msg().send(p, "wand_given");
                 break;
+            
             case "menu":
                 plugin.gui().openMain(p);
                 break;
+            
             case "claim":
                 plugin.selection().confirmClaim(p);
                 break;
+            
             case "unclaim":
                 plugin.selection().unclaimHere(p);
                 break;
+            
             case "resize":
-                handleResize(p, args);
+                if (args.length < 3) {
+                    sendMsg(p, "&cUsage: /aegis resize <direction> <amount>");
+                    sendMsg(p, "&eDirections: &f" + String.join(", ", RESIZE_DIRECTIONS));
+                    return true;
+                }
+                String direction = args[1].toLowerCase();
+                int amount;
+                try {
+                    amount = Integer.parseInt(args[2]);
+                } catch (NumberFormatException e) {
+                    sendMsg(p, "&cAmount must be a number.");
+                    return true;
+                }
+                
+                if (amount <= 0) {
+                    sendMsg(p, "&cAmount must be positive.");
+                    return true;
+                }
+
+                if (!Arrays.asList(RESIZE_DIRECTIONS).contains(direction)) {
+                    sendMsg(p, "&cInvalid direction. Use: &f" + String.join(", ", RESIZE_DIRECTIONS));
+                    return true;
+                }
+
+                plugin.selection().resizePlot(p, direction, amount);
                 break;
-            case "home":
-                handleHome(p);
+
+            // --- KICK / BAN / UNBAN ---
+            case "kick":
+                if (args.length < 2) { sendMsg(p, "&cUsage: /ag kick <player>"); return true; }
+                Plot kPlot = plugin.store().getPlotAt(p.getLocation());
+                if (kPlot == null || !kPlot.getOwner().equals(p.getUniqueId())) {
+                    plugin.msg().send(p, "no_plot_here"); return true;
+                }
+                Player kTarget = Bukkit.getPlayer(args[1]);
+                if (kTarget == null) { sendMsg(p, "&cPlayer not found."); return true; }
+                if (!kPlot.isInside(kTarget.getLocation())) { sendMsg(p, "&cPlayer is not in your plot."); return true; }
+                
+                // Kick logic
+                kTarget.teleport(kTarget.getWorld().getSpawnLocation());
+                kTarget.sendMessage("§cYou were kicked from " + kPlot.getOwnerName() + "'s plot.");
+                sendMsg(p, "&eKicked " + kTarget.getName());
                 break;
+
+            case "ban":
+                if (args.length < 2) { sendMsg(p, "&cUsage: /ag ban <player>"); return true; }
+                Plot bPlot = plugin.store().getPlotAt(p.getLocation());
+                if (bPlot == null || !bPlot.getOwner().equals(p.getUniqueId())) {
+                    plugin.msg().send(p, "no_plot_here"); return true;
+                }
+                OfflinePlayer bTarget = Bukkit.getOfflinePlayer(args[1]);
+                if (bTarget.getUniqueId().equals(p.getUniqueId())) { sendMsg(p, "&cCannot ban yourself."); return true; }
+                
+                bPlot.addBan(bTarget.getUniqueId());
+                plugin.store().setDirty(true);
+                sendMsg(p, "&cBanned " + bTarget.getName());
+                
+                if (bTarget.isOnline() && bPlot.isInside(bTarget.getPlayer().getLocation())) {
+                    bTarget.getPlayer().teleport(bTarget.getPlayer().getWorld().getSpawnLocation());
+                    bTarget.getPlayer().sendMessage("§4You have been BANNED from this plot.");
+                }
+                break;
+
+            case "unban":
+                if (args.length < 2) { sendMsg(p, "&cUsage: /ag unban <player>"); return true; }
+                Plot uPlot = plugin.store().getPlotAt(p.getLocation());
+                if (uPlot == null || !uPlot.getOwner().equals(p.getUniqueId())) {
+                    plugin.msg().send(p, "no_plot_here"); return true;
+                }
+                OfflinePlayer uTarget = Bukkit.getOfflinePlayer(args[1]);
+                uPlot.removeBan(uTarget.getUniqueId());
+                plugin.store().setDirty(true);
+                sendMsg(p, "&aUnbanned " + uTarget.getName());
+                break;
+
+            // --- MANUAL WAND CONSUME ---
+            case "consume":
+                plugin.selection().manualConsumeWand(p);
+                break;
+
             case "setspawn":
-                handleSetSpawn(p);
+                Plot plot = plugin.store().getPlotAt(p.getLocation());
+                if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+                    plugin.msg().send(p, "no_plot_here");
+                    plugin.effects().playError(p);
+                    return true;
+                }
+                if (!plot.isInside(p.getLocation())) {
+                    plugin.msg().send(p, "home-fail-outside");
+                    plugin.effects().playError(p);
+                    return true;
+                }
+                plot.setSpawnLocation(p.getLocation());
+                plugin.store().setDirty(true);
+                plugin.msg().send(p, "home-set-success");
+                plugin.effects().playConfirm(p);
                 break;
-            case "sell":
-                handleSell(p, args);
+            
+            case "home":
+                Plot homePlot = plugin.store().getPlotAt(p.getLocation());
+                if (homePlot == null || !homePlot.getOwner().equals(p.getUniqueId())) {
+                    List<Plot> plots = plugin.store().getPlots(p.getUniqueId());
+                    if (plots != null && !plots.isEmpty()) {
+                        homePlot = plots.get(0);
+                    } else {
+                        plugin.msg().send(p, "no_plot_here");
+                        plugin.effects().playError(p);
+                        return true;
+                    }
+                }
+                if (homePlot.getSpawnLocation() == null) {
+                    plugin.msg().send(p, "home-fail-no-spawn");
+                    plugin.effects().playError(p);
+                    return true;
+                }
+                p.teleport(homePlot.getSpawnLocation());
+                plugin.effects().playConfirm(p);
                 break;
+            
+            case "welcome":
+                handleWelcomeFarewell(p, args, true);
+                break;
+            
+            case "farewell":
+                handleWelcomeFarewell(p, args, false);
+                break;
+            
             case "market":
                 plugin.gui().market().open(p, 0);
                 break;
+            
+            case "sell":
+                handleSell(p, args);
+                break;
+            
+            case "unsell":
+                handleUnsell(p);
+                break;
+            
+            case "rent":
+            case "unrent":
+                plugin.msg().send(p, "market-rent-soon");
+                break;
+            
             case "auction":
                 plugin.gui().auction().open(p, 0);
                 break;
+            
+            case "sound":
+                if (!p.hasPermission("aegis.admin")) {
+                    plugin.msg().send(p, "no_perm");
+                    return true;
+                }
+                plugin.msg().send(p, "&cSound command logic is currently disabled/missing.");
+                break;
+
             case "help":
             default:
                 sendHelp(p);
-                break;
         }
         return true;
     }
 
-    private void handleResize(Player p, String[] args) {
-        if (args.length < 3) {
-            p.sendMessage("§cUsage: /ag resize <direction> <amount>");
+    private void handleWelcomeFarewell(Player p, String[] args, boolean isWelcome) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
             return;
         }
-        plugin.selection().resizePlot(p, args[1], Integer.parseInt(args[2]));
-    }
-
-    private void handleHome(Player p) {
-        Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot != null && plot.getSpawnLocation() != null) {
-            p.teleport(plot.getSpawnLocation());
-            plugin.effects().playConfirm(p);
-        } else {
-            plugin.msg().send(p, "home-fail-no-spawn");
-        }
-    }
-
-    private void handleSetSpawn(Player p) {
-        Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot != null && plot.getOwner().equals(p.getUniqueId())) {
-            plot.setSpawnLocation(p.getLocation());
+        if (args.length < 2) {
+            if (isWelcome) plot.setWelcomeMessage(null);
+            else plot.setFarewellMessage(null);
             plugin.store().setDirty(true);
-            plugin.msg().send(p, "home-set-success");
-        } else {
-            plugin.msg().send(p, "no_plot_here");
+            plugin.msg().send(p, isWelcome ? "welcome-cleared" : "farewell-cleared");
+            plugin.effects().playMenuFlip(p);
+            return;
         }
+        String msg = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
+        if (isWelcome) plot.setWelcomeMessage(msg);
+        else plot.setFarewellMessage(msg);
+        plugin.store().setDirty(true);
+        plugin.msg().send(p, isWelcome ? "welcome-set" : "farewell-set");
+        plugin.effects().playMenuFlip(p);
     }
 
     private void handleSell(Player p, String[] args) {
-        if (args.length < 2) return;
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag sell <price>");
+            return;
+        }
         try {
             double price = Double.parseDouble(args[1]);
-            Plot plot = plugin.store().getPlotAt(p.getLocation());
-            if (plot != null && plot.getOwner().equals(p.getUniqueId())) {
-                plot.setForSale(true, price);
-                plugin.store().setDirty(true);
-                plugin.msg().send(p, "market-for-sale");
+            if (price <= 0) {
+                sendMsg(p, "&cPrice must be greater than 0.");
+                return;
             }
-        } catch (NumberFormatException ignored) {}
+            plot.setForSale(true, price);
+            plugin.store().setDirty(true);
+            plugin.msg().send(p, "market-for-sale", Map.of("PRICE", plugin.vault().format(price)));
+            plugin.effects().playConfirm(p);
+        } catch (NumberFormatException e) {
+            sendMsg(p, "&cPrice must be a valid number.");
+        }
+    }
+
+    private void handleUnsell(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            plugin.effects().playError(p);
+            return;
+        }
+        plot.setForSale(false, 0);
+        plugin.store().setDirty(true);
+        plugin.msg().send(p, "market-not-for-sale");
+        plugin.effects().playMenuFlip(p);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            List<String> completions = new ArrayList<>();
+            List<String> commands = sender.hasPermission("aegis.admin") ?
+                    Arrays.asList(ADMIN_SUB_COMMANDS) :
+                    Arrays.asList(SUB_COMMANDS);
+
+            StringUtil.copyPartialMatches(args[0], commands, completions);
+            Collections.sort(completions);
+            return completions;
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("resize")) {
+            List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
+            return completions;
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("resize")) {
+            return Arrays.asList("1", "2", "3", "4", "5", "10");
+        }
+        if (args.length >= 2 && (args[0].equalsIgnoreCase("welcome") || args[0].equalsIgnoreCase("farewell"))) {
+            return Arrays.asList("Your message here (allows &colors)");
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("sell")) {
+            return Arrays.asList("1000", "5000", "10000");
+        }
+        return null;
     }
 
     private ItemStack createScepter() {
@@ -132,23 +339,29 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         ItemMeta meta = rod.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&bAegis Scepter"));
-            meta.setLore(Arrays.asList("§7Right-click to open menu", "§7Left/Right click to select"));
+            meta.setLore(Arrays.asList(
+                    ChatColor.translateAlternateColorCodes('&', "&7Right-click: Open Aegis Menu"),
+                    ChatColor.translateAlternateColorCodes('&', "&7Left/Right-click: Select corners")
+            ));
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
             meta.getPersistentDataContainer().set(SelectionService.WAND_KEY, PersistentDataType.BYTE, (byte) 1);
             rod.setItemMeta(meta);
         }
         return rod;
     }
-
-    private void sendHelp(Player p) {
-        p.sendMessage("§bAegisGuard Help:");
-        p.sendMessage("§7/ag claim, /ag wand, /ag menu, /ag resize");
+    
+    private void sendHelp(Player player) {
+        sendMsg(player, plugin.msg().get(player, "help_header"));
+        List<String> helpLines = plugin.msg().getList(player, "help_lines");
+        if (helpLines != null) {
+            for (String line : helpLines) {
+                sendMsg(player, line);
+            }
+        }
     }
 
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            return StringUtil.copyPartialMatches(args[0], Arrays.asList(SUB_COMMANDS), new ArrayList<>());
-        }
-        return null;
+    private void sendMsg(CommandSender sender, String message) {
+        if (message == null || message.isEmpty()) return;
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 }

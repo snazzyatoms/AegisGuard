@@ -3,6 +3,7 @@ package com.aegisguard.data;
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material; // --- FIX: Added for Warp Icon ---
 import org.bukkit.World;
 
 import java.util.Collections;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Plot (Data Class)
  * - This is the "Ultimate" version of the Plot class.
- * - Contains: Flags, Roles, Bans, Economy, Auctions, Cosmetics.
+ * - Contains: Flags, Roles, Bans, Economy, Auctions, Cosmetics, Server Warps.
  */
 public class Plot {
     
@@ -33,7 +34,7 @@ public class Plot {
     // --- Flags & Permissions ---
     private final Map<String, Boolean> flags = new HashMap<>();
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
-    private final Set<UUID> bannedPlayers = new HashSet<>(); // [NEW] For /ag ban
+    private final Set<UUID> bannedPlayers = new HashSet<>(); 
 
     // --- Upkeep Field ---
     private long lastUpkeepPayment;
@@ -60,6 +61,11 @@ public class Plot {
     private String borderParticle;
     private String ambientParticle;
     private String entryEffect;
+
+    // --- Server Warp Fields (NEW) ---
+    private boolean isServerWarp;
+    private String warpName;
+    private Material warpIcon;
 
     // --- Constructor (Full) ---
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
@@ -91,8 +97,8 @@ public class Plot {
         flags.put("interact", true);
         
         // [NEW Features]
-        flags.put("fly", false); // Default Flight: OFF
-        flags.put("entry", true); // Default Access: PUBLIC (Open)
+        flags.put("fly", false); 
+        flags.put("entry", true); 
 
         // Initialize optional fields
         this.spawnLocation = null;
@@ -113,6 +119,11 @@ public class Plot {
         this.borderParticle = null;
         this.ambientParticle = null;
         this.entryEffect = null;
+
+        // Initialize Warp defaults
+        this.isServerWarp = false;
+        this.warpName = null;
+        this.warpIcon = null;
     }
     
     // --- Constructor (New Plot Shortcut) ---
@@ -173,7 +184,7 @@ public class Plot {
             playerRoles.remove(playerUUID);
         } else {
             playerRoles.put(playerUUID, role.toLowerCase());
-            bannedPlayers.remove(playerUUID); // Ensure they aren't banned if promoted
+            bannedPlayers.remove(playerUUID); 
         }
     }
     
@@ -183,7 +194,7 @@ public class Plot {
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
         if (owner.equals(playerUUID)) return true; 
-        if (isBanned(playerUUID)) return false; // Banned players have NO permissions
+        if (isBanned(playerUUID)) return false; 
         
         // Renter Logic
         if (currentRenter != null && currentRenter.equals(playerUUID) && System.currentTimeMillis() < rentExpires) {
@@ -193,13 +204,12 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
-        // FIX: Convert List to HashSet to fix compilation error
         Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
         
         return permissions.contains(permission.toUpperCase());
     }
 
-    // --- Ban Logic (New) ---
+    // --- Ban Logic ---
     public Set<UUID> getBannedPlayers() { return bannedPlayers; }
     
     public boolean isBanned(UUID playerUUID) { 
@@ -207,7 +217,7 @@ public class Plot {
     }
     
     public void addBan(UUID playerUUID) {
-        playerRoles.remove(playerUUID); // Remove any trust/role
+        playerRoles.remove(playerUUID); 
         bannedPlayers.add(playerUUID);
     }
     
@@ -289,6 +299,17 @@ public class Plot {
     public void setAmbientParticle(String particle) { this.ambientParticle = particle; }
     public String getEntryEffect() { return entryEffect; }
     public void setEntryEffect(String effect) { this.entryEffect = effect; }
+
+    // --- NEW: Server Warp Logic ---
+    public boolean isServerWarp() { return isServerWarp; }
+    public String getWarpName() { return warpName; }
+    public Material getWarpIcon() { return warpIcon; }
+
+    public void setServerWarp(boolean isWarp, String name, Material icon) {
+        this.isServerWarp = isWarp;
+        this.warpName = name;
+        this.warpIcon = icon;
+    }
 
     // --- Utility ---
     public boolean isInside(Location loc) {

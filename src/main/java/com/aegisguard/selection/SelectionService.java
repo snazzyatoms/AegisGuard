@@ -17,7 +17,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +26,6 @@ public class SelectionService implements Listener {
     private final Map<UUID, Location> loc1 = new HashMap<>();
     private final Map<UUID, Location> loc2 = new HashMap<>();
     
-    // Public key so other classes (like AegisCommand) can use it
     public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
 
     public SelectionService(AegisGuard plugin) {
@@ -39,13 +37,12 @@ public class SelectionService implements Listener {
         Player p = e.getPlayer();
         if (e.getItem() == null || e.getItem().getType() == Material.AIR) return;
 
-        // Check for Wand NBT
         ItemMeta meta = e.getItem().getItemMeta();
         if (meta == null || !meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE)) {
             return;
         }
 
-        e.setCancelled(true); // Prevent tilling dirt with the hoe
+        e.setCancelled(true);
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             loc1.put(p.getUniqueId(), e.getClickedBlock().getLocation());
@@ -78,13 +75,11 @@ public class SelectionService implements Listener {
             return;
         }
         
-        // Check World Rules (Is claiming allowed here?)
         if (!plugin.worldRules().allowClaims(p.getWorld())) {
-            plugin.msg().send(p, "admin-zone-no-claims"); // Use a message key for this
+            plugin.msg().send(p, "admin-zone-no-claims");
             return;
         }
 
-        // Calculate bounds
         int minX = Math.min(l1.getBlockX(), l2.getBlockX());
         int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
         int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
@@ -92,24 +87,20 @@ public class SelectionService implements Listener {
         
         int width = maxX - minX + 1;
         int length = maxZ - minZ + 1;
-        int area = width * length;
         int radius = Math.max(width, length) / 2;
 
-        // Check Limits
-        // 1. Max Area/Radius
+        // Limits
         int limitRadius = plugin.cfg().getWorldMaxRadius(p.getWorld());
         if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
             p.sendMessage(ChatColor.RED + "Claim too big! Max radius is " + limitRadius + " blocks.");
             return;
         }
         
-        // 2. Min Size
         if (radius < plugin.cfg().getWorldMinRadius(p.getWorld())) {
             p.sendMessage(ChatColor.RED + "Claim too small.");
             return;
         }
 
-        // 3. Max Claims Count
         int maxClaims = plugin.cfg().getWorldMaxClaims(p.getWorld());
         int currentCount = plugin.store().getPlots(p.getUniqueId()).size();
         if (currentCount >= maxClaims && !p.hasPermission("aegis.admin.bypass")) {
@@ -117,13 +108,11 @@ public class SelectionService implements Listener {
             return;
         }
 
-        // 4. Overlap Check
         if (plugin.store().isAreaOverlapping(null, l1.getWorld().getName(), minX, minZ, maxX, maxZ)) {
             p.sendMessage(ChatColor.RED + "You cannot claim here! It overlaps another plot.");
             return;
         }
 
-        // 5. Economy Check
         double cost = plugin.cfg().getWorldVaultCost(p.getWorld());
         if (plugin.cfg().useVault(p.getWorld()) && cost > 0) {
             if (!plugin.vault().charge(p, cost)) {
@@ -133,7 +122,6 @@ public class SelectionService implements Listener {
             plugin.msg().send(p, "cost_deducted", Map.of("AMOUNT", plugin.vault().format(cost)));
         }
 
-        // Create Plot
         Plot plot = new Plot(
             UUID.randomUUID(),
             p.getUniqueId(),
@@ -143,46 +131,62 @@ public class SelectionService implements Listener {
             System.currentTimeMillis()
         );
         
-        // Apply Default Flags
         plugin.worldRules().applyDefaults(plot);
-
         plugin.store().addPlot(plot);
         plugin.msg().send(p, "plot_created");
         plugin.effects().playClaimSuccess(p);
         
-        // Clear selection
         loc1.remove(uuid);
         loc2.remove(uuid);
         
-        // --- NEW: Consume Wand Logic ---
-        if (plugin.cfg().raw().getBoolean("claims.consume_wand_on_claim", true)) {
+        // --- WAND CONSUMPTION LOGIC ---
+        boolean consume = plugin.cfg().raw().getBoolean("claims.consume_wand_on_claim", true);
+        boolean adminBypass = plugin.cfg().raw().getBoolean("claims.admin_keep_wand", true);
+        
+        if (consume) {
+            if (adminBypass && plugin.isAdmin(p)) {
+                return;
+            }
             consumeWand(p);
         }
     }
     
-    private void consumeWand(Player p) {
+    public void consumeWand(Player p) {
         ItemStack hand = p.getInventory().getItemInMainHand();
         if (isWand(hand)) {
-            hand.setAmount(0); // Remove it
+            hand.setAmount(hand.getAmount() - 1);
             return;
         }
-        // If not in main hand, check offhand
         ItemStack offhand = p.getInventory().getItemInOffHand();
         if (isWand(offhand)) {
-            offhand.setAmount(0);
+            offhand.setAmount(offhand.getAmount() - 1);
             return;
         }
-        
-        // If not in hands, scan inventory (Rare edge case, but good for polish)
         for (ItemStack item : p.getInventory().getContents()) {
             if (isWand(item)) {
-                item.setAmount(0);
-                break; // Only remove one
+                item.setAmount(item.getAmount() - 1);
+                break;
             }
         }
     }
     
-    private boolean isWand(ItemStack item) {
+    public void manualConsumeWand(Player p) {
+        boolean found = false;
+        for (ItemStack item : p.getInventory().getContents()) {
+            if (isWand(item)) {
+                item.setAmount(0);
+                found = true;
+            }
+        }
+        if (found) {
+            p.sendMessage(ChatColor.GREEN + "Aegis Scepter(s) consumed.");
+            plugin.effects().playUnclaim(p);
+        } else {
+            p.sendMessage(ChatColor.RED + "No Aegis Scepter found in your inventory.");
+        }
+    }
+    
+    public boolean isWand(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
         ItemMeta meta = item.getItemMeta();
         return meta != null && meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE);
@@ -204,7 +208,6 @@ public class SelectionService implements Listener {
         plugin.msg().send(p, "plot_unclaimed");
         plugin.effects().playUnclaim(p);
         
-        // Handle refund if enabled
         if (plugin.cfg().raw().getBoolean("claims.per_world." + p.getWorld().getName() + ".refund_on_unclaim", false)) {
              double originalCost = plugin.cfg().getWorldVaultCost(p.getWorld());
              double percent = plugin.cfg().raw().getDouble("claims.per_world." + p.getWorld().getName() + ".refund_percent", 50.0);
@@ -217,10 +220,43 @@ public class SelectionService implements Listener {
     }
     
     public void resizePlot(Player p, String direction, int amount) {
-         // (Logic for resize kept concise as it was implemented previously)
-         // ... existing resize logic ...
-         // For brevity in this paste, assuming resize logic is standard.
-         // If you need the full resize code block here again, let me know!
-         p.sendMessage(ChatColor.RED + "Resize logic placeholder for update."); 
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+
+        double costPerBlock = plugin.cfg().raw().getDouble("resize-cost-per-block", 10.0);
+        double totalCost = amount * costPerBlock; 
+        
+        if (plugin.cfg().useVault(p.getWorld()) && totalCost > 0) {
+            if (!plugin.vault().charge(p, totalCost)) {
+                plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(totalCost)));
+                return;
+            }
+        }
+
+        int x1 = plot.getX1();
+        int z1 = plot.getZ1();
+        int x2 = plot.getX2();
+        int z2 = plot.getZ2();
+
+        switch (direction.toLowerCase()) {
+            case "north": z1 -= amount; break; 
+            case "south": z2 += amount; break; 
+            case "west":  x1 -= amount; break; 
+            case "east":  x2 += amount; break; 
+            default: return;
+        }
+        
+        // Update logic
+        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+        plot.setX1(x1); plot.setX2(x2);
+        plot.setZ1(z1); plot.setZ2(z2);
+        plugin.store().addPlot(plot);
+        plugin.store().setDirty(true);
+
+        plugin.msg().send(p, "resize-success", Map.of("DIRECTION", direction, "AMOUNT", String.valueOf(amount)));
+        plugin.effects().playConfirm(p);
     }
 }

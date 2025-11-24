@@ -16,11 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Plot (Data Class)
  * - This is the "Ultimate" version of the Plot class.
- * - It contains all fields for all plugin features.
+ * - Contains: Flags, Roles, Bans, Economy, Auctions, Cosmetics.
  */
 public class Plot {
     
-    // Special UUID for server-owned plots
+    // Special UUID for server-owned plots (Admin Zones)
     public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     // --- Core Fields ---
@@ -30,10 +30,11 @@ public class Plot {
     private final String world;
     private int x1, z1, x2, z2; 
     
-    // --- Flags & Roles ---
+    // --- Flags & Permissions ---
     private final Map<String, Boolean> flags = new HashMap<>();
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
-    
+    private final Set<UUID> bannedPlayers = new HashSet<>(); // [NEW] For /ag ban
+
     // --- Upkeep Field ---
     private long lastUpkeepPayment;
 
@@ -60,7 +61,7 @@ public class Plot {
     private String ambientParticle;
     private String entryEffect;
 
-
+    // --- Constructor (Full) ---
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
         this.plotId = plotId;
         this.owner = owner;
@@ -75,7 +76,7 @@ public class Plot {
         // Set the owner's role internally
         this.playerRoles.put(owner, "owner");
 
-        // Default protections ON
+        // --- Default Flags ---
         flags.put("pvp", true);
         flags.put("containers", true);
         flags.put("mobs", true);
@@ -87,9 +88,13 @@ public class Plot {
         flags.put("fire-spread", true);
         flags.put("piston-use", true);
         flags.put("build", true);       
-        flags.put("interact", true);   
+        flags.put("interact", true);
+        
+        // [NEW Features]
+        flags.put("fly", false); // Default Flight: OFF
+        flags.put("entry", true); // Default Access: PUBLIC (Open)
 
-        // Initialize fields
+        // Initialize optional fields
         this.spawnLocation = null;
         this.welcomeMessage = null;
         this.farewellMessage = null;
@@ -110,11 +115,12 @@ public class Plot {
         this.entryEffect = null;
     }
     
+    // --- Constructor (New Plot Shortcut) ---
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
         this(plotId, owner, ownerName, world, x1, z1, x2, z2, System.currentTimeMillis());
     }
 
-    // --- Getters ---
+    // --- Core Getters ---
     public UUID getPlotId() { return plotId; }
     public UUID getOwner() { return owner; }
     public String getOwnerName() { return ownerName; }
@@ -124,7 +130,7 @@ public class Plot {
     public int getX2() { return x2; }
     public int getZ2() { return z2; }
     
-    // Setters for resize
+    // --- Resize Setters ---
     public void setX1(int x) { this.x1 = x; }
     public void setZ1(int z) { this.z1 = z; }
     public void setX2(int x) { this.x2 = x; }
@@ -132,10 +138,10 @@ public class Plot {
     
     public void setOwnerName(String name) { this.ownerName = name; }
 
+    // --- Location Helper ---
     public Location getCenter(AegisGuard plugin) {
         World world = Bukkit.getWorld(this.world);
         if (world == null) return null;
-        
         double cX = (x1 + x2) / 2.0;
         double cZ = (z1 + z2) / 2.0;
         return new Location(world, cX, 64, cZ); 
@@ -145,15 +151,17 @@ public class Plot {
         return owner.equals(SERVER_OWNER_UUID);
     }
 
-    // --- FIX: Re-added missing method for Marketplace ---
+    // --- Marketplace Logic (Critical for Transfers) ---
     public void internalSetOwner(UUID newOwner, String newOwnerName) {
         this.owner = newOwner;
         this.ownerName = newOwnerName;
+        // Wipe old data
         this.playerRoles.clear();
         this.playerRoles.put(newOwner, "owner");
+        this.bannedPlayers.clear(); // Unban everyone for the new owner
     }
     
-    // --- Role Methods ---
+    // --- Role Logic ---
     public Map<UUID, String> getPlayerRoles() { return playerRoles; }
     
     public String getRole(UUID playerUUID) {
@@ -165,6 +173,7 @@ public class Plot {
             playerRoles.remove(playerUUID);
         } else {
             playerRoles.put(playerUUID, role.toLowerCase());
+            bannedPlayers.remove(playerUUID); // Ensure they aren't banned if promoted
         }
     }
     
@@ -174,7 +183,9 @@ public class Plot {
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
         if (owner.equals(playerUUID)) return true; 
+        if (isBanned(playerUUID)) return false; // Banned players have NO permissions
         
+        // Renter Logic
         if (currentRenter != null && currentRenter.equals(playerUUID) && System.currentTimeMillis() < rentExpires) {
             if (plugin.cfg().getRolePermissions("member").contains(permission.toUpperCase())) {
                 return true;
@@ -182,21 +193,38 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
+        // FIX: Convert List to HashSet to fix compilation error
         Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
         
         return permissions.contains(permission.toUpperCase());
     }
 
-    // --- Flag Methods ---
+    // --- Ban Logic (New) ---
+    public Set<UUID> getBannedPlayers() { return bannedPlayers; }
+    
+    public boolean isBanned(UUID playerUUID) { 
+        return bannedPlayers.contains(playerUUID); 
+    }
+    
+    public void addBan(UUID playerUUID) {
+        playerRoles.remove(playerUUID); // Remove any trust/role
+        bannedPlayers.add(playerUUID);
+    }
+    
+    public void removeBan(UUID playerUUID) { 
+        bannedPlayers.remove(playerUUID); 
+    }
+
+    // --- Flag Logic ---
     public boolean getFlag(String key, boolean def) { return flags.getOrDefault(key, def); }
     public void setFlag(String key, boolean value) { flags.put(key, value); }
     public Map<String, Boolean> getFlags() { return Collections.unmodifiableMap(flags); }
     
-    // --- Upkeep Methods ---
+    // --- Upkeep Logic ---
     public long getLastUpkeepPayment() { return lastUpkeepPayment; }
     public void setLastUpkeepPayment(long time) { this.lastUpkeepPayment = time; }
     
-    // --- Welcome/TP Getters & Setters ---
+    // --- Spawn Logic ---
     public Location getSpawnLocation() { return spawnLocation; }
     public String getWelcomeMessage() { return welcomeMessage; }
     public String getFarewellMessage() { return farewellMessage; }
@@ -218,10 +246,7 @@ public class Plot {
     }
 
     public void setSpawnLocationFromString(String s) {
-        if (s == null || s.isEmpty()) {
-            this.spawnLocation = null;
-            return;
-        }
+        if (s == null || s.isEmpty()) { this.spawnLocation = null; return; }
         try {
             String[] parts = s.split(":");
             if (parts.length != 6) return;
@@ -234,44 +259,30 @@ public class Plot {
                 float pitch = Float.parseFloat(parts[5]);
                 this.spawnLocation = new Location(world, x, y, z, yaw, pitch);
             }
-        } catch (Exception e) {
-            this.spawnLocation = null;
-        }
+        } catch (Exception e) { this.spawnLocation = null; }
     }
     
-    // --- Marketplace Getters/Setters ---
+    // --- Marketplace Logic ---
     public boolean isForSale() { return isForSale; }
-    public void setForSale(boolean forSale, double price) {
-        this.isForSale = forSale;
-        this.salePrice = price;
-    }
+    public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
     public double getSalePrice() { return salePrice; }
     
     public boolean isForRent() { return isForRent; }
     public double getRentPrice() { return rentPrice; }
-    public void setForRent(boolean forRent, double price) {
-        this.isForRent = forRent;
-        this.rentPrice = price;
-    }
+    public void setForRent(boolean forRent, double price) { this.isForRent = forRent; this.rentPrice = price; }
     
     public UUID getCurrentRenter() { return currentRenter; }
     public long getRentExpires() { return rentExpires; }
-    public void setRenter(UUID renter, long expirationTime) {
-        this.currentRenter = renter;
-        this.rentExpires = expirationTime;
-    }
+    public void setRenter(UUID renter, long expirationTime) { this.currentRenter = renter; this.rentExpires = expirationTime; }
     
-    // --- Auction Getters/Setters ---
+    // --- Auction Logic ---
     public String getPlotStatus() { return plotStatus; }
     public void setPlotStatus(String status) { this.plotStatus = status; }
     public double getCurrentBid() { return currentBid; }
     public UUID getCurrentBidder() { return currentBidder; }
-    public void setCurrentBid(double bid, UUID bidder) {
-        this.currentBid = bid;
-        this.currentBidder = bidder;
-    }
+    public void setCurrentBid(double bid, UUID bidder) { this.currentBid = bid; this.currentBidder = bidder; }
 
-    // --- Cosmetic Getters/Setters ---
+    // --- Cosmetic Logic ---
     public String getBorderParticle() { return borderParticle; }
     public void setBorderParticle(String particle) { this.borderParticle = particle; }
     public String getAmbientParticle() { return ambientParticle; }
@@ -279,6 +290,7 @@ public class Plot {
     public String getEntryEffect() { return entryEffect; }
     public void setEntryEffect(String effect) { this.entryEffect = effect; }
 
+    // --- Utility ---
     public boolean isInside(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(world)) return false;

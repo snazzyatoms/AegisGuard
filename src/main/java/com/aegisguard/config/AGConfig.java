@@ -35,7 +35,6 @@ public class AGConfig {
         return config.getBoolean("economy.use_vault", true);
     }
     
-    // FIX: Added overload for no-arg call (Global default)
     public boolean useVault() {
         return config.getBoolean("economy.use_vault", true);
     }
@@ -62,6 +61,11 @@ public class AGConfig {
             path = "claims.per_world." + world.getName() + ".item_cost.amount";
         }
         return config.getInt(path, 5);
+    }
+
+    // --- NEW: Flight Cost (Fixes Build Error) ---
+    public double getFlightCost() {
+        return config.getDouble("economy.flag_costs.fly", 5000.0);
     }
 
     // --- Claims ---
@@ -103,7 +107,6 @@ public class AGConfig {
         return List.of("co-owner", "member", "guest");
     }
 
-    // FIX: Added missing method for Plot.java
     public List<String> getRolePermissions(String role) {
         return config.getStringList("roles." + role);
     }
@@ -111,9 +114,14 @@ public class AGConfig {
     // --- Misc ---
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
+    
     public boolean pvpProtectionDefault() { return config.getBoolean("protections.pvp_protection", true); }
     public boolean noMobsInClaims() { return config.getBoolean("protections.no_mobs_in_claims", true); }
     public boolean containerProtectionDefault() { return config.getBoolean("protections.container_protection", true); }
     public boolean petProtectionDefault() { return config.getBoolean("protections.pets_protection", true); }
     public boolean farmProtectionDefault() { return config.getBoolean("protections.farm_protection", true); }
+    
+    // --- NEW: Feature Defaults (Fixes Build Error) ---
+    public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
+    public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
 }

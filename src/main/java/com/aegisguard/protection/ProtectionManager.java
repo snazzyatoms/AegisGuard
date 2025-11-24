@@ -48,9 +48,15 @@ public class ProtectionManager implements Listener {
             Plot plot = plugin.store().getPlotAt(e.getLocation());
             if (plot != null) {
                 boolean isServer = plot.isServerZone();
-                boolean mobsAllowed = !isMobProtectionEnabled(plot); // Logic Flip: If protection is enabled, mobs are disabled.
+                boolean mobsAllowed = isMobProtectionEnabled(plot); // Note: isMobProtectionEnabled returns true if 'mobs' flag is true
+                
+                // If it is a server zone, or 'mobs' flag is false (protection enabled means mobs disabled usually, 
+                // but in your config default 'mobs: true' means allowed. Let's stick to the Flag logic directly)
+                // plot.getFlag("mobs", true) -> True = Mobs Allowed. False = Mobs Blocked.
+                boolean allowMobs = plot.getFlag("mobs", true);
+                boolean safeZone = plot.getFlag("safe_zone", false);
 
-                if (isServer || !mobsAllowed) {
+                if (isServer || safeZone || !allowMobs) {
                     e.setCancelled(true);
                 }
             }
@@ -141,7 +147,61 @@ public class ProtectionManager implements Listener {
         });
     }
 
-    // --- 3. BLOCK BREAK ---
+    // --- 3. COMBAT & DAMAGE (UPDATED) ---
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityDamage(EntityDamageByEntityEvent e) {
+        if (!(e.getEntity() instanceof Player victim)) return;
+        
+        Entity damager = e.getDamager();
+        
+        // === NEW: MOB DAMAGE BLOCKER ===
+        // Prevents Monsters, Slimes, Phantoms, or Projectiles fired by them from hurting players
+        if (damager instanceof Monster || damager instanceof Slime || damager instanceof Phantom || 
+           (damager instanceof Projectile proj && proj.getShooter() instanceof Monster)) {
+            
+            Plot plot = plugin.store().getPlotAt(victim.getLocation());
+            if (plot != null) {
+                boolean isServer = plot.isServerZone();
+                boolean isSafe = plot.getFlag("safe_zone", false);
+                boolean mobsAllowed = plot.getFlag("mobs", true);
+
+                // If mobs are NOT allowed (or safe zone/server zone), CANCEL DAMAGE
+                if (isServer || isSafe || !mobsAllowed) {
+                    e.setCancelled(true);
+                    if (damager instanceof Projectile) damager.remove(); // Delete arrow
+                    return;
+                }
+            }
+        }
+
+        // === PVP LOGIC ===
+        Player attacker = resolveAttacker(damager);
+        // If attacker isn't a player, we don't care about PvP rules (Mob rules handled above)
+        if (attacker == null || attacker.equals(victim)) return;
+
+        Plot plot = plugin.store().getPlotAt(victim.getLocation());
+        if (plot == null) return;
+        if (attacker.hasPermission("aegis.admin")) return;
+
+        if (checkPlotStatus(attacker, plot)) { e.setCancelled(true); return; }
+
+        if (plot.isServerZone()) {
+            if (!plot.getFlag("pvp", false)) {
+                e.setCancelled(true);
+                attacker.sendMessage(plugin.msg().get("cannot_attack"));
+                plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
+            }
+            return;
+        }
+
+        if (!isPvPEnabled(plot)) { // False = PVP Disabled
+            e.setCancelled(true);
+            attacker.sendMessage(plugin.msg().get("cannot_attack"));
+            plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
+        }
+    }
+
+    // --- 4. BLOCK BREAK ---
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
@@ -181,7 +241,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 4. BLOCK PLACE ---
+    // --- 5. BLOCK PLACE ---
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
@@ -222,7 +282,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 5. INTERACT ---
+    // --- 6. INTERACT ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getClickedBlock() == null) return;
@@ -268,59 +328,6 @@ public class ProtectionManager implements Listener {
                  p.sendMessage(plugin.msg().get("cannot_interact"));
                  plugin.effects().playEffect("interact", "deny", p, block.getLocation());
             }
-        }
-    }
-
-    // --- 6. PVP & PROJECTILE DAMAGE ---
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPvP(EntityDamageByEntityEvent e) {
-        if (!(e.getEntity() instanceof Player victim)) return;
-        
-        Player attacker = null;
-        Entity damager = e.getDamager();
-
-        // Logic: Check if attacker is a Player or a Projectile fired by a Player OR Monster
-        if (damager instanceof Player) {
-            attacker = (Player) damager;
-        } else if (damager instanceof Projectile proj) {
-            if (proj.getShooter() instanceof Player) {
-                attacker = (Player) proj.getShooter();
-            } else if (proj.getShooter() instanceof Monster) {
-                // FIX: Block skeleton arrows if PvP/Mob-Damage protection is ON
-                Plot plot = plugin.store().getPlotAt(victim.getLocation());
-                if (plot != null) {
-                     // If safe zone or mob protection is enabled, cancel damage
-                     if (isSafeZoneEnabled(plot) || isMobProtectionEnabled(plot)) {
-                         e.setCancelled(true);
-                         proj.remove(); // Vaporize the arrow
-                     }
-                }
-                return; // Exit early, we handled the mob case
-            }
-        }
-        
-        // If attacker is null (e.g. not a player), exit
-        if (attacker == null || attacker.equals(victim)) return;
-
-        Plot plot = plugin.store().getPlotAt(victim.getLocation());
-        if (plot == null) return;
-        if (attacker.hasPermission("aegis.admin")) return;
-
-        if (checkPlotStatus(attacker, plot)) { e.setCancelled(true); return; }
-
-        if (plot.isServerZone()) {
-            if (!plot.getFlag("pvp", false)) {
-                e.setCancelled(true);
-                attacker.sendMessage(plugin.msg().get("cannot_attack"));
-                plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
-            }
-            return;
-        }
-
-        if (!isPvPEnabled(plot)) { // False = PVP Disabled
-            e.setCancelled(true);
-            attacker.sendMessage(plugin.msg().get("cannot_attack"));
-            plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
         }
     }
 
@@ -384,7 +391,7 @@ public class ProtectionManager implements Listener {
     }
 
     // --- HELPERS ---
-
+    
     public boolean isSafeZoneEnabled(Plot plot) {
         return plot.getFlag("safe_zone", false); 
     }
@@ -404,7 +411,6 @@ public class ProtectionManager implements Listener {
         return true;
     }
 
-    // Public getters for GUI
     public boolean isPvPEnabled(Plot plot) { return !hasFlag(plot, "pvp"); } 
     public void togglePvP(Plot plot) { toggleFlag(plot, "pvp"); }
     

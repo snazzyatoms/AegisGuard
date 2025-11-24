@@ -31,6 +31,15 @@ public class PlayerGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "menu_title"), "§b§lAegisGuard §7— Menu");
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 27, title);
 
+        // --- NEW: Travel System (Slot 8 - Top Right) ---
+        if (plugin.cfg().raw().getBoolean("travel_system.enabled", true)) {
+             inv.setItem(8, GUIManager.icon(
+                Material.COMPASS,
+                GUIManager.safeText(plugin.msg().get(player, "visit_gui_title"), "§bTravel System"),
+                List.of("§7Visit trusted plots and server warps.")
+            ));
+        }
+
         // Claim Land - SLOT 10
         inv.setItem(10, GUIManager.icon(Material.LIGHTNING_ROD, 
             GUIManager.safeText(plugin.msg().get(player, "button_claim_land"), "§aClaim Land"), 
@@ -74,7 +83,6 @@ public class PlayerGUI {
             plugin.msg().getList(player, "info_lore")));
 
         // --- ADMIN PANEL (Slot 26) ---
-        // FIX: Now uses isAdmin() check to respect 'trust_operators' config
         if (plugin.isAdmin(player)) {
             inv.setItem(26, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
         } else {
@@ -93,6 +101,13 @@ public class PlayerGUI {
         boolean isOwner = plot != null && plot.getOwner().equals(player.getUniqueId());
 
         switch (e.getSlot()) {
+            case 8: // Travel System
+                if (plugin.cfg().raw().getBoolean("travel_system.enabled", true)) {
+                     plugin.gui().visit().open(player, 0, false); // Open Friends Tab by default
+                     plugin.effects().playMenuFlip(player);
+                }
+                break;
+                
             case 10: player.closeInventory(); plugin.selection().confirmClaim(player); plugin.effects().playMenuFlip(player); break;
             case 12: 
                 if (!isOwner) { plugin.msg().send(player, "no_plot_here"); plugin.effects().playError(player); return; }

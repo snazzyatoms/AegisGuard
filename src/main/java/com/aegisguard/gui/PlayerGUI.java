@@ -82,12 +82,13 @@ public class PlayerGUI {
             GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fInfo"), 
             plugin.msg().getList(player, "info_lore")));
 
-        // --- ADMIN PANEL (Slot 26) ---
+        // --- ADMIN PANEL (Slot 25 - NEW POSITION) ---
         if (plugin.isAdmin(player)) {
-            inv.setItem(26, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
-        } else {
-            inv.setItem(26, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), plugin.msg().getList(player, "exit_lore")));
+            inv.setItem(25, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
         }
+
+        // --- EXIT BUTTON (Slot 26 - ALWAYS VISIBLE) ---
+        inv.setItem(26, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -119,14 +120,16 @@ public class PlayerGUI {
             case 22: plugin.gui().expansionRequest().open(player); plugin.effects().playMenuFlip(player); break;
             case 24: plugin.gui().info().open(player); plugin.effects().playMenuFlip(player); break;
             
-            case 26: 
+            case 25: // --- NEW: ADMIN BUTTON ---
                 if (plugin.isAdmin(player)) {
                     plugin.gui().admin().open(player);
                     plugin.effects().playMenuFlip(player);
-                } else {
-                    player.closeInventory();
-                    plugin.effects().playMenuClose(player);
                 }
+                break;
+
+            case 26: // --- EXIT BUTTON ---
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
                 break;
         }
     }

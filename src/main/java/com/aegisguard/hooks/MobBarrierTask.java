@@ -21,25 +21,20 @@ public class MobBarrierTask implements Runnable {
 
     @Override
     public void run() {
-        // --- FIX: Check if feature is enabled in config first! ---
-        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) {
-            return;
-        }
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) return;
 
-        // Iterate over all known plots
         for (Plot plot : plugin.store().getAllPlots()) {
             boolean isServer = plot.isServerZone();
-            boolean noMobs = !plot.getFlag("mobs", true); // true = mobs allowed, false = denied
-            
-            // We only care about Server Zones, Safe Zones, or plots where mobs are explicitly denied
-            if (!isServer && !plugin.protection().isSafeZoneEnabled(plot) && !noMobs) {
+            boolean isSafeZone = plugin.protection().isSafeZoneEnabled(plot); 
+            boolean noMobs = !plot.getFlag("mobs", true);
+
+            if (!isServer && !isSafeZone && !noMobs) {
                 continue; 
             }
 
             World world = Bukkit.getWorld(plot.getWorld());
             if (world == null) continue;
 
-            // Scan the entities in the plot's general area
             int minChunkX = plot.getX1() >> 4;
             int minChunkZ = plot.getZ1() >> 4;
             int maxChunkX = plot.getX2() >> 4;
@@ -49,15 +44,21 @@ public class MobBarrierTask implements Runnable {
                 for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                     if (!world.isChunkLoaded(cx, cz)) continue;
                     
-                    for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
+                    Chunk chunk = world.getChunkAt(cx, cz);
+                    for (Entity entity : chunk.getEntities()) {
                         if (entity instanceof Monster || entity instanceof Slime || entity instanceof Phantom) {
                             if (plot.isInside(entity.getLocation())) {
-                                entity.remove();
                                 
-                                // Optional: Check if particles are enabled in config
-                                if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
-                                    world.spawnParticle(Particle.SMOKE_NORMAL, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.05);
-                                }
+                                // --- FIX: Schedule removal on Main Thread ---
+                                plugin.runMain(null, () -> {
+                                    if (entity.isValid()) { // Check if still alive
+                                        entity.remove();
+                                        if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
+                                            world.spawnParticle(Particle.SMOKE_NORMAL, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.05);
+                                        }
+                                    }
+                                });
+                                
                             }
                         }
                     }

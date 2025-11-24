@@ -15,7 +15,8 @@ import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder; 
-import com.aegisguard.gui.InfoGUI.InfoHolder; // <--- CORRECTED FIX
+import com.aegisguard.gui.InfoGUI.InfoHolder; 
+import com.aegisguard.gui.VisitGUI.VisitHolder; // --- NEW: Travel System Import ---
 
 // Expansions (Note the different package!)
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
@@ -29,8 +30,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-
-// ... (Rest of the class file)
 
 /**
  * GUIListener
@@ -66,28 +65,35 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 2. CODEX / INFO MENU
+        // 2. TRAVEL SYSTEM (VISIT) - [ADDED BACK]
         // ==============================================================
-        else if (holder instanceof InfoGUI.InfoHolder) { // <--- THIS WAS THE MISSING LINK
+        else if (holder instanceof VisitHolder castHolder) {
+            new VisitGUI(plugin).handleClick(player, e, castHolder);
+        }
+
+        // ==============================================================
+        // 3. CODEX / INFO MENU
+        // ==============================================================
+        else if (holder instanceof InfoHolder) {
             new InfoGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 3. PERSONAL SETTINGS
+        // 4. PERSONAL SETTINGS
         // ==============================================================
         else if (holder instanceof SettingsGUIHolder) {
             new SettingsGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 4. ADMIN MENU
+        // 5. ADMIN MENU
         // ==============================================================
         else if (holder instanceof AdminHolder) {
             new AdminGUI(plugin).handleClick(player, e);
         }
 
         // ==============================================================
-        // 5. ROLES & PERMISSIONS (Multi-Stage)
+        // 6. ROLES & PERMISSIONS (Multi-Stage)
         // ==============================================================
         else if (holder instanceof PlotSelectorHolder castHolder) {
             new RolesGUI(plugin).handlePlotSelectorClick(player, e, castHolder);
@@ -103,7 +109,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 6. PLOT MANAGEMENT (Flags, Cosmetics)
+        // 7. PLOT MANAGEMENT (Flags, Cosmetics)
         // ==============================================================
         else if (holder instanceof PlotFlagsHolder castHolder) {
             new PlotFlagsGUI(plugin).handleClick(player, e, castHolder);
@@ -113,7 +119,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 7. ECONOMY (Market, Auction)
+        // 8. ECONOMY (Market, Auction)
         // ==============================================================
         else if (holder instanceof PlotMarketHolder castHolder) {
             new PlotMarketGUI(plugin).handleClick(player, e, castHolder);
@@ -123,7 +129,7 @@ public class GUIListener implements Listener {
         }
 
         // ==============================================================
-        // 8. EXPANSIONS & ADMIN LISTS
+        // 9. EXPANSIONS & ADMIN LISTS
         // ==============================================================
         else if (holder instanceof ExpansionHolder) {
             new com.aegisguard.expansions.ExpansionRequestGUI(plugin).handleClick(player, e);
@@ -134,8 +140,5 @@ public class GUIListener implements Listener {
         else if (holder instanceof PlotListHolder castHolder) {
             new AdminPlotListGUI(plugin).handleClick(player, e, castHolder);
         }
-        // ==============================================================
-        // If the code reaches here, the item is locked but the click is ignored.
-        // The original problem of the button not working should now be fixed!
     }
 }

@@ -23,18 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * SQLDataStore
- * - An implementation of IDataStore that uses SQL (SQLite or MySQL).
- * - This is the "Ultimate" version, supporting all features.
- * - This is a "write-through cache" implementation.
- */
 public class SQLDataStore implements IDataStore {
 
     private final AegisGuard plugin;
     private HikariDataSource hikari;
 
-    // --- In-Memory Cache ---
     private final Map<UUID, List<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
     private volatile boolean isDirty = false;
@@ -67,12 +60,14 @@ public class SQLDataStore implements IDataStore {
             ambient_particle VARCHAR(64),
             entry_effect VARCHAR(64),
             current_bid DOUBLE DEFAULT 0.0,
-            current_bidder CHAR(36)
+            current_bidder CHAR(36),
+            is_server_warp BOOLEAN DEFAULT false,
+            warp_name VARCHAR(64),
+            warp_icon VARCHAR(32)
         );
         """;
     private static final String CREATE_INDEXES = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid); CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world);";
     
-    // --- Wilderness Log Table ---
     private static final String CREATE_WILDERNESS_TABLE = """
         CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +83,6 @@ public class SQLDataStore implements IDataStore {
         """;
     private static final String CREATE_WILDERNESS_INDEX = "CREATE INDEX IF NOT EXISTS idx_wilderness_timestamp ON aegis_wilderness_log (timestamp);";
 
-    // --- Alter Table (for updates) ---
     private static final String[] ALTER_TABLES = {
         "ALTER TABLE aegis_plots ADD COLUMN spawn_location TEXT;",
         "ALTER TABLE aegis_plots ADD COLUMN welcome_msg TEXT;",
@@ -104,7 +98,10 @@ public class SQLDataStore implements IDataStore {
         "ALTER TABLE aegis_plots ADD COLUMN ambient_particle VARCHAR(64);",
         "ALTER TABLE aegis_plots ADD COLUMN entry_effect VARCHAR(64);",
         "ALTER TABLE aegis_plots ADD COLUMN current_bid DOUBLE DEFAULT 0.0;",
-        "ALTER TABLE aegis_plots ADD COLUMN current_bidder CHAR(36);"
+        "ALTER TABLE aegis_plots ADD COLUMN current_bidder CHAR(36);",
+        "ALTER TABLE aegis_plots ADD COLUMN is_server_warp BOOLEAN DEFAULT false;",
+        "ALTER TABLE aegis_plots ADD COLUMN warp_name VARCHAR(64);",
+        "ALTER TABLE aegis_plots ADD COLUMN warp_icon VARCHAR(32);"
     };
     
     private static final String LOAD_PLOTS = "SELECT * FROM aegis_plots";
@@ -115,9 +112,9 @@ public class SQLDataStore implements IDataStore {
             spawn_location, welcome_msg, farewell_msg,
             is_for_sale, sale_price, is_for_rent, rent_price, renter_uuid, rent_expires,
             plot_status, border_particle, ambient_particle, entry_effect,
-            current_bid, current_bidder
+            current_bid, current_bidder, is_server_warp, warp_name, warp_icon
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(plot_id) DO UPDATE SET
         owner_name = EXCLUDED.owner_name,
         x1 = EXCLUDED.x1, z1 = EXCLUDED.z1, x2 = EXCLUDED.x2, z2 = EXCLUDED.z2,
@@ -133,14 +130,16 @@ public class SQLDataStore implements IDataStore {
         ambient_particle = EXCLUDED.ambient_particle,
         entry_effect = EXCLUDED.entry_effect,
         current_bid = EXCLUDED.current_bid,
-        current_bidder = EXCLUDED.current_bidder;
+        current_bidder = EXCLUDED.current_bidder,
+        is_server_warp = EXCLUDED.is_server_warp,
+        warp_name = EXCLUDED.warp_name,
+        warp_icon = EXCLUDED.warp_icon;
         """;
         
     private static final String DELETE_PLOT = "DELETE FROM aegis_plots WHERE plot_id = ?";
     private static final String DELETE_PLOTS_BY_OWNER = "DELETE FROM aegis_plots WHERE owner_uuid = ?";
     private static final String UPDATE_PLOT_OWNER = "UPDATE aegis_plots SET owner_uuid = ?, owner_name = ?, roles = ?, is_for_sale = ? WHERE plot_id = ?";
 
-    // --- Wilderness Log Queries ---
     private static final String LOG_WILDERNESS_BLOCK = "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String GET_REVERTABLE_BLOCKS = "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log WHERE timestamp < ? LIMIT ?";
     private static final String DELETE_REVERTED_BLOCKS = "DELETE FROM aegis_wilderness_log WHERE id = ?";
@@ -212,8 +211,7 @@ public class SQLDataStore implements IDataStore {
                  Statement s = conn.createStatement()) {
                 s.execute(alterQuery);
             } catch (SQLException e) {
-                // This is (usually) okay. It just means the column already exists.
-                // A better system would check metadata, but this is fine for SQLite/MySQL.
+                // Ignore "duplicate column" errors
             }
         }
     }
@@ -256,8 +254,14 @@ public class SQLDataStore implements IDataStore {
                 plot.setBorderParticle(rs.getString("border_particle"));
                 plot.setAmbientParticle(rs.getString("ambient_particle"));
                 plot.setEntryEffect(rs.getString("entry_effect"));
+                
+                // --- Load Server Warp Data ---
+                if (rs.getBoolean("is_server_warp")) {
+                    Material icon = Material.matchMaterial(rs.getString("warp_icon"));
+                    if (icon == null) icon = Material.BEACON;
+                    plot.setServerWarp(true, rs.getString("warp_name"), icon);
+                }
 
-                // De-serialize flags and roles from TEXT
                 deserializeFlags(plot, rs.getString("flags"));
                 deserializeRoles(plot, rs.getString("roles"));
 
@@ -315,6 +319,10 @@ public class SQLDataStore implements IDataStore {
                 ps.setDouble(25, plot.getCurrentBid());
                 ps.setString(26, plot.getCurrentBidder() != null ? plot.getCurrentBidder().toString() : null);
                 
+                ps.setBoolean(27, plot.isServerWarp());
+                ps.setString(28, plot.getWarpName());
+                ps.setString(29, plot.getWarpIcon() != null ? plot.getWarpIcon().name() : "BEACON");
+                
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -341,7 +349,48 @@ public class SQLDataStore implements IDataStore {
         this.isDirty = dirty;
     }
 
-    // --- Plot Management (operates on cache) ---
+    // --- Caching/Indexing Methods ---
+
+    private String getChunkKey(Location loc) {
+        return loc.getWorld().getName() + ";" + (loc.getBlockX() >> 4) + ";" + (loc.getBlockZ() >> 4);
+    }
+
+    private void indexPlot(Plot plot) {
+        Map<String, Set<Plot>> worldChunks = plotsByChunk.computeIfAbsent(plot.getWorld(), k -> new ConcurrentHashMap<>());
+        for (String chunkKey : getChunksInArea(plot.getWorld(), plot.getX1(), plot.getZ1(), plot.getX2(), plot.getZ2())) {
+            worldChunks.computeIfAbsent(chunkKey, k -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(plot);
+        }
+    }
+    
+    private void deIndexPlot(Plot plot) {
+        Map<String, Set<Plot>> worldChunks = plotsByChunk.get(plot.getWorld());
+        if (worldChunks == null) return;
+        for (String chunkKey : getChunksInArea(plot.getWorld(), plot.getX1(), plot.getZ1(), plot.getX2(), plot.getZ2())) {
+            Set<Plot> plots = worldChunks.get(chunkKey);
+            if (plots != null) {
+                plots.remove(plot);
+                if (plots.isEmpty()) {
+                    worldChunks.remove(chunkKey);
+                }
+            }
+        }
+    }
+    
+    private Set<String> getChunksInArea(String world, int x1, int z1, int x2, int z2) {
+        Set<String> keys = new HashSet<>();
+        int cX1 = x1 >> 4;
+        int cZ1 = z1 >> 4;
+        int cX2 = x2 >> 4;
+        int cZ2 = z2 >> 4;
+        for (int x = cX1; x <= cX2; x++) {
+            for (int z = cZ1; z <= cZ2; z++) {
+                keys.add(world + ";" + x + ";" + z);
+            }
+        }
+        return keys;
+    }
+    
+    // --- Plot Management API ---
 
     @Override
     public List<Plot> getPlots(UUID owner) {
@@ -503,7 +552,7 @@ public class SQLDataStore implements IDataStore {
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         UUID oldOwner = plot.getOwner();
         
-        // 1. Update in-memory cache
+        // 1. Remove from old owner's list
         List<Plot> oldList = plotsByOwner.get(oldOwner);
         if (oldList != null) {
             oldList.remove(plot);
@@ -512,20 +561,23 @@ public class SQLDataStore implements IDataStore {
             }
         }
         
+        // 2. Update plot object internals
+        // FIX: Using internalSetOwner so we don't need to manually clear roles here
         plot.internalSetOwner(newOwner, newOwnerName);
-        plot.setForSale(false, 0); // No longer for sale
+        plot.setForSale(false, 0); 
         
+        // 3. Add to new owner's list
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
         
-        // 2. Update database
+        // 4. Update database
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(UPDATE_PLOT_OWNER)) {
                 
                 ps.setString(1, newOwner.toString());
                 ps.setString(2, newOwnerName);
-                ps.setString(3, serializeRoles(plot)); // Save new roles (owner)
-                ps.setBoolean(4, false); // Not for sale
+                ps.setString(3, serializeRoles(plot)); 
+                ps.setBoolean(4, false); 
                 ps.setString(5, plot.getPlotId().toString());
                 ps.executeUpdate();
 
@@ -539,7 +591,7 @@ public class SQLDataStore implements IDataStore {
     /* -----------------------------
      * Role Management API
      * ----------------------------- */
-
+      
     @Override
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
         plot.setRole(playerUUID, role);
@@ -555,7 +607,7 @@ public class SQLDataStore implements IDataStore {
     /* -----------------------------
      * Admin Helpers
      * ----------------------------- */
-     
+      
     @Override
     public void removeBannedPlots() {
         for (OfflinePlayer p : Bukkit.getBannedPlayers()) {
@@ -563,99 +615,10 @@ public class SQLDataStore implements IDataStore {
         }
     }
     
-    // --- Caching/Indexing (Identical to YMLDataStore) ---
+    // --- NEW: Wilderness Revert Methods ---
     
-    private String getChunkKey(Location loc) {
-        return loc.getWorld().getName() + ";" + (loc.getBlockX() >> 4) + ";" + (loc.getBlockZ() >> 4);
-    }
-
-    private void indexPlot(Plot plot) {
-        Map<String, Set<Plot>> worldChunks = plotsByChunk.computeIfAbsent(plot.getWorld(), k -> new ConcurrentHashMap<>());
-        for (String chunkKey : getChunksInArea(plot.getWorld(), plot.getX1(), plot.getZ1(), plot.getX2(), plot.getZ2())) {
-            worldChunks.computeIfAbsent(chunkKey, k -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(plot);
-        }
-    }
-    
-    private void deIndexPlot(Plot plot) {
-        Map<String, Set<Plot>> worldChunks = plotsByChunk.get(plot.getWorld());
-        if (worldChunks == null) return;
-        for (String chunkKey : getChunksInArea(plot.getWorld(), plot.getX1(), plot.getZ1(), plot.getX2(), plot.getZ2())) {
-            Set<Plot> plots = worldChunks.get(chunkKey);
-            if (plots != null) {
-                plots.remove(plot);
-                if (plots.isEmpty()) {
-                    worldChunks.remove(chunkKey);
-                }
-            }
-        }
-    }
-    
-    private Set<String> getChunksInArea(String world, int x1, int z1, int x2, int z2) {
-        Set<String> keys = new HashSet<>();
-        int cX1 = x1 >> 4;
-        int cZ1 = z1 >> 4;
-        int cX2 = x2 >> 4;
-        int cZ2 = z2 >> 4;
-        for (int x = cX1; x <= cX2; x++) {
-            for (int z = cZ1; z <= cZ2; z++) {
-                keys.add(world + ";" + x + ";" + z);
-            }
-        }
-        return keys;
-    }
-    
-    // --- SQL Serialization Helpers ---
-    
-    private String serializeFlags(Plot plot) {
-        // Simple key:value,key:value serializer
-        return plot.getFlags().entrySet().stream()
-                .map(e -> e.getKey() + ":" + e.getValue())
-                .collect(Collectors.joining(","));
-    }
-
-    private void deserializeFlags(Plot plot, String data) {
-        if (data == null || data.isEmpty()) return;
-        try {
-            for (String pair : data.split(",")) {
-                String[] parts = pair.split(":");
-                if (parts.length == 2) {
-                    plot.setFlag(parts[0], Boolean.parseBoolean(parts[1]));
-                }
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to parse flags for plot " + plot.getPlotId());
-        }
-    }
-    
-    private String serializeRoles(Plot plot) {
-        // uuid:role,uuid:role serializer
-        return plot.getPlayerRoles().entrySet().stream()
-                .filter(e -> !e.getKey().equals(plot.getOwner())) // Don't save owner
-                .map(e -> e.getKey().toString() + ":" + e.getValue())
-                .collect(Collectors.joining(","));
-    }
-    
-    private void deserializeRoles(Plot plot, String data) {
-        if (data == null || data.isEmpty()) return;
-        try {
-            for (String pair : data.split(",")) {
-                String[] parts = pair.split(":");
-                if (parts.length == 2) {
-                    plot.setRole(UUID.fromString(parts[0]), parts[1]);
-                }
-            }
-        } catch (Exception e) {
-            plugin.getLogger().warning("Failed to parse roles for plot " + plot.getPlotId());
-        }
-    }
-    
-    /* -----------------------------
-     * --- NEW: Wilderness Revert API ---
-     * ----------------------------- */
-
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
-        // This is called from an async task in ProtectionManager
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement(LOG_WILDERNESS_BLOCK)) {
             
@@ -676,8 +639,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void revertWildernessBlocks(long timestamp, int limit) {
-        // This runs on the WildernessRevertTask thread
-        
         Map<Integer, Location> blocksToRevert = new HashMap<>();
         Map<Integer, Material> materialsToSet = new HashMap<>();
         
@@ -709,7 +670,7 @@ public class SQLDataStore implements IDataStore {
         }
         
         if (blocksToRevert.isEmpty()) {
-            return; // Nothing to do
+            return; 
         }
         
         plugin.getLogger().info("Reverting " + blocksToRevert.size() + " wilderness blocks...");
@@ -724,25 +685,65 @@ public class SQLDataStore implements IDataStore {
                     Location loc = entry.getValue();
                     Material mat = materialsToSet.get(id);
                     
-                    // Revert the block
                     if (loc.isWorldLoaded() && loc.getChunk().isLoaded()) {
                         Block b = loc.getBlock();
                         if (b.getType() != mat) {
-                            b.setType(mat, true); // True to apply physics
+                            b.setType(mat, true);
                         }
                     }
                     
-                    // Add to delete batch
                     psDelete.setInt(1, id);
                     psDelete.addBatch();
                 }
                 
-                // 3. Delete all processed entries
                 psDelete.executeBatch();
                 
             } catch (SQLException e) {
                  plugin.getLogger().severe("Failed to delete reverted blocks from log: " + e.getMessage());
             }
         });
+    }
+    
+    // --- Helpers ---
+    
+    private String serializeFlags(Plot plot) {
+        return plot.getFlags().entrySet().stream()
+                .map(e -> e.getKey() + ":" + e.getValue())
+                .collect(Collectors.joining(","));
+    }
+
+    private void deserializeFlags(Plot plot, String data) {
+        if (data == null || data.isEmpty()) return;
+        try {
+            for (String pair : data.split(",")) {
+                String[] parts = pair.split(":");
+                if (parts.length == 2) {
+                    plot.setFlag(parts[0], Boolean.parseBoolean(parts[1]));
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to parse flags for plot " + plot.getPlotId());
+        }
+    }
+    
+    private String serializeRoles(Plot plot) {
+        return plot.getPlayerRoles().entrySet().stream()
+                .filter(e -> !e.getKey().equals(plot.getOwner())) 
+                .map(e -> e.getKey().toString() + ":" + e.getValue())
+                .collect(Collectors.joining(","));
+    }
+    
+    private void deserializeRoles(Plot plot, String data) {
+        if (data == null || data.isEmpty()) return;
+        try {
+            for (String pair : data.split(",")) {
+                String[] parts = pair.split(":");
+                if (parts.length == 2) {
+                    plot.setRole(UUID.fromString(parts[0]), parts[1]);
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to parse roles for plot " + plot.getPlotId());
+        }
     }
 }

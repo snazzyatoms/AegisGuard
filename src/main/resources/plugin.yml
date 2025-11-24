@@ -1,18 +1,18 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.0.1
+version: 1.0.2
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
 authors: ["(snazzyatoms)"]
-website: "https://discord.gg/q7F5mAHyRS"    
+website: "https://discord.gg/Y2NpuR7UZE"    
 softdepend: [Vault, Dynmap, PlaceholderAPI]
 folia-supported: true
 
 commands:
   aegis:
     description: Main AegisGuard command
-    usage: "/aegis <menu|wand|claim|unclaim|resize|kick|ban|consume>"
+    usage: "/aegis <menu|wand|claim|unclaim|resize|visit|kick|ban>"
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -48,7 +48,8 @@ permissions:
       aegis.sell: true
       aegis.unsell: true
       aegis.auction: true
-      # Plot Moderation (Owners managing their own plot)
+      aegis.visit: true     # <-- NEW: Travel System
+      # Plot Moderation
       aegis.kick: true
       aegis.ban: true
       aegis.unban: true
@@ -60,7 +61,9 @@ permissions:
     children:
       aegis.reload: true
       aegis.bypass: true
-      aegis.consume: true     # <-- NEW: Allows manual wand disposal
+      aegis.consume: true     # Allows manual wand disposal
+      aegis.setwarp: true     # <-- NEW: Create Server Warps
+      aegis.delwarp: true     # <-- NEW: Delete Server Warps
 
   # --- INDIVIDUAL NODES ---
   aegis.use:
@@ -93,7 +96,10 @@ permissions:
   aegis.unban:
     description: Unban players from your claim
     default: true
-  
+  aegis.visit:
+    description: Access the Travel System menu
+    default: true
+
   # Economy
   aegis.market:
     description: Access the marketplace
@@ -111,4 +117,10 @@ permissions:
     default: op
   aegis.bypass:
     description: Bypass all protection checks
+    default: op
+  aegis.setwarp:
+    description: Set a plot as a public Server Warp
+    default: op
+  aegis.delwarp:
+    description: Remove a Server Warp
     default: op

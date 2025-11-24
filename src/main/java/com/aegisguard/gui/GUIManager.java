@@ -11,6 +11,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 
+/**
+ * GUIManager
+ * - Central hub for all plugin GUIs.
+ * - Provides access to all GUI instances.
+ */
 public class GUIManager {
 
     private final AegisGuard plugin;
@@ -28,6 +33,7 @@ public class GUIManager {
     private final PlotMarketGUI plotMarketGUI;
     private final PlotAuctionGUI plotAuctionGUI;
     private final InfoGUI infoGUI;
+    private final VisitGUI visitGUI; // --- NEW: Travel System ---
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -45,6 +51,7 @@ public class GUIManager {
         this.plotMarketGUI = new PlotMarketGUI(plugin);
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
         this.infoGUI = new InfoGUI(plugin);
+        this.visitGUI = new VisitGUI(plugin); // --- NEW: Init VisitGUI ---
     }
 
     // --- Accessors ---
@@ -60,28 +67,47 @@ public class GUIManager {
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
     public InfoGUI info() { return infoGUI; }
+    public VisitGUI visit() { return visitGUI; } // --- NEW: Getter ---
 
+    /* -----------------------------
+     * Open Main Menu (Player GUI)
+     * ----------------------------- */
     public void openMain(Player player) {
-        if (playerGUI != null) playerGUI.open(player);
+        if (playerGUI != null) {
+            playerGUI.open(player);
+        }
     }
 
+    /* -----------------------------
+     * Placeholder for /ag admin diag
+     * ----------------------------- */
     public void openDiagnostics(Player player) {
         // Placeholder for now - prevents crash
         player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal.");
     }
 
+    /* -----------------------------
+     * Helper: Build Icon
+     * (Used by all GUIs)
+     * ----------------------------- */
     public static ItemStack icon(Material mat, String name, List<String> lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(name);
             if (lore != null) meta.setLore(lore);
+            
+            // Standard ItemFlags for clean look
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
+            
             item.setItemMeta(meta);
         }
         return item;
     }
 
+    /**
+     * Safely gets a message string or returns a fallback.
+     */
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
         if (fromMsg.contains("[Missing")) return fallback;

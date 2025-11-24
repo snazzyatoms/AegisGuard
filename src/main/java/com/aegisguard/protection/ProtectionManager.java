@@ -2,25 +2,20 @@ package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockIgniteEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.projectiles.ProjectileSource;
@@ -42,7 +37,6 @@ public class ProtectionManager implements Listener {
         this.wildernessRevertEnabled = plugin.cfg().raw().getBoolean("wilderness_revert.enabled", false);
     }
 
-    // --- FIX: Added Missing Method for PAPI Expansion ---
     public boolean isFlagEnabled(Plot plot, String flag) {
         return hasFlag(plot, flag);
     }
@@ -54,10 +48,8 @@ public class ProtectionManager implements Listener {
             Plot plot = plugin.store().getPlotAt(e.getLocation());
             if (plot != null) {
                 boolean isServer = plot.isServerZone();
-                // Use helper to check safe zone + flag
-                boolean mobsAllowed = isMobProtectionEnabled(plot); 
+                boolean mobsAllowed = !isMobProtectionEnabled(plot); // Logic Flip: If protection is enabled, mobs are disabled.
 
-                // If it's a server zone, or safe zone is ON, or mobs flag is FALSE -> Block
                 if (isServer || !mobsAllowed) {
                     e.setCancelled(true);
                 }
@@ -271,7 +263,6 @@ public class ProtectionManager implements Listener {
                 plugin.effects().playEffect("containers", "deny", p, block.getLocation());
             }
         } else if (isInteractable(block.getType())) {
-            // Interact flag logic (simplified)
             if (hasFlag(plot, "interact") && !plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                  e.setCancelled(true);
                  p.sendMessage(plugin.msg().get("cannot_interact"));
@@ -280,11 +271,35 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 6. PVP ---
+    // --- 6. PVP & PROJECTILE DAMAGE ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPvP(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
-        Player attacker = resolveAttacker(e.getDamager());
+        
+        Player attacker = null;
+        Entity damager = e.getDamager();
+
+        // Logic: Check if attacker is a Player or a Projectile fired by a Player OR Monster
+        if (damager instanceof Player) {
+            attacker = (Player) damager;
+        } else if (damager instanceof Projectile proj) {
+            if (proj.getShooter() instanceof Player) {
+                attacker = (Player) proj.getShooter();
+            } else if (proj.getShooter() instanceof Monster) {
+                // FIX: Block skeleton arrows if PvP/Mob-Damage protection is ON
+                Plot plot = plugin.store().getPlotAt(victim.getLocation());
+                if (plot != null) {
+                     // If safe zone or mob protection is enabled, cancel damage
+                     if (isSafeZoneEnabled(plot) || isMobProtectionEnabled(plot)) {
+                         e.setCancelled(true);
+                         proj.remove(); // Vaporize the arrow
+                     }
+                }
+                return; // Exit early, we handled the mob case
+            }
+        }
+        
+        // If attacker is null (e.g. not a player), exit
         if (attacker == null || attacker.equals(victim)) return;
 
         Plot plot = plugin.store().getPlotAt(victim.getLocation());
@@ -362,11 +377,6 @@ public class ProtectionManager implements Listener {
         for (Block block : new ArrayList<>(e.blockList())) {
             Plot plot = plugin.store().getPlotAt(block.getLocation());
             if (plot == null) continue;
-            // If flag is FALSE (default), explode is cancelled.
-            // Wait, logic check: We usually want tnt-damage: false to mean NO damage.
-            // Here: enabled(plot, "tnt-damage") checks safe_zone || flag.
-            // If safe zone is on, enabled() returns true. 
-            // So if enabled -> CANCEL damage.
             if (enabled(plot, "tnt-damage")) {
                 e.blockList().remove(block);
             }
@@ -375,15 +385,11 @@ public class ProtectionManager implements Listener {
 
     // --- HELPERS ---
 
-    // Helper for GUI to check Safe Zone status
     public boolean isSafeZoneEnabled(Plot plot) {
-        return plot.getFlag("safe_zone", false); // Default false
+        return plot.getFlag("safe_zone", false); 
     }
     
-    // Internal logic: Safe Zone overrides specific flag
     private boolean enabled(Plot plot, String flag) {
-        // If Safe Zone is ON, protections are ON (return true).
-        // If Safe Zone is OFF, return specific flag value.
         return plot.getFlag("safe_zone", false) || plot.getFlag(flag, true);
     }
 
@@ -399,7 +405,7 @@ public class ProtectionManager implements Listener {
     }
 
     // Public getters for GUI
-    public boolean isPvPEnabled(Plot plot) { return !hasFlag(plot, "pvp"); } // Logic flip: PvP Protection ON means PvP OFF
+    public boolean isPvPEnabled(Plot plot) { return !hasFlag(plot, "pvp"); } 
     public void togglePvP(Plot plot) { toggleFlag(plot, "pvp"); }
     
     public boolean isContainersEnabled(Plot plot) { return hasFlag(plot, "containers"); }
@@ -420,6 +426,10 @@ public class ProtectionManager implements Listener {
     public void toggleSafeZone(Plot plot, boolean state) {
         boolean newState = !plot.getFlag("safe_zone", false);
         plot.setFlag("safe_zone", newState);
+        if (newState) {
+            plot.setFlag("pvp", false); 
+            plot.setFlag("mobs", false); 
+        }
         plugin.store().setDirty(true);
     }
 

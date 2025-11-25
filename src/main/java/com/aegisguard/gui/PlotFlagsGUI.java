@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages flags on a specific plot.
- * - UPDATED: Cleaner layout with glass borders.
+ * - UPDATED: Biome Changer enabled.
  */
 public class PlotFlagsGUI {
 
@@ -89,7 +89,7 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biome Changer (New v1.1.0 Placeholder)
+        // Biome Changer
         inv.setItem(32, GUIManager.icon(
             Material.GRASS_BLOCK,
             "§2Change Biome",
@@ -146,13 +146,20 @@ public class PlotFlagsGUI {
             
             // Row 4
             case 30: toggleFlight(player, plot); break; // Flight
+            
             case 31: // Cosmetics
                 plugin.gui().cosmetics().open(player, plot); 
                 plugin.effects().playMenuFlip(player); 
                 break;
-            case 32: // Biome (Placeholder for now, opens main menu fallback)
-                player.sendMessage("§aBiome changing coming in v1.1.0!");
-                plugin.effects().playMenuFlip(player);
+            
+            case 32: // Biome Changer
+                if (plugin.cfg().isBiomesEnabled()) {
+                    plugin.gui().biomes().open(player, plot);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    player.sendMessage("§cBiome changing is disabled on this server.");
+                    plugin.effects().playError(player);
+                }
                 break;
 
             // Navigation
@@ -177,8 +184,7 @@ public class PlotFlagsGUI {
             double cost = plugin.cfg().getFlightCost();
             // Charge if: Cost > 0 AND Player is NOT Admin
             if (cost > 0 && !plugin.isAdmin(player)) {
-                // Use EconomyManager to support different currency types if needed
-                // For flags, we usually default to Vault, but let's use the Manager for consistency
+                // Use EconomyManager
                 CurrencyType type = CurrencyType.VAULT; 
                 
                 if (!plugin.eco().withdraw(player, cost, type)) {
@@ -204,6 +210,7 @@ public class PlotFlagsGUI {
         open(player, plot);
     }
 
+    // Helper to generate button icons
     private void addFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey) {
         boolean state = plot.getFlag(flag, true);
         String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
@@ -222,3 +229,4 @@ public class PlotFlagsGUI {
         return newList;
     }
 }
+

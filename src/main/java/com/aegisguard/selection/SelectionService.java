@@ -32,6 +32,11 @@ public class SelectionService implements Listener {
         this.plugin = plugin;
     }
 
+    // --- NEW HELPER FOR GUI ---
+    public boolean hasSelection(Player p) {
+        return loc1.containsKey(p.getUniqueId()) && loc2.containsKey(p.getUniqueId());
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
@@ -89,7 +94,6 @@ public class SelectionService implements Listener {
         int length = maxZ - minZ + 1;
         int radius = Math.max(width, length) / 2;
 
-        // Limits
         int limitRadius = plugin.cfg().getWorldMaxRadius(p.getWorld());
         if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
             p.sendMessage(ChatColor.RED + "Claim too big! Max radius is " + limitRadius + " blocks.");
@@ -139,7 +143,6 @@ public class SelectionService implements Listener {
         loc1.remove(uuid);
         loc2.remove(uuid);
         
-        // --- WAND CONSUMPTION LOGIC ---
         boolean consume = plugin.cfg().raw().getBoolean("claims.consume_wand_on_claim", true);
         boolean adminBypass = plugin.cfg().raw().getBoolean("claims.admin_keep_wand", true);
         
@@ -249,7 +252,6 @@ public class SelectionService implements Listener {
             default: return;
         }
         
-        // Update logic
         plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
         plot.setX1(x1); plot.setX2(x2);
         plot.setZ1(z1); plot.setZ2(z2);

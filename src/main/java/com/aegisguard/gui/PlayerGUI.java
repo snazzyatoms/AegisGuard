@@ -31,7 +31,7 @@ public class PlayerGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "menu_title"), "§b§lAegisGuard §7— Menu");
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 27, title);
 
-        // --- NEW: Travel System (Slot 8 - Top Right) ---
+        // --- Travel System (Slot 8) ---
         if (plugin.cfg().raw().getBoolean("travel_system.enabled", true)) {
              inv.setItem(8, GUIManager.icon(
                 Material.COMPASS,
@@ -82,12 +82,12 @@ public class PlayerGUI {
             GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fInfo"), 
             plugin.msg().getList(player, "info_lore")));
 
-        // --- ADMIN PANEL (Slot 25 - NEW POSITION) ---
+        // --- ADMIN PANEL (Slot 25) ---
         if (plugin.isAdmin(player)) {
             inv.setItem(25, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
         }
 
-        // --- EXIT BUTTON (Slot 26 - ALWAYS VISIBLE) ---
+        // --- EXIT BUTTON (Slot 26) ---
         inv.setItem(26, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
@@ -104,12 +104,24 @@ public class PlayerGUI {
         switch (e.getSlot()) {
             case 8: // Travel System
                 if (plugin.cfg().raw().getBoolean("travel_system.enabled", true)) {
-                     plugin.gui().visit().open(player, 0, false); // Open Friends Tab by default
+                     plugin.gui().visit().open(player, 0, false); 
                      plugin.effects().playMenuFlip(player);
                 }
                 break;
                 
-            case 10: player.closeInventory(); plugin.selection().confirmClaim(player); plugin.effects().playMenuFlip(player); break;
+            case 10: 
+                // --- FIX: Check for selection before closing menu ---
+                if (!plugin.selection().hasSelection(player)) {
+                    plugin.msg().send(player, "must_select"); // Tell them to use wand first
+                    plugin.effects().playError(player);
+                    // Do NOT close inventory
+                } else {
+                    player.closeInventory(); 
+                    plugin.selection().confirmClaim(player); 
+                    plugin.effects().playMenuFlip(player); 
+                }
+                break;
+
             case 12: 
                 if (!isOwner) { plugin.msg().send(player, "no_plot_here"); plugin.effects().playError(player); return; }
                 plugin.gui().flags().open(player, plot); plugin.effects().playMenuFlip(player); break;
@@ -120,14 +132,14 @@ public class PlayerGUI {
             case 22: plugin.gui().expansionRequest().open(player); plugin.effects().playMenuFlip(player); break;
             case 24: plugin.gui().info().open(player); plugin.effects().playMenuFlip(player); break;
             
-            case 25: // --- NEW: ADMIN BUTTON ---
+            case 25: // Admin
                 if (plugin.isAdmin(player)) {
                     plugin.gui().admin().open(player);
                     plugin.effects().playMenuFlip(player);
                 }
                 break;
 
-            case 26: // --- EXIT BUTTON ---
+            case 26: // Exit
                 player.closeInventory();
                 plugin.effects().playMenuClose(player);
                 break;

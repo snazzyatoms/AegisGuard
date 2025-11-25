@@ -33,6 +33,7 @@ public class GUIManager {
     // --- NEW v1.1.0 GUIs ---
     private final LevelingGUI levelingGUI;
     private final ZoningGUI zoningGUI;
+    private final BiomeGUI biomeGUI; // --- ADDED ---
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -54,6 +55,7 @@ public class GUIManager {
         // --- Init New GUIs ---
         this.levelingGUI = new LevelingGUI(plugin);
         this.zoningGUI = new ZoningGUI(plugin);
+        this.biomeGUI = new BiomeGUI(plugin); // --- ADDED ---
     }
 
     // --- Accessors ---
@@ -74,6 +76,7 @@ public class GUIManager {
     // --- NEW Getters ---
     public LevelingGUI leveling() { return levelingGUI; }
     public ZoningGUI zoning() { return zoningGUI; }
+    public BiomeGUI biomes() { return biomeGUI; } // --- ADDED ---
 
     public void openMain(Player player) {
         if (playerGUI != null) playerGUI.open(player);
@@ -101,3 +104,5 @@ public class GUIManager {
         return fromMsg;
     }
 }
+
+

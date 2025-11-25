@@ -86,8 +86,9 @@ public class InfoGUI {
         ));
 
         // --- 4. SECURITY & MODERATION (Slot 16) ---
+        // FIX: Changed IRON_SHIELD to SHIELD (Correct Bukkit Material)
         inv.setItem(16, GUIManager.icon(
-            Material.IRON_SHIELD,
+            Material.SHIELD,
             "§c§lIV. Security & Banishment",
             List.of(
                 "§7You are the lord of your land.",

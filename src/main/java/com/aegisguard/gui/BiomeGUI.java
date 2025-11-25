@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
+import java.util.ArrayList; // --- FIX: Added missing import ---
 import java.util.List;
 import java.util.Map;
 
@@ -131,11 +132,6 @@ public class BiomeGUI {
                 }
             }
         }
-        
-        // Send update packets
-        // Note: In 1.20+, clients might need a relog or chunk reload to see color changes immediately.
-        // We can force it by re-sending chunks, but that's heavy. 
-        // Usually just walking away and back works.
     }
 
     private Material getBiomeIcon(Biome biome) {
@@ -161,3 +157,4 @@ public class BiomeGUI {
         return sb.toString().trim();
     }
 }
+

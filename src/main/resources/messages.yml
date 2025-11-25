@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.0.3 - Messages (Fully localized)
+# AegisGuard v1.1.0 - Messages (Fully localized)
 # ======================================
 # Multilingual Tone System:
 #   Players may choose their preferred "tone of English" in Settings:
@@ -56,7 +56,7 @@ old_english:
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
 
-  # --- NEW: Resize ---
+  # --- Resize ---
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
@@ -71,7 +71,7 @@ old_english:
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
-  # --- NEW: Plot Auction ---
+  # --- Plot Auction ---
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -81,7 +81,7 @@ old_english:
   auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
   
-  # --- NEW: Plot Marketplace ---
+  # --- Plot Marketplace ---
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -91,7 +91,7 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
-  # --- NEW: Expansion Requests ---
+  # --- Expansion Requests ---
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -112,7 +112,7 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
 
-  # --- NEW: Travel / Visit ---
+  # --- Travel / Visit ---
   visit_gui_title: "&9Travel System"
 
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
@@ -176,7 +176,30 @@ old_english:
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
 
-  # --- Plot Flags GUI ---
+  # --- NEW: v1.1.0 Features ---
+  
+  # Biomes
+  biome_gui_title: "&2Change Biome"
+  biome_changed: "&a✔ The land transforms around you! Biome set to {BIOME}."
+  biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
+  biome_select_lore:
+    - "&7Click to transform your plot"
+    - "&7into a {BIOME}."
+    - "&7Cost: &6{COST}"
+
+  # Social
+  like_success: "&a✔ Verily, thou hast favored this dominion! Total likes: &e{AMOUNT}"
+  like_removed: "&eYou removed your favor."
+  like_own_plot: "&cThou cannot bestow favor upon thine own land."
+  like_disabled: "&cSocial standing is ignored in this realm."
+
+  # Visuals (Titles)
+  title_entering: "&b{PLOT_NAME}"
+  subtitle_entering: "&7Owned by {OWNER}"
+  title_entering_wilderness: "&aThe Wilds"
+  subtitle_entering_wilderness: "&7Untamed Lands"
+
+  # Plot Flags GUI
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
@@ -229,7 +252,7 @@ old_english:
   safe_zone_enabled: "&a🛡 Sanctuary is declared. All within is protected."
   safe_zone_disabled: "&c⚠ Sanctuary withdrawn. Individual wards now apply."
   
-  # --- NEW: Flight Flag (Old English) ---
+  # Flight Flag
   button_fly_on: "&b🕊 Flight: Awakened"
   button_fly_off: "&c🕊 Flight: Grounded"
   fly_toggle_lore:
@@ -238,7 +261,7 @@ old_english:
   flight_enabled: "&a🕊 Flight bestowed upon thee."
   flight_disabled: "&c🕊 Flight withdrawn."
   
-  # --- NEW: Entry Flag (Old English) ---
+  # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
@@ -454,6 +477,25 @@ hybrid_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
+  
+  # --- NEW: v1.1.0 Features (Hybrid) ---
+  biome_gui_title: "&2Change Biome"
+  biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
+  biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
+  biome_select_lore:
+    - "&7Click to transform your plot"
+    - "&7into a {BIOME}."
+    - "&7Cost: &6{COST}"
+
+  like_success: "&a✔ You favored this dominion! Total: &e{AMOUNT}"
+  like_removed: "&eYou removed your favor."
+  like_own_plot: "&cThou cannot favor thine own land."
+  like_disabled: "&cSocial standing is ignored here."
+
+  title_entering: "&b{PLOT_NAME}"
+  subtitle_entering: "&7Owned by {OWNER}"
+  title_entering_wilderness: "&aThe Wilds"
+  subtitle_entering_wilderness: "&7Untamed Lands"
 
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
@@ -508,8 +550,8 @@ hybrid_english:
     - "&7Master switch for all protections."
   safe_zone_enabled: "&a🛡 Safe Zone: ON — this claim is fully protected."
   safe_zone_disabled: "&c⚠ Safe Zone: OFF — individual flags apply."
-
-  # --- NEW: Flight Flag (Hybrid) ---
+  
+  # Flight Flag
   button_fly_on: "&b🕊 Flight: Awakened"
   button_fly_off: "&c🕊 Flight: Grounded"
   fly_toggle_lore:
@@ -518,7 +560,7 @@ hybrid_english:
   flight_enabled: "&a🕊 Flight enabled."
   flight_disabled: "&c🕊 Flight disabled."
   
-  # --- NEW: Entry Flag (Hybrid) ---
+  # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
@@ -746,6 +788,25 @@ modern_english:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
 
+  # --- NEW: v1.1.0 Features (Modern) ---
+  biome_gui_title: "&2Change Biome"
+  biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
+  biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
+  biome_select_lore:
+    - "&7Click to transform your plot"
+    - "&7into a {BIOME}."
+    - "&7Cost: &6{COST}"
+
+  like_success: "&a✔ You liked this plot! Total likes: &e{AMOUNT}"
+  like_removed: "&eYou removed your like."
+  like_own_plot: "&cYou cannot like your own plot."
+  like_disabled: "&cSocial rating is disabled on this server."
+
+  title_entering: "&b{PLOT_NAME}"
+  subtitle_entering: "&7Owned by {OWNER}"
+  title_entering_wilderness: "&aWilderness"
+  subtitle_entering_wilderness: "&7Free land"
+
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
   button_pvp_off: "&c⚔ PvP: Off"
@@ -800,7 +861,7 @@ modern_english:
   safe_zone_enabled: "&a🛡 Safe Zone: ON — this claim is fully protected."
   safe_zone_disabled: "&c⚠ Safe Zone: OFF — individual flags apply."
   
-  # --- NEW: Flight Flag (Modern) ---
+  # Flight Flag
   button_fly_on: "&b🕊 Flight: On"
   button_fly_off: "&c🕊 Flight: Off"
   fly_toggle_lore:
@@ -809,13 +870,13 @@ modern_english:
   flight_enabled: "&a🕊 Flight Enabled."
   flight_disabled: "&c🕊 Flight Disabled."
 
-  # --- NEW: Entry Flag (Modern) ---
+  # Entry Flag
   button_entry_on: "&a🚪 Public Access: On"
   button_entry_off: "&c🚪 Public Access: Off"
   entry_toggle_lore:
     - "&7If Off, only added members can enter."
 
-  # --- NEW: Cosmetics ---
+  # Cosmetics
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:
     - "&7Apply cosmetic effects to your plot."
@@ -825,7 +886,7 @@ modern_english:
   
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
-  # --- MODIFIED: Roles GUI ---
+  # Roles GUI
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
@@ -860,12 +921,12 @@ modern_english:
   admin_broadcast_disabled: "&c✖ Broadcasts disabled."
   admin_removed_banned: "&eRemoved plots for banned player: {PLAYER}"
   
-  # --- NEW: Admin Plot List ---
+  # Admin Plot List
   admin_plot_list_title: "&cAll Server Plots"
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
   
-  # --- NEW: Server Zones ---
+  # Server Zones
   admin-zone-created: "&a✔ Server Zone created."
   admin-zone-deleted: "&c✖ Server Zone deleted."
   admin-zone-not-found: "&c❌ You are not in a Server Zone."
@@ -880,7 +941,7 @@ modern_english:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
     
-  # --- NEW: Wilderness Revert ---
+  # Wilderness Revert
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
@@ -901,3 +962,4 @@ modern_english:
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
     - "&e/aegis help &7- Show help"
+

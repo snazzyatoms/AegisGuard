@@ -1,7 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Zone; // --- NEW IMPORT ---
+import com.aegisguard.data.Zone; 
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -70,7 +70,6 @@ public class SQLDataStore implements IDataStore {
         );
         """;
 
-    // --- NEW: Zones Table ---
     private static final String CREATE_ZONES_TABLE = """
         CREATE TABLE IF NOT EXISTS aegis_zones (
             plot_id CHAR(36) NOT NULL,
@@ -84,7 +83,9 @@ public class SQLDataStore implements IDataStore {
         );
         """;
 
-    private static final String CREATE_INDEXES = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid); CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world);";
+    // --- FIX: Split Indexes into separate strings ---
+    private static final String CREATE_INDEX_OWNER = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid)";
+    private static final String CREATE_INDEX_WORLD = "CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world)";
     
     private static final String CREATE_WILDERNESS_TABLE = """
         CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
@@ -99,7 +100,7 @@ public class SQLDataStore implements IDataStore {
             player_uuid CHAR(36) NOT NULL
         );
         """;
-    private static final String CREATE_WILDERNESS_INDEX = "CREATE INDEX IF NOT EXISTS idx_wilderness_timestamp ON aegis_wilderness_log (timestamp);";
+    private static final String CREATE_WILDERNESS_INDEX = "CREATE INDEX IF NOT EXISTS idx_wilderness_timestamp ON aegis_wilderness_log (timestamp)";
 
     private static final String[] ALTER_TABLES = {
         "ALTER TABLE aegis_plots ADD COLUMN spawn_location TEXT;",
@@ -120,7 +121,6 @@ public class SQLDataStore implements IDataStore {
         "ALTER TABLE aegis_plots ADD COLUMN is_server_warp BOOLEAN DEFAULT false;",
         "ALTER TABLE aegis_plots ADD COLUMN warp_name VARCHAR(64);",
         "ALTER TABLE aegis_plots ADD COLUMN warp_icon VARCHAR(32);",
-        // v1.1.0 Updates
         "ALTER TABLE aegis_plots ADD COLUMN level INT DEFAULT 1;",
         "ALTER TABLE aegis_plots ADD COLUMN xp DOUBLE DEFAULT 0.0;"
     };
@@ -161,7 +161,6 @@ public class SQLDataStore implements IDataStore {
         xp = EXCLUDED.xp;
         """;
     
-    // Zone Management Queries
     private static final String DELETE_ZONES_BY_PLOT = "DELETE FROM aegis_zones WHERE plot_id = ?";
     private static final String INSERT_ZONE = """
         INSERT INTO aegis_zones (plot_id, zone_name, x1, y1, z1, x2, y2, z2, rent_price, renter_uuid, rent_expires)
@@ -226,8 +225,12 @@ public class SQLDataStore implements IDataStore {
              Statement s = conn.createStatement()) {
             
             s.execute(CREATE_PLOTS_TABLE);
-            s.execute(CREATE_ZONES_TABLE); // New table
-            s.execute(CREATE_INDEXES);
+            s.execute(CREATE_ZONES_TABLE);
+            
+            // --- FIX: EXECUTE INDEXES SEPARATELY ---
+            s.execute(CREATE_INDEX_OWNER);
+            s.execute(CREATE_INDEX_WORLD);
+            
             s.execute(CREATE_WILDERNESS_TABLE);
             s.execute(CREATE_WILDERNESS_INDEX);
             
@@ -662,14 +665,25 @@ public class SQLDataStore implements IDataStore {
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         UUID oldOwner = plot.getOwner();
+        
+        // 1. Remove from old owner's list
         List<Plot> oldList = plotsByOwner.get(oldOwner);
         if (oldList != null) {
             oldList.remove(plot);
-            if (oldList.isEmpty()) plotsByOwner.remove(oldOwner);
+            if (oldList.isEmpty()) {
+                plotsByOwner.remove(oldOwner);
+            }
         }
+        
+        // 2. Update plot object internals
+        // FIX: Using internalSetOwner so we don't need to manually clear roles here
         plot.internalSetOwner(newOwner, newOwnerName);
+        plot.setForSale(false, 0); 
+        
+        // 3. Add to new owner's list
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
         
+        // 4. Update database
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(UPDATE_PLOT_OWNER)) {
@@ -847,4 +861,3 @@ public class SQLDataStore implements IDataStore {
         }
     }
 }
-

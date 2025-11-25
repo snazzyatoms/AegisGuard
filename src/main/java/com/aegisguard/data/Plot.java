@@ -3,21 +3,22 @@ package com.aegisguard.data;
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material; // --- FIX: Added for Warp Icon ---
+import org.bukkit.Material; 
 import org.bukkit.World;
 
+import java.util.ArrayList; // --- NEW ---
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;      // --- NEW ---
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Plot (Data Class)
- * - This is the "Ultimate" version of the Plot class.
- * - Contains: Flags, Roles, Bans, Economy, Auctions, Cosmetics, Server Warps.
+ * Plot (Data Class) - v1.1.0
+ * - Updated for Zoning (Sub-Claims), Leveling, and Social features.
  */
 public class Plot {
     
@@ -36,15 +37,27 @@ public class Plot {
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
     private final Set<UUID> bannedPlayers = new HashSet<>(); 
 
-    // --- Upkeep Field ---
+    // --- v1.1.0: Zoning & Leveling ---
+    private final List<Zone> zones = new ArrayList<>(); // Sub-claims
+    private int level;
+    private double xp;
+
+    // --- Social (Likes) ---
+    private final Set<UUID> likedBy = new HashSet<>();
+
+    // --- Upkeep ---
     private long lastUpkeepPayment;
 
-    // --- Welcome/TP Fields ---
+    // --- Welcome/TP ---
     private Location spawnLocation;
     private String welcomeMessage;
     private String farewellMessage;
     
-    // --- Marketplace Fields ---
+    // --- Custom Titles ---
+    private String entryTitle;   
+    private String entrySubtitle; 
+
+    // --- Marketplace ---
     private boolean isForSale;
     private double salePrice;
     private boolean isForRent;
@@ -52,22 +65,22 @@ public class Plot {
     private UUID currentRenter;
     private long rentExpires;
     
-    // --- Auction/Expiry Fields ---
-    private String plotStatus; // "ACTIVE", "EXPIRED", "AUCTION"
+    // --- Auction ---
+    private String plotStatus; 
     private double currentBid; 
     private UUID currentBidder; 
     
-    // --- Cosmetic Fields ---
+    // --- Cosmetics ---
     private String borderParticle;
     private String ambientParticle;
     private String entryEffect;
 
-    // --- Server Warp Fields (NEW) ---
+    // --- Server Warps ---
     private boolean isServerWarp;
     private String warpName;
     private Material warpIcon;
 
-    // --- Constructor (Full) ---
+    // --- Constructor ---
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
         this.plotId = plotId;
         this.owner = owner;
@@ -79,10 +92,9 @@ public class Plot {
         this.z2 = Math.max(z1, z2);
         this.lastUpkeepPayment = lastUpkeepPayment;
         
-        // Set the owner's role internally
         this.playerRoles.put(owner, "owner");
 
-        // --- Default Flags ---
+        // Defaults
         flags.put("pvp", true);
         flags.put("containers", true);
         flags.put("mobs", true);
@@ -95,43 +107,23 @@ public class Plot {
         flags.put("piston-use", true);
         flags.put("build", true);       
         flags.put("interact", true);
-        
-        // [NEW Features]
         flags.put("fly", false); 
         flags.put("entry", true); 
 
-        // Initialize optional fields
         this.spawnLocation = null;
-        this.welcomeMessage = null;
-        this.farewellMessage = null;
-        
         this.isForSale = false;
-        this.salePrice = 0.0;
-        this.isForRent = false;
-        this.rentPrice = 0.0;
-        this.currentRenter = null;
-        this.rentExpires = 0L;
-        
         this.plotStatus = "ACTIVE";
-        this.currentBid = 0.0; 
-        this.currentBidder = null; 
         
-        this.borderParticle = null;
-        this.ambientParticle = null;
-        this.entryEffect = null;
-
-        // Initialize Warp defaults
-        this.isServerWarp = false;
-        this.warpName = null;
-        this.warpIcon = null;
+        // v1.1.0 Defaults
+        this.level = 1;
+        this.xp = 0;
     }
     
-    // --- Constructor (New Plot Shortcut) ---
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
         this(plotId, owner, ownerName, world, x1, z1, x2, z2, System.currentTimeMillis());
     }
 
-    // --- Core Getters ---
+    // --- Getters ---
     public UUID getPlotId() { return plotId; }
     public UUID getOwner() { return owner; }
     public String getOwnerName() { return ownerName; }
@@ -141,15 +133,12 @@ public class Plot {
     public int getX2() { return x2; }
     public int getZ2() { return z2; }
     
-    // --- Resize Setters ---
     public void setX1(int x) { this.x1 = x; }
     public void setZ1(int z) { this.z1 = z; }
     public void setX2(int x) { this.x2 = x; }
     public void setZ2(int z) { this.z2 = z; }
-    
     public void setOwnerName(String name) { this.ownerName = name; }
 
-    // --- Location Helper ---
     public Location getCenter(AegisGuard plugin) {
         World world = Bukkit.getWorld(this.world);
         if (world == null) return null;
@@ -162,22 +151,37 @@ public class Plot {
         return owner.equals(SERVER_OWNER_UUID);
     }
 
-    // --- Marketplace Logic (Critical for Transfers) ---
     public void internalSetOwner(UUID newOwner, String newOwnerName) {
         this.owner = newOwner;
         this.ownerName = newOwnerName;
-        // Wipe old data
         this.playerRoles.clear();
         this.playerRoles.put(newOwner, "owner");
-        this.bannedPlayers.clear(); // Unban everyone for the new owner
+        this.bannedPlayers.clear(); 
+        this.likedBy.clear();
     }
     
+    // --- v1.1.0: Zones ---
+    public List<Zone> getZones() { return zones; }
+    public void addZone(Zone zone) { zones.add(zone); }
+    public void removeZone(Zone zone) { zones.remove(zone); }
+    
+    public Zone getZoneAt(Location loc) {
+        for (Zone z : zones) {
+            if (z.isInside(loc)) return z;
+        }
+        return null;
+    }
+
+    // --- v1.1.0: Leveling ---
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
+    public double getXp() { return xp; }
+    public void setXp(double xp) { this.xp = xp; }
+    public void addXp(double amount) { this.xp += amount; }
+
     // --- Role Logic ---
     public Map<UUID, String> getPlayerRoles() { return playerRoles; }
-    
-    public String getRole(UUID playerUUID) {
-        return playerRoles.getOrDefault(playerUUID, "default");
-    }
+    public String getRole(UUID playerUUID) { return playerRoles.getOrDefault(playerUUID, "default"); }
     
     public void setRole(UUID playerUUID, String role) {
         if (role == null || role.equalsIgnoreCase("default")) {
@@ -187,72 +191,59 @@ public class Plot {
             bannedPlayers.remove(playerUUID); 
         }
     }
-    
-    public void removeRole(UUID playerUUID) {
-        playerRoles.remove(playerUUID);
-    }
+    public void removeRole(UUID playerUUID) { playerRoles.remove(playerUUID); }
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
         if (owner.equals(playerUUID)) return true; 
         if (isBanned(playerUUID)) return false; 
         
-        // Renter Logic
         if (currentRenter != null && currentRenter.equals(playerUUID) && System.currentTimeMillis() < rentExpires) {
-            if (plugin.cfg().getRolePermissions("member").contains(permission.toUpperCase())) {
-                return true;
-            }
+            if (plugin.cfg().getRolePermissions("member").contains(permission.toUpperCase())) return true;
         }
         
         String role = getRole(playerUUID);
         Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
-        
         return permissions.contains(permission.toUpperCase());
     }
 
-    // --- Ban Logic ---
-    public Set<UUID> getBannedPlayers() { return bannedPlayers; }
-    
-    public boolean isBanned(UUID playerUUID) { 
-        return bannedPlayers.contains(playerUUID); 
-    }
-    
-    public void addBan(UUID playerUUID) {
-        playerRoles.remove(playerUUID); 
-        bannedPlayers.add(playerUUID);
-    }
-    
-    public void removeBan(UUID playerUUID) { 
-        bannedPlayers.remove(playerUUID); 
+    // --- Social ---
+    public Set<UUID> getLikedBy() { return likedBy; }
+    public int getLikes() { return likedBy.size(); }
+    public boolean hasLiked(UUID player) { return likedBy.contains(player); }
+    public void toggleLike(UUID player) {
+        if (likedBy.contains(player)) likedBy.remove(player);
+        else likedBy.add(player);
     }
 
-    // --- Flag Logic ---
+    // --- Bans ---
+    public Set<UUID> getBannedPlayers() { return bannedPlayers; }
+    public boolean isBanned(UUID playerUUID) { return bannedPlayers.contains(playerUUID); }
+    public void addBan(UUID playerUUID) { playerRoles.remove(playerUUID); bannedPlayers.add(playerUUID); }
+    public void removeBan(UUID playerUUID) { bannedPlayers.remove(playerUUID); }
+
+    // --- Flags ---
     public boolean getFlag(String key, boolean def) { return flags.getOrDefault(key, def); }
     public void setFlag(String key, boolean value) { flags.put(key, value); }
     public Map<String, Boolean> getFlags() { return Collections.unmodifiableMap(flags); }
     
-    // --- Upkeep Logic ---
     public long getLastUpkeepPayment() { return lastUpkeepPayment; }
     public void setLastUpkeepPayment(long time) { this.lastUpkeepPayment = time; }
     
-    // --- Spawn Logic ---
     public Location getSpawnLocation() { return spawnLocation; }
     public String getWelcomeMessage() { return welcomeMessage; }
     public String getFarewellMessage() { return farewellMessage; }
-    
     public void setSpawnLocation(Location loc) { this.spawnLocation = loc; }
     public void setWelcomeMessage(String msg) { this.welcomeMessage = msg; }
     public void setFarewellMessage(String msg) { this.farewellMessage = msg; }
+    
+    public String getEntryTitle() { return entryTitle; }
+    public String getEntrySubtitle() { return entrySubtitle; }
+    public void setEntryTitle(String title) { this.entryTitle = title; }
+    public void setEntrySubtitle(String sub) { this.entrySubtitle = sub; }
 
     public String getSpawnLocationString() {
         if (spawnLocation == null) return null;
-        return String.format("%s:%.2f:%.2f:%.2f:%.2f:%.2f",
-                spawnLocation.getWorld().getName(),
-                spawnLocation.getX(),
-                spawnLocation.getY(),
-                spawnLocation.getZ(),
-                spawnLocation.getYaw(),
-                spawnLocation.getPitch()
-        );
+        return String.format("%s:%.2f:%.2f:%.2f:%.2f:%.2f", spawnLocation.getWorld().getName(), spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(), spawnLocation.getYaw(), spawnLocation.getPitch());
     }
 
     public void setSpawnLocationFromString(String s) {
@@ -262,37 +253,30 @@ public class Plot {
             if (parts.length != 6) return;
             World world = Bukkit.getWorld(parts[0]);
             if (world != null) {
-                double x = Double.parseDouble(parts[1]);
-                double y = Double.parseDouble(parts[2]);
-                double z = Double.parseDouble(parts[3]);
-                float yaw = Float.parseFloat(parts[4]);
-                float pitch = Float.parseFloat(parts[5]);
-                this.spawnLocation = new Location(world, x, y, z, yaw, pitch);
+                this.spawnLocation = new Location(world, Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), Float.parseFloat(parts[4]), Float.parseFloat(parts[5]));
             }
         } catch (Exception e) { this.spawnLocation = null; }
     }
     
-    // --- Marketplace Logic ---
+    // --- Marketplace ---
     public boolean isForSale() { return isForSale; }
     public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
     public double getSalePrice() { return salePrice; }
-    
     public boolean isForRent() { return isForRent; }
     public double getRentPrice() { return rentPrice; }
     public void setForRent(boolean forRent, double price) { this.isForRent = forRent; this.rentPrice = price; }
-    
     public UUID getCurrentRenter() { return currentRenter; }
     public long getRentExpires() { return rentExpires; }
     public void setRenter(UUID renter, long expirationTime) { this.currentRenter = renter; this.rentExpires = expirationTime; }
     
-    // --- Auction Logic ---
+    // --- Auction ---
     public String getPlotStatus() { return plotStatus; }
     public void setPlotStatus(String status) { this.plotStatus = status; }
     public double getCurrentBid() { return currentBid; }
     public UUID getCurrentBidder() { return currentBidder; }
     public void setCurrentBid(double bid, UUID bidder) { this.currentBid = bid; this.currentBidder = bidder; }
 
-    // --- Cosmetic Logic ---
+    // --- Cosmetics ---
     public String getBorderParticle() { return borderParticle; }
     public void setBorderParticle(String particle) { this.borderParticle = particle; }
     public String getAmbientParticle() { return ambientParticle; }
@@ -300,16 +284,11 @@ public class Plot {
     public String getEntryEffect() { return entryEffect; }
     public void setEntryEffect(String effect) { this.entryEffect = effect; }
 
-    // --- NEW: Server Warp Logic ---
+    // --- Server Warps ---
     public boolean isServerWarp() { return isServerWarp; }
     public String getWarpName() { return warpName; }
     public Material getWarpIcon() { return warpIcon; }
-
-    public void setServerWarp(boolean isWarp, String name, Material icon) {
-        this.isServerWarp = isWarp;
-        this.warpName = name;
-        this.warpIcon = icon;
-    }
+    public void setServerWarp(boolean isWarp, String name, Material icon) { this.isServerWarp = isWarp; this.warpName = name; this.warpIcon = icon; }
 
     // --- Utility ---
     public boolean isInside(Location loc) {

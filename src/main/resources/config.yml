@@ -1,5 +1,5 @@
 # ======================================
-#  AegisGuard v1.0.2 - Config
+#  AegisGuard v1.0.3 - Config
 # ======================================
 #  Core configuration file for AegisGuard.
 #  Provides language, economy, claim, protection,
@@ -12,31 +12,20 @@
 hooks:
   dynmap:
     enabled: true
-    # The name of the layer on the Dynmap web UI.
     layer_name: "AegisGuard Plots"
-    # How often (in minutes) to re-scan all plots.
     sync_interval_minutes: 5
-    # Style of the plot markers
     style:
-      stroke_color: "00FF00"  # Line color (hex)
-      stroke_opacity: 0.8       # Line opacity (0.0 - 1.0)
-      stroke_weight: 3          # Line thickness
-      fill_color: "00FF00"    # Fill color (hex)
-      fill_opacity: 0.35        # Fill opacity (0.0 - 1.0)
+      stroke_color: "00FF00"
+      stroke_opacity: 0.8
+      stroke_weight: 3
+      fill_color: "00FF00"
+      fill_opacity: 0.35
 
 storage:
-  # Select your data storage type.
-  # "yml" - (Default) Saves all plot data to plots.yml. Simple, good for small servers.
-  # "sql" - (Recommended) Saves all data to a database. Required for Wilderness Revert.
+  # "yml" (Simple) or "sql" (Database/Network)
   type: "yml"
-  
   database:
-    # Settings for "sql" type
-    # By default, this uses SQLite, which requires no setup.
-    # The file will be created at: /plugins/AegisGuard/aegisguard.db
     file: "aegisguard.db"
-    
-    # --- Example for MySQL (uncomment to use) ---
     # type: "mysql"
     # host: "localhost"
     # port: 3306
@@ -46,180 +35,113 @@ storage:
     # useSSL: false
 
 # ======================================
-# 🗣️ Message & Language System
+# 💱 Currency Settings
 # ======================================
-messages:
-  language_style: "old_english"      # Default tone: old_english / hybrid_english / modern_english
-  allow_runtime_switch: true       # If true, allows live switching via GUI or command
-  show_language_button_in_gui: true    # Displays the “Language Tone” selector in Settings GUI
+# Choose what currency each feature uses.
+# Options: VAULT, EXP, LEVEL, ITEM
+currencies:
+  claiming: VAULT
+  resizing: VAULT
+  flight: VAULT
+  biomes: VAULT
+  teleport: VAULT
 
 # ======================================
-# 💰 Economy (Global Defaults)
+# 💰 Economy & Prices
 # ======================================
-use_vault: true                     # Use Vault economy for claims
-claim_cost: 100.0                   # Cost (Vault currency) per claim
-item_cost:                          # Alternative cost if use_vault = false
-  type: DIAMOND
-  amount: 5
+economy:
+  enabled: true
+  use_vault: true
+  claim_cost: 100.0
+  
+  item_cost:
+    type: DIAMOND
+    amount: 5
 
-refund_on_unclaim: false              # Enable refunding upon unclaim
-refund_percent: 0                   # Refund percentage (0 = none, 50 = half, etc.)
-resize-cost-per-block: 10.0         # Vault cost for each new block when using /ag resize
+  # --- Feature Costs ---
+  # Cost to toggle specific powerful flags ON.
+  flag_costs:
+    fly: 5000.0
 
-# --- Feature Costs ---
-# Cost to toggle specific powerful flags ON.
-flag_costs:
-  fly: 5000.0
+refund_on_unclaim: false
+refund_percent: 0
+resize-cost-per-block: 10.0
 
 # ======================================
-# 💸 Plot Upkeep & Rent
+# 💸 Plot Upkeep (Rent)
 # ======================================
-# This system automatically charges players to "rent" their claimed plots.
 upkeep:
-  enabled: false                    # Set to true to enable the plot upkeep system.
-  
-  # How often (in hours) the plugin should check every plot.
+  enabled: false
   check_interval_hours: 24
-  
-  # The cost (in Vault currency) per plot, per interval.
   cost_per_plot: 100.0
-  
-  # How long (in days) a player has to pay for an overdue plot
-  # before it is automatically auctioned.
   grace_period_days: 7
 
 # ======================================
-# ⚖️ Plot Auctions
+# ⚖️ Auctions
 # ======================================
-# Settings for when a plot's grace period expires.
 auction:
-  # How long (in days) an expired plot stays up for auction.
   duration_days: 3
-  
-  # The minimum amount a bid must be raised by.
   min_bid_increase: 100.0
-  
-  # What % of the final bid is given to the original owner.
-  owner_cut_percent: 50 # 50%
+  owner_cut_percent: 50
 
 # ======================================
-# 🌲 Wilderness Grief Revert
+# 🌲 Wilderness Revert
 # ======================================
-# NOTE: This feature ONLY works if storage.type is "sql" or "mysql".
 wilderness_revert:
   enabled: true
-  # How long to wait (in hours) before reverting a block.
   revert_after_hours: 2
-  # How often (in minutes) to check for blocks to revert.
   check_interval_minutes: 10
-  # How many blocks to revert in one batch.
   revert_batch_size: 500
   
-# =============================================================
-# 🧪 DEMO MODE (For Public Test Servers)
-# =============================================================
-# WARNING: If enabled, plots will be AUTOMATICALLY DELETED after
-# the specified time limit. Do not use on a real survival server.
+# ======================================
+# 🧪 Demo Mode
+# ======================================
 demo_mode:
   enabled: false
-  plot_lifetime_minutes: 180  # 3 Hours
+  plot_lifetime_minutes: 180
 
 # ======================================
-# 🧱 Claims & World Rules
+# 🧱 Claims Settings
 # ======================================
 claims:
-  # --- Global Claim Defaults ---
   max_claims_per_player: 1
   min_radius: 1
   max_radius: 32
   max_area: 16000
   preview_seconds: 10
-
-  # --- Wand Consumption Settings ---
-  # Should the Aegis Scepter be removed from the inventory after a successful claim?
-  consume_wand_on_claim: true
   
-  # If true, players with 'aegis.admin' keep their wand even after claiming.
+  # Item Management
+  consume_wand_on_claim: true
   admin_keep_wand: true
-
-  # --- Optional Per-World Settings ---
+  
+  # --- Travel System (Visiting) ---
+  travel_system:
+    enabled: true
+    # Allow players to teleport to their own plots via GUI?
+    allow_home_teleport: true
+    # Allow players to teleport to plots where they are trusted?
+    allow_visit_teleport: true
+  
+  # Per-World Overrides
   per_world:
-    # 🏰 Overworld – balanced protection
     world:
       allow_claims: true
       use_vault: true
       vault_cost: 200.0
-      item_cost:
-        type: EMERALD
-        amount: 10
-      refund_on_unclaim: true
-      refund_percent: 50
       max_claims_per_player: 2
       min_radius: 4
       max_radius: 48
-      max_area: 25000
-      protections:
-        pvp: true
-        mobs: true
-        containers: true
-        pets: true
-        entities: true
-        farm: true
-        tnt-damage: true
-        fire-spread: true
-        piston-use: true
-
-    # 🔥 Nether – harsh realm, PvP & mobs allowed
     world_nether:
       allow_claims: true
       use_vault: false
-      item_cost:
-        type: GOLD_INGOT
-        amount: 20
-      refund_on_unclaim: false
-      refund_percent: 0
       max_claims_per_player: 1
       min_radius: 2
       max_radius: 16
-      max_area: 8000
-      protections:
-        pvp: false
-        mobs: false
-        containers: true
-        pets: false
-        entities: true
-        farm: false
-        tnt-damage: false
-        fire-spread: false
-        piston-use: true
-
-    # 🌌 The End – unclaimable and mysterious realm
     world_the_end:
       allow_claims: false
-      max_claims_per_player: 0
-      protections:
-        pvp: true
-        mobs: true
-        containers: false
-        pets: false
-        entities: true
-        farm: false
-        tnt-damage: true
-        fire-spread: true
-        piston-use: false
 
 # ======================================
-# 🧭 Travel System (Visiting)
-# ======================================
-travel_system:
-  enabled: true
-  # Allow players to teleport to their own plots via GUI?
-  allow_home_teleport: true
-  # Allow players to teleport to plots where they are trusted?
-  allow_visit_teleport: true
-
-# ======================================
-# ⚙️ Protections (Global Defaults)
+# ⚙️ Protection Defaults
 # ======================================
 protections:
   pvp_protection: true
@@ -228,102 +150,34 @@ protections:
   pets_protection: true
   entities_protection: true
   farm_protection: true
-  tnt-damage: true      # Prevents explosions from breaking blocks
-  fire-spread: true     # Prevents fire from spreading
-  piston-use: true      # Prevents pistons from pushing/pulling blocks into/out of claims
+  tnt-damage: true
+  fire-spread: true
+  piston-use: true
   
-  # --- Flags ---
-  fly: false   # Flight enabled inside plot?
-  entry: true  # Public access allowed? (true = public, false = private)
+  # New Flags
+  fly: false   # Flight disabled by default
+  entry: true  # Public entry enabled by default
 
 # ======================================
 # 🛡️ Active Mob Barrier
 # ======================================
-# Automatically removes hostile mobs that enter "Safe Zones"
-# or "Server Zones" (Spawn/Market).
+# Vaporizes mobs that enter safe zones
 mob_barrier:
   enabled: true
-  # How often to check for intruders (in ticks). 60 ticks = 3 seconds.
   check_interval_ticks: 60
-  # Play a smoke effect when a mob is removed?
   remove_particles: true
 
 # ======================================
-# 🏳️ Plot Roles
+# 🏳️ Roles
 # ======================================
 roles:
-  co-owner:
-    - BUILD
-    - CONTAINERS
-    - INTERACT
-    - PET_DAMAGE
-    - ENTITY_INTERACT
-    - FARM_TRAMPLE
-  member:
-    - BUILD
-    - CONTAINERS
-    - INTERACT
-    - FARM_TRAMPLE
-  guest:
-    - INTERACT
-  default:
-    # Permissions for players with no role (e.g., visitors)
-    - INTERACT
+  co-owner: [BUILD, CONTAINERS, INTERACT, PET_DAMAGE, ENTITY_INTERACT, FARM_TRAMPLE]
+  member: [BUILD, CONTAINERS, INTERACT, FARM_TRAMPLE]
+  guest: [INTERACT]
+  default: [INTERACT]
 
 # ======================================
-# 🔊 Sounds & Immersion
-# ======================================
-sounds:
-  global_enabled: true              # Global sound toggle
-  players: {}                       # Per-player overrides (auto-managed)
-
-  # --- Configurable UI Sounds ---
-  menu_open:
-    sound: BLOCK_CHEST_OPEN
-    volume: 0.7
-    pitch: 1.0
-  menu_flip:
-    sound: UI_BUTTON_CLICK
-    volume: 0.7
-    pitch: 1.2
-  menu_close:
-    sound: BLOCK_CHEST_CLOSE
-    volume: 0.7
-    pitch: 1.0
-  confirm:
-    sound: ENTITY_PLAYER_LEVELUP
-    volume: 0.7
-    pitch: 1.2
-  error:
-    sound: BLOCK_NOTE_BLOCK_BASS
-    volume: 1.0
-    pitch: 0.8
-  claim_success:
-    sound: ENTITY_PLAYER_LEVELUP
-    volume: 1.0
-    pitch: 1.2
-  unclaim:
-    sound: ENTITY_VILLAGER_NO
-    volume: 0.8
-    pitch: 0.9
-
-# ======================================
-# ✨ Plot Visualization
-# ======================================
-visualization:
-  enabled: true
-  
-  # Default particle for plot borders.
-  particle: "FLAME"
-  
-  # Color to use (R,G,B) IF particle is set to REDSTONE/DUST
-  color: "0,255,255" # A nice cyan
-  
-  # How often to refresh the particles (in ticks). 20 ticks = 1 second.
-  interval_ticks: 40 # 2 seconds
-
-# ======================================
-# 🎨 Plot Cosmetics
+# 🎨 Cosmetics Prices
 # ======================================
 cosmetics:
   border_particles:
@@ -350,41 +204,69 @@ cosmetics:
     
   ambient_particles:
     pass
-
   entry_effects:
     pass
 
 # ======================================
-# 🧾 Expansion Requests (Anti-Abuse Logic)
+# 🔮 Visual Titles (Entry Messages)
 # ======================================
-expansions:
-  enabled: true                     # Master toggle
-  approval_required: true           # Requires admin approval (Recommended)
-  notify_admins: true               # Alert admins when a request is made
-  
-  # --- Limits & Rules ---
-  # The absolute maximum radius a plot can ever reach via expansion.
-  # Example: 100 means a 200x200 plot.
-  max_radius_global: 100
-  
-  # Minimum distance (blocks) required between the new expanded border
-  # and any neighbor. Prevents "touching" claims.
-  buffer_zone: 5
-
-  # --- Economy / Cost Logic ---
-  # Base cost per block of radius increase.
-  # Example: Increasing radius by 10 blocks = 10 * 5.0 = $50.
-  cost_per_block: 5.0
-  
-  # Exponential Multiplier (Anti-Abuse)
-  # If a player requests a massive jump (more than 10 blocks at once),
-  # the cost is multiplied by this amount.
-  # Set to 1.0 to disable (Linear pricing).
-  cost_multiplier: 1.5
+titles:
+  enabled: true
+  fade_in: 10
+  stay: 40
+  fade_out: 10
 
 # ======================================
-# 🛡️ Protection Effects (Feedback Visuals)
+# 🌿 Biome Changing
 # ======================================
+biomes:
+  enabled: true
+  cost_per_change: 2000.0
+  allowed:
+    - PLAINS
+    - FOREST
+    - DESERT
+    - JUNGLE
+    - TAIGA
+    - SWAMP
+    - CHERRY_GROVE
+    - BADLANDS
+    - MUSHROOM_FIELDS
+
+# ======================================
+# 👍 Social (Likes)
+# ======================================
+social:
+  likes_enabled: true
+  one_like_per_player: true
+
+# ======================================
+# 🧩 Admin Options
+# ======================================
+admin:
+  auto_remove_banned: false
+  bypass_claim_limit: false
+  broadcast_admin_actions: false
+  allow_language_command: true
+  unlimited_plots: true
+  
+  # Security: If false, OPs need 'aegis.admin' permission
+  trust_operators: true
+
+# ======================================
+# 🔊 Sounds
+# ======================================
+sounds:
+  global_enabled: true
+  players: {}
+  menu_open: { sound: BLOCK_CHEST_OPEN, volume: 0.7, pitch: 1.0 }
+  menu_flip: { sound: UI_BUTTON_CLICK, volume: 0.7, pitch: 1.2 }
+  menu_close: { sound: BLOCK_CHEST_CLOSE, volume: 0.7, pitch: 1.0 }
+  confirm: { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
+  error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
+  claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
+  unclaim: { sound: ENTITY_VILLAGER_NO, volume: 0.8, pitch: 0.9 }
+
 protection_effects:
   enabled: true
   defaults:
@@ -392,11 +274,6 @@ protection_effects:
     deny_particle: SMOKE_NORMAL
     deny_volume: 1.0
     deny_pitch: 1.0
-    success_sound: ENTITY_EXPERIENCE_ORB_PICKUP
-    success_particle: VILLAGER_HAPPY
-    fail_sound: BLOCK_ANVIL_LAND
-    fail_particle: SMOKE_NORMAL
-  # Per-category overrides
   pvp:
     deny_sound: ENTITY_ENDERMAN_TELEPORT
     deny_particle: REDSTONE
@@ -415,19 +292,3 @@ protection_effects:
   farm:
     deny_sound: BLOCK_CROP_BREAK
     deny_particle: VILLAGER_ANGRY
-
-# ======================================
-# 🧩 Admin Options
-# ======================================
-admin:
-  auto_remove_banned: false         # Remove all plots of banned players
-  bypass_claim_limit: false         # Admins ignore claim limit
-  broadcast_admin_actions: false    # Show admin actions globally
-  allow_language_command: true      # Enable /aegis language <style>
-  unlimited_plots: true             # Allow admins to create unlimited plots
-
-  # --- SECURITY: Operator Trust ---
-  # If set to TRUE: Players with /op automatically get full access to AegisGuard.
-  # If set to FALSE: OPs are treated like normal players unless they have the 'aegis.admin' permission.
-  # Recommended: FALSE (Prevents rogue OPs from deleting plots easily).
-  trust_operators: true

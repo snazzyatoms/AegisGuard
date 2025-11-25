@@ -2,7 +2,7 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 
-// --- IMPORTS FOR ALL HOLDERS ---
+// --- IMPORTS ---
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
 import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
@@ -21,8 +21,8 @@ import com.aegisguard.gui.VisitGUI.VisitHolder;
 // --- NEW v1.1.0 IMPORTS ---
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
+import com.aegisguard.gui.BiomeGUI.BiomeHolder;
 
-// Expansions
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 
@@ -60,40 +60,26 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null) return;
 
-        // ==============================================================
-        // 1. PLAYER MAIN MENU (Exit Button Works Here)
-        // ==============================================================
+        // 1. MAIN MENU
         if (holder instanceof PlayerMenuHolder) {
             new PlayerGUI(plugin).handleClick(player, e);
         }
-
-        // ==============================================================
         // 2. TRAVEL SYSTEM
-        // ==============================================================
         else if (holder instanceof VisitHolder castHolder) {
             new VisitGUI(plugin).handleClick(player, e, castHolder);
         }
-
-        // ==============================================================
-        // 3. CODEX / INFO
-        // ==============================================================
+        // 3. CODEX
         else if (holder instanceof InfoHolder) {
             new InfoGUI(plugin).handleClick(player, e);
         }
-
-        // ==============================================================
         // 4. SETTINGS & ADMIN
-        // ==============================================================
         else if (holder instanceof SettingsGUIHolder) {
             new SettingsGUI(plugin).handleClick(player, e);
         }
         else if (holder instanceof AdminHolder) {
             new AdminGUI(plugin).handleClick(player, e);
         }
-
-        // ==============================================================
-        // 5. ROLES & PERMISSIONS
-        // ==============================================================
+        // 5. ROLES
         else if (holder instanceof PlotSelectorHolder castHolder) {
             new RolesGUI(plugin).handlePlotSelectorClick(player, e, castHolder);
         } 
@@ -106,30 +92,21 @@ public class GUIListener implements Listener {
         else if (holder instanceof RoleManageHolder castHolder) {
             new RolesGUI(plugin).handleManageRoleClick(player, e, castHolder);
         }
-
-        // ==============================================================
         // 6. PLOT MANAGEMENT
-        // ==============================================================
         else if (holder instanceof PlotFlagsHolder castHolder) {
             new PlotFlagsGUI(plugin).handleClick(player, e, castHolder);
         }
         else if (holder instanceof CosmeticsHolder castHolder) {
             new PlotCosmeticsGUI(plugin).handleClick(player, e, castHolder);
         }
-
-        // ==============================================================
         // 7. ECONOMY
-        // ==============================================================
         else if (holder instanceof PlotMarketHolder castHolder) {
             new PlotMarketGUI(plugin).handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotAuctionHolder castHolder) {
             new PlotAuctionGUI(plugin).handleClick(player, e, castHolder);
         }
-
-        // ==============================================================
-        // 8. EXPANSIONS & ADMIN LISTS
-        // ==============================================================
+        // 8. EXPANSIONS
         else if (holder instanceof ExpansionHolder) {
             new com.aegisguard.expansions.ExpansionRequestGUI(plugin).handleClick(player, e);
         }
@@ -139,15 +116,18 @@ public class GUIListener implements Listener {
         else if (holder instanceof PlotListHolder castHolder) {
             new AdminPlotListGUI(plugin).handleClick(player, e, castHolder);
         }
-
+        
         // ==============================================================
-        // 9. v1.1.0 NEW FEATURES (Leveling & Zoning)
+        // 9. NEW v1.1.0 FEATURES (Leveling, Zoning, Biomes)
         // ==============================================================
         else if (holder instanceof LevelingHolder castHolder) {
             new LevelingGUI(plugin).handleClick(player, e, castHolder);
         }
         else if (holder instanceof ZoningHolder castHolder) {
             new ZoningGUI(plugin).handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof BiomeHolder castHolder) {
+            new BiomeGUI(plugin).handleClick(player, e, castHolder);
         }
     }
 }

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * YMLDataStore
  * - Manages plot data using plots.yml.
- * - Supports all Ultimate features (Roles, Economy, Auctions).
+ * - Updated for v1.1.0 (Zones, Levels, Server Warps).
  */
 public class YMLDataStore implements IDataStore {
 
@@ -80,11 +80,16 @@ public class YMLDataStore implements IDataStore {
 
                     Plot plot = new Plot(plotId, owner, ownerName, world, x1, z1, x2, z2, lastUpkeep);
 
-                    // --- Load Ultimate Fields ---
+                    // --- Load Core Fields ---
                     plot.setSpawnLocationFromString(data.getString(path + ".spawn-location"));
                     plot.setWelcomeMessage(data.getString(path + ".welcome-message"));
                     plot.setFarewellMessage(data.getString(path + ".farewell-message"));
                     
+                    // --- Load v1.1.0 Leveling ---
+                    plot.setLevel(data.getInt(path + ".level", 1));
+                    plot.setXp(data.getDouble(path + ".xp", 0.0));
+
+                    // --- Load Marketplace ---
                     plot.setForSale(data.getBoolean(path + ".market.is-for-sale", false), data.getDouble(path + ".market.sale-price", 0.0));
                     plot.setForRent(data.getBoolean(path + ".market.is-for-rent", false), data.getDouble(path + ".market.rent-price", 0.0));
                     
@@ -101,7 +106,7 @@ public class YMLDataStore implements IDataStore {
                     plot.setAmbientParticle(data.getString(path + ".cosmetics.ambient-particle"));
                     plot.setEntryEffect(data.getString(path + ".cosmetics.entry-effect"));
                     
-                    // --- NEW: Load Server Warp Data ---
+                    // --- Load Server Warp ---
                     if (data.getBoolean(path + ".is-server-warp", false)) {
                         plot.setServerWarp(
                             true, 
@@ -109,8 +114,31 @@ public class YMLDataStore implements IDataStore {
                             org.bukkit.Material.matchMaterial(data.getString(path + ".warp-icon", "BEACON"))
                         );
                     }
+                    
+                    // --- Load v1.1.0 Zones ---
+                    if (data.isConfigurationSection(path + ".zones")) {
+                        for (String zoneName : data.getConfigurationSection(path + ".zones").getKeys(false)) {
+                            String zPath = path + ".zones." + zoneName;
+                            int zx1 = data.getInt(zPath + ".x1");
+                            int zy1 = data.getInt(zPath + ".y1");
+                            int zz1 = data.getInt(zPath + ".z1");
+                            int zx2 = data.getInt(zPath + ".x2");
+                            int zy2 = data.getInt(zPath + ".y2");
+                            int zz2 = data.getInt(zPath + ".z2");
+                            
+                            Zone zone = new Zone(plot, zoneName, zx1, zy1, zz1, zx2, zy2, zz2);
+                            zone.setRentPrice(data.getDouble(zPath + ".rent-price", 0.0));
+                            String zRenter = data.getString(zPath + ".renter");
+                            if (zRenter != null) {
+                                try {
+                                    zone.rentTo(UUID.fromString(zRenter), data.getLong(zPath + ".rent-expires", 0) - System.currentTimeMillis());
+                                } catch (Exception e) {}
+                            }
+                            plot.addZone(zone);
+                        }
+                    }
 
-                    // --- Load Roles ---
+                    // --- Load Roles & Flags ---
                     if (data.isConfigurationSection(path + ".roles")) {
                         for (String uuidStr : data.getConfigurationSection(path + ".roles").getKeys(false)) {
                             try {
@@ -120,8 +148,6 @@ public class YMLDataStore implements IDataStore {
                             } catch (IllegalArgumentException ignored) {}
                         }
                     }
-                    
-                    // --- Load Flags ---
                     if (data.isConfigurationSection(path + ".flags")) {
                         for (String flagKey : data.getConfigurationSection(path + ".flags").getKeys(false)) {
                             boolean val = data.getBoolean(path + ".flags." + flagKey, true);
@@ -136,8 +162,7 @@ public class YMLDataStore implements IDataStore {
     }
 
     private synchronized void migrateLegacy(UUID owner) {
-        // (Keeping this brief as it's rarely used now)
-        // ... [Standard migration logic] ...
+        // Kept empty for brevity as per previous versions
     }
 
     @Override
@@ -160,6 +185,10 @@ public class YMLDataStore implements IDataStore {
                 data.set(path + ".welcome-message", plot.getWelcomeMessage());
                 data.set(path + ".farewell-message", plot.getFarewellMessage());
                 
+                // v1.1.0 Leveling
+                data.set(path + ".level", plot.getLevel());
+                data.set(path + ".xp", plot.getXp());
+                
                 data.set(path + ".market.is-for-sale", plot.isForSale() ? true : null);
                 data.set(path + ".market.sale-price", plot.isForSale() ? plot.getSalePrice() : null);
                 data.set(path + ".market.is-for-rent", plot.isForRent() ? true : null);
@@ -172,20 +201,33 @@ public class YMLDataStore implements IDataStore {
                 
                 data.set(path + ".cosmetics.border-particle", plot.getBorderParticle());
                 
-                // --- NEW: Save Server Warp Data ---
                 if (plot.isServerWarp()) {
                     data.set(path + ".is-server-warp", true);
                     data.set(path + ".warp-name", plot.getWarpName());
                     data.set(path + ".warp-icon", plot.getWarpIcon().name());
                 }
+                
+                // v1.1.0 Zones
+                if (!plot.getZones().isEmpty()) {
+                    for (Zone zone : plot.getZones()) {
+                        String zPath = path + ".zones." + zone.getName();
+                        data.set(zPath + ".x1", zone.getX1());
+                        data.set(zPath + ".y1", zone.getY1());
+                        data.set(zPath + ".z1", zone.getZ1());
+                        data.set(zPath + ".x2", zone.getX2());
+                        data.set(zPath + ".y2", zone.getY2());
+                        data.set(zPath + ".z2", zone.getZ2());
+                        data.set(zPath + ".rent-price", zone.getRentPrice());
+                        data.set(zPath + ".renter", zone.getRenter() != null ? zone.getRenter().toString() : null);
+                        data.set(zPath + ".rent-expires", zone.isRented() ? zone.getRentExpiration() : null);
+                    }
+                }
 
-                // Save Roles
                 for (Map.Entry<UUID, String> roleEntry : plot.getPlayerRoles().entrySet()) {
                     if (roleEntry.getKey().equals(owner)) continue;
                     data.set(path + ".roles." + roleEntry.getKey().toString(), roleEntry.getValue());
                 }
 
-                // Save Flags
                 for (Map.Entry<String, Boolean> flag : plot.getFlags().entrySet()) {
                     data.set(path + ".flags." + flag.getKey(), flag.getValue());
                 }
@@ -238,8 +280,9 @@ public class YMLDataStore implements IDataStore {
         }
         return keys;
     }
+    
+    // --- Plot Management API ---
 
-    // --- Plot Management ---
     @Override
     public List<Plot> getPlots(UUID owner) { return plotsByOwner.getOrDefault(owner, Collections.emptyList()); }
 
@@ -271,7 +314,6 @@ public class YMLDataStore implements IDataStore {
         if (worldChunks == null) return null;
         Set<Plot> plotsInChunk = worldChunks.get(chunkKey);
         if (plotsInChunk == null) return null;
-
         for (Plot plot : plotsInChunk) {
             if (plot.isInside(loc)) return plot;
         }
@@ -283,16 +325,15 @@ public class YMLDataStore implements IDataStore {
         Set<String> chunks = getChunksInArea(world, x1, z1, x2, z2);
         Map<String, Set<Plot>> worldChunks = plotsByChunk.get(world);
         if (worldChunks == null) return false;
-
+        Set<Plot> plotsToTest = new HashSet<>();
         for (String chunkKey : chunks) {
-            Set<Plot> plots = worldChunks.get(chunkKey);
-            if (plots != null) {
-                for (Plot existingPlot : plots) {
-                    if (plotToIgnore != null && existingPlot.equals(plotToIgnore)) continue;
-                    boolean overlaps = !(x1 > existingPlot.getX2() || x2 < existingPlot.getX1() || z1 > existingPlot.getZ2() || z2 < existingPlot.getZ1());
-                    if (overlaps) return true;
-                }
-            }
+            plotsToTest.addAll(worldChunks.getOrDefault(chunkKey, Collections.emptySet()));
+        }
+        if (plotToIgnore != null) plotsToTest.remove(plotToIgnore);
+        if (plotsToTest.isEmpty()) return false;
+        for (Plot existingPlot : plotsToTest) {
+            boolean overlaps = !(x1 > existingPlot.getX2() || x2 < existingPlot.getX1() || z1 > existingPlot.getZ2() || z2 < existingPlot.getZ1());
+            if (overlaps) return true;
         }
         return false;
     }
@@ -318,30 +359,29 @@ public class YMLDataStore implements IDataStore {
     public void removePlot(UUID owner, UUID plotId) {
         List<Plot> owned = plotsByOwner.get(owner);
         if (owned == null) return;
-        
         Plot toRemove = null;
-        for(Plot p : owned) {
-            if(p.getPlotId().equals(plotId)) { toRemove = p; break; }
-        }
-        
+        for(Plot p : owned) { if(p.getPlotId().equals(plotId)) { toRemove = p; break; } }
         if (toRemove != null) {
             owned.remove(toRemove);
             if (owned.isEmpty()) plotsByOwner.remove(owner);
             deIndexPlot(toRemove);
             isDirty = true;
+            final String plotIdStr = toRemove.getPlotId().toString();
+            plugin.runGlobalAsync(() -> {
+                // Note: YML doesn't need async DB delete, but structure kept for consistency
+            });
         }
     }
 
     @Override
     public void removeAllPlots(UUID owner) {
         List<Plot> owned = plotsByOwner.remove(owner);
-        if (owned != null) {
+        if (owned != null && !owned.isEmpty()) {
             for (Plot plot : owned) deIndexPlot(plot);
             isDirty = true;
         }
     }
     
-    // --- FIX: This method was causing the error because it wasn't found in the interface ---
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         UUID oldOwner = plot.getOwner();
@@ -350,10 +390,7 @@ public class YMLDataStore implements IDataStore {
             oldList.remove(plot);
             if (oldList.isEmpty()) plotsByOwner.remove(oldOwner);
         }
-        
-        // Call the internal method on Plot.java (This line was the cause of your error)
         plot.internalSetOwner(newOwner, newOwnerName);
-        
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
         isDirty = true;
     }

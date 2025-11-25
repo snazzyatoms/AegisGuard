@@ -1,7 +1,7 @@
 package com.aegisguard.config;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.economy.CurrencyType; // Ensure you have this Enum created!
+import com.aegisguard.economy.CurrencyType; 
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -65,6 +65,12 @@ public class AGConfig {
     public boolean isLevelingEnabled() {
         return config.getBoolean("leveling.enabled", true);
     }
+    
+    public CurrencyType getLevelCostType() {
+        String type = config.getString("leveling.cost_type", "VAULT").toUpperCase();
+        try { return CurrencyType.valueOf(type); } 
+        catch (IllegalArgumentException e) { return CurrencyType.VAULT; }
+    }
 
     public double getLevelBaseCost() {
         return config.getDouble("leveling.base_cost", 1000.0);
@@ -86,9 +92,16 @@ public class AGConfig {
     // 🔮 Visuals, Biomes & Social
     // ======================================
     public boolean isTitleEnabled() { return config.getBoolean("titles.enabled", true); }
+    public int getTitleFadeIn() { return config.getInt("titles.fade_in", 10); }
+    public int getTitleStay() { return config.getInt("titles.stay", 40); }
+    public int getTitleFadeOut() { return config.getInt("titles.fade_out", 10); }
+
     public boolean isBiomesEnabled() { return config.getBoolean("biomes.enabled", true); }
     public double getBiomeChangeCost() { return config.getDouble("biomes.cost_per_change", 2000.0); }
+    public List<String> getAllowedBiomes() { return config.getStringList("biomes.allowed"); }
+
     public boolean isLikesEnabled() { return config.getBoolean("social.likes_enabled", true); }
+    public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
 
     // ======================================
     // 💰 Economy
@@ -203,4 +216,3 @@ public class AGConfig {
     public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
     public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
 }
-

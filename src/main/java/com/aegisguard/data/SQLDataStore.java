@@ -83,11 +83,11 @@ public class SQLDataStore implements IDataStore {
         );
         """;
 
-    // --- FIX: Split Indexes into separate strings ---
     private static final String CREATE_INDEX_OWNER = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid)";
     private static final String CREATE_INDEX_WORLD = "CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world)";
     
-    private static final String CREATE_WILDERNESS_TABLE = """
+    // --- FIX: Separate Queries for SQLite vs MySQL Syntax ---
+    private static final String CREATE_WILDERNESS_TABLE_SQLITE = """
         CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             world VARCHAR(64) NOT NULL,
@@ -100,6 +100,21 @@ public class SQLDataStore implements IDataStore {
             player_uuid CHAR(36) NOT NULL
         );
         """;
+        
+    private static final String CREATE_WILDERNESS_TABLE_MYSQL = """
+        CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            world VARCHAR(64) NOT NULL,
+            x INT NOT NULL,
+            y INT NOT NULL,
+            z INT NOT NULL,
+            old_material VARCHAR(64) NOT NULL,
+            new_material VARCHAR(64) NOT NULL,
+            timestamp BIGINT NOT NULL,
+            player_uuid CHAR(36) NOT NULL
+        );
+        """;
+        
     private static final String CREATE_WILDERNESS_INDEX = "CREATE INDEX IF NOT EXISTS idx_wilderness_timestamp ON aegis_wilderness_log (timestamp)";
 
     private static final String[] ALTER_TABLES = {
@@ -227,11 +242,16 @@ public class SQLDataStore implements IDataStore {
             s.execute(CREATE_PLOTS_TABLE);
             s.execute(CREATE_ZONES_TABLE);
             
-            // --- FIX: EXECUTE INDEXES SEPARATELY ---
             s.execute(CREATE_INDEX_OWNER);
             s.execute(CREATE_INDEX_WORLD);
             
-            s.execute(CREATE_WILDERNESS_TABLE);
+            // --- FIX: Choose correct syntax for Wilderness Table ---
+            if (type.equals("mysql")) {
+                s.execute(CREATE_WILDERNESS_TABLE_MYSQL);
+            } else {
+                s.execute(CREATE_WILDERNESS_TABLE_SQLITE);
+            }
+            
             s.execute(CREATE_WILDERNESS_INDEX);
             
         } catch (SQLException e) {
@@ -665,8 +685,6 @@ public class SQLDataStore implements IDataStore {
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         UUID oldOwner = plot.getOwner();
-        
-        // 1. Remove from old owner's list
         List<Plot> oldList = plotsByOwner.get(oldOwner);
         if (oldList != null) {
             oldList.remove(plot);
@@ -674,16 +692,9 @@ public class SQLDataStore implements IDataStore {
                 plotsByOwner.remove(oldOwner);
             }
         }
-        
-        // 2. Update plot object internals
-        // FIX: Using internalSetOwner so we don't need to manually clear roles here
         plot.internalSetOwner(newOwner, newOwnerName);
-        plot.setForSale(false, 0); 
-        
-        // 3. Add to new owner's list
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
         
-        // 4. Update database
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(UPDATE_PLOT_OWNER)) {

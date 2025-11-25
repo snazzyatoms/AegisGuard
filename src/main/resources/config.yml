@@ -1,9 +1,9 @@
 # ======================================
-#  AegisGuard v1.0.3 - Config
+#  AegisGuard v1.1.0 - Config
 # ======================================
 #  Core configuration file for AegisGuard.
 #  Provides language, economy, claim, protection,
-#  expansion, and admin customization options.
+#  expansion, leveling, and admin customization options.
 # ======================================
 
 # ======================================
@@ -45,6 +45,7 @@ currencies:
   flight: VAULT
   biomes: VAULT
   teleport: VAULT
+  leveling: VAULT  # New: Pay money to upgrade plot level
 
 # ======================================
 # 💰 Economy & Prices
@@ -114,12 +115,10 @@ claims:
   consume_wand_on_claim: true
   admin_keep_wand: true
   
-  # --- Travel System (Visiting) ---
+  # --- Travel System ---
   travel_system:
     enabled: true
-    # Allow players to teleport to their own plots via GUI?
     allow_home_teleport: true
-    # Allow players to teleport to plots where they are trusted?
     allow_visit_teleport: true
   
   # Per-World Overrides
@@ -141,6 +140,48 @@ claims:
       allow_claims: false
 
 # ======================================
+# 🏗️ Zoning (Sub-Claims) [NEW v1.1.0]
+# ======================================
+# Allow players to create rentable areas inside their plots.
+zoning:
+  enabled: true
+  # Max sub-zones a player can create per plot
+  max_zones_per_plot: 10
+  # If true, landlord gets 100% of rent. If false, server takes tax (see economy).
+  landlord_gets_full_rent: true
+
+# ======================================
+# 📈 Plot Leveling (RPG) [NEW v1.1.0]
+# ======================================
+# Allow players to upgrade their plots for permanent buffs.
+leveling:
+  enabled: true
+  
+  # Cost to upgrade (Formula: base * level * multiplier)
+  base_cost: 1000.0
+  cost_multiplier: 1.5
+  max_level: 50
+  
+  # --- REWARDS ---
+  # Format: EFFECT:<TYPE>:<AMPLIFIER> or FLAG:<FLAG_NAME>
+  rewards:
+    2:
+      - "EFFECT:SPEED:1"              # Run Faster
+    5:
+      - "FLAG:fly"                    # Unlock Flight Capability
+    10:
+      - "EFFECT:REGENERATION:1"       # Regen Faster
+    15:
+      - "EFFECT:DAMAGE_RESISTANCE:1"  # Minimal Damage (Iron Skin)
+    20:
+      - "EFFECT:SATURATION:1"         # Slow Hunger Degradation
+      - "EFFECT:NIGHT_VISION:1"       # Warding Spell (Night Vision)
+    30:
+      - "EFFECT:LUCK:2"               # High Tier Luck
+    50:
+      - "EFFECT:HEALTH_BOOST:2"       # Massive Health Boost (God Mode Lite)
+
+# ======================================
 # ⚙️ Protection Defaults
 # ======================================
 protections:
@@ -154,14 +195,13 @@ protections:
   fire-spread: true
   piston-use: true
   
-  # New Flags
-  fly: false   # Flight disabled by default
-  entry: true  # Public entry enabled by default
+  # Flags
+  fly: false
+  entry: true
 
 # ======================================
 # 🛡️ Active Mob Barrier
 # ======================================
-# Vaporizes mobs that enter safe zones
 mob_barrier:
   enabled: true
   check_interval_ticks: 60
@@ -208,7 +248,7 @@ cosmetics:
     pass
 
 # ======================================
-# 🔮 Visual Titles (Entry Messages)
+# 🔮 Visual Titles
 # ======================================
 titles:
   enabled: true
@@ -250,7 +290,10 @@ admin:
   allow_language_command: true
   unlimited_plots: true
   
-  # Security: If false, OPs need 'aegis.admin' permission
+  # Allow admins to create Server Plots via GUI/Command?
+  allow_server_plot_creation: true
+  
+  # Security
   trust_operators: true
 
 # ======================================

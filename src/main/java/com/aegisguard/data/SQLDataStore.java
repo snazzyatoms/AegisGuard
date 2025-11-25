@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.data.Zone; // --- NEW IMPORT ---
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -63,9 +64,26 @@ public class SQLDataStore implements IDataStore {
             current_bidder CHAR(36),
             is_server_warp BOOLEAN DEFAULT false,
             warp_name VARCHAR(64),
-            warp_icon VARCHAR(32)
+            warp_icon VARCHAR(32),
+            level INT DEFAULT 1,
+            xp DOUBLE DEFAULT 0.0
         );
         """;
+
+    // --- NEW: Zones Table ---
+    private static final String CREATE_ZONES_TABLE = """
+        CREATE TABLE IF NOT EXISTS aegis_zones (
+            plot_id CHAR(36) NOT NULL,
+            zone_name VARCHAR(32) NOT NULL,
+            x1 INT NOT NULL, y1 INT NOT NULL, z1 INT NOT NULL,
+            x2 INT NOT NULL, y2 INT NOT NULL, z2 INT NOT NULL,
+            rent_price DOUBLE DEFAULT 0.0,
+            renter_uuid CHAR(36),
+            rent_expires BIGINT DEFAULT 0,
+            PRIMARY KEY (plot_id, zone_name)
+        );
+        """;
+
     private static final String CREATE_INDEXES = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid); CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world);";
     
     private static final String CREATE_WILDERNESS_TABLE = """
@@ -101,10 +119,14 @@ public class SQLDataStore implements IDataStore {
         "ALTER TABLE aegis_plots ADD COLUMN current_bidder CHAR(36);",
         "ALTER TABLE aegis_plots ADD COLUMN is_server_warp BOOLEAN DEFAULT false;",
         "ALTER TABLE aegis_plots ADD COLUMN warp_name VARCHAR(64);",
-        "ALTER TABLE aegis_plots ADD COLUMN warp_icon VARCHAR(32);"
+        "ALTER TABLE aegis_plots ADD COLUMN warp_icon VARCHAR(32);",
+        // v1.1.0 Updates
+        "ALTER TABLE aegis_plots ADD COLUMN level INT DEFAULT 1;",
+        "ALTER TABLE aegis_plots ADD COLUMN xp DOUBLE DEFAULT 0.0;"
     };
     
     private static final String LOAD_PLOTS = "SELECT * FROM aegis_plots";
+    private static final String LOAD_ZONES = "SELECT * FROM aegis_zones WHERE plot_id = ?";
     
     private static final String UPSERT_PLOT = """
         INSERT INTO aegis_plots (
@@ -112,9 +134,10 @@ public class SQLDataStore implements IDataStore {
             spawn_location, welcome_msg, farewell_msg,
             is_for_sale, sale_price, is_for_rent, rent_price, renter_uuid, rent_expires,
             plot_status, border_particle, ambient_particle, entry_effect,
-            current_bid, current_bidder, is_server_warp, warp_name, warp_icon
+            current_bid, current_bidder, is_server_warp, warp_name, warp_icon,
+            level, xp
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(plot_id) DO UPDATE SET
         owner_name = EXCLUDED.owner_name,
         x1 = EXCLUDED.x1, z1 = EXCLUDED.z1, x2 = EXCLUDED.x2, z2 = EXCLUDED.z2,
@@ -133,9 +156,18 @@ public class SQLDataStore implements IDataStore {
         current_bidder = EXCLUDED.current_bidder,
         is_server_warp = EXCLUDED.is_server_warp,
         warp_name = EXCLUDED.warp_name,
-        warp_icon = EXCLUDED.warp_icon;
+        warp_icon = EXCLUDED.warp_icon,
+        level = EXCLUDED.level,
+        xp = EXCLUDED.xp;
         """;
-        
+    
+    // Zone Management Queries
+    private static final String DELETE_ZONES_BY_PLOT = "DELETE FROM aegis_zones WHERE plot_id = ?";
+    private static final String INSERT_ZONE = """
+        INSERT INTO aegis_zones (plot_id, zone_name, x1, y1, z1, x2, y2, z2, rent_price, renter_uuid, rent_expires)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """;
+
     private static final String DELETE_PLOT = "DELETE FROM aegis_plots WHERE plot_id = ?";
     private static final String DELETE_PLOTS_BY_OWNER = "DELETE FROM aegis_plots WHERE owner_uuid = ?";
     private static final String UPDATE_PLOT_OWNER = "UPDATE aegis_plots SET owner_uuid = ?, owner_name = ?, roles = ?, is_for_sale = ? WHERE plot_id = ?";
@@ -194,6 +226,7 @@ public class SQLDataStore implements IDataStore {
              Statement s = conn.createStatement()) {
             
             s.execute(CREATE_PLOTS_TABLE);
+            s.execute(CREATE_ZONES_TABLE); // New table
             s.execute(CREATE_INDEXES);
             s.execute(CREATE_WILDERNESS_TABLE);
             s.execute(CREATE_WILDERNESS_INDEX);
@@ -261,9 +294,16 @@ public class SQLDataStore implements IDataStore {
                     if (icon == null) icon = Material.BEACON;
                     plot.setServerWarp(true, rs.getString("warp_name"), icon);
                 }
+                
+                // --- v1.1.0: Leveling ---
+                plot.setLevel(rs.getInt("level"));
+                plot.setXp(rs.getDouble("xp"));
 
                 deserializeFlags(plot, rs.getString("flags"));
                 deserializeRoles(plot, rs.getString("roles"));
+                
+                // --- Load Zones (Sub-Queries) ---
+                loadZones(conn, plot);
 
                 plotsByOwner.computeIfAbsent(plot.getOwner(), k -> new ArrayList<>()).add(plot);
                 indexPlot(plot);
@@ -271,6 +311,33 @@ public class SQLDataStore implements IDataStore {
             plugin.getLogger().info("Loaded " + getAllPlots().size() + " plots from database.");
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to load plots from database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void loadZones(Connection conn, Plot plot) {
+        try (PreparedStatement ps = conn.prepareStatement(LOAD_ZONES)) {
+            ps.setString(1, plot.getPlotId().toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Zone zone = new Zone(
+                        plot,
+                        rs.getString("zone_name"),
+                        rs.getInt("x1"), rs.getInt("y1"), rs.getInt("z1"),
+                        rs.getInt("x2"), rs.getInt("y2"), rs.getInt("z2")
+                    );
+                    zone.setRentPrice(rs.getDouble("rent_price"));
+                    String rUuid = rs.getString("renter_uuid");
+                    if (rUuid != null) {
+                        long expires = rs.getLong("rent_expires");
+                        if (System.currentTimeMillis() < expires) {
+                             zone.rentTo(UUID.fromString(rUuid), expires - System.currentTimeMillis());
+                        }
+                    }
+                    plot.addZone(zone);
+                }
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -283,54 +350,98 @@ public class SQLDataStore implements IDataStore {
         
         Collection<Plot> plotsToSave = getAllPlots();
         
-        try (Connection conn = hikari.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPSERT_PLOT)) {
+        try (Connection conn = hikari.getConnection()) {
+            conn.setAutoCommit(false); // Transaction
             
-            for (Plot plot : plotsToSave) {
-                ps.setString(1, plot.getPlotId().toString());
-                ps.setString(2, plot.getOwner().toString());
-                ps.setString(3, plot.getOwnerName());
-                ps.setString(4, plot.getWorld());
-                ps.setInt(5, plot.getX1());
-                ps.setInt(6, plot.getZ1());
-                ps.setInt(7, plot.getX2());
-                ps.setInt(8, plot.getZ2());
-                ps.setLong(9, plot.getLastUpkeepPayment());
-                ps.setString(10, serializeFlags(plot));
-                ps.setString(11, serializeRoles(plot));
+            try (PreparedStatement ps = conn.prepareStatement(UPSERT_PLOT)) {
+                for (Plot plot : plotsToSave) {
+                    ps.setString(1, plot.getPlotId().toString());
+                    ps.setString(2, plot.getOwner().toString());
+                    ps.setString(3, plot.getOwnerName());
+                    ps.setString(4, plot.getWorld());
+                    ps.setInt(5, plot.getX1());
+                    ps.setInt(6, plot.getZ1());
+                    ps.setInt(7, plot.getX2());
+                    ps.setInt(8, plot.getZ2());
+                    ps.setLong(9, plot.getLastUpkeepPayment());
+                    ps.setString(10, serializeFlags(plot));
+                    ps.setString(11, serializeRoles(plot));
+                    
+                    ps.setString(12, plot.getSpawnLocationString());
+                    ps.setString(13, plot.getWelcomeMessage());
+                    ps.setString(14, plot.getFarewellMessage());
+                    
+                    ps.setBoolean(15, plot.isForSale());
+                    ps.setDouble(16, plot.getSalePrice());
+                    ps.setBoolean(17, plot.isForRent());
+                    ps.setDouble(18, plot.getRentPrice());
+                    ps.setString(19, plot.getCurrentRenter() != null ? plot.getCurrentRenter().toString() : null);
+                    ps.setLong(20, plot.getRentExpires());
+                    
+                    ps.setString(21, plot.getPlotStatus());
+                    
+                    ps.setString(22, plot.getBorderParticle());
+                    ps.setString(23, plot.getAmbientParticle());
+                    ps.setString(24, plot.getEntryEffect());
+                    
+                    ps.setDouble(25, plot.getCurrentBid());
+                    ps.setString(26, plot.getCurrentBidder() != null ? plot.getCurrentBidder().toString() : null);
+                    
+                    ps.setBoolean(27, plot.isServerWarp());
+                    ps.setString(28, plot.getWarpName());
+                    ps.setString(29, plot.getWarpIcon() != null ? plot.getWarpIcon().name() : "BEACON");
+                    
+                    // v1.1.0 Leveling
+                    ps.setInt(30, plot.getLevel());
+                    ps.setDouble(31, plot.getXp());
+                    
+                    ps.addBatch();
+                    
+                    // Save Zones (Delete all + Re-insert to handle deletions)
+                    saveZones(conn, plot);
+                }
+                ps.executeBatch();
+                conn.commit(); // Commit all plots
                 
-                ps.setString(12, plot.getSpawnLocationString());
-                ps.setString(13, plot.getWelcomeMessage());
-                ps.setString(14, plot.getFarewellMessage());
-                
-                ps.setBoolean(15, plot.isForSale());
-                ps.setDouble(16, plot.getSalePrice());
-                ps.setBoolean(17, plot.isForRent());
-                ps.setDouble(18, plot.getRentPrice());
-                ps.setString(19, plot.getCurrentRenter() != null ? plot.getCurrentRenter().toString() : null);
-                ps.setLong(20, plot.getRentExpires());
-                
-                ps.setString(21, plot.getPlotStatus());
-                
-                ps.setString(22, plot.getBorderParticle());
-                ps.setString(23, plot.getAmbientParticle());
-                ps.setString(24, plot.getEntryEffect());
-                
-                ps.setDouble(25, plot.getCurrentBid());
-                ps.setString(26, plot.getCurrentBidder() != null ? plot.getCurrentBidder().toString() : null);
-                
-                ps.setBoolean(27, plot.isServerWarp());
-                ps.setString(28, plot.getWarpName());
-                ps.setString(29, plot.getWarpIcon() != null ? plot.getWarpIcon().name() : "BEACON");
-                
-                ps.addBatch();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-            ps.executeBatch();
+            
             isDirty = false;
             plugin.getLogger().info("Database save complete.");
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to save plots to database: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+    
+    private void saveZones(Connection conn, Plot plot) throws SQLException {
+        // 1. Delete existing zones for this plot
+        try (PreparedStatement psDel = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
+            psDel.setString(1, plot.getPlotId().toString());
+            psDel.executeUpdate();
+        }
+        
+        if (plot.getZones().isEmpty()) return;
+
+        // 2. Insert current zones
+        try (PreparedStatement psIns = conn.prepareStatement(INSERT_ZONE)) {
+            for (Zone zone : plot.getZones()) {
+                psIns.setString(1, plot.getPlotId().toString());
+                psIns.setString(2, zone.getName());
+                psIns.setInt(3, zone.getX1());
+                psIns.setInt(4, zone.getY1());
+                psIns.setInt(5, zone.getZ1());
+                psIns.setInt(6, zone.getX2());
+                psIns.setInt(7, zone.getY2());
+                psIns.setInt(8, zone.getZ2());
+                psIns.setDouble(9, zone.getRentPrice());
+                psIns.setString(10, zone.getRenter() != null ? zone.getRenter().toString() : null);
+                psIns.setLong(11, zone.getRentExpiration());
+                psIns.addBatch();
+            }
+            psIns.executeBatch();
         }
     }
     
@@ -551,25 +662,14 @@ public class SQLDataStore implements IDataStore {
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         UUID oldOwner = plot.getOwner();
-        
-        // 1. Remove from old owner's list
         List<Plot> oldList = plotsByOwner.get(oldOwner);
         if (oldList != null) {
             oldList.remove(plot);
-            if (oldList.isEmpty()) {
-                plotsByOwner.remove(oldOwner);
-            }
+            if (oldList.isEmpty()) plotsByOwner.remove(oldOwner);
         }
-        
-        // 2. Update plot object internals
-        // FIX: Using internalSetOwner so we don't need to manually clear roles here
         plot.internalSetOwner(newOwner, newOwnerName);
-        plot.setForSale(false, 0); 
-        
-        // 3. Add to new owner's list
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
         
-        // 4. Update database
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(UPDATE_PLOT_OWNER)) {
@@ -747,3 +847,4 @@ public class SQLDataStore implements IDataStore {
         }
     }
 }
+

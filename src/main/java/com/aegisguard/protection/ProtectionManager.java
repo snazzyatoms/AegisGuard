@@ -2,6 +2,7 @@ package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.data.Zone; // --- NEW IMPORT ---
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,9 +19,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +35,7 @@ public class ProtectionManager implements Listener {
     private final AegisGuard plugin;
     private final boolean wildernessRevertEnabled; 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>(); // --- NEW: Buff Timer ---
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -48,11 +53,7 @@ public class ProtectionManager implements Listener {
             Plot plot = plugin.store().getPlotAt(e.getLocation());
             if (plot != null) {
                 boolean isServer = plot.isServerZone();
-                boolean mobsAllowed = isMobProtectionEnabled(plot); // Note: isMobProtectionEnabled returns true if 'mobs' flag is true
-                
-                // If it is a server zone, or 'mobs' flag is false (protection enabled means mobs disabled usually, 
-                // but in your config default 'mobs: true' means allowed. Let's stick to the Flag logic directly)
-                // plot.getFlag("mobs", true) -> True = Mobs Allowed. False = Mobs Blocked.
+                boolean mobsAllowed = isMobProtectionEnabled(plot);
                 boolean allowMobs = plot.getFlag("mobs", true);
                 boolean safeZone = plot.getFlag("safe_zone", false);
 
@@ -63,7 +64,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 2. MOVEMENT LOGIC ---
+    // --- 2. MOVEMENT LOGIC (Flight, Bans, Entry, BUFFS) ---
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
@@ -127,9 +128,46 @@ public class ProtectionManager implements Listener {
                 if (!toPlot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                     bouncePlayer(p, e);
                     sendPlotMessage(p, plugin.msg().get(p, "plot_entry_denied"), "", "error");
+                    return;
+                }
+            }
+            
+            // --- NEW: LEVELING BUFFS ---
+            applyPlotBuffs(p, toPlot);
+        }
+    }
+    
+    // --- NEW: Apply RPG Buffs based on Plot Level ---
+    private void applyPlotBuffs(Player p, Plot plot) {
+        if (!plugin.cfg().isLevelingEnabled()) return;
+        
+        long now = System.currentTimeMillis();
+        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return; // Limit checks to every 2s
+        
+        // Only trusted members get buffs
+        if (!plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) return;
+
+        int level = plot.getLevel();
+        // Check levels 1 up to current level
+        for (int i = 1; i <= level; i++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(i);
+            if (rewards == null) continue;
+            
+            for (String reward : rewards) {
+                if (reward.startsWith("EFFECT:")) {
+                    try {
+                        String[] parts = reward.split(":"); // EFFECT:SPEED:1
+                        PotionEffectType type = PotionEffectType.getByName(parts[1]);
+                        int amp = Integer.parseInt(parts[2]) - 1;
+                        
+                        if (type != null) {
+                            p.addPotionEffect(new PotionEffect(type, 100, amp, true, false)); // 5 seconds
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
         }
+        buffCooldowns.put(p.getUniqueId(), now + 2000); // Cooldown 2s
     }
 
     private void bouncePlayer(Player p, PlayerMoveEvent e) {
@@ -147,15 +185,14 @@ public class ProtectionManager implements Listener {
         });
     }
 
-    // --- 3. COMBAT & DAMAGE (UPDATED) ---
+    // --- 3. COMBAT & DAMAGE ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
         
         Entity damager = e.getDamager();
         
-        // === NEW: MOB DAMAGE BLOCKER ===
-        // Prevents Monsters, Slimes, Phantoms, or Projectiles fired by them from hurting players
+        // MOB DAMAGE BLOCKER
         if (damager instanceof Monster || damager instanceof Slime || damager instanceof Phantom || 
            (damager instanceof Projectile proj && proj.getShooter() instanceof Monster)) {
             
@@ -165,18 +202,16 @@ public class ProtectionManager implements Listener {
                 boolean isSafe = plot.getFlag("safe_zone", false);
                 boolean mobsAllowed = plot.getFlag("mobs", true);
 
-                // If mobs are NOT allowed (or safe zone/server zone), CANCEL DAMAGE
                 if (isServer || isSafe || !mobsAllowed) {
                     e.setCancelled(true);
-                    if (damager instanceof Projectile) damager.remove(); // Delete arrow
+                    if (damager instanceof Projectile) damager.remove(); 
                     return;
                 }
             }
         }
 
-        // === PVP LOGIC ===
+        // PVP LOGIC
         Player attacker = resolveAttacker(damager);
-        // If attacker isn't a player, we don't care about PvP rules (Mob rules handled above)
         if (attacker == null || attacker.equals(victim)) return;
 
         Plot plot = plugin.store().getPlotAt(victim.getLocation());
@@ -194,7 +229,7 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (!isPvPEnabled(plot)) { // False = PVP Disabled
+        if (!isPvPEnabled(plot)) { 
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_attack"));
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -208,6 +243,7 @@ public class ProtectionManager implements Listener {
         Block block = e.getBlock();
         Plot plot = plugin.store().getPlotAt(block.getLocation());
 
+        // Wilderness Log
         if (plot == null && wildernessRevertEnabled) {
             final String oldMat = block.getType().toString();
             final UUID uuid = p.getUniqueId();
@@ -217,6 +253,20 @@ public class ProtectionManager implements Listener {
         
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
+
+        // --- NEW: Zone Check (Sub-Claims) ---
+        Zone zone = plot.getZoneAt(block.getLocation());
+        if (zone != null) {
+            if (zone.isRented()) {
+                // Only Renter (and Owner) can build
+                if (!p.getUniqueId().equals(zone.getRenter()) && !p.getUniqueId().equals(plot.getOwner())) {
+                    e.setCancelled(true);
+                    p.sendMessage("§cThis zone is rented by " + Bukkit.getOfflinePlayer(zone.getRenter()).getName());
+                }
+                return; // Exit if in zone (whether allowed or denied)
+            }
+            // If not rented, treat as plot (fall through)
+        }
 
         if (plot.isServerZone()) {
             if (!plot.getFlag("build", false)) {
@@ -259,6 +309,18 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
         
+        // --- NEW: Zone Check ---
+        Zone zone = plot.getZoneAt(block.getLocation());
+        if (zone != null) {
+            if (zone.isRented()) {
+                if (!p.getUniqueId().equals(zone.getRenter()) && !p.getUniqueId().equals(plot.getOwner())) {
+                    e.setCancelled(true);
+                    p.sendMessage("§cThis zone is rented by " + Bukkit.getOfflinePlayer(zone.getRenter()).getName());
+                }
+                return; 
+            }
+        }
+        
         if (plot.isServerZone()) {
             if (!plot.getFlag("build", false)) { 
                 e.setCancelled(true);
@@ -297,6 +359,19 @@ public class ProtectionManager implements Listener {
             p.sendMessage(plugin.msg().get("plot-is-locked"));
             plugin.effects().playError(p);
             return; 
+        }
+        
+        // --- NEW: Zone Check ---
+        Zone zone = plot.getZoneAt(block.getLocation());
+        if (zone != null && zone.isRented()) {
+            // Renter has full container/interact access
+            if (p.getUniqueId().equals(zone.getRenter()) || p.getUniqueId().equals(plot.getOwner())) {
+                return; // Allow
+            } else {
+                e.setCancelled(true);
+                p.sendMessage("§cThis zone is rented.");
+                return;
+            }
         }
         
         if (plot.isServerZone()) {

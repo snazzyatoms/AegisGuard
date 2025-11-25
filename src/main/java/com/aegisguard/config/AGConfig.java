@@ -1,6 +1,7 @@
 package com.aegisguard.config;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.economy.CurrencyType; // Ensure you have this Enum created!
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -31,7 +32,67 @@ public class AGConfig {
         return config;
     }
 
-    // --- Economy ---
+    // ======================================
+    // 💱 Currency System
+    // ======================================
+    public CurrencyType getCurrencyFor(String feature) {
+        String type = config.getString("currencies." + feature, "VAULT").toUpperCase();
+        try {
+            return CurrencyType.valueOf(type);
+        } catch (IllegalArgumentException e) {
+            return CurrencyType.VAULT; // Fallback
+        }
+    }
+
+    // ======================================
+    // 🏗️ Zoning (Sub-Claims)
+    // ======================================
+    public boolean isZoningEnabled() {
+        return config.getBoolean("zoning.enabled", true);
+    }
+
+    public int getMaxZonesPerPlot() {
+        return config.getInt("zoning.max_zones_per_plot", 10);
+    }
+
+    public boolean landlordGetsFullRent() {
+        return config.getBoolean("zoning.landlord_gets_full_rent", true);
+    }
+
+    // ======================================
+    // 📈 Plot Leveling
+    // ======================================
+    public boolean isLevelingEnabled() {
+        return config.getBoolean("leveling.enabled", true);
+    }
+
+    public double getLevelBaseCost() {
+        return config.getDouble("leveling.base_cost", 1000.0);
+    }
+
+    public double getLevelCostMultiplier() {
+        return config.getDouble("leveling.cost_multiplier", 1.5);
+    }
+
+    public int getMaxLevel() {
+        return config.getInt("leveling.max_level", 10);
+    }
+
+    public List<String> getLevelRewards(int level) {
+        return config.getStringList("leveling.rewards." + level);
+    }
+
+    // ======================================
+    // 🔮 Visuals, Biomes & Social
+    // ======================================
+    public boolean isTitleEnabled() { return config.getBoolean("titles.enabled", true); }
+    public boolean isBiomesEnabled() { return config.getBoolean("biomes.enabled", true); }
+    public double getBiomeChangeCost() { return config.getDouble("biomes.cost_per_change", 2000.0); }
+    public boolean isLikesEnabled() { return config.getBoolean("social.likes_enabled", true); }
+
+    // ======================================
+    // 💰 Economy
+    // ======================================
     public boolean useVault(World world) {
         if (world != null) {
             String path = "claims.per_world." + world.getName() + ".use_vault";
@@ -68,12 +129,13 @@ public class AGConfig {
         return config.getInt(path, 5);
     }
 
-    // --- Feature Costs ---
     public double getFlightCost() {
         return config.getDouble("economy.flag_costs.fly", 5000.0);
     }
 
-    // --- Claims ---
+    // ======================================
+    // 🧱 Claims
+    // ======================================
     public int getWorldMaxRadius(World world) {
         if (world != null) {
             String path = "claims.per_world." + world.getName() + ".max_radius";
@@ -131,6 +193,7 @@ public class AGConfig {
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
     
+    // --- Protections ---
     public boolean pvpProtectionDefault() { return config.getBoolean("protections.pvp_protection", true); }
     public boolean noMobsInClaims() { return config.getBoolean("protections.no_mobs_in_claims", true); }
     public boolean containerProtectionDefault() { return config.getBoolean("protections.container_protection", true); }
@@ -140,3 +203,4 @@ public class AGConfig {
     public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
     public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
 }
+

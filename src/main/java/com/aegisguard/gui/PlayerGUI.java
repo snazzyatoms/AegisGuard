@@ -40,10 +40,19 @@ public class PlayerGUI {
             ));
         }
 
-        // Claim Land - SLOT 10
-        inv.setItem(10, GUIManager.icon(Material.LIGHTNING_ROD, 
-            GUIManager.safeText(plugin.msg().get(player, "button_claim_land"), "§aClaim Land"), 
-            plugin.msg().getList(player, "claim_land_lore")));
+        // --- CLAIM LAND (Smart Button - Slot 10) ---
+        if (plugin.selection().hasSelection(player)) {
+            // Has selection -> Show Green/Normal Button
+            inv.setItem(10, GUIManager.icon(Material.LIGHTNING_ROD, 
+                GUIManager.safeText(plugin.msg().get(player, "button_claim_land"), "§aClaim Land"), 
+                plugin.msg().getList(player, "claim_land_lore")));
+        } else {
+            // No selection -> Show Locked Button
+            inv.setItem(10, GUIManager.icon(Material.BARRIER, 
+                "§cClaim Land (Locked)", 
+                List.of("§7You must select 2 corners", "§7with the Wand first!", " ", "§eStatus: §cNo Selection")
+            ));
+        }
 
         // Plot Flags - SLOT 12
         inv.setItem(12, GUIManager.icon(Material.OAK_SIGN, 
@@ -110,15 +119,15 @@ public class PlayerGUI {
                 break;
                 
             case 10: 
-                // --- FIX: Check for selection before closing menu ---
-                if (!plugin.selection().hasSelection(player)) {
-                    plugin.msg().send(player, "must_select"); // Tell them to use wand first
-                    plugin.effects().playError(player);
-                    // Do NOT close inventory
-                } else {
+                // --- FIX: Check if selection exists. ---
+                if (plugin.selection().hasSelection(player)) {
                     player.closeInventory(); 
                     plugin.selection().confirmClaim(player); 
                     plugin.effects().playMenuFlip(player); 
+                } else {
+                    // No selection -> Error Sound -> Stay Open
+                    plugin.effects().playError(player);
+                    player.sendMessage("§cYou must select two corners with the Wand first!");
                 }
                 break;
 
@@ -146,3 +155,5 @@ public class PlayerGUI {
         }
     }
 }
+
+

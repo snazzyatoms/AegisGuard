@@ -296,6 +296,19 @@ admin:
   # Security
   trust_operators: true
 
+  # --- SENTINEL'S SCEPTER (Admin Wand) ---
+  # Custom item for creating Server Zones instantly.
+  wand:
+    material: BLAZE_ROD
+    name: "&c&lSentinel's Scepter"
+    lore:
+      - "&7A tool of absolute authority."
+      - " "
+      - "&eRight-Click: &fSelect Pos 1"
+      - "&eLeft-Click: &fSelect Pos 2"
+      - " "
+      - "&c⚠ Creates SERVER ZONES directly."
+
 # ======================================
 # 🔊 Sounds
 # ======================================

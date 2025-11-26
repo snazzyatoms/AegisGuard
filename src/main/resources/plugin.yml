@@ -17,7 +17,8 @@ commands:
     permission: aegis.use
   aegisadmin:
     description: AegisGuard admin menu & tools
-    usage: "/aegisadmin [reload|bypass|menu|convert]"
+    # Updated usage to include new tools
+    usage: "/aegisadmin [reload|bypass|menu|convert|wand]"
     aliases: [agadmin]
     permission: aegis.admin
 
@@ -70,6 +71,7 @@ permissions:
       aegis.setwarp: true     # Create Server Warps
       aegis.delwarp: true     # Delete Server Warps
       aegis.convert: true     # Seize/Convert plots to Server Zones
+      aegis.admin.wand: true  # Obtain the Sentinel's Scepter
 
   # --- INDIVIDUAL NODES ---
   aegis.use:
@@ -146,4 +148,7 @@ permissions:
     default: op
   aegis.convert:
     description: Convert a plot to a Server Zone
+    default: op
+  aegis.admin.wand:
+    description: Obtain the Sentinel's Scepter
     default: op

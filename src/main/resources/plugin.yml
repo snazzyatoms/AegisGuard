@@ -17,7 +17,6 @@ commands:
     permission: aegis.use
   aegisadmin:
     description: AegisGuard admin menu & tools
-    # Updated usage to include new tools
     usage: "/aegisadmin [reload|bypass|menu|convert|wand]"
     aliases: [agadmin]
     permission: aegis.admin
@@ -62,9 +61,10 @@ permissions:
 
   # --- ADMIN PERMISSIONS ---
   aegis.admin:
-    description: Admin / management features
+    description: Full Admin Control
     default: op
     children:
+      aegis.admin.manage: true # Allows editing ANY plot
       aegis.reload: true
       aegis.bypass: true
       aegis.consume: true     # Allows manual wand disposal
@@ -74,6 +74,10 @@ permissions:
       aegis.admin.wand: true  # Obtain the Sentinel's Scepter
 
   # --- INDIVIDUAL NODES ---
+  aegis.admin.manage:
+    description: Allow editing flags/roles of ANY plot (including Server Zones)
+    default: op
+
   aegis.use:
     description: Use /aegis
     default: true

@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages flags on a specific plot.
- * - UPDATED: Biome Changer enabled.
+ * - UPDATED: Biome Changer with Disclaimer.
  */
 public class PlotFlagsGUI {
 
@@ -89,11 +89,11 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biome Changer
+        // Biome Changer (Updated with Disclaimer Message)
         inv.setItem(32, GUIManager.icon(
             Material.GRASS_BLOCK,
-            "§2Change Biome",
-            List.of("§7Click to change the", "§7climate of your land.")
+            GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
+            plugin.msg().getList(player, "biome_button_lore") // <-- Uses config message with disclaimer
         ));
 
         // --- 5. NAVIGATION ---
@@ -229,4 +229,3 @@ public class PlotFlagsGUI {
         return newList;
     }
 }
-

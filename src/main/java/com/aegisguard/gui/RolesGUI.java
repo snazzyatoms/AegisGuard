@@ -20,6 +20,7 @@ import java.util.UUID;
  * RolesGUI
  * - Replaces the old TrustedGUI.
  * - Features: Plot Selector, Main Role List, Add Player, Manage Player Role.
+ * - UPDATED: Admins can now manage roles on any plot (including Server Plots).
  */
 public class RolesGUI {
 
@@ -68,6 +69,17 @@ public class RolesGUI {
      * Main Entry Point
      * ----------------------------- */
     public void open(Player owner) {
+        // 1. Check if admin is standing in a plot they want to manage
+        if (plugin.isAdmin(owner)) {
+            Plot currentLocPlot = plugin.store().getPlotAt(owner.getLocation());
+            if (currentLocPlot != null) {
+                // If standing in a plot (Server or Player), open roles for THAT plot directly
+                openRolesMenu(owner, currentLocPlot);
+                return;
+            }
+        }
+
+        // 2. Normal Flow: Show owned plots
         List<Plot> plots = plugin.store().getPlots(owner.getUniqueId());
         if (plots == null || plots.isEmpty()) {
             plugin.msg().send(owner, "no_plot_here");
@@ -119,7 +131,8 @@ public class RolesGUI {
         int slot = 0;
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             if (slot >= 45) break;
-            if (entry.getKey().equals(owner.getUniqueId())) continue; 
+            // Don't show self in list unless admin view
+            if (entry.getKey().equals(owner.getUniqueId()) && !plugin.isAdmin(owner)) continue; 
 
             OfflinePlayer member = Bukkit.getOfflinePlayer(entry.getKey());
             String roleName = entry.getValue();
@@ -333,15 +346,10 @@ public class RolesGUI {
         OfflinePlayer target = holder.getTarget();
         if (plot == null || target == null) { player.closeInventory(); return; }
 
-        if (target.getUniqueId().equals(player.getUniqueId())) {
-            plugin.msg().send(player, "role_self");
-            plugin.effects().playError(player);
+        // Check permission (Owner OR Admin)
+        if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
+            plugin.msg().send(player, "no_perm");
             return;
-        }
-        if (target.getUniqueId().equals(plot.getOwner())) {
-             plugin.msg().send(player, "role_is_owner");
-             plugin.effects().playError(player);
-             return;
         }
 
         int slot = e.getSlot();

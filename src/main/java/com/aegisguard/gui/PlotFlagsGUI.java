@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages flags on a specific plot.
- * - UPDATED: Biome Changer with Disclaimer.
+ * - UPDATED: Biome Changer with Disclaimer & Admin Bypass.
  */
 public class PlotFlagsGUI {
 
@@ -89,7 +89,7 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biome Changer (Updated with Disclaimer Message)
+        // Biome Changer (Slot 32 - Now with Disclaimer)
         inv.setItem(32, GUIManager.icon(
             Material.GRASS_BLOCK,
             GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
@@ -115,6 +115,7 @@ public class PlotFlagsGUI {
         if (plot == null) { player.closeInventory(); return; }
 
         // Security: Only Owner OR Admin can edit flags
+        // FIX: This allows OPs/Admins to edit any plot (including Server Zones)
         if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             player.closeInventory();
@@ -124,7 +125,7 @@ public class PlotFlagsGUI {
         int slot = e.getSlot();
 
         switch (slot) {
-            // Row 2
+            // Row 2 (Danger)
             case 10: toggleFlag(player, plot, "pvp"); break;
             case 11: toggleFlag(player, plot, "tnt-damage"); break;
             case 12: toggleFlag(player, plot, "fire-spread"); break;
@@ -137,14 +138,14 @@ public class PlotFlagsGUI {
                 open(player, plot);
                 break;
 
-            // Row 3
+            // Row 3 (Entities)
             case 19: toggleFlag(player, plot, "containers"); break;
             case 20: toggleFlag(player, plot, "piston-use"); break;
             case 21: toggleFlag(player, plot, "farm"); break;
             case 23: toggleFlag(player, plot, "pets"); break;
             case 24: toggleFlag(player, plot, "entities"); break;
             
-            // Row 4
+            // Row 4 (Premium)
             case 30: toggleFlight(player, plot); break; // Flight
             
             case 31: // Cosmetics
@@ -184,7 +185,6 @@ public class PlotFlagsGUI {
             double cost = plugin.cfg().getFlightCost();
             // Charge if: Cost > 0 AND Player is NOT Admin
             if (cost > 0 && !plugin.isAdmin(player)) {
-                // Use EconomyManager
                 CurrencyType type = CurrencyType.VAULT; 
                 
                 if (!plugin.eco().withdraw(player, cost, type)) {

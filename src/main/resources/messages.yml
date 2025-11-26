@@ -56,7 +56,7 @@ old_english:
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
 
-  # --- NEW: Resize ---
+  # --- Resize ---
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
@@ -71,7 +71,7 @@ old_english:
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
-  # --- NEW: Plot Auction ---
+  # --- Plot Auction ---
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -81,7 +81,7 @@ old_english:
   auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
   
-  # --- NEW: Plot Marketplace ---
+  # --- Plot Marketplace ---
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -91,7 +91,7 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
-  # --- NEW: Expansion Requests ---
+  # --- Expansion Requests ---
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -112,7 +112,7 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
 
-  # --- NEW: Travel / Visit ---
+  # --- Travel / Visit ---
   visit_gui_title: "&9Travel System"
 
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
@@ -161,9 +161,10 @@ old_english:
   auction_lore:
     - "&7Bid on lost lands."
   
+  # --- UPDATED NAME ---
   button_info: "&6📜 Codex of Knowledge"
   info_lore:
-    - "&7Seek wisdom within the Codex."
+    - "&7Unfurl the scrolls of wisdom."
   info_message: "&7Seek wisdom within the Codex and protect thy holdings."
 
   settings_menu_title: "&9⚙ Thine Preferences"
@@ -195,7 +196,6 @@ old_english:
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms around you! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
-  
   biome_select_lore:
     - "&7Click to transform your plot"
     - "&7into a {BIOME}."
@@ -489,10 +489,11 @@ hybrid_english:
   auction_lore:
     - "&7Bid on expired plots."
   
-  button_info: "&6📜 Info"
+  # --- UPDATED NAME ---
+  button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Open the Codex to manage protections and learn commands."
   info_lore:
-    - "&7Read the guide."
+    - "&7Consult the archives."
 
   settings_menu_title: "&9⚙ Settings"
   button_sounds_on: "&a🔊 Sounds: On"
@@ -503,23 +504,8 @@ hybrid_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
-
-  # --- NEW: v1.1.0 Leveling (Hybrid) ---
-  level_gui_title: "&dPlot Leveling"
-  level_current_status: "&dCurrent Stats"
-  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
-  level_max_reached: "&cMax Level Reached"
-  level_up_success: "&d⚡ Your plot leveled up to {LEVEL}!"
-  level_up_fail_cost: "&c❌ You need more funds to upgrade."
   
-  # --- NEW: v1.1.0 Zoning (Hybrid) ---
-  zone_gui_title: "&3Sub-Claim Manager"
-  zone_created: "&a✔ Zone '{ZONE}' created."
-  zone_deleted: "&c✖ Zone '{ZONE}' deleted."
-  zone_rented: "&a✔ {PLAYER} rented '{ZONE}'."
-  zone_not_rented: "&7Not rented."
-
-  # --- NEW: v1.1.0 Biomes (Hybrid) ---
+  # --- NEW: v1.1.0 Features (Hybrid) ---
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
@@ -824,10 +810,11 @@ modern_english:
   auction_lore:
     - "&7Bid on expired plots."
   
-  button_info: "&6📜 Info"
+  # --- UPDATED NAME ---
+  button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Open the Codex to manage protections and learn commands."
   info_lore:
-    - "&7Read the guide."
+    - "&7View documentation."
 
   # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Settings"
@@ -859,7 +846,6 @@ modern_english:
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
-  
   biome_select_lore:
     - "&7Click to transform your plot"
     - "&7into a {BIOME}."
@@ -916,7 +902,7 @@ modern_english:
   button_farm_off: "&c🌾 Crops: Off"
   farm_toggle_lore:
     - "&7Prevent crop trampling."
-
+    
   button_tnt_on: "&a💥 Explosions: ON"
   button_tnt_off: "&c💥 Explosions: OFF"
   tnt_toggle_lore:
@@ -945,7 +931,7 @@ modern_english:
   button_fly_off: "&c🕊 Flight: Off"
   fly_toggle_lore:
     - "&7Allow flight inside this plot."
-    - "&7(Cost: &6{COST}&7)"
+    - "&7(Cost to enable: &6{COST}&7)"
   flight_enabled: "&a🕊 Flight Enabled."
   flight_disabled: "&c🕊 Flight Disabled."
   
@@ -961,7 +947,7 @@ modern_english:
   cosmetics_gui_title: "&dPlot Cosmetics"
   cosmetics_border_none: "&cDefault Particles"
   cosmetic_purchased: "&a✔ Cosmetic purchased and applied!"
-  
+
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
   roles_gui_title: "&eManage Plot Roles"
@@ -997,12 +983,10 @@ modern_english:
   admin_broadcast_disabled: "&c✖ Broadcasts disabled."
   admin_removed_banned: "&eRemoved plots for banned player: {PLAYER}"
   
-  # Admin Plot List
   admin_plot_list_title: "&cAll Server Plots"
   admin_plot_teleport: "&eTeleported to {PLAYER}'s plot."
   admin_plot_deleted: "&c✖ Deleted {PLAYER}'s plot."
   
-  # Server Zones
   admin-zone-created: "&a✔ Server Zone created."
   admin-zone-deleted: "&c✖ Server Zone deleted."
   admin-zone-not-found: "&c❌ You are not in a Server Zone."
@@ -1020,7 +1004,6 @@ modern_english:
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
-  # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
@@ -1037,5 +1020,3 @@ modern_english:
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
     - "&e/aegis help &7- Show help"
-
-

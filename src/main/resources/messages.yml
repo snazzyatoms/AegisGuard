@@ -56,7 +56,7 @@ old_english:
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
 
-  # --- Resize ---
+  # --- NEW: Resize ---
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
@@ -71,7 +71,7 @@ old_english:
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
-  # --- Plot Auction ---
+  # --- NEW: Plot Auction ---
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -81,7 +81,7 @@ old_english:
   auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
   
-  # --- Plot Marketplace ---
+  # --- NEW: Plot Marketplace ---
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -91,7 +91,7 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
-  # --- Expansion Requests ---
+  # --- NEW: Expansion Requests ---
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -112,7 +112,7 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
 
-  # --- Travel / Visit ---
+  # --- NEW: Travel / Visit ---
   visit_gui_title: "&9Travel System"
 
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
@@ -176,16 +176,42 @@ old_english:
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
 
-  # --- NEW: v1.1.0 Features ---
+  # --- NEW: v1.1.0 Leveling (Old English) ---
+  level_gui_title: "&dAscension of Land"
+  level_current_status: "&dCurrent Standing"
+  level_upgrade_button: "&aAscend to Level {LEVEL}"
+  level_max_reached: "&cMaximum Ascension Reached"
+  level_up_success: "&d⚡ Thy dominion hath ascended to Level {LEVEL}!"
+  level_up_fail_cost: "&c❌ Thou lacketh the tribute required for ascension."
   
-  # Biomes
+  # --- NEW: v1.1.0 Zoning (Old English) ---
+  zone_gui_title: "&3Sub-Dominion Manager"
+  zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
+  zone_deleted: "&c✖ The zone '{ZONE}' hath been dissolved."
+  zone_rented: "&a✔ {PLAYER} hath rented the zone '{ZONE}'."
+  zone_not_rented: "&7This zone stands empty."
+
+  # --- NEW: v1.1.0 Biomes (Old English) ---
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms around you! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
+  
   biome_select_lore:
     - "&7Click to transform your plot"
     - "&7into a {BIOME}."
     - "&7Cost: &6{COST}"
+    - " "
+    - "&8[&c!&8] &7Disclaimer:"
+    - "&7Changes &nvisuals&7 only (Grass/Sky)."
+    - "&7Does &cNOT&7 replace physical blocks."
+
+  # The Button Disclaimer you asked for!
+  biome_button_lore:
+    - "&7Click to shift the humours"
+    - "&7of thy land's climate."
+    - " "
+    - "&c⚠ Heed: Visuals Only"
+    - "&7(Thy soil remains unchanged)"
 
   # Social
   like_success: "&a✔ Verily, thou hast favored this dominion! Total likes: &e{AMOUNT}"
@@ -477,8 +503,23 @@ hybrid_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
+
+  # --- NEW: v1.1.0 Leveling (Hybrid) ---
+  level_gui_title: "&dPlot Leveling"
+  level_current_status: "&dCurrent Stats"
+  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
+  level_max_reached: "&cMax Level Reached"
+  level_up_success: "&d⚡ Your plot leveled up to {LEVEL}!"
+  level_up_fail_cost: "&c❌ You need more funds to upgrade."
   
-  # --- NEW: v1.1.0 Features (Hybrid) ---
+  # --- NEW: v1.1.0 Zoning (Hybrid) ---
+  zone_gui_title: "&3Sub-Claim Manager"
+  zone_created: "&a✔ Zone '{ZONE}' created."
+  zone_deleted: "&c✖ Zone '{ZONE}' deleted."
+  zone_rented: "&a✔ {PLAYER} rented '{ZONE}'."
+  zone_not_rented: "&7Not rented."
+
+  # --- NEW: v1.1.0 Biomes (Hybrid) ---
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
@@ -486,6 +527,17 @@ hybrid_english:
     - "&7Click to transform your plot"
     - "&7into a {BIOME}."
     - "&7Cost: &6{COST}"
+    - " "
+    - "&8[&c!&8] &7Disclaimer:"
+    - "&7Changes &nvisuals&7 only (Grass/Sky)."
+    - "&7Does &cNOT&7 replace physical blocks."
+
+  biome_button_lore:
+    - "&7Click to change the"
+    - "&7climate of your land."
+    - " "
+    - "&c⚠ Note: Visuals Only"
+    - "&7(Does not spawn sand/snow blocks)"
 
   like_success: "&a✔ You favored this dominion! Total: &e{AMOUNT}"
   like_removed: "&eYou removed your favor."
@@ -788,14 +840,41 @@ modern_english:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
 
-  # --- NEW: v1.1.0 Features (Modern) ---
+  # --- NEW: v1.1.0 Leveling (Modern) ---
+  level_gui_title: "&dPlot Leveling"
+  level_current_status: "&dCurrent Stats"
+  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
+  level_max_reached: "&cMax Level Reached"
+  level_up_success: "&d⚡ Your plot leveled up to {LEVEL}!"
+  level_up_fail_cost: "&c❌ You need more funds to upgrade."
+  
+  # --- NEW: v1.1.0 Zoning (Modern) ---
+  zone_gui_title: "&3Sub-Claim Manager"
+  zone_created: "&a✔ Zone '{ZONE}' created."
+  zone_deleted: "&c✖ Zone '{ZONE}' deleted."
+  zone_rented: "&a✔ {PLAYER} rented '{ZONE}'."
+  zone_not_rented: "&7Not rented."
+
+  # --- NEW: v1.1.0 Biomes (Modern) ---
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
+  
   biome_select_lore:
     - "&7Click to transform your plot"
     - "&7into a {BIOME}."
     - "&7Cost: &6{COST}"
+    - " "
+    - "&8[&c!&8] &7Disclaimer:"
+    - "&7Changes &nvisuals&7 only (Grass/Sky)."
+    - "&7Does &cNOT&7 replace physical blocks."
+
+  biome_button_lore:
+    - "&7Click to change the"
+    - "&7climate of your land."
+    - " "
+    - "&c⚠ Note: Visuals Only"
+    - "&7(Does not spawn sand/snow blocks)"
 
   like_success: "&a✔ You liked this plot! Total likes: &e{AMOUNT}"
   like_removed: "&eYou removed your like."
@@ -804,7 +883,7 @@ modern_english:
 
   title_entering: "&b{PLOT_NAME}"
   subtitle_entering: "&7Owned by {OWNER}"
-  title_entering_wilderness: "&aWilderness"
+  title_entering_wilderness: "&aThe Wilds"
   subtitle_entering_wilderness: "&7Free land"
 
   # --- Plot Flags GUI ---
@@ -869,14 +948,13 @@ modern_english:
     - "&7(Cost: &6{COST}&7)"
   flight_enabled: "&a🕊 Flight Enabled."
   flight_disabled: "&c🕊 Flight Disabled."
-
+  
   # Entry Flag
-  button_entry_on: "&a🚪 Public Access: On"
-  button_entry_off: "&c🚪 Public Access: Off"
+  button_entry_on: "&a🚪 Public Access: Open"
+  button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
-    - "&7If Off, only added members can enter."
+    - "&7If Sealed, strangers cannot enter."
 
-  # Cosmetics
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:
     - "&7Apply cosmetic effects to your plot."
@@ -886,7 +964,6 @@ modern_english:
   
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
-  # Roles GUI
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
@@ -900,7 +977,6 @@ modern_english:
   role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
   role_removed: "&e✔ {PLAYER} has been removed from your plot."
   
-  # Admin GUI
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."
   admin_reload_complete: "&a✔ Reload complete!"
@@ -941,7 +1017,6 @@ modern_english:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
     
-  # Wilderness Revert
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
@@ -962,4 +1037,5 @@ modern_english:
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
     - "&e/aegis help &7- Show help"
+
 

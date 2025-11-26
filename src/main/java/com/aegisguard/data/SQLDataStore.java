@@ -83,10 +83,11 @@ public class SQLDataStore implements IDataStore {
         );
         """;
 
+    // Fix: Separate index queries for safety
     private static final String CREATE_INDEX_OWNER = "CREATE INDEX IF NOT EXISTS idx_owner_uuid ON aegis_plots (owner_uuid)";
     private static final String CREATE_INDEX_WORLD = "CREATE INDEX IF NOT EXISTS idx_world ON aegis_plots (world)";
     
-    // --- FIX: Separate Queries for SQLite vs MySQL Syntax ---
+    // Fix: Separate table syntax for SQLite vs MySQL
     private static final String CREATE_WILDERNESS_TABLE_SQLITE = """
         CREATE TABLE IF NOT EXISTS aegis_wilderness_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,6 +144,7 @@ public class SQLDataStore implements IDataStore {
     private static final String LOAD_PLOTS = "SELECT * FROM aegis_plots";
     private static final String LOAD_ZONES = "SELECT * FROM aegis_zones WHERE plot_id = ?";
     
+    // --- FIX: UPDATED FOR MYSQL COMPATIBILITY ---
     private static final String UPSERT_PLOT = """
         INSERT INTO aegis_plots (
             plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, last_upkeep, flags, roles, 
@@ -153,27 +155,27 @@ public class SQLDataStore implements IDataStore {
             level, xp
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(plot_id) DO UPDATE SET
-        owner_name = EXCLUDED.owner_name,
-        x1 = EXCLUDED.x1, z1 = EXCLUDED.z1, x2 = EXCLUDED.x2, z2 = EXCLUDED.z2,
-        last_upkeep = EXCLUDED.last_upkeep,
-        flags = EXCLUDED.flags, roles = EXCLUDED.roles,
-        spawn_location = EXCLUDED.spawn_location,
-        welcome_msg = EXCLUDED.welcome_msg, farewell_msg = EXCLUDED.farewell_msg,
-        is_for_sale = EXCLUDED.is_for_sale, sale_price = EXCLUDED.sale_price,
-        is_for_rent = EXCLUDED.is_for_rent, rent_price = EXCLUDED.rent_price,
-        renter_uuid = EXCLUDED.renter_uuid, rent_expires = EXCLUDED.rent_expires,
-        plot_status = EXCLUDED.plot_status,
-        border_particle = EXCLUDED.border_particle,
-        ambient_particle = EXCLUDED.ambient_particle,
-        entry_effect = EXCLUDED.entry_effect,
-        current_bid = EXCLUDED.current_bid,
-        current_bidder = EXCLUDED.current_bidder,
-        is_server_warp = EXCLUDED.is_server_warp,
-        warp_name = EXCLUDED.warp_name,
-        warp_icon = EXCLUDED.warp_icon,
-        level = EXCLUDED.level,
-        xp = EXCLUDED.xp;
+        ON DUPLICATE KEY UPDATE
+        owner_name = VALUES(owner_name),
+        x1 = VALUES(x1), z1 = VALUES(z1), x2 = VALUES(x2), z2 = VALUES(z2),
+        last_upkeep = VALUES(last_upkeep),
+        flags = VALUES(flags), roles = VALUES(roles),
+        spawn_location = VALUES(spawn_location),
+        welcome_msg = VALUES(welcome_msg), farewell_msg = VALUES(farewell_msg),
+        is_for_sale = VALUES(is_for_sale), sale_price = VALUES(sale_price),
+        is_for_rent = VALUES(is_for_rent), rent_price = VALUES(rent_price),
+        renter_uuid = VALUES(renter_uuid), rent_expires = VALUES(rent_expires),
+        plot_status = VALUES(plot_status),
+        border_particle = VALUES(border_particle),
+        ambient_particle = VALUES(ambient_particle),
+        entry_effect = VALUES(entry_effect),
+        current_bid = VALUES(current_bid),
+        current_bidder = VALUES(current_bidder),
+        is_server_warp = VALUES(is_server_warp),
+        warp_name = VALUES(warp_name),
+        warp_icon = VALUES(warp_icon),
+        level = VALUES(level),
+        xp = VALUES(xp);
         """;
     
     private static final String DELETE_ZONES_BY_PLOT = "DELETE FROM aegis_zones WHERE plot_id = ?";
@@ -242,17 +244,18 @@ public class SQLDataStore implements IDataStore {
             s.execute(CREATE_PLOTS_TABLE);
             s.execute(CREATE_ZONES_TABLE);
             
-            s.execute(CREATE_INDEX_OWNER);
-            s.execute(CREATE_INDEX_WORLD);
+            // Execute indexes safely
+            try { s.execute(CREATE_INDEX_OWNER); } catch (SQLException ignored) {}
+            try { s.execute(CREATE_INDEX_WORLD); } catch (SQLException ignored) {}
             
-            // --- FIX: Choose correct syntax for Wilderness Table ---
+            // Use correct syntax for Wilderness table
             if (type.equals("mysql")) {
                 s.execute(CREATE_WILDERNESS_TABLE_MYSQL);
             } else {
                 s.execute(CREATE_WILDERNESS_TABLE_SQLITE);
             }
             
-            s.execute(CREATE_WILDERNESS_INDEX);
+            try { s.execute(CREATE_WILDERNESS_INDEX); } catch (SQLException ignored) {}
             
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to create database tables: " + e.getMessage());
@@ -294,7 +297,6 @@ public class SQLDataStore implements IDataStore {
                     rs.getLong("last_upkeep")
                 );
 
-                // --- Load ALL Ultimate Fields ---
                 plot.setSpawnLocationFromString(rs.getString("spawn_location"));
                 plot.setWelcomeMessage(rs.getString("welcome_msg"));
                 plot.setFarewellMessage(rs.getString("farewell_msg"));
@@ -311,21 +313,18 @@ public class SQLDataStore implements IDataStore {
                 plot.setAmbientParticle(rs.getString("ambient_particle"));
                 plot.setEntryEffect(rs.getString("entry_effect"));
                 
-                // --- Load Server Warp Data ---
                 if (rs.getBoolean("is_server_warp")) {
                     Material icon = Material.matchMaterial(rs.getString("warp_icon"));
                     if (icon == null) icon = Material.BEACON;
                     plot.setServerWarp(true, rs.getString("warp_name"), icon);
                 }
                 
-                // --- v1.1.0: Leveling ---
                 plot.setLevel(rs.getInt("level"));
                 plot.setXp(rs.getDouble("xp"));
 
                 deserializeFlags(plot, rs.getString("flags"));
                 deserializeRoles(plot, rs.getString("roles"));
                 
-                // --- Load Zones (Sub-Queries) ---
                 loadZones(conn, plot);
 
                 plotsByOwner.computeIfAbsent(plot.getOwner(), k -> new ArrayList<>()).add(plot);
@@ -713,10 +712,6 @@ public class SQLDataStore implements IDataStore {
         });
     }
 
-    /* -----------------------------
-     * Role Management API
-     * ----------------------------- */
-      
     @Override
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
         plot.setRole(playerUUID, role);
@@ -729,18 +724,12 @@ public class SQLDataStore implements IDataStore {
         isDirty = true;
     }
 
-    /* -----------------------------
-     * Admin Helpers
-     * ----------------------------- */
-      
     @Override
     public void removeBannedPlots() {
         for (OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
         }
     }
-    
-    // --- NEW: Wilderness Revert Methods ---
     
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -767,7 +756,6 @@ public class SQLDataStore implements IDataStore {
         Map<Integer, Location> blocksToRevert = new HashMap<>();
         Map<Integer, Material> materialsToSet = new HashMap<>();
         
-        // 1. Fetch blocks to revert
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement(GET_REVERTABLE_BLOCKS)) {
             
@@ -794,13 +782,10 @@ public class SQLDataStore implements IDataStore {
             return;
         }
         
-        if (blocksToRevert.isEmpty()) {
-            return; 
-        }
+        if (blocksToRevert.isEmpty()) return;
         
         plugin.getLogger().info("Reverting " + blocksToRevert.size() + " wilderness blocks...");
 
-        // 2. Revert blocks (on main thread) and delete from log
         plugin.runMainGlobal(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement psDelete = conn.prepareStatement(DELETE_REVERTED_BLOCKS)) {

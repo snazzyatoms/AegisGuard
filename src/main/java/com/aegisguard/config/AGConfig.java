@@ -1,7 +1,9 @@
 package com.aegisguard.config;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.economy.CurrencyType; 
+import com.aegisguard.economy.CurrencyType;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -23,7 +25,6 @@ public class AGConfig {
         this.config = plugin.getConfig();
         
         // --- AUTO-UPDATE LOGIC ---
-        // This ensures missing keys are added automatically without deleting the file.
         this.config.options().copyDefaults(true);
         plugin.saveConfig();
     }
@@ -65,12 +66,6 @@ public class AGConfig {
     public boolean isLevelingEnabled() {
         return config.getBoolean("leveling.enabled", true);
     }
-    
-    public CurrencyType getLevelCostType() {
-        String type = config.getString("leveling.cost_type", "VAULT").toUpperCase();
-        try { return CurrencyType.valueOf(type); } 
-        catch (IllegalArgumentException e) { return CurrencyType.VAULT; }
-    }
 
     public double getLevelBaseCost() {
         return config.getDouble("leveling.base_cost", 1000.0);
@@ -82,6 +77,12 @@ public class AGConfig {
 
     public int getMaxLevel() {
         return config.getInt("leveling.max_level", 10);
+    }
+
+    public CurrencyType getLevelCostType() {
+        String type = config.getString("leveling.cost_type", "VAULT").toUpperCase();
+        try { return CurrencyType.valueOf(type); } 
+        catch (IllegalArgumentException e) { return CurrencyType.VAULT; }
     }
 
     public List<String> getLevelRewards(int level) {
@@ -126,12 +127,12 @@ public class AGConfig {
         return config.getDouble("economy.claim_cost", 100.0);
     }
 
-    public org.bukkit.Material getWorldItemCostType(World world) {
+    public Material getWorldItemCostType(World world) {
         String path = "economy.item_cost.type";
         if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.type")) {
             path = "claims.per_world." + world.getName() + ".item_cost.type";
         }
-        return org.bukkit.Material.matchMaterial(config.getString(path, "DIAMOND"));
+        return Material.matchMaterial(config.getString(path, "DIAMOND"));
     }
     
     public int getWorldItemCostAmount(World world) {
@@ -215,4 +216,23 @@ public class AGConfig {
     
     public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
     public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
+
+    // ======================================
+    // ⚔️ Admin Scepter (NEW)
+    // ======================================
+    public Material getAdminWandMaterial() {
+        return Material.matchMaterial(config.getString("admin.wand.material", "BLAZE_ROD"));
+    }
+    
+    public String getAdminWandName() {
+        return ChatColor.translateAlternateColorCodes('&', config.getString("admin.wand.name", "&c&lSentinel's Scepter"));
+    }
+    
+    public List<String> getAdminWandLore() {
+        List<String> raw = config.getStringList("admin.wand.lore");
+        if (raw == null || raw.isEmpty()) return new ArrayList<>();
+        List<String> colored = new ArrayList<>();
+        for (String s : raw) colored.add(ChatColor.translateAlternateColorCodes('&', s));
+        return colored;
+    }
 }

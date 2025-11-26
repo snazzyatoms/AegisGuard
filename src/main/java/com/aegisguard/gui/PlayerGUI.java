@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * PlayerGUI
  * - The main player-facing menu for AegisGuard.
- * - UPDATED: Admins can now edit Server Plot flags/roles.
+ * - Layout: 54 Slots (Spacious)
  */
 public class PlayerGUI {
 
@@ -30,16 +30,31 @@ public class PlayerGUI {
 
     public void open(Player player) {
         String title = GUIManager.safeText(plugin.msg().get(player, "menu_title"), "§b§lAegisGuard §7— Menu");
-        Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 54, title); // 54 Slots
+        // UPGRADE: 54 Slots for a cleaner, spacious look
+        Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 54, title);
 
-        // --- 1. Glass Borders ---
-        int[] borderSlots = {0,1,2,3,4,5,6,7,8, 9,17, 18,26, 27,35, 36,44, 45,46,47,51,52,53};
+        // --- 1. Glass Borders (Frame) ---
+        int[] borderSlots = {
+            0,1,2,3,4,5,6,7,8,    // Top Row
+            9,17,                 // Sides
+            18,26,
+            27,35,
+            36,44,
+            45,46,47,51,52,53     // Bottom Row
+        };
+        
         for (int i : borderSlots) {
             inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
         }
 
-        // --- 2. Top Row: Utility ---
-        // Travel System (Slot 13)
+        // --- 2. TOP ROW: Navigation & Info ---
+        
+        // Codex (Slot 4 - Top Left)
+        inv.setItem(4, GUIManager.icon(Material.WRITABLE_BOOK, 
+            GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fGuardian Codex"), 
+            plugin.msg().getList(player, "info_lore")));
+
+        // Travel System (Slot 13 - Top Center)
         if (plugin.cfg().raw().getBoolean("travel_system.enabled", true)) {
              inv.setItem(13, GUIManager.icon(
                 Material.COMPASS,
@@ -48,13 +63,9 @@ public class PlayerGUI {
             ));
         }
 
-        // Codex (Slot 4)
-        inv.setItem(4, GUIManager.icon(Material.WRITABLE_BOOK, 
-            GUIManager.safeText(plugin.msg().get(player, "button_info"), "§fGuardian Codex"), 
-            plugin.msg().getList(player, "info_lore")));
-
-        // --- 3. Middle Row: Plot Management ---
-        // Claim Land (Slot 20)
+        // --- 3. MIDDLE ROW: Plot Management ---
+        
+        // Claim Land (Slot 20) - SMART LOGIC
         boolean hasSelection = plugin.selection().hasSelection(player);
         if (hasSelection) {
             inv.setItem(20, GUIManager.icon(Material.LIGHTNING_ROD, 
@@ -63,11 +74,11 @@ public class PlayerGUI {
         } else {
             inv.setItem(20, GUIManager.icon(Material.BARRIER, 
                 "§cClaim Land (Locked)", 
-                List.of("§7You must select 2 corners with wand first!", " ", "§eStatus: §cNo Selection")
+                List.of("§7You must select 2 corners", "§7with the Wand first!", " ", "§eStatus: §cNo Selection")
             ));
         }
 
-        // Plot Flags (Slot 22)
+        // Flags (Slot 22)
         inv.setItem(22, GUIManager.icon(Material.OAK_SIGN, 
             GUIManager.safeText(plugin.msg().get(player, "button_plot_flags"), "§6Plot Flags"), 
             plugin.msg().getList(player, "plot_flags_lore")));
@@ -77,7 +88,8 @@ public class PlayerGUI {
             GUIManager.safeText(plugin.msg().get(player, "button_roles"), "§bManage Roles"), 
             plugin.msg().getList(player, "roles_lore")));
         
-        // --- 4. Bottom Row: Economy & Expansion ---
+        // --- 4. BOTTOM ROW: Economy & Expansion ---
+        
         // Marketplace (Slot 38)
         inv.setItem(38, GUIManager.icon(Material.GOLD_INGOT, 
             GUIManager.safeText(plugin.msg().get(player, "button_market"), "§ePlot Marketplace"), 
@@ -95,18 +107,19 @@ public class PlayerGUI {
                 plugin.msg().getList(player, "auction_lore", List.of("§7Bid on expired plots."))));
         }
 
-        // --- 5. Footer: Settings & Exit ---
+        // --- 5. FOOTER: System ---
+        
         // Settings (Slot 48)
         inv.setItem(48, GUIManager.icon(Material.COMPARATOR, 
             GUIManager.safeText(plugin.msg().get(player, "button_player_settings"), "§9Player Settings"), 
             plugin.msg().getList(player, "player_settings_lore")));
 
-        // Admin Panel (Slot 49)
+        // Admin Panel (Slot 49) - Only for Admins
         if (plugin.isAdmin(player)) {
             inv.setItem(49, GUIManager.icon(Material.REDSTONE_BLOCK, "§c§lAdmin Panel", List.of("§7Open server management tools.")));
         }
 
-        // Exit (Slot 50)
+        // Exit (Slot 50) - Always Visible
         inv.setItem(50, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"), plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
@@ -138,11 +151,12 @@ public class PlayerGUI {
                     plugin.effects().playMenuFlip(player);
                 } else {
                     plugin.effects().playError(player);
+                    // Do NOT close menu
                 }
                 break;
 
             case 22: // Flags
-                // FIX: Allow if Owner OR Admin (Server Plots)
+                // FIX: Allow access if Owner OR Admin (Allows editing Server Plots)
                 if (!isOwner && !isAdmin) { 
                     plugin.msg().send(player, "no_plot_here"); 
                     plugin.effects().playError(player); 
@@ -153,42 +167,22 @@ public class PlayerGUI {
                 break;
                 
             case 24: // Roles
-                // FIX: Allow if Owner OR Admin (Add builders to spawn)
-                if (!isOwner && !isAdmin && plot == null) {
-                     // If no plot, RolesGUI usually shows list of owned plots.
-                     // If standing in Server Plot as Admin, we want to manage THAT plot.
-                     plugin.gui().roles().open(player); 
-                } else if (plot != null && (isOwner || isAdmin)) {
-                     // Ideally pass the plot directly, but RolesGUI defaults to "Select Plot" menu
-                     // or current plot context. For v1.1, opening the menu is safe.
-                     plugin.gui().roles().open(player);
-                } else {
-                     plugin.gui().roles().open(player); // Fallback to standard menu
-                }
+                // FIX: Allow access if Owner OR Admin
+                plugin.gui().roles().open(player); 
                 plugin.effects().playMenuFlip(player); 
                 break;
                 
             case 38: // Market
-                plugin.gui().market().open(player, 0); 
-                plugin.effects().playMenuFlip(player); 
-                break;
+                plugin.gui().market().open(player, 0); plugin.effects().playMenuFlip(player); break;
                 
             case 40: // Expansion
-                plugin.gui().expansionRequest().open(player); 
-                plugin.effects().playMenuFlip(player); 
-                break;
+                plugin.gui().expansionRequest().open(player); plugin.effects().playMenuFlip(player); break;
                 
             case 42: // Auction
-                if (plugin.cfg().isUpkeepEnabled()) { 
-                    plugin.gui().auction().open(player, 0); 
-                    plugin.effects().playMenuFlip(player); 
-                } 
-                break;
+                if (plugin.cfg().isUpkeepEnabled()) { plugin.gui().auction().open(player, 0); plugin.effects().playMenuFlip(player); } break;
             
             case 48: // Settings
-                plugin.gui().settings().open(player); 
-                plugin.effects().playMenuFlip(player); 
-                break;
+                plugin.gui().settings().open(player); plugin.effects().playMenuFlip(player); break;
             
             case 49: // Admin
                 if (isAdmin) {

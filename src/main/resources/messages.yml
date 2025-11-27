@@ -1,14 +1,6 @@
 # ======================================
 # AegisGuard v1.1.1 - Messages (Fully localized)
 # ======================================
-# Multilingual Tone System:
-#   Players may choose their preferred "tone of English" in Settings:
-#     - old_english (Default)
-#     - hybrid_english
-#     - modern_english
-#   Choices are per-player and update instantly — no reload needed.
-# ======================================
-
 prefix: "&8[&bAegisGuard&8]&r "
 
 language_styles:
@@ -21,15 +13,12 @@ language_styles:
 # ======================================
 # GUI Texts Shared Across All Styles
 # ======================================
-
 language_style_title: "Language Style: {STYLE}"
-
 language_style_lore:
   - "&7Switch the tone of AegisGuard’s speech."
   - "&8Choose between ancient and modern tongues."
   - "&eClick to cycle instantly."
 
-# --- Shared Buttons ---
 button_back: "&eBack"
 button_exit: "&cExit"
 back_lore:
@@ -41,27 +30,22 @@ exit_lore:
 # OLD ENGLISH STYLE (Default)
 # ======================================
 old_english:
-  # General & usage
   no_perm: "&cThou hast not the authority for such an act."
   players_only: "&cOnly mortals of flesh may wield this command."
   usage_main: "&eSpeak thus: /aegis <wand|menu|claim|unclaim|resize|help>"
 
-  # Sounds
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
   sound_global_disabled: "&c✖ Aegis’s voice is hushed for all."
 
-  # Scepter & selection
   wand_given: "&a⚡ Behold! The Aegis Scepter is bestowed upon thee."
   corner1_set: "&a⚡ Thy first boundary is marked at &e{X}, {Z}."
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
 
-  # Resize
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
 
-  # Claim limits & economy
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
   need_vault: "&c❌ Thy coffers hold less than &e{AMOUNT}&c gold."
   cost_deducted: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered."
@@ -71,7 +55,6 @@ old_english:
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
-  # Auction
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -81,7 +64,6 @@ old_english:
   auction-sold: "&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee."
   auction-won: "&a✔ Thou hast won the auction for {PLOT_OWNER}'s old dominion for &6{AMOUNT}&a!"
   
-  # Marketplace
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -91,7 +73,6 @@ old_english:
   market-not-for-sale: "&e✔ Thy dominion is no longer for sale."
   market-rent-soon: "&ePlot renting shall be decreed in a future age."
 
-  # Expansion
   expansion_gui_title: "&d§lLand Expansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -112,9 +93,7 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
 
-  # Travel / Visit
   visit_gui_title: "&9Travel System"
-
   home-set-success: "&a✔ Thy plot's arrival point hath been set to thy location."
   home-fail-outside: "&c❌ Thou must stand within thy dominion to set its arrival point."
   home-fail-no-spawn: "&c❌ Thine arrival point hath not yet been set! Use /ag setspawn."
@@ -161,14 +140,12 @@ old_english:
   auction_lore:
     - "&7Bid on lost lands."
   
-  # --- UPDATED NAME ---
   button_info: "&6📜 Codex of Knowledge"
+  info_message: "&7Seek wisdom within the Codex and protect thy holdings."
   info_lore:
     - "&7Unfurl the scrolls of wisdom."
-  info_message: "&7Seek wisdom within the Codex and protect thy holdings."
 
   settings_menu_title: "&9⚙ Thine Preferences"
-  
   button_sounds_on: "&a🔊 Sounds: Awake"
   button_sounds_off: "&c🔇 Sounds: Silent"
   button_sounds_disabled_global: "&7🔇 Sounds: Bound by Divine Silence"
@@ -177,7 +154,6 @@ old_english:
   sounds_toggle_global_disabled_lore:
     - "&7An edict hath hushed all sound."
 
-  # --- NEW: v1.1.0 Leveling (Old English) ---
   level_gui_title: "&dAscension of Land"
   level_current_status: "&dCurrent Standing"
   level_upgrade_button: "&aAscend to Level {LEVEL}"
@@ -185,14 +161,12 @@ old_english:
   level_up_success: "&d⚡ Thy dominion hath ascended to Level {LEVEL}!"
   level_up_fail_cost: "&c❌ Thou lacketh the tribute required for ascension."
   
-  # --- NEW: v1.1.0 Zoning (Old English) ---
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
   zone_deleted: "&c✖ The zone '{ZONE}' hath been dissolved."
   zone_rented: "&a✔ {PLAYER} hath rented the zone '{ZONE}'."
   zone_not_rented: "&7This zone stands empty."
 
-  # --- NEW: v1.1.0 Biomes (Old English) ---
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms around you! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
@@ -212,19 +186,16 @@ old_english:
     - "&c⚠ Heed: Visuals Only"
     - "&7(Thy soil remains unchanged)"
 
-  # Social
   like_success: "&a✔ Verily, thou hast favored this dominion! Total likes: &e{AMOUNT}"
   like_removed: "&eYou removed your favor."
   like_own_plot: "&cThou cannot bestow favor upon thine own land."
   like_disabled: "&cSocial standing is ignored in this realm."
 
-  # Visuals (Titles)
   title_entering: "&b{PLOT_NAME}"
   subtitle_entering: "&7Owned by {OWNER}"
   title_entering_wilderness: "&aThe Wilds"
   subtitle_entering_wilderness: "&7Untamed Lands"
 
-  # Plot Flags GUI
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
@@ -277,7 +248,6 @@ old_english:
   safe_zone_enabled: "&a🛡 Sanctuary is declared. All within is protected."
   safe_zone_disabled: "&c⚠ Sanctuary withdrawn. Individual wards now apply."
   
-  # Flight Flag
   button_fly_on: "&b🕊 Flight: Awakened"
   button_fly_off: "&c🕊 Flight: Grounded"
   fly_toggle_lore:
@@ -286,18 +256,17 @@ old_english:
   flight_enabled: "&a🕊 Flight bestowed upon thee."
   flight_disabled: "&c🕊 Flight withdrawn."
   
-  # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
     - "&7If Sealed, strangers cannot enter."
   
-  # Shop Flag (NEW)
-  button_shop_on: "&a🛒 Shop Access: Open"
-  button_shop_off: "&c🛒 Shop Access: Sealed"
+  # --- NEW: SHOP FLAG ---
+  button_shop_on: "&a🛒 Trade Access: Open"
+  button_shop_off: "&c🛒 Trade Access: Sealed"
   shop_toggle_lore:
-    - "&7If Open, strangers may use chests"
-    - "&7and signs to trade with thee."
+    - "&7Allow travelers to trade via signs/chests."
+    - "&7(Protects contents, but allows clicks)."
 
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:
@@ -371,12 +340,15 @@ old_english:
     - "&e/aegis resize <dir> <amt> &7- Expand thy dominion"
     - "&e/aegis home &7- Travel to thy plot's arrival point"
     - "&e/aegis setspawn &7- Set thy plot's arrival point"
-    - "&e/aegis welcome [msg] &7- Set a welcome message"
-    - "&e/aegis farewell [msg] &7- Set a farewell message"
+    - "&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)"
+    - "&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)"
     - "&e/aegis sell <price> &7- Put thy plot up for sale"
     - "&e/aegis unsell &7- Remove thy plot from the market"
     - "&e/aegis market &7- View dominions for sale"
     - "&e/aegis auction &7- View dominions for auction"
+    - "&e/aegis rename <name> &7- Set a custom title for thy land."
+    - "&e/aegis setdesc <text> &7- Set a description for travelers."
+    - "&e/aegis stuck &7- Escape a trap or prison."
     - "&e/aegis help &7- Study this sacred guide"
 
 # ======================================
@@ -495,7 +467,6 @@ hybrid_english:
   auction_lore:
     - "&7Bid on expired plots."
   
-  # --- UPDATED NAME ---
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Open the Codex to manage protections and learn commands."
   info_lore:
@@ -510,8 +481,20 @@ hybrid_english:
   sounds_toggle_global_disabled_lore:
     - "&7Server has disabled all sounds."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Flags."
+
+  level_gui_title: "&dPlot Leveling"
+  level_current_status: "&dCurrent Stats"
+  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
+  level_max_reached: "&cMax Level Reached"
+  level_up_success: "&d⚡ Your plot leveled up to {LEVEL}!"
+  level_up_fail_cost: "&c❌ You need more funds to upgrade."
   
-  # --- NEW: v1.1.0 Features (Hybrid) ---
+  zone_gui_title: "&3Sub-Claim Manager"
+  zone_created: "&a✔ Zone '{ZONE}' created."
+  zone_deleted: "&c✖ Zone '{ZONE}' deleted."
+  zone_rented: "&a✔ {PLAYER} rented '{ZONE}'."
+  zone_not_rented: "&7Not rented."
+
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms! Biome set to {BIOME}."
   biome_cost_paid: "&e💰 You paid &6{AMOUNT}&e to shift the climate."
@@ -609,7 +592,7 @@ hybrid_english:
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
     - "&7If Sealed, strangers cannot enter."
-
+  
   # Shop Flag (NEW)
   button_shop_on: "&a🛒 Shop Access: Open"
   button_shop_off: "&c🛒 Shop Access: Sealed"
@@ -680,7 +663,6 @@ hybrid_english:
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
-  # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
@@ -696,6 +678,9 @@ hybrid_english:
     - "&e/aegis unsell &7- Stop selling your plot"
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
+    - "&e/aegis rename <name> &7- Rename plot"
+    - "&e/aegis setdesc <text> &7- Set plot description"
+    - "&e/aegis stuck &7- Teleport to safety"
     - "&e/aegis help &7- Show help"
 
 # ======================================
@@ -824,11 +809,10 @@ modern_english:
   auction_lore:
     - "&7Bid on expired plots."
   
-  # --- UPDATED NAME ---
   button_info: "&6📜 Codex of Knowledge"
   info_message: "&7Open the Codex to manage protections and learn commands."
   info_lore:
-    - "&7View documentation."
+    - "&7Read the guide."
 
   # --- Settings GUI (Player Prefs) ---
   settings_menu_title: "&9⚙ Settings"
@@ -944,10 +928,10 @@ modern_english:
   button_fly_on: "&b🕊 Flight: On"
   button_fly_off: "&c🕊 Flight: Off"
   fly_toggle_lore:
-    - "&7Allow flight inside this plot."
+    - "&7Allow flight within this domain."
     - "&7(Cost to enable: &6{COST}&7)"
-  flight_enabled: "&a🕊 Flight Enabled."
-  flight_disabled: "&c🕊 Flight Disabled."
+  flight_enabled: "&a🕊 Flight enabled."
+  flight_disabled: "&c🕊 Flight disabled."
   
   # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
@@ -1040,4 +1024,7 @@ modern_english:
     - "&e/aegis unsell &7- Stop selling your plot"
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
+    - "&e/aegis rename <name> &7- Rename plot"
+    - "&e/aegis setdesc <text> &7- Set plot description"
+    - "&e/aegis stuck &7- Teleport to safety"
     - "&e/aegis help &7- Show help"

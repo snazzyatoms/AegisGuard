@@ -26,7 +26,7 @@ public class SelectionService implements Listener {
     private final Map<UUID, Location> loc1 = new HashMap<>();
     private final Map<UUID, Location> loc2 = new HashMap<>();
     
-    // Tracks if the player is using the Admin Wand
+    // Tracks if the player is using the Admin Wand for this selection
     private final Map<UUID, Boolean> selectionIsServer = new HashMap<>();
     
     public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
@@ -36,6 +36,7 @@ public class SelectionService implements Listener {
         this.plugin = plugin;
     }
 
+    // --- NEW HELPER FOR GUI ---
     public boolean hasSelection(Player p) {
         return loc1.containsKey(p.getUniqueId()) && loc2.containsKey(p.getUniqueId());
     }
@@ -57,7 +58,7 @@ public class SelectionService implements Listener {
 
         e.setCancelled(true);
 
-        // Mark this selection session
+        // Mark this selection session based on the wand used
         selectionIsServer.put(p.getUniqueId(), isServer);
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
@@ -119,8 +120,8 @@ public class SelectionService implements Listener {
             int width = maxX - minX + 1;
             int length = maxZ - minZ + 1;
             int radius = Math.max(width, length) / 2;
+
             int limitRadius = plugin.cfg().getWorldMaxRadius(p.getWorld());
-            
             if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
                 p.sendMessage(ChatColor.RED + "Claim too big! Max radius is " + limitRadius + " blocks.");
                 return;
@@ -183,7 +184,7 @@ public class SelectionService implements Listener {
             );
             plugin.worldRules().applyDefaults(plot);
         }
-
+        
         plugin.store().addPlot(plot);
 
         if (isServerClaim) {
@@ -206,7 +207,9 @@ public class SelectionService implements Listener {
             boolean adminBypass = plugin.cfg().raw().getBoolean("claims.admin_keep_wand", true);
             
             if (consume) {
-                if (adminBypass && plugin.isAdmin(p)) return;
+                if (adminBypass && plugin.isAdmin(p)) {
+                    return;
+                }
                 consumeWand(p);
             }
         }
@@ -269,8 +272,7 @@ public class SelectionService implements Listener {
         plugin.msg().send(p, "plot_unclaimed");
         plugin.effects().playUnclaim(p);
         
-        // Refund only for players, not server plots
-        if (!plot.isServerZone() && plugin.cfg().raw().getBoolean("claims.per_world." + p.getWorld().getName() + ".refund_on_unclaim", false)) {
+        if (plugin.cfg().raw().getBoolean("claims.per_world." + p.getWorld().getName() + ".refund_on_unclaim", false)) {
              double originalCost = plugin.cfg().getWorldVaultCost(p.getWorld());
              double percent = plugin.cfg().raw().getDouble("claims.per_world." + p.getWorld().getName() + ".refund_percent", 50.0);
              double refund = originalCost * (percent / 100.0);

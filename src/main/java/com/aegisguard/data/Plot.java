@@ -6,19 +6,19 @@ import org.bukkit.Location;
 import org.bukkit.Material; 
 import org.bukkit.World;
 
-import java.util.ArrayList; // --- NEW ---
+import java.util.ArrayList; 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;      // --- NEW ---
+import java.util.List;      
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Plot (Data Class) - v1.1.0
- * - Updated for Zoning (Sub-Claims), Leveling, and Social features.
+ * Plot (Data Class) - v1.1.1
+ * - Updated for Zoning (Sub-Claims), Leveling, Social, and Identity features.
  */
 public class Plot {
     
@@ -53,9 +53,10 @@ public class Plot {
     private String welcomeMessage;
     private String farewellMessage;
     
-    // --- Custom Titles ---
-    private String entryTitle;   
+    // --- Custom Titles & Identity ---
+    private String entryTitle;    // Custom Name (e.g. "The Fortress")
     private String entrySubtitle; 
+    private String description;   // NEW: Description for menus
 
     // --- Marketplace ---
     private boolean isForSale;
@@ -117,6 +118,9 @@ public class Plot {
         // v1.1.0 Defaults
         this.level = 1;
         this.xp = 0;
+        
+        // v1.1.1 Defaults
+        this.description = null;
     }
     
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
@@ -158,6 +162,9 @@ public class Plot {
         this.playerRoles.put(newOwner, "owner");
         this.bannedPlayers.clear(); 
         this.likedBy.clear();
+        this.entryTitle = null;
+        this.entrySubtitle = null;
+        this.description = null; // Clear desc
     }
     
     // --- v1.1.0: Zones ---
@@ -229,6 +236,7 @@ public class Plot {
     public long getLastUpkeepPayment() { return lastUpkeepPayment; }
     public void setLastUpkeepPayment(long time) { this.lastUpkeepPayment = time; }
     
+    // --- Identity ---
     public Location getSpawnLocation() { return spawnLocation; }
     public String getWelcomeMessage() { return welcomeMessage; }
     public String getFarewellMessage() { return farewellMessage; }
@@ -240,6 +248,9 @@ public class Plot {
     public String getEntrySubtitle() { return entrySubtitle; }
     public void setEntryTitle(String title) { this.entryTitle = title; }
     public void setEntrySubtitle(String sub) { this.entrySubtitle = sub; }
+
+    public String getDescription() { return description; } // --- NEW ---
+    public void setDescription(String description) { this.description = description; } // --- NEW ---
 
     public String getSpawnLocationString() {
         if (spawnLocation == null) return null;

@@ -38,7 +38,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         "sell", "unsell", "rent", "unrent", "market", "auction",
         "consume", "kick", "ban", "unban", "visit", 
         "level", "zone", "like",
-        "rename", "stuck" // --- NEW v1.1.1 ---
+        "rename", "stuck", "setdesc" // --- NEW v1.1.1 ---
     };
     
     private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
@@ -150,9 +150,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 handleLike(p);
                 break;
 
-            // --- v1.1.1 NEW COMMANDS ---
+            // --- v1.1.1 IDENTITY & UTILITY ---
             case "rename":
                 handleRename(p, args);
+                break;
+
+            case "setdesc":
+                handleSetDesc(p, args);
                 break;
 
             case "stuck":
@@ -191,6 +195,32 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.store().setDirty(true);
         
         sendMsg(p, "&a✔ Plot renamed to: &r" + name);
+        plugin.effects().playConfirm(p);
+    }
+
+    private void handleSetDesc(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+        if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
+            plugin.msg().send(p, "no_perm");
+            return;
+        }
+        
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag setdesc <Description>");
+            return;
+        }
+        
+        String desc = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
+        desc = ChatColor.translateAlternateColorCodes('&', desc);
+        
+        plot.setDescription(desc);
+        plugin.store().setDirty(true);
+        
+        sendMsg(p, "&a✔ Plot description updated.");
         plugin.effects().playConfirm(p);
     }
 

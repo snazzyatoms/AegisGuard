@@ -145,6 +145,21 @@ old_english:
   info_lore:
     - "&7Unfurl the scrolls of wisdom."
 
+  # --- NEW: UTILITY CHAPTER ---
+  button_utility_chapter: "&3§lVI. Identity & Utility"
+  utility_chapter_lore:
+    - "&7Make your land unique:"
+    - " "
+    - "&b/ag rename <Name>"
+    - "&7Set a custom Title for your plot."
+    - " "
+    - "&b/ag setdesc <Text>"
+    - "&7Set a description visible in the Travel Menu."
+    - " "
+    - "&e/ag stuck"
+    - "&7Trapped? Teleports you to the nearest safe"
+    - "&7location outside the claim."
+
   settings_menu_title: "&9⚙ Thine Preferences"
   button_sounds_on: "&a🔊 Sounds: Awake"
   button_sounds_off: "&c🔇 Sounds: Silent"
@@ -328,7 +343,7 @@ old_english:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
     
-  wilderness_revert_start: "[AegisGuard] The spirits of the wild begin their work..."
+  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] The spirits have restored {AMOUNT} scars."
 
   help_header: "&b⚔ &nThe Guardian’s Scroll of Instruction&r"
@@ -346,9 +361,6 @@ old_english:
     - "&e/aegis unsell &7- Remove thy plot from the market"
     - "&e/aegis market &7- View dominions for sale"
     - "&e/aegis auction &7- View dominions for auction"
-    - "&e/aegis rename <name> &7- Set a custom title for thy land."
-    - "&e/aegis setdesc <text> &7- Set a description for travelers."
-    - "&e/aegis stuck &7- Escape a trap or prison."
     - "&e/aegis help &7- Study this sacred guide"
 
 # ======================================
@@ -663,6 +675,7 @@ hybrid_english:
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
+  # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
@@ -678,9 +691,6 @@ hybrid_english:
     - "&e/aegis unsell &7- Stop selling your plot"
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
-    - "&e/aegis rename <name> &7- Rename plot"
-    - "&e/aegis setdesc <text> &7- Set plot description"
-    - "&e/aegis stuck &7- Teleport to safety"
     - "&e/aegis help &7- Show help"
 
 # ======================================
@@ -938,8 +948,8 @@ modern_english:
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
     - "&7If Sealed, strangers cannot enter."
-  
-  # Shop Flag (NEW)
+
+  # Shop Flag (NEW) - ADDED THIS!
   button_shop_on: "&a🛒 Shop Access: Open"
   button_shop_off: "&c🛒 Shop Access: Sealed"
   shop_toggle_lore:
@@ -1024,7 +1034,4 @@ modern_english:
     - "&e/aegis unsell &7- Stop selling your plot"
     - "&e/aegis market &7- View plots for sale"
     - "&e/aegis auction &7- View plots for auction"
-    - "&e/aegis rename <name> &7- Rename plot"
-    - "&e/aegis setdesc <text> &7- Set plot description"
-    - "&e/aegis stuck &7- Teleport to safety"
     - "&e/aegis help &7- Show help"

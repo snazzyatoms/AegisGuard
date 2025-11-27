@@ -9,11 +9,9 @@ import org.bukkit.entity.Player;
 
 /**
  * EffectUtil
- * - Replaces the old SoundUtil and merges SoundManager.
- * - Centralizes all CONIGURABLE sound and particle effects.
+ * - Centralizes all CONFIGURABLE sound and particle effects.
  * - Handles config-driven effects for protections.
  * - Handles configurable UI sounds.
- * - Reads values from config.yml on reload.
  */
 public class EffectUtil {
 
@@ -88,7 +86,6 @@ public class EffectUtil {
      * ----------------------------- */
 
     private boolean isSoundEnabled(Player p) {
-        // Use the method from the main class
         return plugin.isSoundEnabled(p);
     }
 
@@ -109,9 +106,21 @@ public class EffectUtil {
     }
     public void playClaimSuccess(Player p) {
         play(p, claimSuccessSound, claimSuccessVolume, claimSuccessPitch);
+        // Spawn happy particles
+        p.spawnParticle(Particle.VILLAGER_HAPPY, p.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 0);
     }
     public void playUnclaim(Player p) {
         play(p, unclaimSound, unclaimVolume, unclaimPitch);
+        p.spawnParticle(Particle.SMOKE_LARGE, p.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 0);
+    }
+
+    // --- NEW: Teleport Effect (Required for /ag stuck) ---
+    public void playTeleport(Player p) {
+        // Enderman sound
+        p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        // Purple particles
+        p.spawnParticle(Particle.PORTAL, p.getLocation().add(0, 1, 0), 30, 0.5, 1.0, 0.5, 0.1);
+        p.spawnParticle(Particle.DRAGON_BREATH, p.getLocation(), 10, 0.2, 0.1, 0.2, 0.05);
     }
 
     /**
@@ -128,18 +137,18 @@ public class EffectUtil {
         }
     }
 
-
     /* -----------------------------
      * Config-driven Protection Effects
      * ----------------------------- */
 
     public void playEffect(String category, String type, Player p, Location loc) {
         if (!plugin.getConfig().getBoolean("protection_effects.enabled", true)) return;
-        if (!isSoundEnabled(p)) return; // Respect player's personal sound toggle
+        if (!isSoundEnabled(p)) return;
 
         String base = "protection_effects." + category + "." + type;
         String def = "protection_effects.defaults." + type;
 
+        // Get sound/particle from config or fallback
         String soundKey = plugin.getConfig().getString(base + "_sound",
                 plugin.getConfig().getString(def + "_sound", "BLOCK_NOTE_BLOCK_BASS"));
         String particleKey = plugin.getConfig().getString(base + "_particle",
@@ -150,35 +159,41 @@ public class EffectUtil {
         float pitch = (float) plugin.getConfig().getDouble(base + "_pitch",
                 plugin.getConfig().getDouble(def + "_pitch", 1.0));
 
-        try {
-            Sound sound = Sound.valueOf(soundKey.toUpperCase());
-            p.playSound(loc, sound, volume, pitch);
-        } catch (IllegalArgumentException ignored) {
-            // invalid sound in config
+        if (soundKey != null) {
+            try {
+                Sound sound = Sound.valueOf(soundKey.toUpperCase());
+                p.playSound(loc, sound, volume, pitch);
+            } catch (IllegalArgumentException ignored) {}
         }
 
-        try {
-            Particle particle = Particle.valueOf(particleKey.toUpperCase());
-            loc.getWorld().spawnParticle(particle, loc.clone().add(0.5, 1, 0.5),
-                    10, 0.3, 0.3, 0.3, 0.05);
-        } catch (IllegalArgumentException ignored) {
-            // invalid particle in config
+        if (particleKey != null) {
+            try {
+                Particle particle = Particle.valueOf(particleKey.toUpperCase());
+                loc.getWorld().spawnParticle(particle, loc.clone().add(0.5, 1, 0.5),
+                        10, 0.3, 0.3, 0.3, 0.05);
+            } catch (IllegalArgumentException ignored) {}
         }
     }
     
     /**
-     * --- NEW ---
      * Plays a custom effect defined in the cosmetics section of config.
      */
     public void playCustomEffect(Player p, String effectName, Location loc) {
         if (!plugin.getConfig().getBoolean("protection_effects.enabled", true)) return;
         if (!isSoundEnabled(p)) return;
+        if (effectName == null) return;
 
+        // Try to load from config
         String base = "cosmetics.entry_effects." + effectName;
-        
         String soundKey = plugin.getConfig().getString(base + ".sound");
         String particleKey = plugin.getConfig().getString(base + ".particle");
         
+        // Fallback for hardcoded "lightning" just in case config is missing it
+        if (effectName.equalsIgnoreCase("lightning") && soundKey == null) {
+            p.playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.5f, 2.0f);
+            return;
+        }
+
         if (soundKey != null) {
             try {
                 Sound sound = Sound.valueOf(soundKey.toUpperCase());

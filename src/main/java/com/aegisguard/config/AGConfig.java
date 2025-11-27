@@ -103,6 +103,11 @@ public class AGConfig {
 
     public boolean isLikesEnabled() { return config.getBoolean("social.likes_enabled", true); }
     public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
+    
+    // --- v1.1.1 Additions ---
+    public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
+    public boolean isUnstuckEnabled() { return config.getBoolean("unstuck.enabled", true); }
+    public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
 
     // ======================================
     // 💰 Economy
@@ -145,6 +150,11 @@ public class AGConfig {
 
     public double getFlightCost() {
         return config.getDouble("economy.flag_costs.fly", 5000.0);
+    }
+    
+    // --- NEW: Shop Interact Cost ---
+    public double getShopInteractCost() {
+        return config.getDouble("economy.flag_costs.shop-interact", 0.0);
     }
 
     // ======================================

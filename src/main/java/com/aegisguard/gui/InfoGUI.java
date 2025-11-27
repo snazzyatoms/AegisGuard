@@ -120,11 +120,19 @@ public class InfoGUI {
             )
         ));
 
-        // --- 6. ADMIN GUIDE (Slot 31 - Only for Ops) ---
+        // --- 6. IDENTITY & UTILITY (Slot 24 - NEW) ---
+        // This chapter explains the new v1.1.1 commands
+        inv.setItem(24, GUIManager.icon(
+            Material.NAME_TAG,
+            GUIManager.safeText(plugin.msg().get(player, "button_utility_chapter"), "§3§lVI. Identity & Utility"),
+            plugin.msg().getList(player, "utility_chapter_lore")
+        ));
+
+        // --- 7. ADMIN GUIDE (Slot 31 - Only for Ops) ---
         if (plugin.isAdmin(player)) {
             inv.setItem(31, GUIManager.icon(
                 Material.COMMAND_BLOCK,
-                "§4§lVI. Operator's Guide",
+                "§4§lVII. Operator's Guide",
                 List.of(
                     "§7Authorized Personnel Only.",
                     " ",
@@ -135,8 +143,8 @@ public class InfoGUI {
                     "§7Turn the current plot into a Server Warp",
                     "§7(Visible in the Travel Menu).",
                     " ",
-                    "§c/ag consume",
-                    "§7Manually destroy a wand from inventory."
+                    "§c/agadmin wand",
+                    "§7Manually get the Sentinel's Scepter."
                 )
             ));
         }

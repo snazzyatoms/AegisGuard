@@ -6,8 +6,10 @@ import com.aegisguard.data.Zone;
 import com.aegisguard.selection.SelectionService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -35,7 +37,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         "setspawn", "home", "welcome", "farewell",
         "sell", "unsell", "rent", "unrent", "market", "auction",
         "consume", "kick", "ban", "unban", "visit", 
-        "level", "zone", "like"
+        "level", "zone", "like",
+        "rename", "stuck" // --- NEW v1.1.1 ---
     };
     
     private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
@@ -134,7 +137,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 plugin.gui().auction().open(p, 0);
                 break;
 
-            // --- NEW v1.1.0 SHORTCUTS ---
+            // --- v1.1.0 SHORTCUTS ---
             case "level":
                 openLevelMenu(p);
                 break;
@@ -147,6 +150,15 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 handleLike(p);
                 break;
 
+            // --- v1.1.1 NEW COMMANDS ---
+            case "rename":
+                handleRename(p, args);
+                break;
+
+            case "stuck":
+                handleStuck(p);
+                break;
+
             case "help":
             default:
                 sendHelp(p);
@@ -155,6 +167,68 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     // --- HANDLERS ---
+    
+    private void handleRename(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+        if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
+            plugin.msg().send(p, "no_perm");
+            return;
+        }
+        
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag rename <Name>");
+            return;
+        }
+        
+        String name = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
+        name = ChatColor.translateAlternateColorCodes('&', name);
+        
+        plot.setEntryTitle(name);
+        plugin.store().setDirty(true);
+        
+        sendMsg(p, "&a✔ Plot renamed to: &r" + name);
+        plugin.effects().playConfirm(p);
+    }
+
+    private void handleStuck(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendMsg(p, "&cYou are not inside a plot.");
+            return;
+        }
+        
+        // Find nearest safe spot outside
+        Location loc = p.getLocation();
+        int x = loc.getBlockX();
+        int z = loc.getBlockZ();
+        
+        int dX1 = Math.abs(x - plot.getX1());
+        int dX2 = Math.abs(x - plot.getX2());
+        int dZ1 = Math.abs(z - plot.getZ1());
+        int dZ2 = Math.abs(z - plot.getZ2());
+        
+        int min = Math.min(Math.min(dX1, dX2), Math.min(dZ1, dZ2));
+        
+        Location target = loc.clone();
+        
+        if (min == dX1) target.setX(plot.getX1() - 2);
+        else if (min == dX2) target.setX(plot.getX2() + 2);
+        else if (min == dZ1) target.setZ(plot.getZ1() - 2);
+        else target.setZ(plot.getZ2() + 2);
+        
+        // Get safe Y
+        World world = loc.getWorld();
+        int safeY = world.getHighestBlockYAt(target);
+        target.setY(safeY + 1);
+        
+        p.teleport(target);
+        sendMsg(p, "&e✨ You have been moved to safety.");
+        plugin.effects().playTeleport(p);
+    }
 
     private void handleResize(Player p, String[] args) {
         if (args.length < 3) {

@@ -86,7 +86,6 @@ public class InfoGUI {
         ));
 
         // --- 4. SECURITY & MODERATION (Slot 16) ---
-        // FIX: Changed IRON_SHIELD to SHIELD (Correct Bukkit Material)
         inv.setItem(16, GUIManager.icon(
             Material.SHIELD,
             "§c§lIV. Security & Banishment",
@@ -121,11 +120,28 @@ public class InfoGUI {
         ));
 
         // --- 6. IDENTITY & UTILITY (Slot 24 - NEW) ---
-        // This chapter explains the new v1.1.1 commands
+        // Ensure the lore list is populated from messages.yml
+        List<String> utilityLore = plugin.msg().getList(player, "utility_chapter_lore");
+        if (utilityLore == null || utilityLore.isEmpty()) {
+            // Fallback if messages.yml update hasn't propagated
+            utilityLore = List.of(
+                "§7Make your land unique:",
+                " ",
+                "§b/ag rename <Name>",
+                "§7Set a custom Title for your plot.",
+                " ",
+                "§b/ag setdesc <Text>",
+                "§7Set a description visible in the Travel Menu.",
+                " ",
+                "§e/ag stuck",
+                "§7Trapped? Teleports you to safety."
+            );
+        }
+
         inv.setItem(24, GUIManager.icon(
             Material.NAME_TAG,
             GUIManager.safeText(plugin.msg().get(player, "button_utility_chapter"), "§3§lVI. Identity & Utility"),
-            plugin.msg().getList(player, "utility_chapter_lore")
+            utilityLore
         ));
 
         // --- 7. ADMIN GUIDE (Slot 31 - Only for Ops) ---

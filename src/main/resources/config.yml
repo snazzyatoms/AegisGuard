@@ -1,5 +1,5 @@
 # ======================================
-#  AegisGuard v1.1.0 - Config
+#  AegisGuard v1.1.1 - Config
 # ======================================
 #  Core configuration file for AegisGuard.
 #  Provides language, economy, claim, protection,
@@ -45,7 +45,7 @@ currencies:
   flight: VAULT
   biomes: VAULT
   teleport: VAULT
-  leveling: VAULT  # New: Pay money to upgrade plot level
+  leveling: VAULT
 
 # ======================================
 # 💰 Economy & Prices
@@ -60,7 +60,6 @@ economy:
     amount: 5
 
   # --- Feature Costs ---
-  # Cost to toggle specific powerful flags ON.
   flag_costs:
     fly: 5000.0
 
@@ -140,46 +139,39 @@ claims:
       allow_claims: false
 
 # ======================================
-# 🏗️ Zoning (Sub-Claims) [NEW v1.1.0]
+# 🏗️ Zoning (Sub-Claims)
 # ======================================
-# Allow players to create rentable areas inside their plots.
 zoning:
   enabled: true
-  # Max sub-zones a player can create per plot
   max_zones_per_plot: 10
-  # If true, landlord gets 100% of rent. If false, server takes tax (see economy).
   landlord_gets_full_rent: true
 
 # ======================================
-# 📈 Plot Leveling (RPG) [NEW v1.1.0]
+# 📈 Plot Leveling (RPG)
 # ======================================
-# Allow players to upgrade their plots for permanent buffs.
 leveling:
   enabled: true
-  
-  # Cost to upgrade (Formula: base * level * multiplier)
   base_cost: 1000.0
   cost_multiplier: 1.5
   max_level: 50
   
-  # --- REWARDS ---
-  # Format: EFFECT:<TYPE>:<AMPLIFIER> or FLAG:<FLAG_NAME>
+  # Rewards
   rewards:
     2:
-      - "EFFECT:SPEED:1"              # Run Faster
+      - "EFFECT:SPEED:1"
     5:
-      - "FLAG:fly"                    # Unlock Flight Capability
+      - "FLAG:fly"
     10:
-      - "EFFECT:REGENERATION:1"       # Regen Faster
+      - "EFFECT:REGENERATION:1"
     15:
-      - "EFFECT:DAMAGE_RESISTANCE:1"  # Minimal Damage (Iron Skin)
+      - "EFFECT:DAMAGE_RESISTANCE:1"
     20:
-      - "EFFECT:SATURATION:1"         # Slow Hunger Degradation
-      - "EFFECT:NIGHT_VISION:1"       # Warding Spell (Night Vision)
+      - "EFFECT:SATURATION:1"
+      - "EFFECT:NIGHT_VISION:1"
     30:
-      - "EFFECT:LUCK:2"               # High Tier Luck
+      - "EFFECT:LUCK:2"
     50:
-      - "EFFECT:HEALTH_BOOST:2"       # Massive Health Boost (God Mode Lite)
+      - "EFFECT:HEALTH_BOOST:2"
 
 # ======================================
 # ⚙️ Protection Defaults
@@ -248,13 +240,24 @@ cosmetics:
     pass
 
 # ======================================
-# 🔮 Visual Titles
+# 🔮 Visual Titles & Notifications
 # ======================================
 titles:
   enabled: true
+  # Where should entry/exit messages appear?
+  # Options: CHAT, ACTION_BAR, TITLE
+  notification_location: ACTION_BAR
   fade_in: 10
   stay: 40
   fade_out: 10
+
+# ======================================
+# 🆘 Unstuck Command
+# ======================================
+unstuck:
+  enabled: true
+  warmup_seconds: 5
+  cooldown_seconds: 300
 
 # ======================================
 # 🌿 Biome Changing
@@ -289,15 +292,10 @@ admin:
   broadcast_admin_actions: false
   allow_language_command: true
   unlimited_plots: true
-  
-  # Allow admins to create Server Plots via GUI/Command?
   allow_server_plot_creation: true
-  
-  # Security
   trust_operators: true
 
   # --- SENTINEL'S SCEPTER (Admin Wand) ---
-  # Custom item for creating Server Zones instantly.
   wand:
     material: BLAZE_ROD
     name: "&c&lSentinel's Scepter"

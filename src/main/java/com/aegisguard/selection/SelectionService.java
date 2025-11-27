@@ -1,7 +1,9 @@
 package com.aegisguard.selection;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotClaimEvent; // --- NEW IMPORT ---
 import com.aegisguard.data.Plot;
+import org.bukkit.Bukkit; // --- NEW IMPORT ---
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -150,7 +152,7 @@ public class SelectionService implements Listener {
             }
         }
 
-        // --- CREATE PLOT ---
+        // --- CREATE PLOT OBJECT (But don't save yet) ---
         int minX = Math.min(l1.getBlockX(), l2.getBlockX());
         int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
         int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
@@ -185,6 +187,14 @@ public class SelectionService implements Listener {
             plugin.worldRules().applyDefaults(plot);
         }
         
+        // --- NEW: FIRE EVENT ---
+        PlotClaimEvent event = new PlotClaimEvent(plot, p);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return; // Stop if another plugin cancelled it
+        }
+
+        // --- SAVE PLOT ---
         plugin.store().addPlot(plot);
 
         if (isServerClaim) {

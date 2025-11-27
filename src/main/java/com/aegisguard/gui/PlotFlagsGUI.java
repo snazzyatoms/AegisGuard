@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages flags on a specific plot.
- * - UPDATED: Biome Changer with Disclaimer & Admin Bypass.
+ * - UPDATED: Added Shop Interact Button.
  */
 public class PlotFlagsGUI {
 
@@ -68,6 +68,10 @@ public class PlotFlagsGUI {
         // (Gap)
         addFlagButton(player, inv, plot, 23, "pets", Material.BONE, "button_pets", "pet_toggle_lore");
         addFlagButton(player, inv, plot, 24, "entities", Material.ARMOR_STAND, "button_entity", "entity_toggle_lore");
+        
+        // --- NEW: Shop Interact (Slot 25) ---
+        // Allows visitors to click signs/chests (for shop plugins)
+        addFlagButton(player, inv, plot, 25, "shop-interact", Material.EMERALD, "button_shop", "shop_toggle_lore");
 
         // --- 4. PREMIUM & EXTRAS (Row 4) ---
         // Flight
@@ -89,11 +93,11 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biome Changer (Slot 32 - Now with Disclaimer)
+        // Biome Changer
         inv.setItem(32, GUIManager.icon(
             Material.GRASS_BLOCK,
             GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
-            plugin.msg().getList(player, "biome_button_lore") // <-- Uses config message with disclaimer
+            plugin.msg().getList(player, "biome_button_lore") 
         ));
 
         // --- 5. NAVIGATION ---
@@ -115,7 +119,6 @@ public class PlotFlagsGUI {
         if (plot == null) { player.closeInventory(); return; }
 
         // Security: Only Owner OR Admin can edit flags
-        // FIX: This allows OPs/Admins to edit any plot (including Server Zones)
         if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             player.closeInventory();
@@ -144,6 +147,7 @@ public class PlotFlagsGUI {
             case 21: toggleFlag(player, plot, "farm"); break;
             case 23: toggleFlag(player, plot, "pets"); break;
             case 24: toggleFlag(player, plot, "entities"); break;
+            case 25: toggleFlag(player, plot, "shop-interact"); break; // NEW
             
             // Row 4 (Premium)
             case 30: toggleFlight(player, plot); break; // Flight
@@ -171,6 +175,9 @@ public class PlotFlagsGUI {
 
     private void toggleFlag(Player player, Plot plot, String flag) {
         boolean current = plot.getFlag(flag, true);
+        
+        // Check Cost logic can be expanded here for other flags (like shop-interact) if needed
+        
         plot.setFlag(flag, !current);
         plugin.store().setDirty(true);
         plugin.effects().playConfirm(player);
@@ -213,8 +220,13 @@ public class PlotFlagsGUI {
     // Helper to generate button icons
     private void addFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey) {
         boolean state = plot.getFlag(flag, true);
+        
+        // Default state logic: Some flags default to TRUE, some to FALSE.
+        // Usually "pvp" default is true (allowed) unless safezone.
+        // But for toggle buttons, we want GREEN = ON/Active Feature.
+        
         String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
-        if (name == null) name = "§7" + flag;
+        if (name == null) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
         
         List<String> lore = plugin.msg().getList(p, loreKey);
         if (lore == null) lore = new ArrayList<>();

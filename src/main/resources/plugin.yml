@@ -12,7 +12,8 @@ folia-supported: true
 commands:
   aegis:
     description: Main AegisGuard command
-    usage: "/aegis <menu|wand|claim|unclaim|resize|visit|kick|ban|zone|level|like>"
+    # Updated usage to include rename and stuck
+    usage: "/aegis <menu|wand|claim|unclaim|resize|visit|kick|ban|zone|level|like|rename|stuck>"
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -54,6 +55,9 @@ permissions:
       aegis.level: true  # Leveling
       aegis.biome: true  # Biome Changing
       aegis.like: true   # Social Likes
+      # v1.1.1 Features
+      aegis.rename: true # Plot Renaming
+      aegis.stuck: true  # Unstuck Command
       # Plot Moderation
       aegis.kick: true
       aegis.ban: true
@@ -124,6 +128,14 @@ permissions:
     default: true
   aegis.like:
     description: Like other players' plots
+    default: true
+  
+  # v1.1.1 Feature Nodes
+  aegis.rename:
+    description: Rename your plot alias
+    default: true
+  aegis.stuck:
+    description: Teleport out of a plot if trapped
     default: true
 
   # Economy

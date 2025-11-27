@@ -1,6 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotLevelUpEvent; // --- NEW IMPORT ---
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
@@ -11,7 +12,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LevelingGUI {
@@ -98,6 +98,11 @@ public class LevelingGUI {
                 plugin.effects().playError(player);
                 return;
             }
+
+            // --- FIRE EVENT ---
+            PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvl);
+            Bukkit.getPluginManager().callEvent(event);
+            // (Note: Level up events are usually not cancellable, but we fire it here anyway)
 
             plot.setLevel(nextLvl);
             plugin.store().setDirty(true);

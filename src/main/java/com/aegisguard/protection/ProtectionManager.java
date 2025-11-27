@@ -1,8 +1,8 @@
 package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.api.events.PlotEnterEvent; // --- NEW IMPORT ---
-import com.aegisguard.api.events.PlotLeaveEvent; // --- NEW IMPORT ---
+import com.aegisguard.api.events.PlotEnterEvent;
+import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
 import org.bukkit.Bukkit;
@@ -66,8 +66,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 2. MOVEMENT LOGIC (Flight, Bans, Entry, BUFFS, EVENTS) ---
-    // Changed priority to HIGH so we can properly cancel movement if needed
+    // --- 2. MOVEMENT LOGIC ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
@@ -77,18 +76,15 @@ public class ProtectionManager implements Listener {
         Plot toPlot = plugin.store().getPlotAt(e.getTo());
         Plot fromPlot = plugin.store().getPlotAt(e.getFrom());
 
-        // --- Handle LEAVING a Plot ---
+        // Leaving
         if (fromPlot != null && !fromPlot.equals(toPlot)) {
-            // Fire API Event
             PlotLeaveEvent leaveEvent = new PlotLeaveEvent(fromPlot, p);
             Bukkit.getPluginManager().callEvent(leaveEvent);
             
-            // Farewell Message
             if (!fromPlot.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, fromPlot.getFarewellMessage(), fromPlot.getOwnerName(), "farewell");
             }
 
-            // Flight Leaving
             if (fromPlot.getFlag("fly", false)) {
                 if (!p.hasPermission("aegis.admin.bypass") && 
                     p.getGameMode() != org.bukkit.GameMode.CREATIVE && 
@@ -101,9 +97,8 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // --- Handle ENTERING a Plot ---
+        // Entering
         if (toPlot != null && !toPlot.equals(fromPlot)) {
-            // Fire API Event (Cancellable)
             PlotEnterEvent enterEvent = new PlotEnterEvent(toPlot, p);
             Bukkit.getPluginManager().callEvent(enterEvent);
             
@@ -112,17 +107,14 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
-            // Welcome Message
             if (!toPlot.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, toPlot.getWelcomeMessage(), toPlot.getOwnerName(), "welcome");
             }
             
-            // Entry Effect
             if (toPlot.getEntryEffect() != null) {
                 plugin.effects().playCustomEffect(p, toPlot.getEntryEffect(), toPlot.getCenter(plugin));
             }
 
-            // Flight Entering
             if (toPlot.getFlag("fly", false)) {
                 if (toPlot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                     p.setAllowFlight(true);
@@ -131,10 +123,10 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // --- Continuous Checks (Entry & Bans) ---
+        // Continuous Checks
         if (toPlot != null) {
             if (p.hasPermission("aegis.admin.bypass")) {
-                 applyPlotBuffs(p, toPlot); // Admins get buffs too
+                 applyPlotBuffs(p, toPlot);
                  return;
             }
 
@@ -152,43 +144,35 @@ public class ProtectionManager implements Listener {
                     return;
                 }
             }
-            
-            // Apply Leveling Buffs while inside
             applyPlotBuffs(p, toPlot);
         }
     }
     
-    // --- Apply RPG Buffs based on Plot Level ---
     private void applyPlotBuffs(Player p, Plot plot) {
         if (!plugin.cfg().isLevelingEnabled()) return;
-        
         long now = System.currentTimeMillis();
-        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return; // Limit checks
+        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return;
         
-        // Only trusted members get buffs
         if (!plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) return;
 
         int level = plot.getLevel();
-        // Check levels 1 up to current level
         for (int i = 1; i <= level; i++) {
             List<String> rewards = plugin.cfg().getLevelRewards(i);
             if (rewards == null) continue;
-            
             for (String reward : rewards) {
                 if (reward.startsWith("EFFECT:")) {
                     try {
-                        String[] parts = reward.split(":"); // EFFECT:SPEED:1
+                        String[] parts = reward.split(":");
                         PotionEffectType type = PotionEffectType.getByName(parts[1]);
                         int amp = Integer.parseInt(parts[2]) - 1;
-                        
                         if (type != null) {
-                            p.addPotionEffect(new PotionEffect(type, 100, amp, true, false)); // 5 seconds
+                            p.addPotionEffect(new PotionEffect(type, 100, amp, true, false));
                         }
                     } catch (Exception ignored) {}
                 }
             }
         }
-        buffCooldowns.put(p.getUniqueId(), now + 2000); // Cooldown 2s
+        buffCooldowns.put(p.getUniqueId(), now + 2000);
     }
 
     private void bouncePlayer(Player p, PlayerMoveEvent e) {
@@ -210,13 +194,10 @@ public class ProtectionManager implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
-        
         Entity damager = e.getDamager();
         
-        // MOB DAMAGE BLOCKER
         if (damager instanceof Monster || damager instanceof Slime || damager instanceof Phantom || 
            (damager instanceof Projectile proj && proj.getShooter() instanceof Monster)) {
-            
             Plot plot = plugin.store().getPlotAt(victim.getLocation());
             if (plot != null) {
                 boolean isServer = plot.isServerZone();
@@ -231,7 +212,6 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // PVP LOGIC
         Player attacker = resolveAttacker(damager);
         if (attacker == null || attacker.equals(victim)) return;
 
@@ -264,7 +244,6 @@ public class ProtectionManager implements Listener {
         Block block = e.getBlock();
         Plot plot = plugin.store().getPlotAt(block.getLocation());
 
-        // Wilderness Log
         if (plot == null && wildernessRevertEnabled) {
             final String oldMat = block.getType().toString();
             final UUID uuid = p.getUniqueId();
@@ -275,7 +254,6 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
 
-        // Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null) {
             if (zone.isRented()) {
@@ -328,7 +306,6 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
         
-        // Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null) {
             if (zone.isRented()) {
@@ -363,7 +340,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 6. INTERACT ---
+    // --- 6. INTERACT (UPDATED FOR SHOP PLUGINS) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getClickedBlock() == null) return;
@@ -380,21 +357,28 @@ public class ProtectionManager implements Listener {
             return; 
         }
         
-        // Zone Check
+        // Sub-Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null && zone.isRented()) {
             if (p.getUniqueId().equals(zone.getRenter()) || p.getUniqueId().equals(plot.getOwner())) {
                 return; // Allow
             } else {
+                // Check Shop Flag Override inside a Zone
+                if (plot.getFlag("shop-interact", false) && (isContainer(block.getType()) || isSign(block.getType()))) {
+                    return; // Allow shop interaction even in rented zone
+                }
                 e.setCancelled(true);
                 p.sendMessage("§cThis zone is rented.");
                 return;
             }
         }
         
+        // Check Shop Flag (Global)
+        boolean shopAllowed = plot.getFlag("shop-interact", false);
+
         if (plot.isServerZone()) {
             if (isContainer(block.getType())) {
-                if (!plot.getFlag("containers", false)) {
+                if (!plot.getFlag("containers", false) && !shopAllowed) {
                     e.setCancelled(true);
                     p.sendMessage(plugin.msg().get("cannot_interact"));
                     plugin.effects().playEffect("containers", "deny", p, block.getLocation());
@@ -410,17 +394,28 @@ public class ProtectionManager implements Listener {
         }
 
         if (isContainer(block.getType())) {
+            if (shopAllowed) return; // Allow shopping
+            
             if (isContainersEnabled(plot) && !plot.hasPermission(p.getUniqueId(), "CONTAINERS", plugin)) {
                 e.setCancelled(true);
                 p.sendMessage(plugin.msg().get("cannot_interact"));
                 plugin.effects().playEffect("containers", "deny", p, block.getLocation());
             }
-        } else if (isInteractable(block.getType())) {
+        } else if (isInteractable(block.getType()) && !isSign(block.getType())) {
+            // Regular interact logic
             if (hasFlag(plot, "interact") && !plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                  e.setCancelled(true);
                  p.sendMessage(plugin.msg().get("cannot_interact"));
                  plugin.effects().playEffect("interact", "deny", p, block.getLocation());
             }
+        } else if (isSign(block.getType())) {
+            // Signs are special (often shops)
+             if (shopAllowed) return;
+             
+             if (hasFlag(plot, "interact") && !plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
+                 e.setCancelled(true);
+                 // Silent deny for signs to avoid spam
+             }
         }
     }
 
@@ -554,6 +549,10 @@ public class ProtectionManager implements Listener {
             case CHEST, TRAPPED_CHEST, BARREL, ENDER_CHEST, FURNACE, BLAST_FURNACE, SMOKER, HOPPER, DROPPER, DISPENSER, BREWING_STAND, CHISELED_BOOKSHELF -> true;
             default -> false;
         };
+    }
+    
+    private boolean isSign(Material type) {
+        return type.name().contains("SIGN");
     }
     
     private boolean isInteractable(Material type) {

@@ -1,8 +1,10 @@
 package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotEnterEvent; // --- NEW IMPORT ---
+import com.aegisguard.api.events.PlotLeaveEvent; // --- NEW IMPORT ---
 import com.aegisguard.data.Plot;
-import com.aegisguard.data.Zone; // --- NEW IMPORT ---
+import com.aegisguard.data.Zone;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -35,7 +37,7 @@ public class ProtectionManager implements Listener {
     private final AegisGuard plugin;
     private final boolean wildernessRevertEnabled; 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>(); // --- NEW: Buff Timer ---
+    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>(); 
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -64,8 +66,9 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 2. MOVEMENT LOGIC (Flight, Bans, Entry, BUFFS) ---
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    // --- 2. MOVEMENT LOGIC (Flight, Bans, Entry, BUFFS, EVENTS) ---
+    // Changed priority to HIGH so we can properly cancel movement if needed
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
             e.getFrom().getBlockZ() == e.getTo().getBlockZ()) return;
@@ -74,23 +77,18 @@ public class ProtectionManager implements Listener {
         Plot toPlot = plugin.store().getPlotAt(e.getTo());
         Plot fromPlot = plugin.store().getPlotAt(e.getFrom());
 
-        // Welcome Messages
-        if (toPlot != null && !toPlot.equals(fromPlot)) {
-            if (!toPlot.getOwner().equals(p.getUniqueId())) {
-                sendPlotMessage(p, toPlot.getWelcomeMessage(), toPlot.getOwnerName(), "welcome");
-            }
-            if (toPlot.getEntryEffect() != null) {
-                plugin.effects().playCustomEffect(p, toPlot.getEntryEffect(), toPlot.getCenter(plugin));
-            }
-        }
+        // --- Handle LEAVING a Plot ---
         if (fromPlot != null && !fromPlot.equals(toPlot)) {
+            // Fire API Event
+            PlotLeaveEvent leaveEvent = new PlotLeaveEvent(fromPlot, p);
+            Bukkit.getPluginManager().callEvent(leaveEvent);
+            
+            // Farewell Message
             if (!fromPlot.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, fromPlot.getFarewellMessage(), fromPlot.getOwnerName(), "farewell");
             }
-        }
 
-        // Flight Leaving
-        if (fromPlot != null && (toPlot == null || !toPlot.equals(fromPlot))) {
+            // Flight Leaving
             if (fromPlot.getFlag("fly", false)) {
                 if (!p.hasPermission("aegis.admin.bypass") && 
                     p.getGameMode() != org.bukkit.GameMode.CREATIVE && 
@@ -103,8 +101,28 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // Flight Entering
-        if (toPlot != null && (fromPlot == null || !fromPlot.equals(toPlot))) {
+        // --- Handle ENTERING a Plot ---
+        if (toPlot != null && !toPlot.equals(fromPlot)) {
+            // Fire API Event (Cancellable)
+            PlotEnterEvent enterEvent = new PlotEnterEvent(toPlot, p);
+            Bukkit.getPluginManager().callEvent(enterEvent);
+            
+            if (enterEvent.isCancelled()) {
+                bouncePlayer(p, e);
+                return;
+            }
+
+            // Welcome Message
+            if (!toPlot.getOwner().equals(p.getUniqueId())) {
+                sendPlotMessage(p, toPlot.getWelcomeMessage(), toPlot.getOwnerName(), "welcome");
+            }
+            
+            // Entry Effect
+            if (toPlot.getEntryEffect() != null) {
+                plugin.effects().playCustomEffect(p, toPlot.getEntryEffect(), toPlot.getCenter(plugin));
+            }
+
+            // Flight Entering
             if (toPlot.getFlag("fly", false)) {
                 if (toPlot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                     p.setAllowFlight(true);
@@ -113,9 +131,12 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // Entry & Bans
+        // --- Continuous Checks (Entry & Bans) ---
         if (toPlot != null) {
-            if (p.hasPermission("aegis.admin.bypass")) return;
+            if (p.hasPermission("aegis.admin.bypass")) {
+                 applyPlotBuffs(p, toPlot); // Admins get buffs too
+                 return;
+            }
 
             if (toPlot.isBanned(p.getUniqueId())) {
                 bouncePlayer(p, e);
@@ -132,17 +153,17 @@ public class ProtectionManager implements Listener {
                 }
             }
             
-            // --- NEW: LEVELING BUFFS ---
+            // Apply Leveling Buffs while inside
             applyPlotBuffs(p, toPlot);
         }
     }
     
-    // --- NEW: Apply RPG Buffs based on Plot Level ---
+    // --- Apply RPG Buffs based on Plot Level ---
     private void applyPlotBuffs(Player p, Plot plot) {
         if (!plugin.cfg().isLevelingEnabled()) return;
         
         long now = System.currentTimeMillis();
-        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return; // Limit checks to every 2s
+        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return; // Limit checks
         
         // Only trusted members get buffs
         if (!plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) return;
@@ -254,18 +275,16 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
 
-        // --- NEW: Zone Check (Sub-Claims) ---
+        // Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null) {
             if (zone.isRented()) {
-                // Only Renter (and Owner) can build
                 if (!p.getUniqueId().equals(zone.getRenter()) && !p.getUniqueId().equals(plot.getOwner())) {
                     e.setCancelled(true);
                     p.sendMessage("§cThis zone is rented by " + Bukkit.getOfflinePlayer(zone.getRenter()).getName());
                 }
-                return; // Exit if in zone (whether allowed or denied)
+                return; 
             }
-            // If not rented, treat as plot (fall through)
         }
 
         if (plot.isServerZone()) {
@@ -309,7 +328,7 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin")) return;
         
-        // --- NEW: Zone Check ---
+        // Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null) {
             if (zone.isRented()) {
@@ -361,10 +380,9 @@ public class ProtectionManager implements Listener {
             return; 
         }
         
-        // --- NEW: Zone Check ---
+        // Zone Check
         Zone zone = plot.getZoneAt(block.getLocation());
         if (zone != null && zone.isRented()) {
-            // Renter has full container/interact access
             if (p.getUniqueId().equals(zone.getRenter()) || p.getUniqueId().equals(plot.getOwner())) {
                 return; // Allow
             } else {

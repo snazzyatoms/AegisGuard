@@ -14,27 +14,24 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * AdminPlotListGUI
- * - A paginated GUI for admins to view all plots on the server.
- * - Allows admins to teleport to or delete any plot.
+ * - A paginated GUI for admins to view and manage all plots.
+ * - Supports teleporting and deletion.
  */
 public class AdminPlotListGUI {
 
     private final AegisGuard plugin;
-    private final int PLOTS_PER_PAGE = 45; // 5 rows * 9 slots
+    private final int PLOTS_PER_PAGE = 45;
 
     public AdminPlotListGUI(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    /**
-     * Reliable holder that stores the plot list and current page.
-     */
     public static class PlotListHolder implements InventoryHolder {
         private final int page;
         private final List<Plot> plots;
@@ -46,39 +43,25 @@ public class AdminPlotListGUI {
 
         public int getPage() { return page; }
         public List<Plot> getPlots() { return plots; }
-        public int getMaxPages() { return (int) Math.ceil((double) plots.size() / 45.0); }
-
-        @Override
-        public Inventory getInventory() { return null; }
+        @Override public Inventory getInventory() { return null; }
     }
 
-    /* -----------------------------
-     * Open GUI
-     * ----------------------------- */
     public void open(Player player, int page) {
-        // Get a fresh list of all plots and sort them by owner name
         List<Plot> allPlots = new ArrayList<>(plugin.store().getAllPlots());
-        allPlots.sort((p1, p2) -> p1.getOwnerName().compareToIgnoreCase(p2.getOwnerName()));
+        // Sort by Owner Name A-Z
+        allPlots.sort(Comparator.comparing(Plot::getOwnerName, String.CASE_INSENSITIVE_ORDER));
 
-        int maxPages = (int) Math.ceil((double) allPlots.size() / (double) PLOTS_PER_PAGE);
+        int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
         if (page < 0) page = 0;
-        if (page >= maxPages && maxPages > 0) {
-             page = maxPages - 1;
-        } else if (maxPages == 0) {
-             page = 0;
-        }
+        if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
-        String title = GUIManager.safeText(plugin.msg().get(player, "admin_plot_list_title"), "§cAll Plots")
-                + " §8(Page " + (page + 1) + "/" + Math.max(1, maxPages) + ")";
-
+        String title = "§cGlobal Plot List §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
         // Fill background
-        for (int i = 45; i < 54; i++) {
-            inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
-        }
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
-        // Add plot heads
         int startIndex = page * PLOTS_PER_PAGE;
         for (int i = 0; i < PLOTS_PER_PAGE; i++) {
             int plotIndex = startIndex + i;
@@ -90,23 +73,20 @@ public class AdminPlotListGUI {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                // SetOwningPlayer can fail on offline/unknown players, fallback gracefully
-                try {
-                     meta.setOwningPlayer(owner);
-                } catch (Exception e) {
-                     // Use default steve head
-                }
+                meta.setOwningPlayer(owner);
+                meta.setDisplayName("§bOwner: §f" + plot.getOwnerName());
                 
-                meta.setDisplayName("§bPlot by: §f" + plot.getOwnerName());
-                meta.setLore(List.of(
-                        "§7ID: §e" + plot.getPlotId().toString().substring(0, 8),
-                        "§7World: §f" + plot.getWorld(),
-                        "§7Bounds: §a(" + plot.getX1() + ", " + plot.getZ1() + ")",
-                        "§7      to §a(" + plot.getX2() + ", " + plot.getZ2() + ")",
-                        " ",
-                        "§eLeft-Click: §7Teleport to plot",
-                        "§cRight-Click: §7Delete plot"
-                ));
+                List<String> lore = new ArrayList<>();
+                lore.add("§7ID: §e" + plot.getPlotId().toString().substring(0, 8));
+                lore.add("§7World: §f" + plot.getWorld());
+                lore.add("§7Bounds: §a" + plot.getX1() + ", " + plot.getZ1());
+                lore.add("§7       to §a" + plot.getX2() + ", " + plot.getZ2());
+                if (plot.isServerZone()) lore.add("§c[SERVER ZONE]");
+                lore.add(" ");
+                lore.add("§eLeft-Click: §7Teleport");
+                lore.add("§cRight-Click: §7Delete Plot");
+                
+                meta.setLore(lore);
                 head.setItemMeta(meta);
             }
             inv.setItem(i, head);
@@ -114,21 +94,21 @@ public class AdminPlotListGUI {
 
         // Navigation
         if (page > 0) {
-            inv.setItem(45, GUIManager.icon(Material.ARROW, "§aPrevious Page", List.of("§7Go to page " + page)));
+            inv.setItem(45, GUIManager.createItem(Material.ARROW, "§aPrevious Page", null));
         }
+        
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, "§fBack to Admin Menu", null));
+
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.icon(Material.ARROW, "§aNext Page", List.of("§7Go to page " + (page + 2))));
+            inv.setItem(53, GUIManager.createItem(Material.ARROW, "§aNext Page", null));
         }
 
-        inv.setItem(49, GUIManager.icon(Material.BARRIER, "§cClose", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    /* -----------------------------
-     * Handle Clicks
-     * ----------------------------- */
     public void handleClick(Player player, InventoryClickEvent e, PlotListHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
@@ -136,54 +116,57 @@ public class AdminPlotListGUI {
         int slot = e.getSlot();
         int currentPage = holder.getPage();
 
-        // Handle navigation
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { // Previous Page
+        // Nav
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
             open(player, currentPage - 1);
-            plugin.effects().playMenuFlip(player);
             return;
         }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { // Next Page
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
             open(player, currentPage + 1);
-            plugin.effects().playMenuFlip(player);
             return;
         }
-        if (slot == 49 && e.getCurrentItem().getType() == Material.BARRIER) { // Close
+        if (slot == 48) { // Back
+            plugin.gui().admin().open(player);
+            return;
+        }
+        if (slot == 49) { // Close
             player.closeInventory();
-            plugin.effects().playMenuClose(player);
             return;
         }
 
-        // Handle plot clicks
+        // Listing
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
             if (plotIndex >= holder.getPlots().size()) return;
 
             Plot plot = holder.getPlots().get(plotIndex);
-            if (plot == null) return;
+            if (plot == null) {
+                player.sendMessage("§cPlot no longer exists.");
+                open(player, currentPage); // Refresh
+                return;
+            }
 
             if (e.getClick().isLeftClick()) {
                 // Teleport
                 Location loc = plot.getCenter(plugin);
-                if (loc == null || loc.getWorld() == null) {
-                     plugin.msg().send(player, "admin-plot-tp-fail-world");
-                     plugin.effects().playError(player);
-                     return;
+                if (loc != null && loc.getWorld() != null) {
+                    // Safe Y calculation
+                    int y = loc.getWorld().getHighestBlockYAt(loc);
+                    loc.setY(y + 1);
+                    player.teleport(loc);
+                    
+                    plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
+                    plugin.effects().playConfirm(player);
+                    player.closeInventory();
+                } else {
+                    player.sendMessage("§cInvalid world or location.");
                 }
-                
-                // FIX: Get safe Y-level (Highest non-air block Y + 1.0 to prevent suffocation)
-                int highestY = loc.getWorld().getHighestBlockYAt(loc);
-                loc.setY(highestY + 1.0); 
-                
-                player.teleport(loc);
-                player.closeInventory();
-                plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
-                plugin.effects().playConfirm(player);
             } else if (e.getClick().isRightClick()) {
                 // Delete
                 plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
-                plugin.effects().playError(player);
-                open(player, currentPage); // Refresh the GUI
+                plugin.effects().playUnclaim(player);
+                open(player, currentPage); // Refresh list
             }
         }
     }

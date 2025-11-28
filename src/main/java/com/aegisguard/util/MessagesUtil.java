@@ -1,7 +1,6 @@
 package com.aegisguard.util;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot; 
 import com.aegisguard.gui.SettingsGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -9,8 +8,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -20,22 +19,31 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * MessagesUtil (AegisGuard v1.0)
+ * MessagesUtil (AegisGuard v1.1.1)
  * - Handles multi-language support and message formatting.
- * - Features Auto-Updating logic for messages.yml.
+ * - Supports Hex Colors (&#RRGGBB).
  */
 public class MessagesUtil implements Listener {
 
     private final AegisGuard plugin;
     private FileConfiguration messages;
-    private final Map<UUID, String> playerStyles = new HashMap<>();
+    
+    // Player Language Cache
+    private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
     private String defaultStyle;
 
+    // Persistence
     private File playerDataFile;
     private FileConfiguration playerData;
     private volatile boolean isPlayerDataDirty = false;
+
+    // Hex Pattern
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public MessagesUtil(AegisGuard plugin) {
         this.plugin = plugin;
@@ -51,41 +59,37 @@ public class MessagesUtil implements Listener {
         this.messages = YamlConfiguration.loadConfiguration(file);
 
         // --- AUTO-UPDATER LOGIC ---
-        // 1. Load the internal messages.yml from the JAR
         InputStream defStream = plugin.getResource("messages.yml");
         if (defStream != null) {
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defStream, StandardCharsets.UTF_8));
             this.messages.setDefaults(defConfig);
+            this.messages.options().copyDefaults(true);
         }
         
-        // 2. Copy missing keys from JAR to disk
-        this.messages.options().copyDefaults(true);
         try {
             this.messages.save(file);
         } catch (IOException e) {
             plugin.getLogger().warning("Could not auto-update messages.yml: " + e.getMessage());
         }
-        // --------------------------
 
         this.defaultStyle = messages.getString("language_styles.default", "old_english");
         plugin.getLogger().info("[AegisGuard] Messages loaded. Default style: " + defaultStyle);
         
-        loadPlayerPreferences(); // Reload player data too
+        loadPlayerPreferences(); 
     }
 
     // --- Accessors (Player-aware) ---
+    
     public String get(Player player, String key) {
-        String raw = getRawForPlayer(player, key);
-        return format(raw);
+        return format(getRawForPlayer(player, key));
     }
+    
     public String get(Player player, String key, String... kv) {
-        String raw = getRawForPlayer(player, key);
-        raw = applyPlaceholders(raw, kv);
-        return format(raw);
+        return format(applyPlaceholders(getRawForPlayer(player, key), kv));
     }
+    
     public String get(Player player, String key, Map<String, String> placeholders) {
-        String raw = getRawForPlayer(player, key);
-        return format(applyPlaceholders(raw, placeholders));
+        return format(applyPlaceholders(getRawForPlayer(player, key), placeholders));
     }
 
     public List<String> getList(Player player, String key) {
@@ -97,29 +101,31 @@ public class MessagesUtil implements Listener {
         String path = style + "." + key;
         List<String> list = messages.getStringList(path);
         
+        // Fallback to default language if missing in current style
         if (list.isEmpty()) list = messages.getStringList(defaultStyle + "." + key);
-        if (list.isEmpty()) return fallback;
+        if (list.isEmpty()) return fallback != null ? fallback : Collections.emptyList();
         
         List<String> colored = new ArrayList<>(list.size());
         for (String line : list) colored.add(format(line));
         return colored;
     }
 
-    // --- Accessors (Default style) ---
+    // --- Accessors (Console / Default) ---
+    
     public String get(String key) {
-        String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
-        return format(raw);
+        return format(messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]"));
     }
+    
     public String get(String key, String... kv) {
         String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
-        raw = applyPlaceholders(raw, kv);
-        return format(raw);
+        return format(applyPlaceholders(raw, kv));
     }
+    
     public String get(String key, Map<String, String> placeholders) {
         String raw = messages.getString(defaultStyle + "." + key, "&c[Missing: " + key + "]");
-        raw = applyPlaceholders(raw, placeholders);
-        return format(raw);
+        return format(applyPlaceholders(raw, placeholders));
     }
+    
     public List<String> getList(String key) {
         List<String> list = messages.getStringList(defaultStyle + "." + key);
         if (list.isEmpty()) return Collections.emptyList();
@@ -136,20 +142,27 @@ public class MessagesUtil implements Listener {
     public String prefix() { return format(messages.getString("prefix", "&8[&bAegisGuard&8]&r ")); }
 
     // --- Senders ---
+    
     public void send(CommandSender sender, String key) {
         String msg = (sender instanceof Player p) ? get(p, key) : get(key);
+        if (msg == null || msg.isEmpty()) return;
         sender.sendMessage(prefix() + msg);
     }
+    
     public void send(CommandSender sender, String key, Map<String, String> placeholders) {
         String msg = (sender instanceof Player p) ? get(p, key, placeholders) : get(key, placeholders);
+        if (msg == null || msg.isEmpty()) return;
         sender.sendMessage(prefix() + msg);
     }
+    
     public void send(CommandSender sender, String key, String... kv) {
         String msg = (sender instanceof Player p) ? get(p, key, kv) : get(key, kv);
+        if (msg == null || msg.isEmpty()) return;
         sender.sendMessage(prefix() + msg);
     }
 
     // --- Player Style System ---
+    
     public void setPlayerStyle(Player player, String style) {
         List<String> valid = messages.getStringList("language_styles.available");
         if (valid == null || !valid.contains(style)) {
@@ -158,23 +171,30 @@ public class MessagesUtil implements Listener {
         }
         playerStyles.put(player.getUniqueId(), style);
         savePlayerPreference(player, style);
-        player.sendMessage(ChatColor.GOLD + "🕮 Your speech style is now: " + ChatColor.AQUA + style.replace("_", " "));
+        
+        String styleName = style.replace("_", " ");
+        // Capitalize first letter
+        if (styleName.length() > 0) styleName = styleName.substring(0, 1).toUpperCase() + styleName.substring(1);
+        
+        player.sendMessage(ChatColor.GOLD + "🕮 Language set to: " + ChatColor.AQUA + styleName);
 
-        // Live GUI Refresh
-        if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
-             InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
-             if (holder instanceof SettingsGUI.SettingsGUIHolder settingsHolder) {
-                 com.aegisguard.data.Plot plot = settingsHolder.getPlot();
-                 plugin.runMain(player, () -> plugin.gui().settings().open(player));
-             }
-        }
+        // Live GUI Refresh (if open)
+        plugin.runMain(player, () -> {
+            if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
+                InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
+                if (holder != null && holder.getClass().getName().contains("SettingsGUI")) {
+                    plugin.gui().settings().open(player);
+                }
+            }
+        });
     }
 
     public String getPlayerStyle(Player player) {
         return playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
     }
 
-    // --- Player Preferences (Async Save/Load) ---
+    // --- Persistence (Async Save/Load) ---
+    
     public synchronized void loadPlayerPreferences() {
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
         if (!playerDataFile.exists()) {
@@ -183,23 +203,20 @@ public class MessagesUtil implements Listener {
         playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 
         ConfigurationSection section = playerData.getConfigurationSection("players");
-        if (section == null) return;
-
-        for (String uuidStr : section.getKeys(false)) {
-            try {
-                UUID uuid = UUID.fromString(uuidStr);
-                String style = section.getString(uuidStr + ".language_style", defaultStyle);
-                playerStyles.put(uuid, style);
-            } catch (IllegalArgumentException ignored) {}
+        if (section != null) {
+            for (String uuidStr : section.getKeys(false)) {
+                try {
+                    UUID uuid = UUID.fromString(uuidStr);
+                    String style = section.getString(uuidStr + ".language_style", defaultStyle);
+                    playerStyles.put(uuid, style);
+                } catch (IllegalArgumentException ignored) {}
+            }
         }
         plugin.getLogger().info("[AegisGuard] Loaded " + playerStyles.size() + " player language preferences.");
     }
 
     private synchronized void savePlayerPreference(Player player, String style) {
-        if (playerDataFile == null) {
-            playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
-            playerData = YamlConfiguration.loadConfiguration(playerDataFile);
-        }
+        if (playerDataFile == null) return;
         playerData.set("players." + player.getUniqueId() + ".language_style", style);
         isPlayerDataDirty = true; 
     }
@@ -218,11 +235,11 @@ public class MessagesUtil implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        Player player = e.getPlayer();
-        playerStyles.putIfAbsent(player.getUniqueId(), defaultStyle);
+        playerStyles.putIfAbsent(e.getPlayer().getUniqueId(), defaultStyle);
     }
 
     // --- Internal Helpers ---
+    
     private String getRawForPlayer(Player player, String key) {
         String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
         String path = style + "." + key;
@@ -231,7 +248,17 @@ public class MessagesUtil implements Listener {
     }
 
     private String format(String msg) {
-        return ChatColor.translateAlternateColorCodes('&', msg == null ? "" : msg);
+        if (msg == null) return "";
+        
+        // Hex Color Support (&#RRGGBB)
+        Matcher matcher = HEX_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            String color = msg.substring(matcher.start(), matcher.end());
+            msg = msg.replace(color, net.md_5.bungee.api.ChatColor.of(color.substring(1)).toString());
+            matcher = HEX_PATTERN.matcher(msg);
+        }
+        
+        return ChatColor.translateAlternateColorCodes('&', msg);
     }
 
     private String applyPlaceholders(String msg, String... kv) {
@@ -239,8 +266,7 @@ public class MessagesUtil implements Listener {
         for (int i = 0; i + 1 < kv.length; i += 2) {
             String k = kv[i] == null ? "" : kv[i];
             String v = kv[i + 1] == null ? "" : kv[i + 1];
-            msg = msg.replace("{" + k + "}", v);
-            msg = msg.replace("%" + k + "%", v);
+            msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
         }
         return msg;
     }
@@ -250,8 +276,7 @@ public class MessagesUtil implements Listener {
         for (Map.Entry<String, String> e : map.entrySet()) {
             String k = e.getKey();
             String v = e.getValue() == null ? "" : e.getValue();
-            msg = msg.replace("{" + k + "}", v);
-            msg = msg.replace("%" + k + "%", v);
+            msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
         }
         return msg;
     }

@@ -13,8 +13,8 @@ import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
-import com.aegisguard.hooks.DiscordWebhook; // --- NEW IMPORT ---
-import com.aegisguard.hooks.DynmapHook;
+import com.aegisguard.hooks.DiscordWebhook;
+import com.aegisguard.hooks.MapHookManager; // --- NEW UNIFIED MAP MANAGER ---
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
@@ -41,6 +41,9 @@ public class AegisGuard extends JavaPlugin {
     // --- SINGLETON PATTERN ---
     private static AegisGuard instance;
 
+    /**
+     * Get the main instance of the AegisGuard plugin.
+     */
     public static AegisGuard getInstance() {
         return instance;
     }
@@ -59,8 +62,8 @@ public class AegisGuard extends JavaPlugin {
     private ExpansionRequestManager expansionManager;
     
     // --- HOOKS ---
-    private DynmapHook dynmapHook;
-    private DiscordWebhook discord; // --- NEW FIELD ---
+    private MapHookManager mapHookManager; // Replaces specific DynmapHook
+    private DiscordWebhook discord;
 
     private boolean isFolia = false;
     
@@ -82,7 +85,8 @@ public class AegisGuard extends JavaPlugin {
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
-    public DiscordWebhook getDiscord() { return discord; } // --- NEW GETTER ---
+    public DiscordWebhook getDiscord() { return discord; }
+    public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
 
     @Override
@@ -123,7 +127,7 @@ public class AegisGuard extends JavaPlugin {
         this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
-        this.discord = new DiscordWebhook(this); // --- INITIALIZE DISCORD ---
+        this.discord = new DiscordWebhook(this); 
 
         // Load Data
         this.plotStore.load();
@@ -143,8 +147,10 @@ public class AegisGuard extends JavaPlugin {
         }
         
         if (cfg().autoRemoveBannedPlots()) {
-             // Ensure you have the BannedPlayerListener class in your package if using this feature
-             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
+             try {
+                 Class.forName("com.aegisguard.listeners.BannedPlayerListener");
+                 Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
+             } catch (ClassNotFoundException ignored) {}
         }
 
         // Register Commands
@@ -173,12 +179,14 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void initializeHooks() {
+        // Initialize Unified Map Manager (Dynmap/BlueMap/Pl3xMap)
         try {
-             this.dynmapHook = new DynmapHook(this);
+             this.mapHookManager = new MapHookManager(this);
         } catch (NoClassDefFoundError | Exception e) {
-            getLogger().warning("Dynmap not found or failed to hook.");
+            getLogger().warning("Map hooks could not be initialized: " + e.getMessage());
         }
         
+        // PlaceholderAPI Hook
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new AegisPAPIExpansion(this).register();
         }
@@ -296,11 +304,9 @@ public class AegisGuard extends JavaPlugin {
         if (interval <= 0) return;
         
         Runnable logic = () -> {
-            long currentTime = System.currentTimeMillis();
-            // Full logic should be in a dedicated UpkeepManager class to keep Main clean, 
-            // but for now we iterate safely on a copy of the list.
+            // Note: Actual logic abbreviated for brevity as per your original code
             for (Plot plot : new ArrayList<>(store().getAllPlots())) {
-                 // ... Upkeep Logic ...
+                 // Upkeep Logic placeholder
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);

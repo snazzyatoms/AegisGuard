@@ -5,10 +5,14 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +20,8 @@ import java.util.Map;
 
 /**
  * PlotFlagsGUI
- * - Manages flags on a specific plot.
- * - UPDATED: Added Shop Interact Button.
+ * - Manages protection settings on a specific plot.
+ * - Updated with visual glow for active flags.
  */
 public class PlotFlagsGUI {
 
@@ -34,9 +38,6 @@ public class PlotFlagsGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    /* -----------------------------
-     * Open Flags Menu
-     * ----------------------------- */
     public void open(Player player, Plot plot) {
         if (plot == null) {
             plugin.msg().send(player, "no_plot_here");
@@ -46,71 +47,72 @@ public class PlotFlagsGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "plot_flags_title"), "§9Plot Flags");
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(plot), 54, title);
 
-        // --- 1. GLASS BORDER (Frame) ---
-        int[] borderSlots = {0,1,2,3,4,5,6,7,8,  9,17,  18,26,  27,35,  36,44,  45,46,47,50,51,52,53};
-        for (int i : borderSlots) {
-            inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
-        }
+        // --- 1. GLASS BORDER ---
+        ItemStack filler = GUIManager.getFiller();
+        int[] borderSlots = {0,1,2,3,4,5,6,7,8, 9,17, 18,26, 27,35, 36,44, 45,46,47,50,51,52,53};
+        for (int i : borderSlots) inv.setItem(i, filler);
 
-        // --- 2. DANGER & COMBAT (Row 2) ---
+        // --- 2. DANGER (Row 2) ---
         addFlagButton(player, inv, plot, 10, "pvp", Material.IRON_SWORD, "button_pvp", "pvp_toggle_lore");
         addFlagButton(player, inv, plot, 11, "tnt-damage", Material.TNT, "button_tnt", "tnt_toggle_lore");
         addFlagButton(player, inv, plot, 12, "fire-spread", Material.FLINT_AND_STEEL, "button_fire", "fire_toggle_lore");
-        // (Gap)
+        
         addFlagButton(player, inv, plot, 14, "mobs", Material.ZOMBIE_HEAD, "button_mobs", "mob_toggle_lore");
         addFlagButton(player, inv, plot, 15, "entry", Material.OAK_FENCE_GATE, "button_entry", "entry_toggle_lore"); // Lockdown
-        addFlagButton(player, inv, plot, 16, "safe_zone", Material.SHIELD, "button_safe", "safe_toggle_lore"); // Master Switch
+        addFlagButton(player, inv, plot, 16, "safe_zone", Material.SHIELD, "button_safe", "safe_toggle_lore"); // Admin Only usually
 
-        // --- 3. ENTITIES & MECHANICS (Row 3) ---
+        // --- 3. MECHANICS (Row 3) ---
         addFlagButton(player, inv, plot, 19, "containers", Material.CHEST, "button_containers", "container_toggle_lore");
         addFlagButton(player, inv, plot, 20, "piston-use", Material.PISTON, "button_piston", "piston_toggle_lore");
         addFlagButton(player, inv, plot, 21, "farm", Material.WHEAT, "button_farm", "farm_toggle_lore");
-        // (Gap)
+        
         addFlagButton(player, inv, plot, 23, "pets", Material.BONE, "button_pets", "pet_toggle_lore");
         addFlagButton(player, inv, plot, 24, "entities", Material.ARMOR_STAND, "button_entity", "entity_toggle_lore");
         
-        // --- NEW: Shop Interact (Slot 25) ---
-        // Allows visitors to click signs/chests (for shop plugins)
-        addFlagButton(player, inv, plot, 25, "shop-interact", Material.EMERALD, "button_shop", "shop_toggle_lore");
+        // Shop Interact (Paid Flag usually)
+        double shopCost = plugin.cfg().getShopInteractCost();
+        String shopCostStr = (shopCost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(shopCost, CurrencyType.VAULT) : "Free";
+        addPaidFlagButton(player, inv, plot, 25, "shop-interact", Material.EMERALD, "button_shop", "shop_toggle_lore", shopCostStr);
 
-        // --- 4. PREMIUM & EXTRAS (Row 4) ---
+        // --- 4. PREMIUM (Row 4) ---
+        
         // Flight
         boolean canFly = plot.getFlag("fly", false);
         double flyCost = plugin.cfg().getFlightCost();
-        String costString = (flyCost > 0) ? plugin.vault().format(flyCost) : "Free";
-        if (plugin.isAdmin(player)) costString = "§cAdmin Bypass";
+        String costString = (flyCost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(flyCost, CurrencyType.VAULT) : "Free";
 
-        inv.setItem(30, GUIManager.icon(
+        ItemStack flyIcon = GUIManager.createItem(
             Material.FEATHER,
             canFly ? plugin.msg().get(player, "button_fly_on") : plugin.msg().get(player, "button_fly_off"),
             replacePlaceholder(plugin.msg().getList(player, "fly_toggle_lore"), "{COST}", costString)
-        ));
+        );
+        if (canFly) addGlow(flyIcon);
+        inv.setItem(30, flyIcon);
 
         // Cosmetics
-        inv.setItem(31, GUIManager.icon(
+        inv.setItem(31, GUIManager.createItem(
             Material.NETHER_STAR,
             GUIManager.safeText(plugin.msg().get(player, "button_cosmetics"), "§dCosmetics"),
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biome Changer
-        inv.setItem(32, GUIManager.icon(
-            Material.GRASS_BLOCK,
-            GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
-            plugin.msg().getList(player, "biome_button_lore") 
-        ));
+        // Biomes
+        if (plugin.cfg().isBiomesEnabled()) {
+            inv.setItem(32, GUIManager.createItem(
+                Material.GRASS_BLOCK,
+                GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
+                plugin.msg().getList(player, "biome_button_lore") 
+            ));
+        }
 
         // --- 5. NAVIGATION ---
-        inv.setItem(48, GUIManager.icon(Material.ARROW, GUIManager.safeText(plugin.msg().get(player, "button_back"), "Back"), null));
-        inv.setItem(49, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "Exit"), null));
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cExit", List.of("§7Close menu.")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    /* -----------------------------
-     * Handle Clicks
-     * ----------------------------- */
     public void handleClick(Player player, InventoryClickEvent e, PlotFlagsHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
@@ -118,120 +120,116 @@ public class PlotFlagsGUI {
         Plot plot = holder.getPlot();
         if (plot == null) { player.closeInventory(); return; }
 
-        // Security: Only Owner OR Admin can edit flags
         if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             player.closeInventory();
             return;
         }
 
-        int slot = e.getSlot();
-
-        switch (slot) {
-            // Row 2 (Danger)
+        switch (e.getSlot()) {
+            // Danger
             case 10: toggleFlag(player, plot, "pvp"); break;
             case 11: toggleFlag(player, plot, "tnt-damage"); break;
             case 12: toggleFlag(player, plot, "fire-spread"); break;
             case 14: toggleFlag(player, plot, "mobs"); break;
             case 15: toggleFlag(player, plot, "entry"); break;
-            case 16: // Safe Zone Logic
-                plugin.protection().toggleSafeZone(plot, true);
-                plugin.msg().send(player, plot.getFlag("safe_zone", true) ? "safe_zone_enabled" : "safe_zone_disabled");
-                plugin.effects().playMenuFlip(player);
-                open(player, plot);
+            case 16: // Safe Zone
+                if (plugin.isAdmin(player)) {
+                    plugin.protection().toggleSafeZone(plot, true);
+                    plugin.effects().playMenuFlip(player);
+                    open(player, plot);
+                } else {
+                    plugin.msg().send(player, "no_perm");
+                }
                 break;
 
-            // Row 3 (Entities)
+            // Mechanics
             case 19: toggleFlag(player, plot, "containers"); break;
             case 20: toggleFlag(player, plot, "piston-use"); break;
             case 21: toggleFlag(player, plot, "farm"); break;
             case 23: toggleFlag(player, plot, "pets"); break;
             case 24: toggleFlag(player, plot, "entities"); break;
-            case 25: toggleFlag(player, plot, "shop-interact"); break; // NEW
             
-            // Row 4 (Premium)
-            case 30: toggleFlight(player, plot); break; // Flight
+            // Paid Flags
+            case 25: togglePaidFlag(player, plot, "shop-interact", plugin.cfg().getShopInteractCost()); break;
+            case 30: togglePaidFlag(player, plot, "fly", plugin.cfg().getFlightCost()); break;
             
-            case 31: // Cosmetics
-                plugin.gui().cosmetics().open(player, plot); 
-                plugin.effects().playMenuFlip(player); 
-                break;
-            
-            case 32: // Biome Changer
-                if (plugin.cfg().isBiomesEnabled()) {
-                    plugin.gui().biomes().open(player, plot);
-                    plugin.effects().playMenuFlip(player);
-                } else {
-                    player.sendMessage("§cBiome changing is disabled on this server.");
-                    plugin.effects().playError(player);
-                }
-                break;
+            // Sub-Menus
+            case 31: plugin.gui().cosmetics().open(player, plot); break;
+            case 32: if (plugin.cfg().isBiomesEnabled()) plugin.gui().biomes().open(player, plot); break;
 
-            // Navigation
-            case 48: plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); break;
-            case 49: player.closeInventory(); plugin.effects().playMenuClose(player); break;
+            // Nav
+            case 48: plugin.gui().openMain(player); break;
+            case 49: player.closeInventory(); break;
         }
     }
 
     private void toggleFlag(Player player, Plot plot, String flag) {
         boolean current = plot.getFlag(flag, true);
-        
-        // Check Cost logic can be expanded here for other flags (like shop-interact) if needed
-        
         plot.setFlag(flag, !current);
         plugin.store().setDirty(true);
         plugin.effects().playConfirm(player);
-        open(player, plot); // Refresh
+        open(player, plot);
     }
 
-    private void toggleFlight(Player player, Plot plot) {
-        boolean current = plot.getFlag("fly", false);
+    private void togglePaidFlag(Player player, Plot plot, String flag, double cost) {
+        boolean current = plot.getFlag(flag, false);
         
-        // If turning ON, check cost
-        if (!current) {
-            double cost = plugin.cfg().getFlightCost();
-            // Charge if: Cost > 0 AND Player is NOT Admin
-            if (cost > 0 && !plugin.isAdmin(player)) {
-                CurrencyType type = CurrencyType.VAULT; 
-                
-                if (!plugin.eco().withdraw(player, cost, type)) {
-                    plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(cost, type)));
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.msg().send(player, "cost_deducted", Map.of("AMOUNT", plugin.eco().format(cost, type)));
+        // Only charge if turning ON
+        if (!current && cost > 0 && !plugin.isAdmin(player)) {
+            if (!plugin.eco().withdraw(player, cost, CurrencyType.VAULT)) {
+                plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(cost, CurrencyType.VAULT)));
+                plugin.effects().playError(player);
+                return;
             }
+            plugin.msg().send(player, "cost_deducted", Map.of("AMOUNT", plugin.eco().format(cost, CurrencyType.VAULT)));
         }
 
-        plot.setFlag("fly", !current);
+        plot.setFlag(flag, !current);
         plugin.store().setDirty(true);
         plugin.effects().playConfirm(player);
         
-        // Instant update if inside
-        if (plot.isInside(player.getLocation())) {
+        // Specific logic for flight
+        if (flag.equals("fly") && plot.isInside(player.getLocation())) {
             player.setAllowFlight(!current);
-            if (current) player.setFlying(false); 
-            player.sendMessage(plugin.msg().get(player, !current ? "flight_enabled" : "flight_disabled"));
+            if (current) player.setFlying(false);
         }
         
         open(player, plot);
     }
 
-    // Helper to generate button icons
     private void addFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey) {
         boolean state = plot.getFlag(flag, true);
-        
-        // Default state logic: Some flags default to TRUE, some to FALSE.
-        // Usually "pvp" default is true (allowed) unless safezone.
-        // But for toggle buttons, we want GREEN = ON/Active Feature.
-        
         String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
-        if (name == null) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
+        if (name == null || name.isEmpty()) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
         
         List<String> lore = plugin.msg().getList(p, loreKey);
-        if (lore == null) lore = new ArrayList<>();
+        ItemStack item = GUIManager.createItem(mat, name, lore);
+        if (state) addGlow(item);
         
-        inv.setItem(slot, GUIManager.icon(mat, name, lore));
+        inv.setItem(slot, item);
+    }
+    
+    private void addPaidFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey, String costStr) {
+        boolean state = plot.getFlag(flag, false);
+        String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
+        
+        List<String> lore = plugin.msg().getList(p, loreKey);
+        lore = replacePlaceholder(lore, "{COST}", costStr);
+        
+        ItemStack item = GUIManager.createItem(mat, name, lore);
+        if (state) addGlow(item);
+        
+        inv.setItem(slot, item);
+    }
+    
+    private void addGlow(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            item.setItemMeta(meta);
+        }
     }
     
     private List<String> replacePlaceholder(List<String> list, String key, String value) {

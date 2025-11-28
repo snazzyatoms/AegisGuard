@@ -20,7 +20,7 @@ import java.util.UUID;
  * RolesGUI
  * - Replaces the old TrustedGUI.
  * - Features: Plot Selector, Main Role List, Add Player, Manage Player Role.
- * - UPDATED: Navigation buttons added & Owner hidden from list.
+ * - UPDATED: Prevents owners/admins from editing their own roles to avoid self-lockout.
  */
 public class RolesGUI {
 
@@ -132,9 +132,7 @@ public class RolesGUI {
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             if (slot >= 45) break;
             
-            // FIX: Don't show self (Owner) in list unless you are an admin viewing someone else's plot
-            if (entry.getKey().equals(plot.getOwner()) && !plugin.isAdmin(owner)) continue; 
-
+            // Note: We show everyone now, but we will block interactions with self in the click handler.
             OfflinePlayer member = Bukkit.getOfflinePlayer(entry.getKey());
             String roleName = entry.getValue();
 
@@ -144,11 +142,13 @@ public class RolesGUI {
                 meta.setOwningPlayer(member);
                 String playerName = member.getName() != null ? member.getName() : "Unknown";
                 meta.setDisplayName("§a" + playerName);
-                meta.setLore(List.of(
-                        "§7Role: §e" + roleName,
-                        " ",
-                        "§7Click to Manage"
-                ));
+                
+                // Custom lore for self
+                if (member.getUniqueId().equals(owner.getUniqueId()) && plot.getOwner().equals(owner.getUniqueId())) {
+                     meta.setLore(List.of("§7Role: §e" + roleName, " ", "§c(You cannot edit yourself)"));
+                } else {
+                     meta.setLore(List.of("§7Role: §e" + roleName, " ", "§7Click to Manage"));
+                }
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
@@ -175,7 +175,7 @@ public class RolesGUI {
     }
 
     /* -----------------------------
-     * GUI: Add Player (VICINITY CHECK ADDED)
+     * GUI: Add Player
      * ----------------------------- */
     private void openAddMenu(Player player, Plot plot) {
         String addTitle = GUIManager.safeText(plugin.msg().get(player, "add_trusted_title"), "§bAdd Nearby Player");
@@ -283,6 +283,13 @@ public class RolesGUI {
             if (meta != null) {
                 OfflinePlayer target = meta.getOwningPlayer();
                 if (target != null) {
+                    // FIX: Prevent self-editing if owner
+                    if (target.getUniqueId().equals(player.getUniqueId()) && plot.getOwner().equals(player.getUniqueId())) {
+                        plugin.msg().send(player, "role_edit_self_error");
+                        plugin.effects().playError(player);
+                        return;
+                    }
+                    
                     openManageMenu(player, plot, target);
                     plugin.effects().playMenuFlip(player);
                 }
@@ -328,7 +335,7 @@ public class RolesGUI {
         if (meta != null) {
             OfflinePlayer target = meta.getOwningPlayer();
             if (target != null) {
-                openManageMenu(player, plot, target);
+                openManageMenu(player, holder.getPlot(), meta.getOwningPlayer());
                 plugin.effects().playMenuFlip(player);
             }
         }
@@ -341,13 +348,9 @@ public class RolesGUI {
         Plot plot = holder.getPlot();
         UUID target = holder.getTarget().getUniqueId();
         
-        // Security check
-        if (target.equals(player.getUniqueId()) && !plugin.isAdmin(player)) return;
-        if (target.equals(plot.getOwner())) return;
-
         int slot = e.getSlot();
 
-        // FIX: Handle Navigation
+        // FIX: Handle Navigation FIRST so you can always exit
         if (slot == 18) { // Back
             openRolesMenu(player, plot);
             plugin.effects().playMenuFlip(player);
@@ -356,6 +359,19 @@ public class RolesGUI {
         if (slot == 26) { // Exit
             player.closeInventory();
             plugin.effects().playMenuClose(player);
+            return;
+        }
+
+        // Security check: Prevent modifying self if owner
+        if (target.equals(player.getUniqueId()) && plot.getOwner().equals(player.getUniqueId())) {
+             plugin.msg().send(player, "role_edit_self_error");
+             plugin.effects().playError(player);
+             return;
+        }
+        
+        // Admin Security Check: Only Owner OR Admin can edit others
+        if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
+            plugin.msg().send(player, "no_perm");
             return;
         }
         

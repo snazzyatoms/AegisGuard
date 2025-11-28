@@ -1,15 +1,15 @@
 # ======================================
-#  AegisGuard v1.1.1 - Config
+#  🛡️ AegisGuard v1.1.2 - Configuration
 # ======================================
-#  Core configuration file for AegisGuard.
-#  Provides language, economy, claim, protection,
-#  expansion, leveling, and admin customization options.
+#  Main configuration file.
+#  Restart server or use /agadmin reload after editing.
 # ======================================
 
 # ======================================
 # 🔌 Plugin Hooks & Storage
 # ======================================
 hooks:
+  # --- Web Map ---
   dynmap:
     enabled: true
     layer_name: "AegisGuard Plots"
@@ -21,23 +21,36 @@ hooks:
       fill_color: "00FF00"
       fill_opacity: 0.35
 
+  # --- Discord Webhook (NEW v1.1.2) ---
+  discord:
+    enabled: true
+    # Paste your Webhook URL here (Channel Settings -> Integrations -> Webhooks)
+    webhook_url: "https://discord.com/api/webhooks/..."
+    # Select which events send a notification
+    events:
+      claim_create: true
+      claim_delete: true
+      claim_merge: true
+      admin_actions: true
+
 storage:
-  # "yml" (Simple) or "sql" (Database/Network)
+  # Options: "yml" (Local File) or "sql" (MySQL/MariaDB/SQLite)
+  # Use "sql" if you plan to sync data across servers later.
   type: "yml"
+  
   database:
-    file: "aegisguard.db"
-    # type: "mysql"
+    file: "aegisguard.db" # For SQLite
+    # For MySQL/MariaDB:
     # host: "localhost"
     # port: 3306
     # database: "aegisguard"
-    # username: "user"
+    # username: "root"
     # password: "password"
     # useSSL: false
 
 # ======================================
-# 💱 Currency Settings
+# 💱 Currency System
 # ======================================
-# Choose what currency each feature uses.
 # Options: VAULT, EXP, LEVEL, ITEM
 currencies:
   claiming: VAULT
@@ -55,61 +68,30 @@ economy:
   use_vault: true
   claim_cost: 100.0
   
+  # Fallback if VAULT is disabled
   item_cost:
     type: DIAMOND
     amount: 5
 
-  # --- Feature Costs ---
-  # Cost to toggle specific powerful flags ON.
-  # Set to 0.0 to make them free.
+  # Feature Costs (Set to 0.0 for free)
   flag_costs:
     fly: 5000.0
-    shop-interact: 0.0 # Cost to enable shop interaction (ChestShop support)
+    shop-interact: 500.0 # Cost to allow public chest/sign access (Shops)
 
-refund_on_unclaim: false
-refund_percent: 0
-resize-cost-per-block: 10.0
-
-# ======================================
-# 💸 Plot Upkeep (Rent)
-# ======================================
-upkeep:
-  enabled: false
-  check_interval_hours: 24
-  cost_per_plot: 100.0
-  grace_period_days: 7
-
-# ======================================
-# ⚖️ Auctions
-# ======================================
-auction:
-  duration_days: 3
-  min_bid_increase: 100.0
-  owner_cut_percent: 50
-
-# ======================================
-# 🌲 Wilderness Revert
-# ======================================
-wilderness_revert:
-  enabled: true
-  revert_after_hours: 2
-  check_interval_minutes: 10
-  revert_batch_size: 500
+  # Resizing
+  resize_cost_per_block: 10.0
   
-# ======================================
-# 🧪 Demo Mode
-# ======================================
-demo_mode:
-  enabled: false
-  plot_lifetime_minutes: 180
+  # Refunds
+  refund_on_unclaim: true
+  refund_percent: 50.0
 
 # ======================================
 # 🧱 Claims Settings
 # ======================================
 claims:
-  max_claims_per_player: 1
-  min_radius: 1
-  max_radius: 32
+  max_claims_per_player: 2
+  min_radius: 5
+  max_radius: 64
   max_area: 16000
   preview_seconds: 10
   
@@ -117,6 +99,13 @@ claims:
   consume_wand_on_claim: true
   admin_keep_wand: true
   
+  # --- Plot Merging (NEW v1.1.2) ---
+  merging:
+    enabled: true
+    cost: 500.0
+    # If true, only plots of equal edge length can merge (Recommended: true)
+    require_alignment: true
+
   # --- Travel System ---
   travel_system:
     enabled: true
@@ -128,18 +117,28 @@ claims:
     world:
       allow_claims: true
       use_vault: true
-      vault_cost: 200.0
+      vault_cost: 100.0
       max_claims_per_player: 2
-      min_radius: 4
-      max_radius: 48
+      max_radius: 64
     world_nether:
       allow_claims: true
       use_vault: false
       max_claims_per_player: 1
-      min_radius: 2
-      max_radius: 16
+      max_radius: 32
     world_the_end:
       allow_claims: false
+
+# ======================================
+# 📐 Land Expansions (Requests)
+# ======================================
+expansions:
+  cost_per_block: 10.0
+  # Tax multiplier for large jumps (prevents massive land grabs)
+  cost_multiplier: 1.1
+  # Absolute hard limit for requests
+  max_radius_global: 200
+  # Required distance between neighbors
+  buffer_zone: 5
 
 # ======================================
 # 🏗️ Zoning (Sub-Claims)
@@ -147,6 +146,7 @@ claims:
 zoning:
   enabled: true
   max_zones_per_plot: 10
+  # If true, 100% of rent goes to Plot Owner. If false, Server takes a cut (Tax).
   landlord_gets_full_rent: true
 
 # ======================================
@@ -158,12 +158,12 @@ leveling:
   cost_multiplier: 1.5
   max_level: 50
   
-  # Rewards
+  # Rewards per Level
   rewards:
     2:
       - "EFFECT:SPEED:1"
     5:
-      - "FLAG:fly"
+      - "FLAG:fly" # Unlocks Flight Flag capability
     10:
       - "EFFECT:REGENERATION:1"
     15:
@@ -175,6 +175,32 @@ leveling:
       - "EFFECT:LUCK:2"
     50:
       - "EFFECT:HEALTH_BOOST:2"
+
+# ======================================
+# 💸 Plot Upkeep (Rent)
+# ======================================
+upkeep:
+  enabled: false
+  check_interval_hours: 24
+  cost_per_plot: 50.0
+  grace_period_days: 7
+
+# ======================================
+# ⚖️ Auctions
+# ======================================
+auction:
+  duration_days: 3
+  min_bid_increase: 50.0
+  owner_cut_percent: 50
+
+# ======================================
+# 🌲 Wilderness Revert
+# ======================================
+wilderness_revert:
+  enabled: true
+  revert_after_hours: 2
+  check_interval_minutes: 10
+  revert_batch_size: 500
 
 # ======================================
 # ⚙️ Protection Defaults
@@ -190,10 +216,10 @@ protections:
   fire-spread: true
   piston-use: true
   
-  # Flags
+  # Default Flags for New Plots
   fly: false
   entry: true
-  shop-interact: false # Allows visitors to click signs/chests (needed for shops)
+  shop-interact: false
 
 # ======================================
 # 🛡️ Active Mob Barrier
@@ -202,15 +228,6 @@ mob_barrier:
   enabled: true
   check_interval_ticks: 60
   remove_particles: true
-
-# ======================================
-# 🏳️ Roles
-# ======================================
-roles:
-  co-owner: [BUILD, CONTAINERS, INTERACT, PET_DAMAGE, ENTITY_INTERACT, FARM_TRAMPLE, SHOP_INTERACT]
-  member: [BUILD, CONTAINERS, INTERACT, FARM_TRAMPLE, SHOP_INTERACT]
-  guest: [INTERACT, SHOP_INTERACT]
-  default: [INTERACT]
 
 # ======================================
 # 🎨 Cosmetics Prices
@@ -238,17 +255,16 @@ cosmetics:
       display-name: "&dEnchantment Border"
       price: 3000.0
     
-  ambient_particles:
-    pass
   entry_effects:
-    pass
+    lightning:
+      sound: ENTITY_LIGHTNING_BOLT_THUNDER
+      particle: FLASH
 
 # ======================================
 # 🔮 Visual Titles & Notifications
 # ======================================
 titles:
   enabled: true
-  # Where should entry/exit messages appear?
   # Options: CHAT, ACTION_BAR, TITLE
   notification_location: ACTION_BAR
   fade_in: 10
@@ -279,6 +295,8 @@ biomes:
     - CHERRY_GROVE
     - BADLANDS
     - MUSHROOM_FIELDS
+    - MEADOW
+    - LUSH_CAVES
 
 # ======================================
 # 👍 Social (Likes)
@@ -293,10 +311,8 @@ social:
 admin:
   auto_remove_banned: false
   bypass_claim_limit: false
-  broadcast_admin_actions: false
-  allow_language_command: true
+  broadcast_admin_actions: true
   unlimited_plots: true
-  allow_server_plot_creation: true
   trust_operators: true
 
   # --- SENTINEL'S SCEPTER (Admin Wand) ---
@@ -325,6 +341,9 @@ sounds:
   claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
   unclaim: { sound: ENTITY_VILLAGER_NO, volume: 0.8, pitch: 0.9 }
 
+# ======================================
+# 💥 Protection Effects
+# ======================================
 protection_effects:
   enabled: true
   defaults:

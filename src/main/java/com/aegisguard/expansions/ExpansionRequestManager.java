@@ -2,23 +2,25 @@ package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.economy.VaultHook;
-import com.aegisguard.world.WorldRulesManager;
+import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ExpansionRequestManager
+ * - Handles the lifecycle of land expansion requests.
+ * - Saves pending requests to disk.
+ */
 public class ExpansionRequestManager {
 
     private final AegisGuard plugin;
@@ -39,9 +41,13 @@ public class ExpansionRequestManager {
     public ExpansionRequest getRequest(UUID requesterId) {
         return activeRequests.get(requesterId);
     }
+    
+    public boolean hasPendingRequest(UUID requesterId) {
+        return activeRequests.containsKey(requesterId);
+    }
 
     /* -----------------------------
-     * SMART REQUEST CREATION
+     * REQUEST CREATION
      * ----------------------------- */
     public boolean createRequest(Player requester, Plot plot, int newRadius) {
         if (plot == null || !plot.getOwner().equals(requester.getUniqueId())) {
@@ -49,43 +55,42 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        if (hasActiveRequest(requester.getUniqueId())) {
-            plugin.msg().send(requester, "expansion_exists");
+        if (hasPendingRequest(requester.getUniqueId())) {
+            // Message: "You already have a pending request."
+            plugin.msg().send(requester, "expansion_exists"); 
             return false;
         }
 
-        // 1. LOGIC CHECK: Is the new size actually bigger?
+        // 1. Size Check
         int currentRadius = (plot.getX2() - plot.getX1()) / 2;
         if (newRadius <= currentRadius) {
-            plugin.msg().send(requester, "expansion_invalid_size"); // "New size must be larger."
+            requester.sendMessage("§cNew size must be larger than current size.");
             return false;
         }
 
-        // 2. HARD LIMIT CHECK: Prevent "Infinite" claims
-        // Allow admins to bypass this limit
+        // 2. Limit Check
         int maxRadius = plugin.cfg().raw().getInt("expansions.max_radius_global", 100);
         if (newRadius > maxRadius && !requester.hasPermission("aegis.admin.bypass-limits")) {
-            plugin.msg().send(requester, "expansion_limit_reached", Map.of("LIMIT", String.valueOf(maxRadius)));
+            requester.sendMessage("§cLimit reached (" + maxRadius + " blocks). Cannot expand further.");
             return false;
         }
 
-        // 3. COST CALCULATION (Exponential)
+        // 3. Cost Check
         double cost = calculateSmartCost(currentRadius, newRadius);
+        CurrencyType type = CurrencyType.VAULT; 
         
-        // Check if they can afford it BEFORE submitting
-        if (plugin.cfg().useVault(requester.getWorld()) && !plugin.vault().has(requester, cost)) {
-            plugin.msg().send(requester, "insufficient_funds", Map.of("COST", plugin.vault().format(cost)));
+        if (!plugin.eco().has(requester, cost, type)) {
+            requester.sendMessage("§cInsufficient funds. Cost: " + plugin.eco().format(cost, type));
             return false;
         }
 
-        // 4. OVERLAP PRE-CHECK (The "Bulletproof" Check)
-        // We check nicely before even bothering the admins.
+        // 4. Overlap Check
         if (isOverlapping(plot, newRadius)) {
-            plugin.msg().send(requester, "expansion_overlap_fail"); // "Cannot expand: Neighbors are too close."
+            requester.sendMessage("§cCannot expand: Neighbors are too close.");
             return false;
         }
 
-        // Create Record
+        // 5. Submit
         ExpansionRequest request = new ExpansionRequest(
                 requester.getUniqueId(),
                 plot.getOwner(),
@@ -101,84 +106,59 @@ public class ExpansionRequestManager {
 
         Map<String, String> placeholders = Map.of(
                 "PLAYER", requester.getName(),
-                "AMOUNT", plugin.vault().format(cost),
+                "AMOUNT", plugin.eco().format(cost, type),
                 "SIZE", newRadius + " blocks"
         );
 
         plugin.msg().send(requester, "expansion_submitted", placeholders);
-        plugin.getLogger().info("[AegisGuard] Request created: " + requester.getName() + " wants +" + (newRadius - currentRadius) + " radius.");
         return true;
     }
 
     /* -----------------------------
-     * COST CALCULATOR (Anti-Abuse)
-     * ----------------------------- */
-    private double calculateSmartCost(int currentRadius, int newRadius) {
-        double baseCost = plugin.cfg().raw().getDouble("expansions.cost_per_block", 10.0);
-        double multiplier = plugin.cfg().raw().getDouble("expansions.cost_multiplier", 1.1); 
-        
-        int blocksAdded = newRadius - currentRadius;
-        
-        // Simple Linear: 5 blocks * $10 = $50
-        // Exponential: Adds a tax for massive jumps to discourage huge land grabs
-        double totalCost = baseCost * blocksAdded;
-        
-        if (blocksAdded > 10) {
-            totalCost *= multiplier; // Tax for growing too fast
-        }
-        
-        return Math.round(totalCost * 100.0) / 100.0; // Round to 2 decimals
-    }
-
-    /* -----------------------------
-     * OVERLAP CHECKER
-     * ----------------------------- */
-    private boolean isOverlapping(Plot oldPlot, int newRadius) {
-        World world = Bukkit.getWorld(oldPlot.getWorld());
-        if (world == null) return true; // Safety fail
-
-        int cX = oldPlot.getX1() + (oldPlot.getX2() - oldPlot.getX1()) / 2;
-        int cZ = oldPlot.getZ1() + (oldPlot.getZ2() - oldPlot.getZ1()) / 2;
-        
-        // Buffer Zone: Require 5 blocks of air between plots
-        int buffer = plugin.cfg().raw().getInt("expansions.buffer_zone", 5);
-        int checkRadius = newRadius + buffer;
-
-        int x1 = cX - checkRadius;
-        int z1 = cZ - checkRadius;
-        int x2 = cX + checkRadius;
-        int z2 = cZ + checkRadius;
-
-        // Ask Store if anyone lives here
-        return plugin.store().isAreaOverlapping(oldPlot, oldPlot.getWorld(), x1, z1, x2, z2);
-    }
-
-    /* -----------------------------
-     * APPROVE / DENY LOGIC (Existing)
+     * APPROVE / DENY
      * ----------------------------- */
     public boolean approveRequest(ExpansionRequest req) {
         if (req == null) return false;
 
         OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
+        CurrencyType type = CurrencyType.VAULT;
 
-        // 1. Final Charge (In case they spent money while waiting)
-        if (!chargePlayer(requester, req.getCost(), req.getWorldName())) {
-            denyRequest(req);
-            if (requester.isOnline()) plugin.msg().send(requester.getPlayer(), "expansion_payment_failed");
-            return false;
+        // 1. Charge Player (Final check)
+        // Note: Logic assumes online player for items/XP, offline usually only works with Vault
+        Player p = requester.getPlayer();
+        if (p != null) {
+             if (!plugin.eco().withdraw(p, req.getCost(), type)) {
+                 denyRequest(req);
+                 p.sendMessage("§cExpansion failed: Insufficient funds.");
+                 return false;
+             }
+        } else {
+             // Offline charge via Vault directly if possible
+             if (plugin.cfg().useVault()) {
+                 if (!plugin.vault().charge(requester, req.getCost())) {
+                     denyRequest(req); // Fail silently if offline and broke
+                     return false;
+                 }
+             }
         }
 
+        // 2. Get Plot
         Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
         if (oldPlot == null) {
-            refundPlayer(requester, req.getCost(), req.getWorldName());
+            // Plot deleted? Refund.
+            if (p != null) plugin.eco().deposit(p, req.getCost(), type);
+            else if (plugin.cfg().useVault()) plugin.vault().give(requester, req.getCost());
+            
             denyRequest(req);
             return false;
         }
 
-        // 2. Final Safety Check
+        // 3. Apply Expansion
         if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
-            // Overlap detected at the last second
-            refundPlayer(requester, req.getCost(), req.getWorldName());
+            // Refund on failure (overlap)
+            if (p != null) plugin.eco().deposit(p, req.getCost(), type);
+            else if (plugin.cfg().useVault()) plugin.vault().give(requester, req.getCost());
+            
             denyRequest(req);
             plugin.getLogger().warning("Expansion failed due to overlap during approval.");
             return false;
@@ -188,9 +168,9 @@ public class ExpansionRequestManager {
         activeRequests.remove(req.getRequester());
         setDirty(true);
 
-        if (requester.isOnline()) {
-            plugin.msg().send(requester.getPlayer(), "expansion_approved", Map.of("PLAYER", "Admin"));
-            plugin.effects().playConfirm(requester.getPlayer());
+        if (p != null) {
+            plugin.msg().send(p, "expansion_approved", Map.of("PLAYER", "Admin"));
+            plugin.effects().playConfirm(p);
         }
         return true;
     }
@@ -198,66 +178,71 @@ public class ExpansionRequestManager {
     public boolean denyRequest(ExpansionRequest req) {
         if (req == null) return false;
         req.deny();
+        
         OfflinePlayer target = Bukkit.getOfflinePlayer(req.getRequester());
         if (target.isOnline()) {
             plugin.msg().send(target.getPlayer(), "expansion_denied", Map.of("PLAYER", "Admin"));
             plugin.effects().playError(target.getPlayer());
         }
+        
         activeRequests.remove(req.getRequester());
         setDirty(true);
         return true;
     }
 
-    /* -----------------------------
-     * HELPERS & PERSISTENCE
-     * ----------------------------- */
+    // --- LOGIC ---
+
+    private double calculateSmartCost(int currentRadius, int newRadius) {
+        double baseCost = plugin.cfg().raw().getDouble("expansions.cost_per_block", 10.0);
+        double multiplier = plugin.cfg().raw().getDouble("expansions.cost_multiplier", 1.1); 
+        int blocksAdded = newRadius - currentRadius;
+        
+        double totalCost = baseCost * blocksAdded;
+        if (blocksAdded > 10) totalCost *= multiplier; // Tax for rapid growth
+        
+        return Math.round(totalCost * 100.0) / 100.0;
+    }
+
+    private boolean isOverlapping(Plot oldPlot, int newRadius) {
+        // Calculate new bounds based on center
+        // (Assuming square expansion for radius logic)
+        int cX = (oldPlot.getX1() + oldPlot.getX2()) / 2;
+        int cZ = (oldPlot.getZ1() + oldPlot.getZ2()) / 2;
+        
+        int buffer = plugin.cfg().raw().getInt("expansions.buffer_zone", 5);
+        int r = newRadius + buffer;
+
+        int x1 = cX - r; 
+        int z1 = cZ - r;
+        int x2 = cX + r; 
+        int z2 = cZ + r;
+
+        // Check if new area overlaps anyone else (ignoring self)
+        return plugin.store().isAreaOverlapping(oldPlot, oldPlot.getWorld(), x1, z1, x2, z2);
+    }
     
     private boolean applyExpansion(Plot oldPlot, int newRadius) {
-        World world = Bukkit.getWorld(oldPlot.getWorld());
-        if (world == null) return false;
-
-        int cX = oldPlot.getX1() + (oldPlot.getX2() - oldPlot.getX1()) / 2;
-        int cZ = oldPlot.getZ1() + (oldPlot.getZ2() - oldPlot.getZ1()) / 2;
-
-        Location c1 = new Location(world, cX - newRadius, 0, cZ - newRadius);
-        Location c2 = new Location(world, cX + newRadius, 0, cZ + newRadius);
+        // Calculate new coords
+        int cX = (oldPlot.getX1() + oldPlot.getX2()) / 2;
+        int cZ = (oldPlot.getZ1() + oldPlot.getZ2()) / 2;
         
-        // Remove old, Add new
+        int x1 = cX - newRadius;
+        int z1 = cZ - newRadius;
+        int x2 = cX + newRadius;
+        int z2 = cZ + newRadius;
+        
+        // Resize logic: Remove old -> Add new with updated bounds
         plugin.store().removePlot(oldPlot.getOwner(), oldPlot.getPlotId());
-
-        Plot newPlot = new Plot(
-            oldPlot.getPlotId(), oldPlot.getOwner(), oldPlot.getOwnerName(), oldPlot.getWorld(),
-            c1.getBlockX(), c1.getBlockZ(), c2.getBlockX(), c2.getBlockZ(),
-            oldPlot.getLastUpkeepPayment()
-        );
         
-        oldPlot.getFlags().forEach(newPlot::setFlag);
-        oldPlot.getPlayerRoles().forEach(newPlot::setRole);
-        newPlot.setSpawnLocation(oldPlot.getSpawnLocation());
-        newPlot.setWelcomeMessage(oldPlot.getWelcomeMessage());
-        newPlot.setFarewellMessage(oldPlot.getFarewellMessage());
+        oldPlot.setX1(x1); oldPlot.setX2(x2);
+        oldPlot.setZ1(z1); oldPlot.setZ2(z2);
         
-        plugin.store().addPlot(newPlot);
+        plugin.store().addPlot(oldPlot);
         return true;
     }
 
-    private boolean chargePlayer(OfflinePlayer player, double amount, String worldName) {
-        if (amount <= 0) return true;
-        if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
-            return plugin.vault().charge(player, amount);
-        } 
-        // Item logic omitted for brevity, can be re-added if needed
-        return true;
-    }
+    // --- PERSISTENCE ---
 
-    private void refundPlayer(OfflinePlayer player, double amount, String worldName) {
-        if (amount <= 0) return;
-        if (plugin.cfg().useVault(player.getPlayer() != null ? player.getPlayer().getWorld() : null)) {
-            plugin.vault().give(player, amount);
-        }
-    }
-    
-    public boolean hasActiveRequest(UUID requesterId) { return activeRequests.containsKey(requesterId); }
     public boolean isDirty() { return isDirty; }
     public void setDirty(boolean dirty) { this.isDirty = dirty; }
     public void saveSync() { save(); }
@@ -269,23 +254,27 @@ public class ExpansionRequestManager {
                 file.createNewFile();
             }
         } catch (IOException e) { e.printStackTrace(); }
+        
         data = YamlConfiguration.loadConfiguration(file);
         activeRequests.clear();
-        // ... (Same load logic as previous version) ...
-        // Keeping it concise for display, use previous load logic here
+
         if (data.isConfigurationSection("requests")) {
-            for (String requesterIdStr : data.getConfigurationSection("requests").getKeys(false)) {
+            for (String key : data.getConfigurationSection("requests").getKeys(false)) {
                 try {
-                    UUID requesterId = UUID.fromString(requesterIdStr);
-                    String path = "requests." + requesterIdStr;
+                    UUID reqId = UUID.fromString(key);
+                    String path = "requests." + key;
+                    
                     ExpansionRequest req = new ExpansionRequest(
-                        requesterId, UUID.fromString(data.getString(path + ".owner")),
-                        UUID.fromString(data.getString(path + ".plotId")), data.getString(path + ".world"),
-                        data.getInt(path + ".currentRadius"), data.getInt(path + ".requestedRadius"),
+                        reqId,
+                        UUID.fromString(data.getString(path + ".owner")),
+                        UUID.fromString(data.getString(path + ".plotId")),
+                        data.getString(path + ".world"),
+                        data.getInt(path + ".currentRadius"),
+                        data.getInt(path + ".requestedRadius"),
                         data.getDouble(path + ".cost")
                     );
-                    if (req.isPending()) activeRequests.put(requesterId, req);
-                } catch (Exception e) {}
+                    activeRequests.put(reqId, req);
+                } catch (Exception ignored) {}
             }
         }
     }
@@ -293,8 +282,8 @@ public class ExpansionRequestManager {
     public synchronized void save() {
         if (data == null) return;
         data.set("requests", null);
+        
         for (ExpansionRequest req : activeRequests.values()) {
-            if (!req.isPending()) continue;
             String path = "requests." + req.getRequester().toString();
             data.set(path + ".owner", req.getPlotOwner().toString());
             data.set(path + ".plotId", req.getPlotId().toString());
@@ -302,8 +291,8 @@ public class ExpansionRequestManager {
             data.set(path + ".currentRadius", req.getCurrentRadius());
             data.set(path + ".requestedRadius", req.getRequestedRadius());
             data.set(path + ".cost", req.getCost());
-            data.set(path + ".status", req.getStatus());
         }
+        
         try { data.save(file); isDirty = false; } catch (IOException e) { e.printStackTrace(); }
     }
 }

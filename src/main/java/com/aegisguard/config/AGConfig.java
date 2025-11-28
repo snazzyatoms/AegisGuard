@@ -14,6 +14,25 @@ public class AGConfig {
 
     private final AegisGuard plugin;
     private FileConfiguration config;
+    
+    // --- CACHED VALUES (Optimization) ---
+    private boolean zoningEnabled;
+    private boolean levelingEnabled;
+    private boolean titlesEnabled;
+    private boolean biomesEnabled;
+    private boolean likesEnabled;
+    private boolean unstuckEnabled;
+    private boolean travelEnabled;
+    private boolean upkeepEnabled;
+    
+    // Protections Cache
+    private boolean pvpDefault;
+    private boolean mobDefault;
+    private boolean containerDefault;
+    private boolean petDefault;
+    private boolean farmDefault;
+    private boolean flyDefault;
+    private boolean entryDefault;
 
     public AGConfig(AegisGuard plugin) {
         this.plugin = plugin;
@@ -24,9 +43,28 @@ public class AGConfig {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
         
-        // --- AUTO-UPDATE LOGIC ---
+        // Auto-Update Defaults
         this.config.options().copyDefaults(true);
         plugin.saveConfig();
+        
+        // Update Cache
+        this.zoningEnabled = config.getBoolean("zoning.enabled", true);
+        this.levelingEnabled = config.getBoolean("leveling.enabled", true);
+        this.titlesEnabled = config.getBoolean("titles.enabled", true);
+        this.biomesEnabled = config.getBoolean("biomes.enabled", true);
+        this.likesEnabled = config.getBoolean("social.likes_enabled", true);
+        this.unstuckEnabled = config.getBoolean("unstuck.enabled", true);
+        this.travelEnabled = config.getBoolean("travel_system.enabled", true);
+        this.upkeepEnabled = config.getBoolean("upkeep.enabled", false);
+        
+        // Update Protection Defaults
+        this.pvpDefault = config.getBoolean("protections.pvp_protection", true);
+        this.mobDefault = config.getBoolean("protections.no_mobs_in_claims", true);
+        this.containerDefault = config.getBoolean("protections.container_protection", true);
+        this.petDefault = config.getBoolean("protections.pets_protection", true);
+        this.farmDefault = config.getBoolean("protections.farm_protection", true);
+        this.flyDefault = config.getBoolean("protections.fly", false);
+        this.entryDefault = config.getBoolean("protections.entry", true);
     }
 
     public FileConfiguration raw() {
@@ -41,16 +79,14 @@ public class AGConfig {
         try {
             return CurrencyType.valueOf(type);
         } catch (IllegalArgumentException e) {
-            return CurrencyType.VAULT; // Fallback
+            return CurrencyType.VAULT; 
         }
     }
 
     // ======================================
     // 🏗️ Zoning (Sub-Claims)
     // ======================================
-    public boolean isZoningEnabled() {
-        return config.getBoolean("zoning.enabled", true);
-    }
+    public boolean isZoningEnabled() { return zoningEnabled; }
 
     public int getMaxZonesPerPlot() {
         return config.getInt("zoning.max_zones_per_plot", 10);
@@ -63,9 +99,7 @@ public class AGConfig {
     // ======================================
     // 📈 Plot Leveling
     // ======================================
-    public boolean isLevelingEnabled() {
-        return config.getBoolean("leveling.enabled", true);
-    }
+    public boolean isLevelingEnabled() { return levelingEnabled; }
 
     public double getLevelBaseCost() {
         return config.getDouble("leveling.base_cost", 1000.0);
@@ -92,21 +126,21 @@ public class AGConfig {
     // ======================================
     // 🔮 Visuals, Biomes & Social
     // ======================================
-    public boolean isTitleEnabled() { return config.getBoolean("titles.enabled", true); }
+    public boolean isTitleEnabled() { return titlesEnabled; }
     public int getTitleFadeIn() { return config.getInt("titles.fade_in", 10); }
     public int getTitleStay() { return config.getInt("titles.stay", 40); }
     public int getTitleFadeOut() { return config.getInt("titles.fade_out", 10); }
 
-    public boolean isBiomesEnabled() { return config.getBoolean("biomes.enabled", true); }
+    public boolean isBiomesEnabled() { return biomesEnabled; }
     public double getBiomeChangeCost() { return config.getDouble("biomes.cost_per_change", 2000.0); }
     public List<String> getAllowedBiomes() { return config.getStringList("biomes.allowed"); }
 
-    public boolean isLikesEnabled() { return config.getBoolean("social.likes_enabled", true); }
+    public boolean isLikesEnabled() { return likesEnabled; }
     public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
     
-    // --- v1.1.1 Additions ---
+    // v1.1.1 Additions
     public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
-    public boolean isUnstuckEnabled() { return config.getBoolean("unstuck.enabled", true); }
+    public boolean isUnstuckEnabled() { return unstuckEnabled; }
     public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
 
     // ======================================
@@ -152,7 +186,6 @@ public class AGConfig {
         return config.getDouble("economy.flag_costs.fly", 5000.0);
     }
     
-    // --- NEW: Shop Interact Cost ---
     public double getShopInteractCost() {
         return config.getDouble("economy.flag_costs.shop-interact", 0.0);
     }
@@ -185,18 +218,12 @@ public class AGConfig {
     }
 
     // --- Travel System ---
-    public boolean isTravelSystemEnabled() { 
-        return config.getBoolean("travel_system.enabled", true); 
-    }
-    public boolean allowHomeTeleport() { 
-        return config.getBoolean("travel_system.allow_home_teleport", true); 
-    }
-    public boolean allowVisitTeleport() { 
-        return config.getBoolean("travel_system.allow_visit_teleport", true); 
-    }
+    public boolean isTravelSystemEnabled() { return travelEnabled; }
+    public boolean allowHomeTeleport() { return config.getBoolean("travel_system.allow_home_teleport", true); }
+    public boolean allowVisitTeleport() { return config.getBoolean("travel_system.allow_visit_teleport", true); }
 
     // --- Upkeep ---
-    public boolean isUpkeepEnabled() { return config.getBoolean("upkeep.enabled", false); }
+    public boolean isUpkeepEnabled() { return upkeepEnabled; }
     public long getUpkeepCheckHours() { return config.getLong("upkeep.check_interval_hours", 24); }
     public double getUpkeepCost() { return config.getDouble("upkeep.cost_per_plot", 100.0); }
     public int getUpkeepGraceDays() { return config.getInt("upkeep.grace_period_days", 7); }
@@ -217,15 +244,14 @@ public class AGConfig {
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
     
-    // --- Protections ---
-    public boolean pvpProtectionDefault() { return config.getBoolean("protections.pvp_protection", true); }
-    public boolean noMobsInClaims() { return config.getBoolean("protections.no_mobs_in_claims", true); }
-    public boolean containerProtectionDefault() { return config.getBoolean("protections.container_protection", true); }
-    public boolean petProtectionDefault() { return config.getBoolean("protections.pets_protection", true); }
-    public boolean farmProtectionDefault() { return config.getBoolean("protections.farm_protection", true); }
-    
-    public boolean flyDefault() { return config.getBoolean("protections.fly", false); }
-    public boolean entryDefault() { return config.getBoolean("protections.entry", true); }
+    // --- Protections (Cached) ---
+    public boolean pvpProtectionDefault() { return pvpDefault; }
+    public boolean noMobsInClaims() { return mobDefault; }
+    public boolean containerProtectionDefault() { return containerDefault; }
+    public boolean petProtectionDefault() { return petDefault; }
+    public boolean farmProtectionDefault() { return farmDefault; }
+    public boolean flyDefault() { return flyDefault; }
+    public boolean entryDefault() { return entryDefault; }
 
     // ======================================
     // ⚔️ Admin Scepter (NEW)

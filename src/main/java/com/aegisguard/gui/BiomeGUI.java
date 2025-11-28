@@ -8,16 +8,24 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList; // --- FIX: Added missing import ---
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * BiomeGUI
+ * - Allows changing the biome of a plot.
+ * - Optimized 4x4x4 iteration to prevent lag.
+ */
 public class BiomeGUI {
 
     private final AegisGuard plugin;
@@ -37,36 +45,53 @@ public class BiomeGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome");
         Inventory inv = Bukkit.createInventory(new BiomeHolder(plot), 45, title);
 
-        // Fill background
-        for (int i = 36; i < 45; i++) inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
+        // Background Filler
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 36; i < 45; i++) inv.setItem(i, filler);
 
         List<String> allowedBiomes = plugin.cfg().getAllowedBiomes();
         double cost = plugin.cfg().getBiomeChangeCost();
         CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
         String costStr = (cost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(cost, type) : "Free";
 
+        // Current Plot Biome (for comparison)
+        String currentBiomeStr = plot.getCustomBiome(); 
+        
         int slot = 0;
         for (String biomeName : allowedBiomes) {
             if (slot >= 36) break;
             
             try {
                 Biome biome = Biome.valueOf(biomeName.toUpperCase());
-                Material icon = getBiomeIcon(biome);
+                Material iconMat = getBiomeIcon(biome);
+                String prettyName = formatName(biome.name());
                 
                 List<String> lore = new ArrayList<>(plugin.msg().getList(player, "biome_select_lore"));
-                // Replace placeholders in lore
-                lore.replaceAll(line -> line.replace("{BIOME}", formatName(biome.name()))
-                                            .replace("{COST}", costStr));
+                // Fallback lore if config is empty
+                if (lore.isEmpty()) {
+                    lore.add("§7Cost: " + costStr);
+                    lore.add(" ");
+                    lore.add("§eClick to Apply");
+                } else {
+                    lore.replaceAll(line -> line.replace("{BIOME}", prettyName).replace("{COST}", costStr));
+                }
 
-                inv.setItem(slot++, GUIManager.icon(icon, "§a" + formatName(biome.name()), lore));
+                ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
+                
+                // Highlight if it matches saved biome
+                if (currentBiomeStr != null && currentBiomeStr.equalsIgnoreCase(biome.name())) {
+                    addGlow(icon);
+                }
+
+                inv.setItem(slot++, icon);
                 
             } catch (IllegalArgumentException ignored) {
-                // Skip invalid config biomes
+                // Config might have invalid biomes, skip them safely
             }
         }
 
         // Back Button
-        inv.setItem(40, GUIManager.icon(Material.ARROW, GUIManager.safeText(plugin.msg().get(player, "button_back"), "Back"), null));
+        inv.setItem(40, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to plot settings.")));
         
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -77,18 +102,26 @@ public class BiomeGUI {
         if (e.getCurrentItem() == null) return;
         Plot plot = holder.getPlot();
 
-        if (e.getSlot() == 40) { // Back
+        // Navigation
+        if (e.getSlot() == 40) {
             plugin.gui().flags().open(player, plot);
-            plugin.effects().playMenuFlip(player);
             return;
         }
 
+        // Selection
         if (e.getSlot() < 36 && e.getCurrentItem().getType() != Material.AIR) {
-            String name = e.getCurrentItem().getItemMeta().getDisplayName();
-            String rawBiome = name.replace("§a", "").replace(" ", "_").toUpperCase();
+            String displayName = e.getCurrentItem().getItemMeta().getDisplayName();
+            String rawBiome = displayName.replace("§a", "").toUpperCase().replace(" ", "_");
             
             try {
                 Biome newBiome = Biome.valueOf(rawBiome);
+                
+                // Don't charge if already set
+                if (plot.getCustomBiome() != null && plot.getCustomBiome().equals(newBiome.name())) {
+                    player.sendMessage("§cThis biome is already active.");
+                    return;
+                }
+
                 double cost = plugin.cfg().getBiomeChangeCost();
                 CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
 
@@ -99,18 +132,29 @@ public class BiomeGUI {
                         plugin.effects().playError(player);
                         return;
                     }
-                    plugin.msg().send(player, "biome_cost_paid", Map.of("AMOUNT", plugin.eco().format(cost, type)));
+                    plugin.msg().send(player, "cost_deducted", Map.of("AMOUNT", plugin.eco().format(cost, type)));
                 }
 
-                // Apply Biome Change
+                // Apply
+                player.closeInventory();
+                player.sendMessage("§eTerraforming... this may take a moment.");
+                
+                // Run logic (sync or async depending on server version/safety preferences)
+                // Biome setting is usually fast enough on sync if optimized
                 applyBiomeChange(plot, newBiome);
+                
+                plot.setCustomBiome(newBiome.name());
+                plugin.store().setDirty(true);
                 
                 plugin.msg().send(player, "biome_changed", Map.of("BIOME", formatName(newBiome.name())));
                 plugin.effects().playConfirm(player);
-                player.closeInventory();
+                
+                // Force client update
+                refreshChunks(player, plot);
 
             } catch (Exception ex) {
                 player.sendMessage("§cError applying biome: " + ex.getMessage());
+                ex.printStackTrace();
             }
         }
     }
@@ -123,28 +167,46 @@ public class BiomeGUI {
         int minZ = plot.getZ1();
         int maxX = plot.getX2();
         int maxZ = plot.getZ2();
+        int minY = world.getMinHeight();
+        int maxY = world.getMaxHeight();
 
-        // Set biome block by block (Correct API for 1.16+)
-        for (int x = minX; x <= maxX; x += 4) { // Optimization: Biomes are stored every 4 blocks
+        // Optimized Loop: Minecraft stores biomes in 4x4x4 cubes.
+        // Iterating every single block is wasteful. Steps of 4 are sufficient.
+        for (int x = minX; x <= maxX; x += 4) { 
             for (int z = minZ; z <= maxZ; z += 4) {
-                for (int y = world.getMinHeight(); y < world.getMaxHeight(); y += 4) {
-                    world.setBiome(x, y, z, biome);
+                for (int y = minY; y < maxY; y += 4) {
+                    // Check if coordinate is actually inside (for non-rectangular plots if supported later)
+                    if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                        world.setBiome(x, y, z, biome);
+                    }
                 }
             }
         }
+    }
+    
+    private void refreshChunks(Player player, Plot plot) {
+        // Simple way to refresh: resend chunk packets.
+        // In older versions, this required NMS. In modern API, players usually need to relog
+        // or unload/reload chunks.
+        // We will just inform the user as a fallback.
+        player.sendMessage("§7(Note: You may need to reconnect or leave the area to see visual changes fully.)");
     }
 
     private Material getBiomeIcon(Biome biome) {
         String name = biome.name();
         if (name.contains("DESERT")) return Material.SAND;
-        if (name.contains("FOREST")) return Material.OAK_SAPLING;
+        if (name.contains("FOREST") || name.contains("BIRCH")) return Material.OAK_SAPLING;
         if (name.contains("JUNGLE")) return Material.JUNGLE_SAPLING;
-        if (name.contains("TAIGA")) return Material.SPRUCE_SAPLING;
-        if (name.contains("SWAMP")) return Material.LILY_PAD;
+        if (name.contains("TAIGA") || name.contains("SNOW")) return Material.SPRUCE_SAPLING;
+        if (name.contains("SWAMP") || name.contains("MANGROVE")) return Material.LILY_PAD;
         if (name.contains("PLAINS")) return Material.GRASS_BLOCK;
         if (name.contains("BADLANDS") || name.contains("MESA")) return Material.TERRACOTTA;
         if (name.contains("MUSHROOM")) return Material.RED_MUSHROOM;
-        if (name.contains("CHERRY")) return Material.CHERRY_SAPLING;
+        if (name.contains("CHERRY")) return Material.PINK_PETALS; // 1.20+
+        if (name.contains("DEEP_DARK") || name.contains("SCULK")) return Material.SCULK_SENSOR; // 1.19+
+        if (name.contains("OCEAN") || name.contains("RIVER")) return Material.WATER_BUCKET;
+        if (name.contains("NETHER") || name.contains("CRIMSON")) return Material.NETHERRACK;
+        if (name.contains("END")) return Material.END_STONE;
         return Material.GRASS_BLOCK;
     }
     
@@ -152,9 +214,18 @@ public class BiomeGUI {
         String[] words = input.split("_");
         StringBuilder sb = new StringBuilder();
         for (String w : words) {
+            if (w.isEmpty()) continue;
             sb.append(w.charAt(0)).append(w.substring(1).toLowerCase()).append(" ");
         }
         return sb.toString().trim();
     }
+    
+    private void addGlow(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            item.setItemMeta(meta);
+        }
+    }
 }
-

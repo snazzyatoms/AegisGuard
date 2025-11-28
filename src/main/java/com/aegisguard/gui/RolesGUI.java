@@ -12,15 +12,15 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * RolesGUI
- * - Replaces the old TrustedGUI.
- * - Features: Plot Selector, Main Role List, Add Player, Manage Player Role.
- * - UPDATED: Prevents owners/admins from editing their own roles to avoid self-lockout.
+ * - Manage trusted players and their permission levels.
+ * - Supports OfflinePlayer lookups.
  */
 public class RolesGUI {
 
@@ -30,10 +30,7 @@ public class RolesGUI {
         this.plugin = plugin;
     }
 
-    /* -----------------------------
-     * Inventory Holders (Must be PUBLIC)
-     * ----------------------------- */
-    
+    // --- HOLDERS ---
     public static class PlotSelectorHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }
@@ -64,221 +61,179 @@ public class RolesGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-
-    /* -----------------------------
-     * Main Entry Point
-     * ----------------------------- */
-    public void open(Player owner) {
-        // 1. Check if admin is standing in a plot they want to manage
-        if (plugin.isAdmin(owner)) {
-            Plot currentLocPlot = plugin.store().getPlotAt(owner.getLocation());
-            if (currentLocPlot != null) {
-                // If standing in a plot (Server or Player), open roles for THAT plot directly
-                openRolesMenu(owner, currentLocPlot);
+    // --- ENTRY POINT ---
+    public void open(Player player) {
+        // 1. Admin Override (Manage plot they are standing in)
+        if (plugin.isAdmin(player)) {
+            Plot standingPlot = plugin.store().getPlotAt(player.getLocation());
+            if (standingPlot != null) {
+                openRolesMenu(player, standingPlot);
                 return;
             }
         }
 
-        // 2. Normal Flow: Show owned plots
-        List<Plot> plots = plugin.store().getPlots(owner.getUniqueId());
+        // 2. Normal User Flow
+        List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
+        
         if (plots == null || plots.isEmpty()) {
-            plugin.msg().send(owner, "no_plot_here");
+            plugin.msg().send(player, "no_plot_here");
+            plugin.effects().playError(player);
             return;
         }
 
         if (plots.size() > 1) {
-            openPlotSelector(owner, plots);
+            openPlotSelector(player, plots);
         } else {
-            openRolesMenu(owner, plots.get(0));
+            openRolesMenu(player, plots.get(0));
         }
     }
 
-    /* -----------------------------
-     * GUI: Plot Selector
-     * ----------------------------- */
-    private void openPlotSelector(Player owner, List<Plot> plots) {
-        String title = GUIManager.safeText(plugin.msg().get(owner, "trusted_plot_selector_title"), "§bSelect a Plot to Manage");
+    // --- GUI 1: SELECT PLOT ---
+    private void openPlotSelector(Player player, List<Plot> plots) {
+        String title = "§8Select Plot to Manage";
         Inventory inv = Bukkit.createInventory(new PlotSelectorHolder(), 54, title);
 
         int slot = 0;
         for (Plot plot : plots) {
             if (slot >= 54) break;
-            inv.setItem(slot++, GUIManager.icon(
-                    Material.GRASS_BLOCK,
-                    "§aPlot: " + plot.getCenter(plugin).getBlockX() + ", " + plot.getCenter(plugin).getBlockZ(),
-                    List.of(
-                            "§7World: §f" + plot.getWorld(),
-                            "§7Bounds: §e(" + plot.getX1() + ", " + plot.getZ1() + ")",
-                            "§7Click to manage roles."
-                    )
+            
+            List<String> lore = new ArrayList<>();
+            lore.add("§7World: §f" + plot.getWorld());
+            lore.add("§7Size: §e" + (plot.getX2() - plot.getX1()) + "x" + (plot.getZ2() - plot.getZ1()));
+            lore.add(" ");
+            lore.add("§eClick to Manage Roles");
+
+            inv.setItem(slot++, GUIManager.createItem(
+                Material.GRASS_BLOCK,
+                "§aPlot #" + (slot), // 1-based index for display
+                lore
             ));
         }
-        owner.openInventory(inv);
-        plugin.effects().playMenuOpen(owner);
+        
+        player.openInventory(inv);
+        plugin.effects().playMenuOpen(player);
     }
 
-    /* -----------------------------
-     * GUI: Main Roles Menu
-     * ----------------------------- */
-    public void openRolesMenu(Player owner, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(owner, "roles_gui_title"), "§b🛡 Plot Roles");
+    // --- GUI 2: ROLES LIST ---
+    public void openRolesMenu(Player player, Plot plot) {
+        String title = GUIManager.safeText(plugin.msg().get(player, "roles_gui_title"), "§8Manage Roles");
         Inventory inv = Bukkit.createInventory(new RolesMenuHolder(plot), 54, title);
 
-        for (int i = 45; i < 54; i++) {
-            inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
-        }
-        
+        // Fill Footer
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
         int slot = 0;
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             if (slot >= 45) break;
             
-            // --- FIX: STRICT SELF-HIDE LOGIC ---
-            // 1. If the listed person IS the viewer AND they are the Owner -> HIDE THEM.
-            //    This prevents self-lockout even for admins.
-            if (entry.getKey().equals(owner.getUniqueId()) && plot.getOwner().equals(owner.getUniqueId())) {
-                continue;
-            }
+            UUID uuid = entry.getKey();
+            String role = entry.getValue();
             
-            // 2. If the listed person is the Owner (but viewer is NOT the owner),
-            //    hide them unless viewer is an Admin.
-            if (entry.getKey().equals(plot.getOwner()) && !plugin.isAdmin(owner)) {
-                continue;
-            }
+            // Skip Owner from list unless Admin is viewing (Owner can't change their own role)
+            if (uuid.equals(plot.getOwner()) && !plugin.isAdmin(player)) continue;
 
-            OfflinePlayer member = Bukkit.getOfflinePlayer(entry.getKey());
-            String roleName = entry.getValue();
+            OfflinePlayer member = Bukkit.getOfflinePlayer(uuid);
+            String name = (member.getName() != null) ? member.getName() : "Unknown";
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(member);
-                String playerName = member.getName() != null ? member.getName() : "Unknown";
-                meta.setDisplayName("§a" + playerName);
-                
-                if (entry.getKey().equals(plot.getOwner())) {
-                     meta.setLore(List.of("§7Role: §c" + roleName, " ", "§c(Plot Owner)"));
-                } else {
-                     meta.setLore(List.of("§7Role: §e" + roleName, " ", "§7Click to Manage"));
-                }
+                meta.setDisplayName("§e" + name);
+                List<String> lore = new ArrayList<>();
+                lore.add("§7Role: §f" + role);
+                lore.add(" ");
+                lore.add("§eClick to Edit Role");
+                meta.setLore(lore);
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
         }
 
-        // Buttons
-        inv.setItem(49, GUIManager.icon(
-                Material.EMERALD,
-                GUIManager.safeText(plugin.msg().get(owner, "button_add_trusted"), "§aAdd Nearby Player"),
-                plugin.msg().getList(owner, "add_trusted_lore")));
+        // Add Button
+        inv.setItem(49, GUIManager.createItem(Material.EMERALD, "§aAdd Player", List.of("§7Trust a nearby player.")));
+        
+        // Navigation
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
+        inv.setItem(50, GUIManager.createItem(Material.BARRIER, "§cExit", List.of("§7Close menu.")));
 
-        inv.setItem(48, GUIManager.icon(
-                Material.ARROW,
-                GUIManager.safeText(plugin.msg().get(owner, "button_back"), "§fBack"),
-                plugin.msg().getList(owner, "back_lore")));
-
-        inv.setItem(50, GUIManager.icon(
-                Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(owner, "button_exit"), "§cExit"),
-                plugin.msg().getList(owner, "exit_lore")));
-
-        owner.openInventory(inv);
-        plugin.effects().playMenuOpen(owner);
+        player.openInventory(inv);
+        plugin.effects().playMenuOpen(player);
     }
 
-    /* -----------------------------
-     * GUI: Add Player
-     * ----------------------------- */
+    // --- GUI 3: ADD PLAYER ---
     private void openAddMenu(Player player, Plot plot) {
-        String addTitle = GUIManager.safeText(plugin.msg().get(player, "add_trusted_title"), "§bAdd Nearby Player");
-        Inventory addMenu = Bukkit.createInventory(new RoleAddHolder(plot), 54, addTitle);
+        Inventory inv = Bukkit.createInventory(new RoleAddHolder(plot), 54, "§8Add Trusted Player");
 
         int slot = 0;
-        double range = 50.0; // RADIUS: Players must be within 50 blocks
-
-        for (Player online : Bukkit.getOnlinePlayers()) {
+        // Show nearby players (Radius 50)
+        for (Player nearby : player.getWorld().getPlayers()) {
             if (slot >= 54) break;
-            // Don't show self
-            if (online.getUniqueId().equals(player.getUniqueId())) continue;
-            // Don't show players already added
-            if (plot.getPlayerRoles().containsKey(online.getUniqueId())) continue; 
-
-            // --- VICINITY CHECK ---
-            // 1. Must be in same world
-            if (!online.getWorld().equals(player.getWorld())) continue;
-            // 2. Must be close
-            if (online.getLocation().distance(player.getLocation()) > range) continue;
+            if (nearby.getLocation().distance(player.getLocation()) > 50) continue;
+            if (nearby.equals(player)) continue; // Don't show self
+            if (plot.getPlayerRoles().containsKey(nearby.getUniqueId())) continue; // Already trusted
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                meta.setOwningPlayer(online);
-                meta.setDisplayName("§e" + online.getName());
-                meta.setLore(List.of("§7Click to trust this player."));
+                meta.setOwningPlayer(nearby);
+                meta.setDisplayName("§a" + nearby.getName());
+                meta.setLore(List.of("§7Click to add to plot."));
                 head.setItemMeta(meta);
             }
-            addMenu.setItem(slot++, head);
+            inv.setItem(slot++, head);
         }
-        
+
         if (slot == 0) {
-            addMenu.setItem(22, GUIManager.icon(Material.BARRIER, "§cNo Players Nearby", List.of("§7Ask your friend to stand closer!")));
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER, "§cNo Players Nearby", List.of("§7Ask your friend to stand closer!")));
         }
 
-        // Navigation
-        addMenu.setItem(49, GUIManager.icon(Material.ARROW, "§fBack", null));
-
-        player.openInventory(addMenu);
-        plugin.effects().playMenuFlip(player);
-    }
-    
-    /* -----------------------------
-     * GUI: Manage Specific Player
-     * ----------------------------- */
-    private void openManageMenu(Player player, Plot plot, OfflinePlayer target) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "roles_manage_title"), "§bManage: {PLAYER}").replace("{PLAYER}", target.getName());
-        Inventory inv = Bukkit.createInventory(new RoleManageHolder(plot, target), 27, title);
-
-        // Roles
-        List<String> roleNames = plugin.cfg().getRoleNames(); 
-        for (int i = 0; i < roleNames.size(); i++) {
-            if (i >= 27) break;
-            String roleName = roleNames.get(i);
-            String currentRole = plot.getRole(target.getUniqueId());
-            boolean isCurrent = roleName.equalsIgnoreCase(currentRole);
-            
-            inv.setItem(i, GUIManager.icon(
-                    isCurrent ? Material.EMERALD_BLOCK : Material.NAME_TAG,
-                    (isCurrent ? "§a" : "§e") + roleName,
-                    List.of("§7Click to set this player's role.", isCurrent ? "§a(Current)" : "")
-            ));
-        }
-
-        // Remove
-        inv.setItem(16, GUIManager.icon(Material.REDSTONE_BLOCK, GUIManager.safeText(plugin.msg().get(player, "button_remove_trusted"), "§cRemove From Plot"), null));
-
-        // FIX: Added Navigation Buttons
-        inv.setItem(18, GUIManager.icon(Material.ARROW, GUIManager.safeText(plugin.msg().get(player, "button_back"), "Back"), null));
-        inv.setItem(26, GUIManager.icon(Material.BARRIER, GUIManager.safeText(plugin.msg().get(player, "button_exit"), "Exit"), null));
-        
+        inv.setItem(49, GUIManager.createItem(Material.ARROW, "§fBack", null));
         player.openInventory(inv);
         plugin.effects().playMenuFlip(player);
     }
 
+    // --- GUI 4: MANAGE SPECIFIC PLAYER ---
+    private void openManageMenu(Player player, Plot plot, OfflinePlayer target) {
+        String title = "§8Manage: " + target.getName();
+        Inventory inv = Bukkit.createInventory(new RoleManageHolder(plot, target), 27, title);
 
-    /* -----------------------------
-     * Click Handlers
-     * ----------------------------- */
+        List<String> roles = plugin.cfg().getRoleNames();
+        String currentRole = plot.getRole(target.getUniqueId());
+
+        for (int i = 0; i < roles.size(); i++) {
+            if (i >= 27) break; // Limit
+            String roleName = roles.get(i);
+            boolean isCurrent = roleName.equalsIgnoreCase(currentRole);
+            
+            Material icon = isCurrent ? Material.LIME_DYE : Material.GRAY_DYE;
+            String name = (isCurrent ? "§a" : "§7") + roleName;
+            
+            inv.setItem(i, GUIManager.createItem(icon, name, List.of(isCurrent ? "§a(Current Role)" : "§eClick to Set")));
+        }
+
+        // Remove Button
+        inv.setItem(22, GUIManager.createItem(Material.REDSTONE_BLOCK, "§cRemove Player", List.of("§7Revoke all access.")));
+        
+        // Back
+        inv.setItem(18, GUIManager.createItem(Material.ARROW, "§fBack", null));
+
+        player.openInventory(inv);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    // --- HANDLERS ---
 
     public void handlePlotSelectorClick(Player player, InventoryClickEvent e, PlotSelectorHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-
+        
         List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
-        int slot = e.getSlot();
-
-        if (slot >= 0 && slot < plots.size()) {
-            Plot selectedPlot = plots.get(slot);
-            openRolesMenu(player, selectedPlot);
-            plugin.effects().playMenuFlip(player);
+        int index = e.getSlot();
+        
+        if (index >= 0 && index < plots.size()) {
+            openRolesMenu(player, plots.get(index));
         }
     }
 
@@ -287,67 +242,37 @@ public class RolesGUI {
         if (e.getCurrentItem() == null) return;
         Plot plot = holder.getPlot();
 
-        int slot = e.getSlot();
-
-        if (slot < 45 && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+        // 1. Clicked on a Head -> Manage
+        if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-            if (meta != null) {
-                OfflinePlayer target = meta.getOwningPlayer();
-                if (target != null) {
-                    // Double-check: Prevent self-editing if owner
-                    if (target.getUniqueId().equals(player.getUniqueId()) && plot.getOwner().equals(player.getUniqueId())) {
-                        plugin.msg().send(player, "role_edit_self_error");
-                        plugin.effects().playError(player);
-                        return;
-                    }
-                    
-                    openManageMenu(player, plot, target);
-                    plugin.effects().playMenuFlip(player);
-                }
+            if (meta != null && meta.getOwningPlayer() != null) {
+                openManageMenu(player, plot, meta.getOwningPlayer());
             }
             return;
         }
 
-        switch (slot) {
-            case 49: // Add Player
-                openAddMenu(player, plot);
-                plugin.effects().playMenuFlip(player);
-                break;
-            case 48: // Back
-                plugin.gui().openMain(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-            case 50: // Exit
-                player.closeInventory();
-                plugin.effects().playMenuClose(player);
-                break;
-            default: 
-                break;
+        // 2. Buttons
+        switch (e.getSlot()) {
+            case 49: openAddMenu(player, plot); break;
+            case 48: plugin.gui().openMain(player); break;
+            case 50: player.closeInventory(); break;
         }
     }
 
     public void handleAddTrustedClick(Player player, InventoryClickEvent e, RoleAddHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-        
-        // Handle Back button inside Add Menu
-        if (e.getSlot() == 49 && e.getCurrentItem().getType() == Material.ARROW) {
-             openRolesMenu(player, holder.getPlot());
-             plugin.effects().playMenuFlip(player);
-             return;
+        Plot plot = holder.getPlot();
+
+        if (e.getSlot() == 49) {
+            openRolesMenu(player, plot);
+            return;
         }
 
-        if (e.getCurrentItem().getType() != Material.PLAYER_HEAD) return;
-
-        Plot plot = holder.getPlot();
-        if (plot == null) { player.closeInventory(); return; }
-
-        SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-        if (meta != null) {
-            OfflinePlayer target = meta.getOwningPlayer();
-            if (target != null) {
-                openManageMenu(player, holder.getPlot(), meta.getOwningPlayer());
-                plugin.effects().playMenuFlip(player);
+        if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+            SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
+            if (meta != null && meta.getOwningPlayer() != null) {
+                openManageMenu(player, plot, meta.getOwningPlayer());
             }
         }
     }
@@ -357,48 +282,29 @@ public class RolesGUI {
         if (e.getCurrentItem() == null) return;
         
         Plot plot = holder.getPlot();
-        UUID target = holder.getTarget().getUniqueId();
+        OfflinePlayer target = holder.getTarget();
         
-        int slot = e.getSlot();
-
-        // FIX: Handle Navigation FIRST so you can always exit
-        if (slot == 18) { // Back
+        // Navigation
+        if (e.getSlot() == 18) {
             openRolesMenu(player, plot);
-            plugin.effects().playMenuFlip(player);
-            return;
-        }
-        if (slot == 26) { // Exit
-            player.closeInventory();
-            plugin.effects().playMenuClose(player);
             return;
         }
 
-        // Security check: Prevent modifying self if owner
-        if (target.equals(player.getUniqueId()) && plot.getOwner().equals(player.getUniqueId())) {
-             plugin.msg().send(player, "role_edit_self_error");
-             plugin.effects().playError(player);
-             return;
-        }
-        
-        // Admin Security Check: Only Owner OR Admin can edit others
-        if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
-            plugin.msg().send(player, "no_perm");
-            return;
-        }
-        
-        if (slot == 16) { // Remove
-            plugin.store().removePlayerRole(plot, target);
-            plugin.msg().send(player, "role_removed", Map.of("PLAYER", holder.getTarget().getName()));
+        // Remove
+        if (e.getSlot() == 22) {
+            plugin.store().removePlayerRole(plot, target.getUniqueId());
+            plugin.msg().send(player, "role_removed", Map.of("PLAYER", target.getName()));
             plugin.effects().playUnclaim(player);
             openRolesMenu(player, plot);
             return;
         }
 
+        // Set Role
         List<String> roles = plugin.cfg().getRoleNames();
-        if (slot >= 0 && slot < roles.size()) {
-            String role = roles.get(slot);
-            plugin.store().addPlayerRole(plot, target, role);
-            plugin.msg().send(player, "role_set_to", Map.of("PLAYER", holder.getTarget().getName(), "ROLE", role));
+        if (e.getSlot() >= 0 && e.getSlot() < roles.size()) {
+            String newRole = roles.get(e.getSlot());
+            plugin.store().addPlayerRole(plot, target.getUniqueId(), newRole);
+            plugin.msg().send(player, "role_set_to", Map.of("PLAYER", target.getName(), "ROLE", newRole));
             plugin.effects().playConfirm(player);
             openRolesMenu(player, plot);
         }

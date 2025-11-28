@@ -2,15 +2,18 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.economy.CurrencyType; // --- NEW IMPORT ---
-import org.bukkit.Bukkit; 
+import com.aegisguard.economy.CurrencyType;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,15 +21,17 @@ import java.util.Map;
 
 /**
  * PlotCosmeticsGUI
- * - Allows players to buy and apply cosmetic particle effects.
- * - Updated to use EconomyManager.
+ * - Allows players to buy and apply particle borders.
+ * - Uses NBT for reliable item matching.
  */
 public class PlotCosmeticsGUI {
 
     private final AegisGuard plugin;
+    private final NamespacedKey KEY_PARTICLE_ID;
 
     public PlotCosmeticsGUI(AegisGuard plugin) {
         this.plugin = plugin;
+        this.KEY_PARTICLE_ID = new NamespacedKey(plugin, "cosmetic_id");
     }
 
     public static class CosmeticsHolder implements InventoryHolder {
@@ -40,60 +45,63 @@ public class PlotCosmeticsGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "cosmetics_gui_title"), "§dPlot Cosmetics");
         Inventory inv = Bukkit.createInventory(new CosmeticsHolder(plot), 54, title);
 
-        for (int i = 45; i < 54; i++) {
-            inv.setItem(i, GUIManager.icon(Material.GRAY_STAINED_GLASS_PANE, " ", null));
-        }
+        // Fill Footer
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
-        ConfigurationSection borderSection = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles");
+        ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles");
         String currentBorder = plot.getBorderParticle();
         
-        // Slot 0: "None"
-        inv.setItem(0, GUIManager.icon(
-                Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(player, "cosmetics_border_none"), "§cDefault Particles"),
-                currentBorder == null ? List.of("§a(Selected)") : List.of("§7Click to select.")
-        ));
+        // Slot 0: Reset/None
+        List<String> noneLore = currentBorder == null ? List.of("§a(Selected)") : List.of("§7Click to disable border.");
+        inv.setItem(0, GUIManager.createItem(Material.BARRIER, "§cDisable Border", noneLore));
 
-        if (borderSection != null) {
+        if (section != null) {
             int slot = 1;
-            for (String key : borderSection.getKeys(false)) {
+            for (String key : section.getKeys(false)) {
                 if (slot >= 45) break;
 
-                String materialName = borderSection.getString(key + ".material", "BLAZE_POWDER");
-                String particleName = borderSection.getString(key + ".particle", "FLAME");
-                String displayName = GUIManager.safeText(borderSection.getString(key + ".display-name"), "§6Flame Border");
-                double price = borderSection.getDouble(key + ".price", 0.0);
+                String matName = section.getString(key + ".material", "BLAZE_POWDER");
+                String particleName = section.getString(key + ".particle", "FLAME");
+                String displayName = GUIManager.safeText(section.getString(key + ".display-name"), "§6Flame Border");
+                double price = section.getDouble(key + ".price", 0.0);
 
-                Material material = Material.matchMaterial(materialName);
+                Material material = Material.matchMaterial(matName);
                 if (material == null) material = Material.BLAZE_POWDER;
 
                 List<String> lore = new ArrayList<>();
-                lore.add("§7Applies a " + particleName + " effect to");
-                lore.add("§7your plot's visualization border.");
+                lore.add("§7Effect: " + particleName);
                 lore.add(" ");
 
-                // --- NEW: Use Eco Manager formatting ---
-                // Defaulting cosmetics to VAULT for now, but you could add a config option later
                 CurrencyType type = CurrencyType.VAULT; 
+                boolean isSelected = particleName.equalsIgnoreCase(currentBorder);
 
-                if (price > 0) {
+                if (isSelected) {
+                    lore.add("§a(Selected)");
+                } else if (price > 0 && !plugin.isAdmin(player)) {
                     lore.add("§7Cost: §e" + plugin.eco().format(price, type));
                     lore.add("§eLeft-Click: §7Buy & Apply");
                 } else {
                     lore.add("§aFree!");
                     lore.add("§eLeft-Click: §7Apply");
                 }
-                
-                if (particleName.equalsIgnoreCase(currentBorder)) {
-                    lore.add("§a(Selected)");
-                }
 
-                inv.setItem(slot++, GUIManager.icon(material, displayName, lore));
+                ItemStack icon = GUIManager.createItem(material, displayName, lore);
+                
+                // Store Key in NBT
+                ItemMeta meta = icon.getItemMeta();
+                if (meta != null) {
+                    meta.getPersistentDataContainer().set(KEY_PARTICLE_ID, PersistentDataType.STRING, key);
+                    icon.setItemMeta(meta);
+                }
+                
+                inv.setItem(slot++, icon);
             }
         }
         
-        inv.setItem(48, GUIManager.icon(Material.ARROW, "§fBack to Flags", null));
-        inv.setItem(49, GUIManager.icon(Material.BARRIER, "§cClose", null));
+        // Navigation
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -114,58 +122,60 @@ public class PlotCosmeticsGUI {
 
         int slot = e.getSlot();
 
-        if (slot == 48) { // Back
+        // Nav
+        if (slot == 48) { 
             plugin.gui().flags().open(player, plot);
-            plugin.effects().playMenuFlip(player);
             return;
         }
-        if (slot == 49) { // Close
+        if (slot == 49) {
             player.closeInventory();
-            plugin.effects().playMenuClose(player);
             return;
         }
 
+        // Reset
         if (slot == 0) {
-            plot.setBorderParticle(null);
-            plugin.store().setDirty(true);
-            plugin.effects().playMenuFlip(player);
-            open(player, plot);
+            if (plot.getBorderParticle() != null) {
+                plot.setBorderParticle(null);
+                plugin.store().setDirty(true);
+                plugin.msg().send(player, "cosmetic_removed");
+                plugin.effects().playMenuFlip(player);
+                open(player, plot);
+            }
             return;
         }
 
-        if (slot > 0 && slot < 45) {
-            ItemStack clicked = e.getCurrentItem();
-            if (clicked == null || clicked.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+        // Selection
+        ItemStack item = e.getCurrentItem();
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.getPersistentDataContainer().has(KEY_PARTICLE_ID, PersistentDataType.STRING)) return;
 
-            ConfigurationSection borderSection = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles");
-            if (borderSection == null) return;
+        String key = meta.getPersistentDataContainer().get(KEY_PARTICLE_ID, PersistentDataType.STRING);
+        ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles." + key);
+        
+        if (section != null) {
+            String particleName = section.getString("particle");
+            
+            // Check if already selected
+            if (particleName != null && particleName.equalsIgnoreCase(plot.getBorderParticle())) {
+                player.sendMessage("§cThis cosmetic is already active.");
+                return;
+            }
 
-            for (String key : borderSection.getKeys(false)) {
-                String displayName = GUIManager.safeText(borderSection.getString(key + ".display-name"), "");
-                
-                if (clicked.getItemMeta() != null && displayName.equals(clicked.getItemMeta().getDisplayName())) {
-                    String particleName = borderSection.getString(key + ".particle", "FLAME");
-                    double price = borderSection.getDouble(key + ".price", 0.0);
-
-                    // --- NEW: Transaction Logic with EconomyManager ---
-                    CurrencyType type = CurrencyType.VAULT; // Default for cosmetics
-
-                    if (price > 0 && !plugin.isAdmin(player)) {
-                        if (!plugin.eco().withdraw(player, price, type)) {
-                            plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(price, type)));
-                            plugin.effects().playError(player);
-                            return;
-                        }
-                        plugin.msg().send(player, "cosmetic_purchased");
-                    }
-                    
-                    plot.setBorderParticle(particleName);
-                    plugin.store().setDirty(true);
-                    plugin.effects().playConfirm(player);
-                    open(player, plot);
+            double price = section.getDouble("price", 0.0);
+            
+            if (price > 0 && !plugin.isAdmin(player)) {
+                if (!plugin.eco().withdraw(player, price, CurrencyType.VAULT)) {
+                    plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(price, CurrencyType.VAULT)));
+                    plugin.effects().playError(player);
                     return;
                 }
+                plugin.msg().send(player, "cosmetic_purchased");
             }
+
+            plot.setBorderParticle(particleName);
+            plugin.store().setDirty(true);
+            plugin.effects().playConfirm(player);
+            open(player, plot); // Refresh to show "Selected"
         }
     }
 }

@@ -10,7 +10,7 @@ import net.pl3x.map.core.markers.option.Fill;
 import net.pl3x.map.core.markers.option.Options;
 import net.pl3x.map.core.markers.option.Stroke;
 import net.pl3x.map.core.world.World;
-import net.pl3x.map.Key; // FIXED IMPORT (Was net.pl3x.map.core.Key)
+import net.pl3x.map.core.Key; // --- FIXED IMPORT ---
 import org.bukkit.Bukkit;
 
 import java.util.Collection;
@@ -58,6 +58,7 @@ public class Pl3xMapHook {
                 String keyId = "plot_" + plot.getPlotId();
                 
                 // Create Rectangle Marker
+                // Note: +1 on X2/Z2 to cover the full block visual
                 Marker rect = Marker.rectangle(
                     Key.of(keyId), 
                     Point.of(plot.getX1(), plot.getZ1()), 
@@ -65,6 +66,7 @@ public class Pl3xMapHook {
                 );
 
                 // Styling (Colors in ARGB format)
+                // Server: Red (0xFFFF0000), Player: Green (0xFF00FF00)
                 int strokeColor = plot.isServerZone() ? 0xFFFF0000 : 0xFF00FF00;
                 int fillColor = plot.isServerZone() ? 0x55FF0000 : 0x5500FF00; 
                 

@@ -16,6 +16,7 @@ public class AGConfig {
     private FileConfiguration config;
     
     // --- CACHED VALUES (Optimization) ---
+    // Reads are instant, preventing disk/map lookup lag
     private boolean zoningEnabled;
     private boolean levelingEnabled;
     private boolean titlesEnabled;
@@ -24,6 +25,12 @@ public class AGConfig {
     private boolean unstuckEnabled;
     private boolean travelEnabled;
     private boolean upkeepEnabled;
+    
+    // v1.1.2 New Features Cache
+    private boolean discordEnabled;
+    private boolean mergeEnabled;
+    private boolean bluemapEnabled;
+    private boolean pl3xmapEnabled;
     
     // Protections Cache
     private boolean pvpDefault;
@@ -43,11 +50,24 @@ public class AGConfig {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
         
-        // Auto-Update Defaults
-        this.config.options().copyDefaults(true);
+        // --- 1. DEFAULT INJECTION ---
+        // This ensures new settings appear in existing config files automatically
+        config.addDefault("hooks.bluemap.enabled", true);
+        config.addDefault("hooks.bluemap.label", "Claims");
+        
+        config.addDefault("hooks.pl3xmap.enabled", true);
+        
+        config.addDefault("hooks.discord.enabled", false); // False by default (needs URL)
+        config.addDefault("hooks.discord.webhook_url", "https://discord.com/api/webhooks/...");
+        
+        config.addDefault("claims.merging.enabled", true);
+        config.addDefault("claims.merging.cost", 500.0);
+        
+        // Apply defaults and save
+        config.options().copyDefaults(true);
         plugin.saveConfig();
         
-        // Update Cache
+        // --- 2. UPDATE CACHE ---
         this.zoningEnabled = config.getBoolean("zoning.enabled", true);
         this.levelingEnabled = config.getBoolean("leveling.enabled", true);
         this.titlesEnabled = config.getBoolean("titles.enabled", true);
@@ -56,6 +76,12 @@ public class AGConfig {
         this.unstuckEnabled = config.getBoolean("unstuck.enabled", true);
         this.travelEnabled = config.getBoolean("travel_system.enabled", true);
         this.upkeepEnabled = config.getBoolean("upkeep.enabled", false);
+        
+        // New Hooks Cache
+        this.discordEnabled = config.getBoolean("hooks.discord.enabled", false);
+        this.mergeEnabled = config.getBoolean("claims.merging.enabled", true);
+        this.bluemapEnabled = config.getBoolean("hooks.bluemap.enabled", true);
+        this.pl3xmapEnabled = config.getBoolean("hooks.pl3xmap.enabled", true);
         
         // Update Protection Defaults
         this.pvpDefault = config.getBoolean("protections.pvp_protection", true);
@@ -72,6 +98,13 @@ public class AGConfig {
     }
 
     // ======================================
+    // 🔌 Hooks (New v1.1.2)
+    // ======================================
+    public boolean isDiscordEnabled() { return discordEnabled; }
+    public boolean isBlueMapEnabled() { return bluemapEnabled; }
+    public boolean isPl3xMapEnabled() { return pl3xmapEnabled; }
+    
+    // ======================================
     // 💱 Currency System
     // ======================================
     public CurrencyType getCurrencyFor(String feature) {
@@ -81,6 +114,39 @@ public class AGConfig {
         } catch (IllegalArgumentException e) {
             return CurrencyType.VAULT; 
         }
+    }
+
+    // ======================================
+    // 🧱 Claims & Merging
+    // ======================================
+    public boolean isMergeEnabled() { return mergeEnabled; }
+    
+    public double getMergeCost() {
+        return config.getDouble("claims.merging.cost", 500.0);
+    }
+
+    public int getWorldMaxRadius(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".max_radius";
+            if (config.isSet(path)) return config.getInt(path);
+        }
+        return config.getInt("claims.max_radius", 32);
+    }
+
+    public int getWorldMinRadius(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".min_radius";
+            if (config.isSet(path)) return config.getInt(path);
+        }
+        return config.getInt("claims.min_radius", 1);
+    }
+    
+    public int getWorldMaxClaims(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".max_claims_per_player";
+            if (config.isSet(path)) return config.getInt(path);
+        }
+        return config.getInt("claims.max_claims_per_player", 1);
     }
 
     // ======================================
@@ -138,7 +204,6 @@ public class AGConfig {
     public boolean isLikesEnabled() { return likesEnabled; }
     public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
     
-    // v1.1.1 Additions
     public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
     public boolean isUnstuckEnabled() { return unstuckEnabled; }
     public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
@@ -190,33 +255,6 @@ public class AGConfig {
         return config.getDouble("economy.flag_costs.shop-interact", 0.0);
     }
 
-    // ======================================
-    // 🧱 Claims
-    // ======================================
-    public int getWorldMaxRadius(World world) {
-        if (world != null) {
-            String path = "claims.per_world." + world.getName() + ".max_radius";
-            if (config.isSet(path)) return config.getInt(path);
-        }
-        return config.getInt("claims.max_radius", 32);
-    }
-
-    public int getWorldMinRadius(World world) {
-        if (world != null) {
-            String path = "claims.per_world." + world.getName() + ".min_radius";
-            if (config.isSet(path)) return config.getInt(path);
-        }
-        return config.getInt("claims.min_radius", 1);
-    }
-    
-    public int getWorldMaxClaims(World world) {
-        if (world != null) {
-            String path = "claims.per_world." + world.getName() + ".max_claims_per_player";
-            if (config.isSet(path)) return config.getInt(path);
-        }
-        return config.getInt("claims.max_claims_per_player", 1);
-    }
-
     // --- Travel System ---
     public boolean isTravelSystemEnabled() { return travelEnabled; }
     public boolean allowHomeTeleport() { return config.getBoolean("travel_system.allow_home_teleport", true); }
@@ -254,7 +292,7 @@ public class AGConfig {
     public boolean entryDefault() { return entryDefault; }
 
     // ======================================
-    // ⚔️ Admin Scepter (NEW)
+    // ⚔️ Admin Scepter
     // ======================================
     public Material getAdminWandMaterial() {
         return Material.matchMaterial(config.getString("admin.wand.material", "BLAZE_ROD"));

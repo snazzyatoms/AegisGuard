@@ -132,7 +132,19 @@ public class RolesGUI {
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             if (slot >= 45) break;
             
-            // Note: We show everyone now, but we will block interactions with self in the click handler.
+            // --- FIX: STRICT SELF-HIDE LOGIC ---
+            // 1. If the listed person IS the viewer AND they are the Owner -> HIDE THEM.
+            //    This prevents self-lockout even for admins.
+            if (entry.getKey().equals(owner.getUniqueId()) && plot.getOwner().equals(owner.getUniqueId())) {
+                continue;
+            }
+            
+            // 2. If the listed person is the Owner (but viewer is NOT the owner),
+            //    hide them unless viewer is an Admin.
+            if (entry.getKey().equals(plot.getOwner()) && !plugin.isAdmin(owner)) {
+                continue;
+            }
+
             OfflinePlayer member = Bukkit.getOfflinePlayer(entry.getKey());
             String roleName = entry.getValue();
 
@@ -143,9 +155,8 @@ public class RolesGUI {
                 String playerName = member.getName() != null ? member.getName() : "Unknown";
                 meta.setDisplayName("§a" + playerName);
                 
-                // Custom lore for self
-                if (member.getUniqueId().equals(owner.getUniqueId()) && plot.getOwner().equals(owner.getUniqueId())) {
-                     meta.setLore(List.of("§7Role: §e" + roleName, " ", "§c(You cannot edit yourself)"));
+                if (entry.getKey().equals(plot.getOwner())) {
+                     meta.setLore(List.of("§7Role: §c" + roleName, " ", "§c(Plot Owner)"));
                 } else {
                      meta.setLore(List.of("§7Role: §e" + roleName, " ", "§7Click to Manage"));
                 }
@@ -283,7 +294,7 @@ public class RolesGUI {
             if (meta != null) {
                 OfflinePlayer target = meta.getOwningPlayer();
                 if (target != null) {
-                    // FIX: Prevent self-editing if owner
+                    // Double-check: Prevent self-editing if owner
                     if (target.getUniqueId().equals(player.getUniqueId()) && plot.getOwner().equals(player.getUniqueId())) {
                         plugin.msg().send(player, "role_edit_self_error");
                         plugin.effects().playError(player);

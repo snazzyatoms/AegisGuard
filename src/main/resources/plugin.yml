@@ -4,35 +4,34 @@ version: 1.1.1
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
-authors: ["(snazzyatoms)"]
-website: "https://discord.gg/Y2NpuR7UZE"    
+authors: [snazzyatoms]
+website: https://discord.gg/Y2NpuR7UZE
 softdepend: [Vault, Dynmap, PlaceholderAPI]
 folia-supported: true
 
 commands:
   aegis:
-    description: Main AegisGuard command
-    # Updated usage to include rename and stuck
-    usage: "/aegis <menu|wand|claim|unclaim|resize|visit|kick|ban|zone|level|like|rename|stuck>"
+    description: Main AegisGuard command.
+    usage: /aegis <help|menu|claim|wand>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
-    description: AegisGuard admin menu & tools
-    usage: "/aegisadmin [reload|bypass|menu|convert|wand]"
-    aliases: [agadmin]
+    description: Admin management tools.
+    usage: /aegisadmin <menu|reload|bypass>
+    aliases: [agadmin, aga]
     permission: aegis.admin
 
 permissions:
+  # --- GROUPS ---
   aegis.*:
-    description: All AegisGuard permissions
+    description: Wildcard for all plugin permissions.
     default: op
     children:
       aegis.user: true
       aegis.admin: true
 
-  # --- PLAYER PERMISSIONS ---
   aegis.user:
-    description: Standard player functionality
+    description: Recommended permissions for default players.
     default: true
     children:
       aegis.use: true
@@ -45,126 +44,144 @@ permissions:
       aegis.setspawn: true
       aegis.welcome: true
       aegis.farewell: true
+      aegis.rename: true
+      aegis.setdesc: true
+      aegis.stuck: true
+      aegis.visit: true
+      # Features
       aegis.market: true
       aegis.sell: true
       aegis.unsell: true
       aegis.auction: true
-      aegis.visit: true
-      # v1.1.0 Features
-      aegis.zone: true   # Zoning (Sub-Claims)
-      aegis.level: true  # Leveling
-      aegis.biome: true  # Biome Changing
-      aegis.like: true   # Social Likes
-      # v1.1.1 Features
-      aegis.rename: true # Plot Renaming
-      aegis.stuck: true  # Unstuck Command
-      # Plot Moderation
+      aegis.zone: true
+      aegis.level: true
+      aegis.biome: true
+      aegis.like: true
+      # Moderation
       aegis.kick: true
       aegis.ban: true
       aegis.unban: true
 
-  # --- ADMIN PERMISSIONS ---
   aegis.admin:
-    description: Full Admin Control
+    description: Administrative permissions.
     default: op
     children:
-      aegis.admin.manage: true # Allows editing ANY plot
+      aegis.admin.manage: true
       aegis.reload: true
       aegis.bypass: true
-      aegis.consume: true     # Allows manual wand disposal
-      aegis.setwarp: true     # Create Server Warps
-      aegis.delwarp: true     # Delete Server Warps
-      aegis.convert: true     # Seize/Convert plots to Server Zones
-      aegis.admin.wand: true  # Obtain the Sentinel's Scepter
+      aegis.consume: true
+      aegis.setwarp: true
+      aegis.delwarp: true
+      aegis.convert: true
+      aegis.admin.wand: true
 
-  # --- INDIVIDUAL NODES ---
-  aegis.admin.manage:
-    description: Allow editing flags/roles of ANY plot (including Server Zones)
-    default: op
-
+  # --- CORE PERMISSIONS ---
   aegis.use:
-    description: Use /aegis
+    description: Ability to use the /aegis command.
     default: true
   aegis.menu:
-    description: Open GUI menu
+    description: Open the main GUI.
     default: true
   aegis.wand:
-    description: Use the claim wand
+    description: Receive and use the claim wand.
     default: true
   aegis.claim:
-    description: Claim your own chunks/regions
+    description: Claim land.
     default: true
   aegis.unclaim:
-    description: Unclaim your own chunks/regions
+    description: Unclaim land.
     default: true
   aegis.resize:
-    description: Expand or shrink claims
+    description: Resize land.
     default: true
-  aegis.consume:
-    description: Manually destroy the scepter via command
-    default: op
-  aegis.kick:
-    description: Kick players from your claim
+  aegis.home:
+    description: Teleport to plot spawn.
     default: true
-  aegis.ban:
-    description: Ban players from your claim
-    default: true
-  aegis.unban:
-    description: Unban players from your claim
+  aegis.setspawn:
+    description: Set plot spawn.
     default: true
   aegis.visit:
-    description: Access the Travel System menu
-    default: true
-  
-  # v1.1.0 Feature Nodes
-  aegis.zone:
-    description: Create and manage sub-claims (zones)
-    default: true
-  aegis.level:
-    description: Access the plot leveling system
-    default: true
-  aegis.biome:
-    description: Change plot biomes
-    default: true
-  aegis.like:
-    description: Like other players' plots
-    default: true
-  
-  # v1.1.1 Feature Nodes
-  aegis.rename:
-    description: Rename your plot alias
+    description: Open travel menu.
     default: true
   aegis.stuck:
-    description: Teleport out of a plot if trapped
+    description: Use unstuck command.
     default: true
 
-  # Economy
+  # --- IDENTITY & SOCIAL ---
+  aegis.welcome:
+    description: Set welcome message.
+    default: true
+  aegis.farewell:
+    description: Set farewell message.
+    default: true
+  aegis.rename:
+    description: Set plot alias title.
+    default: true
+  aegis.setdesc:
+    description: Set plot description.
+    default: true
+  aegis.like:
+    description: Give reputation to plots.
+    default: true
+
+  # --- ADVANCED FEATURES ---
+  aegis.zone:
+    description: Manage sub-zones.
+    default: true
+  aegis.level:
+    description: Access leveling menu.
+    default: true
+  aegis.biome:
+    description: Access biome menu.
+    default: true
+
+  # --- MODERATION ---
+  aegis.kick:
+    description: Kick players from own plot.
+    default: true
+  aegis.ban:
+    description: Ban players from own plot.
+    default: true
+  aegis.unban:
+    description: Unban players from own plot.
+    default: true
+
+  # --- ECONOMY ---
   aegis.market:
-    description: Access the marketplace
+    description: View marketplace.
     default: true
   aegis.sell:
-    description: Sell a plot
+    description: Put plot for sale.
+    default: true
+  aegis.unsell:
+    description: Remove plot from sale.
     default: true
   aegis.auction:
-    description: Access auctions
+    description: View auction house.
     default: true
 
-  # Admin Specifics
+  # --- ADMIN NODES ---
   aegis.reload:
-    description: Reload AegisGuard config
+    description: Reload configuration.
     default: op
   aegis.bypass:
-    description: Bypass all protection checks
+    description: Bypass all protection checks (Build/Break anywhere).
     default: op
-  aegis.setwarp:
-    description: Set a plot as a public Server Warp
-    default: op
-  aegis.delwarp:
-    description: Remove a Server Warp
+  aegis.admin.manage:
+    description: Edit flags/roles of other players' plots.
     default: op
   aegis.convert:
-    description: Convert a plot to a Server Zone
+    description: Seize a plot and convert to Server Zone.
+    default: op
+  aegis.setwarp:
+    description: Set a plot as a Server Warp.
+    default: op
+  aegis.delwarp:
+    description: Remove a Server Warp.
     default: op
   aegis.admin.wand:
-    description: Obtain the Sentinel's Scepter
+    description: Get the Sentinel's Scepter.
+    default: op
+  aegis.consume:
+    description: Manually dispose of a wand item.
     default: op

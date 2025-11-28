@@ -13,10 +13,11 @@ import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
+import com.aegisguard.hooks.DiscordWebhook; // --- NEW IMPORT ---
 import com.aegisguard.hooks.DynmapHook;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
-import com.aegisguard.listeners.BannedPlayerListener; // Ensure this import matches your package structure
+import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -37,18 +38,14 @@ import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
 
-    // --- SINGLETON PATTERN START ---
+    // --- SINGLETON PATTERN ---
     private static AegisGuard instance;
 
-    /**
-     * Get the main instance of the AegisGuard plugin.
-     * Use this instead of passing 'plugin' around.
-     */
     public static AegisGuard getInstance() {
         return instance;
     }
-    // --- SINGLETON PATTERN END ---
     
+    // --- MANAGERS ---
     private AGConfig configMgr;
     private IDataStore plotStore;
     private GUIManager gui;
@@ -60,7 +57,10 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
+    
+    // --- HOOKS ---
     private DynmapHook dynmapHook;
+    private DiscordWebhook discord; // --- NEW FIELD ---
 
     private boolean isFolia = false;
     
@@ -70,7 +70,7 @@ public class AegisGuard extends JavaPlugin {
     private Object wildernessRevertTask;
     private Object mobBarrierTask;
 
-    // Getters for Managers
+    // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
     public GUIManager gui() { return gui; }
@@ -82,6 +82,7 @@ public class AegisGuard extends JavaPlugin {
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
+    public DiscordWebhook getDiscord() { return discord; } // --- NEW GETTER ---
     public boolean isFolia() { return isFolia; }
 
     @Override
@@ -104,7 +105,7 @@ public class AegisGuard extends JavaPlugin {
 
         this.configMgr = new AGConfig(this);
         
-        // Initialize Data Store
+        // Initialize Data Store (SQL or YML)
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -112,7 +113,7 @@ public class AegisGuard extends JavaPlugin {
             this.plotStore = new YMLDataStore(this);
         }
         
-        // Initialize Managers
+        // Initialize Core Managers
         this.selection = new SelectionService(this);
         this.messages = new MessagesUtil(this);
         this.gui = new GUIManager(this);
@@ -122,6 +123,7 @@ public class AegisGuard extends JavaPlugin {
         this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
+        this.discord = new DiscordWebhook(this); // --- INITIALIZE DISCORD ---
 
         // Load Data
         this.plotStore.load();
@@ -141,7 +143,7 @@ public class AegisGuard extends JavaPlugin {
         }
         
         if (cfg().autoRemoveBannedPlots()) {
-             // Ensure you have the BannedPlayerListener class in your package
+             // Ensure you have the BannedPlayerListener class in your package if using this feature
              Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
@@ -293,12 +295,12 @@ public class AegisGuard extends JavaPlugin {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
         
-        // Note: Actual logic abbreviated for brevity as per your original code
         Runnable logic = () -> {
             long currentTime = System.currentTimeMillis();
-            // Upkeep processing logic...
+            // Full logic should be in a dedicated UpkeepManager class to keep Main clean, 
+            // but for now we iterate safely on a copy of the list.
             for (Plot plot : new ArrayList<>(store().getAllPlots())) {
-                 // Logic from your existing class goes here
+                 // ... Upkeep Logic ...
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
@@ -307,7 +309,7 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql")) {
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) {
             getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
             return; 
         }

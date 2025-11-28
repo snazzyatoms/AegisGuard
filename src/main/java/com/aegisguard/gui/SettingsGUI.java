@@ -10,9 +10,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
+
 /**
  * SettingsGUI
- * - Handles *personal* player preferences (sounds, language).
+ * - Handles personal player preferences (sounds, language, notifications).
  */
 public class SettingsGUI {
 
@@ -22,183 +24,125 @@ public class SettingsGUI {
         this.plugin = plugin;
     }
 
-    /**
-     * Tag holder that stores the plot being edited (or null).
-     * Must be PUBLIC for GUIListener.
-     */
     public static class SettingsGUIHolder implements InventoryHolder {
         private final Plot plot;
-
-        public SettingsGUIHolder(Plot plot) {
-            this.plot = plot;
-        }
-
-        public Plot getPlot() {
-            return plot;
-        }
-
-        @Override
-        public Inventory getInventory() {
-            return null;
-        }
+        public SettingsGUIHolder(Plot plot) { this.plot = plot; }
+        public Plot getPlot() { return plot; }
+        @Override public Inventory getInventory() { return null; }
     }
 
     /* -----------------------------
-     * Open Settings Menu
+     * OPEN
      * ----------------------------- */
-    public void open(Player player, Plot plot) {
-        Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54,
-                GUIManager.safeText(plugin.msg().get(player, "settings_menu_title"), "§bAegisGuard — Settings")
-        );
+    public void open(Player player) { open(player, null); }
 
-        // --- Sounds ---
+    public void open(Player player, Plot plot) {
+        String title = GUIManager.safeText(plugin.msg().get(player, "settings_menu_title"), "§bAegisGuard — Settings");
+        Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54, title);
+
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
+
+        // --- 1. SOUNDS (Slot 10) ---
         boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
         if (!globalEnabled) {
-            inv.setItem(10, GUIManager.icon(
-                    Material.BARRIER,
-                    GUIManager.safeText(plugin.msg().get(player, "button_sounds_disabled_global"), "§cSounds Disabled By Admin"),
-                    plugin.msg().getList(player, "sounds_toggle_global_disabled_lore")
+            inv.setItem(10, GUIManager.createItem(
+                Material.BARRIER, 
+                "§cSounds Disabled Globally", 
+                List.of("§7Server admin has disabled sounds.")
             ));
         } else {
             boolean soundsEnabled = plugin.isSoundEnabled(player);
-            inv.setItem(10, GUIManager.icon(
-                    soundsEnabled ? Material.NOTE_BLOCK : Material.RED_DYE,
-                    soundsEnabled ? GUIManager.safeText(plugin.msg().get(player, "button_sounds_on"), "§aSounds: ON")
-                                  : GUIManager.safeText(plugin.msg().get(player, "button_sounds_off"), "§cSounds: OFF"),
-                    plugin.msg().getList(player, "sounds_toggle_lore")
+            inv.setItem(10, GUIManager.createItem(
+                soundsEnabled ? Material.NOTE_BLOCK : Material.JUKEBOX,
+                soundsEnabled ? "§aSounds: ON" : "§cSounds: OFF",
+                List.of("§7Toggle UI sound effects.")
             ));
         }
 
-        // --- Protection Dummies (Show global defaults, but don't toggle) ---
-        inv.setItem(11, GUIManager.icon(Material.IRON_SWORD, "§7PvP Protection (Global Default)", plugin.msg().getList(player, "pvp_toggle_lore")));
-        inv.setItem(12, GUIManager.icon(Material.CHEST, "§7Container Protection (Global Default)", plugin.msg().getList(player, "container_toggle_lore")));
-        inv.setItem(13, GUIManager.icon(Material.ZOMBIE_HEAD, "§7Mob Protection (Global Default)", plugin.msg().getList(player, "mob_toggle_lore")));
-        inv.setItem(14, GUIManager.icon(Material.BONE, "§7Pet Protection (Global Default)", plugin.msg().getList(player, "pet_toggle_lore")));
-        inv.setItem(15, GUIManager.icon(Material.ARMOR_STAND, "§7Entity Protection (Global Default)", plugin.msg().getList(player, "entity_toggle_lore")));
-        inv.setItem(16, GUIManager.icon(Material.WHEAT, "§7Farm Protection (Global Default)", plugin.msg().getList(player, "farm_toggle_lore")));
-        inv.setItem(17, GUIManager.icon(Material.SHIELD, "§7Safe Zone (Global Default)", plugin.msg().getList(player, "safe_toggle_lore")));
-
-
-        /* -----------------------------
-         * Language Style Selection
-         * ----------------------------- */
+        // --- 2. LANGUAGE (Slot 13) ---
         String currentStyle = plugin.msg().getPlayerStyle(player);
-        Material icon;
-        switch (currentStyle) {
-            case "modern_english": icon = Material.BOOK; break;
-            case "hybrid_english": icon = Material.ENCHANTED_BOOK; break;
-            default: icon = Material.WRITABLE_BOOK; break;
-        }
-
-        inv.setItem(31, GUIManager.icon(
-                icon,
-                "§b🕮 " + GUIManager.safeText(plugin.msg().get(player, "language_style_title"), "Language: {STYLE}")
-                            .replace("{STYLE}", formatStyle(currentStyle)),
-                plugin.msg().getList(player, "language_style_lore")
+        inv.setItem(13, GUIManager.createItem(
+            Material.WRITABLE_BOOK,
+            "§eLanguage: " + formatStyle(currentStyle),
+            List.of("§7Click to cycle language styles.")
+        ));
+        
+        // --- 3. NOTIFICATIONS (Slot 16) ---
+        // (Assuming you store this in config per player, simplified here)
+        String notifMode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
+        inv.setItem(16, GUIManager.createItem(
+            Material.PAPER,
+            "§bNotifications: " + notifMode,
+            List.of("§7Click to cycle:", "§7Action Bar -> Chat -> Title")
         ));
 
-        // Navigation
-        inv.setItem(48, GUIManager.icon(
-                Material.ARROW,
-                GUIManager.safeText(plugin.msg().get(player, "button_back"), "§fBack"),
-                plugin.msg().getList(player, "back_lore")
-        ));
-
-        inv.setItem(49, GUIManager.icon(
-                Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§cExit"),
-                plugin.msg().getList(player, "exit_lore")
-        ));
+        // --- NAVIGATION ---
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack to Menu", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
 
         player.openInventory(inv);
-        plugin.effects().playMenuFlip(player);
-    }
-    
-    // Overload for convenience
-    public void open(Player player) {
-        open(player, null);
+        plugin.effects().playMenuOpen(player);
     }
 
     /* -----------------------------
-     * Handle Clicks (slot-based)
-     * This method is called by GUIListener
+     * CLICK HANDLER
      * ----------------------------- */
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) {
-            return;
-        }
-        Plot plot = holder.getPlot();
+        if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
+        Plot plot = holder.getPlot(); // Preserve context if passed
 
-        int slot = e.getRawSlot();
-        switch (slot) {
-            case 10: // Sounds Toggle
-                boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
-                if (!globalEnabled) {
+        switch (e.getRawSlot()) {
+            case 10: // Sounds
+                if (!plugin.cfg().globalSoundsEnabled()) {
                     plugin.effects().playError(player);
                 } else {
-                    boolean currentlyEnabled = plugin.isSoundEnabled(player);
-                    plugin.getConfig().set("sounds.players." + player.getUniqueId(), !currentlyEnabled);
-
-                    // Save Async
-                    plugin.runGlobalAsync(() -> {
-                        plugin.saveConfig();
-                    });
-
+                    boolean current = plugin.isSoundEnabled(player);
+                    plugin.getConfig().set("sounds.players." + player.getUniqueId(), !current);
+                    plugin.runGlobalAsync(() -> plugin.saveConfig());
                     plugin.effects().playMenuFlip(player);
+                    open(player, plot);
                 }
                 break;
-            
-            // Slots 11-17 are dummy buttons
-            case 11: case 12: case 13: case 14: case 15: case 16: case 17:
-                plugin.effects().playError(player);
-                plugin.msg().send(player, "settings_gui_not_toggle");
-                break;
-            
-            case 31: // Language cycle
-                if (!plugin.cfg().raw().getBoolean("messages.allow_runtime_switch", true)) {
-                    plugin.effects().playError(player);
-                    plugin.msg().send(player, "language_switch_disabled");
-                    return;
-                }
-                
-                String current = plugin.msg().getPlayerStyle(player);
-                String next;
-                if (current.equals("old_english")) next = "hybrid_english";
-                else if (current.equals("hybrid_english")) next = "modern_english";
-                else next = "old_english";
-                
-                plugin.msg().setPlayerStyle(player, next);
-                plugin.effects().playMenuFlip(player);
-                
-                open(player, plot); 
-                return; 
 
-            case 48: // Back
-                plugin.gui().openMain(player);
+            case 13: // Language
+                String style = plugin.msg().getPlayerStyle(player);
+                String nextStyle = switch (style) {
+                    case "old_english" -> "modern_english";
+                    case "modern_english" -> "hybrid_english";
+                    default -> "old_english";
+                };
+                plugin.msg().setPlayerStyle(player, nextStyle);
                 plugin.effects().playMenuFlip(player);
-                return; 
-            
-            case 49: // Exit
-                player.closeInventory();
-                plugin.effects().playMenuClose(player);
-                return;
-            
-            default: 
-                /* ignore filler */
+                open(player, plot);
                 break;
+                
+            case 16: // Notifications
+                String mode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
+                String nextMode = switch (mode) {
+                    case "ACTION_BAR" -> "CHAT";
+                    case "CHAT" -> "TITLE";
+                    default -> "ACTION_BAR";
+                };
+                plugin.getConfig().set("notifications." + player.getUniqueId(), nextMode);
+                plugin.runGlobalAsync(() -> plugin.saveConfig());
+                plugin.effects().playMenuFlip(player);
+                open(player, plot);
+                break;
+
+            case 48: plugin.gui().openMain(player); break;
+            case 49: player.closeInventory(); break;
         }
-
-        open(player, plot); // Refresh GUI instantly
     }
 
     private String formatStyle(String style) {
-        switch (style) {
-            case "modern_english": return "§aModern English";
-            case "hybrid_english": return "§eHybrid English";
-            default: return "§dOld English";
-        }
+        return switch (style) {
+            case "modern_english" -> "§aModern";
+            case "hybrid_english" -> "§eHybrid";
+            default -> "§dOld English"; // Default
+        };
     }
 }

@@ -15,13 +15,14 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * DynmapHook
- * - Integrates with Dynmap to display all AegisGuard plots.
- * - Fixed to compile on all Spigot/Paper versions using Reflection.
+ * - Integrates with Dynmap to display plots visually.
+ * - Supports Folia via reflection scheduling.
  */
 public class DynmapHook {
 
@@ -31,32 +32,40 @@ public class DynmapHook {
     private MarkerSet markerSet;
     private boolean isEnabled = false;
 
+    // Config Cache
+    private int strokeColor, fillColor;
+    private double strokeOpacity, fillOpacity;
+    private int strokeWeight;
+
     public DynmapHook(AegisGuard plugin) {
         this.plugin = plugin;
         
-        if (plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", false)) {
-            Plugin dynmapPlugin = Bukkit.getPluginManager().getPlugin("dynmap");
+        if (!plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", false)) return;
+
+        Plugin dynmapPlugin = Bukkit.getPluginManager().getPlugin("dynmap");
+        if (dynmapPlugin instanceof DynmapAPI) {
+            this.dynmap = (DynmapAPI) dynmapPlugin;
+            this.markerAPI = dynmap.getMarkerAPI();
             
-            if (dynmapPlugin instanceof DynmapAPI) {
-                this.dynmap = (DynmapAPI) dynmapPlugin;
-                this.markerAPI = dynmap.getMarkerAPI();
-                
-                if (this.markerAPI != null) {
-                    setupMarkerSet();
-                    runFullRender(); 
-                    startSyncTask();
-                    isEnabled = true;
-                    plugin.getLogger().info("Successfully hooked into Dynmap.");
-                }
-            } else {
-                plugin.getLogger().warning("Dynmap plugin not found or invalid.");
+            if (this.markerAPI != null) {
+                loadConfig();
+                setupMarkerSet();
+                startSyncTask();
+                isEnabled = true;
+                plugin.getLogger().info("Successfully hooked into Dynmap.");
             }
         }
     }
+    
+    private void loadConfig() {
+        strokeColor = Integer.parseInt(plugin.cfg().raw().getString("hooks.dynmap.style.stroke_color", "00FF00"), 16);
+        strokeOpacity = plugin.cfg().raw().getDouble("hooks.dynmap.style.stroke_opacity", 0.8);
+        strokeWeight = plugin.cfg().raw().getInt("hooks.dynmap.style.stroke_weight", 3);
+        fillColor = Integer.parseInt(plugin.cfg().raw().getString("hooks.dynmap.style.fill_color", "00FF00"), 16);
+        fillOpacity = plugin.cfg().raw().getDouble("hooks.dynmap.style.fill_opacity", 0.35);
+    }
 
     private void setupMarkerSet() {
-        if (markerAPI == null) return;
-
         String layerName = plugin.cfg().raw().getString("hooks.dynmap.layer_name", "AegisGuard Plots");
         this.markerSet = markerAPI.getMarkerSet("aegisguard.plots");
         
@@ -65,37 +74,19 @@ public class DynmapHook {
         } else {
             this.markerSet.setMarkerSetLabel(layerName);
         }
-
-        // Settings
-        int strokeColor = Integer.parseInt(plugin.cfg().raw().getString("hooks.dynmap.style.stroke_color", "00FF00"), 16);
-        double strokeOpacity = plugin.cfg().raw().getDouble("hooks.dynmap.style.stroke_opacity", 0.8);
-        int strokeWeight = plugin.cfg().raw().getInt("hooks.dynmap.style.stroke_weight", 3);
-        int fillColor = Integer.parseInt(plugin.cfg().raw().getString("hooks.dynmap.style.fill_color", "00FF00"), 16);
-        double fillOpacity = plugin.cfg().raw().getDouble("hooks.dynmap.style.fill_opacity", 0.35);
-
-        if (markerSet != null) {
-            // Use Reflection to call setDefaultAreaStyle to avoid compilation errors on older/newer APIs
-            try {
-                Method setStyle = markerSet.getClass().getMethod("setDefaultAreaStyle", int.class, double.class, int.class, double.class, int.class);
-                setStyle.invoke(markerSet, strokeWeight, strokeOpacity, strokeColor, fillOpacity, fillColor);
-            } catch (Exception ignored) {
-                // Method not found in this Dynmap version, skipping default style
-            }
-        }
     }
 
     private void startSyncTask() {
         long intervalTicks = 20L * 60 * plugin.cfg().raw().getLong("hooks.dynmap.sync_interval_minutes", 5);
-        long initialDelay = 20L * 30; 
+        long initialDelay = 100L; // 5 seconds
 
         if (plugin.isFolia()) {
-            // Reflection for Folia Scheduler to avoid "cannot find symbol" error
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", JavaPlugin.class, Consumer.class, long.class, long.class);
                 runMethod.invoke(scheduler, plugin, (Consumer<Object>) t -> runFullRender(), initialDelay, intervalTicks);
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to schedule Folia task via reflection: " + e.getMessage());
+                plugin.getLogger().warning("[Dynmap] Failed to schedule Folia task: " + e.getMessage());
             }
         } else {
             Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::runFullRender, initialDelay, intervalTicks);
@@ -105,7 +96,7 @@ public class DynmapHook {
     private void runFullRender() {
         if (!isEnabled || markerSet == null) return;
         
-        // Ensure Async
+        // Safety check to ensure async execution
         if (Bukkit.isPrimaryThread()) {
             plugin.runGlobalAsync(this::runFullRender);
             return;
@@ -123,53 +114,89 @@ public class DynmapHook {
             AreaMarker marker = existingMarkers.remove(markerId); 
             
             String worldName = plot.getWorld();
-            if (Bukkit.getWorld(worldName) == null) continue;
+            if (Bukkit.getWorld(worldName) == null) continue; // Skip unloaded worlds
             
             double[] x = { plot.getX1(), plot.getX2() + 1.0 };
             double[] z = { plot.getZ1(), plot.getZ2() + 1.0 };
             
             if (marker == null) {
-                marker = markerSet.createAreaMarker(markerId, "", false, worldName, x, z, false);
+                marker = markerSet.createAreaMarker(markerId, plot.getOwnerName(), false, worldName, x, z, false);
             } else {
                 marker.setCornerLocations(x, z);
+                marker.setLabel(plot.getOwnerName());
                 
-                // FIX: Manual World Check without using setWorld() to avoid API conflict
+                // If world changed (rare but possible with world resets)
                 if (!marker.getWorld().equals(worldName)) {
                     marker.deleteMarker();
-                    marker = markerSet.createAreaMarker(markerId, "", false, worldName, x, z, false);
+                    marker = markerSet.createAreaMarker(markerId, plot.getOwnerName(), false, worldName, x, z, false);
                 }
             }
             
             if (marker != null) {
                 marker.setDescription(buildPopupHTML(plot));
                 
+                // Color Logic
+                int sColor = strokeColor;
+                int fColor = fillColor;
+                
                 if (plot.isServerZone()) {
-                    marker.setFillStyle(0.35, 0xFF0000);
-                    marker.setLineStyle(3, 0.8, 0xFF0000);
+                    sColor = 0xFF0000; // Red
+                    fColor = 0xFF0000;
+                } else if (plot.isForSale()) {
+                    sColor = 0xFFFF00; // Yellow
+                    fColor = 0xFFFF00;
                 }
+                
+                marker.setFillStyle(fillOpacity, fColor);
+                marker.setLineStyle(strokeWeight, strokeOpacity, sColor);
             }
         }
         
+        // Remove deleted plots
         for (AreaMarker oldMarker : existingMarkers.values()) {
             oldMarker.deleteMarker();
         }
     }
     
     private String buildPopupHTML(Plot plot) {
-        String ownerName = plot.getOwnerName();
-        String roleList = plot.getPlayerRoles().entrySet().stream()
-            .filter(e -> !e.getValue().equals("owner"))
-            .map(e -> {
-                OfflinePlayer p = Bukkit.getOfflinePlayer(e.getKey());
-                return (p.getName() != null ? p.getName() : "Unknown") + " (" + e.getValue() + ")";
-            })
-            .collect(Collectors.joining("<br>"));
-
-        if (roleList.isEmpty()) roleList = "None";
-
-        return "<div style=\"font-weight:bold;font-size:120%;\">" +
-               ownerName + "'s Plot</div>" +
-               "<div style=\"font-weight:bold;\">Roles:</div>" +
-               roleList;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style=\"font-family:Arial;text-align:center;\">");
+        
+        // Header
+        sb.append("<div style=\"font-weight:bold;font-size:120%;margin-bottom:5px;\">");
+        if (plot.isServerZone()) {
+            sb.append("<span style=\"color:#FF0000;\">Server Zone</span>");
+        } else {
+            sb.append(plot.getOwnerName()).append("'s Plot");
+        }
+        sb.append("</div>");
+        
+        // Details
+        sb.append("<hr>");
+        if (plot.isForSale()) {
+            sb.append("<div>Status: <span style=\"color:green;font-weight:bold;\">FOR SALE</span></div>");
+            sb.append("<div>Price: ").append(plot.getSalePrice()).append("</div>");
+        }
+        
+        sb.append("<div>Level: ").append(plot.getLevel()).append("</div>");
+        
+        // Roles
+        Map<UUID, String> roles = plot.getPlayerRoles();
+        if (!roles.isEmpty()) {
+            sb.append("<div style=\"margin-top:5px;font-weight:bold;\">Members:</div>");
+            String members = roles.entrySet().stream()
+                .filter(e -> !e.getValue().equals("owner"))
+                .map(e -> {
+                    OfflinePlayer p = Bukkit.getOfflinePlayer(e.getKey());
+                    return (p.getName() != null ? p.getName() : "Unknown");
+                })
+                .collect(Collectors.joining(", "));
+            
+            if (members.isEmpty()) members = "None";
+            sb.append("<div>").append(members).append("</div>");
+        }
+        
+        sb.append("</div>");
+        return sb.toString();
     }
 }

@@ -277,8 +277,8 @@ old_english:
     - "&7If Sealed, strangers cannot enter."
   
   # --- NEW: SHOP FLAG ---
-  button_shop_on: "&a🛒 Trade Access: Open"
-  button_shop_off: "&c🛒 Trade Access: Sealed"
+  button_shop_on: "&a🛒 Shop Access: Open"
+  button_shop_off: "&c🛒 Shop Access: Sealed"
   shop_toggle_lore:
     - "&7Allow travelers to trade via signs/chests."
     - "&7(Protects contents, but allows clicks)."
@@ -292,6 +292,7 @@ old_english:
 
   flag_toggled: "&e⚙ {FLAG} ward is now &f{STATUS}&e."
 
+  # --- NEW: Roles (Old English) ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect a Dominion to Manage"
@@ -304,6 +305,8 @@ old_english:
   role_is_owner: "&cThou mayest not change the owner's role."
   role_set_to: "&a✔ {PLAYER} hath been granted the role of {ROLE}."
   role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
+  # --- NEW: Self-Edit Error ---
+  role_edit_self_error: "&c❌ Thou cannot edit thy own role. Thou risks locking thyself out!"
   
   admin_menu_title: "&c⚙ High Guardian Tools"
   admin_reloading: "&7Reloading ancient scrolls..."
@@ -343,7 +346,7 @@ old_english:
     - "&7If ON, all players may use doors/buttons."
     - "&cIf OFF, no players may use doors/buttons."
     
-  wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
+  wilderness_revert_start: "[AegisGuard] The spirits of the wild begin their work..."
   wilderness_revert_end: "[AegisGuard] The spirits have restored {AMOUNT} scars."
 
   help_header: "&b⚔ &nThe Guardian’s Scroll of Instruction&r"
@@ -526,15 +529,15 @@ hybrid_english:
     - "&c⚠ Note: Visuals Only"
     - "&7(Does not spawn sand/snow blocks)"
 
-  like_success: "&a✔ You favored this dominion! Total: &e{AMOUNT}"
-  like_removed: "&eYou removed your favor."
-  like_own_plot: "&cThou cannot favor thine own land."
-  like_disabled: "&cSocial standing is ignored here."
+  like_success: "&a✔ You liked this plot! Total likes: &e{AMOUNT}"
+  like_removed: "&eYou removed your like."
+  like_own_plot: "&cYou cannot like your own plot."
+  like_disabled: "&cSocial rating is disabled on this server."
 
   title_entering: "&b{PLOT_NAME}"
   subtitle_entering: "&7Owned by {OWNER}"
   title_entering_wilderness: "&aThe Wilds"
-  subtitle_entering_wilderness: "&7Untamed Lands"
+  subtitle_entering_wilderness: "&7Free land"
 
   # --- Plot Flags GUI ---
   button_pvp_on: "&a⚔ PvP: On"
@@ -594,17 +597,17 @@ hybrid_english:
   button_fly_on: "&b🕊 Flight: On"
   button_fly_off: "&c🕊 Flight: Off"
   fly_toggle_lore:
-    - "&7Allow flight within this domain."
+    - "&7Allow flight inside this plot."
     - "&7(Cost to enable: &6{COST}&7)"
-  flight_enabled: "&a🕊 Flight enabled."
-  flight_disabled: "&c🕊 Flight disabled."
+  flight_enabled: "&a🕊 Flight Enabled."
+  flight_disabled: "&c🕊 Flight Disabled."
   
   # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
     - "&7If Sealed, strangers cannot enter."
-  
+
   # Shop Flag (NEW)
   button_shop_on: "&a🛒 Shop Access: Open"
   button_shop_off: "&c🛒 Shop Access: Sealed"
@@ -621,6 +624,7 @@ hybrid_english:
 
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
+  # --- NEW: Roles (Hybrid) ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
@@ -633,6 +637,8 @@ hybrid_english:
   role_is_owner: "&cYou can't change the owner's role."
   role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
   role_removed: "&e✔ {PLAYER} has been removed from your plot."
+  # --- NEW: Self-Edit Error ---
+  role_edit_self_error: "&c❌ You cannot edit your own role. You risk locking yourself out!"
   
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."
@@ -675,7 +681,6 @@ hybrid_english:
   wilderness_revert_start: "[AegisGuard] The wilderness revert task is starting..."
   wilderness_revert_end: "[AegisGuard] Reverted {AMOUNT} blocks."
 
-  # Help
   help_header: "&b⚔ &nGuardian’s Guide&r"
   help_lines:
     - "&e/aegis wand &7- Get your Aegis Scepter"
@@ -938,18 +943,18 @@ modern_english:
   button_fly_on: "&b🕊 Flight: On"
   button_fly_off: "&c🕊 Flight: Off"
   fly_toggle_lore:
-    - "&7Allow flight within this domain."
+    - "&7Allow flight inside this plot."
     - "&7(Cost to enable: &6{COST}&7)"
-  flight_enabled: "&a🕊 Flight enabled."
-  flight_disabled: "&c🕊 Flight disabled."
+  flight_enabled: "&a🕊 Flight Enabled."
+  flight_disabled: "&c🕊 Flight Disabled."
   
   # Entry Flag
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
     - "&7If Sealed, strangers cannot enter."
-
-  # Shop Flag (NEW) - ADDED THIS!
+  
+  # Shop Flag (NEW)
   button_shop_on: "&a🛒 Shop Access: Open"
   button_shop_off: "&c🛒 Shop Access: Sealed"
   shop_toggle_lore:
@@ -965,6 +970,7 @@ modern_english:
 
   flag_toggled: "&e⚙ {FLAG}: &f{STATUS}"
 
+  # --- NEW: Roles (Modern) ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect Plot to Manage"
@@ -977,6 +983,8 @@ modern_english:
   role_is_owner: "&cYou can't change the owner's role."
   role_set_to: "&a✔ {PLAYER} has been set to {ROLE}."
   role_removed: "&e✔ {PLAYER} has been removed from your plot."
+  # --- NEW: Self-Edit Error ---
+  role_edit_self_error: "&c❌ You cannot edit your own role. You risk locking yourself out!"
   
   admin_menu_title: "&c⚙ Admin Tools"
   admin_reloading: "&7Reloading configurations..."

@@ -18,6 +18,16 @@
 
     <repositories>
         <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+            <id>modrinth-repo</id>
+            <url>https://api.modrinth.com/maven</url>
+        </repository>
+
+        <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
@@ -40,11 +50,6 @@
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
-        </repository>
-
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
@@ -85,15 +90,10 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.pl3xgaming</groupId>
-            <artifactId>Pl3xMap</artifactId>
-            <version>v1.6.0</version> <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>maven.modrinth</groupId>
+            <artifactId>pl3xmap</artifactId>
+            <version>1.6.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

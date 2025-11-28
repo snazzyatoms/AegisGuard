@@ -24,8 +24,6 @@ import java.util.List;
 public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
-    
-    // Updated list of admin sub-commands
     private static final String[] SUB_COMMANDS = { "reload", "bypass", "menu", "convert", "wand" };
 
     public AdminCommand(AegisGuard plugin) {
@@ -34,7 +32,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        // Console check
+        // --- CONSOLE HANDLING ---
         if (!(sender instanceof Player p)) {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.cfg().reload();
@@ -43,35 +41,42 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 plugin.store().load();
                 sender.sendMessage("[AegisGuard] Reload complete.");
             } else {
-                sender.sendMessage("[AegisGuard] Only players can use GUI commands. Use 'aegisadmin reload' to reload.");
+                sender.sendMessage("[AegisGuard] GUI commands are player-only. Use 'aegisadmin reload' to reload config.");
             }
             return true;
         }
 
-        // Permission check
+        // --- PERMISSION CHECK ---
         if (!p.hasPermission("aegis.admin")) {
             plugin.msg().send(p, "no_perm");
             return true;
         }
 
-        // Default: Open Admin GUI
+        // --- DEFAULT: OPEN MENU ---
         if (args.length == 0) {
             plugin.gui().admin().open(p);
             return true;
         }
 
+        // --- SUBCOMMANDS ---
         switch (args[0].toLowerCase()) {
             case "reload":
                 plugin.cfg().reload();
                 plugin.msg().reload();
                 plugin.worldRules().reload();
                 plugin.store().load();
-                p.sendMessage(ChatColor.GREEN + "✔ [AegisGuard] Configuration reloaded.");
+                p.sendMessage(ChatColor.GREEN + "✔ [AegisGuard] Configuration & Data reloaded.");
+                plugin.effects().playConfirm(p);
                 break;
                 
             case "bypass":
-                // In v1.1.0, bypass is permission-based, but we can add a toggle later.
-                p.sendMessage(ChatColor.YELLOW + "⚠ Admin Bypass is active via permission 'aegis.admin.bypass'.");
+                // Toggle permission logic isn't usually done via command unless hooking into LuckPerms API.
+                // For a simple plugin, we usually just inform them they have the permission node.
+                if (p.hasPermission("aegis.admin.bypass")) {
+                    p.sendMessage(ChatColor.YELLOW + "⚠ You currently have Bypass Mode enabled via permissions.");
+                } else {
+                    p.sendMessage(ChatColor.RED + "❌ You do not have 'aegis.admin.bypass'.");
+                }
                 break;
                 
             case "menu":
@@ -80,30 +85,35 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 
             // --- CONVERT TO SERVER ZONE ---
             case "convert":
+                if (!p.hasPermission("aegis.convert")) { plugin.msg().send(p, "no_perm"); return true; }
+                
                 Plot plot = plugin.store().getPlotAt(p.getLocation());
                 if (plot == null) {
                     p.sendMessage(ChatColor.RED + "❌ You must be standing in a plot to convert it.");
                     return true;
                 }
-                // 1. Change owner to Server
+                
+                // 1. Change Owner to Server UUID
                 plugin.store().changePlotOwner(plot, Plot.SERVER_OWNER_UUID, "Server");
                 
-                // 2. Set Safe Defaults
+                // 2. Lock Down Flags
                 plot.setFlag("pvp", false);
                 plot.setFlag("mobs", false);
                 plot.setFlag("build", false);
                 plot.setFlag("safe_zone", true);
                 
                 plugin.store().setDirty(true);
-                p.sendMessage(ChatColor.GREEN + "✔ Plot converted to Server Zone.");
+                p.sendMessage(ChatColor.GREEN + "✔ Plot '" + plot.getPlotId().toString().substring(0,8) + "' converted to Server Zone.");
                 plugin.effects().playConfirm(p);
                 break;
                 
-            // --- NEW: SENTINEL'S SCEPTER (Admin Wand) ---
+            // --- ADMIN WAND ---
             case "wand":
+                if (!p.hasPermission("aegis.admin.wand")) { plugin.msg().send(p, "no_perm"); return true; }
+                
                 p.getInventory().addItem(createAdminScepter());
                 p.sendMessage(ChatColor.RED + "⚡ You have received the Sentinel's Scepter.");
-                p.sendMessage(ChatColor.GRAY + "Use this to create Server Zones instantly (bypassing costs).");
+                p.sendMessage(ChatColor.GRAY + "Use this to create Server Zones instantly.");
                 plugin.effects().playClaimSuccess(p);
                 break;
 
@@ -113,11 +123,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
-     * Creates the special Admin Wand using settings from config.yml
-     */
     private ItemStack createAdminScepter() {
-        // Read Material from Config (Default: BLAZE_ROD)
         Material mat = plugin.cfg().getAdminWandMaterial();
         if (mat == null) mat = Material.BLAZE_ROD;
         
@@ -125,13 +131,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         ItemMeta meta = rod.getItemMeta();
         
         if (meta != null) {
-            // Read Name & Lore from Config
             meta.setDisplayName(plugin.cfg().getAdminWandName());
             meta.setLore(plugin.cfg().getAdminWandLore());
-            
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
             
-            // IMPORTANT: Set the Persistent Data Tag so SelectionService knows this is an Admin Wand
+            // KEY: This NBT tag tells SelectionService that this is a SERVER claim tool
             meta.getPersistentDataContainer().set(SelectionService.SERVER_WAND_KEY, PersistentDataType.BYTE, (byte) 1);
             
             rod.setItemMeta(meta);

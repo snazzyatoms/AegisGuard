@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <name>AegisGuard</name>
-    <description>The Next Generation of Land Protection & Economy</description>
+    <description>The Next Generation of Land Protection &amp; Economy</description>
 
     <properties>
         <java.version>17</java.version>
@@ -17,7 +17,6 @@
     </properties>
 
     <repositories>
-        <!-- Spigot / Paper -->
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -27,32 +26,27 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         
-        <!-- PlaceholderAPI -->
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
 
-        <!-- Dynmap -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
 
-        <!-- BlueMap -->
         <repository>
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
         </repository>
 
-        <!-- Pl3xMap -->
         <repository>
             <id>pl3xmap</id>
             <url>https://repo.pl3x.net/</url>
         </repository>
 
-        <!-- Vault -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -60,7 +54,6 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API (Includes Spigot/Bukkit) -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -68,7 +61,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Vault Economy -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -76,7 +68,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- PlaceholderAPI -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -84,7 +75,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Dynmap API -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
@@ -92,30 +82,26 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- BlueMap API -->
         <dependency>
             <groupId>de.bluecolored</groupId>
             <artifactId>bluemap-api</artifactId>
-            <version>2.7.3</version> <!-- Check for latest -->
+            <version>2.7.3</version>
             <scope>provided</scope>
         </dependency>
 
-        <!-- Pl3xMap API -->
         <dependency>
             <groupId>net.pl3x.map</groupId>
             <artifactId>core</artifactId>
-            <version>1.6.0</version> <!-- Check for latest -->
+            <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
 
-        <!-- Database Connection Pool (Must be Shaded) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
         </dependency>
         
-        <!-- SLF4J (Hikari Dependency) -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
@@ -137,7 +123,6 @@
                 </configuration>
             </plugin>
             
-            <!-- Shade Plugin (Critical for HikariCP) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -150,7 +135,6 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <!-- Relocate HikariCP to avoid conflicts -->
                             <relocations>
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>

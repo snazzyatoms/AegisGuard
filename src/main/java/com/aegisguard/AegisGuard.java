@@ -7,7 +7,7 @@ import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.EconomyManager; // --- NEW IMPORT ---
+import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
@@ -16,6 +16,7 @@ import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DynmapHook;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
+import com.aegisguard.listeners.BannedPlayerListener; // Ensure this import matches your package structure
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -23,7 +24,6 @@ import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,14 +32,22 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.UUID; 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
 
-    public static AegisGuard plugin;
+    // --- SINGLETON PATTERN START ---
+    private static AegisGuard instance;
+
+    /**
+     * Get the main instance of the AegisGuard plugin.
+     * Use this instead of passing 'plugin' around.
+     */
+    public static AegisGuard getInstance() {
+        return instance;
+    }
+    // --- SINGLETON PATTERN END ---
     
     private AGConfig configMgr;
     private IDataStore plotStore;
@@ -47,7 +55,7 @@ public class AegisGuard extends JavaPlugin {
     private ProtectionManager protection;
     private SelectionService selection;
     private VaultHook vault;
-    private EconomyManager ecoManager; // --- NEW FIELD ---
+    private EconomyManager ecoManager;
     private MessagesUtil messages;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -56,18 +64,20 @@ public class AegisGuard extends JavaPlugin {
 
     private boolean isFolia = false;
     
+    // Task Objects (Object type for Folia/Bukkit compatibility)
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
     private Object mobBarrierTask;
 
+    // Getters for Managers
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
     public GUIManager gui() { return gui; }
     public ProtectionManager protection() { return protection; }
     public SelectionService selection() { return selection; }
     public VaultHook vault() { return vault; }
-    public EconomyManager eco() { return ecoManager; } // --- NEW GETTER ---
+    public EconomyManager eco() { return ecoManager; }
     public MessagesUtil msg() { return messages; }
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
@@ -76,21 +86,25 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        plugin = this;
+        // Initialize Singleton
+        instance = this;
 
+        // Detect Server Software
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
-            getLogger().info("Folia detected.");
+            getLogger().info("Folia detected. Enabling region scheduler hooks.");
         } catch (ClassNotFoundException e) {
             isFolia = false;
         }
 
+        // Load Configs
         saveDefaultConfig();
         saveResource("messages.yml", false);
 
         this.configMgr = new AGConfig(this);
         
+        // Initialize Data Store
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -98,16 +112,18 @@ public class AegisGuard extends JavaPlugin {
             this.plotStore = new YMLDataStore(this);
         }
         
+        // Initialize Managers
         this.selection = new SelectionService(this);
         this.messages = new MessagesUtil(this);
         this.gui = new GUIManager(this);
         this.vault = new VaultHook(this);
-        this.ecoManager = new EconomyManager(this); // --- NEW INITIALIZATION ---
+        this.ecoManager = new EconomyManager(this);
         this.worldRules = new WorldRulesManager(this);
         this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
 
+        // Load Data
         this.plotStore.load();
         
         runGlobalAsync(() -> {
@@ -115,17 +131,21 @@ public class AegisGuard extends JavaPlugin {
             expansionManager.load();
         });
 
+        // Register Events
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
+        
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
         
         if (cfg().autoRemoveBannedPlots()) {
+             // Ensure you have the BannedPlayerListener class in your package
              Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
+        // Register Commands
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
             AegisCommand aegisExecutor = new AegisCommand(this);
@@ -140,20 +160,21 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
+        // Start Tasks
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask(); 
         startMobBarrierTask();
         
         initializeHooks();
-        getLogger().info("AegisGuard enabled.");
+        getLogger().info("AegisGuard enabled successfully.");
     }
     
     private void initializeHooks() {
         try {
              this.dynmapHook = new DynmapHook(this);
         } catch (NoClassDefFoundError | Exception e) {
-            getLogger().warning("Dynmap not found.");
+            getLogger().warning("Dynmap not found or failed to hook.");
         }
         
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -163,6 +184,7 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // Cancel Tasks Safely (Reflection used for Folia/Bukkit task compatibility)
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
         cancelTaskReflectively(wildernessRevertTask);
@@ -171,9 +193,13 @@ public class AegisGuard extends JavaPlugin {
         if (plotStore != null) plotStore.saveSync();
         if (expansionManager != null) expansionManager.saveSync();
         if (messages != null) messages.savePlayerData();
+        
+        instance = null; // Cleanup singleton reference
         getLogger().info("AegisGuard disabled.");
     }
     
+    // --- UTILITY METHODS ---
+
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
@@ -187,7 +213,7 @@ public class AegisGuard extends JavaPlugin {
         return player.isOp() || player.hasPermission("aegis.admin");
     }
 
-    // --- SCHEDULERS ---
+    // --- FOLIA / BUKKIT SCHEDULERS ---
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
@@ -254,7 +280,7 @@ public class AegisGuard extends JavaPlugin {
     // --- TASKS ---
 
     private void startAutoSaver() {
-        long interval = 20L * 60 * 5;
+        long interval = 20L * 60 * 5; // 5 Minutes
         Runnable logic = () -> {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
@@ -267,16 +293,12 @@ public class AegisGuard extends JavaPlugin {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
         
-        double cost = cfg().getUpkeepCost();
-        long gracePeriodMillis = TimeUnit.DAYS.toMillis(cfg().getUpkeepGraceDays());
-        long auctionDurationMillis = TimeUnit.DAYS.toMillis(cfg().raw().getLong("auction.duration_days", 3));
-
+        // Note: Actual logic abbreviated for brevity as per your original code
         Runnable logic = () -> {
             long currentTime = System.currentTimeMillis();
-            long checkIntervalMillis = TimeUnit.HOURS.toMillis(cfg().getUpkeepCheckHours());
-            // (Full Upkeep Logic is preserved here, shortened for display)
+            // Upkeep processing logic...
             for (Plot plot : new ArrayList<>(store().getAllPlots())) {
-                // ... logic ...
+                 // Logic from your existing class goes here
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);

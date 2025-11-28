@@ -1,6 +1,6 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.1.1
+version: 1.1.2
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
@@ -12,7 +12,7 @@ folia-supported: true
 commands:
   aegis:
     description: Main AegisGuard command.
-    usage: /aegis <help|menu|claim|wand>
+    usage: /aegis <help|menu|claim|wand|merge>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -40,6 +40,7 @@ permissions:
       aegis.claim: true
       aegis.unclaim: true
       aegis.resize: true
+      aegis.merge: true
       aegis.home: true
       aegis.setspawn: true
       aegis.welcome: true
@@ -67,6 +68,7 @@ permissions:
     default: op
     children:
       aegis.admin.manage: true
+      aegis.admin.bypass-limits: true
       aegis.reload: true
       aegis.bypass: true
       aegis.consume: true
@@ -93,6 +95,9 @@ permissions:
     default: true
   aegis.resize:
     description: Resize land.
+    default: true
+  aegis.merge:
+    description: Merge adjacent plots.
     default: true
   aegis.home:
     description: Teleport to plot spawn.
@@ -169,6 +174,9 @@ permissions:
     default: op
   aegis.admin.manage:
     description: Edit flags/roles of other players' plots.
+    default: op
+  aegis.admin.bypass-limits:
+    description: Ignore max plot size/count limits.
     default: op
   aegis.convert:
     description: Seize a plot and convert to Server Zone.

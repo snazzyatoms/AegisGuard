@@ -1,21 +1,27 @@
 package com.aegisguard.data;
 
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.Bukkit;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Zone (Sub-Claim)
- * - Represents a rentable area inside a Plot.
+ * - Represents a 3D rentable area inside a Plot.
+ * - Updated for v1.1.1 (Rent Timer Formatting, Center Calculation).
  */
 public class Zone {
     
     private final String name;
     private final Plot parent;
     
-    // Bounds
+    // 3D Bounds
     private int x1, y1, z1;
     private int x2, y2, z2;
     
+    // Rent Data
     private double rentPrice;
     private UUID renter;
     private long rentExpiration;
@@ -23,6 +29,7 @@ public class Zone {
     public Zone(Plot parent, String name, int x1, int y1, int z1, int x2, int y2, int z2) {
         this.parent = parent;
         this.name = name;
+        // Normalize coordinates immediately
         this.x1 = Math.min(x1, x2);
         this.y1 = Math.min(y1, y2);
         this.z1 = Math.min(z1, z2);
@@ -31,9 +38,11 @@ public class Zone {
         this.z2 = Math.max(z1, z2);
     }
 
+    // --- Core Identity ---
     public String getName() { return name; }
     public Plot getParent() { return parent; }
     
+    // --- Bounds ---
     public int getX1() { return x1; }
     public int getY1() { return y1; }
     public int getZ1() { return z1; }
@@ -41,14 +50,32 @@ public class Zone {
     public int getY2() { return y2; }
     public int getZ2() { return z2; }
     
+    public void setBounds(int x1, int y1, int z1, int x2, int y2, int z2) {
+        this.x1 = Math.min(x1, x2);
+        this.y1 = Math.min(y1, y2);
+        this.z1 = Math.min(z1, z2);
+        this.x2 = Math.max(x1, x2);
+        this.y2 = Math.max(y1, y2);
+        this.z2 = Math.max(z1, z2);
+    }
+
+    // --- Rent Logic ---
     public double getRentPrice() { return rentPrice; }
     public void setRentPrice(double price) { this.rentPrice = price; }
     
     public boolean isRented() {
-        return renter != null && System.currentTimeMillis() < rentExpiration;
+        if (renter == null) return false;
+        if (System.currentTimeMillis() > rentExpiration) {
+            // Expired implicitly
+            return false;
+        }
+        return true;
     }
     
-    public UUID getRenter() { return isRented() ? renter : null; }
+    public UUID getRenter() { 
+        return isRented() ? renter : null; 
+    }
+    
     public long getRentExpiration() { return rentExpiration; }
     
     public void rentTo(UUID player, long durationMillis) {
@@ -61,11 +88,54 @@ public class Zone {
         this.rentExpiration = 0;
     }
     
+    // --- Utilities ---
+    
     public boolean isInside(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(parent.getWorld())) return false;
+        
         int x = loc.getBlockX();
         int y = loc.getBlockY();
         int z = loc.getBlockZ();
-        return x >= x1 && x <= x2 && y >= y1 && y <= y2 && z >= z1 && z <= z2;
+        
+        return x >= x1 && x <= x2 && 
+               y >= y1 && y <= y2 && 
+               z >= z1 && z <= z2;
+    }
+    
+    public Location getCenter() {
+        World w = Bukkit.getWorld(parent.getWorld());
+        if (w == null) return null;
+        double cX = (x1 + x2) / 2.0 + 0.5;
+        double cY = (y1 + y2) / 2.0; // No +0.5 for Y usually, but debatable
+        double cZ = (z1 + z2) / 2.0 + 0.5;
+        return new Location(w, cX, cY, cZ);
+    }
+    
+    public String getRemainingTimeFormatted() {
+        if (!isRented()) return "Available";
+        long diff = rentExpiration - System.currentTimeMillis();
+        if (diff <= 0) return "Expired";
+        
+        long days = TimeUnit.MILLISECONDS.toDays(diff);
+        long hours = TimeUnit.MILLISECONDS.toHours(diff) % 24;
+        
+        if (days > 0) return days + "d " + hours + "h";
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
+        return hours + "h " + minutes + "m";
+    }
+
+    // --- Equality (Prevents Duplicates in Lists) ---
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Zone zone = (Zone) o;
+        return name.equals(zone.name) && parent.equals(zone.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, parent);
     }
 }

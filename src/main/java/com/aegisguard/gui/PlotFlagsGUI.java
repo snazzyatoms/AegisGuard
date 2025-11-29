@@ -20,8 +20,8 @@ import java.util.Map;
 
 /**
  * PlotFlagsGUI
- * - Manages protection settings on a specific plot.
- * - FINAL FIX: Biome Changer access removed and logic standardized.
+ * - Manages protection settings.
+ * - FIX: Fully localized and Biome button removed.
  */
 public class PlotFlagsGUI {
 
@@ -59,7 +59,7 @@ public class PlotFlagsGUI {
         
         addFlagButton(player, inv, plot, 14, "mobs", Material.ZOMBIE_HEAD, "button_mobs", "mob_toggle_lore");
         addFlagButton(player, inv, plot, 15, "entry", Material.OAK_FENCE_GATE, "button_entry", "entry_toggle_lore"); // Lockdown
-        addFlagButton(player, inv, plot, 16, "safe_zone", Material.SHIELD, "button_safe", "safe_toggle_lore"); // Admin Only usually
+        addFlagButton(player, inv, plot, 16, "safe_zone", Material.SHIELD, "button_safe", "safe_toggle_lore"); // Admin
 
         // --- 3. MECHANICS (Row 3) ---
         addFlagButton(player, inv, plot, 19, "containers", Material.CHEST, "button_containers", "container_toggle_lore");
@@ -96,12 +96,16 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // REMOVED: Biome Changer button (Slot 32)
-        // This is where the old Biome button was. We remove it as requested.
+        // REMOVED: Biome Changer button (Slot 32) - Accessed via Main Menu only
 
         // --- 5. NAVIGATION ---
-        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cExit", List.of("§7Close menu.")));
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, 
+            GUIManager.safeText(plugin.msg().get(player, "button_back"), "Back"), 
+            plugin.msg().getList(player, "back_lore")));
+            
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, 
+            GUIManager.safeText(plugin.msg().get(player, "button_exit"), "Exit"), 
+            plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -149,19 +153,27 @@ public class PlotFlagsGUI {
             case 30: togglePaidFlag(player, plot, "fly", plugin.cfg().getFlightCost()); break;
             
             // Sub-Menus
-            case 31: plugin.gui().cosmetics().open(player, plot); break;
-            // CASE 32 (Biome Changer) REMOVED
+            case 31: // Cosmetics
+                plugin.gui().cosmetics().open(player, plot);
+                plugin.effects().playMenuFlip(player);
+                break;
             
             // Nav
             case 48: plugin.gui().openMain(player); break;
             case 49: player.closeInventory(); break;
         }
     }
-
+    
+    // --- Helpers ---
     private void toggleFlag(Player player, Plot plot, String flag) {
         boolean current = plot.getFlag(flag, true);
         plot.setFlag(flag, !current);
         plugin.store().setDirty(true);
+        
+        // Use flag_toggled message
+        String status = !current ? "§aON" : "§cOFF";
+        plugin.msg().send(player, "flag_toggled", Map.of("FLAG", flag.toUpperCase(), "STATUS", status));
+        
         plugin.effects().playConfirm(player);
         open(player, plot);
     }
@@ -169,7 +181,6 @@ public class PlotFlagsGUI {
     private void togglePaidFlag(Player player, Plot plot, String flag, double cost) {
         boolean current = plot.getFlag(flag, false);
         
-        // Only charge if turning ON
         if (!current && cost > 0 && !plugin.isAdmin(player)) {
             if (!plugin.eco().withdraw(player, cost, CurrencyType.VAULT)) {
                 plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(cost, CurrencyType.VAULT)));
@@ -183,7 +194,6 @@ public class PlotFlagsGUI {
         plugin.store().setDirty(true);
         plugin.effects().playConfirm(player);
         
-        // Specific logic for flight
         if (flag.equals("fly") && plot.isInside(player.getLocation())) {
             player.setAllowFlight(!current);
             if (current) player.setFlying(false);
@@ -191,11 +201,13 @@ public class PlotFlagsGUI {
         
         open(player, plot);
     }
-
+    
     private void addFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey) {
         boolean state = plot.getFlag(flag, true);
+        // Localized name lookup
         String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
-        if (name == null || name.isEmpty()) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
+        // Fallback if key missing
+        if (name == null || name.isEmpty() || name.contains("Missing")) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
         
         List<String> lore = plugin.msg().getList(p, loreKey);
         ItemStack item = GUIManager.createItem(mat, name, lore);
@@ -207,6 +219,7 @@ public class PlotFlagsGUI {
     private void addPaidFlagButton(Player p, Inventory inv, Plot plot, int slot, String flag, Material mat, String nameKey, String loreKey, String costStr) {
         boolean state = plot.getFlag(flag, false);
         String name = plugin.msg().get(p, nameKey + (state ? "_on" : "_off"));
+        if (name == null || name.isEmpty() || name.contains("Missing")) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
         
         List<String> lore = plugin.msg().getList(p, loreKey);
         lore = replacePlaceholder(lore, "{COST}", costStr);

@@ -5,13 +5,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.jetbrains.annotations.Nullable; // Optional, but good practice if you have the lib
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Plot (Data Class) - v1.1.1
+ * Plot (Data Class) - v1.1.2
  * Represents a land claim.
  */
 public class Plot {
@@ -21,7 +21,7 @@ public class Plot {
     
     // Default Flag State (To keep constructor clean)
     private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
-        Map.entry("pvp", false), // Usually PvP is false by default in claims
+        Map.entry("pvp", false), 
         Map.entry("containers", true),
         Map.entry("mobs", true),
         Map.entry("pets", true),
@@ -76,7 +76,7 @@ public class Plot {
     private String entryTitle;    
     private String entrySubtitle; 
     private String description;   
-    private String customBiome;   // Support for BiomeGUI
+    private String customBiome;   
 
     // --- Cosmetics ---
     private String borderParticle;
@@ -95,19 +95,15 @@ public class Plot {
         this.owner = owner;
         this.ownerName = ownerName;
         this.world = world;
-        // Normalize coordinates (Min/Max) immediately to prevent logic errors later
         this.x1 = Math.min(x1, x2);
         this.z1 = Math.min(z1, z2);
         this.x2 = Math.max(x1, x2);
         this.z2 = Math.max(z1, z2);
         this.lastUpkeepPayment = lastUpkeepPayment;
         
-        // Initialize Owner Role
         if (!isServerZone()) {
             this.playerRoles.put(owner, "owner");
         }
-
-        // Apply Defaults
         this.flags.putAll(DEFAULT_FLAGS);
     }
     
@@ -132,9 +128,8 @@ public class Plot {
     public Location getCenter(@Nullable AegisGuard plugin) {
         World w = Bukkit.getWorld(this.world);
         if (w == null) return null;
-        double cX = (x1 + x2) / 2.0 + 0.5; // +0.5 to center on block
+        double cX = (x1 + x2) / 2.0 + 0.5;
         double cZ = (z1 + z2) / 2.0 + 0.5;
-        // If plugin provided, maybe get surface Y? For now, standard 64 or 100
         int y = w.getHighestBlockYAt((int)cX, (int)cZ) + 1;
         return new Location(w, cX, y, cZ); 
     }
@@ -142,29 +137,20 @@ public class Plot {
     // --- PERMISSIONS SYSTEM ---
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
-        // 1. Owner always has permission
         if (owner.equals(playerUUID)) return true; 
-        
-        // 2. Banned players never have permission
         if (isBanned(playerUUID)) return false; 
         
-        // 3. Renter Logic (Treat as Owner or High Rank?)
         if (currentRenter != null && currentRenter.equals(playerUUID)) {
             if (System.currentTimeMillis() < rentExpires) {
-                // Renters usually get "Co-Owner" or "Member" rights depending on config
-                // For safety, let's assume they get MEMBER rights plus interaction
-                Set<String> perms = plugin.cfg().getRolePermissions("member"); // Or "renter" if you add that role
+                Set<String> perms = plugin.cfg().getRolePermissions("member"); 
                 return perms.contains(permission.toUpperCase());
             } else {
-                // Rent expired
                 this.currentRenter = null;
                 this.rentExpires = 0;
             }
         }
         
-        // 4. Role Hierarchy
         String role = getRole(playerUUID);
-        // 'default' role usually means 'guest/visitor'
         Set<String> permissions = plugin.cfg().getRolePermissions(role);
         return permissions.contains(permission.toUpperCase());
     }
@@ -178,12 +164,21 @@ public class Plot {
             playerRoles.remove(playerUUID);
         } else {
             playerRoles.put(playerUUID, role.toLowerCase());
-            bannedPlayers.remove(playerUUID); // Cannot be banned and have a role
+            bannedPlayers.remove(playerUUID);
         }
     }
 
-    // --- GETTERS & SETTERS (Cleaned Up) ---
+    // --- RESTORED ACCESSORS (Fixes Logic Errors) ---
+    public Map<UUID, String> getPlayerRoles() { 
+        return playerRoles; 
+    }
+    
+    public void removeRole(UUID playerUUID) { 
+        playerRoles.remove(playerUUID); 
+    }
+    // ----------------------------------------------
 
+    // --- GETTERS & SETTERS (Existing) ---
     public UUID getPlotId() { return plotId; }
     public UUID getOwner() { return owner; }
     public String getOwnerName() { return ownerName; }
@@ -193,7 +188,6 @@ public class Plot {
     public int getX2() { return x2; }
     public int getZ2() { return z2; }
     
-    // Bounds modification (Use with caution, requires re-saving)
     public void setX1(int x) { this.x1 = x; }
     public void setZ1(int z) { this.z1 = z; }
     public void setX2(int x) { this.x2 = x; }
@@ -245,7 +239,7 @@ public class Plot {
     // Bans
     public boolean isBanned(UUID playerUUID) { return bannedPlayers.contains(playerUUID); }
     public void addBan(UUID playerUUID) { 
-        playerRoles.remove(playerUUID); // Kick role if banned
+        playerRoles.remove(playerUUID); 
         bannedPlayers.add(playerUUID); 
     }
     public void removeBan(UUID playerUUID) { bannedPlayers.remove(playerUUID); }
@@ -320,7 +314,7 @@ public class Plot {
         if (s == null || s.isEmpty()) { this.spawnLocation = null; return; }
         try {
             String[] parts = s.split(":");
-            if (parts.length < 4) return; // Basic validation
+            if (parts.length < 4) return;
             World world = Bukkit.getWorld(parts[0]);
             if (world != null) {
                 this.spawnLocation = new Location(world, 

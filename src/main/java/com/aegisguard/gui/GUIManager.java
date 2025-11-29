@@ -76,6 +76,13 @@ public class GUIManager {
             playerGUI.open(player);
         }
     }
+    
+    /**
+     * Placeholder method for Diagnostics GUI (Fixes AdminGUI error).
+     */
+    public void openDiagnostics(Player player) {
+        player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal (Stub).");
+    }
 
     // --- GETTERS (Categorized) ---
 
@@ -103,7 +110,19 @@ public class GUIManager {
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
 
-    // --- UTILITIES (Static Helpers for UI Construction) ---
+    // ======================================
+    // --- UTILITIES (Static Helpers) ---
+    // ======================================
+
+    /**
+     * RESTORED: Converts null or placeholder strings to a safe fallback.
+     * Used by all GUIs for reliable display names/titles.
+     */
+    public static String safeText(String fromMsg, String fallback) {
+        if (fromMsg == null) return fallback;
+        if (fromMsg.contains("[Missing") || fromMsg.contains("null")) return fallback;
+        return fromMsg;
+    }
 
     /**
      * Creates a standardized GUI Item with color translation.

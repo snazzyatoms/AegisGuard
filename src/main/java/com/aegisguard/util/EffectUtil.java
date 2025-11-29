@@ -135,7 +135,7 @@ public class EffectUtil {
     // --- INTERNAL HELPER ---
 
     private void play(Player p, String soundName, float vol, float pitch) {
-        // FIX: Access globalSoundsEnabled() through cfg() (Error 1998)
+        // FIX: Access globalSoundsEnabled() through cfg()
         if (!plugin.cfg().globalSoundsEnabled() || !plugin.isSoundEnabled(p)) return; 
         try {
             p.playSound(p.getLocation(), Sound.valueOf(soundName.toUpperCase()), vol, pitch);

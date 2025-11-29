@@ -115,7 +115,6 @@ public class EffectUtil {
         // "Lightning" preset
         if (effectName.equalsIgnoreCase("lightning")) {
             p.playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.5f, 2.0f);
-            // Don't spawn actual lightning (damage), just sound/particles if needed
             return;
         }
 
@@ -136,7 +135,8 @@ public class EffectUtil {
     // --- INTERNAL HELPER ---
 
     private void play(Player p, String soundName, float vol, float pitch) {
-        if (!plugin.globalSoundsEnabled() || !plugin.isSoundEnabled(p)) return;
+        // FIX: Access globalSoundsEnabled() through cfg() (Error 1998)
+        if (!plugin.cfg().globalSoundsEnabled() || !plugin.isSoundEnabled(p)) return; 
         try {
             p.playSound(p.getLocation(), Sound.valueOf(soundName.toUpperCase()), vol, pitch);
         } catch (Exception e) {

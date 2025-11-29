@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages protection settings on a specific plot.
- * - Updated with visual glow for active flags.
+ * - FINAL FIX: Biome Changer access removed and logic standardized.
  */
 public class PlotFlagsGUI {
 
@@ -69,7 +69,7 @@ public class PlotFlagsGUI {
         addFlagButton(player, inv, plot, 23, "pets", Material.BONE, "button_pets", "pet_toggle_lore");
         addFlagButton(player, inv, plot, 24, "entities", Material.ARMOR_STAND, "button_entity", "entity_toggle_lore");
         
-        // Shop Interact (Paid Flag usually)
+        // Shop Interact (Paid Flag)
         double shopCost = plugin.cfg().getShopInteractCost();
         String shopCostStr = (shopCost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(shopCost, CurrencyType.VAULT) : "Free";
         addPaidFlagButton(player, inv, plot, 25, "shop-interact", Material.EMERALD, "button_shop", "shop_toggle_lore", shopCostStr);
@@ -96,14 +96,8 @@ public class PlotFlagsGUI {
             plugin.msg().getList(player, "cosmetics_lore")
         ));
         
-        // Biomes
-        if (plugin.cfg().isBiomesEnabled()) {
-            inv.setItem(32, GUIManager.createItem(
-                Material.GRASS_BLOCK,
-                GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome"),
-                plugin.msg().getList(player, "biome_button_lore") 
-            ));
-        }
+        // REMOVED: Biome Changer button (Slot 32)
+        // This is where the old Biome button was. We remove it as requested.
 
         // --- 5. NAVIGATION ---
         inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
@@ -156,8 +150,8 @@ public class PlotFlagsGUI {
             
             // Sub-Menus
             case 31: plugin.gui().cosmetics().open(player, plot); break;
-            case 32: if (plugin.cfg().isBiomesEnabled()) plugin.gui().biomes().open(player, plot); break;
-
+            // CASE 32 (Biome Changer) REMOVED
+            
             // Nav
             case 48: plugin.gui().openMain(player); break;
             case 49: player.closeInventory(); break;

@@ -1,67 +1,141 @@
-# Contributing to AegisGuard 🛡️
+This ensures:
 
-Thank you for your interest in contributing to AegisGuard!  
-This document explains how to work with the project using our **Maven + JitPack/JitCI build pipeline** and how to submit high-quality contributions.
+Your POM is valid
 
----
+JitPack-compatible dependencies resolve correctly
 
-## 📚 Table of Contents
-- [Development Requirements](#development-requirements)  
-- [How the Build System Works](#how-the-build-system-works)  
-- [Forking & Cloning](#forking--cloning)  
-- [Local Building (Maven + JitPack-Compatible)](#local-building-maven--jitpack-compatible)  
-- [Running the Plugin for Testing](#running-the-plugin-for-testing)  
-- [Submitting Pull Requests](#submitting-pull-requests)  
-- [Reporting Issues](#reporting-issues)  
-- [Coding Style & Standards](#coding-style--standards)  
-- [Commit Message Standards](#commit-message-standards)  
-- [Code of Conduct](#code-of-conduct)  
-- [License](#license)  
+The shading relocations succeed
 
----
+No API mismatches exist
 
-## 🛠️ Development Requirements
+If your build succeeds locally, your pull request will succeed on JitPack too.
 
-Before contributing, make sure you have:
+▶️ Running the Plugin for Testing
 
-- **Java 17 (required)**  
-- **Maven 3.8+**  
-- A GitHub account  
-- Basic understanding of Bukkit/Paper plugin development  
-- (Optional) A test server running Paper/Folia 1.20+  
+Build the JAR:
 
----
+mvn clean package
 
-## 🧬 How the Build System Works
 
-AegisGuard does **not** use Gradle or local shading scripts.  
-It uses:
+Navigate to:
 
-- **Maven** for building & dependency management  
-- **JitPack / JitCI** for automated builds and release artifacts  
-- **GitHub Releases + Hangar + Spigot** to publish builds  
+target/AegisGuard-<version>.jar
 
-### Why this matters  
-When you submit a PR, **JitPack** automatically tries to compile the plugin using your changes.  
-If Maven builds correctly, the PR will pass.  
-If not, you’ll see errors in JitPack like:
 
-- Missing dependencies  
-- Incorrect imports  
-- API incompatibilities  
+Drop the jar into your test server’s plugins/ folder.
 
-Your local build must match the CI pipeline.
+Start the server and verify:
 
----
+AegisGuard loads correctly
 
-## 🔧 Forking & Cloning
+No errors in console
 
-The correct workflow is:
+Commands and GUIs open normally
 
-1. **Fork the repository**  
-   https://github.com/snazzyatoms/AegisGuard
+Database + YAML stores function as expected
 
-2. Clone your fork:
-   ```bash
-   git clone https://github.com/<your-username>/AegisGuard.git
-   cd AegisGuard
+🔀 Submitting Pull Requests
+
+Before creating a PR:
+
+Sync your fork with the latest main
+
+git fetch upstream
+git merge upstream/main
+
+
+Ensure your build passes:
+
+mvn clean install
+
+
+Push your branch:
+
+git push origin feature/my-feature
+
+
+Open a Pull Request:
+
+Write a clear title
+
+Describe exactly what you changed and why
+
+Attach console logs if applicable
+
+Mention any breaking changes
+
+Maintainers may request adjustments before merging.
+
+🐛 Reporting Issues
+
+When reporting bugs, please include:
+
+Server type: Paper, Folia, Spigot
+
+Server version (e.g. 1.20.4, 1.21.1)
+
+AegisGuard version (from /version AegisGuard)
+
+Steps to reproduce the issue
+
+Full console logs or stack trace (if available)
+
+Other installed plugins (optional)
+
+Good bug reports = fast fixes.
+
+Submit issues here:
+https://github.com/snazzyatoms/AegisGuard/issues
+
+📏 Coding Style & Standards
+
+Please follow these conventions:
+
+Use the existing project structure and naming patterns
+
+Maintain compatibility with Java 17
+
+Keep imports clean & organized
+
+Avoid adding unnecessary dependencies
+
+Document public APIs
+
+Avoid blocking operations on the main thread
+
+For Folia-specific code: always use GlobalRegionScheduler correctly
+
+For database code: ensure thread safety
+
+📝 Commit Message Standards
+
+Example commit messages:
+
+Fix: Prevent NPE in plot lookup when world is missing
+Improve: Added PAPI placeholder for plot sale price
+Feature: Added biome cosmetics API + GUI hooks
+Refactor: Cleaned up ProtectionManager flag handling
+Docs: Updated installation instructions and quick start
+
+
+Avoid vague messages like:
+❌ “fix stuff”
+❌ “changes”
+❌ “update”
+
+🤝 Code of Conduct
+
+Be respectful, patient, and collaborative.
+All contributors, maintainers, and users should feel welcome.
+
+Harassment, discrimination, or toxicity will not be tolerated.
+
+⚖️ License
+
+Contributions must be compatible with the MIT License, the license used by AegisGuard.
+By contributing, you agree to license your work under MIT.
+
+Thank you for helping shape AegisGuard into a modern, powerful protection ecosystem.
+If you need help, hop into the Discord:
+
+👉 https://discord.gg/Y2NpuR7UZE

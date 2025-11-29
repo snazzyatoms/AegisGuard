@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * ExpansionRequestGUI
  * - Allows players to submit requests to increase their plot size.
+ * - Fully localized for language switching.
  */
 public class ExpansionRequestGUI {
 
@@ -30,7 +31,8 @@ public class ExpansionRequestGUI {
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, "§d§lLand Expansion Request");
+        String title = GUIManager.safeText(plugin.msg().get(player, "expansion_gui_title"), "§dLand Expansion Request");
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, title);
 
         // Background
         ItemStack filler = GUIManager.getFiller();
@@ -40,33 +42,43 @@ public class ExpansionRequestGUI {
         boolean validPlot = (plot != null && plot.getOwner().equals(player.getUniqueId()));
 
         // --- TIER 1: SMALL (+5) ---
-        inv.setItem(11, GUIManager.createItem(Material.IRON_PICKAXE, "§aSmall Expansion", List.of(
-            "§7Increase radius by §a+5 blocks§7.",
-            " ",
-            validPlot ? "§eClick to submit request." : "§cMust stand in your plot."
-        )));
+        // Fallback names are used if message keys are missing to prevent blank items
+        String nameSmall = plugin.msg().get(player, "expansion_small_name");
+        if (nameSmall == null) nameSmall = "§aSmall Expansion";
+        
+        inv.setItem(11, GUIManager.createItem(Material.IRON_PICKAXE, nameSmall, 
+            plugin.msg().getList(player, validPlot ? "expansion_small_lore" : "expansion_locked_lore")
+        ));
 
         // --- TIER 2: MEDIUM (+15) ---
-        inv.setItem(13, GUIManager.createItem(Material.GOLDEN_PICKAXE, "§6Medium Expansion", List.of(
-            "§7Increase radius by §6+15 blocks§7.",
-            " ",
-            validPlot ? "§eClick to submit request." : "§cMust stand in your plot."
-        )));
+        String nameMedium = plugin.msg().get(player, "expansion_medium_name");
+        if (nameMedium == null) nameMedium = "§6Medium Expansion";
+        
+        inv.setItem(13, GUIManager.createItem(Material.GOLDEN_PICKAXE, nameMedium, 
+            plugin.msg().getList(player, validPlot ? "expansion_medium_lore" : "expansion_locked_lore")
+        ));
 
         // --- TIER 3: LARGE (+30) ---
-        inv.setItem(15, GUIManager.createItem(Material.DIAMOND_PICKAXE, "§bLarge Expansion", List.of(
-            "§7Increase radius by §b+30 blocks§7.",
-            " ",
-            validPlot ? "§eClick to submit request." : "§cMust stand in your plot."
-        )));
+        String nameLarge = plugin.msg().get(player, "expansion_large_name");
+        if (nameLarge == null) nameLarge = "§bLarge Expansion";
+        
+        inv.setItem(15, GUIManager.createItem(Material.DIAMOND_PICKAXE, nameLarge, 
+            plugin.msg().getList(player, validPlot ? "expansion_large_lore" : "expansion_locked_lore")
+        ));
 
         // --- ADMIN VIEW (Slot 26) ---
         if (plugin.isAdmin(player)) {
-            inv.setItem(26, GUIManager.createItem(Material.COMPASS, "§cView Pending Requests (Admin)", List.of("§7Manage expansion queue.")));
+            inv.setItem(26, GUIManager.createItem(Material.COMPASS, 
+                plugin.msg().get(player, "button_view_requests_admin"), 
+                plugin.msg().getList(player, "view_requests_admin_lore")
+            ));
         }
 
         // Navigation
-        inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to the main menu.")));
+        inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, 
+            plugin.msg().get(player, "button_back_menu"), 
+            plugin.msg().getList(player, "back_menu_lore")
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -127,7 +139,7 @@ public class ExpansionRequestGUI {
         
         // Check if pending request exists
         if (plugin.getExpansionRequestManager().hasPendingRequest(player.getUniqueId())) {
-            player.sendMessage("§cYou already have a pending request.");
+            plugin.msg().send(player, "expansion_exists"); // "You already have a pending request"
             plugin.effects().playError(player);
             return false;
         }

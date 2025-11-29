@@ -7,7 +7,7 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
-import de.bluecolored.bluemap.api.MarkerAPI; // FIX: MarkerAPI class is needed for the getter method type
+import de.bluecolored.bluemap.api.markers.MarkerAPI; // Added explicit import for clarity
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
 
@@ -28,19 +28,15 @@ public class BlueMapHook {
         BlueMapAPI.onEnable(api -> {
             this.api = api;
             
-            // MarkerAPI is available on the main API object
+            // FIX 1: Access MarkerAPI explicitly from the API object
             MarkerAPI markerAPI = api.getMarkerAPI(); 
             
-            this.markerSet = markerAPI.createMarkerSet(MARKER_SET_ID);
+            this.markerSet = markerAPI.createMarkerSet(MARKER_SET_ID); 
             this.markerSet.setLabel(plugin.cfg().raw().getString("hooks.bluemap.label", "Claims"));
-            update(); // Call the defined update method
+            update();
         });
     }
 
-    /**
-     * Public method called by MapHookManager to force a render update.
-     * FIX: Method must be public/visible (Error 2030)
-     */
     public void update() {
         if (markerSet == null || api == null) return;
 
@@ -70,7 +66,7 @@ public class BlueMapHook {
                 float minY = 64f; 
                 float maxY = 100f;
 
-                // Marker creation is done on the MarkerSet
+                // ExtrudeMarker creation is done on the MarkerSet
                 ExtrudeMarker marker = markerSet.createExtrudeMarker(id, map, shape, minY, maxY);
                 
                 // Info

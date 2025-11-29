@@ -53,3 +53,9 @@ Click **Fork** in the top-right.
 ```bash
 git clone https://github.com/<your-username>/AegisGuard.git
 cd AegisGuard
+
+---
+3. Create a Development Branch
+
+```bash
+git checkout -b feature/my-feature

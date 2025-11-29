@@ -1,63 +1,67 @@
 # Contributing to AegisGuard 🛡️
 
 Thank you for your interest in contributing to AegisGuard!  
-This document explains how to develop, build, test, and submit changes using AegisGuard’s **Maven + JitPack/JitCI** pipeline.
+This document explains how to work with the project using our **Maven + JitPack/JitCI build pipeline** and how to submit high-quality contributions.
 
 ---
 
-## 📦 Development Requirements
+## 📚 Table of Contents
+- [Development Requirements](#development-requirements)  
+- [How the Build System Works](#how-the-build-system-works)  
+- [Forking & Cloning](#forking--cloning)  
+- [Local Building (Maven + JitPack-Compatible)](#local-building-maven--jitpack-compatible)  
+- [Running the Plugin for Testing](#running-the-plugin-for-testing)  
+- [Submitting Pull Requests](#submitting-pull-requests)  
+- [Reporting Issues](#reporting-issues)  
+- [Coding Style & Standards](#coding-style--standards)  
+- [Commit Message Standards](#commit-message-standards)  
+- [Code of Conduct](#code-of-conduct)  
+- [License](#license)  
 
-Before you begin, ensure you have:
+---
+
+## 🛠️ Development Requirements
+
+Before contributing, make sure you have:
 
 - **Java 17 (required)**  
 - **Maven 3.8+**  
-- Git installed  
-- A Paper/Folia test server (recommended)  
-- Basic understanding of Bukkit/Paper development  
+- A GitHub account  
+- Basic understanding of Bukkit/Paper plugin development  
+- (Optional) A test server running Paper/Folia 1.20+  
 
 ---
 
 ## 🧬 How the Build System Works
 
-AegisGuard uses:
+AegisGuard does **not** use Gradle or local shading scripts.  
+It uses:
 
-- **Maven** for project builds  
-- **JitPack / JitCI** for automated CI builds  
-- **GitHub Releases, Hangar, Spigot** for distributing releases  
+- **Maven** for building & dependency management  
+- **JitPack / JitCI** for automated builds and release artifacts  
+- **GitHub Releases + Hangar + Spigot** to publish builds  
 
-When you submit a pull request, JitPack will:
+### Why this matters  
+When you submit a PR, **JitPack** automatically tries to compile the plugin using your changes.  
+If Maven builds correctly, the PR will pass.  
+If not, you’ll see errors in JitPack like:
 
-1. Compile the project using Maven  
-2. Resolve dependencies  
-3. Run shading/relocation  
-4. Verify that everything builds cleanly  
+- Missing dependencies  
+- Incorrect imports  
+- API incompatibilities  
 
-If your build succeeds locally using the same Maven commands,  
-**your PR will pass CI as well.**
-
----
-
-# 🔧 Getting Started
-
-## 1. Fork the Repository
-
-Go to:  
-https://github.com/snazzyatoms/AegisGuard
-
-Click **Fork** in the top-right.
+Your local build must match the CI pipeline.
 
 ---
 
-## 2. Clone Your Fork
+## 🔧 Forking & Cloning
 
-```bash
-git clone https://github.com/<your-username>/AegisGuard.git
-cd AegisGuard
+The correct workflow is:
 
----
-3. Create a Development Branch
+1. **Fork the repository**  
+   https://github.com/snazzyatoms/AegisGuard
 
-```bash
-git checkout -b feature/my-feature
-
-
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/<your-username>/AegisGuard.git
+   cd AegisGuard

@@ -3,7 +3,7 @@
 ### The Next Generation of Land Protection & Economy  
 **Simple. Steadfast. Eternal.**
 
-![AegisGuard Banner](https://raw.githubusercontent.com/snazzyatoms/AegisGuard/main/.github/banner.png)
+
 
 ---
 

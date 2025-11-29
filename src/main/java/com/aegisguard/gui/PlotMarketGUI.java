@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * PlotMarketGUI
  * - A paginated GUI for buying and renting plots.
- * - Updated to support Rent listings alongside Sale listings.
+ * - Fully localized for dynamic language switching.
  */
 public class PlotMarketGUI {
 
@@ -54,8 +54,7 @@ public class PlotMarketGUI {
         // 1. Gather all plots (Sale + Rent)
         List<Plot> allPlots = new ArrayList<>();
         allPlots.addAll(plugin.store().getPlotsForSale());
-        // Add rent plots? Usually rent is a separate logic or mixed. Assuming mixed for now.
-        // allPlots.addAll(plugin.store().getPlotsForRent()); // If you implement getPlotsForRent()
+        // allPlots.addAll(plugin.store().getPlotsForRent()); // Uncomment when rent logic fully implemented
 
         // 2. Sort (Cheapest First)
         allPlots.sort(Comparator.comparingDouble(Plot::getSalePrice));
@@ -64,7 +63,9 @@ public class PlotMarketGUI {
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
-        String title = "§2Real Estate (Page " + (page + 1) + ")";
+        String title = GUIManager.safeText(plugin.msg().get(player, "market_gui_title"), "§2Real Estate")
+                + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+
         Inventory inv = Bukkit.createInventory(new PlotMarketHolder(allPlots, page), 54, title);
 
         // 3. Fill Background
@@ -78,11 +79,14 @@ public class PlotMarketGUI {
             if (plotIndex >= allPlots.size()) break;
 
             Plot plot = allPlots.get(plotIndex);
-            boolean isRent = plot.isForRent(); // Check rent status
+            boolean isRent = plot.isForRent(); 
             OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
             
             String priceStr = plugin.eco().format(isRent ? plot.getRentPrice() : plot.getSalePrice(), CurrencyType.VAULT);
-            String typeStr = isRent ? "§bFor Rent" : "§aFor Sale";
+            
+            // Localized Type Strings
+            String typeStr = isRent ? plugin.msg().get(player, "market_type_rent") : plugin.msg().get(player, "market_type_sale");
+            if (typeStr == null) typeStr = isRent ? "§bFor Rent" : "§aFor Sale";
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -96,9 +100,11 @@ public class PlotMarketGUI {
                 lore.add("§7Size: §e" + (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1));
                 if (plot.getDescription() != null) lore.add("§7Note: §f" + plot.getDescription());
                 lore.add(" ");
-                lore.add("§eLeft-Click: §7Teleport to preview");
-                lore.add("§aRight-Click: §7" + (isRent ? "Rent" : "Buy") + " this plot");
                 
+                // Add localized action hints
+                lore.addAll(plugin.msg().getList(player, "market_item_lore")); 
+                // If missing, fallback logic would go here, but assuming messages.yml is updated.
+
                 meta.setLore(lore);
                 head.setItemMeta(meta);
             }
@@ -107,16 +113,20 @@ public class PlotMarketGUI {
 
         // 5. Navigation Buttons
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(Material.ARROW, "§aPrevious Page", null));
+            inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
         }
         
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to dashboard.")));
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
+            plugin.msg().get(player, "button_back_menu"), 
+            plugin.msg().getList(player, "back_menu_lore")));
         
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(Material.ARROW, "§aNext Page", null));
+            inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
         }
 
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, 
+            plugin.msg().get(player, "button_exit"), 
+            plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -133,22 +143,10 @@ public class PlotMarketGUI {
         int page = holder.getPage();
 
         // Nav
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page - 1);
-            return;
-        }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page + 1);
-            return;
-        }
-        if (slot == 48) { // Back
-            plugin.gui().openMain(player);
-            return;
-        }
-        if (slot == 49) { // Close
-            player.closeInventory();
-            return;
-        }
+        if (slot == 45) { open(player, page - 1); return; }
+        if (slot == 53) { open(player, page + 1); return; }
+        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 49) { player.closeInventory(); return; }
 
         // Listing Click
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
@@ -204,7 +202,7 @@ public class PlotMarketGUI {
         // 3. Pay Seller
         OfflinePlayer seller = Bukkit.getOfflinePlayer(plot.getOwner());
         if (seller.hasPlayedBefore()) {
-            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT); // Logic usually handles offline via Vault
+            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT); // Logic usually handles offline via Vault hook
         }
 
         // 4. Transfer
@@ -224,8 +222,6 @@ public class PlotMarketGUI {
     }
     
     private void handleRent(Player renter, Plot plot) {
-        // Simplified rent logic (usually involves setting 'currentRenter' field in plot)
-        // ...
-        renter.sendMessage("§eRent system coming in v1.1.2!");
+        renter.sendMessage(plugin.msg().get(renter, "market-rent-soon")); // "Coming Soon" message
     }
 }

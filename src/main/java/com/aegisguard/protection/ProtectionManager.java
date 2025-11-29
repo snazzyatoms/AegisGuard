@@ -19,6 +19,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent; // NEW IMPORT
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
@@ -61,7 +62,24 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 2. MOVEMENT LOGIC (Optimized) ---
+    // --- 2. MOB TARGETING (NEW: Ignore Trusted Players) ---
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMobTarget(EntityTargetLivingEntityEvent e) {
+        if (!(e.getTarget() instanceof Player target)) return;
+        
+        // Only stop hostile mobs
+        if (!(e.getEntity() instanceof Monster || e.getEntity() instanceof Slime || e.getEntity() instanceof Phantom)) return;
+
+        Plot plot = plugin.store().getPlotAt(target.getLocation());
+        if (plot != null) {
+            // If the player is trusted (Owner/Member), the mob loses interest
+            if (plot.hasPermission(target.getUniqueId(), "INTERACT", plugin)) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    // --- 3. MOVEMENT LOGIC (Optimized) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
         // Performance: Don't run logic if they just rotated their head
@@ -153,7 +171,7 @@ public class ProtectionManager implements Listener {
         }
     }
     
-    // --- 3. COMBAT & DAMAGE ---
+    // --- 4. COMBAT & DAMAGE ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) return;
@@ -161,13 +179,21 @@ public class ProtectionManager implements Listener {
         Entity damager = e.getDamager();
         Plot plot = plugin.store().getPlotAt(victim.getLocation());
 
-        // A. Mob Damage inside Safezones
+        // A. Mob Damage (Updated)
         if (damager instanceof Monster || damager instanceof Slime || damager instanceof Phantom || 
            (damager instanceof Projectile proj && proj.getShooter() instanceof Monster)) {
             if (plot != null) {
+                // 1. Flag Checks (Server Zone / Safe Zone / No Mobs)
                 if (plot.isServerZone() || plot.getFlag("safe_zone", false) || !plot.getFlag("mobs", true)) {
                     e.setCancelled(true);
                     if (damager instanceof Projectile) damager.remove();    
+                    return;
+                }
+                
+                // 2. Trust Check: If player is trusted/owner, they are safe from mobs
+                if (plot.hasPermission(victim.getUniqueId(), "INTERACT", plugin)) {
+                    e.setCancelled(true);
+                    if (damager instanceof Projectile) damager.remove();
                     return;
                 }
             }
@@ -191,7 +217,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 4. BLOCK BREAK ---
+    // --- 5. BLOCK BREAK ---
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
@@ -230,7 +256,7 @@ public class ProtectionManager implements Listener {
         if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) cancelBuild(e, p);
     }
 
-    // --- 5. BLOCK PLACE ---
+    // --- 6. BLOCK PLACE ---
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
@@ -268,7 +294,7 @@ public class ProtectionManager implements Listener {
         if (!plot.hasPermission(p.getUniqueId(), "BUILD", plugin)) cancelBuild(e, p);
     }
 
-    // --- 6. INTERACT (Shop & Containers) ---
+    // --- 7. INTERACT (Shop & Containers) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getClickedBlock() == null) return;
@@ -325,14 +351,14 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 7. MISC EVENTS ---
+    // --- 8. PET DAMAGE ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPetDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Tameable pet)) return;
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
         
-        // FIX: Replaced deprecated getOwnerUniqueId() with getOwner().getUniqueId()
+        // FIX: Use getOwner().getUniqueId() to avoid method not found errors on modern APIs
         if (pet.getOwner() != null && pet.getOwner().getUniqueId().equals(attacker.getUniqueId())) return;    
 
         Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
@@ -361,7 +387,7 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin.bypass")) return;
 
-        boolean farmAllowed = plot.getFlag("farm", true); // Default allow trample? Usually default is false (protect)
+        boolean farmAllowed = plot.getFlag("farm", true); 
         
         if (!farmAllowed || !plot.hasPermission(p.getUniqueId(), "FARM_TRAMPLE", plugin)) {
             e.setCancelled(true);
@@ -374,7 +400,7 @@ public class ProtectionManager implements Listener {
         for (Block block : new ArrayList<>(e.blockList())) {
             Plot plot = plugin.store().getPlotAt(block.getLocation());
             if (plot != null) {
-                if (!plot.getFlag("tnt-damage", false)) { // Default NO tnt damage
+                if (!plot.getFlag("tnt-damage", false)) { 
                     e.blockList().remove(block);
                 }
             }
@@ -382,20 +408,13 @@ public class ProtectionManager implements Listener {
     }
 
     // ======================================
-    // --- RESTORED LOGIC METHODS (External API) ---
+    // --- HELPER METHODS ---
     // ======================================
 
-    /**
-     * RESTORED: Checks if a flag is currently enabled on a plot (used by PAPI/Logic).
-     */
     public boolean isFlagEnabled(Plot plot, String flag) {
         return plot != null && plot.getFlag(flag, true); 
     }
 
-    /**
-     * RESTORED: Toggles the SafeZone flag, also overriding PvP/Mobs to false if turning ON.
-     * Used by PlotFlagsGUI.
-     */
     public void toggleSafeZone(Plot plot, boolean state) {
         boolean newState = !plot.getFlag("safe_zone", false);
         plot.setFlag("safe_zone", newState);
@@ -406,18 +425,10 @@ public class ProtectionManager implements Listener {
         plugin.store().setDirty(true);
     }
     
-    /**
-     * RESTORED: Checks if the plot is marked as a SafeZone (used by MobBarrierTask).
-     */
     public boolean isSafeZoneEnabled(Plot plot) {
         return plot != null && plot.getFlag("safe_zone", false); 
     }
 
-    // --- INTERNAL HELPERS ---
-    
-    /**
-     * Internal check for locked/expired plots.
-     */
     private boolean isPlotLocked(Player player, Plot plot) {
         if (plot == null) return false;
         if (plugin.isAdmin(player)) return false;
@@ -477,7 +488,7 @@ public class ProtectionManager implements Listener {
 
     private void cancelBuild(org.bukkit.event.Cancellable e, Player p) {
         e.setCancelled(true);
-        p.sendMessage(plugin.msg().get("cannot_break")); // Re-use message key
+        p.sendMessage(plugin.msg().get("cannot_break")); 
         plugin.effects().playError(p);
     }
     

@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
@@ -24,7 +23,7 @@ import java.util.Map;
 /**
  * BiomeGUI
  * - Allows changing the biome of a plot.
- * - Optimized 4x4x4 iteration to prevent lag.
+ * - FIX: Added Back and Exit buttons for proper navigation flow.
  */
 public class BiomeGUI {
 
@@ -53,8 +52,6 @@ public class BiomeGUI {
         double cost = plugin.cfg().getBiomeChangeCost();
         CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
         String costStr = (cost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(cost, type) : "Free";
-
-        // Current Plot Biome (for comparison)
         String currentBiomeStr = plot.getCustomBiome(); 
         
         int slot = 0;
@@ -67,7 +64,6 @@ public class BiomeGUI {
                 String prettyName = formatName(biome.name());
                 
                 List<String> lore = new ArrayList<>(plugin.msg().getList(player, "biome_select_lore"));
-                // Fallback lore if config is empty
                 if (lore.isEmpty()) {
                     lore.add("§7Cost: " + costStr);
                     lore.add(" ");
@@ -78,7 +74,6 @@ public class BiomeGUI {
 
                 ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
                 
-                // Highlight if it matches saved biome
                 if (currentBiomeStr != null && currentBiomeStr.equalsIgnoreCase(biome.name())) {
                     addGlow(icon);
                 }
@@ -86,12 +81,17 @@ public class BiomeGUI {
                 inv.setItem(slot++, icon);
                 
             } catch (IllegalArgumentException ignored) {
-                // Config might have invalid biomes, skip them safely
+                // Skip invalid config biomes
             }
         }
 
-        // Back Button
-        inv.setItem(40, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to plot settings.")));
+        // --- NAVIGATION BUTTONS ---
+        
+        // Back Button (Returns to Flags Menu)
+        inv.setItem(40, GUIManager.createItem(Material.ARROW, "§fBack to Flags", List.of("§7Return to Plot Settings.")));
+        
+        // Exit Button (Closes entirely)
+        inv.setItem(44, GUIManager.createItem(Material.BARRIER, "§cExit Menu", List.of("§7Close the Biome Changer.")));
         
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -103,8 +103,14 @@ public class BiomeGUI {
         Plot plot = holder.getPlot();
 
         // Navigation
-        if (e.getSlot() == 40) {
-            plugin.gui().flags().open(player, plot);
+        if (e.getSlot() == 40) { // Back to Flags
+            plugin.gui().flags().open(player, plot); 
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (e.getSlot() == 44) { // Exit Menu
+            player.closeInventory();
+            plugin.effects().playMenuClose(player);
             return;
         }
 
@@ -139,8 +145,6 @@ public class BiomeGUI {
                 player.closeInventory();
                 player.sendMessage("§eTerraforming... this may take a moment.");
                 
-                // Run logic (sync or async depending on server version/safety preferences)
-                // Biome setting is usually fast enough on sync if optimized
                 applyBiomeChange(plot, newBiome);
                 
                 plot.setCustomBiome(newBiome.name());
@@ -171,11 +175,9 @@ public class BiomeGUI {
         int maxY = world.getMaxHeight();
 
         // Optimized Loop: Minecraft stores biomes in 4x4x4 cubes.
-        // Iterating every single block is wasteful. Steps of 4 are sufficient.
         for (int x = minX; x <= maxX; x += 4) { 
             for (int z = minZ; z <= maxZ; z += 4) {
                 for (int y = minY; y < maxY; y += 4) {
-                    // Check if coordinate is actually inside (for non-rectangular plots if supported later)
                     if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                         world.setBiome(x, y, z, biome);
                     }
@@ -185,9 +187,6 @@ public class BiomeGUI {
     }
     
     private void refreshChunks(Player player, Plot plot) {
-        // Simple way to refresh: resend chunk packets.
-        // In older versions, this required NMS. In modern API, players usually need to relog
-        // or unload/reload chunks.
         // We will just inform the user as a fallback.
         player.sendMessage("§7(Note: You may need to reconnect or leave the area to see visual changes fully.)");
     }

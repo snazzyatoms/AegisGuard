@@ -15,11 +15,13 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map; // Added for placeholder replacement
 
 /**
  * VisitGUI
  * - Allows players to warp to plots they are trusted on.
  * - Allows warping to public Server Zones (Warps).
+ * - Fully localized for language switching.
  */
 public class VisitGUI {
 
@@ -53,12 +55,11 @@ public class VisitGUI {
         // --- FILTER LOGIC ---
         for (Plot plot : plugin.store().getAllPlots()) {
             if (showWarps) {
-                // Show Server Warps
                 if (plot.isServerWarp()) {
                     displayPlots.add(plot);
                 }
             } else {
-                // Show Trusted Plots (Where player is Member/Co-Owner, but NOT Owner)
+                // Trusted Plots (Member/Co-Owner but NOT Owner)
                 if (plot.getPlayerRoles().containsKey(player.getUniqueId()) && !plot.getOwner().equals(player.getUniqueId())) {
                     displayPlots.add(plot);
                 }
@@ -79,7 +80,11 @@ public class VisitGUI {
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
-        String modeTitle = showWarps ? "§6Server Waypoints" : "§9Trusted Plots";
+        // Localization Keys: "visit_title_warps" vs "visit_title_trusted"
+        String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
+        String defaultTitle = showWarps ? "§6Server Waypoints" : "§9Trusted Plots";
+        
+        String modeTitle = plugin.msg().get(player, modeTitleKey, defaultTitle);
         String title = GUIManager.safeText(null, modeTitle) + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
 
         Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, title);
@@ -101,25 +106,26 @@ public class VisitGUI {
                 // Server Warp
                 Material mat = plot.getWarpIcon() != null ? plot.getWarpIcon() : Material.BEACON;
                 String name = plot.getWarpName() != null ? plot.getWarpName() : "Server Warp";
-                icon = GUIManager.createItem(mat, "§6" + name, List.of("§7Click to warp."));
+                
+                icon = GUIManager.createItem(mat, "§6" + name, plugin.msg().getList(player, "visit_warp_lore"));
             } else {
                 // Trusted Plot
                 OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
                 String role = plot.getRole(player.getUniqueId());
                 String ownerName = (plot.getOwnerName() != null) ? plot.getOwnerName() : "Unknown";
-                String alias = (plot.getEntryTitle() != null) ? "§7Alias: §f" + plot.getEntryTitle() : "";
+                String alias = (plot.getEntryTitle() != null) ? plot.getEntryTitle() : ownerName + "'s Plot";
 
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
                 if (meta != null) {
                     meta.setOwningPlayer(owner);
-                    meta.setDisplayName("§e" + ownerName + "'s Dominion");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("§7World: §f" + plot.getWorld());
-                    lore.add("§7Your Status: §a" + role);
-                    if (!alias.isEmpty()) lore.add(alias);
-                    lore.add(" ");
-                    lore.add("§eClick to Teleport");
+                    meta.setDisplayName(plugin.msg().get(player, "visit_plot_name", Map.of("PLOT", alias)));
+                    
+                    List<String> lore = new ArrayList<>(plugin.msg().getList(player, "visit_plot_lore"));
+                    // Replace placeholders in lore list manually since getList doesn't support Map replacer natively in utils yet
+                    lore.replaceAll(s -> s.replace("{WORLD}", plot.getWorld())
+                                          .replace("{ROLE}", role));
+                    
                     meta.setLore(lore);
                     head.setItemMeta(meta);
                 }
@@ -130,17 +136,23 @@ public class VisitGUI {
 
         // --- TOGGLE BUTTON (Slot 49) ---
         if (showWarps) {
-            inv.setItem(49, GUIManager.createItem(Material.PLAYER_HEAD, "§bSwitch to: Trusted Plots", List.of("§7View plots you are trusted on.")));
+            inv.setItem(49, GUIManager.createItem(Material.PLAYER_HEAD, 
+                plugin.msg().get(player, "visit_switch_trusted"), 
+                plugin.msg().getList(player, "visit_switch_trusted_lore")));
         } else {
-            inv.setItem(49, GUIManager.createItem(Material.BEACON, "§6Switch to: Server Warps", List.of("§7View official server locations.")));
+            inv.setItem(49, GUIManager.createItem(Material.BEACON, 
+                plugin.msg().get(player, "visit_switch_warps"), 
+                plugin.msg().getList(player, "visit_switch_warps_lore")));
         }
 
         // Navigation
-        if (page > 0) inv.setItem(45, GUIManager.createItem(Material.ARROW, "§fPrevious Page", null));
-        if (page < maxPages - 1) inv.setItem(53, GUIManager.createItem(Material.ARROW, "§fNext Page", null));
+        if (page > 0) inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
+        if (page < maxPages - 1) inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
         
         // Back
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, "§fBack to Menu", null));
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
+            plugin.msg().get(player, "button_back_menu"), 
+            plugin.msg().getList(player, "back_menu_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);

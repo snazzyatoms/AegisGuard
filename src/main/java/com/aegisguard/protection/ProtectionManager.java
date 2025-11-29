@@ -331,7 +331,9 @@ public class ProtectionManager implements Listener {
         if (!(e.getEntity() instanceof Tameable pet)) return;
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
-        if (pet.getOwner() != null && pet.getOwner().getOwnerUniqueId().equals(attacker.getUniqueId())) return;    
+        
+        // FIX: Replaced deprecated getOwnerUniqueId() with getOwner().getUniqueId()
+        if (pet.getOwner() != null && pet.getOwner().getUniqueId().equals(attacker.getUniqueId())) return;    
 
         Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
         if (plot == null) return;
@@ -452,7 +454,6 @@ public class ProtectionManager implements Listener {
 
     private void bouncePlayer(Player p, PlayerMoveEvent e) {
         e.setCancelled(true);
-        // Optional: Push them back slightly? usually cancellation is enough.
     }
     
     private void sendPlotMessage(Player p, String message) {

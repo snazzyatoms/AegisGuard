@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * PlotAuctionGUI
  * - Allows players to bid on expired plots.
- * - Handles refunds for outbid players.
+ * - Fully localized.
  */
 public class PlotAuctionGUI {
 
@@ -49,7 +49,6 @@ public class PlotAuctionGUI {
 
     public void open(Player player, int page) {
         List<Plot> allPlots = new ArrayList<>(plugin.store().getPlotsForAuction());
-        // Sort by bid (Ascending)
         allPlots.sort(Comparator.comparingDouble(Plot::getCurrentBid));
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
@@ -57,15 +56,15 @@ public class PlotAuctionGUI {
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
         String title = GUIManager.safeText(plugin.msg().get(player, "auction_gui_title"), "§6Plot Auctions")
-                + " §8(Page " + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+                + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
 
         Inventory inv = Bukkit.createInventory(new PlotAuctionHolder(allPlots, page), 54, title);
 
-        // Fill background
+        // Background
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
-        // Add plot heads
+        // Listings
         int startIndex = page * PLOTS_PER_PAGE;
         for (int i = 0; i < PLOTS_PER_PAGE; i++) {
             int plotIndex = startIndex + i;
@@ -80,17 +79,27 @@ public class PlotAuctionGUI {
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(owner);
-                meta.setDisplayName("§ePlot Auction (Formerly " + plot.getOwnerName() + "'s)");
+                // Localized Item Name
+                String itemName = plugin.msg().get(player, "auction_item_name", Map.of("OWNER", plot.getOwnerName()));
+                if (itemName == null) itemName = "§ePlot Auction (" + plot.getOwnerName() + ")";
+                meta.setDisplayName(itemName);
                 
+                // Localized Lore
                 List<String> lore = new ArrayList<>();
                 lore.add("§7World: §f" + plot.getWorld());
                 lore.add("§7Size: §a" + (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1));
                 lore.add(" ");
-                lore.add("§7Current Bid: §e" + plugin.eco().format(plot.getCurrentBid(), CurrencyType.VAULT));
-                lore.add("§7Highest Bidder: §f" + bidderName);
+                
+                String bidStr = plugin.eco().format(plot.getCurrentBid(), CurrencyType.VAULT);
+                String bidLine = plugin.msg().get(player, "auction_current_bid", Map.of("AMOUNT", bidStr));
+                String bidderLine = plugin.msg().get(player, "auction_highest_bidder", Map.of("PLAYER", bidderName));
+                
+                lore.add(bidLine != null ? bidLine : "§7Current Bid: §e" + bidStr);
+                lore.add(bidderLine != null ? bidderLine : "§7Highest Bidder: §f" + bidderName);
                 lore.add(" ");
-                lore.add("§eLeft-Click: §7Teleport to preview");
-                lore.add("§aRight-Click: §7Bid on this plot");
+                
+                // Action Hints
+                lore.addAll(plugin.msg().getList(player, "auction_item_lore"));
                 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -100,16 +109,20 @@ public class PlotAuctionGUI {
 
         // Navigation
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(Material.ARROW, "§aPrevious Page", List.of("§7Go to page " + page)));
+            inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
         }
         
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, "§fBack to Menu", List.of("§7Return to the main menu.")));
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
+            plugin.msg().get(player, "button_back_menu"), 
+            plugin.msg().getList(player, "back_menu_lore")));
 
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(Material.ARROW, "§aNext Page", List.of("§7Go to page " + (page + 2))));
+            inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
         }
 
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, 
+            plugin.msg().get(player, "button_exit"), 
+            plugin.msg().getList(player, "exit_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -122,30 +135,18 @@ public class PlotAuctionGUI {
         int slot = e.getSlot();
         int currentPage = holder.getPage();
 
-        // Navigation
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, currentPage - 1);
-            return;
-        }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, currentPage + 1);
-            return;
-        }
-        if (slot == 48 && e.getCurrentItem().getType() == Material.NETHER_STAR) {
-            plugin.gui().openMain(player);
-            return;
-        }
-        if (slot == 49 && e.getCurrentItem().getType() == Material.BARRIER) {
-            player.closeInventory();
-            return;
-        }
+        // Nav
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, currentPage - 1); return; }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, currentPage + 1); return; }
+        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 49) { player.closeInventory(); return; }
 
-        // Listings
+        // Listing Click
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
-            int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
-            if (plotIndex >= holder.getPlots().size()) return;
+            int index = (currentPage * PLOTS_PER_PAGE) + slot;
+            if (index >= holder.getPlots().size()) return;
 
-            Plot plot = holder.getPlots().get(plotIndex);
+            Plot plot = holder.getPlots().get(index);
             if (plot == null) return;
 
             if (e.getClick().isLeftClick()) {
@@ -164,7 +165,6 @@ public class PlotAuctionGUI {
     }
 
     private void bidOnPlot(Player bidder, Plot plot) {
-        // 1. Validation
         if (plot.getOwner().equals(bidder.getUniqueId())) {
             plugin.msg().send(bidder, "auction-bid-own");
             plugin.effects().playError(bidder);
@@ -177,33 +177,28 @@ public class PlotAuctionGUI {
             return;
         }
         
-        // 2. Calculate New Bid
         double currentBid = plot.getCurrentBid();
         double minIncrease = plugin.cfg().raw().getDouble("auction.min_bid_increase", 100.0);
         double newBid = (currentBid == 0) ? minIncrease : currentBid + minIncrease;
 
-        // 3. Charge Player
         if (!plugin.eco().withdraw(bidder, newBid, CurrencyType.VAULT)) {
             plugin.msg().send(bidder, "need_vault", Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
             plugin.effects().playError(bidder);
             return;
         }
         
-        // 4. Refund Old Bidder
         if (plot.getCurrentBidder() != null) {
             OfflinePlayer oldBidder = Bukkit.getOfflinePlayer(plot.getCurrentBidder());
-            plugin.eco().deposit(oldBidder.getPlayer(), currentBid, CurrencyType.VAULT); // Handles offline via Vault hook internally usually
+            plugin.eco().deposit(oldBidder.getPlayer(), currentBid, CurrencyType.VAULT); 
             
             if (oldBidder.isOnline()) {
                 plugin.msg().send(oldBidder.getPlayer(), "auction-outbid", Map.of("PLAYER", bidder.getName()));
             }
         }
 
-        // 5. Update Plot
         plot.setCurrentBid(newBid, bidder.getUniqueId());
         plugin.store().setDirty(true);
 
-        // 6. Notify
         plugin.msg().send(bidder, "auction-bid-success", Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
         plugin.effects().playConfirm(bidder);
     }

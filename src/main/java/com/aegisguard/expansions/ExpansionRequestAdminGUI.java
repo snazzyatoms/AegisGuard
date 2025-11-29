@@ -2,6 +2,7 @@ package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -21,6 +22,7 @@ import java.util.UUID;
 /**
  * ExpansionRequestAdminGUI
  * - Allows admins to view, approve, or deny land expansion requests.
+ * - Fully localized.
  */
 public class ExpansionRequestAdminGUI {
 
@@ -30,9 +32,6 @@ public class ExpansionRequestAdminGUI {
         this.plugin = plugin;
     }
 
-    /**
-     * Holder identifying the Admin GUI and mapping slots to Request IDs.
-     */
     public static class ExpansionAdminHolder implements InventoryHolder {
         private final Map<Integer, UUID> slotMap = new HashMap<>();
 
@@ -50,7 +49,8 @@ public class ExpansionRequestAdminGUI {
 
     public void open(Player player) {
         ExpansionAdminHolder holder = new ExpansionAdminHolder();
-        Inventory inv = Bukkit.createInventory(holder, 54, "§8Expansion Requests");
+        String title = GUIManager.safeText(plugin.msg().get(player, "expansion_admin_title"), "§8Expansion Requests");
+        Inventory inv = Bukkit.createInventory(holder, 54, title);
 
         // Fill background
         ItemStack filler = GUIManager.getFiller();
@@ -59,8 +59,9 @@ public class ExpansionRequestAdminGUI {
         Collection<ExpansionRequest> requests = plugin.getExpansionRequestManager().getActiveRequests();
         
         if (requests.isEmpty()) {
-            inv.setItem(22, GUIManager.createItem(Material.BARRIER, "§cNo Pending Requests", 
-                List.of("§7There are no requests to review.")));
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER, 
+                plugin.msg().get(player, "expansion_none_title", "§cNo Pending Requests"), 
+                plugin.msg().getList(player, "expansion_none_lore")));
         } else {
             int slot = 0;
             for (ExpansionRequest req : requests) {
@@ -71,12 +72,12 @@ public class ExpansionRequestAdminGUI {
 
                 List<String> lore = new ArrayList<>();
                 lore.add("§7World: §f" + req.getWorldName());
-                lore.add("§7Current Radius: §e" + req.getCurrentRadius());
-                lore.add("§7Requested: §a" + req.getRequestedRadius() + " §7(+" + (req.getRequestedRadius() - req.getCurrentRadius()) + ")");
-                lore.add("§7Cost Paid: §6" + plugin.eco().format(req.getCost(), com.aegisguard.economy.CurrencyType.VAULT)); // Assuming Vault for expansions
+                lore.add("§7Radius: §e" + req.getCurrentRadius() + " §7-> §a" + req.getRequestedRadius());
+                lore.add("§7Cost Paid: §6" + plugin.eco().format(req.getCost(), CurrencyType.VAULT));
                 lore.add(" ");
-                lore.add("§a§lLEFT CLICK §7to Approve");
-                lore.add("§c§lRIGHT CLICK §7to Deny");
+                
+                // Add localized action hints
+                lore.addAll(plugin.msg().getList(player, "expansion_admin_actions"));
 
                 inv.setItem(slot, GUIManager.createItem(Material.PAPER, "§bRequest: " + name, lore));
                 holder.addRequest(slot, req.getRequester());
@@ -85,7 +86,9 @@ public class ExpansionRequestAdminGUI {
         }
 
         // Back Button
-        inv.setItem(49, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to Admin Menu")));
+        inv.setItem(49, GUIManager.createItem(Material.ARROW, 
+            plugin.msg().get(player, "button_back"), 
+            plugin.msg().getList(player, "back_lore")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -102,6 +105,7 @@ public class ExpansionRequestAdminGUI {
         // Handle Back Button
         if (slot == 49) {
             plugin.gui().admin().open(player);
+            plugin.effects().playMenuFlip(player);
             return;
         }
 
@@ -113,7 +117,7 @@ public class ExpansionRequestAdminGUI {
         ExpansionRequest req = manager.getRequest(requesterId);
 
         if (req == null) {
-            player.sendMessage("§cThis request is no longer valid.");
+            player.sendMessage(plugin.msg().get(player, "request_expired"));
             open(player); // Refresh
             return;
         }
@@ -136,6 +140,6 @@ public class ExpansionRequestAdminGUI {
             plugin.effects().playUnclaim(player);
         }
 
-        open(player); // Refresh GUI to remove the processed item
+        open(player); // Refresh GUI
     }
 }

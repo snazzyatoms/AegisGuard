@@ -7,114 +7,161 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
-import de.bluecolored.bluemap.api.markers.MarkerAPI; // Added explicit import for clarity
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 public class BlueMapHook {
 
     private final AegisGuard plugin;
-    private MarkerSet markerSet;
-    private final String MARKER_SET_ID = "aegisguard_plots";
     private BlueMapAPI api;
+
+    // Marker-set id used on each map
+    private static final String MARKER_SET_ID = "aegisguard_plots";
 
     public BlueMapHook(AegisGuard plugin) {
         this.plugin = plugin;
-        
-        // Wait for BlueMap to enable
+
+        // Wait for BlueMap to be enabled
         BlueMapAPI.onEnable(api -> {
             this.api = api;
-            
-            // FIX 1: Access MarkerAPI explicitly from the API object
-            MarkerAPI markerAPI = api.getMarkerAPI(); 
-            
-            this.markerSet = markerAPI.createMarkerSet(MARKER_SET_ID); 
-            this.markerSet.setLabel(plugin.cfg().raw().getString("hooks.bluemap.label", "Claims"));
-            update();
+            update(); // initial update when BlueMap is ready
         });
     }
 
+    /**
+     * Rebuild all markers on all maps based on current plots.
+     */
     public void update() {
-        if (markerSet == null || api == null) return;
+        if (api == null) return;
 
         plugin.runGlobalAsync(() -> {
             Collection<Plot> plots = plugin.store().getAllPlots();
-            
-            // Clear existing markers to prevent duplicates on update
-            markerSet.getMarkers().clear(); 
-            
+
+            // 1) Clear our marker-set on every map
+            for (BlueMapMap map : api.getMaps()) {
+                MarkerSet set = map.getMarkerSets().get(MARKER_SET_ID);
+                if (set != null) {
+                    set.getMarkers().clear();
+                }
+            }
+
+            // 2) Rebuild markers per plot
             for (Plot plot : plots) {
-                String id = "plot_" + plot.getPlotId().toString();
-                
-                // Get the map instance for this world
                 BlueMapMap map = getMapForWorld(plot.getWorld());
                 if (map == null) continue;
 
-                // Coordinates
+                // Get/create marker set for this map
+                MarkerSet markerSet = getOrCreateMarkerSet(map);
+
+                String id = "plot_" + plot.getPlotId();
+
+                // Coords (expand by +1 to cover whole blocks visually)
                 double x1 = plot.getX1();
-                double x2 = plot.getX2() + 1; 
+                double x2 = plot.getX2() + 1;
                 double z1 = plot.getZ1();
                 double z2 = plot.getZ2() + 1;
-                
-                // Shape
+
                 Shape shape = Shape.createRect(x1, z1, x2, z2);
-                
-                // Height (Default visual range for a claim wall)
-                float minY = 64f; 
+
+                float minY = 64f;   // can be tweaked or made configurable
                 float maxY = 100f;
 
-                // ExtrudeMarker creation is done on the MarkerSet
-                ExtrudeMarker marker = markerSet.createExtrudeMarker(id, map, shape, minY, maxY);
-                
-                // Info
-                marker.setLabel(plot.getOwnerName() + "'s Plot");
-                marker.setDetail(getHtml(plot)); 
-                
-                // Colors (ARGB)
-                Color color = plot.isServerZone() ? new Color(255, 0, 0, 100) : new Color(0, 255, 0, 50); 
-                Color lineColor = plot.isServerZone() ? new Color(255, 0, 0, 255) : new Color(0, 255, 0, 255);
-                
+                // Build marker
+                String label = (plot.isServerZone() ? "[Server] " : "") + plot.getOwnerName() + "'s Plot";
+                ExtrudeMarker marker = new ExtrudeMarker(label, shape, minY, maxY);
+
+                // Popup detail
+                marker.setDetail(getHtml(plot));
+
+                // Colors
+                Color fillColor;
+                Color lineColor;
+
                 if (plot.isForSale()) {
-                    color = new Color(255, 255, 0, 50);
+                    // yellow for sale
+                    fillColor = new Color(255, 255, 0, 60);
                     lineColor = new Color(255, 255, 0, 255);
+                } else if (plot.isServerZone()) {
+                    // red for server zones
+                    fillColor = new Color(255, 0, 0, 60);
+                    lineColor = new Color(255, 0, 0, 255);
+                } else {
+                    // green for player plots
+                    fillColor = new Color(0, 255, 0, 60);
+                    lineColor = new Color(0, 255, 0, 255);
                 }
 
-                marker.setFillColor(color);
+                marker.setFillColor(fillColor);
                 marker.setLineColor(lineColor);
+                marker.setLineWidth(2);
+
+                // Put into marker set
+                markerSet.put(id, marker);
             }
         });
     }
-    
-    // --- Helper Methods ---
 
     /**
-     * Finds the first available map for the given world name.
+     * Get or create the marker-set for a given map.
+     */
+    private MarkerSet getOrCreateMarkerSet(BlueMapMap map) {
+        Map<String, MarkerSet> sets = map.getMarkerSets();
+
+        MarkerSet existing = sets.get(MARKER_SET_ID);
+        if (existing != null) {
+            return existing;
+        }
+
+        String label = plugin.cfg().raw().getString("hooks.bluemap.label", "Claims");
+        MarkerSet set = new MarkerSet(label);
+        set.setToggleable(true);
+        set.setDefaultHidden(false);
+        set.setSorting(0);
+
+        sets.put(MARKER_SET_ID, set);
+        return set;
+    }
+
+    /**
+     * Finds the first map associated with a given world name.
      */
     private BlueMapMap getMapForWorld(String worldName) {
         if (api == null) return null;
-        
+
         Optional<BlueMapWorld> worldOpt = api.getWorld(worldName);
-        if (worldOpt.isPresent()) {
-            // Return the first map found for this world (usually the surface map)
-            Collection<BlueMapMap> maps = worldOpt.get().getMaps();
-            if (!maps.isEmpty()) {
-                return maps.iterator().next();
-            }
-        }
-        return null; 
+        if (worldOpt.isEmpty()) return null;
+
+        Collection<BlueMapMap> maps = worldOpt.get().getMaps();
+        if (maps.isEmpty()) return null;
+
+        // Usually the first one is the main surface map
+        return maps.iterator().next();
     }
-    
+
     /**
-     * Builds the HTML popup for the map marker.
+     * Builds the HTML popup for the marker.
      */
     private String getHtml(Plot plot) {
-        return "<div style='text-align:center;'>" +
-               "<div style='font-weight:bold;'>" + plot.getOwnerName() + "</div>" +
-               "<div>Level: " + plot.getLevel() + "</div>" +
-               (plot.isForSale() ? "<div style='color:yellow;'>FOR SALE</div>" : "") +
-               "</div>";
+        String ownerLabel = plot.isServerZone()
+            ? "<span style='color:red;font-weight:bold;'>Server Zone</span>"
+            : plot.getOwnerName();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='text-align:center;'>")
+          .append("<div style='font-weight:bold;'>").append(ownerLabel).append("</div>")
+          .append("<div>Level: ").append(plot.getLevel()).append("</div>");
+
+        if (plot.isForSale()) {
+            sb.append("<div style='color:yellow;font-weight:bold;'>FOR SALE: $")
+              .append(plot.getSalePrice())
+              .append("</div>");
+        }
+
+        sb.append("</div>");
+        return sb.toString();
     }
 }

@@ -1,15 +1,27 @@
-# 🛡️ AegisGuard
+<div align="center">
 
+<table>
+<tr>
+<td><img src="https://raw.githubusercontent.com/snazzyatoms/AegisGuard/main/.github/aegisguard-logo.png" width="180" alt="AegisGuard Logo"></td>
+
+<td>
+
+# 🛡️ **AegisGuard**
 ### The Next Generation of Land Protection & Economy  
 **Simple. Steadfast. Eternal.**
 
+</td>
+</tr>
+</table>
 
+</div>
 
 ---
 
 > “Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”
 
 ---
+
 
 ## 🔗 Quick Links
 

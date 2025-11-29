@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.awt.Color; // --- ADDED IMPORT ---
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +61,7 @@ public class BannedPlayerListener implements Listener {
                 int count = toRemove.size();
                 
                 for (Plot plot : toRemove) {
+                    // This call handles DB/YML deletion asynchronously
                     plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 }
                 
@@ -70,8 +72,8 @@ public class BannedPlayerListener implements Listener {
                 if (plugin.getDiscord().isEnabled()) {
                     DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
                         .setTitle("🚫 Banned Player Wipe")
-                        .setColor(0xFF0000) // Red
-                        .setDescription("Player **" + name + "** was detected as banned.")
+                        .setColor(Color.RED) // FIXED: Use java.awt.Color object
+                        .setDescription("Player **" + name + "** was detected as banned. Their land has been seized.")
                         .addField("Action", "All plots removed", true)
                         .addField("Count", String.valueOf(count), true)
                         .setFooter("AegisGuard Automation", null);

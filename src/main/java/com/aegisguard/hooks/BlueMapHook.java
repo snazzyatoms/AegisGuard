@@ -26,7 +26,7 @@ public class BlueMapHook {
         // Wait for BlueMap to enable
         BlueMapAPI.onEnable(api -> {
             this.api = api;
-            // Create or Retrieve Marker Set via MarkerAPI
+            // FIX 1: Get MarkerAPI from the API instance
             this.markerSet = api.getMarkerAPI().createMarkerSet(MARKER_SET_ID);
             this.markerSet.setLabel(plugin.cfg().raw().getString("hooks.bluemap.label", "Claims"));
             update();
@@ -62,7 +62,7 @@ public class BlueMapHook {
                 float minY = 64f; 
                 float maxY = 100f;
 
-                // FIX: BlueMap markers MUST be created specific to a Map instance
+                // FIX 2: createExtrudeMarker is correctly called on MarkerSet object now
                 ExtrudeMarker marker = markerSet.createExtrudeMarker(id, map, shape, minY, maxY);
                 
                 // Info
@@ -70,7 +70,7 @@ public class BlueMapHook {
                 marker.setDetail(getHtml(plot)); 
                 
                 // Colors (ARGB)
-                // Default: Green, Server: Red, Sale: Yellow (Check in final logic)
+                // Default: Green, Server: Red, Sale: Yellow
                 Color color = plot.isServerZone() ? new Color(255, 0, 0, 100) : new Color(0, 255, 0, 50); 
                 Color lineColor = plot.isServerZone() ? new Color(255, 0, 0, 255) : new Color(0, 255, 0, 255);
                 

@@ -35,11 +35,11 @@ import java.util.concurrent.TimeUnit;
 public class ProtectionManager implements Listener {
 
     private final AegisGuard plugin;
-    private final boolean wildernessRevertEnabled; 
+    private final boolean wildernessRevertEnabled;    
     
     // Cooldown Maps (Concurrent for Folia/Async safety)
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>(); 
+    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>();    
 
     // Dependency Injection
     public ProtectionManager(AegisGuard plugin) {
@@ -90,7 +90,7 @@ public class ProtectionManager implements Listener {
                     plugin.runMain(p, () -> {
                         p.setAllowFlight(false);
                         p.setFlying(false);
-                        p.setFallDistance(0); 
+                        p.setFallDistance(0);    
                         p.sendMessage("§c🕊 Leaving flight zone.");
                     });
                 }
@@ -167,7 +167,7 @@ public class ProtectionManager implements Listener {
             if (plot != null) {
                 if (plot.isServerZone() || plot.getFlag("safe_zone", false) || !plot.getFlag("mobs", true)) {
                     e.setCancelled(true);
-                    if (damager instanceof Projectile) damager.remove(); 
+                    if (damager instanceof Projectile) damager.remove();    
                     return;
                 }
             }
@@ -177,14 +177,14 @@ public class ProtectionManager implements Listener {
         Player attacker = resolveAttacker(damager);
         if (attacker == null || attacker.equals(victim)) return;
         if (plot == null) return;
-        if (attacker.hasPermission("aegis.admin")) return; // Admin Bypass
+        if (plugin.isAdmin(attacker)) return; // Admin Bypass
 
         // Check if Plot is Locked (inactive/expired)
         if (isPlotLocked(attacker, plot)) { e.setCancelled(true); return; }
 
         // Check PvP Flag
-        boolean pvpAllowed = plot.getFlag("pvp", false); // PvP defaults to FALSE usually
-        if (!pvpAllowed) { 
+        boolean pvpAllowed = plot.getFlag("pvp", false);
+        if (!pvpAllowed) {    
             e.setCancelled(true);
             attacker.sendMessage(plugin.msg().get("cannot_attack"));
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -216,7 +216,7 @@ public class ProtectionManager implements Listener {
             if (!p.getUniqueId().equals(zone.getRenter()) && !p.getUniqueId().equals(plot.getOwner())) {
                 e.setCancelled(true);
                 p.sendMessage("§cThis zone is rented by " + Bukkit.getOfflinePlayer(zone.getRenter()).getName());
-                return; 
+                return;    
             }
         }
 
@@ -254,7 +254,7 @@ public class ProtectionManager implements Listener {
             if (!p.getUniqueId().equals(zone.getRenter()) && !p.getUniqueId().equals(plot.getOwner())) {
                 e.setCancelled(true);
                 p.sendMessage("§cThis zone is rented by " + Bukkit.getOfflinePlayer(zone.getRenter()).getName());
-                return; 
+                return;    
             }
         }
         
@@ -279,10 +279,10 @@ public class ProtectionManager implements Listener {
         if (plot == null) return;
         if (p.hasPermission("aegis.admin.bypass")) return;
         
-        if (isPlotLocked(p, plot)) { 
-            e.setCancelled(true); 
-            p.sendMessage(plugin.msg().get("plot-is-locked")); 
-            return; 
+        if (isPlotLocked(p, plot)) {    
+            e.setCancelled(true);    
+            p.sendMessage(plugin.msg().get("plot-is-locked"));    
+            return;    
         }
         
         // Sub-Zone Logic
@@ -292,7 +292,7 @@ public class ProtectionManager implements Listener {
             if (!isRenter) {
                 // Allow shopping interaction even in rented zones if flag is on
                 if (plot.getFlag("shop-interact", false) && (isContainer(block.getType()) || isSign(block.getType()))) {
-                    return; 
+                    return;    
                 }
                 e.setCancelled(true);
                 p.sendMessage("§cThis zone is rented.");
@@ -331,7 +331,7 @@ public class ProtectionManager implements Listener {
         if (!(e.getEntity() instanceof Tameable pet)) return;
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
-        if (pet.getOwner() != null && pet.getOwner().getUniqueId().equals(attacker.getUniqueId())) return; 
+        if (pet.getOwner() != null && pet.getOwner().getOwnerUniqueId().equals(attacker.getUniqueId())) return;    
 
         Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
         if (plot == null) return;
@@ -379,7 +379,49 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- HELPER METHODS ---
+    // ======================================
+    // --- RESTORED LOGIC METHODS (External API) ---
+    // ======================================
+
+    /**
+     * RESTORED: Checks if a flag is currently enabled on a plot (used by PAPI/Logic).
+     */
+    public boolean isFlagEnabled(Plot plot, String flag) {
+        return plot != null && plot.getFlag(flag, true); 
+    }
+
+    /**
+     * RESTORED: Toggles the SafeZone flag, also overriding PvP/Mobs to false if turning ON.
+     * Used by PlotFlagsGUI.
+     */
+    public void toggleSafeZone(Plot plot, boolean state) {
+        boolean newState = !plot.getFlag("safe_zone", false);
+        plot.setFlag("safe_zone", newState);
+        if (newState) {
+            plot.setFlag("pvp", false); 
+            plot.setFlag("mobs", false); 
+        }
+        plugin.store().setDirty(true);
+    }
+    
+    /**
+     * RESTORED: Checks if the plot is marked as a SafeZone (used by MobBarrierTask).
+     */
+    public boolean isSafeZoneEnabled(Plot plot) {
+        return plot != null && plot.getFlag("safe_zone", false); 
+    }
+
+    // --- INTERNAL HELPERS ---
+    
+    /**
+     * Internal check for locked/expired plots.
+     */
+    private boolean isPlotLocked(Player player, Plot plot) {
+        if (plot == null) return false;
+        if (plugin.isAdmin(player)) return false;
+        if (plot.getPlotStatus().equalsIgnoreCase("ACTIVE")) return false;
+        return true;
+    }
     
     private void applyPlotBuffs(Player p, Plot plot) {
         if (!plugin.cfg().isLevelingEnabled()) return;
@@ -424,13 +466,14 @@ public class ProtectionManager implements Listener {
         });
     }
 
-    private boolean isPlotLocked(Player player, Plot plot) {
-        // Returns true if plot is expired/locked/unpaid
-        if (plot.getPlotStatus().equalsIgnoreCase("ACTIVE")) return false;
-        // Logic: if locked, return true.
-        return true; 
+    private Player resolveAttacker(Entity damager) {
+        if (damager instanceof Player dp) return dp;
+        if (damager instanceof Projectile proj) {
+            if (proj.getShooter() instanceof Player sp) return sp;
+        }
+        return null;
     }
-    
+
     private void cancelBuild(org.bukkit.event.Cancellable e, Player p) {
         e.setCancelled(true);
         p.sendMessage(plugin.msg().get("cannot_break")); // Re-use message key
@@ -443,15 +486,6 @@ public class ProtectionManager implements Listener {
         plugin.effects().playEffect(type, "deny", p, p.getLocation());
     }
 
-    private Player resolveAttacker(Entity damager) {
-        if (damager instanceof Player dp) return dp;
-        if (damager instanceof Projectile proj) {
-            if (proj.getShooter() instanceof Player sp) return sp;
-        }
-        return null;
-    }
-
-    // Modern Switch Expressions for cleaner Material checking
     private boolean isContainer(Material type) {
         if (type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX")) return true;
         return switch (type) {

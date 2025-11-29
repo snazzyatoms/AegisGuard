@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Plot (Data Class) - v1.1.2
  * Represents a land claim.
+ * FIX: Corrected List-to-Set conversion in hasPermission logic.
  */
 public class Plot {
     
@@ -142,7 +143,8 @@ public class Plot {
         
         if (currentRenter != null && currentRenter.equals(playerUUID)) {
             if (System.currentTimeMillis() < rentExpires) {
-                Set<String> perms = plugin.cfg().getRolePermissions("member"); 
+                // FIX 1: Convert List from config to Set before checking
+                Set<String> perms = new HashSet<>(plugin.cfg().getRolePermissions("member")); 
                 return perms.contains(permission.toUpperCase());
             } else {
                 this.currentRenter = null;
@@ -151,7 +153,8 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
-        Set<String> permissions = plugin.cfg().getRolePermissions(role);
+        // FIX 2: Convert List from config to Set before checking
+        Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
         return permissions.contains(permission.toUpperCase());
     }
 

@@ -10,7 +10,7 @@ import net.pl3x.map.core.markers.option.Fill;
 import net.pl3x.map.core.markers.option.Options;
 import net.pl3x.map.core.markers.option.Stroke;
 import net.pl3x.map.core.world.World;
-import net.pl3x.core.Key; // <--- FIXED IMPORT 
+import net.pl3x.map.core.Key;
 
 import java.util.Collection;
 

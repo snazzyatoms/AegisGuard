@@ -1,10 +1,6 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/1cab9fe4-6135-4280-8892-896ae495c530" width="260" alt="AegisGuard Logo">
 </p>
-
-<h1 align="center">🛡️ AegisGuard</h1>
-
-<p align="center">
   <strong>The Next Generation of Land Protection & Economy</strong><br>
   Simple. Steadfast. Eternal.
 </p>

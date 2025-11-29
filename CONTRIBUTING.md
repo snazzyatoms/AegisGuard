@@ -1,101 +1,85 @@
-This ensures:
+## ▶️ Running the Plugin for Testing
 
-Your POM is valid
-
-JitPack-compatible dependencies resolve correctly
-
-The shading relocations succeed
-
-No API mismatches exist
-
-If your build succeeds locally, your pull request will succeed on JitPack too.
-
-▶️ Running the Plugin for Testing
-
-Build the JAR:
-
+### Build the JAR:
+```bash
 mvn clean package
-
-
-Navigate to:
-
+Navigate to the output:
+php-template
+Copy code
 target/AegisGuard-<version>.jar
+Install for testing:
+Drop the JAR into your server’s plugins/ folder
 
+Start the server
 
-Drop the jar into your test server’s plugins/ folder.
-
-Start the server and verify:
+Verify:
 
 AegisGuard loads correctly
 
-No errors in console
+No console errors
 
-Commands and GUIs open normally
+Commands and GUIs function normally
 
-Database + YAML stores function as expected
+Database + YAML stores behave as expected
 
 🔀 Submitting Pull Requests
-
 Before creating a PR:
-
-Sync your fork with the latest main
-
+1. Sync your fork with the latest main:
+bash
+Copy code
 git fetch upstream
 git merge upstream/main
-
-
-Ensure your build passes:
-
+2. Ensure your build passes:
+bash
+Copy code
 mvn clean install
-
-
-Push your branch:
-
+3. Push your branch:
+bash
+Copy code
 git push origin feature/my-feature
+When opening a Pull Request:
+Please include:
 
+A clear, descriptive title
 
-Open a Pull Request:
+Explanation of what you changed
 
-Write a clear title
+Why the change is necessary
 
-Describe exactly what you changed and why
+Any console logs related to the fix
 
-Attach console logs if applicable
-
-Mention any breaking changes
+Notes on backward compatibility (if applicable)
 
 Maintainers may request adjustments before merging.
 
 🐛 Reporting Issues
+To report bugs efficiently, include:
 
-When reporting bugs, please include:
+Server type: Paper, Folia, or Spigot
 
-Server type: Paper, Folia, Spigot
+Server version: e.g., 1.20.4 or 1.21.1
 
-Server version (e.g. 1.20.4, 1.21.1)
+AegisGuard version: from /version AegisGuard
 
-AegisGuard version (from /version AegisGuard)
+Exact steps to reproduce
 
-Steps to reproduce the issue
+Full console logs or stack traces (if applicable)
 
-Full console logs or stack trace (if available)
+Other installed plugins (optional but helpful)
 
-Other installed plugins (optional)
-
-Good bug reports = fast fixes.
+Good bug reports = faster fixes.
 
 Submit issues here:
-https://github.com/snazzyatoms/AegisGuard/issues
+👉 https://github.com/snazzyatoms/AegisGuard/issues
 
 📏 Coding Style & Standards
-
 Please follow these conventions:
 
 Use the existing project structure and naming patterns
 
 Maintain compatibility with Java 17
 
-Keep imports clean & organized
+Keep imports clean and organized
 
 Avoid adding unnecessary dependencies
 
@@ -103,39 +87,43 @@ Document public APIs
 
 Avoid blocking operations on the main thread
 
-For Folia-specific code: always use GlobalRegionScheduler correctly
+For Folia support: use GlobalRegionScheduler properly
 
-For database code: ensure thread safety
+For database operations: ensure thread safety
 
 📝 Commit Message Standards
-
-Example commit messages:
-
+Good commit message examples:
+vbnet
+Copy code
 Fix: Prevent NPE in plot lookup when world is missing
 Improve: Added PAPI placeholder for plot sale price
 Feature: Added biome cosmetics API + GUI hooks
 Refactor: Cleaned up ProtectionManager flag handling
 Docs: Updated installation instructions and quick start
-
-
-Avoid vague messages like:
+Avoid vague commits:
 ❌ “fix stuff”
+
 ❌ “changes”
+
 ❌ “update”
 
 🤝 Code of Conduct
+Be respectful, patient, and collaborative
 
-Be respectful, patient, and collaborative.
-All contributors, maintainers, and users should feel welcome.
+Keep discussions focused on code, not people
 
-Harassment, discrimination, or toxicity will not be tolerated.
+Harassment or discrimination is not tolerated
+
+Everyone should feel welcome contributing
 
 ⚖️ License
+All contributions must be compatible with the MIT License, which AegisGuard uses.
+By contributing, you agree that your work is licensed under MIT.
 
-Contributions must be compatible with the MIT License, the license used by AegisGuard.
-By contributing, you agree to license your work under MIT.
+Thank you for helping shape AegisGuard into a modern, powerful land-protection ecosystem.
+If you need help, join the community:
 
-Thank you for helping shape AegisGuard into a modern, powerful protection ecosystem.
-If you need help, hop into the Discord:
+👉 Discord: https://discord.gg/Y2NpuR7UZE
 
-👉 https://discord.gg/Y2NpuR7UZE
+yaml
+Copy code

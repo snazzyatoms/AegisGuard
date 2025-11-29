@@ -11,11 +11,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-/**
- * AdminGUI
- * - Central control panel for server administrators.
- * - Toggles global settings and links to management tools.
- */
 public class AdminGUI {
 
     private final AegisGuard plugin;
@@ -49,7 +44,7 @@ public class AdminGUI {
 
         // --- TOOLS ---
         inv.setItem(28, GUIManager.createItem(Material.AMETHYST_CLUSTER, "§dExpansion Admin", List.of("§7Review pending land requests.")));
-        inv.setItem(29, GUIManager.createItem(Material.WRITABLE_BOOK, "§bGlobal Plot List", List.of("§7View/TP to any plot."))); // Link to AdminPlotListGUI
+        inv.setItem(29, GUIManager.createItem(Material.WRITABLE_BOOK, "§bGlobal Plot List", List.of("§7View/TP to any plot.")));
         inv.setItem(30, GUIManager.createItem(Material.COMPASS, "§bDiagnostics", List.of("§7View system stats.")));
         inv.setItem(31, GUIManager.createItem(Material.REPEATER, "§eReload Config", List.of("§7Reload all settings.")));
 
@@ -82,7 +77,7 @@ public class AdminGUI {
                 break;
                 
             case 29:
-                plugin.gui().plotList().open(player, 0); // Link to Plot List
+                plugin.gui().plotList().open(player, 0); 
                 plugin.effects().playMenuFlip(player);
                 break;
 
@@ -117,15 +112,13 @@ public class AdminGUI {
         boolean val = plugin.getConfig().getBoolean(path, def);
         String color = val ? "§a" : "§7";
         String status = val ? "ON" : "OFF";
-        Material icon = val ? mat : Material.gunpowder(mat); // Fallback logic usually just gray dye or barrier
-        if (!val) icon = Material.GRAY_DYE; 
+        
+        // FIX: Replaced invalid method call with Material enum logic
+        Material icon = val ? mat : Material.GRAY_DYE; 
 
         inv.setItem(slot, GUIManager.createItem(icon, color + name + ": " + status, List.of("§7Click to toggle.")));
     }
     
-    // Quick helper for Material fallback since Material.gunpowder isn't real
-    // Just using the passed material is fine, color code does the heavy lifting visually.
-
     private void flipBool(String path, boolean def) {
         boolean current = plugin.getConfig().getBoolean(path, def);
         plugin.getConfig().set(path, !current);

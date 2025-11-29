@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -16,12 +15,12 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 /**
  * ZoningGUI
  * - Manages Sub-Claims (Rentals) inside a plot.
- * - Allows creating, deleting, and evicting tenants.
+ * - Fully localized for dynamic language switching.
  */
 public class ZoningGUI {
 
@@ -39,7 +38,7 @@ public class ZoningGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = "§3Sub-Claim Manager";
+        String title = GUIManager.safeText(plugin.msg().get(player, "zone_gui_title"), "§3Sub-Claim Manager");
         Inventory inv = Bukkit.createInventory(new ZoningHolder(plot), 54, title);
 
         // --- 1. LIST ZONES ---
@@ -47,10 +46,12 @@ public class ZoningGUI {
         int slot = 0;
         
         for (Zone zone : zones) {
-            if (slot >= 45) break; // Pagination limit (can add pages later if needed)
+            if (slot >= 45) break; 
             
             boolean isRented = zone.isRented();
-            String status = isRented ? "§cRented" : "§aAvailable";
+            String status = isRented ? plugin.msg().get(player, "zone_status_rented") : plugin.msg().get(player, "zone_status_available");
+            if (status == null) status = isRented ? "§cRented" : "§aAvailable"; // Fallback
+
             String renterName = "None";
             String timeRemaining = "";
 
@@ -60,17 +61,19 @@ public class ZoningGUI {
                 timeRemaining = zone.getRemainingTimeFormatted();
             }
 
+            // Localized Lore
             List<String> lore = new ArrayList<>();
             lore.add("§7Status: " + status);
             lore.add("§7Price: §6" + plugin.eco().format(zone.getRentPrice(), com.aegisguard.economy.CurrencyType.VAULT));
             lore.add(" ");
+            
             if (isRented) {
                 lore.add("§7Tenant: §f" + renterName);
                 lore.add("§7Expires: §f" + timeRemaining);
                 lore.add(" ");
-                lore.add("§cLeft-Click to Evict Tenant");
+                lore.add(plugin.msg().get(player, "zone_evict_action")); // "Left-Click to Evict"
             }
-            lore.add("§cRight-Click to Delete Zone");
+            lore.add(plugin.msg().get(player, "zone_delete_action")); // "Right-Click to Delete"
 
             inv.setItem(slot, GUIManager.createItem(
                 isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
@@ -81,11 +84,8 @@ public class ZoningGUI {
             slot++;
         }
         
-        // Fill empty slots with glass to separate the footer
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         // --- 2. ACTIONS ---
         
@@ -93,14 +93,16 @@ public class ZoningGUI {
         boolean hasSelection = plugin.selection().hasSelection(player);
         inv.setItem(49, GUIManager.createItem(
             Material.EMERALD_BLOCK, 
-            "§aCreate New Zone", 
+            plugin.msg().get(player, "button_zone_create"), // "Create New Zone"
             hasSelection ? 
-                List.of("§7Create a zone from your", "§7current wand selection.", " ", "§eClick to Create") :
-                List.of("§cYou must select corners", "§cwith the Wand first!", " ", "§7(Zone will default to $100)")
+                plugin.msg().getList(player, "zone_create_ready_lore") :
+                plugin.msg().getList(player, "zone_create_locked_lore")
         ));
 
         // Back (Slot 45)
-        inv.setItem(45, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
+        inv.setItem(45, GUIManager.createItem(Material.ARROW, 
+            plugin.msg().get(player, "button_back"), 
+            plugin.msg().getList(player, "back_lore")));
         
         player.openInventory(inv);
         GUIManager.playClick(player);
@@ -121,22 +123,18 @@ public class ZoningGUI {
         // --- CREATE ZONE ---
         if (e.getSlot() == 49) {
             if (plugin.selection().hasSelection(player)) {
-                // Auto-generate name based on count (Zone-1, Zone-2)
                 String name = "Zone-" + (plot.getZones().size() + 1);
-                
-                // You would typically open an Anvil GUI here for the name, 
-                // but for simplicity, we create a default one and let them rename later.
                 player.performCommand("ag zone create " + name + " 100"); 
                 player.closeInventory();
             } else {
                 plugin.effects().playError(player);
-                player.sendMessage("§cYou must select a region with the Wand first.");
+                player.sendMessage(plugin.msg().get(player, "must_select"));
             }
             return;
         }
         
         // --- ZONE MANAGEMENT ---
-        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.AIR) {
+        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.AIR && e.getCurrentItem().getType() != Material.GRAY_STAINED_GLASS_PANE) {
             String name = ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
             Zone target = null;
             
@@ -151,17 +149,18 @@ public class ZoningGUI {
                 plot.removeZone(target);
                 plugin.store().setDirty(true);
                 player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
-                open(player, plot); // Refresh
+                plugin.msg().send(player, "zone_deleted", Map.of("ZONE", target.getName()));
+                open(player, plot); 
             }
             // Evict
             else if (e.isLeftClick()) {
                 if (target.isRented()) {
                     target.evict();
                     plugin.store().setDirty(true);
-                    player.sendMessage("§eTenant evicted from " + target.getName());
-                    open(player, plot); // Refresh
+                    plugin.msg().send(player, "zone_evicted", Map.of("ZONE", target.getName()));
+                    open(player, plot); 
                 } else {
-                    player.sendMessage("§cThis zone is not rented.");
+                    plugin.msg().send(player, "zone_not_rented");
                 }
             }
         }

@@ -1,24 +1,15 @@
 package com.aegisguard.data;
 
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 /**
  * IDataStore (Interface)
  * - This is a "contract" that all data storage systems must follow.
  * - This allows AegisGuard to switch between YML and SQL seamlessly.
- *
- * --- UPGRADE NOTES (Ultimate) ---
- * - Added getPlotsForSale() for the marketplace.
- * - Added getPlotsForAuction() for the auction system.
- * - Added changePlotOwner() for the marketplace.
- * - Added logWildernessBlock() and revertWildernessBlocks().
  */
 public interface IDataStore {
 
@@ -29,13 +20,11 @@ public interface IDataStore {
 
     /**
      * Saves all pending changes to the data store.
-     * This is intended to be run ASYNCHRONOUSLY.
      */
     void save();
 
     /**
      * Saves all pending changes immediately on the current thread.
-     * Used ONLY for onDisable().
      */
     void saveSync();
 
@@ -48,6 +37,10 @@ public interface IDataStore {
      * Manually sets the dirty flag.
      */
     void setDirty(boolean dirty);
+
+    // ----------------------------------------
+    // --- PLOT ACCESSORS ---
+    // ----------------------------------------
 
     /**
      * Gets all plots owned by a specific player.
@@ -65,29 +58,30 @@ public interface IDataStore {
     Collection<Plot> getAllPlots();
 
     /**
-     * --- NEW ---
      * Gets all plots that are currently for sale.
-     * @return A collection of plots.
      */
     Collection<Plot> getPlotsForSale();
 
     /**
-     * --- NEW ---
      * Gets all plots that are currently for auction.
-     * @return A collection of plots.
      */
     Collection<Plot> getPlotsForAuction();
 
     /**
      * Finds the plot at a specific Bukkit Location.
-     * This MUST be fast (using a spatial hash or SQL query).
      */
     Plot getPlotAt(Location loc);
 
     /**
      * Checks if a new area overlaps with any existing plots.
+     * * @param plotToIgnore The plot being checked (e.g., the current plot being resized).
+     * The implementation must ignore this plot during the overlap check.
      */
     boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2);
+    
+    // ----------------------------------------
+    // --- PLOT MODIFICATION ---
+    // ----------------------------------------
     
     /**
      * Creates and stores a new plot.
@@ -96,7 +90,6 @@ public interface IDataStore {
 
     /**
      * Adds a pre-made plot object to the store.
-     * Used by the resize command.
      */
     void addPlot(Plot plot);
     
@@ -121,9 +114,7 @@ public interface IDataStore {
     void removePlayerRole(Plot plot, UUID playerUUID);
 
     /**
-     * --- NEW ---
      * Atomically changes the owner of a plot.
-     * This must update the in-memory cache AND the database.
      */
     void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
 
@@ -132,17 +123,17 @@ public interface IDataStore {
      */
     void removeBannedPlots();
     
-    // --- NEW: Wilderness Revert Methods ---
+    // ----------------------------------------
+    // --- WILDERNESS REVERT ---
+    // ----------------------------------------
     
     /**
      * Logs a block change in the wilderness to the database.
-     * This method MUST be called asynchronously.
      */
     void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
     
     /**
      * Queries and reverts a batch of expired wilderness blocks.
-     * This method MUST be called asynchronously.
      */
     void revertWildernessBlocks(long timestamp, int limit);
 }

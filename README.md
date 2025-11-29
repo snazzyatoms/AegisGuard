@@ -1,7 +1,9 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/1cab9fe4-6135-4280-8892-896ae495c530" width="260" alt="AegisGuard Logo">
 </p>
-                       <strong>The Next Generation of Land Protection & Economy</strong><br>
+
+<p align="center">
+  <strong>The Next Generation of Land Protection & Economy</strong><br>
   Simple. Steadfast. Eternal.
 </p>
 
@@ -15,7 +17,9 @@
 
 ---
 
-> “Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”
+<p align="center">
+  <em>“Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”</em>
+</p>
 
 ---
 

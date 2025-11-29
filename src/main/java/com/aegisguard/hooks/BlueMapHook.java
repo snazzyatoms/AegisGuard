@@ -9,7 +9,7 @@ import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
-import de.bluecolored.bluemap.api.MarkerAPI; // <-- FIX: This import is causing the error. We must delete it.
+
 
 import java.util.Collection;
 import java.util.Optional;

@@ -1,7 +1,6 @@
 <p align="center">
-  </p><img width="1024" height="1024" alt="ChatGPT Image Nov 26, 2025, 07_21_32 PM" src="https://github.com/user-attachments/assets/1cab9fe4-6135-4280-8892-896ae495c530" />" width="260" alt="AegisGuard Logo">
-
-
+  <img src="https://github.com/user-attachments/assets/1cab9fe4-6135-4280-8892-896ae495c530" width="260" alt="AegisGuard Logo">
+</p>
 
 <h1 align="center">🛡️ AegisGuard</h1>
 

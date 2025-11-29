@@ -1,272 +1,221 @@
-🛡️ AegisGuard
-The Next Generation of Land Protection & Economy
+[center][size=7][b]🛡️ AegisGuard[/b][/size]
+[size=4][i]The Next Generation of Land Protection & Economy[/i][/size]
+[size=3]Simple. Steadfast. Eternal.[/size]
+
+[img]https://raw.githubusercontent.com/snazzyatoms/AegisGuard/main/.github/banner.png[/img]
+[/center]
+
+[hr]
+
+[center][i]"Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision."[/i][/center]
+
+[hr]
+
+[center][size=5][b]🔗 Quick Links[/b][/size][/center]
+
+[list]
+[*][b]Spigot:[/b] https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/
+[*][b]Hangar:[/b] https://hangar.papermc.io/snazzyatoms/AegisGuard
+[*][b]CurseForge:[/b] https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy
+[*][b]Wiki:[/b] https://github.com/snazzyatoms/AegisGuard/wiki
+[*][b]Discord:[/b] https://discord.gg/Y2NpuR7UZE
+[*][b]Issues:[/b] https://github.com/snazzyatoms/AegisGuard/issues
+[/list]
+
+[hr]
+
+[size=6][b]⚡ What is AegisGuard?[/b][/size]
+
+AegisGuard is a modern, Folia-native land protection ecosystem for Minecraft servers.  
+It transforms land into a living economy with taxes, auctions, roles, zoning, flags, server zones, and more.
+
+[size=5][b]Players can:[/b][/size]
+[list]
+[*]Claim land using a selection wand + GUI menus
+[*]Pay upkeep taxes to keep plots active
+[*]Buy, sell, and rent land in a global marketplace
+[*]Watch expired land move to a server-wide Auction House
+[/list]
+
+[size=5][b]Admins can:[/b][/size]
+[list]
+[*]Create Server Zones (spawn, warzone, shops, dungeons)
+[*]Manage flags, roles, and protections visually
+[*]Integrate plots with Dynmap / BlueMap / Pl3xMap
+[*]Hook into Vault, PlaceholderAPI, and more
+[/list]
+
+[hr]
+
+[size=6][b]🎯 Key Features[/b][/size]
+
+[size=5][b]⚡ Folia-Native Architecture[/b][/size]
+[list]
+[*]Automatic Folia / Paper / Spigot detection
+[*]Async-safe operations with GlobalRegionScheduler
+[*]Upkeep, auctions, map sync all handled off-thread
+[/list]
+
+[size=5][b]💰 Living Land Economy[/b][/size]
+[list]
+[*]Plot upkeep + taxes
+[*]Auction House for expired/seized land
+[*]Marketplace for buying/selling/renting
+[*]Economy types: Vault, Items, XP, XP Levels
+[/list]
+
+[size=5][b]🏰 Empire Building Tools[/b][/size]
+[list]
+[*]Claims + Sub-Claims (Zoning)
+[*]Plot Leveling (Speed, Haste, Regen, etc.)
+[*]Biome Cosmetics (change plot atmosphere)
+[*]Particle Borders + Hologram Titles
+[/list]
+
+[size=5][b]🛡️ Server Zone Tools[/b][/size]
+[list]
+[*][b]/agadmin wand[/b] – Create protected Server Zones
+[*][b]/agadmin convert[/b] – Convert any player plot to server land
+[*]Master Key mode: edit any plot by standing inside it
+[/list]
+
+[size=5][b]🧭 GUI-First Design[/b][/size]
+[list]
+[*]Guardian Codex menu: /ag menu
+[*]Flags, roles, upgrades, cosmetics, travel, economy
+[*]Minimal commands — everything is clickable
+[/list]
+
+[size=5][b]🗺️ Map Integrations[/b][/size]
+[list]
+[*]Dynmap (async overlays)
+[*]BlueMap (3D plot visuals)
+[*]Pl3xMap (modern lightweight map support)
+[*]Vault (economy)
+[*]PlaceholderAPI (placeholders for HUDs/scoreboards)
+[/list]
+
+[hr]
+
+[size=6][b]🧪 Try Before You Install[/b][/size]
+
+Test AegisGuard on the public demo server:
 
-Simple. Steadfast. Eternal.
-
-“Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”
-
-🔗 Quick Links
-
-Downloads:
-
-Spigot: https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/
-
-Hangar: https://hangar.papermc.io/snazzyatoms/AegisGuard
-
-CurseForge: https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy
-
-Docs & Support:
-
-Wiki: https://github.com/snazzyatoms/AegisGuard/wiki
-
-Discord: https://discord.gg/Y2NpuR7UZE
-
-Issues: https://github.com/snazzyatoms/AegisGuard/issues
-
-⚡ What is AegisGuard?
-
-AegisGuard is a modern, Folia-native land protection ecosystem for Paper, Folia, and Spigot servers.
-It doesn’t just “protect chunks”—it transforms land into a living economy asset with taxes, auctions, roles, flags, and a rich player marketplace.
-
-Players Can:
-
-Claim land using a visual selection wand and full GUI control
-
-Maintain their land through upkeep taxes
-
-Buy, sell, or rent plots through the Global Marketplace
-
-Watch inactive land enter a server-wide Auction House automatically
-
-Admins Can:
-
-Create Server Zones (spawn, warzones, jails, markets)
-
-Manage land through intuitive GUIs
-
-Integrate with Dynmap, BlueMap, Pl3xMap, Vault, PlaceholderAPI
-
-Control flags, roles, world rules, and plot behavior easily
-
-🎯 Key Features
-⚡ Folia-Native Architecture
-
-Auto-detects Folia / Paper / Spigot
-
-Uses GlobalRegionScheduler for true async safety
-
-Map sync, upkeep, auctions, and heavy tasks run off the main thread
-
-💰 Living Land Economy
-
-AegisGuard features a full real-estate economy loop:
-
-Upkeep System – Plots require periodic taxes
-
-Auction House – Expired plots go to public auction
-
-Global Marketplace – Sell or rent plots through clean GUIs
-
-Economy Engine – Choose the cost type:
-
-Vault currency
-
-Items (diamonds, etc.)
-
-XP
-
-XP Levels
-
-🏰 Empire Building (Player Features)
-
-Claims & Sub-Claims (Zoning) – Divide plots into rentable rooms/shops
-
-Plot Leveling – Invest money/items/XP to unlock buffs (Speed, Haste, Regen…)
-
-Biome Cosmetics – Change the biome feel of your land
-
-Particle Borders & Holograms – Stylish plot visibility
-
-Guardian Codex (/ag menu) – Your all-in-one player command center
-
-🛡️ Server Plot Architecture (Admin Tools)
-
-Sentinel’s Scepter – /agadmin wand
-Create server-owned zones immune to normal limits.
-
-Plot Conversion – /agadmin convert
-Transform any player plot into a server plot instantly.
-
-Master Key Mode
-Edit any plot’s flags/roles simply by standing inside it.
-
-🧭 GUI-First Design
-
-Everything is clickable, intuitive, and player-friendly:
-
-Flags & Roles
-
-Plot Upgrades
-
-Biome Editor
-
-Travel Menu
-
-Auction House
-
-Marketplace
-
-Minimal commands, maximum usability.
-
-🗺️ Map Integrations
-
-AegisGuard integrates seamlessly with:
-
-Dynmap – Async plot overlays
-
-BlueMap – Beautiful 3D plot visuals
-
-Pl3xMap – Lightweight modern map support
-
-Vault – Core economy integration
-
-PlaceholderAPI – Perfect for scoreboards & HUDs
-
-🧪 Try AegisGuard Live
-
-Test AegisGuard on the public showcase server:
-
+[code]
 IP: 72.5.47.116:25570
-Version: 1.20.4+ (Daily World Reset • Sandbox Mode)
+Version: 1.20.4+
 Command: /ag menu
-Tip: Open the Guardian Codex to start claiming land.
+Tip: Open the Guardian Codex to begin claiming land.
+[/code]
 
-✅ Compatibility
+[hr]
 
-Supported Server Software
+[size=6][b]✅ Compatibility[/b][/size]
 
-Folia (native support)
+[b]Supported Server Software:[/b]
+[list]
+[*]Folia (native support)
+[*]Paper
+[*]Spigot
+[/list]
 
-Paper
+[b]Supported MC Versions:[/b]  
+1.16 – 1.21+  
 
-Spigot
+[b]Not Supported:[/b]  
+1.8 – 1.12 (intentionally modern-only)
 
-Supported Minecraft Versions
+[hr]
 
-1.16 – 1.21+ (actively tested on 1.16–1.20.6 & 1.21.x)
+[size=6][b]📦 Installation[/b][/size]
 
-Not Supported
+[list=1]
+[*]Download the latest AegisGuard JAR  
+[*]Place it into your [b]plugins/[/b] folder  
+[*]Recommended plugins:
+    [list]
+    [*]Vault
+    [*]Any economy plugin (EssentialsX, CMI, etc.)
+    [*]Dynmap / BlueMap / Pl3xMap
+    [*]PlaceholderAPI
+    [/list]
+[*]Restart your server  
+[*]Check /plugins for successful load  
+[/list]
 
-1.8 – 1.12 (AegisGuard is intentionally modern-only)
+For full installation details:  
+[b]https://github.com/snazzyatoms/AegisGuard/wiki[/b]
 
-📦 Installation
+[hr]
 
-Download the latest JAR from:
+[size=6][b]🚀 Quick Start (Players)[/b][/size]
 
-Spigot
+[b]1. Get the Wand[/b]  
+[code]/ag wand[/code]
 
-Hangar
-
-CurseForge
-
-Drop it into your plugins/ folder
-
-(Optional, recommended)
-
-Install Vault
-
-Install an economy plugin
-
-Install Dynmap, BlueMap, or Pl3xMap
-
-Install PlaceholderAPI
-
-Restart the server
-
-Verify with /plugins
-
-Detailed configuration found in the Wiki:
-https://github.com/snazzyatoms/AegisGuard/wiki
-
-🚀 Quick Start (Players)
-Get the selection wand:
-/ag wand
-
-Select two corners:
-
-Right-click first corner
-
+[b]2. Select Corners[/b]  
+Right-click first corner  
 Left-click second corner
 
-Claim the plot:
-/ag claim
+[b]3. Claim the Plot[/b]  
+[code]/ag claim[/code]
 
-Open the Guardian Codex:
-/ag menu
+[b]4. Open the Guardian Codex[/b]  
+[code]/ag menu[/code]
 
+[hr]
 
-Manage flags, roles, upgrades, cosmetics and more.
+[size=6][b]🧰 Admin Commands[/b][/size]
 
-🧰 Admin Overview
+[code]
+/agadmin wand      - Create Server Zones
+/agadmin convert   - Convert plot to Server Zone
+/ag reload         - Reload config & messages
+[/code]
 
-Useful commands:
+Permissions & command list:  
+[b]https://github.com/snazzyatoms/AegisGuard/wiki/Permissions-and-Commands[/b]
 
-/agadmin wand      - Get Sentinel's Scepter (Server Zones)
-/agadmin convert   - Convert current plot to a Server Zone
-/ag reload         - Reload configuration & messages
+[hr]
 
+[size=6][b]📚 Documentation[/b][/size]
 
-Permissions & full command list:
-https://github.com/snazzyatoms/AegisGuard/wiki/Permissions-and-Commands
+- Player Handbook  
+- Admin Guide  
+- Land Economy System  
+- Plot Architecture  
+- Map Integrations  
+- Developer API  
 
-📚 Documentation
+[b]Wiki:[/b] https://github.com/snazzyatoms/AegisGuard/wiki
 
-Full Wiki:
+[hr]
 
-Overview
+[size=6][b]🛠️ Development & Contributing[/b][/size]
 
-Installation Guide
+Contributions are welcome!  
+Use the GitHub Issues page for bugs or suggestions:  
+[b]https://github.com/snazzyatoms/AegisGuard/issues[/b]
 
-Player Handbook
+When reporting bugs, include:
+[list]
+[*]Server version
+[*]AegisGuard version
+[*]Logs / errors
+[*]Steps to reproduce
+[/list]
 
-Land Economy Rules
+[hr]
 
-Integrations
+[size=6][b]❤️ Community[/b][/size]
 
-Developer API
+Discord: https://discord.gg/Y2NpuR7UZE  
+Wiki: https://github.com/snazzyatoms/AegisGuard/wiki  
+Issue Tracker: https://github.com/snazzyatoms/AegisGuard/issues  
 
-https://github.com/snazzyatoms/AegisGuard/wiki
+[hr]
 
-🛠️ Development & Contributing
-
-We welcome:
-
-Bug reports
-
-Feature requests
-
-Pull requests
-
-Suggestions
-
-Create issues here:
-https://github.com/snazzyatoms/AegisGuard/issues
-
-Please include server version, plugin version, logs, and reproduction steps.
-
-❤️ Support & Community
-
-You’re not alone:
-
-Discord: https://discord.gg/Y2NpuR7UZE
-
-Wiki: https://github.com/snazzyatoms/AegisGuard/wiki
-
-Issue Tracker: https://github.com/snazzyatoms/AegisGuard/issues
-
-📜 License
-
-AegisGuard is released under the MIT License and can be used freely on any public, private, or commercial server.
-
-Simple. Steadfast. Eternal.
+[center][size=5][b]📜 License[/b][/size]
+AegisGuard is licensed under the MIT License.
 Forged with ❤️ for the Minecraft community.
+[/center]

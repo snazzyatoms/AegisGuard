@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ExpansionRequestManager
- * - Handles the lifecycle of land expansion requests.
- * - Saves pending requests to disk.
+ * - Handles land expansion requests.
+ * - Fully localized.
  */
 public class ExpansionRequestManager {
 
@@ -56,7 +56,6 @@ public class ExpansionRequestManager {
         }
 
         if (hasPendingRequest(requester.getUniqueId())) {
-            // Message: "You already have a pending request."
             plugin.msg().send(requester, "expansion_exists"); 
             return false;
         }
@@ -64,14 +63,14 @@ public class ExpansionRequestManager {
         // 1. Size Check
         int currentRadius = (plot.getX2() - plot.getX1()) / 2;
         if (newRadius <= currentRadius) {
-            requester.sendMessage("§cNew size must be larger than current size.");
+            plugin.msg().send(requester, "expansion_invalid_size"); // "New size must be larger."
             return false;
         }
 
         // 2. Limit Check
         int maxRadius = plugin.cfg().raw().getInt("expansions.max_radius_global", 100);
         if (newRadius > maxRadius && !requester.hasPermission("aegis.admin.bypass-limits")) {
-            requester.sendMessage("§cLimit reached (" + maxRadius + " blocks). Cannot expand further.");
+            plugin.msg().send(requester, "expansion_limit_reached", Map.of("LIMIT", String.valueOf(maxRadius)));
             return false;
         }
 
@@ -80,13 +79,13 @@ public class ExpansionRequestManager {
         CurrencyType type = CurrencyType.VAULT; 
         
         if (!plugin.eco().has(requester, cost, type)) {
-            requester.sendMessage("§cInsufficient funds. Cost: " + plugin.eco().format(cost, type));
+            plugin.msg().send(requester, "expansion_payment_failed"); // Reusing or creating "insufficient_funds"
             return false;
         }
 
         // 4. Overlap Check
         if (isOverlapping(plot, newRadius)) {
-            requester.sendMessage("§cCannot expand: Neighbors are too close.");
+            plugin.msg().send(requester, "expansion_overlap_fail");
             return false;
         }
 
@@ -123,20 +122,19 @@ public class ExpansionRequestManager {
         OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
         CurrencyType type = CurrencyType.VAULT;
 
-        // 1. Charge Player (Final check)
-        // Note: Logic assumes online player for items/XP, offline usually only works with Vault
+        // 1. Charge Player
         Player p = requester.getPlayer();
         if (p != null) {
              if (!plugin.eco().withdraw(p, req.getCost(), type)) {
                  denyRequest(req);
-                 p.sendMessage("§cExpansion failed: Insufficient funds.");
+                 plugin.msg().send(p, "expansion_payment_failed");
                  return false;
              }
         } else {
-             // Offline charge via Vault directly if possible
+             // Offline charge via Vault
              if (plugin.cfg().useVault()) {
                  if (!plugin.vault().charge(requester, req.getCost())) {
-                     denyRequest(req); // Fail silently if offline and broke
+                     denyRequest(req);
                      return false;
                  }
              }
@@ -145,7 +143,6 @@ public class ExpansionRequestManager {
         // 2. Get Plot
         Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
         if (oldPlot == null) {
-            // Plot deleted? Refund.
             if (p != null) plugin.eco().deposit(p, req.getCost(), type);
             else if (plugin.cfg().useVault()) plugin.vault().give(requester, req.getCost());
             
@@ -155,7 +152,6 @@ public class ExpansionRequestManager {
 
         // 3. Apply Expansion
         if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
-            // Refund on failure (overlap)
             if (p != null) plugin.eco().deposit(p, req.getCost(), type);
             else if (plugin.cfg().useVault()) plugin.vault().give(requester, req.getCost());
             
@@ -204,8 +200,6 @@ public class ExpansionRequestManager {
     }
 
     private boolean isOverlapping(Plot oldPlot, int newRadius) {
-        // Calculate new bounds based on center
-        // (Assuming square expansion for radius logic)
         int cX = (oldPlot.getX1() + oldPlot.getX2()) / 2;
         int cZ = (oldPlot.getZ1() + oldPlot.getZ2()) / 2;
         
@@ -217,12 +211,10 @@ public class ExpansionRequestManager {
         int x2 = cX + r; 
         int z2 = cZ + r;
 
-        // Check if new area overlaps anyone else (ignoring self)
         return plugin.store().isAreaOverlapping(oldPlot, oldPlot.getWorld(), x1, z1, x2, z2);
     }
     
     private boolean applyExpansion(Plot oldPlot, int newRadius) {
-        // Calculate new coords
         int cX = (oldPlot.getX1() + oldPlot.getX2()) / 2;
         int cZ = (oldPlot.getZ1() + oldPlot.getZ2()) / 2;
         
@@ -231,7 +223,6 @@ public class ExpansionRequestManager {
         int x2 = cX + newRadius;
         int z2 = cZ + newRadius;
         
-        // Resize logic: Remove old -> Add new with updated bounds
         plugin.store().removePlot(oldPlot.getOwner(), oldPlot.getPlotId());
         
         oldPlot.setX1(x1); oldPlot.setX2(x2);

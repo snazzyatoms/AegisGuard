@@ -18,6 +18,11 @@
 
     <repositories>
         <repository>
+            <id>pl3x-repo</id>
+            <url>https://repo.pl3x.net/</url>
+        </repository>
+
+        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -85,16 +90,10 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.Pl3xMap</groupId>
-            <artifactId>Pl3xMap</artifactId>
-            <version>v3.0.0-beta.9</version>
+            <groupId>net.pl3x.map</groupId>
+            <artifactId>Pl3xMap-API-Bukkit</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>

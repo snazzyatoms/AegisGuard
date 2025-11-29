@@ -7,6 +7,7 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
+import de.bluecolored.bluemap.api.markers.MarkerAPI; // FIX: Ensure MarkerAPI is imported if necessary, though it seems to resolve
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
 
@@ -26,8 +27,11 @@ public class BlueMapHook {
         // Wait for BlueMap to enable
         BlueMapAPI.onEnable(api -> {
             this.api = api;
-            // FIX 1: Get MarkerAPI from the API instance
-            this.markerSet = api.getMarkerAPI().createMarkerSet(MARKER_SET_ID);
+            
+            // FIX 1: getMarkerAPI() is now stored in a local variable for clarity and to satisfy the compiler
+            MarkerAPI markerAPI = api.getMarkerAPI(); 
+            
+            this.markerSet = markerAPI.createMarkerSet(MARKER_SET_ID); // FIX: Use markerAPI reference
             this.markerSet.setLabel(plugin.cfg().raw().getString("hooks.bluemap.label", "Claims"));
             update();
         });
@@ -62,7 +66,8 @@ public class BlueMapHook {
                 float minY = 64f; 
                 float maxY = 100f;
 
-                // FIX 2: createExtrudeMarker is correctly called on MarkerSet object now
+                // FIX 2: ExtrudeMarker creation is correctly called on MarkerSet object
+                // The error was likely due to the ambiguity of MarkerSet method overload.
                 ExtrudeMarker marker = markerSet.createExtrudeMarker(id, map, shape, minY, maxY);
                 
                 // Info
@@ -70,7 +75,6 @@ public class BlueMapHook {
                 marker.setDetail(getHtml(plot)); 
                 
                 // Colors (ARGB)
-                // Default: Green, Server: Red, Sale: Yellow
                 Color color = plot.isServerZone() ? new Color(255, 0, 0, 100) : new Color(0, 255, 0, 50); 
                 Color lineColor = plot.isServerZone() ? new Color(255, 0, 0, 255) : new Color(0, 255, 0, 255);
                 

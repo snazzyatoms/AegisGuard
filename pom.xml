@@ -85,10 +85,13 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.pl3xgaming.Pl3xMap</groupId>
-            <artifactId>core</artifactId>
-            <version>v3.0.0-beta.9</version>
-            <scope>provided</scope>
+            <groupId>com.github.Pl3xMap.Pl3xMap</groupId> <artifactId>core</artifactId>              <version>v3.0.0-beta.9</version>           <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

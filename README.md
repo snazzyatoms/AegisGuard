@@ -1,20 +1,21 @@
-<div align="center">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/snazzyatoms/AegisGuard/main/.github/aegisguard-logo.png" width="260" alt="AegisGuard Logo">
+</p>
 
-<table>
-<tr>
-<td><img src="https://raw.githubusercontent.com/snazzyatoms/AegisGuard/main/.github/aegisguard-logo.png" width="180" alt="AegisGuard Logo"></td>
+<h1 align="center">🛡️ AegisGuard</h1>
 
-<td>
+<p align="center">
+  <strong>The Next Generation of Land Protection & Economy</strong><br>
+  Simple. Steadfast. Eternal.
+</p>
 
-# 🛡️ **AegisGuard**
-### The Next Generation of Land Protection & Economy  
-**Simple. Steadfast. Eternal.**
-
-</td>
-</tr>
-</table>
-
-</div>
+<p align="center">
+  <a href="https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/"><img src="https://img.shields.io/badge/Spigot-Download-orange?style=for-the-badge"></a>
+  <a href="https://hangar.papermc.io/snazzyatoms/AegisGuard"><img src="https://img.shields.io/badge/Hangar-Download-green?style=for-the-badge"></a>
+  <a href="https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy"><img src="https://img.shields.io/badge/CurseForge-Download-purple?style=for-the-badge"></a>
+  <a href="https://github.com/snazzyatoms/AegisGuard/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge"></a>
+  <a href="https://discord.gg/Y2NpuR7UZE"><img src="https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord&logoColor=white"></a>
+</p>
 
 ---
 

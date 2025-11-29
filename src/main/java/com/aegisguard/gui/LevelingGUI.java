@@ -15,11 +15,12 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * LevelingGUI
  * - Allows players to upgrade their plot level.
- * - Displays costs and rewards dynamically.
+ * - Fully localized for dynamic language switching.
  */
 public class LevelingGUI {
 
@@ -37,7 +38,7 @@ public class LevelingGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(null, "§d§lPlot Level: " + plot.getLevel());
+        String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§dPlot Leveling");
         Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 27, title);
 
         // Fill background
@@ -55,7 +56,7 @@ public class LevelingGUI {
 
         inv.setItem(11, GUIManager.createItem(
             Material.ENCHANTING_TABLE,
-            "§dCurrent Status",
+            plugin.msg().get(player, "level_current_status"), // "Current Status"
             infoLore
         ));
 
@@ -78,19 +79,21 @@ public class LevelingGUI {
 
             inv.setItem(15, GUIManager.createItem(
                 Material.EXPERIENCE_BOTTLE,
-                "§aUpgrade to Level " + nextLvl,
+                plugin.msg().get(player, "level_upgrade_button", Map.of("LEVEL", String.valueOf(nextLvl))),
                 upgradeLore
             ));
         } else {
             inv.setItem(15, GUIManager.createItem(
                 Material.BARRIER, 
-                "§cMax Level Reached", 
+                plugin.msg().get(player, "level_max_reached"), 
                 List.of("§7Your plot is fully ascended.")
             ));
         }
 
         // Back Button (Slot 22)
-        inv.setItem(22, GUIManager.createItem(Material.ARROW, "§fBack", List.of("§7Return to dashboard.")));
+        inv.setItem(22, GUIManager.createItem(Material.ARROW, 
+            plugin.msg().get(player, "button_back"), 
+            plugin.msg().getList(player, "back_lore")));
         
         player.openInventory(inv);
         GUIManager.playClick(player);
@@ -113,7 +116,7 @@ public class LevelingGUI {
 
             // 1. Check Funds
             if (!plugin.eco().withdraw(player, cost, type)) {
-                player.sendMessage("§cYou need " + plugin.eco().format(cost, type) + " to upgrade.");
+                plugin.msg().send(player, "level_up_fail_cost"); // "You lack tribute..."
                 plugin.effects().playError(player);
                 return;
             }
@@ -128,7 +131,7 @@ public class LevelingGUI {
             
             // 4. Feedback
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            player.sendMessage("§d§lLEVEL UP! §aYour plot is now Level " + nextLvl);
+            plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvl)));
             plugin.effects().playConfirm(player);
             
             open(player, plot); // Refresh menu
@@ -140,8 +143,6 @@ public class LevelingGUI {
     private double calculateCost(int level) {
         double base = plugin.cfg().getLevelBaseCost();
         double mult = plugin.cfg().getLevelCostMultiplier();
-        // Formula: Base * (Level * Multiplier) -> Linear Scaling
-        // For exponential: base * Math.pow(mult, level)
         return base * (level * mult);
     }
     
@@ -157,7 +158,6 @@ public class LevelingGUI {
                     try {
                         String[] parts = s.split(":");
                         String type = parts[1].toLowerCase().replace("_", " ");
-                        // Capitalize
                         type = type.substring(0, 1).toUpperCase() + type.substring(1);
                         formatted.add("§b✦ " + type + " " + toRoman(Integer.parseInt(parts[2])));
                     } catch (Exception e) {

@@ -142,17 +142,17 @@ old_english:
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
   
-  expansion_small_name: "&aMinor Expansion"
+  expansion_small_name: "&aMinor Petition (+5)"
   expansion_small_lore:
     - "&7Increase borders by &a+5 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_medium_name: "&6Major Expansion"
+  expansion_medium_name: "&6Major Petition (+15)"
   expansion_medium_lore:
     - "&7Increase borders by &6+15 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_large_name: "&bRoyal Expansion"
+  expansion_large_name: "&bRoyal Petition (+30)"
   expansion_large_lore:
     - "&7Increase borders by &b+30 blocks&7."
     - " "
@@ -325,13 +325,16 @@ old_english:
     - "&7An edict hath hushed all sound."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Wards."
 
-  # --- Leveling & Zoning ---
-  level_gui_title: "&dAscension of Land"
-  level_current_status: "&dCurrent Standing"
-  level_upgrade_button: "&aAscend to Level {LEVEL}"
-  level_max_reached: "&cMaximum Ascension Reached"
-  level_up_success: "&d⚡ Thy dominion hath ascended to Level {LEVEL}!"
+  # --- Leveling & Zoning (UPDATED) ---
+  level_gui_title: "&8⚡ Dominion Ascension"
+  level_current_status: "&e📜 Thy Current Standing"
+  level_upgrade_button: "&6⬆ Ascend to Level {LEVEL}"
+  level_max_reached: "&b🛡 Highest Ascension Reached"
+  level_up_success: "&d⚡ Rejoice! Thy dominion hath ascended to Level {LEVEL}!"
   level_up_fail_cost: "&c❌ Thou lacketh the tribute required for ascension."
+  level_button_lore:
+    - "&7Ascend thy plot to unlock"
+    - "&7godly powers and greater size."
   
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
@@ -342,7 +345,7 @@ old_english:
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
   zone_delete_action: "&cRight-Click to Dissolve"
-  button_zone_create: "&aMark New Zone"
+  button_zone_create: "&a⚡ Mark New Zone"
   zone_create_ready_lore:
     - "&7Mark a zone from thy"
     - "&7current wand selection."
@@ -678,17 +681,18 @@ hybrid_english:
   expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ This petition has expired."
-  expansion_small_name: "&aMinor Expansion"
+  
+  expansion_small_name: "&aMinor Expansion (+5)"
   expansion_small_lore:
     - "&7Increase borders by &a+5 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_medium_name: "&6Major Expansion"
+  expansion_medium_name: "&6Major Expansion (+15)"
   expansion_medium_lore:
     - "&7Increase borders by &6+15 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_large_name: "&bRoyal Expansion"
+  expansion_large_name: "&bRoyal Expansion (+30)"
   expansion_large_lore:
     - "&7Increase borders by &b+30 blocks&7."
     - " "
@@ -809,15 +813,16 @@ hybrid_english:
     - "&7Server has muted all plugin sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Land Wards to edit."
 
-  level_gui_title: "&dLand Ascension"
-  level_current_status: "&dCurrent Level"
-  level_upgrade_button: "&aAscend to Level {LEVEL}"
-  level_max_reached: "&cMaximum Level Reached"
-  level_up_success: "&d⚡ Your dominion ascended to Level {LEVEL}!"
-  level_up_fail_cost: "&c❌ You lack the tribute to ascend."
+  # --- Leveling & Zoning (UPDATED) ---
+  level_gui_title: "&8⚡ Dominion Ascension"
+  level_current_status: "&e📜 Current Power"
+  level_upgrade_button: "&6⬆ Ascend to Level {LEVEL}"
+  level_max_reached: "&b🛡 Maximum Power Reached"
+  level_up_success: "&d⚡ Success! Your dominion ascended to Level {LEVEL}!"
+  level_up_fail_cost: "&c❌ You lack the funds to ascend."
   level_button_lore:
     - "&7Ascend your plot to unlock"
-    - "&7greater size and power."
+    - "&7new abilities and size."
 
   zone_gui_title: "&3Zone Manager"
   zone_created: "&a✔ Zone '{ZONE}' marked."
@@ -828,7 +833,7 @@ hybrid_english:
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
   zone_delete_action: "&cRight-Click to Delete"
-  button_zone_create: "&aMark New Zone"
+  button_zone_create: "&a⚡ Create Rental Zone"
   zone_create_ready_lore:
     - "&7Mark a zone from your"
     - "&7current wand selection."
@@ -965,6 +970,7 @@ hybrid_english:
   role_set_to: '&a✔ {PLAYER} is now {ROLE}.'
   role_removed: '&e✔ {PLAYER} removed.'
 
+  # --- Admin Tools ---
   admin_menu_title: '&c⚙ Admin Control'
   admin_reloading: '&7Reloading...'
   admin_reload_complete: '&a✔ Done!'
@@ -1194,17 +1200,18 @@ modern_english:
   expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ Request expired."
-  expansion_small_name: "&aSmall Expansion"
+  
+  expansion_small_name: "&aSmall Expansion (+5)"
   expansion_small_lore:
     - "&7Increase radius by &a+5 blocks&7."
     - " "
     - "&eClick to Submit"
-  expansion_medium_name: "&6Medium Expansion"
+  expansion_medium_name: "&6Medium Expansion (+15)"
   expansion_medium_lore:
     - "&7Increase radius by &6+15 blocks&7."
     - " "
     - "&eClick to Submit"
-  expansion_large_name: "&bLarge Expansion"
+  expansion_large_name: "&bLarge Expansion (+30)"
   expansion_large_lore:
     - "&7Increase radius by &b+30 blocks&7."
     - " "
@@ -1370,12 +1377,13 @@ modern_english:
     - "&7Server has disabled sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
-  level_gui_title: "&dLeveling"
-  level_current_status: "&dStats"
-  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
-  level_max_reached: "&cMax Level Reached"
-  level_up_success: "&d⚡ Claim leveled up to {LEVEL}!"
-  level_up_fail_cost: "&c❌ Insufficient funds."
+  # --- Leveling & Zoning (UPDATED) ---
+  level_gui_title: "&8⚡ Leveling Menu"
+  level_current_status: "&e📊 Current Stats"
+  level_upgrade_button: "&6⬆ Upgrade to Level {LEVEL}"
+  level_max_reached: "&b🛑 Max Level Reached"
+  level_up_success: "&d⚡ Plot successfully upgraded to Level {LEVEL}!"
+  level_up_fail_cost: "&c❌ Insufficient funds for upgrade."
   level_button_lore:
     - "&7Upgrade claim size"
     - "&7and unlock features."
@@ -1389,7 +1397,7 @@ modern_english:
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
   zone_delete_action: "&cRight-Click to Delete"
-  button_zone_create: "&aCreate Zone"
+  button_zone_create: "&a⚡ Create Sub-Zone"
   zone_create_ready_lore:
     - "&7Create zone from selection."
   zone_create_locked_lore:
@@ -1520,6 +1528,7 @@ modern_english:
   role_set_to: '&a✔ {PLAYER} is now {ROLE}.'
   role_removed: '&e✔ {PLAYER} removed.'
 
+  # --- Admin Tools ---
   admin_menu_title: '&c⚙ Admin'
   admin_reloading: '&7Reloading...'
   admin_reload_complete: '&a✔ Done.'

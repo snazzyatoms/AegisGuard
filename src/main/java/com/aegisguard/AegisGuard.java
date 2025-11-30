@@ -4,7 +4,6 @@ import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
-import com.aegisguard.data.Plot;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
 import com.aegisguard.economy.EconomyManager;
@@ -18,6 +17,7 @@ import com.aegisguard.hooks.MapHookManager; // --- NEW UNIFIED MAP MANAGER ---
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
+import com.aegisguard.listeners.LevelingListener; // <--- IMPORT ADDED
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -32,7 +32,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -141,6 +140,12 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
+        
+        // --- NEW: REGISTER LEVELING LISTENER ---
+        // This activates Flight, Haste, and Iron Skin for leveled plots.
+        if (cfg().isLevelingEnabled()) {
+             Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
+        }
         
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
@@ -304,10 +309,7 @@ public class AegisGuard extends JavaPlugin {
         if (interval <= 0) return;
         
         Runnable logic = () -> {
-            // Note: Actual logic abbreviated for brevity as per your original code
-            for (Plot plot : new ArrayList<>(store().getAllPlots())) {
-                 // Upkeep Logic placeholder
-            }
+            // Placeholder for future upkeep logic integration
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }

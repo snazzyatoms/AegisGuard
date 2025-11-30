@@ -31,18 +31,23 @@ exit_lore:
 # OLD ENGLISH STYLE (Default)
 # ======================================
 old_english:
-  # --- Navigation ---
+  # --- Navigation & Common ---
   button_back: "&e⟵ Return"
-  back_lore:
+  button_back_lore:
     - "&7Return to the prior page."
   
   button_back_menu: "&fReturn to Menu"
-  back_menu_lore:
-    - "&7Go back to the main dashboard."
+  button_back_menu_lore:
+    - "&7Return to the main index."
+
+  button_exit: "&c✖ Depart"
+  button_exit_lore:
+    - "&7Close this sacred scroll."
 
   button_prev_page: "&fPrior Page"
   button_next_page: "&fNext Page"
   
+  # --- General ---
   role_edit_self_error: "&c❌ Thou cannot edit thy own role. Thou risks locking thyself out!"
   no_perm: "&cThou hast not the authority for such an act."
   players_only: "&cOnly mortals of flesh may wield this command."
@@ -51,6 +56,7 @@ old_english:
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
   sound_global_disabled: "&c✖ Aegis’s voice is hushed for all."
 
+  # --- Claiming & Wand ---
   wand_given: "&a⚡ Behold! The Aegis Scepter is bestowed upon thee."
   corner1_set: "&a⚡ Thy first boundary is marked at &e{X}, {Z}."
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
@@ -63,13 +69,14 @@ old_english:
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
   resize-fail-max-area: "&c❌ Thou canst not expand! Thy dominion wouldst exceed the sacred limit of {AMOUNT} blocks."
 
-  # --- MERGING ---
+  # --- Merging ---
   merge_invalid_dir: "&c❌ Speak a valid direction: NORTH, SOUTH, EAST, or WEST."
   merge_no_plot: "&c❌ There is no dominion in that direction to merge with."
   merge_not_owner: "&c❌ Thou dost not own the adjacent land."
   merge_not_aligned: "&c❌ The lands are not aligned. Their borders must match perfectly."
   merge_success: "&a⚡ Behold! The lands have fused into one great dominion!"
 
+  # --- Economy ---
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
   need_vault: "&c❌ Thy coffers hold less than &e{AMOUNT}&c gold."
   cost_deducted: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered."
@@ -82,6 +89,7 @@ old_english:
   plot_expired_upkeep: "&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!"
   plot-is-locked: "&c❌ This dominion is locked pending tribute and cannot be altered."
 
+  # --- Auctions ---
   plot-now-auctioned: "&e⚠ Thy dominion is now up for public auction!"
   auction-gui-title: "&6Dominion Auctions"
   auction-bid-own: "&cThou canst not bid upon thine own expired dominion."
@@ -97,6 +105,7 @@ old_english:
     - "&eLeft-Click: &7Gaze upon the land"
     - "&aRight-Click: &7Offer a bid"
   
+  # --- Market ---
   market-gui-title: "&2Dominion Marketplace"
   market-teleport: "&eSpiriting thee to {PLAYER}'s plot..."
   market-buy-own: "&cThou canst not purchase thine own dominion."
@@ -111,7 +120,7 @@ old_english:
     - "&eLeft-Click: &7Gaze upon the land"
     - "&aRight-Click: &7Purchase the Deed"
 
-  # --- EXPANSION ---
+  # --- Expansion ---
   expansion_gui_title: "&d§lLand Expansion Petition"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -132,6 +141,7 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
+  
   expansion_small_name: "&aMinor Expansion"
   expansion_small_lore:
     - "&7Increase borders by &a+5 blocks&7."
@@ -158,7 +168,7 @@ old_english:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
 
-  # --- VISIT ---
+  # --- Visit / Travel ---
   visit_gui_title: "&9Travel System"
   visit_title_warps: "&6Realm Waypoints"
   visit_title_trusted: "&9Ally Dominions"
@@ -196,6 +206,7 @@ old_english:
   plot_entry_denied: "&c⛔ This dominion is sealed to outsiders."
   plot_banned_entry: "&c⛔ Thou art BANISHED from this land!"
 
+  # --- Main Menu ---
   menu_title: "&b⚔ The Guardian Codex ⚔"
   
   button_claim_land: "&a🛡 Lay Claim to Land"
@@ -239,7 +250,7 @@ old_english:
   info_lore:
     - "&7Unfurl the scrolls of wisdom."
 
-  # --- CODEX (Fully Localized) ---
+  # --- Codex ---
   codex_gui_title: "&9§lThe Guardian Codex"
   codex_claim_title: "&e§lI. The Art of Claiming"
   codex_claim_lore:
@@ -289,7 +300,7 @@ old_english:
     - "&eSub-Dominions (Zones):"
     - "&7Lease parts of thy land to serfs."
 
-  # --- UTILITY ---
+  # --- Utility & Settings ---
   button_utility_chapter: "&3§lVI. Identity & Utility"
   utility_chapter_lore:
     - "&7Make your land unique:"
@@ -314,6 +325,7 @@ old_english:
     - "&7An edict hath hushed all sound."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Wards."
 
+  # --- Leveling & Zoning ---
   level_gui_title: "&dAscension of Land"
   level_current_status: "&dCurrent Standing"
   level_upgrade_button: "&aAscend to Level {LEVEL}"
@@ -360,6 +372,7 @@ old_english:
     - "&c⚠ Heed: Visuals Only"
     - "&7(Thy soil remains unchanged)"
 
+  # --- Likes ---
   like_success: "&a✔ Verily, thou hast favored this dominion! Total likes: &e{AMOUNT}"
   like_removed: "&eYou removed your favor."
   like_own_plot: "&cThou cannot bestow favor upon thine own land."
@@ -370,6 +383,7 @@ old_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
+  # --- Flags / Wards ---
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
@@ -458,6 +472,7 @@ old_english:
 
   flag_toggled: '&e⚙ {FLAG} ward is now &f{STATUS}&e.'
 
+  # --- Roles ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect a Dominion to Manage"
@@ -471,6 +486,7 @@ old_english:
   role_set_to: "&a✔ {PLAYER} hath been granted the role of {ROLE}."
   role_removed: "&e✔ {PLAYER} hath been removed from thy plot."
 
+  # --- Admin Tools ---
   admin_menu_title: "&c⚙ High Guardian Tools"
   admin_reloading: "&7Reloading ancient scrolls..."
   admin_reload_complete: "&a✔ The scrolls are refreshed."
@@ -483,6 +499,7 @@ old_english:
   button_admin_broadcast: '&bBroadcast Admin Deeds'
   admin_broadcast_lore:
     - "&7Let the realm hear of judgments."
+  
   button_admin_unlimited: "&aInfinite Dominion"
   admin_unlimited_lore:
     - "&7Allow admins unlimited land."
@@ -511,6 +528,7 @@ old_english:
     - "&cRight-Click: &7Destroy"
   admin_plot_teleport: '&eThou hast been spirited to the dominion of {PLAYER}.'
   admin_plot_deleted: '&c✖ The dominion of {PLAYER} hath been struck from the records.'
+  
   button_back_admin: "&fReturn to High Tools"
 
   admin-zone-created: '&a✔ A new Server Zone hath been decreed.'
@@ -556,12 +574,16 @@ old_english:
 hybrid_english:
   # --- Navigation ---
   button_back: "&e⟵ Return"
-  back_lore:
+  button_back_lore:
     - "&7Return to the previous page."
   
   button_back_menu: "&fReturn to Menu"
-  back_menu_lore:
-    - "&7Go back to the main dashboard."
+  button_back_menu_lore:
+    - "&7Return to the dashboard."
+
+  button_exit: "&c✖ Close"
+  button_exit_lore:
+    - "&7Close this menu."
 
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"
@@ -1064,12 +1086,16 @@ hybrid_english:
 modern_english:
   # --- Navigation ---
   button_back: "&e⟵ Back"
-  back_lore:
+  button_back_lore:
     - "&7Return to the previous page."
   
   button_back_menu: "&fReturn to Menu"
-  back_menu_lore:
+  button_back_menu_lore:
     - "&7Go back to the main dashboard."
+
+  button_exit: "&cExit"
+  button_exit_lore:
+    - "&7Close window."
 
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"

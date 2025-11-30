@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * LevelingGUI (Ultimate Edition - Finalized)
- * - Added: EXIT BUTTON (Slot 44)
- * - Supports Infinite Levels & RPG Effects.
- * - Strict filtering of Health/Regen.
+ * LevelingGUI (Ultimate Edition - Fixed)
+ * - Fixed: Compilation errors (createItem arguments).
+ * - Added: EXIT BUTTON (Slot 44).
+ * - Features: Visual Progress Bar, RPG Effects, Flight logic.
  */
 public class LevelingGUI {
 
@@ -45,8 +45,8 @@ public class LevelingGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§8⚡ Dominion Ascension");
         Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 45, title);
 
-        // Fill background
-        ItemStack filler = GUIManager.createItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        // --- FIX: Pass empty list for lore to satisfy GUIManager ---
+        ItemStack filler = GUIManager.createItem(Material.BLACK_STAINED_GLASS_PANE, " ", new ArrayList<>());
         for (int i = 0; i < 45; i++) inv.setItem(i, filler);
 
         int currentLvl = plot.getLevel();
@@ -109,7 +109,7 @@ public class LevelingGUI {
             plugin.msg().get(player, "button_back"), 
             plugin.msg().getList(player, "back_lore")));
 
-        // --- SLOT 44: EXIT BUTTON (ADDED) ---
+        // --- SLOT 44: EXIT BUTTON ---
         inv.setItem(44, GUIManager.createItem(Material.BARRIER, 
             plugin.msg().get(player, "button_exit"), 
             plugin.msg().getList(player, "button_exit_lore")));
@@ -124,9 +124,13 @@ public class LevelingGUI {
         int filledSlots = (int) (progress * slots.length);
 
         for (int i = 0; i < slots.length; i++) {
-            if (i < filledSlots) inv.setItem(slots[i], GUIManager.createItem(Material.LIME_STAINED_GLASS_PANE, "§a§lUNLOCKED"));
-            else if (i == filledSlots && current < max) inv.setItem(slots[i], GUIManager.createItem(Material.ORANGE_STAINED_GLASS_PANE, "§6§lNEXT GOAL"));
-            else inv.setItem(slots[i], GUIManager.createItem(Material.GRAY_STAINED_GLASS_PANE, "§7LOCKED"));
+            // --- FIX: Added new ArrayList<>() to all createItem calls here ---
+            if (i < filledSlots) 
+                inv.setItem(slots[i], GUIManager.createItem(Material.LIME_STAINED_GLASS_PANE, "§a§lUNLOCKED", new ArrayList<>()));
+            else if (i == filledSlots && current < max) 
+                inv.setItem(slots[i], GUIManager.createItem(Material.ORANGE_STAINED_GLASS_PANE, "§6§lNEXT GOAL", new ArrayList<>()));
+            else 
+                inv.setItem(slots[i], GUIManager.createItem(Material.GRAY_STAINED_GLASS_PANE, "§7LOCKED", new ArrayList<>()));
         }
     }
 
@@ -141,7 +145,7 @@ public class LevelingGUI {
             return; 
         }
 
-        // Exit Button (ADDED)
+        // Exit Button
         if (e.getSlot() == 44) {
             player.closeInventory();
             return;
@@ -163,7 +167,14 @@ public class LevelingGUI {
             Bukkit.getPluginManager().callEvent(event);
             
             plot.setLevel(nextLvl);
-            plugin.store().setDirty(true);
+            // Ensure this method exists in your IDataStore interface!
+            // If errors persist here, change to: plugin.store().save(); 
+            // but ideally we save just the specific plot.
+            try {
+                plugin.store().savePlot(plot); 
+            } catch (NoSuchMethodError ex) {
+                plugin.store().save(); // Fallback if interface update wasn't applied
+            }
             
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 0.5f);

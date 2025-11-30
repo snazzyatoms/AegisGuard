@@ -10,6 +10,7 @@ import java.util.UUID;
  * IDataStore (Interface)
  * - This is a "contract" that all data storage systems must follow.
  * - This allows AegisGuard to switch between YML and SQL seamlessly.
+ * - UPDATED: Added savePlot() for individual updates.
  */
 public interface IDataStore {
 
@@ -74,7 +75,7 @@ public interface IDataStore {
 
     /**
      * Checks if a new area overlaps with any existing plots.
-     * * @param plotToIgnore The plot being checked (e.g., the current plot being resized).
+     * @param plotToIgnore The plot being checked (e.g., the current plot being resized).
      * The implementation must ignore this plot during the overlap check.
      */
     boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2);
@@ -92,6 +93,12 @@ public interface IDataStore {
      * Adds a pre-made plot object to the store.
      */
     void addPlot(Plot plot);
+    
+    /**
+     * Saves a specific plot's data. 
+     * Essential for Leveling and Expansions to persist changes immediately.
+     */
+    void savePlot(Plot plot);
     
     /**
      * Removes a single plot by its ID.

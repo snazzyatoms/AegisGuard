@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player; // NEW IMPORT
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Plot (Data Class) - v1.1.2
  * Represents a land claim.
- * FIX: Corrected List-to-Set conversion in hasPermission logic.
+ * UPDATED: Added Leveling Logic (expand, maxMembers, contains)
  */
 public class Plot {
     
@@ -55,6 +56,7 @@ public class Plot {
     // --- Progression (v1.1.0) ---
     private int level = 1;
     private double xp = 0;
+    private int maxMembers = 2; // Default starting member slots (NEW)
 
     // --- Economy & Upkeep ---
     private long lastUpkeepPayment;
@@ -115,6 +117,10 @@ public class Plot {
     // --- CORE LOGIC ---
 
     public boolean isInside(Location loc) {
+        return contains(loc); // Delegating to standard naming
+    }
+
+    public boolean contains(Location loc) { // NEW METHOD (Standard naming for Listeners)
         if (loc == null || loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(world)) return false;
         int x = loc.getBlockX();
@@ -135,6 +141,27 @@ public class Plot {
         return new Location(w, cX, y, cZ); 
     }
 
+    // --- LEVELING LOGIC (NEW) ---
+
+    public void expand(int amount) {
+        this.x1 -= amount;
+        this.z1 -= amount;
+        this.x2 += amount;
+        this.z2 += amount;
+        // Note: Collision checking should happen in the Listener before calling this!
+    }
+
+    public int getMaxMembers() { return maxMembers; }
+    public void setMaxMembers(int max) { this.maxMembers = max; }
+
+    public boolean isOwner(Player player) { // NEW Helper
+        return player.getUniqueId().equals(owner);
+    }
+
+    public boolean isTrusted(Player player) { // NEW Helper
+        return playerRoles.containsKey(player.getUniqueId()) && !isBanned(player.getUniqueId());
+    }
+
     // --- PERMISSIONS SYSTEM ---
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
@@ -143,7 +170,6 @@ public class Plot {
         
         if (currentRenter != null && currentRenter.equals(playerUUID)) {
             if (System.currentTimeMillis() < rentExpires) {
-                // FIX 1: Convert List from config to Set before checking
                 Set<String> perms = new HashSet<>(plugin.cfg().getRolePermissions("member")); 
                 return perms.contains(permission.toUpperCase());
             } else {
@@ -153,7 +179,6 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
-        // FIX 2: Convert List from config to Set before checking
         Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
         return permissions.contains(permission.toUpperCase());
     }
@@ -171,7 +196,6 @@ public class Plot {
         }
     }
 
-    // --- RESTORED ACCESSORS (Fixes Logic Errors) ---
     public Map<UUID, String> getPlayerRoles() { 
         return playerRoles; 
     }
@@ -179,7 +203,6 @@ public class Plot {
     public void removeRole(UUID playerUUID) { 
         playerRoles.remove(playerUUID); 
     }
-    // ----------------------------------------------
 
     // --- GETTERS & SETTERS (Existing) ---
     public UUID getPlotId() { return plotId; }

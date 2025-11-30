@@ -1,8 +1,8 @@
 # ======================================
-#  🛡️ AegisGuard v1.1.2 - Configuration
+# 🛡️ AegisGuard v1.1.2 - Configuration
 # ======================================
-#  Main configuration file.
-#  Restart server or use /agadmin reload after editing.
+# Main configuration file.
+# Restart server or use /agadmin reload after editing.
 # ======================================
 
 # ======================================
@@ -150,31 +150,120 @@ zoning:
   landlord_gets_full_rent: true
 
 # ======================================
-# 📈 Plot Leveling (RPG)
+# 📈 Plot Leveling (RPG - UPDATED)
 # ======================================
 leveling:
   enabled: true
   base_cost: 1000.0
   cost_multiplier: 1.5
-  max_level: 50
+  max_level: 30 # Updated to match the new tree
   
-  # Rewards per Level
+  # Rewards per Level (30-Level Ascension Tree)
+  # "EFFECT:<TYPE>:<LEVEL>" or "RADIUS:<BLOCKS>" or "MEMBERS:<SLOTS>" or "FLIGHT"
   rewards:
+    # --- TIER 1: THE BASICS ---
+    1:
+      - "EFFECT:SPEED:1"           # Agility I
+      - "RADIUS:5"
     2:
-      - "EFFECT:SPEED:1"
+      - "EFFECT:SPEED:2"           # Agility II
+      - "MEMBERS:1"
+    3:
+      - "EFFECT:FAST_DIGGING:1"    # Haste I (Mining Speed)
+      - "RADIUS:5"
+    4:
+      - "EFFECT:FAST_DIGGING:2"    # Haste II (Insta-Mine capability)
+      - "MEMBERS:1"
     5:
-      - "FLAG:fly" # Unlocks Flight Flag capability
+      - "EFFECT:JUMP:1"            # Jump Boost I
+      - "RADIUS:10"
+
+    # --- TIER 2: EXPLORATION & SURVIVAL ---
+    6:
+      - "EFFECT:NIGHT_VISION:1"    # True Sight (See in dark)
+      - "MEMBERS:2"
+    7:
+      - "EFFECT:WATER_BREATHING:1" # Aquatic Lungs (Underwater bases)
+      - "RADIUS:10"
+    8:
+      - "EFFECT:DOLPHINS_GRACE:1"  # Swim faster
+      - "MEMBERS:2"
+    9:
+      - "EFFECT:SLOW_FALLING:1"    # No Fall Damage in base
+      - "RADIUS:15"
     10:
-      - "EFFECT:REGENERATION:1"
+      - "FLIGHT"                   # <--- UNLOCK FLIGHT
+      - "MEMBERS:3"
+
+    # --- TIER 3: COMBAT & DEFENSE ---
+    11:
+      - "EFFECT:DAMAGE_RESISTANCE:1" # Iron Skin I (Armor Protection)
+      - "RADIUS:15"
+    12:
+      - "EFFECT:INCREASE_DAMAGE:1"   # Strength I
+      - "MEMBERS:3"
+    13:
+      - "EFFECT:FIRE_RESISTANCE:1"   # Fireborn (Lava proof)
+      - "RADIUS:20"
+    14:
+      - "EFFECT:DAMAGE_RESISTANCE:2" # Iron Skin II (Better Armor)
+      - "MEMBERS:4"
     15:
-      - "EFFECT:DAMAGE_RESISTANCE:1"
-    20:
-      - "EFFECT:SATURATION:1"
-      - "EFFECT:NIGHT_VISION:1"
-    30:
+      - "EFFECT:INCREASE_DAMAGE:2"   # Strength II
+      - "RADIUS:20"
+
+    # --- TIER 4: UTILITY MASTERY ---
+    16:
+      - "EFFECT:LUCK:1"              # Fortune's Favor (Fishing/Loot)
+      - "MEMBERS:4"
+    17:
       - "EFFECT:LUCK:2"
-    50:
-      - "EFFECT:HEALTH_BOOST:2"
+      - "RADIUS:25"
+    18:
+      - "EFFECT:CONDUIT_POWER:1"     # Atlantis Power (Full underwater god mode)
+      - "MEMBERS:5"
+    19:
+      - "EFFECT:JUMP:3"              # Super Jump
+      - "RADIUS:25"
+    20:
+      - "EFFECT:SPEED:3"             # Super Speed
+      - "MEMBERS:5"
+
+    # --- TIER 5: DOMINION OVERLORD ---
+    21:
+      - "EFFECT:DAMAGE_RESISTANCE:3" # Iron Skin III (Tanky)
+      - "RADIUS:30"
+    22:
+      - "EFFECT:FAST_DIGGING:3"      # Super Haste
+      - "MEMBERS:6"
+    23:
+      - "EFFECT:GLOWING:1"           # Glowing Aura (Visual flex)
+      - "RADIUS:30"
+    24:
+      - "EFFECT:ABSORPTION:1"        # Extra Hearts (Shielding)
+      - "MEMBERS:6"
+    25:
+      - "EFFECT:ABSORPTION:2"        # More Extra Hearts
+      - "RADIUS:40"
+
+    # --- TIER 6: GOD STATUS ---
+    26:
+      - "EFFECT:LUCK:5"              # Max Luck
+      - "MEMBERS:8"
+    27:
+      - "EFFECT:DAMAGE_RESISTANCE:4" # Near Invincible in base
+      - "RADIUS:50"
+    28:
+      - "EFFECT:INCREASE_DAMAGE:3"   # One-shot mobs
+      - "MEMBERS:10"
+    29:
+      - "EFFECT:SPEED:5"             # Flash Speed
+      - "RADIUS:75"
+    30:
+      - "FLIGHT"                     # Flight (Confirmed)
+      - "EFFECT:CONDUIT_POWER:2"     # God of the Sea
+      - "RADIUS:100"                 # Massive land expansion
+      - "MEMBERS:20"                 # Huge clan size
 
 # ======================================
 # 💸 Plot Upkeep (Rent)

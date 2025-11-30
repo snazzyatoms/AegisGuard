@@ -16,7 +16,6 @@ public class AGConfig {
     private FileConfiguration config;
     
     // --- CACHED VALUES (Optimization) ---
-    // Reads are instant, preventing disk/map lookup lag
     private boolean zoningEnabled;
     private boolean levelingEnabled;
     private boolean titlesEnabled;
@@ -51,19 +50,17 @@ public class AGConfig {
         this.config = plugin.getConfig();
         
         // --- 1. DEFAULT INJECTION ---
-        // This ensures new settings appear in existing config files automatically
         config.addDefault("hooks.bluemap.enabled", true);
         config.addDefault("hooks.bluemap.label", "Claims");
         
         config.addDefault("hooks.pl3xmap.enabled", true);
         
-        config.addDefault("hooks.discord.enabled", false); // False by default (needs URL)
+        config.addDefault("hooks.discord.enabled", false);
         config.addDefault("hooks.discord.webhook_url", "https://discord.com/api/webhooks/...");
         
         config.addDefault("claims.merging.enabled", true);
         config.addDefault("claims.merging.cost", 500.0);
         
-        // Apply defaults and save
         config.options().copyDefaults(true);
         plugin.saveConfig();
         
@@ -101,6 +98,7 @@ public class AGConfig {
     // 🔌 Hooks (New v1.1.2)
     // ======================================
     public boolean isDiscordEnabled() { return discordEnabled; }
+    public String getDiscordWebhookUrl() { return config.getString("hooks.discord.webhook_url", ""); }
     public boolean isBlueMapEnabled() { return bluemapEnabled; }
     public boolean isPl3xMapEnabled() { return pl3xmapEnabled; }
     
@@ -130,7 +128,7 @@ public class AGConfig {
             String path = "claims.per_world." + world.getName() + ".max_radius";
             if (config.isSet(path)) return config.getInt(path);
         }
-        return config.getInt("claims.max_radius", 32);
+        return config.getInt("claims.max_radius", 64);
     }
 
     public int getWorldMinRadius(World world) {
@@ -138,7 +136,7 @@ public class AGConfig {
             String path = "claims.per_world." + world.getName() + ".min_radius";
             if (config.isSet(path)) return config.getInt(path);
         }
-        return config.getInt("claims.min_radius", 1);
+        return config.getInt("claims.min_radius", 5);
     }
     
     public int getWorldMaxClaims(World world) {
@@ -146,8 +144,16 @@ public class AGConfig {
             String path = "claims.per_world." + world.getName() + ".max_claims_per_player";
             if (config.isSet(path)) return config.getInt(path);
         }
-        return config.getInt("claims.max_claims_per_player", 1);
+        return config.getInt("claims.max_claims_per_player", 2);
     }
+
+    // ======================================
+    // 📐 Expansions (Requests) - NEW
+    // ======================================
+    public double getExpansionCost() { return config.getDouble("expansions.cost_per_block", 10.0); }
+    public double getExpansionMultiplier() { return config.getDouble("expansions.cost_multiplier", 1.1); }
+    public int getMaxExpansionRadius() { return config.getInt("expansions.max_radius_global", 200); }
+    public int getExpansionBuffer() { return config.getInt("expansions.buffer_zone", 5); }
 
     // ======================================
     // 🏗️ Zoning (Sub-Claims)
@@ -176,7 +182,7 @@ public class AGConfig {
     }
 
     public int getMaxLevel() {
-        return config.getInt("leveling.max_level", 10);
+        return config.getInt("leveling.max_level", 30); // Default bumped for safety
     }
 
     public CurrencyType getLevelCostType() {
@@ -207,6 +213,24 @@ public class AGConfig {
     public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
     public boolean isUnstuckEnabled() { return unstuckEnabled; }
     public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
+
+    // ======================================
+    // 🎨 Cosmetics Prices - NEW
+    // ======================================
+    public double getCosmeticPrice(String type) {
+        return config.getDouble("cosmetics.border_particles." + type + ".price", 0.0);
+    }
+
+    // ======================================
+    // 🛡️ Active Mob Barrier - NEW
+    // ======================================
+    public boolean isMobBarrierEnabled() { return config.getBoolean("mob_barrier.enabled", true); }
+    public int getMobBarrierInterval() { return config.getInt("mob_barrier.check_interval_ticks", 60); }
+
+    // ======================================
+    // 💥 Protection Effects - NEW
+    // ======================================
+    public boolean isProtectionEffectsEnabled() { return config.getBoolean("protection_effects.enabled", true); }
 
     // ======================================
     // 💰 Economy

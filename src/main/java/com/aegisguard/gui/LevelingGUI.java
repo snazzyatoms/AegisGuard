@@ -21,9 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * LevelingGUI (Ultimate Edition)
- * - Supports Infinite Levels (Config defined).
- * - "Cool Name" generator for effects.
+ * LevelingGUI (Ultimate Edition - Finalized)
+ * - Added: EXIT BUTTON (Slot 44)
+ * - Supports Infinite Levels & RPG Effects.
+ * - Strict filtering of Health/Regen.
  */
 public class LevelingGUI {
 
@@ -44,6 +45,7 @@ public class LevelingGUI {
         String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§8⚡ Dominion Ascension");
         Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 45, title);
 
+        // Fill background
         ItemStack filler = GUIManager.createItem(Material.BLACK_STAINED_GLASS_PANE, " ");
         for (int i = 0; i < 45; i++) inv.setItem(i, filler);
 
@@ -51,10 +53,10 @@ public class LevelingGUI {
         int nextLvl = currentLvl + 1;
         int maxLvl = plugin.cfg().getMaxLevel();
 
-        // --- PROGRESS BAR ---
+        // --- VISUAL PROGRESS BAR ---
         renderProgressBar(inv, currentLvl, maxLvl);
 
-        // --- CURRENT STATS (Slot 11) ---
+        // --- SLOT 11: CURRENT STATS ---
         List<String> currentLore = new ArrayList<>();
         currentLore.add("§7Current Rank: §f" + currentLvl);
         currentLore.add("");
@@ -63,7 +65,7 @@ public class LevelingGUI {
         
         inv.setItem(11, GUIManager.createItem(Material.BOOK, "§e§nYour Current Power", currentLore));
 
-        // --- NEXT LEVEL PREVIEW (Slot 15) ---
+        // --- SLOT 15: NEXT LEVEL PREVIEW ---
         List<String> nextLore = new ArrayList<>();
         if (nextLvl <= maxLvl) {
             nextLore.add("§7Next Rank: §b" + nextLvl);
@@ -76,7 +78,7 @@ public class LevelingGUI {
         }
         inv.setItem(15, GUIManager.createItem(Material.KNOWLEDGE_BOOK, "§b§nNext Tier Preview", nextLore));
 
-        // --- UPGRADE BUTTON (Slot 13) ---
+        // --- SLOT 13: UPGRADE BUTTON ---
         if (nextLvl <= maxLvl) {
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
@@ -102,8 +104,15 @@ public class LevelingGUI {
             inv.setItem(13, GUIManager.createItem(Material.BEACON,"§b§lMAXIMUM LEVEL", List.of("§7Your dominion is fully ascended.")));
         }
 
-        // --- BACK BUTTON (Slot 40) ---
-        inv.setItem(40, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_back"), plugin.msg().getList(player, "back_lore")));
+        // --- SLOT 40: BACK BUTTON ---
+        inv.setItem(40, GUIManager.createItem(Material.ARROW, 
+            plugin.msg().get(player, "button_back"), 
+            plugin.msg().getList(player, "back_lore")));
+
+        // --- SLOT 44: EXIT BUTTON (ADDED) ---
+        inv.setItem(44, GUIManager.createItem(Material.BARRIER, 
+            plugin.msg().get(player, "button_exit"), 
+            plugin.msg().getList(player, "button_exit_lore")));
         
         player.openInventory(inv);
         GUIManager.playClick(player);
@@ -126,8 +135,19 @@ public class LevelingGUI {
         if (e.getCurrentItem() == null) return;
         Plot plot = holder.getPlot();
         
-        if (e.getSlot() == 40) { plugin.gui().openMain(player); return; }
+        // Back Button
+        if (e.getSlot() == 40) { 
+            plugin.gui().openMain(player); 
+            return; 
+        }
 
+        // Exit Button (ADDED)
+        if (e.getSlot() == 44) {
+            player.closeInventory();
+            return;
+        }
+
+        // Upgrade Button
         if (e.getSlot() == 13 && e.getCurrentItem().getType() == Material.NETHER_STAR) {
             int nextLvl = plot.getLevel() + 1;
             double cost = calculateCost(nextLvl);
@@ -200,11 +220,10 @@ public class LevelingGUI {
         return formatted;
     }
     
-    // Makes effect names look RPG-style
     private String beautifyEffect(String type) {
         type = type.toUpperCase();
         if (type.contains("FAST_DIGGING")) return "Mining Haste";
-        if (type.contains("DAMAGE_RESISTANCE")) return "Iron Skin"; // Better Armor Protection
+        if (type.contains("DAMAGE_RESISTANCE")) return "Iron Skin";
         if (type.contains("INCREASE_DAMAGE")) return "Strength";
         if (type.contains("SPEED")) return "Agility";
         if (type.contains("JUMP")) return "High Jump";

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  * YMLDataStore
  * - Manages plot data using plots.yml.
  * - Optimized for cache lookups and safe saving.
+ * - UPDATED: Added savePlot() implementation.
  */
 public class YMLDataStore implements IDataStore {
 
@@ -40,7 +41,6 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public synchronized void load() {
-        // ... (Existing file existence and load logic is preserved) ...
         try {
             if (!file.exists()) {
                 File parent = file.getParentFile();
@@ -53,13 +53,8 @@ public class YMLDataStore implements IDataStore {
         plotsByOwner.clear();
         plotsByChunk.clear();
 
-        // --- LOAD LOGIC (Preserved from user's latest version) ---
         if (data.isConfigurationSection("plots")) {
             for (String ownerId : data.getConfigurationSection("plots").getKeys(false)) {
-                // ... (Loading and deserialization logic remains the same) ...
-                // For brevity, assuming the plot deserialization loop is correct and complete.
-                // It should end with addPlot(plot) and indexPlot(plot).
-                
                 UUID owner;
                 try { owner = UUID.fromString(ownerId); } catch (IllegalArgumentException ex) { continue; }
                 String ownerPath = "plots." + ownerId;
@@ -98,7 +93,6 @@ public class YMLDataStore implements IDataStore {
                          try { plot.setRenter(UUID.fromString(renterUUID), data.getLong(path + ".market.rent-expires", 0L)); } catch (Exception ignored) {}
                     }
                     plot.setPlotStatus(data.getString(path + ".plot-status", "ACTIVE"));
-                    // ... (rest of deserialization: auction, cosmetics, warps, zones, roles, flags) ...
                     
                     if (data.isConfigurationSection(path + ".roles")) {
                         for (String uuidStr : data.getConfigurationSection(path + ".roles").getKeys(false)) {
@@ -125,7 +119,6 @@ public class YMLDataStore implements IDataStore {
     public synchronized void save() {
         data.set("plots", null); // Wipe and rewrite (safest for YML)
         
-        // ... (Serialization logic is preserved and assumed correct) ...
         for (Map.Entry<UUID, List<Plot>> entry : plotsByOwner.entrySet()) {
             UUID owner = entry.getKey();
             for (Plot plot : entry.getValue()) {
@@ -151,13 +144,10 @@ public class YMLDataStore implements IDataStore {
                 data.set(path + ".level", plot.getLevel());
                 data.set(path + ".xp", plot.getXp());
                 
-                // Market logic uses ternary operator, clean it up
                 if (plot.isForSale()) {
                     data.set(path + ".market.is-for-sale", true);
                     data.set(path + ".market.sale-price", plot.getSalePrice());
                 }
-                
-                // ... (rest of serialization logic) ...
                 
                 // Roles (Skip Owner)
                 for (Map.Entry<UUID, String> roleEntry : plot.getPlayerRoles().entrySet()) {
@@ -178,6 +168,16 @@ public class YMLDataStore implements IDataStore {
     public void saveSync() { 
         save(); 
     }
+    
+    // --- NEW: Implement savePlot from Interface ---
+    @Override
+    public void savePlot(Plot plot) {
+        // For YML, partial saves are tricky/risky. We trigger a full save to be safe.
+        // In a future optimization, we could just write to the 'data' object and saveAsync.
+        isDirty = true;
+        // Optional: Trigger immediate save if critical, or wait for auto-save task.
+        // save(); 
+    }
 
     @Override
     public boolean isDirty() { return isDirty; }
@@ -189,7 +189,6 @@ public class YMLDataStore implements IDataStore {
     // --- IDataStore API Implementation ---
     // ==============================================================
 
-    // FIX: Correct signature for isAreaOverlapping to use Plot object
     @Override
     public boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2) {
         Set<String> chunks = getChunksInArea(world, x1, z1, x2, z2);
@@ -201,7 +200,6 @@ public class YMLDataStore implements IDataStore {
             plotsToTest.addAll(worldChunks.getOrDefault(chunkKey, Collections.emptySet()));
         }
         
-        // FIX: Ensure it correctly ignores the Plot object passed in
         if (plotToIgnore != null) plotsToTest.remove(plotToIgnore);
 
         for (Plot existingPlot : plotsToTest) {
@@ -211,7 +209,7 @@ public class YMLDataStore implements IDataStore {
         return false;
     }
 
-    // --- Indexing Helpers (Preserved) ---
+    // --- Indexing Helpers ---
     
     private String getChunkKey(Location loc) {
         return loc.getWorld().getName() + ";" + (loc.getBlockX() >> 4) + ";" + (loc.getBlockZ() >> 4);
@@ -359,7 +357,6 @@ public class YMLDataStore implements IDataStore {
         }
     }
     
-    // Stubs
     @Override public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {}
     @Override public void revertWildernessBlocks(long timestamp, int limit) {}
 }

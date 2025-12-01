@@ -21,7 +21,7 @@ hooks:
       fill_color: "00FF00"
       fill_opacity: 0.35
 
-  # --- Discord Webhook (NEW v1.1.2) ---
+  # --- Discord Webhook (NEW v1.2.0) ---
   discord:
     enabled: true
     # Paste your Webhook URL here (Channel Settings -> Integrations -> Webhooks)
@@ -111,7 +111,7 @@ claims:
   consume_wand_on_claim: true
   admin_keep_wand: true
   
-  # --- Plot Merging (NEW v1.1.2) ---
+  # --- Plot Merging (NEW v1.2.0) ---
   merging:
     enabled: true
     cost: 500.0

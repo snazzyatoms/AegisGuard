@@ -4,7 +4,6 @@ import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
-import com.aegisguard.data.Plot;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
 import com.aegisguard.economy.EconomyManager;
@@ -12,7 +11,7 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.gui.SidebarManager; // --- NEW IMPORT ---
+import com.aegisguard.gui.SidebarManager; 
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.MapHookManager;
@@ -33,6 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File; // Required for the fix
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -61,7 +61,7 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
-    private SidebarManager sidebarManager; // --- NEW FIELD ---
+    private SidebarManager sidebarManager; 
     
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -89,7 +89,7 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
-    public SidebarManager getSidebar() { return sidebarManager; } // --- NEW GETTER ---
+    public SidebarManager getSidebar() { return sidebarManager; }
     public boolean isFolia() { return isFolia; }
 
     @Override
@@ -108,7 +108,11 @@ public class AegisGuard extends JavaPlugin {
 
         // Load Configs
         saveDefaultConfig();
-        saveResource("messages.yml", false);
+        
+        // FIX: Silent check for messages.yml to prevent console warning
+        if (!new File(getDataFolder(), "messages.yml").exists()) {
+            saveResource("messages.yml", false);
+        }
 
         this.configMgr = new AGConfig(this);
         
@@ -319,7 +323,6 @@ public class AegisGuard extends JavaPlugin {
         
         Runnable logic = () -> {
             // Placeholder for upkeep logic
-            // for (Plot plot : new ArrayList<>(store().getAllPlots())) { ... }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -327,7 +330,7 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql")) {
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) {
             getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
             return; 
         }

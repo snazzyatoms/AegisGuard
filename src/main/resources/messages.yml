@@ -39,6 +39,7 @@ old_english:
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
   sound_global_disabled: "&c✖ Aegis’s voice is hushed for all."
   
+  # --- Sidebar (Scoreboard) ---
   sidebar_enabled: "&a✔ The ledger of the land is now revealed."
   sidebar_disabled: "&c✖ The ledger of the land is now hidden."
 
@@ -128,6 +129,7 @@ old_english:
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
   
+  # EXPANSION TIERS (Old English)
   expansion_tier1_name: "&aYeoman's Grant (+5)"
   expansion_tier1_lore:
     - "&7A modest addition."
@@ -555,7 +557,7 @@ old_english:
 
   help_header: '&b⚔ &nThe Guardian’s Scroll of Instruction&r'
   help_lines:
-    - '&e/ag wand &7- Receive thine &bAegis Scepter'
+    - '&e/aegis wand &7- Receive thine &bAegis Scepter'
     - '&e/aegis menu &7- Summon the Guardian Codex'
     - '&e/aegis claim &7- Bind land to thy will'
     - '&e/aegis unclaim &7- Release thine claim'
@@ -602,6 +604,7 @@ hybrid_english:
   sound_global_enabled: "&a✔ The realm's sounds are restored."
   sound_global_disabled: "&c✖ The realm falls silent."
   
+  # --- Sidebar (Scoreboard) ---
   sidebar_enabled: "&a✔ Sidebar display enabled."
   sidebar_disabled: "&c✖ Sidebar display disabled."
 
@@ -691,31 +694,32 @@ hybrid_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ This petition has expired."
   
+  # FIXED: All 5 Tiers
   expansion_tier1_name: "&aMinor Expansion (+5)"
   expansion_tier1_lore:
     - "&7Increase borders by &a+5 blocks&7."
     - " "
-    - "&eClick to Petition"
+    - "&eClick to Request"
   expansion_tier2_name: "&eStandard Expansion (+10)"
   expansion_tier2_lore:
     - "&7Increase borders by &e+10 blocks&7."
     - " "
-    - "&eClick to Petition"
+    - "&eClick to Request"
   expansion_tier3_name: "&fMajor Expansion (+20)"
   expansion_tier3_lore:
     - "&7Increase borders by &f+20 blocks&7."
     - " "
-    - "&eClick to Petition"
+    - "&eClick to Request"
   expansion_tier4_name: "&6Noble Expansion (+35)"
   expansion_tier4_lore:
     - "&7Increase borders by &6+35 blocks&7."
     - " "
-    - "&eClick to Petition"
-  expansion_tier5_name: "&bRoyal Expansion (+50)"
+    - "&eClick to Request"
+  expansion_tier5_name: "&bImperial Expansion (+50)"
   expansion_tier5_lore:
     - "&7Increase borders by &b+50 blocks&7."
     - " "
-    - "&eClick to Petition"
+    - "&eClick to Request"
 
   expansion_locked_lore:
     - "&cYou must stand within"
@@ -911,7 +915,7 @@ hybrid_english:
   zone_create_locked_lore:
     - "&cThou must select corners"
     - "&cwith the Wand first!"
-  zone_evicted: "&eTenant evicted from {ZONE}."
+  zone_evicted: "&eThe tenant hath been evicted from {ZONE}."
   zone_button_lore:
     - "&7Manage rental grounds"
     - "&7within thy borders."
@@ -939,17 +943,17 @@ hybrid_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
-  # --- Wards (Flags) ---
+  # --- Wards ---
   button_pvp_on: '&a⚔ PvP: Allowed'
   button_pvp_off: '&c⚔ PvP: Protected'
   pvp_toggle_lore:
     - '&7Allow combat?'
-  
+
   button_containers_on: '&a📦 Chests: Accessible'
   button_containers_off: '&c📦 Chests: Protected'
   container_toggle_lore:
     - '&7Protect your items?'
-  
+
   button_mobs_on: '&a🧟 Monsters: Spawning'
   button_mobs_off: '&c🧟 Monsters: Blocked'
   mob_toggle_lore:
@@ -995,7 +999,7 @@ hybrid_english:
   button_fly_on: '&b🕊 Flight: Active'
   button_fly_off: '&c🕊 Flight: Inactive'
   fly_toggle_lore: 
-    - "&7Enable flight in claim."
+    - "&7Allow flight within this domain."
     - "&7Cost to enable: &6{COST}"
   flight_enabled: '&a🕊 Flight bestowed upon thee.'
   flight_disabled: '&c🕊 Flight withdrawn.'
@@ -1008,12 +1012,13 @@ hybrid_english:
   button_shop_on: '&a🛒 Trade Access: Open'
   button_shop_off: '&c🛒 Trade Access: Sealed'
   shop_toggle_lore: 
-    - "&7Allow usage of shop chests?"
+    - "&7Allow travelers to trade via signs/chests."
+    - "&7(Protects contents, but allows clicks)."
     - "&7Cost: &6{COST}"
     
   button_cosmetics: '&dVisual Effects'
   cosmetics_lore:
-    - '&7Add particles to your borders.'
+    - '&7Visual border effects.'
   cosmetics_gui_title: '&dDominion Cosmetics'
   cosmetics_border_none: '&cNo Effect'
   cosmetics_status_selected: "&a(Active)"
@@ -1086,7 +1091,7 @@ hybrid_english:
   admin-zone-created: '&a✔ Server Zone set.'
   admin-zone-deleted: '&c✖ Server Zone removed.'
   admin-zone-not-found: '&c❌ Not a Server Zone.'
-  admin_zone_flags_title: '&cServer Zone Settings'
+  admin_zone_flags_title: '&cServer Zone Wards'
   flag_build_lore:
     - '&7Allow building?'
   flag_containers_lore:
@@ -1126,7 +1131,7 @@ modern_english:
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"
   
-  button_exit: "&cExit"
+  button_exit: "&c✖ Close"
   button_exit_lore:
     - "&7Close this menu."
 
@@ -1140,8 +1145,8 @@ modern_english:
   sound_global_disabled: "&c✖ Plugin sounds disabled."
 
   # --- Sidebar (Scoreboard) ---
-  sidebar_enabled: "&a✔ Sidebar enabled."
-  sidebar_disabled: "&c✖ Sidebar disabled."
+  sidebar_enabled: "&a✔ Sidebar info enabled."
+  sidebar_disabled: "&c✖ Sidebar info disabled."
 
   # --- Claiming & Wand ---
   wand_given: "&a✔ You received the Claim Tool."
@@ -1229,6 +1234,7 @@ modern_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ Request expired."
   
+  # FIXED: All 5 Tiers for Modern English
   expansion_tier1_name: "&aSmall Upgrade (+5)"
   expansion_tier1_lore:
     - "&7Radius: &a+5 blocks"
@@ -1348,7 +1354,7 @@ modern_english:
   info_lore:
     - "&7Commands & Info."
   
-  # --- Codex (Modern) ---
+  # --- Codex ---
   codex_gui_title: "&9§lGuardian's Guide"
   codex_claim_title: "&e§lI. Claiming"
   codex_claim_lore:
@@ -1419,7 +1425,7 @@ modern_english:
     - "&7Server has disabled sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
-  # --- Leveling & Zoning (UPDATED) ---
+  # --- Leveling & Zoning ---
   level_gui_title: "&dLeveling"
   level_current_status: "&dStats"
   level_upgrade_button: "&aUpgrade to Level {LEVEL}"
@@ -1460,6 +1466,7 @@ modern_english:
   biome_button_lore:
     - "&7Change biome color."
 
+  # --- Likes ---
   like_success: "&a✔ Liked! Total: &e{AMOUNT}"
   like_removed: "&eLike removed."
   like_own_plot: "&cCannot like own claim."
@@ -1470,7 +1477,7 @@ modern_english:
   title_entering_wilderness: '&aWilderness'
   subtitle_entering_wilderness: ''
 
-  # --- Flags / Wards ---
+  # --- Flags ---
   button_pvp_on: '&a⚔ PvP: Allowed'
   button_pvp_off: '&c⚔ PvP: Disabled'
   pvp_toggle_lore:
@@ -1575,7 +1582,7 @@ modern_english:
   admin_menu_title: '&c⚙ Admin'
   admin_reloading: '&7Reloading...'
   admin_reload_complete: '&a✔ Done.'
-  button_admin_auto_remove: '&6Auto-Wipe'
+  button_admin_auto_remove: '&6Auto-Wipe Bans'
   admin_auto_remove_lore:
     - '&7Delete plots of banned players.'
   button_admin_bypass_limit: '&dBypass Limits'

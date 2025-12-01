@@ -46,10 +46,6 @@ public class ProtectionManager implements Listener {
         this.wildernessRevertEnabled = plugin.cfg().raw().getBoolean("wilderness_revert.enabled", false);
     }
 
-    // ... (Keep Mob Spawn, Move, Damage, Break, Place, Interact, Pet logic exactly as they were) ...
-    // I am omitting the unchanged event handlers to save space, but KEEP THEM in your file!
-    // Only the helper method below has changed significantly.
-
     // --- 1. MOB SPAWN PREVENTION ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent e) {
@@ -63,7 +59,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- 2. MOB TARGETING ---
+    // --- 2. MOB TARGETING (Stop targeting trusted players) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobTarget(EntityTargetLivingEntityEvent e) {
         if (!(e.getTarget() instanceof Player target)) return;
@@ -71,13 +67,14 @@ public class ProtectionManager implements Listener {
 
         Plot plot = plugin.store().getPlotAt(target.getLocation());
         if (plot != null) {
+            // If trusted, mob ignores player
             if (plot.hasPermission(target.getUniqueId(), "INTERACT", plugin)) {
                 e.setCancelled(true);
             }
         }
     }
 
-    // --- 3. MOVEMENT LOGIC ---
+    // --- 3. MOVEMENT LOGIC (Sidebar & Messages) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
@@ -87,10 +84,13 @@ public class ProtectionManager implements Listener {
         Plot toPlot = plugin.store().getPlotAt(e.getTo());
         Plot fromPlot = plugin.store().getPlotAt(e.getFrom());
 
-        // Leaving
+        // A. Leaving Logic
         if (fromPlot != null && !fromPlot.equals(toPlot)) {
             PlotLeaveEvent leaveEvent = new PlotLeaveEvent(fromPlot, p);
             Bukkit.getPluginManager().callEvent(leaveEvent);
+            
+            // Hide Sidebar when leaving plot
+            plugin.getSidebar().hideSidebar(p);
             
             if (!fromPlot.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, fromPlot.getFarewellMessage());
@@ -111,7 +111,7 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // Entering
+        // B. Entering Logic
         if (toPlot != null && !toPlot.equals(fromPlot)) {
             PlotEnterEvent enterEvent = new PlotEnterEvent(toPlot, p);
             Bukkit.getPluginManager().callEvent(enterEvent);
@@ -120,6 +120,9 @@ public class ProtectionManager implements Listener {
                 bouncePlayer(p, e);
                 return;
             }
+            
+            // Show Sidebar when entering plot
+            plugin.getSidebar().showSidebar(p, toPlot);
 
             if (!toPlot.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, toPlot.getWelcomeMessage());
@@ -139,7 +142,7 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // Continuous
+        // C. Continuous Checks
         if (toPlot != null) {
             if (p.hasPermission("aegis.admin.bypass")) {
                  applyPlotBuffs(p, toPlot);
@@ -163,7 +166,7 @@ public class ProtectionManager implements Listener {
             applyPlotBuffs(p, toPlot);
         }
     }
-
+    
     // --- 4. COMBAT ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent e) {
@@ -180,6 +183,7 @@ public class ProtectionManager implements Listener {
                     if (damager instanceof Projectile) damager.remove();    
                     return;
                 }
+                // Trust Check: If trusted, cancel mob damage
                 if (plot.hasPermission(victim.getUniqueId(), "INTERACT", plugin)) {
                     e.setCancelled(true);
                     if (damager instanceof Projectile) damager.remove();
@@ -336,6 +340,7 @@ public class ProtectionManager implements Listener {
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) return;
         
+        // FIX: Use getOwner().getUniqueId()
         if (pet.getOwner() != null && pet.getOwner().getUniqueId().equals(attacker.getUniqueId())) return;    
 
         Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
@@ -383,13 +388,12 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- HELPER: APPLY BUFFS (THE FIX) ---
+    // --- HELPER: APPLY BUFFS ---
     
     private void applyPlotBuffs(Player p, Plot plot) {
         if (!plugin.cfg().isLevelingEnabled()) return;
         long now = System.currentTimeMillis();
         
-        // Only check every 2 seconds to prevent spam
         if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return;
         
         if (!plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) return;
@@ -405,22 +409,28 @@ public class ProtectionManager implements Listener {
                         PotionEffectType type = PotionEffectType.getByName(parts[1]);
                         int amp = Integer.parseInt(parts[2]) - 1;
                         if (type != null) {
-                            // FIX: duration = 100 ticks (5s), particles=false, icon=false
-                            // This applies the buff without cluttering the screen
+                            // FIX: ambient=true, particles=false, icon=false (Clean Inventory)
                             p.addPotionEffect(new PotionEffect(type, 100, amp, true, false, false));
                         }
                     } catch (Exception ignored) {}
                 }
             }
         }
-        // Update cooldown: 2 seconds (40 ticks)
         buffCooldowns.put(p.getUniqueId(), now + 2000);
     }
 
     // --- OTHER HELPERS ---
     
     public boolean isFlagEnabled(Plot plot, String flag) { return plot != null && plot.getFlag(flag, true); }
-    public void toggleSafeZone(Plot plot, boolean state) { /* ... */ } // Assuming you have this impl from previous turns
+    public void toggleSafeZone(Plot plot, boolean state) { 
+        boolean newState = !plot.getFlag("safe_zone", false);
+        plot.setFlag("safe_zone", newState);
+        if (newState) {
+            plot.setFlag("pvp", false); 
+            plot.setFlag("mobs", false); 
+        }
+        plugin.store().setDirty(true);
+    }
     public boolean isSafeZoneEnabled(Plot plot) { return plot != null && plot.getFlag("safe_zone", false); }
     private boolean isPlotLocked(Player player, Plot plot) { return plot != null && !plugin.isAdmin(player) && !plot.getPlotStatus().equalsIgnoreCase("ACTIVE"); }
     private void bouncePlayer(Player p, PlayerMoveEvent e) { e.setCancelled(true); }
@@ -445,7 +455,7 @@ public class ProtectionManager implements Listener {
 
     private void cancelBuild(org.bukkit.event.Cancellable e, Player p) { e.setCancelled(true); p.sendMessage(plugin.msg().get("cannot_break")); plugin.effects().playError(p); }
     private void cancelInteract(org.bukkit.event.Cancellable e, Player p, String type) { e.setCancelled(true); p.sendMessage(plugin.msg().get("cannot_interact")); plugin.effects().playEffect(type, "deny", p, p.getLocation()); }
-    private boolean isContainer(Material type) { return type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX") || type == Material.CHEST || type == Material.BARREL; } // Simplified for brevity
+    private boolean isContainer(Material type) { return type == Material.SHULKER_BOX || type.name().endsWith("_SHULKER_BOX") || type == Material.CHEST || type == Material.BARREL; } 
     private boolean isSign(Material type) { return type.name().contains("SIGN"); }
-    private boolean isInteractable(Material type) { return type.name().contains("DOOR") || type.name().contains("BUTTON"); } // Simplified
+    private boolean isInteractable(Material type) { return type.name().contains("DOOR") || type.name().contains("BUTTON"); } 
 }

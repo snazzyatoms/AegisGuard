@@ -4,6 +4,7 @@ import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
+import com.aegisguard.data.Plot;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
 import com.aegisguard.economy.EconomyManager;
@@ -11,13 +12,14 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.gui.SidebarManager; // --- NEW IMPORT ---
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
-import com.aegisguard.hooks.MapHookManager; // --- NEW UNIFIED MAP MANAGER ---
+import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
-import com.aegisguard.listeners.LevelingListener; // <--- IMPORT ADDED
+import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -59,9 +61,10 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
+    private SidebarManager sidebarManager; // --- NEW FIELD ---
     
     // --- HOOKS ---
-    private MapHookManager mapHookManager; // Replaces specific DynmapHook
+    private MapHookManager mapHookManager;
     private DiscordWebhook discord;
 
     private boolean isFolia = false;
@@ -86,6 +89,7 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
+    public SidebarManager getSidebar() { return sidebarManager; } // --- NEW GETTER ---
     public boolean isFolia() { return isFolia; }
 
     @Override
@@ -123,10 +127,13 @@ public class AegisGuard extends JavaPlugin {
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
         this.worldRules = new WorldRulesManager(this);
-        this.protection = new ProtectionManager(this);
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
-        this.discord = new DiscordWebhook(this); 
+        this.discord = new DiscordWebhook(this);
+        
+        // Initialize Sidebar BEFORE ProtectionManager (Protection uses Sidebar)
+        this.sidebarManager = new SidebarManager(this); 
+        this.protection = new ProtectionManager(this);
 
         // Load Data
         this.plotStore.load();
@@ -141,10 +148,12 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
         
-        // --- NEW: REGISTER LEVELING LISTENER ---
-        // This activates Flight, Haste, and Iron Skin for leveled plots.
+        // Register Leveling Listener
         if (cfg().isLevelingEnabled()) {
-             Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
+             try {
+                 Class.forName("com.aegisguard.listeners.LevelingListener");
+                 Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
+             } catch (ClassNotFoundException ignored) {}
         }
         
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
@@ -184,7 +193,7 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void initializeHooks() {
-        // Initialize Unified Map Manager (Dynmap/BlueMap/Pl3xMap)
+        // Initialize Unified Map Manager
         try {
              this.mapHookManager = new MapHookManager(this);
         } catch (NoClassDefFoundError | Exception e) {
@@ -199,7 +208,7 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Cancel Tasks Safely (Reflection used for Folia/Bukkit task compatibility)
+        // Cancel Tasks Safely
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
         cancelTaskReflectively(wildernessRevertTask);
@@ -309,7 +318,8 @@ public class AegisGuard extends JavaPlugin {
         if (interval <= 0) return;
         
         Runnable logic = () -> {
-            // Placeholder for future upkeep logic integration
+            // Placeholder for upkeep logic
+            // for (Plot plot : new ArrayList<>(store().getAllPlots())) { ... }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -317,7 +327,7 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) {
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql")) {
             getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
             return; 
         }

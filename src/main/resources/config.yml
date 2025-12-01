@@ -9,15 +9,15 @@
 # 🌐 LANGUAGE SETTINGS (LOCALES)
 # =======================================================================
 settings:
-  # Select the active language file from the /plugins/AegisGuard/locales/ folder.
-  #
-  # AVAILABLE OPTIONS:
-  #  - en_hybrid.yml  (Default: "Estate", "Deed" - Professional RPG)
-  #  - en_modern.yml  (Standard: "Claim", "Plot" - Simple Minecraft)
-  #  - en_old.yml     (Hardcore: "Fiefdom", "Decree" - Medieval Roleplay)
-  #
-  # You can also create your own (e.g., es_ES.yml) and reference it here.
-  language_file: "en_hybrid.yml"
+  # The SERVER DEFAULT language.
+  # New players will start with this language automatically.
+  # Options: en_hybrid.yml, en_modern.yml, en_old.yml
+  default_language_file: "en_hybrid.yml"
+
+  # Allow players to choose their own personal language?
+  # If true, players can use /ag lang to switch between Modern, Old, or Hybrid
+  # without affecting other players or the server config.
+  allow_player_switching: true
 
 # =======================================================================
 # 🎛️ MODULAR ARCHITECTURE (MASTER SWITCHBOARD)

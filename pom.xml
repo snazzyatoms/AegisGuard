@@ -17,9 +17,10 @@
     </properties>
 
     <repositories>
+        <!-- Pl3xMap from Modrinth -->
         <repository>
             <id>modrinth-repo</id>
-            <url>https://api.modrinth.com/maven</url>
+            <url>https://api.modrinth.com/maven/</url>
         </repository>
 
         <repository>
@@ -31,6 +32,7 @@
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
+
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
@@ -89,6 +91,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ✅ Correct Pl3xMap API for 1.20.4 via Modrinth -->
         <dependency>
             <groupId>maven.modrinth</groupId>
             <artifactId>pl3xmap</artifactId>
@@ -104,8 +107,9 @@
         
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
+            <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

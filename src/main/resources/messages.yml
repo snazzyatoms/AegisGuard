@@ -120,7 +120,7 @@ old_english:
     - "&eLeft-Click: &7Gaze upon the land"
     - "&aRight-Click: &7Purchase the Deed"
 
-  # --- Expansion ---
+  # --- Expansion (Old English) ---
   expansion_gui_title: "&d§lLand Expansion Petition"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -142,6 +142,7 @@ old_english:
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
   
+  # FIXED KEYS BELOW:
   expansion_tier1_name: "&aYeoman's Grant (+5)"
   expansion_tier1_lore:
     - "&7A modest addition."
@@ -183,7 +184,7 @@ old_english:
   expansion_admin_actions:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
-
+    
   # --- Visit / Travel ---
   visit_gui_title: "&9Travel System"
   visit_title_warps: "&6Realm Waypoints"
@@ -680,7 +681,7 @@ hybrid_english:
     - "&eLeft-Click: &7Preview Land"
     - "&aRight-Click: &7Purchase Deed"
 
-  # --- Expansion ---
+  # --- Expansion (Hybrid) ---
   expansion_gui_title: "&d§lExpansion Petition"
   button_expand: "&dRequest More Land"
   expand_lore:
@@ -702,6 +703,7 @@ hybrid_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ This petition has expired."
   
+  # FIXED KEYS BELOW:
   expansion_tier1_name: "&aMinor Expansion (+5)"
   expansion_tier1_lore:
     - "&7Increase borders by &a+5 blocks&7."
@@ -722,7 +724,7 @@ hybrid_english:
     - "&7Increase borders by &6+35 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_tier5_name: "&bRoyal Expansion (+50)"
+  expansion_tier5_name: "&bImperial Expansion (+50)"
   expansion_tier5_lore:
     - "&7Increase borders by &b+50 blocks&7."
     - " "
@@ -738,7 +740,7 @@ hybrid_english:
   expansion_admin_actions:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
-
+    
   # --- Visit / Travel ---
   visit_gui_title: "&9Travel Network"
   visit_title_warps: "&6Realm Waypoints"
@@ -1201,7 +1203,7 @@ modern_english:
     - "&eLeft-Click: &7Preview Claim"
     - "&aRight-Click: &7Purchase Deed"
 
-  # --- Expansion Request ---
+  # --- Expansion Request (Modern) ---
   expansion_gui_title: "&dExpansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -1223,21 +1225,33 @@ modern_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ Request expired."
   
-  expansion_small_name: "&aSmall Expansion (+5)"
-  expansion_small_lore:
-    - "&7Increase radius by &a+5 blocks&7."
+  # FIXED KEYS BELOW:
+  expansion_tier1_name: "&aSmall Upgrade (+5)"
+  expansion_tier1_lore:
+    - "&7Radius: &a+5 blocks"
     - " "
     - "&eClick to Submit"
-  expansion_medium_name: "&6Medium Expansion (+15)"
-  expansion_medium_lore:
-    - "&7Increase radius by &6+15 blocks&7."
+  expansion_tier2_name: "&eMedium Upgrade (+10)"
+  expansion_tier2_lore:
+    - "&7Radius: &e+10 blocks"
     - " "
     - "&eClick to Submit"
-  expansion_large_name: "&bLarge Expansion (+30)"
-  expansion_large_lore:
-    - "&7Increase radius by &b+30 blocks&7."
+  expansion_tier3_name: "&fLarge Upgrade (+20)"
+  expansion_tier3_lore:
+    - "&7Radius: &f+20 blocks"
     - " "
     - "&eClick to Submit"
+  expansion_tier4_name: "&6Huge Upgrade (+35)"
+  expansion_tier4_lore:
+    - "&7Radius: &6+35 blocks"
+    - " "
+    - "&eClick to Submit"
+  expansion_tier5_name: "&bMassive Upgrade (+50)"
+  expansion_tier5_lore:
+    - "&7Radius: &b+50 blocks"
+    - " "
+    - "&eClick to Submit"
+
   expansion_locked_lore:
     - "&cYou must be standing"
     - "&cin your own claim."

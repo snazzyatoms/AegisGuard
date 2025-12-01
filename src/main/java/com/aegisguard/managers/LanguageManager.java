@@ -3,79 +3,86 @@ package com.yourname.aegisguard.managers;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class LanguageManager {
 
     private final JavaPlugin plugin;
-    private FileConfiguration localeConfig;
-    private File localeFile;
+    // Cache all loaded languages: "en_modern" -> Config Object
+    private final Map<String, FileConfiguration> localeCache = new HashMap<>();
+    // Cache player preferences: UUID -> "en_modern"
+    private final Map<UUID, String> playerLocales = new HashMap<>();
 
     public LanguageManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        loadLocale();
+        loadAllLocales();
     }
 
-    public void loadLocale() {
-        // 1. Get the desired language file name from config.yml
-        // Default to "en_hybrid.yml" if not set
-        String fileName = plugin.getConfig().getString("settings.language_file", "en_hybrid.yml");
-
-        // 2. Create the "locales" folder if it doesn't exist
+    public void loadAllLocales() {
+        localeCache.clear();
         File localeFolder = new File(plugin.getDataFolder(), "locales");
-        if (!localeFolder.exists()) {
-            localeFolder.mkdirs();
-        }
+        if (!localeFolder.exists()) localeFolder.mkdirs();
 
-        // 3. Check if the specific file exists. If not, save the default from resources.
-        localeFile = new File(localeFolder, fileName);
-        if (!localeFile.exists()) {
-            try {
-                // Tries to save the file from inside the .jar
-                plugin.saveResource("locales/" + fileName, false);
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().severe("Could not find language file: " + fileName);
-                plugin.getLogger().severe("Falling back to en_hybrid.yml");
-                plugin.saveResource("locales/en_hybrid.yml", false);
-                localeFile = new File(localeFolder, "en_hybrid.yml");
+        // The 3 Core Languages to ensure exist
+        String[] defaults = {"en_hybrid.yml", "en_modern.yml", "en_old.yml"};
+
+        for (String fileName : defaults) {
+            File file = new File(localeFolder, fileName);
+            if (!file.exists()) {
+                try {
+                    plugin.saveResource("locales/" + fileName, false);
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Could not create default locale: " + fileName);
+                }
             }
         }
 
-        // 4. Load the configuration
-        localeConfig = YamlConfiguration.loadConfiguration(localeFile);
-        plugin.getLogger().info("Loaded Language: " + fileName);
-    }
-
-    /**
-     * Gets a message from the currently active locale file.
-     */
-    public String getMsg(String key) {
-        // Get the string directly (No more "hybrid." prefix needed)
-        String message = localeConfig.getString("messages." + key);
-        
-        if (message == null) {
-            return ChatColor.RED + "Missing Key: " + key;
+        // Load EVERYTHING in the folder (allows for custom languages like es_ES.yml)
+        for (File file : localeFolder.listFiles()) {
+            if (file.getName().endsWith(".yml")) {
+                String key = file.getName().replace(".yml", ""); // "en_modern"
+                localeCache.put(key, YamlConfiguration.loadConfiguration(file));
+                plugin.getLogger().info("Loaded Language: " + key);
+            }
         }
+    }
 
-        String prefix = localeConfig.getString("prefix", "&8[&bAegis&8] &7");
+    /**
+     * Set a player's language preference.
+     * In a real plugin, you would save this to player_data.yml or MySQL async.
+     */
+    public void setPlayerLang(Player player, String langKey) {
+        if (localeCache.containsKey(langKey)) {
+            playerLocales.put(player.getUniqueId(), langKey);
+            // TODO: Save to database here
+            player.sendMessage(ChatColor.GREEN + "Language changed to: " + langKey);
+        }
+    }
+
+    /**
+     * THE NEW GET MESSAGE METHOD
+     * Context-Aware: Checks who is asking for the message.
+     */
+    public String getMsg(Player player, String key) {
+        // 1. Check Player Preference -> Fallback to Server Default
+        String langKey = playerLocales.getOrDefault(player.getUniqueId(), 
+                         plugin.getConfig().getString("settings.language_file", "en_hybrid").replace(".yml", ""));
+
+        // 2. Get the Config from Cache
+        FileConfiguration config = localeCache.get(langKey);
+        if (config == null) config = localeCache.get("en_hybrid"); // Safety fallback
+
+        // 3. Get String
+        String message = config.getString("messages." + key);
+        if (message == null) return ChatColor.RED + "Missing Key: " + key;
+
+        String prefix = config.getString("prefix", "&8[&bAegis&8] &7");
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
-    }
-
-    /**
-     * Gets a GUI title or Item Name
-     */
-    public String getGui(String key) {
-        String text = localeConfig.getString("gui." + key, key);
-        return ChatColor.translateAlternateColorCodes('&', text);
-    }
-    
-    /**
-     * Gets Terminology (Estate vs Plot)
-     */
-    public String getTerm(String key) {
-        String text = localeConfig.getString("terminology." + key, "Estate");
-        return ChatColor.translateAlternateColorCodes('&', text);
     }
 }

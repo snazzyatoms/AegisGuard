@@ -5,10 +5,8 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -35,34 +33,30 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
         "wand", "menu", "claim", "unclaim", "resize", "help",
         "setspawn", "home", "welcome", "farewell",
-        "sell", "unsell", "rent", "unrent", "market", "auction",
-        "consume", "kick", "ban", "unban", "visit", 
+        "sell", "unsell", "market", "auction",
+        "kick", "ban", "unban", "visit", 
         "level", "zone", "like",
-        "rename", "stuck", "setdesc" // v1.1.1 Additions
+        "rename", "stuck", "setdesc", "merge", "sidebar" // Added sidebar & merge
     };
     
     private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
 
-    // Dependency Injection (Best Practice)
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        // 1. Check if sender is a player
         if (!(sender instanceof Player p)) {
             plugin.msg().send(sender, "players_only");
             return true;
         }
 
-        // 2. Default to Menu if no args
         if (args.length == 0) {
             plugin.gui().openMain(p);
             return true;
         }
 
-        // 3. Handle Subcommands
         switch (args[0].toLowerCase()) {
             case "wand":
                 p.getInventory().addItem(createScepter());
@@ -97,12 +91,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "unban":
                 handleUnban(p, args);
                 break;
-
-            // --- UTILITY ---
-            case "consume":
-                plugin.selection().manualConsumeWand(p);
-                break;
-            
+                
+            // --- UTILITIES ---
             case "visit":
                 if (!plugin.cfg().isTravelSystemEnabled()) { sendMsg(p, "&cTravel system is disabled."); return true; }
                 plugin.gui().visit().open(p, 0, false);
@@ -136,6 +126,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 handleSetDesc(p, args);
                 break;
             
+            // --- NEW: MERGE ---
+            case "merge":
+                if (args.length < 2) {
+                     sendMsg(p, "&cUsage: /ag merge <N/S/E/W>");
+                } else {
+                     plugin.selection().attemptMerge(p, args[1]);
+                }
+                break;
+                
+            // --- NEW: SIDEBAR ---
+            case "sidebar":
+                plugin.getSidebar().toggle(p);
+                break;
+            
             // --- ECONOMY ---
             case "market":
                 plugin.gui().market().open(p, 0);
@@ -153,7 +157,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 plugin.gui().auction().open(p, 0);
                 break;
 
-            // --- ADVANCED FEATURES ---
+            // --- SHORTCUTS ---
             case "level":
                 openLevelMenu(p);
                 break;
@@ -173,7 +177,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    // --- HANDLER METHODS ---
+    // --- HANDLERS ---
     
     private void handleRename(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
@@ -194,7 +198,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         String name = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         name = ChatColor.translateAlternateColorCodes('&', name);
         
-        // Limit length to prevent GUI breaking
+        // Limit length
         if (name.length() > 32) {
             sendMsg(p, "&cName is too long (Max 32 chars).");
             return;
@@ -240,29 +244,27 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Find nearest safe spot outside
         Location loc = p.getLocation();
         int x = loc.getBlockX();
         int z = loc.getBlockZ();
         
-        // Calculate distance to all 4 edges
+        // Find nearest edge
         int dX1 = Math.abs(x - plot.getX1());
         int dX2 = Math.abs(x - plot.getX2());
         int dZ1 = Math.abs(z - plot.getZ1());
         int dZ2 = Math.abs(z - plot.getZ2());
         
-        // Find minimum distance
         int min = Math.min(Math.min(dX1, dX2), Math.min(dZ1, dZ2));
         
         Location target = loc.clone();
         
-        // Push player 2 blocks outside the nearest border
+        // Push 2 blocks out
         if (min == dX1) target.setX(plot.getX1() - 2);
         else if (min == dX2) target.setX(plot.getX2() + 2);
         else if (min == dZ1) target.setZ(plot.getZ1() - 2);
         else target.setZ(plot.getZ2() + 2);
         
-        // Get safe Y at that new location
+        // Safe Y
         World world = loc.getWorld();
         int safeY = world.getHighestBlockYAt(target);
         target.setY(safeY + 1);
@@ -440,8 +442,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plot.setForSale(true, price);
             plugin.store().setDirty(true);
             
-            // Note: Ensure your messages.yml has 'market-for-sale'
-            plugin.msg().send(p, "market-for-sale", Map.of("PRICE", plugin.vault().format(price)));
+            plugin.msg().send(p, "market-for-sale", Map.of("PRICE", plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT)));
         } catch (NumberFormatException e) { sendMsg(p, "&cInvalid number."); }
     }
 
@@ -511,10 +512,16 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
             return completions;
         }
+        if (args.length == 2 && args[0].equalsIgnoreCase("merge")) {
+            List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
+            return completions;
+        }
         return null;
     }
 
     private ItemStack createScepter() {
+        // Using LIGHTNING_ROD as requested for modernization
         ItemStack rod = new ItemStack(Material.LIGHTNING_ROD);
         ItemMeta meta = rod.getItemMeta();
         if (meta != null) {

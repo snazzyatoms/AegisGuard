@@ -10,56 +10,72 @@ import java.io.File;
 public class LanguageManager {
 
     private final JavaPlugin plugin;
-    private FileConfiguration langConfig;
-    private File langFile;
+    private FileConfiguration localeConfig;
+    private File localeFile;
 
     public LanguageManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        loadLanguages();
+        loadLocale();
     }
 
-    public void loadLanguages() {
-        // Creates lang.yml if it doesn't exist
-        langFile = new File(plugin.getDataFolder(), "lang.yml");
-        if (!langFile.exists()) {
-            plugin.saveResource("lang.yml", false);
+    public void loadLocale() {
+        // 1. Get the desired language file name from config.yml
+        // Default to "en_hybrid.yml" if not set
+        String fileName = plugin.getConfig().getString("settings.language_file", "en_hybrid.yml");
+
+        // 2. Create the "locales" folder if it doesn't exist
+        File localeFolder = new File(plugin.getDataFolder(), "locales");
+        if (!localeFolder.exists()) {
+            localeFolder.mkdirs();
         }
-        langConfig = YamlConfiguration.loadConfiguration(langFile);
-        plugin.getLogger().info("Language file loaded successfully.");
+
+        // 3. Check if the specific file exists. If not, save the default from resources.
+        localeFile = new File(localeFolder, fileName);
+        if (!localeFile.exists()) {
+            try {
+                // Tries to save the file from inside the .jar
+                plugin.saveResource("locales/" + fileName, false);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().severe("Could not find language file: " + fileName);
+                plugin.getLogger().severe("Falling back to en_hybrid.yml");
+                plugin.saveResource("locales/en_hybrid.yml", false);
+                localeFile = new File(localeFolder, "en_hybrid.yml");
+            }
+        }
+
+        // 4. Load the configuration
+        localeConfig = YamlConfiguration.loadConfiguration(localeFile);
+        plugin.getLogger().info("Loaded Language: " + fileName);
     }
 
     /**
-     * THE HELPER METHOD
-     * Automatically detects if server is using "modern", "old", or "hybrid"
-     * and fetches the correct message string.
+     * Gets a message from the currently active locale file.
      */
     public String getMsg(String key) {
-        // 1. Check which language is active in settings
-        String activeLang = langConfig.getString("settings.active_language", "hybrid");
-
-        // 2. Build the path (e.g., "hybrid.messages.claim_success")
-        String path = activeLang + ".messages." + key;
-
-        // 3. Get the string (or return error if missing)
-        String message = langConfig.getString(path);
+        // Get the string directly (No more "hybrid." prefix needed)
+        String message = localeConfig.getString("messages." + key);
+        
         if (message == null) {
-            return ChatColor.RED + "Missing Language Key: " + path;
+            return ChatColor.RED + "Missing Key: " + key;
         }
 
-        // 4. Get the Prefix
-        String prefix = langConfig.getString("settings.prefix", "&8[&bAegis&8] &7");
-
-        // 5. Return colored string with Prefix attached
+        String prefix = localeConfig.getString("prefix", "&8[&bAegis&8] &7");
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
+    }
+
+    /**
+     * Gets a GUI title or Item Name
+     */
+    public String getGui(String key) {
+        String text = localeConfig.getString("gui." + key, key);
+        return ChatColor.translateAlternateColorCodes('&', text);
     }
     
     /**
-     * Terminology Helper
-     * Gets "Estate" or "Plot" based on language.
+     * Gets Terminology (Estate vs Plot)
      */
     public String getTerm(String key) {
-        String activeLang = langConfig.getString("settings.active_language", "hybrid");
-        return ChatColor.translateAlternateColorCodes('&', 
-               langConfig.getString(activeLang + ".terminology." + key, "Estate"));
+        String text = localeConfig.getString("terminology." + key, "Estate");
+        return ChatColor.translateAlternateColorCodes('&', text);
     }
 }

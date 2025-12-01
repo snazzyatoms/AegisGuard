@@ -5,8 +5,10 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location; // FIXED: Added missing import
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;    // FIXED: Added missing import
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -36,7 +38,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         "sell", "unsell", "market", "auction",
         "kick", "ban", "unban", "visit", 
         "level", "zone", "like",
-        "rename", "stuck", "setdesc", "merge", "sidebar" // Added sidebar & merge
+        "rename", "stuck", "setdesc", "merge", "sidebar" 
     };
     
     private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
@@ -91,7 +93,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "unban":
                 handleUnban(p, args);
                 break;
-                
+
             // --- UTILITIES ---
             case "visit":
                 if (!plugin.cfg().isTravelSystemEnabled()) { sendMsg(p, "&cTravel system is disabled."); return true; }
@@ -170,6 +172,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 handleLike(p);
                 break;
 
+            case "consume":
+                plugin.selection().manualConsumeWand(p);
+                break;
+
             case "help":
             default:
                 sendHelp(p);
@@ -198,7 +204,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         String name = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         name = ChatColor.translateAlternateColorCodes('&', name);
         
-        // Limit length
         if (name.length() > 32) {
             sendMsg(p, "&cName is too long (Max 32 chars).");
             return;
@@ -521,7 +526,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private ItemStack createScepter() {
-        // Using LIGHTNING_ROD as requested for modernization
         ItemStack rod = new ItemStack(Material.LIGHTNING_ROD);
         ItemMeta meta = rod.getItemMeta();
         if (meta != null) {

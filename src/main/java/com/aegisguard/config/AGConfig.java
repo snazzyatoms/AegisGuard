@@ -57,6 +57,12 @@ public class AGConfig {
         config.addDefault("leveling.expand_plot_on_levelup", false); // Default OFF as requested
         config.addDefault("leveling.expansion_amount", 5);
         
+        // Hook Defaults
+        config.addDefault("hooks.bluemap.enabled", true);
+        config.addDefault("hooks.pl3xmap.enabled", true);
+        config.addDefault("hooks.discord.enabled", false);
+        config.addDefault("claims.merging.enabled", true);
+        
         config.options().copyDefaults(true);
         plugin.saveConfig();
         
@@ -90,6 +96,18 @@ public class AGConfig {
 
     public FileConfiguration raw() { return config; }
 
+    // ======================================
+    // 💱 Currency System (FIXED ERROR HERE)
+    // ======================================
+    public CurrencyType getCurrencyFor(String feature) {
+        String type = config.getString("currencies." + feature, "VAULT").toUpperCase();
+        try {
+            return CurrencyType.valueOf(type);
+        } catch (IllegalArgumentException e) {
+            return CurrencyType.VAULT; 
+        }
+    }
+
     // --- Leveling Getters ---
     public boolean isLevelingEnabled() { return levelingEnabled; }
     
@@ -111,27 +129,62 @@ public class AGConfig {
         return config.getStringList("leveling.rewards." + level);
     }
 
-    // ... (Keep all other existing getters: Currency, World Limits, Protections, etc.) ...
+    // ======================================
+    // --- Standard Getters ---
+    // ======================================
     
-    // For brevity, assuming the rest of the file is unchanged from previous versions.
-    // Ensure you keep the methods like getCurrencyFor, getWorldMaxRadius, etc.
+    public boolean useVault(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".use_vault";
+            if (config.isSet(path)) return config.getBoolean(path);
+        }
+        return config.getBoolean("economy.use_vault", true);
+    }
     
-    public boolean useVault(World world) { /* ... */ return config.getBoolean("economy.use_vault", true); }
     public boolean useVault() { return config.getBoolean("economy.use_vault", true); }
-    public double getWorldVaultCost(World world) { /* ... */ return 100.0; }
-    public Material getWorldItemCostType(World world) { /* ... */ return Material.DIAMOND; }
-    public int getWorldItemCostAmount(World world) { /* ... */ return 5; }
+    
+    public double getWorldVaultCost(World world) {
+        if (world != null) {
+            String path = "claims.per_world." + world.getName() + ".vault_cost";
+            if (config.isSet(path)) return config.getDouble(path);
+        }
+        return config.getDouble("economy.claim_cost", 100.0);
+    }
+    
+    public Material getWorldItemCostType(World world) {
+        String path = "economy.item_cost.type";
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.type")) {
+            path = "claims.per_world." + world.getName() + ".item_cost.type";
+        }
+        return Material.matchMaterial(config.getString(path, "DIAMOND"));
+    }
+    
+    public int getWorldItemCostAmount(World world) {
+        String path = "economy.item_cost.amount";
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".item_cost.amount")) {
+            path = "claims.per_world." + world.getName() + ".item_cost.amount";
+        }
+        return config.getInt(path, 5);
+    }
+    
     public double getFlightCost() { return config.getDouble("economy.flag_costs.fly", 5000.0); }
     public double getShopInteractCost() { return config.getDouble("economy.flag_costs.shop-interact", 0.0); }
+    
     public boolean isTravelSystemEnabled() { return travelEnabled; }
+    public boolean allowHomeTeleport() { return config.getBoolean("travel_system.allow_home_teleport", true); }
+    public boolean allowVisitTeleport() { return config.getBoolean("travel_system.allow_visit_teleport", true); }
+    
     public boolean isUpkeepEnabled() { return upkeepEnabled; }
     public long getUpkeepCheckHours() { return config.getLong("upkeep.check_interval_hours", 24); }
     public double getUpkeepCost() { return config.getDouble("upkeep.cost_per_plot", 100.0); }
     public int getUpkeepGraceDays() { return config.getInt("upkeep.grace_period_days", 7); }
+    
     public List<String> getRoleNames() { return new ArrayList<>(config.getConfigurationSection("roles").getKeys(false)); }
     public List<String> getRolePermissions(String role) { return config.getStringList("roles." + role); }
+    
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
+    
     public boolean pvpProtectionDefault() { return pvpDefault; }
     public boolean noMobsInClaims() { return mobDefault; }
     public boolean containerProtectionDefault() { return containerDefault; }
@@ -139,32 +192,50 @@ public class AGConfig {
     public boolean farmProtectionDefault() { return farmDefault; }
     public boolean flyDefault() { return flyDefault; }
     public boolean entryDefault() { return entryDefault; }
+    
     public Material getAdminWandMaterial() { return Material.matchMaterial(config.getString("admin.wand.material", "BLAZE_ROD")); }
     public String getAdminWandName() { return ChatColor.translateAlternateColorCodes('&', config.getString("admin.wand.name", "&c&lSentinel's Scepter")); }
     public List<String> getAdminWandLore() { return new ArrayList<>(); }
-    public int getWorldMaxRadius(World world) { return 32; } // Stub for compilation, ensure your actual file has the real logic
-    public int getWorldMinRadius(World world) { return 1; }
-    public int getWorldMaxClaims(World world) { return 1; }
+    
+    public int getWorldMaxRadius(World world) {
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".max_radius")) return config.getInt("claims.per_world." + world.getName() + ".max_radius");
+        return config.getInt("claims.max_radius", 32);
+    }
+    
+    public int getWorldMinRadius(World world) {
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".min_radius")) return config.getInt("claims.per_world." + world.getName() + ".min_radius");
+        return config.getInt("claims.min_radius", 1);
+    }
+    
+    public int getWorldMaxClaims(World world) {
+        if (world != null && config.isSet("claims.per_world." + world.getName() + ".max_claims_per_player")) return config.getInt("claims.per_world." + world.getName() + ".max_claims_per_player");
+        return config.getInt("claims.max_claims_per_player", 1);
+    }
+    
     public boolean isZoningEnabled() { return zoningEnabled; }
-    public int getMaxZonesPerPlot() { return 10; }
-    public boolean landlordGetsFullRent() { return true; }
+    public int getMaxZonesPerPlot() { return config.getInt("zoning.max_zones_per_plot", 10); }
+    public boolean landlordGetsFullRent() { return config.getBoolean("zoning.landlord_gets_full_rent", true); }
+    
     public boolean isTitleEnabled() { return titlesEnabled; }
-    public int getTitleFadeIn() { return 10; }
-    public int getTitleStay() { return 40; }
-    public int getTitleFadeOut() { return 10; }
+    public int getTitleFadeIn() { return config.getInt("titles.fade_in", 10); }
+    public int getTitleStay() { return config.getInt("titles.stay", 40); }
+    public int getTitleFadeOut() { return config.getInt("titles.fade_out", 10); }
+    
     public boolean isBiomesEnabled() { return biomesEnabled; }
-    public double getBiomeChangeCost() { return 2000.0; }
+    public double getBiomeChangeCost() { return config.getDouble("biomes.cost_per_change", 2000.0); }
     public List<String> getAllowedBiomes() { return config.getStringList("biomes.allowed"); }
+    
     public boolean isLikesEnabled() { return likesEnabled; }
-    public boolean oneLikePerPlayer() { return true; }
-    public String getNotificationLocation() { return "ACTION_BAR"; }
+    public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
+    
+    public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
     public boolean isUnstuckEnabled() { return unstuckEnabled; }
-    public int getUnstuckWarmup() { return 5; }
-    public boolean allowHomeTeleport() { return true; }
-    public boolean allowVisitTeleport() { return true; }
+    public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
+    
     public boolean isDiscordEnabled() { return discordEnabled; }
     public boolean isBlueMapEnabled() { return bluemapEnabled; }
     public boolean isPl3xMapEnabled() { return pl3xmapEnabled; }
+    
     public boolean isMergeEnabled() { return mergeEnabled; }
-    public double getMergeCost() { return 500.0; }
+    public double getMergeCost() { return config.getDouble("claims.merging.cost", 500.0); }
 }

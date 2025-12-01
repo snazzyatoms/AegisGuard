@@ -105,10 +105,11 @@
             <version>5.1.0</version>
         </dependency>
         
+        <!-- LOGGING FIX: Use the Server's SLF4J instead of bundling our own -->
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.36</version>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -139,14 +140,12 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <relocations>
+                                <!-- Relocate Hikari to avoid conflicts -->
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>org.slf4j</pattern>
-                                    <shadedPattern>com.aegisguard.lib.slf4j</shadedPattern>
-                                </relocation>
+                                <!-- REMOVED SLF4J RELOCATION: This was causing the "No Provider" error -->
                             </relocations>
                             <filters>
                                 <filter>

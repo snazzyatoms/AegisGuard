@@ -7,24 +7,20 @@ import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * LevelingGUI (Ultimate Edition - Fixed)
- * - Fixed: Compilation errors (createItem arguments).
- * - Added: EXIT BUTTON (Slot 44).
- * - Features: Visual Progress Bar, RPG Effects, Flight logic.
+ * LevelingGUI
+ * - Allows players to upgrade their plot level.
+ * - Configurable: Can optionally expand plot size on level up.
  */
 public class LevelingGUI {
 
@@ -42,96 +38,74 @@ public class LevelingGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§8⚡ Dominion Ascension");
-        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 45, title);
+        String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§dPlot Leveling");
+        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 27, title);
 
-        // --- FIX: Pass empty list for lore to satisfy GUIManager ---
-        ItemStack filler = GUIManager.createItem(Material.BLACK_STAINED_GLASS_PANE, " ", new ArrayList<>());
-        for (int i = 0; i < 45; i++) inv.setItem(i, filler);
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
         int currentLvl = plot.getLevel();
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§7Level: §f" + currentLvl);
+        infoLore.add("§7XP Multiplier: §f" + plugin.cfg().getLevelCostMultiplier());
+        infoLore.add("");
+        
+        // Show expansion info if enabled
+        if (plugin.cfg().isLevelingExpansionEnabled()) {
+            int amount = plugin.cfg().getLevelingExpansionAmount();
+            infoLore.add("§bBonus: §7+ " + amount + " block radius/lvl");
+        }
+        
+        infoLore.add("§7Current Buffs:");
+        infoLore.addAll(formatBuffs(currentLvl));
+
+        inv.setItem(11, GUIManager.createItem(
+            Material.ENCHANTING_TABLE,
+            plugin.msg().get(player, "level_current_status"),
+            infoLore
+        ));
+
         int nextLvl = currentLvl + 1;
         int maxLvl = plugin.cfg().getMaxLevel();
-
-        // --- VISUAL PROGRESS BAR ---
-        renderProgressBar(inv, currentLvl, maxLvl);
-
-        // --- SLOT 11: CURRENT STATS ---
-        List<String> currentLore = new ArrayList<>();
-        currentLore.add("§7Current Rank: §f" + currentLvl);
-        currentLore.add("");
-        currentLore.add("§7Active Bonuses:");
-        currentLore.addAll(formatBuffs(currentLvl));
         
-        inv.setItem(11, GUIManager.createItem(Material.BOOK, "§e§nYour Current Power", currentLore));
-
-        // --- SLOT 15: NEXT LEVEL PREVIEW ---
-        List<String> nextLore = new ArrayList<>();
-        if (nextLvl <= maxLvl) {
-            nextLore.add("§7Next Rank: §b" + nextLvl);
-            nextLore.add("");
-            nextLore.add("§7Upcoming Bonuses:");
-            nextLore.addAll(formatBuffs(nextLvl));
-        } else {
-            nextLore.add("§7You have reached the");
-            nextLore.add("§7pinnacle of power.");
-        }
-        inv.setItem(15, GUIManager.createItem(Material.KNOWLEDGE_BOOK, "§b§nNext Tier Preview", nextLore));
-
-        // --- SLOT 13: UPGRADE BUTTON ---
         if (nextLvl <= maxLvl) {
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
             String costStr = plugin.eco().format(cost, type);
-
+            
             List<String> upgradeLore = new ArrayList<>();
-            upgradeLore.add("§7Upgrade to §dLevel " + nextLvl);
+            upgradeLore.add("§7Cost: §e" + costStr);
             upgradeLore.add("");
-            upgradeLore.add("§7Cost: §6" + costStr);
-            upgradeLore.add("");
-            upgradeLore.add("§7§oClick to pay tribute and");
-            upgradeLore.add("§7§oascend your dominion.");
-
-            ItemStack upgradeBtn = GUIManager.createItem(Material.NETHER_STAR,"§6§l⬆ ASCEND DOMINION ⬆", upgradeLore);
-            ItemMeta meta = upgradeBtn.getItemMeta();
-            if (meta != null) {
-                meta.addEnchant(Enchantment.DURABILITY, 1, true);
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                upgradeBtn.setItemMeta(meta);
+            upgradeLore.add("§7New Buffs Unlocked:");
+            upgradeLore.addAll(formatBuffs(nextLvl));
+            
+            if (plugin.cfg().isLevelingExpansionEnabled()) {
+                upgradeLore.add("");
+                upgradeLore.add("§b+ " + plugin.cfg().getLevelingExpansionAmount() + " Block Radius");
             }
-            inv.setItem(13, upgradeBtn);
+            
+            upgradeLore.add("");
+            upgradeLore.add("§eClick to Purchase Upgrade");
+
+            inv.setItem(15, GUIManager.createItem(
+                Material.EXPERIENCE_BOTTLE,
+                plugin.msg().get(player, "level_upgrade_button", Map.of("LEVEL", String.valueOf(nextLvl))),
+                upgradeLore
+            ));
         } else {
-            inv.setItem(13, GUIManager.createItem(Material.BEACON,"§b§lMAXIMUM LEVEL", List.of("§7Your dominion is fully ascended.")));
+            inv.setItem(15, GUIManager.createItem(
+                Material.BARRIER, 
+                plugin.msg().get(player, "level_max_reached"), 
+                List.of("§7Your plot is fully ascended.")
+            ));
         }
 
-        // --- SLOT 40: BACK BUTTON ---
-        inv.setItem(40, GUIManager.createItem(Material.ARROW, 
+        inv.setItem(22, GUIManager.createItem(Material.ARROW, 
             plugin.msg().get(player, "button_back"), 
             plugin.msg().getList(player, "back_lore")));
-
-        // --- SLOT 44: EXIT BUTTON ---
-        inv.setItem(44, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
-            plugin.msg().getList(player, "button_exit_lore")));
         
         player.openInventory(inv);
         GUIManager.playClick(player);
-    }
-
-    private void renderProgressBar(Inventory inv, int current, int max) {
-        int[] slots = {28, 29, 30, 31, 32, 33, 34};
-        double progress = Math.min(1.0, (double) current / max);
-        int filledSlots = (int) (progress * slots.length);
-
-        for (int i = 0; i < slots.length; i++) {
-            // --- FIX: Added new ArrayList<>() to all createItem calls here ---
-            if (i < filledSlots) 
-                inv.setItem(slots[i], GUIManager.createItem(Material.LIME_STAINED_GLASS_PANE, "§a§lUNLOCKED", new ArrayList<>()));
-            else if (i == filledSlots && current < max) 
-                inv.setItem(slots[i], GUIManager.createItem(Material.ORANGE_STAINED_GLASS_PANE, "§6§lNEXT GOAL", new ArrayList<>()));
-            else 
-                inv.setItem(slots[i], GUIManager.createItem(Material.GRAY_STAINED_GLASS_PANE, "§7LOCKED", new ArrayList<>()));
-        }
     }
 
     public void handleClick(Player player, InventoryClickEvent e, LevelingHolder holder) {
@@ -139,48 +113,71 @@ public class LevelingGUI {
         if (e.getCurrentItem() == null) return;
         Plot plot = holder.getPlot();
         
-        // Back Button
-        if (e.getSlot() == 40) { 
-            plugin.gui().openMain(player); 
-            return; 
-        }
-
-        // Exit Button
-        if (e.getSlot() == 44) {
-            player.closeInventory();
+        if (e.getSlot() == 22) {
+            plugin.gui().openMain(player);
             return;
         }
 
-        // Upgrade Button
-        if (e.getSlot() == 13 && e.getCurrentItem().getType() == Material.NETHER_STAR) {
+        if (e.getSlot() == 15 && e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
             int nextLvl = plot.getLevel() + 1;
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
 
+            // 1. Check Funds
             if (!plugin.eco().withdraw(player, cost, type)) {
                 plugin.msg().send(player, "level_up_fail_cost");
                 plugin.effects().playError(player);
                 return;
             }
 
+            // 2. Handle Expansion (If Enabled)
+            if (plugin.cfg().isLevelingExpansionEnabled()) {
+                int expandAmount = plugin.cfg().getLevelingExpansionAmount();
+                int newX1 = plot.getX1() - expandAmount;
+                int newZ1 = plot.getZ1() - expandAmount;
+                int newX2 = plot.getX2() + expandAmount;
+                int newZ2 = plot.getZ2() + expandAmount;
+
+                // Overlap Check
+                if (plugin.store().isAreaOverlapping(plot, plot.getWorld(), newX1, newZ1, newX2, newZ2)) {
+                    plugin.eco().deposit(player, cost, type); // Refund
+                    player.sendMessage("§cCannot level up: Plot expansion would overlap a neighbor.");
+                    plugin.effects().playError(player);
+                    return;
+                }
+
+                // Limit Check (Admin Bypass)
+                int newRadius = (newX2 - newX1) / 2;
+                int maxRadius = plugin.cfg().getWorldMaxRadius(player.getWorld());
+                if (newRadius > maxRadius && !player.hasPermission("aegis.admin.bypass")) {
+                     plugin.eco().deposit(player, cost, type); // Refund
+                     player.sendMessage("§cCannot level up: Expansion exceeds world limit (" + maxRadius + ").");
+                     plugin.effects().playError(player);
+                     return;
+                }
+
+                // Apply Resize
+                plugin.store().removePlot(plot.getOwner(), plot.getPlotId()); // Remove old index
+                plot.setX1(newX1); plot.setX2(newX2);
+                plot.setZ1(newZ1); plot.setZ2(newZ2);
+                plugin.store().addPlot(plot); // Add new index
+            }
+
+            // 3. Fire Event & Apply Level
             PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvl);
             Bukkit.getPluginManager().callEvent(event);
             
             plot.setLevel(nextLvl);
-            // Ensure this method exists in your IDataStore interface!
-            // If errors persist here, change to: plugin.store().save(); 
-            // but ideally we save just the specific plot.
-            try {
-                plugin.store().savePlot(plot); 
-            } catch (NoSuchMethodError ex) {
-                plugin.store().save(); // Fallback if interface update wasn't applied
-            }
+            plugin.store().setDirty(true);
             
+            // 4. Feedback
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 0.5f);
             plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvl)));
             plugin.effects().playConfirm(player);
-            open(player, plot);
+            
+            open(player, plot); // Refresh menu
+        } else if (e.getSlot() == 15) {
+             GUIManager.playClick(player);
         }
     }
     
@@ -194,73 +191,33 @@ public class LevelingGUI {
         List<String> rewards = plugin.cfg().getLevelRewards(level);
         List<String> formatted = new ArrayList<>();
         if (rewards == null || rewards.isEmpty()) {
-            formatted.add("§8- (No buffs for this level)");
-            return formatted;
-        }
-
-        for (String s : rewards) {
-            // STRICTLY FILTER OUT REGEN/HEALTH
-            if (s.contains("REGENERATION") || s.contains("SATURATION") || s.contains("HEAL")) continue;
-
-            if (s.equalsIgnoreCase("FLIGHT") || s.equalsIgnoreCase("FLY")) {
-                formatted.add("§b☁ §lABILITY: FLIGHT");
-                formatted.add("   §7(Fly within your borders)");
-            }
-            else if (s.startsWith("PARTICLE:")) {
-                 String type = s.split(":")[1];
-                 formatted.add("§d✨ Aura: " + beautifyName(type));
-            }
-            else if (s.startsWith("EFFECT:")) {
-                try {
-                    String[] parts = s.split(":");
-                    String rawType = parts[1];
-                    String lvl = toRoman(Integer.parseInt(parts[2]));
-                    formatted.add("§a✦ " + beautifyEffect(rawType) + " " + lvl);
-                } catch (Exception e) { formatted.add("§a✦ " + s); }
-            }
-            else if (s.startsWith("RADIUS:")) {
-                formatted.add("§e⬈ Expansion: §f+" + s.split(":")[1] + " Blocks");
-            }
-            else if (s.startsWith("MEMBERS:")) {
-                formatted.add("§e👥 Roster: §f+" + s.split(":")[1] + " Slots");
-            }
-            else {
-                formatted.add("§a✦ " + s);
+            formatted.add("§8- (None)");
+        } else {
+            for (String s : rewards) {
+                if (s.startsWith("EFFECT:")) {
+                    try {
+                        String[] parts = s.split(":");
+                        String type = parts[1].toLowerCase().replace("_", " ");
+                        type = type.substring(0, 1).toUpperCase() + type.substring(1);
+                        formatted.add("§b✦ " + type + " " + toRoman(Integer.parseInt(parts[2])));
+                    } catch (Exception e) {
+                        formatted.add("§b✦ " + s);
+                    }
+                } else {
+                    formatted.add("§a✦ " + s);
+                }
             }
         }
         return formatted;
     }
     
-    private String beautifyEffect(String type) {
-        type = type.toUpperCase();
-        if (type.contains("FAST_DIGGING")) return "Mining Haste";
-        if (type.contains("DAMAGE_RESISTANCE")) return "Iron Skin";
-        if (type.contains("INCREASE_DAMAGE")) return "Strength";
-        if (type.contains("SPEED")) return "Agility";
-        if (type.contains("JUMP")) return "High Jump";
-        if (type.contains("NIGHT_VISION")) return "True Sight";
-        if (type.contains("WATER_BREATHING")) return "Aquatic Lungs";
-        if (type.contains("FIRE_RESISTANCE")) return "Fireborn";
-        if (type.contains("LUCK")) return "Fortune's Favor";
-        if (type.contains("DOLPHINS_GRACE")) return "Ocean's Speed";
-        if (type.contains("CONDUIT_POWER")) return "Atlantis Power";
-        if (type.contains("SLOW_FALLING")) return "Feather Weight";
-        return beautifyName(type);
-    }
-    
-    private String beautifyName(String str) {
-        if (str == null || str.isEmpty()) return str;
-        String[] words = str.toLowerCase().split("_");
-        StringBuilder sb = new StringBuilder();
-        for (String w : words) {
-            sb.append(w.substring(0, 1).toUpperCase()).append(w.substring(1)).append(" ");
-        }
-        return sb.toString().trim();
-    }
-    
     private String toRoman(int n) {
         return switch (n) {
-            case 1 -> "I"; case 2 -> "II"; case 3 -> "III"; case 4 -> "IV"; case 5 -> "V";
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
             default -> String.valueOf(n);
         };
     }

@@ -1,8 +1,8 @@
 # ======================================
-# 🛡️ AegisGuard v1.1.2 - Configuration
+#  🛡️ AegisGuard v1.1.2 - Configuration
 # ======================================
-# Main configuration file.
-# Restart server or use /agadmin reload after editing.
+#  Main configuration file.
+#  Restart server or use /agadmin reload after editing.
 # ======================================
 
 # ======================================
@@ -32,10 +32,16 @@ hooks:
       claim_delete: true
       claim_merge: true
       admin_actions: true
+  
+  # --- Maps (Auto-Detected) ---
+  bluemap:
+    enabled: true
+    label: "Claims"
+  pl3xmap:
+    enabled: true
 
 storage:
   # Options: "yml" (Local File) or "sql" (MySQL/MariaDB/SQLite)
-  # Use "sql" if you plan to sync data across servers later.
   type: "yml"
   
   database:
@@ -47,6 +53,12 @@ storage:
     # username: "root"
     # password: "password"
     # useSSL: false
+
+# ======================================
+# 📊 Sidebar (Scoreboard)
+# ======================================
+sidebar:
+  enabled: true
 
 # ======================================
 # 💱 Currency System
@@ -156,31 +168,35 @@ leveling:
   enabled: true
   base_cost: 1000.0
   cost_multiplier: 1.5
-  max_level: 30 # Updated to match the new tree
+  max_level: 30
+  
+  # --- NEW: Expansion Toggle ---
+  expand_plot_on_levelup: false
+  expansion_amount: 5
   
   # Rewards per Level (30-Level Ascension Tree)
   # "EFFECT:<TYPE>:<LEVEL>" or "RADIUS:<BLOCKS>" or "MEMBERS:<SLOTS>" or "FLIGHT"
   rewards:
     # --- TIER 1: THE BASICS ---
     1:
-      - "EFFECT:SPEED:1"           # Agility I
+      - "EFFECT:SPEED:1"            # Agility I
       - "RADIUS:5"
     2:
-      - "EFFECT:SPEED:2"           # Agility II
+      - "EFFECT:SPEED:2"            # Agility II
       - "MEMBERS:1"
     3:
-      - "EFFECT:FAST_DIGGING:1"    # Haste I (Mining Speed)
+      - "EFFECT:FAST_DIGGING:1"     # Haste I (Mining Speed)
       - "RADIUS:5"
     4:
-      - "EFFECT:FAST_DIGGING:2"    # Haste II (Insta-Mine capability)
+      - "EFFECT:FAST_DIGGING:2"     # Haste II (Insta-Mine capability)
       - "MEMBERS:1"
     5:
-      - "EFFECT:JUMP:1"            # Jump Boost I
+      - "EFFECT:JUMP:1"             # Jump Boost I
       - "RADIUS:10"
 
     # --- TIER 2: EXPLORATION & SURVIVAL ---
     6:
-      - "EFFECT:NIGHT_VISION:1"    # True Sight (See in dark)
+      - "EFFECT:NIGHT_VISION:1"     # True Sight (See in dark)
       - "MEMBERS:2"
     7:
       - "EFFECT:WATER_BREATHING:1" # Aquatic Lungs (Underwater bases)
@@ -192,7 +208,7 @@ leveling:
       - "EFFECT:SLOW_FALLING:1"    # No Fall Damage in base
       - "RADIUS:15"
     10:
-      - "FLIGHT"                   # <--- UNLOCK FLIGHT
+      - "FLAG:fly"                 # <--- UNLOCK FLIGHT
       - "MEMBERS:3"
 
     # --- TIER 3: COMBAT & DEFENSE ---

@@ -1,476 +1,242 @@
-# ======================================
-#  🛡️ AegisGuard v1.2.0 - Configuration
-# ======================================
-#  Main configuration file.
+# =======================================================================
+#  🛡️ AEGISGUARD v1.3.0 - MASTER CONFIGURATION
+# =======================================================================
+#  "The Estate & Economy Update"
 #  Restart server or use /agadmin reload after editing.
-# ======================================
+# =======================================================================
 
-# ======================================
-# 🔌 Plugin Hooks & Storage
-# ======================================
+# =======================================================================
+# 🎛️ MODULAR ARCHITECTURE (MASTER SWITCHBOARD)
+# =======================================================================
+# Disable modules here to completely remove them from the game.
+# This saves RAM and unregisters unused commands.
+# =======================================================================
+modules:
+  # Allow players to claim personal land? (Private Estates)
+  private_estates: true
+
+  # Enable the Guild/Alliance system? (Guild Estates)
+  # Unlocks: /ag guild, Shared Treasuries, and Guild Plots.
+  guild_system: true
+
+  # The "Living Economy" Engine.
+  # If false, land is free, and there is no upkeep/tax system.
+  economy_engine: true
+
+  # Enable the "Liquidation Chute" GUI?
+  # Allows players to sell items to pay for upkeep.
+  asset_liquidation: true
+
+  # Enable the leveling systems? (Ascension & Bastion)
+  # If false, plots are static and cannot be upgraded.
+  progression_system: true
+
+# =======================================================================
+# 🔌 PLUGIN HOOKS & STORAGE
+# =======================================================================
 hooks:
-  # --- Web Map ---
+  # --- Web Map Integration ---
   dynmap:
     enabled: true
-    layer_name: "AegisGuard Plots"
+    layer_name: "AegisGuard Estates"
     sync_interval_minutes: 5
     style:
       stroke_color: "00FF00"
       stroke_opacity: 0.8
-      stroke_weight: 3
       fill_color: "00FF00"
       fill_opacity: 0.35
 
-  # --- Discord Webhook (NEW v1.2.0) ---
+  # --- Discord Webhook ---
   discord:
     enabled: true
-    # Paste your Webhook URL here (Channel Settings -> Integrations -> Webhooks)
     webhook_url: "https://discord.com/api/webhooks/..."
-    # Select which events send a notification
     events:
       claim_create: true
-      claim_delete: true
-      claim_merge: true
+      guild_create: true       # [NEW]
+      estate_liquidation: true # [NEW]
       admin_actions: true
-  
-  # --- Maps (Auto-Detected) ---
-  bluemap:
-    enabled: true
-    label: "Claims"
-  pl3xmap:
-    enabled: true
+
+  # --- Other Maps (Auto-Detected) ---
+  bluemap: { enabled: true, label: "Estates" }
+  pl3xmap: { enabled: true }
 
 storage:
   # Options: "yml" (Local File) or "sql" (MySQL/MariaDB/SQLite)
   type: "yml"
-  
   database:
     file: "aegisguard.db" # For SQLite
-    # For MySQL/MariaDB:
     # host: "localhost"
     # port: 3306
     # database: "aegisguard"
     # username: "root"
     # password: "password"
-    # useSSL: false
 
-# ======================================
-# 📊 Sidebar (Scoreboard)
-# ======================================
-sidebar:
-  enabled: true
-
-# ======================================
-# 💱 Currency System
-# ======================================
-# Options: VAULT, EXP, LEVEL, ITEM
-currencies:
-  claiming: VAULT
-  resizing: VAULT
-  flight: VAULT
-  biomes: VAULT
-  teleport: VAULT
-  leveling: VAULT
-
-# ======================================
-# 💰 Economy & Prices
-# ======================================
+# =======================================================================
+# 💰 ECONOMY & LEDGER
+# =======================================================================
 economy:
   enabled: true
   use_vault: true
-  claim_cost: 100.0
-  
-  # Fallback if VAULT is disabled
-  item_cost:
-    type: DIAMOND
-    amount: 5
+  currency_name: "Credits"
 
-  # Feature Costs (Set to 0.0 for free)
-  flag_costs:
-    fly: 5000.0
-    shop-interact: 500.0 # Cost to allow public chest/sign access (Shops)
+  # --- The Land Ledger (Pre-Paid Rent) ---
+  ledger:
+    # Allow players to deposit more than the current bill? (Rollover Credit)
+    allow_overpayment: true
+    # Maximum days of rent a player can pre-pay.
+    max_prepay_days: 60
+    # [NEW] Small Group Reserve
+    # Prevent withdrawals if it drops protection below X days.
+    min_reserve_days: 7
 
-  # Resizing
-  resize_cost_per_block: 10.0
-  
-  # Refunds
-  refund_on_unclaim: true
-  refund_percent: 50.0
+  # --- Asset Liquidation (Item Selling) ---
+  liquidation:
+    # Durability Calculation: Damaged items are worth less?
+    respect_durability: true
+    # Bonus value per enchantment level
+    price_per_enchant: 10.0
 
-# ======================================
-# 🧱 Claims Settings
-# ======================================
-claims:
-  max_claims_per_player: 2
+  # --- Creation Costs ---
+  costs:
+    private_estate_creation: 500.0
+    guild_creation: 5000.0      # Cost to form a Guild
+    guild_estate_creation: 2000.0 # Cost to claim Guild Land
+
+  # --- Smart Upkeep (Taxes) ---
+  upkeep:
+    enabled: true
+    check_interval_hours: 24
+    # The Formula: Base + (Blocks * Price)
+    base_cost: 100.0
+    price_per_block: 0.50
+    # Penalty Multiplier if player owns > 5 plots
+    landlord_penalty: 1.2
+    # Grace period before deletion/liquidation
+    grace_period_days: 7
+
+# =======================================================================
+# 🏡 ESTATE SETTINGS (Formerly Claims)
+# =======================================================================
+estates:
+  # Limits
+  max_estates_per_player: 3
   min_radius: 5
-  max_radius: 64
-  max_area: 16000
-  preview_seconds: 10
-  
-  # Item Management
-  consume_wand_on_claim: true
-  admin_keep_wand: true
-  
-  # --- Plot Merging (NEW v1.2.0) ---
-  merging:
-    enabled: true
-    cost: 500.0
-    # If true, only plots of equal edge length can merge (Recommended: true)
-    require_alignment: true
+  max_radius: 100
+  max_total_area: 50000
 
-  # --- Travel System ---
-  travel_system:
-    enabled: true
-    allow_home_teleport: true
-    allow_visit_teleport: true
-  
-  # Per-World Overrides
+  # Naming & Identity
+  naming:
+    # Default names when claimed
+    private_format: "%player%'s Estate"
+    guild_format: "%guild% Estate"
+    # Cost to rename an estate
+    rename_cost: 500.0
+    # Only Grandmasters can rename Guild Estates?
+    grandmaster_only: true
+
+  # World Settings
   per_world:
     world:
-      allow_claims: true
+      allow_estates: true
       use_vault: true
-      vault_cost: 100.0
-      max_claims_per_player: 2
-      max_radius: 64
     world_nether:
-      allow_claims: true
-      use_vault: false
-      max_claims_per_player: 1
-      max_radius: 32
+      allow_estates: true
+      max_radius: 50
     world_the_end:
-      allow_claims: false
+      allow_estates: false
 
-# ======================================
-# 📐 Land Expansions (Requests)
-# ======================================
-expansions:
-  cost_per_block: 10.0
-  # Tax multiplier for large jumps (prevents massive land grabs)
-  cost_multiplier: 1.1
-  # Absolute hard limit for requests
-  max_radius_global: 200
-  # Required distance between neighbors
-  buffer_zone: 5
+# =======================================================================
+# 🏰 GUILD SYSTEM SETTINGS
+# =======================================================================
+guilds:
+  # Requirements to claim land as a Guild
+  land_claiming:
+    enabled: true
+    min_members_required: 2 # Prevents solo guilds from claiming land
 
-# ======================================
-# 🏗️ Zoning (Sub-Claims)
-# ======================================
+  # Security Protocols
+  security:
+    # Freeze Treasury if members drop below minimum?
+    freeze_on_instability: true
+    # Hours a new recruit must wait before counting for stability
+    recruit_probation_hours: 72
+    # How to handle money if Guild dissolves? (VOID or SPLIT)
+    liquidation_payout: "SPLIT"
+
+# =======================================================================
+# 📈 PROGRESSION (Ascension & Bastion)
+# =======================================================================
+progression:
+  enabled: true
+
+  # [NEW] Split Configuration
+  # We have moved the massive reward lists to separate files
+  # to keep this config clean.
+  #
+  # Private Estates -> Edit 'ascension.yml'
+  # Guild Estates   -> Edit 'bastion.yml'
+
+  # General Settings
+  notifications:
+    # Broadcast to server when someone reaches max level?
+    broadcast_max_level: true
+    # Firework effect on level up?
+    play_effects: true
+
+# =======================================================================
+# 🏗️ ZONING (Sub-Claims)
+# =======================================================================
 zoning:
   enabled: true
-  max_zones_per_plot: 10
-  # If true, 100% of rent goes to Plot Owner. If false, Server takes a cut (Tax).
+  max_zones_per_estate: 15
+  # If true, 100% of rent goes to Estate Owner. If false, Server takes tax.
   landlord_gets_full_rent: true
 
-# ======================================
-# 📈 Plot Leveling (RPG - UPDATED)
-# ======================================
-leveling:
-  enabled: true
-  base_cost: 1000.0
-  cost_multiplier: 1.5
-  max_level: 30
-  
-  # --- NEW: Expansion Toggle ---
-  expand_plot_on_levelup: false
-  expansion_amount: 5
-  
-  # Rewards per Level (30-Level Ascension Tree)
-  # "EFFECT:<TYPE>:<LEVEL>" or "RADIUS:<BLOCKS>" or "MEMBERS:<SLOTS>" or "FLIGHT"
-  rewards:
-    # --- TIER 1: THE BASICS ---
-    1:
-      - "EFFECT:SPEED:1"            # Agility I
-      - "RADIUS:5"
-    2:
-      - "EFFECT:SPEED:2"            # Agility II
-      - "MEMBERS:1"
-    3:
-      - "EFFECT:FAST_DIGGING:1"     # Haste I (Mining Speed)
-      - "RADIUS:5"
-    4:
-      - "EFFECT:FAST_DIGGING:2"     # Haste II (Insta-Mine capability)
-      - "MEMBERS:1"
-    5:
-      - "EFFECT:JUMP:1"             # Jump Boost I
-      - "RADIUS:10"
+# =======================================================================
+# 📐 EXPANSION REQUESTS (Land Grants)
+# =======================================================================
+expansions:
+  # Base price per block
+  price_per_block: 10.0
 
-    # --- TIER 2: EXPLORATION & SURVIVAL ---
-    6:
-      - "EFFECT:NIGHT_VISION:1"     # True Sight (See in dark)
-      - "MEMBERS:2"
-    7:
-      - "EFFECT:WATER_BREATHING:1" # Aquatic Lungs (Underwater bases)
-      - "RADIUS:10"
-    8:
-      - "EFFECT:DOLPHINS_GRACE:1"  # Swim faster
-      - "MEMBERS:2"
-    9:
-      - "EFFECT:SLOW_FALLING:1"    # No Fall Damage in base
-      - "RADIUS:15"
-    10:
-      - "FLAG:fly"                 # <--- UNLOCK FLIGHT
-      - "MEMBERS:3"
+  # Scaling Factor (The bigger the plot, the more expensive to grow)
+  scaling:
+    # 0-2000 blocks: Normal Price
+    small: { threshold: 0, multiplier: 1.0 }
+    # 2000-5000 blocks: 1.5x Price
+    medium: { threshold: 2000, multiplier: 1.5 }
+    # 5000+ blocks: Double Price
+    large: { threshold: 5000, multiplier: 2.0 }
 
-    # --- TIER 3: COMBAT & DEFENSE ---
-    11:
-      - "EFFECT:DAMAGE_RESISTANCE:1" # Iron Skin I (Armor Protection)
-      - "RADIUS:15"
-    12:
-      - "EFFECT:INCREASE_DAMAGE:1"   # Strength I
-      - "MEMBERS:3"
-    13:
-      - "EFFECT:FIRE_RESISTANCE:1"   # Fireborn (Lava proof)
-      - "RADIUS:20"
-    14:
-      - "EFFECT:DAMAGE_RESISTANCE:2" # Iron Skin II (Better Armor)
-      - "MEMBERS:4"
-    15:
-      - "EFFECT:INCREASE_DAMAGE:2"   # Strength II
-      - "RADIUS:20"
+# =======================================================================
+# 🎨 VISUALS & TITLES
+# =======================================================================
+visuals:
+  titles:
+    enabled: true
+    enter_format: "&7Entering &b%estate%"
+    exit_format: "&7Leaving &b%estate%"
+    action_bar: true
 
-    # --- TIER 4: UTILITY MASTERY ---
-    16:
-      - "EFFECT:LUCK:1"              # Fortune's Favor (Fishing/Loot)
-      - "MEMBERS:4"
-    17:
-      - "EFFECT:LUCK:2"
-      - "RADIUS:25"
-    18:
-      - "EFFECT:CONDUIT_POWER:1"     # Atlantis Power (Full underwater god mode)
-      - "MEMBERS:5"
-    19:
-      - "EFFECT:JUMP:3"              # Super Jump
-      - "RADIUS:25"
-    20:
-      - "EFFECT:SPEED:3"             # Super Speed
-      - "MEMBERS:5"
+  particles:
+    border_enabled: true
+    # Default border style
+    default_particle: "FLAME"
 
-    # --- TIER 5: DOMINION OVERLORD ---
-    21:
-      - "EFFECT:DAMAGE_RESISTANCE:3" # Iron Skin III (Tanky)
-      - "RADIUS:30"
-    22:
-      - "EFFECT:FAST_DIGGING:3"      # Super Haste
-      - "MEMBERS:6"
-    23:
-      - "EFFECT:GLOWING:1"           # Glowing Aura (Visual flex)
-      - "RADIUS:30"
-    24:
-      - "EFFECT:ABSORPTION:1"        # Extra Hearts (Shielding)
-      - "MEMBERS:6"
-    25:
-      - "EFFECT:ABSORPTION:2"        # More Extra Hearts
-      - "RADIUS:40"
-
-    # --- TIER 6: GOD STATUS ---
-    26:
-      - "EFFECT:LUCK:5"              # Max Luck
-      - "MEMBERS:8"
-    27:
-      - "EFFECT:DAMAGE_RESISTANCE:4" # Near Invincible in base
-      - "RADIUS:50"
-    28:
-      - "EFFECT:INCREASE_DAMAGE:3"   # One-shot mobs
-      - "MEMBERS:10"
-    29:
-      - "EFFECT:SPEED:5"             # Flash Speed
-      - "RADIUS:75"
-    30:
-      - "FLIGHT"                     # Flight (Confirmed)
-      - "EFFECT:CONDUIT_POWER:2"     # God of the Sea
-      - "RADIUS:100"                 # Massive land expansion
-      - "MEMBERS:20"                 # Huge clan size
-
-# ======================================
-# 💸 Plot Upkeep (Rent)
-# ======================================
-upkeep:
-  enabled: false
-  check_interval_hours: 24
-  cost_per_plot: 50.0
-  grace_period_days: 7
-
-# ======================================
-# ⚖️ Auctions
-# ======================================
-auction:
-  duration_days: 3
-  min_bid_increase: 50.0
-  owner_cut_percent: 50
-
-# ======================================
-# 🌲 Wilderness Revert
-# ======================================
-wilderness_revert:
-  enabled: true
-  revert_after_hours: 2
-  check_interval_minutes: 10
-  revert_batch_size: 500
-
-# ======================================
-# ⚙️ Protection Defaults
-# ======================================
-protections:
-  pvp_protection: true
-  no_mobs_in_claims: true
-  container_protection: true
-  pets_protection: true
-  entities_protection: true
-  farm_protection: true
-  tnt-damage: true
-  fire-spread: true
-  piston-use: true
-  
-  # Default Flags for New Plots
-  fly: false
-  entry: true
-  shop-interact: false
-
-# ======================================
-# 🛡️ Active Mob Barrier
-# ======================================
-mob_barrier:
-  enabled: true
-  check_interval_ticks: 60
-  remove_particles: true
-
-# ======================================
-# 🎨 Cosmetics Prices
-# ======================================
-cosmetics:
-  border_particles:
-    flame:
-      material: BLAZE_POWDER
-      particle: FLAME
-      display-name: "&6Flame Border"
-      price: 1000.0
-    heart:
-      material: POPPY
-      particle: HEART
-      display-name: "&cHeart Border"
-      price: 2500.0
-    soul:
-      material: SOUL_SAND
-      particle: SOUL_FIRE_FLAME
-      display-name: "&bSoul Flame Border"
-      price: 5000.0
-    enchant:
-      material: ENCHANTING_TABLE
-      particle: ENCHANTMENT_TABLE
-      display-name: "&dEnchantment Border"
-      price: 3000.0
-    
-  entry_effects:
-    lightning:
-      sound: ENTITY_LIGHTNING_BOLT_THUNDER
-      particle: FLASH
-
-# ======================================
-# 🔮 Visual Titles & Notifications
-# ======================================
-titles:
-  enabled: true
-  # Options: CHAT, ACTION_BAR, TITLE
-  notification_location: ACTION_BAR
-  fade_in: 10
-  stay: 40
-  fade_out: 10
-
-# ======================================
-# 🆘 Unstuck Command
-# ======================================
-unstuck:
-  enabled: true
-  warmup_seconds: 5
-  cooldown_seconds: 300
-
-# ======================================
-# 🌿 Biome Changing
-# ======================================
-biomes:
-  enabled: true
-  cost_per_change: 2000.0
-  allowed:
-    - PLAINS
-    - FOREST
-    - DESERT
-    - JUNGLE
-    - TAIGA
-    - SWAMP
-    - CHERRY_GROVE
-    - BADLANDS
-    - MUSHROOM_FIELDS
-    - MEADOW
-    - LUSH_CAVES
-
-# ======================================
-# 👍 Social (Likes)
-# ======================================
-social:
-  likes_enabled: true
-  one_like_per_player: true
-
-# ======================================
-# 🧩 Admin Options
-# ======================================
+# =======================================================================
+# 🧩 ADMIN & DEBUG
+# =======================================================================
 admin:
-  auto_remove_banned: false
-  bypass_claim_limit: false
-  broadcast_admin_actions: true
-  unlimited_plots: true
-  trust_operators: true
+  # Sentinel Scepter (Admin Wand)
+  wand_material: BLAZE_ROD
+  bypass_limits: false
+  debug_mode: false
 
-  # --- SENTINEL'S SCEPTER (Admin Wand) ---
-  wand:
-    material: BLAZE_ROD
-    name: "&c&lSentinel's Scepter"
-    lore:
-      - "&7A tool of absolute authority."
-      - " "
-      - "&eRight-Click: &fSelect Pos 1"
-      - "&eLeft-Click: &fSelect Pos 2"
-      - " "
-      - "&c⚠ Creates SERVER ZONES directly."
-
-# ======================================
-# 🔊 Sounds
-# ======================================
+# =======================================================================
+# 🔊 SOUNDS
+# =======================================================================
 sounds:
-  global_enabled: true
-  players: {}
-  menu_open: { sound: BLOCK_CHEST_OPEN, volume: 0.7, pitch: 1.0 }
-  menu_flip: { sound: UI_BUTTON_CLICK, volume: 0.7, pitch: 1.2 }
-  menu_close: { sound: BLOCK_CHEST_CLOSE, volume: 0.7, pitch: 1.0 }
-  confirm: { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
-  error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
+  menu_click: { sound: UI_BUTTON_CLICK, volume: 1.0, pitch: 1.0 }
   claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
-  unclaim: { sound: ENTITY_VILLAGER_NO, volume: 0.8, pitch: 0.9 }
-
-# ======================================
-# 💥 Protection Effects
-# ======================================
-protection_effects:
-  enabled: true
-  defaults:
-    deny_sound: BLOCK_NOTE_BLOCK_BASS
-    deny_particle: SMOKE_NORMAL
-    deny_volume: 1.0
-    deny_pitch: 1.0
-  pvp:
-    deny_sound: ENTITY_ENDERMAN_TELEPORT
-    deny_particle: REDSTONE
-  containers:
-    deny_sound: BLOCK_CHEST_LOCKED
-    deny_particle: CRIT
-  mobs:
-    deny_sound: ENTITY_ZOMBIE_ATTACK_IRON_DOOR
-    deny_particle: FLAME
-  pets:
-    deny_sound: ENTITY_CAT_HISS
-    deny_particle: HEART
-  entities:
-    deny_sound: BLOCK_ANVIL_PLACE
-    deny_particle: CRIT_MAGIC
-  farm:
-    deny_sound: BLOCK_CROP_BREAK
-    deny_particle: VILLAGER_ANGRY
+  error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.5 }
+  cash_register: { sound: BLOCK_NOTE_BLOCK_BELL, volume: 1.0, pitch: 1.5 }

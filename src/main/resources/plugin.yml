@@ -1,6 +1,6 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.1.2
+version: 1.2.0
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.

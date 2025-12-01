@@ -31,13 +31,13 @@ exit_lore:
 # OLD ENGLISH STYLE (Default)
 # ======================================
 old_english:
-  # --- Navigation & Common ---
+  # --- Navigation ---
   button_back: "&e⟵ Return"
-  button_back_lore:
+  back_lore:
     - "&7Return to the prior page."
   
   button_back_menu: "&fReturn to Menu"
-  button_back_menu_lore:
+  back_menu_lore:
     - "&7Return to the main index."
 
   button_exit: "&c✖ Depart"
@@ -47,7 +47,7 @@ old_english:
   button_prev_page: "&fPrior Page"
   button_next_page: "&fNext Page"
   
-  # --- General ---
+  # --- General Errors ---
   role_edit_self_error: "&c❌ Thou cannot edit thy own role. Thou risks locking thyself out!"
   no_perm: "&cThou hast not the authority for such an act."
   players_only: "&cOnly mortals of flesh may wield this command."
@@ -76,7 +76,7 @@ old_english:
   merge_not_aligned: "&c❌ The lands are not aligned. Their borders must match perfectly."
   merge_success: "&a⚡ Behold! The lands have fused into one great dominion!"
 
-  # --- Economy ---
+  # --- Economy & Limits ---
   max_claims_reached: "&c❌ Thou canst hold but {AMOUNT} dominion(s)."
   need_vault: "&c❌ Thy coffers hold less than &e{AMOUNT}&c gold."
   cost_deducted: "&e💰 Tribute of &6{AMOUNT}&e hath been rendered."
@@ -142,21 +142,37 @@ old_english:
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
   
-  expansion_small_name: "&aMinor Petition (+5)"
-  expansion_small_lore:
-    - "&7Increase borders by &a+5 blocks&7."
+  expansion_tier1_name: "&aYeoman's Grant (+5)"
+  expansion_tier1_lore:
+    - "&7A modest addition."
+    - "&7Gain &a+5 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_medium_name: "&6Major Petition (+15)"
-  expansion_medium_lore:
-    - "&7Increase borders by &6+15 blocks&7."
+  expansion_tier2_name: "&eKnight's Fee (+10)"
+  expansion_tier2_lore:
+    - "&7A respectable widening."
+    - "&7Gain &e+10 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_large_name: "&bRoyal Petition (+30)"
-  expansion_large_lore:
-    - "&7Increase borders by &b+30 blocks&7."
+  expansion_tier3_name: "&fBaron's Estate (+20)"
+  expansion_tier3_lore:
+    - "&7Land fit for a lord."
+    - "&7Gain &f+20 blocks &7radius."
     - " "
     - "&eClick to Petition"
+  expansion_tier4_name: "&6Duke's Domain (+35)"
+  expansion_tier4_lore:
+    - "&7A vast stretch of earth."
+    - "&7Gain &6+35 blocks &7radius."
+    - " "
+    - "&eClick to Petition"
+  expansion_tier5_name: "&bRoyal Charter (+50)"
+  expansion_tier5_lore:
+    - "&7A kingdom unto itself."
+    - "&7Gain &b+50 blocks &7radius."
+    - " "
+    - "&eClick to Petition"
+  
   expansion_locked_lore:
     - "&cThou must stand within"
     - "&cthine own land to petition."
@@ -250,57 +266,7 @@ old_english:
   info_lore:
     - "&7Unfurl the scrolls of wisdom."
 
-  # --- Codex ---
-  codex_gui_title: "&9§lThe Guardian Codex"
-  codex_claim_title: "&e§lI. The Art of Claiming"
-  codex_claim_lore:
-    - "&7How to bind the earth to thy will:"
-    - " "
-    - "&f1. &7Speak &b/ag wand &7to summon the Scepter."
-    - "&f2. &7Right-Click the first boundary stone."
-    - "&f3. &7Left-Click the second boundary stone."
-    - "&f4. &7Speak &a/ag claim &7to purchase the deed."
-  codex_travel_title: "&b§lII. Aether Travel"
-  codex_travel_lore:
-    - "&7Traverse the realm instantly:"
-    - " "
-    - "&e/ag home &7- Return to thy hearth."
-    - "&e/ag setspawn &7- Mark thy landing spot."
-    - "&e/ag visit &7- Journey to the lands of allies."
-  codex_menus_title: "&d§lIII. Menu Mastery"
-  codex_menus_lore:
-    - "&7The great menu (&b/ag menu&7) controls all:"
-    - " "
-    - "&6🚩 Wards: &7Control PvP, Beasts, and Fire."
-    - "&b👥 Allies: &7Grant trust to companions."
-    - "&d✨ Glamours: &7Adorn thy borders with magic."
-  codex_security_title: "&c§lIV. Banishment"
-  codex_security_lore:
-    - "&7Protect thy borders from rogues:"
-    - " "
-    - "&c/ag kick &7- Expel a trespasser."
-    - "&4/ag ban &7- Erect a barrier against them."
-  codex_economy_title: "&6§lV. The Treasury"
-  codex_economy_lore:
-    - "&7Land requires gold to maintain."
-    - " "
-    - "&eUpkeep: &7Pay thy taxes or lose the land."
-    - "&aMarket: &7Sell thy deed to others."
-  codex_identity_title: "&3§lVI. Identity"
-  codex_identity_lore:
-    - "&7Make thy land unique:"
-    - " "
-    - "&b/ag rename &7- Name thy dominion."
-    - "&e/ag stuck &7- Escape from traps."
-  codex_advanced_title: "&5§lVII. High Magic"
-  codex_advanced_lore:
-    - "&dAscension (Leveling):"
-    - "&7Empower thy land to grow larger."
-    - " "
-    - "&eSub-Dominions (Zones):"
-    - "&7Lease parts of thy land to serfs."
-
-  # --- Utility & Settings ---
+  # --- Utility ---
   button_utility_chapter: "&3§lVI. Identity & Utility"
   utility_chapter_lore:
     - "&7Make your land unique:"
@@ -325,16 +291,16 @@ old_english:
     - "&7An edict hath hushed all sound."
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Wards."
 
-  # --- Leveling & Zoning (UPDATED) ---
-  level_gui_title: "&8⚡ Dominion Ascension"
-  level_current_status: "&e📜 Thy Current Standing"
-  level_upgrade_button: "&6⬆ Ascend to Level {LEVEL}"
-  level_max_reached: "&b🛡 Highest Ascension Reached"
-  level_up_success: "&d⚡ Rejoice! Thy dominion hath ascended to Level {LEVEL}!"
+  # --- Leveling & Zoning ---
+  level_gui_title: "&dAscension of Land"
+  level_current_status: "&dCurrent Standing"
+  level_upgrade_button: "&aAscend to Level {LEVEL}"
+  level_max_reached: "&cMaximum Ascension Reached"
+  level_up_success: "&d⚡ Thy dominion hath ascended to Level {LEVEL}!"
   level_up_fail_cost: "&c❌ Thou lacketh the tribute required for ascension."
   level_button_lore:
     - "&7Ascend thy plot to unlock"
-    - "&7godly powers and greater size."
+    - "&7greater size and power."
   
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
@@ -345,7 +311,7 @@ old_english:
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
   zone_delete_action: "&cRight-Click to Dissolve"
-  button_zone_create: "&a⚡ Mark New Zone"
+  button_zone_create: "&aMark New Zone"
   zone_create_ready_lore:
     - "&7Mark a zone from thy"
     - "&7current wand selection."
@@ -355,6 +321,9 @@ old_english:
     - "&cThou must select corners"
     - "&cwith the Wand first!"
   zone_evicted: "&eThe tenant hath been evicted from {ZONE}."
+  zone_button_lore:
+    - "&7Manage rental grounds"
+    - "&7within thy borders."
 
   biome_gui_title: "&2Change Biome"
   biome_changed: "&a✔ The land transforms around you! Biome set to {BIOME}."
@@ -367,7 +336,6 @@ old_english:
     - "&8[&c!&8] &7Disclaimer:"
     - "&7Changes &nvisuals&7 only (Grass/Sky)."
     - "&7Does &cNOT&7 replace physical blocks."
-
   biome_button_lore:
     - "&7Click to shift the humours"
     - "&7of thy land's climate."
@@ -386,7 +354,7 @@ old_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
-  # --- Flags / Wards ---
+  # --- Wards (Flags) ---
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
@@ -475,7 +443,6 @@ old_english:
 
   flag_toggled: '&e⚙ {FLAG} ward is now &f{STATUS}&e.'
 
-  # --- Roles ---
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
   trusted_plot_selector_title: "&bSelect a Dominion to Manage"
@@ -502,7 +469,6 @@ old_english:
   button_admin_broadcast: '&bBroadcast Admin Deeds'
   admin_broadcast_lore:
     - "&7Let the realm hear of judgments."
-  
   button_admin_unlimited: "&aInfinite Dominion"
   admin_unlimited_lore:
     - "&7Allow admins unlimited land."
@@ -515,15 +481,15 @@ old_english:
   button_admin_diagnostics: "&bDivination"
   button_admin_reload: "&eRefresh Scrolls"
   
-  admin_auto_remove_enabled: "&a✔ Auto-purge awaken’d."
-  admin_auto_remove_disabled: "&c✖ Auto-purge slumbereth."
-  admin_bypass_enabled: "&a✔ Bypass is granted unto ops."
-  admin_bypass_disabled: "&c✖ Bypass revoked."
-  admin_broadcast_enabled: "&a✔ Proclamations shall be heard."
-  admin_broadcast_disabled: "&c✖ Proclamations silenced."
-  admin_removed_banned: "&ePurged plots of the banished: {PLAYER}"
+  admin_auto_remove_enabled: '&a✔ Auto-purge awaken’d.'
+  admin_auto_remove_disabled: '&c✖ Auto-purge slumbereth."
+  admin_bypass_enabled: '&a✔ Bypass is granted unto ops.'
+  admin_bypass_disabled: '&c✖ Bypass revoked.'
+  admin_broadcast_enabled: '&a✔ Proclamations shall be heard.'
+  admin_broadcast_disabled: '&c✖ Proclamations silenced.'
+  admin_removed_banned: '&ePurged plots of the banished: {PLAYER}'
 
-  admin_plot_list_title: "&cAll Known Dominions"
+  admin_plot_list_title: '&cAll Known Dominions'
   admin_plot_item_name: "&bOwner: &f{OWNER}"
   admin_server_zone_tag: "&c[SERVER ZONE]"
   admin_plot_actions:
@@ -531,7 +497,6 @@ old_english:
     - "&cRight-Click: &7Destroy"
   admin_plot_teleport: '&eThou hast been spirited to the dominion of {PLAYER}.'
   admin_plot_deleted: '&c✖ The dominion of {PLAYER} hath been struck from the records.'
-  
   button_back_admin: "&fReturn to High Tools"
 
   admin-zone-created: '&a✔ A new Server Zone hath been decreed.'
@@ -550,6 +515,57 @@ old_english:
 
   wilderness_revert_start: '[AegisGuard] The spirits of the wild begin their work...'
   wilderness_revert_end: '[AegisGuard] The spirits have restored {AMOUNT} scars.'
+
+  # --- Codex (Old English) ---
+  codex_gui_title: "&9§lThe Guardian Codex"
+  codex_claim_title: "&e§lI. The Art of Claiming"
+  codex_claim_lore:
+    - "&7How to bind the earth to thy will:"
+    - " "
+    - "&f1. &7Speak &b/ag wand &7to summon the Scepter."
+    - "&f2. &7Right-Click the first boundary stone."
+    - "&f3. &7Left-Click the second boundary stone."
+    - "&f4. &7Speak &a/ag claim &7to purchase the deed."
+  codex_travel_title: "&b§lII. Aether Travel"
+  codex_travel_lore:
+    - "&7Traverse the realm instantly:"
+    - " "
+    - "&e/ag home &7- Return to thy hearth."
+    - "&e/ag setspawn &7- Mark thy landing spot."
+    - "&e/ag visit &7- Journey to the lands of allies."
+  codex_menus_title: "&d§lIII. Menu Mastery"
+  codex_menus_lore:
+    - "&7The great menu (&b/ag menu&7) controls all:"
+    - " "
+    - "&6🚩 Wards: &7Control PvP, Beasts, and Fire."
+    - "&b👥 Allies: &7Grant trust to companions."
+    - "&d✨ Glamours: &7Adorn thy borders with magic."
+    - "&a🌿 Biomes: &7Shift the humours of the earth."
+  codex_security_title: "&c§lIV. Banishment"
+  codex_security_lore:
+    - "&7Protect thy borders from rogues:"
+    - " "
+    - "&c/ag kick &7- Expel a trespasser."
+    - "&4/ag ban &7- Erect a barrier against them."
+  codex_economy_title: "&6§lV. The Treasury"
+  codex_economy_lore:
+    - "&7Land requires gold to maintain."
+    - " "
+    - "&eUpkeep: &7Pay thy taxes or lose the land."
+    - "&aMarket: &7Sell thy deed to others."
+  codex_identity_title: "&3§lVI. Identity"
+  codex_identity_lore:
+    - "&7Make thy land unique:"
+    - " "
+    - "&b/ag rename &7- Name thy dominion."
+    - "&e/ag stuck &7- Escape from traps."
+  codex_advanced_title: "&5§lVII. High Magic"
+  codex_advanced_lore:
+    - "&dAscension (Leveling):"
+    - "&7Empower thy land to grow larger."
+    - " "
+    - "&eSub-Dominions (Zones):"
+    - "&7Lease parts of thy land to serfs."
 
   help_header: '&b⚔ &nThe Guardian’s Scroll of Instruction&r'
   help_lines:
@@ -577,21 +593,21 @@ old_english:
 hybrid_english:
   # --- Navigation ---
   button_back: "&e⟵ Return"
-  button_back_lore:
+  back_lore:
     - "&7Return to the previous page."
   
   button_back_menu: "&fReturn to Menu"
-  button_back_menu_lore:
-    - "&7Return to the dashboard."
+  back_menu_lore:
+    - "&7Return to the main dashboard."
+
+  button_prev_page: "&fPrevious Page"
+  button_next_page: "&fNext Page"
 
   button_exit: "&c✖ Close"
   button_exit_lore:
     - "&7Close this menu."
-
-  button_prev_page: "&fPrevious Page"
-  button_next_page: "&fNext Page"
   
-  # --- General ---
+  # --- General Errors ---
   role_edit_self_error: "&c❌ You cannot change your own role. You risk locking yourself out!"
   no_perm: "&cYou lack the authority for this action."
   players_only: "&cOnly adventurers may use this command."
@@ -600,6 +616,7 @@ hybrid_english:
   sound_global_enabled: "&a✔ The realm's sounds are restored."
   sound_global_disabled: "&c✖ The realm falls silent."
 
+  # --- Claiming & Wand ---
   wand_given: "&a⚡ The Aegis Scepter has been granted to you."
   corner1_set: "&a⚡ First boundary mark set at &e{X}, {Z}."
   corner2_set: "&b⚡ Second boundary mark set at &e{X}, {Z}."
@@ -612,13 +629,14 @@ hybrid_english:
   resize-fail-overlap: "&c❌ Expansion failed! Your borders would clash with another."
   resize-fail-max-area: "&c❌ Expansion failed! You would exceed the {AMOUNT} block limit."
 
-  # --- MERGING ---
+  # --- Merging ---
   merge_invalid_dir: "&c❌ Invalid direction. Use NORTH, SOUTH, EAST, or WEST."
   merge_no_plot: "&c❌ There is no dominion in that direction."
   merge_not_owner: "&c❌ You do not own the adjacent land."
   merge_not_aligned: "&c❌ The lands are not aligned. Borders must match size."
   merge_success: "&a⚡ The lands have fused into one great dominion!"
 
+  # --- Economy & Limits ---
   max_claims_reached: "&c❌ You have reached your limit of {AMOUNT} dominion(s)."
   need_vault: "&c❌ You require &e{AMOUNT}&c more gold."
   cost_deducted: "&e💰 A tribute of &6{AMOUNT}&e has been paid."
@@ -631,6 +649,7 @@ hybrid_english:
   plot_expired_upkeep: "&c❌ Your dominion has fallen to ruin due to unpaid upkeep!"
   plot-is-locked: "&c❌ This land is locked and cannot be changed."
 
+  # --- Auctions ---
   plot-now-auctioned: "&e⚠ Your land is now being auctioned!"
   auction-gui-title: "&6Land Auctions"
   auction-bid-own: "&cYou cannot bid on your own fallen land."
@@ -646,6 +665,7 @@ hybrid_english:
     - "&eLeft-Click: &7Preview Land"
     - "&aRight-Click: &7Place Bid"
 
+  # --- Market ---
   market-gui-title: "&2Real Estate Market"
   market-teleport: "&eWarping to {PLAYER}'s land..."
   market-buy-own: "&cYou cannot purchase your own land."
@@ -660,7 +680,7 @@ hybrid_english:
     - "&eLeft-Click: &7Preview Land"
     - "&aRight-Click: &7Purchase Deed"
 
-  # --- EXPANSION ---
+  # --- Expansion ---
   expansion_gui_title: "&d§lExpansion Petition"
   button_expand: "&dRequest More Land"
   expand_lore:
@@ -682,21 +702,32 @@ hybrid_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ This petition has expired."
   
-  expansion_small_name: "&aMinor Expansion (+5)"
-  expansion_small_lore:
+  expansion_tier1_name: "&aMinor Expansion (+5)"
+  expansion_tier1_lore:
     - "&7Increase borders by &a+5 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_medium_name: "&6Major Expansion (+15)"
-  expansion_medium_lore:
-    - "&7Increase borders by &6+15 blocks&7."
+  expansion_tier2_name: "&eStandard Expansion (+10)"
+  expansion_tier2_lore:
+    - "&7Increase borders by &e+10 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_large_name: "&bRoyal Expansion (+30)"
-  expansion_large_lore:
-    - "&7Increase borders by &b+30 blocks&7."
+  expansion_tier3_name: "&fMajor Expansion (+20)"
+  expansion_tier3_lore:
+    - "&7Increase borders by &f+20 blocks&7."
     - " "
     - "&eClick to Petition"
+  expansion_tier4_name: "&6Noble Expansion (+35)"
+  expansion_tier4_lore:
+    - "&7Increase borders by &6+35 blocks&7."
+    - " "
+    - "&eClick to Petition"
+  expansion_tier5_name: "&bRoyal Expansion (+50)"
+  expansion_tier5_lore:
+    - "&7Increase borders by &b+50 blocks&7."
+    - " "
+    - "&eClick to Petition"
+
   expansion_locked_lore:
     - "&cYou must stand within"
     - "&cyour own land to petition."
@@ -708,7 +739,7 @@ hybrid_english:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
 
-  # --- VISIT ---
+  # --- Visit / Travel ---
   visit_gui_title: "&9Travel Network"
   visit_title_warps: "&6Realm Waypoints"
   visit_title_trusted: "&9Ally Dominions"
@@ -746,6 +777,7 @@ hybrid_english:
   plot_entry_denied: "&c⛔ Entry forbidden. This land is sealed."
   plot_banned_entry: "&c⛔ You are banished from this dominion!"
 
+  # --- Main Menu ---
   menu_title: "&b⚔ Aegis Menu ⚔"
 
   button_claim_land: "&a🛡 Claim Land"
@@ -789,7 +821,55 @@ hybrid_english:
   info_lore:
     - "&7Learn the commands."
 
-  # --- UTILITY ---
+  # --- Codex ---
+  codex_gui_title: "&9§lGuardian's Guide"
+  codex_claim_title: "&e§lI. Claiming Land"
+  codex_claim_lore:
+    - "&7How to secure territory:"
+    - " "
+    - "&f1. &7Use &b/ag wand &7to get the tool."
+    - "&f2. &7Right-Click first corner."
+    - "&f3. &7Left-Click second corner."
+    - "&f4. &7Use &a/ag claim &7to purchase."
+  codex_travel_title: "&b§lII. Travel Magic"
+  codex_travel_lore:
+    - "&7Move instantly:"
+    - " "
+    - "&e/ag home &7- Return to base."
+    - "&e/ag setspawn &7- Set base location."
+    - "&e/ag visit &7- Visit allies."
+  codex_menus_title: "&d§lIII. The Menu"
+  codex_menus_lore:
+    - "&7Use &b/ag menu&7 to manage:"
+    - " "
+    - "&6🚩 Wards: &7PvP, Mobs, etc."
+    - "&b👥 Allies: &7Trust friends."
+    - "&d✨ Glamours: &7Visual borders."
+    - "&a🌿 Biomes: &7Change grass colors."
+  codex_security_title: "&c§lIV. Security"
+  codex_security_lore:
+    - "&7Protect your borders:"
+    - " "
+    - "&c/ag kick &7- Remove a player."
+    - "&4/ag ban &7- Block a player."
+  codex_economy_title: "&6§lV. Economy"
+  codex_economy_lore:
+    - "&7Managing wealth:"
+    - " "
+    - "&eUpkeep: &7Pay tax or lose land."
+    - "&aMarket: &7Buy/Sell deeds."
+  codex_identity_title: "&3§lVI. Utility"
+  codex_identity_lore:
+    - "&7Customize your land:"
+    - " "
+    - "&b/ag rename &7- Name it."
+    - "&e/ag stuck &7- Escape traps."
+  codex_advanced_title: "&5§lVII. Advanced"
+  codex_advanced_lore:
+    - "&dLeveling: &7Upgrade size."
+    - "&eZones: &7Create rentals."
+
+  # --- Utility & Settings ---
   button_utility_chapter: "&3§lVI. Utility"
   utility_chapter_lore:
     - "&7Useful commands:"
@@ -813,29 +893,29 @@ hybrid_english:
     - "&7Server has muted all plugin sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Land Wards to edit."
 
-  # --- Leveling & Zoning (UPDATED) ---
-  level_gui_title: "&8⚡ Dominion Ascension"
-  level_current_status: "&e📜 Current Power"
-  level_upgrade_button: "&6⬆ Ascend to Level {LEVEL}"
-  level_max_reached: "&b🛡 Maximum Power Reached"
-  level_up_success: "&d⚡ Success! Your dominion ascended to Level {LEVEL}!"
-  level_up_fail_cost: "&c❌ You lack the funds to ascend."
+  # --- Leveling, Zoning, Biome ---
+  level_gui_title: "&dLand Ascension"
+  level_current_status: "&dCurrent Level"
+  level_upgrade_button: "&aAscend to Level {LEVEL}"
+  level_max_reached: "&cMaximum Level Reached"
+  level_up_success: "&d⚡ Your dominion ascended to Level {LEVEL}!"
+  level_up_fail_cost: "&c❌ You lack the tribute to ascend."
   level_button_lore:
     - "&7Ascend your plot to unlock"
-    - "&7new abilities and size."
+    - "&7greater size and power."
 
-  zone_gui_title: "&3Zone Manager"
-  zone_created: "&a✔ Zone '{ZONE}' marked."
-  zone_deleted: "&c✖ Zone '{ZONE}' removed."
-  zone_rented: "&a✔ {PLAYER} is renting '{ZONE}'."
-  zone_not_rented: "&7Zone is vacant."
+  zone_gui_title: "&3Sub-Dominion Manager"
+  zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
+  zone_deleted: "&c✖ The zone '{ZONE}' hath been dissolved."
+  zone_rented: "&a✔ {PLAYER} hath rented the zone '{ZONE}'."
+  zone_not_rented: "&7This zone stands empty."
   zone_status_rented: "&cOccupied"
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
-  zone_delete_action: "&cRight-Click to Delete"
-  button_zone_create: "&a⚡ Create Rental Zone"
+  zone_delete_action: "&cRight-Click to Dissolve"
+  button_zone_create: "&aMark New Zone"
   zone_create_ready_lore:
-    - "&7Mark a zone from your"
+    - "&7Mark a zone from thy"
     - "&7current wand selection."
     - " "
     - "&eClick to Create"
@@ -859,6 +939,7 @@ hybrid_english:
   biome_button_lore:
     - "&7Change the biome color."
 
+  # --- Likes ---
   like_success: "&a✔ You commended this land! Total: &e{AMOUNT}"
   like_removed: "&eCommendation withdrawn."
   like_own_plot: "&cYou cannot commend your own land."
@@ -866,9 +947,10 @@ hybrid_english:
 
   title_entering: '&b{PLOT_NAME}'
   subtitle_entering: '&7Dominion of {OWNER}'
-  title_entering_wilderness: '&aWilderness'
-  subtitle_entering_wilderness: '&7Unclaimed Territory'
+  title_entering_wilderness: '&aThe Wilds'
+  subtitle_entering_wilderness: '&7Untamed Lands'
 
+  # --- Wards ---
   button_pvp_on: '&a⚔ PvP: Allowed'
   button_pvp_off: '&c⚔ PvP: Protected'
   pvp_toggle_lore:
@@ -924,28 +1006,27 @@ hybrid_english:
   button_fly_on: '&b🕊 Flight: Active'
   button_fly_off: '&c🕊 Flight: Inactive'
   fly_toggle_lore: 
-    - "&7Allow flight within this domain."
+    - "&7Enable flight in claim."
     - "&7Cost to enable: &6{COST}"
-  flight_enabled: '&a🕊 You can now fly.'
-  flight_disabled: '&c🕊 Flight revoked.'
+  flight_enabled: '&a🕊 Flight bestowed upon thee.'
+  flight_disabled: '&c🕊 Flight withdrawn.'
 
   button_entry_on: '&a🚪 Entry: Open'
   button_entry_off: '&c🚪 Entry: Closed'
   entry_toggle_lore:
     - '&7Lock out strangers?'
 
-  button_shop_on: '&a🛒 Shops: Usable'
-  button_shop_off: '&c🛒 Shops: Protected'
+  button_shop_on: '&a🛒 Trade Access: Open'
+  button_shop_off: '&c🛒 Trade Access: Sealed'
   shop_toggle_lore: 
-    - "&7Allow usage of shop chests."
-    - "&7(Protects contents, but allows clicks)."
+    - "&7Allow usage of shop chests?"
     - "&7Cost: &6{COST}"
     
-  button_cosmetics: "&dVisual Effects"
+  button_cosmetics: '&dVisual Effects'
   cosmetics_lore:
-    - "&7Add particles to your borders."
-  cosmetics_gui_title: "&dDominion Cosmetics"
-  cosmetics_border_none: "&cNo Effect"
+    - '&7Add particles to your borders.'
+  cosmetics_gui_title: '&dDominion Cosmetics'
+  cosmetics_border_none: '&cNo Effect'
   cosmetics_status_selected: "&a(Active)"
   cosmetics_status_free: "&aFree"
   cosmetics_click_buy: "&eLeft-Click: Acquire"
@@ -959,7 +1040,7 @@ hybrid_english:
 
   roles_gui_title: '&eAlly Management'
   roles_manage_title: '&bManage: {PLAYER}'
-  trusted_plot_selector_title: '&bSelect Plot'
+  trusted_plot_selector_title: '&bSelect a Dominion'
   add_trusted_title: '&aAdd Ally'
   button_add_trusted: '&aAdd Ally'
   add_trusted_lore:
@@ -973,7 +1054,7 @@ hybrid_english:
   # --- Admin Tools ---
   admin_menu_title: '&c⚙ Admin Control'
   admin_reloading: '&7Reloading...'
-  admin_reload_complete: '&a✔ Done!'
+  admin_reload_complete: '&a✔ Done.'
   button_admin_auto_remove: '&6Auto-Wipe Bans'
   admin_auto_remove_lore:
     - '&7Delete plots of banned players.'
@@ -994,7 +1075,7 @@ hybrid_english:
     - "&7Reduce magical effects."
   button_admin_diagnostics: "&bDivination"
   button_admin_reload: "&eRefresh Scrolls"
-
+  
   admin_auto_remove_enabled: '&a✔ Auto-Wipe ON.'
   admin_auto_remove_disabled: '&c✖ Auto-Wipe OFF.'
   admin_bypass_enabled: '&a✔ Limit Bypass ON.'
@@ -1016,7 +1097,7 @@ hybrid_english:
   admin-zone-created: '&a✔ Server Zone set.'
   admin-zone-deleted: '&c✖ Server Zone removed.'
   admin-zone-not-found: '&c❌ Not a Server Zone.'
-  admin_zone_flags_title: '&cServer Zone Settings'
+  admin_zone_flags_title: '&cServer Zone Wards'
   flag_build_lore:
     - '&7Allow building?'
   flag_containers_lore:
@@ -1026,67 +1107,6 @@ hybrid_english:
 
   wilderness_revert_start: '[AegisGuard] Nature is healing...'
   wilderness_revert_end: '[AegisGuard] {AMOUNT} blocks reverted.'
-
-  # --- CODEX (Hybrid) ---
-  codex_gui_title: "&9§lGuardian's Guide"
-  codex_claim_title: "&e§lI. Claiming Land"
-  codex_claim_lore:
-    - "&7How to secure territory:"
-    - " "
-    - "&f1. &7Use &b/ag wand &7to get the tool."
-    - "&f2. &7Right-Click first corner."
-    - "&f3. &7Left-Click second corner."
-    - "&f4. &7Use &a/ag claim &7to purchase."
-  codex_travel_title: "&b§lII. Travel Magic"
-  codex_travel_lore:
-    - "&7Move instantly:"
-    - " "
-    - "&e/ag home &7- Return to base."
-    - "&e/ag setspawn &7- Set base location."
-    - "&e/ag visit &7- Visit allies."
-  codex_menus_title: "&d§lIII. The Menu"
-  codex_menus_lore:
-    - "&7Use &b/ag menu&7 to manage:"
-    - " "
-    - "&6🚩 Wards: &7PvP, Mobs, etc."
-    - "&b👥 Allies: &7Trust friends."
-    - "&d✨ Glamours: &7Visual borders."
-    - "&a🌿 Biomes: &7Change grass colors."
-  codex_security_title: "&c§lIV. Security"
-  codex_security_lore:
-    - "&7Protect your borders:"
-    - " "
-    - "&c/ag kick &7- Remove a player."
-    - "&4/ag ban &7- Block a player."
-  codex_economy_title: "&6§lV. Economy"
-  codex_economy_lore:
-    - "&7Managing wealth:"
-    - " "
-    - "&eUpkeep: &7Pay tax or lose land."
-    - "&aMarket: &7Buy/Sell deeds."
-  codex_identity_title: "&3§lVI. Utility"
-  codex_identity_lore:
-    - "&7Customize your land:"
-    - " "
-    - "&b/ag rename &7- Name it."
-    - "&e/ag stuck &7- Escape traps."
-  codex_advanced_title: "&5§lVII. Advanced"
-  codex_advanced_lore:
-    - "&dLeveling: &7Upgrade size."
-    - "&eZones: &7Create rentals."
-    
-  help_header: '&b⚔ &nManual&r'
-  help_lines:
-    - '&e/ag wand'
-    - '&e/ag menu'
-    - '&e/ag claim'
-    - '&e/ag unclaim'
-    - '&e/ag resize <dir> <amt>'
-    - '&e/ag home'
-    - '&e/ag setspawn'
-    - '&e/ag welcome [msg]'
-    - '&e/ag market'
-    - '&e/ag help'
     
 # ======================================
 # MODERN ENGLISH STYLE (Clean & Standard)
@@ -1094,22 +1114,22 @@ hybrid_english:
 modern_english:
   # --- Navigation ---
   button_back: "&e⟵ Back"
-  button_back_lore:
+  back_lore:
     - "&7Return to the previous page."
   
   button_back_menu: "&fReturn to Menu"
-  button_back_menu_lore:
+  back_menu_lore:
     - "&7Go back to the main dashboard."
-
-  button_exit: "&cExit"
-  button_exit_lore:
-    - "&7Close window."
 
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"
+  
+  button_exit: "&cExit"
+  button_exit_lore:
+    - "&7Close this menu."
 
   # --- General Errors ---
-  role_edit_self_error: "&c❌ You cannot edit your own role."
+  role_edit_self_error: "&cError: You cannot edit your own role."
   no_perm: "&cError: Insufficient permissions."
   players_only: "&cError: Command restricted to players."
   usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
@@ -1267,6 +1287,7 @@ modern_english:
   plot_entry_denied: "&c⛔ Entry denied. This claim is private."
   plot_banned_entry: "&c⛔ You are BANNED from this claim!"
 
+  # --- Main Menu ---
   menu_title: "&b⚔ AegisGuard Menu"
 
   button_claim_land: "&a🛡 Create Claim"
@@ -1381,13 +1402,12 @@ modern_english:
     - "&7Server has disabled sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
-  # --- Leveling & Zoning (UPDATED) ---
-  level_gui_title: "&8⚡ Leveling Menu"
-  level_current_status: "&e📊 Current Stats"
-  level_upgrade_button: "&6⬆ Upgrade to Level {LEVEL}"
-  level_max_reached: "&b🛑 Max Level Reached"
-  level_up_success: "&d⚡ Plot successfully upgraded to Level {LEVEL}!"
-  level_up_fail_cost: "&c❌ Insufficient funds for upgrade."
+  level_gui_title: "&dLeveling"
+  level_current_status: "&dStats"
+  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
+  level_max_reached: "&cMax Level Reached"
+  level_up_success: "&d⚡ Claim leveled up to {LEVEL}!"
+  level_up_fail_cost: "&c❌ Insufficient funds."
   level_button_lore:
     - "&7Upgrade claim size"
     - "&7and unlock features."
@@ -1401,7 +1421,7 @@ modern_english:
   zone_status_available: "&aAvailable"
   zone_evict_action: "&cLeft-Click to Evict"
   zone_delete_action: "&cRight-Click to Delete"
-  button_zone_create: "&a⚡ Create Sub-Zone"
+  button_zone_create: "&aCreate Zone"
   zone_create_ready_lore:
     - "&7Create zone from selection."
   zone_create_locked_lore:

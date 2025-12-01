@@ -11,23 +11,6 @@ language_styles:
     - modern_english
 
 # ======================================
-# GUI Texts Shared Across All Styles
-# ======================================
-language_style_title: 'Language Style: {STYLE}'
-language_style_lore:
-  - '&7Switch the tone of AegisGuard’s speech.'
-  - '&8Choose between ancient and modern tongues.'
-  - '&eClick to cycle instantly.'
-
-# Shared defaults – styles can override these
-button_back: '&e⟵ Back'
-button_exit: '&cExit'
-back_lore:
-  - '&7Return to the previous menu'
-exit_lore:
-  - '&7Close this menu'
-
-# ======================================
 # OLD ENGLISH STYLE (Default)
 # ======================================
 old_english:
@@ -55,6 +38,9 @@ old_english:
 
   sound_global_enabled: "&a✔ The realm again resoundeth with Aegis’s voice."
   sound_global_disabled: "&c✖ Aegis’s voice is hushed for all."
+  
+  sidebar_enabled: "&a✔ The ledger of the land is now revealed."
+  sidebar_disabled: "&c✖ The ledger of the land is now hidden."
 
   # --- Claiming & Wand ---
   wand_given: "&a⚡ Behold! The Aegis Scepter is bestowed upon thee."
@@ -120,7 +106,7 @@ old_english:
     - "&eLeft-Click: &7Gaze upon the land"
     - "&aRight-Click: &7Purchase the Deed"
 
-  # --- Expansion (Old English) ---
+  # --- Expansion ---
   expansion_gui_title: "&d§lLand Expansion Petition"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -142,7 +128,6 @@ old_english:
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
   
-  # FIXED KEYS BELOW:
   expansion_tier1_name: "&aYeoman's Grant (+5)"
   expansion_tier1_lore:
     - "&7A modest addition."
@@ -184,7 +169,7 @@ old_english:
   expansion_admin_actions:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
-    
+
   # --- Visit / Travel ---
   visit_gui_title: "&9Travel System"
   visit_title_warps: "&6Realm Waypoints"
@@ -483,7 +468,7 @@ old_english:
   button_admin_reload: "&eRefresh Scrolls"
   
   admin_auto_remove_enabled: '&a✔ Auto-purge awaken’d.'
-  admin_auto_remove_disabled: '&c✖ Auto-purge slumbereth."
+  admin_auto_remove_disabled: '&c✖ Auto-purge slumbereth.'
   admin_bypass_enabled: '&a✔ Bypass is granted unto ops.'
   admin_bypass_disabled: '&c✖ Bypass revoked.'
   admin_broadcast_enabled: '&a✔ Proclamations shall be heard.'
@@ -570,7 +555,7 @@ old_english:
 
   help_header: '&b⚔ &nThe Guardian’s Scroll of Instruction&r'
   help_lines:
-    - '&e/aegis wand &7- Receive thine &bAegis Scepter'
+    - '&e/ag wand &7- Receive thine &bAegis Scepter'
     - '&e/aegis menu &7- Summon the Guardian Codex'
     - '&e/aegis claim &7- Bind land to thy will'
     - '&e/aegis unclaim &7- Release thine claim'
@@ -616,6 +601,9 @@ hybrid_english:
 
   sound_global_enabled: "&a✔ The realm's sounds are restored."
   sound_global_disabled: "&c✖ The realm falls silent."
+  
+  sidebar_enabled: "&a✔ Sidebar display enabled."
+  sidebar_disabled: "&c✖ Sidebar display disabled."
 
   # --- Claiming & Wand ---
   wand_given: "&a⚡ The Aegis Scepter has been granted to you."
@@ -681,7 +669,7 @@ hybrid_english:
     - "&eLeft-Click: &7Preview Land"
     - "&aRight-Click: &7Purchase Deed"
 
-  # --- Expansion (Hybrid) ---
+  # --- Expansion ---
   expansion_gui_title: "&d§lExpansion Petition"
   button_expand: "&dRequest More Land"
   expand_lore:
@@ -703,7 +691,6 @@ hybrid_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ This petition has expired."
   
-  # FIXED KEYS BELOW:
   expansion_tier1_name: "&aMinor Expansion (+5)"
   expansion_tier1_lore:
     - "&7Increase borders by &a+5 blocks&7."
@@ -724,7 +711,7 @@ hybrid_english:
     - "&7Increase borders by &6+35 blocks&7."
     - " "
     - "&eClick to Petition"
-  expansion_tier5_name: "&bImperial Expansion (+50)"
+  expansion_tier5_name: "&bRoyal Expansion (+50)"
   expansion_tier5_lore:
     - "&7Increase borders by &b+50 blocks&7."
     - " "
@@ -740,7 +727,7 @@ hybrid_english:
   expansion_admin_actions:
     - "&aLeft-Click: &7Grant"
     - "&cRight-Click: &7Deny"
-    
+
   # --- Visit / Travel ---
   visit_gui_title: "&9Travel Network"
   visit_title_warps: "&6Realm Waypoints"
@@ -905,7 +892,7 @@ hybrid_english:
   level_button_lore:
     - "&7Ascend your plot to unlock"
     - "&7greater size and power."
-
+  
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
   zone_deleted: "&c✖ The zone '{ZONE}' hath been dissolved."
@@ -922,12 +909,12 @@ hybrid_english:
     - " "
     - "&eClick to Create"
   zone_create_locked_lore:
-    - "&cYou must select corners"
+    - "&cThou must select corners"
     - "&cwith the Wand first!"
   zone_evicted: "&eTenant evicted from {ZONE}."
   zone_button_lore:
     - "&7Manage rental grounds"
-    - "&7within your borders."
+    - "&7within thy borders."
 
   biome_gui_title: "&2Biome Magic"
   biome_changed: "&a✔ The climate shifts! Biome is now {BIOME}."
@@ -952,17 +939,17 @@ hybrid_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
-  # --- Wards ---
+  # --- Wards (Flags) ---
   button_pvp_on: '&a⚔ PvP: Allowed'
   button_pvp_off: '&c⚔ PvP: Protected'
   pvp_toggle_lore:
     - '&7Allow combat?'
-
+  
   button_containers_on: '&a📦 Chests: Accessible'
   button_containers_off: '&c📦 Chests: Protected'
   container_toggle_lore:
     - '&7Protect your items?'
-
+  
   button_mobs_on: '&a🧟 Monsters: Spawning'
   button_mobs_off: '&c🧟 Monsters: Blocked'
   mob_toggle_lore:
@@ -1099,7 +1086,7 @@ hybrid_english:
   admin-zone-created: '&a✔ Server Zone set.'
   admin-zone-deleted: '&c✖ Server Zone removed.'
   admin-zone-not-found: '&c❌ Not a Server Zone.'
-  admin_zone_flags_title: '&cServer Zone Wards'
+  admin_zone_flags_title: '&cServer Zone Settings'
   flag_build_lore:
     - '&7Allow building?'
   flag_containers_lore:
@@ -1109,6 +1096,19 @@ hybrid_english:
 
   wilderness_revert_start: '[AegisGuard] Nature is healing...'
   wilderness_revert_end: '[AegisGuard] {AMOUNT} blocks reverted.'
+
+  help_header: '&bAegisGuard Help'
+  help_lines:
+    - '&e/ag wand'
+    - '&e/ag menu'
+    - '&e/ag claim'
+    - '&e/ag unclaim'
+    - '&e/ag resize <dir> <amt>'
+    - '&e/ag home'
+    - '&e/ag setspawn'
+    - '&e/ag welcome [msg]'
+    - '&e/ag market'
+    - '&e/ag help'
     
 # ======================================
 # MODERN ENGLISH STYLE (Clean & Standard)
@@ -1138,6 +1138,10 @@ modern_english:
 
   sound_global_enabled: "&a✔ Plugin sounds enabled."
   sound_global_disabled: "&c✖ Plugin sounds disabled."
+
+  # --- Sidebar (Scoreboard) ---
+  sidebar_enabled: "&a✔ Sidebar enabled."
+  sidebar_disabled: "&c✖ Sidebar disabled."
 
   # --- Claiming & Wand ---
   wand_given: "&a✔ You received the Claim Tool."
@@ -1203,7 +1207,7 @@ modern_english:
     - "&eLeft-Click: &7Preview Claim"
     - "&aRight-Click: &7Purchase Deed"
 
-  # --- Expansion Request (Modern) ---
+  # --- Expansion Request ---
   expansion_gui_title: "&dExpansion Request"
   button_expand: "&dRequest Expansion"
   expand_lore:
@@ -1225,7 +1229,6 @@ modern_english:
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ Request expired."
   
-  # FIXED KEYS BELOW:
   expansion_tier1_name: "&aSmall Upgrade (+5)"
   expansion_tier1_lore:
     - "&7Radius: &a+5 blocks"
@@ -1416,6 +1419,7 @@ modern_english:
     - "&7Server has disabled sounds."
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
+  # --- Leveling & Zoning (UPDATED) ---
   level_gui_title: "&dLeveling"
   level_current_status: "&dStats"
   level_upgrade_button: "&aUpgrade to Level {LEVEL}"
@@ -1466,6 +1470,7 @@ modern_english:
   title_entering_wilderness: '&aWilderness'
   subtitle_entering_wilderness: ''
 
+  # --- Flags / Wards ---
   button_pvp_on: '&a⚔ PvP: Allowed'
   button_pvp_off: '&c⚔ PvP: Disabled'
   pvp_toggle_lore:
@@ -1521,8 +1526,8 @@ modern_english:
   button_fly_on: '&b🕊 Flight: ON'
   button_fly_off: '&c🕊 Flight: OFF'
   fly_toggle_lore: 
-    - "&7Enable flight?"
-    - "&7Cost: &6{COST}"
+    - "&7Enable flight in claim."
+    - "&7Cost to enable: &6{COST}"
   flight_enabled: '&aFlight enabled.'
   flight_disabled: '&cFlight disabled.'
 
@@ -1541,7 +1546,7 @@ modern_english:
   cosmetics_lore:
     - '&7Visual border effects.'
   cosmetics_gui_title: '&dCosmetics'
-  cosmetics_border_none: '&cNone'
+  cosmetics_border_none: '&cNo Effect'
   cosmetics_status_selected: "&a(Active)"
   cosmetics_status_free: "&aFree"
   cosmetics_click_buy: "&eLeft-Click: Buy"

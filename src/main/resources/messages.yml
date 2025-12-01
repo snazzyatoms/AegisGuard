@@ -1050,6 +1050,8 @@ hybrid_english:
     - " "
     - "&6🚩 Wards: &7PvP, Mobs, etc."
     - "&b👥 Allies: &7Trust friends."
+    - "&d✨ Glamours: &7Visual borders."
+    - "&a🌿 Biomes: &7Change grass colors."
   codex_security_title: "&c§lIV. Security"
   codex_security_lore:
     - "&7Protect your borders:"
@@ -1331,6 +1333,8 @@ modern_english:
     - " "
     - "&6🚩 Settings: &7PvP, Mobs, etc."
     - "&b👥 Members: &7Trust players."
+    - "&d✨ Cosmetics: &7Particle effects."
+    - "&a🌿 Biomes: &7Change biome type."
   codex_security_title: "&c§lIV. Security"
   codex_security_lore:
     - "&7Manage visitors:"

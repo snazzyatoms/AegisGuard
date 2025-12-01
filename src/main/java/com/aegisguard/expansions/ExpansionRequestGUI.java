@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * ExpansionRequestGUI
  * - Allows players to submit requests to increase their plot size.
- * - Fully localized for language switching.
+ * - Updated with 5 Tiers and Exit Button.
  */
 public class ExpansionRequestGUI {
 
@@ -32,52 +32,66 @@ public class ExpansionRequestGUI {
 
     public void open(Player player) {
         String title = GUIManager.safeText(plugin.msg().get(player, "expansion_gui_title"), "§dLand Expansion Request");
-        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 27, title);
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 36, title); // Increased to 36 for better spacing
 
         // Background
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 36; i++) inv.setItem(i, filler);
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         boolean validPlot = (plot != null && plot.getOwner().equals(player.getUniqueId()));
-
-        // --- TIER 1: SMALL (+5) ---
-        // Fallback names are used if message keys are missing to prevent blank items
-        String nameSmall = plugin.msg().get(player, "expansion_small_name");
-        if (nameSmall == null) nameSmall = "§aSmall Expansion";
         
-        inv.setItem(11, GUIManager.createItem(Material.IRON_PICKAXE, nameSmall, 
-            plugin.msg().getList(player, validPlot ? "expansion_small_lore" : "expansion_locked_lore")
+        // Helper to get lore based on validity
+        String statusLoreKey = validPlot ? "expansion_click_submit" : "expansion_locked_lore";
+
+        // --- TIER 1: TIER 1 (+5) ---
+        inv.setItem(11, GUIManager.createItem(Material.WOODEN_PICKAXE, 
+            plugin.msg().get(player, "expansion_tier1_name", "§aTier 1 Expansion"), 
+            plugin.msg().getList(player, "expansion_tier1_lore")
         ));
 
-        // --- TIER 2: MEDIUM (+15) ---
-        String nameMedium = plugin.msg().get(player, "expansion_medium_name");
-        if (nameMedium == null) nameMedium = "§6Medium Expansion";
-        
-        inv.setItem(13, GUIManager.createItem(Material.GOLDEN_PICKAXE, nameMedium, 
-            plugin.msg().getList(player, validPlot ? "expansion_medium_lore" : "expansion_locked_lore")
+        // --- TIER 2: TIER 2 (+10) ---
+        inv.setItem(12, GUIManager.createItem(Material.STONE_PICKAXE, 
+            plugin.msg().get(player, "expansion_tier2_name", "§7Tier 2 Expansion"), 
+            plugin.msg().getList(player, "expansion_tier2_lore")
         ));
 
-        // --- TIER 3: LARGE (+30) ---
-        String nameLarge = plugin.msg().get(player, "expansion_large_name");
-        if (nameLarge == null) nameLarge = "§bLarge Expansion";
-        
-        inv.setItem(15, GUIManager.createItem(Material.DIAMOND_PICKAXE, nameLarge, 
-            plugin.msg().getList(player, validPlot ? "expansion_large_lore" : "expansion_locked_lore")
+        // --- TIER 3: TIER 3 (+20) ---
+        inv.setItem(13, GUIManager.createItem(Material.IRON_PICKAXE, 
+            plugin.msg().get(player, "expansion_tier3_name", "§fTier 3 Expansion"), 
+            plugin.msg().getList(player, "expansion_tier3_lore")
         ));
 
-        // --- ADMIN VIEW (Slot 26) ---
+        // --- TIER 4: TIER 4 (+35) ---
+        inv.setItem(14, GUIManager.createItem(Material.GOLDEN_PICKAXE, 
+            plugin.msg().get(player, "expansion_tier4_name", "§6Tier 4 Expansion"), 
+            plugin.msg().getList(player, "expansion_tier4_lore")
+        ));
+
+        // --- TIER 5: TIER 5 (+50) ---
+        inv.setItem(15, GUIManager.createItem(Material.DIAMOND_PICKAXE, 
+            plugin.msg().get(player, "expansion_tier5_name", "§bTier 5 Expansion"), 
+            plugin.msg().getList(player, "expansion_tier5_lore")
+        ));
+
+        // --- ADMIN VIEW (Slot 31) ---
         if (plugin.isAdmin(player)) {
-            inv.setItem(26, GUIManager.createItem(Material.COMPASS, 
+            inv.setItem(31, GUIManager.createItem(Material.COMPASS, 
                 plugin.msg().get(player, "button_view_requests_admin"), 
                 plugin.msg().getList(player, "view_requests_admin_lore")
             ));
         }
 
         // Navigation
-        inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, 
+        inv.setItem(27, GUIManager.createItem(Material.NETHER_STAR, 
             plugin.msg().get(player, "button_back_menu"), 
             plugin.msg().getList(player, "back_menu_lore")
+        ));
+        
+        // Exit Button (Added as requested)
+        inv.setItem(35, GUIManager.createItem(Material.BARRIER, 
+            plugin.msg().get(player, "button_exit"), 
+            plugin.msg().getList(player, "exit_lore")
         ));
 
         player.openInventory(inv);
@@ -92,42 +106,45 @@ public class ExpansionRequestGUI {
         int currentRadius = (plot != null) ? (plot.getX2() - plot.getX1()) / 2 : 0;
 
         switch (e.getSlot()) {
-            case 11: // Small
-                if (validatePlot(player, plot)) {
-                    plugin.getExpansionRequestManager().createRequest(player, plot, currentRadius + 5);
-                    player.closeInventory();
-                    plugin.effects().playConfirm(player);
-                }
+            case 11: // Tier 1 (+5)
+                if (validatePlot(player, plot)) submit(player, plot, currentRadius + 5);
+                break;
+            case 12: // Tier 2 (+10)
+                if (validatePlot(player, plot)) submit(player, plot, currentRadius + 10);
+                break;
+            case 13: // Tier 3 (+20)
+                if (validatePlot(player, plot)) submit(player, plot, currentRadius + 20);
+                break;
+            case 14: // Tier 4 (+35)
+                if (validatePlot(player, plot)) submit(player, plot, currentRadius + 35);
+                break;
+            case 15: // Tier 5 (+50)
+                if (validatePlot(player, plot)) submit(player, plot, currentRadius + 50);
                 break;
 
-            case 13: // Medium
-                if (validatePlot(player, plot)) {
-                    plugin.getExpansionRequestManager().createRequest(player, plot, currentRadius + 15);
-                    player.closeInventory();
-                    plugin.effects().playConfirm(player);
-                }
-                break;
-
-            case 15: // Large
-                if (validatePlot(player, plot)) {
-                    plugin.getExpansionRequestManager().createRequest(player, plot, currentRadius + 30);
-                    player.closeInventory();
-                    plugin.effects().playConfirm(player);
-                }
-                break;
-
-            case 26: // Admin View
+            case 31: // Admin View
                 if (plugin.isAdmin(player)) {
                     plugin.gui().expansionAdmin().open(player);
                     plugin.effects().playMenuFlip(player);
                 }
                 break;
 
-            case 22: // Back
+            case 27: // Back
                 plugin.gui().openMain(player);
                 plugin.effects().playMenuFlip(player);
                 break;
+                
+            case 35: // Exit
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
+                break;
         }
+    }
+    
+    private void submit(Player player, Plot plot, int newRadius) {
+        plugin.getExpansionRequestManager().createRequest(player, plot, newRadius);
+        player.closeInventory();
+        plugin.effects().playConfirm(player);
     }
 
     private boolean validatePlot(Player player, Plot plot) {
@@ -137,13 +154,11 @@ public class ExpansionRequestGUI {
             return false;
         }
         
-        // Check if pending request exists
         if (plugin.getExpansionRequestManager().hasPendingRequest(player.getUniqueId())) {
-            plugin.msg().send(player, "expansion_exists"); // "You already have a pending request"
+            plugin.msg().send(player, "expansion_exists"); 
             plugin.effects().playError(player);
             return false;
         }
-        
         return true;
     }
 }

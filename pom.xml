@@ -17,43 +17,35 @@
     </properties>
 
     <repositories>
-        <!-- 1. Pl3xMap Official (Most Reliable API Source) -->
         <repository>
-            <id>pl3x-repo</id>
-            <url>https://repo.pl3x.net/</url>
+            <id>modrinth-repo</id>
+            <url>https://api.modrinth.com/maven</url>
         </repository>
 
-        <!-- 2. JitPack (Vault & Utilities) -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
 
-        <!-- 3. PaperMC (Server API) -->
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-
-        <!-- 4. SpigotMC (Fallback) -->
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         
-        <!-- 5. PlaceholderAPI -->
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
 
-        <!-- 6. Dynmap -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
 
-        <!-- 7. BlueMap -->
         <repository>
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
@@ -62,7 +54,6 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -70,7 +61,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Vault Economy -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -78,7 +68,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- PlaceholderAPI -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -86,7 +75,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Dynmap API -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
@@ -94,7 +82,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- BlueMap API -->
         <dependency>
             <groupId>de.bluecolored</groupId>
             <artifactId>bluemap-api</artifactId>
@@ -102,22 +89,19 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Pl3xMap API (Stable) -->
         <dependency>
-            <groupId>net.pl3x.map</groupId>
-            <artifactId>Pl3xMap-API-Bukkit</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <groupId>maven.modrinth</groupId>
+            <artifactId>pl3xmap</artifactId>
+            <version>1.20.4-491</version>
             <scope>provided</scope>
         </dependency>
 
-        <!-- HikariCP (Database) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
         </dependency>
         
-        <!-- SLF4J NOP (Silences "No Provider" Console Errors) -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
@@ -138,7 +122,6 @@
                 </configuration>
             </plugin>
             
-            <!-- Shade Plugin (Relocates HikariCP to prevent conflicts) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

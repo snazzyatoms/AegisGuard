@@ -1,0 +1,105 @@
+# =======================================================================
+#  🛡️ AEGISGUARD v1.3.0 - LANGUAGE & TERMINOLOGY
+# =======================================================================
+#  "The Estate & Economy Update"
+#
+#  HOW TO SWITCH LANGUAGES:
+#  Change 'active_language' to one of the keys below:
+#  - modern (Standard Minecraft style: "Claim", "Plot", "You")
+#  - old    (Hardcore RPG style: "Fiefdom", "Decree", "Thou")
+#  - hybrid (Aegis Default: "Estate", "Deed", "You")
+# =======================================================================
+
+settings:
+  active_language: hybrid
+  prefix: "&8[&bAegis&8] &7"
+
+# =======================================================================
+# 🌐 LANGUAGE: HYBRID (Default - Professional RPG)
+# =======================================================================
+hybrid:
+  terminology:
+    land_singular: "Estate"
+    land_plural: "Estates"
+    type_private: "Private Estate"
+    type_guild: "Guild Estate"
+    action_claim: "Deed"
+    action_unclaim: "Vacate"
+
+  messages:
+    claim_success: "&a&lDEED SIGNED! &7You have established a new %type% named &f%name%&7."
+    claim_failed_money: "&cInsufficient Funds. &7Deeding this land requires &c$%cost%&7."
+    claim_failed_guild_money: "&cInsufficient Treasury Funds. &7The Guild needs &c$%cost% &7to secure this estate."
+    claim_failed_overlap: "&cBoundary Dispute! &7This area overlaps with another Estate."
+    guild_claim_announce: "&e&lEXPANSION! &6%guild% &7has secured a new Estate at &f%location%&7."
+    enter_title: "&b%name%"
+    enter_subtitle: "&7Owned by &f%owner%"
+    exit_title: "&7Wilderness"
+    exit_subtitle: "&7Unclaimed Territory"
+    ledger_deposit: "&aDeposit Confirmed. &7Added &f$%amount% &7to the Estate Ledger."
+    treasury_frozen: "&b&l❄ TREASURY FROZEN. &7Instability detected (Members: %current%/%min%)."
+    no_permission: "&cYou do not have the required Role to perform this action."
+
+# =======================================================================
+# 🌐 LANGUAGE: MODERN (Standard - Simple & Clean)
+# =======================================================================
+modern:
+  terminology:
+    land_singular: "Claim"
+    land_plural: "Claims"
+    type_private: "Private Claim"
+    type_guild: "Guild Claim"
+    action_claim: "Claim"
+    action_unclaim: "Unclaim"
+
+  messages:
+    claim_success: "&aSuccess! &7You have claimed a new %type% named &f%name%&7."
+    claim_failed_money: "&cNot enough money. &7Claiming this area costs &c$%cost%&7."
+    claim_failed_guild_money: "&cNot enough Guild funds. &7Your Guild needs &c$%cost% &7to claim this."
+    claim_failed_overlap: "&cOverlap! &7You cannot claim over someone else's land."
+    guild_claim_announce: "&eNew Claim! &6%guild% &7has claimed land at &f%location%&7."
+    enter_title: "&b%name%"
+    enter_subtitle: "&7Owned by &f%owner%"
+    exit_title: "&7Wilderness"
+    exit_subtitle: "&7You have left the claim."
+    ledger_deposit: "&aMoney Added. &7You deposited &f$%amount% &7into the claim bank."
+    treasury_frozen: "&b&l❄ BANK LOCKED. &7Not enough members (Members: %current%/%min%)."
+    no_permission: "&cYou don't have permission to do that."
+
+# =======================================================================
+# 🌐 LANGUAGE: OLD ENGLISH (Hardcore - Immersive)
+# =======================================================================
+old:
+  terminology:
+    land_singular: "Fiefdom"
+    land_plural: "Fiefdoms"
+    type_private: "Personal Fief"
+    type_guild: "Royal Territory"
+    action_claim: "Decree"
+    action_unclaim: "Abandon"
+
+  messages:
+    claim_success: "&a&lROYAL DECREE! &7Thou hast established a new %type% known as &f%name%&7."
+    claim_failed_money: "&cEmpty Coffers. &7To decree this land requires &c$%cost% &7gold."
+    claim_failed_guild_money: "&cThe Treasury is barren. &7Thy Guild requires &c$%cost% &7to annex this land."
+    claim_failed_overlap: "&cLand Dispute! &7This territory belongs to another Lord."
+    guild_claim_announce: "&e&lHEAR YE! &6%guild% &7hath annexed new lands at &f%location%&7."
+    enter_title: "&b%name%"
+    enter_subtitle: "&7Under the rule of &f%owner%"
+    exit_title: "&7The Wilds"
+    exit_subtitle: "&7Lawless Lands"
+    ledger_deposit: "&aTribute Accepted. &7Thou hast added &f$%amount% &7to the local coffers."
+    treasury_frozen: "&b&l❄ TREASURY SEALED. &7Thy Guild is weak (Subjects: %current%/%min%)."
+    no_permission: "&cThou lackest the standing to perform such a deed."
+
+# =======================================================================
+# 📜 GUI MENUS (Global - Uses Active Terminology)
+# =======================================================================
+guis:
+  main_menu: "&8Guardian Codex"
+  ledger_menu: "&8Financial Desk: %estate%"
+  guild_dashboard: "&8Alliance Dashboard: %guild%"
+  item_deed: "&b📜 Estate Title"
+  item_treasury: "&eAlliance Treasury"
+  item_members: "&fManage Roster"
+  item_settings: "&7Estate Settings"

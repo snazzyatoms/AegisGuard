@@ -1,0 +1,62 @@
+# =======================================================================
+#  🏰 ALLIANCE / GUILD ROLES
+# =======================================================================
+#  These roles apply to the ORGANIZATION, not just the land.
+#  "flags" here determine Political Power (Bank, Invite, Rename).
+# =======================================================================
+
+roles:
+  # --- THE LEADER ---
+  grandmaster:
+    name: "&6Grandmaster"
+    priority: 100
+    icon: GOLDEN_HELMET
+    flags:
+      - MANAGE_IDENTITY  # <--- CAN RENAME GUILD & ESTATE
+      - WITHDRAW_BANK    # <--- CAN TAKE MONEY
+      - DELETE_GUILD
+      - MANAGE_ROLES
+      - KICK_MEMBERS
+      - INVITE_MEMBERS
+      - BUILD_ON_ESTATE
+
+  # --- THE OFFICERS ---
+  commander:
+    name: "&eCommander"
+    priority: 80
+    icon: DIAMOND_SWORD
+    flags:
+      - WITHDRAW_BANK
+      - KICK_MEMBERS
+      - INVITE_MEMBERS
+      - BUILD_ON_ESTATE
+      # Note: Cannot RENAME or DELETE.
+
+  # --- THE VETERANS ---
+  officer:
+    name: "&dOfficer"
+    priority: 60
+    icon: IRON_CHESTPLATE
+    flags:
+      - INVITE_MEMBERS
+      - BUILD_ON_ESTATE
+      - DEPOSIT_BANK
+
+  # --- THE MEMBERS ---
+  initiate:
+    name: "&7Initiate"
+    priority: 20
+    icon: LEATHER_BOOTS
+    flags:
+      - DEPOSIT_BANK
+      - BUILD_ON_ESTATE
+      # Note: Cannot Invite or Withdraw.
+
+  # --- THE RECRUITS (Probation) ---
+  recruit:
+    name: "&8Recruit"
+    priority: 10
+    icon: WOODEN_SWORD
+    flags:
+      - DEPOSIT_BANK
+      # Note: Cannot Build (until promoted) to prevent griefing.

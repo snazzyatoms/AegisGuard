@@ -12,7 +12,8 @@ folia-supported: true
 commands:
   aegis:
     description: Main AegisGuard command.
-    usage: /aegis <help|menu|claim|wand|merge>
+    # Added sidebar to usage
+    usage: /aegis <help|menu|claim|wand|merge|sidebar>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -41,6 +42,7 @@ permissions:
       aegis.unclaim: true
       aegis.resize: true
       aegis.merge: true
+      aegis.sidebar: true # <--- Added Permission Here
       aegis.home: true
       aegis.setspawn: true
       aegis.welcome: true
@@ -99,6 +101,11 @@ permissions:
   aegis.merge:
     description: Merge adjacent plots.
     default: true
+  # --- NEW PERMISSION ---
+  aegis.sidebar:
+    description: Toggle the plot info sidebar.
+    default: true
+  # --------------------
   aegis.home:
     description: Teleport to plot spawn.
     default: true

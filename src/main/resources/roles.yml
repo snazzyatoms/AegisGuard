@@ -1,0 +1,52 @@
+# =======================================================================
+#  🛡️ PRIVATE ESTATE ROLES
+# =======================================================================
+#  These roles apply to PRIVATE ESTATES (Solo Land).
+#  Players can toggle flags for these roles, but cannot rename them.
+# =======================================================================
+
+roles:
+  # --- TIER 1: CO-OWNER ---
+  co_owner:
+    enabled: true
+    name: "&c&lCo-Owner"
+    priority: 100
+    icon: NETHER_STAR
+    description: "Has near-total control over the estate."
+    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER, INVITE]
+
+  # --- TIER 2: RESIDENT ---
+  resident:
+    enabled: true
+    name: "&aResident"
+    priority: 50
+    icon: IRON_DOOR
+    description: "Can build and live here, but cannot manage others."
+    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER]
+
+  # --- TIER 3: TRUSTED ---
+  trusted:
+    enabled: true
+    name: "&bTrusted"
+    priority: 30
+    icon: IRON_SWORD
+    description: "Can interact and access chests, but cannot build."
+    defaults: [CONTAINER, INTERACT, BUTTON_USE]
+
+  # --- TIER 4: GUEST ---
+  guest:
+    enabled: true
+    name: "&7Guest"
+    priority: 10
+    icon: PAPER
+    description: "Visitor access only."
+    defaults: [BUTTON_USE]
+
+  # --- TIER 5: BANNED ---
+  banned:
+    enabled: true
+    name: "&0Banned"
+    priority: 0
+    icon: BARRIER
+    description: "Cannot enter the estate."
+    defaults: []

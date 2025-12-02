@@ -40,9 +40,32 @@ modules:
   progression_system: true
 
 # =======================================================================
-# 🔌 PLUGIN HOOKS & STORAGE
+# 💾 DATA STORAGE
 # =======================================================================
-hooks:
+# Define where AegisGuard saves all player and estate data.
+storage:
+  # Options: "yml" (Local File), "sqlite" (Single File DB), or "mysql" (External DB)
+  # Use "mysql" for networks or large servers.
+  type: "yml"
+
+  database:
+    # --- SQLite (Only used if type is "sqlite") ---
+    file: "aegisguard.db"
+
+    # --- MySQL / MariaDB Connection ---
+    # host: "localhost"
+    # port: 3306
+    # database: "aegisguard"
+    # username: "root"
+    # password: "password"
+    # useSSL: false
+
+# =======================================================================
+# 🗺️ MAP INTEGRATIONS
+# =======================================================================
+# Settings for web-maps. If you don't use a map plugin, these are ignored.
+maps:
+  # --- Dynmap ---
   dynmap:
     enabled: true
     layer_name: "AegisGuard Estates"
@@ -53,28 +76,31 @@ hooks:
       fill_color: "00FF00"
       fill_opacity: 0.35
 
+  # --- BlueMap ---
+  bluemap:
+    enabled: true
+    label: "Estates"
+
+  # --- Pl3xMap / SquareMap ---
+  pl3xmap:
+    enabled: true
+
+# =======================================================================
+# 🔌 EXTERNAL HOOKS
+# =======================================================================
+# Connections to third-party services (Discord, PlaceholderAPI, etc).
+hooks:
+  # --- Discord Webhook ---
   discord:
     enabled: true
+    # Paste your Webhook URL here (Channel Settings -> Integrations -> Webhooks)
     webhook_url: "https://discord.com/api/webhooks/..."
+    # Select which events send a notification to Discord
     events:
       claim_create: true
       guild_create: true
       estate_liquidation: true
       admin_actions: true
-
-  bluemap: { enabled: true, label: "Estates" }
-  pl3xmap: { enabled: true }
-
-storage:
-  # Options: "yml" (Local) or "mysql" (External DB)
-  type: "yml"
-  database:
-    file: "aegisguard.db" 
-    # host: "localhost"
-    # port: 3306
-    # database: "aegisguard"
-    # username: "root"
-    # password: "password"
 
 # =======================================================================
 # 👥 ROLE SYSTEM (CRITICAL)
@@ -84,10 +110,10 @@ storage:
 role_system:
   # Default role given to a friend when invited to a Private Estate
   default_private_role: "resident"
-  
+
   # Default role given to a player joining a Guild
   default_guild_role: "initiate"
-  
+
   # The files containing the hierarchy (Located in /plugins/AegisGuard/)
   private_roles_file: "roles.yml"
   guild_roles_file: "alliance_roles.yml"
@@ -173,7 +199,7 @@ guilds:
 progression:
   enabled: true
   # Note: Rewards are now in 'ascension.yml' and 'bastion.yml'
-  
+
   notifications:
     broadcast_max_level: true
     play_effects: true

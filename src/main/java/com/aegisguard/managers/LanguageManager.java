@@ -14,10 +14,11 @@ import java.util.UUID;
 public class LanguageManager {
 
     private final JavaPlugin plugin;
-    // Cache all loaded languages: "en_modern" -> Config Object
     private final Map<String, FileConfiguration> localeCache = new HashMap<>();
-    // Cache player preferences: UUID -> "en_modern"
     private final Map<UUID, String> playerLocales = new HashMap<>();
+
+    // CRITICAL UPDATE: Hardcoded default is now Old English
+    private static final String DEFAULT_LANG = "en_old"; 
 
     public LanguageManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -29,8 +30,8 @@ public class LanguageManager {
         File localeFolder = new File(plugin.getDataFolder(), "locales");
         if (!localeFolder.exists()) localeFolder.mkdirs();
 
-        // The 3 Core Languages to ensure exist
-        String[] defaults = {"en_hybrid.yml", "en_modern.yml", "en_old.yml"};
+        // Ensure all 3 exist, but prioritize en_old
+        String[] defaults = {"en_old.yml", "en_hybrid.yml", "en_modern.yml"};
 
         for (String fileName : defaults) {
             File file = new File(localeFolder, fileName);
@@ -38,51 +39,42 @@ public class LanguageManager {
                 try {
                     plugin.saveResource("locales/" + fileName, false);
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Could not create default locale: " + fileName);
+                    plugin.getLogger().warning("Could not create locale: " + fileName);
                 }
             }
         }
 
-        // Load EVERYTHING in the folder (allows for custom languages like es_ES.yml)
+        // Load them into memory
         for (File file : localeFolder.listFiles()) {
             if (file.getName().endsWith(".yml")) {
-                String key = file.getName().replace(".yml", ""); // "en_modern"
+                String key = file.getName().replace(".yml", "");
                 localeCache.put(key, YamlConfiguration.loadConfiguration(file));
                 plugin.getLogger().info("Loaded Language: " + key);
             }
         }
     }
 
-    /**
-     * Set a player's language preference.
-     * In a real plugin, you would save this to player_data.yml or MySQL async.
-     */
     public void setPlayerLang(Player player, String langKey) {
         if (localeCache.containsKey(langKey)) {
             playerLocales.put(player.getUniqueId(), langKey);
-            // TODO: Save to database here
             player.sendMessage(ChatColor.GREEN + "Language changed to: " + langKey);
         }
     }
 
-    /**
-     * THE NEW GET MESSAGE METHOD
-     * Context-Aware: Checks who is asking for the message.
-     */
     public String getMsg(Player player, String key) {
-        // 1. Check Player Preference -> Fallback to Server Default
+        // 1. Check Player Preference -> Fallback to Config -> Fallback to DEFAULT_LANG (Old)
         String langKey = playerLocales.getOrDefault(player.getUniqueId(), 
-                         plugin.getConfig().getString("settings.language_file", "en_hybrid").replace(".yml", ""));
+                         plugin.getConfig().getString("settings.default_language_file", DEFAULT_LANG + ".yml").replace(".yml", ""));
 
-        // 2. Get the Config from Cache
         FileConfiguration config = localeCache.get(langKey);
-        if (config == null) config = localeCache.get("en_hybrid"); // Safety fallback
+        
+        // Safety Fallback: If config is broken, load Old English
+        if (config == null) config = localeCache.get(DEFAULT_LANG); 
 
-        // 3. Get String
         String message = config.getString("messages." + key);
         if (message == null) return ChatColor.RED + "Missing Key: " + key;
 
-        String prefix = config.getString("prefix", "&8[&bAegis&8] &7");
+        String prefix = config.getString("prefix", "&8[&6Aegis&8] &7");
         return ChatColor.translateAlternateColorCodes('&', prefix + message);
     }
 }

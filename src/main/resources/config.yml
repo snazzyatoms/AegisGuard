@@ -5,51 +5,44 @@
 #  Restart server or use /agadmin reload after editing.
 # =======================================================================
 
+# Used for auto-updating checks. Do not change manually.
+config_version: 3
+
 # =======================================================================
 # 🌐 LANGUAGE SETTINGS (LOCALES)
 # =======================================================================
 settings:
   # The SERVER DEFAULT language.
-  # New players will start with this language automatically.
   # Options: en_hybrid.yml, en_modern.yml, en_old.yml
   default_language_file: "en_hybrid.yml"
 
-  # Allow players to choose their own personal language?
-  # If true, players can use /ag lang to switch between Modern, Old, or Hybrid
-  # without affecting other players or the server config.
+  # Allow players to choose their own personal language via GUI?
   allow_player_switching: true
 
 # =======================================================================
 # 🎛️ MODULAR ARCHITECTURE (MASTER SWITCHBOARD)
 # =======================================================================
 # Disable modules here to completely remove them from the game.
-# This saves RAM and unregisters unused commands.
-# =======================================================================
 modules:
   # Allow players to claim personal land? (Private Estates)
   private_estates: true
 
   # Enable the Guild/Alliance system? (Guild Estates)
-  # Unlocks: /ag guild, Shared Treasuries, and Guild Plots.
   guild_system: true
 
-  # The "Living Economy" Engine.
-  # If false, land is free, and there is no upkeep/tax system.
+  # The "Living Economy" Engine (Upkeep/Tax).
   economy_engine: true
 
   # Enable the "Liquidation Chute" GUI?
-  # Allows players to sell items to pay for upkeep.
   asset_liquidation: true
 
   # Enable the leveling systems? (Ascension & Bastion)
-  # If false, plots are static and cannot be upgraded.
   progression_system: true
 
 # =======================================================================
 # 🔌 PLUGIN HOOKS & STORAGE
 # =======================================================================
 hooks:
-  # --- Web Map Integration ---
   dynmap:
     enabled: true
     layer_name: "AegisGuard Estates"
@@ -60,30 +53,44 @@ hooks:
       fill_color: "00FF00"
       fill_opacity: 0.35
 
-  # --- Discord Webhook ---
   discord:
     enabled: true
     webhook_url: "https://discord.com/api/webhooks/..."
     events:
       claim_create: true
-      guild_create: true       # [NEW]
-      estate_liquidation: true # [NEW]
+      guild_create: true
+      estate_liquidation: true
       admin_actions: true
 
-  # --- Other Maps (Auto-Detected) ---
   bluemap: { enabled: true, label: "Estates" }
   pl3xmap: { enabled: true }
 
 storage:
-  # Options: "yml" (Local File) or "sql" (MySQL/MariaDB/SQLite)
+  # Options: "yml" (Local) or "mysql" (External DB)
   type: "yml"
   database:
-    file: "aegisguard.db" # For SQLite
+    file: "aegisguard.db" 
     # host: "localhost"
     # port: 3306
     # database: "aegisguard"
     # username: "root"
     # password: "password"
+
+# =======================================================================
+# 👥 ROLE SYSTEM (CRITICAL)
+# =======================================================================
+# Defines where the plugin looks for role configurations.
+# This prevents the "Missing Roles" crash by pointing to external files.
+role_system:
+  # Default role given to a friend when invited to a Private Estate
+  default_private_role: "resident"
+  
+  # Default role given to a player joining a Guild
+  default_guild_role: "initiate"
+  
+  # The files containing the hierarchy (Located in /plugins/AegisGuard/)
+  private_roles_file: "roles.yml"
+  guild_roles_file: "alliance_roles.yml"
 
 # =======================================================================
 # 💰 ECONOMY & LEDGER
@@ -95,60 +102,47 @@ economy:
 
   # --- The Land Ledger (Pre-Paid Rent) ---
   ledger:
-    # Allow players to deposit more than the current bill? (Rollover Credit)
     allow_overpayment: true
-    # Maximum days of rent a player can pre-pay.
     max_prepay_days: 60
-    # [NEW] Small Group Reserve
     # Prevent withdrawals if it drops protection below X days.
     min_reserve_days: 7
 
   # --- Asset Liquidation (Item Selling) ---
+  # Note: Item values are defined in 'liquidation.yml'
   liquidation:
-    # Durability Calculation: Damaged items are worth less?
     respect_durability: true
-    # Bonus value per enchantment level
     price_per_enchant: 10.0
 
   # --- Creation Costs ---
   costs:
     private_estate_creation: 500.0
-    guild_creation: 5000.0      # Cost to form a Guild
-    guild_estate_creation: 2000.0 # Cost to claim Guild Land
+    guild_creation: 5000.0
+    guild_estate_creation: 2000.0
 
   # --- Smart Upkeep (Taxes) ---
   upkeep:
     enabled: true
     check_interval_hours: 24
-    # The Formula: Base + (Blocks * Price)
     base_cost: 100.0
     price_per_block: 0.50
-    # Penalty Multiplier if player owns > 5 plots
     landlord_penalty: 1.2
-    # Grace period before deletion/liquidation
     grace_period_days: 7
 
 # =======================================================================
-# 🏡 ESTATE SETTINGS (Formerly Claims)
+# 🏡 ESTATE SETTINGS (Private Land)
 # =======================================================================
 estates:
-  # Limits
   max_estates_per_player: 3
   min_radius: 5
   max_radius: 100
   max_total_area: 50000
 
-  # Naming & Identity
   naming:
-    # Default names when claimed
     private_format: "%player%'s Estate"
     guild_format: "%guild% Estate"
-    # Cost to rename an estate
     rename_cost: 500.0
-    # Only Grandmasters can rename Guild Estates?
     grandmaster_only: true
 
-  # World Settings
   per_world:
     world:
       allow_estates: true
@@ -163,18 +157,14 @@ estates:
 # 🏰 GUILD SYSTEM SETTINGS
 # =======================================================================
 guilds:
-  # Requirements to claim land as a Guild
   land_claiming:
     enabled: true
-    min_members_required: 2 # Prevents solo guilds from claiming land
+    min_members_required: 2
 
-  # Security Protocols
   security:
-    # Freeze Treasury if members drop below minimum?
     freeze_on_instability: true
-    # Hours a new recruit must wait before counting for stability
     recruit_probation_hours: 72
-    # How to handle money if Guild dissolves? (VOID or SPLIT)
+    # Options: VOID, SPLIT, LEADER
     liquidation_payout: "SPLIT"
 
 # =======================================================================
@@ -182,19 +172,10 @@ guilds:
 # =======================================================================
 progression:
   enabled: true
-
-  # [NEW] Split Configuration
-  # We have moved the massive reward lists to separate files
-  # to keep this config clean.
-  #
-  # Private Estates -> Edit 'ascension.yml'
-  # Guild Estates   -> Edit 'bastion.yml'
-
-  # General Settings
+  # Note: Rewards are now in 'ascension.yml' and 'bastion.yml'
+  
   notifications:
-    # Broadcast to server when someone reaches max level?
     broadcast_max_level: true
-    # Firework effect on level up?
     play_effects: true
 
 # =======================================================================
@@ -203,23 +184,16 @@ progression:
 zoning:
   enabled: true
   max_zones_per_estate: 15
-  # If true, 100% of rent goes to Estate Owner. If false, Server takes tax.
   landlord_gets_full_rent: true
 
 # =======================================================================
 # 📐 EXPANSION REQUESTS (Land Grants)
 # =======================================================================
 expansions:
-  # Base price per block
   price_per_block: 10.0
-
-  # Scaling Factor (The bigger the plot, the more expensive to grow)
   scaling:
-    # 0-2000 blocks: Normal Price
     small: { threshold: 0, multiplier: 1.0 }
-    # 2000-5000 blocks: 1.5x Price
     medium: { threshold: 2000, multiplier: 1.5 }
-    # 5000+ blocks: Double Price
     large: { threshold: 5000, multiplier: 2.0 }
 
 # =======================================================================
@@ -234,14 +208,24 @@ visuals:
 
   particles:
     border_enabled: true
-    # Default border style
     default_particle: "FLAME"
+
+# =======================================================================
+# 🧪 DEMO MODE (Showcase)
+# =======================================================================
+demo_mode:
+  enabled: false
+  reset_interval_minutes: 1440
+  prevent_chat: false
+  broadcast_warning: true
+  reset_commands:
+    - "kickall Server Resetting..."
+    - "restart"
 
 # =======================================================================
 # 🧩 ADMIN & DEBUG
 # =======================================================================
 admin:
-  # Sentinel Scepter (Admin Wand)
   wand_material: BLAZE_ROD
   bypass_limits: false
   debug_mode: false

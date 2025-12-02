@@ -1,0 +1,74 @@
+# =======================================================================
+#  ♻️ ASSET LIQUIDATION (THE CHUTE)
+# =======================================================================
+#  This file controls the "Virtual Liquidation GUI".
+#  Players drop items here to convert them into Estate Credit.
+#  This is NOT a shop. It is a way to pay Upkeep using resources.
+# =======================================================================
+
+settings:
+  enabled: true
+  
+  # 📉 Durability Logic
+  # If true, damaged items are worth less based on remaining use.
+  # Formula: BasePrice * (CurrentDurability / MaxDurability)
+  respect_durability: true
+  
+  # ✨ Enchantment Bonus
+  # Added value per level of enchantment.
+  # Example: Sharpness V adds (5 * 10.0) = $50.00 to the item's value.
+  price_per_enchant_level: 15.0
+  
+  # 🔒 Security
+  # Items that cannot be liquidated even if they are in the list.
+  blacklisted_names:
+    - "&cAdmin Sword"
+    - "&6Legendary Item"
+
+# =======================================================================
+# 💎 VALUE REGISTRY
+# =======================================================================
+#  Define the base price for accepted items.
+#  Format: MATERIAL_NAME: PRICE
+# =======================================================================
+values:
+  # --- PRECIOUS MATERIALS ---
+  DIAMOND: 100.0
+  EMERALD: 50.0
+  GOLD_INGOT: 25.0
+  IRON_INGOT: 10.0
+  COPPER_INGOT: 5.0
+  NETHERITE_INGOT: 500.0
+  
+  # --- MOB DROPS (Farmable Income) ---
+  ROTTEN_FLESH: 0.5   # Great for zombie farms
+  BONE: 0.5
+  GUNPOWDER: 2.0
+  SPIDER_EYE: 1.0
+  ENDER_PEARL: 10.0
+  BLAZE_ROD: 15.0
+  
+  # --- FARMING (Sustainable Rent) ---
+  WHEAT: 1.0
+  CARROT: 1.0
+  POTATO: 1.0
+  PUMPKIN: 2.0
+  MELON_SLICE: 0.5
+  HAY_BLOCK: 9.0
+  
+  # --- EQUIPMENT (Recycling) ---
+  # These values are modified by the Durability Logic above.
+  # A broken sword might only be worth $1.00.
+  DIAMOND_SWORD: 200.0
+  DIAMOND_PICKAXE: 300.0
+  DIAMOND_CHESTPLATE: 800.0
+  IRON_SWORD: 20.0
+  IRON_CHESTPLATE: 60.0
+  BOW: 15.0
+  
+  # --- TREASURES ---
+  SADDLE: 50.0
+  NAME_TAG: 50.0
+  MUSIC_DISC_13: 100.0
+  MUSIC_DISC_CAT: 100.0
+  TOTEM_OF_UNDYING: 1000.0

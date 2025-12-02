@@ -1,0 +1,117 @@
+# =======================================================================
+# 🏰 BASTION SYSTEM (GUILD ESTATES)
+# =======================================================================
+# "Build a Fortress. Rule the Economy. Defend your People."
+#
+# Focus: Infrastructure, Economy Scaling, and Global Power.
+# This system uses the GUILD TREASURY (Pooled Funds) for upgrades.
+# Rewards often apply to ALL members or the land itself.
+# =======================================================================
+
+settings:
+  # Guild upgrades are expensive. They require team effort.
+  base_cost: 10000.0
+  # Cost scales aggressively to prevent massive guilds from maxing out day 1.
+  cost_multiplier: 1.8
+  max_level: 50
+
+  # Does the guild need a certain number of members to upgrade?
+  # Prevents solo players from buying "Guild" power.
+  require_min_members: true
+
+rewards:
+  # ==========================================================
+  # ⛺ TIER 1: THE OUTPOST (Levels 1-5)
+  # Focus: Survival and Basic Recruitment.
+  # ==========================================================
+  1:
+    cost_override: 5000.0 # Starter Grant
+    description: "&7The foundation of a new power."
+    rewards:
+      - "MEMBERS:5"          # Recruit 5 people
+      - "SUBZONES:3"         # Create 3 shops/rooms
+      - "RADIUS:15"          # Initial land claim size
+  2:
+    description: "&7Basic fortifications and storage."
+    rewards:
+      - "EFFECT:RESISTANCE:1" # Basic defense for everyone inside
+      - "SUBZONES:5"          # More rooms for members
+  3:
+    description: "&eEconomic Start: &7Unlocks the Guild Tax ledger."
+    rewards:
+      - "TAX_REDUCTION:0.05"  # 5% Discount on Daily Upkeep
+      - "MEMBERS:8"
+  5:
+    description: "&6Milestone: &7The Outpost is secure."
+    rewards:
+      - "RADIUS:25"
+      - "GLOBAL_BUFF:XP:1.05" # +5% XP for members ANYWHERE on the server
+
+  # ==========================================================
+  # 🏯 TIER 2: THE FORTRESS (Levels 6-15)
+  # Focus: Defense, Industry, and Market Control.
+  # ==========================================================
+  8:
+    description: "&7Industrial expansion."
+    rewards:
+      - "EFFECT:FAST_DIGGING:1" # Haste I inside base
+      - "SUBZONES:10"
+  10:
+    description: "&bMilestone: &7Establish a Trade Port."
+    rewards:
+      - "WARP:public_market"    # Unlocks a public warp others can visit
+      - "MARKET_SLOTS:5"        # 5 Free slots on Global Market
+      - "TAX_REDUCTION:0.10"    # 10% Discount on Upkeep
+  12:
+    description: "&cMilitary Training Grounds."
+    rewards:
+      - "EFFECT:INCREASE_DAMAGE:1" # Strength I inside base
+      - "MEMBERS:15"
+  15:
+    description: "&6Milestone: &7Advanced fortifications."
+    rewards:
+      - "RADIUS:50"
+      - "EFFECT:REGENERATION:1"    # Heal inside base
+      - "GLOBAL_BUFF:DAMAGE:1.05"  # +5% Damage vs Mobs globally
+
+  # ==========================================================
+  # 🏙️ TIER 3: THE CITADEL (Levels 16-30)
+  # Focus: Massive Scale, Population, and Prestige.
+  # ==========================================================
+  20:
+    description: "&dMilestone: &7The City of Lights."
+    rewards:
+      - "EFFECT:NIGHT_VISION:1"
+      - "EFFECT:SPEED:2"        # Fast travel inside city
+      - "MEMBERS:30"
+      - "TAX_REDUCTION:0.15"    # 15% Tax Cut
+  25:
+    description: "&7Deep storage vaults."
+    rewards:
+      - "SUBZONES:30"           # Apartment complex ready
+      - "EFFECT:FIRE_RESISTANCE:1"
+  30:
+    description: "&6&lTHE CAPITAL CITY"
+    rewards:
+      - "RADIUS:100"            # Massive territory
+      - "MEMBERS:50"            # Huge roster
+      - "WARP:legendary"        # Special particle warp effect
+      - "GLOBAL_BUFF:LUCK:2"    # Luck II everywhere for members
+
+  # ==========================================================
+  # 👑 TIER 4: THE EMPIRE (Levels 31-50)
+  # Focus: Server Dominance. Just showing off wealth.
+  # ==========================================================
+  40:
+    description: "&5&lImperial Decree: &7We own this world."
+    rewards:
+      - "TAX_REDUCTION:0.25"    # 25% Tax Cut (Huge savings)
+      - "MEMBERS:75"
+      - "EFFECT:SATURATION:1"   # No hunger inside capital
+  50:
+    description: "&4&l☠ GOD KINGDOM ☠"
+    rewards:
+      - "RADIUS:300"            # Enormous land grant
+      - "MEMBERS:100"           # Server cap guild size
+      - "GLOBAL_BUFF:XP:1.20"   # +20% XP Global (The best grind spot)
+      - "FLAG:invincible_pets"  # Pets cannot die in claims

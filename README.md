@@ -1,8 +1,9 @@
 <p align="center">
-  <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
+  <img src="https://github.com/user-attachments/assets/1cab9fe4-6135-4280-8892-896ae495c530" width="260" alt="AegisGuard Logo">
 </p>
 
 <p align="center">
+  <strong>The Next Generation of Land Protection & Economy</strong><br>
   Simple. Steadfast. Eternal.
 </p>
 
@@ -21,6 +22,7 @@
 </p>
 
 ---
+
 
 ## 🔗 Quick Links
 
@@ -85,23 +87,30 @@ Turn land into a **real estate loop**:
 
 ### 🏰 Empire Building (Player Features)
 
-- **Claims & Sub-Claims (Zoning):** Create main plots, then define sub-zones (rooms, shops, apartments) to rent out.
+- **Claims & Sub-Claims (Zoning):**  
+  Create main plots, then define sub-zones (rooms, shops, apartments) to rent out.
 
-- **Plot Leveling:** Invest resources to level up plots and unlock buffs (Speed, Haste, Regen, etc.).
+- **Plot Leveling:**  
+  Invest resources to level up plots and unlock buffs (Speed, Haste, Regen, etc.).
 
-- **Biome Cosmetics:** Change the biome atmosphere of a plot for visual flair.
+- **Biome Cosmetics:**  
+  Change the biome atmosphere of a plot for visual flair.
 
-- **Particle Borders & Holograms:** Show borders and plot info without spamming chat.
+- **Particle Borders & Holograms:**  
+  Show borders and plot info without spamming chat.
 
 ---
 
 ### 🛡️ Server Plot Architecture (Admin Tools)
 
-- **Sentinel’s Scepter:** `/agadmin wand` – create server-owned zones that ignore normal limits/costs.
+- **Sentinel’s Scepter:**  
+  `/agadmin wand` – create server-owned zones that ignore normal limits/costs.
 
-- **Plot Conversion:** `/agadmin convert` – stand in a player plot and seize it as a server zone.
+- **Plot Conversion:**  
+  `/agadmin convert` – stand in a player plot and seize it as a server zone.
 
-- **Master Key Mode:** High-trust permission that lets staff adjust any plot simply by standing in it.
+- **Master Key Mode:**  
+  High-trust permission that lets staff adjust any plot simply by standing in it.
 
 ---
 
@@ -130,7 +139,7 @@ Almost everything is driven by menus instead of raw commands:
 You can test AegisGuard on a public demo server:
 
 ```text
-IP:       72.5.47.116:25570
-Version:  1.20.4+ (Daily World Reset • Sandbox Mode)
-Command:  /ag menu
-Tip:      Open the Guardian Codex inside the menu to learn how to claim land.
+IP:      72.5.47.116:25570
+Version: 1.20.4+ (Daily World Reset • Sandbox Mode)
+Command: /ag menu
+Tip:     Open the Guardian Codex inside the menu to learn how to claim land.

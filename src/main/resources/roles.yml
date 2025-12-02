@@ -1,10 +1,11 @@
 # =======================================================================
-#  🛡️ PRIVATE ESTATE ROLES (SUPERIOR EDITION)
+#  🛡️ PRIVATE ESTATE ROLES (EXTRAVAGANT EDITION)
 # =======================================================================
 #  "Your Home. Your Rules. Your Hierarchy."
 #
 #  This file defines the roles available for Solo/Private Estates.
 #  Admins: You can disable any role by setting 'enabled: false'.
+#  Players: Can edit the permissions of these roles via the GUI.
 # =======================================================================
 
 roles:
@@ -14,7 +15,7 @@ roles:
   # ==========================================================
   viceroy:
     enabled: true
-    name: "&4&lViceroy" # Formerly Co-Owner
+    name: "&4&lViceroy" # The Co-Owner
     priority: 100
     icon: NETHER_STAR
     description: "The right hand of the owner. Total dominion."
@@ -22,43 +23,91 @@ roles:
 
   seneschal:
     enabled: true
-    name: "&cSeneschal" # Estate Manager
-    priority: 90
+    name: "&cSeneschal" # The Manager
+    priority: 95
     icon: WRITABLE_BOOK
-    description: "Manages guests and settings, but cannot evict the owner."
+    description: "Manages guests, settings, and staff."
     defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER, INVITE, KICK, SETTINGS]
 
   # ==========================================================
-  # ⚒️ TIER 2: THE SPECIALISTS
-  # Specific jobs. Good for hiring help without risking griefing.
+  # ⚔️ TIER 2: DEFENSE & SECURITY
+  # Roles dedicated to keeping the estate safe.
+  # ==========================================================
+  warden:
+    enabled: true
+    name: "&4Warden"
+    priority: 90
+    icon: SHIELD
+    description: "Head of security. Can manage bans and defenses."
+    defaults: [MOB_KILL, PVP, BAN_ENTRY, KICK, TURRET_USE]
+
+  sentry:
+    enabled: true
+    name: "&cSentry"
+    priority: 85
+    icon: CROSSBOW
+    description: "A guard stationed to protect the grounds."
+    defaults: [MOB_KILL, PVP, DOOR_USE, GATE_USE]
+
+  # ==========================================================
+  # ⚒️ TIER 3: THE SPECIALISTS (Skilled Labor)
+  # Specific jobs without risk of theft.
   # ==========================================================
   architect:
     enabled: true
     name: "&bArchitect"
     priority: 80
     icon: DIAMOND_PICKAXE
-    description: "Authorized to build and renovate structures."
+    description: "Authorized to build structures and renovate."
     defaults: [BLOCK_BREAK, BLOCK_PLACE, INTERACT]
-    # Notice: No CONTAINER access. They can build, but can't steal.
+    # No Container Access (Cannot steal items)
 
   engineer:
     enabled: true
     name: "&eEngineer"
-    priority: 70
+    priority: 75
     icon: REDSTONE_TORCH
     description: "Manages machinery, repeaters, and redstone."
     defaults: [BUTTON_USE, LEVER_USE, REDSTONE_CHANGE, INTERACT]
+
+  arcanist:
+    enabled: true
+    name: "&5Arcanist"
+    priority: 70
+    icon: ENCHANTING_TABLE
+    description: "Access to enchanting, brewing, and magic."
+    defaults: [INTERACT, CONTAINER_ACCESS, BUTTON_USE]
+
+  # ==========================================================
+  # 🌾 TIER 4: AGRICULTURE & ECONOMY
+  # Farming and trading roles.
+  # ==========================================================
+  merchant:
+    enabled: true
+    name: "&6Merchant"
+    priority: 65
+    icon: EMERALD
+    description: "Manages shops and trades on the estate."
+    defaults: [CONTAINER_ACCESS, CREATE_SHOP, INTERACT]
 
   groundskeeper:
     enabled: true
     name: "&2Groundskeeper"
     priority: 60
     icon: GOLDEN_HOE
-    description: "Tends to crops and animals. Cannot break buildings."
-    defaults: [CROP_PLANT, CROP_HARVEST, ANIMAL_BREED, ANIMAL_KILL, MOB_KILL]
+    description: "Tends to crops and plants. Cannot break buildings."
+    defaults: [CROP_PLANT, CROP_HARVEST, INTERACT]
+
+  stablehand:
+    enabled: true
+    name: "&6Stablehand"
+    priority: 55
+    icon: SADDLE
+    description: "Cares for horses and livestock."
+    defaults: [ANIMAL_BREED, ANIMAL_KILL, RIDE, LEASH]
 
   # ==========================================================
-  # 🏠 TIER 3: RESIDENTS & TENANTS
+  # 🏠 TIER 5: RESIDENTS
   # People who live here.
   # ==========================================================
   resident:
@@ -74,11 +123,11 @@ roles:
     name: "&eTenant"
     priority: 40
     icon: CHEST
-    description: "Rents a room. Can use doors and chests, but no building."
-    defaults: [CONTAINER, DOOR_USE, BED_USE, BUTTON_USE]
+    description: "Rents a room. Can use doors and personal chests."
+    defaults: [DOOR_USE, BED_USE, BUTTON_USE] # Note: No general container access
 
   # ==========================================================
-  # 🗝️ TIER 4: VISITORS & GUESTS
+  # 🗝️ TIER 6: VISITORS
   # Low trust access.
   # ==========================================================
   trusted_guest:
@@ -86,7 +135,7 @@ roles:
     name: "&bTrusted Guest"
     priority: 30
     icon: IRON_SWORD
-    description: "Can visit and interact with basic mechanisms."
+    description: "Can visit and use basic mechanisms."
     defaults: [DOOR_USE, BUTTON_USE, LEVER_USE, PRESSURE_PLATE]
 
   guest:
@@ -106,7 +155,7 @@ roles:
     defaults: [] # Zero permissions. Just walking.
 
   # ==========================================================
-  # 🚫 TIER 5: RESTRICTED
+  # 🚫 TIER 7: RESTRICTED
   # ==========================================================
   exiled:
     enabled: true

@@ -1,52 +1,117 @@
 # =======================================================================
-#  🛡️ PRIVATE ESTATE ROLES
+#  🛡️ PRIVATE ESTATE ROLES (SUPERIOR EDITION)
 # =======================================================================
-#  These roles apply to PRIVATE ESTATES (Solo Land).
-#  Players can toggle flags for these roles, but cannot rename them.
+#  "Your Home. Your Rules. Your Hierarchy."
+#
+#  This file defines the roles available for Solo/Private Estates.
+#  Admins: You can disable any role by setting 'enabled: false'.
 # =======================================================================
 
 roles:
-  # --- TIER 1: CO-OWNER ---
-  co_owner:
+  # ==========================================================
+  # 👑 TIER 1: THE RULING CLASS
+  # High trust. Can manage the property and other players.
+  # ==========================================================
+  viceroy:
     enabled: true
-    name: "&c&lCo-Owner"
+    name: "&4&lViceroy" # Formerly Co-Owner
     priority: 100
     icon: NETHER_STAR
-    description: "Has near-total control over the estate."
-    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER, INVITE]
+    description: "The right hand of the owner. Total dominion."
+    defaults: [ALL]
 
-  # --- TIER 2: RESIDENT ---
+  seneschal:
+    enabled: true
+    name: "&cSeneschal" # Estate Manager
+    priority: 90
+    icon: WRITABLE_BOOK
+    description: "Manages guests and settings, but cannot evict the owner."
+    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER, INVITE, KICK, SETTINGS]
+
+  # ==========================================================
+  # ⚒️ TIER 2: THE SPECIALISTS
+  # Specific jobs. Good for hiring help without risking griefing.
+  # ==========================================================
+  architect:
+    enabled: true
+    name: "&bArchitect"
+    priority: 80
+    icon: DIAMOND_PICKAXE
+    description: "Authorized to build and renovate structures."
+    defaults: [BLOCK_BREAK, BLOCK_PLACE, INTERACT]
+    # Notice: No CONTAINER access. They can build, but can't steal.
+
+  engineer:
+    enabled: true
+    name: "&eEngineer"
+    priority: 70
+    icon: REDSTONE_TORCH
+    description: "Manages machinery, repeaters, and redstone."
+    defaults: [BUTTON_USE, LEVER_USE, REDSTONE_CHANGE, INTERACT]
+
+  groundskeeper:
+    enabled: true
+    name: "&2Groundskeeper"
+    priority: 60
+    icon: GOLDEN_HOE
+    description: "Tends to crops and animals. Cannot break buildings."
+    defaults: [CROP_PLANT, CROP_HARVEST, ANIMAL_BREED, ANIMAL_KILL, MOB_KILL]
+
+  # ==========================================================
+  # 🏠 TIER 3: RESIDENTS & TENANTS
+  # People who live here.
+  # ==========================================================
   resident:
     enabled: true
     name: "&aResident"
     priority: 50
     icon: IRON_DOOR
-    description: "Can build and live here, but cannot manage others."
-    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER]
+    description: "A trusted friend living on the estate."
+    defaults: [BLOCK_BREAK, BLOCK_PLACE, CONTAINER, INTERACT, BED_USE]
 
-  # --- TIER 3: TRUSTED ---
-  trusted:
+  tenant:
     enabled: true
-    name: "&bTrusted"
+    name: "&eTenant"
+    priority: 40
+    icon: CHEST
+    description: "Rents a room. Can use doors and chests, but no building."
+    defaults: [CONTAINER, DOOR_USE, BED_USE, BUTTON_USE]
+
+  # ==========================================================
+  # 🗝️ TIER 4: VISITORS & GUESTS
+  # Low trust access.
+  # ==========================================================
+  trusted_guest:
+    enabled: true
+    name: "&bTrusted Guest"
     priority: 30
     icon: IRON_SWORD
-    description: "Can interact and access chests, but cannot build."
-    defaults: [CONTAINER, INTERACT, BUTTON_USE]
+    description: "Can visit and interact with basic mechanisms."
+    defaults: [DOOR_USE, BUTTON_USE, LEVER_USE, PRESSURE_PLATE]
 
-  # --- TIER 4: GUEST ---
   guest:
     enabled: true
     name: "&7Guest"
-    priority: 10
+    priority: 20
     icon: PAPER
-    description: "Visitor access only."
-    defaults: [BUTTON_USE]
+    description: "A welcome visitor. Can open doors."
+    defaults: [DOOR_USE]
 
-  # --- TIER 5: BANNED ---
-  banned:
+  spectator:
     enabled: true
-    name: "&0Banned"
+    name: "&8Spectator"
+    priority: 10
+    icon: GLASS
+    description: "Look, but don't touch."
+    defaults: [] # Zero permissions. Just walking.
+
+  # ==========================================================
+  # 🚫 TIER 5: RESTRICTED
+  # ==========================================================
+  exiled:
+    enabled: true
+    name: "&0&lExiled"
     priority: 0
     icon: BARRIER
-    description: "Cannot enter the estate."
-    defaults: []
+    description: "Banned from entering the estate boundaries."
+    defaults: [BAN_ENTRY]

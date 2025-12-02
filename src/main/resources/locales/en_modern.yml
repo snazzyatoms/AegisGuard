@@ -1,0 +1,65 @@
+# =======================================================================
+# 🛡️ AEGISGUARD - MODERN ENGLISH
+# Style: Simple, Direct, Standard Minecraft Terms.
+# =======================================================================
+
+prefix: "&8[&bProtection&8] &7"
+
+terminology:
+  land_singular: "Claim"
+  land_plural: "Claims"
+  type_private: "Private Claim"
+  type_guild: "Guild Claim"
+  action_claim: "Claim"
+  action_unclaim: "Unclaim"
+  action_resize: "Resize"
+
+messages:
+  # --- Claiming ---
+  claim_success: "&aSuccess! &7You have claimed a new %type% named &f%name%&7."
+  claim_failed_money: "&cNot enough money. &7Claiming this area costs &c$%cost%&7."
+  claim_failed_guild_money: "&cNot enough Guild funds. &7Your Guild needs &c$%cost% &7to claim this."
+  claim_failed_overlap: "&cOverlap! &7You cannot claim over someone else's land."
+  claim_failed_limit: "&cLimit Reached. &7You have too many claims (Max: %max%)."
+  
+  # --- Guilds ---
+  guild_created: "&aGuild Created. &7You are now the leader of &e%guild%&7."
+  guild_claim_announce: "&eNew Claim! &6%guild% &7has claimed land at &f%location%&7."
+  guild_rename_success: "&aRenamed. &7This claim is now called &f%name%&7."
+  
+  # --- Economy ---
+  ledger_deposit: "&aMoney Added. &7You deposited &f$%amount% &7into the claim bank."
+  ledger_withdrawal: "&eMoney Taken. &7You took &f$%amount% &7from the claim bank."
+  treasury_frozen: "&b&l❄ BANK LOCKED. &7Not enough members (Members: %current%/%min%)."
+  liquidation_success: "&aSold Items. &7You sold &f%count% items &7for &a$%total%&7."
+  
+  # --- Titles (Screen) ---
+  enter_title: "&b%name%"
+  enter_subtitle: "&7Owned by &f%owner%"
+  exit_title: "&7Wilderness"
+  exit_subtitle: "&7You left the claim"
+
+  # --- Errors ---
+  no_permission: "&cYou don't have permission to do that."
+  not_in_guild: "&cYou need to be in a Guild first."
+  
+gui:
+  # General UI Buttons
+  button_back: "&c&l⬅ Back"
+  button_close: "&c&l✖ Close"
+  button_confirm: "&a&l✔ Yes"
+  button_cancel: "&c&l✖ No"
+  button_next: "&7Next ➡"
+  button_prev: "&7⬅ Prev"
+
+  # Menu Titles
+  title_main: "&8Main Menu"
+  title_ledger: "&8Claim Bank"
+  title_roles: "&8Member Roles"
+  title_liquidation: "&8Sell Items"
+  title_bastion: "&8Guild Upgrades"
+  
+  # Items
+  item_deed: "&b📍 Claim Info"
+  item_treasury: "&eGuild Bank"
+  item_members: "&fMembers"

@@ -1,62 +1,119 @@
 # =======================================================================
-#  🏰 ALLIANCE / GUILD ROLES
+#  🏰 ALLIANCE / GUILD ROLES (SUPERIOR EDITION)
 # =======================================================================
-#  These roles apply to the ORGANIZATION, not just the land.
-#  "flags" here determine Political Power (Bank, Invite, Rename).
+#  "Build an Army. Manage an Economy. Rule the Server."
+#
+#  These roles define the hierarchy within a Guild.
+#  PLAYERS (Guild Leaders) can edit the permissions of these roles
+#  specifically for their own Guild via the Dashboard GUI.
 # =======================================================================
 
 roles:
-  # --- THE LEADER ---
+  # ==========================================================
+  # 👑 TIER 1: THE CROWN (Leadership)
+  # Absolute authority over the Guild's assets and people.
+  # ==========================================================
   grandmaster:
-    name: "&6Grandmaster"
+    enabled: true
+    name: "&6&lGrandmaster"
     priority: 100
     icon: GOLDEN_HELMET
-    flags:
-      - MANAGE_IDENTITY  # <--- CAN RENAME GUILD & ESTATE
-      - WITHDRAW_BANK    # <--- CAN TAKE MONEY
-      - DELETE_GUILD
-      - MANAGE_ROLES
-      - KICK_MEMBERS
-      - INVITE_MEMBERS
-      - BUILD_ON_ESTATE
+    description: "The supreme ruler of the Guild."
+    defaults: [ALL]
 
-  # --- THE OFFICERS ---
-  commander:
-    name: "&eCommander"
-    priority: 80
+  hand_of_king:
+    enabled: true
+    name: "&cHand of the King" # Co-Owner equivalent
+    priority: 95
+    icon: NETHER_STAR
+    description: "Second in command. Can manage everything except the Leader."
+    defaults: [MANAGE_ROLES, WITHDRAW_BANK, INVITE, KICK, CLAIM_LAND, RENAME]
+
+  # ==========================================================
+  # ⚖️ TIER 2: THE HIGH COUNCIL (Specialized Administration)
+  # High-trust roles for specific departments (War, Money, Politics).
+  # ==========================================================
+  high_marshal:
+    enabled: true
+    name: "&4High Marshal" # War Minister
+    priority: 90
     icon: DIAMOND_SWORD
-    flags:
-      - WITHDRAW_BANK
-      - KICK_MEMBERS
-      - INVITE_MEMBERS
-      - BUILD_ON_ESTATE
-      # Note: Cannot RENAME or DELETE.
+    description: "Commands the military. Can declare war and manage claims."
+    defaults: [CLAIM_LAND, UNCLAIM_LAND, SET_HOME, DECLARE_WAR]
 
-  # --- THE VETERANS ---
-  officer:
-    name: "&dOfficer"
-    priority: 60
+  exchequer:
+    enabled: true
+    name: "&eLord Exchequer" # Treasurer
+    priority: 85
+    icon: GOLD_BLOCK
+    description: "Master of Coin. Manages the Treasury and taxes."
+    defaults: [WITHDRAW_BANK, DEPOSIT_BANK, MANAGE_TAXES, CHECK_LOGS]
+
+  ambassador:
+    enabled: true
+    name: "&bAmbassador" # Diplomat
+    priority: 80
+    icon: PAPER
+    description: "Head of foreign relations. Manages allies and truces."
+    defaults: [ALLIANCE_CHAT, MANAGE_RELATIONS, INVITE]
+
+  # ==========================================================
+  # ⚔️ TIER 3: THE OFFICER CORPS
+  # Middle management. Can invite/kick lower ranks.
+  # ==========================================================
+  captain:
+    enabled: true
+    name: "&dCaptain"
+    priority: 70
     icon: IRON_CHESTPLATE
-    flags:
-      - INVITE_MEMBERS
-      - BUILD_ON_ESTATE
-      - DEPOSIT_BANK
+    description: "Field commander. Can recruit soldiers."
+    defaults: [INVITE, KICK, BUILD_ON_ESTATE, USE_GUILD_SHOP]
 
-  # --- THE MEMBERS ---
+  quartermaster:
+    enabled: true
+    name: "&aQuartermaster"
+    priority: 60
+    icon: CHEST
+    description: "Logistics officer. Manages guild chests and supplies."
+    defaults: [CONTAINER_ACCESS, BUILD_ON_ESTATE, DEPOSIT_BANK]
+
+  # ==========================================================
+  # 🛡️ TIER 4: THE LEGION (Standard Members)
+  # The core population of the Guild.
+  # ==========================================================
+  knight:
+    enabled: true
+    name: "&fKnight" # Trusted Member
+    priority: 50
+    icon: IRON_SWORD
+    description: "A sworn defender of the Guild."
+    defaults: [BUILD_ON_ESTATE, CONTAINER_ACCESS, USE_WARPS]
+
+  citizen:
+    enabled: true
+    name: "&7Citizen" # Standard Member
+    priority: 40
+    icon: LEATHER_CHESTPLATE
+    description: "A recognized member of the Guild."
+    defaults: [BUILD_ON_ESTATE, DEPOSIT_BANK, USE_WARPS]
+
+  # ==========================================================
+  # 🪵 TIER 5: THE INITIATES (Newcomers)
+  # Low trust. Usually restricted to prevent "insiding" (betrayal).
+  # ==========================================================
   initiate:
-    name: "&7Initiate"
+    enabled: true
+    name: "&8Initiate"
     priority: 20
-    icon: LEATHER_BOOTS
-    flags:
-      - DEPOSIT_BANK
-      - BUILD_ON_ESTATE
-      # Note: Cannot Invite or Withdraw.
+    icon: CHAINMAIL_HELMET
+    description: "New blood. Access is limited."
+    defaults: [DEPOSIT_BANK, ALLIANCE_CHAT]
+    # Note: Cannot build or open chests by default to prevent theft.
 
-  # --- THE RECRUITS (Probation) ---
-  recruit:
-    name: "&8Recruit"
+  probationary:
+    enabled: true
+    name: "&8Probationary"
     priority: 10
     icon: WOODEN_SWORD
-    flags:
-      - DEPOSIT_BANK
-      # Note: Cannot Build (until promoted) to prevent griefing.
+    description: "Under observation. Very restricted access."
+    defaults: [ALLIANCE_CHAT]

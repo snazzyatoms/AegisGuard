@@ -14,7 +14,7 @@ config_version: 3
 settings:
   # The SERVER DEFAULT language.
   # Options: en_hybrid.yml, en_modern.yml, en_old.yml
-  default_language_file: "en_hybrid.yml"
+  default_language_file: "en_old.yml"
 
   # Allow players to choose their own personal language via GUI?
   allow_player_switching: true

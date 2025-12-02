@@ -1,0 +1,91 @@
+# =======================================================================
+# 📈 ASCENSION SYSTEM (PRIVATE ESTATES)
+# =======================================================================
+# Focus: Personal Power, Efficiency, and QoL.
+# This system uses the player's personal wallet for upgrades.
+# Rewards are active ONLY inside the player's Private Estate.
+# =======================================================================
+
+settings:
+  # Base cost of Level 1 upgrade (Cost increases exponentially per level)
+  base_cost: 2500.0
+  # Cost Multiplier for each subsequent level (e.g., 1.5x)
+  cost_multiplier: 1.5
+  max_level: 30
+  
+  # Requirement: Do players need EXP levels to ascend?
+  required_exp_levels: 5
+
+rewards:
+  # --- TIER 1: THE FOUNDATION (Levels 1-5) ---
+  # Focus: Basic movement and tool efficiency.
+  1:
+    cost_override: 500.0 # Cheaper start
+    description: "&7Unlocks basic movement speed."
+    rewards:
+      - "EFFECT:SPEED:1"
+      - "MEMBERS:1"
+  2:
+    description: "&7Unlock Haste to increase mining speed."
+    rewards:
+      - "EFFECT:FAST_DIGGING:1"
+      - "MEMBERS:1"
+  5:
+    description: "&7Milestone: Greatly increases claim border visibility."
+    rewards:
+      - "RADIUS:10"
+      - "EFFECT:SPEED:2"
+      - "EFFECT:JUMP:1"
+
+  # --- TIER 2: RESOURCE MASTERY (Levels 6-15) ---
+  # Focus: Resource collection, inventory, and farming QoL.
+  10:
+    description: "&aMilestone: Unlocks personal, private Auction house slot."
+    rewards:
+      - "FLAG:auction_slot"
+      - "EFFECT:LUCK:1"
+      - "RADIUS:15"
+  12:
+    description: "&7Aquatic efficiency and durability preservation."
+    rewards:
+      - "EFFECT:WATER_BREATHING:1"
+      - "FLAG:no_item_damage" # Example: Items don't take damage in this plot
+  15:
+    description: "&aMilestone: Unlock personal Flight within this Estate."
+    rewards:
+      - "FLAG:fly"
+      - "MEMBERS:3"
+      - "RADIUS:20"
+
+  # --- TIER 3: DEFENSE & RESILIENCE (Levels 16-25) ---
+  # Focus: Combat, health, and fire resistance within the estate.
+  20:
+    description: "&cMilestone: Damage Resistance I and increased member cap."
+    rewards:
+      - "EFFECT:DAMAGE_RESISTANCE:1"
+      - "EFFECT:FIRE_RESISTANCE:1"
+      - "MEMBERS:5"
+      - "RADIUS:25"
+  22:
+    description: "&7Absorb damage and increase health capacity."
+    rewards:
+      - "EFFECT:ABSORPTION:1"
+      - "RADIUS:30"
+  25:
+    description: "&cMilestone: Full Fire Immunity and Regeneration boost."
+    rewards:
+      - "EFFECT:FIRE_RESISTANCE:2"
+      - "EFFECT:REGENERATION:1"
+
+  # --- TIER 4: GOD STATUS (Levels 26-30) ---
+  # Focus: Max power and massive land capacity.
+  30:
+    description: "&6&lMASTER ASCENSION! &7Maximized area, effects, and member capacity."
+    rewards:
+      - "RADIUS:100"
+      - "EFFECT:CONDUIT_POWER:2" # God of the Sea/Air
+      - "EFFECT:LUCK:5"
+      - "MEMBERS:10"
+      - "FLAG:max_stats" # Example: Enables all possible non-PvP buffs
+
+# =======================================================================

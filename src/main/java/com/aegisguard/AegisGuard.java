@@ -19,6 +19,7 @@ import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
+import com.aegisguard.listeners.ChatInputListener; // v1.3.0 NEW
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener; // v1.3.0
 import com.aegisguard.managers.*; // v1.3.0 New Managers
@@ -156,7 +157,7 @@ public class AegisGuard extends JavaPlugin {
         // Initialize Core Managers
         this.selection = new SelectionService(this);
         this.messages = new MessagesUtil(this);
-        this.gui = new GUIManager(this); // Note: Update this to use new v1.3.0 GUI logic later
+        this.gui = new GUIManager(this); 
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
         this.worldRules = new WorldRulesManager(this);
@@ -179,6 +180,9 @@ public class AegisGuard extends JavaPlugin {
         // --- REGISTER EVENTS ---
         // v1.3.0 GUI Listener (Handles Codex/Dashboard clicks)
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
+        
+        // v1.3.0 Chat Input Listener (Handles Renaming/Creation via Chat)
+        Bukkit.getPluginManager().registerEvents(new ChatInputListener(this), this);
         
         // v1.3.0 Migration Notification (Welcome Message)
         Bukkit.getPluginManager().registerEvents(new MigrationListener(this), this);
@@ -233,14 +237,12 @@ public class AegisGuard extends JavaPlugin {
     }
     
     private void initializeHooks() {
-        // Initialize Unified Map Manager
         try {
              this.mapHookManager = new MapHookManager(this);
         } catch (NoClassDefFoundError | Exception e) {
             getLogger().warning("Map hooks could not be initialized: " + e.getMessage());
         }
         
-        // PlaceholderAPI Hook
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new AegisPAPIExpansion(this).register();
         }
@@ -248,7 +250,6 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Cancel Tasks Safely
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
         cancelTaskReflectively(wildernessRevertTask);
@@ -258,12 +259,11 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (messages != null) messages.savePlayerData();
         
-        instance = null; // Cleanup singleton reference
+        instance = null;
         getLogger().info("AegisGuard disabled.");
     }
     
-    // --- UTILITY METHODS ---
-
+    // ... rest of the utility methods remain unchanged ...
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
@@ -276,8 +276,6 @@ public class AegisGuard extends JavaPlugin {
         }
         return player.isOp() || player.hasPermission("aegis.admin");
     }
-
-    // --- FOLIA / BUKKIT SCHEDULERS ---
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
@@ -341,10 +339,8 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
-    // --- TASKS ---
-
     private void startAutoSaver() {
-        long interval = 20L * 60 * 5; // 5 Minutes
+        long interval = 20L * 60 * 5; 
         Runnable logic = () -> {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
@@ -356,7 +352,6 @@ public class AegisGuard extends JavaPlugin {
     private void startUpkeepTask() {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
-        
         Runnable logic = () -> {
             // Placeholder for upkeep logic
         };

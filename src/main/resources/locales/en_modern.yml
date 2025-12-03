@@ -22,6 +22,14 @@ messages:
   claim_failed_overlap: "&cOverlap! &7You cannot claim over someone else's land."
   claim_failed_limit: "&cLimit Reached. &7You have too many claims (Max: %max%)."
   
+  # --- Petitions ---
+  petition_submitted: "&aRequest Sent. &7You asked for &f%size% &7more blocks. Cost: &e$%cost%&7."
+  petition_exists: "&cWait. &7You already have a request pending."
+  petition_invalid_size: "&cError. &7New size must be bigger."
+  petition_limit_reached: "&cMax Size. &7You hit the claim size limit."
+  petition_approved_title: "&a&lREQUEST APPROVED"
+  petition_denied: "&cYour resize request was denied."
+
   # --- Guilds ---
   guild_created: "&aGuild Created. &7You are now the leader of &e%guild%&7."
   guild_claim_announce: "&eNew Claim! &6%guild% &7has claimed land at &f%location%&7."
@@ -33,7 +41,7 @@ messages:
   treasury_frozen: "&b&l❄ BANK LOCKED. &7Not enough members (Members: %current%/%min%)."
   liquidation_success: "&aSold Items. &7You sold &f%count% items &7for &a$%total%&7."
   
-  # --- Titles (Screen) ---
+  # --- Titles ---
   enter_title: "&b%name%"
   enter_subtitle: "&7Owned by &f%owner%"
   exit_title: "&7Wilderness"
@@ -44,13 +52,14 @@ messages:
   not_in_guild: "&cYou need to be in a Guild first."
   
 gui:
-  # General UI Buttons
+  # UI Buttons
   button_back: "&c&l⬅ Back"
   button_close: "&c&l✖ Close"
   button_confirm: "&a&l✔ Yes"
   button_cancel: "&c&l✖ No"
   button_next: "&7Next ➡"
   button_prev: "&7⬅ Prev"
+  button_exit: "&c&l✖ Exit"
 
   # Menu Titles
   title_main: "&8Main Menu"
@@ -58,8 +67,43 @@ gui:
   title_roles: "&8Member Roles"
   title_liquidation: "&8Sell Items"
   title_bastion: "&8Guild Upgrades"
+  title_petition: "&8Resize Claim"
   
   # Items
   item_deed: "&b📍 Claim Info"
   item_treasury: "&eGuild Bank"
   item_members: "&fMembers"
+
+  # --- Petition GUI ---
+  petition_click_submit: "&eClick to Request Resize."
+  petition_locked_lore: "&cYou cannot resize this."
+  
+  petition_tier1_name: "&aTier 1 (+5)"
+  petition_tier1_lore:
+    - "&7Small expansion."
+    - "&7+5 Blocks."
+  
+  petition_tier2_name: "&eTier 2 (+10)"
+  petition_tier2_lore:
+    - "&7Standard expansion."
+    - "&7+10 Blocks."
+
+  petition_tier3_name: "&6Tier 3 (+20)"
+  petition_tier3_lore:
+    - "&7Large expansion."
+    - "&7+20 Blocks."
+
+  petition_tier4_name: "&dTier 4 (+35)"
+  petition_tier4_lore:
+    - "&7Huge expansion."
+    - "&7+35 Blocks."
+
+  petition_tier5_name: "&bTier 5 (+50)"
+  petition_tier5_lore:
+    - "&7Massive expansion."
+    - "&7+50 Blocks."
+
+  button_view_petitions_admin: "&c&lAdmin Requests"
+  view_petitions_admin_lore:
+    - "&7See pending resize requests."
+    - "&eClick to View"

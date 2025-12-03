@@ -38,9 +38,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player p)) {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.cfg().reload();
-                // plugin.msg().reload(); // msg() is replaced by LanguageManager
                 plugin.getLanguageManager().loadAllLocales();
-                // plugin.store().load(); // Handled by EstateManager
                 sender.sendMessage("[AegisGuard] Reload complete.");
             } else {
                 sender.sendMessage("[AegisGuard] GUI commands are player-only. Use 'aegisadmin reload' to reload config.");
@@ -58,9 +56,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
         // --- DEFAULT: OPEN MENU ---
         if (args.length == 0) {
-            // Open Admin GUI (Ensure you update GuiManager to have openAdminMenu())
-            // plugin.getGuiManager().openAdminMenu(p);
-            p.sendMessage("§eOpening Admin Panel... (Coming Soon)");
+            plugin.getGuiManager().admin().open(p);
             return true;
         }
 
@@ -70,9 +66,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 plugin.cfg().reload();
                 plugin.getLanguageManager().loadAllLocales();
                 plugin.getRoleManager().loadAllRoles();
-                // Estate reloading logic if needed
                 p.sendMessage(ChatColor.GREEN + "✔ [AegisGuard] v1.3.0 Configuration & Locales reloaded.");
-                // plugin.effects().playConfirm(p);
                 break;
                 
             case "bypass":
@@ -84,8 +78,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             case "menu":
-                // plugin.getGuiManager().openAdminMenu(p);
-                p.sendMessage("§eOpening Admin Panel... (Coming Soon)");
+                plugin.getGuiManager().admin().open(p);
                 break;
                 
             // --- CONVERT TO SERVER ZONE ---
@@ -101,13 +94,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 
-                // 1. Convert Logic (Use Estate Object)
-                // This is a Placeholder UUID for "Server"
-                // Ideally, use a constant like Estate.SERVER_UUID
+                // 1. Convert Logic
                 UUID serverUUID = UUID.fromString("00000000-0000-0000-0000-000000000000"); 
                 
-                // You will need a method in EstateManager to transfer ownership safely
-                // plugin.getEstateManager().transferOwnership(estate, serverUUID, true); // true = isGuild (Server acts like Guild)
+                // UNCOMMENTED: This now works because EstateManager has this method
+                plugin.getEstateManager().transferOwnership(estate, serverUUID, true); 
                 
                 // 2. Lock Down Flags
                 estate.setFlag("pvp", false);
@@ -115,10 +106,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 estate.setFlag("build", false);
                 estate.setFlag("safe_zone", true);
                 
-                // plugin.getEstateManager().saveEstate(estate); // Save changes
-                
                 p.sendMessage(ChatColor.GREEN + "✔ Estate converted to Server Zone.");
-                // plugin.effects().playConfirm(p);
                 break;
                 
             // --- ADMIN WAND ---
@@ -131,10 +119,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 p.getInventory().addItem(createAdminScepter());
                 p.sendMessage(ChatColor.RED + "⚡ Sentinel's Scepter Received.");
                 p.sendMessage(ChatColor.GRAY + "Use this to create Server Zones.");
-                // plugin.effects().playClaimSuccess(p);
                 break;
 
-            // --- SET LANGUAGE (Debug) ---
+            // --- SET LANGUAGE ---
             case "setlang":
                 if (args.length < 3) {
                     p.sendMessage("§cUsage: /agadmin setlang <player> <file>");
@@ -156,7 +143,6 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     }
 
     private ItemStack createAdminScepter() {
-        // Updated to use the new Config path if you changed it, or fallback
         String matName = plugin.getConfig().getString("admin.wand_material", "BLAZE_ROD");
         Material mat = Material.getMaterial(matName);
         if (mat == null) mat = Material.BLAZE_ROD;
@@ -176,7 +162,6 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             ));
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
             
-            // KEY: This NBT tag tells SelectionService that this is a SERVER claim tool
             meta.getPersistentDataContainer().set(SelectionService.SERVER_WAND_KEY, PersistentDataType.BYTE, (byte) 1);
             
             rod.setItemMeta(meta);

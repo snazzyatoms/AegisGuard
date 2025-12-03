@@ -1,22 +1,30 @@
 package com.aegisguard.api.events;
 
-import com.aegisguard.data.Plot;
+import com.aegisguard.objects.Estate; // Updated Import
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class PlotLeaveEvent extends Event {
+/**
+ * Fired when a player exits an Estate boundary.
+ * This event is not cancellable because movement has usually already happened.
+ */
+public class EstateLeaveEvent extends Event {
 
     private static final HandlerList handlers = new HandlerList();
-    private final Plot plot;
+    private final Estate estate;
     private final Player player;
 
-    public PlotLeaveEvent(Plot plot, Player player) {
-        this.plot = plot;
+    public EstateLeaveEvent(Estate estate, Player player) {
+        this.estate = estate;
         this.player = player;
     }
 
-    public Plot getPlot() { return plot; }
+    /**
+     * Get the Estate being left.
+     */
+    public Estate getEstate() { return estate; }
+    
     public Player getPlayer() { return player; }
 
     @Override

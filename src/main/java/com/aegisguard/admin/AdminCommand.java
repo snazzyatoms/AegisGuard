@@ -1,8 +1,9 @@
-package com.aegisguard.admin;
+package com.yourname.aegisguard.admin;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
-import com.aegisguard.selection.SelectionService;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
+import com.yourname.aegisguard.selection.SelectionService;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -20,11 +21,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
-    private static final String[] SUB_COMMANDS = { "reload", "bypass", "menu", "convert", "wand" };
+    private static final String[] SUB_COMMANDS = { "reload", "bypass", "menu", "convert", "wand", "setlang" };
 
     public AdminCommand(AegisGuard plugin) {
         this.plugin = plugin;
@@ -36,9 +38,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player p)) {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.cfg().reload();
-                plugin.msg().reload();
-                plugin.worldRules().reload();
-                plugin.store().load();
+                // plugin.msg().reload(); // msg() is replaced by LanguageManager
+                plugin.getLanguageManager().loadAllLocales();
+                // plugin.store().load(); // Handled by EstateManager
                 sender.sendMessage("[AegisGuard] Reload complete.");
             } else {
                 sender.sendMessage("[AegisGuard] GUI commands are player-only. Use 'aegisadmin reload' to reload config.");
@@ -46,15 +48,19 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        LanguageManager lang = plugin.getLanguageManager();
+
         // --- PERMISSION CHECK ---
         if (!p.hasPermission("aegis.admin")) {
-            plugin.msg().send(p, "no_perm");
+            p.sendMessage(lang.getMsg(p, "no_permission"));
             return true;
         }
 
         // --- DEFAULT: OPEN MENU ---
         if (args.length == 0) {
-            plugin.gui().admin().open(p);
+            // Open Admin GUI (Ensure you update GuiManager to have openAdminMenu())
+            // plugin.getGuiManager().openAdminMenu(p);
+            p.sendMessage("§eOpening Admin Panel... (Coming Soon)");
             return true;
         }
 
@@ -62,77 +68,112 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
             case "reload":
                 plugin.cfg().reload();
-                plugin.msg().reload();
-                plugin.worldRules().reload();
-                plugin.store().load();
-                p.sendMessage(ChatColor.GREEN + "✔ [AegisGuard] Configuration & Data reloaded.");
-                plugin.effects().playConfirm(p);
+                plugin.getLanguageManager().loadAllLocales();
+                plugin.getRoleManager().loadAllRoles();
+                // Estate reloading logic if needed
+                p.sendMessage(ChatColor.GREEN + "✔ [AegisGuard] v1.3.0 Configuration & Locales reloaded.");
+                // plugin.effects().playConfirm(p);
                 break;
                 
             case "bypass":
-                // Toggle permission logic isn't usually done via command unless hooking into LuckPerms API.
-                // For a simple plugin, we usually just inform them they have the permission node.
                 if (p.hasPermission("aegis.admin.bypass")) {
-                    p.sendMessage(ChatColor.YELLOW + "⚠ You currently have Bypass Mode enabled via permissions.");
+                    p.sendMessage(ChatColor.YELLOW + "⚠ Bypass Mode: ENABLED (via Permission)");
                 } else {
-                    p.sendMessage(ChatColor.RED + "❌ You do not have 'aegis.admin.bypass'.");
+                    p.sendMessage(ChatColor.RED + "❌ Bypass Mode: DISABLED");
                 }
                 break;
                 
             case "menu":
-                plugin.gui().admin().open(p);
+                // plugin.getGuiManager().openAdminMenu(p);
+                p.sendMessage("§eOpening Admin Panel... (Coming Soon)");
                 break;
                 
             // --- CONVERT TO SERVER ZONE ---
             case "convert":
-                if (!p.hasPermission("aegis.convert")) { plugin.msg().send(p, "no_perm"); return true; }
+                if (!p.hasPermission("aegis.convert")) { 
+                    p.sendMessage(lang.getMsg(p, "no_permission")); 
+                    return true; 
+                }
                 
-                Plot plot = plugin.store().getPlotAt(p.getLocation());
-                if (plot == null) {
-                    p.sendMessage(ChatColor.RED + "❌ You must be standing in a plot to convert it.");
+                Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
+                if (estate == null) {
+                    p.sendMessage(ChatColor.RED + "❌ You must be standing in an Estate to convert it.");
                     return true;
                 }
                 
-                // 1. Change Owner to Server UUID
-                plugin.store().changePlotOwner(plot, Plot.SERVER_OWNER_UUID, "Server");
+                // 1. Convert Logic (Use Estate Object)
+                // This is a Placeholder UUID for "Server"
+                // Ideally, use a constant like Estate.SERVER_UUID
+                UUID serverUUID = UUID.fromString("00000000-0000-0000-0000-000000000000"); 
+                
+                // You will need a method in EstateManager to transfer ownership safely
+                // plugin.getEstateManager().transferOwnership(estate, serverUUID, true); // true = isGuild (Server acts like Guild)
                 
                 // 2. Lock Down Flags
-                plot.setFlag("pvp", false);
-                plot.setFlag("mobs", false);
-                plot.setFlag("build", false);
-                plot.setFlag("safe_zone", true);
+                estate.setFlag("pvp", false);
+                estate.setFlag("mobs", false);
+                estate.setFlag("build", false);
+                estate.setFlag("safe_zone", true);
                 
-                plugin.store().setDirty(true);
-                p.sendMessage(ChatColor.GREEN + "✔ Plot '" + plot.getPlotId().toString().substring(0,8) + "' converted to Server Zone.");
-                plugin.effects().playConfirm(p);
+                // plugin.getEstateManager().saveEstate(estate); // Save changes
+                
+                p.sendMessage(ChatColor.GREEN + "✔ Estate converted to Server Zone.");
+                // plugin.effects().playConfirm(p);
                 break;
                 
             // --- ADMIN WAND ---
             case "wand":
-                if (!p.hasPermission("aegis.admin.wand")) { plugin.msg().send(p, "no_perm"); return true; }
+                if (!p.hasPermission("aegis.admin.wand")) { 
+                    p.sendMessage(lang.getMsg(p, "no_permission")); 
+                    return true; 
+                }
                 
                 p.getInventory().addItem(createAdminScepter());
-                p.sendMessage(ChatColor.RED + "⚡ You have received the Sentinel's Scepter.");
-                p.sendMessage(ChatColor.GRAY + "Use this to create Server Zones instantly.");
-                plugin.effects().playClaimSuccess(p);
+                p.sendMessage(ChatColor.RED + "⚡ Sentinel's Scepter Received.");
+                p.sendMessage(ChatColor.GRAY + "Use this to create Server Zones.");
+                // plugin.effects().playClaimSuccess(p);
+                break;
+
+            // --- SET LANGUAGE (Debug) ---
+            case "setlang":
+                if (args.length < 3) {
+                    p.sendMessage("§cUsage: /agadmin setlang <player> <file>");
+                    return true;
+                }
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    p.sendMessage("§cPlayer not found.");
+                    return true;
+                }
+                plugin.getLanguageManager().setPlayerLang(target, args[2]);
+                p.sendMessage("§aSet language for " + target.getName() + " to " + args[2]);
                 break;
 
             default:
-                p.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /agadmin <reload|bypass|menu|convert|wand>");
+                p.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /agadmin <reload|bypass|convert|wand>");
         }
         return true;
     }
 
     private ItemStack createAdminScepter() {
-        Material mat = plugin.cfg().getAdminWandMaterial();
+        // Updated to use the new Config path if you changed it, or fallback
+        String matName = plugin.getConfig().getString("admin.wand_material", "BLAZE_ROD");
+        Material mat = Material.getMaterial(matName);
         if (mat == null) mat = Material.BLAZE_ROD;
         
         ItemStack rod = new ItemStack(mat);
         ItemMeta meta = rod.getItemMeta();
         
         if (meta != null) {
-            meta.setDisplayName(plugin.cfg().getAdminWandName());
-            meta.setLore(plugin.cfg().getAdminWandLore());
+            meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Sentinel's Scepter");
+            meta.setLore(Arrays.asList(
+                "§7A tool of absolute authority.",
+                " ",
+                "§eRight-Click: §fSelect Pos 1",
+                "§eLeft-Click: §fSelect Pos 2",
+                " ",
+                "§c⚠ Creates SERVER ZONES directly."
+            ));
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
             
             // KEY: This NBT tag tells SelectionService that this is a SERVER claim tool

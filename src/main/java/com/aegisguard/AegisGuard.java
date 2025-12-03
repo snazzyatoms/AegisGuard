@@ -2,6 +2,7 @@ package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.commands.AegisCommand;
+import com.aegisguard.commands.CommandHandler; // v1.3.0 Command Router
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
@@ -19,6 +20,8 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
+import com.aegisguard.listeners.MigrationListener; // v1.3.0
+import com.aegisguard.managers.*; // v1.3.0 New Managers
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -32,7 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File; // Required for the fix
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -42,16 +45,13 @@ public class AegisGuard extends JavaPlugin {
     // --- SINGLETON PATTERN ---
     private static AegisGuard instance;
 
-    /**
-     * Get the main instance of the AegisGuard plugin.
-     */
     public static AegisGuard getInstance() {
         return instance;
     }
     
-    // --- MANAGERS ---
+    // --- EXISTING MANAGERS ---
     private AGConfig configMgr;
-    private IDataStore plotStore;
+    private IDataStore plotStore; // Legacy support
     private GUIManager gui;
     private ProtectionManager protection;
     private SelectionService selection;
@@ -63,13 +63,19 @@ public class AegisGuard extends JavaPlugin {
     private ExpansionRequestManager expansionManager;
     private SidebarManager sidebarManager; 
     
+    // --- v1.3.0 NEW MANAGERS ---
+    private LanguageManager languageManager;
+    private RoleManager roleManager;
+    private EstateManager estateManager;
+    private AllianceManager allianceManager;
+    
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
 
     private boolean isFolia = false;
     
-    // Task Objects (Object type for Folia/Bukkit compatibility)
+    // Task Objects
     private Object autoSaveTask;
     private Object upkeepTask;
     private Object wildernessRevertTask;
@@ -92,6 +98,12 @@ public class AegisGuard extends JavaPlugin {
     public SidebarManager getSidebar() { return sidebarManager; }
     public boolean isFolia() { return isFolia; }
 
+    // v1.3.0 Getters
+    public LanguageManager getLanguageManager() { return languageManager; }
+    public RoleManager getRoleManager() { return roleManager; }
+    public EstateManager getEstateManager() { return estateManager; }
+    public AllianceManager getAllianceManager() { return allianceManager; }
+
     @Override
     public void onEnable() {
         // Initialize Singleton
@@ -109,14 +121,31 @@ public class AegisGuard extends JavaPlugin {
         // Load Configs
         saveDefaultConfig();
         
-        // FIX: Silent check for messages.yml to prevent console warning
+        // Fix: Ensure messages.yml exists (legacy support)
         if (!new File(getDataFolder(), "messages.yml").exists()) {
             saveResource("messages.yml", false);
         }
 
         this.configMgr = new AGConfig(this);
         
-        // Initialize Data Store (SQL or YML)
+        // --- v1.3.0 INITIALIZATION START ---
+        // 1. Load Languages First (So other managers can use messages)
+        this.languageManager = new LanguageManager(this);
+        
+        // 2. Load Roles (Permission Brain)
+        this.roleManager = new RoleManager(this);
+        
+        // 3. Load Estates (Land Data)
+        this.estateManager = new EstateManager(this);
+        
+        // 4. Load Guilds (Team Data)
+        this.allianceManager = new AllianceManager(this);
+        
+        // 5. Run Legacy Migration Check (Converts old plots to Estates)
+        new DataConverter(this, estateManager).runMigration();
+        // --- v1.3.0 INITIALIZATION END ---
+
+        // Initialize Legacy Data Store (Keep for safe transition)
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.plotStore = new SQLDataStore(this);
@@ -127,7 +156,7 @@ public class AegisGuard extends JavaPlugin {
         // Initialize Core Managers
         this.selection = new SelectionService(this);
         this.messages = new MessagesUtil(this);
-        this.gui = new GUIManager(this);
+        this.gui = new GUIManager(this); // Note: Update this to use new v1.3.0 GUI logic later
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
         this.worldRules = new WorldRulesManager(this);
@@ -135,11 +164,11 @@ public class AegisGuard extends JavaPlugin {
         this.expansionManager = new ExpansionRequestManager(this);
         this.discord = new DiscordWebhook(this);
         
-        // Initialize Sidebar BEFORE ProtectionManager (Protection uses Sidebar)
+        // Initialize Sidebar & Protection
         this.sidebarManager = new SidebarManager(this); 
         this.protection = new ProtectionManager(this);
 
-        // Load Data
+        // Load Legacy Data (if needed)
         this.plotStore.load();
         
         runGlobalAsync(() -> {
@@ -147,8 +176,13 @@ public class AegisGuard extends JavaPlugin {
             expansionManager.load();
         });
 
-        // Register Events
+        // --- REGISTER EVENTS ---
+        // v1.3.0 GUI Listener (Handles Codex/Dashboard clicks)
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
+        
+        // v1.3.0 Migration Notification (Welcome Message)
+        Bukkit.getPluginManager().registerEvents(new MigrationListener(this), this);
+
         Bukkit.getPluginManager().registerEvents(protection, this); 
         Bukkit.getPluginManager().registerEvents(selection, this);
         
@@ -172,11 +206,13 @@ public class AegisGuard extends JavaPlugin {
         }
 
         // Register Commands
+        // v1.3.0 Command Router (/ag)
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
-            AegisCommand aegisExecutor = new AegisCommand(this);
-            aegis.setExecutor(aegisExecutor);
-            aegis.setTabCompleter(aegisExecutor);
+            // Note: We are switching to the new CommandHandler for v1.3.0
+            CommandHandler mainExecutor = new CommandHandler(this); 
+            aegis.setExecutor(mainExecutor);
+            // aegis.setTabCompleter(mainExecutor); // Implement TabCompleter later
         }
 
         PluginCommand admin = getCommand("aegisadmin");
@@ -193,7 +229,7 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         
         initializeHooks();
-        getLogger().info("AegisGuard enabled successfully.");
+        getLogger().info("AegisGuard v1.3.0 enabled successfully.");
     }
     
     private void initializeHooks() {

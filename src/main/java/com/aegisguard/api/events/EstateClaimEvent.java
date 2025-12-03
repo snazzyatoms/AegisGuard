@@ -1,24 +1,28 @@
 package com.aegisguard.api.events;
 
-import com.aegisguard.data.Plot;
+import com.aegisguard.objects.Estate; // Make sure this points to your new Estate object
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class PlotClaimEvent extends Event implements Cancellable {
+/**
+ * Fired when a player (or Guild) attempts to claim a new Estate.
+ * Can be cancelled to prevent the claim.
+ */
+public class EstateClaimEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
-    private final Plot plot;
+    private final Estate estate;
     private final Player player;
     private boolean cancelled;
 
-    public PlotClaimEvent(Plot plot, Player player) {
-        this.plot = plot;
+    public EstateClaimEvent(Estate estate, Player player) {
+        this.estate = estate;
         this.player = player;
     }
 
-    public Plot getPlot() { return plot; }
+    public Estate getEstate() { return estate; }
     public Player getPlayer() { return player; }
 
     @Override

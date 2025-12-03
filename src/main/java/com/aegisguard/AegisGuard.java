@@ -1,7 +1,6 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.commands.CommandHandler; // v1.3.0 Command Router
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
@@ -12,7 +11,6 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.gui.SidebarManager; 
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.MapHookManager;
@@ -21,7 +19,7 @@ import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener; // v1.3.0 NEW
 import com.aegisguard.listeners.LevelingListener;
-import com.aegisguard.listeners.MigrationListener; // v1.3.0
+import com.aegisguard.listeners.MigrationListener; // v1.3.0 NEW
 import com.aegisguard.managers.*; // v1.3.0 New Managers
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
@@ -62,7 +60,8 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
-    private SidebarManager sidebarManager; 
+    
+    // Note: SidebarManager removed as requested
     
     // --- v1.3.0 NEW MANAGERS ---
     private LanguageManager languageManager;
@@ -96,7 +95,6 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
-    public SidebarManager getSidebar() { return sidebarManager; }
     public boolean isFolia() { return isFolia; }
 
     // v1.3.0 Getters
@@ -165,8 +163,7 @@ public class AegisGuard extends JavaPlugin {
         this.expansionManager = new ExpansionRequestManager(this);
         this.discord = new DiscordWebhook(this);
         
-        // Initialize Sidebar & Protection
-        this.sidebarManager = new SidebarManager(this); 
+        // Initialize Protection (Mob Logic)
         this.protection = new ProtectionManager(this);
 
         // Load Legacy Data (if needed)
@@ -178,6 +175,7 @@ public class AegisGuard extends JavaPlugin {
         });
 
         // --- REGISTER EVENTS ---
+        
         // v1.3.0 GUI Listener (Handles Codex/Dashboard clicks)
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         
@@ -187,7 +185,13 @@ public class AegisGuard extends JavaPlugin {
         // v1.3.0 Migration Notification (Welcome Message)
         Bukkit.getPluginManager().registerEvents(new MigrationListener(this), this);
 
+        // Standard Protection (Mobs/Physics)
         Bukkit.getPluginManager().registerEvents(protection, this); 
+        
+        // New v1.3.0 Protection (Roles/Permissions)
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.ProtectionListener(this), this);
+        
+        // Selection Wand
         Bukkit.getPluginManager().registerEvents(selection, this);
         
         // Register Leveling Listener
@@ -213,7 +217,6 @@ public class AegisGuard extends JavaPlugin {
         // v1.3.0 Command Router (/ag)
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
-            // Note: We are switching to the new CommandHandler for v1.3.0
             CommandHandler mainExecutor = new CommandHandler(this); 
             aegis.setExecutor(mainExecutor);
             // aegis.setTabCompleter(mainExecutor); // Implement TabCompleter later
@@ -259,7 +262,7 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (messages != null) messages.savePlayerData();
         
-        instance = null; 
+        instance = null;
         getLogger().info("AegisGuard disabled.");
     }
     

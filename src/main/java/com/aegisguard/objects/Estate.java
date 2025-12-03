@@ -15,11 +15,13 @@ public class Estate {
 
     private final UUID estateId;
     private String name;
-    private final UUID ownerId; // Player UUID (Private) or Guild UUID (Guild)
-    private final boolean isGuildEstate;
+    
+    // Remove 'final' so we can transfer ownership later
+    private UUID ownerId; // Player UUID (Private) or Guild UUID (Guild)
+    private boolean isGuildEstate;
     
     private final World world;
-    private final Cuboid region; // You will need a simple Cuboid utility class
+    private final Cuboid region;
     private long creationDate;
 
     // Stores members: Player UUID -> Role ID (e.g., "viceroy", "resident")
@@ -56,7 +58,24 @@ public class Estate {
     public Cuboid getRegion() { return region; }
     public double getBalance() { return ledgerBalance; }
 
+    // ==========================================================
+    // 🧱 CORE SETTERS (For Admin/Transfer Logic)
+    // ==========================================================
     public void setName(String name) { this.name = name; }
+    
+    /**
+     * Update the Owner (Player or Guild UUID).
+     */
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    /**
+     * Toggle between Guild Estate and Private Estate.
+     */
+    public void setIsGuild(boolean isGuild) {
+        this.isGuildEstate = isGuild;
+    }
 
     // ==========================================================
     // 👥 MEMBER MANAGEMENT
@@ -98,8 +117,11 @@ public class Estate {
         flags.put(flag.toLowerCase(), value);
     }
 
-    public Boolean getFlag(String flag) {
-        return flags.get(flag.toLowerCase());
+    public boolean getFlag(String flag) {
+        // Default logic: if flag missing, return true (permissive) or false (restrictive)
+        // For common flags like "pvp" or "mobs", we usually default to FALSE or TRUE based on config.
+        // Here we return the stored value, or false if unset.
+        return flags.getOrDefault(flag.toLowerCase(), false);
     }
 
     // ==========================================================

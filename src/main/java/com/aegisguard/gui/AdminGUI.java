@@ -1,28 +1,35 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.LanguageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * AdminGUI
  * - Central control panel for server administrators.
- * - Fully localized for language switching.
+ * - Manages v1.3.0 Modules and Settings.
  */
 public class AdminGUI {
 
     private final AegisGuard plugin;
+    private final NamespacedKey actionKey;
 
     public AdminGUI(AegisGuard plugin) {
         this.plugin = plugin;
+        this.actionKey = new NamespacedKey(plugin, "admin_action");
     }
 
     public static class AdminHolder implements InventoryHolder {
@@ -31,128 +38,163 @@ public class AdminGUI {
 
     public void open(Player player) {
         if (!plugin.isAdmin(player)) {
-            plugin.msg().send(player, "no_perm");
+            plugin.getLanguageManager().getMsg(player, "no_permission");
             return;
         }
 
-        String title = GUIManager.safeText(plugin.msg().get(player, "admin_menu_title"), "§c§lHigh Guardian Tools");
+        LanguageManager lang = plugin.getLanguageManager();
+        // Title: "Admin Control Panel"
+        String title = lang.getGui("title_admin"); 
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
+
+        // --- MODULE TOGGLES (Row 2) ---
+        // 1. Private Estates
+        addToggle(inv, 10, "modules.private_estates", 
+            "&bPrivate Estates", Material.OAK_DOOR, "toggle_private");
+
+        // 2. Guild System
+        addToggle(inv, 11, "modules.guild_system", 
+            "&6Guild System", Material.GOLDEN_HELMET, "toggle_guilds");
+
+        // 3. Economy Engine
+        addToggle(inv, 12, "modules.economy_engine", 
+            "&eEconomy Engine", Material.GOLD_INGOT, "toggle_economy");
+
+        // 4. Asset Liquidation
+        addToggle(inv, 13, "modules.asset_liquidation", 
+            "&aLiquidation Chute", Material.HOPPER, "toggle_liquidation");
+
+        // 5. Progression System
+        addToggle(inv, 14, "modules.progression_system", 
+            "&dProgression System", Material.EXPERIENCE_BOTTLE, "toggle_progression");
+
+        // --- TOOLS (Row 4) ---
         
-        ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 45; i++) inv.setItem(i, filler);
+        // Reload Config
+        inv.setItem(29, createActionItem(Material.REDSTONE_BLOCK, 
+            "&c&lReload Plugin", 
+            List.of("&7Reloads Config, Lang, and Roles."), 
+            "reload_plugin"));
 
-        // --- SETTINGS TOGGLES ---
-        // Each toggle uses dynamic keys: "button_admin_auto_remove", "admin_auto_remove_enabled", etc.
-        addToggle(player, inv, 10, "admin.auto_remove_banned", "button_admin_auto_remove", "admin_auto_remove_lore", Material.TNT, false);
-        addToggle(player, inv, 11, "admin.bypass_claim_limit", "button_admin_bypass_limit", "admin_bypass_limit_lore", Material.NETHER_STAR, false);
-        addToggle(player, inv, 12, "admin.broadcast_admin_actions", "button_admin_broadcast", "admin_broadcast_lore", Material.BEACON, false);
-        addToggle(player, inv, 13, "admin.unlimited_plots", "button_admin_unlimited", "admin_unlimited_lore", Material.EMERALD_BLOCK, true);
-        addToggle(player, inv, 14, "sync.proxy.enabled", "button_admin_sync", "admin_sync_lore", Material.ENDER_EYE, false);
-        addToggle(player, inv, 15, "performance.low_overhead_mode", "button_admin_perf", "admin_perf_lore", Material.REDSTONE_BLOCK, false);
+        // Admin Wand
+        inv.setItem(31, createActionItem(Material.BLAZE_ROD, 
+            "&6Get Sentinel Wand", 
+            List.of("&7Create Server Zones."), 
+            "get_wand"));
 
-        // --- TOOLS ---
-        inv.setItem(28, GUIManager.createItem(Material.AMETHYST_CLUSTER, 
-            plugin.msg().get(player, "button_view_requests_admin"), 
-            plugin.msg().getList(player, "view_requests_admin_lore")));
-            
-        inv.setItem(29, GUIManager.createItem(Material.WRITABLE_BOOK, 
-            plugin.msg().get(player, "admin_plot_list_title"), 
-            List.of("§7View/TP to any plot."))); // Can add "admin_plot_list_lore" later if needed
-
-        inv.setItem(30, GUIManager.createItem(Material.COMPASS, 
-            plugin.msg().get(player, "button_admin_diagnostics", "§bDiagnostics"), 
-            List.of("§7View system stats.")));
-
-        inv.setItem(31, GUIManager.createItem(Material.REPEATER, 
-            plugin.msg().get(player, "button_admin_reload", "§eReload Config"), 
-            List.of("§7Reload all settings.")));
+        // Manage Petitions
+        inv.setItem(33, createActionItem(Material.WRITABLE_BOOK, 
+            "&bView Petitions", 
+            List.of("&7Manage pending requests."), 
+            "view_petitions"));
 
         // --- NAVIGATION ---
-        inv.setItem(36, GUIManager.createItem(Material.ARROW, 
-            plugin.msg().get(player, "button_back_menu"), 
-            plugin.msg().getList(player, "back_menu_lore")));
-            
-        inv.setItem(44, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
-            plugin.msg().getList(player, "exit_lore")));
+        inv.setItem(36, createActionItem(Material.ARROW, lang.getGui("button_back"), null, "back"));
+        inv.setItem(44, createActionItem(Material.BARRIER, lang.getGui("button_close"), null, "close"));
 
         player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        if (!(e.getInventory().getHolder() instanceof AdminHolder)) return;
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+        
+        ItemMeta meta = e.getCurrentItem().getItemMeta();
+        if (meta == null || !meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) return;
 
-        switch (e.getSlot()) {
-            // Toggles
-            case 10: flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); open(player); break;
-            case 11: flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false); open(player); break;
-            case 12: flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false); open(player); break;
-            case 13: flipBool(player, "admin.unlimited_plots", null, null, true); open(player); break;
-            case 14: flipBool(player, "sync.proxy.enabled", null, null, false); open(player); break;
-            case 15: flipBool(player, "performance.low_overhead_mode", null, null, false); open(player); break;
+        String action = meta.getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
 
-            // Tools
-            case 28: 
-                plugin.gui().expansionAdmin().open(player); 
-                plugin.effects().playMenuFlip(player);
+        switch (action) {
+            // --- TOGGLES ---
+            case "toggle_private":
+                flipBool("modules.private_estates"); open(player); break;
+            case "toggle_guilds":
+                flipBool("modules.guild_system"); open(player); break;
+            case "toggle_economy":
+                flipBool("modules.economy_engine"); open(player); break;
+            case "toggle_liquidation":
+                flipBool("modules.asset_liquidation"); open(player); break;
+            case "toggle_progression":
+                flipBool("modules.progression_system"); open(player); break;
+
+            // --- ACTIONS ---
+            case "reload_plugin":
+                player.sendMessage("§eReloading AegisGuard v1.3.0...");
+                plugin.cfg().reload();
+                plugin.getLanguageManager().loadAllLocales();
+                plugin.getRoleManager().loadAllRoles();
+                player.sendMessage("§a✔ Configuration Reloaded.");
+                player.closeInventory();
+                break;
+
+            case "get_wand":
+                player.performCommand("agadmin wand");
+                player.closeInventory();
+                break;
+
+            case "view_petitions":
+                // Open Petition Admin GUI
+                player.sendMessage("§eOpening Petition Manager... (Coming Soon)");
+                break;
+
+            case "back":
+                // plugin.getGuiManager().openMainMenu(player);
                 break;
                 
-            case 29:
-                plugin.gui().plotList().open(player, 0); 
-                plugin.effects().playMenuFlip(player);
+            case "close":
+                player.closeInventory();
                 break;
-
-            case 30: 
-                plugin.gui().openDiagnostics(player); 
-                plugin.effects().playMenuFlip(player);
-                break;
-
-            case 31: // Reload
-                plugin.msg().send(player, "admin_reloading");
-                plugin.runGlobalAsync(() -> {
-                    plugin.cfg().reload();
-                    plugin.msg().reload();
-                    plugin.worldRules().reload();
-                    plugin.store().load();
-                    plugin.runMain(player, () -> {
-                        plugin.msg().send(player, "admin_reload_complete");
-                        plugin.effects().playConfirm(player);
-                        open(player);
-                    });
-                });
-                break;
-
-            case 36: plugin.gui().openMain(player); break;
-            case 44: player.closeInventory(); break;
         }
     }
 
     // --- HELPERS ---
 
-    private void addToggle(Player p, Inventory inv, int slot, String path, String nameKey, String loreKey, Material mat, boolean def) {
-        boolean val = plugin.getConfig().getBoolean(path, def);
+    private void addToggle(Inventory inv, int slot, String configPath, String name, Material mat, String actionId) {
+        boolean enabled = plugin.getConfig().getBoolean(configPath, true);
         
-        String name = plugin.msg().get(p, nameKey);
-        if (name == null) name = "Setting"; // Fallback
+        String status = enabled ? "&a&lENABLED" : "&c&lDISABLED";
+        Material icon = enabled ? mat : Material.GRAY_DYE;
         
-        String status = val ? "§aON" : "§cOFF";
-        Material icon = val ? mat : Material.GRAY_DYE; 
+        List<String> lore = new ArrayList<>();
+        lore.add(" ");
+        lore.add("&7Status: " + status);
+        lore.add(" ");
+        lore.add("&eClick to Toggle");
 
-        inv.setItem(slot, GUIManager.createItem(icon, name + ": " + status, plugin.msg().getList(p, loreKey)));
-    }
-    
-    private void flipBool(Player p, String path, String msgOn, String msgOff, boolean def) {
-        boolean current = plugin.getConfig().getBoolean(path, def);
-        boolean next = !current;
-        plugin.getConfig().set(path, next);
-        plugin.saveConfig();
-        plugin.cfg().reload(); 
+        ItemStack item = createActionItem(icon, name, lore, actionId);
         
-        // Optional feedback message if keys provided
-        if (next && msgOn != null) plugin.msg().send(p, msgOn);
-        if (!next && msgOff != null) plugin.msg().send(p, msgOff);
+        // Add Glow if enabled
+        if (enabled) {
+            ItemMeta meta = item.getItemMeta();
+            meta.addEnchant(org.bukkit.enchantments.Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            item.setItemMeta(meta);
+        }
+        
+        inv.setItem(slot, item);
+    }
+
+    private void flipBool(String path) {
+        boolean current = plugin.getConfig().getBoolean(path);
+        plugin.getConfig().set(path, !current);
+        plugin.saveConfig();
+        plugin.cfg().reload();
+    }
+
+    private ItemStack createActionItem(Material mat, String name, List<String> lore, String action) {
+        ItemStack item = new ItemStack(mat);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(org.bukkit.ChatColor.translateAlternateColorCodes('&', name));
+        
+        if (lore != null) {
+            List<String> colorLore = new ArrayList<>();
+            for (String l : lore) colorLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', l));
+            meta.setLore(colorLore);
+        }
+        
+        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, action);
+        item.setItemMeta(meta);
+        return item;
     }
 }

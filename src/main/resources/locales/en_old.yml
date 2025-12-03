@@ -1,5 +1,5 @@
 # =======================================================================
-# 🛡️ AEGISGUARD - OLD ENGLISH  (DEFAULT)
+# 🛡️ AEGISGUARD - OLD ENGLISH (DEFAULT)
 # Style: Medieval, Hardcore Roleplay, "Game of Thrones" vibe.
 # =======================================================================
 
@@ -22,6 +22,14 @@ messages:
   claim_failed_overlap: "&cLand Dispute! &7This territory belongs to another Lord."
   claim_failed_limit: "&cExpansion Halted. &7Thou canst not rule more than &f%max% &7lands."
   
+  # --- Petitions (Private Expansion) ---
+  petition_submitted: "&aPetition Sent. &7The Crown has received thy request for &f%size%&7. Cost: &e$%cost%&7."
+  petition_exists: "&cPatience! &7Thou already has a petition pending judgment."
+  petition_invalid_size: "&cInvalid Request. &7Thy borders must expand, not shrink."
+  petition_limit_reached: "&cLimit Reached. &7The Crown grants no more land to one Lord."
+  petition_approved_title: "&6&lPETITION GRANTED"
+  petition_denied: "&cThy petition was rejected by the High Council."
+
   # --- Guilds ---
   guild_created: "&6&lA NEW POWER RISES. &7Thou hast founded the House of &e%guild%&7."
   guild_claim_announce: "&e&lHEAR YE! &6%guild% &7hath annexed new lands at &f%location%&7."
@@ -51,6 +59,7 @@ gui:
   button_cancel: "&c&l✖ Nay"
   button_next: "&7Turn Page ➡"
   button_prev: "&7⬅ Turn Page"
+  button_exit: "&c&l✖ Close Ledger"
 
   # Menu Titles
   title_main: "&8The King's Ledger"
@@ -58,8 +67,43 @@ gui:
   title_roles: "&8Court Hierarchy"
   title_liquidation: "&8Offerings & Tribute"
   title_bastion: "&8Castle Construction"
+  title_petition: "&8Petition the Crown"
   
   # Items
   item_deed: "&b📜 Land Warrant"
   item_treasury: "&eRoyal Treasury"
   item_members: "&fSubjects & Lords"
+
+  # --- Petition GUI (Specifics) ---
+  petition_click_submit: "&eClick to send Petition."
+  petition_locked_lore: "&cThou cannot expand this land."
+  
+  petition_tier1_name: "&aSmall Grant (+5)"
+  petition_tier1_lore:
+    - "&7Request a minor expansion."
+    - "&7Adds &f5 blocks &7to borders."
+  
+  petition_tier2_name: "&eModest Grant (+10)"
+  petition_tier2_lore:
+    - "&7Request more land for farming."
+    - "&7Adds &f10 blocks &7to borders."
+
+  petition_tier3_name: "&6Noble Grant (+20)"
+  petition_tier3_lore:
+    - "&7Expand thy estate significantly."
+    - "&7Adds &f20 blocks &7to borders."
+
+  petition_tier4_name: "&dRoyal Grant (+35)"
+  petition_tier4_lore:
+    - "&7A massive undertaking."
+    - "&7Adds &f35 blocks &7to borders."
+
+  petition_tier5_name: "&5&lImperial Annexation (+50)"
+  petition_tier5_lore:
+    - "&7Claim the horizon itself."
+    - "&7Adds &f50 blocks &7to borders."
+
+  button_view_petitions_admin: "&c&lView Active Petitions"
+  view_petitions_admin_lore:
+    - "&7Review requests from your subjects."
+    - "&eClick to Manage"

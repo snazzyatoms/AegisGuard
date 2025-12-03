@@ -259,7 +259,7 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (messages != null) messages.savePlayerData();
         
-        instance = null;
+        instance = null; 
         getLogger().info("AegisGuard disabled.");
     }
     

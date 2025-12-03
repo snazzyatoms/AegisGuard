@@ -22,6 +22,14 @@ messages:
   claim_failed_overlap: "&cBoundary Dispute! &7This area overlaps with another Estate."
   claim_failed_limit: "&cLimit Reached. &7You cannot manage more than &f%max% &7Estates."
   
+  # --- Petitions ---
+  petition_submitted: "&aApplication Sent. &7Request for &f%size% &7expansion submitted. Fee: &e$%cost%&7."
+  petition_exists: "&cPending. &7You already have an active application."
+  petition_invalid_size: "&cError. &7New size must be larger than current."
+  petition_limit_reached: "&cMax Size. &7This Estate cannot grow any further."
+  petition_approved_title: "&a&lAPPLICATION APPROVED"
+  petition_denied: "&cYour expansion request was denied."
+
   # --- Guilds ---
   guild_created: "&6&lALLIANCE FORMED. &7You have founded &e%guild%&7."
   guild_claim_announce: "&e&lEXPANSION! &6%guild% &7has secured a new Estate at &f%location%&7."
@@ -33,7 +41,7 @@ messages:
   treasury_frozen: "&b&l❄ TREASURY FROZEN. &7Instability detected (Members: %current%/%min%)."
   liquidation_success: "&aAssets Liquidated. &7Sold &f%count% items &7for &a$%total%&7."
   
-  # --- Titles (Screen) ---
+  # --- Titles ---
   enter_title: "&b%name%"
   enter_subtitle: "&7Owned by &f%owner%"
   exit_title: "&7Wilderness"
@@ -44,13 +52,14 @@ messages:
   not_in_guild: "&cYou must be a member of a Guild to do this."
   
 gui:
-  # General UI Buttons
+  # UI Buttons
   button_back: "&c&l⬅ Go Back"
   button_close: "&c&l✖ Close Menu"
   button_confirm: "&a&l✔ Confirm"
   button_cancel: "&c&l✖ Cancel"
   button_next: "&7Next Page ➡"
   button_prev: "&7⬅ Prev Page"
+  button_exit: "&c&l✖ Exit"
 
   # Menu Titles
   title_main: "&8Guardian Codex"
@@ -58,8 +67,43 @@ gui:
   title_roles: "&8Hierarchy Management"
   title_liquidation: "&8Asset Liquidation Chute"
   title_bastion: "&8Bastion Infrastructure"
+  title_petition: "&8Land Expansion Application"
   
   # Items
   item_deed: "&b📜 Estate Title"
   item_treasury: "&eAlliance Treasury"
   item_members: "&fManage Roster"
+
+  # --- Petition GUI ---
+  petition_click_submit: "&eClick to Submit Application."
+  petition_locked_lore: "&cYou cannot modify this estate."
+  
+  petition_tier1_name: "&aMinor Adjustment (+5)"
+  petition_tier1_lore:
+    - "&7Small boundary shift."
+    - "&7Adds &f5 blocks &7to radius."
+  
+  petition_tier2_name: "&eStandard Expansion (+10)"
+  petition_tier2_lore:
+    - "&7Standard land increase."
+    - "&7Adds &f10 blocks &7to radius."
+
+  petition_tier3_name: "&6Major Expansion (+20)"
+  petition_tier3_lore:
+    - "&7Significant territory growth."
+    - "&7Adds &f20 blocks &7to radius."
+
+  petition_tier4_name: "&dEstate Extension (+35)"
+  petition_tier4_lore:
+    - "&7Large scale land acquisition."
+    - "&7Adds &f35 blocks &7to radius."
+
+  petition_tier5_name: "&b&lRegional Dominance (+50)"
+  petition_tier5_lore:
+    - "&7Massive territory expansion."
+    - "&7Adds &f50 blocks &7to radius."
+
+  button_view_petitions_admin: "&c&lManage Applications"
+  view_petitions_admin_lore:
+    - "&7Review pending land requests."
+    - "&eClick to Open"

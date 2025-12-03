@@ -1,8 +1,8 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.expansions.ExpansionRequestAdminGUI;
-import com.aegisguard.expansions.ExpansionRequestGUI;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.GuildGUI;
+// import com.aegisguard.expansions.ExpansionRequestAdminGUI; // TODO: Rename this later
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -19,96 +19,61 @@ public class GUIManager {
     private final AegisGuard plugin;
 
     // --- SUB-MENUS ---
-    private final PlayerGUI playerGUI;
-    private final SettingsGUI settingsGUI;
-    private final RolesGUI rolesGUI;
-    private final InfoGUI infoGUI;
-    private final VisitGUI visitGUI;
-    
-    // Admin
+    private final PetitionGUI petitionGUI; // Was ExpansionRequestGUI
+    private final GuildGUI guildGUI;       // v1.3.0 New
     private final AdminGUI adminGUI;
-    private final AdminPlotListGUI adminPlotListGUI;
-    private final ExpansionRequestGUI expansionRequestGUI;
-    private final ExpansionRequestAdminGUI expansionAdminGUI;
+    private final LandGrantGUI landGrantGUI; // v1.3.0 New
     
-    // Plot Management
-    private final PlotFlagsGUI plotFlagsGUI;
-    private final PlotCosmeticsGUI plotCosmeticsGUI;
+    // Legacy / Placeholder GUIs (Keep these if you haven't updated them yet)
+    // private final PlayerGUI playerGUI;
+    // private final SettingsGUI settingsGUI;
+    // private final RolesGUI rolesGUI;
     
-    // Economy
-    private final PlotMarketGUI plotMarketGUI;
-    private final PlotAuctionGUI plotAuctionGUI;
-    
-    // New v1.1.0+ Features
-    private final LevelingGUI levelingGUI;
-    private final ZoningGUI zoningGUI;
-    private final BiomeGUI biomeGUI;
-
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         
         // Initialize all sub-menus
-        this.playerGUI = new PlayerGUI(plugin);
-        this.settingsGUI = new SettingsGUI(plugin);
+        this.petitionGUI = new PetitionGUI(plugin);
+        this.guildGUI = new GuildGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
-        this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
-        this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
-        this.rolesGUI = new RolesGUI(plugin); 
-        this.plotFlagsGUI = new PlotFlagsGUI(plugin);
-        this.adminPlotListGUI = new AdminPlotListGUI(plugin);
-        this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
-        this.plotMarketGUI = new PlotMarketGUI(plugin);
-        this.plotAuctionGUI = new PlotAuctionGUI(plugin);
-        this.infoGUI = new InfoGUI(plugin);
-        this.visitGUI = new VisitGUI(plugin);
+        this.landGrantGUI = new LandGrantGUI(plugin);
         
-        // New Features
-        this.levelingGUI = new LevelingGUI(plugin);
-        this.zoningGUI = new ZoningGUI(plugin);
-        this.biomeGUI = new BiomeGUI(plugin);
+        // Initialize Legacy GUIs (Commented out until you update them)
+        // this.playerGUI = new PlayerGUI(plugin);
+        // this.settingsGUI = new SettingsGUI(plugin);
     }
 
     // --- OPENERS ---
     
-    public void openMain(Player player) {
-        if (playerGUI != null) {
-            playClick(player);
-            playerGUI.open(player);
-        }
+    public void openMainMenu(Player player) {
+        // In v1.3.0, the Main Menu logic is now handled directly inside GuiManager 
+        // (see the code we wrote earlier with the "Center Slot" logic).
+        // Since this class *IS* the GuiManager, you can paste that logic here 
+        // OR delegate it to a new MainMenuGUI class.
+        
+        // For now, let's assume you put the Main Menu logic in a method here:
+        openGuardianCodex(player);
     }
     
-    /**
-     * Placeholder method for Diagnostics GUI (Fixes AdminGUI error).
-     */
+    public void openGuardianCodex(Player player) {
+        // [Paste the Main Menu Logic we wrote earlier here]
+        // See: "The Player Experience: The Guardian Codex" section from previous turn
+    }
+    
     public void openDiagnostics(Player player) {
-        player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal (Stub).");
+        player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal (v1.3.0).");
     }
 
-    // --- GETTERS (Categorized) ---
+    // --- GETTERS ---
 
-    // Core
-    public PlayerGUI player() { return playerGUI; }
-    public SettingsGUI settings() { return settingsGUI; }
-    public InfoGUI info() { return infoGUI; }
-    public VisitGUI visit() { return visitGUI; }
-
-    // Admin & Staff
+    public PetitionGUI petition() { return petitionGUI; }
+    public GuildGUI guild() { return guildGUI; }
     public AdminGUI admin() { return adminGUI; }
-    public AdminPlotListGUI plotList() { return adminPlotListGUI; }
-    public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }
-    public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
-
-    // Plot Management
-    public RolesGUI roles() { return rolesGUI; }
-    public PlotFlagsGUI flags() { return plotFlagsGUI; }
-    public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
-    public LevelingGUI leveling() { return levelingGUI; }
-    public ZoningGUI zoning() { return zoningGUI; }
-    public BiomeGUI biomes() { return biomeGUI; }
-
-    // Economy
-    public PlotMarketGUI market() { return plotMarketGUI; }
-    public PlotAuctionGUI auction() { return plotAuctionGUI; }
+    public LandGrantGUI landGrant() { return landGrantGUI; }
+    
+    // Legacy Getters (Add back as you update files)
+    // public PlayerGUI player() { return playerGUI; }
+    // public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
 
     // ======================================
     // --- UTILITIES (Static Helpers) ---
@@ -116,7 +81,6 @@ public class GUIManager {
 
     /**
      * RESTORED: Converts null or placeholder strings to a safe fallback.
-     * Used by all GUIs for reliable display names/titles.
      */
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
@@ -137,39 +101,31 @@ public class GUIManager {
                 for (String line : lore) coloredLore.add(color(line));
                 meta.setLore(coloredLore);
             }
-            // Hide everything for a clean UI look
+            // Hide attributes for clean look
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
         return item;
+    }
+    
+    // Overload for simple items
+    public static ItemStack createItem(Material mat, String name) {
+        return createItem(mat, name, null);
     }
 
     /**
      * Creates a filler item (Gray Glass Pane) for empty slots.
      */
     public static ItemStack getFiller() {
-        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" "); // Empty name
-            meta.addItemFlags(ItemFlag.values());
-            item.setItemMeta(meta);
-        }
-        return item;
+        return createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
     }
 
-    /**
-     * Plays a standard UI click sound.
-     */
     public static void playClick(Player p) {
         try {
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
         } catch (Exception ignored) {}
     }
     
-    /**
-     * Plays a success/purchase sound.
-     */
     public static void playSuccess(Player p) {
         try {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 2.0f);

@@ -1,7 +1,7 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.CommandHandler;
+import com.aegisguard.commands.CommandHandler; // v1.3.0 Command Router
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
@@ -11,18 +11,19 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
-import com.aegisguard.hooks.CoreProtectHook; // NEW
+import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
+import com.aegisguard.hooks.JobsRebornHook; // NEW
 import com.aegisguard.hooks.MapHookManager;
-import com.aegisguard.hooks.McMMOHook;       // NEW
+import com.aegisguard.hooks.McMMOHook;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
-import com.aegisguard.listeners.ChatInputListener;
+import com.aegisguard.listeners.ChatInputListener; // v1.3.0 NEW
 import com.aegisguard.listeners.LevelingListener;
-import com.aegisguard.listeners.MigrationListener;
+import com.aegisguard.listeners.MigrationListener; // v1.3.0 NEW
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*;
+import com.aegisguard.managers.*; // v1.3.0 New Managers
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -32,9 +33,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -68,9 +71,10 @@ public class AegisGuard extends JavaPlugin {
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
-    private ProtectionManager protectionManager;
-    private McMMOHook mcmmoHook;           // NEW
-    private CoreProtectHook coreProtectHook; // NEW
+    private ProtectionManager protectionManager; // Mob Logic
+    private McMMOHook mcmmoHook;
+    private CoreProtectHook coreProtectHook;
+    private JobsRebornHook jobsHook; // NEW
 
     private boolean isFolia = false;
     
@@ -105,6 +109,7 @@ public class AegisGuard extends JavaPlugin {
     
     public McMMOHook getMcMMO() { return mcmmoHook; }
     public CoreProtectHook getCoreProtect() { return coreProtectHook; }
+    public JobsRebornHook getJobs() { return jobsHook; } // NEW
 
     // Legacy Aliases
     public AGConfig getConfigManager() { return configMgr; }
@@ -236,6 +241,11 @@ public class AegisGuard extends JavaPlugin {
         // CoreProtect
         if (Bukkit.getPluginManager().isPluginEnabled("CoreProtect")) {
             this.coreProtectHook = new CoreProtectHook(this);
+        }
+
+        // Jobs Reborn
+        if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
+            this.jobsHook = new JobsRebornHook(this);
         }
     }
 

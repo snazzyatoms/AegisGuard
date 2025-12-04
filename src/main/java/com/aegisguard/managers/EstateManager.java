@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.managers;
+package com.aegisguard.managers;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Cuboid;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Cuboid;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;

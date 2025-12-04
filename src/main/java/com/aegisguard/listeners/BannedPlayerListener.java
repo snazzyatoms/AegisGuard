@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.listeners;
+package com.aegisguard.listeners;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.hooks.DiscordWebhook;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.hooks.DiscordWebhook;
+import com.aegisguard.objects.Estate;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;

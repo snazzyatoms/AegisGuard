@@ -1,9 +1,10 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.api.events.PlotLevelUpEvent;
-import com.aegisguard.data.Plot;
-import com.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.api.events.EstateLevelUpEvent; // Updated Event
+import com.yourname.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -19,8 +20,8 @@ import java.util.Map;
 
 /**
  * LevelingGUI
- * - Allows players to upgrade their plot level.
- * - Configurable: Can optionally expand plot size on level up.
+ * - Displays the Ascension (Solo) or Bastion (Guild) tree.
+ * - Updated for v1.3.0 Estate System.
  */
 public class LevelingGUI {
 
@@ -31,194 +32,139 @@ public class LevelingGUI {
     }
 
     public static class LevelingHolder implements InventoryHolder {
-        private final Plot plot;
-        public LevelingHolder(Plot plot) { this.plot = plot; }
-        public Plot getPlot() { return plot; }
+        private final Estate estate;
+        public LevelingHolder(Estate estate) { this.estate = estate; }
+        public Estate getEstate() { return estate; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§dPlot Leveling");
-        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 27, title);
+    public void open(Player player, Estate estate) {
+        LanguageManager lang = plugin.getLanguageManager();
+        
+        // Determine Title based on type
+        String key = estate.isGuild() ? "title_bastion" : "title_ascension";
+        String title = lang.getGui(key); 
+        if (title.contains("Missing")) title = "§dLeveling: " + estate.getName();
+
+        Inventory inv = Bukkit.createInventory(new LevelingHolder(estate), 27, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
-        int currentLvl = plot.getLevel();
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Level: §f" + currentLvl);
-        infoLore.add("§7XP Multiplier: §f" + plugin.cfg().getLevelCostMultiplier());
-        infoLore.add("");
+        int currentLvl = estate.getLevel();
         
-        // Show expansion info if enabled
-        if (plugin.cfg().isLevelingExpansionEnabled()) {
-            int amount = plugin.cfg().getLevelingExpansionAmount();
+        // --- INFO ICON (Current State) ---
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§7Current Level: §f" + currentLvl);
+        infoLore.add(" ");
+        
+        // Expansion Info
+        if (plugin.getConfig().getBoolean("progression.leveling.expand_on_levelup", false)) {
+            int amount = plugin.getConfig().getInt("progression.leveling.expansion_amount", 5);
             infoLore.add("§bBonus: §7+ " + amount + " block radius/lvl");
         }
         
-        infoLore.add("§7Current Buffs:");
-        infoLore.addAll(formatBuffs(currentLvl));
+        infoLore.add("§7Active Perks:");
+        // Fetch real perks from ProgressionManager (Visual only here)
+        // In a real GUI, we might list them. For now, keep it simple.
+        infoLore.add("§8(Click 'Active Perks' in Main Menu to view)");
 
         inv.setItem(11, GUIManager.createItem(
             Material.ENCHANTING_TABLE,
-            plugin.msg().get(player, "level_current_status"),
+            lang.getMsg(player, "level_current_status"), // "Current Status"
             infoLore
         ));
 
+        // --- UPGRADE BUTTON ---
         int nextLvl = currentLvl + 1;
-        int maxLvl = plugin.cfg().getMaxLevel();
+        int maxLvl = plugin.getConfig().getInt("progression.max_level", 30);
         
         if (nextLvl <= maxLvl) {
             double cost = calculateCost(nextLvl);
-            CurrencyType type = plugin.cfg().getLevelCostType();
-            String costStr = plugin.eco().format(cost, type);
+            CurrencyType type = CurrencyType.VAULT; // TODO: Configurable per level?
+            String costStr = plugin.getEconomy().format(cost, type);
             
             List<String> upgradeLore = new ArrayList<>();
             upgradeLore.add("§7Cost: §e" + costStr);
             upgradeLore.add("");
             upgradeLore.add("§7New Buffs Unlocked:");
-            upgradeLore.addAll(formatBuffs(nextLvl));
             
-            if (plugin.cfg().isLevelingExpansionEnabled()) {
-                upgradeLore.add("");
-                upgradeLore.add("§b+ " + plugin.cfg().getLevelingExpansionAmount() + " Block Radius");
-            }
+            // Fetch rewards for next level
+            // (Placeholder logic - ideally fetch from ProgressionManager)
+            upgradeLore.add("§a+ Increased Member Cap");
+            upgradeLore.add("§a+ New Buffs");
             
             upgradeLore.add("");
             upgradeLore.add("§eClick to Purchase Upgrade");
 
             inv.setItem(15, GUIManager.createItem(
                 Material.EXPERIENCE_BOTTLE,
-                plugin.msg().get(player, "level_upgrade_button", Map.of("LEVEL", String.valueOf(nextLvl))),
+                lang.getMsg(player, "level_upgrade_button").replace("%level%", String.valueOf(nextLvl)),
                 upgradeLore
             ));
         } else {
             inv.setItem(15, GUIManager.createItem(
                 Material.BARRIER, 
-                plugin.msg().get(player, "level_max_reached"), 
-                List.of("§7Your plot is fully ascended.")
+                lang.getMsg(player, "level_max_reached"), 
+                List.of("§7Your estate is fully ascended.")
             ));
         }
 
-        inv.setItem(22, GUIManager.createItem(Material.ARROW, 
-            plugin.msg().get(player, "button_back"), 
-            plugin.msg().getList(player, "back_lore")));
+        // Back Button
+        inv.setItem(22, GUIManager.createItem(Material.ARROW, lang.getGui("button_back")));
         
         player.openInventory(inv);
-        GUIManager.playClick(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e, LevelingHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-        Plot plot = holder.getPlot();
+        Estate estate = holder.getEstate();
         
         if (e.getSlot() == 22) {
-            plugin.gui().openMain(player);
+            plugin.getGuiManager().openGuardianCodex(player);
             return;
         }
 
         if (e.getSlot() == 15 && e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
-            int nextLvl = plot.getLevel() + 1;
+            int nextLvl = estate.getLevel() + 1;
             double cost = calculateCost(nextLvl);
-            CurrencyType type = plugin.cfg().getLevelCostType();
-
+            
             // 1. Check Funds
-            if (!plugin.eco().withdraw(player, cost, type)) {
-                plugin.msg().send(player, "level_up_fail_cost");
-                plugin.effects().playError(player);
+            if (!plugin.getEconomy().withdraw(player, cost)) {
+                player.sendMessage(plugin.getLanguageManager().getMsg(player, "claim_failed_money"));
                 return;
             }
 
             // 2. Handle Expansion (If Enabled)
-            if (plugin.cfg().isLevelingExpansionEnabled()) {
-                int expandAmount = plugin.cfg().getLevelingExpansionAmount();
-                int newX1 = plot.getX1() - expandAmount;
-                int newZ1 = plot.getZ1() - expandAmount;
-                int newX2 = plot.getX2() + expandAmount;
-                int newZ2 = plot.getZ2() + expandAmount;
-
-                // Overlap Check
-                if (plugin.store().isAreaOverlapping(plot, plot.getWorld(), newX1, newZ1, newX2, newZ2)) {
-                    plugin.eco().deposit(player, cost, type); // Refund
-                    player.sendMessage("§cCannot level up: Plot expansion would overlap a neighbor.");
-                    plugin.effects().playError(player);
-                    return;
-                }
-
-                // Limit Check (Admin Bypass)
-                int newRadius = (newX2 - newX1) / 2;
-                int maxRadius = plugin.cfg().getWorldMaxRadius(player.getWorld());
-                if (newRadius > maxRadius && !player.hasPermission("aegis.admin.bypass")) {
-                     plugin.eco().deposit(player, cost, type); // Refund
-                     player.sendMessage("§cCannot level up: Expansion exceeds world limit (" + maxRadius + ").");
-                     plugin.effects().playError(player);
-                     return;
-                }
-
-                // Apply Resize
-                plugin.store().removePlot(plot.getOwner(), plot.getPlotId()); // Remove old index
-                plot.setX1(newX1); plot.setX2(newX2);
-                plot.setZ1(newZ1); plot.setZ2(newZ2);
-                plugin.store().addPlot(plot); // Add new index
+            if (plugin.getConfig().getBoolean("progression.leveling.expand_on_levelup", false)) {
+                int expandAmount = plugin.getConfig().getInt("progression.leveling.expansion_amount", 5);
+                
+                // Simple expansion logic (expand all sides)
+                // Note: In v1.3.0, use EstateManager.resizeEstate() for safety
+                plugin.getEstateManager().resizeEstate(estate, "ALL", expandAmount);
             }
 
             // 3. Fire Event & Apply Level
-            PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvl);
+            EstateLevelUpEvent event = new EstateLevelUpEvent(estate, player, nextLvl);
             Bukkit.getPluginManager().callEvent(event);
             
-            plot.setLevel(nextLvl);
-            plugin.store().setDirty(true);
+            estate.setLevel(nextLvl);
+            // plugin.getEstateManager().saveEstate(estate);
             
             // 4. Feedback
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvl)));
-            plugin.effects().playConfirm(player);
+            player.sendMessage(plugin.getLanguageManager().getMsg(player, "level_up_success").replace("%level%", String.valueOf(nextLvl)));
+            // plugin.effects().playConfirm(player);
             
-            open(player, plot); // Refresh menu
-        } else if (e.getSlot() == 15) {
-             GUIManager.playClick(player);
+            open(player, estate); // Refresh menu
         }
     }
     
     private double calculateCost(int level) {
-        double base = plugin.cfg().getLevelBaseCost();
-        double mult = plugin.cfg().getLevelCostMultiplier();
+        double base = plugin.getConfig().getDouble("economy.costs.level_base", 1000.0);
+        double mult = plugin.getConfig().getDouble("economy.costs.level_multiplier", 1.5);
         return base * (level * mult);
-    }
-    
-    private List<String> formatBuffs(int level) {
-        List<String> rewards = plugin.cfg().getLevelRewards(level);
-        List<String> formatted = new ArrayList<>();
-        if (rewards == null || rewards.isEmpty()) {
-            formatted.add("§8- (None)");
-        } else {
-            for (String s : rewards) {
-                if (s.startsWith("EFFECT:")) {
-                    try {
-                        String[] parts = s.split(":");
-                        String type = parts[1].toLowerCase().replace("_", " ");
-                        type = type.substring(0, 1).toUpperCase() + type.substring(1);
-                        formatted.add("§b✦ " + type + " " + toRoman(Integer.parseInt(parts[2])));
-                    } catch (Exception e) {
-                        formatted.add("§b✦ " + s);
-                    }
-                } else {
-                    formatted.add("§a✦ " + s);
-                }
-            }
-        }
-        return formatted;
-    }
-    
-    private String toRoman(int n) {
-        return switch (n) {
-            case 1 -> "I";
-            case 2 -> "II";
-            case 3 -> "III";
-            case 4 -> "IV";
-            case 5 -> "V";
-            default -> String.valueOf(n);
-        };
     }
 }

@@ -1,4 +1,4 @@
-package com.yourname.aegisguard.managers;
+package com.aegisguard.managers;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

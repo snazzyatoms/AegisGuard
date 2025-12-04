@@ -1,6 +1,6 @@
-package com.yourname.aegisguard.hooks;
+package com.aegisguard.hooks;
 
-import com.yourname.aegisguard.AegisGuard;
+import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
 
 public class MapHookManager {

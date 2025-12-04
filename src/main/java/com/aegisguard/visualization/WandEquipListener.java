@@ -1,5 +1,8 @@
 package com.aegisguard.visualization;
 
+
+import static com.aegisguard.selection.SelectionService.WAND_KEY;
+import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 import com.aegisguard.AegisGuard;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

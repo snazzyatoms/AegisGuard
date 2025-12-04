@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.managers;
+package com.aegisguard.managers;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.economy.CurrencyType;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;

@@ -1,7 +1,7 @@
-package com.yourname.aegisguard.hooks;
+package com.aegisguard.hooks;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Particle;

@@ -45,10 +45,8 @@ public class JobsRebornHook {
 
         // Check if player actually has this job
         if (jPlayer.isInJob(job)) {
-            // Give XP (Currency is usually handled automatically by Jobs based on XP, 
-            // or we can ignore currency and just give XP for leveling).
-            // This method signature varies by Jobs version, but addExp is standard.
-            jPlayer.addJobExp(job, amount);
+            // FIXED: Changed from addJobExp to addExp
+            jPlayer.addExp(job, amount);
         }
     }
 

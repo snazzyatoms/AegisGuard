@@ -1,28 +1,30 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * PlayerGUI
- * - The main dashboard for AegisGuard.
- * - Fully localized: Text updates based on player language setting.
- */
 public class PlayerGUI {
 
     private final AegisGuard plugin;
+    private final NamespacedKey actionKey;
 
     public PlayerGUI(AegisGuard plugin) {
         this.plugin = plugin;
+        this.actionKey = new NamespacedKey(plugin, "ag_action");
     }
 
     public static class PlayerMenuHolder implements InventoryHolder {
@@ -30,209 +32,99 @@ public class PlayerGUI {
     }
 
     public void open(Player player) {
-        // Title from config
-        String title = GUIManager.safeText(plugin.msg().get(player, "menu_title"), "§8AegisGuard Dashboard");
-        Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 54, title);
+        LanguageManager lang = plugin.getLanguageManager();
+        Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
+        
+        String title = lang.getGui("title_main");
+        Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 27, title);
 
-        // --- 1. Glass Borders ---
+        // Background Filler
         ItemStack filler = GUIManager.getFiller();
-        int[] borderSlots = {0,1,2,3,4,5,6,7,8, 9,17, 18,26, 27,35, 36,44, 45,46,47,51,52,53};
-        for (int i : borderSlots) inv.setItem(i, filler);
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
-        // --- 2. HEADER ---
-        
-        // Codex (Slot 4)
-        inv.setItem(4, GUIManager.createItem(Material.WRITABLE_BOOK, 
-            plugin.msg().get(player, "button_info"), 
-            plugin.msg().getList(player, "info_lore")));
+        // =========================================================
+        // 📍 CENTER SLOT: CURRENT LOCATION STATUS
+        // =========================================================
+        ItemStack statusItem;
+        if (estate != null) {
+            // Standing in Estate
+            statusItem = new ItemStack(Material.FILLED_MAP);
+            ItemMeta meta = statusItem.getItemMeta();
+            meta.setDisplayName(lang.getMsg(player, "enter_title").replace("%name%", estate.getName()));
+            
+            List<String> lore = new ArrayList<>();
+            lore.add(" ");
+            lore.add("&8» &7Owner: &f" + Bukkit.getOfflinePlayer(estate.getOwnerId()).getName());
+            lore.add(" ");
+            lore.add("&eClick to Manage");
+            
+            // Convert & Colorize
+            List<String> coloredLore = new ArrayList<>();
+            for(String s : lore) coloredLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', s));
+            meta.setLore(coloredLore);
+            
+            // Tag for listener
+            meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "manage_current_estate");
+            statusItem.setItemMeta(meta);
+            
+            // --- 🔮 PERKS BUTTON ---
+            inv.setItem(17, plugin.getGuiManager().createActionItem(Material.ENCHANTED_BOOK, 
+                "&d🔮 Active Estate Perks", 
+                "view_perks", 
+                "&7View active effects & buffs.", " ", "&eClick to View ➡"));
 
-        // Travel (Slot 13)
-        if (plugin.cfg().isTravelSystemEnabled()) {
-             inv.setItem(13, GUIManager.createItem(Material.COMPASS,
-                plugin.msg().get(player, "visit_gui_title"),
-                plugin.msg().getList(player, "visit_button_lore")));
-        }
-
-        // --- 3. CORE MANAGEMENT ---
-        
-        Plot currentPlot = plugin.store().getPlotAt(player.getLocation());
-        boolean isOwner = currentPlot != null && currentPlot.getOwner().equals(player.getUniqueId());
-        boolean isAdmin = plugin.isAdmin(player);
-        boolean canManage = isOwner || isAdmin;
-
-        // Claim Land (Slot 20)
-        boolean hasSelection = plugin.selection().hasSelection(player);
-        if (hasSelection) {
-            inv.setItem(20, GUIManager.createItem(Material.LIGHTNING_ROD, 
-                plugin.msg().get(player, "button_claim_land"), 
-                plugin.msg().getList(player, "claim_land_ready_lore")
-            ));
         } else {
-            inv.setItem(20, GUIManager.createItem(Material.BARRIER, 
-                // Fallback to red text if specific locked key missing, though button_claim_land usually has colors
-                "§c" + plugin.msg().get(player, "button_claim_land"), 
-                plugin.msg().getList(player, "claim_land_lore") // Default lore explains how to get wand
-            ));
-        }
-
-        // Flags (Slot 22)
-        Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
-        inv.setItem(22, GUIManager.createItem(flagIcon, 
-            plugin.msg().get(player, "button_plot_flags"), 
-            plugin.msg().getList(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore")
-        ));
-
-        // Roles (Slot 24)
-        Material roleIcon = canManage ? Material.PLAYER_HEAD : Material.SKELETON_SKULL;
-        inv.setItem(24, GUIManager.createItem(roleIcon, 
-            plugin.msg().get(player, "button_roles"), 
-            plugin.msg().getList(player, canManage ? "roles_lore" : "roles_locked_lore")
-        ));
-        
-        // --- 4. ADVANCED FEATURES ---
-        
-        // Leveling (Slot 29)
-        if (plugin.cfg().isLevelingEnabled()) {
-            inv.setItem(29, GUIManager.createItem(Material.EXPERIENCE_BOTTLE, 
-                plugin.msg().get(player, "level_gui_title"), 
-                plugin.msg().getList(player, "level_button_lore")
-            ));
+            // Standing in Wilderness
+            statusItem = new ItemStack(Material.GRASS_BLOCK);
+            ItemMeta meta = statusItem.getItemMeta();
+            meta.setDisplayName(lang.getMsg(player, "exit_title")); // "Wilderness"
+            
+            List<String> lore = new ArrayList<>();
+            lore.add("&7You are standing in unclaimed territory.");
+            lore.add(" ");
+            lore.add("&eClick to Deed (Claim) this land.");
+            
+            // Convert & Colorize
+            List<String> coloredLore = new ArrayList<>();
+            for(String s : lore) coloredLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', s));
+            meta.setLore(coloredLore);
+            
+            meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "start_claim");
+            statusItem.setItemMeta(meta);
         }
         
-        // Zoning (Slot 31)
-        if (plugin.cfg().isZoningEnabled()) {
-             inv.setItem(31, GUIManager.createItem(Material.IRON_BARS, 
-                plugin.msg().get(player, "zone_gui_title"), 
-                plugin.msg().getList(player, "zone_button_lore")
-            ));
-        }
+        inv.setItem(13, statusItem);
+
+        // =========================================================
+        // 🔘 NAVIGATION BUTTONS
+        // =========================================================
         
-        // Biomes (Slot 33)
-        if (plugin.cfg().isBiomesEnabled()) {
-             inv.setItem(33, GUIManager.createItem(Material.SPORE_BLOSSOM, 
-                plugin.msg().get(player, "biome_gui_title"), 
-                plugin.msg().getList(player, "biome_button_lore")
-            ));
-        }
+        // [11] My Estates
+        inv.setItem(11, plugin.getGuiManager().createActionItem(Material.OAK_DOOR, 
+            "&6My Properties", "open_estates", 
+            "&7View and manage all your", "&7Private and Guild estates.", " ", "&eClick to View"));
 
-        // --- 5. ECONOMY & EXPANSION ---
-        
-        // Market (Slot 38)
-        inv.setItem(38, GUIManager.createItem(Material.GOLD_INGOT, 
-            plugin.msg().get(player, "button_market"), 
-            plugin.msg().getList(player, "market_lore")
-        ));
+        // [15] Guild Dashboard
+        inv.setItem(15, plugin.getGuiManager().createActionItem(Material.GOLDEN_HELMET, 
+            "&eGuild Dashboard", "open_guild", 
+            "&7Access your Alliance,", "&7Treasury, and Roster.", " ", "&eClick to Open"));
 
-        // Expansion (Slot 40)
-        inv.setItem(40, GUIManager.createItem(Material.DIAMOND_PICKAXE, 
-            plugin.msg().get(player, "button_expand"), 
-            plugin.msg().getList(player, "expand_lore")
-        ));
-
-        // Auctions (Slot 42)
-        if (plugin.cfg().isUpkeepEnabled()) {
-             inv.setItem(42, GUIManager.createItem(Material.LAVA_BUCKET, 
-                plugin.msg().get(player, "button_auction"), 
-                plugin.msg().getList(player, "auction_lore")
-            ));
-        }
-
-        // --- 6. FOOTER ---
-        
-        // Settings (Slot 48)
-        inv.setItem(48, GUIManager.createItem(Material.COMPARATOR, 
-            plugin.msg().get(player, "button_player_settings"), 
-            plugin.msg().getList(player, "player_settings_lore")
-        ));
-
-        // Admin (Slot 49)
-        if (plugin.isAdmin(player)) {
-            inv.setItem(49, GUIManager.createItem(Material.REDSTONE_BLOCK, 
-                plugin.msg().get(player, "admin_menu_title"), 
-                List.of("§7Operator Access Only"))); // Safe to hardcode or add admin_access_lore key
-        }
-
-        // Exit (Slot 50)
-        inv.setItem(50, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
-            plugin.msg().getList(player, "exit_lore")
-        ));
+        // [22] Settings
+        inv.setItem(22, plugin.getGuiManager().createActionItem(Material.COMPARATOR, 
+            "&7Personal Settings", "open_settings", 
+            "&7Language, Sounds, and Notifications.", " ", "&eClick to Configure"));
 
         player.openInventory(inv);
         GUIManager.playClick(player);
     }
-
+    
+    // This handles clicks SPECIFICALLY for the PlayerMenuHolder
     public void handleClick(Player player, InventoryClickEvent e) {
-        e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
-
-        Plot plot = plugin.store().getPlotAt(player.getLocation());
-        boolean isOwner = plot != null && plot.getOwner().equals(player.getUniqueId());
-        boolean isAdmin = plugin.isAdmin(player);
-        boolean canManage = isOwner || isAdmin;
-
-        switch (e.getSlot()) {
-            case 4: plugin.gui().info().open(player); break;
-            
-            case 13: 
-                if (plugin.cfg().isTravelSystemEnabled()) plugin.gui().visit().open(player, 0, false); 
-                break;
-
-            case 20: // Claim
-                if (plugin.selection().hasSelection(player)) {
-                    player.closeInventory();
-                    plugin.selection().confirmClaim(player);
-                } else {
-                    GUIManager.playSuccess(player); 
-                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                }
-                break;
-
-            case 22: // Flags
-                if (canManage) plugin.gui().flags().open(player, plot);
-                else plugin.msg().send(player, "no_plot_here");
-                break;
-
-            case 24: // Roles
-                if (plot != null && canManage) plugin.gui().roles().open(player);
-                else plugin.msg().send(player, "no_plot_here");
-                break;
-
-            // Advanced Features
-            case 29: // Leveling
-                if (plugin.cfg().isLevelingEnabled()) {
-                    if (plot != null && canManage) plugin.gui().leveling().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
-                }
-                break;
-                
-            case 31: // Zoning
-                if (plugin.cfg().isZoningEnabled()) {
-                    if (plot != null && canManage) plugin.gui().zoning().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
-                }
-                break;
-                
-            case 33: // Biomes
-                if (plugin.cfg().isBiomesEnabled()) {
-                    if (plot != null && canManage) plugin.gui().biomes().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
-                }
-                break;
-
-            // Economy
-            case 38: plugin.gui().market().open(player, 0); break;
-            case 40: plugin.gui().expansionRequest().open(player); break;
-            case 42: if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0); break;
-
-            // System
-            case 48: plugin.gui().settings().open(player); break;
-            case 49: if (isAdmin) plugin.gui().admin().open(player); break;
-            case 50: player.closeInventory(); break;
-        }
+        // This is actually handled by GuiListener using NBT tags now!
+        // You don't technically need logic here if GuiListener is doing the work.
+        // But if you want to keep it modular:
         
-        if (e.getSlot() != 20 && e.getSlot() != 50) {
-             GUIManager.playClick(player);
-        }
+        e.setCancelled(true);
+        // Logic is delegated to NBT tags in GuiListener.java
     }
 }

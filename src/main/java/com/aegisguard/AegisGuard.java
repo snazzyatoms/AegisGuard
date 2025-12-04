@@ -6,9 +6,7 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.EconomyManager;
-import com.aegisguard.economy.VaultHook;
-import com.aegisguard.gui.GUIListener;
+import com.aegisguard.economy.VaultHook; // VaultHook stayed in economy package, this is correct
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
@@ -20,10 +18,11 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener;
+import com.aegisguard.listeners.GUIListener; // FIXED IMPORT (Was .gui.GUIListener)
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*;
+import com.aegisguard.managers.*; // This imports EconomyManager correctly from managers package
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -37,6 +36,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -61,7 +61,7 @@ public class AegisGuard extends JavaPlugin {
     private ProgressionManager progressionManager;
     private GUIManager guiManager;
     
-    // --- UTILS ---
+    // --- LEGACY / UTILS ---
     private SelectionService selection;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -134,9 +134,6 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
         
-        // Note: messages.yml is no longer used or generated.
-        // LanguageManager handles locales/*.yml automatically.
-
         this.configMgr = new AGConfig(this);
         
         // 1. Initialize Core Managers
@@ -347,12 +344,9 @@ public class AegisGuard extends JavaPlugin {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
         Runnable logic = () -> {
-            // Use the correct package reference to avoid ambiguity
             for (com.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
                  double cost = economyManager.calculateDailyUpkeep(e);
-                 if (!e.withdraw(cost)) {
-                     // Handle bankruptcy
-                 }
+                 if (!e.withdraw(cost)) { } 
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
@@ -361,10 +355,7 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) {
-            getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
-            return; 
-        }
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) return;
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
         WildernessRevertTask task = new WildernessRevertTask(this, dataStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);

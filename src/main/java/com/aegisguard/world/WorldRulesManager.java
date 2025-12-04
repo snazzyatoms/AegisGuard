@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.world;
+package com.aegisguard.world;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.config.AGConfig;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.config.AGConfig;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;

@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.managers;
+package com.aegisguard.managers;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Estate;
-import com.yourname.aegisguard.objects.Guild;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Estate;
+import com.aegisguard.objects.Guild;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

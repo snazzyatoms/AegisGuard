@@ -1,8 +1,8 @@
-package com.aegisguard.world;
+package com.yourname.aegisguard.world;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.config.AGConfig;
-import com.aegisguard.data.Plot;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.config.AGConfig;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -42,7 +42,7 @@ public class WorldRulesManager {
         );
         
         // 2. Load Per-World Overrides
-        ConfigurationSection section = plugin.getConfig().getConfigurationSection("claims.per_world");
+        ConfigurationSection section = plugin.getConfig().getConfigurationSection("estates.per_world");
         if (section == null) {
             plugin.getLogger().info("[AegisGuard] No per-world configuration found. Using defaults.");
             return;
@@ -57,7 +57,7 @@ public class WorldRulesManager {
             if (prot == null) prot = worldSec;
 
             WorldRuleSet set = new WorldRuleSet(
-                worldSec.getBoolean("allow_claims", defaultRuleSet.allowClaims),
+                worldSec.getBoolean("allow_estates", defaultRuleSet.allowClaims),
                 prot.getBoolean("pvp", defaultRuleSet.pvp),
                 prot.getBoolean("mobs", defaultRuleSet.mobs),
                 prot.getBoolean("containers", defaultRuleSet.containers),
@@ -74,29 +74,29 @@ public class WorldRulesManager {
     }
 
     /**
-     * Applies the specific world's default flags to a newly created plot.
+     * Applies the specific world's default flags to a newly created estate.
      */
-    public void applyDefaults(Plot plot) {
-        if (plot == null) return;
+    public void applyDefaults(Estate estate) {
+        if (estate == null) return;
         
-        World world = Bukkit.getWorld(plot.getWorld());
+        World world = estate.getWorld();
         WorldRuleSet set = getRules(world);
         
         // Apply Main Protections
-        plot.setFlag("pvp", set.pvp);
-        plot.setFlag("mobs", set.mobs);
-        plot.setFlag("containers", set.containers);
-        plot.setFlag("pets", set.pets);
-        plot.setFlag("farm", set.farms);
-        plot.setFlag("fly", set.fly);
-        plot.setFlag("entry", set.entry);
+        estate.setFlag("pvp", set.pvp);
+        estate.setFlag("mobs", set.mobs);
+        estate.setFlag("containers", set.containers);
+        estate.setFlag("pets", set.pets);
+        estate.setFlag("farm", set.farms);
+        estate.setFlag("fly", set.fly);
+        estate.setFlag("entry", set.entry);
         
         // Hardcoded safe defaults (usually always false/protected initially)
-        plot.setFlag("tnt-damage", false);
-        plot.setFlag("fire-spread", false);
-        plot.setFlag("piston-use", false);
-        plot.setFlag("interact", true); // Usually allow interaction by default for members
-        plot.setFlag("build", true);
+        estate.setFlag("tnt-damage", false);
+        estate.setFlag("fire-spread", false);
+        estate.setFlag("piston-use", false);
+        estate.setFlag("interact", true); // Usually allow interaction by default for members
+        estate.setFlag("build", true);
     }
 
     private WorldRuleSet getRules(World world) {

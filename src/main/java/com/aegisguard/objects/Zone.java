@@ -1,4 +1,4 @@
-package com.yourname.aegisguard.objects; // Moved to objects package to match Estate
+package com.aegisguard.objects; // Moved to objects package to match Estate
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

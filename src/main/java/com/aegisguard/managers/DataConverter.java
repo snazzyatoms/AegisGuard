@@ -5,6 +5,7 @@ import com.aegisguard.objects.Cuboid;
 import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -13,16 +14,15 @@ import java.util.UUID;
 public class DataConverter {
 
     private final AegisGuard plugin;
+    private final EstateManager estateManager;
 
-    public DataConverter(AegisGuard plugin) {
+    public DataConverter(AegisGuard plugin, EstateManager estateManager) {
         this.plugin = plugin;
+        this.estateManager = estateManager;
     }
 
     public void runMigration() {
-        // 1. Check for old v1.2.0 data file
         File oldFile = new File(plugin.getDataFolder(), "claims.yml"); 
-        
-        // Safety: If no old file exists, or we already have new data, stop.
         if (!oldFile.exists() || !plugin.getEstateManager().getAllEstates().isEmpty()) {
             return; 
         }
@@ -34,7 +34,6 @@ public class DataConverter {
 
         for (String key : oldConfig.getKeys(false)) {
             try {
-                // Extract Old Data
                 UUID ownerId = UUID.fromString(oldConfig.getString(key + ".owner"));
                 String world = oldConfig.getString(key + ".world");
                 int x1 = oldConfig.getInt(key + ".x1");
@@ -42,24 +41,20 @@ public class DataConverter {
                 int x2 = oldConfig.getInt(key + ".x2");
                 int z2 = oldConfig.getInt(key + ".z2");
                 
-                // Construct New Objects
                 Location min = new Location(Bukkit.getWorld(world), x1, 0, z1);
                 Location max = new Location(Bukkit.getWorld(world), x2, 255, z2);
                 Cuboid region = new Cuboid(min, max);
                 
-                // Create "Private Estate" (isGuild = false)
-                String name = Bukkit.getOfflinePlayer(ownerId).getName() + "'s Estate";
-                Estate estate = plugin.getEstateManager().createEstate(
-                    Bukkit.getOfflinePlayer(ownerId), 
+                OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerId);
+                String name = (owner.getName() != null ? owner.getName() : "Unknown") + "'s Estate";
+                
+                // FIXED: Now passes OfflinePlayer correctly
+                Estate estate = estateManager.createEstate(
+                    owner, 
                     region, 
                     name, 
                     false 
                 );
-                
-                // Migrate Members (Map old 'trusted' list to 'Resident' role)
-                for (String memberId : oldConfig.getStringList(key + ".members")) {
-                    estate.setMember(UUID.fromString(memberId), "resident");
-                }
                 
                 count++;
             } catch (Exception e) {
@@ -68,12 +63,8 @@ public class DataConverter {
         }
 
         plugin.getLogger().info("✅ MIGRATION SUCCESS: Converted " + count + " plots.");
-        
-        // Disable Sidebar (Legacy cleanup)
         plugin.getConfig().set("sidebar.enabled", false);
         plugin.saveConfig();
-        
-        // Rename old file so we don't migrate again next reboot
         oldFile.renameTo(new File(plugin.getDataFolder(), "claims.yml.bak"));
     }
 }

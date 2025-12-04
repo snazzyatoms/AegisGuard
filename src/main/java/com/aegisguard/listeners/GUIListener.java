@@ -1,9 +1,7 @@
 package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.*;
-import com.aegisguard.expansions.PetitionAdminGUI;
-import com.aegisguard.expansions.PetitionGUI;
+import com.aegisguard.gui.*; // Imports PetitionGUI, PetitionAdminGUI, etc.
 import com.aegisguard.objects.Estate;
 
 import org.bukkit.Material;

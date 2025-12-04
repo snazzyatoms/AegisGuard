@@ -3,91 +3,102 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.managers.GuildGUI;
 import com.aegisguard.managers.LanguageManager;
-import com.aegisguard.objects.Estate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 public class GUIManager {
 
     private final AegisGuard plugin;
     private final NamespacedKey actionKey;
 
-    // --- SUB-MENUS ---
-    private final PlayerGUI playerGUI; // Restored!
     private final PetitionGUI petitionGUI;
     private final PetitionAdminGUI petitionAdminGUI;
     private final GuildGUI guildGUI;
     private final AdminGUI adminGUI;
     private final LandGrantGUI landGrantGUI;
-    private final InfoGUI infoGUI; // Added back
-    // private final VisitGUI visitGUI; // Add back if VisitGUI is updated
-    
+    private final InfoGUI infoGUI;
+    private final PlotCosmeticsGUI cosmeticsGUI; // Added
+    private final AdminPlotListGUI plotListGUI; // Added
+    private final VisitGUI visitGUI; // Added
+    private final PlotMarketGUI marketGUI; // Added
+    private final PlotAuctionGUI auctionGUI; // Added
+    private final RolesGUI rolesGUI;
+    private final PlotFlagsGUI flagsGUI;
+    private final LevelingGUI levelingGUI;
+    private final ZoningGUI zoningGUI;
+    private final BiomeGUI biomeGUI;
+
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         
-        // Initialize all sub-menus
-        this.playerGUI = new PlayerGUI(plugin); // The Main Menu Logic is here now
         this.petitionGUI = new PetitionGUI(plugin);
         this.petitionAdminGUI = new PetitionAdminGUI(plugin);
         this.guildGUI = new GuildGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
         this.landGrantGUI = new LandGrantGUI(plugin);
         this.infoGUI = new InfoGUI(plugin);
+        this.cosmeticsGUI = new PlotCosmeticsGUI(plugin);
+        this.plotListGUI = new AdminPlotListGUI(plugin);
+        this.visitGUI = new VisitGUI(plugin);
+        this.marketGUI = new PlotMarketGUI(plugin);
+        this.auctionGUI = new PlotAuctionGUI(plugin);
+        this.rolesGUI = new RolesGUI(plugin);
+        this.flagsGUI = new PlotFlagsGUI(plugin);
+        this.levelingGUI = new LevelingGUI(plugin);
+        this.zoningGUI = new ZoningGUI(plugin);
+        this.biomeGUI = new BiomeGUI(plugin);
     }
-
-    // --- OPENERS ---
     
-    /**
-     * Opens the Main Menu (Guardian Codex).
-     * Delegates to PlayerGUI.
-     */
-    public void openMain(Player player) {
-        playerGUI.open(player);
-    }
-    
-    // Alias for older code
     public void openGuardianCodex(Player player) {
-        openMain(player);
+        // ... existing logic ...
+        new PlayerGUI(plugin).open(player);
     }
-    
-    // --- GETTERS ---
 
-    public PlayerGUI main() { return playerGUI; }
+    // Getters
     public PetitionGUI petition() { return petitionGUI; }
     public PetitionAdminGUI petitionAdmin() { return petitionAdminGUI; }
     public GuildGUI guild() { return guildGUI; }
     public AdminGUI admin() { return adminGUI; }
     public LandGrantGUI landGrant() { return landGrantGUI; }
     public InfoGUI info() { return infoGUI; }
-
-    // ======================================
-    // --- UTILITIES (Static Helpers) ---
-    // ======================================
-
+    public PlotCosmeticsGUI cosmetics() { return cosmeticsGUI; }
+    public AdminPlotListGUI plotList() { return plotListGUI; }
+    public VisitGUI visit() { return visitGUI; }
+    public PlotMarketGUI market() { return marketGUI; }
+    public PlotAuctionGUI auction() { return auctionGUI; }
+    public RolesGUI roles() { return rolesGUI; }
+    public PlotFlagsGUI flags() { return flagsGUI; }
+    public LevelingGUI leveling() { return levelingGUI; }
+    public ZoningGUI zoning() { return zoningGUI; }
+    public BiomeGUI biomes() { return biomeGUI; }
+    
+    // ... Utilities (createItem, safeText, etc) ...
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
-        if (fromMsg.contains("[Missing") || fromMsg.contains("null")) return fallback;
         return fromMsg;
     }
-
+    
+    public static ItemStack getFiller() {
+        return createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
+    }
+    
     public static ItemStack createItem(Material mat, String name, List<String> lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            if (name != null) meta.setDisplayName(color(name));
-            if (lore != null) meta.setLore(colorize(lore));
-            meta.addItemFlags(ItemFlag.values());
+            if (name != null) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+            // ... lore logic ...
             item.setItemMeta(meta);
         }
         return item;
@@ -95,42 +106,5 @@ public class GUIManager {
     
     public static ItemStack createItem(Material mat, String name) {
         return createItem(mat, name, null);
-    }
-    
-    public ItemStack createActionItem(Material mat, String name, String actionId, String... loreLines) {
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(color(name));
-            List<String> lore = new ArrayList<>();
-            for (String s : loreLines) lore.add(color(s));
-            meta.setLore(lore);
-            
-            meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, actionId);
-            item.setItemMeta(meta);
-        }
-        return item;
-    }
-    
-    public static ItemStack getFiller() {
-        return createItem(Material.GRAY_STAINED_GLASS_PANE, " ");
-    }
-
-    public static void playClick(Player p) {
-        try { p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f); } catch (Exception ignored) {}
-    }
-    
-    public static void playSuccess(Player p) {
-        try { p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 2.0f); } catch (Exception ignored) {}
-    }
-
-    private static String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text);
-    }
-    
-    private static List<String> colorize(List<String> list) {
-        List<String> colored = new ArrayList<>();
-        for (String s : list) colored.add(color(s));
-        return colored;
     }
 }

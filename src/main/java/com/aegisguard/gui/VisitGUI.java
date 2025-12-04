@@ -1,8 +1,10 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -15,18 +17,12 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map; // Added for placeholder replacement
+import java.util.Map;
 
-/**
- * VisitGUI
- * - Allows players to warp to plots they are trusted on.
- * - Allows warping to public Server Zones (Warps).
- * - Fully localized for language switching.
- */
 public class VisitGUI {
 
     private final AegisGuard plugin;
-    private final int PLOTS_PER_PAGE = 45;
+    private final int ESTATES_PER_PAGE = 45;
 
     public VisitGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -35,95 +31,93 @@ public class VisitGUI {
     public static class VisitHolder implements InventoryHolder {
         private final int page;
         private final boolean showingWarps; // Toggle state
-        private final List<Plot> plots;
+        private final List<Estate> estates;
 
-        public VisitHolder(List<Plot> plots, int page, boolean showingWarps) {
-            this.plots = plots;
+        public VisitHolder(List<Estate> estates, int page, boolean showingWarps) {
+            this.estates = estates;
             this.page = page;
             this.showingWarps = showingWarps;
         }
 
         public int getPage() { return page; }
         public boolean isShowingWarps() { return showingWarps; }
-        public List<Plot> getPlots() { return plots; }
+        public List<Estate> getEstates() { return estates; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, int page, boolean showWarps) {
-        List<Plot> displayPlots = new ArrayList<>();
+        LanguageManager lang = plugin.getLanguageManager();
+        List<Estate> displayList = new ArrayList<>();
         
         // --- FILTER LOGIC ---
-        for (Plot plot : plugin.store().getAllPlots()) {
+        for (Estate estate : plugin.getEstateManager().getAllEstates()) {
             if (showWarps) {
-                if (plot.isServerWarp()) {
-                    displayPlots.add(plot);
+                // Show Public Warps (Server Zones or Guild Warps if implemented)
+                // Placeholder: Assuming Server Zones or specially flagged estates are warps
+                if (estate.getFlag("is_warp")) {
+                    displayList.add(estate);
                 }
             } else {
-                // Trusted Plots (Member/Co-Owner but NOT Owner)
-                if (plot.getPlayerRoles().containsKey(player.getUniqueId()) && !plot.getOwner().equals(player.getUniqueId())) {
-                    displayPlots.add(plot);
+                // Show Trusted Estates (Where I am a member but NOT owner)
+                if (estate.isMember(player.getUniqueId()) && !estate.getOwnerId().equals(player.getUniqueId())) {
+                    displayList.add(estate);
                 }
             }
         }
 
         // Sort Alphabetically
-        displayPlots.sort((p1, p2) -> {
-            String n1 = showWarps ? p1.getWarpName() : p1.getOwnerName();
-            String n2 = showWarps ? p2.getWarpName() : p2.getOwnerName();
-            if (n1 == null) n1 = "Unknown";
-            if (n2 == null) n2 = "Unknown";
-            return n1.compareToIgnoreCase(n2);
-        });
+        displayList.sort(Comparator.comparing(Estate::getName, String.CASE_INSENSITIVE_ORDER));
 
         // Pagination
-        int maxPages = (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE);
+        int maxPages = (int) Math.ceil((double) displayList.size() / ESTATES_PER_PAGE);
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
-        // Localization Keys: "visit_title_warps" vs "visit_title_trusted"
+        // Title
         String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
-        String defaultTitle = showWarps ? "§6Server Waypoints" : "§9Trusted Plots";
+        String defaultTitle = showWarps ? "§6Server Waypoints" : "§9Trusted Estates";
         
-        String modeTitle = plugin.msg().get(player, modeTitleKey, defaultTitle);
-        String title = GUIManager.safeText(null, modeTitle) + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
-
-        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, title);
+        String modeTitle = lang.getMsg(player, modeTitleKey);
+        if (modeTitle.contains("Missing")) modeTitle = defaultTitle;
+        
+        String title = modeTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        Inventory inv = Bukkit.createInventory(new VisitHolder(displayList, page, showWarps), 54, title);
 
         // Fill Footer
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         // Populate Items
-        int startIndex = page * PLOTS_PER_PAGE;
-        for (int i = 0; i < PLOTS_PER_PAGE; i++) {
+        int startIndex = page * ESTATES_PER_PAGE;
+        for (int i = 0; i < ESTATES_PER_PAGE; i++) {
             int index = startIndex + i;
-            if (index >= displayPlots.size()) break;
+            if (index >= displayList.size()) break;
 
-            Plot plot = displayPlots.get(index);
+            Estate estate = displayList.get(index);
             ItemStack icon;
 
             if (showWarps) {
-                // Server Warp
-                Material mat = plot.getWarpIcon() != null ? plot.getWarpIcon() : Material.BEACON;
-                String name = plot.getWarpName() != null ? plot.getWarpName() : "Server Warp";
-                
-                icon = GUIManager.createItem(mat, "§6" + name, plugin.msg().getList(player, "visit_warp_lore"));
+                // Warp Icon
+                Material mat = Material.BEACON; // Could be customized in Estate object later
+                icon = GUIManager.createItem(mat, "§6" + estate.getName(), lang.getMsgList(player, "visit_warp_lore"));
             } else {
-                // Trusted Plot
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-                String role = plot.getRole(player.getUniqueId());
-                String ownerName = (plot.getOwnerName() != null) ? plot.getOwnerName() : "Unknown";
-                String alias = (plot.getEntryTitle() != null) ? plot.getEntryTitle() : ownerName + "'s Plot";
-
+                // Trusted Estate Head
+                OfflinePlayer owner = Bukkit.getOfflinePlayer(estate.getOwnerId());
+                String role = estate.getMemberRole(player.getUniqueId());
+                
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
                 if (meta != null) {
-                    meta.setOwningPlayer(owner);
-                    meta.setDisplayName(plugin.msg().get(player, "visit_plot_name", Map.of("PLOT", alias)));
+                    if (!estate.isGuild()) meta.setOwningPlayer(owner);
                     
-                    List<String> lore = new ArrayList<>(plugin.msg().getList(player, "visit_plot_lore"));
-                    // Replace placeholders in lore list manually since getList doesn't support Map replacer natively in utils yet
-                    lore.replaceAll(s -> s.replace("{WORLD}", plot.getWorld())
+                    // Localized Name: "Steve's Estate"
+                    String nameFormat = lang.getMsg(player, "visit_plot_name").replace("{PLOT}", estate.getName());
+                    if (nameFormat.contains("Missing")) nameFormat = "§e" + estate.getName();
+                    
+                    meta.setDisplayName(nameFormat);
+                    
+                    List<String> lore = new ArrayList<>(lang.getMsgList(player, "visit_plot_lore"));
+                    lore.replaceAll(s -> s.replace("{WORLD}", estate.getWorld().getName())
                                           .replace("{ROLE}", role));
                     
                     meta.setLore(lore);
@@ -137,25 +131,23 @@ public class VisitGUI {
         // --- TOGGLE BUTTON (Slot 49) ---
         if (showWarps) {
             inv.setItem(49, GUIManager.createItem(Material.PLAYER_HEAD, 
-                plugin.msg().get(player, "visit_switch_trusted"), 
-                plugin.msg().getList(player, "visit_switch_trusted_lore")));
+                lang.getMsg(player, "visit_switch_trusted"), 
+                lang.getMsgList(player, "visit_switch_trusted_lore")));
         } else {
             inv.setItem(49, GUIManager.createItem(Material.BEACON, 
-                plugin.msg().get(player, "visit_switch_warps"), 
-                plugin.msg().getList(player, "visit_switch_warps_lore")));
+                lang.getMsg(player, "visit_switch_warps"), 
+                lang.getMsgList(player, "visit_switch_warps_lore")));
         }
 
         // Navigation
-        if (page > 0) inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
-        if (page < maxPages - 1) inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
+        if (page > 0) inv.setItem(45, GUIManager.createItem(Material.ARROW, lang.getGui("button_prev")));
+        if (page < maxPages - 1) inv.setItem(53, GUIManager.createItem(Material.ARROW, lang.getGui("button_next")));
         
         // Back
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
-            plugin.msg().get(player, "button_back_menu"), 
-            plugin.msg().getList(player, "back_menu_lore")));
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, lang.getGui("button_back")));
 
         player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e, VisitHolder holder) {
@@ -168,29 +160,31 @@ public class VisitGUI {
         // Nav
         if (slot == 45) { open(player, holder.getPage() - 1, warps); return; }
         if (slot == 53) { open(player, holder.getPage() + 1, warps); return; }
-        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 48) { plugin.getGuiManager().openGuardianCodex(player); return; }
 
         // Switch Mode
         if (slot == 49) {
             open(player, 0, !warps);
-            plugin.effects().playMenuFlip(player);
+            // plugin.effects().playMenuFlip(player);
             return;
         }
 
         // Teleport
-        if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() != Material.AIR) {
-            int index = (holder.getPage() * PLOTS_PER_PAGE) + slot;
-            if (index < holder.getPlots().size()) {
-                Plot plot = holder.getPlots().get(index);
+        if (slot < ESTATES_PER_PAGE && e.getCurrentItem().getType() != Material.AIR) {
+            int index = (holder.getPage() * ESTATES_PER_PAGE) + slot;
+            if (index < holder.getEstates().size()) {
+                Estate estate = holder.getEstates().get(index);
                 
-                if (plot.getSpawnLocation() != null) {
-                    player.teleport(plot.getSpawnLocation());
+                if (estate.getSpawnLocation() != null) {
+                    player.teleport(estate.getSpawnLocation());
                 } else {
-                    player.teleport(plot.getCenter(plugin));
+                    Location center = estate.getCenter();
+                    center.setY(center.getWorld().getHighestBlockYAt(center) + 1);
+                    player.teleport(center);
                 }
                 
-                plugin.msg().send(player, "home-set-success"); // Reusing "Teleport Success" msg
-                plugin.effects().playTeleport(player);
+                player.sendMessage(plugin.getLanguageManager().getMsg(player, "home-set-success")); // Reuse "Teleport Success"
+                // plugin.effects().playTeleport(player);
                 player.closeInventory();
             }
         }

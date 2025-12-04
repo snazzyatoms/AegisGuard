@@ -1,5 +1,6 @@
-package com.aegisguard.data;
+package com.yourname.aegisguard.data;
 
+import com.yourname.aegisguard.objects.Estate; // v1.3.0 Object
 import org.bukkit.Location;
 
 import java.util.Collection;
@@ -8,139 +9,98 @@ import java.util.UUID;
 
 /**
  * IDataStore (Interface)
- * - This is a "contract" that all data storage systems must follow.
- * - This allows AegisGuard to switch between YML and SQL seamlessly.
- * - UPDATED: Added savePlot() for individual updates.
+ * - The contract for saving/loading ESTATES.
+ * - Updated for v1.3.0 (Replaced 'Plot' with 'Estate').
  */
 public interface IDataStore {
 
     /**
-     * Initializes the data store (e.g., creates tables, loads YML).
+     * Initializes the data store (creates tables/files).
      */
     void load();
 
     /**
-     * Saves all pending changes to the data store.
+     * Saves all pending changes (Async safe).
      */
     void save();
 
     /**
-     * Saves all pending changes immediately on the current thread.
+     * Saves immediately on the main thread (for shutdown).
      */
     void saveSync();
 
-    /**
-     * Checks if there are pending changes to be saved.
-     */
     boolean isDirty();
-
-    /**
-     * Manually sets the dirty flag.
-     */
     void setDirty(boolean dirty);
 
     // ----------------------------------------
-    // --- PLOT ACCESSORS ---
+    // --- ESTATE ACCESSORS (v1.3.0) ---
     // ----------------------------------------
 
     /**
-     * Gets all plots owned by a specific player.
+     * Gets all estates owned by a specific player.
      */
-    List<Plot> getPlots(UUID owner);
+    List<Estate> getEstates(UUID owner);
 
     /**
-     * Gets a single plot by its unique ID.
+     * Gets a single estate by its unique ID.
      */
-    Plot getPlot(UUID owner, UUID plotId);
+    Estate getEstate(UUID estateId);
 
     /**
-     * Gets all plots from all owners.
+     * Gets all estates currently loaded.
      */
-    Collection<Plot> getAllPlots();
+    Collection<Estate> getAllEstates();
 
     /**
-     * Gets all plots that are currently for sale.
+     * Finds the estate at a specific location.
      */
-    Collection<Plot> getPlotsForSale();
+    Estate getEstateAt(Location loc);
 
     /**
-     * Gets all plots that are currently for auction.
+     * Checks if a region overlaps with existing estates.
+     * @param ignoreEstateId The ID of the estate being resized (to skip self-check).
      */
-    Collection<Plot> getPlotsForAuction();
-
-    /**
-     * Finds the plot at a specific Bukkit Location.
-     */
-    Plot getPlotAt(Location loc);
-
-    /**
-     * Checks if a new area overlaps with any existing plots.
-     * @param plotToIgnore The plot being checked (e.g., the current plot being resized).
-     * The implementation must ignore this plot during the overlap check.
-     */
-    boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2);
+    boolean isAreaOverlapping(String world, int x1, int z1, int x2, int z2, UUID ignoreEstateId);
     
     // ----------------------------------------
-    // --- PLOT MODIFICATION ---
+    // --- MODIFICATION ---
     // ----------------------------------------
-    
-    /**
-     * Creates and stores a new plot.
-     */
-    void createPlot(UUID owner, Location c1, Location c2);
 
     /**
-     * Adds a pre-made plot object to the store.
+     * Saves a new or updated estate to the database.
      */
-    void addPlot(Plot plot);
+    void saveEstate(Estate estate);
     
     /**
-     * Saves a specific plot's data. 
-     * Essential for Leveling and Expansions to persist changes immediately.
+     * Deletes an estate permanently.
      */
-    void savePlot(Plot plot);
+    void deleteEstate(UUID estateId);
     
     /**
-     * Removes a single plot by its ID.
+     * Deletes all estates owned by a specific player.
      */
-    void removePlot(UUID owner, UUID plotId);
-    
-    /**
-     * Removes all plots for a specific owner.
-     */
-    void removeAllPlots(UUID owner);
-    
-    /**
-     * Adds or updates a player's role on a plot.
-     */
-    void addPlayerRole(Plot plot, UUID playerUUID, String role);
-    
-    /**
-     * Removes a player's role from a plot.
-     */
-    void removePlayerRole(Plot plot, UUID playerUUID);
+    void deleteEstatesByOwner(UUID ownerId);
 
     /**
-     * Atomically changes the owner of a plot.
+     * Updates the owner of an estate (e.g., Player -> Guild).
      */
-    void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
+    void updateEstateOwner(Estate estate, UUID newOwnerId, boolean isGuild);
 
-    /**
-     * Runs the admin task to remove all plots owned by banned players.
-     */
-    void removeBannedPlots();
-    
     // ----------------------------------------
     // --- WILDERNESS REVERT ---
     // ----------------------------------------
     
-    /**
-     * Logs a block change in the wilderness to the database.
-     */
     void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
     
-    /**
-     * Queries and reverts a batch of expired wilderness blocks.
-     */
     void revertWildernessBlocks(long timestamp, int limit);
+    
+    // ----------------------------------------
+    // --- LEGACY SUPPORT (Optional) ---
+    // ----------------------------------------
+    // These methods mimic the old v1.2 API to prevent compile errors
+    // in old classes you haven't fully deleted yet.
+    // Ideally, you should delete these once the conversion is 100% done.
+    
+    default void addPlot(Estate e) { saveEstate(e); }
+    default void removePlot(UUID owner, UUID id) { deleteEstate(id); }
 }

@@ -13,8 +13,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 public class GUIManager {
 
@@ -32,7 +32,6 @@ public class GUIManager {
     private final AdminPlotListGUI plotListGUI;
     private final VisitGUI visitGUI;
     
-    // Renamed to match v1.3.0 Estate System
     private final EstateMarketGUI marketGUI; 
     private final EstateAuctionGUI auctionGUI;
     
@@ -48,8 +47,6 @@ public class GUIManager {
         this.plugin = plugin;
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         
-        // Initialize all sub-menus
-        // Note: These classes must be in com.aegisguard.gui package
         this.petitionGUI = new PetitionGUI(plugin);
         this.petitionAdminGUI = new PetitionAdminGUI(plugin);
         this.guildGUI = new GuildGUI(plugin);
@@ -60,7 +57,6 @@ public class GUIManager {
         this.plotListGUI = new AdminPlotListGUI(plugin);
         this.visitGUI = new VisitGUI(plugin);
         
-        // Initialize new Estate GUIs
         this.marketGUI = new EstateMarketGUI(plugin);
         this.auctionGUI = new EstateAuctionGUI(plugin);
         
@@ -70,21 +66,19 @@ public class GUIManager {
         this.zoningGUI = new ZoningGUI(plugin);
         this.biomeGUI = new BiomeGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
-        
-        // Main Menu Logic
         this.playerGUI = new PlayerGUI(plugin); 
     }
     
-    /**
-     * Opens the Main Dashboard (Guardian Codex).
-     */
-    public void openGuardianCodex(Player player) {
+    // --- OPENERS ---
+    
+    public void openMain(Player player) {
         playerGUI.open(player);
     }
+
+    public void openGuardianCodex(Player player) {
+        openMain(player);
+    }
     
-    /**
-     * Opens the Side Window for Active Perks.
-     */
     public void openPerksMenu(Player player, Estate estate) {
         playerGUI.openPerksMenu(player, estate);
     }
@@ -99,10 +93,8 @@ public class GUIManager {
     public PlotCosmeticsGUI cosmetics() { return cosmeticsGUI; }
     public AdminPlotListGUI plotList() { return plotListGUI; }
     public VisitGUI visit() { return visitGUI; }
-    
-    public EstateMarketGUI market() { return marketGUI; }
-    public EstateAuctionGUI auction() { return auctionGUI; }
-    
+    public EstateMarketGUI market() { return marketGUI; } 
+    public EstateAuctionGUI auction() { return auctionGUI; } 
     public RolesGUI roles() { return rolesGUI; }
     public PlotFlagsGUI flags() { return flagsGUI; }
     public LevelingGUI leveling() { return levelingGUI; }
@@ -110,13 +102,9 @@ public class GUIManager {
     public BiomeGUI biomes() { return biomeGUI; }
     public SettingsGUI settings() { return settingsGUI; }
     
-    // ======================================
-    // --- UTILITIES (Static Helpers) ---
-    // ======================================
-
+    // --- UTILITIES ---
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
-        if (fromMsg.contains("[Missing") || fromMsg.contains("null")) return fallback;
         return fromMsg;
     }
     
@@ -134,7 +122,6 @@ public class GUIManager {
                 for(String l : lore) colored.add(color(l));
                 meta.setLore(colored);
             }
-            // Hide attributes for clean look
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
@@ -145,9 +132,6 @@ public class GUIManager {
         return createItem(mat, name, null);
     }
     
-    /**
-     * Creates an item with a hidden NBT tag for action routing.
-     */
     public ItemStack createActionItem(Material mat, String name, String actionId, String... loreLines) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
@@ -156,7 +140,6 @@ public class GUIManager {
             List<String> lore = new ArrayList<>();
             for (String s : loreLines) lore.add(color(s));
             meta.setLore(lore);
-            
             meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, actionId);
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);

@@ -13,8 +13,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GUIManager {
 
@@ -22,7 +22,6 @@ public class GUIManager {
     private final NamespacedKey actionKey;
 
     // --- SUB-MENUS ---
-    // Note: No imports needed because they are all in the same package (com.aegisguard.gui)
     private final PetitionGUI petitionGUI;
     private final PetitionAdminGUI petitionAdminGUI;
     private final GuildGUI guildGUI;
@@ -50,6 +49,7 @@ public class GUIManager {
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         
         // Initialize all sub-menus
+        // Note: These classes must be in com.aegisguard.gui package
         this.petitionGUI = new PetitionGUI(plugin);
         this.petitionAdminGUI = new PetitionAdminGUI(plugin);
         this.guildGUI = new GuildGUI(plugin);
@@ -71,17 +71,21 @@ public class GUIManager {
         this.biomeGUI = new BiomeGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
         
-        // Main Menu Logic moved here
+        // Main Menu Logic
         this.playerGUI = new PlayerGUI(plugin); 
     }
     
+    /**
+     * Opens the Main Dashboard (Guardian Codex).
+     */
     public void openGuardianCodex(Player player) {
-        // Delegate to the dedicated PlayerGUI class
         playerGUI.open(player);
     }
     
+    /**
+     * Opens the Side Window for Active Perks.
+     */
     public void openPerksMenu(Player player, Estate estate) {
-        // Delegate to PlayerGUI for the side window
         playerGUI.openPerksMenu(player, estate);
     }
 
@@ -96,7 +100,6 @@ public class GUIManager {
     public AdminPlotListGUI plotList() { return plotListGUI; }
     public VisitGUI visit() { return visitGUI; }
     
-    // Fixed Types
     public EstateMarketGUI market() { return marketGUI; }
     public EstateAuctionGUI auction() { return auctionGUI; }
     
@@ -113,6 +116,7 @@ public class GUIManager {
 
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
+        if (fromMsg.contains("[Missing") || fromMsg.contains("null")) return fallback;
         return fromMsg;
     }
     
@@ -130,6 +134,7 @@ public class GUIManager {
                 for(String l : lore) colored.add(color(l));
                 meta.setLore(colored);
             }
+            // Hide attributes for clean look
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
@@ -140,6 +145,9 @@ public class GUIManager {
         return createItem(mat, name, null);
     }
     
+    /**
+     * Creates an item with a hidden NBT tag for action routing.
+     */
     public ItemStack createActionItem(Material mat, String name, String actionId, String... loreLines) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();

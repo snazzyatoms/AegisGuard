@@ -1,12 +1,15 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
-import com.aegisguard.data.Zone;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
+import com.yourname.aegisguard.objects.Zone;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -19,7 +22,7 @@ import java.util.Map;
 
 /**
  * ZoningGUI
- * - Manages Sub-Claims (Rentals) inside a plot.
+ * - Manages Sub-Claims (Rentals) inside an Estate.
  * - Fully localized for dynamic language switching.
  */
 public class ZoningGUI {
@@ -31,26 +34,33 @@ public class ZoningGUI {
     }
 
     public static class ZoningHolder implements InventoryHolder {
-        private final Plot plot;
-        public ZoningHolder(Plot plot) { this.plot = plot; }
-        public Plot getPlot() { return plot; }
+        private final Estate estate;
+        public ZoningHolder(Estate estate) { this.estate = estate; }
+        public Estate getEstate() { return estate; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "zone_gui_title"), "§3Sub-Claim Manager");
-        Inventory inv = Bukkit.createInventory(new ZoningHolder(plot), 54, title);
+    public void open(Player player, Estate estate) {
+        LanguageManager lang = plugin.getLanguageManager();
+        
+        String title = lang.getGui("title_zoning_menu"); // "Sub-Claim Manager"
+        if (title.contains("Missing")) title = "§3Sub-Claim Manager";
+        
+        Inventory inv = Bukkit.createInventory(new ZoningHolder(estate), 54, title);
 
         // --- 1. LIST ZONES ---
-        List<Zone> zones = plot.getZones();
+        List<Zone> zones = estate.getZones();
         int slot = 0;
         
         for (Zone zone : zones) {
             if (slot >= 45) break; 
             
             boolean isRented = zone.isRented();
-            String status = isRented ? plugin.msg().get(player, "zone_status_rented") : plugin.msg().get(player, "zone_status_available");
-            if (status == null) status = isRented ? "§cRented" : "§aAvailable"; // Fallback
+            
+            // Status Text
+            String statusKey = isRented ? "zone_status_rented" : "zone_status_available";
+            String status = lang.getMsg(player, statusKey);
+            if (status.contains("Missing")) status = isRented ? "§cRented" : "§aAvailable";
 
             String renterName = "None";
             String timeRemaining = "";
@@ -61,19 +71,19 @@ public class ZoningGUI {
                 timeRemaining = zone.getRemainingTimeFormatted();
             }
 
-            // Localized Lore
             List<String> lore = new ArrayList<>();
             lore.add("§7Status: " + status);
-            lore.add("§7Price: §6" + plugin.eco().format(zone.getRentPrice(), com.aegisguard.economy.CurrencyType.VAULT));
+            lore.add("§7Price: §6" + plugin.getEconomy().format(zone.getRentPrice(), CurrencyType.VAULT));
             lore.add(" ");
             
             if (isRented) {
                 lore.add("§7Tenant: §f" + renterName);
                 lore.add("§7Expires: §f" + timeRemaining);
                 lore.add(" ");
-                lore.add(plugin.msg().get(player, "zone_evict_action")); // "Left-Click to Evict"
+                lore.add(lang.getMsg(player, "zone_evict_action")); // "Left-Click to Evict"
             }
-            lore.add(plugin.msg().get(player, "zone_delete_action")); // "Right-Click to Delete"
+            
+            lore.add(lang.getMsg(player, "zone_delete_action")); // "Right-Click to Delete"
 
             inv.setItem(slot, GUIManager.createItem(
                 isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
@@ -84,61 +94,65 @@ public class ZoningGUI {
             slot++;
         }
         
+        // Background Filler
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         // --- 2. ACTIONS ---
         
         // Create Button (Slot 49)
-        boolean hasSelection = plugin.selection().hasSelection(player);
+        boolean hasSelection = plugin.getSelection().hasSelection(player);
+        
+        List<String> createLore = hasSelection ? 
+            lang.getMsgList(player, "zone_create_ready_lore") :
+            lang.getMsgList(player, "zone_create_locked_lore");
+            
         inv.setItem(49, GUIManager.createItem(
             Material.EMERALD_BLOCK, 
-            plugin.msg().get(player, "button_zone_create"), // "Create New Zone"
-            hasSelection ? 
-                plugin.msg().getList(player, "zone_create_ready_lore") :
-                plugin.msg().getList(player, "zone_create_locked_lore")
+            lang.getGui("button_zone_create"), 
+            createLore
         ));
 
         // Back (Slot 45)
-        inv.setItem(45, GUIManager.createItem(Material.ARROW, 
-            plugin.msg().get(player, "button_back"), 
-            plugin.msg().getList(player, "back_lore")));
+        inv.setItem(45, GUIManager.createItem(Material.ARROW, lang.getGui("button_back")));
         
         player.openInventory(inv);
-        GUIManager.playClick(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e, ZoningHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
         
-        Plot plot = holder.getPlot();
+        Estate estate = holder.getEstate();
+        LanguageManager lang = plugin.getLanguageManager();
         
         // --- NAVIGATION ---
         if (e.getSlot() == 45) {
-            plugin.gui().openMain(player);
+            plugin.getGuiManager().openGuardianCodex(player);
             return;
         }
         
         // --- CREATE ZONE ---
         if (e.getSlot() == 49) {
-            if (plugin.selection().hasSelection(player)) {
-                String name = "Zone-" + (plot.getZones().size() + 1);
+            if (plugin.getSelection().hasSelection(player)) {
+                // TODO: Add Chat Input Prompt for Name/Price
+                String name = "Zone-" + (estate.getZones().size() + 1);
                 player.performCommand("ag zone create " + name + " 100"); 
                 player.closeInventory();
             } else {
-                plugin.effects().playError(player);
-                player.sendMessage(plugin.msg().get(player, "must_select"));
+                // plugin.effects().playError(player);
+                player.sendMessage(lang.getMsg(player, "must_select"));
             }
             return;
         }
         
         // --- ZONE MANAGEMENT ---
-        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.AIR && e.getCurrentItem().getType() != Material.GRAY_STAINED_GLASS_PANE) {
+        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.AIR) {
             String name = ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
             Zone target = null;
             
-            for (Zone z : plot.getZones()) {
+            for (Zone z : estate.getZones()) {
                 if (z.getName().equalsIgnoreCase(name)) { target = z; break; }
             }
             
@@ -146,21 +160,23 @@ public class ZoningGUI {
 
             // Delete
             if (e.isRightClick()) {
-                plot.removeZone(target);
-                plugin.store().setDirty(true);
-                player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
-                plugin.msg().send(player, "zone_deleted", Map.of("ZONE", target.getName()));
-                open(player, plot); 
+                estate.removeZone(target);
+                // plugin.getEstateManager().saveEstate(estate);
+                
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
+                // plugin.msg().send(player, "zone_deleted", Map.of("ZONE", target.getName()));
+                open(player, estate); 
             }
             // Evict
             else if (e.isLeftClick()) {
                 if (target.isRented()) {
                     target.evict();
-                    plugin.store().setDirty(true);
-                    plugin.msg().send(player, "zone_evicted", Map.of("ZONE", target.getName()));
-                    open(player, plot); 
+                    // plugin.getEstateManager().saveEstate(estate);
+                    
+                    // plugin.msg().send(player, "zone_evicted", Map.of("ZONE", target.getName()));
+                    open(player, estate); 
                 } else {
-                    plugin.msg().send(player, "zone_not_rented");
+                    player.sendMessage(lang.getMsg(player, "zone_not_rented"));
                 }
             }
         }

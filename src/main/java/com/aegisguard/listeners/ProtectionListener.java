@@ -1,9 +1,9 @@
-package com.yourname.aegisguard.listeners;
+package com.aegisguard.listeners;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.EstateManager;
-import com.yourname.aegisguard.managers.RoleManager;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.EstateManager;
+import com.aegisguard.managers.RoleManager;
+import com.aegisguard.objects.Estate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

@@ -1,9 +1,9 @@
-package com.yourname.aegisguard.admin;
+package com.aegisguard.admin;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.objects.Estate;
-import com.yourname.aegisguard.selection.SelectionService;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Estate;
+import com.aegisguard.selection.SelectionService;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;

@@ -1,9 +1,9 @@
-package com.yourname.aegisguard.commands;
+package com.aegisguard.commands;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.AllianceManager;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.objects.Guild;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.AllianceManager;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Guild;
 import org.bukkit.entity.Player;
 
 public class GuildCommand implements CommandHandler.SubCommand {

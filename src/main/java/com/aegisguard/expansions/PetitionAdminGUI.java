@@ -1,9 +1,9 @@
-package com.yourname.aegisguard.gui;
+package com.aegisguard.gui;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.managers.PetitionManager;
-import com.yourname.aegisguard.managers.PetitionManager.PetitionRequest;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.managers.PetitionManager;
+import com.aegisguard.managers.PetitionManager.PetitionRequest;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

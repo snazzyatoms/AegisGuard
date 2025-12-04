@@ -1,32 +1,31 @@
-package com.aegisguard;
+package com.snazzyatoms.aegisguard;
 
-import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.CommandHandler; // v1.3.0 Command Router
-import com.aegisguard.config.AGConfig;
-import com.aegisguard.data.IDataStore;
-import com.aegisguard.data.SQLDataStore;
-import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.EconomyManager;
-import com.aegisguard.economy.VaultHook;
-import com.aegisguard.expansions.ExpansionRequestManager;
-import com.aegisguard.gui.GUIListener;
-import com.aegisguard.gui.GUIManager;
-import com.aegisguard.hooks.AegisPAPIExpansion;
-import com.aegisguard.hooks.DiscordWebhook;
-import com.aegisguard.hooks.MapHookManager;
-import com.aegisguard.hooks.MobBarrierTask;
-import com.aegisguard.hooks.WildernessRevertTask;
-import com.aegisguard.listeners.BannedPlayerListener;
-import com.aegisguard.listeners.ChatInputListener; // v1.3.0 NEW
-import com.aegisguard.listeners.LevelingListener;
-import com.aegisguard.listeners.MigrationListener; // v1.3.0 NEW
-import com.aegisguard.managers.*; // v1.3.0 New Managers
-import com.aegisguard.protection.ProtectionManager;
-import com.aegisguard.selection.SelectionService;
-import com.aegisguard.util.EffectUtil;
-import com.aegisguard.util.MessagesUtil;
-import com.aegisguard.visualization.WandEquipListener;
-import com.aegisguard.world.WorldRulesManager;
+import com.yourname.aegisguard.admin.AdminCommand;
+import com.yourname.aegisguard.commands.CommandHandler;
+import com.yourname.aegisguard.config.AGConfig;
+import com.yourname.aegisguard.data.IDataStore;
+import com.yourname.aegisguard.data.SQLDataStore;
+import com.yourname.aegisguard.data.YMLDataStore;
+import com.yourname.aegisguard.economy.EconomyManager;
+import com.yourname.aegisguard.economy.VaultHook;
+import com.yourname.aegisguard.gui.GUIManager;
+import com.yourname.aegisguard.hooks.AegisPAPIExpansion;
+import com.yourname.aegisguard.hooks.DiscordWebhook;
+import com.yourname.aegisguard.hooks.MapHookManager;
+import com.yourname.aegisguard.hooks.MobBarrierTask;
+import com.yourname.aegisguard.hooks.WildernessRevertTask;
+import com.yourname.aegisguard.listeners.BannedPlayerListener;
+import com.yourname.aegisguard.listeners.ChatInputListener;
+import com.yourname.aegisguard.listeners.GUIListener;
+import com.yourname.aegisguard.listeners.LevelingListener;
+import com.yourname.aegisguard.listeners.MigrationListener;
+import com.yourname.aegisguard.listeners.ProtectionListener;
+import com.yourname.aegisguard.managers.*;
+import com.yourname.aegisguard.protection.ProtectionManager;
+import com.yourname.aegisguard.selection.SelectionService;
+import com.yourname.aegisguard.util.EffectUtil;
+import com.yourname.aegisguard.visualization.WandEquipListener;
+import com.yourname.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -41,37 +40,35 @@ import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
 
-    // --- SINGLETON PATTERN ---
     private static AegisGuard instance;
 
     public static AegisGuard getInstance() {
         return instance;
     }
     
-    // --- EXISTING MANAGERS ---
+    // --- v1.3.0 MANAGERS ---
     private AGConfig configMgr;
-    private IDataStore plotStore; // Legacy support
-    private GUIManager gui;
-    private ProtectionManager protection;
-    private SelectionService selection;
-    private VaultHook vault;
-    private EconomyManager ecoManager;
-    private MessagesUtil messages;
-    private WorldRulesManager worldRules;
-    private EffectUtil effectUtil;
-    private ExpansionRequestManager expansionManager;
-    
-    // Note: SidebarManager removed as requested
-    
-    // --- v1.3.0 NEW MANAGERS ---
+    private IDataStore dataStore; // Renamed from plotStore
     private LanguageManager languageManager;
     private RoleManager roleManager;
     private EstateManager estateManager;
     private AllianceManager allianceManager;
+    private EconomyManager economyManager;
+    private PetitionManager petitionManager;
+    private LandGrantManager landGrantManager;
+    private ProgressionManager progressionManager;
+    private GUIManager guiManager;
+    
+    // --- LEGACY / UTILS ---
+    private SelectionService selection;
+    private WorldRulesManager worldRules;
+    private EffectUtil effectUtil;
+    private VaultHook vault;
     
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
+    private ProtectionManager protectionManager; // Mob Logic
 
     private boolean isFolia = false;
     
@@ -83,29 +80,41 @@ public class AegisGuard extends JavaPlugin {
 
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
-    public IDataStore store() { return plotStore; }
-    public GUIManager gui() { return gui; }
-    public ProtectionManager protection() { return protection; }
-    public SelectionService selection() { return selection; }
-    public VaultHook vault() { return vault; }
-    public EconomyManager eco() { return ecoManager; }
-    public MessagesUtil msg() { return messages; }
-    public WorldRulesManager worldRules() { return worldRules; }
-    public EffectUtil effects() { return effectUtil; }
-    public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
-    public DiscordWebhook getDiscord() { return discord; }
-    public MapHookManager getMapHooks() { return mapHookManager; }
-    public boolean isFolia() { return isFolia; }
-
-    // v1.3.0 Getters
+    public IDataStore getDataStore() { return dataStore; }
+    
     public LanguageManager getLanguageManager() { return languageManager; }
     public RoleManager getRoleManager() { return roleManager; }
     public EstateManager getEstateManager() { return estateManager; }
     public AllianceManager getAllianceManager() { return allianceManager; }
+    public EconomyManager getEconomy() { return economyManager; }
+    public PetitionManager getPetitionManager() { return petitionManager; }
+    public LandGrantManager getLandGrantManager() { return landGrantManager; }
+    public ProgressionManager getProgressionManager() { return progressionManager; }
+    public GUIManager getGuiManager() { return guiManager; }
+    
+    public ProtectionManager getProtectionManager() { return protectionManager; }
+    public SelectionService getSelection() { return selection; }
+    public WorldRulesManager getWorldRules() { return worldRules; }
+    public EffectUtil getEffects() { return effectUtil; }
+    public DiscordWebhook getDiscord() { return discord; }
+    public MapHookManager getMapHooks() { return mapHookManager; }
+    public boolean isFolia() { return isFolia; }
+    public VaultHook getVault() { return vault; } // Exposed for economy manager
+
+    // Legacy Aliases (to fix compile errors in older classes)
+    public AGConfig getConfigManager() { return configMgr; }
+    public IDataStore store() { return dataStore; }
+    public GUIManager gui() { return guiManager; }
+    public EconomyManager eco() { return economyManager; }
+    public ProtectionManager protection() { return protectionManager; }
+    public SelectionService selection() { return selection; }
+    public WorldRulesManager worldRules() { return worldRules; }
+    public EffectUtil effects() { return effectUtil; }
+    public VaultHook vault() { return vault; }
+
 
     @Override
     public void onEnable() {
-        // Initialize Singleton
         instance = this;
 
         // Detect Server Software
@@ -119,107 +128,70 @@ public class AegisGuard extends JavaPlugin {
 
         // Load Configs
         saveDefaultConfig();
-        
-        // Fix: Ensure messages.yml exists (legacy support)
-        if (!new File(getDataFolder(), "messages.yml").exists()) {
-            saveResource("messages.yml", false);
-        }
-
         this.configMgr = new AGConfig(this);
         
-        // --- v1.3.0 INITIALIZATION START ---
-        // 1. Load Languages First (So other managers can use messages)
+        // 1. Initialize Core Managers (Order Matters!)
         this.languageManager = new LanguageManager(this);
-        
-        // 2. Load Roles (Permission Brain)
         this.roleManager = new RoleManager(this);
-        
-        // 3. Load Estates (Land Data)
         this.estateManager = new EstateManager(this);
-        
-        // 4. Load Guilds (Team Data)
         this.allianceManager = new AllianceManager(this);
         
-        // 5. Run Legacy Migration Check (Converts old plots to Estates)
-        new DataConverter(this, estateManager).runMigration();
-        // --- v1.3.0 INITIALIZATION END ---
-
-        // Initialize Legacy Data Store (Keep for safe transition)
+        // 2. Initialize Data Store
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
-            this.plotStore = new SQLDataStore(this);
+            this.dataStore = new SQLDataStore(this);
         } else {
-            this.plotStore = new YMLDataStore(this);
+            this.dataStore = new YMLDataStore(this);
         }
+        this.dataStore.load(); // Load data into EstateManager
+
+        // 3. Initialize Economy & Gameplay
+        this.vault = new VaultHook(this); // Must be before EconomyManager
+        this.economyManager = new EconomyManager(this);
+        this.progressionManager = new ProgressionManager(this);
+        this.petitionManager = new PetitionManager(this);
+        this.landGrantManager = new LandGrantManager(this);
         
-        // Initialize Core Managers
-        this.selection = new SelectionService(this);
-        this.messages = new MessagesUtil(this);
-        this.gui = new GUIManager(this); 
-        this.vault = new VaultHook(this);
-        this.ecoManager = new EconomyManager(this);
-        this.worldRules = new WorldRulesManager(this);
+        // 4. Initialize Utils & Visuals
         this.effectUtil = new EffectUtil(this);
-        this.expansionManager = new ExpansionRequestManager(this);
+        this.worldRules = new WorldRulesManager(this);
+        this.selection = new SelectionService(this);
+        this.guiManager = new GUIManager(this);
         this.discord = new DiscordWebhook(this);
-        
-        // Initialize Protection (Mob Logic)
-        this.protection = new ProtectionManager(this);
+        this.protectionManager = new ProtectionManager(this); // Mob Logic
 
-        // Load Legacy Data (if needed)
-        this.plotStore.load();
+        // 5. Run Migration (Converts old plots if found)
+        new DataConverter(this, estateManager).runMigration();
         
-        runGlobalAsync(() -> {
-            messages.loadPlayerPreferences();
-            expansionManager.load();
-        });
-
         // --- REGISTER EVENTS ---
-        
-        // v1.3.0 GUI Listener (Handles Codex/Dashboard clicks)
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        
-        // v1.3.0 Chat Input Listener (Handles Renaming/Creation via Chat)
         Bukkit.getPluginManager().registerEvents(new ChatInputListener(this), this);
-        
-        // v1.3.0 Migration Notification (Welcome Message)
         Bukkit.getPluginManager().registerEvents(new MigrationListener(this), this);
-
-        // Standard Protection (Mobs/Physics)
-        Bukkit.getPluginManager().registerEvents(protection, this); 
-        
-        // New v1.3.0 Protection (Roles/Permissions)
-        Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.ProtectionListener(this), this);
-        
-        // Selection Wand
+        Bukkit.getPluginManager().registerEvents(new ProtectionListener(this), this); // Player Logic
+        Bukkit.getPluginManager().registerEvents(protectionManager, this); // Mob Logic
         Bukkit.getPluginManager().registerEvents(selection, this);
         
-        // Register Leveling Listener
-        if (cfg().isLevelingEnabled()) {
+        if (cfg().isProgressionEnabled()) {
              try {
-                 Class.forName("com.aegisguard.listeners.LevelingListener");
+                 Class.forName("com.yourname.aegisguard.listeners.LevelingListener");
                  Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
              } catch (ClassNotFoundException ignored) {}
         }
         
-        if (cfg().raw().getBoolean("visualization.enabled", true)) {
+        if (cfg().raw().getBoolean("visuals.particles.border_enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
         
         if (cfg().autoRemoveBannedPlots()) {
-             try {
-                 Class.forName("com.aegisguard.listeners.BannedPlayerListener");
-                 Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
-             } catch (ClassNotFoundException ignored) {}
+             Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
-        // Register Commands
-        // v1.3.0 Command Router (/ag)
+        // --- COMMANDS ---
+        CommandHandler cmdHandler = new CommandHandler(this);
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
-            CommandHandler mainExecutor = new CommandHandler(this); 
-            aegis.setExecutor(mainExecutor);
-            // aegis.setTabCompleter(mainExecutor); // Implement TabCompleter later
+            aegis.setExecutor(cmdHandler);
+            // aegis.setTabCompleter(cmdHandler);
         }
 
         PluginCommand admin = getCommand("aegisadmin");
@@ -229,7 +201,7 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
-        // Start Tasks
+        // --- TASKS ---
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask(); 
@@ -258,15 +230,18 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(wildernessRevertTask);
         cancelTaskReflectively(mobBarrierTask);
 
-        if (plotStore != null) plotStore.saveSync();
-        if (expansionManager != null) expansionManager.saveSync();
-        if (messages != null) messages.savePlayerData();
+        if (dataStore != null) dataStore.saveSync();
+        if (petitionManager != null) petitionManager.saveSync();
         
+        // Save Player Data via LanguageManager if you added persistence there
+        // if (languageManager != null) languageManager.saveData();
+
         instance = null;
         getLogger().info("AegisGuard disabled.");
     }
     
-    // ... rest of the utility methods remain unchanged ...
+    // --- UTILITY METHODS ---
+
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
@@ -279,6 +254,8 @@ public class AegisGuard extends JavaPlugin {
         }
         return player.isOp() || player.hasPermission("aegis.admin");
     }
+
+    // --- SCHEDULERS ---
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
@@ -342,12 +319,13 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
+    // --- TASKS ---
+
     private void startAutoSaver() {
         long interval = 20L * 60 * 5; 
         Runnable logic = () -> {
-            if (plotStore != null && plotStore.isDirty()) plotStore.save();
-            if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
-            if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
+            if (dataStore != null && dataStore.isDirty()) dataStore.save();
+            if (petitionManager != null && petitionManager.isDirty()) petitionManager.save();
         };
         autoSaveTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -355,8 +333,15 @@ public class AegisGuard extends JavaPlugin {
     private void startUpkeepTask() {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
+        
         Runnable logic = () -> {
-            // Placeholder for upkeep logic
+            // Loop estates and deduct
+            for (com.yourname.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
+                 double cost = economyManager.calculateDailyUpkeep(e);
+                 if (!e.withdraw(cost)) {
+                     // Handle bankruptcy logic (e.g., freeze or warn)
+                 }
+            }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -369,7 +354,7 @@ public class AegisGuard extends JavaPlugin {
             return; 
         }
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
-        WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
+        WildernessRevertTask task = new WildernessRevertTask(this, dataStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
     }
     

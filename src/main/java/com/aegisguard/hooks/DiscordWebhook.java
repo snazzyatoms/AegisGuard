@@ -1,7 +1,6 @@
 package com.aegisguard.hooks;
 
 import com.aegisguard.AegisGuard;
-import org.bukkit.Bukkit;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.OutputStream;
@@ -14,6 +13,7 @@ import java.awt.Color;
  * DiscordWebhook
  * - Lightweight, zero-dependency class to send Embeds to Discord.
  * - Runs asynchronously to prevent server lag.
+ * - Updated for v1.3.0 Config Cache.
  */
 public class DiscordWebhook {
 
@@ -26,9 +26,10 @@ public class DiscordWebhook {
     }
 
     public boolean isEnabled() {
-        return plugin.cfg().raw().getBoolean("hooks.discord.enabled", false) 
-               && url != null 
-               && url.startsWith("http");
+        // v1.3.0: Use cached config value for performance
+        return plugin.cfg().isDiscordEnabled() 
+                && url != null 
+                && url.startsWith("http");
     }
 
     /**

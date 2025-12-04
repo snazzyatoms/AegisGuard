@@ -1,4 +1,4 @@
-package com.aegisguard.expansions;
+package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;

@@ -4,7 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.managers.PetitionManager;
-import com.aegisguard.objects.PetitionRequest; // FIXED IMPORT
+import com.aegisguard.objects.PetitionRequest; // Fixed Import
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -17,7 +17,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -63,7 +62,7 @@ public class PetitionAdminGUI {
                 OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
                 String name = requester.getName() != null ? requester.getName() : "Unknown";
 
-                List<String> lore = new ArrayList<>();
+                List<String> lore = new java.util.ArrayList<>();
                 lore.add("§7World: §f" + req.getWorldName());
                 lore.add("§7Expansion: §e" + req.getCurrentRadius() + " §7➡ §a" + req.getRequestedRadius());
                 lore.add("§7Cost Paid: §6$" + String.format("%.2f", req.getCost()));
@@ -74,8 +73,10 @@ public class PetitionAdminGUI {
                 ItemStack item = GUIManager.createItem(Material.PAPER, "§bPetition: " + name, lore);
                 
                 ItemMeta meta = item.getItemMeta();
-                meta.getPersistentDataContainer().set(reqKey, PersistentDataType.STRING, req.getRequester().toString());
-                item.setItemMeta(meta);
+                if (meta != null) {
+                    meta.getPersistentDataContainer().set(reqKey, PersistentDataType.STRING, req.getRequester().toString());
+                    item.setItemMeta(meta);
+                }
 
                 inv.setItem(slot, item);
                 slot++;

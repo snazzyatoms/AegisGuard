@@ -25,8 +25,8 @@ public class VaultHook implements Listener {
     public VaultHook(AegisGuard plugin) {
         this.plugin = plugin;
 
-        // Config Check
-        if (!plugin.cfg().useVault()) {
+        // v1.3.0 Config Check (New Method Name)
+        if (!plugin.cfg().isEconomyEnabled()) {
             plugin.getLogger().info("Economy features disabled via config.yml (Free Mode).");
             return;
         }

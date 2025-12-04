@@ -17,61 +17,56 @@
     </properties>
 
     <repositories>
-        <!-- Spigot / Paper -->
-        <repository>
-            <id>papermc</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </repository>
-
-        <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
-
-        <!-- JitPack (for Jobs Reborn & Vault) -->
+        <!-- 1. JitPack (The Heavy Lifter: Handles Vault, Jobs, mcMMO) -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
 
-        <!-- PlaceholderAPI -->
+        <!-- 2. PaperMC (Server API) -->
+        <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+
+        <!-- 3. Spigot (Fallback) -->
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        
+        <!-- 4. PlaceholderAPI -->
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
 
-        <!-- Dynmap -->
+        <!-- 5. Dynmap -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
 
-        <!-- BlueMap -->
+        <!-- 6. BlueMap -->
         <repository>
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
         </repository>
 
-        <!-- Pl3xMap (Modrinth) -->
+        <!-- 7. Modrinth (Pl3xMap) -->
         <repository>
             <id>modrinth-repo</id>
             <url>https://api.modrinth.com/maven/</url>
         </repository>
 
-        <!-- mcMMO Repository -->
-        <repository>
-            <id>mcmmo-repo</id>
-            <url>https://repo.mc-mmo.com/repository/maven-public/</url>
-        </repository>
-
-        <!-- CoreProtect Repository -->
+        <!-- 8. CoreProtect -->
         <repository>
             <id>playpro-repo</id>
             <url>https://maven.playpro.com</url>
         </repository>
         
-        <!-- WorldGuard/WorldEdit -->
+        <!-- 9. WorldGuard/WorldEdit -->
         <repository>
             <id>sk89q-repo</id>
             <url>https://maven.enginehub.org/repo/</url>
@@ -87,7 +82,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Economy -->
+        <!-- Economy (Vault via JitPack is more reliable) -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -125,7 +120,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- RPG & Jobs -->
+        <!-- ✅ Jobs Reborn (JitPack) -->
         <dependency>
             <groupId>com.github.Zrips</groupId>
             <artifactId>Jobs</artifactId>
@@ -133,8 +128,9 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ✅ mcMMO (Switched to JitPack for stability) -->
         <dependency>
-            <groupId>com.gmail.nossr50.mcMMO</groupId>
+            <groupId>com.github.mcMMO-Dev</groupId>
             <artifactId>mcMMO</artifactId>
             <version>2.1.226</version>
             <scope>provided</scope>

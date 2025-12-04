@@ -6,9 +6,12 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.VaultHook; // VaultHook stayed in economy package
+import com.aegisguard.economy.VaultHook; // VaultHook IS in economy package, keep this.
 import com.aegisguard.gui.GUIManager;
-// REMOVED: import com.aegisguard.gui.SidebarManager; (Deleted file)
+
+// --- FIXED IMPORTS ---
+import com.aegisguard.listeners.GUIListener; // Moved from .gui to .listeners
+// REMOVED: import com.aegisguard.gui.SidebarManager; (Deleted)
 // REMOVED: import com.aegisguard.economy.EconomyManager; (Moved to managers)
 
 import com.aegisguard.hooks.AegisPAPIExpansion;
@@ -21,11 +24,10 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener;
-import com.aegisguard.listeners.GUIListener; // FIXED: Imports from .listeners
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.EconomyManager;
+import com.aegisguard.managers.*; // This imports EconomyManager correctly now
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -136,6 +138,8 @@ public class AegisGuard extends JavaPlugin {
         }
 
         saveDefaultConfig();
+        
+        // Messages.yml legacy check removed
 
         this.configMgr = new AGConfig(this);
         
@@ -291,7 +295,7 @@ public class AegisGuard extends JavaPlugin {
                 Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
                 Method runMethod = scheduler.getClass().getMethod("run", org.bukkit.plugin.Plugin.class, Consumer.class, Runnable.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {}
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }

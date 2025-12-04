@@ -1,91 +1,61 @@
 # =======================================================================
-# 📈 ASCENSION SYSTEM (PRIVATE ESTATES)
+# 📈 ASCENSION SYSTEM (PTS EDITION)
 # =======================================================================
-# Focus: Personal Power, Efficiency, and QoL.
-# This system uses the player's personal wallet for upgrades.
-# Rewards are active ONLY inside the player's Private Estate.
+# Accelerated progression for testing purposes.
 # =======================================================================
 
 settings:
-  # Base cost of Level 1 upgrade (Cost increases exponentially per level)
-  base_cost: 2500.0
-  # Cost Multiplier for each subsequent level (e.g., 1.5x)
-  cost_multiplier: 1.5
+  # Cheap start ($100), Gentle curve (1.2x)
+  base_cost: 100.0
+  cost_multiplier: 1.2
   max_level: 30
   
-  # Requirement: Do players need EXP levels to ascend?
-  required_exp_levels: 5
+  # Removed XP requirement for easy testing
+  required_exp_levels: 0
 
 rewards:
-  # --- TIER 1: THE FOUNDATION (Levels 1-5) ---
-  # Focus: Basic movement and tool efficiency.
+  # --- TIER 1: FAST START ---
   1:
-    cost_override: 500.0 # Cheaper start
-    description: "&7Unlocks basic movement speed."
+    cost_override: 50.0 # Super cheap first level
+    description: "&7Welcome to the Test Server!"
     rewards:
       - "EFFECT:SPEED:1"
-      - "MEMBERS:1"
+      - "MEMBERS:2"
+      - "RADIUS:10"
   2:
-    description: "&7Unlock Haste to increase mining speed."
+    description: "&7Testing Haste effects."
     rewards:
       - "EFFECT:FAST_DIGGING:1"
-      - "MEMBERS:1"
+      - "RADIUS:5"
+  3:
+    description: "&7Testing Jump effects."
+    rewards:
+      - "EFFECT:JUMP:2"
+      - "RADIUS:5"
+
+  # --- TIER 2: THE FUN STUFF (Early Unlock) ---
   5:
-    description: "&7Milestone: Greatly increases claim border visibility."
+    description: "&bMilestone: &7Early Flight Unlock for Testing."
     rewards:
-      - "RADIUS:10"
+      - "FLAG:fly"          # <--- Flight unlocked very early
       - "EFFECT:SPEED:2"
-      - "EFFECT:JUMP:1"
-
-  # --- TIER 2: RESOURCE MASTERY (Levels 6-15) ---
-  # Focus: Resource collection, inventory, and farming QoL.
-  10:
-    description: "&aMilestone: Unlocks personal, private Auction house slot."
-    rewards:
-      - "FLAG:auction_slot"
-      - "EFFECT:LUCK:1"
-      - "RADIUS:15"
-  12:
-    description: "&7Aquatic efficiency and durability preservation."
-    rewards:
-      - "EFFECT:WATER_BREATHING:1"
-      - "FLAG:no_item_damage" # Example: Items don't take damage in this plot
-  15:
-    description: "&aMilestone: Unlock personal Flight within this Estate."
-    rewards:
-      - "FLAG:fly"
-      - "MEMBERS:3"
       - "RADIUS:20"
-
-  # --- TIER 3: DEFENSE & RESILIENCE (Levels 16-25) ---
-  # Focus: Combat, health, and fire resistance within the estate.
-  20:
-    description: "&cMilestone: Damage Resistance I and increased member cap."
-    rewards:
-      - "EFFECT:DAMAGE_RESISTANCE:1"
-      - "EFFECT:FIRE_RESISTANCE:1"
       - "MEMBERS:5"
-      - "RADIUS:25"
-  22:
-    description: "&7Absorb damage and increase health capacity."
+
+  # --- TIER 3: HIGH POWER ---
+  10:
+    description: "&cMilestone: &7God Mode Testing."
     rewards:
-      - "EFFECT:ABSORPTION:1"
-      - "RADIUS:30"
-  25:
-    description: "&cMilestone: Full Fire Immunity and Regeneration boost."
-    rewards:
-      - "EFFECT:FIRE_RESISTANCE:2"
+      - "EFFECT:DAMAGE_RESISTANCE:2"
       - "EFFECT:REGENERATION:1"
+      - "EFFECT:SATURATION:1" # No hunger
+      - "RADIUS:50"
 
-  # --- TIER 4: GOD STATUS (Levels 26-30) ---
-  # Focus: Max power and massive land capacity.
-  30:
-    description: "&6&lMASTER ASCENSION! &7Maximized area, effects, and member capacity."
+  # --- TIER 4: LIMIT TESTING ---
+  20:
+    description: "&6&lMAX TEST LEVEL"
     rewards:
-      - "RADIUS:100"
-      - "EFFECT:CONDUIT_POWER:2" # God of the Sea/Air
+      - "RADIUS:200"
+      - "MEMBERS:20"
       - "EFFECT:LUCK:5"
-      - "MEMBERS:10"
-      - "FLAG:max_stats" # Example: Enables all possible non-PvP buffs
-
-# =======================================================================
+      - "EFFECT:GLOWING:1"

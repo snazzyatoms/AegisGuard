@@ -45,6 +45,10 @@ public class Estate {
     private UUID currentRenter;
     private long rentExpires;
 
+    // --- AUCTION (New v1.3.0) ---
+    private double currentBid;
+    private UUID currentBidder;
+
     // --- PROGRESSION ---
     private int level = 1;
     private double xp = 0;
@@ -56,6 +60,7 @@ public class Estate {
     private String farewellMessage;
     private String description;
     private String borderParticle;
+    private String customBiome; // Added for BiomeGUI
 
     public Estate(UUID estateId, String name, UUID ownerId, boolean isGuildEstate, World world, Cuboid region) {
         this.estateId = estateId;
@@ -138,6 +143,12 @@ public class Estate {
     public double getSalePrice() { return salePrice; }
     public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
 
+    // Auction
+    public double getCurrentBid() { return currentBid; }
+    public void setCurrentBid(double bid) { this.currentBid = bid; }
+    public UUID getCurrentBidder() { return currentBidder; }
+    public void setBidder(UUID bidder) { this.currentBidder = bidder; }
+
     // ==========================================================
     // 📈 PROGRESSION
     // ==========================================================
@@ -158,6 +169,9 @@ public class Estate {
     public void setWelcomeMessage(String msg) { this.welcomeMessage = msg; }
     public String getFarewellMessage() { return farewellMessage; }
     public void setFarewellMessage(String msg) { this.farewellMessage = msg; }
+    
+    public String getCustomBiome() { return customBiome; }
+    public void setCustomBiome(String biome) { this.customBiome = biome; }
     
     // --- Likes ---
     public int getLikes() { return likedBy.size(); }

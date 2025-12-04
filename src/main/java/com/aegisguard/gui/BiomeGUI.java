@@ -1,8 +1,9 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
-import com.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.managers.LanguageManager;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -20,11 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * BiomeGUI
- * - Allows changing the biome of a plot.
- * - FIX: Added Back and Exit buttons for proper navigation flow.
- */
 public class BiomeGUI {
 
     private final AegisGuard plugin;
@@ -34,15 +30,18 @@ public class BiomeGUI {
     }
 
     public static class BiomeHolder implements InventoryHolder {
-        private final Plot plot;
-        public BiomeHolder(Plot plot) { this.plot = plot; }
-        public Plot getPlot() { return plot; }
+        private final Estate estate;
+        public BiomeHolder(Estate estate) { this.estate = estate; }
+        public Estate getEstate() { return estate; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome");
-        Inventory inv = Bukkit.createInventory(new BiomeHolder(plot), 45, title);
+    public void open(Player player, Estate estate) {
+        LanguageManager lang = plugin.getLanguageManager();
+        
+        // Title: "Change Biome" (Localized)
+        String title = lang.getGui("title_biome_menu"); 
+        Inventory inv = Bukkit.createInventory(new BiomeHolder(estate), 45, title);
 
         // Background Filler
         ItemStack filler = GUIManager.getFiller();
@@ -50,9 +49,11 @@ public class BiomeGUI {
 
         List<String> allowedBiomes = plugin.cfg().getAllowedBiomes();
         double cost = plugin.cfg().getBiomeChangeCost();
-        CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
-        String costStr = (cost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(cost, type) : "Free";
-        String currentBiomeStr = plot.getCustomBiome(); 
+        
+        // TODO: Move currency type to config (using VAULT for now)
+        CurrencyType type = CurrencyType.VAULT; 
+        String costStr = (cost > 0 && !plugin.isAdmin(player)) ? plugin.getEconomy().format(cost, type) : "Free";
+        String currentBiomeStr = estate.getCustomBiome(); 
         
         int slot = 0;
         for (String biomeName : allowedBiomes) {
@@ -63,13 +64,18 @@ public class BiomeGUI {
                 Material iconMat = getBiomeIcon(biome);
                 String prettyName = formatName(biome.name());
                 
-                List<String> lore = new ArrayList<>(plugin.msg().getList(player, "biome_select_lore"));
-                if (lore.isEmpty()) {
+                List<String> lore = new ArrayList<>();
+                // Fetch lore template from Lang file
+                // If missing, use default
+                List<String> template = lang.getMsgList(player, "biome_select_lore");
+                if (template.isEmpty()) {
                     lore.add("§7Cost: " + costStr);
                     lore.add(" ");
                     lore.add("§eClick to Apply");
                 } else {
-                    lore.replaceAll(line -> line.replace("{BIOME}", prettyName).replace("{COST}", costStr));
+                    for(String line : template) {
+                        lore.add(line.replace("{COST}", costStr));
+                    }
                 }
 
                 ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
@@ -87,74 +93,74 @@ public class BiomeGUI {
 
         // --- NAVIGATION BUTTONS ---
         
-        // Back Button (Returns to Flags Menu)
-        inv.setItem(40, GUIManager.createItem(Material.ARROW, "§fBack to Flags", List.of("§7Return to Plot Settings.")));
+        // Back Button
+        inv.setItem(40, GUIManager.createItem(Material.ARROW, lang.getGui("button_back")));
         
-        // Exit Button (Closes entirely)
-        inv.setItem(44, GUIManager.createItem(Material.BARRIER, "§cExit Menu", List.of("§7Close the Biome Changer.")));
+        // Exit Button
+        inv.setItem(44, GUIManager.createItem(Material.BARRIER, lang.getGui("button_close")));
         
         player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e, BiomeHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-        Plot plot = holder.getPlot();
+        Estate estate = holder.getEstate();
 
         // Navigation
-        if (e.getSlot() == 40) { // Back to Flags
-            plugin.gui().flags().open(player, plot); 
-            plugin.effects().playMenuFlip(player);
+        if (e.getSlot() == 40) { // Back
+            // plugin.gui().flags().open(player, estate); 
+            // Fallback to main menu for now
+            plugin.getGuiManager().openGuardianCodex(player);
             return;
         }
-        if (e.getSlot() == 44) { // Exit Menu
+        if (e.getSlot() == 44) { // Exit
             player.closeInventory();
-            plugin.effects().playMenuClose(player);
             return;
         }
 
         // Selection
         if (e.getSlot() < 36 && e.getCurrentItem().getType() != Material.AIR) {
             String displayName = e.getCurrentItem().getItemMeta().getDisplayName();
-            String rawBiome = displayName.replace("§a", "").toUpperCase().replace(" ", "_");
+            String rawBiome = ChatColor.stripColor(displayName).toUpperCase().replace(" ", "_");
             
             try {
                 Biome newBiome = Biome.valueOf(rawBiome);
                 
                 // Don't charge if already set
-                if (plot.getCustomBiome() != null && plot.getCustomBiome().equals(newBiome.name())) {
+                if (estate.getCustomBiome() != null && estate.getCustomBiome().equals(newBiome.name())) {
                     player.sendMessage("§cThis biome is already active.");
                     return;
                 }
 
                 double cost = plugin.cfg().getBiomeChangeCost();
-                CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
+                // Assuming Vault for simplicity in v1.3.0
+                CurrencyType type = CurrencyType.VAULT; 
 
                 // Transaction
                 if (cost > 0 && !plugin.isAdmin(player)) {
-                    if (!plugin.eco().withdraw(player, cost, type)) {
-                        plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(cost, type)));
-                        plugin.effects().playError(player);
+                    if (!plugin.getEconomy().withdraw(player, cost)) {
+                        player.sendMessage("§cInsufficient Funds. Cost: " + plugin.getEconomy().format(cost, type));
                         return;
                     }
-                    plugin.msg().send(player, "cost_deducted", Map.of("AMOUNT", plugin.eco().format(cost, type)));
+                    player.sendMessage("§aPaid " + plugin.getEconomy().format(cost, type));
                 }
 
                 // Apply
                 player.closeInventory();
                 player.sendMessage("§eTerraforming... this may take a moment.");
                 
-                applyBiomeChange(plot, newBiome);
+                applyBiomeChange(estate, newBiome);
                 
-                plot.setCustomBiome(newBiome.name());
-                plugin.store().setDirty(true);
+                estate.setCustomBiome(newBiome.name());
+                // plugin.getEstateManager().saveEstate(estate); // Save logic
                 
-                plugin.msg().send(player, "biome_changed", Map.of("BIOME", formatName(newBiome.name())));
-                plugin.effects().playConfirm(player);
+                player.sendMessage("§a✔ Biome changed to " + formatName(newBiome.name()));
+                // plugin.effects().playConfirm(player);
                 
-                // Force client update
-                refreshChunks(player, plot);
+                // Force client update message
+                refreshChunks(player, estate);
 
             } catch (Exception ex) {
                 player.sendMessage("§cError applying biome: " + ex.getMessage());
@@ -163,14 +169,14 @@ public class BiomeGUI {
         }
     }
 
-    private void applyBiomeChange(Plot plot, Biome biome) {
-        World world = Bukkit.getWorld(plot.getWorld());
+    private void applyBiomeChange(Estate estate, Biome biome) {
+        World world = estate.getWorld();
         if (world == null) return;
 
-        int minX = plot.getX1();
-        int minZ = plot.getZ1();
-        int maxX = plot.getX2();
-        int maxZ = plot.getZ2();
+        int minX = estate.getRegion().getLowerNE().getBlockX();
+        int minZ = estate.getRegion().getLowerNE().getBlockZ();
+        int maxX = estate.getRegion().getUpperSW().getBlockX();
+        int maxZ = estate.getRegion().getUpperSW().getBlockZ();
         int minY = world.getMinHeight();
         int maxY = world.getMaxHeight();
 
@@ -178,6 +184,7 @@ public class BiomeGUI {
         for (int x = minX; x <= maxX; x += 4) { 
             for (int z = minZ; z <= maxZ; z += 4) {
                 for (int y = minY; y < maxY; y += 4) {
+                    // Strict bounds check before setting
                     if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                         world.setBiome(x, y, z, biome);
                     }
@@ -186,9 +193,9 @@ public class BiomeGUI {
         }
     }
     
-    private void refreshChunks(Player player, Plot plot) {
-        // We will just inform the user as a fallback.
-        player.sendMessage("§7(Note: You may need to reconnect or leave the area to see visual changes fully.)");
+    private void refreshChunks(Player player, Estate estate) {
+        // Inform user to relog/move
+        player.sendMessage("§7(Note: You may need to leave the area or relog to see visual changes.)");
     }
 
     private Material getBiomeIcon(Biome biome) {
@@ -201,8 +208,8 @@ public class BiomeGUI {
         if (name.contains("PLAINS")) return Material.GRASS_BLOCK;
         if (name.contains("BADLANDS") || name.contains("MESA")) return Material.TERRACOTTA;
         if (name.contains("MUSHROOM")) return Material.RED_MUSHROOM;
-        if (name.contains("CHERRY")) return Material.PINK_PETALS; // 1.20+
-        if (name.contains("DEEP_DARK") || name.contains("SCULK")) return Material.SCULK_SENSOR; // 1.19+
+        if (name.contains("CHERRY")) return Material.PINK_PETALS; 
+        if (name.contains("DEEP_DARK") || name.contains("SCULK")) return Material.SCULK_SENSOR; 
         if (name.contains("OCEAN") || name.contains("RIVER")) return Material.WATER_BUCKET;
         if (name.contains("NETHER") || name.contains("CRIMSON")) return Material.NETHERRACK;
         if (name.contains("END")) return Material.END_STONE;

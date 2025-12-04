@@ -1,10 +1,10 @@
 package com.aegisguard.gui;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.gui.GUIManager;
-import com.yourname.aegisguard.managers.AllianceManager;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.objects.Guild;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.GUIManager;
+import com.aegisguard.managers.AllianceManager;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Guild;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

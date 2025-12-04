@@ -6,8 +6,11 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.VaultHook; // This stays here
+import com.aegisguard.economy.VaultHook; // VaultHook stayed in economy package
 import com.aegisguard.gui.GUIManager;
+// REMOVED: import com.aegisguard.gui.SidebarManager; (Deleted file)
+// REMOVED: import com.aegisguard.economy.EconomyManager; (Moved to managers)
+
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
@@ -22,7 +25,7 @@ import com.aegisguard.listeners.GUIListener; // FIXED: Imports from .listeners
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*; // FIXED: Imports EconomyManager from .managers
+import com.aegisguard.managers.*; // This imports EconomyManager correctly from managers package
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -48,7 +51,7 @@ public class AegisGuard extends JavaPlugin {
         return instance;
     }
     
-    // --- MANAGERS ---
+    // --- v1.3.0 MANAGERS ---
     private AGConfig configMgr;
     private IDataStore dataStore;
     private LanguageManager languageManager;
@@ -61,7 +64,7 @@ public class AegisGuard extends JavaPlugin {
     private ProgressionManager progressionManager;
     private GUIManager guiManager;
     
-    // --- UTILS ---
+    // --- LEGACY / UTILS ---
     private SelectionService selection;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -288,7 +291,7 @@ public class AegisGuard extends JavaPlugin {
                 Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
                 Method runMethod = scheduler.getClass().getMethod("run", org.bukkit.plugin.Plugin.class, Consumer.class, Runnable.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
-            } catch (Exception e) {}
+            } catch (Exception e) { e.printStackTrace(); }
         } else {
             Bukkit.getScheduler().runTask(this, task);
         }
@@ -346,7 +349,9 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             for (com.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
                  double cost = economyManager.calculateDailyUpkeep(e);
-                 if (!e.withdraw(cost)) { } 
+                 if (!e.withdraw(cost)) {
+                     // Handle bankruptcy
+                 }
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);

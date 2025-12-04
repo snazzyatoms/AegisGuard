@@ -1,7 +1,7 @@
-package com.yourname.aegisguard.listeners;
+package com.aegisguard.listeners;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

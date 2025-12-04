@@ -1,6 +1,6 @@
-package com.yourname.aegisguard.data;
+package com.aegisguard.data;
 
-import com.yourname.aegisguard.objects.Estate; // v1.3.0 Object
+import com.aegisguard.objects.Estate; // v1.3.0 Object
 import org.bukkit.Location;
 
 import java.util.Collection;

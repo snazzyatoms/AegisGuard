@@ -1,10 +1,10 @@
-package com.yourname.aegisguard.commands;
+package com.aegisguard.commands;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.managers.RoleManager;
-import com.yourname.aegisguard.objects.Cuboid;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.managers.RoleManager;
+import com.aegisguard.objects.Cuboid;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;

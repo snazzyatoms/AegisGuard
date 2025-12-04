@@ -25,7 +25,7 @@ import com.aegisguard.listeners.GUIListener; // FIXED: Imports from .listeners
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*; // This imports EconomyManager correctly from managers package
+import com.aegisguard.managers.EconomyManager;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;

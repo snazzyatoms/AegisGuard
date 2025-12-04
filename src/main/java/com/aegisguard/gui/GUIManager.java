@@ -4,17 +4,15 @@ import com.yourname.aegisguard.AegisGuard;
 import com.yourname.aegisguard.managers.GuildGUI;
 import com.yourname.aegisguard.managers.LanguageManager;
 import com.yourname.aegisguard.objects.Estate;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,164 +23,53 @@ public class GUIManager {
     private final NamespacedKey actionKey;
 
     // --- SUB-MENUS ---
+    private final PlayerGUI playerGUI; // Restored!
     private final PetitionGUI petitionGUI;
     private final PetitionAdminGUI petitionAdminGUI;
     private final GuildGUI guildGUI;
     private final AdminGUI adminGUI;
     private final LandGrantGUI landGrantGUI;
+    private final InfoGUI infoGUI; // Added back
+    // private final VisitGUI visitGUI; // Add back if VisitGUI is updated
     
-    // Legacy / Placeholder GUIs (Keep these if you haven't updated them yet)
-    // private final PlayerGUI playerGUI;
-    // private final SettingsGUI settingsGUI;
-    // private final RolesGUI rolesGUI;
-
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         
         // Initialize all sub-menus
+        this.playerGUI = new PlayerGUI(plugin); // The Main Menu Logic is here now
         this.petitionGUI = new PetitionGUI(plugin);
         this.petitionAdminGUI = new PetitionAdminGUI(plugin);
         this.guildGUI = new GuildGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
         this.landGrantGUI = new LandGrantGUI(plugin);
-        
-        // Initialize Legacy GUIs
-        // this.playerGUI = new PlayerGUI(plugin);
-        // this.settingsGUI = new SettingsGUI(plugin);
+        this.infoGUI = new InfoGUI(plugin);
     }
 
     // --- OPENERS ---
     
-    public void openMainMenu(Player player) {
-        openGuardianCodex(player);
-    }
-    
-    public void openGuardianCodex(Player player) {
-        LanguageManager lang = plugin.getLanguageManager();
-        Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
-        
-        String title = lang.getGui("title_main");
-        Inventory inv = Bukkit.createInventory(null, 27, title);
-
-        // Background Filler
-        ItemStack filler = getFiller();
-        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
-
-        // =========================================================
-        // 📍 CENTER SLOT: CURRENT LOCATION STATUS (The Sidebar Replacement)
-        // =========================================================
-        ItemStack statusItem;
-        if (estate != null) {
-            // Standing in Estate
-            statusItem = new ItemStack(Material.FILLED_MAP);
-            ItemMeta meta = statusItem.getItemMeta();
-            meta.setDisplayName(lang.getMsg(player, "enter_title").replace("%name%", estate.getName()));
-            
-            List<String> lore = new ArrayList<>();
-            lore.add(" ");
-            lore.add("&8» &7Owner: &f" + Bukkit.getOfflinePlayer(estate.getOwnerId()).getName());
-            // lore.add("&8» &7Level: &e" + estate.getLevel()); 
-            // lore.add("&8» &7Tax Paid Until: &a" + getReadableDate(estate.getPaidUntil()));
-            lore.add(" ");
-            lore.add("&eClick to Manage");
-            
-            meta.setLore(colorize(lore));
-            // Tag for listener
-            meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "manage_current_estate");
-            statusItem.setItemMeta(meta);
-            
-            // --- 🔮 PERKS BUTTON (Side Window) ---
-            // Slot 17 (Middle Right)
-            ItemStack perksIcon = createItem(Material.ENCHANTED_BOOK, "&d🔮 Active Estate Perks");
-            ItemMeta perksMeta = perksIcon.getItemMeta();
-            List<String> perksLore = new ArrayList<>();
-            perksLore.add(" ");
-            perksLore.add("&7View active effects & buffs.");
-            perksLore.add(" ");
-            perksLore.add("&eClick to View ➡");
-            
-            perksMeta.setLore(colorize(perksLore));
-            perksMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "view_perks");
-            perksIcon.setItemMeta(perksMeta);
-            
-            inv.setItem(17, perksIcon);
-
-        } else {
-            // Standing in Wilderness
-            statusItem = new ItemStack(Material.GRASS_BLOCK);
-            ItemMeta meta = statusItem.getItemMeta();
-            meta.setDisplayName(lang.getMsg(player, "exit_title")); // "Wilderness"
-            List<String> lore = new ArrayList<>();
-            lore.add("&7You are standing in unclaimed territory.");
-            lore.add(" ");
-            lore.add("&eClick to Deed (Claim) this land.");
-            meta.setLore(colorize(lore));
-            
-            meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "start_claim");
-            statusItem.setItemMeta(meta);
-        }
-        
-        inv.setItem(13, statusItem);
-
-        // =========================================================
-        // 🔘 NAVIGATION BUTTONS
-        // =========================================================
-        
-        // [11] My Estates List
-        inv.setItem(11, createActionItem(Material.OAK_DOOR, "&6My Properties", "open_estates",
-            "&7View and manage all your", "&7Private and Guild estates.", " ", "&eClick to View"));
-
-        // [15] Guild Dashboard
-        inv.setItem(15, createActionItem(Material.GOLDEN_HELMET, "&eGuild Dashboard", "open_guild",
-            "&7Access your Alliance,", "&7Treasury, and Roster.", " ", "&eClick to Open"));
-
-        // [22] Settings / Language
-        inv.setItem(22, createActionItem(Material.COMPARATOR, "&7Personal Settings", "open_settings",
-            "&7Language, Sounds, and Notifications.", " ", "&eClick to Configure"));
-
-        player.openInventory(inv);
-        playClick(player);
-    }
-    
     /**
-     * NEW: The "Side Window" Menu for Active Perks.
+     * Opens the Main Menu (Guardian Codex).
+     * Delegates to PlayerGUI.
      */
-    public void openPerksMenu(Player player, Estate estate) {
-        Inventory inv = Bukkit.createInventory(null, 27, "&8Active Perks");
-        
-        ItemStack filler = getFiller();
-        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
-
-        // Placeholder for fetching actual buffs from Ascension/Bastion manager
-        int slot = 10;
-        
-        inv.setItem(slot++, createItem(Material.GOLDEN_PICKAXE, "&e⚡ Haste II", 
-            List.of("&7Mining speed increased.", "&7Source: &fBastion Level 5")));
-
-        inv.setItem(slot++, createItem(Material.SUGAR, "&b💨 Speed I", 
-            List.of("&7Movement speed increased.", "&7Source: &fBastion Level 2")));
-            
-        inv.setItem(slot++, createItem(Material.FEATHER, "&f🕊 Flight", 
-            List.of("&7Creative flight enabled.", "&7Source: &fAscension Level 10")));
-
-        // Back Button
-        inv.setItem(22, createActionItem(Material.ARROW, "&c⬅ Back", "back_to_codex"));
-
-        player.openInventory(inv);
+    public void openMain(Player player) {
+        playerGUI.open(player);
     }
-
-    public void openDiagnostics(Player player) {
-        player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal (v1.3.0).");
+    
+    // Alias for older code
+    public void openGuardianCodex(Player player) {
+        openMain(player);
     }
-
+    
     // --- GETTERS ---
 
+    public PlayerGUI main() { return playerGUI; }
     public PetitionGUI petition() { return petitionGUI; }
     public PetitionAdminGUI petitionAdmin() { return petitionAdminGUI; }
     public GuildGUI guild() { return guildGUI; }
     public AdminGUI admin() { return adminGUI; }
     public LandGrantGUI landGrant() { return landGrantGUI; }
+    public InfoGUI info() { return infoGUI; }
 
     // ======================================
     // --- UTILITIES (Static Helpers) ---

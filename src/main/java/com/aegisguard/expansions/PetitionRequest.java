@@ -1,15 +1,20 @@
-package com.aegisguard.expansions;
+package com.yourname.aegisguard.managers; // or .objects if you prefer
 
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
-public class ExpansionRequest {
+import java.util.UUID;
+
+/**
+ * Represents a pending request from a player to expand their Private Estate.
+ * (Renamed from ExpansionRequest to match v1.3.0 "Petition" terminology).
+ */
+public class PetitionRequest {
 
     private final UUID requester;
-    private final UUID plotOwner;
-    private final UUID plotId;
+    private final UUID estateOwner; // Usually same as requester
+    private final UUID estateId;
     private final String worldName;
     private final int currentRadius;
     private final int requestedRadius;
@@ -19,11 +24,11 @@ public class ExpansionRequest {
     private boolean approved;
     private boolean denied;
 
-    public ExpansionRequest(UUID requester, UUID plotOwner, UUID plotId, String worldName,
-                            int currentRadius, int requestedRadius, double cost) {
+    public PetitionRequest(UUID requester, UUID estateOwner, UUID estateId, String worldName,
+                           int currentRadius, int requestedRadius, double cost) {
         this.requester = requester;
-        this.plotOwner = plotOwner;
-        this.plotId = plotId;
+        this.estateOwner = estateOwner;
+        this.estateId = estateId;
         this.worldName = worldName;
         this.currentRadius = currentRadius;
         this.requestedRadius = requestedRadius;
@@ -35,8 +40,8 @@ public class ExpansionRequest {
 
     // --- Getters ---
     public UUID getRequester() { return requester; }
-    public UUID getPlotOwner() { return plotOwner; }
-    public UUID getPlotId() { return plotId; }
+    public UUID getEstateOwner() { return estateOwner; }
+    public UUID getEstateId() { return estateId; }
     public String getWorldName() { return worldName; }
     public int getCurrentRadius() { return currentRadius; }
     public int getRequestedRadius() { return requestedRadius; }
@@ -46,7 +51,7 @@ public class ExpansionRequest {
     // --- Helper Methods ---
     public World getWorld() { return Bukkit.getWorld(worldName); }
     public OfflinePlayer getRequesterPlayer() { return Bukkit.getOfflinePlayer(requester); }
-    public OfflinePlayer getOwnerPlayer() { return Bukkit.getOfflinePlayer(plotOwner); }
+    public OfflinePlayer getOwnerPlayer() { return Bukkit.getOfflinePlayer(estateOwner); }
 
     // --- Status Logic ---
     public synchronized boolean isApproved() { return approved; }

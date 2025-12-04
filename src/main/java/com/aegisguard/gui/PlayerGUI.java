@@ -36,18 +36,16 @@ public class PlayerGUI {
         Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
         
         String title = lang.getGui("title_main");
+        if (title.contains("Missing")) title = "§8Guardian Codex";
+        
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 27, title);
 
-        // Background Filler
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
-        // =========================================================
-        // 📍 CENTER SLOT: CURRENT LOCATION STATUS
-        // =========================================================
+        // Center Slot
         ItemStack statusItem;
         if (estate != null) {
-            // Standing in Estate
             statusItem = new ItemStack(Material.FILLED_MAP);
             ItemMeta meta = statusItem.getItemMeta();
             meta.setDisplayName(lang.getMsg(player, "enter_title").replace("%name%", estate.getName()));
@@ -58,36 +56,26 @@ public class PlayerGUI {
             lore.add(" ");
             lore.add("&eClick to Manage");
             
-            // Convert & Colorize
-            List<String> coloredLore = new ArrayList<>();
-            for(String s : lore) coloredLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', s));
-            meta.setLore(coloredLore);
-            
-            // Tag for listener
+            meta.setLore(colorize(lore));
             meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "manage_current_estate");
             statusItem.setItemMeta(meta);
             
-            // --- 🔮 PERKS BUTTON ---
+            // Perks Button (Side Window)
             inv.setItem(17, plugin.getGuiManager().createActionItem(Material.ENCHANTED_BOOK, 
                 "&d🔮 Active Estate Perks", 
                 "view_perks", 
                 "&7View active effects & buffs.", " ", "&eClick to View ➡"));
 
         } else {
-            // Standing in Wilderness
             statusItem = new ItemStack(Material.GRASS_BLOCK);
             ItemMeta meta = statusItem.getItemMeta();
-            meta.setDisplayName(lang.getMsg(player, "exit_title")); // "Wilderness"
+            meta.setDisplayName(lang.getMsg(player, "exit_title"));
             
             List<String> lore = new ArrayList<>();
             lore.add("&7You are standing in unclaimed territory.");
             lore.add(" ");
             lore.add("&eClick to Deed (Claim) this land.");
-            
-            // Convert & Colorize
-            List<String> coloredLore = new ArrayList<>();
-            for(String s : lore) coloredLore.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', s));
-            meta.setLore(coloredLore);
+            meta.setLore(colorize(lore));
             
             meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "start_claim");
             statusItem.setItemMeta(meta);
@@ -95,21 +83,15 @@ public class PlayerGUI {
         
         inv.setItem(13, statusItem);
 
-        // =========================================================
-        // 🔘 NAVIGATION BUTTONS
-        // =========================================================
-        
-        // [11] My Estates
+        // Buttons
         inv.setItem(11, plugin.getGuiManager().createActionItem(Material.OAK_DOOR, 
             "&6My Properties", "open_estates", 
             "&7View and manage all your", "&7Private and Guild estates.", " ", "&eClick to View"));
 
-        // [15] Guild Dashboard
         inv.setItem(15, plugin.getGuiManager().createActionItem(Material.GOLDEN_HELMET, 
             "&eGuild Dashboard", "open_guild", 
             "&7Access your Alliance,", "&7Treasury, and Roster.", " ", "&eClick to Open"));
 
-        // [22] Settings
         inv.setItem(22, plugin.getGuiManager().createActionItem(Material.COMPARATOR, 
             "&7Personal Settings", "open_settings", 
             "&7Language, Sounds, and Notifications.", " ", "&eClick to Configure"));
@@ -118,13 +100,35 @@ public class PlayerGUI {
         GUIManager.playClick(player);
     }
     
-    // This handles clicks SPECIFICALLY for the PlayerMenuHolder
-    public void handleClick(Player player, InventoryClickEvent e) {
-        // This is actually handled by GuiListener using NBT tags now!
-        // You don't technically need logic here if GuiListener is doing the work.
-        // But if you want to keep it modular:
+    /**
+     * NEW: The "Side Window" Menu for Active Perks.
+     */
+    public void openPerksMenu(Player player, Estate estate) {
+        Inventory inv = Bukkit.createInventory(null, 27, "§8Active Perks");
         
-        e.setCancelled(true);
-        // Logic is delegated to NBT tags in GuiListener.java
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
+
+        // Placeholder logic for perks
+        int slot = 10;
+        inv.setItem(slot++, GUIManager.createItem(Material.GOLDEN_PICKAXE, "&e⚡ Haste II", 
+            List.of("&7Mining speed increased.", "&7Source: &fBastion Level 5")));
+
+        inv.setItem(slot++, GUIManager.createItem(Material.SUGAR, "&b💨 Speed I", 
+            List.of("&7Movement speed increased.", "&7Source: &fBastion Level 2")));
+            
+        inv.setItem(slot++, GUIManager.createItem(Material.FEATHER, "&f🕊 Flight", 
+            List.of("&7Creative flight enabled.", "&7Source: &fAscension Level 10")));
+
+        // Back Button
+        inv.setItem(22, plugin.getGuiManager().createActionItem(Material.ARROW, "&c⬅ Back", "back_to_codex"));
+
+        player.openInventory(inv);
+    }
+
+    private List<String> colorize(List<String> list) {
+        List<String> colored = new ArrayList<>();
+        for (String s : list) colored.add(org.bukkit.ChatColor.translateAlternateColorCodes('&', s));
+        return colored;
     }
 }

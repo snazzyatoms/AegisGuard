@@ -1,7 +1,7 @@
 package com.aegisguard.gui;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

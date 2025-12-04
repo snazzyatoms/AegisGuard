@@ -1,7 +1,7 @@
-package com.yourname.aegisguard.visualization;
+package com.aegisguard.visualization;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;

@@ -120,7 +120,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ Jobs Reborn (Set to Snapshot for Build Stability) -->
+        <!-- ✅ Jobs Reborn (Fixed: Uses master-SNAPSHOT) -->
         <dependency>
             <groupId>com.github.Zrips</groupId>
             <artifactId>Jobs</artifactId>
@@ -128,7 +128,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ mcMMO (Set to Snapshot for Build Stability) -->
+        <!-- ✅ mcMMO (Fixed: Uses master-SNAPSHOT) -->
         <dependency>
             <groupId>com.github.mcMMO-Dev</groupId>
             <artifactId>mcMMO</artifactId>

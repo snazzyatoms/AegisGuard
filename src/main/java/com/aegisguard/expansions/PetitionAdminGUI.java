@@ -1,9 +1,10 @@
-package com.aegisguard.gui;
+package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.GUIManager;
 import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.managers.PetitionManager;
-import com.aegisguard.managers.PetitionManager.PetitionRequest;
+import com.aegisguard.objects.PetitionRequest; // FIXED IMPORT
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -15,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
-import com.aegisguard.objects.PetitionRequest;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,11 +40,11 @@ public class PetitionAdminGUI {
         LanguageManager lang = plugin.getLanguageManager();
         PetitionManager manager = plugin.getPetitionManager();
         
-        // Title: "Expansion Requests" or "Royal Petitions"
         String title = lang.getGui("title_petition_admin"); 
+        if (title.contains("Missing")) title = "§8Expansion Requests";
+
         Inventory inv = Bukkit.createInventory(new PetitionAdminHolder(), 54, title);
 
-        // Fill background
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
@@ -63,7 +64,7 @@ public class PetitionAdminGUI {
                 String name = requester.getName() != null ? requester.getName() : "Unknown";
 
                 List<String> lore = new ArrayList<>();
-                lore.add("§7World: §f" + req.getWorld()); // Fixed getter
+                lore.add("§7World: §f" + req.getWorldName());
                 lore.add("§7Expansion: §e" + req.getCurrentRadius() + " §7➡ §a" + req.getRequestedRadius());
                 lore.add("§7Cost Paid: §6$" + String.format("%.2f", req.getCost()));
                 lore.add(" ");
@@ -72,7 +73,6 @@ public class PetitionAdminGUI {
 
                 ItemStack item = GUIManager.createItem(Material.PAPER, "§bPetition: " + name, lore);
                 
-                // Store Request ID in the item
                 ItemMeta meta = item.getItemMeta();
                 meta.getPersistentDataContainer().set(reqKey, PersistentDataType.STRING, req.getRequester().toString());
                 item.setItemMeta(meta);
@@ -82,9 +82,7 @@ public class PetitionAdminGUI {
             }
         }
 
-        // Back Button
         inv.setItem(49, GUIManager.createItem(Material.ARROW, lang.getGui("button_back")));
-
         admin.openInventory(inv);
     }
 
@@ -94,13 +92,11 @@ public class PetitionAdminGUI {
         
         if (item == null || item.getItemMeta() == null) return;
 
-        // Handle Back Button
         if (e.getSlot() == 49) {
             plugin.getGuiManager().admin().open(admin);
             return;
         }
 
-        // Handle Request Click
         if (item.getItemMeta().getPersistentDataContainer().has(reqKey, PersistentDataType.STRING)) {
             String uuidStr = item.getItemMeta().getPersistentDataContainer().get(reqKey, PersistentDataType.STRING);
             UUID requesterId = UUID.fromString(uuidStr);
@@ -110,26 +106,22 @@ public class PetitionAdminGUI {
 
             if (req == null) {
                 admin.sendMessage("§cThis petition has expired or was handled.");
-                open(admin); // Refresh
+                open(admin);
                 return;
             }
 
             if (e.isLeftClick()) {
-                // Approve
                 if (manager.approveRequest(req, admin)) {
                     admin.sendMessage("§a✔ Petition Approved.");
                     GUIManager.playSuccess(admin);
                 } else {
                     admin.sendMessage("§cFailed to approve (Overlap or Error).");
-                    // GUIManager.playError(admin);
                 }
             } else if (e.isRightClick()) {
-                // Deny
                 manager.denyRequest(req, admin);
                 admin.sendMessage("§c✖ Petition Denied.");
-                // GUIManager.playClick(admin);
             }
-            open(admin); // Refresh list
+            open(admin);
         }
     }
 }

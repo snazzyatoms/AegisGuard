@@ -1,4 +1,4 @@
-package com.snazzyatoms.aegisguard;
+package com.aegisguard;
 
 import com.yourname.aegisguard.admin.AdminCommand;
 import com.yourname.aegisguard.commands.CommandHandler;

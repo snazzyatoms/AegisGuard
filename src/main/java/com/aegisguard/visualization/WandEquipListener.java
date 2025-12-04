@@ -1,9 +1,7 @@
 package com.aegisguard.visualization;
 
-
-import static com.aegisguard.selection.SelectionService.WAND_KEY;
-import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 import com.aegisguard.AegisGuard;
+import com.aegisguard.visualization.PlotVisualizerTask;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,8 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.yourname.aegisguard.selection.SelectionService.WAND_KEY;
-import static com.yourname.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
+// FIXED IMPORTS
+import static com.aegisguard.selection.SelectionService.WAND_KEY;
+import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 
 public class WandEquipListener implements Listener {
 
@@ -35,13 +34,9 @@ public class WandEquipListener implements Listener {
         Player p = e.getPlayer();
         ItemStack newItem = p.getInventory().getItem(e.getNewSlot());
 
-        // v1.3.0: Check NBT Tags instead of Materials.
-        // This supports Lightning Rods, Blaze Rods, or anything else you config.
         boolean isWand = false;
-        
         if (newItem != null && newItem.hasItemMeta()) {
             ItemMeta meta = newItem.getItemMeta();
-            // Check for Player Wand (Lightning Rod) OR Admin Wand (Blaze Rod)
             if (meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE) || 
                 meta.getPersistentDataContainer().has(SERVER_WAND_KEY, PersistentDataType.BYTE)) {
                 isWand = true;
@@ -62,20 +57,14 @@ public class WandEquipListener implements Listener {
 
     private void startVisualizer(Player p) {
         if (activeTasks.containsKey(p.getUniqueId())) return;
-
         PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
         
         if (plugin.isFolia()) {
-            // Folia: Use the Global Region Scheduler via reflection helper
             try {
-                // 20 ticks = 1 second refresh rate
                 Object task = scheduleFoliaTask(runnable);
                 activeTasks.put(p.getUniqueId(), task);
-            } catch (Exception e) {
-                plugin.getLogger().warning("Failed to schedule visualizer on Folia: " + e.getMessage());
-            }
+            } catch (Exception e) {}
         } else {
-            // Bukkit: Standard Async Timer
             BukkitTask task = runnable.runTaskTimerAsynchronously(plugin, 0L, 20L);
             activeTasks.put(p.getUniqueId(), task);
         }
@@ -84,29 +73,16 @@ public class WandEquipListener implements Listener {
     private void stopVisualizer(Player p) {
         Object task = activeTasks.remove(p.getUniqueId());
         if (task != null) {
-            if (task instanceof BukkitTask) {
-                ((BukkitTask) task).cancel();
-            } 
-            else if (task instanceof PlotVisualizerTask) {
-                ((PlotVisualizerTask) task).cancel();
-            }
-            else {
-                // Reflection cancel for Folia
-                try {
-                    task.getClass().getMethod("cancel").invoke(task);
-                } catch (Exception ignored) {}
-            }
+            if (task instanceof BukkitTask) ((BukkitTask) task).cancel();
+            else if (task instanceof PlotVisualizerTask) ((PlotVisualizerTask) task).cancel();
         }
     }
     
-    // Helper for Folia scheduling to keep code clean
     private Object scheduleFoliaTask(Runnable run) {
         try {
             Object scheduler = org.bukkit.Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
             java.lang.reflect.Method method = scheduler.getClass().getMethod("runAtFixedRate", org.bukkit.plugin.Plugin.class, java.util.function.Consumer.class, long.class, long.class);
             return method.invoke(scheduler, plugin, (java.util.function.Consumer<Object>) t -> run.run(), 1L, 20L);
-        } catch (Exception e) {
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 }

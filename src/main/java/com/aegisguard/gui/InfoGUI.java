@@ -1,6 +1,7 @@
-package com.aegisguard.gui;
+package com.yourname.aegisguard.gui;
 
-import com.aegisguard.AegisGuard;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.managers.LanguageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,8 +9,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.List;
 
 public class InfoGUI {
 
@@ -24,58 +23,59 @@ public class InfoGUI {
     }
 
     public void open(Player player) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "codex_gui_title"), "§9§lThe Guardian Codex");
+        LanguageManager lang = plugin.getLanguageManager();
+        String title = lang.getGui("title_main"); // Reusing Main Title or create "title_help"
         Inventory inv = Bukkit.createInventory(new InfoHolder(), 45, title);
 
         ItemStack filler = GUIManager.getFiller();
         for(int i=0; i<45; i++) inv.setItem(i, filler);
 
-        // --- 1. CLAIMING ---
+        // --- 1. CLAIMING / ESTATES ---
         inv.setItem(10, GUIManager.createItem(Material.GOLDEN_HOE, 
-            plugin.msg().get(player, "codex_claim_title"), 
-            plugin.msg().getList(player, "codex_claim_lore")));
+            lang.getMsg(player, "codex_claim_title"), 
+            lang.getMsgList(player, "codex_claim_lore")));
 
-        // --- 2. TRAVEL ---
-        inv.setItem(12, GUIManager.createItem(Material.ENDER_PEARL, 
-            plugin.msg().get(player, "codex_travel_title"), 
-            plugin.msg().getList(player, "codex_travel_lore")));
+        // --- 2. GUILDS / ALLIANCES (New v1.3.0) ---
+        inv.setItem(12, GUIManager.createItem(Material.GOLDEN_HELMET, 
+            lang.getMsg(player, "codex_guild_title"), 
+            lang.getMsgList(player, "codex_guild_lore")));
 
-        // --- 3. MENUS ---
+        // --- 3. MENUS & COMMANDS ---
         inv.setItem(14, GUIManager.createItem(Material.WRITABLE_BOOK, 
-            plugin.msg().get(player, "codex_menus_title"), 
-            plugin.msg().getList(player, "codex_menus_lore")));
+            lang.getMsg(player, "codex_menus_title"), 
+            lang.getMsgList(player, "codex_menus_lore")));
 
-        // --- 4. SECURITY ---
+        // --- 4. SECURITY & ROLES ---
         inv.setItem(16, GUIManager.createItem(Material.SHIELD, 
-            plugin.msg().get(player, "codex_security_title"), 
-            plugin.msg().getList(player, "codex_security_lore")));
+            lang.getMsg(player, "codex_security_title"), 
+            lang.getMsgList(player, "codex_security_lore")));
         
-        // --- 5. ECONOMY ---
+        // --- 5. ECONOMY & LIQUIDATION ---
         inv.setItem(22, GUIManager.createItem(Material.GOLD_INGOT, 
-            plugin.msg().get(player, "codex_economy_title"), 
-            plugin.msg().getList(player, "codex_economy_lore")));
+            lang.getMsg(player, "codex_economy_title"), 
+            lang.getMsgList(player, "codex_economy_lore")));
 
         // --- 6. IDENTITY ---
         inv.setItem(24, GUIManager.createItem(Material.NAME_TAG, 
-            plugin.msg().get(player, "codex_identity_title"), 
-            plugin.msg().getList(player, "codex_identity_lore")));
+            lang.getMsg(player, "codex_identity_title"), 
+            lang.getMsgList(player, "codex_identity_lore")));
         
-        // --- 7. ADVANCED ---
+        // --- 7. ADVANCED (Zoning/Banned) ---
         inv.setItem(31, GUIManager.createItem(Material.EXPERIENCE_BOTTLE, 
-            plugin.msg().get(player, "codex_advanced_title"), 
-            plugin.msg().getList(player, "codex_advanced_lore")));
+            lang.getMsg(player, "codex_advanced_title"), 
+            lang.getMsgList(player, "codex_advanced_lore")));
 
         // --- Navigation ---
         inv.setItem(40, GUIManager.createItem(Material.NETHER_STAR, 
-            plugin.msg().get(player, "button_back_menu"), // New key
-            plugin.msg().getList(player, "back_menu_lore")));
+            lang.getGui("button_back"), 
+            null));
             
         inv.setItem(44, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
-            plugin.msg().getList(player, "exit_lore")));
+            lang.getGui("button_close"), 
+            null));
         
         player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
@@ -83,14 +83,14 @@ public class InfoGUI {
         if (e.getCurrentItem() == null) return;
         
         if (e.getSlot() == 40) { 
-            plugin.gui().openMain(player);
-            plugin.effects().playMenuFlip(player);
+            plugin.getGuiManager().openGuardianCodex(player); // Return to Dashboard
+            // plugin.effects().playMenuFlip(player);
         } else if (e.getSlot() == 44) { 
             player.closeInventory();
-            plugin.effects().playMenuClose(player);
+            // plugin.effects().playMenuClose(player);
         } else {
             if (e.getCurrentItem().getType() != Material.GRAY_STAINED_GLASS_PANE) {
-                plugin.effects().playMenuFlip(player);
+                // plugin.effects().playMenuFlip(player);
             }
         }
     }

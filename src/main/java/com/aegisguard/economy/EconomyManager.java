@@ -1,20 +1,32 @@
-package com.aegisguard.economy;
+package com.yourname.aegisguard.managers;
 
-import com.aegisguard.AegisGuard;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.economy.CurrencyType;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.apache.commons.lang.WordUtils; // Built-in Bukkit lib for capitalization
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.Map;
 
 public class EconomyManager {
 
     private final AegisGuard plugin;
+    
+    // Liquidation Cache
+    private final Map<Material, Double> liquidationValues = new HashMap<>();
+    private double pricePerEnchantLevel;
+    private boolean respectDurability;
 
     public EconomyManager(AegisGuard plugin) {
         this.plugin = plugin;
+        loadLiquidationValues(); // Load v1.3.0 "Trash to Cash" values
     }
 
     /**
@@ -33,6 +45,11 @@ public class EconomyManager {
                 yield p.getInventory().containsAtLeast(new ItemStack(mat), (int) amount);
             }
         };
+    }
+    
+    // Overload for default currency (VAULT)
+    public boolean has(Player p, double amount) {
+        return has(p, amount, CurrencyType.VAULT);
     }
 
     /**
@@ -62,12 +79,17 @@ public class EconomyManager {
             case ITEM -> {
                 Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
                 p.getInventory().removeItem(new ItemStack(mat, (int) amount));
-                p.updateInventory(); // Safe to call in modern versions
+                // p.updateInventory(); // Not strictly needed in 1.20+
                 p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
                 return true;
             }
         }
         return false;
+    }
+
+    // Overload for default currency
+    public boolean withdraw(Player p, double amount) {
+        return withdraw(p, amount, CurrencyType.VAULT);
     }
 
     /**
@@ -83,12 +105,16 @@ public class EconomyManager {
             case ITEM -> {
                 Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
                 HashMap<Integer, ItemStack> left = p.getInventory().addItem(new ItemStack(mat, (int) amount));
-                // Drop excess on the ground if inventory full
                 for (ItemStack drop : left.values()) {
                     p.getWorld().dropItemNaturally(p.getLocation(), drop);
                 }
             }
         }
+    }
+    
+    // Overload for default currency
+    public void deposit(Player p, double amount) {
+        deposit(p, amount, CurrencyType.VAULT);
     }
 
     /**
@@ -100,46 +126,116 @@ public class EconomyManager {
             case EXP -> (int) amount + " XP";
             case LEVEL -> (int) amount + " Levels";
             case ITEM -> {
-                // Formatting: "DIAMOND_BLOCK" -> "Diamond Block"
-                // Ideally pass the World to get the specific item type, 
-                // but for general formatting we assume default or use a generic label.
-                Material mat = Material.EMERALD; // Default fallback for generic display
-                if (plugin.cfg() != null) {
-                     // Note: To be perfectly accurate this needs a World context, 
-                     // but usually format() is used in GUIs where context implies the player's world.
-                     // For now, we return a generic string or try to grab a default.
-                     mat = plugin.cfg().getWorldItemCostType(null); 
-                }
-                
-                String name = mat.name().toLowerCase().replace("_", " ");
-                try {
-                    // Capitalize first letter of each word
-                    char[] chars = name.toCharArray();
-                    boolean found = false;
-                    for (int i = 0; i < chars.length; i++) {
-                        if (!found && Character.isLetter(chars[i])) {
-                            chars[i] = Character.toUpperCase(chars[i]);
-                            found = true;
-                        } else if (Character.isWhitespace(chars[i]) || chars[i]=='.' || chars[i]=='\'') { 
-                            found = false;
-                        }
-                    }
-                    name = String.valueOf(chars);
-                } catch (Exception ignored) {}
-                
-                // Pluralize roughly
+                Material mat = plugin.cfg().getWorldItemCostType(null); 
+                String name = formatMaterialName(mat);
                 if (amount != 1) name += "s"; 
-                
                 yield (int) amount + " " + name;
             }
         };
     }
+    
+    // ==========================================================
+    // ♻️ ASSET LIQUIDATION (The Chute)
+    // ==========================================================
+    public void loadLiquidationValues() {
+        File file = new File(plugin.getDataFolder(), "liquidation.yml");
+        if (!file.exists()) plugin.saveResource("liquidation.yml", false);
+        
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        
+        this.respectDurability = config.getBoolean("settings.respect_durability", true);
+        this.pricePerEnchantLevel = config.getDouble("settings.price_per_enchant_level", 10.0);
+        
+        liquidationValues.clear();
+        ConfigurationSection values = config.getConfigurationSection("values");
+        if (values != null) {
+            for (String key : values.getKeys(false)) {
+                Material mat = Material.getMaterial(key);
+                if (mat != null) {
+                    liquidationValues.put(mat, values.getDouble(key));
+                }
+            }
+        }
+    }
+
+    public double calculateValue(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return 0.0;
+        
+        Double basePrice = liquidationValues.get(item.getType());
+        if (basePrice == null) return 0.0;
+        
+        double finalValue = basePrice * item.getAmount();
+
+        // Durability Logic
+        if (respectDurability && item.getType().getMaxDurability() > 0) {
+            double damagePercent = (double) (item.getType().getMaxDurability() - item.getDurability()) / item.getType().getMaxDurability();
+            finalValue *= damagePercent;
+        }
+
+        // Enchantment Bonus
+        if (pricePerEnchantLevel > 0) {
+            int totalEnchants = item.getEnchantments().values().stream().mapToInt(Integer::intValue).sum();
+            finalValue += (totalEnchants * pricePerEnchantLevel);
+        }
+
+        return Math.max(0, finalValue);
+    }
+
+    // ==========================================================
+    // 💸 UPKEEP & COST CALCULATOR
+    // ==========================================================
+    
+    /**
+     * Calculate daily rent for an Estate based on size.
+     */
+    public double calculateDailyUpkeep(Estate estate) {
+        double base = plugin.getConfig().getDouble("economy.upkeep.base_cost", 100.0);
+        double perBlock = plugin.getConfig().getDouble("economy.upkeep.price_per_block", 0.50);
+        
+        // Calculate Area (Width * Length)
+        long area = estate.getRegion().getArea();
+        
+        double total = base + (area * perBlock);
+
+        // TODO: Hook into Bastion Level to apply Guild Discounts here
+        
+        return total;
+    }
+
+    /**
+     * Calculate creation cost for a new Estate selection.
+     */
+    public double calculateClaimCost(com.aegisguard.objects.Cuboid region) {
+        if (region == null) return 0.0;
+        
+        double baseCost = plugin.getConfig().getDouble("economy.costs.private_estate_creation", 100.0);
+        double pricePerBlock = plugin.getConfig().getDouble("expansions.price_per_block", 10.0);
+        long area = region.getArea();
+        
+        return baseCost + (area * pricePerBlock);
+    }
+
+    // ==========================================================
+    // 🛠️ UTILITIES
+    // ==========================================================
+
+    private String formatMaterialName(Material mat) {
+        String name = mat.name().toLowerCase().replace("_", " ");
+        char[] chars = name.toCharArray();
+        boolean found = false;
+        for (int i = 0; i < chars.length; i++) {
+            if (!found && Character.isLetter(chars[i])) {
+                chars[i] = Character.toUpperCase(chars[i]);
+                found = true;
+            } else if (Character.isWhitespace(chars[i])) {
+                found = false;
+            }
+        }
+        return String.valueOf(chars);
+    }
 
     // --- XP Calculation Utilities ---
     
-    /**
-     * Calculates total XP points from levels + progress.
-     */
     private int getTotalExperience(Player player) {
         int experience = 0;
         int level = player.getLevel();
@@ -153,9 +249,6 @@ public class EconomyManager {
         return experience + Math.round(player.getExp() * player.getExpToLevel());
     }
 
-    /**
-     * Completely resets player XP and gives them the new total amount.
-     */
     private void setTotalExperience(Player player, int amount) {
         player.setExp(0);
         player.setLevel(0);

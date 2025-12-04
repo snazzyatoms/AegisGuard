@@ -1,128 +1,113 @@
 package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.gui.*; // Import all GUIs
+import com.aegisguard.objects.Estate; // Fix Import
+
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-public class GuiListener implements Listener {
+public class GUIListener implements Listener {
 
     private final AegisGuard plugin;
-    private final NamespacedKey actionKey;      // Main Menu Actions
-    private final NamespacedKey guildActionKey; // Guild Menu Actions
+    private final NamespacedKey actionKey;
+    private final NamespacedKey guildActionKey;
 
-    public GuiListener(AegisGuard plugin) {
+    public GUIListener(AegisGuard plugin) {
         this.plugin = plugin;
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         this.guildActionKey = new NamespacedKey(plugin, "guild_action");
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        // 1. CRITICAL SAFETY CHECKS (The v1.2.1 Lesson)
+        if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getClickedInventory() == null) return;
-        if (event.getCurrentItem() == null) return;
-        if (event.getCurrentItem().getType() == Material.AIR) return;
         
-        Player player = (Player) event.getWhoClicked();
         ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) return;
+        
         ItemMeta meta = clicked.getItemMeta();
-
         if (meta == null) return;
 
-        // 2. CHECK FOR OUR KEYS
-        // Does this item have a hidden action tag?
+        InventoryHolder holder = event.getView().getTopInventory().getHolder();
+
+        // --- HOLDER ROUTING ---
+        if (holder instanceof AdminPlotListGUI.EstateListHolder castHolder) {
+            plugin.getGuiManager().plotList().handleClick(player, event, castHolder);
+            return;
+        }
+        if (holder instanceof BiomeGUI.BiomeHolder castHolder) {
+            plugin.getGuiManager().biomes().handleClick(player, event, castHolder);
+            return;
+        }
+        if (holder instanceof PetitionGUI.PetitionHolder) {
+            plugin.getGuiManager().petition().handleClick(player, event);
+            return;
+        }
+        if (holder instanceof PetitionAdminGUI.PetitionAdminHolder) {
+            plugin.getGuiManager().petitionAdmin().handleClick(player, event);
+            return;
+        }
+        if (holder instanceof AdminGUI.AdminHolder) {
+            plugin.getGuiManager().admin().handleClick(player, event);
+            return;
+        }
+        if (holder instanceof LandGrantGUI.LandGrantHolder) {
+            plugin.getGuiManager().landGrant().handleClick(player, event);
+            return;
+        }
+        // Add PlotCosmeticsGUI holder check here if implemented
+
+        // --- NBT TAG ROUTING ---
         if (meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
-            event.setCancelled(true); // Stop theft
+            event.setCancelled(true);
             handleMainMenuClick(player, meta);
-        } 
-        else if (meta.getPersistentDataContainer().has(guildActionKey, PersistentDataType.STRING)) {
-            event.setCancelled(true); // Stop theft
-            handleGuildMenuClick(player, meta);
+            return;
         }
     }
-
-    // ==========================================================
-    // 🏠 MAIN MENU LOGIC (Guardian Codex)
-    // ==========================================================
+    
     private void handleMainMenuClick(Player player, ItemMeta meta) {
         String action = meta.getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
         if (action == null) return;
 
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-
         switch (action) {
             case "start_claim":
                 player.closeInventory();
-                player.performCommand("ag wand"); // Give wand
-                // Or open a specific "Claiming Mode" guide
+                player.performCommand("ag wand");
                 break;
 
             case "open_guild":
-                // Open the Guild Dashboard
-                plugin.getGuildGUI().openDashboard(player);
+                plugin.getGuiManager().guild().openDashboard(player);
                 break;
 
             case "open_estates":
-                // TODO: Open "My Estates" list
-                player.sendMessage("§eOpening Estate List... (Coming Soon)");
+                player.sendMessage("§eOpening Estate List...");
+                // plugin.getGuiManager().plotList().open(player, 0);
                 break;
 
             case "open_settings":
-                // TODO: Open Language/Settings Selector
-                player.sendMessage("§eOpening Settings... (Coming Soon)");
+                plugin.getGuiManager().settings().open(player);
                 break;
                 
-            case "open_liquidation":
-                // Open the "Trash to Cash" chute
-                // plugin.getLiquidationManager().openChute(player);
-                player.sendMessage("§eOpening Liquidation Chute... (Coming Soon)");
-                break;
-        }
-    }
-
-    // ==========================================================
-    // 🏰 GUILD DASHBOARD LOGIC
-    // ==========================================================
-    private void handleGuildMenuClick(Player player, ItemMeta meta) {
-        String action = meta.getPersistentDataContainer().get(guildActionKey, PersistentDataType.STRING);
-        if (action == null) return;
-
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
-
-        switch (action) {
-            case "guild_create":
-                player.closeInventory();
-                player.sendMessage("§aTo create a Guild, type: §f/ag guild create <Name>");
-                // Future: Use Chat Prompt here instead
-                break;
-
-            case "guild_bank":
-                // Open Treasury GUI
-                player.sendMessage("§eOpening Treasury Vault... (Coming Soon)");
-                break;
-
-            case "guild_members":
-                // Open Roster GUI
-                player.sendMessage("§eOpening Member Roster... (Coming Soon)");
-                break;
-
-            case "guild_upgrade":
-                // Open Bastion Tree
-                player.sendMessage("§eOpening Bastion Upgrades... (Coming Soon)");
+            case "view_perks":
+                Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
+                if (estate != null) {
+                    plugin.getGuiManager().openPerksMenu(player, estate);
+                }
                 break;
                 
-            case "guild_leave":
-                player.closeInventory();
-                player.performCommand("ag guild leave");
+            case "back_to_codex":
+                plugin.getGuiManager().openGuardianCodex(player);
                 break;
         }
     }

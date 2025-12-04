@@ -1,8 +1,8 @@
 package com.aegisguard.gui;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;

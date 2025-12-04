@@ -1,12 +1,12 @@
-package com.yourname.aegisguard.listeners;
+package com.aegisguard.listeners;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.gui.AdminGUI;
-import com.yourname.aegisguard.gui.AdminPlotListGUI;
-import com.yourname.aegisguard.gui.BiomeGUI;
-import com.yourname.aegisguard.gui.LandGrantGUI;
-import com.yourname.aegisguard.gui.PetitionAdminGUI;
-import com.yourname.aegisguard.gui.PetitionGUI;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.AdminGUI;
+import com.aegisguard.gui.AdminPlotListGUI;
+import com.aegisguard.gui.BiomeGUI;
+import com.aegisguard.gui.LandGrantGUI;
+import com.aegisguard.gui.PetitionAdminGUI;
+import com.aegisguard.gui.PetitionGUI;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;

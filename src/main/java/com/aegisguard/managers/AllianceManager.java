@@ -1,6 +1,6 @@
-package com.yourname.aegisguard.managers;
+package com.aegisguard.managers;
 
-import com.yourname.aegisguard.objects.Guild;
+import com.aegisguard.objects.Guild;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,9 +1,8 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.expansions.PetitionAdminGUI; // FIXED IMPORT
-import com.aegisguard.expansions.PetitionGUI;      // FIXED IMPORT
 import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Estate;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -23,6 +22,7 @@ public class GUIManager {
     private final NamespacedKey actionKey;
 
     // --- SUB-MENUS ---
+    // Note: No imports needed because they are all in the same package (com.aegisguard.gui)
     private final PetitionGUI petitionGUI;
     private final PetitionAdminGUI petitionAdminGUI;
     private final GuildGUI guildGUI;
@@ -33,7 +33,7 @@ public class GUIManager {
     private final AdminPlotListGUI plotListGUI;
     private final VisitGUI visitGUI;
     
-    // FIXED: Renamed Plot->Estate
+    // Renamed to match v1.3.0 Estate System
     private final EstateMarketGUI marketGUI; 
     private final EstateAuctionGUI auctionGUI;
     
@@ -43,11 +43,13 @@ public class GUIManager {
     private final ZoningGUI zoningGUI;
     private final BiomeGUI biomeGUI;
     private final SettingsGUI settingsGUI;
+    private final PlayerGUI playerGUI;
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         this.actionKey = new NamespacedKey(plugin, "ag_action");
         
+        // Initialize all sub-menus
         this.petitionGUI = new PetitionGUI(plugin);
         this.petitionAdminGUI = new PetitionAdminGUI(plugin);
         this.guildGUI = new GuildGUI(plugin);
@@ -58,7 +60,7 @@ public class GUIManager {
         this.plotListGUI = new AdminPlotListGUI(plugin);
         this.visitGUI = new VisitGUI(plugin);
         
-        // FIXED: Renamed Plot->Estate
+        // Initialize new Estate GUIs
         this.marketGUI = new EstateMarketGUI(plugin);
         this.auctionGUI = new EstateAuctionGUI(plugin);
         
@@ -68,13 +70,22 @@ public class GUIManager {
         this.zoningGUI = new ZoningGUI(plugin);
         this.biomeGUI = new BiomeGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
+        
+        // Main Menu Logic moved here
+        this.playerGUI = new PlayerGUI(plugin); 
     }
     
     public void openGuardianCodex(Player player) {
-        new PlayerGUI(plugin).open(player);
+        // Delegate to the dedicated PlayerGUI class
+        playerGUI.open(player);
+    }
+    
+    public void openPerksMenu(Player player, Estate estate) {
+        // Delegate to PlayerGUI for the side window
+        playerGUI.openPerksMenu(player, estate);
     }
 
-    // Getters
+    // --- GETTERS ---
     public PetitionGUI petition() { return petitionGUI; }
     public PetitionAdminGUI petitionAdmin() { return petitionAdminGUI; }
     public GuildGUI guild() { return guildGUI; }
@@ -85,7 +96,7 @@ public class GUIManager {
     public AdminPlotListGUI plotList() { return plotListGUI; }
     public VisitGUI visit() { return visitGUI; }
     
-    // FIXED: Renamed Plot->Estate
+    // Fixed Types
     public EstateMarketGUI market() { return marketGUI; }
     public EstateAuctionGUI auction() { return auctionGUI; }
     
@@ -96,7 +107,10 @@ public class GUIManager {
     public BiomeGUI biomes() { return biomeGUI; }
     public SettingsGUI settings() { return settingsGUI; }
     
-    // --- UTILITIES ---
+    // ======================================
+    // --- UTILITIES (Static Helpers) ---
+    // ======================================
+
     public static String safeText(String fromMsg, String fallback) {
         if (fromMsg == null) return fallback;
         return fromMsg;
@@ -134,6 +148,7 @@ public class GUIManager {
             List<String> lore = new ArrayList<>();
             for (String s : loreLines) lore.add(color(s));
             meta.setLore(lore);
+            
             meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, actionId);
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);

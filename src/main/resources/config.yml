@@ -1,0 +1,206 @@
+# =======================================================================
+#  🛡️ AEGISGUARD v1.3.0 - PUBLIC TEST SERVER (PTS) CONFIG
+# =======================================================================
+#  "The Estate & Economy Update"
+#  Configured for: Accelerated Gameplay & Manual Resets
+# =======================================================================
+
+config_version: 3
+
+# =======================================================================
+# 🌐 LANGUAGE SETTINGS
+# =======================================================================
+settings:
+  # Default to Hybrid so new players understand terms like "Estate" immediately
+  default_language_file: "en_hybrid.yml"
+  allow_player_switching: true
+
+# =======================================================================
+# 🎛️ MODULAR ARCHITECTURE
+# =======================================================================
+modules:
+  private_estates: true
+  guild_system: true
+  economy_engine: true
+  asset_liquidation: true
+  progression_system: true
+
+# =======================================================================
+# 💾 DATA STORAGE
+# =======================================================================
+storage:
+  type: "yml"
+  database:
+    file: "aegisguard.db"
+
+# =======================================================================
+# 🗺️ MAP INTEGRATIONS
+# =======================================================================
+maps:
+  dynmap:
+    enabled: true
+    layer_name: "AegisGuard Estates"
+    sync_interval_minutes: 1 # Fast sync for testing
+    style:
+      stroke_color: "00FF00"
+      stroke_opacity: 0.8
+      fill_color: "00FF00"
+      fill_opacity: 0.35
+
+  bluemap: { enabled: true, label: "Estates" }
+  pl3xmap: { enabled: true }
+
+# =======================================================================
+# 🔌 EXTERNAL HOOKS
+# =======================================================================
+hooks:
+  discord:
+    enabled: true
+    webhook_url: "https://discord.com/api/webhooks/..."
+    events:
+      claim_create: true
+      guild_create: true
+      estate_liquidation: true
+      admin_actions: true
+
+# =======================================================================
+# 👥 ROLE SYSTEM
+# =======================================================================
+role_system:
+  default_private_role: "resident"
+  default_guild_role: "initiate"
+  private_roles_file: "roles.yml"
+  guild_roles_file: "alliance_roles.yml"
+
+# =======================================================================
+# 💰 ECONOMY & LEDGER (PTS PRICING)
+# =======================================================================
+economy:
+  enabled: true
+  use_vault: true
+  currency_name: "Credits"
+
+  ledger:
+    allow_overpayment: true
+    max_prepay_days: 60
+    min_reserve_days: 0 # Disabled for easier testing
+
+  liquidation:
+    respect_durability: true
+    price_per_enchant: 50.0 # High value to make getting money faster
+
+  # --- PTS PRICING (Cheap, but not free) ---
+  costs:
+    private_estate_creation: 50.0  # Cheap enough for a new player
+    guild_creation: 250.0          # Requires a tiny bit of grinding
+    guild_estate_creation: 100.0   # Cheap guild land
+
+  # --- Smart Upkeep ---
+  upkeep:
+    enabled: true
+    check_interval_hours: 24
+    base_cost: 10.0         # Very low tax
+    price_per_block: 0.05   # Almost negligible expansion tax
+    landlord_penalty: 1.0   # No penalty for testing
+    grace_period_days: 14   # Long grace period
+
+# =======================================================================
+# 🏡 ESTATE SETTINGS
+# =======================================================================
+estates:
+  max_estates_per_player: 5 # Generous limit for testing
+  min_radius: 5
+  max_radius: 200
+  max_total_area: 100000
+
+  naming:
+    private_format: "%player%'s Estate"
+    guild_format: "%guild% Estate"
+    rename_cost: 10.0       # Cheap renaming
+    grandmaster_only: true
+
+  per_world:
+    world: { allow_estates: true, use_vault: true }
+    world_nether: { allow_estates: true, max_radius: 50 }
+    world_the_end: { allow_estates: false }
+
+# =======================================================================
+# 🏰 GUILD SYSTEM SETTINGS
+# =======================================================================
+guilds:
+  land_claiming:
+    enabled: true
+    min_members_required: 1 # Allow solo testing of Guild features
+
+  security:
+    freeze_on_instability: false # Disabled for easier testing
+    recruit_probation_hours: 0   # Instant access for testing
+    liquidation_payout: "SPLIT"
+
+# =======================================================================
+# 📈 PROGRESSION
+# =======================================================================
+progression:
+  enabled: true
+  notifications: { broadcast_max_level: true, play_effects: true }
+
+# =======================================================================
+# 🏗️ ZONING
+# =======================================================================
+zoning:
+  enabled: true
+  max_zones_per_estate: 30 # High limit for testing
+  landlord_gets_full_rent: true
+
+# =======================================================================
+# 📐 EXPANSION REQUESTS (PTS Mode)
+# =======================================================================
+expansions:
+  price_per_block: 2.0    # Cheap expansion
+  auto_approve: true      # <--- KEY: No Admin needed. Instant expansion.
+  
+  scaling:
+    small: { threshold: 0, multiplier: 1.0 }
+    medium: { threshold: 5000, multiplier: 1.1 }
+    large: { threshold: 10000, multiplier: 1.2 }
+
+# =======================================================================
+# 🎨 VISUALS & TITLES
+# =======================================================================
+visuals:
+  titles: { enabled: true, enter_format: "&7Entering &b%estate%", exit_format: "&7Leaving &b%estate%", action_bar: true }
+  particles: { border_enabled: true, default_particle: "FLAME" }
+
+# =======================================================================
+# 🧪 DEMO MODE (MANUAL ONLY)
+# =======================================================================
+demo_mode:
+  enabled: true
+  
+  # Set to 0 to DISABLE automatic resets. 
+  # You can still run the reset commands manually via console.
+  reset_interval_minutes: 0 
+  
+  prevent_chat: false
+  broadcast_warning: true
+  reset_commands:
+    - "broadcast &c&l[AegisGuard] &eManual Server Reset Initiated!"
+    - "kickall &cServer Resetting... Please rejoin in 1 minute."
+    - "restart"
+
+# =======================================================================
+# 🧩 ADMIN & DEBUG
+# =======================================================================
+admin:
+  wand_material: BLAZE_ROD
+  bypass_limits: false
+  debug_mode: false
+
+# =======================================================================
+# 🔊 SOUNDS
+# =======================================================================
+sounds:
+  menu_click: { sound: UI_BUTTON_CLICK, volume: 1.0, pitch: 1.0 }
+  claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
+  error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.5 }
+  cash_register: { sound: BLOCK_NOTE_BLOCK_BELL, volume: 1.0, pitch: 1.5 }

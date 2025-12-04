@@ -1,22 +1,23 @@
-package com.aegisguard.listeners;
+package com.yourname.aegisguard.listeners;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
-import com.aegisguard.hooks.DiscordWebhook;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.hooks.DiscordWebhook;
+import com.yourname.aegisguard.objects.Estate;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.awt.Color; // --- ADDED IMPORT ---
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * BannedPlayerListener
- * - Automatically deletes plots if the owner is banned.
+ * - Automatically deletes Estates if the owner is banned.
  * - Handles both online bans (Quit) and offline bans (PreLogin).
+ * - Updated for v1.3.0 Estate System.
  */
 public class BannedPlayerListener implements Listener {
 
@@ -47,34 +48,35 @@ public class BannedPlayerListener implements Listener {
     }
 
     /**
-     * Central logic to wipe plots safely.
+     * Central logic to wipe estates safely.
      */
     private void processBanWipe(UUID uuid, String name) {
         if (!plugin.cfg().autoRemoveBannedPlots()) return;
 
         plugin.runGlobalAsync(() -> {
-            List<Plot> plots = plugin.store().getPlots(uuid);
+            // v1.3.0: Use EstateManager to fetch data
+            List<Estate> estates = plugin.getEstateManager().getEstates(uuid);
             
-            if (plots != null && !plots.isEmpty()) {
+            if (estates != null && !estates.isEmpty()) {
                 // Create copy to avoid concurrent modification exceptions during iteration
-                List<Plot> toRemove = new ArrayList<>(plots);
+                List<Estate> toRemove = new ArrayList<>(estates);
                 int count = toRemove.size();
                 
-                for (Plot plot : toRemove) {
-                    // This call handles DB/YML deletion asynchronously
-                    plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+                for (Estate estate : toRemove) {
+                    // v1.3.0: Use EstateManager to delete (Handles Cache + DB)
+                    plugin.getEstateManager().deleteEstate(estate.getId());
                 }
                 
                 plugin.getLogger().warning("[AegisGuard] Banned Player Detected: " + name);
-                plugin.getLogger().info("[AegisGuard] Auto-removed " + count + " plots belonging to " + name);
+                plugin.getLogger().info("[AegisGuard] Auto-removed " + count + " estates belonging to " + name);
 
-                // --- v1.1.2 Feature: Discord Logging ---
+                // --- Discord Logging ---
                 if (plugin.getDiscord().isEnabled()) {
                     DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
                         .setTitle("🚫 Banned Player Wipe")
-                        .setColor(Color.RED) // FIXED: Use java.awt.Color object
+                        .setColor(Color.RED)
                         .setDescription("Player **" + name + "** was detected as banned. Their land has been seized.")
-                        .addField("Action", "All plots removed", true)
+                        .addField("Action", "All Estates removed", true)
                         .addField("Count", String.valueOf(count), true)
                         .setFooter("AegisGuard Automation", null);
                     

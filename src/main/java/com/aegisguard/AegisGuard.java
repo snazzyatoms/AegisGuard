@@ -1,15 +1,15 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.commands.AegisCommand;
 import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
+import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
+import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
-// Removed SidebarManager
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
@@ -20,7 +20,6 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener;
-import com.aegisguard.listeners.GUIListener; // Corrected Import
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
@@ -34,11 +33,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable; // FIXED
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
-import java.lang.reflect.Method; // FIXED
+import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
@@ -49,7 +49,7 @@ public class AegisGuard extends JavaPlugin {
         return instance;
     }
     
-    // --- MANAGERS ---
+    // --- v1.3.0 MANAGERS ---
     private AGConfig configMgr;
     private IDataStore dataStore;
     private LanguageManager languageManager;
@@ -62,7 +62,7 @@ public class AegisGuard extends JavaPlugin {
     private ProgressionManager progressionManager;
     private GUIManager guiManager;
     
-    // --- UTILS ---
+    // --- LEGACY / UTILS ---
     private SelectionService selection;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -87,6 +87,7 @@ public class AegisGuard extends JavaPlugin {
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore getDataStore() { return dataStore; }
+    
     public LanguageManager getLanguageManager() { return languageManager; }
     public RoleManager getRoleManager() { return roleManager; }
     public EstateManager getEstateManager() { return estateManager; }
@@ -96,6 +97,7 @@ public class AegisGuard extends JavaPlugin {
     public LandGrantManager getLandGrantManager() { return landGrantManager; }
     public ProgressionManager getProgressionManager() { return progressionManager; }
     public GUIManager getGuiManager() { return guiManager; }
+    
     public ProtectionManager getProtectionManager() { return protectionManager; }
     public SelectionService getSelection() { return selection; }
     public WorldRulesManager getWorldRules() { return worldRules; }
@@ -104,6 +106,7 @@ public class AegisGuard extends JavaPlugin {
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
     public VaultHook getVault() { return vault; }
+    
     public McMMOHook getMcMMO() { return mcmmoHook; }
     public CoreProtectHook getCoreProtect() { return coreProtectHook; }
     public JobsRebornHook getJobs() { return jobsHook; }
@@ -131,16 +134,19 @@ public class AegisGuard extends JavaPlugin {
         }
 
         saveDefaultConfig();
-        if (!new File(getDataFolder(), "messages.yml").exists()) {
-            saveResource("messages.yml", false);
-        }
+        
+        // REMOVED: The check for messages.yml causing the crash
+        // if (!new File(getDataFolder(), "messages.yml").exists()) { ... }
 
         this.configMgr = new AGConfig(this);
+        
+        // 1. Initialize Core Managers
         this.languageManager = new LanguageManager(this);
         this.roleManager = new RoleManager(this);
         this.estateManager = new EstateManager(this);
         this.allianceManager = new AllianceManager(this);
         
+        // 2. Initialize Data Store
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
         if (storageType.contains("sql")) {
             this.dataStore = new SQLDataStore(this);
@@ -149,12 +155,14 @@ public class AegisGuard extends JavaPlugin {
         }
         this.dataStore.load();
 
+        // 3. Initialize Economy & Gameplay
         this.vault = new VaultHook(this);
         this.economyManager = new EconomyManager(this);
         this.progressionManager = new ProgressionManager(this);
         this.petitionManager = new PetitionManager(this);
         this.landGrantManager = new LandGrantManager(this);
         
+        // 4. Initialize Utils & Visuals
         this.effectUtil = new EffectUtil(this);
         this.worldRules = new WorldRulesManager(this);
         this.selection = new SelectionService(this);
@@ -162,9 +170,13 @@ public class AegisGuard extends JavaPlugin {
         this.discord = new DiscordWebhook(this);
         this.protectionManager = new ProtectionManager(this);
 
+        // REMOVED: MessagesUtil initialization (Legacy)
+        // this.messages = new MessagesUtil(this);
+
+        // 5. Run Migration
         new DataConverter(this, estateManager).runMigration();
         
-        // Register Listeners
+        // --- REGISTER EVENTS ---
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(new ChatInputListener(this), this);
         Bukkit.getPluginManager().registerEvents(new MigrationListener(this), this);
@@ -187,7 +199,7 @@ public class AegisGuard extends JavaPlugin {
              Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
         }
 
-        // Commands
+        // --- COMMANDS ---
         CommandHandler cmdHandler = new CommandHandler(this);
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
@@ -201,6 +213,7 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminExecutor);
         }
 
+        // --- TASKS ---
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask(); 
@@ -248,6 +261,7 @@ public class AegisGuard extends JavaPlugin {
         getLogger().info("AegisGuard disabled.");
     }
     
+    // --- UTILITY METHODS ---
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
@@ -261,6 +275,7 @@ public class AegisGuard extends JavaPlugin {
         return player.isOp() || player.hasPermission("aegis.admin");
     }
 
+    // --- SCHEDULERS ---
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
             try {

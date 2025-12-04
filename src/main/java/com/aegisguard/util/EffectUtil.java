@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
  * EffectUtil
  * - Centralizes all CONFIGURABLE sound and particle effects.
  * - Handles UI sounds and protection feedback.
+ * - Updated for v1.3.0.
  */
 public class EffectUtil {
 
@@ -135,8 +136,10 @@ public class EffectUtil {
     // --- INTERNAL HELPER ---
 
     private void play(Player p, String soundName, float vol, float pitch) {
-        // FIX: Access globalSoundsEnabled() through cfg()
-        if (!plugin.cfg().globalSoundsEnabled() || !plugin.isSoundEnabled(p)) return; 
+        // Check Global Toggle & Player Toggle
+        if (!plugin.getConfig().getBoolean("sounds.global_enabled", true)) return;
+        if (!plugin.isSoundEnabled(p)) return; 
+        
         try {
             p.playSound(p.getLocation(), Sound.valueOf(soundName.toUpperCase()), vol, pitch);
         } catch (Exception e) {

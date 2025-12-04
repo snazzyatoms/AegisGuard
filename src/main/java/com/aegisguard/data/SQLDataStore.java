@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.data;
+package com.aegisguard.data;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Cuboid;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Cuboid;
+import com.aegisguard.objects.Estate;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;

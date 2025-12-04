@@ -1,24 +1,23 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.2.0
+version: 1.3.0
 api-version: "1.20"
 prefix: AegisGuard
-description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
+description: The complete Estate & Economy update. Manage lands, guilds, and power.
 authors: [snazzyatoms]
 website: https://discord.gg/Y2NpuR7UZE
-softdepend: [Vault, Dynmap, PlaceholderAPI]
+softdepend: [Vault, Dynmap, BlueMap, Pl3xMap, PlaceholderAPI]
 folia-supported: true
 
 commands:
   aegis:
     description: Main AegisGuard command.
-    # Added sidebar to usage
-    usage: /aegis <help|menu|claim|wand|merge|sidebar>
+    usage: /aegis <help|menu|claim|guild|wand>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
     description: Admin management tools.
-    usage: /aegisadmin <menu|reload|bypass>
+    usage: /aegisadmin <menu|reload|bypass|convert|wand|setlang>
     aliases: [agadmin, aga]
     permission: aegis.admin
 
@@ -41,17 +40,19 @@ permissions:
       aegis.claim: true
       aegis.unclaim: true
       aegis.resize: true
-      aegis.merge: true
-      aegis.sidebar: true # <--- Added Permission Here
+      # New v1.3.0 Permissions
+      aegis.guild: true
+      aegis.invite: true
+      aegis.setrole: true
+      # Features
       aegis.home: true
       aegis.setspawn: true
-      aegis.welcome: true
-      aegis.farewell: true
+      aegis.visit: true
       aegis.rename: true
       aegis.setdesc: true
       aegis.stuck: true
-      aegis.visit: true
-      # Features
+      aegis.welcome: true
+      aegis.farewell: true
       aegis.market: true
       aegis.sell: true
       aegis.unsell: true
@@ -70,18 +71,19 @@ permissions:
     default: op
     children:
       aegis.admin.manage: true
+      aegis.admin.bypass: true
       aegis.admin.bypass-limits: true
       aegis.reload: true
-      aegis.bypass: true
-      aegis.consume: true
       aegis.setwarp: true
       aegis.delwarp: true
       aegis.convert: true
       aegis.admin.wand: true
+      aegis.admin.setlang: true
+      aegis.consume: true
 
   # --- CORE PERMISSIONS ---
   aegis.use:
-    description: Ability to use the /aegis command.
+    description: Use the /aegis command.
     default: true
   aegis.menu:
     description: Open the main GUI.
@@ -98,19 +100,22 @@ permissions:
   aegis.resize:
     description: Resize land.
     default: true
-  aegis.merge:
-    description: Merge adjacent plots.
+  aegis.guild:
+    description: Access Guild commands and dashboard.
     default: true
-  # --- NEW PERMISSION ---
-  aegis.sidebar:
-    description: Toggle the plot info sidebar.
+  aegis.invite:
+    description: Invite players to your estate.
     default: true
-  # --------------------
+  aegis.setrole:
+    description: Manage member roles in your estate.
+    default: true
+
+  # --- UTILITY ---
   aegis.home:
-    description: Teleport to plot spawn.
+    description: Teleport to estate spawn.
     default: true
   aegis.setspawn:
-    description: Set plot spawn.
+    description: Set estate spawn.
     default: true
   aegis.visit:
     description: Open travel menu.
@@ -118,22 +123,20 @@ permissions:
   aegis.stuck:
     description: Use unstuck command.
     default: true
-
-  # --- IDENTITY & SOCIAL ---
+  aegis.rename:
+    description: Rename estate.
+    default: true
+  aegis.setdesc:
+    description: Set estate description.
+    default: true
   aegis.welcome:
     description: Set welcome message.
     default: true
   aegis.farewell:
     description: Set farewell message.
     default: true
-  aegis.rename:
-    description: Set plot alias title.
-    default: true
-  aegis.setdesc:
-    description: Set plot description.
-    default: true
   aegis.like:
-    description: Give reputation to plots.
+    description: Like an estate.
     default: true
 
   # --- ADVANCED FEATURES ---
@@ -146,56 +149,57 @@ permissions:
   aegis.biome:
     description: Access biome menu.
     default: true
-
-  # --- MODERATION ---
-  aegis.kick:
-    description: Kick players from own plot.
-    default: true
-  aegis.ban:
-    description: Ban players from own plot.
-    default: true
-  aegis.unban:
-    description: Unban players from own plot.
-    default: true
-
-  # --- ECONOMY ---
   aegis.market:
     description: View marketplace.
     default: true
   aegis.sell:
-    description: Put plot for sale.
+    description: Put estate for sale.
     default: true
   aegis.unsell:
-    description: Remove plot from sale.
+    description: Remove estate from sale.
     default: true
   aegis.auction:
     description: View auction house.
+    default: true
+
+  # --- MODERATION ---
+  aegis.kick:
+    description: Kick players from estate.
+    default: true
+  aegis.ban:
+    description: Ban players from estate.
+    default: true
+  aegis.unban:
+    description: Unban players from estate.
     default: true
 
   # --- ADMIN NODES ---
   aegis.reload:
     description: Reload configuration.
     default: op
-  aegis.bypass:
-    description: Bypass all protection checks (Build/Break anywhere).
-    default: op
-  aegis.admin.manage:
-    description: Edit flags/roles of other players' plots.
+  aegis.admin.bypass:
+    description: Bypass all protection checks.
     default: op
   aegis.admin.bypass-limits:
-    description: Ignore max plot size/count limits.
+    description: Ignore max estate size/count limits.
+    default: op
+  aegis.admin.manage:
+    description: Edit flags/roles of other players' estates.
     default: op
   aegis.convert:
-    description: Seize a plot and convert to Server Zone.
+    description: Seize an estate and convert to Server Zone.
     default: op
   aegis.setwarp:
-    description: Set a plot as a Server Warp.
+    description: Set an estate as a Server Warp.
     default: op
   aegis.delwarp:
     description: Remove a Server Warp.
     default: op
   aegis.admin.wand:
     description: Get the Sentinel's Scepter.
+    default: op
+  aegis.admin.setlang:
+    description: Force set a player's language style.
     default: op
   aegis.consume:
     description: Manually dispose of a wand item.

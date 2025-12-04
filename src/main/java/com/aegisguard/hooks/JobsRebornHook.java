@@ -3,6 +3,7 @@ package com.aegisguard.hooks;
 import com.aegisguard.AegisGuard;
 import com.gamingmesh.jobs.Jobs;
 import com.gamingmesh.jobs.container.Job;
+import com.gamingmesh.jobs.container.JobProgression; // Added Import
 import com.gamingmesh.jobs.container.JobsPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -24,13 +25,6 @@ public class JobsRebornHook {
         return enabled;
     }
 
-    /**
-     * Gives XP to a player's specific job.
-     * Useful for rewarding "Architect" or "Builder" jobs when claiming land.
-     * @param player The player to reward
-     * @param jobName The name of the job (e.g. "Builder")
-     * @param amount The amount of XP to give
-     */
     public void giveJobExp(Player player, String jobName, double amount) {
         if (!enabled) return;
 
@@ -38,22 +32,17 @@ public class JobsRebornHook {
         if (jPlayer == null) return;
 
         Job job = Jobs.getJob(jobName);
-        if (job == null) {
-            // Silently fail if job doesn't exist to avoid console spam
-            return; 
-        }
+        if (job == null) return;
 
-        // Check if player actually has this job
         if (jPlayer.isInJob(job)) {
-            // FIXED: Changed from addJobExp to addExp
-            jPlayer.addExp(job, amount);
+            // FIX: Get Progression Object first, then add Exp
+            JobProgression prog = jPlayer.getJobProgression(job);
+            if (prog != null) {
+                prog.addExperience(amount);
+            }
         }
     }
 
-    /**
-     * Checks if a player has a specific job level.
-     * Useful if you want to restrict claiming to "Level 10 Builders" only.
-     */
     public int getJobLevel(Player player, String jobName) {
         if (!enabled) return 0;
         

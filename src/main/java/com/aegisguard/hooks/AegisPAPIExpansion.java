@@ -1,8 +1,8 @@
-package com.yourname.aegisguard.hooks;
+package com.aegisguard.hooks;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.objects.Estate;
-import com.yourname.aegisguard.objects.Guild;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.objects.Estate;
+import com.aegisguard.objects.Guild;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;

@@ -99,6 +99,29 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ✅ Jobs Reborn (Economy & RPG) -->
+        <dependency>
+            <groupId>com.github.Zrips</groupId>
+            <artifactId>Jobs</artifactId>
+            <version>4.17.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ✅ WorldGuard (Optional hook for now, but we are replacing it) -->
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>7.2.13</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
@@ -145,7 +168,6 @@
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
                                 </relocation>
-                                <!-- REMOVED SLF4J RELOCATION: This was causing the "No Provider" error -->
                             </relocations>
                             <filters>
                                 <filter>

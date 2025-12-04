@@ -37,7 +37,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -62,7 +61,7 @@ public class AegisGuard extends JavaPlugin {
     private ProgressionManager progressionManager;
     private GUIManager guiManager;
     
-    // --- LEGACY / UTILS ---
+    // --- UTILS ---
     private SelectionService selection;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -135,8 +134,8 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
         
-        // REMOVED: The check for messages.yml causing the crash
-        // if (!new File(getDataFolder(), "messages.yml").exists()) { ... }
+        // Note: messages.yml is no longer used or generated.
+        // LanguageManager handles locales/*.yml automatically.
 
         this.configMgr = new AGConfig(this);
         
@@ -169,9 +168,6 @@ public class AegisGuard extends JavaPlugin {
         this.guiManager = new GUIManager(this);
         this.discord = new DiscordWebhook(this);
         this.protectionManager = new ProtectionManager(this);
-
-        // REMOVED: MessagesUtil initialization (Legacy)
-        // this.messages = new MessagesUtil(this);
 
         // 5. Run Migration
         new DataConverter(this, estateManager).runMigration();
@@ -351,9 +347,12 @@ public class AegisGuard extends JavaPlugin {
         long interval = (long) (20L * 60 * 60 * cfg().getUpkeepCheckHours());
         if (interval <= 0) return;
         Runnable logic = () -> {
+            // Use the correct package reference to avoid ambiguity
             for (com.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
                  double cost = economyManager.calculateDailyUpkeep(e);
-                 if (!e.withdraw(cost)) { } 
+                 if (!e.withdraw(cost)) {
+                     // Handle bankruptcy
+                 }
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
@@ -362,7 +361,10 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) return;
+        if (!storage.equalsIgnoreCase("sql") && !storage.equalsIgnoreCase("mysql") && !storage.equalsIgnoreCase("mariadb")) {
+            getLogger().warning("Wilderness Revert enabled but storage is not SQL. Feature disabled.");
+            return; 
+        }
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
         WildernessRevertTask task = new WildernessRevertTask(this, dataStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);

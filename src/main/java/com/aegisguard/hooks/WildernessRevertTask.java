@@ -1,7 +1,7 @@
 package com.aegisguard.hooks;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.data.IDataStore; // Interface
+import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -11,12 +11,12 @@ import java.util.concurrent.TimeUnit;
  * WildernessRevertTask
  * - This task runs periodically to clean up the wilderness.
  * - It queries the database for block changes older than a set time
- * and reverts them if the player is offline or far away.
+ * - and reverts them if the player is offline or far away.
  */
 public class WildernessRevertTask extends BukkitRunnable {
 
     private final AegisGuard plugin;
-    private final IDataStore dataStore; // Should always reference the interface
+    private final IDataStore dataStore;
     private final long revertBeforeTimestamp;
     private final int revertBatchSize;
 
@@ -24,40 +24,45 @@ public class WildernessRevertTask extends BukkitRunnable {
         this.plugin = plugin;
         this.dataStore = dataStore;
         
-        // This feature ONLY works with SQLDataStore (for logging purposes)
+        // 1. Check Storage Type
+        // This feature requires SQL because logging every block break to YML is too slow.
         if (!(dataStore instanceof SQLDataStore)) {
-            plugin.getLogger().warning("Wilderness Revert is enabled in config, but storage.type is not 'sql'. This feature will be disabled.");
+            // Only warn if the feature was actually enabled in config
+            if (plugin.getConfig().getBoolean("wilderness_revert.enabled", false)) {
+                plugin.getLogger().warning("Wilderness Revert is enabled, but storage type is 'yml'. This feature requires 'sql'. Disabling task.");
+            }
             this.revertBeforeTimestamp = 0;
             this.revertBatchSize = 0;
             this.cancel();
             return;
         }
 
-        long hours = plugin.cfg().raw().getLong("wilderness_revert.revert_after_hours", 2);
+        // 2. Load Settings
+        long hours = plugin.getConfig().getLong("wilderness_revert.revert_after_hours", 2);
         this.revertBeforeTimestamp = TimeUnit.HOURS.toMillis(hours);
-        this.revertBatchSize = plugin.cfg().raw().getInt("wilderness_revert.revert_batch_size", 500);
+        this.revertBatchSize = plugin.getConfig().getInt("wilderness_revert.revert_batch_size", 500);
         
-        plugin.getLogger().info("Wilderness Revert task enabled. Reverting changes older than " + hours + " hours.");
+        plugin.getLogger().info("Wilderness Revert task active. Reverting changes older than " + hours + " hours.");
     }
 
     @Override
     public void run() {
-        // Since this class only proceeds if dataStore is an instance of SQLDataStore, 
-        // we can safely call the IDataStore method.
-        if (revertBatchSize <= 0) {
-            this.cancel();
+        // Safety Check
+        if (revertBatchSize <= 0 || this.isCancelled()) {
             return;
         }
 
-        // This whole operation runs asynchronously (as scheduled in AegisGuard.java)
+        // Logic
         try {
+            // Calculate the cutoff time (Current Time - Configured Hours)
             long checkTime = System.currentTimeMillis() - revertBeforeTimestamp;
             
-            // FIX: Call the method via the interface (dataStore), not a concrete field (sqlStore).
+            // Execute the revert via the Interface
+            // (The SQL implementation handles the heavy lifting async)
             dataStore.revertWildernessBlocks(checkTime, revertBatchSize);
             
         } catch (Exception e) {
-            plugin.getLogger().severe("Error during wilderness revert task:");
+            plugin.getLogger().severe("Error during wilderness revert task: " + e.getMessage());
             e.printStackTrace();
         }
     }

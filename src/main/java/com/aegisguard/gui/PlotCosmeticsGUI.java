@@ -50,7 +50,7 @@ public class PlotCosmeticsGUI {
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("visuals.particles.border_particles");
-        String currentBorder = estate.getBorderParticle(); // Ensure getBorderParticle() is in Estate.java
+        String currentBorder = estate.getBorderParticle();
         
         // Slot 0: Reset/None
         String resetName = lang.getMsg(player, "cosmetics_border_none");
@@ -171,7 +171,8 @@ public class PlotCosmeticsGUI {
             double price = section.getDouble("price", 0.0);
             
             if (price > 0 && !plugin.isAdmin(player)) {
-                if (!plugin.getEconomy().withdraw(player, price, CurrencyType.VAULT)) {
+                // FIXED: Removed CurrencyType.VAULT argument to match EconomyManager
+                if (!plugin.getEconomy().withdraw(player, price)) {
                     player.sendMessage("§cInsufficient Funds.");
                     return;
                 }

@@ -42,7 +42,6 @@ modules:
 # =======================================================================
 # 💾 DATA STORAGE
 # =======================================================================
-# Define where AegisGuard saves all player and estate data.
 storage:
   # Options: "yml" (Local File), "sqlite" (Single File DB), or "mysql" (External DB)
   # Use "mysql" for networks or large servers.
@@ -63,7 +62,6 @@ storage:
 # =======================================================================
 # 🗺️ MAP INTEGRATIONS
 # =======================================================================
-# Settings for web-maps. If you don't use a map plugin, these are ignored.
 maps:
   # --- Dynmap ---
   dynmap:
@@ -88,7 +86,6 @@ maps:
 # =======================================================================
 # 🔌 EXTERNAL HOOKS
 # =======================================================================
-# Connections to third-party services (Discord, PlaceholderAPI, etc).
 hooks:
   # --- Discord Webhook ---
   discord:
@@ -105,8 +102,6 @@ hooks:
 # =======================================================================
 # 👥 ROLE SYSTEM (CRITICAL)
 # =======================================================================
-# Defines where the plugin looks for role configurations.
-# This prevents the "Missing Roles" crash by pointing to external files.
 role_system:
   # Default role given to a friend when invited to a Private Estate
   default_private_role: "resident"
@@ -260,7 +255,37 @@ admin:
 # 🔊 SOUNDS
 # =======================================================================
 sounds:
+  global_enabled: true
   menu_click: { sound: UI_BUTTON_CLICK, volume: 1.0, pitch: 1.0 }
   claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
   error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.5 }
   cash_register: { sound: BLOCK_NOTE_BLOCK_BELL, volume: 1.0, pitch: 1.5 }
+
+# =======================================================================
+# 💥 PROTECTION EFFECTS (Deny Feedback)
+# =======================================================================
+protection_effects:
+  enabled: true
+  defaults:
+    deny_sound: BLOCK_NOTE_BLOCK_BASS
+    deny_particle: SMOKE_NORMAL
+    deny_volume: 1.0
+    deny_pitch: 1.0
+  pvp:
+    deny_sound: ENTITY_ENDERMAN_TELEPORT
+    deny_particle: REDSTONE
+  containers:
+    deny_sound: BLOCK_CHEST_LOCKED
+    deny_particle: CRIT
+  mobs:
+    deny_sound: ENTITY_ZOMBIE_ATTACK_IRON_DOOR
+    deny_particle: FLAME
+  pets:
+    deny_sound: ENTITY_CAT_HISS
+    deny_particle: HEART
+  entities:
+    deny_sound: BLOCK_ANVIL_PLACE
+    deny_particle: CRIT_MAGIC
+  farm:
+    deny_sound: BLOCK_CROP_BREAK
+    deny_particle: VILLAGER_ANGRY

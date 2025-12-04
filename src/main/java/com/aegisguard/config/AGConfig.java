@@ -1,7 +1,7 @@
 package com.yourname.aegisguard.config;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.economy.CurrencyType;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.economy.CurrencyType;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;

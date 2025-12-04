@@ -1,4 +1,4 @@
-package com.yourname.aegisguard.config;
+package com.aegisguard.config;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.economy.CurrencyType;

@@ -1,4 +1,4 @@
-package com.yourname.aegisguard.objects;
+package com.aegisguard.objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

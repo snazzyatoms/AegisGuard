@@ -6,8 +6,10 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.VaultHook; // VaultHook stayed in economy package, this is correct
+// REMOVED EconomyManager import (It is imported via managers.* now)
+import com.aegisguard.economy.VaultHook;
 import com.aegisguard.gui.GUIManager;
+// REMOVED SidebarManager import (File deleted)
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
@@ -18,11 +20,11 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener;
-import com.aegisguard.listeners.GUIListener; // FIXED IMPORT (Was .gui.GUIListener)
+import com.aegisguard.listeners.GUIListener; // FIXED IMPORT (Now in listeners package)
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*; // This imports EconomyManager correctly from managers package
+import com.aegisguard.managers.*; // Imports EconomyManager, PetitionManager, etc.
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
@@ -61,7 +63,7 @@ public class AegisGuard extends JavaPlugin {
     private ProgressionManager progressionManager;
     private GUIManager guiManager;
     
-    // --- LEGACY / UTILS ---
+    // --- UTILS ---
     private SelectionService selection;
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
@@ -133,7 +135,8 @@ public class AegisGuard extends JavaPlugin {
         }
 
         saveDefaultConfig();
-        
+        // Removed messages.yml logic
+
         this.configMgr = new AGConfig(this);
         
         // 1. Initialize Core Managers

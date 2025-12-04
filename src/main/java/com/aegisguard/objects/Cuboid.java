@@ -33,6 +33,21 @@ public class Cuboid implements Iterable<Block> {
     }
 
     /**
+     * NEW: Check if this Cuboid overlaps/intersects with another Cuboid.
+     * Critical for the "WorldGuard Killer" and expansion overlap checks.
+     */
+    public boolean overlaps(Cuboid other) {
+        if (!this.worldName.equals(other.worldName)) return false;
+        
+        // AABB Intersection Logic:
+        // If any dimension is completely disjoint (to the left/right/above/below), 
+        // then they do NOT overlap.
+        return this.xMin <= other.xMax && this.xMax >= other.xMin &&
+               this.zMin <= other.zMax && this.zMax >= other.zMin &&
+               this.yMin <= other.yMax && this.yMax >= other.yMin;
+    }
+
+    /**
      * Check if a location is inside this Cuboid.
      */
     public boolean contains(Location loc) {

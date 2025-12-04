@@ -1,5 +1,6 @@
 package com.aegisguard.objects;
 
+import com.aegisguard.objects.Cuboid; // Ensure correct package for Cuboid
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +16,10 @@ import java.util.*;
  * Supports Private Ownership (Solo) and Guild Ownership (Alliance).
  */
 public class Estate {
+
+    // --- CONSTANTS ---
+    // The special UUID used for Admin/Server zones (Spawn, Warzone, etc.)
+    public static final UUID SERVER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final UUID estateId;
     private String name;
@@ -33,6 +38,9 @@ public class Estate {
     // --- FLAGS ---
     private final Map<String, Boolean> flags = new HashMap<>();
 
+    // --- SUB-ZONES ---
+    private final List<Zone> zones = new ArrayList<>();
+
     // --- ECONOMY ---
     private double ledgerBalance;
     private long paidUntil;
@@ -45,7 +53,7 @@ public class Estate {
     private UUID currentRenter;
     private long rentExpires;
 
-    // --- AUCTION (New v1.3.0) ---
+    // --- AUCTION ---
     private double currentBid;
     private UUID currentBidder;
 
@@ -60,7 +68,7 @@ public class Estate {
     private String farewellMessage;
     private String description;
     private String borderParticle;
-    private String customBiome; // Added for BiomeGUI
+    private String customBiome; 
 
     public Estate(UUID estateId, String name, UUID ownerId, boolean isGuildEstate, World world, Cuboid region) {
         this.estateId = estateId;
@@ -76,6 +84,20 @@ public class Estate {
         this.flags.put("mobs", false);
         this.flags.put("build", true);
         this.flags.put("interact", true);
+        // v1.3.0 Defaults
+        this.flags.put("hunger", true);
+        this.flags.put("sleep", true);
+    }
+
+    // ==========================================================
+    // 👑 IDENTIFICATION
+    // ==========================================================
+    
+    /**
+     * Checks if this is a Server Zone (Admin owned).
+     */
+    public boolean isServerZone() {
+        return ownerId.equals(SERVER_UUID) || getFlag("safe_zone");
     }
 
     // ==========================================================
@@ -122,7 +144,25 @@ public class Estate {
     // ⚙️ FLAGS & SETTINGS
     // ==========================================================
     public void setFlag(String flag, boolean value) { flags.put(flag.toLowerCase(), value); }
-    public boolean getFlag(String flag) { return flags.getOrDefault(flag.toLowerCase(), false); }
+    
+    public boolean getFlag(String flag) { 
+        // Default to false if unset, unless specific logic overrides later
+        return flags.getOrDefault(flag.toLowerCase(), false); 
+    }
+
+    // ==========================================================
+    // 🏗️ SUB-ZONES
+    // ==========================================================
+    public List<Zone> getZones() { return zones; }
+    public void addZone(Zone zone) { zones.add(zone); }
+    public void removeZone(Zone zone) { zones.remove(zone); }
+    
+    public Zone getZoneAt(Location loc) {
+        for (Zone z : zones) {
+            if (z.isInside(loc)) return z;
+        }
+        return null;
+    }
 
     // ==========================================================
     // 💰 ECONOMY
@@ -142,6 +182,8 @@ public class Estate {
     public boolean isForSale() { return isForSale; }
     public double getSalePrice() { return salePrice; }
     public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
+    public boolean isForRent() { return isForRent; }
+    public double getRentPrice() { return rentPrice; } // Placeholder for future Rent logic
 
     // Auction
     public double getCurrentBid() { return currentBid; }
@@ -172,6 +214,9 @@ public class Estate {
     
     public String getCustomBiome() { return customBiome; }
     public void setCustomBiome(String biome) { this.customBiome = biome; }
+    
+    public String getBorderParticle() { return borderParticle; }
+    public void setBorderParticle(String p) { this.borderParticle = p; }
     
     // --- Likes ---
     public int getLikes() { return likedBy.size(); }

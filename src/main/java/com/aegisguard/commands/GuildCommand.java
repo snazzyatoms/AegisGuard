@@ -21,9 +21,7 @@ public class GuildCommand implements CommandHandler.SubCommand {
 
         // /ag guild
         if (args.length == 1) {
-            // Open GUI (Dashboard)
-            // plugin.getGuiManager().openGuildDashboard(player);
-            player.sendMessage("§eOpening Guild Dashboard... (Coming Soon)");
+            plugin.getGuiManager().guild().openDashboard(player);
             return;
         }
 
@@ -36,36 +34,35 @@ public class GuildCommand implements CommandHandler.SubCommand {
                 return;
             }
             
-            // 1. Check if already in guild
             if (allianceManager.isInGuild(player.getUniqueId())) {
-                player.sendMessage(lang.getMsg(player, "already_in_guild")); // Add to lang
+                player.sendMessage(lang.getMsg(player, "already_in_guild"));
                 return;
             }
 
-            // 2. Check Economy (Vault)
-            double cost = plugin.getConfig().getDouble("economy.costs.guild_creation", 5000.0);
-            if (!plugin.getEconomy().withdrawPlayer(player, cost).transactionSuccess()) {
+            double cost = plugin.cfg().raw().getDouble("economy.costs.guild_creation", 5000.0);
+            
+            // FIX: Direct boolean check (No .transactionSuccess())
+            if (!plugin.getEconomy().withdraw(player, cost)) {
                 player.sendMessage(lang.getMsg(player, "claim_failed_money").replace("%cost%", String.valueOf(cost)));
                 return;
             }
 
-            // 3. Create
             String name = args[2];
             Guild newGuild = allianceManager.createGuild(player, name);
             
             if (newGuild != null) {
                 player.sendMessage(lang.getMsg(player, "guild_created").replace("%guild%", name));
-                // Optional: Broadcast globally
             } else {
+                // Refund if creation failed (e.g. name taken)
+                plugin.getEconomy().deposit(player, cost);
                 player.sendMessage(lang.getMsg(player, "guild_name_taken"));
             }
-            return;
         }
-
-        // --- /ag guild invite <Player> ---
-        if (action.equals("invite")) {
-            // Hook into invite logic (We need an InviteManager later)
-            player.sendMessage("§eInvite sent! (Placeholder)");
+        
+        // --- /ag guild leave ---
+        else if (action.equals("leave")) {
+            // Placeholder logic
+            player.sendMessage("§eLeft guild (Placeholder).");
         }
     }
 }

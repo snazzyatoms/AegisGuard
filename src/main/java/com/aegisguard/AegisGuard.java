@@ -7,11 +7,9 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
-import com.aegisguard.expansions.ExpansionRequestManager;
-import com.aegisguard.gui.GUIListener; // Ensure file is named GUIListener.java
 import com.aegisguard.gui.GUIManager;
+// Removed SidebarManager
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
@@ -22,6 +20,7 @@ import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.ChatInputListener;
+import com.aegisguard.listeners.GUIListener; // Corrected Import
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
@@ -35,10 +34,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitRunnable; // FIXED
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.lang.reflect.Method; // FIXED
 import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
@@ -190,7 +190,9 @@ public class AegisGuard extends JavaPlugin {
         // Commands
         CommandHandler cmdHandler = new CommandHandler(this);
         PluginCommand aegis = getCommand("aegis");
-        if (aegis != null) aegis.setExecutor(cmdHandler);
+        if (aegis != null) {
+            aegis.setExecutor(cmdHandler);
+        }
 
         PluginCommand admin = getCommand("aegisadmin");
         if (admin != null) {
@@ -214,15 +216,19 @@ public class AegisGuard extends JavaPlugin {
         } catch (NoClassDefFoundError | Exception e) {
             getLogger().warning("Map hooks could not be initialized: " + e.getMessage());
         }
+        
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new AegisPAPIExpansion(this).register();
         }
+        
         if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
             this.mcmmoHook = new McMMOHook(this);
         }
+
         if (Bukkit.getPluginManager().isPluginEnabled("CoreProtect")) {
             this.coreProtectHook = new CoreProtectHook(this);
         }
+        
         if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
             this.jobsHook = new JobsRebornHook(this);
         }
@@ -242,7 +248,6 @@ public class AegisGuard extends JavaPlugin {
         getLogger().info("AegisGuard disabled.");
     }
     
-    // --- UTILS ---
     public boolean isSoundEnabled(Player player) {
         if (!cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
@@ -309,9 +314,12 @@ public class AegisGuard extends JavaPlugin {
 
     private void cancelTaskReflectively(Object task) {
         if (task == null) return;
-        if (task instanceof BukkitTask) ((BukkitTask) task).cancel();
-        else {
-            try { task.getClass().getMethod("cancel").invoke(task); } catch (Exception ignored) {}
+        if (task instanceof BukkitTask) {
+            ((BukkitTask) task).cancel();
+        } else {
+            try {
+                task.getClass().getMethod("cancel").invoke(task);
+            } catch (Exception ignored) {}
         }
     }
 
@@ -330,7 +338,7 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             for (com.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
                  double cost = economyManager.calculateDailyUpkeep(e);
-                 if (!e.withdraw(cost)) { } // Bankruptcy logic
+                 if (!e.withdraw(cost)) { } 
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);

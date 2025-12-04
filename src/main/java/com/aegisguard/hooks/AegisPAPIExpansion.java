@@ -1,16 +1,14 @@
-package com.aegisguard.hooks;
+package com.yourname.aegisguard.hooks;
 
-import com.aegisguard.AegisGuard;
-import com.aegisguard.data.Plot;
+import com.yourname.aegisguard.AegisGuard;
+import com.yourname.aegisguard.objects.Estate;
+import com.yourname.aegisguard.objects.Guild;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * PlaceholderAPI Expansion for AegisGuard.
- * This class handles all placeholder requests.
- */
 public class AegisPAPIExpansion extends PlaceholderExpansion {
 
     private final AegisGuard plugin;
@@ -21,7 +19,7 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getIdentifier() {
-        return "aegis"; // The main identifier (e.g., %aegis_...%)
+        return "aegis";
     }
 
     @Override
@@ -34,68 +32,81 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
         return plugin.getDescription().getVersion();
     }
 
-    /**
-     * This makes the placeholders persist even if the plugin is reloaded.
-     */
     @Override
     public boolean persist() {
         return true;
     }
 
-    /**
-     * This is the core logic that handles placeholder requests.
-     */
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, @NotNull String identifier) {
-        if (offlinePlayer == null || !offlinePlayer.isOnline()) {
-            return null;
-        }
+        if (offlinePlayer == null || !offlinePlayer.isOnline()) return null;
         Player player = offlinePlayer.getPlayer();
-        if (player == null) {
-            return null;
-        }
+        if (player == null) return null;
 
         // --- Player-Specific Placeholders ---
-        // %aegis_player_plot_count%
-        if (identifier.equals("player_plot_count")) {
-            return String.valueOf(plugin.store().getPlots(player.getUniqueId()).size());
-        }
-
-        // --- Location-Based Placeholders ---
-        Plot plot = plugin.store().getPlotAt(player.getLocation());
-        String wilderness = "Wilderness"; // Default if not in a plot
-
-        // %aegis_plot_owner%
-        if (identifier.equals("plot_owner")) {
-            return plot != null ? plot.getOwnerName() : wilderness;
-        }
-
-        // %aegis_plot_role%
-        if (identifier.equals("plot_role")) {
-            if (plot == null) return "N/A";
-            return plot.getRole(player.getUniqueId());
-        }
-
-        // %aegis_plot_flag_<flagname>%
-        if (identifier.startsWith("plot_flag_")) {
-            if (plot == null) return "N/A";
-            String flag = identifier.substring(10); // Get the part after "plot_flag_"
-            boolean enabled = plugin.protection().isFlagEnabled(plot, flag);
-            return enabled ? "Enabled" : "Disabled";
+        
+        // %aegis_player_estate_count%
+        if (identifier.equals("player_estate_count")) {
+            return String.valueOf(plugin.getEstateManager().getEstates(player.getUniqueId()).size());
         }
         
-        // %aegis_plot_status%
-        if (identifier.equals("plot_status")) {
-            if (plot == null) return wilderness;
-            return plot.getPlotStatus();
+        // %aegis_player_guild_name%
+        if (identifier.equals("player_guild_name")) {
+            Guild guild = plugin.getAllianceManager().getPlayerGuild(player.getUniqueId());
+            return (guild != null) ? guild.getName() : "None";
         }
         
-        // %aegis_plot_sale_price%
-        if (identifier.equals("plot_sale_price")) {
-            if (plot == null || !plot.isForSale()) return "Not for Sale";
-            return plugin.vault().format(plot.getSalePrice());
+        // %aegis_player_guild_role%
+        if (identifier.equals("player_guild_role")) {
+            Guild guild = plugin.getAllianceManager().getPlayerGuild(player.getUniqueId());
+            return (guild != null) ? guild.getMemberRole(player.getUniqueId()) : "None";
         }
 
-        return null; // Invalid placeholder
+        // --- Location-Based Placeholders (Standing In) ---
+        
+        Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
+        String wilderness = "Wilderness";
+
+        // %aegis_estate_owner%
+        if (identifier.equals("estate_owner")) {
+            if (estate == null) return wilderness;
+            return Bukkit.getOfflinePlayer(estate.getOwnerId()).getName();
+        }
+
+        // %aegis_estate_name%
+        if (identifier.equals("estate_name")) {
+            return estate != null ? estate.getName() : wilderness;
+        }
+
+        // %aegis_estate_role% (Your role in the current land)
+        if (identifier.equals("estate_role")) {
+            if (estate == null) return "N/A";
+            return estate.getMemberRole(player.getUniqueId());
+        }
+        
+        // %aegis_estate_level%
+        if (identifier.equals("estate_level")) {
+            return estate != null ? String.valueOf(estate.getLevel()) : "0";
+        }
+        
+        // %aegis_estate_balance% (Ledger)
+        if (identifier.equals("estate_balance")) {
+            return estate != null ? String.format("%.2f", estate.getBalance()) : "0.00";
+        }
+
+        // %aegis_estate_flag_<flag>%
+        if (identifier.startsWith("estate_flag_")) {
+            if (estate == null) return "N/A";
+            String flag = identifier.substring(12); // remove "estate_flag_"
+            return estate.getFlag(flag) ? "Enabled" : "Disabled";
+        }
+        
+        // %aegis_estate_sale_price%
+        if (identifier.equals("estate_sale_price")) {
+            if (estate == null || !estate.isForSale()) return "Not for Sale";
+            return String.format("%.2f", estate.getSalePrice());
+        }
+
+        return null; 
     }
 }

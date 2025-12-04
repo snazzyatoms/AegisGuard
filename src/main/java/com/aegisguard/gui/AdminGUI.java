@@ -47,6 +47,10 @@ public class AdminGUI {
         String title = lang.getGui("title_admin"); 
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
 
+        // Background Filler
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 45; i++) inv.setItem(i, filler);
+
         // --- MODULE TOGGLES (Row 2) ---
         // 1. Private Estates
         addToggle(inv, 10, "modules.private_estates", 
@@ -135,7 +139,7 @@ public class AdminGUI {
 
             case "view_petitions":
                 // Open Petition Admin GUI
-                player.sendMessage("§eOpening Petition Manager... (Coming Soon)");
+                plugin.getGuiManager().petitionAdmin().open(player);
                 break;
 
             case "back":

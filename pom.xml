@@ -17,17 +17,7 @@
     </properties>
 
     <repositories>
-        <!-- Pl3xMap from Modrinth -->
-        <repository>
-            <id>modrinth-repo</id>
-            <url>https://api.modrinth.com/maven/</url>
-        </repository>
-
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-
+        <!-- Spigot / Paper -->
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -37,25 +27,59 @@
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
-        
+
+        <!-- JitPack (for Jobs Reborn & Vault) -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <!-- PlaceholderAPI -->
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
 
+        <!-- Dynmap -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
 
+        <!-- BlueMap -->
         <repository>
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
         </repository>
+
+        <!-- Pl3xMap (Modrinth) -->
+        <repository>
+            <id>modrinth-repo</id>
+            <url>https://api.modrinth.com/maven/</url>
+        </repository>
+
+        <!-- mcMMO Repository -->
+        <repository>
+            <id>mcmmo-repo</id>
+            <url>https://repo.mc-mmo.com/repository/maven-public/</url>
+        </repository>
+
+        <!-- CoreProtect Repository -->
+        <repository>
+            <id>playpro-repo</id>
+            <url>https://maven.playpro.com</url>
+        </repository>
+        
+        <!-- WorldGuard/WorldEdit -->
+        <repository>
+            <id>sk89q-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <!-- Server API -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -63,6 +87,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Economy -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
@@ -70,6 +95,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Utils -->
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
@@ -77,6 +103,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Maps -->
         <dependency>
             <groupId>us.dynmap</groupId>
             <artifactId>dynmap-api</artifactId>
@@ -91,7 +118,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ Correct Pl3xMap API for 1.20.4 via Modrinth -->
         <dependency>
             <groupId>maven.modrinth</groupId>
             <artifactId>pl3xmap</artifactId>
@@ -99,7 +125,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ Jobs Reborn (Economy & RPG) -->
+        <!-- RPG & Jobs -->
         <dependency>
             <groupId>com.github.Zrips</groupId>
             <artifactId>Jobs</artifactId>
@@ -107,7 +133,27 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ WorldGuard (Optional hook for now, but we are replacing it) -->
+        <dependency>
+            <groupId>com.gmail.nossr50.mcMMO</groupId>
+            <artifactId>mcMMO</artifactId>
+            <version>2.1.226</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Protection & Logging -->
+        <dependency>
+            <groupId>net.coreprotect</groupId>
+            <artifactId>coreprotect</artifactId>
+            <version>22.2</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.sk89q.worldguard</groupId>
             <artifactId>worldguard-bukkit</artifactId>
@@ -122,13 +168,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Database -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
         </dependency>
         
-        <!-- LOGGING FIX: Use the Server's SLF4J instead of bundling our own -->
+        <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -163,7 +210,6 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <relocations>
-                                <!-- Relocate Hikari to avoid conflicts -->
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>

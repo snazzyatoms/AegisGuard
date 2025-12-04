@@ -1,9 +1,9 @@
-package com.yourname.aegisguard.selection;
+package com.aegisguard.selection;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
-import com.yourname.aegisguard.objects.Cuboid;
-import com.yourname.aegisguard.objects.Estate;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
+import com.aegisguard.objects.Cuboid;
+import com.aegisguard.objects.Estate;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;

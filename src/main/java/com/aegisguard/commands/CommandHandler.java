@@ -1,7 +1,7 @@
-package com.yourname.aegisguard.commands;
+package com.aegisguard.commands;
 
-import com.yourname.aegisguard.AegisGuard;
-import com.yourname.aegisguard.managers.LanguageManager;
+import com.aegisguard.AegisGuard;
+import com.aegisguard.managers.LanguageManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,11 +18,21 @@ public class CommandHandler implements CommandExecutor {
     public CommandHandler(AegisGuard plugin) {
         this.plugin = plugin;
         
-        // Register Sub-Commands Here
-        register("guild", new GuildCommand(plugin));
-        register("alliance", new GuildCommand(plugin)); // Alias
-        // TODO: register("claim", new ClaimCommand(plugin));
-        // TODO: register("menu", new MenuCommand(plugin));
+        // --- GUILD COMMANDS ---
+        GuildCommand guildCmd = new GuildCommand(plugin);
+        register("guild", guildCmd);
+        register("alliance", guildCmd); // Alias
+
+        // --- ESTATE COMMANDS (Private Land) ---
+        EstateCommand estateCmd = new EstateCommand(plugin);
+        register("claim", estateCmd);
+        register("deed", estateCmd);    // RP Alias
+        register("unclaim", estateCmd);
+        register("vacate", estateCmd);  // RP Alias
+        register("invite", estateCmd);
+        register("trust", estateCmd);   // Alias
+        register("setrole", estateCmd);
+        register("resize", estateCmd);  // Handled in EstateCommand now
     }
 
     private void register(String name, SubCommand cmd) {
@@ -39,19 +49,22 @@ public class CommandHandler implements CommandExecutor {
         Player player = (Player) sender;
         LanguageManager lang = plugin.getLanguageManager();
 
-        // 1. No Arguments? Open Main Menu
+        // 1. No Arguments? Open Guardian Codex (Main Menu)
         if (args.length == 0) {
-            // plugin.getGuiManager().openMainMenu(player); (We will enable this later)
-            player.sendMessage("§eOpening Guardian Codex... (Coming Soon)");
+            plugin.gui().openMain(player);
             return true;
         }
 
         // 2. Find Sub-Command
         String sub = args[0].toLowerCase();
+        
         if (subCommands.containsKey(sub)) {
             subCommands.get(sub).execute(player, args);
         } else {
-            player.sendMessage(lang.getMsg(player, "unknown_command")); // Add this key to lang files later
+            // Fallback: Check for "Unknown Command" message in lang file, or default
+            String msg = lang.getMsg(player, "unknown_command");
+            if (msg.startsWith("Missing Key")) msg = "§cUnknown command. Type /ag menu for help.";
+            player.sendMessage(msg);
         }
 
         return true;

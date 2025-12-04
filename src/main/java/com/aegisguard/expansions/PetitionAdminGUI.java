@@ -15,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
-
+import com.aegisguard.objects.PetitionRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

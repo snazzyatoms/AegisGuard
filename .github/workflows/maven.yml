@@ -23,6 +23,7 @@ jobs:
 
     - name: Build with Maven
       # The -U forces updates for snapshots (fixing the Jobs/mcMMO dependencies)
+      # The -B runs in batch mode (less log noise)
       run: mvn -B -U clean package --file pom.xml
 
     - name: Upload JAR

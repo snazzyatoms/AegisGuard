@@ -1,10 +1,11 @@
 name: Build AegisGuard (Manual Only)
 
-# This section determines WHEN the build runs.
-# We have removed 'push' and 'pull_request' so it won't auto-run on commits.
 on:
-  # This enables the "Run workflow" button in the Actions tab for manual builds.
   workflow_dispatch:
+
+# Required to upload files to the Releases page
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -22,15 +23,20 @@ jobs:
         cache: maven
 
     - name: Build with Maven
-      # The -U forces updates for snapshots (fixing the Jobs/mcMMO dependencies)
-      # The -B runs in batch mode (less log noise)
+      # -U forces snapshot updates (Fixes Jobs/mcMMO)
       run: mvn -B -U clean package --file pom.xml
 
-    - name: Upload JAR
-      uses: actions/upload-artifact@v4
+    - name: Delete Original JAR
+      # We delete the raw "original-" file so it doesn't get uploaded
+      run: rm target/original-*.jar
+
+    - name: Upload JAR to Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: AegisGuard-Manual-Build
-        # The '!' excludes the "original-" file so you only get the working plugin JAR
-        path: |
-          target/*.jar
-          !target/original-*.jar
+        # This creates/updates a tag called "dev-build"
+        tag_name: dev-build
+        name: Latest Manual Build
+        draft: false
+        prerelease: true
+        # This overwrites the files so you always get the newest one
+        files: target/*.jar

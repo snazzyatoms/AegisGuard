@@ -1,9 +1,7 @@
 package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.*;
-import com.aegisguard.expansions.PetitionAdminGUI; // If using expansions package
-import com.aegisguard.expansions.PetitionGUI;
+import com.aegisguard.gui.*; // Imports PetitionGUI, GuildGUI, AdminGUI, etc.
 import com.aegisguard.objects.Estate;
 
 import org.bukkit.Material;
@@ -38,7 +36,6 @@ public class GUIListener implements Listener {
         Inventory top = event.getView().getTopInventory();
         
         // 1. GLOBAL SAFETY: Stop moving items in our GUIs
-        // This prevents players from stealing the "Glass Panes" or "Buttons"
         if (isAegisInventory(top)) {
             event.setCancelled(true);
         }
@@ -145,7 +142,6 @@ public class GUIListener implements Listener {
     
     /**
      * Checks if the inventory belongs to AegisGuard to enforce global cancellation.
-     * This stops players from dragging items out of the menu.
      */
     private boolean isAegisInventory(Inventory inv) {
         if (inv == null) return false;
@@ -165,7 +161,6 @@ public class GUIListener implements Listener {
         if (action == null) return;
 
         switch (action) {
-            // --- CODEX NAVIGATION ---
             case "start_claim":
                 player.closeInventory();
                 player.performCommand("ag wand");
@@ -180,8 +175,8 @@ public class GUIListener implements Listener {
                 plugin.getGuiManager().market().open(player, 0);
                 break;
             case "open_estates":
-                // Route to a list of owned estates. For now, use admin list as placeholder or message
-                player.sendMessage("§eOpening My Estates... (See /ag claim for now)");
+                player.sendMessage("§eOpening Estate List...");
+                plugin.getGuiManager().plotList().open(player, 0);
                 break;
             case "open_auction":
                 plugin.getGuiManager().auction().open(player, 0);

@@ -8,31 +8,24 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-/**
- * This task runs for a single player, showing them the borders
- * of the estate they are currently standing in.
- * - Updated for v1.3.0 Estate System.
- */
 public class PlotVisualizerTask extends BukkitRunnable {
 
     private final AegisGuard plugin;
     private final Player player;
     private Estate lastEstate = null;
+    
+    // Visual Settings
     private Particle particle;
     private Particle.DustOptions dustOptions;
 
-    // --- CROSS-VERSION COMPATIBILITY (1.20.4 vs 1.20.5+) ---
+    // Cross-Version Support
     private static final Particle DUST_PARTICLE_TYPE;
     static {
         Particle p;
-        try {
-            p = Particle.valueOf("DUST"); // 1.20.5+
-        } catch (IllegalArgumentException e) {
-            try {
-                p = Particle.valueOf("REDSTONE"); // 1.20.4 and older
-            } catch (IllegalArgumentException ex) {
-                p = Particle.FLAME; // Fallback
-            }
+        try { p = Particle.valueOf("DUST"); } 
+        catch (IllegalArgumentException e) {
+            try { p = Particle.valueOf("REDSTONE"); } 
+            catch (IllegalArgumentException ex) { p = Particle.FLAME; }
         }
         DUST_PARTICLE_TYPE = p;
     }
@@ -40,7 +33,7 @@ public class PlotVisualizerTask extends BukkitRunnable {
     public PlotVisualizerTask(AegisGuard plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        updateParticle(null); // Initialize default
+        updateParticle(null, false);
     }
 
     @Override
@@ -50,30 +43,37 @@ public class PlotVisualizerTask extends BukkitRunnable {
             return;
         }
 
-        // v1.3.0: Use EstateManager
         Estate currentEstate = plugin.getEstateManager().getEstateAt(player.getLocation());
 
         if (currentEstate != null) {
             if (!currentEstate.equals(lastEstate)) {
                 lastEstate = currentEstate;
             }
-            // Check for custom cosmetic particle (stored in Estate object)
-            // Make sure you added getBorderParticle() to Estate.java!
-            updateParticle(currentEstate.getDescription()); // Using Description field as placeholder if particle field missing
-            // Ideally: updateParticle(currentEstate.getBorderParticle());
             
-            drawEstateBorders(currentEstate);
+            // Update particles based on type
+            boolean isServer = currentEstate.isServerZone();
+            updateParticle(currentEstate.getBorderParticle(), isServer);
+            
+            drawEstateBorders(currentEstate, isServer);
         } else {
             lastEstate = null;
         }
     }
 
-    private void updateParticle(String cosmeticParticleName) {
-        String particleName = cosmeticParticleName != null ? cosmeticParticleName 
-                : plugin.getConfig().getString("visuals.particles.default_particle", "FLAME");
+    private void updateParticle(String cosmeticName, boolean isServer) {
+        // SERVER ZONES = ALWAYS RED DUST
+        if (isServer) {
+            this.particle = DUST_PARTICLE_TYPE;
+            this.dustOptions = new Particle.DustOptions(Color.RED, 1.5F);
+            return;
+        }
+
+        // Player Estates = Custom or Default (Flame/Blue)
+        String name = cosmeticName != null ? cosmeticName : 
+                      plugin.getConfig().getString("visuals.particles.default_particle", "FLAME");
         
         try {
-            this.particle = Particle.valueOf(particleName.toUpperCase());
+            this.particle = Particle.valueOf(name.toUpperCase());
         } catch (IllegalArgumentException e) {
             this.particle = Particle.FLAME;
         }
@@ -85,19 +85,18 @@ public class PlotVisualizerTask extends BukkitRunnable {
         }
     }
 
-    private void drawEstateBorders(Estate estate) {
+    private void drawEstateBorders(Estate estate, boolean isServer) {
         if (estate.getWorld() == null || !player.getWorld().equals(estate.getWorld())) return;
 
         int y = player.getLocation().getBlockY();
-        int step = 2; // Density
+        // Server zones are denser
+        int step = isServer ? 1 : 2; 
 
-        // Use Cuboid Helper
         int x1 = estate.getRegion().getLowerNE().getBlockX();
         int z1 = estate.getRegion().getLowerNE().getBlockZ();
         int x2 = estate.getRegion().getUpperSW().getBlockX();
         int z2 = estate.getRegion().getUpperSW().getBlockZ();
 
-        // Draw Rectangle
         for (int x = x1; x <= x2; x += step) {
             spawnParticle(new Location(estate.getWorld(), x, y, z1));
             spawnParticle(new Location(estate.getWorld(), x, y, z2));

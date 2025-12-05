@@ -4,105 +4,54 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.objects.Estate;
 import com.aegisguard.selection.SelectionService;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.util.StringUtil;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class AegisCommand implements CommandExecutor, TabCompleter {
+public class AegisCommand implements CommandHandler.SubCommand {
 
     private final AegisGuard plugin;
-
-    // Updated Command List for Tab Completion (Removed 'sidebar')
-    private static final String[] SUB_COMMANDS = {
-        "wand", "menu", "claim", "unclaim", "resize", "help",
-        "setspawn", "home", "invite", "kick", "ban", "unban",
-        "visit", "level", "zone", "like", "rename", "setdesc", "merge",
-        "guild" // New v1.3.0
-    };
-    
-    private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
 
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage("§cOnly players can use AegisGuard commands.");
-            return true;
-        }
-
+    public void execute(Player p, String[] args) {
         LanguageManager lang = plugin.getLanguageManager();
+
+        // If only "/ag" was typed, this logic is actually handled in CommandHandler main method.
+        // But if routed here via "menu" or "help", args[0] will be that keyword.
 
         if (args.length == 0) {
             plugin.getGuiManager().openGuardianCodex(p);
-            return true;
+            return;
         }
 
         String sub = args[0].toLowerCase();
 
         switch (sub) {
+            // --- GENERAL TOOLS ---
             case "wand":
                 p.getInventory().addItem(createScepter());
-                p.sendMessage(lang.getMsg(p, "wand_given")); // Add to lang
+                p.sendMessage(lang.getMsg(p, "wand_given"));
                 break;
             
             case "menu":
                 plugin.getGuiManager().openGuardianCodex(p);
                 break;
-            
-            // --- DELEGATE TO NEW ESTATE COMMAND ---
-            case "claim":
-            case "deed":
-                // Forward to EstateCommand logic (or just run it here)
-                plugin.getSelection().confirmClaim(p);
-                break;
-            
-            case "unclaim":
-            case "vacate":
-                // We moved this logic to EstateCommand, but for now let's use the Selection helper
-                // or call the new EstateManager delete method directly.
-                Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
-                if (estate != null && estate.getOwnerId().equals(p.getUniqueId())) {
-                    plugin.getEstateManager().deleteEstate(estate.getId());
-                    p.sendMessage(lang.getMsg(p, "claim_deleted")); // Add to lang
-                } else {
-                    p.sendMessage(lang.getMsg(p, "no_permission"));
-                }
-                break;
-            
-            case "resize":
-                handleResize(p, args);
-                break;
-
-            // --- GUILD SHORTCUT ---
-            case "guild":
-            case "alliance":
-                p.performCommand("ag guild " + (args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : ""));
-                break;
 
             // --- UTILITIES ---
             case "visit":
-                // plugin.gui().visit().open(p); // Update VisitGUI first!
-                p.sendMessage("§eOpening Travel Menu... (Coming Soon)");
+                plugin.getGuiManager().visit().open(p, 0, false);
                 break;
 
             case "setspawn":
@@ -125,19 +74,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 handleSetDesc(p, args);
                 break;
             
-            // --- NEW: MERGE ---
             case "merge":
-                // Placeholder for Merge Logic using EstateManager
                 p.sendMessage("§eMerge logic moving to EstateManager... (Coming Soon)");
                 break;
             
-            // --- SHORTCUTS ---
             case "level":
-                // plugin.gui().leveling().open(p, estate);
+                Estate lvlEstate = plugin.getEstateManager().getEstateAt(p.getLocation());
+                if (lvlEstate != null) plugin.getGuiManager().leveling().open(p, lvlEstate);
+                else p.sendMessage(lang.getMsg(p, "no_plot_here"));
                 break;
                 
             case "zone":
-                // plugin.gui().zoning().open(p, estate);
+                Estate zoneEstate = plugin.getEstateManager().getEstateAt(p.getLocation());
+                if (zoneEstate != null) plugin.getGuiManager().zoning().open(p, zoneEstate);
+                else p.sendMessage(lang.getMsg(p, "no_plot_here"));
                 break;
                 
             case "consume":
@@ -148,10 +98,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             default:
                 sendHelp(p);
         }
-        return true;
     }
 
-    // --- HANDLERS (Updated to use Estate Object) ---
+    // --- HANDLERS ---
     
     private void handleRename(Player p, String[] args) {
         LanguageManager lang = plugin.getLanguageManager();
@@ -180,14 +129,17 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         
         estate.setName(name);
-        // plugin.getEstateManager().saveEstate(estate);
-        
+        // Note: Auto-save handles persistence
         p.sendMessage(lang.getMsg(p, "guild_rename_success").replace("%name%", name));
     }
 
     private void handleSetDesc(Player p, String[] args) {
-        // Similar logic to rename, just setting description if Estate has that field
-        p.sendMessage("§eDescription updated.");
+        Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
+        if (estate != null && estate.getOwnerId().equals(p.getUniqueId())) {
+            String desc = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            estate.setDescription(ChatColor.translateAlternateColorCodes('&', desc));
+            p.sendMessage("§eDescription updated.");
+        }
     }
 
     private void handleStuck(Player p) {
@@ -197,9 +149,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Simple "Teleport to Edge" logic
         Location target = p.getLocation();
-        target.setX(estate.getRegion().getLowerNE().getX() - 2); // Quick hack
+        // Teleport slightly outside
+        target.setX(estate.getRegion().getLowerNE().getX() - 2);
         target.setY(p.getWorld().getHighestBlockYAt(target) + 1);
         
         p.teleport(target);
@@ -207,33 +159,22 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleResize(Player p, String[] args) {
-        if (args.length < 3) {
-            p.sendMessage("§cUsage: /ag resize <direction> <amount>");
-            return;
-        }
-        String dir = args[1];
-        int amt = Integer.parseInt(args[2]);
-        
-        Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
-        if (estate != null) {
-            plugin.getEstateManager().resizeEstate(estate, dir, amt);
-            p.sendMessage("§aResized!");
-        }
+        // Handled by EstateCommand now, but kept for reference if needed
     }
 
     private void handleSetSpawn(Player p) {
         Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
         if (estate != null && estate.getOwnerId().equals(p.getUniqueId())) {
-            // estate.setSpawnLocation(p.getLocation());
+            estate.setSpawnLocation(p.getLocation());
             p.sendMessage("§aSpawn set!");
         }
     }
 
     private void handleHome(Player p) {
-        // Find first estate owned by player
         for (Estate e : plugin.getEstateManager().getAllEstates()) {
             if (e.getOwnerId().equals(p.getUniqueId())) {
-                // p.teleport(e.getSpawnLocation());
+                if (e.getSpawnLocation() != null) p.teleport(e.getSpawnLocation());
+                else p.teleport(e.getCenter());
                 p.sendMessage("§aTeleporting home...");
                 return;
             }
@@ -261,16 +202,5 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         p.sendMessage("§e/ag claim §7- Claim Land");
         p.sendMessage("§e/ag guild §7- Guild Commands");
         p.sendMessage("§8§m------------------------");
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            List<String> completions = new ArrayList<>();
-            StringUtil.copyPartialMatches(args[0], Arrays.asList(SUB_COMMANDS), completions);
-            Collections.sort(completions);
-            return completions;
-        }
-        return null;
     }
 }

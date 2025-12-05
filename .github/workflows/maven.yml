@@ -35,4 +35,7 @@ jobs:
       with:
         # This will be the name of the download button
         name: AegisGuard-1.3.0-PST
-        path: target/*.jar
+        # The ! excludes the "original-" file so you only get the working one
+        path: |
+          target/*.jar
+          !target/original-*.jar

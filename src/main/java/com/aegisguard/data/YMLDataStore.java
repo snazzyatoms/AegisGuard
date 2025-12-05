@@ -5,7 +5,6 @@ import com.aegisguard.objects.Cuboid;
 import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -111,13 +110,6 @@ public class YMLDataStore implements IDataStore {
             
             // Flags
             ConfigurationSection flags = sec.createSection("flags");
-            // We need to iterate known flags or store them in a way we can loop
-            // For now, save common ones or if you added a getFlags() map to Estate, use that.
-            // Assuming you added `public Map<String, Boolean> getFlags()` to Estate.java:
-            // for (Map.Entry<String, Boolean> entry : estate.getFlags().entrySet()) {
-            //    flags.set(entry.getKey(), entry.getValue());
-            // }
-            // Fallback manual save for now:
             flags.set("pvp", estate.getFlag("pvp"));
             flags.set("mobs", estate.getFlag("mobs"));
             flags.set("build", estate.getFlag("build"));
@@ -125,6 +117,7 @@ public class YMLDataStore implements IDataStore {
             flags.set("safe_zone", estate.getFlag("safe_zone"));
             flags.set("hunger", estate.getFlag("hunger"));
             flags.set("sleep", estate.getFlag("sleep"));
+            // Save any other flags dynamically if possible, or add them here
 
             // Members
             ConfigurationSection mems = sec.createSection("members");
@@ -144,7 +137,6 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void saveEstate(Estate estate) {
         // Mark dirty to save on auto-save, or save immediately
-        // Ideally, update the specific section in 'config' object in memory
         isDirty = true;
         // For safety in development, force save:
         save();
@@ -173,16 +165,3 @@ public class YMLDataStore implements IDataStore {
         // YML does not support block logging. This feature is SQL only.
     }
 }
-```
-
-### 3. 🛠️ `EstateManager.java` (Add Register Method)
-I added `registerEstateFromLoad` so the DataStore can populate the map without triggering a "New Estate" save loop.
-
-**Location:** `src/main/java/com/aegisguard/managers/EstateManager.java`
-
-```java
-    // Add this method to EstateManager.java
-    public void registerEstateFromLoad(Estate estate) {
-        estateMap.put(estate.getId(), estate);
-        addToCache(estate);
-    }

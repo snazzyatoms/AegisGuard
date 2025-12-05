@@ -13,6 +13,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.util.UUID;
 
+/**
+ * DataConverter
+ * - Handles the critical migration from v1.2.0 'plots.yml' to v1.3.0 'estates'.
+ * - Ensures no data (Owner, Flags, Members) is lost during the upgrade.
+ */
 public class DataConverter {
 
     private final AegisGuard plugin;
@@ -24,64 +29,78 @@ public class DataConverter {
     }
 
     public void runMigration() {
+        // 1. Check for Legacy File
         File oldFile = new File(plugin.getDataFolder(), "plots.yml"); 
         
-        // Safety: If no old file exists, stop.
+        // If no old file exists, skip migration.
         if (!oldFile.exists()) {
             return; 
         }
         
-        // If we already have estates loaded, don't double-migrate
+        // If we already have new estates loaded, do not double-migrate.
         if (!estateManager.getAllEstates().isEmpty()) {
-            plugin.getLogger().info("[Migration] Estates already loaded. Skipping migration.");
             return;
         }
 
-        plugin.getLogger().info("⚠️ DETECTED LEGACY 'plots.yml'. Starting Migration...");
+        plugin.getLogger().info("⚠️ DETECTED LEGACY 'plots.yml'. Starting Migration to Estate System...");
         
         YamlConfiguration oldConfig = YamlConfiguration.loadConfiguration(oldFile);
         int count = 0;
+        int failCount = 0;
 
-        // Loop through keys
+        // 2. Iterate through all legacy entries
         for (String key : oldConfig.getKeys(false)) {
-            // Handle "plots.UUID" structure
-            if (key.equalsIgnoreCase("plots")) {
-                ConfigurationSection sec = oldConfig.getConfigurationSection("plots");
-                if (sec != null) {
-                    for (String subKey : sec.getKeys(false)) {
-                        // Inside plots, there might be OWNER UUIDs
-                        ConfigurationSection ownerSec = sec.getConfigurationSection(subKey);
-                        if (ownerSec != null) {
-                            // Check if this section IS a plot, or contains plots
-                            if (ownerSec.contains("world")) {
-                                migrateSinglePlot(ownerSec, subKey); // Flat structure
+            try {
+                // Handle nested "plots.UUID" structure (Common in v1.2)
+                if (key.equalsIgnoreCase("plots")) {
+                    ConfigurationSection sec = oldConfig.getConfigurationSection("plots");
+                    if (sec != null) {
+                        for (String subKey : sec.getKeys(false)) {
+                            // Check if this is a direct plot OR a player UUID holding plots
+                            ConfigurationSection subSec = sec.getConfigurationSection(subKey);
+                            
+                            if (subSec.contains("world")) {
+                                // It's a plot directly
+                                migrateSinglePlot(subSec, subKey);
                                 count++;
                             } else {
-                                // It's an owner grouping -> iterate plots inside
-                                for (String plotId : ownerSec.getKeys(false)) {
-                                    migrateSinglePlot(ownerSec.getConfigurationSection(plotId), plotId);
+                                // It's a UUID container -> loop children
+                                for (String plotId : subSec.getKeys(false)) {
+                                    migrateSinglePlot(subSec.getConfigurationSection(plotId), plotId);
                                     count++;
                                 }
                             }
                         }
                     }
+                    continue;
                 }
-                continue;
+                
+                // Handle flat structure (Root keys are UUIDs)
+                if (oldConfig.isConfigurationSection(key)) {
+                     migrateSinglePlot(oldConfig.getConfigurationSection(key), key);
+                     count++;
+                }
+
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to process legacy key: " + key);
+                e.printStackTrace();
+                failCount++;
             }
-            
-            // Handle flat structure (root keys are UUIDs)
-             if (oldConfig.isConfigurationSection(key)) {
-                 migrateSinglePlot(oldConfig.getConfigurationSection(key), key);
-                 count++;
-             }
         }
 
-        plugin.getLogger().info("✅ MIGRATION SUCCESS: Converted " + count + " plots to Estates.");
-        
-        // Rename old file so we don't migrate again
-        File backup = new File(plugin.getDataFolder(), "plots.yml.bak");
-        if (oldFile.renameTo(backup)) {
-            plugin.getLogger().info("Renamed plots.yml to plots.yml.bak");
+        // 3. Cleanup & Backup
+        if (count > 0) {
+            plugin.getLogger().info("✅ MIGRATION SUCCESS: Converted " + count + " plots to Estates.");
+            plugin.getLogger().info("ℹ️ Old 'plots.yml' has been renamed to 'plots.yml.bak' for safety.");
+            
+            // Rename old file so we don't migrate again next reboot
+            oldFile.renameTo(new File(plugin.getDataFolder(), "plots.yml.bak"));
+        } else {
+            if (failCount == 0) {
+                plugin.getLogger().info("No valid plots found in plots.yml to migrate.");
+            } else {
+                plugin.getLogger().warning("Migration finished with " + failCount + " errors. Check 'plots.yml'.");
+            }
         }
     }
 
@@ -89,8 +108,9 @@ public class DataConverter {
         try {
             if (section == null) return;
             
+            // -- 1. Basic Data --
             String ownerStr = section.getString("owner");
-            if (ownerStr == null) return; // Skip invalid entries
+            if (ownerStr == null) return; // Invalid entry
             
             UUID ownerId;
             try {
@@ -100,7 +120,7 @@ public class DataConverter {
             String worldName = section.getString("world");
             World world = Bukkit.getWorld(worldName);
             
-            // Fallback: If world is null (renamed?), try default world
+            // Fallback: If world is null (renamed?), try default world to save the data
             if (world == null) {
                 world = Bukkit.getWorlds().get(0);
                 plugin.getLogger().warning("Migrating plot " + id + ": World '" + worldName + "' not found. Moved to '" + world.getName() + "'.");
@@ -118,12 +138,12 @@ public class DataConverter {
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerId);
             String name = (owner.getName() != null ? owner.getName() : "Unknown") + "'s Estate";
             
-            // Create the Estate
+            // -- 2. Create the Estate Object --
             Estate estate = estateManager.createEstate(
                 owner, 
                 region, 
                 name, 
-                false 
+                false // Default to Private Estate
             );
             
             if (estate == null) {
@@ -131,7 +151,8 @@ public class DataConverter {
                 return;
             }
 
-            // --- MIGRATE FLAGS (Critical for Protection) ---
+            // -- 3. MIGRATE FLAGS (Critical: Mobs, PvP, etc.) --
+            // We iterate ALL keys in the 'flags' section so we don't miss custom ones.
             if (section.isConfigurationSection("flags")) {
                 ConfigurationSection flags = section.getConfigurationSection("flags");
                 for (String flag : flags.getKeys(false)) {
@@ -139,29 +160,32 @@ public class DataConverter {
                     estate.setFlag(flag, val);
                 }
             } else {
-                // If no flags found, FORCE SAFE DEFAULTS
-                estate.setFlag("mobs", false); // No mobs
-                estate.setFlag("pvp", false);  // No PvP
+                // If no flags found (very old version?), FORCE SAFE DEFAULTS to match v1.2.0 behavior
+                estate.setFlag("mobs", false); // Block mobs by default
+                estate.setFlag("pvp", false);  // Block PvP by default
+                estate.setFlag("tnt-damage", false);
+                estate.setFlag("fire-spread", false);
             }
             
-            // Migrate Members
+            // -- 4. Migrate Members / Trusted --
             if (section.isList("members")) {
                 for (String memberId : section.getStringList("members")) {
                     try {
+                        // Default legacy members to "Resident" role
                         estate.setMember(UUID.fromString(memberId), "resident");
                     } catch (Exception ignored) {}
                 }
             }
-            // Migrate Roles map (if existed)
-            if (section.isConfigurationSection("roles")) {
-                 ConfigurationSection roles = section.getConfigurationSection("roles");
-                 for (String uuidKey : roles.getKeys(false)) {
-                     String role = roles.getString(uuidKey);
-                     try { estate.setMember(UUID.fromString(uuidKey), role); } catch (Exception ignored) {}
-                 }
+            // Migrate 'trusted' list if it existed separately
+            if (section.isList("trusted")) {
+                for (String trustedId : section.getStringList("trusted")) {
+                    try {
+                        estate.setMember(UUID.fromString(trustedId), "resident");
+                    } catch (Exception ignored) {}
+                }
             }
             
-            // Save immediately to lock it in
+            // -- 5. Save --
             plugin.getDataStore().saveEstate(estate);
             
         } catch (Exception e) {

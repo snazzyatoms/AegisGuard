@@ -73,15 +73,17 @@ public class LanguageManager {
     }
 
     /**
-     * NEW: Overload for placeholders (Map).
-     * Fixes compilation error in PlayerGUI.
+     * THIS IS THE METHOD THAT WAS MISSING.
+     * It handles the replacement of {PLOT_NAME}, {OWNER}, etc.
      */
     public String getMsg(Player player, String key, Map<String, String> placeholders) {
         String msg = getMsg(player, key);
-        if (placeholders != null) {
+        
+        if (placeholders != null && !placeholders.isEmpty()) {
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {
                 String k = entry.getKey();
                 String v = entry.getValue();
+                // Support both {KEY} and %KEY% formats
                 msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
             }
         }

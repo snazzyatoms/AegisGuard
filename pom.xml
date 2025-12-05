@@ -5,7 +5,7 @@
 
     <groupId>com.aegisguard</groupId>
     <artifactId>AegisGuard</artifactId>
-    <version>1.2.1</version>
+    <version>1.3.0-PST</version>
     <packaging>jar</packaging>
 
     <name>AegisGuard</name>
@@ -17,12 +17,6 @@
     </properties>
 
     <repositories>
-        <!-- Pl3xMap from Modrinth -->
-        <repository>
-            <id>modrinth-repo</id>
-            <url>https://api.modrinth.com/maven/</url>
-        </repository>
-
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -52,6 +46,21 @@
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
+        </repository>
+
+        <repository>
+            <id>modrinth-repo</id>
+            <url>https://api.modrinth.com/maven/</url>
+        </repository>
+
+        <repository>
+            <id>playpro-repo</id>
+            <url>https://maven.playpro.com</url>
+        </repository>
+        
+        <repository>
+            <id>sk89q-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
         </repository>
     </repositories>
 
@@ -91,11 +100,59 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ✅ Correct Pl3xMap API for 1.20.4 via Modrinth -->
         <dependency>
             <groupId>maven.modrinth</groupId>
             <artifactId>pl3xmap</artifactId>
             <version>1.20.4-491</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ✅ Jobs Reborn (Updated with Exclusions to fix warnings) -->
+        <dependency>
+            <groupId>com.github.Zrips</groupId>
+            <artifactId>Jobs</artifactId>
+            <version>master-SNAPSHOT</version>
+            <scope>provided</scope>
+            <exclusions>
+                <!-- This blocks Maven from trying to find the broken sub-dependencies -->
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.mcMMO-Dev</groupId>
+            <artifactId>mcMMO</artifactId>
+            <version>master-SNAPSHOT</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>net.coreprotect</groupId>
+            <artifactId>coreprotect</artifactId>
+            <version>22.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sk89q.worldguard</groupId>
+            <artifactId>worldguard-bukkit</artifactId>
+            <version>7.0.9</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>7.2.13</version>
             <scope>provided</scope>
         </dependency>
 
@@ -107,8 +164,8 @@
         
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.36</version>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -142,10 +199,6 @@
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.aegisguard.lib.hikari</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.slf4j</pattern>
-                                    <shadedPattern>com.aegisguard.lib.slf4j</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

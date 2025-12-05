@@ -55,7 +55,7 @@ public class LanguageManager {
         }
     }
 
-    // --- GETTERS (The missing methods!) ---
+    // --- GETTERS ---
 
     public String getMsg(Player player, String key) {
         String langKey = getPlayerLangKey(player);
@@ -64,22 +64,39 @@ public class LanguageManager {
         if (config == null) return "§c[Config Error: No Locales Loaded]";
         
         String msg = config.getString("messages." + key);
+        // Fallback check in root if not in messages section (legacy support)
+        if (msg == null) msg = config.getString(key);
         if (msg == null) return "§c[Missing: " + key + "]";
         
         String prefix = config.getString("prefix", "&8[&bAegis&8] &7");
         return format(prefix + msg);
     }
 
+    /**
+     * NEW: Overload for placeholders (Map).
+     * Fixes compilation error in PlayerGUI.
+     */
+    public String getMsg(Player player, String key, Map<String, String> placeholders) {
+        String msg = getMsg(player, key);
+        if (placeholders != null) {
+            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                String k = entry.getKey();
+                String v = entry.getValue();
+                msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
+            }
+        }
+        return msg;
+    }
+
     public String getGui(String key) {
-        // For GUIs, we usually use the default language or a generic one since Inventory Titles are static
-        // If you want dynamic titles, you need to pass a Player to this method.
-        // For now, we use the Default Locale to fix the compilation error.
         FileConfiguration config = localeCache.get(DEFAULT_LANG);
         if (config == null && !localeCache.isEmpty()) config = localeCache.values().iterator().next();
         
         if (config == null) return "§cGUI Error";
         
         String val = config.getString("gui." + key);
+        // Fallback to root if not found
+        if (val == null) val = config.getString(key);
         return format(val != null ? val : key);
     }
 
@@ -90,7 +107,8 @@ public class LanguageManager {
         if (config == null) return new ArrayList<>();
         
         List<String> list = config.getStringList("messages." + key);
-        if (list.isEmpty()) list = config.getStringList("gui." + key); // Check GUI section too
+        if (list.isEmpty()) list = config.getStringList("gui." + key); 
+        if (list.isEmpty()) list = config.getStringList(key);
         
         List<String> formatted = new ArrayList<>();
         for (String s : list) formatted.add(format(s));
@@ -122,7 +140,6 @@ public class LanguageManager {
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
     
-    // Add title support
     public void sendTitle(Player p, String titleKey, String subtitleInput) {
         String title = getMsg(p, titleKey);
         if (title.contains("Missing")) title = "";

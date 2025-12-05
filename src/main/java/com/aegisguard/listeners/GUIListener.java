@@ -2,6 +2,8 @@ package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.*;
+import com.aegisguard.expansions.PetitionAdminGUI; // If using expansions package
+import com.aegisguard.expansions.PetitionGUI;
 import com.aegisguard.objects.Estate;
 
 import org.bukkit.Material;
@@ -36,6 +38,7 @@ public class GUIListener implements Listener {
         Inventory top = event.getView().getTopInventory();
         
         // 1. GLOBAL SAFETY: Stop moving items in our GUIs
+        // This prevents players from stealing the "Glass Panes" or "Buttons"
         if (isAegisInventory(top)) {
             event.setCancelled(true);
         }
@@ -126,13 +129,13 @@ public class GUIListener implements Listener {
         if (meta != null) {
             // Main Menu Actions
             if (meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true);
+                event.setCancelled(true); // Double ensure
                 handleMainMenuClick(player, meta);
                 return;
             }
             // Guild Dashboard Actions
             if (meta.getPersistentDataContainer().has(guildActionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true);
+                event.setCancelled(true); // Double ensure
                 String action = meta.getPersistentDataContainer().get(guildActionKey, PersistentDataType.STRING);
                 handleGuildClick(player, action);
                 return;
@@ -142,6 +145,7 @@ public class GUIListener implements Listener {
     
     /**
      * Checks if the inventory belongs to AegisGuard to enforce global cancellation.
+     * This stops players from dragging items out of the menu.
      */
     private boolean isAegisInventory(Inventory inv) {
         if (inv == null) return false;
@@ -151,7 +155,9 @@ public class GUIListener implements Listener {
                holder instanceof SettingsGUI.SettingsHolder ||
                holder instanceof InfoGUI.InfoHolder ||
                holder instanceof VisitGUI.VisitHolder ||
-               holder instanceof GuildGUI.GuildHolder; // Added Guild Holder
+               holder instanceof GuildGUI.GuildHolder || 
+               holder instanceof EstateMarketGUI.MarketHolder ||
+               holder instanceof EstateAuctionGUI.AuctionHolder;
     }
     
     private void handleMainMenuClick(Player player, ItemMeta meta) {
@@ -159,6 +165,7 @@ public class GUIListener implements Listener {
         if (action == null) return;
 
         switch (action) {
+            // --- CODEX NAVIGATION ---
             case "start_claim":
                 player.closeInventory();
                 player.performCommand("ag wand");
@@ -174,7 +181,6 @@ public class GUIListener implements Listener {
                 break;
             case "open_estates":
                 // Route to a list of owned estates. For now, use admin list as placeholder or message
-                // Ideally: plugin.getGuiManager().myEstates().open(player);
                 player.sendMessage("§eOpening My Estates... (See /ag claim for now)");
                 break;
             case "open_auction":
@@ -205,6 +211,7 @@ public class GUIListener implements Listener {
                 player.closeInventory();
                 break;
         }
+        
         GUIManager.playClick(player);
     }
 

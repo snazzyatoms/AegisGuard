@@ -14,8 +14,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
-import java.util.List;
 
+// FIX: Implements SubCommand (Not CommandExecutor)
 public class AegisCommand implements CommandHandler.SubCommand {
 
     private final AegisGuard plugin;
@@ -28,9 +28,7 @@ public class AegisCommand implements CommandHandler.SubCommand {
     public void execute(Player p, String[] args) {
         LanguageManager lang = plugin.getLanguageManager();
 
-        // If only "/ag" was typed, this logic is actually handled in CommandHandler main method.
-        // But if routed here via "menu" or "help", args[0] will be that keyword.
-
+        // If routed here with empty args (shouldn't happen via CommandHandler but safe to check)
         if (args.length == 0) {
             plugin.getGuiManager().openGuardianCodex(p);
             return;
@@ -129,7 +127,6 @@ public class AegisCommand implements CommandHandler.SubCommand {
         }
         
         estate.setName(name);
-        // Note: Auto-save handles persistence
         p.sendMessage(lang.getMsg(p, "guild_rename_success").replace("%name%", name));
     }
 
@@ -159,7 +156,7 @@ public class AegisCommand implements CommandHandler.SubCommand {
     }
 
     private void handleResize(Player p, String[] args) {
-        // Handled by EstateCommand now, but kept for reference if needed
+        // Handled by EstateCommand now
     }
 
     private void handleSetSpawn(Player p) {

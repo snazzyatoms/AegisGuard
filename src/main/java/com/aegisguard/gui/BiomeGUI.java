@@ -9,17 +9,18 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BiomeGUI {
 
@@ -44,7 +45,6 @@ public class BiomeGUI {
         
         Inventory inv = Bukkit.createInventory(new BiomeHolder(estate), 45, title);
 
-        // Background Filler
         ItemStack filler = GUIManager.getFiller();
         for (int i = 36; i < 45; i++) inv.setItem(i, filler);
 
@@ -97,7 +97,7 @@ public class BiomeGUI {
         player.openInventory(inv);
     }
 
-    // This MUST be public for GUIListener to call it!
+    // THIS METHOD MUST BE PUBLIC for GUIListener to see it
     public void handleClick(Player player, InventoryClickEvent e, BiomeHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
@@ -133,6 +133,7 @@ public class BiomeGUI {
 
                 // Transaction
                 if (cost > 0 && !plugin.isAdmin(player)) {
+                    // Ensure this withdraw matches EconomyManager signature
                     if (!plugin.getEconomy().withdraw(player, cost)) {
                         player.sendMessage(lang.getMsg(player, "claim_failed_money").replace("%cost%", String.valueOf(cost)));
                         return;
@@ -172,7 +173,6 @@ public class BiomeGUI {
         int minY = world.getMinHeight();
         int maxY = world.getMaxHeight();
 
-        // Optimized Loop: Minecraft stores biomes in 4x4x4 cubes
         for (int x = minX; x <= maxX; x += 4) { 
             for (int z = minZ; z <= maxZ; z += 4) {
                 for (int y = minY; y < maxY; y += 4) {

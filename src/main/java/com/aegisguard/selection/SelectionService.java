@@ -23,12 +23,12 @@ public class SelectionService implements Listener {
 
     private final AegisGuard plugin;
     
-    // Selection Cache (Player -> Location)
+    // Selection Cache
     private final Map<UUID, Location> loc1 = new HashMap<>();
     private final Map<UUID, Location> loc2 = new HashMap<>();
     private final Map<UUID, Boolean> selectionIsServer = new HashMap<>();
     
-    // NBT Keys for the Wand Item
+    // NBT Keys
     public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
     public static final NamespacedKey SERVER_WAND_KEY = new NamespacedKey("aegisguard", "server_wand");
 
@@ -42,7 +42,8 @@ public class SelectionService implements Listener {
     
     public Cuboid getSelection(Player p) {
         if (!hasSelection(p)) return null;
-        return new Cuboid(loc1.get(p.getUniqueId()), loc2.get(p.getUniqueId()));
+        // Force vertical expansion even for raw gets
+        return createVerticallyExpandedCuboid(loc1.get(p.getUniqueId()), loc2.get(p.getUniqueId()));
     }
 
     @EventHandler
@@ -76,9 +77,6 @@ public class SelectionService implements Listener {
         }
     }
 
-    // ==========================================================
-    // 🏗️ CONFIRM CLAIM (THE LOGIC)
-    // ==========================================================
     public void confirmClaim(Player p) {
         UUID uuid = p.getUniqueId();
         LanguageManager lang = plugin.getLanguageManager();
@@ -97,23 +95,22 @@ public class SelectionService implements Listener {
             return;
         }
         
-        Cuboid selection = new Cuboid(l1, l2);
+        // FIX: Force Vertical Expansion (Bedrock to Sky)
+        Cuboid selection = createVerticallyExpandedCuboid(l1, l2);
         int radius = Math.max(selection.getWidth(), selection.getLength()) / 2;
         
         // --- VALIDATION ---
         if (!isServerClaim) {
-            // 1. Check World Rules
             if (!plugin.getWorldRules().allowClaims(p.getWorld())) {
                 p.sendMessage(ChatColor.RED + "Estates are disabled in this world.");
                 return;
             }
 
-            // 2. SERVER ZONE INTERSECTION (The WorldGuard Killer)
+            // WorldGuard Killer Check
             if (isOverlappingServerZone(selection)) {
                 if (!p.hasPermission("aegis.admin.bypass")) {
                     p.sendMessage(ChatColor.RED + "❌ " + ChatColor.BOLD + "FORBIDDEN.");
                     p.sendMessage(ChatColor.RED + "This land is protected by Aegis Divine.");
-                    p.sendMessage(ChatColor.GRAY + "You cannot claim inside a Server Zone.");
                     p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 1f, 0.5f);
                     return;
                 } else {
@@ -121,20 +118,17 @@ public class SelectionService implements Listener {
                 }
             }
 
-            // 3. Standard Overlap Check (Player vs Player)
             if (plugin.getEstateManager().isOverlapping(selection)) {
                 p.sendMessage(lang.getMsg(p, "claim_failed_overlap"));
                 return;
             }
 
-            // 4. Size Limit
             int maxRadius = plugin.getConfig().getInt("estates.max_radius", 100);
             if (radius > maxRadius && !p.hasPermission("aegis.admin.bypass")) {
                 p.sendMessage(lang.getMsg(p, "claim_failed_limit").replace("%max%", String.valueOf(maxRadius)));
                 return;
             }
             
-            // 5. Cost Check
             double cost = plugin.getEconomy().calculateClaimCost(selection);
             if (plugin.getConfig().getBoolean("economy.enabled", true) && cost > 0) {
                 if (!plugin.getEconomy().withdraw(p, cost)) {
@@ -157,12 +151,13 @@ public class SelectionService implements Listener {
         Estate estate = plugin.getEstateManager().createEstate(p, selection, name, false); 
         
         if (isServerClaim && estate != null) {
-            // Configure new Server Zone defaults
             plugin.getEstateManager().transferOwnership(estate, Estate.SERVER_UUID, false);
             estate.setFlag("build", false);
             estate.setFlag("pvp", false);
             estate.setFlag("mobs", false);
             estate.setFlag("safe_zone", true);
+            // Force save for server zones immediately
+            plugin.getDataStore().saveEstate(estate);
         }
 
         if (estate != null) {
@@ -170,11 +165,9 @@ public class SelectionService implements Listener {
                 .replace("%type%", isServerClaim ? "Server Zone" : lang.getTerm("type_private"))
                 .replace("%name%", name));
             
-            // --- NEW: mcMMO XP REWARD ---
             if (!isServerClaim && plugin.getMcMMO() != null) {
                 plugin.getMcMMO().giveClaimExp(p);
             }
-            // ----------------------------
             
             if (!isServerClaim && plugin.getConfig().getBoolean("estates.consume_wand_on_claim", true)) {
                 consumeWand(p);
@@ -184,6 +177,21 @@ public class SelectionService implements Listener {
             loc2.remove(uuid);
             selectionIsServer.remove(uuid);
         }
+    }
+    
+    // NEW HELPER: Creates 256+ height region regardless of click
+    private Cuboid createVerticallyExpandedCuboid(Location p1, Location p2) {
+        World w = p1.getWorld();
+        int minH = w.getMinHeight();
+        int maxH = w.getMaxHeight();
+        
+        Location bot = p1.clone(); 
+        bot.setY(minH);
+        
+        Location top = p2.clone(); 
+        top.setY(maxH);
+        
+        return new Cuboid(bot, top);
     }
     
     private boolean isOverlappingServerZone(Cuboid selection) {

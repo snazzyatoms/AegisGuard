@@ -1,12 +1,12 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.GUIManager;
 import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.managers.PetitionManager;
-import com.aegisguard.objects.PetitionRequest; // Fixed Import
+import com.aegisguard.objects.PetitionRequest;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -15,8 +15,8 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.NamespacedKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -62,7 +62,7 @@ public class PetitionAdminGUI {
                 OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
                 String name = requester.getName() != null ? requester.getName() : "Unknown";
 
-                List<String> lore = new java.util.ArrayList<>();
+                List<String> lore = new ArrayList<>();
                 lore.add("§7World: §f" + req.getWorldName());
                 lore.add("§7Expansion: §e" + req.getCurrentRadius() + " §7➡ §a" + req.getRequestedRadius());
                 lore.add("§7Cost Paid: §6$" + String.format("%.2f", req.getCost()));
@@ -93,11 +93,13 @@ public class PetitionAdminGUI {
         
         if (item == null || item.getItemMeta() == null) return;
 
+        // Back Button
         if (e.getSlot() == 49) {
             plugin.getGuiManager().admin().open(admin);
             return;
         }
 
+        // Handle Request Clicks
         if (item.getItemMeta().getPersistentDataContainer().has(reqKey, PersistentDataType.STRING)) {
             String uuidStr = item.getItemMeta().getPersistentDataContainer().get(reqKey, PersistentDataType.STRING);
             UUID requesterId = UUID.fromString(uuidStr);
@@ -122,7 +124,7 @@ public class PetitionAdminGUI {
                 manager.denyRequest(req, admin);
                 admin.sendMessage("§c✖ Petition Denied.");
             }
-            open(admin);
+            open(admin); // Refresh menu
         }
     }
 }

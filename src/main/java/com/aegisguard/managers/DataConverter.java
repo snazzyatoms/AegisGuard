@@ -6,6 +6,8 @@ import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -22,43 +24,52 @@ public class DataConverter {
     }
 
     public void runMigration() {
-        // FIX: Look for 'plots.yml', not 'claims.yml'
         File oldFile = new File(plugin.getDataFolder(), "plots.yml"); 
         
-        // Safety: If no old file exists, OR we already have new data (estates.yml), stop.
+        // Safety: If no old file exists, stop.
         if (!oldFile.exists()) {
             return; 
         }
         
         // If we already have estates loaded, don't double-migrate
-        if (!plugin.getEstateManager().getAllEstates().isEmpty()) {
+        if (!estateManager.getAllEstates().isEmpty()) {
+            plugin.getLogger().info("[Migration] Estates already loaded. Skipping migration.");
             return;
         }
 
-        plugin.getLogger().info("⚠️ DETECTED LEGACY 'plots.yml'. Migrating to Estate System...");
+        plugin.getLogger().info("⚠️ DETECTED LEGACY 'plots.yml'. Starting Migration...");
         
         YamlConfiguration oldConfig = YamlConfiguration.loadConfiguration(oldFile);
         int count = 0;
 
+        // Loop through keys
         for (String key : oldConfig.getKeys(false)) {
-            // In some legacy versions, root keys were UUIDs directly.
-            // In others, it was plots.UUID. We assume the file structure is flat or under 'plots'.
-            
-            String root = key;
-            // Check if we need to dive deeper (e.g. if the key is "plots")
+            // Handle "plots.UUID" structure
             if (key.equalsIgnoreCase("plots")) {
                 ConfigurationSection sec = oldConfig.getConfigurationSection("plots");
                 if (sec != null) {
                     for (String subKey : sec.getKeys(false)) {
-                        migrateSinglePlot(sec.getConfigurationSection(subKey), subKey);
-                        count++;
+                        // Inside plots, there might be OWNER UUIDs
+                        ConfigurationSection ownerSec = sec.getConfigurationSection(subKey);
+                        if (ownerSec != null) {
+                            // Check if this section IS a plot, or contains plots
+                            if (ownerSec.contains("world")) {
+                                migrateSinglePlot(ownerSec, subKey); // Flat structure
+                                count++;
+                            } else {
+                                // It's an owner grouping -> iterate plots inside
+                                for (String plotId : ownerSec.getKeys(false)) {
+                                    migrateSinglePlot(ownerSec.getConfigurationSection(plotId), plotId);
+                                    count++;
+                                }
+                            }
+                        }
                     }
                 }
-                continue; // Skip the rest of the loop for this key
+                continue;
             }
             
-            // Attempt to migrate flat keys if "plots" section didn't exist
-            // (This handles older/different data store versions)
+            // Handle flat structure (root keys are UUIDs)
              if (oldConfig.isConfigurationSection(key)) {
                  migrateSinglePlot(oldConfig.getConfigurationSection(key), key);
                  count++;
@@ -67,33 +78,41 @@ public class DataConverter {
 
         plugin.getLogger().info("✅ MIGRATION SUCCESS: Converted " + count + " plots to Estates.");
         
-        // Disable Sidebar (Legacy cleanup)
-        plugin.getConfig().set("visuals.sidebar_enabled", false);
-        plugin.saveConfig();
-        
-        // Rename old file so we don't migrate again next reboot
-        // We rename it to .bak to keep a safe backup
-        oldFile.renameTo(new File(plugin.getDataFolder(), "plots.yml.bak"));
+        // Rename old file so we don't migrate again
+        File backup = new File(plugin.getDataFolder(), "plots.yml.bak");
+        if (oldFile.renameTo(backup)) {
+            plugin.getLogger().info("Renamed plots.yml to plots.yml.bak");
+        }
     }
 
-    private void migrateSinglePlot(org.bukkit.configuration.ConfigurationSection section, String id) {
+    private void migrateSinglePlot(ConfigurationSection section, String id) {
         try {
             if (section == null) return;
             
             String ownerStr = section.getString("owner");
-            if (ownerStr == null) return;
+            if (ownerStr == null) return; // Skip invalid entries
             
-            UUID ownerId = UUID.fromString(ownerStr);
-            String world = section.getString("world");
+            UUID ownerId;
+            try {
+                 ownerId = UUID.fromString(ownerStr);
+            } catch (IllegalArgumentException e) { return; }
+
+            String worldName = section.getString("world");
+            World world = Bukkit.getWorld(worldName);
+            
+            // Fallback: If world is null (renamed?), try default world
+            if (world == null) {
+                world = Bukkit.getWorlds().get(0);
+                plugin.getLogger().warning("Migrating plot " + id + ": World '" + worldName + "' not found. Moved to '" + world.getName() + "'.");
+            }
+
             int x1 = section.getInt("x1");
             int z1 = section.getInt("z1");
             int x2 = section.getInt("x2");
             int z2 = section.getInt("z2");
             
-            if (world == null || Bukkit.getWorld(world) == null) return;
-
-            Location min = new Location(Bukkit.getWorld(world), x1, 0, z1);
-            Location max = new Location(Bukkit.getWorld(world), x2, 255, z2);
+            Location min = new Location(world, x1, 0, z1);
+            Location max = new Location(world, x2, 255, z2);
             Cuboid region = new Cuboid(min, max);
             
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerId);
@@ -107,7 +126,25 @@ public class DataConverter {
                 false 
             );
             
-            // Migrate Members if list exists
+            if (estate == null) {
+                plugin.getLogger().warning("Skipped plot " + id + " due to overlap or error.");
+                return;
+            }
+
+            // --- MIGRATE FLAGS (Critical for Protection) ---
+            if (section.isConfigurationSection("flags")) {
+                ConfigurationSection flags = section.getConfigurationSection("flags");
+                for (String flag : flags.getKeys(false)) {
+                    boolean val = flags.getBoolean(flag);
+                    estate.setFlag(flag, val);
+                }
+            } else {
+                // If no flags found, FORCE SAFE DEFAULTS
+                estate.setFlag("mobs", false); // No mobs
+                estate.setFlag("pvp", false);  // No PvP
+            }
+            
+            // Migrate Members
             if (section.isList("members")) {
                 for (String memberId : section.getStringList("members")) {
                     try {
@@ -115,6 +152,17 @@ public class DataConverter {
                     } catch (Exception ignored) {}
                 }
             }
+            // Migrate Roles map (if existed)
+            if (section.isConfigurationSection("roles")) {
+                 ConfigurationSection roles = section.getConfigurationSection("roles");
+                 for (String uuidKey : roles.getKeys(false)) {
+                     String role = roles.getString(uuidKey);
+                     try { estate.setMember(UUID.fromString(uuidKey), role); } catch (Exception ignored) {}
+                 }
+            }
+            
+            // Save immediately to lock it in
+            plugin.getDataStore().saveEstate(estate);
             
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to migrate plot: " + id + " - " + e.getMessage());

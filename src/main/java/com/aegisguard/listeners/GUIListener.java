@@ -35,13 +35,14 @@ public class GUIListener implements Listener {
         
         Inventory top = event.getView().getTopInventory();
         
-        // 1. GLOBAL SAFETY: Prevent item moving in Aegis GUIs
+        // 1. GLOBAL SAFETY: Prevent item moving/taking in ALL Aegis GUIs
         if (isAegisInventory(top)) {
             event.setCancelled(true);
         }
 
         if (event.getClickedInventory() == null) return;
-        // Prevent clicking in own inventory if top is Aegis GUI (Optional, mostly for safety)
+        
+        // Extra Safety: Prevent clicking own inventory while menu is open
         if (isAegisInventory(top) && event.getClickedInventory().equals(event.getView().getBottomInventory())) {
              event.setCancelled(true);
              return;
@@ -51,10 +52,11 @@ public class GUIListener implements Listener {
         if (clicked == null || clicked.getType() == Material.AIR) return;
         
         ItemMeta meta = clicked.getItemMeta();
+        if (meta == null) return;
         
         InventoryHolder holder = top.getHolder();
 
-        // --- 2. HOLDER ROUTING (Sub-Menus) ---
+        // --- 2. HOLDER ROUTING (Delegate to specific GUI logic) ---
         if (holder instanceof AdminPlotListGUI.EstateListHolder castHolder) {
             plugin.getGuiManager().plotList().handleClick(player, event, castHolder);
             return;
@@ -127,44 +129,61 @@ public class GUIListener implements Listener {
              plugin.getGuiManager().info().handleClick(player, event);
              return;
         }
+        // Add GuildHolder check if GuildGUI uses one
+        if (holder instanceof GuildGUI.GuildHolder) {
+             // Typically GuildGUI uses NBT routing, but we add safety here
+             event.setCancelled(true);
+        }
         
-        // --- 3. NBT ROUTING (Main Menu & Guilds) ---
-        if (meta != null) {
-            if (meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true);
-                handleMainMenuClick(player, meta);
-                return;
-            }
-            if (meta.getPersistentDataContainer().has(guildActionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true);
-                String action = meta.getPersistentDataContainer().get(guildActionKey, PersistentDataType.STRING);
-                handleGuildClick(player, action);
-                return;
-            }
+        // --- 3. NBT ROUTING (Main Menu & Navigation) ---
+        if (meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
+            event.setCancelled(true);
+            handleMainMenuClick(player, meta);
+            return;
+        }
+        
+        if (meta.getPersistentDataContainer().has(guildActionKey, PersistentDataType.STRING)) {
+            event.setCancelled(true);
+            String action = meta.getPersistentDataContainer().get(guildActionKey, PersistentDataType.STRING);
+            handleGuildClick(player, action);
+            return;
         }
     }
     
     /**
-     * Checks if the inventory belongs to AegisGuard to enforce global cancellation.
+     * Identifies if an inventory belongs to AegisGuard.
      */
     private boolean isAegisInventory(Inventory inv) {
         if (inv == null) return false;
         InventoryHolder holder = inv.getHolder();
+        
         return holder instanceof PlayerGUI.PlayerMenuHolder ||
                holder instanceof AdminGUI.AdminHolder ||
                holder instanceof SettingsGUI.SettingsHolder ||
                holder instanceof InfoGUI.InfoHolder ||
                holder instanceof VisitGUI.VisitHolder ||
-               holder instanceof GuildGUI.GuildHolder || 
+               holder instanceof GuildGUI.GuildHolder ||
                holder instanceof EstateMarketGUI.MarketHolder ||
-               holder instanceof EstateAuctionGUI.AuctionHolder;
+               holder instanceof EstateAuctionGUI.AuctionHolder ||
+               holder instanceof PetitionGUI.PetitionHolder ||
+               holder instanceof PetitionAdminGUI.PetitionAdminHolder ||
+               holder instanceof LandGrantGUI.LandGrantHolder ||
+               holder instanceof PlotCosmeticsGUI.CosmeticsHolder ||
+               holder instanceof PlotFlagsGUI.PlotFlagsHolder ||
+               holder instanceof RolesGUI.RolesMenuHolder ||
+               holder instanceof RolesGUI.RoleAddHolder ||
+               holder instanceof RolesGUI.RoleManageHolder ||
+               holder instanceof LevelingGUI.LevelingHolder ||
+               holder instanceof ZoningGUI.ZoningHolder ||
+               holder instanceof BiomeGUI.BiomeHolder ||
+               holder instanceof AdminPlotListGUI.EstateListHolder;
     }
     
     private void handleMainMenuClick(Player player, ItemMeta meta) {
         String action = meta.getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
         if (action == null) return;
 
-        // Get current estate for context-sensitive buttons
+        // Get context (Standing in estate?)
         Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
         boolean isOwner = estate != null && (estate.getOwnerId().equals(player.getUniqueId()) || plugin.isAdmin(player));
 
@@ -172,14 +191,11 @@ public class GUIListener implements Listener {
             // --- GENERAL ---
             case "start_claim":
                 player.closeInventory();
-                plugin.getSelection().confirmClaim(player);
+                player.performCommand("ag wand");
                 break;
             case "get_wand":
                 player.closeInventory();
                 player.performCommand("ag wand");
-                break;
-            case "open_info":
-                plugin.getGuiManager().info().open(player);
                 break;
             case "open_visit":
                 plugin.getGuiManager().visit().open(player, 0, false);
@@ -187,53 +203,56 @@ public class GUIListener implements Listener {
             case "open_guild":
                 plugin.getGuiManager().guild().openDashboard(player);
                 break;
-
-            // --- ESTATE MANAGEMENT ---
-            case "manage_current_estate":
-            case "manage_flags":
-                if (isOwner) plugin.getGuiManager().flags().open(player, estate);
-                else player.sendMessage("§cYou must stand in your estate to manage it.");
-                break;
-                
-            case "manage_roles":
-                // RolesGUI handles selection logic internally if not provided
-                if (isOwner) plugin.getGuiManager().roles().open(player);
-                else player.sendMessage("§cYou must stand in your estate to manage roles.");
-                break;
-
-            case "open_leveling":
-                if (isOwner) plugin.getGuiManager().leveling().open(player, estate);
-                else player.sendMessage("§cYou must stand in your estate to level it up.");
-                break;
-
-            case "open_zoning":
-                if (isOwner) plugin.getGuiManager().zoning().open(player, estate);
-                else player.sendMessage("§cYou must stand in your estate to manage zones.");
-                break;
-            
-            case "open_biomes":
-                if (isOwner) plugin.getGuiManager().biomes().open(player, estate);
-                else player.sendMessage("§cYou must stand in your estate to change biomes.");
-                break;
-                
-            case "open_petition": // "Expand" button
-                if (isOwner) plugin.getGuiManager().petition().open(player);
-                else player.sendMessage("§cYou must stand in your estate to expand it.");
-                break;
-
-            case "view_perks":
-                if (estate != null) plugin.getGuiManager().openPerksMenu(player, estate);
+            case "open_info":
+                plugin.getGuiManager().info().open(player);
                 break;
 
             // --- ECONOMY ---
             case "open_market":
                 plugin.getGuiManager().market().open(player, 0);
                 break;
-            case "open_estates":
-                plugin.getGuiManager().plotList().open(player, 0); // Shows all for now, ideal is "My Plots" filter
-                break;
             case "open_auction":
                 plugin.getGuiManager().auction().open(player, 0);
+                break;
+            case "open_estates":
+                // TODO: Create specific "My Estates" GUI. For now, list all or use placeholder
+                plugin.getGuiManager().plotList().open(player, 0);
+                break;
+
+            // --- ESTATE MANAGEMENT (Requires Context) ---
+            case "manage_current_estate":
+            case "manage_flags":
+                if (isOwner) plugin.getGuiManager().flags().open(player, estate);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+
+            case "manage_roles":
+                if (isOwner) plugin.getGuiManager().roles().open(player);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+
+            case "open_leveling":
+                if (isOwner) plugin.getGuiManager().leveling().open(player, estate);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+            
+            case "open_zoning":
+                if (isOwner) plugin.getGuiManager().zoning().open(player, estate);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+
+            case "open_biomes":
+                if (isOwner) plugin.getGuiManager().biomes().open(player, estate);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+                
+            case "open_petition":
+                if (isOwner) plugin.getGuiManager().petition().open(player);
+                else player.sendMessage(plugin.getLanguageManager().getMsg(player, "no_permission"));
+                break;
+
+            case "view_perks":
+                if (estate != null) plugin.getGuiManager().openPerksMenu(player, estate);
                 break;
 
             // --- UTILS ---
@@ -250,6 +269,7 @@ public class GUIListener implements Listener {
                 player.closeInventory();
                 break;
         }
+        
         GUIManager.playClick(player);
     }
 

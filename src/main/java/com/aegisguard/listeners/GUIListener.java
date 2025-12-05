@@ -1,7 +1,7 @@
 package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.*; // Imports PetitionGUI, GuildGUI, AdminGUI, etc.
+import com.aegisguard.gui.*;
 import com.aegisguard.objects.Estate;
 
 import org.bukkit.Material;
@@ -35,12 +35,18 @@ public class GUIListener implements Listener {
         
         Inventory top = event.getView().getTopInventory();
         
-        // 1. GLOBAL SAFETY: Stop moving items in our GUIs
+        // 1. GLOBAL SAFETY: Prevent item moving in Aegis GUIs
         if (isAegisInventory(top)) {
             event.setCancelled(true);
         }
 
         if (event.getClickedInventory() == null) return;
+        // Prevent clicking in own inventory if top is Aegis GUI (Optional, mostly for safety)
+        if (isAegisInventory(top) && event.getClickedInventory().equals(event.getView().getBottomInventory())) {
+             event.setCancelled(true);
+             return;
+        }
+
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
         
@@ -48,7 +54,7 @@ public class GUIListener implements Listener {
         
         InventoryHolder holder = top.getHolder();
 
-        // --- 2. HOLDER ROUTING (Specific Logic) ---
+        // --- 2. HOLDER ROUTING (Sub-Menus) ---
         if (holder instanceof AdminPlotListGUI.EstateListHolder castHolder) {
             plugin.getGuiManager().plotList().handleClick(player, event, castHolder);
             return;
@@ -124,15 +130,13 @@ public class GUIListener implements Listener {
         
         // --- 3. NBT ROUTING (Main Menu & Guilds) ---
         if (meta != null) {
-            // Main Menu Actions
             if (meta.getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true); // Double ensure
+                event.setCancelled(true);
                 handleMainMenuClick(player, meta);
                 return;
             }
-            // Guild Dashboard Actions
             if (meta.getPersistentDataContainer().has(guildActionKey, PersistentDataType.STRING)) {
-                event.setCancelled(true); // Double ensure
+                event.setCancelled(true);
                 String action = meta.getPersistentDataContainer().get(guildActionKey, PersistentDataType.STRING);
                 handleGuildClick(player, action);
                 return;
@@ -160,10 +164,22 @@ public class GUIListener implements Listener {
         String action = meta.getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
         if (action == null) return;
 
+        // Get current estate for context-sensitive buttons
+        Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
+        boolean isOwner = estate != null && (estate.getOwnerId().equals(player.getUniqueId()) || plugin.isAdmin(player));
+
         switch (action) {
+            // --- GENERAL ---
             case "start_claim":
                 player.closeInventory();
+                plugin.getSelection().confirmClaim(player);
+                break;
+            case "get_wand":
+                player.closeInventory();
                 player.performCommand("ag wand");
+                break;
+            case "open_info":
+                plugin.getGuiManager().info().open(player);
                 break;
             case "open_visit":
                 plugin.getGuiManager().visit().open(player, 0, false);
@@ -171,33 +187,61 @@ public class GUIListener implements Listener {
             case "open_guild":
                 plugin.getGuiManager().guild().openDashboard(player);
                 break;
+
+            // --- ESTATE MANAGEMENT ---
+            case "manage_current_estate":
+            case "manage_flags":
+                if (isOwner) plugin.getGuiManager().flags().open(player, estate);
+                else player.sendMessage("§cYou must stand in your estate to manage it.");
+                break;
+                
+            case "manage_roles":
+                // RolesGUI handles selection logic internally if not provided
+                if (isOwner) plugin.getGuiManager().roles().open(player);
+                else player.sendMessage("§cYou must stand in your estate to manage roles.");
+                break;
+
+            case "open_leveling":
+                if (isOwner) plugin.getGuiManager().leveling().open(player, estate);
+                else player.sendMessage("§cYou must stand in your estate to level it up.");
+                break;
+
+            case "open_zoning":
+                if (isOwner) plugin.getGuiManager().zoning().open(player, estate);
+                else player.sendMessage("§cYou must stand in your estate to manage zones.");
+                break;
+            
+            case "open_biomes":
+                if (isOwner) plugin.getGuiManager().biomes().open(player, estate);
+                else player.sendMessage("§cYou must stand in your estate to change biomes.");
+                break;
+                
+            case "open_petition": // "Expand" button
+                if (isOwner) plugin.getGuiManager().petition().open(player);
+                else player.sendMessage("§cYou must stand in your estate to expand it.");
+                break;
+
+            case "view_perks":
+                if (estate != null) plugin.getGuiManager().openPerksMenu(player, estate);
+                break;
+
+            // --- ECONOMY ---
             case "open_market":
                 plugin.getGuiManager().market().open(player, 0);
                 break;
             case "open_estates":
-                player.sendMessage("§eOpening Estate List...");
-                plugin.getGuiManager().plotList().open(player, 0);
+                plugin.getGuiManager().plotList().open(player, 0); // Shows all for now, ideal is "My Plots" filter
                 break;
             case "open_auction":
                 plugin.getGuiManager().auction().open(player, 0);
                 break;
+
+            // --- UTILS ---
             case "open_settings":
                 plugin.getGuiManager().settings().open(player);
                 break;
             case "open_admin":
                 plugin.getGuiManager().admin().open(player);
-                break;
-                
-            // --- UTILS ---
-            case "manage_current_estate":
-                Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
-                if (estate != null) {
-                    plugin.getGuiManager().flags().open(player, estate);
-                }
-                break;
-            case "view_perks":
-                Estate e = plugin.getEstateManager().getEstateAt(player.getLocation());
-                if (e != null) plugin.getGuiManager().openPerksMenu(player, e);
                 break;
             case "back_to_codex":
                 plugin.getGuiManager().openGuardianCodex(player);
@@ -206,7 +250,6 @@ public class GUIListener implements Listener {
                 player.closeInventory();
                 break;
         }
-        
         GUIManager.playClick(player);
     }
 

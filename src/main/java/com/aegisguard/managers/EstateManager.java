@@ -5,7 +5,7 @@ import com.aegisguard.objects.Cuboid;
 import com.aegisguard.objects.Estate;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer; // Import OfflinePlayer
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
@@ -24,9 +24,6 @@ public class EstateManager {
         return Collections.unmodifiableCollection(estateMap.values());
     }
 
-    /**
-     * Create a new Estate. Accepts OfflinePlayer for migration support.
-     */
     public Estate createEstate(OfflinePlayer owner, Cuboid region, String name, boolean isGuild) {
         if (isOverlapping(region)) {
             return null; 
@@ -35,9 +32,6 @@ public class EstateManager {
         UUID id = UUID.randomUUID();
         UUID ownerId = owner.getUniqueId();
         
-        // For Guilds, we might map the player to a Guild UUID later, 
-        // but for creation we start with the creator's ID or a Guild ID passed in.
-        
         Estate newEstate = new Estate(id, name, ownerId, isGuild, region.getWorld(), region);
 
         registerEstate(newEstate);
@@ -45,6 +39,16 @@ public class EstateManager {
 
         return newEstate;
     }
+
+    // --- THIS WAS THE MISSING METHOD ---
+    /**
+     * Registers an estate directly from storage without triggering a save.
+     */
+    public void registerEstateFromLoad(Estate estate) {
+        estateMap.put(estate.getId(), estate);
+        addToCache(estate);
+    }
+    // -----------------------------------
 
     public void deleteEstate(UUID estateId) {
         Estate estate = estateMap.remove(estateId);
@@ -55,7 +59,8 @@ public class EstateManager {
     }
     
     public boolean resizeEstate(Estate estate, String direction, int amount) {
-        // Placeholder for resize logic
+        // Placeholder logic for resize
+        // In a full implementation, you would calculate new cuboid, check overlap, and update
         return true; 
     }
 

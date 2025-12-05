@@ -102,7 +102,6 @@ public class YMLDataStore implements IDataStore {
             sec.set("region.z2", r.getUpperSW().getBlockZ());
             
             ConfigurationSection flags = sec.createSection("flags");
-            // Iterate over critical flags manually or generic loop if flags exposed
             flags.set("pvp", estate.getFlag("pvp"));
             flags.set("mobs", estate.getFlag("mobs"));
             flags.set("build", estate.getFlag("build"));
@@ -131,6 +130,14 @@ public class YMLDataStore implements IDataStore {
         save();
     }
 
+    // --- ADDED MISSING METHOD TO FIX COMPILATION ---
+    @Override
+    public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
+        // For YML, saving the estate handles the owner update automatically
+        saveEstate(estate);
+    }
+    // -----------------------------------------------
+
     @Override
     public void deleteEstate(UUID id) {
         if (config != null) {
@@ -154,7 +161,6 @@ public class YMLDataStore implements IDataStore {
         // YML does not support block logging. This feature is SQL only.
     }
 
-    // --- THIS WAS MISSING ---
     @Override
     public void logWildernessBlock(org.bukkit.Location loc, String type, String data, java.util.UUID player) {
         // No-op for YML (SQL Only feature)

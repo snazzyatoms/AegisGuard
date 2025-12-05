@@ -18,21 +18,36 @@ public class CommandHandler implements CommandExecutor {
     public CommandHandler(AegisGuard plugin) {
         this.plugin = plugin;
         
-        // --- GUILD COMMANDS ---
+        // --- 1. GENERAL COMMANDS (AegisCommand) ---
+        AegisCommand generalCmd = new AegisCommand(plugin);
+        register("menu", generalCmd);
+        register("wand", generalCmd);
+        register("help", generalCmd);
+        register("visit", generalCmd);
+        register("home", generalCmd);
+        register("setspawn", generalCmd);
+        register("stuck", generalCmd);
+        register("rename", generalCmd);
+        register("setdesc", generalCmd);
+        register("level", generalCmd);
+        register("zone", generalCmd);
+        register("consume", generalCmd);
+
+        // --- 2. GUILD COMMANDS (GuildCommand) ---
         GuildCommand guildCmd = new GuildCommand(plugin);
         register("guild", guildCmd);
-        register("alliance", guildCmd); // Alias
+        register("alliance", guildCmd);
 
-        // --- ESTATE COMMANDS (Private Land) ---
+        // --- 3. ESTATE COMMANDS (EstateCommand) ---
         EstateCommand estateCmd = new EstateCommand(plugin);
         register("claim", estateCmd);
-        register("deed", estateCmd);    // RP Alias
+        register("deed", estateCmd);
         register("unclaim", estateCmd);
-        register("vacate", estateCmd);  // RP Alias
+        register("vacate", estateCmd);
         register("invite", estateCmd);
-        register("trust", estateCmd);   // Alias
+        register("trust", estateCmd);
         register("setrole", estateCmd);
-        register("resize", estateCmd);  // Handled in EstateCommand now
+        register("resize", estateCmd);
     }
 
     private void register(String name, SubCommand cmd) {
@@ -49,9 +64,9 @@ public class CommandHandler implements CommandExecutor {
         Player player = (Player) sender;
         LanguageManager lang = plugin.getLanguageManager();
 
-        // 1. No Arguments? Open Guardian Codex (Main Menu)
+        // 1. No Arguments? Open Main Menu
         if (args.length == 0) {
-            plugin.gui().openMain(player);
+            plugin.getGuiManager().openGuardianCodex(player);
             return true;
         }
 
@@ -61,16 +76,15 @@ public class CommandHandler implements CommandExecutor {
         if (subCommands.containsKey(sub)) {
             subCommands.get(sub).execute(player, args);
         } else {
-            // Fallback: Check for "Unknown Command" message in lang file, or default
+            // Fallback
             String msg = lang.getMsg(player, "unknown_command");
-            if (msg.startsWith("Missing Key")) msg = "§cUnknown command. Type /ag menu for help.";
+            if (msg.startsWith("§c[Missing")) msg = "§cUnknown command. Type /ag help.";
             player.sendMessage(msg);
         }
 
         return true;
     }
 
-    // Simple Interface for clean code
     public interface SubCommand {
         void execute(Player player, String[] args);
     }

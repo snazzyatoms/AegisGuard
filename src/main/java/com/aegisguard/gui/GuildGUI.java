@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -27,6 +28,11 @@ public class GuildGUI {
         this.actionKey = new NamespacedKey(plugin, "guild_action");
     }
 
+    // --- HOLDER CLASS (Critical for GUIListener) ---
+    public static class GuildHolder implements InventoryHolder {
+        @Override public Inventory getInventory() { return null; }
+    }
+
     public void openDashboard(Player player) {
         LanguageManager lang = plugin.getLanguageManager();
         AllianceManager allianceManager = plugin.getAllianceManager();
@@ -39,7 +45,8 @@ public class GuildGUI {
         }
 
         String title = lang.getGui("title_guild_dashboard").replace("%guild%", guild.getName());
-        Inventory inv = Bukkit.createInventory(null, 45, title);
+        // FIX: Use GuildHolder
+        Inventory inv = Bukkit.createInventory(new GuildHolder(), 45, title);
         
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 45; i++) inv.setItem(i, filler);
@@ -68,12 +75,14 @@ public class GuildGUI {
 
     private void openNoGuildMenu(Player player) {
         LanguageManager lang = plugin.getLanguageManager();
-        Inventory inv = Bukkit.createInventory(null, 27, "§8No Alliance Found");
+        // FIX: Use GuildHolder
+        Inventory inv = Bukkit.createInventory(new GuildHolder(), 27, "§8No Alliance Found");
         
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
         inv.setItem(11, createButton(Material.GRASS_BLOCK, "&aCreate a Guild", "guild_create", "&7Cost: &a$5,000"));
+        inv.setItem(15, createButton(Material.PAPER, "&bAccept Invite", "guild_join", "&7View pending invitations."));
         inv.setItem(26, GUIManager.createItem(Material.BARRIER, lang.getGui("button_close")));
             
         player.openInventory(inv);

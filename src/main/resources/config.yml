@@ -1,238 +1,604 @@
-# =======================================================================
-#  🛡️ AEGISGUARD v1.2.2 - MASTER CONFIGURATION
-# =======================================================================
-#  "The Classic Protection Update"
-#  Restart server or use /agadmin reload after editing.
-# =======================================================================
+# ==============================================================================
+# 🛡️ AegisGuard v1.2.2 - Main Configuration
+# ==============================================================================
+# This file controls how AegisGuard behaves on your server:
+# - Where and how claims are stored (YML vs SQL)
+# - How much things cost (claims, flags, biomes, cosmetics)
+# - Leveling, zoning, auctions, and more
+#
+# After editing, run:  /agadmin reload   or restart the server.
+# ==============================================================================
 
-config_version: 2
 
-# =======================================================================
-# 💾 DATA STORAGE
-# =======================================================================
-storage:
-  # Storage Engine Options:
-  # 1. "yml"    - Local file storage (plugins/AegisGuard/plots.yml). Default.
-  # 2. "sqlite" - Local database file (aegisguard.db). Fast, no setup.
-  # 3. "mysql"  - External database. Best for large networks/Bungee.
-  type: "yml"
-
-  # Database Credentials (Required for "mysql")
-  database:
-    host: "localhost"
-    port: 3306
-    database: "aegisguard"
-    username: "root"
-    password: "password"
-    useSSL: false
-    pool_size: 10
-    connection_timeout: 5000
-
-# =======================================================================
-# 🌐 LANGUAGE
-# =======================================================================
-settings:
-  # Available: en_old.yml, en_hybrid.yml, en_modern.yml
-  default_language_file: "en_old.yml"
-  allow_player_switching: true
-
-# =======================================================================
-# 🎛️ MODULES
-# =======================================================================
-modules:
-  land_claims: true       # Renamed from private_estates for v1.2
-  guild_system: true
-  economy_engine: true
-  asset_liquidation: true
-  progression_system: true
-
-# =======================================================================
-# 🔌 EXTERNAL HOOKS
-# =======================================================================
+# ==============================================================================
+# 🔌 PLUGIN HOOKS & STORAGE BACKEND
+# ==============================================================================
 hooks:
-  # --- Web Maps ---
+  # ---------------------------------------------------------------------------
+  # 🌍 Web Map Integrations
+  # ---------------------------------------------------------------------------
   dynmap:
     enabled: true
-    layer_name: "AegisGuard Plots" # Fixed naming
+    layer_name: "AegisGuard Plots"
     sync_interval_minutes: 5
     style:
       stroke_color: "00FF00"
+      stroke_opacity: 0.8
+      stroke_weight: 3
       fill_color: "00FF00"
       fill_opacity: 0.35
-  
-  bluemap: { enabled: true, label: "Plots" } # Fixed naming
-  pl3xmap: { enabled: true }
 
-  # --- Discord ---
+  # Dynmap is optional. If disabled, claims will not be drawn on the web map.
+
+  # ---------------------------------------------------------------------------
+  # 📣 Discord Webhook Integration
+  # ---------------------------------------------------------------------------
   discord:
     enabled: true
+    # Paste your Webhook URL here:
+    #  - Discord Channel → Edit Channel → Integrations → Webhooks
     webhook_url: "https://discord.com/api/webhooks/..."
+    # Choose which events send a notification to Discord:
     events:
       claim_create: true
       claim_delete: true
+      claim_merge: true
       admin_actions: true
 
-# =======================================================================
-# 💰 ECONOMY
-# =======================================================================
+  # ---------------------------------------------------------------------------
+  # 🗺️ Other Map Plugins (Auto-detected in Map Manager)
+  # ---------------------------------------------------------------------------
+  bluemap:
+    enabled: true
+    label: "Claims"
+  pl3xmap:
+    enabled: true
+
+
+# ------------------------------------------------------------------------------
+# 💾 DATA STORAGE
+# ------------------------------------------------------------------------------
+# This controls WHERE AegisGuard stores all plot data:
+#
+#  type: "yml"
+#    - Stores claims in plugins/AegisGuard/plots.yml
+#    - Easiest to back up or move between servers
+#    - Best for small to medium single servers
+#
+#  type: "sql"
+#    - Uses an SQL database layer (SQLite by default, or MySQL/MariaDB if set)
+#    - Best for large servers, multiple proxies, or future network setups
+#    - More robust for crashes and high concurrency
+#
+# NOTE:
+#   - Pick ONE type and stick with it for a server.
+#   - Switching from "yml" to "sql" later will not magically migrate old data
+#     unless you provide/import the data yourself.
+# ------------------------------------------------------------------------------
+storage:
+  # Options: "yml" (local file) or "sql" (database via SQLDataStore)
+  type: "yml"
+
+  database:
+    # SQLite mode (local .db file, no external SQL server required):
+    file: "aegisguard.db"
+
+    # If you want MySQL/MariaDB instead:
+    # host: "localhost"
+    # port: 3306
+    # database: "aegisguard"
+    # username: "root"
+    # password: "password"
+    # useSSL: false
+
+
+# ==============================================================================
+# 📊 SIDEBAR (SCOREBOARD)
+# ==============================================================================
+sidebar:
+  enabled: false
+  # When enabled, AegisGuard can show claim info in a sidebar scoreboard.
+
+
+# ==============================================================================
+# 💱 CURRENCY MAPPING
+# ==============================================================================
+# Which currency source is used for each feature:
+# - VAULT  → Uses your economy plugin (EssentialsX, CMI, etc.)
+# - EXP    → Player experience points
+# - LEVEL  → Player experience levels
+# - ITEM   → Uses the item_cost fallback from the economy section
+# ==============================================================================
+currencies:
+  claiming: VAULT
+  resizing: VAULT
+  flight: VAULT
+  biomes: VAULT
+  teleport: VAULT
+  leveling: VAULT
+
+
+# ==============================================================================
+# 💰 ECONOMY & PRICES
+# ==============================================================================
 economy:
   enabled: true
   use_vault: true
-  
-  # Fallback (Item Cost)
-  item_cost: { type: DIAMOND, amount: 5 }
-
-  # Standard Pricing
+  # Base cost to create a new plot claim (if currencies.claiming = VAULT)
   claim_cost: 100.0
-  resize_cost_per_block: 10.0
-  
-  # Feature Pricing
+
+  # Fallback if VAULT is disabled or unavailable:
+  # Players will be charged this ITEM instead.
+  item_cost:
+    type: DIAMOND
+    amount: 5
+
+  # Feature-specific costs (set to 0.0 to make them free).
   flag_costs:
     fly: 5000.0
+    # Cost to allow public chest/sign access (Shop-like use)
     shop-interact: 500.0
 
-  # Refunds
+  # Cost to increase plot size per block (used by expansions/resizing).
+  resize_cost_per_block: 10.0
+
+  # Refunds when unclaiming plots.
   refund_on_unclaim: true
+  # Percent of original claim cost refunded (e.g., 50.0 = 50% back).
   refund_percent: 50.0
 
-# =======================================================================
-# 🧱 PLOT SETTINGS
-# =======================================================================
+
+# ==============================================================================
+# 🧱 CLAIMS & PER-WORLD RULES
+# ==============================================================================
 claims:
+  # Hard limits per player (global, can be overridden per-world).
   max_claims_per_player: 2
   min_radius: 5
   max_radius: 64
   max_area: 16000
   preview_seconds: 10
-  
-  # Tools
-  consume_wand_on_claim: true
-  admin_keep_wand: true
 
-  # Merging
+  # Item Management
+  consume_wand_on_claim: true   # Should the claiming wand be consumed?
+  admin_keep_wand: true         # Admins keep the wand for convenience.
+
+  # ---------------------------------------------------------------------------
+  # 🔗 Plot Merging
+  # ---------------------------------------------------------------------------
   merging:
     enabled: true
     cost: 500.0
+    # If true, only plots of equal edge length can merge (recommended).
     require_alignment: true
 
-  # Teleportation
+  # ---------------------------------------------------------------------------
+  # ✨ Travel System (Home / Visit)
+  # ---------------------------------------------------------------------------
   travel_system:
     enabled: true
     allow_home_teleport: true
     allow_visit_teleport: true
 
-  # World Settings
+  # ---------------------------------------------------------------------------
+  # 🌍 Per-World Overrides
+  # ---------------------------------------------------------------------------
   per_world:
     world:
       allow_claims: true
+      use_vault: true
+      vault_cost: 100.0
+      max_claims_per_player: 2
       max_radius: 64
+
     world_nether:
       allow_claims: true
+      use_vault: false     # Example: maybe use ITEM or EXP here via currencies
+      max_claims_per_player: 1
       max_radius: 32
+
     world_the_end:
-      allow_claims: false
+      allow_claims: false   # Disable claiming in The End entirely.
 
-# =======================================================================
-# 📈 LEVELING (Ascension)
-# =======================================================================
-leveling:
-  enabled: true
-  base_cost: 1000.0
-  cost_multiplier: 1.5
-  max_level: 30
-  expand_plot_on_levelup: false
-  expansion_amount: 5
-  
-  rewards:
-    1: ["EFFECT:SPEED:1", "RADIUS:5"]
-    5: ["EFFECT:JUMP:1", "RADIUS:10"]
-    10: ["FLAG:fly", "MEMBERS:3"]
-    30: ["FLIGHT", "RADIUS:100", "MEMBERS:20"]
 
-# =======================================================================
-# 🏗️ ZONING & PROTECTION
-# =======================================================================
+# ==============================================================================
+# 📐 LAND EXPANSIONS (REQUESTS)
+# ==============================================================================
+expansions:
+  # Base cost per extra block of expanded radius/area.
+  cost_per_block: 10.0
+
+  # Scales cost with size so huge expansions become expensive.
+  cost_multiplier: 1.1
+
+  # Absolute global limit (prevents someone from building a continent-sized plot).
+  max_radius_global: 200
+
+  # Minimum gap between neighboring claims (prevents wall-to-wall spam).
+  buffer_zone: 5
+
+
+# ==============================================================================
+# 🏗️ ZONING (SUB-CLAIMS / RENTABLE ROOMS)
+# ==============================================================================
 zoning:
   enabled: true
   max_zones_per_plot: 10
+  # If true, 100% of rent goes to the Plot Owner.
+  # If false, the server can take a cut (future tax systems, etc.).
   landlord_gets_full_rent: true
 
+
+# ==============================================================================
+# 📈 PLOT LEVELING (RPG ASCENSION)
+# ==============================================================================
+leveling:
+  enabled: true
+  base_cost: 1000.0        # Cost for level 1 → 2
+  cost_multiplier: 1.5     # Each next level becomes more expensive
+  max_level: 30
+
+  # When enabled, leveling can expand the plot radius automatically.
+  expand_plot_on_levelup: false
+  expansion_amount: 5      # Blocks added per level increase (if enabled)
+
+  # Rewards per level (30-Level Ascension Tree)
+  # Supported reward formats:
+  #  - "EFFECT:<TYPE>:<LEVEL>"
+  #  - "RADIUS:<BLOCKS>"
+  #  - "MEMBERS:<SLOTS>"
+  #  - "FLAG:<flag-name>"
+  #  - "FLIGHT"
+  rewards:
+    # --- TIER 1: FOUNDATIONS ---
+    1:
+      - "EFFECT:SPEED:1"
+      - "RADIUS:5"
+    2:
+      - "EFFECT:SPEED:2"
+      - "MEMBERS:1"
+    3:
+      - "EFFECT:FAST_DIGGING:1"
+      - "RADIUS:5"
+    4:
+      - "EFFECT:FAST_DIGGING:2"
+      - "MEMBERS:1"
+    5:
+      - "EFFECT:JUMP:1"
+      - "RADIUS:10"
+
+    # --- TIER 2: EXPLORATION & SURVIVAL ---
+    6:
+      - "EFFECT:NIGHT_VISION:1"
+      - "MEMBERS:2"
+    7:
+      - "EFFECT:WATER_BREATHING:1"
+      - "RADIUS:10"
+    8:
+      - "EFFECT:DOLPHINS_GRACE:1"
+      - "MEMBERS:2"
+    9:
+      - "EFFECT:SLOW_FALLING:1"
+      - "RADIUS:15"
+    10:
+      - "FLAG:fly"
+      - "MEMBERS:3"
+
+    # --- TIER 3: COMBAT & DEFENSE ---
+    11:
+      - "EFFECT:DAMAGE_RESISTANCE:1"
+      - "RADIUS:15"
+    12:
+      - "EFFECT:INCREASE_DAMAGE:1"
+      - "MEMBERS:3"
+    13:
+      - "EFFECT:FIRE_RESISTANCE:1"
+      - "RADIUS:20"
+    14:
+      - "EFFECT:DAMAGE_RESISTANCE:2"
+      - "MEMBERS:4"
+    15:
+      - "EFFECT:INCREASE_DAMAGE:2"
+      - "RADIUS:20"
+
+    # --- TIER 4: UTILITY MASTERY ---
+    16:
+      - "EFFECT:LUCK:1"
+      - "MEMBERS:4"
+    17:
+      - "EFFECT:LUCK:2"
+      - "RADIUS:25"
+    18:
+      - "EFFECT:CONDUIT_POWER:1"
+      - "MEMBERS:5"
+    19:
+      - "EFFECT:JUMP:3"
+      - "RADIUS:25"
+    20:
+      - "EFFECT:SPEED:3"
+      - "MEMBERS:5"
+
+    # --- TIER 5: DOMAIN OVERSEER ---
+    21:
+      - "EFFECT:DAMAGE_RESISTANCE:3"
+      - "RADIUS:30"
+    22:
+      - "EFFECT:FAST_DIGGING:3"
+      - "MEMBERS:6"
+    23:
+      - "EFFECT:GLOWING:1"
+      - "RADIUS:30"
+    24:
+      - "EFFECT:ABSORPTION:1"
+      - "MEMBERS:6"
+    25:
+      - "EFFECT:ABSORPTION:2"
+      - "RADIUS:40"
+
+    # --- TIER 6: GOD STATUS ---
+    26:
+      - "EFFECT:LUCK:5"
+      - "MEMBERS:8"
+    27:
+      - "EFFECT:DAMAGE_RESISTANCE:4"
+      - "RADIUS:50"
+    28:
+      - "EFFECT:INCREASE_DAMAGE:3"
+      - "MEMBERS:10"
+    29:
+      - "EFFECT:SPEED:5"
+      - "RADIUS:75"
+    30:
+      - "FLIGHT"
+      - "EFFECT:CONDUIT_POWER:2"
+      - "RADIUS:100"
+      - "MEMBERS:20"
+
+
+# ==============================================================================
+# 💸 PLOT UPKEEP (RENT-LIKE TAX)
+# ==============================================================================
+upkeep:
+  enabled: false
+  check_interval_hours: 24
+  cost_per_plot: 50.0
+  grace_period_days: 7
+  # If enabled, players must pay upkeep or risk losing their plots.
+
+
+# ==============================================================================
+# ⚖️ AUCTIONS
+# ==============================================================================
+auction:
+  duration_days: 3
+  min_bid_increase: 50.0
+  owner_cut_percent: 50   # Percent of final sale value given to plot owner.
+
+
+# ==============================================================================
+# 🌲 WILDERNESS REVERT
+# ==============================================================================
+wilderness_revert:
+  enabled: true
+  revert_after_hours: 2         # How long until wilderness edits are reverted.
+  check_interval_minutes: 10    # How often the system checks for revertable blocks.
+  revert_batch_size: 500        # Max blocks per revert cycle (prevents lag spikes).
+
+
+# ==============================================================================
+# ⚙️ PROTECTION DEFAULTS & FLAGS
+# ==============================================================================
 protections:
+  # Global behavior inside claims:
   pvp_protection: true
   no_mobs_in_claims: true
   container_protection: true
+  pets_protection: true
+  entities_protection: true
+  farm_protection: true
   tnt-damage: true
   fire-spread: true
-  
-  # Default Flags for new plots
+  piston-use: true
+
+  # Default flag states for newly created plots.
   fly: false
   entry: true
   shop-interact: false
 
+
+# ==============================================================================
+# 🛡️ ACTIVE MOB BARRIER
+# ==============================================================================
 mob_barrier:
   enabled: true
   check_interval_ticks: 60
   remove_particles: true
 
-# =======================================================================
-# 🎨 COSMETICS
-# =======================================================================
+
+# ==============================================================================
+# 🎨 COSMETICS (PARTICLES & ENTRY EFFECTS)
+# ==============================================================================
 cosmetics:
   border_particles:
-    flame: { material: BLAZE_POWDER, particle: FLAME, display-name: "&6Flame Border", price: 1000.0 }
-    heart: { material: POPPY, particle: HEART, display-name: "&cHeart Border", price: 2500.0 }
-    soul:  { material: SOUL_SAND, particle: SOUL_FIRE_FLAME, display-name: "&bSoul Flame", price: 5000.0 }
+    flame:
+      material: BLAZE_POWDER
+      particle: FLAME
+      display-name: "&6Flame Border"
+      price: 1000.0
+    heart:
+      material: POPPY
+      particle: HEART
+      display-name: "&cHeart Border"
+      price: 2500.0
+    soul:
+      material: SOUL_SAND
+      particle: SOUL_FIRE_FLAME
+      display-name: "&bSoul Flame Border"
+      price: 5000.0
+    enchant:
+      material: ENCHANTING_TABLE
+      particle: ENCHANTMENT_TABLE
+      display-name: "&dEnchantment Border"
+      price: 3000.0
 
   entry_effects:
-    lightning: { sound: ENTITY_LIGHTNING_BOLT_THUNDER, particle: FLASH }
+    lightning:
+      sound: ENTITY_LIGHTNING_BOLT_THUNDER
+      particle: FLASH
 
-# =======================================================================
-# 🧩 ADMIN & VISUALS
-# =======================================================================
+
+# ==============================================================================
+# 🔮 VISUAL TITLES & NOTIFICATIONS
+# ==============================================================================
 titles:
   enabled: true
+  # Where to show protection/entry messages:
+  # Options: CHAT, ACTION_BAR, TITLE
   notification_location: ACTION_BAR
   fade_in: 10
   stay: 40
   fade_out: 10
 
+
+# ==============================================================================
+# 🆘 UNSTUCK COMMAND
+# ==============================================================================
+unstuck:
+  enabled: true
+  warmup_seconds: 5
+  cooldown_seconds: 300
+  # Teleports players to a safe location if they are trapped in claims.
+
+
+# ==============================================================================
+# 🌿 BIOME CHANGING (BIOME GUI)
+# ==============================================================================
+biomes:
+  enabled: true
+
+  # Cost per biome change (uses currencies.biomes mapping above).
+  # Set to 0.0 to make biome changes free.
+  cost_per_change: 2000.0
+
+  # List of biomes that appear in the Biome GUI.
+  # Names must match Bukkit's Biome enum names exactly.
+  allowed:
+    - PLAINS
+    - FOREST
+    - DESERT
+    - JUNGLE
+    - TAIGA
+    - SWAMP
+    - CHERRY_GROVE
+    - BADLANDS
+    - MUSHROOM_FIELDS
+    - MEADOW
+    - LUSH_CAVES
+
+
+# ==============================================================================
+# 👍 SOCIAL (LIKES / RATING)
+# ==============================================================================
+social:
+  likes_enabled: true
+  one_like_per_player: true
+  # When enabled, players can "like" plots. Useful for rating popular builds.
+
+
+# ==============================================================================
+# 🧩 ADMIN OPTIONS & SENTINEL'S SCEPTER
+# ==============================================================================
 admin:
-  wand_material: BLAZE_ROD
   auto_remove_banned: false
   bypass_claim_limit: false
   broadcast_admin_actions: true
+  unlimited_plots: true
   trust_operators: true
 
+  # Sentinel's Scepter (Admin Wand)
+  wand:
+    material: BLAZE_ROD
+    name: "&c&lSentinel's Scepter"
+    lore:
+      - "&7A tool of absolute authority."
+      - " "
+      - "&eRight-Click: &fSelect Pos 1"
+      - "&eLeft-Click: &fSelect Pos 2"
+      - " "
+      - "&c⚠ Creates SERVER ZONES directly."
+
+
+# ==============================================================================
+# 🔊 SOUND SCHEME
+# ==============================================================================
 sounds:
   global_enabled: true
-  menu_open: { sound: BLOCK_CHEST_OPEN, volume: 1.0, pitch: 1.0 }
-  confirm: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
-  error: { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.5 }
-  claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
+  players: {}   # Reserved for player-specific sound overrides (future use).
 
-# =======================================================================
-# 💥 PROTECTION FEEDBACK
-# =======================================================================
+  menu_open:   { sound: BLOCK_CHEST_OPEN,    volume: 0.7, pitch: 1.0 }
+  menu_flip:   { sound: UI_BUTTON_CLICK,     volume: 0.7, pitch: 1.2 }
+  menu_close:  { sound: BLOCK_CHEST_CLOSE,   volume: 0.7, pitch: 1.0 }
+  confirm:     { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
+  error:       { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
+  claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
+  unclaim:     { sound: ENTITY_VILLAGER_NO,  volume: 0.8, pitch: 0.9 }
+
+
+# ==============================================================================
+# 💥 PROTECTION FEEDBACK (DENY EFFECTS)
+# ==============================================================================
 protection_effects:
   enabled: true
-  defaults: { deny_sound: BLOCK_NOTE_BLOCK_BASS, deny_particle: SMOKE_NORMAL }
-  pvp: { deny_sound: ENTITY_ENDERMAN_TELEPORT, deny_particle: REDSTONE }
-  containers: { deny_sound: BLOCK_CHEST_LOCKED, deny_particle: CRIT }
-  mobs: { deny_sound: ENTITY_ZOMBIE_ATTACK_IRON_DOOR, deny_particle: FLAME }
 
-# =======================================================================
-# 👥 ROLES
-# =======================================================================
+  # Default sound/particle used when denying actions inside claims.
+  defaults:
+    deny_sound: BLOCK_NOTE_BLOCK_BASS
+    deny_particle: SMOKE_NORMAL
+    deny_volume: 1.0
+    deny_pitch: 1.0
+
+  pvp:
+    deny_sound: ENTITY_ENDERMAN_TELEPORT
+    deny_particle: REDSTONE
+  containers:
+    deny_sound: BLOCK_CHEST_LOCKED
+    deny_particle: CRIT
+  mobs:
+    deny_sound: ENTITY_ZOMBIE_ATTACK_IRON_DOOR
+    deny_particle: FLAME
+  pets:
+    deny_sound: ENTITY_CAT_HISS
+    deny_particle: HEART
+  entities:
+    deny_sound: BLOCK_ANVIL_PLACE
+    deny_particle: CRIT_MAGIC
+  farm:
+    deny_sound: BLOCK_CROP_BREAK
+    deny_particle: VILLAGER_ANGRY
+
+
+# ==============================================================================
+# 👥 ROLE MANAGEMENT
+# ==============================================================================
 roles:
   owner:
     name: "&cOwner"
     priority: 100
-    permissions: [ALL]
+    permissions:
+      - ALL
+
   member:
     name: "&aMember"
     priority: 50
-    permissions: [BLOCK_BREAK, BLOCK_PLACE, INTERACT, CONTAINER]
+    permissions:
+      - BLOCK_BREAK
+      - BLOCK_PLACE
+      - INTERACT
+      - CONTAINER
+
   visitor:
     name: "&7Visitor"
     priority: 0
-    permissions: [USE_DOORS, USE_BUTTONS]
+    permissions:
+      - USE_DOORS
+      - USE_BUTTONS

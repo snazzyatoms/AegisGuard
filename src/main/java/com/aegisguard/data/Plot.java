@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.flags.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,13 +11,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * Plot (Data Class) - v1.2.2
+ * Plot (Data Class) - v1.2.2+
  * - Represents a land claim.
- * - UPDATED: Strictly 2D (X/Z only) to ensure Bedrock-to-Sky protection.
- * - UPDATED: Server Zone identification.
+ * - 2D (X/Z only) to ensure Bedrock-to-Sky protection.
+ * - Server Zone identification.
+ * - Thread-friendly collections for Folia / async-safe data access.
  */
 public class Plot {
 
@@ -54,11 +57,24 @@ public class Plot {
     private int x1, z1, x2, z2;
 
     // --- Data Containers ---
-    private final Map<String, Boolean> flags = new HashMap<>();
+    // Claim flags (per-plot)
+    private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
+
+    // Player -> role name ("owner", "member", etc.)
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
-    private final Set<UUID> bannedPlayers = new HashSet<>();
-    private final List<Zone> zones = new ArrayList<>();
-    private final Set<UUID> likedBy = new HashSet<>();
+
+    // Per-role flag overrides: roleName -> (flagKey -> TriState)
+    // Example: "member" -> { "pvp" -> ALLOW, "entry" -> DENY }
+    private final Map<String, Map<String, TriState>> roleFlagStates = new ConcurrentHashMap<>();
+
+    // Banned players
+    private final Set<UUID> bannedPlayers = ConcurrentHashMap.newKeySet();
+
+    // Sub-zones within this plot
+    private final List<Zone> zones = new CopyOnWriteArrayList<>();
+
+    // Likes
+    private final Set<UUID> likedBy = ConcurrentHashMap.newKeySet();
 
     // --- Progression ---
     private int level = 1;
@@ -100,7 +116,8 @@ public class Plot {
 
     // --- CONSTRUCTORS ---
 
-    public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
+    public Plot(UUID plotId, UUID owner, String ownerName, String world,
+                int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
         this.plotId = plotId;
         this.owner = owner;
         this.ownerName = ownerName;
@@ -121,7 +138,8 @@ public class Plot {
         this.flags.putAll(DEFAULT_FLAGS);
     }
 
-    public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
+    public Plot(UUID plotId, UUID owner, String ownerName, String world,
+                int x1, int z1, int x2, int z2) {
         this(plotId, owner, ownerName, world, x1, z1, x2, z2, System.currentTimeMillis());
     }
 
@@ -134,6 +152,9 @@ public class Plot {
     /**
      * Checks if a location is inside the Plot.
      * IGNORES Y-LEVEL completely to provide Bedrock-to-Sky protection.
+     *
+     * NOTE (Folia/Paper):
+     * This method assumes it is called from a valid region/global context.
      */
     public boolean contains(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
@@ -152,6 +173,10 @@ public class Plot {
         return SERVER_OWNER_UUID.equals(owner);
     }
 
+    /**
+     * Get approximate center of the plot.
+     * Caller must ensure this is run on a valid Bukkit thread (global tick or region task).
+     */
     public Location getCenter(@Nullable AegisGuard plugin) {
         World w = Bukkit.getWorld(this.world);
         if (w == null) return null;
@@ -243,7 +268,77 @@ public class Plot {
         playerRoles.remove(playerUUID);
     }
 
+    // --- ROLE FLAG OVERRIDES (PER-PLOT) ---
+
+    /**
+     * Get the TriState override for a given role + flag key.
+     *
+     * @param roleName The configured role name (e.g. "member", "trusted")
+     * @param flagKey  The plot flag key (e.g. "pvp", "containers")
+     * @return TriState.INHERIT if no override exists.
+     */
+    public TriState getRoleFlagState(String roleName, String flagKey) {
+        if (roleName == null || flagKey == null) {
+            return TriState.INHERIT;
+        }
+
+        Map<String, TriState> flagsForRole = roleFlagStates.get(roleName.toLowerCase());
+        if (flagsForRole == null) {
+            return TriState.INHERIT;
+        }
+
+        return flagsForRole.getOrDefault(flagKey.toLowerCase(), TriState.INHERIT);
+    }
+
+    /**
+     * Set or clear a per-role override for a given flag.
+     *
+     * - INHERIT = remove override, use normal plot/world/zone logic.
+     * - ALLOW / DENY = explicit role-level override on this plot.
+     */
+    public void setRoleFlagState(String roleName, String flagKey, TriState state) {
+        if (roleName == null || flagKey == null || state == null) {
+            return;
+        }
+
+        String roleKey = roleName.toLowerCase();
+        String flagKeyLower = flagKey.toLowerCase();
+
+        if (state == TriState.INHERIT) {
+            Map<String, TriState> flagsForRole = roleFlagStates.get(roleKey);
+            if (flagsForRole != null) {
+                flagsForRole.remove(flagKeyLower);
+                if (flagsForRole.isEmpty()) {
+                    roleFlagStates.remove(roleKey);
+                }
+            }
+            return;
+        }
+
+        roleFlagStates
+                .computeIfAbsent(roleKey, k -> new ConcurrentHashMap<>())
+                .put(flagKeyLower, state);
+    }
+
+    /**
+     * Read-only view of all per-role flag overrides for this plot.
+     * Useful for admin/debug menus.
+     */
+    public Map<String, Map<String, TriState>> getRoleFlagStates() {
+        // NOTE: outer map is unmodifiable; inner maps are still live views.
+        return Collections.unmodifiableMap(roleFlagStates);
+    }
+
+    /**
+     * Remove all overrides for a given role (e.g. when deleting a role type).
+     */
+    public void clearRoleFlagsForRole(String roleName) {
+        if (roleName == null) return;
+        roleFlagStates.remove(roleName.toLowerCase());
+    }
+
     // --- GETTERS & SETTERS ---
+
     public UUID getPlotId() {
         return plotId;
     }
@@ -309,6 +404,7 @@ public class Plot {
         }
         this.bannedPlayers.clear();
         this.likedBy.clear();
+        this.roleFlagStates.clear();
         this.entryTitle = null;
         this.description = null;
     }
@@ -337,6 +433,70 @@ public class Plot {
         return playerRoles.entrySet().stream()
                 .map(e -> e.getKey() + ":" + e.getValue())
                 .collect(Collectors.joining(","));
+    }
+
+    /**
+     * Serialize roleFlagStates to a compact string.
+     *
+     * Format example:
+     *   owner>pvp=ALLOW|entry=DENY;member>pvp=DENY
+     *
+     * Only non-INHERIT states are stored.
+     */
+    public String serializeRoleFlags() {
+        if (roleFlagStates.isEmpty()) return "";
+
+        return roleFlagStates.entrySet().stream()
+                .map(roleEntry -> {
+                    String roleName = roleEntry.getKey();
+                    String flagsPart = roleEntry.getValue().entrySet().stream()
+                            .map(e -> e.getKey() + "=" + e.getValue().name())
+                            .collect(Collectors.joining("|"));
+                    return roleName + ">" + flagsPart;
+                })
+                .collect(Collectors.joining(";"));
+    }
+
+    /**
+     * Load roleFlagStates from the string produced by serializeRoleFlags().
+     */
+    public void deserializeRoleFlags(String data) {
+        roleFlagStates.clear();
+        if (data == null || data.isEmpty()) return;
+
+        String[] roleBlocks = data.split(";");
+        for (String block : roleBlocks) {
+            if (block.isEmpty()) continue;
+
+            String[] parts = block.split(">");
+            if (parts.length != 2) continue;
+
+            String roleName = parts[0].toLowerCase();
+            String flagsPart = parts[1];
+
+            Map<String, TriState> flagsForRole = new ConcurrentHashMap<>();
+
+            String[] flagTokens = flagsPart.split("\\|");
+            for (String token : flagTokens) {
+                if (token.isEmpty()) continue;
+                String[] kv = token.split("=");
+                if (kv.length != 2) continue;
+
+                String flagKey = kv[0].toLowerCase();
+                String stateName = kv[1];
+
+                try {
+                    TriState state = TriState.valueOf(stateName);
+                    flagsForRole.put(flagKey, state);
+                } catch (IllegalArgumentException ignored) {
+                    // Ignore unknown / corrupted enum values
+                }
+            }
+
+            if (!flagsForRole.isEmpty()) {
+                roleFlagStates.put(roleName, flagsForRole);
+            }
+        }
     }
 
     // Zones
@@ -382,7 +542,7 @@ public class Plot {
 
     // Social
     public Set<UUID> getLikedBy() {
-        return likedBy;
+        return Collections.unmodifiableSet(likedBy);
     }
 
     public int getLikes() {

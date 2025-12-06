@@ -12,12 +12,12 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;    // ✅ CORRECT: GUI package for 1.2.x
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.gui.SidebarManager; 
+import com.aegisguard.gui.SidebarManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
-import com.aegisguard.hooks.JobsRebornHook;
+// import com.aegisguard.hooks.JobsRebornHook;
+// import com.aegisguard.hooks.McMMOHook;
 import com.aegisguard.hooks.MapHookManager;
-import com.aegisguard.hooks.McMMOHook;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.listeners.BannedPlayerListener;
@@ -52,7 +52,7 @@ public class AegisGuard extends JavaPlugin {
     public static AegisGuard getInstance() {
         return instance;
     }
-    
+
     // --- MANAGERS (v1.2.2 Strict Structure) ---
     private AGConfig configMgr;
     private IDataStore plotStore;
@@ -65,17 +65,17 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
-    private SidebarManager sidebarManager; 
-    
+    private SidebarManager sidebarManager;
+
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
-    private McMMOHook mcmmoHook;
-    private JobsRebornHook jobsHook;
+    // private McMMOHook mcmmoHook;
+    // private JobsRebornHook jobsHook;
     // Note: CoreProtect usually handled inside Listener or DataStore in 1.2.x
 
     private boolean isFolia = false;
-    
+
     // Task Objects
     private Object autoSaveTask;
     private Object upkeepTask;
@@ -103,10 +103,10 @@ public class AegisGuard extends JavaPlugin {
     public MapHookManager getMapHooks() { return mapHookManager; }
     public SidebarManager getSidebar() { return sidebarManager; }
     public boolean isFolia() { return isFolia; }
-    
-    // Hooks
-    public McMMOHook getMcMMO() { return mcmmoHook; }
-    public JobsRebornHook getJobs() { return jobsHook; }
+
+    // Hooks – removed for 1.2.2 (only in 1.3.0)
+    // public McMMOHook getMcMMO() { return mcmmoHook; }
+    // public JobsRebornHook getJobs() { return jobsHook; }
 
     // Legacy Alias
     public AGConfig getConfigManager() { return configMgr; }
@@ -126,16 +126,16 @@ public class AegisGuard extends JavaPlugin {
         }
 
         saveDefaultConfig();
-        
+
         if (!new File(getDataFolder(), "messages.yml").exists()) {
             saveResource("messages.yml", false);
         }
 
         this.configMgr = new AGConfig(this);
-        
+
         // --- 2. STORAGE INIT ---
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
-        
+
         if (storageType.contains("mysql") || storageType.contains("mariadb") || storageType.contains("sql")) {
             getLogger().info("Initializing SQL DataStore (Custom/Local)...");
             this.plotStore = new SQLDataStore(this);
@@ -143,7 +143,7 @@ public class AegisGuard extends JavaPlugin {
             getLogger().info("Initializing YML DataStore (File System)...");
             this.plotStore = new YMLDataStore(this);
         }
-        
+
         // --- 3. INIT MANAGERS (v1.2.2 Structure) ---
         this.selection = new SelectionService(this);
         this.messages = new MessagesUtil(this);
@@ -154,12 +154,12 @@ public class AegisGuard extends JavaPlugin {
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
         this.discord = new DiscordWebhook(this);
-        this.sidebarManager = new SidebarManager(this); 
+        this.sidebarManager = new SidebarManager(this);
         this.protection = new ProtectionManager(this);
 
         // Load Data
         this.plotStore.load();
-        
+
         runGlobalAsync(() -> {
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
@@ -167,25 +167,25 @@ public class AegisGuard extends JavaPlugin {
 
         // Register Events
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
-        Bukkit.getPluginManager().registerEvents(protection, this); 
+        Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
-        
+
         if (cfg().isLevelingEnabled()) {
-             try {
-                 Class.forName("com.aegisguard.listeners.LevelingListener");
-                 Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
-             } catch (ClassNotFoundException ignored) {}
+            try {
+                Class.forName("com.aegisguard.listeners.LevelingListener");
+                Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
+            } catch (ClassNotFoundException ignored) {}
         }
-        
+
         if (cfg().raw().getBoolean("visualization.enabled", true)) {
             Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         }
-        
+
         if (cfg().autoRemoveBannedPlots()) {
-             try {
-                 Class.forName("com.aegisguard.listeners.BannedPlayerListener");
-                 Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
-             } catch (ClassNotFoundException ignored) {}
+            try {
+                Class.forName("com.aegisguard.listeners.BannedPlayerListener");
+                Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
+            } catch (ClassNotFoundException ignored) {}
         }
 
         // Register Commands
@@ -206,29 +206,31 @@ public class AegisGuard extends JavaPlugin {
         // Start Tasks
         startAutoSaver();
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
-        startWildernessRevertTask(); 
+        startWildernessRevertTask();
         startMobBarrierTask();
-        
+
         initializeHooks();
         getLogger().info("AegisGuard enabled successfully.");
     }
-    
+
     private void initializeHooks() {
         try {
-             this.mapHookManager = new MapHookManager(this);
+            this.mapHookManager = new MapHookManager(this);
         } catch (NoClassDefFoundError | Exception e) {
             getLogger().warning("Map hooks could not be initialized: " + e.getMessage());
         }
-        
+
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new AegisPAPIExpansion(this).register();
         }
-        if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
-            this.mcmmoHook = new McMMOHook(this);
-        }
-        if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
-            this.jobsHook = new JobsRebornHook(this);
-        }
+
+        // mcMMO / Jobs hooks are 1.3.0-only and intentionally disabled in 1.2.2
+        // if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
+        //     this.mcmmoHook = new McMMOHook(this);
+        // }
+        // if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
+        //     this.jobsHook = new JobsRebornHook(this);
+        // }
     }
 
     @Override
@@ -241,25 +243,25 @@ public class AegisGuard extends JavaPlugin {
         // Force Save on Disable
         if (plotStore != null) {
             getLogger().info("Saving plot data...");
-            plotStore.saveSync(); 
+            plotStore.saveSync();
         }
-        
+
         if (expansionManager != null) expansionManager.saveSync();
         if (messages != null) messages.savePlayerData();
-        
+
         instance = null;
         getLogger().info("AegisGuard disabled.");
     }
-    
+
     // --- UTILITY METHODS (Fixed) ---
-    
+
     public boolean isSoundEnabled(Player player) {
         // Safe check if config is null
         if (configMgr == null || !cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
         return getConfig().getBoolean(key, true);
     }
-    
+
     public boolean isAdmin(Player player) {
         if (player == null) return false;
         // Check config for OP trust
@@ -287,7 +289,7 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getScheduler().runTaskAsynchronously(this, task);
         }
     }
-    
+
     public void runMain(Player player, Runnable task) {
         if (player == null) { runMainGlobal(task); return; }
         if (isFolia) {
@@ -301,7 +303,7 @@ public class AegisGuard extends JavaPlugin {
             Bukkit.getScheduler().runTask(this, task);
         }
     }
-    
+
     public void runMainGlobal(Runnable task) {
         if (isFolia) {
             try {
@@ -321,8 +323,8 @@ public class AegisGuard extends JavaPlugin {
                 // 1.21+ Fix: Use Plugin.class
                 Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class);
                 return runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), intervalTicks, intervalTicks);
-            } catch (Exception e) { 
-                return null; 
+            } catch (Exception e) {
+                return null;
             }
         } else {
             return new BukkitRunnable() {
@@ -345,7 +347,7 @@ public class AegisGuard extends JavaPlugin {
     // --- TASKS ---
 
     private void startAutoSaver() {
-        long interval = 20L * 60 * 5; 
+        long interval = 20L * 60 * 5;
         Runnable logic = () -> {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
@@ -360,24 +362,24 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             if (plotStore == null) return;
             for (com.aegisguard.data.Plot plot : plotStore.getAllPlots()) {
-                 // v1.2.1 Logic: use ecoManager to check/charge upkeep
-                 // implementation depends on EconomyManager details
+                // v1.2.1 Logic: use ecoManager to check/charge upkeep
+                // implementation depends on EconomyManager details
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
     }
-    
+
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
         // Only run if SQL is active
         if (!storage.contains("sql") && !storage.contains("mysql")) return;
-        
+
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
         WildernessRevertTask task = new WildernessRevertTask(this, plotStore);
         wildernessRevertTask = scheduleAsyncRepeating(task::run, interval);
     }
-    
+
     private void startMobBarrierTask() {
         long interval = cfg().raw().getLong("mob_barrier.check_interval_ticks", 60);
         MobBarrierTask task = new MobBarrierTask(this);

@@ -65,7 +65,7 @@ hooks:
 #    - Easiest to back up or move between servers
 #    - Best for small to medium single servers
 #
-#  type: "sql"
+#  type: "MySQL"
 #    - Uses an SQL database layer (SQLite by default, or MySQL/MariaDB if set)
 #    - Best for large servers, multiple proxies, or future network setups
 #    - More robust for crashes and high concurrency
@@ -76,7 +76,7 @@ hooks:
 #     unless you provide/import the data yourself.
 # ------------------------------------------------------------------------------
 storage:
-  # Options: "yml" (local file) or "sql" (database via SQLDataStore)
+  # Options: "yml" (local file) or "MySSQL" (database via SQLDataStore)
   type: "yml"
 
   database:

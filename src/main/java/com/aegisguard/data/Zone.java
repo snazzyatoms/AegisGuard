@@ -1,23 +1,24 @@
-package com.aegisguard.data;
+package com.aegisguard.data; // Changed from .objects to .data
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.Bukkit;
+
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Zone (Sub-Claim)
+ * Zone (Sub-Claim) - v1.2.2
  * - Represents a 3D rentable area inside a Plot.
- * - Updated for v1.1.1 (Rent Timer Formatting, Center Calculation).
+ * - Lives in 'data' package now.
  */
 public class Zone {
     
     private final String name;
     private final Plot parent;
     
-    // 3D Bounds
+    // 3D Bounds (Zones are usually rooms, so we keep Y)
     private int x1, y1, z1;
     private int x2, y2, z2;
     
@@ -107,7 +108,7 @@ public class Zone {
         World w = Bukkit.getWorld(parent.getWorld());
         if (w == null) return null;
         double cX = (x1 + x2) / 2.0 + 0.5;
-        double cY = (y1 + y2) / 2.0; // No +0.5 for Y usually, but debatable
+        double cY = (y1 + y2) / 2.0; 
         double cZ = (z1 + z2) / 2.0 + 0.5;
         return new Location(w, cX, cY, cZ);
     }

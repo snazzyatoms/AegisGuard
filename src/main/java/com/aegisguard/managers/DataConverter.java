@@ -131,28 +131,29 @@ public class DataConverter {
             int x2 = section.getInt("x2");
             int z2 = section.getInt("z2");
             
-            Location min = new Location(world, x1, 0, z1);
-            Location max = new Location(world, x2, 255, z2);
+            // Ensure vertical bounds are set (0 to 255/320)
+            int minY = world.getMinHeight();
+            int maxY = world.getMaxHeight();
+            
+            Location min = new Location(world, x1, minY, z1);
+            Location max = new Location(world, x2, maxY, z2);
             Cuboid region = new Cuboid(min, max);
             
             OfflinePlayer owner = Bukkit.getOfflinePlayer(ownerId);
             String name = (owner.getName() != null ? owner.getName() : "Unknown") + "'s Estate";
             
-            // -- 2. Create the Estate Object --
-            Estate estate = estateManager.createEstate(
-                owner, 
-                region, 
+            // -- 2. Create the Estate Object Directly (Bypasses "Player" requirement) --
+            // Constructor: UUID id, String name, UUID ownerId, boolean isGuild, World world, Cuboid region
+            Estate estate = new Estate(
+                UUID.randomUUID(), 
                 name, 
-                false // Default to Private Estate
+                ownerId, 
+                false, 
+                world, 
+                region
             );
             
-            if (estate == null) {
-                plugin.getLogger().warning("Skipped plot " + id + " due to overlap or error.");
-                return;
-            }
-
-            // -- 3. MIGRATE FLAGS (Critical: Mobs, PvP, etc.) --
-            // We iterate ALL keys in the 'flags' section so we don't miss custom ones.
+            // -- 3. MIGRATE FLAGS --
             if (section.isConfigurationSection("flags")) {
                 ConfigurationSection flags = section.getConfigurationSection("flags");
                 for (String flag : flags.getKeys(false)) {
@@ -160,9 +161,9 @@ public class DataConverter {
                     estate.setFlag(flag, val);
                 }
             } else {
-                // If no flags found (very old version?), FORCE SAFE DEFAULTS to match v1.2.0 behavior
-                estate.setFlag("mobs", false); // Block mobs by default
-                estate.setFlag("pvp", false);  // Block PvP by default
+                // Defaults
+                estate.setFlag("mobs", false); 
+                estate.setFlag("pvp", false); 
                 estate.setFlag("tnt-damage", false);
                 estate.setFlag("fire-spread", false);
             }
@@ -171,12 +172,11 @@ public class DataConverter {
             if (section.isList("members")) {
                 for (String memberId : section.getStringList("members")) {
                     try {
-                        // Default legacy members to "Resident" role
                         estate.setMember(UUID.fromString(memberId), "resident");
                     } catch (Exception ignored) {}
                 }
             }
-            // Migrate 'trusted' list if it existed separately
+            
             if (section.isList("trusted")) {
                 for (String trustedId : section.getStringList("trusted")) {
                     try {
@@ -185,8 +185,9 @@ public class DataConverter {
                 }
             }
             
-            // -- 5. Save --
-            plugin.getDataStore().saveEstate(estate);
+            // -- 5. Register and Save --
+            estateManager.registerEstateFromLoad(estate); // Add to memory
+            plugin.getDataStore().saveEstate(estate);     // Save to new DB format
             
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to migrate plot: " + id + " - " + e.getMessage());

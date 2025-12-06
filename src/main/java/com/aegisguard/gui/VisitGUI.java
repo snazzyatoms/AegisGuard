@@ -2,7 +2,9 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.util.TeleportUtil;          // ✅ Use TeleportUtil
 import org.bukkit.Bukkit;
+import org.bukkit.Location;                      // ✅ For target locations
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -15,7 +17,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map; // Added for placeholder replacement
+import java.util.Map;
 
 /**
  * VisitGUI
@@ -122,7 +124,7 @@ public class VisitGUI {
                     meta.setDisplayName(plugin.msg().get(player, "visit_plot_name", Map.of("PLOT", alias)));
                     
                     List<String> lore = new ArrayList<>(plugin.msg().getList(player, "visit_plot_lore"));
-                    // Replace placeholders in lore list manually since getList doesn't support Map replacer natively in utils yet
+                    // Replace placeholders in lore list manually
                     lore.replaceAll(s -> s.replace("{WORLD}", plot.getWorld())
                                           .replace("{ROLE}", role));
                     
@@ -136,23 +138,41 @@ public class VisitGUI {
 
         // --- TOGGLE BUTTON (Slot 49) ---
         if (showWarps) {
-            inv.setItem(49, GUIManager.createItem(Material.PLAYER_HEAD, 
+            inv.setItem(49, GUIManager.createItem(
+                Material.PLAYER_HEAD, 
                 plugin.msg().get(player, "visit_switch_trusted"), 
-                plugin.msg().getList(player, "visit_switch_trusted_lore")));
+                plugin.msg().getList(player, "visit_switch_trusted_lore")
+            ));
         } else {
-            inv.setItem(49, GUIManager.createItem(Material.BEACON, 
+            inv.setItem(49, GUIManager.createItem(
+                Material.BEACON, 
                 plugin.msg().get(player, "visit_switch_warps"), 
-                plugin.msg().getList(player, "visit_switch_warps_lore")));
+                plugin.msg().getList(player, "visit_switch_warps_lore")
+            ));
         }
 
         // Navigation
-        if (page > 0) inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
-        if (page < maxPages - 1) inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
+        if (page > 0) {
+            inv.setItem(45, GUIManager.createItem(
+                Material.ARROW,
+                plugin.msg().get(player, "button_prev_page"),
+                null
+            ));
+        }
+        if (page < maxPages - 1) {
+            inv.setItem(53, GUIManager.createItem(
+                Material.ARROW,
+                plugin.msg().get(player, "button_next_page"),
+                null
+            ));
+        }
         
         // Back
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
+        inv.setItem(48, GUIManager.createItem(
+            Material.NETHER_STAR, 
             plugin.msg().get(player, "button_back_menu"), 
-            plugin.msg().getList(player, "back_menu_lore")));
+            plugin.msg().getList(player, "back_menu_lore")
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -182,14 +202,25 @@ public class VisitGUI {
             int index = (holder.getPage() * PLOTS_PER_PAGE) + slot;
             if (index < holder.getPlots().size()) {
                 Plot plot = holder.getPlots().get(index);
-                
-                if (plot.getSpawnLocation() != null) {
-                    player.teleport(plot.getSpawnLocation());
-                } else {
-                    player.teleport(plot.getCenter(plugin));
+                if (plot == null) return;
+
+                // Prefer explicit spawn, fall back to plot center
+                Location target = plot.getSpawnLocation() != null
+                        ? plot.getSpawnLocation()
+                        : plot.getCenter(plugin);
+
+                if (target == null || target.getWorld() == null) {
+                    // Optional: you can swap this message key if you add a dedicated one
+                    plugin.msg().send(player, "home-fail-no-spawn");
+                    plugin.effects().playError(player);
+                    return;
                 }
-                
-                plugin.msg().send(player, "home-set-success"); // Reusing "Teleport Success" msg
+
+                // ✅ Folia/Paper-safe teleport
+                TeleportUtil.safeTeleport(plugin, player, target);
+
+                // Currently reusing this message; you can add a dedicated "visit_teleport_success" later if you want
+                plugin.msg().send(player, "home-set-success");
                 plugin.effects().playTeleport(player);
                 player.closeInventory();
             }

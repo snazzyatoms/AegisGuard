@@ -1,19 +1,16 @@
 package com.aegisguard;
 
-import com.aegisguard.admin.AdminCommand;
+import com.aegisguard.commands.AdminCommand; // Updated location based on previous file
 import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.VaultHook; // VaultHook IS in economy package, keep this.
+import com.aegisguard.economy.VaultHook;
 import com.aegisguard.gui.GUIManager;
 
-// --- FIXED IMPORTS ---
-import com.aegisguard.listeners.GUIListener; // Moved from .gui to .listeners
-// REMOVED: import com.aegisguard.gui.SidebarManager; (Deleted)
-// REMOVED: import com.aegisguard.economy.EconomyManager; (Moved to managers)
-
+// --- LISTENERS & HOOKS ---
+import com.aegisguard.listeners.GUIListener;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.CoreProtectHook;
 import com.aegisguard.hooks.DiscordWebhook;
@@ -27,12 +24,13 @@ import com.aegisguard.listeners.ChatInputListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MigrationListener;
 import com.aegisguard.listeners.ProtectionListener;
-import com.aegisguard.managers.*; // This imports EconomyManager correctly now
+import com.aegisguard.managers.*;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
+
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -40,7 +38,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -103,7 +100,6 @@ public class AegisGuard extends JavaPlugin {
     public GUIManager getGuiManager() { return guiManager; }
     
     public ProtectionManager getProtectionManager() { return protectionManager; }
-    public SelectionService getSelection() { return selection; }
     public WorldRulesManager getWorldRules() { return worldRules; }
     public EffectUtil getEffects() { return effectUtil; }
     public DiscordWebhook getDiscord() { return discord; }
@@ -114,6 +110,12 @@ public class AegisGuard extends JavaPlugin {
     public McMMOHook getMcMMO() { return mcmmoHook; }
     public CoreProtectHook getCoreProtect() { return coreProtectHook; }
     public JobsRebornHook getJobs() { return jobsHook; }
+
+    // --- SELECTION SERVICE (Fixed for AdminCommand) ---
+    public SelectionService getSelection() { return selection; }
+    
+    // ADDED: This alias ensures the AdminCommand finds the manager correctly
+    public SelectionService getSelectionManager() { return selection; }
 
     // Legacy Aliases
     public AGConfig getConfigManager() { return configMgr; }
@@ -139,8 +141,6 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
         
-        // Messages.yml legacy check removed
-
         this.configMgr = new AGConfig(this);
         
         // 1. Initialize Core Managers
@@ -168,7 +168,7 @@ public class AegisGuard extends JavaPlugin {
         // 4. Initialize Utils & Visuals
         this.effectUtil = new EffectUtil(this);
         this.worldRules = new WorldRulesManager(this);
-        this.selection = new SelectionService(this);
+        this.selection = new SelectionService(this); // Init Selection Service
         this.guiManager = new GUIManager(this);
         this.discord = new DiscordWebhook(this);
         this.protectionManager = new ProtectionManager(this);
@@ -200,18 +200,15 @@ public class AegisGuard extends JavaPlugin {
         }
 
         // --- COMMANDS ---
+        // We now use one unified CommandHandler
         CommandHandler cmdHandler = new CommandHandler(this);
         PluginCommand aegis = getCommand("aegis");
         if (aegis != null) {
             aegis.setExecutor(cmdHandler);
         }
 
-        PluginCommand admin = getCommand("aegisadmin");
-        if (admin != null) {
-            AdminCommand adminExecutor = new AdminCommand(this);
-            admin.setExecutor(adminExecutor);
-            admin.setTabCompleter(adminExecutor);
-        }
+        // NOTE: AdminCommand is now registered inside CommandHandler (as /ag admin).
+        // The separate "aegisadmin" block was removed to avoid type conflicts.
 
         // --- TASKS ---
         startAutoSaver();

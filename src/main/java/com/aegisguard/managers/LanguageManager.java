@@ -7,10 +7,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LanguageManager {
@@ -26,26 +24,99 @@ public class LanguageManager {
     }
 
     public void loadAllLocales() {
-        // Default to the file specified in config, or modern.yml
-        String localeName = plugin.getConfig().getString("settings.locale", "modern") + ".yml";
-        File localeDir = new File(plugin.getDataFolder(), "locales");
-        if (!localeDir.exists()) localeDir.mkdirs();
+        // Base locale name without extension
+        String baseLocale = plugin.getConfig().getString("settings.locale", "modern");
+        String localeName = baseLocale + ".yml";
 
-        this.langFile = new File(localeDir, localeName);
-        if (!langFile.exists()) {
-            plugin.saveResource("locales/" + localeName, false);
+        File localeDir = new File(plugin.getDataFolder(), "locales");
+        if (!localeDir.exists()) {
+            localeDir.mkdirs();
         }
 
+        // Target file in plugins/AegisGuard/locales
+        this.langFile = new File(localeDir, localeName);
+
+        // 1) Ensure the locale file exists on disk, with safe fallbacks
+        if (!langFile.exists()) {
+            // First try embedded resource "locales/<localeName>" in the JAR
+            String resourcePath = "locales/" + localeName;
+
+            if (plugin.getResource(resourcePath) != null) {
+                try {
+                    plugin.saveResource(resourcePath, false);
+                    plugin.getLogger().info("Extracted embedded locale: " + resourcePath);
+                } catch (IllegalArgumentException ex) {
+                    plugin.getLogger().warning("Failed to save embedded locale " + resourcePath + ": " + ex.getMessage());
+                }
+            } else {
+                // No embedded file for the chosen locale – try fallback to modern.yml
+                plugin.getLogger().warning("Locale '" + localeName + "' is not embedded in the JAR. Falling back to 'modern.yml'.");
+
+                if (!"modern".equalsIgnoreCase(baseLocale)) {
+                    // Try modern.yml as a fallback
+                    String fallbackName = "modern.yml";
+                    File fallbackFile = new File(localeDir, fallbackName);
+
+                    if (!fallbackFile.exists()) {
+                        String fallbackResource = "locales/modern.yml";
+                        if (plugin.getResource(fallbackResource) != null) {
+                            try {
+                                plugin.saveResource(fallbackResource, false);
+                                plugin.getLogger().info("Extracted fallback embedded locale: " + fallbackResource);
+                            } catch (IllegalArgumentException ex) {
+                                plugin.getLogger().warning("Failed to save fallback locale " + fallbackResource + ": " + ex.getMessage());
+                            }
+                        } else {
+                            plugin.getLogger().severe("No embedded fallback locale 'locales/modern.yml' found. Creating minimal default locale file.");
+                            createMinimalDefaultLocale(fallbackFile);
+                        }
+                    }
+
+                    // Use the fallback file instead
+                    this.langFile = fallbackFile;
+                    localeName = fallbackName;
+                } else {
+                    // We already wanted modern.yml and it's not embedded either – hard fallback to a generated file
+                    plugin.getLogger().severe("Embedded locale '" + resourcePath + "' not found. Creating minimal default locale file.");
+                    createMinimalDefaultLocale(langFile);
+                }
+            }
+        }
+
+        // 2) Load configuration from the selected file
         this.langConfig = YamlConfiguration.loadConfiguration(langFile);
-        
-        // Cache terminology for getTerm()
+
+        // 3) Cache terminology for getTerm()
+        terminology.clear();
         if (langConfig.contains("terminology")) {
             for (String key : langConfig.getConfigurationSection("terminology").getKeys(false)) {
                 terminology.put(key, langConfig.getString("terminology." + key));
             }
         }
-        
+
         plugin.getLogger().info("Loaded language file: " + localeName);
+    }
+
+    /**
+     * Creates a minimal, safe default locale file so the plugin does not crash
+     * even if no embedded locales are present.
+     */
+    private void createMinimalDefaultLocale(File target) {
+        YamlConfiguration yml = new YamlConfiguration();
+        yml.set("prefix", "&8[&bAegis&8] ");
+
+        // A couple of safe defaults you can expand later
+        yml.set("messages.aegis_loaded", "&aAegisGuard enabled.");
+        yml.set("messages.aegis_disabled", "&cAegisGuard disabled.");
+        yml.set("terminology.plot", "&aEstate");
+        yml.set("terminology.guild", "&bGuild");
+
+        try {
+            yml.save(target);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to write minimal default locale to " + target.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // --- Core Message Methods ---
@@ -54,7 +125,7 @@ public class LanguageManager {
         if (langConfig == null) return "§c[Lang Error]";
         String msg = lookupKey(key);
         if (msg == null) return "§c[Missing: " + key + "]";
-        
+
         msg = ChatColor.translateAlternateColorCodes('&', msg);
         if (msg.contains("%prefix%")) {
             String prefix = langConfig.getString("prefix", "&8[&bAegis&8] ");
@@ -76,7 +147,7 @@ public class LanguageManager {
         return getMsg(null, key);
     }
 
-    // --- GUI & List Methods (Fixes GUI Errors) ---
+    // --- GUI & List Methods ---
 
     public String getGui(String key) {
         // Looks specifically in the 'gui' section, then falls back to root
@@ -90,7 +161,7 @@ public class LanguageManager {
         List<String> list = langConfig.getStringList("gui." + key);
         if (list.isEmpty()) list = langConfig.getStringList("messages." + key);
         if (list.isEmpty()) list = langConfig.getStringList(key);
-        
+
         if (list.isEmpty()) {
             List<String> err = new ArrayList<>();
             err.add("§c[Missing List: " + key + "]");

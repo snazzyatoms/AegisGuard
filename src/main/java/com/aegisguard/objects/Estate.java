@@ -14,7 +14,7 @@ public class Estate {
     private UUID ownerId;
     private boolean isGuild;
     private final World world;
-    private final Cuboid region;
+    private Cuboid region; // was final, now mutable
     
     // --- Extended Features ---
     private int level = 1;
@@ -66,6 +66,14 @@ public class Estate {
     public World getWorld() { return world; }
     public Cuboid getRegion() { return region; }
 
+    // Allow EstateManager / other systems to resize or move the plot region.
+    public void setRegion(Cuboid region) {
+        if (region == null) return;
+        this.region = region;
+        // Keep spawn inside the estate by default
+        this.spawnLocation = region.getCenter();
+    }
+
     // --- HELPER METHODS ---
     public Location getCenter() {
         return region.getCenter();
@@ -88,7 +96,7 @@ public class Estate {
     // --- ECONOMY ---
     public double getBalance() { return balance; }
     public void deposit(double amount) { this.balance += amount; }
-    public void withdraw(double amount) { this.balance -= amount; } // Returns void based on usage context, check logic
+    public void withdraw(double amount) { this.balance -= amount; } // Still void; caller shouldn't use it as boolean
 
     public boolean isForSale() { return forSale; }
     public void setForSale(boolean forSale, int price) { 

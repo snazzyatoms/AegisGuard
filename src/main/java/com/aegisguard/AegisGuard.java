@@ -39,7 +39,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
@@ -349,10 +348,10 @@ public class AegisGuard extends JavaPlugin {
         if (interval <= 0) return;
         Runnable logic = () -> {
             for (com.aegisguard.objects.Estate e : estateManager.getAllEstates()) {
-                 double cost = economyManager.calculateDailyUpkeep(e);
-                 if (!e.withdraw(cost)) {
-                     // Handle bankruptcy
-                 }
+                double cost = economyManager.calculateDailyUpkeep(e);
+                // Estate#withdraw returns void, so just call it directly.
+                e.withdraw(cost);
+                // TODO: Handle bankruptcy here if needed (e.g., check balance and repossess estates).
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);

@@ -24,9 +24,10 @@ public class LanguageManager {
     }
 
     public void loadAllLocales() {
-        // Base locale name without extension
-        String baseLocale = plugin.getConfig().getString("settings.locale", "modern");
-        String localeName = baseLocale + ".yml";
+        // Raw value from config (settings.locale)
+        String raw = plugin.getConfig().getString("settings.locale", "modern");
+        String base = normalizeBaseLocale(raw); // e.g. "modern" -> "en_modern"
+        String localeName = base + ".yml";
 
         File localeDir = new File(plugin.getDataFolder(), "locales");
         if (!localeDir.exists()) {
@@ -38,10 +39,10 @@ public class LanguageManager {
 
         // 1) Ensure the locale file exists on disk, with safe fallbacks
         if (!langFile.exists()) {
-            // First try embedded resource "locales/<localeName>" in the JAR
             String resourcePath = "locales/" + localeName;
 
             if (plugin.getResource(resourcePath) != null) {
+                // We have this locale embedded in the JAR
                 try {
                     plugin.saveResource(resourcePath, false);
                     plugin.getLogger().info("Extracted embedded locale: " + resourcePath);
@@ -49,37 +50,32 @@ public class LanguageManager {
                     plugin.getLogger().warning("Failed to save embedded locale " + resourcePath + ": " + ex.getMessage());
                 }
             } else {
-                // No embedded file for the chosen locale – try fallback to modern.yml
-                plugin.getLogger().warning("Locale '" + localeName + "' is not embedded in the JAR. Falling back to 'modern.yml'.");
+                // No matching embedded file – fall back to en_modern.yml
+                plugin.getLogger().warning("Locale '" + localeName + "' is not embedded in the JAR. Falling back to 'en_modern.yml'.");
 
-                if (!"modern".equalsIgnoreCase(baseLocale)) {
-                    // Try modern.yml as a fallback
-                    String fallbackName = "modern.yml";
-                    File fallbackFile = new File(localeDir, fallbackName);
+                String fallbackBase = "en_modern";
+                String fallbackName = fallbackBase + ".yml";
+                File fallbackFile = new File(localeDir, fallbackName);
 
-                    if (!fallbackFile.exists()) {
-                        String fallbackResource = "locales/modern.yml";
-                        if (plugin.getResource(fallbackResource) != null) {
-                            try {
-                                plugin.saveResource(fallbackResource, false);
-                                plugin.getLogger().info("Extracted fallback embedded locale: " + fallbackResource);
-                            } catch (IllegalArgumentException ex) {
-                                plugin.getLogger().warning("Failed to save fallback locale " + fallbackResource + ": " + ex.getMessage());
-                            }
-                        } else {
-                            plugin.getLogger().severe("No embedded fallback locale 'locales/modern.yml' found. Creating minimal default locale file.");
-                            createMinimalDefaultLocale(fallbackFile);
+                if (!fallbackFile.exists()) {
+                    String fallbackResource = "locales/" + fallbackName;
+                    if (plugin.getResource(fallbackResource) != null) {
+                        try {
+                            plugin.saveResource(fallbackResource, false);
+                            plugin.getLogger().info("Extracted fallback embedded locale: " + fallbackResource);
+                        } catch (IllegalArgumentException ex) {
+                            plugin.getLogger().warning("Failed to save fallback locale " + fallbackResource + ": " + ex.getMessage());
                         }
+                    } else {
+                        // Even the fallback isn't embedded – generate a tiny default file
+                        plugin.getLogger().severe("No embedded fallback locale 'locales/" + fallbackName + "' found. Creating minimal default locale file.");
+                        createMinimalDefaultLocale(fallbackFile);
                     }
-
-                    // Use the fallback file instead
-                    this.langFile = fallbackFile;
-                    localeName = fallbackName;
-                } else {
-                    // We already wanted modern.yml and it's not embedded either – hard fallback to a generated file
-                    plugin.getLogger().severe("Embedded locale '" + resourcePath + "' not found. Creating minimal default locale file.");
-                    createMinimalDefaultLocale(langFile);
                 }
+
+                // Swap to fallback
+                this.langFile = fallbackFile;
+                localeName = fallbackName;
             }
         }
 
@@ -88,13 +84,51 @@ public class LanguageManager {
 
         // 3) Cache terminology for getTerm()
         terminology.clear();
-        if (langConfig.contains("terminology")) {
+        if (langConfig != null && langConfig.contains("terminology")) {
             for (String key : langConfig.getConfigurationSection("terminology").getKeys(false)) {
                 terminology.put(key, langConfig.getString("terminology." + key));
             }
         }
 
-        plugin.getLogger().info("Loaded language file: " + localeName);
+        plugin.getLogger().info("Loaded language file: " + localeName + " (requested: " + raw + ")");
+    }
+
+    /**
+     * Normalizes whatever is in settings.locale to one of the real filenames you have:
+     *   modern / en_modern(.yml) / english / en  -> en_modern
+     *   old / en_old(.yml)                        -> en_old
+     *   hybrid / en_hybrid(.yml)                  -> en_hybrid
+     *   anything else starting with en_           -> left as-is (without .yml)
+     */
+    private String normalizeBaseLocale(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return "en_modern";
+        }
+
+        String base = raw.toLowerCase(Locale.ROOT).trim();
+
+        // Strip ".yml" if user included it
+        if (base.endsWith(".yml")) {
+            base = base.substring(0, base.length() - 4);
+        }
+
+        switch (base) {
+            case "modern":
+            case "english":
+            case "en":
+                return "en_modern";
+            case "old":
+                return "en_old";
+            case "hybrid":
+                return "en_hybrid";
+            default:
+                // If they already gave something like "en_modern" or "en_custom"
+                if (base.startsWith("en_")) {
+                    return base;
+                }
+                // Last resort: prefix with en_
+                return "en_" + base;
+        }
     }
 
     /**
@@ -134,7 +168,7 @@ public class LanguageManager {
         return msg;
     }
 
-    // Overload for placeholders (fixes PlayerGUI error)
+    // Overload for placeholders
     public String getMsg(Player p, String key, Map<String, String> placeholders) {
         String msg = getMsg(p, key);
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {

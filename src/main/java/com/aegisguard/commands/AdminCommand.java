@@ -6,7 +6,6 @@ import com.aegisguard.objects.Estate;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-
 import java.util.UUID;
 
 public class AdminCommand implements CommandHandler.SubCommand {
@@ -40,7 +39,8 @@ public class AdminCommand implements CommandHandler.SubCommand {
                 break;
 
             case "wand":
-                player.getInventory().addItem(plugin.getSelectionManager().getWand());
+                // UPDATED: Use the new centralized ItemManager to get the Sentinel Scepter
+                player.getInventory().addItem(plugin.getItemManager().getSentinelScepter());
                 player.sendMessage(ChatColor.GOLD + "You have received the Sentinel's Scepter.");
                 break;
 
@@ -66,6 +66,7 @@ public class AdminCommand implements CommandHandler.SubCommand {
         }
 
         String plotName = args[1];
+        // NOTE: getSelectionManager() is an alias for getSelection()
         Location[] sel = plugin.getSelectionManager().getSelectionLocations(player.getUniqueId());
         
         if (sel == null || sel[0] == null || sel[1] == null) {
@@ -75,9 +76,9 @@ public class AdminCommand implements CommandHandler.SubCommand {
 
         Estate existing = plugin.getDataStore().getEstateAt(sel[0]); 
         if (existing != null) {
-             // FIXED: getName()
-             player.sendMessage(ChatColor.RED + "Overlaps with: " + existing.getName());
-             return;
+            // FIXED: getName()
+            player.sendMessage(ChatColor.RED + "Overlaps with: " + existing.getName());
+            return;
         }
 
         UUID serverUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");

@@ -358,6 +358,11 @@ old_english:
   mob_toggle_lore:
     - "&7Still the claws of hostile beasts."
 
+  button_animals_on: "&a🐄 Beastfolk Ward: Awake"
+  button_animals_off: "&c🐄 Beastfolk Ward: Silent"
+  animals_toggle_lore:
+    - "&7Shelter livestock and gentle beasts from harm."
+
   button_pets_on: "&a🐾 Beast Ward: Awake"
   button_pets_off: "&c🐾 Beast Ward: Silent"
   pet_toggle_lore:
@@ -372,6 +377,16 @@ old_english:
   button_farm_off: "&c🌾 Harvest Ward: Silent"
   farm_toggle_lore:
     - "&7Spare thy crops from trampling."
+
+  button_redstone_on: "&a🔴 Redstone Ward: Awake"
+  button_redstone_off: "&c🔴 Redstone Ward: Silent"
+  redstone_toggle_lore:
+    - "&7Permit levers, plates, and circuits to stir."
+
+  button_vehicle_on: "&a🚤 Conveyance Ward: Awake"
+  button_vehicle_off: "&c🚤 Conveyance Ward: Silent"
+  vehicle_toggle_lore:
+    - "&7Guard boats, carts, and other steeds of travel."
 
   button_tnt_on: "&a💥 Blast Ward: Awake"
   button_tnt_off: "&c💥 Blast Ward: Silent"
@@ -500,6 +515,15 @@ old_english:
   flag_interact_lore:
     - '&7If ON, all players may use doors/buttons.'
     - '&cIf OFF, no players may use doors/buttons.'
+  flag_animals_lore:
+    - '&7If ON, beasts are protected.'
+    - '&cIf OFF, beasts may be harmed.'
+  flag_redstone_lore:
+    - '&7If ON, redstone contraptions may stir.'
+    - '&cIf OFF, circuits lie silent.'
+  flag_vehicle_lore:
+    - '&7If ON, vessels and carts may be used.'
+    - '&cIf OFF, such conveyances are barred.'
 
   wilderness_revert_start: '[AegisGuard] The spirits of the wild begin their work...'
   wilderness_revert_end: '[AegisGuard] The spirits have restored {AMOUNT} scars.'
@@ -574,6 +598,7 @@ old_english:
     - '&e/aegis setdesc <text> &7- Set a description for travelers.'
     - '&e/aegis stuck &7- Escape a trap or prison.'
     - '&e/aegis help &7- Study this sacred guide'
+
     
 # ======================================
 # HYBRID ENGLISH STYLE (Fantasy RPG)
@@ -959,6 +984,11 @@ hybrid_english:
   mob_toggle_lore:
     - '&7Allow hostile mobs?'
 
+  button_animals_on: '&a🐄 Animals: Unrestricted'
+  button_animals_off: '&c🐄 Animals: Protected'
+  animals_toggle_lore:
+    - '&7Protect passive animals?'
+
   button_pets_on: '&a🐾 Pets: Vulnerable'
   button_pets_off: '&c🐾 Pets: Protected'
   pet_toggle_lore:
@@ -973,6 +1003,16 @@ hybrid_english:
   button_farm_off: '&c🌾 Crops: Protected'
   farm_toggle_lore:
     - '&7Prevent trampling?'
+
+  button_redstone_on: '&a🔴 Redstone: Active'
+  button_redstone_off: '&c🔴 Redstone: Disabled'
+  redstone_toggle_lore:
+    - '&7Allow redstone mechanics?'
+
+  button_vehicle_on: '&a🚤 Vehicles: Allowed'
+  button_vehicle_off: '&c🚤 Vehicles: Blocked'
+  vehicle_toggle_lore:
+    - '&7Allow boats, carts & mounts?'
 
   button_tnt_on: '&a💥 TNT: Dangerous'
   button_tnt_off: '&c💥 TNT: Safe'
@@ -1098,6 +1138,15 @@ hybrid_english:
     - '&7Allow containers?'
   flag_interact_lore:
     - '&7Allow interactions?'
+  flag_animals_lore:
+    - '&7If ON, animals are protected.'
+    - '&cIf OFF, animals can be harmed.'
+  flag_redstone_lore:
+    - '&7If ON, redstone works normally.'
+    - '&cIf OFF, circuits are disabled.'
+  flag_vehicle_lore:
+    - '&7If ON, vehicles may be used.'
+    - '&cIf OFF, boats & carts are blocked.'
 
   wilderness_revert_start: '[AegisGuard] Nature is healing...'
   wilderness_revert_end: '[AegisGuard] {AMOUNT} blocks reverted.'
@@ -1114,6 +1163,7 @@ hybrid_english:
     - '&e/ag welcome [msg]'
     - '&e/ag market'
     - '&e/ag help'
+
     
 # ======================================
 # MODERN ENGLISH STYLE (Clean & Standard)
@@ -1493,6 +1543,11 @@ modern_english:
   mob_toggle_lore:
     - '&7Allow hostile mobs?'
 
+  button_animals_on: '&a🐄 Animals: Unrestricted'
+  button_animals_off: '&c🐄 Animals: Protected'
+  animals_toggle_lore:
+    - '&7Protect passive animals?'
+
   button_pets_on: '&a🐾 Pets: Unsafe'
   button_pets_off: '&c🐾 Pets: Protected'
   pet_toggle_lore:
@@ -1507,6 +1562,16 @@ modern_english:
   button_farm_off: '&c🌾 Crops: Protected'
   farm_toggle_lore:
     - '&7Prevent trampling?'
+
+  button_redstone_on: '&a🔴 Redstone: Enabled'
+  button_redstone_off: '&c🔴 Redstone: Disabled'
+  redstone_toggle_lore:
+    - '&7Allow redstone mechanics?'
+
+  button_vehicle_on: '&a🚤 Vehicles: Allowed'
+  button_vehicle_off: '&c🚤 Vehicles: Blocked'
+  vehicle_toggle_lore:
+    - '&7Allow boats, minecarts & mounts?'
 
   button_tnt_on: '&a💥 TNT: On'
   button_tnt_off: '&c💥 TNT: Off'
@@ -1547,6 +1612,7 @@ modern_english:
   button_shop_off: '&c🛒 Shop: Private'
   shop_toggle_lore: 
     - "&7Allow usage of shop chests?"
+    - "&7Contents stay protected."
     - "&7Cost: &6{COST}"
     
   button_cosmetics: '&dCosmetics'
@@ -1631,6 +1697,15 @@ modern_english:
     - '&7Allow containers?'
   flag_interact_lore:
     - '&7Allow interactions?'
+  flag_animals_lore:
+    - '&7If ON, animals are protected.'
+    - '&cIf OFF, animals can be harmed.'
+  flag_redstone_lore:
+    - '&7If ON, redstone works normally.'
+    - '&cIf OFF, redstone is disabled.'
+  flag_vehicle_lore:
+    - '&7If ON, vehicles may be used.'
+    - '&cIf OFF, boats & minecarts are blocked.'
 
   wilderness_revert_start: '&7Reverting wilderness...'
   wilderness_revert_end: '&7Reverted {AMOUNT} blocks.'

@@ -1,9 +1,6 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
-// If you have Zone.java in objects package, keep this. 
-// If Zone is not used in 1.2.1, you can remove the import and the List<Zone>.
-import com.aegisguard.data.Zone; 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Plot (Data Class) - v1.2.2
@@ -29,7 +27,7 @@ public class Plot {
     private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
         Map.entry("pvp", false), 
         Map.entry("containers", true),
-        Map.entry("mobs", false), // Protects against mobs by default
+        Map.entry("mobs", false), // Changed to false to protect by default
         Map.entry("pets", true),
         Map.entry("entities", true),
         Map.entry("farm", true),
@@ -212,9 +210,6 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
-        
-        // Fetch role permissions from Config
-        // Note: Logic assumes config has "roles.<role>.permissions"
         Set<String> permissions = new HashSet<>();
         List<String> rolePerms = plugin.cfg().raw().getStringList("roles." + role + ".permissions");
         if (rolePerms != null) permissions.addAll(rolePerms);
@@ -223,7 +218,7 @@ public class Plot {
     }
 
     public String getRole(UUID playerUUID) { 
-        return playerRoles.getOrDefault(playerUUID, "visitor"); // Default to visitor if not found
+        return playerRoles.getOrDefault(playerUUID, "visitor"); 
     }
     
     public void setRole(UUID playerUUID, String role) {
@@ -278,6 +273,19 @@ public class Plot {
     public boolean getFlag(String key, boolean def) { return flags.getOrDefault(key, def); }
     public void setFlag(String key, boolean value) { flags.put(key, value); }
     public Map<String, Boolean> getFlags() { return Collections.unmodifiableMap(flags); }
+    
+    // Serialization Helpers for SQL
+    public String serializeFlags() {
+        return flags.entrySet().stream()
+            .map(e -> e.getKey() + ":" + e.getValue())
+            .collect(Collectors.joining(","));
+    }
+
+    public String serializeRoles() {
+        return playerRoles.entrySet().stream()
+            .map(e -> e.getKey() + ":" + e.getValue())
+            .collect(Collectors.joining(","));
+    }
 
     // Zones
     public List<Zone> getZones() { return zones; }
@@ -315,8 +323,11 @@ public class Plot {
     public void removeBan(UUID playerUUID) { bannedPlayers.remove(playerUUID); }
 
     // Upkeep & Economy
+    public long getLastUpkeep() { return lastUpkeepPayment; } // Getter alias for SQLDataStore
     public long getLastUpkeepPayment() { return lastUpkeepPayment; }
+    public void setLastUpkeep(long time) { this.lastUpkeepPayment = time; } // Setter alias
     public void setLastUpkeepPayment(long time) { this.lastUpkeepPayment = time; }
+    
     public boolean isForSale() { return isForSale; }
     public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
     public double getSalePrice() { return salePrice; }

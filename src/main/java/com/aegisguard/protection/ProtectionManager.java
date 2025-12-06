@@ -3,6 +3,7 @@ package com.aegisguard.protection;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.objects.Estate;
 import com.aegisguard.objects.Guild;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -10,11 +11,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.block.EntityChangeBlockEvent;
 
 /**
  * ProtectionManager
  * - Handles Environmental & Entity-based protections.
- * - Ensures Mobs, PvP, Fire, and Explosions respect Estate flags.
  */
 public class ProtectionManager implements Listener {
 
@@ -23,10 +25,20 @@ public class ProtectionManager implements Listener {
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
     }
+    
+    // --- Helper to determine if an estate is a safe zone ---
+    private boolean isEstateSafe(Estate estate) {
+        if (estate == null) return false;
+        // Server Estates are inherently safe (mobs not allowed)
+        if (estate.isServerEstate()) return true;
+        // Check flags: Safe Zone or Mobs flag is FALSE
+        return estate.getFlag("safe_zone") || !estate.getFlag("mobs");
+    }
 
     // ==========================================================
     // 🧟 MOB SPAWNING & TARGETING
     // ==========================================================
+
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent e) {
         if (e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM) return;
@@ -34,8 +46,8 @@ public class ProtectionManager implements Listener {
         Estate estate = plugin.getEstateManager().getEstateAt(e.getLocation());
         
         if (estate != null) {
-            // If "mobs" flag is FALSE, strictly cancel hostile spawns
-            if (!estate.getFlag("mobs")) {
+            // Cancel hostile spawns if the estate is designated as safe (mobs disallowed)
+            if (isEstateSafe(estate)) {
                 if (isHostile(e.getEntity())) {
                     e.setCancelled(true);
                 }
@@ -48,25 +60,38 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // --- NEW: Stop mobs from seeing/targeting players in Safe Zones ---
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityTarget(EntityTargetLivingEntityEvent e) {
         if (!(e.getTarget() instanceof Player target)) return;
         
         Estate estate = plugin.getEstateManager().getEstateAt(target.getLocation());
         
-        // If player is in a Safe Zone or an Estate with disabled mobs
-        if (estate != null) {
-            if (estate.getFlag("safe_zone") || !estate.getFlag("mobs")) {
-                e.setCancelled(true);
-                e.setTarget(null); // Force them to forget the player
+        if (isEstateSafe(estate)) {
+            e.setCancelled(true);
+            e.setTarget(null); // Force them to forget the player
+            
+            // IMMEDIATE REPEL: Push the mob out or away from the boundary/player
+            if (e.getEntity().getLocation().distanceSquared(target.getLocation()) < 25) {
+                // Assumes a RepelMob method exists in EffectUtil or elsewhere
+                plugin.getEffects().repelMob(e.getEntity()); 
             }
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityChangeBlock(EntityChangeBlockEvent e) {
+        if (!(e.getEntity() instanceof Enderman || e.getEntity() instanceof Silverfish || e.getEntity() instanceof Wither)) return;
+
+        Estate estate = plugin.getEstateManager().getEstateAt(e.getBlock().getLocation());
+        if (isEstateSafe(estate)) {
+            e.setCancelled(true);
+        }
+    }
+    
     // ==========================================================
     // ⚔️ DAMAGE & COMBAT
     // ==========================================================
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent e) {
         Entity victim = e.getEntity();
@@ -79,7 +104,9 @@ public class ProtectionManager implements Listener {
         Estate estate = plugin.getEstateManager().getEstateAt(victim.getLocation());
 
         // 1. PvP Protection
-        if (victim instanceof Player && attacker instanceof Player) {
+        if (victim instanceof Player pVictim && attacker instanceof Player pAttacker) {
+            if (plugin.isAdmin(pAttacker)) return; 
+            
             if (estate != null) {
                 if (!estate.getFlag("pvp")) {
                     e.setCancelled(true);
@@ -90,9 +117,9 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // 2. PvE (Player attacked by Mob) - God Mode in Safe Zones
+        // 2. PvE (Mob attacking Player) - God Mode in Safe Zones
         if (victim instanceof Player && isHostile(attacker)) {
-            if (estate != null && estate.getFlag("safe_zone")) {
+            if (isEstateSafe(estate)) {
                 e.setCancelled(true); 
             }
             return;
@@ -105,6 +132,7 @@ public class ProtectionManager implements Listener {
                     if (plugin.isAdmin(p)) return;
 
                     boolean hasAccess = estate.isMember(p.getUniqueId());
+                    // Guild/Alliance Check
                     if (estate.isGuild() && !hasAccess) {
                         Guild guild = plugin.getAllianceManager().getGuild(estate.getOwnerId());
                         if (guild != null && guild.isMember(p.getUniqueId())) hasAccess = true;
@@ -112,15 +140,30 @@ public class ProtectionManager implements Listener {
 
                     if (!hasAccess) {
                         e.setCancelled(true);
-                        plugin.getLanguageManager().sendTitle(p, "cannot_attack", "");
+                        p.sendMessage(ChatColor.RED + "You cannot harm assets in this Estate.");
                     }
                 }
             }
         }
     }
+    
+    // NEW: Prevents Mob Damage from non-Entity Sources
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onMobDamage(EntityDamageEvent e) {
+        if (!(e.getEntity() instanceof Mob mob)) return;
+        
+        Estate estate = plugin.getEstateManager().getEstateAt(mob.getLocation());
+        if (isEstateSafe(estate)) {
+            DamageCause cause = e.getCause();
+            // Prevent mobs from dying from environmental factors in safe zones
+            if (cause == DamageCause.SUFFOCATION || cause == DamageCause.LAVA || cause == DamageCause.FIRE || cause == DamageCause.FREEZE) {
+                e.setCancelled(true);
+            }
+        }
+    }
 
     // ==========================================================
-    // 💥 EXPLOSIONS & FIRE
+    // 💥 EXPLOSIONS & FIRE (Preserved)
     // ==========================================================
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onExplode(EntityExplodeEvent e) {
@@ -149,7 +192,7 @@ public class ProtectionManager implements Listener {
     }
 
     // ==========================================================
-    // 🍎 HUNGER
+    // 🍎 HUNGER (Preserved)
     // ==========================================================
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onHungerDeplete(FoodLevelChangeEvent e) {

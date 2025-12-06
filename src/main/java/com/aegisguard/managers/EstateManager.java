@@ -41,7 +41,7 @@ public class EstateManager {
         return estates.get(id);
     }
 
-    // Fixed: Added getEstates(UUID)
+    // Get all estates owned by a specific player
     public List<Estate> getEstates(UUID ownerId) {
         return estates.values().stream()
                 .filter(e -> e.getOwnerId() != null && e.getOwnerId().equals(ownerId))
@@ -181,5 +181,48 @@ public class EstateManager {
 
         // Assumes Cuboid has a constructor taking two Locations.
         return new Cuboid(newMin, newMax);
+    }
+
+    // ------------------------------------------------------------------------
+    // Ownership transfer (fixes missing transferOwnership(...) symbol)
+    // ------------------------------------------------------------------------
+
+    /**
+     * Core ownership transfer method used by GUIs and admin commands.
+     *
+     * @param estate   The estate being transferred
+     * @param newOwner The new owner's UUID (can be null for server-owned)
+     * @param isGuild  Whether this estate should be treated as a guild estate
+     */
+    public void transferOwnership(Estate estate, UUID newOwner, boolean isGuild) {
+        if (estate == null) return;
+
+        UUID oldOwner = estate.getOwnerId();
+
+        // Update main ownership fields
+        estate.setOwnerId(newOwner);
+        estate.setGuild(isGuild);
+
+        // Clear sale / rent when ownership changes
+        estate.setForSale(false, (int) estate.getSalePrice());
+        estate.setForRent(false);
+
+        // Member cleanup / assignment
+        if (oldOwner != null && !oldOwner.equals(newOwner)) {
+            estate.removeMember(oldOwner);
+        }
+        if (newOwner != null) {
+            estate.setMember(newOwner, "owner");
+        }
+
+        // Persist using the datastore contract
+        plugin.getDataStore().updateEstateOwner(estate, newOwner, isGuild);
+    }
+
+    /**
+     * Convenience overload if callers don't care about the guild flag.
+     */
+    public void transferOwnership(Estate estate, UUID newOwner) {
+        transferOwnership(estate, newOwner, false);
     }
 }

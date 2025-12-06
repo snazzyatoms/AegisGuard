@@ -1,6 +1,6 @@
 package com.aegisguard;
 
-import com.aegisguard.commands.AdminCommand; // Updated location based on previous file
+import com.aegisguard.commands.AdminCommand; 
 import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
@@ -54,6 +54,7 @@ public class AegisGuard extends JavaPlugin {
     private IDataStore dataStore;
     private LanguageManager languageManager;
     private RoleManager roleManager;
+    private ItemManager itemManager; // ADDED: New Item Manager
     private EstateManager estateManager;
     private AllianceManager allianceManager;
     private EconomyManager economyManager;
@@ -90,6 +91,7 @@ public class AegisGuard extends JavaPlugin {
     
     public LanguageManager getLanguageManager() { return languageManager; }
     public RoleManager getRoleManager() { return roleManager; }
+    public ItemManager getItemManager() { return itemManager; } // ADDED: Getter
     public EstateManager getEstateManager() { return estateManager; }
     public AllianceManager getAllianceManager() { return allianceManager; }
     public EconomyManager getEconomy() { return economyManager; }
@@ -145,6 +147,7 @@ public class AegisGuard extends JavaPlugin {
         // 1. Initialize Core Managers
         this.languageManager = new LanguageManager(this);
         this.roleManager = new RoleManager(this);
+        this.itemManager = new ItemManager(this); // ADDED: Initialization
         this.estateManager = new EstateManager(this);
         this.allianceManager = new AllianceManager(this);
         

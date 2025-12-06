@@ -24,10 +24,19 @@ public class LanguageManager {
     }
 
     public void loadAllLocales() {
-        // Raw value from config (settings.locale)
-        String raw = plugin.getConfig().getString("settings.locale", "modern");
-        String base = normalizeBaseLocale(raw); // e.g. "modern" -> "en_modern"
-        String localeName = base + ".yml";
+        // Read from config: settings.default_language_file
+        String configuredFile = plugin.getConfig().getString("settings.default_language_file", "en_modern.yml");
+
+        if (configuredFile == null || configuredFile.trim().isEmpty()) {
+            configuredFile = "en_modern.yml";
+        }
+
+        configuredFile = configuredFile.trim();
+        if (!configuredFile.endsWith(".yml")) {
+            configuredFile = configuredFile + ".yml";
+        }
+
+        String localeName = configuredFile;
 
         File localeDir = new File(plugin.getDataFolder(), "locales");
         if (!localeDir.exists()) {
@@ -53,8 +62,7 @@ public class LanguageManager {
                 // No matching embedded file – fall back to en_modern.yml
                 plugin.getLogger().warning("Locale '" + localeName + "' is not embedded in the JAR. Falling back to 'en_modern.yml'.");
 
-                String fallbackBase = "en_modern";
-                String fallbackName = fallbackBase + ".yml";
+                String fallbackName = "en_modern.yml";
                 File fallbackFile = new File(localeDir, fallbackName);
 
                 if (!fallbackFile.exists()) {
@@ -90,45 +98,7 @@ public class LanguageManager {
             }
         }
 
-        plugin.getLogger().info("Loaded language file: " + localeName + " (requested: " + raw + ")");
-    }
-
-    /**
-     * Normalizes whatever is in settings.locale to one of the real filenames you have:
-     *   modern / en_modern(.yml) / english / en  -> en_modern
-     *   old / en_old(.yml)                        -> en_old
-     *   hybrid / en_hybrid(.yml)                  -> en_hybrid
-     *   anything else starting with en_           -> left as-is (without .yml)
-     */
-    private String normalizeBaseLocale(String raw) {
-        if (raw == null || raw.isEmpty()) {
-            return "en_modern";
-        }
-
-        String base = raw.toLowerCase(Locale.ROOT).trim();
-
-        // Strip ".yml" if user included it
-        if (base.endsWith(".yml")) {
-            base = base.substring(0, base.length() - 4);
-        }
-
-        switch (base) {
-            case "modern":
-            case "english":
-            case "en":
-                return "en_modern";
-            case "old":
-                return "en_old";
-            case "hybrid":
-                return "en_hybrid";
-            default:
-                // If they already gave something like "en_modern" or "en_custom"
-                if (base.startsWith("en_")) {
-                    return base;
-                }
-                // Last resort: prefix with en_
-                return "en_" + base;
-        }
+        plugin.getLogger().info("Loaded language file: " + localeName + " (configured: " + configuredFile + ")");
     }
 
     /**

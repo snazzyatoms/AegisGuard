@@ -56,7 +56,7 @@ public class Estate {
         flags.put("interact", false);
     }
 
-    // --- CORE GETTERS ---
+    // --- CORE GETTERS / SETTERS ---
     public UUID getId() { return plotId; }
     public UUID getPlotId() { return plotId; } 
     public String getName() { return name; }
@@ -65,6 +65,17 @@ public class Estate {
     public boolean isGuild() { return isGuild; }
     public World getWorld() { return world; }
     public Cuboid getRegion() { return region; }
+
+    public void setName(String name) { this.name = name; }
+
+    // New: allow EstateManager / commands to change ownership & guild status
+    public void setOwnerId(UUID ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public void setGuild(boolean guild) {
+        this.isGuild = guild;
+    }
 
     // Allow EstateManager / other systems to resize or move the plot region.
     public void setRegion(Cuboid region) {
@@ -87,8 +98,6 @@ public class Estate {
         return region.contains(loc);
     }
 
-    public void setName(String name) { this.name = name; }
-
     // --- LEVELING ---
     public int getLevel() { return level; }
     public void setLevel(int level) { this.level = level; }
@@ -108,6 +117,9 @@ public class Estate {
     public boolean isForRent() { return forRent; }
     public void setForRent(boolean forRent) { this.forRent = forRent; }
     public double getRentPrice() { return rentPrice; }
+
+    // Optional helper so datastores / logic can adjust rent price without toggling flag
+    public void setRentPrice(double rentPrice) { this.rentPrice = rentPrice; }
 
     // --- DESCRIPTION ---
     public String getDescription() { return description; }

@@ -7,6 +7,7 @@ import com.aegisguard.selection.SelectionService;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -15,7 +16,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 
-// FIX: Implements SubCommand (Not CommandExecutor)
+// Implements CommandHandler.SubCommand (new shape)
 public class AegisCommand implements CommandHandler.SubCommand {
 
     private final AegisGuard plugin;
@@ -25,16 +26,21 @@ public class AegisCommand implements CommandHandler.SubCommand {
     }
 
     @Override
-    public void execute(Player p, String[] args) {
-        LanguageManager lang = plugin.getLanguageManager();
+    public boolean execute(CommandSender sender,
+                           String label,
+                           String subLabel,
+                           String[] args) {
 
-        // If routed here with empty args (shouldn't happen via CommandHandler but safe to check)
-        if (args.length == 0) {
-            plugin.getGuiManager().openGuardianCodex(p);
-            return;
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cOnly players may use this command.");
+            return true;
         }
 
-        String sub = args[0].toLowerCase();
+        Player p = (Player) sender;
+        LanguageManager lang = plugin.getLanguageManager();
+
+        // subLabel is the keyword registered in CommandHandler (e.g. "menu", "home", "rename", "consume")
+        String sub = subLabel.toLowerCase();
 
         switch (sub) {
             // --- GENERAL TOOLS ---
@@ -42,7 +48,7 @@ public class AegisCommand implements CommandHandler.SubCommand {
                 p.getInventory().addItem(createScepter());
                 p.sendMessage(lang.getMsg(p, "wand_given"));
                 break;
-            
+
             case "menu":
                 plugin.getGuiManager().openGuardianCodex(p);
                 break;
@@ -55,11 +61,11 @@ public class AegisCommand implements CommandHandler.SubCommand {
             case "setspawn":
                 handleSetSpawn(p);
                 break;
-            
+
             case "home":
                 handleHome(p);
                 break;
-            
+
             case "stuck":
                 handleStuck(p);
                 break;
@@ -71,39 +77,56 @@ public class AegisCommand implements CommandHandler.SubCommand {
             case "setdesc":
                 handleSetDesc(p, args);
                 break;
-            
+
             case "merge":
                 p.sendMessage("§eMerge logic moving to EstateManager... (Coming Soon)");
                 break;
-            
-            case "level":
+
+            case "level": {
                 Estate lvlEstate = plugin.getEstateManager().getEstateAt(p.getLocation());
-                if (lvlEstate != null) plugin.getGuiManager().leveling().open(p, lvlEstate);
-                else p.sendMessage(lang.getMsg(p, "no_plot_here"));
+                if (lvlEstate != null) {
+                    plugin.getGuiManager().leveling().open(p, lvlEstate);
+                } else {
+                    p.sendMessage(lang.getMsg(p, "no_plot_here"));
+                }
                 break;
-                
-            case "zone":
+            }
+
+            case "zone": {
                 Estate zoneEstate = plugin.getEstateManager().getEstateAt(p.getLocation());
-                if (zoneEstate != null) plugin.getGuiManager().zoning().open(p, zoneEstate);
-                else p.sendMessage(lang.getMsg(p, "no_plot_here"));
+                if (zoneEstate != null) {
+                    plugin.getGuiManager().zoning().open(p, zoneEstate);
+                } else {
+                    p.sendMessage(lang.getMsg(p, "no_plot_here"));
+                }
                 break;
-                
+            }
+
             case "consume":
+                // Consume the selection wand
                 plugin.getSelection().consumeWand(p);
                 break;
 
             case "help":
             default:
                 sendHelp(p);
+                break;
         }
+
+        return true;
     }
 
     // --- HANDLERS ---
-    
+
+    /**
+     * /ag rename <Name...>
+     * In this new model, args already exclude the subLabel ("rename"),
+     * so args[0] is the first word of the new name.
+     */
     private void handleRename(Player p, String[] args) {
         LanguageManager lang = plugin.getLanguageManager();
         Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
-        
+
         if (estate == null) {
             p.sendMessage(lang.getMsg(p, "no_plot_here"));
             return;
@@ -112,31 +135,43 @@ public class AegisCommand implements CommandHandler.SubCommand {
             p.sendMessage(lang.getMsg(p, "no_permission"));
             return;
         }
-        
-        if (args.length < 2) {
+
+        if (args.length == 0) {
             p.sendMessage("§cUsage: /ag rename <Name>");
             return;
         }
-        
-        String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+        String name = String.join(" ", args);
         name = ChatColor.translateAlternateColorCodes('&', name);
-        
+
         if (name.length() > 32) {
             p.sendMessage("§cName too long.");
             return;
         }
-        
+
         estate.setName(name);
         p.sendMessage(lang.getMsg(p, "guild_rename_success").replace("%name%", name));
     }
 
+    /**
+     * /ag setdesc <Description...>
+     * args contains only the description parts.
+     */
     private void handleSetDesc(Player p, String[] args) {
         Estate estate = plugin.getEstateManager().getEstateAt(p.getLocation());
-        if (estate != null && estate.getOwnerId().equals(p.getUniqueId())) {
-            String desc = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            estate.setDescription(ChatColor.translateAlternateColorCodes('&', desc));
-            p.sendMessage("§eDescription updated.");
+        if (estate == null || !estate.getOwnerId().equals(p.getUniqueId())) {
+            p.sendMessage("§cYou must be the owner of this Estate to change its description.");
+            return;
         }
+
+        if (args.length == 0) {
+            p.sendMessage("§cUsage: /ag setdesc <Description>");
+            return;
+        }
+
+        String desc = String.join(" ", args);
+        estate.setDescription(ChatColor.translateAlternateColorCodes('&', desc));
+        p.sendMessage("§eDescription updated.");
     }
 
     private void handleStuck(Player p) {
@@ -145,18 +180,14 @@ public class AegisCommand implements CommandHandler.SubCommand {
             p.sendMessage("§cYou are not inside an Estate.");
             return;
         }
-        
+
         Location target = p.getLocation();
-        // Teleport slightly outside
+        // Teleport slightly outside on X, then up to surface
         target.setX(estate.getRegion().getLowerNE().getX() - 2);
         target.setY(p.getWorld().getHighestBlockYAt(target) + 1);
-        
+
         p.teleport(target);
         p.sendMessage("§e✨ Unstuck!");
-    }
-
-    private void handleResize(Player p, String[] args) {
-        // Handled by EstateCommand now
     }
 
     private void handleSetSpawn(Player p) {
@@ -164,14 +195,19 @@ public class AegisCommand implements CommandHandler.SubCommand {
         if (estate != null && estate.getOwnerId().equals(p.getUniqueId())) {
             estate.setSpawnLocation(p.getLocation());
             p.sendMessage("§aSpawn set!");
+        } else {
+            p.sendMessage("§cYou must own this Estate to set its spawn.");
         }
     }
 
     private void handleHome(Player p) {
         for (Estate e : plugin.getEstateManager().getAllEstates()) {
-            if (e.getOwnerId().equals(p.getUniqueId())) {
-                if (e.getSpawnLocation() != null) p.teleport(e.getSpawnLocation());
-                else p.teleport(e.getCenter());
+            if (e.getOwnerId() != null && e.getOwnerId().equals(p.getUniqueId())) {
+                if (e.getSpawnLocation() != null) {
+                    p.teleport(e.getSpawnLocation());
+                } else {
+                    p.teleport(e.getCenter());
+                }
                 p.sendMessage("§aTeleporting home...");
                 return;
             }
@@ -186,18 +222,21 @@ public class AegisCommand implements CommandHandler.SubCommand {
             meta.setDisplayName(ChatColor.AQUA + "Aegis Scepter");
             meta.setLore(Arrays.asList("§7Right-click: Open Menu", "§7Left-click: Select Corners"));
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            // Uses SelectionService.WAND_KEY (we'll fix this once we see SelectionService)
             meta.getPersistentDataContainer().set(SelectionService.WAND_KEY, PersistentDataType.BYTE, (byte) 1);
             rod.setItemMeta(meta);
         }
         return rod;
     }
-    
+
     private void sendHelp(Player p) {
         p.sendMessage("§8§m------------------------");
         p.sendMessage("§bAegisGuard v1.3.0 Help");
         p.sendMessage("§e/ag menu §7- Open Dashboard");
-        p.sendMessage("§e/ag claim §7- Claim Land");
-        p.sendMessage("§e/ag guild §7- Guild Commands");
+        p.sendMessage("§e/ag home §7- Teleport to your Estate");
+        p.sendMessage("§e/ag setspawn §7- Set Estate spawn");
+        p.sendMessage("§e/ag rename <name> §7- Rename your Estate");
+        p.sendMessage("§e/ag setdesc <text> §7- Set Estate description");
         p.sendMessage("§8§m------------------------");
     }
 }

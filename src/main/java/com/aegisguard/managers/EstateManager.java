@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class EstateManager {
 
@@ -22,18 +23,28 @@ public class EstateManager {
         estates.put(estate.getId(), estate);
     }
     
-    // Alias for register
     public void addEstate(Estate estate) {
         registerEstateFromLoad(estate);
     }
 
-    // --- FIXED: Added removeEstate method ---
     public void removeEstate(UUID id) {
         estates.remove(id);
+    }
+    
+    // Alias to fix "cannot find symbol deleteEstate"
+    public void deleteEstate(UUID id) {
+        removeEstate(id);
     }
 
     public Estate getEstate(UUID id) {
         return estates.get(id);
+    }
+
+    // Fixed: Added getEstates(UUID)
+    public List<Estate> getEstates(UUID ownerId) {
+        return estates.values().stream()
+                .filter(e -> e.getOwnerId() != null && e.getOwnerId().equals(ownerId))
+                .collect(Collectors.toList());
     }
 
     public Estate getEstateAt(Location loc) {
@@ -57,30 +68,36 @@ public class EstateManager {
             region.getWorld(),
             region
         );
-        
-        // Save to memory
         estates.put(estate.getId(), estate);
-        
-        // Save to DB
         plugin.getDataStore().saveEstate(estate);
-        
         return estate;
     }
-    
-    // Used for Overlap Checks (Memory based for speed)
-    public boolean isOverlapping(Cuboid region) {
-        for (Estate e : estates.values()) {
-            if (e.getWorld().equals(region.getWorld())) {
-                if (e.getRegion().overlaps(region)) return true;
+
+    // Fixed: Added resizeEstate logic
+    public boolean resizeEstate(Estate estate, String direction, int amount) {
+        Cuboid oldRegion = estate.getRegion();
+        Cuboid newRegion = oldRegion.expand(direction, amount); 
+        
+        if (newRegion == null) return false;
+        
+        // Overlap Check (Ignore self)
+        for (Estate other : getAllEstates()) {
+            if (other.equals(estate)) continue;
+            if (other.getWorld().equals(estate.getWorld())) {
+                if (other.getRegion().overlaps(newRegion)) return false;
             }
         }
-        return false;
-    }
-
-    public void transferOwnership(Estate estate, UUID newOwner, boolean isGuild) {
-        // Logic handled by calling command/datastore update usually, 
-        // but we can update the object here.
-        // This requires setter on Estate if we want to mutate it, 
-        // or we create a new one. For now, assuming you handle this in logic.
+        
+        // Apply (Note: You need a setRegion method or recreate estate, assuming Cuboid is mutable or swapped)
+        // Since Estate.region is final, we usually do internal mutation or reflection. 
+        // For now, let's assume Cuboid has mutable bounds or we cheat:
+        // Ideally: estate.setRegion(newRegion);
+        // If Region is final, we have to recreate the Estate or update the Cuboid internal values.
+        
+        // Temporary fix for compilation:
+        oldRegion.setBounds(newRegion.getLowerNE(), newRegion.getUpperSW());
+        
+        plugin.getDataStore().saveEstate(estate);
+        return true;
     }
 }

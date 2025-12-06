@@ -1,14 +1,15 @@
 package com.aegisguard.data;
 
 import org.bukkit.Location;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * IDataStore (Interface) - v1.2.1 Legacy
- * - The contract for saving/loading PLOTS (Legacy System).
- * - Ensures SQL and YML behave identically for the old architecture.
+ * IDataStore (Interface) - v1.2.1
+ * - Contract for PLOT storage (Legacy Structure).
+ * - Ensures SQL and YML implementations are identical.
  */
 public interface IDataStore {
 
@@ -23,7 +24,8 @@ public interface IDataStore {
     void save();
 
     /**
-     * Saves all pending changes immediately on the current thread.
+     * Saves all pending changes immediately (Main Thread).
+     * Used on server shutdown.
      */
     void saveSync();
 
@@ -73,7 +75,7 @@ public interface IDataStore {
 
     /**
      * Checks if a new area overlaps with any existing plots.
-     * @param plotToIgnore The plot being checked (e.g., the current plot being resized).
+     * @param plotToIgnore The plot being checked (optional, can be null).
      */
     boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2);
     
@@ -82,18 +84,17 @@ public interface IDataStore {
     // ----------------------------------------
     
     /**
-     * Creates and stores a new plot.
+     * Creates and stores a new plot from two locations.
      */
     void createPlot(UUID owner, Location c1, Location c2);
 
     /**
-     * Adds a pre-made plot object to the store.
+     * Adds a pre-existing plot object to the store.
      */
     void addPlot(Plot plot);
     
     /**
-     * Saves a specific plot's data. 
-     * Essential for Leveling and Expansions to persist changes immediately.
+     * Saves a specific plot's data immediately.
      */
     void savePlot(Plot plot);
     
@@ -132,7 +133,7 @@ public interface IDataStore {
     // ----------------------------------------
     
     /**
-     * Logs a block change in the wilderness to the database.
+     * Logs a block change in the wilderness.
      */
     void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
     

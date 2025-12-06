@@ -17,7 +17,7 @@
     </properties>
 
     <repositories>
-        <!-- 1. JitPack (Jobs, mcMMO, Vault) -->
+        <!-- 1. JitPack (Vault, misc libs) -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -118,34 +118,6 @@
             <artifactId>pl3xmap</artifactId>
             <version>1.20.4-491</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- ✅ Jobs Reborn (Snapshot for build stability) -->
-        <dependency>
-            <groupId>com.github.Zrips</groupId>
-            <artifactId>Jobs</artifactId>
-            <version>master-SNAPSHOT</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- ✅ mcMMO (Snapshot for build stability) -->
-        <dependency>
-            <groupId>com.github.mcMMO-Dev</groupId>
-            <artifactId>mcMMO</artifactId>
-            <version>master-SNAPSHOT</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Protection & Logging -->

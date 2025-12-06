@@ -3,6 +3,8 @@ package com.aegisguard.commands;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
+import com.aegisguard.util.TeleportUtil; // ✅ NEW: Folia-safe teleports
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location; // FIXED: Added missing import
@@ -274,7 +276,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         int safeY = world.getHighestBlockYAt(target);
         target.setY(safeY + 1);
         
-        p.teleport(target);
+        // ✅ Folia-safe teleport
+        TeleportUtil.safeTeleport(plugin, p, target);
         sendMsg(p, "&e✨ You have been moved to safety.");
         plugin.effects().playTeleport(p);
     }
@@ -327,8 +330,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendMsg(p, "&cYou cannot kick a Server Operator.");
             return;
         }
-        
-        kTarget.teleport(kTarget.getWorld().getSpawnLocation());
+
+        // ✅ Folia-safe: send to world spawn
+        Location spawn = kTarget.getWorld().getSpawnLocation();
+        TeleportUtil.safeTeleport(plugin, kTarget, spawn);
+
         kTarget.sendMessage("§cYou were kicked from " + kPlot.getOwnerName() + "'s plot.");
         sendMsg(p, "&eKicked " + kTarget.getName());
     }
@@ -349,8 +355,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         sendMsg(p, "&cBanned " + bTarget.getName());
         
         if (bTarget.isOnline() && bPlot.isInside(bTarget.getPlayer().getLocation())) {
-            bTarget.getPlayer().teleport(bTarget.getPlayer().getWorld().getSpawnLocation());
-            bTarget.getPlayer().sendMessage("§4You have been BANNED from this plot.");
+            // ✅ Folia-safe: eject banned player to spawn
+            Player online = bTarget.getPlayer();
+            if (online != null) {
+                Location spawn = online.getWorld().getSpawnLocation();
+                TeleportUtil.safeTeleport(plugin, online, spawn);
+                online.sendMessage("§4You have been BANNED from this plot.");
+            }
         }
     }
 
@@ -406,7 +417,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plugin.effects().playError(p);
             return;
         }
-        p.teleport(homePlot.getSpawnLocation());
+
+        // ✅ Folia-safe home teleport
+        TeleportUtil.safeTeleport(plugin, p, homePlot.getSpawnLocation());
         plugin.effects().playConfirm(p);
     }
 

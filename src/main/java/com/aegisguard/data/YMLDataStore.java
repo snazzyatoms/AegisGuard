@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * - Manages plot data using 'plots.yml'.
  * - Implements strict IDataStore contract for 1.2.x.
  * - Ensures data persistence with immediate saving on modification.
- * - UPDATED: Saves advanced systems (rent, auction, bans, likes, cosmetics, warps, biomes).
+ * - UPDATED: Saves advanced systems (rent, auction, bans, likes, cosmetics, warps, biomes, zones).
  */
 public class YMLDataStore implements IDataStore {
 
@@ -195,8 +195,39 @@ public class YMLDataStore implements IDataStore {
                     plot.setServerWarp(isWarp, warpName, icon);
                 }
 
-                // TODO: Zones persistence once Zone class contract is available.
-                // if (sec.isConfigurationSection("zones")) { ... }
+                // Zones (3D sub-claims)
+                if (sec.isConfigurationSection("zones")) {
+                    ConfigurationSection zonesSec = sec.getConfigurationSection("zones");
+                    for (String zoneName : zonesSec.getKeys(false)) {
+                        ConfigurationSection z = zonesSec.getConfigurationSection(zoneName);
+                        if (z == null) continue;
+
+                        int zx1 = z.getInt("x1");
+                        int zy1 = z.getInt("y1");
+                        int zz1 = z.getInt("z1");
+                        int zx2 = z.getInt("x2");
+                        int zy2 = z.getInt("y2");
+                        int zz2 = z.getInt("z2");
+
+                        Zone zone = new Zone(plot, zoneName, zx1, zy1, zz1, zx2, zy2, zz2);
+                        zone.setRentPrice(z.getDouble("rent-price", 0.0));
+
+                        String renterStr = z.getString("renter");
+                        long exp = z.getLong("rent-expiration", 0L);
+                        if (renterStr != null && !renterStr.isEmpty()) {
+                            try {
+                                UUID renter = UUID.fromString(renterStr);
+                                long now = System.currentTimeMillis();
+                                if (exp > now) {
+                                    // Keep the same expiry moment using remaining duration
+                                    zone.rentTo(renter, exp - now);
+                                }
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+
+                        plot.addZone(zone);
+                    }
+                }
 
                 // Cache it
                 cachePlot(plot);
@@ -325,8 +356,21 @@ public class YMLDataStore implements IDataStore {
         warp.set("warp-name", plot.getWarpName());
         warp.set("warp-icon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
 
-        // TODO: Zones persistence once Zone class contract is available.
-        // ConfigurationSection zones = sec.createSection("zones"); ...
+        // Zones
+        ConfigurationSection zonesSec = sec.createSection("zones");
+        for (Zone zone : plot.getZones()) {
+            ConfigurationSection z = zonesSec.createSection(zone.getName());
+            z.set("x1", zone.getX1());
+            z.set("y1", zone.getY1());
+            z.set("z1", zone.getZ1());
+            z.set("x2", zone.getX2());
+            z.set("y2", zone.getY2());
+            z.set("z2", zone.getZ2());
+            z.set("rent-price", zone.getRentPrice());
+            UUID zr = zone.getRenter();
+            z.set("renter", zr != null ? zr.toString() : null);
+            z.set("rent-expiration", zone.getRentExpiration());
+        }
     }
 
     // ==============================================================    

@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.objects.Cuboid;
 import com.aegisguard.objects.Estate;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -50,7 +51,9 @@ public class EstateManager {
     public Estate getEstateAt(Location loc) {
         if (loc == null) return null;
         for (Estate e : estates.values()) {
-            if (e.getRegion().contains(loc)) return e;
+            if (e.getRegion() != null && e.getRegion().contains(loc)) {
+                return e;
+            }
         }
         return null;
     }
@@ -73,31 +76,110 @@ public class EstateManager {
         return estate;
     }
 
-    // Fixed: Added resizeEstate logic
+    /**
+     * Resize an estate region in a given direction by a number of blocks.
+     * Direction is treated as a string (e.g. "NORTH", "SOUTH", "EAST", "WEST", "UP", "DOWN").
+     */
     public boolean resizeEstate(Estate estate, String direction, int amount) {
+        if (estate == null || estate.getRegion() == null || amount == 0) {
+            return false;
+        }
+
         Cuboid oldRegion = estate.getRegion();
-        Cuboid newRegion = oldRegion.expand(direction, amount); 
-        
-        if (newRegion == null) return false;
-        
+        Cuboid newRegion = expandRegion(oldRegion, direction, amount);
+        if (newRegion == null) {
+            return false;
+        }
+
         // Overlap Check (Ignore self)
         for (Estate other : getAllEstates()) {
             if (other.equals(estate)) continue;
-            if (other.getWorld().equals(estate.getWorld())) {
-                if (other.getRegion().overlaps(newRegion)) return false;
+            if (other.getWorld() != null
+                    && other.getWorld().equals(estate.getWorld())
+                    && other.getRegion() != null
+                    && other.getRegion().overlaps(newRegion)) {
+                return false;
             }
         }
-        
-        // Apply (Note: You need a setRegion method or recreate estate, assuming Cuboid is mutable or swapped)
-        // Since Estate.region is final, we usually do internal mutation or reflection. 
-        // For now, let's assume Cuboid has mutable bounds or we cheat:
-        // Ideally: estate.setRegion(newRegion);
-        // If Region is final, we have to recreate the Estate or update the Cuboid internal values.
-        
-        // Temporary fix for compilation:
-        oldRegion.setBounds(newRegion.getLowerNE(), newRegion.getUpperSW());
-        
+
+        // Apply new region to the estate
+        // Assumes Estate has a setRegion(Cuboid) method.
+        estate.setRegion(newRegion);
         plugin.getDataStore().saveEstate(estate);
         return true;
+    }
+
+    /**
+     * Helper used by SelectionService and others:
+     * Check if a given region overlaps any existing estate.
+     */
+    public boolean isOverlapping(Cuboid region) {
+        if (region == null) return false;
+        for (Estate estate : estates.values()) {
+            if (estate.getRegion() != null
+                    && estate.getWorld() != null
+                    && estate.getWorld().equals(region.getWorld())
+                    && estate.getRegion().overlaps(region)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Internal helper: expand a Cuboid by direction & amount into a NEW Cuboid.
+     * This replaces the old Cuboid#expand(String,int) + setBounds(...) calls.
+     */
+    private Cuboid expandRegion(Cuboid original, String direction, int amount) {
+        if (original == null || direction == null || amount == 0) return original;
+
+        World world = original.getWorld();
+        if (world == null) return original;
+
+        Location l1 = original.getLowerNE();
+        Location l2 = original.getUpperSW();
+
+        double minX = Math.min(l1.getX(), l2.getX());
+        double maxX = Math.max(l1.getX(), l2.getX());
+        double minY = Math.min(l1.getY(), l2.getY());
+        double maxY = Math.max(l1.getY(), l2.getY());
+        double minZ = Math.min(l1.getZ(), l2.getZ());
+        double maxZ = Math.max(l1.getZ(), l2.getZ());
+
+        String dir = direction.toUpperCase(Locale.ROOT);
+
+        switch (dir) {
+            case "NORTH":
+                // negative Z
+                minZ -= amount;
+                break;
+            case "SOUTH":
+                // positive Z
+                maxZ += amount;
+                break;
+            case "WEST":
+                // negative X
+                minX -= amount;
+                break;
+            case "EAST":
+                // positive X
+                maxX += amount;
+                break;
+            case "UP":
+                maxY += amount;
+                break;
+            case "DOWN":
+                minY -= amount;
+                break;
+            default:
+                // Unknown direction, no change
+                return original;
+        }
+
+        Location newMin = new Location(world, minX, minY, minZ);
+        Location newMax = new Location(world, maxX, maxY, maxZ);
+
+        // Assumes Cuboid has a constructor taking two Locations.
+        return new Cuboid(newMin, newMax);
     }
 }

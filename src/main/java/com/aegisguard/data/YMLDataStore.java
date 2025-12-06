@@ -70,9 +70,14 @@ public class YMLDataStore implements IDataStore {
 
                 Estate estate = new Estate(id, name, owner, isGuild, world, region);
 
-                // --- Extended fields (v1.3.0 fully persisted) ---
+                // --- Extended fields (v1.3.0) ---
                 estate.setLevel(sec.getInt("level", estate.getLevel()));
-                estate.deposit(sec.getDouble("balance", 0.0));  // starting from 0, deposit saved balance
+
+                double storedBalance = sec.getDouble("balance", 0.0);
+                if (storedBalance != 0.0) {
+                    // Estate starts at 0, so deposit the stored balance.
+                    estate.deposit(storedBalance);
+                }
 
                 String description = sec.getString("description", "");
                 estate.setDescription(description);
@@ -92,16 +97,20 @@ public class YMLDataStore implements IDataStore {
                 }
 
                 // Economy flags
-                estate.setForSale(sec.getBoolean("for_sale", false), (int) sec.getDouble("sale_price", 0.0));
-                estate.setForRent(sec.getBoolean("for_rent", false));
-                // Only set rent price if you use it
-                double rentPrice = sec.getDouble("rent_price", 0.0);
-                // You don't currently have a setter for rentPrice alone, so we just load the flag.
-                // If you add a setter later, hook it here.
+                boolean forSale = sec.getBoolean("for_sale", false);
+                double salePrice = sec.getDouble("sale_price", 0.0);
+                estate.setForSale(forSale, (int) salePrice);
+
+                boolean forRent = sec.getBoolean("for_rent", false);
+                estate.setForRent(forRent);
+                // rent_price is saved & loaded here but Estate currently has no setter for the price itself.
+                // Once you add setRentPrice(double), you can wire it in:
+                // double rentPrice = sec.getDouble("rent_price", 0.0); estate.setRentPrice(rentPrice);
 
                 // Visuals
                 String borderParticle = sec.getString("border_particle", estate.getBorderParticle());
                 estate.setBorderParticle(borderParticle);
+
                 String biome = sec.getString("custom_biome", null);
                 if (biome != null && !biome.isEmpty()) {
                     estate.setCustomBiome(biome);
@@ -124,9 +133,8 @@ public class YMLDataStore implements IDataStore {
                     }
                 }
 
-                // TODO: Zones could be persisted here if/when Zone has a proper schema.
+                // Zones: can be wired later when Zone has a stable schema.
 
-                // Add to memory
                 plugin.getEstateManager().registerEstateFromLoad(estate);
                 count++;
 
@@ -142,7 +150,7 @@ public class YMLDataStore implements IDataStore {
     public void save() {
         ensureConfigLoaded();
 
-        // Rebuild the file from the in-memory view so deletions are honored.
+        // Rebuild from in-memory view so deletions are honored.
         FileConfiguration newConfig = new YamlConfiguration();
 
         for (Estate estate : plugin.getEstateManager().getAllEstates()) {
@@ -199,7 +207,7 @@ public class YMLDataStore implements IDataStore {
                 mems.set(uid.toString(), estate.getMemberRole(uid));
             }
 
-            // Zones could be saved here later if needed.
+            // Zones: reserved for future use.
         }
 
         try {
@@ -231,17 +239,15 @@ public class YMLDataStore implements IDataStore {
     public void saveEstate(Estate estate) {
         if (estate == null) return;
         isDirty = true;
-        // For maximum safety, we also save immediately.
+        // Rock-solid: persist immediately; autosaver + saveSync add extra safety.
         save();
     }
 
     @Override
     public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
+        // Ownership changes should already be applied to the Estate object by EstateManager.
+        // Datastore's job is just persistence.
         if (estate == null) return;
-        estate.setMember(estate.getOwnerId(), null); // optional cleanup if you treat old owner as member
-        estate.setMember(newOwner, "owner");         // if you want a role marker
-        // Ownership is probably handled elsewhere (EstateManager.transferOwnership),
-        // so we just persist current state.
         saveEstate(estate);
     }
 
@@ -250,7 +256,7 @@ public class YMLDataStore implements IDataStore {
         ensureConfigLoaded();
         if (id == null) return;
 
-        // Remove from in-memory manager first
+        // Remove from in-memory manager
         plugin.getEstateManager().removeEstate(id);
 
         // Remove from file
@@ -259,8 +265,10 @@ public class YMLDataStore implements IDataStore {
         save();
     }
 
-    // NOTE: This alias is *not* part of IDataStore, so we remove @Override.
-    // It still compiles and can be used by legacy code, but won't break the interface.
+    /**
+     * Legacy alias for older code that still calls deleteEstate.
+     * Not part of IDataStore, so no @Override here.
+     */
     public void deleteEstate(UUID id) {
         removeEstate(id);
     }
@@ -309,16 +317,16 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void revertWildernessBlocks(long timestamp, int limit) {
-        // YML datastore does not track wilderness history; SQL datastore handles this.
+        // YML datastore does not track wilderness history; SQL datastore will.
     }
 
     @Override
-    public void logWildernessBlock(Location loc, String old, String newMat, UUID uuid) {
+    public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
         // No-op for YML implementation.
     }
 
     // ------------------------------------------------------------------------
-    // Bulk operations
+    // Bulk operations & flags (banned, sale, auction)
     // ------------------------------------------------------------------------
 
     @Override
@@ -366,8 +374,10 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public Collection<Estate> getEstatesForAuction() {
-        // If you add auction support later, wire it here.
-        return Collections.emptyList();
+        // Wire auction support via a flag: estate.flag["auction"] == true
+        return plugin.getEstateManager().getAllEstates().stream()
+                .filter(e -> e.getFlag("auction"))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -378,8 +388,8 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void createEstate(UUID owner, Location c1, Location c2) {
-        // Optional convenience hook: you can implement this to match your SQL datastore,
-        // but currently AegisGuard uses EstateManager#createEstate directly.
+        // Optional convenience hook: currently you likely call EstateManager#createEstate directly.
+        // Left empty to avoid changing behavior.
     }
 
     @Override
@@ -403,7 +413,23 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void removeBannedEstates() {
-        // If you later implement a "banned" flag or list on estates, you can prune here.
+        // Uses a "banned" flag on the estate to identify which ones to purge.
+        ensureConfigLoaded();
+
+        List<UUID> toRemove = plugin.getEstateManager().getAllEstates().stream()
+                .filter(e -> e.getFlag("banned"))
+                .map(Estate::getId)
+                .collect(Collectors.toList());
+
+        for (UUID id : toRemove) {
+            plugin.getEstateManager().removeEstate(id);
+            config.set(id.toString(), null);
+        }
+
+        if (!toRemove.isEmpty()) {
+            isDirty = true;
+            save();
+        }
     }
 
     // ------------------------------------------------------------------------

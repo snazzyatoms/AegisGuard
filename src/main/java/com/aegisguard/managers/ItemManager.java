@@ -4,140 +4,162 @@ import com.aegisguard.AegisGuard;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * Central registry for all special AegisGuard items.
+ *
+ * - Player Claim Wand  (Aegis Scepter)
+ * - Sentinel Scepter   (Admin-only server wand)
+ *
+ * Detection is done EXCLUSIVELY via PersistentDataContainer keys,
+ * so items cannot be forged with anvils, renaming, or lore edits.
+ */
 public class ItemManager {
 
     private final AegisGuard plugin;
-    
-    // Security Keys (The hidden "fingerprints")
-    private final NamespacedKey KEY_ADMIN_WAND;
-    private final NamespacedKey KEY_PLAYER_WAND;
+
+    // Hidden tags – these are the "true identity" of items
+    public static NamespacedKey PLAYER_WAND_KEY;
+    public static NamespacedKey SENTINEL_WAND_KEY;
 
     public ItemManager(AegisGuard plugin) {
         this.plugin = plugin;
-        // These keys allow us to identify the item even if a player renames it
-        this.KEY_ADMIN_WAND = new NamespacedKey(plugin, "sentinel_scepter");
-        this.KEY_PLAYER_WAND = new NamespacedKey(plugin, "claim_wand");
+        PLAYER_WAND_KEY = new NamespacedKey(plugin, "player_wand");
+        SENTINEL_WAND_KEY = new NamespacedKey(plugin, "sentinel_scepter");
     }
 
-    /**
-     * Generates the Sentinel's Scepter (Admin Tool)
-     */
-    public ItemStack getSentinelScepter() {
-        FileConfiguration config = plugin.cfg().raw(); // Adjust if you use plugin.getConfig()
-
-        // 1. Read Config
-        String matName = config.getString("admin.wand.material", "BLAZE_ROD");
-        String displayName = config.getString("admin.wand.name", "&c&lSentinel's Scepter");
-        List<String> lore = config.getStringList("admin.wand.lore");
-
-        // 2. Validate Material
-        Material mat = Material.matchMaterial(matName);
-        if (mat == null) {
-            plugin.getLogger().warning("Invalid material for Admin Wand: " + matName + ". Defaulting to BLAZE_ROD.");
-            mat = Material.BLAZE_ROD;
-        }
-
-        // 3. Create Item
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta != null) {
-            // Apply Text
-            meta.setDisplayName(format(displayName));
-            List<String> formattedLore = new ArrayList<>();
-            if (lore != null) {
-                for (String line : lore) formattedLore.add(format(line));
-            }
-            meta.setLore(formattedLore);
-
-            // Apply Glow Effect
-            meta.addEnchant(Enchantment.DURABILITY, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-
-            // 4. APPLY SECURITY TAG
-            meta.getPersistentDataContainer().set(KEY_ADMIN_WAND, PersistentDataType.BYTE, (byte) 1);
-            
-            item.setItemMeta(meta);
-        }
-
-        return item;
-    }
+    // =====================================================================
+    // 🪄 PLAYER CLAIM WAND (Aegis Scepter)
+    // =====================================================================
 
     /**
-     * Generates the Aegis Wand (Player Claim Tool)
+     * Standard player wand used for private estate selection.
+     * This is what /ag wand (AegisCommand / EstateCommand) should give.
      */
     public ItemStack getPlayerWand() {
-        FileConfiguration config = plugin.cfg().raw();
-
-        // 1. Read Config
-        String matName = config.getString("claims.wand.material", "GOLDEN_SHOVEL");
-        String displayName = config.getString("claims.wand.name", "&eClaiming Tool");
-        List<String> lore = config.getStringList("claims.wand.lore");
-
-        // 2. Validate Material
-        Material mat = Material.matchMaterial(matName);
-        if (mat == null) {
-            plugin.getLogger().warning("Invalid material for Player Wand: " + matName + ". Defaulting to GOLDEN_SHOVEL.");
-            mat = Material.GOLDEN_SHOVEL;
-        }
-
-        // 3. Create Item
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-
+        ItemStack rod = new ItemStack(Material.LIGHTNING_ROD);
+        ItemMeta meta = rod.getItemMeta();
         if (meta != null) {
-            // Apply Text
-            meta.setDisplayName(format(displayName));
-            List<String> formattedLore = new ArrayList<>();
-            if (lore != null) {
-                for (String line : lore) formattedLore.add(format(line));
+            meta.setDisplayName(ChatColor.AQUA + "Aegis Scepter");
+            meta.setLore(java.util.Arrays.asList(
+                    ChatColor.GRAY + "Left-click: Set Corner A",
+                    ChatColor.GRAY + "Right-click: Set Corner B",
+                    ChatColor.DARK_AQUA + "Used to claim private Estates"
+            ));
+
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+            meta.addEnchant(Enchantment.LUCK, 1, true); // subtle glow
+
+            // Hidden tag: marks this as the official player wand
+            meta.getPersistentDataContainer().set(
+                    PLAYER_WAND_KEY,
+                    PersistentDataType.BYTE,
+                    (byte) 1
+            );
+
+            rod.setItemMeta(meta);
+        }
+        return rod;
+    }
+
+    /**
+     * Returns true only if the item is a genuine Aegis player wand.
+     * A renamed lightning rod will NOT pass this check.
+     */
+    public boolean isPlayerWand(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        Byte flag = pdc.get(PLAYER_WAND_KEY, PersistentDataType.BYTE);
+        return flag != null && flag == (byte) 1;
+    }
+
+    // =====================================================================
+    // 🛡️ SENTINEL SCEPTER (Admin-only Server Wand)
+    // =====================================================================
+
+    /**
+     * Admin-only Sentinel Scepter for defining server / safe-zone estates.
+     * This is what /ag admin wand should give.
+     */
+    public ItemStack getSentinelScepter() {
+        ItemStack rod = new ItemStack(Material.BLAZE_ROD);
+        ItemMeta meta = rod.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GOLD + "Sentinel Scepter");
+            meta.setLore(java.util.Arrays.asList(
+                    ChatColor.GRAY + "Left-click: Set Server Corner A",
+                    ChatColor.GRAY + "Right-click: Set Server Corner B",
+                    ChatColor.YELLOW + "Used for server & safe-zone Estates"
+            ));
+
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+            meta.addEnchant(Enchantment.LUCK, 1, true);
+
+            // Hidden tag: marks this as the official Sentinel Scepter
+            meta.getPersistentDataContainer().set(
+                    SENTINEL_WAND_KEY,
+                    PersistentDataType.BYTE,
+                    (byte) 1
+            );
+
+            rod.setItemMeta(meta);
+        }
+        return rod;
+    }
+
+    /**
+     * Returns true only if the item is a genuine Sentinel Scepter.
+     * A random blaze rod with the same name will NOT pass this check.
+     */
+    public boolean isSentinelScepter(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        Byte flag = pdc.get(SENTINEL_WAND_KEY, PersistentDataType.BYTE);
+        return flag != null && flag == (byte) 1;
+    }
+
+    // =====================================================================
+    // 🔧 HELPER UTILITIES
+    // =====================================================================
+
+    /**
+     * Returns true if this item is ANY recognized Aegis selection tool.
+     * Handy if you ever need one unified check.
+     */
+    public boolean isAnyWand(ItemStack item) {
+        return isPlayerWand(item) || isSentinelScepter(item);
+    }
+
+    /**
+     * Removes every Aegis wand/scepter from a player's inventory.
+     * Optional, but handy for debug/admin cleanup.
+     */
+    public void removeAllWands(Player player) {
+        ItemStack[] contents = player.getInventory().getContents();
+        boolean changed = false;
+
+        for (int i = 0; i < contents.length; i++) {
+            if (isAnyWand(contents[i])) {
+                contents[i] = null;
+                changed = true;
             }
-            meta.setLore(formattedLore);
-
-            // Optional: Glow (You can make this configurable later)
-            meta.addEnchant(Enchantment.DURABILITY, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-
-            // 4. APPLY SECURITY TAG
-            meta.getPersistentDataContainer().set(KEY_PLAYER_WAND, PersistentDataType.BYTE, (byte) 1);
-
-            item.setItemMeta(meta);
         }
 
-        return item;
-    }
-
-    // ==============================================================
-    // VALIDATION LOGIC (Use these in your Listeners)
-    // ==============================================================
-
-    public boolean isSentinelScepter(ItemStack item) {
-        if (isInvalid(item)) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(KEY_ADMIN_WAND, PersistentDataType.BYTE);
-    }
-
-    public boolean isPlayerWand(ItemStack item) {
-        if (isInvalid(item)) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(KEY_PLAYER_WAND, PersistentDataType.BYTE);
-    }
-
-    // Helper to check for air/null
-    private boolean isInvalid(ItemStack item) {
-        return item == null || item.getType() == Material.AIR || !item.hasItemMeta();
-    }
-
-    // Helper for colors
-    private String format(String msg) {
-        return ChatColor.translateAlternateColorCodes('&', msg);
+        if (changed) {
+            player.getInventory().setContents(contents);
+        }
     }
 }

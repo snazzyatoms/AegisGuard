@@ -20,6 +20,11 @@ import java.util.stream.Collectors;
  * - 2D (X/Z only) to ensure Bedrock-to-Sky protection.
  * - Server Zone identification.
  * - Thread-friendly collections for Folia / async-safe data access.
+ *
+ * NOTE:
+ *  - This class itself is thread-friendly for reads/writes on its collections.
+ *  - Any Bukkit / world calls (Bukkit.getWorld, getHighestBlockYAt, etc.)
+ *    must be invoked from a valid Paper/Folia context (global or region task).
  */
 public class Plot {
 
@@ -30,7 +35,7 @@ public class Plot {
     private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
             Map.entry("pvp", false),
             Map.entry("containers", true),
-            Map.entry("mobs", false), // Changed to false to protect by default
+            Map.entry("mobs", false), // false by default: safer claims
             Map.entry("pets", true),
             Map.entry("entities", true),
             Map.entry("farm", true),
@@ -57,6 +62,7 @@ public class Plot {
     private int x1, z1, x2, z2;
 
     // --- Data Containers ---
+
     // Claim flags (per-plot)
     private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
 
@@ -175,7 +181,8 @@ public class Plot {
 
     /**
      * Get approximate center of the plot.
-     * Caller must ensure this is run on a valid Bukkit thread (global tick or region task).
+     * Caller must ensure this is run on a valid Bukkit thread
+     * (global tick or region task) for this world's region.
      */
     public Location getCenter(@Nullable AegisGuard plugin) {
         World w = Bukkit.getWorld(this.world);
@@ -190,7 +197,7 @@ public class Plot {
         return new Location(w, cX, y, cZ);
     }
 
-    // --- LEVELING LOGIC ---
+    // --- LEVELING / SIZE ---
 
     public void expand(int amount) {
         this.x1 -= amount;
@@ -215,7 +222,7 @@ public class Plot {
         return playerRoles.containsKey(player.getUniqueId()) && !isBanned(player.getUniqueId());
     }
 
-    // --- PERMISSIONS SYSTEM ---
+    // --- PERMISSIONS SYSTEM (ROLE PERMISSIONS FROM CONFIG) ---
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
         // Server Zones: Always deny unless admin bypass is checked externally
@@ -410,6 +417,7 @@ public class Plot {
     }
 
     // Flags
+
     public boolean getFlag(String key, boolean def) {
         return flags.getOrDefault(key, def);
     }
@@ -423,6 +431,7 @@ public class Plot {
     }
 
     // Serialization Helpers for SQL
+
     public String serializeFlags() {
         return flags.entrySet().stream()
                 .map(e -> e.getKey() + ":" + e.getValue())
@@ -500,12 +509,13 @@ public class Plot {
     }
 
     // Zones
+
     public List<Zone> getZones() {
         return zones;
     }
 
     public void addZone(Zone zone) {
-        zones.add(zone);
+        zones.add(Objects.requireNonNull(zone, "zone"));
     }
 
     public void removeZone(Zone zone) {
@@ -513,6 +523,7 @@ public class Plot {
     }
 
     public Zone getZoneAt(Location loc) {
+        if (loc == null) return null;
         for (Zone z : zones) {
             if (z.isInside(loc)) return z;
         }
@@ -520,6 +531,7 @@ public class Plot {
     }
 
     // Leveling
+
     public int getLevel() {
         return level;
     }
@@ -541,6 +553,7 @@ public class Plot {
     }
 
     // Social
+
     public Set<UUID> getLikedBy() {
         return Collections.unmodifiableSet(likedBy);
     }
@@ -559,6 +572,7 @@ public class Plot {
     }
 
     // Bans
+
     public boolean isBanned(UUID playerUUID) {
         return bannedPlayers.contains(playerUUID);
     }
@@ -577,6 +591,7 @@ public class Plot {
     }
 
     // Upkeep & Economy
+
     public long getLastUpkeep() {
         return lastUpkeepPayment;
     } // Getter alias for SQLDataStore
@@ -633,6 +648,7 @@ public class Plot {
     }
 
     // Auction
+
     public String getPlotStatus() {
         return plotStatus;
     }
@@ -655,6 +671,7 @@ public class Plot {
     }
 
     // Visuals
+
     public Location getSpawnLocation() {
         return spawnLocation;
     }
@@ -710,6 +727,7 @@ public class Plot {
     }
 
     // Identity
+
     public String getEntryTitle() {
         return entryTitle;
     }
@@ -743,6 +761,7 @@ public class Plot {
     }
 
     // Cosmetics
+
     public String getBorderParticle() {
         return borderParticle;
     }
@@ -768,6 +787,7 @@ public class Plot {
     }
 
     // Server Warps
+
     public boolean isServerWarp() {
         return isServerWarp;
     }
@@ -786,11 +806,12 @@ public class Plot {
         this.warpIcon = icon;
     }
 
+    // --- Object overrides ---
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Plot plot = (Plot) o;
+        if (!(o instanceof Plot plot)) return false;
         return plotId.equals(plot.plotId);
     }
 

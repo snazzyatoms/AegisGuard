@@ -5,7 +5,6 @@ import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.objects.Cuboid;
 import com.aegisguard.objects.Estate;
 import org.bukkit.*;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,9 +29,7 @@ public class SelectionService implements Listener {
     private final Map<UUID, Location> loc2 = new HashMap<>();
     private final Map<UUID, Boolean> selectionIsServer = new HashMap<>();
     
-    // NBT Keys
-    public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
-    public static final NamespacedKey SERVER_WAND_KEY = new NamespacedKey("aegisguard", "server_wand");
+    // Removed: WAND_KEY and SERVER_WAND_KEY are now handled by ItemManager
 
     public SelectionService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -54,27 +51,7 @@ public class SelectionService implements Listener {
         return createVerticallyExpandedCuboid(loc1.get(p.getUniqueId()), loc2.get(p.getUniqueId()));
     }
 
-    // --- ADDED: The Sentinel Scepter Generator ---
-    public ItemStack getWand() {
-        ItemStack wand = new ItemStack(Material.BLAZE_ROD);
-        ItemMeta meta = wand.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Sentinel's Scepter");
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "A tool of absolute authority.");
-            lore.add("");
-            lore.add(ChatColor.YELLOW + "Right-Click: " + ChatColor.WHITE + "Select Pos 1");
-            lore.add(ChatColor.YELLOW + "Left-Click: "  + ChatColor.WHITE + "Select Pos 2");
-            meta.setLore(lore);
-            
-            // Apply NBT so the listener recognizes it
-            meta.getPersistentDataContainer().set(WAND_KEY, PersistentDataType.BYTE, (byte) 1);
-            meta.getPersistentDataContainer().set(SERVER_WAND_KEY, PersistentDataType.BYTE, (byte) 1);
-            
-            wand.setItemMeta(meta);
-        }
-        return wand;
-    }
+    // REMOVED: getWand() method is now handled by ItemManager.java
 
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
@@ -82,29 +59,30 @@ public class SelectionService implements Listener {
         ItemStack item = e.getItem();
         
         if (item == null || item.getType() == Material.AIR) return;
-        if (!item.hasItemMeta()) return;
+        
+        // --- NEW: Centralized Item Check ---
+        boolean isPlayerWand = plugin.getItemManager().isPlayerWand(item);
+        boolean isSentinelScepter = plugin.getItemManager().isSentinelScepter(item);
 
-        ItemMeta meta = item.getItemMeta();
-        boolean isNormal = meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE);
-        boolean isServer = meta.getPersistentDataContainer().has(SERVER_WAND_KEY, PersistentDataType.BYTE);
-
-        // If it's not a wand, ignore
-        if (!isNormal && !isServer) return;
+        // If it's not a valid wand, ignore the interaction
+        if (!isPlayerWand && !isSentinelScepter) return;
 
         e.setCancelled(true); 
-        selectionIsServer.put(p.getUniqueId(), isServer);
+        
+        // Sentinel Scepter is used for server claims (isServer=true)
+        selectionIsServer.put(p.getUniqueId(), isSentinelScepter);
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null) {
             Location loc = e.getClickedBlock().getLocation();
             loc1.put(p.getUniqueId(), loc);
             p.sendMessage(ChatColor.GREEN + "Corner 1 set at " + formatLoc(loc));
-            playSelectionEffect(p, loc, isServer);
+            playSelectionEffect(p, loc, isSentinelScepter);
             
         } else if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getClickedBlock() != null) {
             Location loc = e.getClickedBlock().getLocation();
             loc2.put(p.getUniqueId(), loc);
             p.sendMessage(ChatColor.GREEN + "Corner 2 set at " + formatLoc(loc));
-            playSelectionEffect(p, loc, isServer);
+            playSelectionEffect(p, loc, isSentinelScepter);
         }
     }
 
@@ -187,7 +165,8 @@ public class SelectionService implements Listener {
     public void consumeWand(Player p) {
         ItemStack[] contents = p.getInventory().getContents();
         for (int i = 0; i < contents.length; i++) {
-            if (isWand(contents[i])) {
+            // Updated check to use the local isWand(), which now uses ItemManager
+            if (isWand(contents[i])) { 
                 if (contents[i].getAmount() > 1) {
                     contents[i].setAmount(contents[i].getAmount() - 1);
                 } else {
@@ -199,10 +178,8 @@ public class SelectionService implements Listener {
     }
     
     public boolean isWand(ItemStack item) {
-        if (item == null || item.getType() == Material.AIR) return false;
-        if (!item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        return meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE);
+        // NEW: Check if the item is the official Player Wand using the ItemManager
+        return plugin.getItemManager().isPlayerWand(item);
     }
     
     private void playSelectionEffect(Player p, Location loc, boolean isServer) {

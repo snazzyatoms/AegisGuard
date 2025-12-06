@@ -21,7 +21,6 @@ public class CommandHandler implements CommandExecutor {
         // --- 1. GENERAL COMMANDS (AegisCommand) ---
         AegisCommand generalCmd = new AegisCommand(plugin);
         register("menu", generalCmd);
-        register("wand", generalCmd);
         register("help", generalCmd);
         register("visit", generalCmd);
         register("home", generalCmd);
@@ -38,7 +37,7 @@ public class CommandHandler implements CommandExecutor {
         register("guild", guildCmd);
         register("alliance", guildCmd);
 
-        // --- 3. ESTATE COMMANDS (EstateCommand) ---
+        // --- 3. ESTATE COMMANDS (Player Plots) ---
         EstateCommand estateCmd = new EstateCommand(plugin);
         register("claim", estateCmd);
         register("deed", estateCmd);
@@ -48,6 +47,14 @@ public class CommandHandler implements CommandExecutor {
         register("trust", estateCmd);
         register("setrole", estateCmd);
         register("resize", estateCmd);
+
+        // --- 4. ADMIN COMMANDS (Server Estates & Maintenance) ---
+        // This was missing! 
+        AdminCommand adminCmd = new AdminCommand(plugin);
+        register("admin", adminCmd);
+        register("reload", adminCmd);
+        register("wand", adminCmd); // Moved wand here so it gives the Admin Scepter if perm allows
+        register("server", adminCmd); // Alias for creating server plots
     }
 
     private void register(String name, SubCommand cmd) {
@@ -57,7 +64,13 @@ public class CommandHandler implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§cOnly players can use AegisGuard commands.");
+            // Allow console to use reload
+            if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+                plugin.reloadConfig();
+                sender.sendMessage("[AegisGuard] Reloaded from Console.");
+                return true;
+            }
+            sender.sendMessage("§cOnly players can use AegisGuard gameplay commands.");
             return true;
         }
 

@@ -5,6 +5,7 @@ import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.managers.LanguageManager;
 import com.aegisguard.objects.Estate;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor; // Added ChatColor for clear color signaling
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -42,12 +43,17 @@ public class PlotFlagsGUI {
     public void open(Player player, Estate estate) {
         LanguageManager lang = plugin.getLanguageManager();
         
+        // --- DEFAULT PROTECTION ENSURED ---
+        // Ensures protection flags (e.g., break/pvp) default to FALSE (Protected)
+        // If the Estate object is new, this saves the default state immediately.
+        plugin.getEstateManager().initializeDefaultFlags(estate);
+        // ----------------------------------
+        
         if (estate == null) {
             player.sendMessage(lang.getMsg(player, "no_plot_here"));
             return;
         }
 
-        // Title: "Estate Settings"
         String title = lang.getGui("title_flags"); 
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(estate), 54, title);
 
@@ -57,6 +63,7 @@ public class PlotFlagsGUI {
         for (int i : borderSlots) inv.setItem(i, filler);
 
         // --- 2. DANGER (Row 2) ---
+        // Note: The material provided here is only a fallback icon.
         addFlagButton(player, inv, estate, 10, "pvp", Material.IRON_SWORD, "button_pvp", "pvp_toggle_lore");
         addFlagButton(player, inv, estate, 11, "tnt-damage", Material.TNT, "button_tnt", "tnt_toggle_lore");
         addFlagButton(player, inv, estate, 12, "fire-spread", Material.FLINT_AND_STEEL, "button_fire", "fire_toggle_lore");
@@ -109,7 +116,6 @@ public class PlotFlagsGUI {
         inv.setItem(49, GUIManager.createItem(Material.BARRIER, lang.getGui("button_close")));
 
         player.openInventory(inv);
-        // plugin.effects().playMenuOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e, PlotFlagsHolder holder) {
@@ -136,7 +142,6 @@ public class PlotFlagsGUI {
             case 16: // Safe Zone
                 if (plugin.isAdmin(player)) {
                     estate.setFlag("safe_zone", !estate.getFlag("safe_zone"));
-                    // plugin.getEstateManager().saveEstate(estate);
                     open(player, estate);
                 }
                 break;
@@ -154,7 +159,7 @@ public class PlotFlagsGUI {
             
             // Sub-Menus
             case 31: // Cosmetics
-                plugin.getGuiManager().cosmetics().open(player, estate); // Make sure you add cosmetics() getter to GuiManager
+                plugin.getGuiManager().cosmetics().open(player, estate);
                 break;
             
             // Nav
@@ -163,16 +168,15 @@ public class PlotFlagsGUI {
         }
     }
     
-    // --- Helpers ---
+    // --- New & Updated Helpers ---
+
     private void toggleFlag(Player player, Estate estate, String flag) {
         boolean current = estate.getFlag(flag);
         estate.setFlag(flag, !current);
-        // plugin.getEstateManager().saveEstate(estate);
         
-        String status = !current ? "§aON" : "§cOFF";
-        // plugin.getLanguageManager().send(player, "flag_toggled", Map.of("FLAG", flag.toUpperCase(), "STATUS", status));
+        String status = !current ? ChatColor.GREEN + "ON" : ChatColor.RED + "OFF";
+        player.sendMessage(ChatColor.GOLD + "Flag " + flag.toUpperCase() + " set to " + status + ChatColor.GOLD + ".");
         
-        // plugin.effects().playConfirm(player);
         open(player, estate);
     }
 
@@ -188,7 +192,6 @@ public class PlotFlagsGUI {
         }
 
         estate.setFlag(flag, !current);
-        // plugin.getEstateManager().saveEstate(estate);
         
         if (flag.equals("fly") && estate.getRegion().contains(player.getLocation())) {
             player.setAllowFlight(!current);
@@ -197,28 +200,82 @@ public class PlotFlagsGUI {
         
         open(player, estate);
     }
-    
-    private void addFlagButton(Player p, Inventory inv, Estate estate, int slot, String flag, Material mat, String nameKey, String loreKey) {
+
+    /**
+     * Helper to create a flag item with distinct ON/OFF visuals.
+     * State determines color, glow, and material.
+     */
+    private void addFlagButton(Player p, Inventory inv, Estate estate, int slot, String flag, Material baseMat, String nameKey, String loreKey) {
         boolean state = estate.getFlag(flag);
-        String name = plugin.getLanguageManager().getMsg(p, nameKey + (state ? "_on" : "_off"));
-        if (name.contains("Missing")) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
+        ChatColor statusColor = state ? ChatColor.GREEN : ChatColor.RED;
+        String statusText = state ? "ENABLED" : "DISABLED";
         
+        // Use wool for highly visible ON/OFF state (Green/Red)
+        Material iconMat = state ? Material.GREEN_WOOL : Material.RED_WOOL;
+        
+        // Fallback to the provided base material if wool isn't appropriate
+        if (baseMat == Material.IRON_SWORD || baseMat == Material.TNT || baseMat == Material.SHIELD || baseMat == Material.CHEST) {
+            iconMat = baseMat;
+        }
+        
+        // --- 1. NAME FORMATTING ---
+        String name = plugin.getLanguageManager().getMsg(p, nameKey);
+        // Fallback if language key is missing
+        if (name.contains("Missing") || name.isEmpty()) {
+            name = ChatColor.GRAY + flag.toUpperCase();
+        }
+        // Add clear ON/OFF state to the end of the name
+        name = name + statusColor + " (" + statusText + ")";
+        
+        // --- 2. LORE FORMATTING ---
         List<String> lore = plugin.getLanguageManager().getMsgList(p, loreKey);
-        ItemStack item = GUIManager.createItem(mat, name, lore);
-        if (state) addGlow(item);
+        List<String> updatedLore = new ArrayList<>();
+
+        if (lore != null) {
+            for(String line : lore) {
+                updatedLore.add(line.replace("{STATUS}", statusColor + statusText));
+            }
+        }
+        
+        // --- 3. CREATE ITEM ---
+        ItemStack item = GUIManager.createItem(iconMat, name, updatedLore);
+        if (state) addGlow(item); // Only add glow if ON (Enabled/Unprotected)
         
         inv.setItem(slot, item);
     }
     
+    /**
+     * Helper for paid flags, maintaining distinct ON/OFF visuals.
+     */
     private void addPaidFlagButton(Player p, Inventory inv, Estate estate, int slot, String flag, Material mat, String nameKey, String loreKey, String costStr) {
         boolean state = estate.getFlag(flag);
-        String name = plugin.getLanguageManager().getMsg(p, nameKey + (state ? "_on" : "_off"));
-        if (name.contains("Missing")) name = "§7" + flag + ": " + (state ? "§aON" : "§cOFF");
+        ChatColor statusColor = state ? ChatColor.GREEN : ChatColor.RED;
+        String statusText = state ? "ENABLED" : "DISABLED";
         
+        // Use wool for highly visible ON/OFF state
+        Material iconMat = state ? Material.GREEN_WOOL : Material.RED_WOOL;
+        if (mat == Material.EMERALD) iconMat = mat; // Keep emerald for shop/economy
+        
+        // --- 1. NAME FORMATTING ---
+        String name = plugin.getLanguageManager().getMsg(p, nameKey);
+        if (name.contains("Missing") || name.isEmpty()) {
+            name = ChatColor.GRAY + flag.toUpperCase();
+        }
+        name = name + statusColor + " (" + statusText + ")";
+        
+        // --- 2. LORE FORMATTING ---
         List<String> lore = plugin.getLanguageManager().getMsgList(p, loreKey);
         lore = replacePlaceholder(lore, "{COST}", costStr);
+        List<String> updatedLore = new ArrayList<>();
         
-        ItemStack item = GUIManager.createItem(mat, name, lore);
+        if (lore != null) {
+            for(String line : lore) {
+                updatedLore.add(line.replace("{STATUS}", statusColor + statusText));
+            }
+        }
+        
+        // --- 3. CREATE ITEM ---
+        ItemStack item = GUIManager.createItem(iconMat, name, updatedLore);
         if (state) addGlow(item);
         
         inv.setItem(slot, item);

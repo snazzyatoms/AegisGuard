@@ -126,7 +126,6 @@ public class YMLDataStore implements IDataStore {
         if (loc == null) return null;
         if (plugin.getEstateManager() != null) {
             for (Estate e : plugin.getEstateManager().getAllEstates()) {
-                // FIXED: Use getRegion().contains() instead of isInside()
                 if (e.getRegion().contains(loc)) return e;
             }
         }
@@ -139,19 +138,23 @@ public class YMLDataStore implements IDataStore {
         save();
     }
 
-    // FIXED: Renamed to match Interface 'updateEstateOwner'
     @Override
     public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
         saveEstate(estate);
     }
 
-    // FIXED: Renamed to match Interface 'removeEstate'
     @Override
     public void removeEstate(UUID id) {
         if (config != null) {
             config.set(id.toString(), null);
             save();
         }
+    }
+
+    // --- INTERFACE FIX: Added Alias deleteEstate ---
+    @Override
+    public void deleteEstate(UUID id) {
+        removeEstate(id);
     }
 
     @Override
@@ -185,21 +188,38 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void saveSync() { save(); }
     
-    // Stubs to satisfy Interface
     @Override public void revertWildernessBlocks(long timestamp, int limit) {}
     @Override public void logWildernessBlock(Location loc, String old, String newMat, UUID uuid) {}
     
-    // Note: If IDataStore requires these, add them:
-    @Override public void deleteEstatesByOwner(UUID ownerId) {
+    // --- INTERFACE FIX: Added removeAllPlots ---
+    @Override
+    public void removeAllPlots(UUID owner) {
          if (config == null) return;
          List<String> toRemove = new ArrayList<>();
          for (String key : config.getKeys(false)) {
-             String owner = config.getString(key + ".owner");
-             if (owner != null && owner.equals(ownerId.toString())) {
+             String ownerStr = config.getString(key + ".owner");
+             if (ownerStr != null && ownerStr.equals(owner.toString())) {
                  toRemove.add(key);
              }
          }
          for (String key : toRemove) config.set(key, null);
          if (!toRemove.isEmpty()) save();
     }
+
+    // --- INTERFACE FIX: Added Missing Stubs ---
+    @Override public List<Estate> getEstates(UUID owner) {
+        return plugin.getEstateManager().getAllEstates().stream()
+                .filter(e -> e.getOwnerId() != null && e.getOwnerId().equals(owner))
+                .collect(Collectors.toList());
+    }
+
+    @Override public Collection<Estate> getAllEstates() { return plugin.getEstateManager().getAllEstates(); }
+    @Override public Collection<Estate> getEstatesForSale() { return new ArrayList<>(); }
+    @Override public Collection<Estate> getEstatesForAuction() { return new ArrayList<>(); }
+    @Override public Estate getEstate(UUID owner, UUID plotId) { return plugin.getEstateManager().getEstate(plotId); }
+    @Override public void createEstate(UUID owner, Location c1, Location c2) {}
+    @Override public void addEstate(Estate estate) { saveEstate(estate); }
+    @Override public void addPlayerRole(Estate estate, UUID uuid, String role) { saveEstate(estate); }
+    @Override public void removePlayerRole(Estate estate, UUID uuid) { saveEstate(estate); }
+    @Override public void removeBannedEstates() {}
 }

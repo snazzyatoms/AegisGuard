@@ -63,16 +63,15 @@ public class MobBarrierTask implements Runnable {
                 final int finalCz = cz;
                 
                 if (plugin.isFolia()) {
-                    // On Folia, check if chunk is loaded before scheduling
+                    // Folia / region-thread safe
                     if (!world.isChunkLoaded(cx, cz)) continue;
                     
-                    // Schedule chunk check on its region thread
                     Bukkit.getRegionScheduler().run(plugin, world, finalCx, finalCz, scheduledTask -> {
                         checkChunkForMobs(world, plot, finalCx, finalCz);
                     });
                 } else {
-                    // Non-Folia: check directly
-                    checkChunkForMobs(world, plot, cx, cz);
+                    // Non-Folia: schedule chunk work back on the main thread
+                    plugin.runMainGlobal(() -> checkChunkForMobs(world, plot, finalCx, finalCz));
                 }
             }
         }
@@ -98,7 +97,7 @@ public class MobBarrierTask implements Runnable {
     
     private void removeMob(Entity entity) {
         if (plugin.isFolia()) {
-            // On Folia, use entity scheduler
+            // On Folia, use entity scheduler (region-thread safe)
             entity.getScheduler().run(plugin, scheduledTask -> {
                 if (entity.isValid()) {
                     entity.remove();
@@ -106,7 +105,7 @@ public class MobBarrierTask implements Runnable {
                 }
             }, null);
         } else {
-            // Non-Folia: use main thread
+            // Non-Folia: always go to main thread
             plugin.runMain(null, () -> {
                 if (entity.isValid()) {
                     entity.remove();
@@ -118,7 +117,13 @@ public class MobBarrierTask implements Runnable {
     
     private void spawnRemovalParticle(Entity entity) {
         if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
-            entity.getWorld().spawnParticle(Particle.SMOKE_NORMAL, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.05);
+            entity.getWorld().spawnParticle(
+                Particle.SMOKE_NORMAL,
+                entity.getLocation().add(0, 1, 0),
+                5,
+                0.1, 0.1, 0.1,
+                0.05
+            );
         }
     }
 }

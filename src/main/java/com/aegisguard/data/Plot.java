@@ -3,7 +3,7 @@ package com.aegisguard.data;
 import com.aegisguard.AegisGuard;
 // If you have Zone.java in objects package, keep this. 
 // If Zone is not used in 1.2.1, you can remove the import and the List<Zone>.
-import com.aegisguard.objects.Zone; 
+import com.aegisguard.data.Zone; 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;

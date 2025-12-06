@@ -28,15 +28,13 @@ public class MobBarrierTask implements Runnable {
                 if (world == null) continue;
 
                 // 1. Check Permissions/Flags
-                // If this is a Safe Zone, OR if "mobs" flag is disabled -> CLEANUP TIME
-                boolean isSafeZone = estate.getFlag("safe_zone");
+                // Mobs should only be removed if the "mobs" flag is explicitly set to FALSE.
                 boolean mobsAllowed = estate.getFlag("mobs");
 
-                // If mobs are allowed AND it's not a safe zone, we skip this estate
-                if (mobsAllowed && !isSafeZone) continue;
+                // If mobs are allowed (flag is TRUE), we skip the cleanup for this estate.
+                if (mobsAllowed) continue;
 
                 // 2. Calculate Chunk Boundaries
-                // We convert block coordinates to chunk coordinates (divide by 16)
                 int minChunkX = estate.getRegion().getLowerNE().getBlockX() >> 4;
                 int minChunkZ = estate.getRegion().getLowerNE().getBlockZ() >> 4;
                 int maxChunkX = estate.getRegion().getUpperSW().getBlockX() >> 4;
@@ -53,16 +51,19 @@ public class MobBarrierTask implements Runnable {
                         Chunk chunk = world.getChunkAt(cx, cz);
                         
                         // 4. Scan Entities
-                        // This array covers everything: Ground (Zombies), Sky (Phantoms), Bosses (Wither)
                         for (Entity entity : chunk.getEntities()) {
                             
                             // Optimization: Skip players and non-living immediately
                             if (!(entity instanceof LivingEntity)) continue;
                             if (entity instanceof Player) continue;
+                            if (entity instanceof ArmorStand) continue; // Skip utility entities
+                            if (entity.getType() == EntityType.SLIME || entity.getType() == EntityType.MAGMA_CUBE) {
+                                // Prevent small slimes from continuously reappearing after being split
+                                if (((Slime) entity).getSize() <= 1) continue;
+                            }
 
                             if (isHostile(entity)) {
                                 // 5. Precision Check: Is the mob actually INSIDE the boundary?
-                                // If your estate goes from Bedrock to Sky (Y: -64 to 320), this catches Phantoms too.
                                 if (estate.getRegion().contains(entity.getLocation())) {
                                     
                                     // 6. TERMINATE
@@ -77,7 +78,7 @@ public class MobBarrierTask implements Runnable {
     }
 
     private void removeMob(Entity entity) {
-        if (!entity.isValid()) return; // Already dead
+        if (!entity.isValid()) return;
 
         // Effects
         if (plugin.getConfig().getBoolean("mob_barrier.remove_particles", true)) {

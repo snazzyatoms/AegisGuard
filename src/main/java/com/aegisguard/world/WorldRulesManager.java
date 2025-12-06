@@ -29,19 +29,22 @@ public class WorldRulesManager {
         rules.clear();
         AGConfig cfg = plugin.cfg();
 
-        // 1. Establish Global Defaults from Config
+        // 1. Global Defaults
         this.defaultRuleSet = new WorldRuleSet(
-            true, // Allow claims by default
+            true, // allowClaims
             cfg.pvpProtectionDefault(),
             cfg.noMobsInClaims(),
             cfg.containerProtectionDefault(),
             cfg.petProtectionDefault(),
             cfg.farmProtectionDefault(),
+            true,  // animals (NEW)
+            true,  // redstone (NEW)
+            true,  // vehicles (NEW)
             cfg.flyDefault(),
             cfg.entryDefault()
         );
-        
-        // 2. Load Per-World Overrides
+
+        // 2. Per-world Overrides
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("claims.per_world");
         if (section == null) {
             plugin.getLogger().info("[AegisGuard] No per-world configuration found. Using defaults.");
@@ -52,7 +55,6 @@ public class WorldRulesManager {
             ConfigurationSection worldSec = section.getConfigurationSection(worldName);
             if (worldSec == null) continue;
 
-            // Check for specific "protections" subsection, otherwise check root of world section
             ConfigurationSection prot = worldSec.getConfigurationSection("protections");
             if (prot == null) prot = worldSec;
 
@@ -63,6 +65,9 @@ public class WorldRulesManager {
                 prot.getBoolean("containers", defaultRuleSet.containers),
                 prot.getBoolean("pets", defaultRuleSet.pets),
                 prot.getBoolean("farms", defaultRuleSet.farms),
+                prot.getBoolean("animals", defaultRuleSet.animals),
+                prot.getBoolean("redstone", defaultRuleSet.redstone),
+                prot.getBoolean("vehicles", defaultRuleSet.vehicles),
                 prot.getBoolean("fly", defaultRuleSet.fly),
                 prot.getBoolean("entry", defaultRuleSet.entry)
             );
@@ -74,28 +79,33 @@ public class WorldRulesManager {
     }
 
     /**
-     * Applies the specific world's default flags to a newly created plot.
+     * Applies world-default flags to a newly created plot.
      */
     public void applyDefaults(Plot plot) {
         if (plot == null) return;
-        
+
         World world = Bukkit.getWorld(plot.getWorld());
         WorldRuleSet set = getRules(world);
-        
-        // Apply Main Protections
+
         plot.setFlag("pvp", set.pvp);
         plot.setFlag("mobs", set.mobs);
         plot.setFlag("containers", set.containers);
         plot.setFlag("pets", set.pets);
         plot.setFlag("farm", set.farms);
+
+        // NEW FLAGS ✅
+        plot.setFlag("animals", set.animals);
+        plot.setFlag("redstone", set.redstone);
+        plot.setFlag("vehicles", set.vehicles);
+
         plot.setFlag("fly", set.fly);
         plot.setFlag("entry", set.entry);
-        
-        // Hardcoded safe defaults (usually always false/protected initially)
+
+        // Hard safety defaults
         plot.setFlag("tnt-damage", false);
         plot.setFlag("fire-spread", false);
         plot.setFlag("piston-use", false);
-        plot.setFlag("interact", true); // Usually allow interaction by default for members
+        plot.setFlag("interact", true);
         plot.setFlag("build", true);
     }
 
@@ -106,15 +116,15 @@ public class WorldRulesManager {
 
     // --- Public API ---
 
-    public boolean allowClaims(World world) {
-        return getRules(world).allowClaims;
-    }
-
+    public boolean allowClaims(World world) { return getRules(world).allowClaims; }
     public boolean isPvPAllowed(World world) { return getRules(world).pvp; }
     public boolean allowMobs(World world) { return getRules(world).mobs; }
     public boolean allowContainers(World world) { return getRules(world).containers; }
     public boolean allowPets(World world) { return getRules(world).pets; }
     public boolean allowFarms(World world) { return getRules(world).farms; }
+    public boolean allowAnimals(World world) { return getRules(world).animals; }
+    public boolean allowRedstone(World world) { return getRules(world).redstone; }
+    public boolean allowVehicles(World world) { return getRules(world).vehicles; }
 
     public boolean isProtectionEnabled(World world, String key) {
         WorldRuleSet set = getRules(world);
@@ -123,14 +133,17 @@ public class WorldRulesManager {
             case "mobs" -> set.mobs;
             case "containers" -> set.containers;
             case "pets" -> set.pets;
-            case "farms", "farm" -> set.farms;
+            case "farm", "farms" -> set.farms;
+            case "animals" -> set.animals;
+            case "redstone" -> set.redstone;
+            case "vehicles" -> set.vehicles;
             case "fly" -> set.fly;
             case "entry" -> set.entry;
             default -> true;
         };
     }
 
-    // --- Data Class ---
+    // --- Data Container ---
     public static class WorldRuleSet {
         public boolean allowClaims;
         public boolean pvp;
@@ -138,11 +151,15 @@ public class WorldRulesManager {
         public boolean containers;
         public boolean pets;
         public boolean farms;
+        public boolean animals;
+        public boolean redstone;
+        public boolean vehicles;
         public boolean fly;
         public boolean entry;
 
         public WorldRuleSet(boolean allowClaims, boolean pvp, boolean mobs,
-                            boolean containers, boolean pets, boolean farms, 
+                            boolean containers, boolean pets, boolean farms,
+                            boolean animals, boolean redstone, boolean vehicles,
                             boolean fly, boolean entry) {
             this.allowClaims = allowClaims;
             this.pvp = pvp;
@@ -150,6 +167,9 @@ public class WorldRulesManager {
             this.containers = containers;
             this.pets = pets;
             this.farms = farms;
+            this.animals = animals;
+            this.redstone = redstone;
+            this.vehicles = vehicles;
             this.fly = fly;
             this.entry = entry;
         }

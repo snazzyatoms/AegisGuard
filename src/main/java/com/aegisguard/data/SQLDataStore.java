@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  * - Uses REPLACE INTO for universal compatibility.
  * - Stores advanced plot data in 'settings' blob (progression, market, warps, cosmetics, likes, bans...).
  * - UPDATED: Adds full Zone (sub-claim) persistence via aegis_zones table.
+ * - UPDATED: Persists per-role flag overrides via Plot.serializeRoleFlags()/deserializeRoleFlags().
  */
 public class SQLDataStore implements IDataStore {
 
@@ -120,7 +121,7 @@ public class SQLDataStore implements IDataStore {
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-            plugin.getLogger().info("Connecting to SQL Database (" + host + ")...");
+            plugin.getLogger().info("Connecting to MySQL/MariaDB (" + host + ":" + port + ", DB=" + database + ")...");
         } else {
             File file = new File(plugin.getDataFolder(), "aegisguard.db");
             if (!file.getParentFile().exists()) {
@@ -128,7 +129,7 @@ public class SQLDataStore implements IDataStore {
             }
             config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
             config.setDriverClassName("org.sqlite.JDBC");
-            plugin.getLogger().info("Using local SQLite database file.");
+            plugin.getLogger().info("Using local SQLite database file: " + file.getName());
         }
 
         this.hikari = new HikariDataSource(config);
@@ -202,7 +203,8 @@ public class SQLDataStore implements IDataStore {
                                 try {
                                     UUID u = UUID.fromString(kv[0]);
                                     plot.setRole(u, kv[1]);
-                                } catch (IllegalArgumentException ignored) {}
+                                } catch (IllegalArgumentException ignored) {
+                                }
                             }
                         }
                     }
@@ -260,7 +262,8 @@ public class SQLDataStore implements IDataStore {
                             UUID renter = UUID.fromString(renterStr);
                             // Keep the same absolute expiration using remaining duration
                             zone.rentTo(renter, expires - now);
-                        } catch (IllegalArgumentException ignored) {}
+                        } catch (IllegalArgumentException ignored) {
+                        }
                     }
 
                     parent.addZone(zone);
@@ -317,7 +320,7 @@ public class SQLDataStore implements IDataStore {
                     ps.setString(12, plot.serializeFlags());
                     ps.setString(13, plot.serializeRoles());
 
-                    // Advanced settings blob
+                    // Advanced settings blob (includes roleFlags now)
                     ps.setString(14, serializeSettings(plot));
 
                     ps.executeUpdate();
@@ -421,6 +424,12 @@ public class SQLDataStore implements IDataStore {
         add.accept("warpName", plot.getWarpName());
         add.accept("warpIcon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
 
+        // NEW: per-role flag overrides (only non-INHERIT values are serialized)
+        String roleFlags = plot.serializeRoleFlags();
+        if (!roleFlags.isEmpty()) {
+            add.accept("roleFlags", roleFlags);
+        }
+
         // Zones are stored in aegis_zones, not in settings.
 
         return sb.toString();
@@ -515,7 +524,8 @@ public class SQLDataStore implements IDataStore {
                             if (uStr.isEmpty()) continue;
                             try {
                                 plot.toggleLike(UUID.fromString(uStr));
-                            } catch (IllegalArgumentException ignored) {}
+                            } catch (IllegalArgumentException ignored) {
+                            }
                         }
                         break;
                     }
@@ -526,7 +536,8 @@ public class SQLDataStore implements IDataStore {
                             if (uStr.isEmpty()) continue;
                             try {
                                 plot.addBan(UUID.fromString(uStr));
-                            } catch (IllegalArgumentException ignored) {}
+                            } catch (IllegalArgumentException ignored) {
+                            }
                         }
                         break;
                     }
@@ -554,8 +565,14 @@ public class SQLDataStore implements IDataStore {
                             try {
                                 Material icon = Material.valueOf(value);
                                 plot.setServerWarp(plot.isServerWarp(), plot.getWarpName(), icon);
-                            } catch (IllegalArgumentException ignored) {}
+                            } catch (IllegalArgumentException ignored) {
+                            }
                         }
+                        break;
+
+                    // NEW: per-role flag overrides
+                    case "roleFlags":
+                        plot.deserializeRoleFlags(value);
                         break;
                 }
             } catch (Exception ignored) {
@@ -668,9 +685,9 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- Indexing Helpers ---
-    // ==============================================================    
+    // ==============================================================
 
     private void indexPlot(Plot plot) {
         String w = plot.getWorld();
@@ -714,9 +731,9 @@ public class SQLDataStore implements IDataStore {
         return Collections.emptySet();
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- Wilderness Logging ---
-    // ==============================================================    
+    // ==============================================================
 
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -745,9 +762,9 @@ public class SQLDataStore implements IDataStore {
         // TODO: implement rollback logic if you want SQL-driven wilderness revert
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- Basic Accessors ---
-    // ==============================================================    
+    // ==============================================================
 
     @Override
     public boolean isDirty() {

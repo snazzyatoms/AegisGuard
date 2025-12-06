@@ -11,13 +11,10 @@ import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.*;
 
-import java.util.UUID;
-
 /**
  * ProtectionManager
  * - Handles Environmental & Entity-based protections.
  * - Ensures Mobs, PvP, Fire, and Explosions respect Estate flags.
- * - Supports both Private Estates and Guild Estates.
  */
 public class ProtectionManager implements Listener {
 
@@ -28,11 +25,10 @@ public class ProtectionManager implements Listener {
     }
 
     // ==========================================================
-    // 🧟 MOB SPAWNING (The "Disappear" Logic)
+    // 🧟 MOB SPAWNING & TARGETING
     // ==========================================================
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent e) {
-        // Allow custom spawning (e.g. plugins, commands), only block natural/spawners if flagged
         if (e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM) return;
 
         Estate estate = plugin.getEstateManager().getEstateAt(e.getLocation());
@@ -45,9 +41,25 @@ public class ProtectionManager implements Listener {
                 }
             }
         } else {
-            // Wilderness Logic: Check global world rules
+            // Wilderness Logic
             if (!plugin.getWorldRules().allowMobs(e.getLocation().getWorld())) {
                 if (isHostile(e.getEntity())) e.setCancelled(true);
+            }
+        }
+    }
+
+    // --- NEW: Stop mobs from seeing/targeting players in Safe Zones ---
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityTarget(EntityTargetLivingEntityEvent e) {
+        if (!(e.getTarget() instanceof Player target)) return;
+        
+        Estate estate = plugin.getEstateManager().getEstateAt(target.getLocation());
+        
+        // If player is in a Safe Zone or an Estate with disabled mobs
+        if (estate != null) {
+            if (estate.getFlag("safe_zone") || !estate.getFlag("mobs")) {
+                e.setCancelled(true);
+                e.setTarget(null); // Force them to forget the player
             }
         }
     }
@@ -60,29 +72,25 @@ public class ProtectionManager implements Listener {
         Entity victim = e.getEntity();
         Entity attacker = e.getDamager();
 
-        // Resolve Projectiles (Arrow/Trident -> Shooter)
         if (attacker instanceof Projectile proj && proj.getShooter() instanceof Entity shooter) {
             attacker = shooter;
         }
 
         Estate estate = plugin.getEstateManager().getEstateAt(victim.getLocation());
 
-        // 1. PvP Protection (Player vs Player)
+        // 1. PvP Protection
         if (victim instanceof Player && attacker instanceof Player) {
             if (estate != null) {
-                // If PvP is disabled in this Estate
                 if (!estate.getFlag("pvp")) {
                     e.setCancelled(true);
-                    // Optional: Send feedback?
-                    // plugin.getLanguageManager().sendTitle((Player) attacker, "cannot_attack", "");
                 }
             } else if (!plugin.getWorldRules().isPvPAllowed(victim.getWorld())) {
-                e.setCancelled(true); // Wilderness PvP check
+                e.setCancelled(true);
             }
             return;
         }
 
-        // 2. PvE (Player attacked by Mob) - "Safe Zone" God Mode
+        // 2. PvE (Player attacked by Mob) - God Mode in Safe Zones
         if (victim instanceof Player && isHostile(attacker)) {
             if (estate != null && estate.getFlag("safe_zone")) {
                 e.setCancelled(true); 
@@ -90,24 +98,18 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // 3. Friendly Fire / Asset Protection (Pets, Armor Stands, Animals)
+        // 3. Asset Protection (Pets, Armor Stands)
         if (estate != null && !estate.getFlag("pets")) {
             if (victim instanceof Tameable || victim instanceof Animals || victim instanceof ArmorStand || victim instanceof ItemFrame) {
                 if (attacker instanceof Player p) {
-                    // Allow admins to bypass
                     if (plugin.isAdmin(p)) return;
 
-                    // Check Access: Private Member OR Guild Member
                     boolean hasAccess = estate.isMember(p.getUniqueId());
-                    
                     if (estate.isGuild() && !hasAccess) {
                         Guild guild = plugin.getAllianceManager().getGuild(estate.getOwnerId());
-                        if (guild != null && guild.isMember(p.getUniqueId())) {
-                            hasAccess = true;
-                        }
+                        if (guild != null && guild.isMember(p.getUniqueId())) hasAccess = true;
                     }
 
-                    // If not allowed, block damage
                     if (!hasAccess) {
                         e.setCancelled(true);
                         plugin.getLanguageManager().sendTitle(p, "cannot_attack", "");
@@ -122,12 +124,8 @@ public class ProtectionManager implements Listener {
     // ==========================================================
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onExplode(EntityExplodeEvent e) {
-        // Iterate through all blocks the explosion WOULD destroy
         e.blockList().removeIf(block -> {
             Estate estate = plugin.getEstateManager().getEstateAt(block.getLocation());
-            
-            // If the block is inside an estate, and that estate does NOT allow TNT damage
-            // (Default: tnt-damage is false, so !false = true -> remove from list)
             return estate != null && !estate.getFlag("tnt-damage");
         });
     }
@@ -136,8 +134,6 @@ public class ProtectionManager implements Listener {
     public void onFireSpread(BlockIgniteEvent e) {
         if (e.getCause() == BlockIgniteEvent.IgniteCause.SPREAD || e.getCause() == BlockIgniteEvent.IgniteCause.LAVA) {
             Estate estate = plugin.getEstateManager().getEstateAt(e.getBlock().getLocation());
-            
-            // If fire-spread flag is FALSE (default), stop it
             if (estate != null && !estate.getFlag("fire-spread")) {
                 e.setCancelled(true);
             }
@@ -153,21 +149,17 @@ public class ProtectionManager implements Listener {
     }
 
     // ==========================================================
-    // 🍎 HUNGER & STATUS (v1.3.0)
+    // 🍎 HUNGER
     // ==========================================================
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onHungerDeplete(FoodLevelChangeEvent e) {
         if (!(e.getEntity() instanceof Player player)) return;
 
         Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
-        if (estate != null) {
-            // If "hunger" flag is FALSE (unchecked), prevent loss
-            // Useful for Spawn / Safe Zones
-            if (!estate.getFlag("hunger")) {
-                if (e.getFoodLevel() < player.getFoodLevel()) {
-                    e.setCancelled(true);
-                    player.setSaturation(20f);
-                }
+        if (estate != null && !estate.getFlag("hunger")) {
+            if (e.getFoodLevel() < player.getFoodLevel()) {
+                e.setCancelled(true);
+                player.setSaturation(20f);
             }
         }
     }
@@ -175,14 +167,8 @@ public class ProtectionManager implements Listener {
     // ==========================================================
     // 🛠️ UTILITIES
     // ==========================================================
-    
-    /**
-     * Determines if an entity is considered hostile/dangerous.
-     * Includes 1.21+ mobs (Breeze, Bogged, Creaking) via name check.
-     */
-    private boolean isHostile(Entity e) {
+    public boolean isHostile(Entity e) {
         if (e == null) return false;
-        
         if (e instanceof Monster) return true;
         if (e instanceof Slime) return true;
         if (e instanceof Phantom) return true;
@@ -191,7 +177,6 @@ public class ProtectionManager implements Listener {
         if (e instanceof Hoglin) return true;
         if (e instanceof EnderDragon || e instanceof Wither) return true;
 
-        // String-Based Checks for Future Mobs (Version Agnostic)
         String name = e.getType().name();
         return name.contains("WARDEN") || 
                name.contains("BREEZE") || 

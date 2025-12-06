@@ -15,6 +15,11 @@ terminology:
   action_resize: "Resize"
 
 messages:
+  # --- General ---
+  unknown_command: "&cUnknown command. Type /ag help."
+  must_select: "&cYou must select an area with the Wand first."
+  wand_received: "&eYou received the Sentinel's Scepter."
+
   # --- Claiming ---
   claim_success: "&aSuccess! &7You have claimed a new %type% named &f%name%&7."
   claim_failed_money: "&cNot enough money. &7Claiming this area costs &c$%cost%&7."
@@ -61,7 +66,18 @@ gui:
   button_prev: "&7⬅ Prev"
   button_exit: "&c&l✖ Exit"
 
-  # Menu Titles
+  # --- Guardian Codex (Main Menu Titles) ---
+  # These were missing and causing the errors
+  codex_title: "&8Guardian Codex"
+  codex_menu_title: "&8AegisGuard > Menu"
+  codex_claim_title: "&8AegisGuard > Claims"
+  codex_guild_title: "&8AegisGuard > Guilds"
+  codex_security_title: "&8AegisGuard > Security"
+  codex_economy_title: "&8AegisGuard > Economy"
+  codex_identity_title: "&8AegisGuard > Identity"
+  codex_advanced_title: "&8AegisGuard > Advanced"
+
+  # Standard Menu Titles
   title_main: "&8Main Menu"
   title_ledger: "&8Claim Bank"
   title_roles: "&8Member Roles"

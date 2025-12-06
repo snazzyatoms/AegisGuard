@@ -6,6 +6,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.*;
+import org.bukkit.entity.Slime;
+import org.bukkit.event.entity.EntityType;
 
 public class MobBarrierTask implements Runnable {
 
@@ -14,25 +16,27 @@ public class MobBarrierTask implements Runnable {
     public MobBarrierTask(AegisGuard plugin) {
         this.plugin = plugin;
     }
+    
+    private boolean isEstateSafe(Estate estate) {
+        if (estate == null) return false;
+        if (estate.isServerEstate()) return true;
+        return estate.getFlag("safe_zone") || !estate.getFlag("mobs");
+    }
 
     @Override
     public void run() {
         if (!plugin.getConfig().getBoolean("mob_barrier.enabled", false)) return;
 
-        // CRITICAL FIX: Entity access MUST happen on the Main Server Thread.
-        // We schedule this logic to run synchronously to prevent server crashes.
-        plugin.runMain(null, () -> {
+        // Execute the main logic on the main thread or global region scheduler (handled by plugin.runMainGlobal)
+        plugin.runMainGlobal(() -> {
             
             for (Estate estate : plugin.getEstateManager().getAllEstates()) {
                 World world = estate.getWorld();
                 if (world == null) continue;
 
                 // 1. Check Permissions/Flags
-                // Mobs should only be removed if the "mobs" flag is explicitly set to FALSE.
-                boolean mobsAllowed = estate.getFlag("mobs");
-
-                // If mobs are allowed (flag is TRUE), we skip the cleanup for this estate.
-                if (mobsAllowed) continue;
+                // If the estate is not safe (mobs allowed), skip the cleanup task.
+                if (!isEstateSafe(estate)) continue;
 
                 // 2. Calculate Chunk Boundaries
                 int minChunkX = estate.getRegion().getLowerNE().getBlockX() >> 4;
@@ -44,8 +48,6 @@ public class MobBarrierTask implements Runnable {
                 for (int cx = minChunkX; cx <= maxChunkX; cx++) {
                     for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                         
-                        // PERFORMANCE: Never load a chunk just to check for mobs. 
-                        // Only check currently active chunks.
                         if (!world.isChunkLoaded(cx, cz)) continue;
                         
                         Chunk chunk = world.getChunkAt(cx, cz);
@@ -53,21 +55,19 @@ public class MobBarrierTask implements Runnable {
                         // 4. Scan Entities
                         for (Entity entity : chunk.getEntities()) {
                             
-                            // Optimization: Skip players and non-living immediately
-                            if (!(entity instanceof LivingEntity)) continue;
-                            if (entity instanceof Player) continue;
-                            if (entity instanceof ArmorStand) continue; // Skip utility entities
+                            // Optimization: Skip players, passive mobs, and utility entities
+                            if (!(entity instanceof LivingEntity) || entity instanceof Player) continue;
+                            if (entity instanceof ArmorStand || entity instanceof ItemFrame) continue;
+
+                            // Handle slimes to prevent perpetual spawning/removal loop
                             if (entity.getType() == EntityType.SLIME || entity.getType() == EntityType.MAGMA_CUBE) {
-                                // Prevent small slimes from continuously reappearing after being split
                                 if (((Slime) entity).getSize() <= 1) continue;
                             }
 
                             if (isHostile(entity)) {
                                 // 5. Precision Check: Is the mob actually INSIDE the boundary?
                                 if (estate.getRegion().contains(entity.getLocation())) {
-                                    
-                                    // 6. TERMINATE
-                                    removeMob(entity);
+                                    removeMob(entity); // 6. TERMINATE
                                 }
                             }
                         }
@@ -92,30 +92,22 @@ public class MobBarrierTask implements Runnable {
         // Removal
         entity.remove();
     }
-
-    /**
-     * Determines if an entity is hostile.
-     * Covers Ground (Zombies, Creepers), Sky (Phantoms, Ghasts), and Bosses.
-     */
+    
+    // Hostile check is identical to ProtectionManager's check for consistency
     private boolean isHostile(Entity e) {
         if (e == null) return false;
-
-        // Standard Categorization
-        if (e instanceof Monster) return true; // Zombies, Skeles, Creepers, Spiders
-        if (e instanceof Slime) return true;   // Slimes, Magma Cubes
-        if (e instanceof Phantom) return true; // Sky Attack
+        if (e instanceof Monster) return true;
+        if (e instanceof Slime) return true;
+        if (e instanceof Phantom) return true;
         if (e instanceof Shulker) return true;
-        if (e instanceof Ghast) return true;   // Sky Attack
+        if (e instanceof Ghast) return true;
         if (e instanceof Hoglin) return true;
         if (e instanceof EnderDragon || e instanceof Wither) return true;
 
-        // String-Based Checks for Future Mobs (1.21+ support without crashing on old versions)
         String name = e.getType().name();
-        if (name.contains("WARDEN")) return true;
-        if (name.contains("BREEZE")) return true;
-        if (name.contains("BOGGED")) return true;
-        if (name.contains("CREAKING")) return true;
-
-        return false;
+        return name.contains("WARDEN") || 
+               name.contains("BREEZE") || 
+               name.contains("BOGGED") || 
+               name.contains("CREAKING");
     }
 }

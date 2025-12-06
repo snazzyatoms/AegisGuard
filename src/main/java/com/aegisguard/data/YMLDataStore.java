@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  * - Implements strict IDataStore contract for 1.2.x.
  * - Ensures data persistence with immediate saving on modification.
  * - UPDATED: Saves advanced systems (rent, auction, bans, likes, cosmetics, warps, biomes, zones).
+ * - UPDATED: Persists per-role flag overrides via Plot.serializeRoleFlags()/deserializeRoleFlags().
  */
 public class YMLDataStore implements IDataStore {
 
@@ -40,9 +41,9 @@ public class YMLDataStore implements IDataStore {
         this.file = new File(plugin.getDataFolder(), "plots.yml");
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- CORE I/O ---
-    // ==============================================================    
+    // ==============================================================
 
     @Override
     public void load() {
@@ -156,6 +157,12 @@ public class YMLDataStore implements IDataStore {
                             plot.setRole(UUID.fromString(pUuid), roles.getString(pUuid));
                         } catch (Exception ignored) {}
                     }
+                }
+
+                // NEW: per-role flag overrides (compact blob)
+                String roleFlagsBlob = sec.getString("role-flags");
+                if (roleFlagsBlob != null && !roleFlagsBlob.isEmpty()) {
+                    plot.deserializeRoleFlags(roleFlagsBlob);
                 }
 
                 // Likes
@@ -332,6 +339,10 @@ public class YMLDataStore implements IDataStore {
             roles.set(entry.getKey().toString(), entry.getValue());
         }
 
+        // NEW: per-role flag overrides (compact blob, same as SQL)
+        String roleFlagsBlob = plot.serializeRoleFlags();
+        sec.set("role-flags", roleFlagsBlob.isEmpty() ? null : roleFlagsBlob);
+
         // Likes
         List<String> liked = plot.getLikedBy().stream()
                 .map(UUID::toString)
@@ -373,9 +384,9 @@ public class YMLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- ACCESSORS ---
-    // ==============================================================    
+    // ==============================================================
 
     @Override
     public List<Plot> getPlots(UUID owner) {
@@ -435,9 +446,9 @@ public class YMLDataStore implements IDataStore {
         return false;
     }
 
-    // ==============================================================    
+    // ==============================================================
     // --- MODIFICATION ---
-    // ==============================================================    
+    // ==============================================================
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {

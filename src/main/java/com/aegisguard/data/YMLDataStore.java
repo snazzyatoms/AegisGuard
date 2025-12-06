@@ -12,6 +12,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 public class YMLDataStore implements IDataStore {
 
@@ -130,18 +132,43 @@ public class YMLDataStore implements IDataStore {
         save();
     }
 
-    // --- ADDED MISSING METHOD TO FIX COMPILATION ---
     @Override
     public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
-        // For YML, saving the estate handles the owner update automatically
+        // YML saves everything on save(), so this alias ensures logic consistency
         saveEstate(estate);
     }
-    // -----------------------------------------------
 
     @Override
     public void deleteEstate(UUID id) {
         if (config != null) {
             config.set(id.toString(), null);
+            save();
+        }
+    }
+
+    /**
+     * NEW: Implements the missing deleteEstatesByOwner method required by IDataStore.
+     * Used for banning players and wiping their data.
+     */
+    @Override
+    public void deleteEstatesByOwner(UUID ownerId) {
+        if (config == null) return;
+
+        List<String> toRemove = new ArrayList<>();
+        String targetOwner = ownerId.toString();
+
+        for (String key : config.getKeys(false)) {
+            String owner = config.getString(key + ".owner");
+            if (owner != null && owner.equals(targetOwner)) {
+                toRemove.add(key);
+            }
+        }
+
+        for (String key : toRemove) {
+            config.set(key, null);
+        }
+        
+        if (!toRemove.isEmpty()) {
             save();
         }
     }
@@ -158,11 +185,11 @@ public class YMLDataStore implements IDataStore {
     
     @Override
     public void revertWildernessBlocks(long checkTime, int limit) {
-        // YML does not support block logging. This feature is SQL only.
+        // YML does not support block logging.
     }
 
     @Override
     public void logWildernessBlock(org.bukkit.Location loc, String type, String data, java.util.UUID player) {
-        // No-op for YML (SQL Only feature)
+        // No-op for YML
     }
 }

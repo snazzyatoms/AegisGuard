@@ -1,7 +1,8 @@
 package com.aegisguard.commands;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.objects.Estate; // FIXED: Changed from Plot to Estate
+import com.aegisguard.objects.Cuboid;
+import com.aegisguard.objects.Estate;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -19,7 +20,7 @@ public class AdminCommand implements CommandHandler.SubCommand {
     @Override
     public void execute(Player player, String[] args) {
         if (!player.hasPermission("aegisguard.admin")) {
-            player.sendMessage(ChatColor.RED + "You do not have permission to administer the Aegis.");
+            player.sendMessage(ChatColor.RED + "You do not have permission.");
             return;
         }
 
@@ -33,18 +34,18 @@ public class AdminCommand implements CommandHandler.SubCommand {
         switch (sub) {
             case "reload":
                 plugin.reloadConfig();
-                if (plugin.getLanguageManager() != null) plugin.getLanguageManager().load();
+                // FIXED: loadAllLocales()
+                if (plugin.getLanguageManager() != null) plugin.getLanguageManager().loadAllLocales();
                 player.sendMessage(ChatColor.GREEN + "AegisGuard configuration reloaded.");
                 break;
 
             case "wand":
-                // Using the new getSelectionManager() alias we added
                 player.getInventory().addItem(plugin.getSelectionManager().getWand());
                 player.sendMessage(ChatColor.GOLD + "You have received the Sentinel's Scepter.");
                 break;
 
             case "claim":
-            case "server": // Usage: /ag admin claim <Name>
+            case "server": 
                 handleServerClaim(player, args);
                 break;
 
@@ -65,84 +66,70 @@ public class AdminCommand implements CommandHandler.SubCommand {
         }
 
         String plotName = args[1];
-
-        // 1. Get Selection
-        // Note: getSelectionLocations returns Location[] { loc1, loc2 }
         Location[] sel = plugin.getSelectionManager().getSelectionLocations(player.getUniqueId());
         
         if (sel == null || sel[0] == null || sel[1] == null) {
-            player.sendMessage(ChatColor.RED + "You must select an area with the Sentinel's Scepter first.");
+            player.sendMessage(ChatColor.RED + "Select area with Wand first.");
             return;
         }
 
-        // 2. Check Overlap
-        // We pass 'null' as the estate to ignore, meaning check everything
         Estate existing = plugin.getDataStore().getEstateAt(sel[0]); 
         if (existing != null) {
-             // Basic overlap check (you might want a more complex range check here later)
-             // For now, if the start point is inside another estate, block it.
-             player.sendMessage(ChatColor.RED + "This selection overlaps with estate: " + existing.getDisplayName());
+             // FIXED: getName()
+             player.sendMessage(ChatColor.RED + "Overlaps with: " + existing.getName());
              return;
         }
 
-        // 3. Create SERVER Estate
-        // Using fixed UUID 0-0-0-0-0 for Server Ownership
         UUID serverUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
         
-        // Constructor: Estate(UUID plotId, UUID ownerId, String ownerName, String world, int x1, int z1, int x2, int z2)
+        // FIXED: Create Cuboid and use correct Constructor
+        // Ensure vertical expansion
+        Location min = sel[0]; min.setY(sel[0].getWorld().getMinHeight());
+        Location max = sel[1]; max.setY(sel[0].getWorld().getMaxHeight());
+        Cuboid region = new Cuboid(min, max);
+
         Estate serverEstate = new Estate(
                 UUID.randomUUID(), 
+                plotName, 
                 serverUUID, 
-                "SERVER", 
-                sel[0].getWorld().getName(), 
-                sel[0].getBlockX(), sel[0].getBlockZ(), 
-                sel[1].getBlockX(), sel[1].getBlockZ()
+                false, // isGuild
+                sel[0].getWorld(), 
+                region
         );
 
-        // 4. Automatically Enable SafeZone Flags
         serverEstate.setFlag("pvp", false);
-        serverEstate.setFlag("mobs", false);     // This triggers the MobBarrierTask
-        serverEstate.setFlag("mob-spawning", false);
-        serverEstate.setFlag("explosion", false);
-        serverEstate.setFlag("fire-spread", false);
-        serverEstate.setFlag("entry", true);     // Public entry
-        serverEstate.setFlag("safe_zone", true); // Activates "God Mode"
+        serverEstate.setFlag("mobs", false);
+        serverEstate.setFlag("safe_zone", true);
         
-        serverEstate.setDisplayName(ChatColor.translateAlternateColorCodes('&', plotName));
-        
-        // 5. Save using the new method name
+        // FIXED: Use DataStore
         plugin.getDataStore().saveEstate(serverEstate);
+        
+        // FIXED: Add to manager (method name check)
+        plugin.getEstateManager().registerEstateFromLoad(serverEstate);
 
-        // 6. Cache it in memory (EstateManager) so it appears immediately without restart
-        plugin.getEstateManager().addEstate(serverEstate);
-
-        player.sendMessage(ChatColor.GREEN + "Server Estate '" + plotName + "' created successfully.");
-        player.sendMessage(ChatColor.GRAY + "SafeZone flags (No PvP/Mobs) have been auto-applied.");
+        player.sendMessage(ChatColor.GREEN + "Server Estate '" + plotName + "' created.");
     }
 
     private void handleForceDelete(Player player) {
-        // Updated to use Estate object
         Estate estate = plugin.getEstateManager().getEstateAt(player.getLocation());
         
         if (estate == null) {
-            player.sendMessage(ChatColor.RED + "You are not standing in a plot.");
+            player.sendMessage(ChatColor.RED + "Not in a plot.");
             return;
         }
         
-        // Remove from DB
-        plugin.getDataStore().removeEstate(estate.getPlotId());
+        // FIXED: getId()
+        plugin.getDataStore().removeEstate(estate.getId());
+        plugin.getEstateManager().removeEstate(estate.getId());
         
-        // Remove from Memory
-        plugin.getEstateManager().removeEstate(estate.getPlotId());
-        
-        player.sendMessage(ChatColor.GREEN + "Estate '" + estate.getDisplayName() + "' force deleted.");
+        player.sendMessage(ChatColor.GREEN + "Estate '" + estate.getName() + "' deleted.");
     }
 
     private void sendAdminHelp(Player player) {
         player.sendMessage(ChatColor.GOLD + "--- AegisGuard Admin ---");
-        player.sendMessage(ChatColor.YELLOW + "/ag admin wand " + ChatColor.WHITE + "- Get Selection Wand");
-        player.sendMessage(ChatColor.YELLOW + "/ag admin claim <Name> " + ChatColor.WHITE + "- Create Server Zone");
-        player.sendMessage(ChatColor.YELLOW + "/ag admin delete " + ChatColor.WHITE + "- Force delete plot");
-        player.sendMessage(ChatColor.YELLOW + "/ag admin reload " + ChatColor.WHITE + "- Reload Config");
+        player.sendMessage(ChatColor.YELLOW + "/ag admin wand");
+        player.sendMessage(ChatColor.YELLOW + "/ag admin claim <Name>");
+        player.sendMessage(ChatColor.YELLOW + "/ag admin delete");
+        player.sendMessage(ChatColor.YELLOW + "/ag admin reload");
     }
 }

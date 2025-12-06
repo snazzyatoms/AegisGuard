@@ -78,10 +78,18 @@ public class Zone {
     }
     
     public long getRentExpiration() { return rentExpiration; }
-    
+
     public void rentTo(UUID player, long durationMillis) {
         this.renter = player;
         this.rentExpiration = System.currentTimeMillis() + durationMillis;
+    }
+
+    /**
+     * Direct setter used by persistence layers to restore exact state.
+     */
+    public void setRentState(UUID renter, long rentExpiration) {
+        this.renter = renter;
+        this.rentExpiration = rentExpiration;
     }
     
     public void evict() {

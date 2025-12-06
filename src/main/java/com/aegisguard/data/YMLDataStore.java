@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,10 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * YMLDataStore (v1.2.1)
+ * YMLDataStore (v1.2.2+)
  * - Manages plot data using 'plots.yml'.
- * - Implements strict IDataStore contract for 1.2.1.
+ * - Implements strict IDataStore contract for 1.2.x.
  * - Ensures data persistence with immediate saving on modification.
+ * - UPDATED: Saves advanced systems (rent, auction, bans, likes, cosmetics, warps, biomes).
  */
 public class YMLDataStore implements IDataStore {
 
@@ -30,7 +32,7 @@ public class YMLDataStore implements IDataStore {
     private final Map<UUID, List<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     // Map<WorldName, Map<ChunkKey, Set<Plot>>> for fast spatial lookups
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
-    
+
     private volatile boolean isDirty = false;
 
     public YMLDataStore(AegisGuard plugin) {
@@ -38,9 +40,9 @@ public class YMLDataStore implements IDataStore {
         this.file = new File(plugin.getDataFolder(), "plots.yml");
     }
 
-    // ==============================================================
+    // ==============================================================    
     // --- CORE I/O ---
-    // ==============================================================
+    // ==============================================================    
 
     @Override
     public void load() {
@@ -48,7 +50,9 @@ public class YMLDataStore implements IDataStore {
         plotsByChunk.clear();
 
         if (!file.exists()) {
-            try { file.createNewFile(); } catch (IOException ignored) {}
+            try {
+                file.createNewFile();
+            } catch (IOException ignored) {}
         }
 
         config = YamlConfiguration.loadConfiguration(file);
@@ -59,12 +63,13 @@ public class YMLDataStore implements IDataStore {
             try {
                 UUID plotId = UUID.fromString(key);
                 ConfigurationSection sec = config.getConfigurationSection(key);
+                if (sec == null) continue;
 
                 // Basic Info
                 UUID ownerId = UUID.fromString(sec.getString("owner"));
                 String ownerName = sec.getString("owner-name", "Unknown");
                 String worldName = sec.getString("world");
-                
+
                 if (Bukkit.getWorld(worldName) == null) continue; // Skip invalid worlds
 
                 int x1 = sec.getInt("x1");
@@ -74,25 +79,68 @@ public class YMLDataStore implements IDataStore {
 
                 // Create Plot Object
                 Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2);
-                
-                // Load Extra Data
+
+                // Progression
                 plot.setLevel(sec.getInt("level", 1));
                 plot.setXp(sec.getDouble("xp", 0.0));
                 plot.setLastUpkeep(sec.getLong("last-upkeep", System.currentTimeMillis()));
-                
-                // Load Visuals
+                plot.setMaxMembers(sec.getInt("max-members", 2));
+
+                // Visuals
                 plot.setSpawnLocationFromString(sec.getString("spawn-location"));
                 plot.setWelcomeMessage(sec.getString("welcome-message"));
                 plot.setFarewellMessage(sec.getString("farewell-message"));
+                plot.setEntryTitle(sec.getString("entry-title"));
+                plot.setEntrySubtitle(sec.getString("entry-subtitle"));
                 plot.setDescription(sec.getString("description"));
-                
-                // Load Economy Status
-                if (sec.getBoolean("market.is-for-sale")) {
-                    plot.setForSale(true, sec.getDouble("market.sale-price"));
+                plot.setCustomBiome(sec.getString("custom-biome"));
+
+                // Economy & Market
+                // New-style section
+                if (sec.isConfigurationSection("market")) {
+                    ConfigurationSection market = sec.getConfigurationSection("market");
+                    if (market != null) {
+                        if (market.getBoolean("is-for-sale", false)) {
+                            plot.setForSale(true, market.getDouble("sale-price", 0.0));
+                        }
+                        if (market.getBoolean("is-for-rent", false)) {
+                            plot.setForRent(true, market.getDouble("rent-price", 0.0));
+                        }
+                        String renterStr = market.getString("current-renter");
+                        if (renterStr != null && !renterStr.isEmpty()) {
+                            try {
+                                UUID renter = UUID.fromString(renterStr);
+                                long expires = market.getLong("rent-expires", 0L);
+                                plot.setRenter(renter, expires);
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+                    }
+                } else {
+                    // Backwards compatibility with old flat keys
+                    if (sec.getBoolean("market.is-for-sale", false)) {
+                        plot.setForSale(true, sec.getDouble("market.sale-price", 0.0));
+                    }
                 }
+
                 plot.setPlotStatus(sec.getString("plot-status", "ACTIVE"));
 
-                // Load Flags
+                // Auction
+                if (sec.isConfigurationSection("auction")) {
+                    ConfigurationSection auction = sec.getConfigurationSection("auction");
+                    if (auction != null) {
+                        double bid = auction.getDouble("current-bid", 0.0);
+                        String bidderStr = auction.getString("current-bidder");
+                        UUID bidder = null;
+                        if (bidderStr != null && !bidderStr.isEmpty()) {
+                            try {
+                                bidder = UUID.fromString(bidderStr);
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+                        plot.setCurrentBid(bid, bidder);
+                    }
+                }
+
+                // Flags
                 if (sec.isConfigurationSection("flags")) {
                     ConfigurationSection flags = sec.getConfigurationSection("flags");
                     for (String f : flags.getKeys(false)) {
@@ -100,7 +148,7 @@ public class YMLDataStore implements IDataStore {
                     }
                 }
 
-                // Load Roles
+                // Roles
                 if (sec.isConfigurationSection("roles")) {
                     ConfigurationSection roles = sec.getConfigurationSection("roles");
                     for (String pUuid : roles.getKeys(false)) {
@@ -109,6 +157,46 @@ public class YMLDataStore implements IDataStore {
                         } catch (Exception ignored) {}
                     }
                 }
+
+                // Likes
+                for (String uuidStr : sec.getStringList("liked-by")) {
+                    try {
+                        plot.toggleLike(UUID.fromString(uuidStr));
+                    } catch (IllegalArgumentException ignored) {}
+                }
+
+                // Bans
+                for (String uuidStr : sec.getStringList("banned")) {
+                    try {
+                        plot.addBan(UUID.fromString(uuidStr));
+                    } catch (IllegalArgumentException ignored) {}
+                }
+
+                // Cosmetics
+                if (sec.isConfigurationSection("cosmetics")) {
+                    ConfigurationSection cos = sec.getConfigurationSection("cosmetics");
+                    plot.setBorderParticle(cos.getString("border-particle"));
+                    plot.setAmbientParticle(cos.getString("ambient-particle"));
+                    plot.setEntryEffect(cos.getString("entry-effect"));
+                }
+
+                // Warp
+                if (sec.isConfigurationSection("warp")) {
+                    ConfigurationSection warp = sec.getConfigurationSection("warp");
+                    boolean isWarp = warp.getBoolean("is-server-warp", false);
+                    String warpName = warp.getString("warp-name");
+                    String iconName = warp.getString("warp-icon");
+                    Material icon = null;
+                    if (iconName != null && !iconName.isEmpty()) {
+                        try {
+                            icon = Material.valueOf(iconName);
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+                    plot.setServerWarp(isWarp, warpName, icon);
+                }
+
+                // TODO: Zones persistence once Zone class contract is available.
+                // if (sec.isConfigurationSection("zones")) { ... }
 
                 // Cache it
                 cachePlot(plot);
@@ -124,12 +212,12 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void save() {
         if (config == null) config = new YamlConfiguration();
-        
+
         // Save all cached plots to the config object
         for (Plot plot : getAllPlots()) {
             writePlotToConfig(plot);
         }
-        
+
         try {
             config.save(file);
             isDirty = false;
@@ -143,11 +231,10 @@ public class YMLDataStore implements IDataStore {
     public void saveSync() {
         save();
     }
-    
+
     @Override
     public void savePlot(Plot plot) {
         // Update the specific section in memory and save to disk immediately
-        // This mirrors SQL's "instant save" behavior
         writePlotToConfig(plot);
         try {
             config.save(file);
@@ -155,11 +242,12 @@ public class YMLDataStore implements IDataStore {
             e.printStackTrace();
         }
     }
-    
+
     private void writePlotToConfig(Plot plot) {
         String key = plot.getPlotId().toString();
         ConfigurationSection sec = config.createSection(key);
-        
+
+        // Core
         sec.set("owner", plot.getOwner().toString());
         sec.set("owner-name", plot.getOwnerName());
         sec.set("world", plot.getWorld());
@@ -167,21 +255,39 @@ public class YMLDataStore implements IDataStore {
         sec.set("z1", plot.getZ1());
         sec.set("x2", plot.getX2());
         sec.set("z2", plot.getZ2());
-        
+
+        // Progression
         sec.set("level", plot.getLevel());
         sec.set("xp", plot.getXp());
         sec.set("last-upkeep", plot.getLastUpkeep());
-        
+        sec.set("max-members", plot.getMaxMembers());
+
+        // Visuals
         sec.set("spawn-location", plot.getSpawnLocationString());
         sec.set("welcome-message", plot.getWelcomeMessage());
         sec.set("farewell-message", plot.getFarewellMessage());
+        sec.set("entry-title", plot.getEntryTitle());
+        sec.set("entry-subtitle", plot.getEntrySubtitle());
         sec.set("description", plot.getDescription());
-        
-        if (plot.isForSale()) {
-            sec.set("market.is-for-sale", true);
-            sec.set("market.sale-price", plot.getSalePrice());
-        }
+        sec.set("custom-biome", plot.getCustomBiome());
+
+        // Economy & Market
+        ConfigurationSection market = sec.createSection("market");
+        market.set("is-for-sale", plot.isForSale());
+        market.set("sale-price", plot.getSalePrice());
+        market.set("is-for-rent", plot.isForRent());
+        market.set("rent-price", plot.getRentPrice());
+        UUID renter = plot.getCurrentRenter();
+        market.set("current-renter", renter != null ? renter.toString() : null);
+        market.set("rent-expires", plot.getRentExpires());
+
         sec.set("plot-status", plot.getPlotStatus());
+
+        // Auction
+        ConfigurationSection auction = sec.createSection("auction");
+        auction.set("current-bid", plot.getCurrentBid());
+        UUID bidder = plot.getCurrentBidder();
+        auction.set("current-bidder", bidder != null ? bidder.toString() : null);
 
         // Flags
         ConfigurationSection flags = sec.createSection("flags");
@@ -194,11 +300,38 @@ public class YMLDataStore implements IDataStore {
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             roles.set(entry.getKey().toString(), entry.getValue());
         }
+
+        // Likes
+        List<String> liked = plot.getLikedBy().stream()
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        sec.set("liked-by", liked.isEmpty() ? null : liked);
+
+        // Bans
+        List<String> banned = plot.getBannedPlayers().stream()
+                .map(UUID::toString)
+                .collect(Collectors.toList());
+        sec.set("banned", banned.isEmpty() ? null : banned);
+
+        // Cosmetics
+        ConfigurationSection cos = sec.createSection("cosmetics");
+        cos.set("border-particle", plot.getBorderParticle());
+        cos.set("ambient-particle", plot.getAmbientParticle());
+        cos.set("entry-effect", plot.getEntryEffect());
+
+        // Warp
+        ConfigurationSection warp = sec.createSection("warp");
+        warp.set("is-server-warp", plot.isServerWarp());
+        warp.set("warp-name", plot.getWarpName());
+        warp.set("warp-icon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
+
+        // TODO: Zones persistence once Zone class contract is available.
+        // ConfigurationSection zones = sec.createSection("zones"); ...
     }
 
-    // ==============================================================
+    // ==============================================================    
     // --- ACCESSORS ---
-    // ==============================================================
+    // ==============================================================    
 
     @Override
     public List<Plot> getPlots(UUID owner) {
@@ -231,13 +364,13 @@ public class YMLDataStore implements IDataStore {
     public Plot getPlotAt(Location loc) {
         String world = loc.getWorld().getName();
         String key = (loc.getBlockX() >> 4) + "," + (loc.getBlockZ() >> 4);
-        
+
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(world);
         if (worldMap == null) return null;
-        
+
         Set<Plot> candidates = worldMap.get(key);
         if (candidates == null) return null;
-        
+
         for (Plot p : candidates) {
             if (p.isInside(loc)) return p;
         }
@@ -246,9 +379,6 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2) {
-        // Fast check against cache
-        // (In a real scenario, we'd optimize this with the chunk map, 
-        // but iterating all plots in world is acceptable for small-medium servers)
         for (Plot p : getAllPlots()) {
             if (!p.getWorld().equals(world)) continue;
             if (ignore != null && p.getPlotId().equals(ignore.getPlotId())) continue;
@@ -261,22 +391,22 @@ public class YMLDataStore implements IDataStore {
         return false;
     }
 
-    // ==============================================================
+    // ==============================================================    
     // --- MODIFICATION ---
-    // ==============================================================
+    // ==============================================================    
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
         UUID id = UUID.randomUUID();
         String ownerName = Bukkit.getOfflinePlayer(owner).getName();
-        
+
         int x1 = Math.min(c1.getBlockX(), c2.getBlockX());
         int x2 = Math.max(c1.getBlockX(), c2.getBlockX());
         int z1 = Math.min(c1.getBlockZ(), c2.getBlockZ());
         int z2 = Math.max(c1.getBlockZ(), c2.getBlockZ());
 
         Plot plot = new Plot(id, owner, ownerName, c1.getWorld().getName(), x1, z1, x2, z2);
-        
+
         // Add to cache and save
         addPlot(plot);
     }
@@ -301,11 +431,14 @@ public class YMLDataStore implements IDataStore {
             if (removed != null) {
                 list.remove(removed);
                 deIndexPlot(removed);
-                
-                // Remove from file
+
                 if (config != null) {
                     config.set(plotId.toString(), null);
-                    try { config.save(file); } catch (IOException e) { e.printStackTrace(); }
+                    try {
+                        config.save(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -319,7 +452,11 @@ public class YMLDataStore implements IDataStore {
                 deIndexPlot(p);
                 config.set(p.getPlotId().toString(), null);
             }
-            try { config.save(file); } catch (IOException e) { e.printStackTrace(); }
+            try {
+                config.save(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -337,17 +474,14 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
-        // Remove from old owner cache
         List<Plot> oldList = plotsByOwner.get(plot.getOwner());
         if (oldList != null) oldList.remove(plot);
-        
-        // Update Plot
+
         plot.setOwner(newOwner);
         plot.setOwnerName(newOwnerName);
-        
-        // Add to new owner cache
+
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
-        
+
         savePlot(plot);
     }
 
@@ -357,32 +491,36 @@ public class YMLDataStore implements IDataStore {
             removeAllPlots(p.getUniqueId());
         }
     }
-    
+
     // --- Indexing Helpers ---
 
     private void cachePlot(Plot plot) {
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> new ArrayList<>()).add(plot);
-        
+
         String w = plot.getWorld();
-        int minX = plot.getX1() >> 4; int maxX = plot.getX2() >> 4;
-        int minZ = plot.getZ1() >> 4; int maxZ = plot.getZ2() >> 4;
-        
+        int minX = plot.getX1() >> 4;
+        int maxX = plot.getX2() >> 4;
+        int minZ = plot.getZ1() >> 4;
+        int maxZ = plot.getZ2() >> 4;
+
         Map<String, Set<Plot>> worldMap = plotsByChunk.computeIfAbsent(w, k -> new ConcurrentHashMap<>());
-        
+
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 worldMap.computeIfAbsent(x + "," + z, k -> new HashSet<>()).add(plot);
             }
         }
     }
-    
+
     private void deIndexPlot(Plot plot) {
         String w = plot.getWorld();
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(w);
         if (worldMap == null) return;
 
-        int minX = plot.getX1() >> 4; int maxX = plot.getX2() >> 4;
-        int minZ = plot.getZ1() >> 4; int maxZ = plot.getZ2() >> 4;
+        int minX = plot.getX1() >> 4;
+        int maxX = plot.getX2() >> 4;
+        int minZ = plot.getZ1() >> 4;
+        int maxZ = plot.getZ2() >> 4;
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
@@ -392,10 +530,17 @@ public class YMLDataStore implements IDataStore {
         }
     }
 
-    @Override public boolean isDirty() { return isDirty; }
-    @Override public void setDirty(boolean dirty) { this.isDirty = dirty; }
+    @Override
+    public boolean isDirty() {
+        return isDirty;
+    }
 
-    // No-ops for SQL features
+    @Override
+    public void setDirty(boolean dirty) {
+        this.isDirty = dirty;
+    }
+
+    // No-ops for SQL-specific features
     @Override public void logWildernessBlock(Location loc, String o, String n, UUID p) {}
     @Override public void revertWildernessBlocks(long t, int l) {}
 }

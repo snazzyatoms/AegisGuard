@@ -1,6 +1,6 @@
 # =======================================================================
-# 🛡️ AEGISGUARD - MODERN ENGLISH
-# Style: Simple, Direct, Standard Minecraft Terms.
+# 🛡️ AEGISGUARD - MODERN ENGLISH (Unified v1.3.0)
+# Style: Clean, Professional, Standard Minecraft Terms.
 # =======================================================================
 
 prefix: "&8[&bProtection&8] &7"
@@ -15,10 +15,26 @@ terminology:
   action_resize: "Resize"
 
 messages:
-  # --- General ---
+  # --- General & Navigation ---
   unknown_command: "&cUnknown command. Type /ag help."
-  must_select: "&cYou must select an area with the Wand first."
-  wand_received: "&eYou received the Sentinel's Scepter."
+  usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
+  no_permission: "&cError: Insufficient permissions."
+  players_only: "&cError: Command restricted to players."
+  
+  # --- Sounds & Sidebar ---
+  sound_global_enabled: "&a✔ Plugin sounds enabled."
+  sound_global_disabled: "&c✖ Plugin sounds disabled."
+  sidebar_enabled: "&a✔ Sidebar info enabled."
+  sidebar_disabled: "&c✖ Sidebar info disabled."
+
+  # --- Selection (Wand) ---
+  wand_given: "&a✔ You received the Claim Tool."
+  wand_consumed: "&a✔ Claim Tool consumed."
+  wand_not_found: "&c❌ Claim Tool not found in inventory."
+  must_select: "&c❌ You must select 2 corners with the Wand first."
+  corners_diff_world: "&c❌ Both corners must be in the same world."
+  corner1_set: "&a⚡ Position 1 set at &e{X}, {Z}."
+  corner2_set: "&b⚡ Position 2 set at &e{X}, {Z}."
 
   # --- Claiming ---
   claim_success: "&aSuccess! &7You have claimed a new %type% named &f%name%&7."
@@ -26,100 +42,483 @@ messages:
   claim_failed_guild_money: "&cNot enough Guild funds. &7Your Guild needs &c$%cost% &7to claim this."
   claim_failed_overlap: "&cOverlap! &7You cannot claim over someone else's land."
   claim_failed_limit: "&cLimit Reached. &7You have too many claims (Max: %max%)."
-  
-  # --- Petitions ---
+  plot_created: "&a✔ Claim created successfully."
+  plot_unclaimed: "&e⚠ Claim removed."
+  no_plot_here: "&c❌ You are not standing in a claim."
+
+  # --- Resizing & Merging ---
+  resize_success: "&a✔ Claim resized {DIRECTION} by {AMOUNT} blocks."
+  resize_fail_overlap: "&c❌ Resize failed! It would overlap another claim."
+  resize_fail_max_area: "&c❌ Resize failed! It exceeds the {AMOUNT} block limit."
+  merge_invalid_dir: "&c❌ Invalid direction. Use NORTH, SOUTH, EAST, or WEST."
+  merge_no_plot: "&c❌ No claim found in that direction."
+  merge_not_owner: "&c❌ You do not own the adjacent claim."
+  merge_not_aligned: "&c❌ Claims are not aligned. Edges must match exactly."
+  merge_success: "&a✔ Claims successfully merged!"
+
+  # --- Petitions (Expansions) ---
   petition_submitted: "&aRequest Sent. &7You asked for &f%size% &7more blocks. Cost: &e$%cost%&7."
   petition_exists: "&cWait. &7You already have a request pending."
   petition_invalid_size: "&cError. &7New size must be bigger."
   petition_limit_reached: "&cMax Size. &7You hit the claim size limit."
   petition_approved_title: "&a&lREQUEST APPROVED"
   petition_denied: "&cYour resize request was denied."
+  expansion_payment_failed: "&c❌ Request failed; insufficient funds."
+  expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
 
   # --- Guilds ---
   guild_created: "&aGuild Created. &7You are now the leader of &e%guild%&7."
   guild_claim_announce: "&eNew Claim! &6%guild% &7has claimed land at &f%location%&7."
   guild_rename_success: "&aRenamed. &7This claim is now called &f%name%&7."
+  not_in_guild: "&cYou need to be in a Guild first."
   
   # --- Economy ---
   ledger_deposit: "&aMoney Added. &7You deposited &f$%amount% &7into the claim bank."
   ledger_withdrawal: "&eMoney Taken. &7You took &f$%amount% &7from the claim bank."
   treasury_frozen: "&b&l❄ BANK LOCKED. &7Not enough members (Members: %current%/%min%)."
   liquidation_success: "&aSold Items. &7You sold &f%count% items &7for &a$%total%&7."
+  need_vault: "&c❌ Insufficient funds. Cost: &e${AMOUNT}&c."
+  cost_deducted: "&e💰 Charged &6${AMOUNT}&e."
+  vault_refund: "&e💰 Refunded &6${AMOUNT}&e ({PERCENT}%)."
+  upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for claim upkeep."
+  upkeep_failed_warning: "&cAlert: Upkeep due. Deposit funds soon."
+  plot_expired_upkeep: "&cAlert: Claim deleted due to unpaid upkeep."
   
-  # --- Titles ---
+  # --- Auctions ---
+  plot-now-auctioned: "&e⚠ Your claim is now being auctioned!"
+  auction-bid-own: "&cError: You cannot bid on your own expired claim."
+  auction-already-highest: "&eYou are already the highest bidder."
+  auction-outbid: "&e{PLAYER} has outbid you!"
+  auction-bid-success: "&a✔ Bid of &6{AMOUNT}&a accepted."
+  auction-sold: "&a✔ Your claim was sold to {PLAYER} for &6{AMOUNT}&a."
+  auction-won: "&a✔ You won the auction for {PLOT_OWNER}'s claim for &6{AMOUNT}&a!"
+
+  # --- Market ---
+  market-buy-own: "&cError: Cannot buy your own claim."
+  market-buy-success: "&a✔ Bought {PLAYER}'s claim for &6{PRICE}&a!"
+  market-sold: "&a✔ {PLAYER} bought your claim for &6{PRICE}&a!"
+  market-for-sale: "&a✔ Claim listed for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Claim unlisted."
+
+  # --- Travel & Homes ---
+  home-set-success: "&a✔ Claim spawn set to your location."
+  home-fail-outside: "&c❌ You must be inside your claim to set spawn."
+  home-fail-no-spawn: "&c❌ No spawn point set! Use /ag setspawn."
+  welcome-set: "&a✔ Welcome message updated."
+  welcome-cleared: "&e✔ Welcome message removed."
+  farewell-set: "&a✔ Farewell message updated."
+  farewell-cleared: "&e✔ Farewell message removed."
+
+  # --- Titles & Notifications ---
   enter_title: "&b%name%"
   enter_subtitle: "&7Owned by &f%owner%"
   exit_title: "&7Wilderness"
   exit_subtitle: "&7You left the claim"
-
-  # --- Errors ---
-  no_permission: "&cYou don't have permission to do that."
-  not_in_guild: "&cYou need to be in a Guild first."
   
+  cannot_break: "&c❌ You cannot break blocks here."
+  cannot_place: "&c❌ You cannot place blocks here."
+  cannot_interact: "&c❌ You cannot interact here."
+  cannot_attack: "&c❌ PvP is disabled here."
+  plot_entry_denied: "&c⛔ Entry denied. This claim is private."
+  plot_banned_entry: "&c⛔ You are BANNED from this claim!"
+  plot-is-locked: "&cError: This claim is locked."
+
+  # --- Admin Tools ---
+  admin_reloading: '&7Reloading...'
+  admin_reload_complete: '&a✔ Done.'
+  admin_auto_remove_enabled: '&a✔ Auto-Wipe ON.'
+  admin_auto_remove_disabled: '&c✖ Auto-Wipe OFF.'
+  admin_bypass_enabled: '&a✔ Limit Bypass ON.'
+  admin_bypass_disabled: '&c✖ Limit Bypass OFF.'
+  admin_broadcast_enabled: '&a✔ Logging ON.'
+  admin_broadcast_disabled: '&c✖ Logging OFF.'
+  admin_removed_banned: '&eWiped plots for: {PLAYER}'
+  admin_plot_teleport: '&eTeleported to {PLAYER}.'
+  admin_plot_deleted: '&c✖ Deleted {PLAYER}.'
+  admin-zone-created: '&a✔ Server Zone created.'
+  admin-zone-deleted: '&c✖ Server Zone deleted.'
+  admin-zone-not-found: '&c❌ Not a Server Zone.'
+  wilderness_revert_start: '&7Reverting wilderness...'
+  wilderness_revert_end: '&7Reverted {AMOUNT} blocks.'
+
+  # --- Likes ---
+  like_success: "&a✔ Liked! Total: &e{AMOUNT}"
+  like_removed: "&eLike removed."
+  like_own_plot: "&cCannot like own claim."
+  like_disabled: '&cLikes disabled.'
+
 gui:
-  # UI Buttons
-  button_back: "&c&l⬅ Back"
-  button_close: "&c&l✖ Close"
-  button_confirm: "&a&l✔ Yes"
-  button_cancel: "&c&l✖ No"
-  button_next: "&7Next ➡"
-  button_prev: "&7⬅ Prev"
-  button_exit: "&c&l✖ Exit"
+  # --- Navigation Buttons ---
+  button_back: "&e⟵ Back"
+  back_lore:
+    - "&7Return to the previous page."
+  button_back_menu: "&fReturn to Menu"
+  back_menu_lore:
+    - "&7Go back to the main dashboard."
+  button_close: "&c✖ Close"
+  button_confirm: "&a✔ Yes"
+  button_cancel: "&c✖ No"
+  button_next: "&fNext Page"
+  button_prev: "&fPrevious Page"
+  button_exit: "&c✖ Close"
+  button_exit_lore:
+    - "&7Close this menu."
 
-  # --- Guardian Codex (Main Menu Titles) ---
-  # These were missing and causing the errors
-  codex_title: "&8Guardian Codex"
-  codex_menu_title: "&8AegisGuard > Menu"
-  codex_claim_title: "&8AegisGuard > Claims"
-  codex_guild_title: "&8AegisGuard > Guilds"
-  codex_security_title: "&8AegisGuard > Security"
-  codex_economy_title: "&8AegisGuard > Economy"
-  codex_identity_title: "&8AegisGuard > Identity"
-  codex_advanced_title: "&8AegisGuard > Advanced"
-
-  # Standard Menu Titles
-  title_main: "&8Main Menu"
-  title_ledger: "&8Claim Bank"
-  title_roles: "&8Member Roles"
-  title_liquidation: "&8Sell Items"
-  title_bastion: "&8Guild Upgrades"
-  title_petition: "&8Resize Claim"
+  # --- 📖 Guardian Codex (Main Menu Titles) ---
+  # FIXED: Matches the Manual structure
+  codex_gui_title: "&9§lGuardian's Guide"
   
-  # Items
-  item_deed: "&b📍 Claim Info"
-  item_treasury: "&eGuild Bank"
-  item_members: "&fMembers"
+  codex_menu_title: "&d§lIII. Menu"
+  codex_menus_lore:
+    - "&7Use &b/ag menu&7 to manage:"
+    - " "
+    - "&6🚩 Settings: &7PvP, Mobs, etc."
+    - "&b👥 Members: &7Trust players."
+    - "&d✨ Cosmetics: &7Particle effects."
+    - "&a🌿 Biomes: &7Change biome type."
 
-  # --- Petition GUI ---
+  codex_claim_title: "&e§lI. Claiming"
+  codex_claim_lore:
+    - "&7How to protect land:"
+    - " "
+    - "&f1. &7Use &b/ag wand &7to get the tool."
+    - "&f2. &7Right-Click first corner."
+    - "&f3. &7Left-Click second corner."
+    - "&f4. &7Use &a/ag claim &7to buy."
+
+  codex_travel_title: "&b§lII. Travel"
+  codex_travel_lore:
+    - "&7Fast travel commands:"
+    - " "
+    - "&e/ag home &7- Teleport to claim."
+    - "&e/ag setspawn &7- Set spawn point."
+    - "&e/ag visit &7- Visit friends."
+
+  codex_security_title: "&c§lIV. Security"
+  codex_security_lore:
+    - "&7Manage visitors:"
+    - " "
+    - "&c/ag kick &7- Kick player."
+    - "&4/ag ban &7- Ban player."
+
+  codex_economy_title: "&6§lV. Economy"
+  codex_economy_lore:
+    - "&7Managing funds:"
+    - " "
+    - "&eUpkeep: &7Tax system."
+    - "&aMarket: &7Buy/Sell claims."
+
+  codex_identity_title: "&3§lVI. Utility"
+  codex_identity_lore:
+    - "&7Customize:"
+    - " "
+    - "&b/ag rename &7- Set name."
+    - "&e/ag stuck &7- Unstuck."
+
+  codex_advanced_title: "&5§lVII. Advanced"
+  codex_advanced_lore:
+    - "&dLeveling: &7Upgrade limits."
+    - "&eZones: &7Create rentals."
+
+  # --- Main Menu ---
+  menu_title: "&b⚔ AegisGuard Menu"
+
+  button_claim_land: "&a🛡 Create Claim"
+  claim_land_lore:
+    - "&7Secure this area."
+  claim_land_ready_lore:
+    - "&7Create claim from"
+    - "&7current selection."
+    - " "
+    - "&eClick to Confirm"
+
+  button_plot_flags: "&6Settings"
+  plot_flags_title: "&9⚙ Settings"
+  plot_flags_lore:
+    - "&7Manage claim rules."
+  plot_flags_locked_lore:
+    - "&cStand in your claim"
+    - "&cto edit settings."
+
+  button_roles: "&eMembers"
+  roles_lore:
+    - "&7Manage trusted players."
+  
+  button_player_settings: "&9Preferences"
+  player_settings_lore:
+    - "&7Edit local settings."
+
+  button_market: "&eMarketplace"
+  market_lore:
+    - "&7Buy and sell claims."
+
+  button_auction: "&cAuctions"
+  auction_lore:
+    - "&7Bid on expired claims."
+
+  button_info: "&6📜 Help"
+  info_lore:
+    - "&7Commands & Info."
+
+  # --- Expansion/Petitions ---
+  # Note: Mapped to 'petition' keys for Java compatibility, using 'Expansion' text.
+  petition_gui_title: "&dExpansion Request"
   petition_click_submit: "&eClick to Request Resize."
-  petition_locked_lore: "&cYou cannot resize this."
+  petition_locked_lore: 
+    - "&cYou cannot resize this."
   
-  petition_tier1_name: "&aTier 1 (+5)"
+  petition_tier1_name: "&aSmall Upgrade (+5)"
   petition_tier1_lore:
-    - "&7Small expansion."
-    - "&7+5 Blocks."
+    - "&7Radius: &a+5 blocks"
+    - " "
+    - "&eClick to Submit"
   
-  petition_tier2_name: "&eTier 2 (+10)"
+  petition_tier2_name: "&eMedium Upgrade (+10)"
   petition_tier2_lore:
-    - "&7Standard expansion."
-    - "&7+10 Blocks."
+    - "&7Radius: &e+10 blocks"
+    - " "
+    - "&eClick to Submit"
 
-  petition_tier3_name: "&6Tier 3 (+20)"
+  petition_tier3_name: "&fLarge Upgrade (+20)"
   petition_tier3_lore:
-    - "&7Large expansion."
-    - "&7+20 Blocks."
+    - "&7Radius: &f+20 blocks"
+    - " "
+    - "&eClick to Submit"
 
-  petition_tier4_name: "&dTier 4 (+35)"
+  petition_tier4_name: "&6Huge Upgrade (+35)"
   petition_tier4_lore:
-    - "&7Huge expansion."
-    - "&7+35 Blocks."
+    - "&7Radius: &6+35 blocks"
+    - " "
+    - "&eClick to Submit"
 
-  petition_tier5_name: "&bTier 5 (+50)"
+  petition_tier5_name: "&bMassive Upgrade (+50)"
   petition_tier5_lore:
-    - "&7Massive expansion."
-    - "&7+50 Blocks."
+    - "&7Radius: &b+50 blocks"
+    - " "
+    - "&eClick to Submit"
 
-  button_view_petitions_admin: "&c&lAdmin Requests"
+  button_view_petitions_admin: "&cReview Requests (Admin)"
   view_petitions_admin_lore:
-    - "&7See pending resize requests."
-    - "&eClick to View"
+    - "&7Approve or Deny requests."
+  
+  petition_admin_title: "&8Pending Requests"
+  petition_none_title: "&cNo Requests"
+  petition_none_lore:
+    - "&7No pending requests found."
+  petition_admin_actions:
+    - "&aLeft-Click: &7Approve"
+    - "&cRight-Click: &7Deny"
+
+  # --- Travel & Visits ---
+  visit_gui_title: "&9Travel Menu"
+  visit_title_warps: "&6Server Waypoints"
+  visit_title_trusted: "&9Trusted Claims"
+  visit_switch_trusted: "&bView: Trusted Claims"
+  visit_switch_warps: "&6View: Server Waypoints"
+  visit_warp_lore:
+    - "&7Click to warp."
+  visit_plot_name: "&e{PLOT}"
+  visit_plot_lore:
+    - "&7World: &f{WORLD}"
+    - "&7Status: &a{ROLE}"
+    - " "
+    - "&eClick to Teleport"
+
+  # --- Auctions ---
+  auction-gui-title: "&6Claim Auctions"
+  auction_item_name: "&eAuction: {OWNER}'s Claim"
+  auction_current_bid: "&7Current Bid: &e{AMOUNT}"
+  auction_highest_bidder: "&7Highest Bidder: &f{PLAYER}"
+  auction_item_lore:
+    - "&eLeft-Click: &7Preview Claim"
+    - "&aRight-Click: &7Place Bid"
+
+  # --- Market ---
+  market-gui-title: "&2Real Estate"
+  market-teleport: "&eTeleporting to {PLAYER}'s claim..."
+  market_type_rent: "&bFor Rent"
+  market_type_sale: "&aFor Sale"
+  market_item_lore:
+    - "&eLeft-Click: &7Preview Claim"
+    - "&aRight-Click: &7Purchase Deed"
+
+  # --- Settings / Flags GUI ---
+  button_pvp_on: '&a⚔ PvP: Allowed'
+  button_pvp_off: '&c⚔ PvP: Disabled'
+  pvp_toggle_lore:
+    - '&7Allow combat?'
+  
+  button_containers_on: '&a📦 Containers: Allowed'
+  button_containers_off: '&c📦 Containers: Protected'
+  container_toggle_lore:
+    - '&7Protect chests/furnaces?'
+  
+  button_mobs_on: '&a🧟 Mobs: Allowed'
+  button_mobs_off: '&c🧟 Mobs: Blocked'
+  mob_toggle_lore:
+    - '&7Allow hostile mobs?'
+
+  button_pets_on: '&a🐾 Pets: Unsafe'
+  button_pets_off: '&c🐾 Pets: Protected'
+  pet_toggle_lore:
+    - '&7Protect tamed pets?'
+
+  button_entity_on: '&a🗿 Entities: Unsafe'
+  button_entity_off: '&c🗿 Entities: Protected'
+  entity_toggle_lore:
+    - '&7Protect item frames?'
+
+  button_farm_on: '&a🌾 Crops: Vulnerable'
+  button_farm_off: '&c🌾 Crops: Protected'
+  farm_toggle_lore:
+    - '&7Prevent trampling?'
+
+  button_tnt_on: '&a💥 TNT: On'
+  button_tnt_off: '&c💥 TNT: Off'
+  tnt_toggle_lore:
+    - '&7Allow explosion damage?'
+
+  button_fire_on: '&a🔥 Fire: Spread On'
+  button_fire_off: '&c🔥 Fire: Spread Off'
+  fire_toggle_lore:
+    - '&7Allow fire spread?'
+
+  button_piston_on: '&a🔩 Pistons: On'
+  button_piston_off: '&c🔩 Pistons: Off'
+  piston_toggle_lore:
+    - '&7Allow piston movement?'
+
+  button_safe_on: '&a🛡 SafeZone: ON'
+  button_safe_off: '&c🛡 SafeZone: OFF'
+  safe_toggle_lore:
+    - '&7Override all protections.'
+  
+  button_fly_on: '&b🕊 Flight: ON'
+  button_fly_off: '&c🕊 Flight: OFF'
+  fly_toggle_lore: 
+    - "&7Enable flight in claim."
+    - "&7Cost to enable: &6{COST}"
+  
+  button_entry_on: '&a🚪 Entry: Allowed'
+  button_entry_off: '&c🚪 Entry: Denied'
+  entry_toggle_lore:
+    - '&7Lock claim from strangers?'
+
+  button_shop_on: '&a🛒 Shop: Public'
+  button_shop_off: '&c🛒 Shop: Private'
+  shop_toggle_lore: 
+    - "&7Allow usage of shop chests?"
+    - "&7Cost: &6{COST}"
+
+  # --- Cosmetics ---
+  cosmetics_gui_title: '&dCosmetics'
+  button_cosmetics: '&dCosmetics'
+  cosmetics_lore:
+    - '&7Visual border effects.'
+  cosmetics_border_none: '&cNo Effect'
+  cosmetics_status_selected: "&a(Active)"
+  cosmetics_status_free: "&aFree"
+  cosmetics_click_buy: "&eLeft-Click: Buy"
+  cosmetics_click_apply: "&eLeft-Click: Apply"
+  cosmetics_click_disable: "&7Click to remove."
+
+  # --- Roles ---
+  roles_gui_title: '&eMembers'
+  roles_manage_title: '&bManage: {PLAYER}'
+  trusted_plot_selector_title: '&bSelect Claim'
+  add_trusted_title: '&aAdd Member'
+  button_add_trusted: '&aAdd Member'
+  add_trusted_lore:
+    - '&7Trust a nearby player.'
+  button_remove_trusted: '&cRemove'
+  role_self: '&cCannot edit yourself.'
+  role_is_owner: '&cCannot edit owner.'
+
+  # --- Leveling ---
+  level_gui_title: "&dLeveling"
+  level_current_status: "&dStats"
+  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
+  level_max_reached: "&cMax Level Reached"
+  level_up_success: "&d⚡ Claim leveled up to {LEVEL}!"
+  level_up_fail_cost: "&c❌ Insufficient funds."
+  level_button_lore:
+    - "&7Upgrade claim size"
+    - "&7and unlock features."
+
+  # --- Zoning ---
+  zone_gui_title: "&3Zone Manager"
+  button_zone_create: "&aCreate Zone"
+  zone_create_ready_lore:
+    - "&7Create zone from selection."
+  zone_create_locked_lore:
+    - "&cSelect area with Wand first."
+  zone_evict_action: "&cLeft-Click to Evict"
+  zone_delete_action: "&cRight-Click to Delete"
+  zone_status_rented: "&cRented"
+  zone_status_available: "&aAvailable"
+  zone_button_lore:
+    - "&7Create sub-claims"
+    - "&7for rentals."
+
+  # --- Biomes ---
+  biome_gui_title: "&2Biome"
+  biome_changed: "&a✔ Biome set to {BIOME}."
+  biome_select_lore:
+    - "&7Set biome to {BIOME}."
+    - "&7Cost: &e{COST}"
+    - " "
+    - "&8[&c!&8] &7Visuals Only"
+  biome_button_lore:
+    - "&7Change biome color."
+  
+  # --- Admin Tools GUI ---
+  admin_menu_title: '&c⚙ Admin'
+  button_admin_auto_remove: '&6Auto-Wipe Bans'
+  admin_auto_remove_lore:
+    - '&7Delete plots of banned players.'
+  button_admin_bypass_limit: '&dBypass Limits'
+  admin_bypass_limit_lore:
+    - '&7Ignore claim limits.'
+  button_admin_broadcast: '&bLog Actions'
+  admin_broadcast_lore:
+    - '&7Broadcast admin usage.'
+  button_admin_unlimited: "&aInfinite Claims"
+  admin_unlimited_lore:
+    - "&7Allow admins unlimited land."
+  button_admin_sync: "&bGlobal Sync"
+  admin_sync_lore:
+    - "&7Sync data across network."
+  button_admin_perf: "&cPerformance Mode"
+  admin_perf_lore:
+    - "&7Reduce particles."
+  button_admin_diagnostics: "&bDiagnostics"
+  button_admin_reload: "&eReload Config"
+  
+  admin_plot_list_title: '&cGlobal Plot List'
+  admin_plot_item_name: "&bOwner: &f{OWNER}"
+  admin_server_zone_tag: "&c[SERVER ZONE]"
+  admin_plot_actions:
+    - "&eLeft-Click: &7Teleport"
+    - "&cRight-Click: &7Delete"
+  button_back_admin: "&fBack to Admin"
+
+  admin_zone_flags_title: '&cZone Settings'
+  flag_build_lore:
+    - '&7Allow building?'
+  flag_containers_lore:
+    - '&7Allow containers?'
+  flag_interact_lore:
+    - '&7Allow interactions?'
+
+  help_header: '&bAegisGuard Help'
+  help_lines:
+    - '&e/ag wand'
+    - '&e/ag menu'
+    - '&e/ag claim'
+    - '&e/ag unclaim'
+    - '&e/ag resize <dir> <amt>'
+    - '&e/ag home'
+    - '&e/ag setspawn'
+    - '&e/ag welcome [msg]'
+    - '&e/ag market'
+    - '&e/ag help'

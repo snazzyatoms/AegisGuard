@@ -77,6 +77,9 @@ public class ProtectionManager implements Listener {
     // --- 3. MOVEMENT LOGIC (Sidebar & Messages) ---
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent e) {
+        // ✅ Safety: handle potential null 'to' location
+        if (e.getTo() == null) return;
+
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
             e.getFrom().getBlockZ() == e.getTo().getBlockZ()) return;
 

@@ -76,7 +76,7 @@ hooks:
 #     unless you provide/import the data yourself.
 # ------------------------------------------------------------------------------
 storage:
-  # Options: "yml" (local file) or "MySSQL" (database via SQLDataStore)
+  # Options: "yml" (local file) or "MySQL" (database via SQLDataStore)
   type: "yml"
 
   database:

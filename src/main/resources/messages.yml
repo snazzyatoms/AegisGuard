@@ -26,6 +26,8 @@ old_english:
   button_exit: "&c✖ Depart"
   button_exit_lore:
     - "&7Close this sacred scroll."
+  exit_lore:
+    - "&7Close this sacred scroll."
 
   button_prev_page: "&fPrior Page"
   button_next_page: "&fNext Page"
@@ -358,11 +360,6 @@ old_english:
   mob_toggle_lore:
     - "&7Still the claws of hostile beasts."
 
-  button_animals_on: "&a🐄 Beastfolk Ward: Awake"
-  button_animals_off: "&c🐄 Beastfolk Ward: Silent"
-  animals_toggle_lore:
-    - "&7Shelter livestock and gentle beasts from harm."
-
   button_pets_on: "&a🐾 Beast Ward: Awake"
   button_pets_off: "&c🐾 Beast Ward: Silent"
   pet_toggle_lore:
@@ -378,16 +375,6 @@ old_english:
   farm_toggle_lore:
     - "&7Spare thy crops from trampling."
 
-  button_redstone_on: "&a🔴 Redstone Ward: Awake"
-  button_redstone_off: "&c🔴 Redstone Ward: Silent"
-  redstone_toggle_lore:
-    - "&7Permit levers, plates, and circuits to stir."
-
-  button_vehicle_on: "&a🚤 Conveyance Ward: Awake"
-  button_vehicle_off: "&c🚤 Conveyance Ward: Silent"
-  vehicle_toggle_lore:
-    - "&7Guard boats, carts, and other steeds of travel."
-
   button_tnt_on: "&a💥 Blast Ward: Awake"
   button_tnt_off: "&c💥 Blast Ward: Silent"
   tnt_toggle_lore:
@@ -402,6 +389,21 @@ old_english:
   button_piston_off: "&c🔩 Piston Ward: Silent"
   piston_toggle_lore:
     - "&7Halt the movement of blocks across thy borders."
+
+  button_animals_on: "&a🐮 Herd Ward: Awake"
+  button_animals_off: "&c🐮 Herd Ward: Silent"
+  animals_toggle_lore:
+    - "&7Shield docile beasts from harm."
+
+  button_redstone_on: "&a⚡ Rune Ward: Awake"
+  button_redstone_off: "&c⚡ Rune Ward: Silent"
+  redstone_toggle_lore:
+    - "&7Still or stir the runes of redstone."
+
+  button_vehicles_on: "&a🛶 Carriage Ward: Awake"
+  button_vehicles_off: "&c🛶 Carriage Ward: Silent"
+  vehicles_toggle_lore:
+    - "&7Govern boats, carts, and like contraptions."
 
   button_safe_on: "&a🛡 Sanctuary: Awakened"
   button_safe_off: "&c🛡 Sanctuary: Slumbering"
@@ -445,6 +447,51 @@ old_english:
   cosmetic_purchased: '&a✔ Cosmetic unlocked and applied!'
 
   flag_toggled: '&e⚙ {FLAG} ward is now &f{STATUS}&e.'
+
+  # Server / inheritance tooltips
+  server_zone_forced_flag: '&cThis ward is bound by a Server Zone decree.'
+  admin_forced_flag_notice: '&7[High Guardian] This ward is forced at {LEVEL} level and may not be altered here.'
+  flag_inherited_from_world: '&7Inheritance: &fWorld&7 decree.'
+  flag_inherited_from_zone: '&7Inheritance: &fServer Zone&7 decree.'
+  flag_inherited_from_plot: '&7Inheritance: &fDominion&7 settings.'
+
+  # --- Role Flags (Old English) ---
+  role_flags_gui_title: "&9⚙ Wards of {ROLE}"
+  role_flags_legend_title: "&7How These Wards Behave"
+  role_flags_legend_lore:
+    - "&7&lInherit&7: Heed the common law of"
+    - "&7world, zone, and dominion."
+    - " "
+    - "&aAllow: &7Grant this role leave to act,"
+    - "&7even where others are bound."
+    - "&cDeny: &7Bar this role, though others"
+    - "&7may yet be permitted."
+
+  role_flag_state_inherit: "Inherit"
+  role_flag_state_allow: "Allow (Bypass)"
+  role_flag_state_deny: "Deny (Forbidden)"
+
+  role_flag_name_pvp: "&bWard of Blades (PvP)"
+  role_flag_name_containers: "&bWard of Relics (Containers)"
+  role_flag_name_mobs: "&bWard of Beasts (Hostile Mobs)"
+  role_flag_name_pets: "&bWard of Companions (Pets)"
+  role_flag_name_entities: "&bWard of Effigies (Entities)"
+  role_flag_name_farm: "&bWard of Harvest (Crops)"
+  role_flag_name_tnt: "&bWard of Thunder (Explosions)"
+  role_flag_name_fire: "&bWard of Flame (Fire)"
+  role_flag_name_piston: "&bWard of Stonecraft (Pistons)"
+  role_flag_name_entry: "&bWard of Gates (Entry)"
+  role_flag_name_shop: "&bWard of Trade (Shops)"
+  role_flag_name_fly: "&bWard of Sky (Flight)"
+  role_flag_name_animals: "&bWard of Herds (Animals)"
+  role_flag_name_redstone: "&bWard of Runes (Redstone)"
+  role_flag_name_vehicles: "&bWard of Carriages (Vehicles)"
+
+  role_flag_lore_common:
+    - "&7Set how this role moveth within"
+    - "&7thy guarded dominion."
+    - " "
+    - "&eClick to cycle: Inherit → Allow → Deny"
 
   roles_gui_title: "&eManage Plot Roles"
   roles_manage_title: "&bManage: {PLAYER}"
@@ -515,15 +562,6 @@ old_english:
   flag_interact_lore:
     - '&7If ON, all players may use doors/buttons.'
     - '&cIf OFF, no players may use doors/buttons.'
-  flag_animals_lore:
-    - '&7If ON, beasts are protected.'
-    - '&cIf OFF, beasts may be harmed.'
-  flag_redstone_lore:
-    - '&7If ON, redstone contraptions may stir.'
-    - '&cIf OFF, circuits lie silent.'
-  flag_vehicle_lore:
-    - '&7If ON, vessels and carts may be used.'
-    - '&cIf OFF, such conveyances are barred.'
 
   wilderness_revert_start: '[AegisGuard] The spirits of the wild begin their work...'
   wilderness_revert_end: '[AegisGuard] The spirits have restored {AMOUNT} scars.'
@@ -618,6 +656,8 @@ hybrid_english:
 
   button_exit: "&c✖ Close"
   button_exit_lore:
+    - "&7Close this menu."
+  exit_lore:
     - "&7Close this menu."
   
   # --- General Errors ---
@@ -984,11 +1024,6 @@ hybrid_english:
   mob_toggle_lore:
     - '&7Allow hostile mobs?'
 
-  button_animals_on: '&a🐄 Animals: Unrestricted'
-  button_animals_off: '&c🐄 Animals: Protected'
-  animals_toggle_lore:
-    - '&7Protect passive animals?'
-
   button_pets_on: '&a🐾 Pets: Vulnerable'
   button_pets_off: '&c🐾 Pets: Protected'
   pet_toggle_lore:
@@ -1004,16 +1039,6 @@ hybrid_english:
   farm_toggle_lore:
     - '&7Prevent trampling?'
 
-  button_redstone_on: '&a🔴 Redstone: Active'
-  button_redstone_off: '&c🔴 Redstone: Disabled'
-  redstone_toggle_lore:
-    - '&7Allow redstone mechanics?'
-
-  button_vehicle_on: '&a🚤 Vehicles: Allowed'
-  button_vehicle_off: '&c🚤 Vehicles: Blocked'
-  vehicle_toggle_lore:
-    - '&7Allow boats, carts & mounts?'
-
   button_tnt_on: '&a💥 TNT: Dangerous'
   button_tnt_off: '&c💥 TNT: Safe'
   tnt_toggle_lore:
@@ -1028,6 +1053,21 @@ hybrid_english:
   button_piston_off: '&c🔩 Pistons: Blocked'
   piston_toggle_lore:
     - '&7Allow pistons at border?'
+
+  button_animals_on: '&a🐮 Animals: Vulnerable'
+  button_animals_off: '&c🐮 Animals: Protected'
+  animals_toggle_lore:
+    - '&7Protect peaceful animals?'
+
+  button_redstone_on: '&a⚡ Redstone: Flowing'
+  button_redstone_off: '&c⚡ Redstone: Sealed'
+  redstone_toggle_lore:
+    - '&7Allow redstone usage?'
+
+  button_vehicles_on: '&a🛶 Vehicles: Free'
+  button_vehicles_off: '&c🛶 Vehicles: Locked'
+  vehicles_toggle_lore:
+    - '&7Allow boats & minecarts?'
 
   button_safe_on: '&a🛡 Sanctuary: Active'
   button_safe_off: '&c🛡 Sanctuary: Inactive'
@@ -1071,6 +1111,51 @@ hybrid_english:
   cosmetic_purchased: '&a✔ Effect purchased!'
 
   flag_toggled: '&e⚙ Ward {FLAG}: &f{STATUS}'
+
+  # Server / inheritance tooltips
+  server_zone_forced_flag: '&cThis ward is controlled by a Server Zone.'
+  admin_forced_flag_notice: '&7[Admin] Forced at {LEVEL} level; cannot be changed here.'
+  flag_inherited_from_world: '&7Inherited from: &fWorld'
+  flag_inherited_from_zone: '&7Inherited from: &fServer Zone'
+  flag_inherited_from_plot: '&7Inherited from: &fPlot'
+
+  # --- Role Flags (Hybrid) ---
+  role_flags_gui_title: "&9⚙ Role Wards: {ROLE}"
+  role_flags_legend_title: "&7Ward Behaviour"
+  role_flags_legend_lore:
+    - "&7Inherit: Follow normal world/zone/plot rules."
+    - " "
+    - "&aAllow: &7This role may bypass the ward."
+    - "&cDeny: &7This role is always blocked."
+    - " "
+    - "&7Use this to fine-tune what each"
+    - "&7role may actually do."
+
+  role_flag_state_inherit: "Inherit"
+  role_flag_state_allow: "Allow (Bypass)"
+  role_flag_state_deny: "Deny (Blocked)"
+
+  role_flag_name_pvp: "&bPvP Ward"
+  role_flag_name_containers: "&bContainer Ward"
+  role_flag_name_mobs: "&bMonster Ward"
+  role_flag_name_pets: "&bPet Ward"
+  role_flag_name_entities: "&bEntity Ward"
+  role_flag_name_farm: "&bHarvest Ward"
+  role_flag_name_tnt: "&bExplosion Ward"
+  role_flag_name_fire: "&bFire Ward"
+  role_flag_name_piston: "&bPiston Ward"
+  role_flag_name_entry: "&bEntry Ward"
+  role_flag_name_shop: "&bShop Ward"
+  role_flag_name_fly: "&bFlight Ward"
+  role_flag_name_animals: "&bAnimal Ward"
+  role_flag_name_redstone: "&bRedstone Ward"
+  role_flag_name_vehicles: "&bVehicle Ward"
+
+  role_flag_lore_common:
+    - "&7Adjust how this role interacts with"
+    - "&7protected mechanics inside this dominion."
+    - " "
+    - "&eClick to cycle: Inherit → Allow → Deny"
 
   roles_gui_title: '&eAlly Management'
   roles_manage_title: '&bManage: {PLAYER}'
@@ -1138,15 +1223,6 @@ hybrid_english:
     - '&7Allow containers?'
   flag_interact_lore:
     - '&7Allow interactions?'
-  flag_animals_lore:
-    - '&7If ON, animals are protected.'
-    - '&cIf OFF, animals can be harmed.'
-  flag_redstone_lore:
-    - '&7If ON, redstone works normally.'
-    - '&cIf OFF, circuits are disabled.'
-  flag_vehicle_lore:
-    - '&7If ON, vehicles may be used.'
-    - '&cIf OFF, boats & carts are blocked.'
 
   wilderness_revert_start: '[AegisGuard] Nature is healing...'
   wilderness_revert_end: '[AegisGuard] {AMOUNT} blocks reverted.'
@@ -1183,6 +1259,8 @@ modern_english:
   
   button_exit: "&c✖ Close"
   button_exit_lore:
+    - "&7Close this menu."
+  exit_lore:
     - "&7Close this menu."
 
   # --- General Errors ---
@@ -1543,11 +1621,6 @@ modern_english:
   mob_toggle_lore:
     - '&7Allow hostile mobs?'
 
-  button_animals_on: '&a🐄 Animals: Unrestricted'
-  button_animals_off: '&c🐄 Animals: Protected'
-  animals_toggle_lore:
-    - '&7Protect passive animals?'
-
   button_pets_on: '&a🐾 Pets: Unsafe'
   button_pets_off: '&c🐾 Pets: Protected'
   pet_toggle_lore:
@@ -1563,16 +1636,6 @@ modern_english:
   farm_toggle_lore:
     - '&7Prevent trampling?'
 
-  button_redstone_on: '&a🔴 Redstone: Enabled'
-  button_redstone_off: '&c🔴 Redstone: Disabled'
-  redstone_toggle_lore:
-    - '&7Allow redstone mechanics?'
-
-  button_vehicle_on: '&a🚤 Vehicles: Allowed'
-  button_vehicle_off: '&c🚤 Vehicles: Blocked'
-  vehicle_toggle_lore:
-    - '&7Allow boats, minecarts & mounts?'
-
   button_tnt_on: '&a💥 TNT: On'
   button_tnt_off: '&c💥 TNT: Off'
   tnt_toggle_lore:
@@ -1587,6 +1650,21 @@ modern_english:
   button_piston_off: '&c🔩 Pistons: Off'
   piston_toggle_lore:
     - '&7Allow piston movement?'
+
+  button_animals_on: '&a🐮 Animals: Vulnerable'
+  button_animals_off: '&c🐮 Animals: Protected'
+  animals_toggle_lore:
+    - '&7Prevent damage to passive animals?'
+
+  button_redstone_on: '&a⚡ Redstone: Enabled'
+  button_redstone_off: '&c⚡ Redstone: Disabled'
+  redstone_toggle_lore:
+    - '&7Allow redstone interactions?'
+
+  button_vehicles_on: '&a🛶 Vehicles: Usable'
+  button_vehicles_off: '&c🛶 Vehicles: Locked'
+  vehicles_toggle_lore:
+    - '&7Allow boats, minecarts, etc?'
 
   button_safe_on: '&a🛡 SafeZone: ON'
   button_safe_off: '&c🛡 SafeZone: OFF'
@@ -1612,7 +1690,6 @@ modern_english:
   button_shop_off: '&c🛒 Shop: Private'
   shop_toggle_lore: 
     - "&7Allow usage of shop chests?"
-    - "&7Contents stay protected."
     - "&7Cost: &6{COST}"
     
   button_cosmetics: '&dCosmetics'
@@ -1630,6 +1707,51 @@ modern_english:
   cosmetic_purchased: '&a✔ Purchased.'
 
   flag_toggled: '&eSetting {FLAG}: &f{STATUS}'
+
+  # Server / inheritance tooltips
+  server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
+  admin_forced_flag_notice: '&7[Admin] Flag is forced at {LEVEL} level. Editing disabled here.'
+  flag_inherited_from_world: '&7Inherited from: &fWorld'
+  flag_inherited_from_zone: '&7Inherited from: &fZone'
+  flag_inherited_from_plot: '&7Inherited from: &fClaim'
+
+  # --- Role Flags (Modern) ---
+  role_flags_gui_title: "&9⚙ Role Permissions: {ROLE}"
+  role_flags_legend_title: "&7How this works"
+  role_flags_legend_lore:
+    - "&7Inherit: Use normal claim/world rules."
+    - " "
+    - "&aAllow: &7Role can bypass this restriction."
+    - "&cDeny: &7Role is always blocked."
+    - " "
+    - "&7Use this to fine-tune what members of"
+    - "&7this role are actually allowed to do."
+
+  role_flag_state_inherit: "Inherit"
+  role_flag_state_allow: "Allow"
+  role_flag_state_deny: "Deny"
+
+  role_flag_name_pvp: "&bPvP"
+  role_flag_name_containers: "&bContainers"
+  role_flag_name_mobs: "&bHostile Mobs"
+  role_flag_name_pets: "&bPets"
+  role_flag_name_entities: "&bEntities"
+  role_flag_name_farm: "&bCrops"
+  role_flag_name_tnt: "&bExplosions"
+  role_flag_name_fire: "&bFire"
+  role_flag_name_piston: "&bPistons"
+  role_flag_name_entry: "&bClaim Entry"
+  role_flag_name_shop: "&bShops"
+  role_flag_name_fly: "&bFlight"
+  role_flag_name_animals: "&bAnimals"
+  role_flag_name_redstone: "&bRedstone"
+  role_flag_name_vehicles: "&bVehicles"
+
+  role_flag_lore_common:
+    - "&7Per-role permissions for this claim."
+    - "&7Overrides normal flag rules if set."
+    - " "
+    - "&eClick to cycle: Inherit → Allow → Deny"
 
   roles_gui_title: '&eMembers'
   roles_manage_title: '&bManage: {PLAYER}'
@@ -1697,15 +1819,6 @@ modern_english:
     - '&7Allow containers?'
   flag_interact_lore:
     - '&7Allow interactions?'
-  flag_animals_lore:
-    - '&7If ON, animals are protected.'
-    - '&cIf OFF, animals can be harmed.'
-  flag_redstone_lore:
-    - '&7If ON, redstone works normally.'
-    - '&cIf OFF, redstone is disabled.'
-  flag_vehicle_lore:
-    - '&7If ON, vehicles may be used.'
-    - '&cIf OFF, boats & minecarts are blocked.'
 
   wilderness_revert_start: '&7Reverting wilderness...'
   wilderness_revert_end: '&7Reverted {AMOUNT} blocks.'

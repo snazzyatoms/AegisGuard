@@ -1,7 +1,9 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.objects.Zone; // Ensure Zone object exists or remove if not used in 1.2.1
+// If you have Zone.java in objects package, keep this. 
+// If Zone is not used in 1.2.1, you can remove the import and the List<Zone>.
+import com.aegisguard.objects.Zone; 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,7 +29,7 @@ public class Plot {
     private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
         Map.entry("pvp", false), 
         Map.entry("containers", true),
-        Map.entry("mobs", false), // Changed to false to protect by default
+        Map.entry("mobs", false), // Protects against mobs by default
         Map.entry("pets", true),
         Map.entry("entities", true),
         Map.entry("farm", true),
@@ -50,6 +52,7 @@ public class Plot {
     private final String world;
     
     // 2D Coordinates (Defines the "Column" of protection)
+    // We ONLY store X and Z. Y is irrelevant for infinite height.
     private int x1, z1, x2, z2; 
     
     // --- Data Containers ---
@@ -132,16 +135,18 @@ public class Plot {
 
     /**
      * Checks if a location is inside the Plot.
-     * IGNORES Y-LEVEL to provide Bedrock-to-Sky protection.
+     * IGNORES Y-LEVEL completely to provide Bedrock-to-Sky protection.
      */
     public boolean contains(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
+        
+        // World check first
         if (!loc.getWorld().getName().equals(world)) return false;
         
         int x = loc.getBlockX();
         int z = loc.getBlockZ();
         
-        // Simple 2D Bounding Box Check
+        // Simple 2D Bounding Box Check (Y is ignored)
         return x >= x1 && x <= x2 && z >= z1 && z <= z2;
     }
     
@@ -194,8 +199,12 @@ public class Plot {
         // Rent Logic
         if (currentRenter != null && currentRenter.equals(playerUUID)) {
             if (System.currentTimeMillis() < rentExpires) {
-                Set<String> perms = new HashSet<>(plugin.cfg().getRolePermissions("member")); 
-                return perms.contains(permission.toUpperCase());
+                // Safely fetch permissions set from config
+                Set<String> perms = new HashSet<>();
+                List<String> configPerms = plugin.cfg().raw().getStringList("roles.member.permissions"); // Fallback to member role for renters
+                if (configPerms != null) perms.addAll(configPerms);
+                
+                return perms.contains(permission.toUpperCase()) || perms.contains("ALL");
             } else {
                 this.currentRenter = null;
                 this.rentExpires = 0;
@@ -203,12 +212,18 @@ public class Plot {
         }
         
         String role = getRole(playerUUID);
-        Set<String> permissions = new HashSet<>(plugin.cfg().getRolePermissions(role));
-        return permissions.contains(permission.toUpperCase());
+        
+        // Fetch role permissions from Config
+        // Note: Logic assumes config has "roles.<role>.permissions"
+        Set<String> permissions = new HashSet<>();
+        List<String> rolePerms = plugin.cfg().raw().getStringList("roles." + role + ".permissions");
+        if (rolePerms != null) permissions.addAll(rolePerms);
+        
+        return permissions.contains(permission.toUpperCase()) || permissions.contains("ALL");
     }
 
     public String getRole(UUID playerUUID) { 
-        return playerRoles.getOrDefault(playerUUID, "default"); 
+        return playerRoles.getOrDefault(playerUUID, "visitor"); // Default to visitor if not found
     }
     
     public void setRole(UUID playerUUID, String role) {
@@ -326,6 +341,7 @@ public class Plot {
     public void setWelcomeMessage(String msg) { this.welcomeMessage = msg; }
     public String getFarewellMessage() { return farewellMessage; }
     public void setFarewellMessage(String msg) { this.farewellMessage = msg; }
+    
     public String getSpawnLocationString() {
         if (spawnLocation == null) return null;
         return String.format("%s:%.2f:%.2f:%.2f:%.2f:%.2f", 
@@ -333,13 +349,21 @@ public class Plot {
             spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(), 
             spawnLocation.getYaw(), spawnLocation.getPitch());
     }
+    
     public void setSpawnLocationFromString(String s) {
         if (s == null || s.isEmpty()) { this.spawnLocation = null; return; }
         try {
             String[] parts = s.split(":");
+            if (parts.length < 4) return;
             World world = Bukkit.getWorld(parts[0]);
             if (world != null) {
-                this.spawnLocation = new Location(world, Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                this.spawnLocation = new Location(world, 
+                    Double.parseDouble(parts[1]), 
+                    Double.parseDouble(parts[2]), 
+                    Double.parseDouble(parts[3]),
+                    parts.length > 4 ? Float.parseFloat(parts[4]) : 0f, 
+                    parts.length > 5 ? Float.parseFloat(parts[5]) : 0f
+                );
             }
         } catch (Exception ignored) {}
     }

@@ -11,9 +11,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class YMLDataStore implements IDataStore {
 
@@ -134,7 +134,6 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
-        // YML saves everything on save(), so this alias ensures logic consistency
         saveEstate(estate);
     }
 
@@ -146,10 +145,6 @@ public class YMLDataStore implements IDataStore {
         }
     }
 
-    /**
-     * NEW: Implements the missing deleteEstatesByOwner method required by IDataStore.
-     * Used for banning players and wiping their data.
-     */
     @Override
     public void deleteEstatesByOwner(UUID ownerId) {
         if (config == null) return;
@@ -172,6 +167,34 @@ public class YMLDataStore implements IDataStore {
             save();
         }
     }
+    
+    // --- THIS WAS THE MISSING METHOD ---
+    @Override
+    public boolean isAreaOverlapping(String world, int x1, int z1, int x2, int z2, UUID excludeId) {
+        // For YML, all estates are loaded into memory by EstateManager.
+        // So this direct DB check is redundant but required by interface.
+        // We perform a simple check against the file config to satisfy the contract.
+        if (config == null) return false;
+
+        for (String key : config.getKeys(false)) {
+            if (excludeId != null && key.equals(excludeId.toString())) continue;
+
+            String w = config.getString(key + ".world");
+            if (w == null || !w.equals(world)) continue;
+
+            int ex1 = config.getInt(key + ".region.x1");
+            int ex2 = config.getInt(key + ".region.x2");
+            int ez1 = config.getInt(key + ".region.z1");
+            int ez2 = config.getInt(key + ".region.z2");
+
+            // Simple AABB Overlap Check
+            if (x1 <= ex2 && x2 >= ex1 && z1 <= ez2 && z2 >= ez1) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // -----------------------------------
 
     @Override
     public boolean isDirty() {

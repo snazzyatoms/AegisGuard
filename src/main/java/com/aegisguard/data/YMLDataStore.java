@@ -88,10 +88,10 @@ public class YMLDataStore implements IDataStore {
         if (config == null) config = new YamlConfiguration();
         
         for (Estate estate : plugin.getEstateManager().getAllEstates()) {
-            String id = estate.getPlotId().toString();
+            String id = estate.getId().toString();
             ConfigurationSection sec = config.createSection(id);
             
-            sec.set("name", estate.getDisplayName());
+            sec.set("name", estate.getName());
             sec.set("owner", estate.getOwnerId() != null ? estate.getOwnerId().toString() : "");
             sec.set("is_guild", estate.isGuild());
             sec.set("world", estate.getWorld().getName());
@@ -121,15 +121,13 @@ public class YMLDataStore implements IDataStore {
         }
     }
     
-    // --- FIXED: Added missing getEstateAt ---
     @Override
     public Estate getEstateAt(Location loc) {
         if (loc == null) return null;
-        // In YML mode, all estates are in memory via EstateManager.
-        // We iterate memory to find it.
         if (plugin.getEstateManager() != null) {
             for (Estate e : plugin.getEstateManager().getAllEstates()) {
-                if (e.isInside(loc)) return e;
+                // FIXED: Use getRegion().contains() instead of isInside()
+                if (e.getRegion().contains(loc)) return e;
             }
         }
         return null;
@@ -141,13 +139,13 @@ public class YMLDataStore implements IDataStore {
         save();
     }
 
-    // --- FIXED: Renamed from updateEstateOwner to match Interface ---
+    // FIXED: Renamed to match Interface 'updateEstateOwner'
     @Override
-    public void changeEstateOwner(Estate estate, UUID newOwner, String newName) {
+    public void updateEstateOwner(Estate estate, UUID newOwner, boolean isGuild) {
         saveEstate(estate);
     }
 
-    // --- FIXED: Renamed from deleteEstate to match Interface ---
+    // FIXED: Renamed to match Interface 'removeEstate'
     @Override
     public void removeEstate(UUID id) {
         if (config != null) {
@@ -156,13 +154,12 @@ public class YMLDataStore implements IDataStore {
         }
     }
 
-    // --- FIXED: Signature matched to Interface ---
     @Override
-    public boolean isAreaOverlapping(Estate ignore, String world, int x1, int z1, int x2, int z2) {
+    public boolean isAreaOverlapping(String world, int x1, int z1, int x2, int z2, UUID excludeId) {
         if (config == null) return false;
 
         for (String key : config.getKeys(false)) {
-            if (ignore != null && key.equals(ignore.getPlotId().toString())) continue;
+            if (excludeId != null && key.equals(excludeId.toString())) continue;
 
             String w = config.getString(key + ".world");
             if (w == null || !w.equals(world)) continue;
@@ -172,7 +169,6 @@ public class YMLDataStore implements IDataStore {
             int ez1 = config.getInt(key + ".region.z1");
             int ez2 = config.getInt(key + ".region.z2");
 
-            // AABB Check
             if (x1 <= ex2 && x2 >= ex1 && z1 <= ez2 && z2 >= ez1) {
                 return true;
             }
@@ -189,26 +185,12 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void saveSync() { save(); }
     
-    // --- STUBS (Required to satisfy IDataStore interface) ---
+    // Stubs to satisfy Interface
     @Override public void revertWildernessBlocks(long timestamp, int limit) {}
     @Override public void logWildernessBlock(Location loc, String old, String newMat, UUID uuid) {}
-    @Override public List<Estate> getEstates(UUID owner) { 
-        return plugin.getEstateManager().getAllEstates().stream()
-            .filter(e -> e.getOwnerId() != null && e.getOwnerId().equals(owner))
-            .collect(Collectors.toList());
-    }
-    @Override public Collection<Estate> getAllEstates() { return plugin.getEstateManager().getAllEstates(); }
-    @Override public Collection<Estate> getEstatesForSale() { return new ArrayList<>(); }
-    @Override public Collection<Estate> getEstatesForAuction() { return new ArrayList<>(); }
-    @Override public Estate getEstate(UUID owner, UUID plotId) { return plugin.getEstateManager().getEstate(plotId); }
-    @Override public void createEstate(UUID owner, Location c1, Location c2) {}
-    @Override public void addEstate(Estate estate) { saveEstate(estate); }
-    @Override public void addPlayerRole(Estate estate, UUID uuid, String role) { saveEstate(estate); }
-    @Override public void removePlayerRole(Estate estate, UUID uuid) { saveEstate(estate); }
-    @Override public void removeBannedEstates() {}
-    @Override public void removeAllPlots(UUID owner) { deleteEstatesByOwner(owner); }
     
-    public void deleteEstatesByOwner(UUID ownerId) {
+    // Note: If IDataStore requires these, add them:
+    @Override public void deleteEstatesByOwner(UUID ownerId) {
          if (config == null) return;
          List<String> toRemove = new ArrayList<>();
          for (String key : config.getKeys(false)) {

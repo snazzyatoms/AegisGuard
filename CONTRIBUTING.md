@@ -24,7 +24,7 @@ This document explains how to work with the project using our **Maven + JitPack/
 
 Before contributing, make sure you have:
 
-- **Java 17 (required)**  
+- **Java 21 (required)**  
 - **Maven 3.8+**  
 - A GitHub account  
 - Basic understanding of Bukkit/Paper plugin development  

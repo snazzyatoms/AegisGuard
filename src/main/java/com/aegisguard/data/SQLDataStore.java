@@ -727,8 +727,22 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
+    // NEW: proper implementation returning a mutable set
     private Set<String> getChunksInArea(String world, int x1, int z1, int x2, int z2) {
-        return Collections.emptySet();
+        Set<String> result = new HashSet<>();
+
+        int minChunkX = x1 >> 4;
+        int maxChunkX = x2 >> 4;
+        int minChunkZ = z1 >> 4;
+        int maxChunkZ = z2 >> 4;
+
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                result.add(cx + "," + cz);
+            }
+        }
+
+        return result;
     }
 
     // ==============================================================
@@ -778,7 +792,9 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public List<Plot> getPlots(UUID owner) {
-        return plotsByOwner.getOrDefault(owner, Collections.emptyList());
+        // Changed: never return Collections.emptyList() to avoid UnsupportedOperationException
+        List<Plot> list = plotsByOwner.get(owner);
+        return (list != null) ? new ArrayList<>(list) : new ArrayList<>();
     }
 
     @Override

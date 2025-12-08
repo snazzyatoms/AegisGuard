@@ -54,6 +54,7 @@ old_english:
   corners_diff_world: "&c❌ The corners lie in different realms! They must be one."
   wand_consumed: "&a⚡ The Scepter vanishes, its power spent upon the land."
   wand_not_found: "&c❌ Thou dost not hold the required Scepter."
+  wand_already_owned: "&eThou already bearest the Aegis Scepter. Wield it, rather than summon another."
 
   resize-success: "&a✔ Thy dominion hath expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Thou canst not expand! Thy dominion wouldst clash with another."
@@ -693,6 +694,7 @@ hybrid_english:
   corners_diff_world: "&c❌ The corners are in different realms! They must match."
   wand_consumed: "&a⚡ The Scepter vanishes, its power spent."
   wand_not_found: "&c❌ You do not hold the required Scepter."
+  wand_already_owned: "&eYou already carry the Aegis Scepter. Use that one instead of summoning a new one."
 
   resize-success: "&a✔ Your dominion has expanded {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Expansion failed! Your borders would clash with another."
@@ -1318,6 +1320,7 @@ modern_english:
   corners_diff_world: "&c❌ Both corners must be in the same world."
   wand_consumed: "&a✔ Claim Tool consumed."
   wand_not_found: "&c❌ Claim Tool not found in inventory."
+  wand_already_owned: "&eYou already have a Claim Tool. Use it instead of requesting another."
 
   resize-success: "&a✔ Claim resized {DIRECTION} by {AMOUNT} blocks."
   resize-fail-overlap: "&c❌ Resize failed! It would overlap another claim."

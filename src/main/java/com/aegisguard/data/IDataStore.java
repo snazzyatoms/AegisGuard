@@ -1,5 +1,6 @@
 package com.aegisguard.data;
 
+import com.aegisguard.gui.RolesGUI;
 import org.bukkit.Location;
 
 import java.util.Collection;
@@ -182,6 +183,33 @@ public interface IDataStore {
      *  - Skip server zones (SERVER_OWNER_UUID)
      */
     void removeBannedPlots();
+
+    // ----------------------------------------
+    // --- ROLE FLAG STATE (PER-ROLE) ---------
+    // ----------------------------------------
+
+    /**
+     * Returns the effective tri-state flag for a specific role on a plot.
+     * Used by the Roles GUI to render the current state.
+     *
+     * @param plot    Plot to query
+     * @param roleId  Role identifier (e.g. "member", "guest", custom)
+     * @param flagKey Flag key (e.g. "build", "interact", "container")
+     * @return TriState flag value (ALLOW, DENY, INHERIT)
+     */
+    RolesGUI.TriState getRoleFlagState(Plot plot, String roleId, String flagKey);
+
+    /**
+     * Sets the tri-state flag for a specific role on a plot.
+     * Implementations should persist this change and mark the
+     * datastore as dirty.
+     *
+     * @param plot    Plot to modify
+     * @param roleId  Role identifier
+     * @param flagKey Flag key
+     * @param state   New tri-state value
+     */
+    void setRoleFlagState(Plot plot, String roleId, String flagKey, RolesGUI.TriState state);
 
     // ----------------------------------------
     // --- WILDERNESS REVERT ------------------

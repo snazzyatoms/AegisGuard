@@ -14,6 +14,26 @@ import org.bukkit.entity.Slime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * MobBarrierTask
+ *
+ * Periodically enforces mob barrier rules for plots.
+ *
+ * Semantics:
+ *  - Uses ProtectionManager + Plot flags as the single source of truth.
+ *  - Server Zones: always mob-protected (barrier always active).
+ *  - Normal Plots:
+ *      - mobs flag ON  (green) => hostiles inside the plot are removed.
+ *      - mobs flag OFF (red)   => vanilla behavior; barrier does nothing,
+ *                                mobs may walk in / stay in the plot.
+ *
+ * NOTE:
+ *  - Safe Zone alone does NOT force mob barrier here anymore.
+ *    That means you can have Safe Zone ON (for structural / environment safety)
+ *    but Mob Protection OFF, and mobs will be allowed to exist in the plot.
+ *  - If you want safe zones to also always mob-clean, that can be made a
+ *    config toggle later (e.g. mob_barrier.safe_zone_forces_mobs: true).
+ */
 public class MobBarrierTask implements Runnable {
 
     private final AegisGuard plugin;
@@ -24,27 +44,34 @@ public class MobBarrierTask implements Runnable {
 
     @Override
     public void run() {
-        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) return;
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) {
+            return;
+        }
 
         List<Plot> plotsToCheck = new ArrayList<>();
 
         // Collect all plots that should be "mob-cleaned"
         for (Plot plot : plugin.store().getAllPlots()) {
-            boolean isServer   = plot.isServerZone();
-            boolean isSafeZone = plugin.protection().isSafeZoneEnabled(plot);
+            if (plot == null) continue;
 
-            // Use the same semantics as ProtectionManager / PAPI:
-            // mobs flag: true = mob protection ON (no hostiles)
+            boolean isServer = plot.isServerZone();
+
+            // Use the same semantics as ProtectionManager:
+            // mobs flag: true = mob protection ON (green)
             boolean mobsProtected = plugin.protection().isFlagEnabled(plot, "mobs");
 
-            // If none of these are true, skip this plot
-            if (!isServer && !isSafeZone && !mobsProtected) {
+            // If this is not a server plot and mob protection is OFF,
+            // then we skip it entirely (vanilla behavior).
+            if (!isServer && !mobsProtected) {
                 continue;
             }
+
             plotsToCheck.add(plot);
         }
 
-        if (plotsToCheck.isEmpty()) return;
+        if (plotsToCheck.isEmpty()) {
+            return;
+        }
 
         // Process each plot
         for (Plot plot : plotsToCheck) {
@@ -66,15 +93,15 @@ public class MobBarrierTask implements Runnable {
                 final int finalCx = cx;
                 final int finalCz = cz;
 
+                // Folia-safe scheduling per chunk region
                 if (plugin.isFolia()) {
-                    // Folia / region-thread safe
                     if (!world.isChunkLoaded(cx, cz)) continue;
 
                     Bukkit.getRegionScheduler().run(plugin, world, finalCx, finalCz, scheduledTask -> {
                         checkChunkForMobs(world, plot, finalCx, finalCz);
                     });
                 } else {
-                    // Non-Folia: schedule chunk work back on the main thread
+                    // Non-Folia: schedule chunk work on main thread
                     plugin.runMainGlobal(() -> checkChunkForMobs(world, plot, finalCx, finalCz));
                 }
             }
@@ -83,6 +110,16 @@ public class MobBarrierTask implements Runnable {
 
     private void checkChunkForMobs(World world, Plot plot, int cx, int cz) {
         if (!world.isChunkLoaded(cx, cz)) return;
+
+        // Re-evaluate current protection state at execution time.
+        // This way, if the player toggled mob protection OFF since
+        // the run() scan, we immediately stop despawning mobs.
+        boolean isServer = plot.isServerZone();
+        boolean mobsProtected = plugin.protection().isFlagEnabled(plot, "mobs");
+        if (!isServer && !mobsProtected) {
+            // Mob protection currently OFF for this plot -> vanilla
+            return;
+        }
 
         try {
             Chunk chunk = world.getChunkAt(cx, cz);
@@ -95,7 +132,10 @@ public class MobBarrierTask implements Runnable {
             }
         } catch (Exception e) {
             // Log error but don't crash the task
-            plugin.getLogger().warning("Error checking chunk at " + cx + ", " + cz + " in world " + world.getName() + ": " + e.getMessage());
+            plugin.getLogger().warning(
+                    "Error checking chunk at " + cx + ", " + cz +
+                    " in world " + world.getName() + ": " + e.getMessage()
+            );
         }
     }
 
@@ -122,11 +162,11 @@ public class MobBarrierTask implements Runnable {
     private void spawnRemovalParticle(Entity entity) {
         if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
             entity.getWorld().spawnParticle(
-                Particle.SMOKE_NORMAL,
-                entity.getLocation().add(0, 1, 0),
-                5,
-                0.1, 0.1, 0.1,
-                0.05
+                    Particle.SMOKE_NORMAL,
+                    entity.getLocation().add(0, 1, 0),
+                    5,
+                    0.1, 0.1, 0.1,
+                    0.05
             );
         }
     }

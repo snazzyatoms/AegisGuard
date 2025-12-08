@@ -1,7 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.RolesGUI;
+import com.aegisguard.flags.TriState;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
@@ -691,18 +691,17 @@ public class SQLDataStore implements IDataStore {
     // ==============================================================  
 
     @Override
-    public RolesGUI.TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
+    public TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
         if (plot == null || roleId == null || flagKey == null) {
-            return RolesGUI.TriState.INHERIT;
+            return TriState.INHERIT;
         }
 
-        // Delegate to Plot's role-flags model; this should already
-        // be in sync with serializeRoleFlags()/deserializeRoleFlags().
+        // Delegate to Plot’s internal tri-state storage
         return plot.getRoleFlagState(roleId, flagKey);
     }
 
     @Override
-    public void setRoleFlagState(Plot plot, String roleId, String flagKey, RolesGUI.TriState state) {
+    public void setRoleFlagState(Plot plot, String roleId, String flagKey, TriState state) {
         if (plot == null || roleId == null || flagKey == null || state == null) {
             return;
         }

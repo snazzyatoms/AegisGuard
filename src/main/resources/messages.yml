@@ -1400,8 +1400,7 @@ modern_english:
   expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
   expansion_invalid_size: "&c❌ New size must be larger."
   request_expired: "&c❌ Request expired."
-  
-  # FIXED: All 5 Tiers for Modern English
+
   expansion_tier1_name: "&aSmall Upgrade (+5)"
   expansion_tier1_lore:
     - "&7Radius: &a+5 blocks"
@@ -1520,7 +1519,7 @@ modern_english:
   info_message: "&7Read the guide."
   info_lore:
     - "&7Commands & Info."
-  
+
   # --- Codex ---
   codex_gui_title: "&9§lGuardian's Guide"
   codex_claim_title: "&e§lI. Claiming"
@@ -1569,6 +1568,7 @@ modern_english:
     - "&dLeveling: &7Upgrade limits."
     - "&eZones: &7Create rentals."
 
+  # --- Utility ---
   button_utility_chapter: "&3§lVI. Utility"
   utility_chapter_lore:
     - "&7Useful commands:"
@@ -1593,15 +1593,15 @@ modern_english:
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
   # --- Leveling & Zoning ---
-level_gui_title: "&dPlot Ascension"
-level_current_status: "&bCurrent Plot Level"
-level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
-level_max_reached: "&6Maximum Level Reached"
-level_up_success: "&d⚡ Your plot has ascended to Level &f{LEVEL}&d!"
-level_up_fail_cost: "&cYou don't have enough funds to upgrade this plot."
-level_button_lore:
-  - "&7Upgrade claim size"
-  - "&7and unlock new features."
+  level_gui_title: "&dPlot Ascension"
+  level_current_status: "&bCurrent Plot Level"
+  level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
+  level_max_reached: "&6Maximum Level Reached"
+  level_up_success: "&d⚡ Your plot has ascended to Level &f{LEVEL}&d!"
+  level_up_fail_cost: "&cYou don't have enough funds to upgrade this plot."
+  level_button_lore:
+    - "&7Upgrade claim size"
+    - "&7and unlock new features."
 
   zone_gui_title: "&3Zone Manager"
   zone_created: "&a✔ Zone '{ZONE}' created."

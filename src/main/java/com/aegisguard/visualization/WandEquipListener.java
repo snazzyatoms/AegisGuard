@@ -1,7 +1,7 @@
 package com.aegisguard.visualization;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.selection.SelectionService;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,17 +10,19 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.aegisguard.selection.SelectionService.WAND_KEY;
+import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
+
 public class WandEquipListener implements Listener {
 
     private final AegisGuard plugin;
-    private final Map<UUID, Object> activeTasks = new HashMap<>();
+    private final Map<UUID, BukkitTask> activeTasks = new HashMap<>();
 
     public WandEquipListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -31,9 +33,7 @@ public class WandEquipListener implements Listener {
         Player p = e.getPlayer();
         ItemStack newItem = p.getInventory().getItem(e.getNewSlot());
 
-        boolean isWand = isAegisWand(newItem);
-
-        if (isWand) {
+        if (isAnyAegisWand(newItem)) {
             startVisualizer(p);
         } else {
             stopVisualizer(p);
@@ -46,71 +46,42 @@ public class WandEquipListener implements Listener {
     }
 
     /**
-     * Checks if the given item is an Aegis wand / scepter (player or server),
-     * using the persistent NBT keys from SelectionService.
+     * Checks if the given item is any Aegis wand / scepter:
+     *  - normal player wand (WAND_KEY)
+     *  - server/admin wand (SERVER_WAND_KEY)
      */
-    private boolean isAegisWand(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) {
+    private boolean isAnyAegisWand(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
             return false;
         }
-
         ItemMeta meta = item.getItemMeta();
         if (meta == null) {
             return false;
         }
 
         var container = meta.getPersistentDataContainer();
-        return container.has(SelectionService.WAND_KEY, PersistentDataType.BYTE)
-                || container.has(SelectionService.SERVER_WAND_KEY, PersistentDataType.BYTE);
+        return container.has(WAND_KEY, PersistentDataType.BYTE)
+                || container.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
     }
 
     private void startVisualizer(Player p) {
         UUID id = p.getUniqueId();
         if (activeTasks.containsKey(id)) {
-            return; // already running for this player
+            return; // already running
         }
 
         PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
 
-        if (plugin.isFolia()) {
-            // Folia / region-thread: use the player scheduler at fixed rate
-            Object scheduled = p.getScheduler().runAtFixedRate(
-                    plugin,
-                    scheduledTask -> runnable.run(),
-                    0L,
-                    20L
-            );
-            activeTasks.put(id, scheduled);
-        } else {
-            // Classic Bukkit/Paper: run on the main thread every 20 ticks
-            BukkitTask task = runnable.runTaskTimer(plugin, 0L, 20L);
-            activeTasks.put(id, task);
-        }
+        // Paper / “Folia-ish” friendly: use BukkitRunnable#runTaskTimer
+        BukkitTask task = runnable.runTaskTimer(plugin, 0L, 20L); // every 1 second
+        activeTasks.put(id, task);
     }
 
     private void stopVisualizer(Player p) {
         UUID id = p.getUniqueId();
-        Object task = activeTasks.remove(id);
-        if (task == null) {
-            return;
-        }
-
-        // Normal Bukkit/Paper task
-        if (task instanceof BukkitTask bukkitTask) {
-            bukkitTask.cancel();
-            return;
-        }
-
-        // Direct BukkitRunnable (fallback)
-        if (task instanceof BukkitRunnable bukkitRunnable) {
-            bukkitRunnable.cancel();
-            return;
-        }
-
-        // Folia ScheduledTask or any other scheduler with cancel()
-        try {
-            task.getClass().getMethod("cancel").invoke(task);
-        } catch (Exception ignored) {
+        BukkitTask task = activeTasks.remove(id);
+        if (task != null) {
+            task.cancel();
         }
     }
 }

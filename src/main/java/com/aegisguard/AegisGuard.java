@@ -24,6 +24,7 @@ import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
+import com.aegisguard.selection.WandSafetyListener;   // ✅ NEW: wand anti-dupe / safety listener
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
@@ -168,6 +169,9 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
+
+        // ✅ NEW: Wand safety (no dupes, no chest-moving, drop = vanish)
+        Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
 
         if (cfg().isLevelingEnabled()) {
             try {

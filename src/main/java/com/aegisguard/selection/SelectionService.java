@@ -14,6 +14,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.awt.Color;
@@ -51,8 +52,9 @@ public class SelectionService implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
-        boolean isNormal = meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE);
-        boolean isServer = meta.getPersistentDataContainer().has(SERVER_WAND_KEY, PersistentDataType.BYTE);
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        boolean isNormal = pdc.has(WAND_KEY, PersistentDataType.BYTE);
+        boolean isServer = pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
 
         if (!isNormal && !isServer) return;
 
@@ -62,13 +64,19 @@ public class SelectionService implements Listener {
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null) {
             Location loc = e.getClickedBlock().getLocation();
             loc1.put(p.getUniqueId(), loc);
-            plugin.msg().send(p, "corner1_set", Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
+            plugin.msg().send(p, "corner1_set", Map.of(
+                    "X", String.valueOf(loc.getBlockX()),
+                    "Z", String.valueOf(loc.getBlockZ())
+            ));
             playSelectionEffect(p, loc, isServer);
             
         } else if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getClickedBlock() != null) {
             Location loc = e.getClickedBlock().getLocation();
             loc2.put(p.getUniqueId(), loc);
-            plugin.msg().send(p, "corner2_set", Map.of("X", String.valueOf(loc.getBlockX()), "Z", String.valueOf(loc.getBlockZ())));
+            plugin.msg().send(p, "corner2_set", Map.of(
+                    "X", String.valueOf(loc.getBlockX()),
+                    "Z", String.valueOf(loc.getBlockZ())
+            ));
             playSelectionEffect(p, loc, isServer);
         }
     }
@@ -87,7 +95,7 @@ public class SelectionService implements Listener {
         Location l2 = loc2.get(uuid);
 
         if (!l1.getWorld().equals(l2.getWorld())) {
-            plugin.msg().send(p, "corners_diff_world"); // NEW KEY
+            plugin.msg().send(p, "corners_diff_world");
             return;
         }
         
@@ -96,7 +104,6 @@ public class SelectionService implements Listener {
         int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
         int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
         
-        // FIX: Scope issue for width/length/radius
         int width = maxX - minX + 1;
         int length = maxZ - minZ + 1;
         int radius = Math.max(width, length) / 2;
@@ -109,7 +116,7 @@ public class SelectionService implements Listener {
             }
 
             if (plugin.store().isAreaOverlapping(null, l1.getWorld().getName(), minX, minZ, maxX, maxZ)) {
-                plugin.msg().send(p, "resize-fail-overlap"); // Re-use overlap message
+                plugin.msg().send(p, "resize-fail-overlap");
                 plugin.effects().playError(p);
                 return;
             }
@@ -135,14 +142,24 @@ public class SelectionService implements Listener {
         long now = System.currentTimeMillis();
         
         if (isServerClaim) {
-            plot = new Plot(UUID.randomUUID(), Plot.SERVER_OWNER_UUID, "Server", 
-                           l1.getWorld().getName(), minX, minZ, maxX, maxZ, now);
+            plot = new Plot(
+                    UUID.randomUUID(),
+                    Plot.SERVER_OWNER_UUID,
+                    "Server",
+                    l1.getWorld().getName(),
+                    minX, minZ, maxX, maxZ, now
+            );
             plot.setFlag("build", false);
             plot.setFlag("pvp", false);
             plot.setFlag("safe_zone", true);
         } else {
-            plot = new Plot(UUID.randomUUID(), p.getUniqueId(), p.getName(), 
-                           l1.getWorld().getName(), minX, minZ, maxX, maxZ, now);
+            plot = new Plot(
+                    UUID.randomUUID(),
+                    p.getUniqueId(),
+                    p.getName(),
+                    l1.getWorld().getName(),
+                    minX, minZ, maxX, maxZ, now
+            );
             plugin.worldRules().applyDefaults(plot);
         }
         
@@ -159,7 +176,7 @@ public class SelectionService implements Listener {
                 .setColor(Color.GREEN)
                 .setDescription(p.getName() + " has established a new territory!")
                 .addField("World", plot.getWorld(), true)
-                .addField("Size", (width) + "x" + (length), true)
+                .addField("Size", width + "x" + length, true)
                 .setFooter("AegisGuard v1.1.2", null);
             plugin.getDiscord().send(embed);
         }
@@ -194,7 +211,7 @@ public class SelectionService implements Listener {
         try {
             face = BlockFace.valueOf(direction.toUpperCase());
         } catch (IllegalArgumentException e) {
-            plugin.msg().send(p, "merge_invalid_dir"); // NEW KEY
+            plugin.msg().send(p, "merge_invalid_dir");
             return;
         }
 
@@ -202,35 +219,52 @@ public class SelectionService implements Listener {
         int checkX = 0, checkZ = 0;
 
         switch (face) {
-            case NORTH -> { checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2; checkZ = currentPlot.getZ1() - 1; }
-            case SOUTH -> { checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2; checkZ = currentPlot.getZ2() + 1; }
-            case WEST  -> { checkX = currentPlot.getX1() - 1; checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2; }
-            case EAST  -> { checkX = currentPlot.getX2() + 1; checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2; }
-            default -> { plugin.msg().send(p, "merge_invalid_dir"); return; }
+            case NORTH -> {
+                checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2;
+                checkZ = currentPlot.getZ1() - 1;
+            }
+            case SOUTH -> {
+                checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2;
+                checkZ = currentPlot.getZ2() + 1;
+            }
+            case WEST -> {
+                checkX = currentPlot.getX1() - 1;
+                checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2;
+            }
+            case EAST -> {
+                checkX = currentPlot.getX2() + 1;
+                checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2;
+            }
+            default -> {
+                plugin.msg().send(p, "merge_invalid_dir");
+                return;
+            }
         }
 
         Plot targetPlot = plugin.store().getPlotAt(new Location(p.getWorld(), checkX, 64, checkZ));
         
         if (targetPlot == null) {
-            plugin.msg().send(p, "merge_no_plot"); // "No plot in that direction"
+            plugin.msg().send(p, "merge_no_plot");
             return;
         }
 
         if (!targetPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "merge_not_owner"); // "You don't own that plot"
+            plugin.msg().send(p, "merge_not_owner");
             return;
         }
 
         // --- ALIGNMENT CHECK ---
-        boolean aligned = false;
+        boolean aligned;
         if (face == BlockFace.NORTH || face == BlockFace.SOUTH) {
-            aligned = (currentPlot.getX1() == targetPlot.getX1()) && (currentPlot.getX2() == targetPlot.getX2());
+            aligned = (currentPlot.getX1() == targetPlot.getX1())
+                    && (currentPlot.getX2() == targetPlot.getX2());
         } else {
-            aligned = (currentPlot.getZ1() == targetPlot.getZ1()) && (currentPlot.getZ2() == targetPlot.getZ2());
+            aligned = (currentPlot.getZ1() == targetPlot.getZ1())
+                    && (currentPlot.getZ2() == targetPlot.getZ2());
         }
 
         if (!aligned) {
-            plugin.msg().send(p, "merge_not_aligned"); // "Plots must be aligned"
+            plugin.msg().send(p, "merge_not_aligned");
             return;
         }
         
@@ -239,7 +273,8 @@ public class SelectionService implements Listener {
              double cost = plugin.cfg().getMergeCost();
              if (cost > 0 && !plugin.isAdmin(p)) {
                  if (!plugin.vault().charge(p, cost)) {
-                     plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
+                     plugin.msg().send(p, "need_vault",
+                             Map.of("AMOUNT", plugin.vault().format(cost)));
                      return;
                  }
              }
@@ -256,8 +291,10 @@ public class SelectionService implements Listener {
         plugin.store().removePlot(p.getUniqueId(), targetPlot.getPlotId());
 
         // 2. Create mega plot
-        currentPlot.setX1(newX1); currentPlot.setZ1(newZ1);
-        currentPlot.setX2(newX2); currentPlot.setZ2(newZ2);
+        currentPlot.setX1(newX1);
+        currentPlot.setZ1(newZ1);
+        currentPlot.setX2(newX2);
+        currentPlot.setZ2(newZ2);
         
         // 3. Save
         plugin.store().addPlot(currentPlot);
@@ -274,7 +311,9 @@ public class SelectionService implements Listener {
                     .setTitle("🔄 Plot Merge Completed")
                     .setColor(new Color(0, 100, 200))
                     .setDescription(p.getName() + " merged two claims.")
-                    .addField("New Size", (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1), true)
+                    .addField("New Size",
+                            (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1),
+                            true)
             );
         }
     }
@@ -304,7 +343,10 @@ public class SelectionService implements Listener {
              double refund = originalCost * (percent / 100.0);
              if (refund > 0) {
                  plugin.vault().give(p, refund);
-                 plugin.msg().send(p, "vault_refund", Map.of("AMOUNT", plugin.vault().format(refund), "PERCENT", String.valueOf(percent)));
+                 plugin.msg().send(p, "vault_refund", Map.of(
+                         "AMOUNT", plugin.vault().format(refund),
+                         "PERCENT", String.valueOf(percent)
+                 ));
              }
         }
     }
@@ -343,30 +385,64 @@ public class SelectionService implements Listener {
             }
         }
         if (found) {
-            plugin.msg().send(p, "wand_consumed"); // NEW KEY
+            plugin.msg().send(p, "wand_consumed");
             plugin.effects().playUnclaim(p);
         } else {
-            plugin.msg().send(p, "wand_not_found"); // NEW KEY
+            plugin.msg().send(p, "wand_not_found");
         }
     }
-    
+
+    /**
+     * Legacy helper kept for compatibility.
+     * Now treats BOTH normal Aegis Wand and Sentinel Scepter as "wands".
+     */
     public boolean isWand(ItemStack item) {
+        return isAnyWand(item);
+    }
+
+    /**
+     * Static helper: check if an ItemStack is any Aegis selection item
+     * (player wand OR server/sentinel wand).
+     */
+    public static boolean isAnyWand(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
+
         ItemMeta meta = item.getItemMeta();
-        return meta != null && meta.getPersistentDataContainer().has(WAND_KEY, PersistentDataType.BYTE);
+        if (meta == null) return false;
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        return pdc.has(WAND_KEY, PersistentDataType.BYTE)
+                || pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
+    }
+
+    /**
+     * Static helper for commands:
+     * "Does this player already have ANY Aegis selection wand/scepter?"
+     *
+     * Use this in /aegis wand, /aegis scepter, etc. to prevent duplicates.
+     */
+    public static boolean playerHasAnyWand(Player p) {
+        for (ItemStack stack : p.getInventory().getContents()) {
+            if (isAnyWand(stack)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     private void playSelectionEffect(Player p, Location loc, boolean isServer) {
         try {
             Particle particle = isServer ? Particle.SOUL_FIRE_FLAME : Particle.VILLAGER_HAPPY;
             p.spawnParticle(particle, loc.clone().add(0.5, 1.2, 0.5), 5, 0.2, 0.2, 0.2, 0);
-            p.playSound(p.getLocation(), isServer ? Sound.BLOCK_BEACON_POWER_SELECT : Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.5f);
+            p.playSound(p.getLocation(),
+                    isServer ? Sound.BLOCK_BEACON_POWER_SELECT : Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
+                    1f,
+                    1.5f
+            );
         } catch (Exception ignored) {}
     }
     
     public void resizePlot(Player p, String direction, int amount) {
-        // Note: Assuming resizePlot is already implemented elsewhere or matches this pattern.
-        // If you need the localized resize logic here, I can provide it, but typically it is in AegisCommand
-        // or this service. The method structure above covers the key "chatty" logic.
+        // Intentionally left as-is; you mentioned this is handled elsewhere or to be filled later.
     }
 }

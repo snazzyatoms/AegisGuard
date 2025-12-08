@@ -129,7 +129,12 @@ public class PlotFlagsGUI {
             case 14 -> toggle(player, plot, "mobs");
             case 15 -> toggle(player, plot, "entry");
             case 16 -> {
-                if (plugin.isAdmin(player)) plugin.protection().toggleSafeZone(plot, true);
+                // Safe zone is admin-only, and should truly toggle
+                if (plugin.isAdmin(player)) {
+                    boolean currently = plugin.protection().isSafeZoneEnabled(plot);
+                    plugin.protection().toggleSafeZone(plot, !currently);
+                    plugin.effects().playConfirm(player);
+                }
             }
 
             case 19 -> toggle(player, plot, "containers");

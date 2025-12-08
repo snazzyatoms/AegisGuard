@@ -14,13 +14,14 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 /**
  * LevelingGUI
- * - Allows players to upgrade their plot level.
- * - Configurable: Can optionally expand plot size on level up.
+ * - Richer progression view for plot levels.
+ * - Shows a level track, current tier, and next tier preview.
  */
 public class LevelingGUI {
 
@@ -38,72 +39,157 @@ public class LevelingGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "level_gui_title"), "§dPlot Leveling");
-        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 27, title);
+        if (plot == null) {
+            plugin.msg().send(player, "no_plot_here");
+            return;
+        }
 
+        String title = GUIManager.safeText(
+                plugin.msg().get(player, "level_gui_title"),
+                "§dPlot Ascension Codex"
+        );
+        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 54, title);
+
+        // --- Filler border ---
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) {
+            inv.setItem(i, filler);
+        }
 
         int currentLvl = plot.getLevel();
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("§7Level: §f" + currentLvl);
-        infoLore.add("§7XP Multiplier: §f" + plugin.cfg().getLevelCostMultiplier());
-        infoLore.add("");
-        
-        // Show expansion info if enabled
+        int maxLvl = plugin.cfg().getMaxLevel();
+
+        // ----------------------------------------------------------------
+        // 1. HEADER: Plot & current level summary
+        // ----------------------------------------------------------------
+        List<String> headerLore = new ArrayList<>();
+        headerLore.add("§7Owner: §f" + plot.getOwnerName());
+        headerLore.add("§7World: §f" + plot.getWorld());
+        headerLore.add("");
+        headerLore.add("§7Current Level: §b" + currentLvl + "§7 / §f" + maxLvl);
+        headerLore.add("§7XP Cost Multiplier: §f" + plugin.cfg().getLevelCostMultiplier());
+
         if (plugin.cfg().isLevelingExpansionEnabled()) {
             int amount = plugin.cfg().getLevelingExpansionAmount();
-            infoLore.add("§bBonus: §7+ " + amount + " block radius/lvl");
+            headerLore.add("");
+            headerLore.add("§bTerritory Growth:");
+            headerLore.add("§7+§f" + amount + " §7block radius per level.");
         }
-        
-        infoLore.add("§7Current Buffs:");
-        infoLore.addAll(formatBuffs(currentLvl));
 
-        inv.setItem(11, GUIManager.createItem(
-            Material.ENCHANTING_TABLE,
-            plugin.msg().get(player, "level_current_status"),
-            infoLore
+        inv.setItem(4, GUIManager.createItem(
+                Material.NETHER_STAR,
+                plugin.msg().get(player, "level_current_status"),
+                headerLore
         ));
 
+        // ----------------------------------------------------------------
+        // 2. LEVEL TRACK (window around current level)
+        //    Slots 19 -> 25 (up to 7 levels)
+        // ----------------------------------------------------------------
+        int windowSize = 7;
+        int half = windowSize / 2;
+        int start = Math.max(1, currentLvl - half);
+        int end = Math.min(maxLvl, start + windowSize - 1);
+        // If we’re at top end and still not full window, slide back
+        if (end - start + 1 < windowSize && start > 1) {
+            start = Math.max(1, end - windowSize + 1);
+        }
+
+        int slot = 19;
+        for (int level = start; level <= end; level++) {
+            inv.setItem(slot++, buildLevelTrackItem(player, plot, level, currentLvl, maxLvl));
+        }
+
+        // ----------------------------------------------------------------
+        // 3. CURRENT BUFFS PANEL (left)
+        // ----------------------------------------------------------------
+        List<String> currentBuffLore = new ArrayList<>();
+        currentBuffLore.add("§7Level §b" + currentLvl + " §7Buffs:");
+        currentBuffLore.addAll(formatBuffs(currentLvl));
+        currentBuffLore.add("");
+        currentBuffLore.add("§8These buffs are active while");
+        currentBuffLore.add("§8you are inside this dominion.");
+
+        inv.setItem(29, GUIManager.createItem(
+                Material.BOOK,
+                "§aCurrent Blessings",
+                currentBuffLore
+        ));
+
+        // ----------------------------------------------------------------
+        // 4. NEXT LEVEL PREVIEW + UPGRADE BUTTON (center)
+        // ----------------------------------------------------------------
         int nextLvl = currentLvl + 1;
-        int maxLvl = plugin.cfg().getMaxLevel();
-        
         if (nextLvl <= maxLvl) {
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
             String costStr = plugin.eco().format(cost, type);
-            
+
             List<String> upgradeLore = new ArrayList<>();
-            upgradeLore.add("§7Cost: §e" + costStr);
+            upgradeLore.add("§7Next Tier: §bLevel " + nextLvl);
+            upgradeLore.add("§7Cost: §e" + costStr + " §7(" + type.name() + ")");
             upgradeLore.add("");
             upgradeLore.add("§7New Buffs Unlocked:");
             upgradeLore.addAll(formatBuffs(nextLvl));
-            
+
             if (plugin.cfg().isLevelingExpansionEnabled()) {
                 upgradeLore.add("");
-                upgradeLore.add("§b+ " + plugin.cfg().getLevelingExpansionAmount() + " Block Radius");
+                upgradeLore.add("§bTerritory Gain:");
+                upgradeLore.add("§7+§f" + plugin.cfg().getLevelingExpansionAmount()
+                        + " §7radius on this upgrade.");
             }
-            
-            upgradeLore.add("");
-            upgradeLore.add("§eClick to Purchase Upgrade");
 
-            inv.setItem(15, GUIManager.createItem(
-                Material.EXPERIENCE_BOTTLE,
-                plugin.msg().get(player, "level_upgrade_button", Map.of("LEVEL", String.valueOf(nextLvl))),
-                upgradeLore
+            upgradeLore.add("");
+            upgradeLore.add("§eClick to ascend to §bLevel " + nextLvl);
+
+            inv.setItem(31, GUIManager.createItem(
+                    Material.EXPERIENCE_BOTTLE,
+                    plugin.msg().get(player, "level_upgrade_button",
+                            Map.of("LEVEL", String.valueOf(nextLvl))),
+                    upgradeLore
             ));
         } else {
-            inv.setItem(15, GUIManager.createItem(
-                Material.BARRIER, 
-                plugin.msg().get(player, "level_max_reached"), 
-                List.of("§7Your plot is fully ascended.")
+            inv.setItem(31, GUIManager.createItem(
+                    Material.BEACON,
+                    plugin.msg().get(player, "level_max_reached"),
+                    Arrays.asList(
+                            "§7Your dominion has reached",
+                            "§7its highest tier.",
+                            "",
+                            "§aEnjoy your full power."
+                    )
             ));
         }
 
-        inv.setItem(22, GUIManager.createItem(Material.ARROW, 
-            plugin.msg().get(player, "button_back"), 
-            plugin.msg().getList(player, "back_lore")));
-        
+        // ----------------------------------------------------------------
+        // 5. EXPANSION INFO PANEL (right)
+        // ----------------------------------------------------------------
+        if (plugin.cfg().isLevelingExpansionEnabled()) {
+            List<String> expansionLore = new ArrayList<>();
+            expansionLore.add("§bTerritory Growth Rules:");
+            expansionLore.add("§7Each upgrade expands your");
+            expansionLore.add("§7claim radius outward evenly.");
+            expansionLore.add("");
+            expansionLore.add("§7Max world limit: §f"
+                    + plugin.cfg().getWorldMaxRadius(player.getWorld()) + " §7blocks.");
+            expansionLore.add("§8Respects world + overlap rules.");
+
+            inv.setItem(33, GUIManager.createItem(
+                    Material.GRASS_BLOCK,
+                    "§aTerritory Expansion",
+                    expansionLore
+            ));
+        }
+
+        // ----------------------------------------------------------------
+        // 6. NAVIGATION
+        // ----------------------------------------------------------------
+        inv.setItem(49, GUIManager.createItem(
+                Material.ARROW,
+                plugin.msg().get(player, "button_back"),
+                plugin.msg().getList(player, "back_lore")
+        ));
+
         player.openInventory(inv);
         GUIManager.playClick(player);
     }
@@ -111,15 +197,30 @@ public class LevelingGUI {
     public void handleClick(Player player, InventoryClickEvent e, LevelingHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
         Plot plot = holder.getPlot();
-        
-        if (e.getSlot() == 22) {
+        if (plot == null) {
+            plugin.msg().send(player, "no_plot_here");
+            return;
+        }
+
+        int slot = e.getSlot();
+
+        // Back to main menu
+        if (slot == 49) {
             plugin.gui().openMain(player);
             return;
         }
 
-        if (e.getSlot() == 15 && e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
+        // Upgrade button
+        if (slot == 31 && e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
             int nextLvl = plot.getLevel() + 1;
+            int maxLvl = plugin.cfg().getMaxLevel();
+            if (nextLvl > maxLvl) {
+                GUIManager.playClick(player);
+                return;
+            }
+
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
 
@@ -150,10 +251,10 @@ public class LevelingGUI {
                 int newRadius = (newX2 - newX1) / 2;
                 int maxRadius = plugin.cfg().getWorldMaxRadius(player.getWorld());
                 if (newRadius > maxRadius && !player.hasPermission("aegis.admin.bypass")) {
-                     plugin.eco().deposit(player, cost, type); // Refund
-                     player.sendMessage("§cCannot level up: Expansion exceeds world limit (" + maxRadius + ").");
-                     plugin.effects().playError(player);
-                     return;
+                    plugin.eco().deposit(player, cost, type); // Refund
+                    player.sendMessage("§cCannot level up: Expansion exceeds world limit (" + maxRadius + ").");
+                    plugin.effects().playError(player);
+                    return;
                 }
 
                 // Apply Resize
@@ -164,29 +265,85 @@ public class LevelingGUI {
             }
 
             // 3. Fire Event & Apply Level
-            PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvl);
+            int nextLvlFinal = nextLvl;
+            PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvlFinal);
             Bukkit.getPluginManager().callEvent(event);
-            
-            plot.setLevel(nextLvl);
+
+            plot.setLevel(nextLvlFinal);
             plugin.store().setDirty(true);
-            
+
             // 4. Feedback
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvl)));
+            plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvlFinal)));
             plugin.effects().playConfirm(player);
-            
-            open(player, plot); // Refresh menu
-        } else if (e.getSlot() == 15) {
-             GUIManager.playClick(player);
+
+            // Refresh menu
+            open(player, plot);
+            return;
+        }
+
+        // Clicks on the track are just "preview" clicks for now
+        if (slot >= 19 && slot <= 25) {
+            GUIManager.playClick(player);
         }
     }
-    
+
+    // --------------------------------------------------
+    // HELPERS
+    // --------------------------------------------------
+
+    private ItemStack buildLevelTrackItem(Player player, Plot plot, int level, int currentLvl, int maxLvl) {
+        Material mat;
+        String title;
+        List<String> lore = new ArrayList<>();
+
+        if (level < currentLvl) {
+            mat = Material.EMERALD_BLOCK;
+            title = "§aLevel " + level + " §7(Completed)";
+            lore.add("§7You have already unlocked");
+            lore.add("§7this tier's blessings.");
+        } else if (level == currentLvl) {
+            mat = Material.GOLD_BLOCK;
+            title = "§eLevel " + level + " §7(Current)";
+            lore.add("§7These are your current active");
+            lore.add("§7blessings inside this dominion.");
+        } else {
+            mat = Material.REDSTONE_BLOCK;
+            title = "§cLevel " + level + " §7(Locked)";
+            if (level == currentLvl + 1) {
+                lore.add("§7This is your §enext§7 tier.");
+                double cost = calculateCost(level);
+                CurrencyType type = plugin.cfg().getLevelCostType();
+                lore.add("§7Cost: §e" + plugin.eco().format(cost, type));
+            } else {
+                lore.add("§7Reach previous levels to");
+                lore.add("§7progress toward this tier.");
+            }
+        }
+
+        lore.add("");
+        lore.add("§7Buffs at this tier:");
+        lore.addAll(formatBuffs(level));
+
+        // Little footer
+        lore.add("");
+        if (level == currentLvl + 1 && level <= maxLvl) {
+            lore.add("§eUpgrade via the center button.");
+        } else if (level > currentLvl + 1) {
+            lore.add("§8Progress step by step.");
+        } else {
+            lore.add("§8Already mastered.");
+        }
+
+        return GUIManager.createItem(mat, title, lore);
+    }
+
     private double calculateCost(int level) {
         double base = plugin.cfg().getLevelBaseCost();
         double mult = plugin.cfg().getLevelCostMultiplier();
         return base * (level * mult);
     }
-    
+
     private List<String> formatBuffs(int level) {
         List<String> rewards = plugin.cfg().getLevelRewards(level);
         List<String> formatted = new ArrayList<>();
@@ -210,7 +367,7 @@ public class LevelingGUI {
         }
         return formatted;
     }
-    
+
     private String toRoman(int n) {
         return switch (n) {
             case 1 -> "I";

@@ -259,25 +259,13 @@ public class PlotFlagsGUI {
 
     // ---------------- HELPERS ----------------
 
-    /**
-     * Returns the raw default for a flag when the plot has no explicit value.
-     * This is independent from safe_zone / server_zone semantics.
-     */
-    private boolean getRawDefault(String flag) {
-        String key = flag.toLowerCase();
-        switch (key) {
-            case "pvp":
-            case "mobs":
-            case "animals":
-                return true;   // protection ON by default
-            default:
-                return false;  // protection OFF by default
-        }
-    }
-
     private void toggleFlag(Player p, Plot plot, String flag) {
-        boolean current = plot.getFlag(flag, getRawDefault(flag));
-        plot.setFlag(flag, !current);
+        // Use the *real* protection state (including safe_zone/server bias),
+        // then explicitly flip it so player choice always wins.
+        boolean currentlyOn = plugin.protection().isFlagEnabled(plot, flag);
+        boolean newValue = !currentlyOn;
+
+        plot.setFlag(flag, newValue);
         plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
         plugin.effects().playConfirm(p);

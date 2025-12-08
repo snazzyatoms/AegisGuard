@@ -31,22 +31,52 @@ public class Plot {
     // Special UUID for server-owned plots (Admin Zones/Spawn)
     public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-    // Default Flag State
+    /**
+     * Default Flag State
+     *
+     * Convention (aligned with GUI & ProtectionManager):
+     *  - true  = PROTECTED / RESTRICTED / SAFE (green)
+     *  - false = VULNERABLE / VANILLA-LIKE (red)
+     *
+     * Per-flag meaning:
+     *  - pvp         -> true = PvP blocked in this plot
+     *  - mobs        -> true = mob protection ON (no hostile mob damage/target in-plot)
+     *  - animals     -> true = animals protected from damage/interact
+     *  - tnt-damage  -> true = explosions do NOT damage the plot
+     *  - fire-spread -> true = fire spread blocked
+     *  - containers  -> true = container protection rules apply (non-trusted blocked)
+     *  - piston-use  -> true = piston abuse blocked
+     *  - farm        -> true = crops protected
+     *  - vehicles    -> true = vehicle protection rules apply
+     *  - safe_zone   -> special “umbrella” flag, default OFF, admin-only via GUI
+     */
     private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
-            Map.entry("pvp", false),
+            // Combat & mobs
+            Map.entry("pvp", true),          // PvP protected by default
+            Map.entry("mobs", true),         // Mob protection ON by default
+            Map.entry("animals", true),      // Animal protection ON by default
+
+            // Interaction / mechanics
             Map.entry("containers", true),
-            Map.entry("mobs", false), // false by default: safer claims
             Map.entry("pets", true),
             Map.entry("entities", true),
             Map.entry("farm", true),
-            Map.entry("tnt-damage", false),
-            Map.entry("fire-spread", false),
-            Map.entry("piston-use", false),
+            Map.entry("vehicles", true),
+            Map.entry("redstone", false),    // opt-in: some servers want redstone free by default
+            Map.entry("piston-use", false),  // opt-in piston protection
+
+            // Environmental damage
+            Map.entry("tnt-damage", true),
+            Map.entry("fire-spread", true),
+
+            // General build / interact toggles (role system still decides *who*)
             Map.entry("build", true),
             Map.entry("interact", true),
+
+            // QoL / misc
             Map.entry("fly", false),
-            Map.entry("entry", true),
-            Map.entry("safe_zone", false),
+            Map.entry("entry", true),        // true = open, false = closed to non-trusted
+            Map.entry("safe_zone", false),   // admin-controlled, not default
             Map.entry("hunger", true),
             Map.entry("sleep", true)
     );
@@ -141,6 +171,8 @@ public class Plot {
         if (!isServerZone()) {
             this.playerRoles.put(owner, "owner");
         }
+
+        // Seed with defaults so new plots start SAFE and can be relaxed by the owner.
         this.flags.putAll(DEFAULT_FLAGS);
     }
 

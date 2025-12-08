@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
  */
 public class EffectUtil {
 
+    private static EffectUtil INSTANCE;
+
     private final AegisGuard plugin;
 
     // Cache
@@ -25,6 +27,7 @@ public class EffectUtil {
 
     public EffectUtil(AegisGuard plugin) {
         this.plugin = plugin;
+        INSTANCE = this;
         reload();
     }
 
@@ -57,6 +60,27 @@ public class EffectUtil {
     public void playMenuFlip(Player p) { play(p, menuFlipSound, 0.5f, 1.5f); }
     public void playConfirm(Player p) { play(p, confirmSound, vol, 1.5f); }
     public void playError(Player p) { play(p, errorSound, 1.0f, 0.5f); }
+
+    /**
+     * Legacy/static helper used by GUIs (e.g. RolesGUI).
+     * Delegates to the current EffectUtil instance so it respects
+     * config + per-player sound toggles. Falls back to a simple
+     * UI button click if the instance is not yet initialized.
+     */
+    public static void playToggle(Player p) {
+        if (p == null) return;
+
+        // Prefer the configured instance (respects config + sound toggles)
+        if (INSTANCE != null) {
+            INSTANCE.playMenuFlip(p);
+            return;
+        }
+
+        // Fallback: generic UI click
+        try {
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.5f);
+        } catch (Exception ignored) {}
+    }
 
     // --- GAMEPLAY EFFECTS ---
 

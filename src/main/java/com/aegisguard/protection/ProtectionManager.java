@@ -13,6 +13,7 @@ import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Slime;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -102,7 +103,7 @@ public class ProtectionManager implements Listener {
      * Examples:
      *  - PVP:     true  => PvP blocked, player is safe
      *  - Mobs:    true  => mob protection ON, hostile mobs restricted
-     *  - Animals: true  => animals protected from harm / interaction
+     *  - Animals: true  => animals & pets protected from harm / interaction
      */
     public boolean isFlagEnabled(Plot plot, String flagKey) {
         if (plot == null || flagKey == null) {
@@ -202,9 +203,6 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // If damage already cancelled by something else, we’re done.
-        // (ignoreCancelled = true already covered this)
-
         // Resolve the TRUE mob source (handles projectiles)
         Entity damager = e.getDamager();
         Entity source = damager;
@@ -227,6 +225,42 @@ public class ProtectionManager implements Listener {
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
             plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
+        }
+    }
+
+    // NEW: hostile mobs cannot damage animals or tameable pets when animals protection is ON
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMobDamageAnimal(EntityDamageByEntityEvent e) {
+        Entity target = e.getEntity();
+
+        // Only care about animals & tameable pets
+        if (!(target instanceof Animals) && !(target instanceof Tameable)) {
+            return;
+        }
+
+        // Resolve mob source (handles projectiles)
+        Entity damager = e.getDamager();
+        Entity source = damager;
+
+        if (damager instanceof Projectile proj && proj.getShooter() instanceof Entity shooter) {
+            source = shooter;
+        }
+
+        // Only care about hostile mobs here
+        if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
+            return;
+        }
+
+        Plot plot = plugin.store().getPlotAt(target.getLocation());
+        if (plot == null) {
+            return;
+        }
+
+        // Animals flag: true = animals (including tameables) protected
+        if (isProtectionActive(plot, "animals", true)) {
+            e.setCancelled(true);
+            // No player to play the effect to, so just use the mob target location
+            plugin.effects().playEffect("animals", "deny", null, target.getLocation());
         }
     }
 
@@ -343,12 +377,15 @@ public class ProtectionManager implements Listener {
     }
 
     // --------------------------------------------------
-    // ANIMALS
+    // ANIMALS (INCLUDING TAMEABLE PETS)
     // --------------------------------------------------
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onAnimalDamage(EntityDamageByEntityEvent e) {
-        if (!(e.getEntity() instanceof Animals animal)) {
+        Entity target = e.getEntity();
+
+        // Livestock + tameable pets
+        if (!(target instanceof Animals) && !(target instanceof Tameable)) {
             return;
         }
 
@@ -357,17 +394,19 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        Plot plot = plugin.store().getPlotAt(animal.getLocation());
-        // animals flag: true = animals protected, false = vanilla
+        Plot plot = plugin.store().getPlotAt(target.getLocation());
+        // animals flag: true = animals (and tameables) protected, false = vanilla
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
-            plugin.effects().playEffect("animals", "deny", p, animal.getLocation());
+            plugin.effects().playEffect("animals", "deny", p, target.getLocation());
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onAnimalInteract(PlayerInteractEntityEvent e) {
-        if (!(e.getRightClicked() instanceof Animals)) {
+        Entity clicked = e.getRightClicked();
+
+        if (!(clicked instanceof Animals) && !(clicked instanceof Tameable)) {
             return;
         }
 
@@ -376,10 +415,10 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        Plot plot = plugin.store().getPlotAt(e.getRightClicked().getLocation());
+        Plot plot = plugin.store().getPlotAt(clicked.getLocation());
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
-            plugin.effects().playEffect("animals", "deny", p, e.getRightClicked().getLocation());
+            plugin.effects().playEffect("animals", "deny", p, clicked.getLocation());
         }
     }
 

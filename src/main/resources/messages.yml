@@ -47,6 +47,7 @@ old_english:
 
   # --- Claiming & Wand ---
   wand_given: "&a⚡ Behold! The Aegis Scepter is bestowed upon thee."
+  wand_already_on: "&eNay, traveler; the Aegis Scepter is already borne upon thy person."
   corner1_set: "&a⚡ Thy first boundary is marked at &e{X}, {Z}."
   corner2_set: "&b⚡ Thy second boundary is set at &e{X}, {Z}."
   must_select: "&c❌ Thou must select two sacred points with thine Scepter."
@@ -282,12 +283,12 @@ old_english:
   settings_gui_not_toggle: "&cThese are but examples. Use Plot Wards."
 
   # --- Leveling & Zoning ---
-  level_gui_title: "&dAscension of Land"
-  level_current_status: "&dCurrent Standing"
-  level_upgrade_button: "&aAscend to Level {LEVEL}"
-  level_max_reached: "&cMaximum Ascension Reached"
-  level_up_success: "&d⚡ Thy dominion hath ascended to Level {LEVEL}!"
-  level_up_fail_cost: "&c❌ Thou lacketh the tribute required for ascension."
+  level_gui_title: "&dAscension of the Holdfast"
+  level_current_status: "&bThe Present Estate of Thy Holding"
+  level_upgrade_button: "&aRaise Thy Holdfast unto Level &f{LEVEL}"
+  level_max_reached: "&6Thy holding may ascend no further."
+  level_up_success: "&d⚡ Lo, thy holding hath risen unto Level &f{LEVEL}&d!"
+  level_up_fail_cost: "&c❌ Thy treasury is wanting; this rite of ascension must await fuller coffers."
   level_button_lore:
     - "&7Ascend thy plot to unlock"
     - "&7greater size and power."
@@ -647,7 +648,6 @@ old_english:
     - '&e/aegis stuck &7- Escape a trap or prison.'
     - '&e/aegis help &7- Study this sacred guide'
 
-
     
 # ======================================
 # HYBRID ENGLISH STYLE (Fantasy RPG)
@@ -686,6 +686,7 @@ hybrid_english:
 
   # --- Claiming & Wand ---
   wand_given: "&a⚡ The Aegis Scepter has been granted to you."
+  wand_already_on: "&eThe Aegis Scepter already rests within thy grasp."
   corner1_set: "&a⚡ First boundary mark set at &e{X}, {Z}."
   corner2_set: "&b⚡ Second boundary mark set at &e{X}, {Z}."
   must_select: "&c❌ You must mark two points with the Scepter first."
@@ -963,12 +964,12 @@ hybrid_english:
   settings_gui_not_toggle: "&cThese are examples. Use Land Wards to edit."
 
   # --- Leveling, Zoning, Biome ---
-  level_gui_title: "&dLand Ascension"
-  level_current_status: "&dCurrent Level"
-  level_upgrade_button: "&aAscend to Level {LEVEL}"
-  level_max_reached: "&cMaximum Level Reached"
-  level_up_success: "&d⚡ Your dominion ascended to Level {LEVEL}!"
-  level_up_fail_cost: "&c❌ You lack the tribute to ascend."
+  level_gui_title: "&dDominion Ascension"
+  level_current_status: "&bCurrent Standing of Thy Estate"
+  level_upgrade_button: "&aAscend unto Level &f{LEVEL}"
+  level_max_reached: "&6Thy estate hath reached its peak."
+  level_up_success: "&d⚡ Thy estate hath ascended to level &f{LEVEL}&d!"
+  level_up_fail_cost: "&c❌ Thy coffers lack the wealth to empower this ascension."
   level_button_lore:
     - "&7Ascend your plot to unlock"
     - "&7greater size and power."
@@ -1309,7 +1310,8 @@ modern_english:
   sidebar_disabled: "&c✖ Sidebar info disabled."
 
   # --- Claiming & Wand ---
-  wand_given: "&a✔ You received the Claim Tool."
+  wand_given: "&a⚡ You received the Aegis Scepter."
+  wand_already_on: "&eYour Aegis Scepter is already active in your inventory."
   corner1_set: "&a⚡ Position 1 set at &e{X}, {Z}."
   corner2_set: "&b⚡ Position 2 set at &e{X}, {Z}."
   must_select: "&c❌ You must select 2 corners with the Wand first."
@@ -1586,12 +1588,12 @@ modern_english:
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
   # --- Leveling & Zoning ---
-  level_gui_title: "&dLeveling"
-  level_current_status: "&dStats"
-  level_upgrade_button: "&aUpgrade to Level {LEVEL}"
-  level_max_reached: "&cMax Level Reached"
-  level_up_success: "&d⚡ Claim leveled up to {LEVEL}!"
-  level_up_fail_cost: "&c❌ Insufficient funds."
+  level_gui_title: "&dEstate Ascension"
+  level_current_status: "&bCurrent Estate Level"
+  level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
+  level_max_reached: "&6Max Level Reached"
+  level_up_success: "&d⚡ Your estate has ascended to level &f{LEVEL}&d!"
+  level_up_fail_cost: "&cYou don't have enough funds to level up this estate."
   level_button_lore:
     - "&7Upgrade claim size"
     - "&7and unlock features."

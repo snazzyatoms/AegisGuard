@@ -55,43 +55,48 @@ public class ProtectionManager implements Listener {
     /**
      * Generic "is this protection ON" helper.
      *
-     * Semantics (NEW):
-     *  - For combat-ish flags like "mobs" and "pvp", we ALWAYS respect the flag value,
-     *    even in safe zones, so players & server owners have true choice.
-     *  - For other flags (redstone, vehicles, etc.), server zones and safe zones
-     *    still act as a catch-all protection layer.
+     * Semantics (UPDATED):
+     *  - Every flag is ultimately controlled by the plot's own flag value.
+     *  - Safe zones / server zones only bias the DEFAULT to "ON" for important flags
+     *    when no explicit flag has been set yet.
+     *  - Once the player/admin toggles a flag in the GUI, that explicit value always wins.
      *
      * This matches the UI idea:
      *  - Green = protected / restricted
      *  - Red   = vulnerable / vanilla-like
      */
     private boolean isProtectionActive(Plot plot, String flagKey, boolean defaultValue) {
-        if (plot == null) {
+        if (plot == null || flagKey == null) {
             return false;
         }
 
         String key = flagKey.toLowerCase();
 
-        // --- COMBAT FLAGS: respect player / admin choice even in safe zones ---
-        // "mobs"  => true = mob protection ON (players safe from hostile mobs)
-        // "pvp"   => true = PvP protection ON (block PvP)
-        if (key.equals("mobs") || key.equals("pvp")) {
-            // For server zones we still default to protection, but allow explicit override.
-            if (plot.isServerZone()) {
-                return plot.getFlag(key, true);
+        // Start from the caller's default (e.g. pvp/animals default ON, others OFF)
+        boolean effectiveDefault = defaultValue;
+
+        // In server/safe zones, lean towards safety by default for important flags,
+        // but do NOT hard-force them; explicit per-plot values still override.
+        if (plot.isServerZone() || plot.getFlag("safe_zone", false)) {
+            switch (key) {
+                case "pvp":
+                case "mobs":
+                case "animals":
+                case "containers":
+                case "piston-use":
+                case "farm":
+                case "redstone":
+                case "vehicles":
+                case "tnt-damage":
+                case "fire-spread":
+                case "explosions":
+                    effectiveDefault = true;
+                    break;
             }
-            return plot.getFlag(key, defaultValue);
         }
 
-        // --- OTHER FLAGS: safe_zone / server_zone act as a hard safety net ---
-        if (plot.isServerZone()) {
-            return true;
-        }
-        if (plot.getFlag("safe_zone", false)) {
-            return true;
-        }
-
-        return plot.getFlag(key, defaultValue);
+        // Stored value (if present) always wins over the derived default.
+        return plot.getFlag(key, effectiveDefault);
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.aegisguard.visualization;
 
 import com.aegisguard.AegisGuard;
-import org.bukkit.Bukkit;
+import com.aegisguard.selection.SelectionService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,25 +10,16 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
-
-import static com.aegisguard.selection.SelectionService.WAND_KEY;
-import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 
 public class WandEquipListener implements Listener {
 
     private final AegisGuard plugin;
-    /**
-     * Stores:
-     *  - BukkitTask (non-Folia)
-     *  - Region scheduler handle with cancel() (Folia)
-     */
     private final Map<UUID, Object> activeTasks = new HashMap<>();
 
     public WandEquipListener(AegisGuard plugin) {
@@ -38,18 +29,13 @@ public class WandEquipListener implements Listener {
     @EventHandler
     public void onSlotChange(PlayerItemHeldEvent e) {
         Player p = e.getPlayer();
-        UUID id = p.getUniqueId();
-
         ItemStack newItem = p.getInventory().getItem(e.getNewSlot());
-        boolean holdingWand = isAnyAegisWand(newItem);
 
-        if (holdingWand) {
-            // Already running for this player? do nothing.
-            if (!activeTasks.containsKey(id)) {
-                startVisualizer(p);
-            }
+        boolean isWand = isAegisWand(newItem);
+
+        if (isWand) {
+            startVisualizer(p);
         } else {
-            // No longer holding a wand -> stop border visualizer
             stopVisualizer(p);
         }
     }
@@ -59,79 +45,71 @@ public class WandEquipListener implements Listener {
         stopVisualizer(e.getPlayer());
     }
 
-    // --------------------------------------------------
-    // INTERNAL
-    // --------------------------------------------------
+    /**
+     * Checks if the given item is an Aegis wand / scepter (player or server),
+     * using the persistent NBT keys from SelectionService.
+     */
+    private boolean isAegisWand(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return false;
+        }
 
-    private boolean isAnyAegisWand(ItemStack item) {
-        if (item == null) return false;
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
+        if (meta == null) {
+            return false;
+        }
 
         var container = meta.getPersistentDataContainer();
-        return container.has(WAND_KEY, PersistentDataType.BYTE)
-                || container.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
+        return container.has(SelectionService.WAND_KEY, PersistentDataType.BYTE)
+                || container.has(SelectionService.SERVER_WAND_KEY, PersistentDataType.BYTE);
     }
 
     private void startVisualizer(Player p) {
         UUID id = p.getUniqueId();
-
-        // Safety: stop any stale task
-        stopVisualizer(p);
-
-        long interval = plugin.cfg().raw().getLong("visualization.interval_ticks", 20L);
-        if (interval < 1L) interval = 20L;
+        if (activeTasks.containsKey(id)) {
+            return; // already running for this player
+        }
 
         PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
 
         if (plugin.isFolia()) {
-            try {
-                Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                var runMethod = scheduler.getClass().getMethod(
-                        "runAtFixedRate",
-                        Plugin.class,
-                        Consumer.class,
-                        long.class,
-                        long.class
-                );
-
-                Object handle = runMethod.invoke(
-                        scheduler,
-                        plugin,
-                        (Consumer<Object>) t -> runnable.run(),
-                        0L,
-                        interval
-                );
-
-                activeTasks.put(id, handle);
-            } catch (Exception ex) {
-                plugin.getLogger().warning("[Visualization] Failed to schedule wand visualizer on Folia: " + ex.getMessage());
-            }
-        } else {
-            // Normal Paper/Spigot: main-thread repeating task
-            BukkitTask task = Bukkit.getScheduler().runTaskTimer(
+            // Folia / region-thread: use the player scheduler at fixed rate
+            Object scheduled = p.getScheduler().runAtFixedRate(
                     plugin,
-                    runnable,
+                    scheduledTask -> runnable.run(),
                     0L,
-                    interval
+                    20L
             );
+            activeTasks.put(id, scheduled);
+        } else {
+            // Classic Bukkit/Paper: run on the main thread every 20 ticks
+            BukkitTask task = runnable.runTaskTimer(plugin, 0L, 20L);
             activeTasks.put(id, task);
         }
     }
 
     private void stopVisualizer(Player p) {
         UUID id = p.getUniqueId();
-        Object handle = activeTasks.remove(id);
-        if (handle == null) return;
+        Object task = activeTasks.remove(id);
+        if (task == null) {
+            return;
+        }
 
-        if (handle instanceof BukkitTask bukkitTask) {
+        // Normal Bukkit/Paper task
+        if (task instanceof BukkitTask bukkitTask) {
             bukkitTask.cancel();
             return;
         }
 
-        // Folia handle with cancel()
+        // Direct BukkitRunnable (fallback)
+        if (task instanceof BukkitRunnable bukkitRunnable) {
+            bukkitRunnable.cancel();
+            return;
+        }
+
+        // Folia ScheduledTask or any other scheduler with cancel()
         try {
-            handle.getClass().getMethod("cancel").invoke(handle);
+            task.getClass().getMethod("cancel").invoke(task);
         } catch (Exception ignored) {
         }
     }

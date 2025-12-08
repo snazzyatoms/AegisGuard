@@ -73,6 +73,59 @@ public class ProtectionManager implements Listener {
         return plot.getFlag(flagKey, defaultValue);
     }
 
+    /**
+     * Public helper used by GUIs / hooks to check a plot flag.
+     * Applies the same semantics as isProtectionActive:
+     *  - server zones & safe zones are always treated as "enabled"
+     *  - falls back to a per-flag default when unset
+     */
+    public boolean isFlagEnabled(Plot plot, String flagKey) {
+        if (plot == null || flagKey == null) {
+            return false;
+        }
+
+        String key = flagKey.toLowerCase();
+        boolean defaultValue;
+
+        // Match in-world behavior:
+        // - pvp & animals default to ON (protection enabled)
+        // - everything else defaults to OFF unless explicitly set
+        switch (key) {
+            case "pvp":
+            case "animals":
+                defaultValue = true;
+                break;
+            default:
+                defaultValue = false;
+                break;
+        }
+
+        return isProtectionActive(plot, key, defaultValue);
+    }
+
+    /**
+     * Strongly typed helper used by mob-barrier / GUIs.
+     */
+    public boolean isSafeZoneEnabled(Plot plot) {
+        return plot != null && plot.getFlag("safe_zone", false);
+    }
+
+    /**
+     * Toggles the safe zone flag for a plot and persists it.
+     * Safe zones automatically provide:
+     *  - PvP protection
+     *  - Mob protection
+     *  - Animal protection
+     * via the standard protection checks.
+     */
+    public void toggleSafeZone(Plot plot, boolean enabled) {
+        if (plot == null) {
+            return;
+        }
+        plot.setFlag("safe_zone", enabled);
+        plugin.store().savePlot(plot);
+    }
+
     // --------------------------------------------------
     // MOB SPAWNING & TARGETING
     // --------------------------------------------------

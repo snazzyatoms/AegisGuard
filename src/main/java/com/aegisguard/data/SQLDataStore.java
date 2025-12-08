@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.RolesGUI;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.Bukkit;
@@ -685,9 +686,35 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================
-    // --- Indexing Helpers ---
-    // ==============================================================
+    // ==============================================================  
+    // --- ROLE FLAG STATE (TriState) --------------------------------
+    // ==============================================================  
+
+    @Override
+    public RolesGUI.TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
+        if (plot == null || roleId == null || flagKey == null) {
+            return RolesGUI.TriState.INHERIT;
+        }
+
+        // Delegate to Plot's role-flags model; this should already
+        // be in sync with serializeRoleFlags()/deserializeRoleFlags().
+        return plot.getRoleFlagState(roleId, flagKey);
+    }
+
+    @Override
+    public void setRoleFlagState(Plot plot, String roleId, String flagKey, RolesGUI.TriState state) {
+        if (plot == null || roleId == null || flagKey == null || state == null) {
+            return;
+        }
+
+        plot.setRoleFlagState(roleId, flagKey, state);
+        savePlot(plot);
+        isDirty = true;
+    }
+
+    // ==============================================================  
+    // --- Indexing Helpers ---  
+    // ==============================================================  
 
     private void indexPlot(Plot plot) {
         String w = plot.getWorld();
@@ -745,9 +772,9 @@ public class SQLDataStore implements IDataStore {
         return result;
     }
 
-    // ==============================================================
-    // --- Wilderness Logging ---
-    // ==============================================================
+    // ==============================================================  
+    // --- Wilderness Logging ---  
+    // ==============================================================  
 
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -776,9 +803,9 @@ public class SQLDataStore implements IDataStore {
         // TODO: implement rollback logic if you want SQL-driven wilderness revert
     }
 
-    // ==============================================================
-    // --- Basic Accessors ---
-    // ==============================================================
+    // ==============================================================  
+    // --- Basic Accessors ---  
+    // ==============================================================  
 
     @Override
     public boolean isDirty() {

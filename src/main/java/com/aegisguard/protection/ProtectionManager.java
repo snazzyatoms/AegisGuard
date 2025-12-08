@@ -53,31 +53,56 @@ public class ProtectionManager implements Listener {
     /**
      * Generic "is this protection ON" helper.
      *
-     * Semantics:
-     *  - Server Zone  => always protected
-     *  - Safe Zone    => always protected
-     *  - Otherwise    => use the given flag + default
+     * Semantics (NEW):
+     *  - For combat-ish flags like "mobs" and "pvp", we ALWAYS respect the flag value,
+     *    even in safe zones, so players & server owners have true choice.
+     *  - For other flags (redstone, vehicles, etc.), server zones and safe zones
+     *    still act as a catch-all protection layer.
      *
-     * This matches the UI: green = ON (more protection), red = OFF (vanilla).
+     * This matches the UI idea:
+     *  - Green = protected / restricted
+     *  - Red   = vulnerable / vanilla-like
      */
     private boolean isProtectionActive(Plot plot, String flagKey, boolean defaultValue) {
         if (plot == null) {
             return false;
         }
+
+        String key = flagKey.toLowerCase();
+
+        // --- COMBAT FLAGS: respect player / admin choice even in safe zones ---
+        // "mobs"  => true = mob protection ON (players safe from hostile mobs)
+        // "pvp"   => true = PvP protection ON (block PvP)
+        if (key.equals("mobs") || key.equals("pvp")) {
+            // For server zones we still default to protection, but allow explicit override.
+            if (plot.isServerZone()) {
+                return plot.getFlag(key, true);
+            }
+            return plot.getFlag(key, defaultValue);
+        }
+
+        // --- OTHER FLAGS: safe_zone / server_zone act as a hard safety net ---
         if (plot.isServerZone()) {
             return true;
         }
         if (plot.getFlag("safe_zone", false)) {
             return true;
         }
-        return plot.getFlag(flagKey, defaultValue);
+
+        return plot.getFlag(key, defaultValue);
     }
 
     /**
-     * Public helper used by GUIs / hooks to check a plot flag.
-     * Applies the same semantics as isProtectionActive:
-     *  - server zones & safe zones are always treated as "enabled"
-     *  - falls back to a per-flag default when unset
+     * Public helper used by GUIs / hooks to check a plot flag in a
+     * protection-centric way.
+     *
+     * Returns true when the associated protection is ACTIVE, not when
+     * the vanilla behavior is allowed.
+     *
+     * Examples:
+     *  - PVP:     true  => PvP blocked, player is safe
+     *  - Mobs:    true  => mob protection ON, hostile mobs restricted
+     *  - Animals: true  => animals protected from harm / interaction
      */
     public boolean isFlagEnabled(Plot plot, String flagKey) {
         if (plot == null || flagKey == null) {
@@ -105,6 +130,18 @@ public class ProtectionManager implements Listener {
 
     /**
      * Strongly typed helper used by mob-barrier / GUIs.
+     * This is the single source of truth for "mob protection ON?"
+     */
+    public boolean isMobProtectionEnabled(Plot plot) {
+        return isProtectionActive(plot, "mobs", false);
+    }
+
+    /**
+     * Safe zone helper. Safe zones now primarily represent structural /
+     * environmental protections (explosions, block damage, etc.).
+     *
+     * Combat protections like PVP / mobs are still individually controlled
+     * by their own flags so players + server owners have proper choice.
      */
     public boolean isSafeZoneEnabled(Plot plot) {
         return plot != null && plot.getFlag("safe_zone", false);
@@ -112,11 +149,8 @@ public class ProtectionManager implements Listener {
 
     /**
      * Toggles the safe zone flag for a plot and persists it.
-     * Safe zones automatically provide:
-     *  - PvP protection
-     *  - Mob protection
-     *  - Animal protection
-     * via the standard protection checks.
+     * Safe zones primarily protect structures & environment; they no longer
+     * automatically force mob / pvp protection, which are now full-choice flags.
      */
     public void toggleSafeZone(Plot plot, boolean enabled) {
         if (plot == null) {
@@ -140,8 +174,9 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(e.getLocation());
-        if (isProtectionActive(plot, "mobs", false)) {
-            // mobs flag ON (or safe_zone / server_zone) => block hostile spawns
+
+        // Mob protection ON => block hostile spawns in this dominion
+        if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
         }
     }
@@ -153,9 +188,45 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
-        if (isProtectionActive(plot, "mobs", false)) {
-            // Hostile mobs cannot target players in protected plots
+
+        // Mob protection ON => hostile mobs cannot target players in this plot
+        if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
+        }
+    }
+
+    // NEW: explicit damage guard so mobs cannot hurt you inside protected plots
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onMobDamagePlayer(EntityDamageByEntityEvent e) {
+        if (!(e.getEntity() instanceof Player victim)) {
+            return;
+        }
+
+        // If damage already cancelled by something else, we’re done.
+        // (ignoreCancelled = true already covered this)
+
+        // Resolve the TRUE mob source (handles projectiles)
+        Entity damager = e.getDamager();
+        Entity source = damager;
+
+        if (damager instanceof Projectile proj && proj.getShooter() instanceof Entity shooter) {
+            source = shooter;
+        }
+
+        // Only care about hostile mobs here
+        if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
+            return;
+        }
+
+        Plot plot = plugin.store().getPlotAt(victim.getLocation());
+        if (plot == null) {
+            return;
+        }
+
+        // Mob protection ON => no damage to players from hostile mobs in this plot
+        if (isMobProtectionEnabled(plot)) {
+            e.setCancelled(true);
+            plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
         }
     }
 

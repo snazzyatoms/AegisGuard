@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.flags.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -598,4 +599,27 @@ public class YMLDataStore implements IDataStore {
     // No-ops for SQL-specific features
     @Override public void logWildernessBlock(Location loc, String o, String n, UUID p) {}
     @Override public void revertWildernessBlocks(long t, int l) {}
+
+    // ----------------------------------------
+    // --- ROLE FLAG OVERRIDES (YML) ---------
+    // ----------------------------------------
+
+    @Override
+    public TriState getRoleFlagState(Plot plot, String roleName, String flagKey) {
+        if (plot == null) {
+            return TriState.INHERIT;
+        }
+        return plot.getRoleFlagState(roleName, flagKey);
+    }
+
+    @Override
+    public void setRoleFlagState(Plot plot, String roleName, String flagKey, TriState state) {
+        if (plot == null) {
+            return;
+        }
+        // Normalize null to INHERIT for safety
+        plot.setRoleFlagState(roleName, flagKey, state == null ? TriState.INHERIT : state);
+        // Persist immediately so YML stays in sync with in-memory plot
+        savePlot(plot);
+    }
 }

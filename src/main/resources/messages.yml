@@ -344,6 +344,16 @@ old_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
+  # --- Wards Info (Flags Help) ---
+  button_flags_info: "&6📜 Wards & Protections"
+  flags_info_lore:
+    - "&7These sigils govern the safety of thy land."
+    - "&aGreen: &7Awake and guarding."
+    - "&cRed: &7Slumbering; protection withdrawn."
+    - " "
+    - "&7Hover each ward to learn what it"
+    - "&7shieldeth or permitteth."
+
   # --- Wards (Flags) ---
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
@@ -636,6 +646,7 @@ old_english:
     - '&e/aegis setdesc <text> &7- Set a description for travelers.'
     - '&e/aegis stuck &7- Escape a trap or prison.'
     - '&e/aegis help &7- Study this sacred guide'
+
 
     
 # ======================================
@@ -1008,71 +1019,92 @@ hybrid_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
+  # --- Wards Info (Flags Help) ---
+  button_flags_info: "&6📜 Ward Overview"
+  flags_info_lore:
+    - "&7These toggles control protection on your land."
+    - "&aGreen: &7Ward active (more protection)."
+    - "&cRed: &7Ward off (normal/vanilla behaviour)."
+    - " "
+    - "&7Hover each icon to see what it does."
+
   # --- Wards ---
-  button_pvp_on: '&a⚔ PvP: Allowed'
-  button_pvp_off: '&c⚔ PvP: Protected'
+  button_pvp_on: '&a⚔ PvP Ward: Protected'
+  button_pvp_off: '&c⚔ PvP Ward: Open'
   pvp_toggle_lore:
-    - '&7Allow combat?'
+    - '&7When &aON&7, players cannot damage each other here.'
+    - '&7When &cOFF&7, PvP follows normal server rules.'
 
-  button_containers_on: '&a📦 Chests: Accessible'
-  button_containers_off: '&c📦 Chests: Protected'
+  button_containers_on: '&a📦 Container Ward: Protected'
+  button_containers_off: '&c📦 Container Ward: Open'
   container_toggle_lore:
-    - '&7Protect your items?'
+    - '&7When &aON&7, only trusted players may open containers.'
+    - '&7When &cOFF&7, anyone may use them (if other rules allow).'
 
-  button_mobs_on: '&a🧟 Monsters: Spawning'
-  button_mobs_off: '&c🧟 Monsters: Blocked'
+  button_mobs_on: '&a🧟 Monster Ward: Blocked'
+  button_mobs_off: '&c🧟 Monster Ward: Allowed'
   mob_toggle_lore:
-    - '&7Allow hostile mobs?'
+    - '&7When &aON&7, hostile mobs cannot spawn or attack here.'
+    - '&7When &cOFF&7, mobs behave normally.'
 
-  button_pets_on: '&a🐾 Pets: Vulnerable'
-  button_pets_off: '&c🐾 Pets: Protected'
+  button_pets_on: '&a🐾 Pet Ward: Protected'
+  button_pets_off: '&c🐾 Pet Ward: Vulnerable'
   pet_toggle_lore:
-    - '&7Prevent harm to pets?'
+    - '&7When &aON&7, tamed pets are protected from damage.'
+    - '&7When &cOFF&7, pets can be harmed normally.'
 
-  button_entity_on: '&a🗿 Entities: Vulnerable'
-  button_entity_off: '&c🗿 Entities: Protected'
+  button_entity_on: '&a🗿 Entity Ward: Protected'
+  button_entity_off: '&c🗿 Entity Ward: Vulnerable'
   entity_toggle_lore:
-    - '&7Protect frames & stands?'
+    - '&7When &aON&7, frames, stands & displays are protected.'
+    - '&7When &cOFF&7, they can be broken or modified.'
 
-  button_farm_on: '&a🌾 Crops: Vulnerable'
-  button_farm_off: '&c🌾 Crops: Protected'
+  button_farm_on: '&a🌾 Harvest Ward: Protected'
+  button_farm_off: '&c🌾 Harvest Ward: Vulnerable'
   farm_toggle_lore:
-    - '&7Prevent trampling?'
+    - '&7When &aON&7, crops cannot be trampled.'
+    - '&7When &cOFF&7, crops can be damaged normally.'
 
-  button_tnt_on: '&a💥 TNT: Dangerous'
-  button_tnt_off: '&c💥 TNT: Safe'
+  button_tnt_on: '&a💥 Blast Ward: Safe'
+  button_tnt_off: '&c💥 Blast Ward: Unsafe'
   tnt_toggle_lore:
-    - '&7Allow explosion damage?'
+    - '&7When &aON&7, TNT & explosions cannot damage this land.'
+    - '&7When &cOFF&7, explosions behave normally.'
 
-  button_fire_on: '&a🔥 Fire: Spreading'
-  button_fire_off: '&c🔥 Fire: Contained'
+  button_fire_on: '&a🔥 Flame Ward: Contained'
+  button_fire_off: '&c🔥 Flame Ward: Spreading'
   fire_toggle_lore:
-    - '&7Allow fire spread?'
+    - '&7When &aON&7, fire cannot spread.'
+    - '&7When &cOFF&7, fire spread is allowed.'
 
-  button_piston_on: '&a🔩 Pistons: Active'
-  button_piston_off: '&c🔩 Pistons: Blocked'
+  button_piston_on: '&a🔩 Piston Ward: Blocked'
+  button_piston_off: '&c🔩 Piston Ward: Allowed'
   piston_toggle_lore:
-    - '&7Allow pistons at border?'
+    - '&7When &aON&7, pistons cannot move blocks across borders.'
+    - '&7When &cOFF&7, pistons behave normally.'
 
-  button_animals_on: '&a🐮 Animals: Vulnerable'
-  button_animals_off: '&c🐮 Animals: Protected'
+  button_animals_on: '&a🐮 Herd Ward: Protected'
+  button_animals_off: '&c🐮 Herd Ward: Vulnerable'
   animals_toggle_lore:
-    - '&7Protect peaceful animals?'
+    - '&7When &aON&7, passive animals are protected from damage.'
+    - '&7When &cOFF&7, they can be harmed normally.'
 
-  button_redstone_on: '&a⚡ Redstone: Flowing'
-  button_redstone_off: '&c⚡ Redstone: Sealed'
+  button_redstone_on: '&a⚡ Rune Ward: Restricted'
+  button_redstone_off: '&c⚡ Rune Ward: Free'
   redstone_toggle_lore:
-    - '&7Allow redstone usage?'
+    - '&7When &aON&7, redstone usage is blocked in this land.'
+    - '&7When &cOFF&7, redstone behaves normally.'
 
-  button_vehicles_on: '&a🛶 Vehicles: Free'
-  button_vehicles_off: '&c🛶 Vehicles: Locked'
+  button_vehicles_on: '&a🛶 Vehicle Ward: Locked'
+  button_vehicles_off: '&c🛶 Vehicle Ward: Free'
   vehicles_toggle_lore:
-    - '&7Allow boats & minecarts?'
+    - '&7When &aON&7, boats & minecarts are locked/protected.'
+    - '&7When &cOFF&7, they can be used or broken by others.'
 
   button_safe_on: '&a🛡 Sanctuary: Active'
   button_safe_off: '&c🛡 Sanctuary: Inactive'
   safe_toggle_lore:
-    - '&7Total protection mode.'
+    - '&7Total protection mode. Overrides most wards.'
   safe_zone_enabled: '&a🛡 Sanctuary Mode Active.'
   safe_zone_disabled: '&c⚠ Sanctuary Mode Disabled.'
 
@@ -1087,7 +1119,7 @@ hybrid_english:
   button_entry_on: '&a🚪 Entry: Open'
   button_entry_off: '&c🚪 Entry: Closed'
   entry_toggle_lore:
-    - '&7Lock out strangers?'
+    - '&7When Closed, strangers cannot enter.'
 
   button_shop_on: '&a🛒 Trade Access: Open'
   button_shop_off: '&c🛒 Trade Access: Sealed'
@@ -1605,78 +1637,99 @@ modern_english:
   title_entering_wilderness: '&aWilderness'
   subtitle_entering_wilderness: ''
 
+  # --- Wards Info (Flags Help) ---
+  button_flags_info: "&6📜 Ward Info"
+  flags_info_lore:
+    - "&7Wards control protection rules for this claim."
+    - "&aGreen = ON&7: Protection enforced."
+    - "&cRed = OFF&7: Vanilla behaviour."
+    - " "
+    - "&7Hover each icon to see exactly what it does."
+
   # --- Flags ---
-  button_pvp_on: '&a⚔ PvP: Allowed'
-  button_pvp_off: '&c⚔ PvP: Disabled'
+  button_pvp_on: '&a⚔ PvP Protection: ON'
+  button_pvp_off: '&c⚔ PvP Protection: OFF'
   pvp_toggle_lore:
-    - '&7Allow combat?'
+    - '&7ON: Players cannot damage each other in this claim.'
+    - '&7OFF: PvP follows normal server rules.'
   
-  button_containers_on: '&a📦 Containers: Allowed'
-  button_containers_off: '&c📦 Containers: Protected'
+  button_containers_on: '&a📦 Container Protection: ON'
+  button_containers_off: '&c📦 Container Protection: OFF'
   container_toggle_lore:
-    - '&7Protect chests/furnaces?'
+    - '&7ON: Only trusted players can open containers.'
+    - '&7OFF: Anyone may open containers (if roles allow).'
   
-  button_mobs_on: '&a🧟 Mobs: Allowed'
-  button_mobs_off: '&c🧟 Mobs: Blocked'
+  button_mobs_on: '&a🧟 Mob Protection: ON'
+  button_mobs_off: '&c🧟 Mob Protection: OFF'
   mob_toggle_lore:
-    - '&7Allow hostile mobs?'
+    - '&7ON: Hostile mobs cannot spawn or attack here.'
+    - '&7OFF: Mobs behave normally.'
 
-  button_pets_on: '&a🐾 Pets: Unsafe'
-  button_pets_off: '&c🐾 Pets: Protected'
+  button_pets_on: '&a🐾 Pet Protection: ON'
+  button_pets_off: '&c🐾 Pet Protection: OFF'
   pet_toggle_lore:
-    - '&7Protect tamed pets?'
+    - '&7ON: Tamed pets are protected from damage.'
+    - '&7OFF: Pets can be damaged normally.'
 
-  button_entity_on: '&a🗿 Entities: Unsafe'
-  button_entity_off: '&c🗿 Entities: Protected'
+  button_entity_on: '&a🗿 Entity Protection: ON'
+  button_entity_off: '&c🗿 Entity Protection: OFF'
   entity_toggle_lore:
-    - '&7Protect item frames?'
+    - '&7ON: Item frames, armor stands, etc. are protected.'
+    - '&7OFF: They can be broken or modified.'
 
-  button_farm_on: '&a🌾 Crops: Vulnerable'
-  button_farm_off: '&c🌾 Crops: Protected'
+  button_farm_on: '&a🌾 Crop Protection: ON'
+  button_farm_off: '&c🌾 Crop Protection: OFF'
   farm_toggle_lore:
-    - '&7Prevent trampling?'
+    - '&7ON: Crops cannot be trampled.'
+    - '&7OFF: Crops can be trampled.'
 
-  button_tnt_on: '&a💥 TNT: On'
-  button_tnt_off: '&c💥 TNT: Off'
+  button_tnt_on: '&a💥 Explosion Protection: ON'
+  button_tnt_off: '&c💥 Explosion Protection: OFF'
   tnt_toggle_lore:
-    - '&7Allow explosion damage?'
+    - '&7ON: Explosions cannot damage blocks here.'
+    - '&7OFF: Explosion damage is allowed.'
 
-  button_fire_on: '&a🔥 Fire: Spread On'
-  button_fire_off: '&c🔥 Fire: Spread Off'
+  button_fire_on: '&a🔥 Fire Spread Protection: ON'
+  button_fire_off: '&c🔥 Fire Spread Protection: OFF'
   fire_toggle_lore:
-    - '&7Allow fire spread?'
+    - '&7ON: Fire cannot spread.'
+    - '&7OFF: Fire spreads normally.'
 
-  button_piston_on: '&a🔩 Pistons: On'
-  button_piston_off: '&c🔩 Pistons: Off'
+  button_piston_on: '&a🔩 Piston Protection: ON'
+  button_piston_off: '&c🔩 Piston Protection: OFF'
   piston_toggle_lore:
-    - '&7Allow piston movement?'
+    - '&7ON: Pistons cannot move blocks across claim borders.'
+    - '&7OFF: Pistons behave normally.'
 
-  button_animals_on: '&a🐮 Animals: Vulnerable'
-  button_animals_off: '&c🐮 Animals: Protected'
+  button_animals_on: '&a🐮 Animal Protection: ON'
+  button_animals_off: '&c🐮 Animal Protection: OFF'
   animals_toggle_lore:
-    - '&7Prevent damage to passive animals?'
+    - '&7ON: Passive animals are protected from damage.'
+    - '&7OFF: They can be harmed normally.'
 
-  button_redstone_on: '&a⚡ Redstone: Enabled'
-  button_redstone_off: '&c⚡ Redstone: Disabled'
+  button_redstone_on: '&a⚡ Redstone Protection: ON'
+  button_redstone_off: '&c⚡ Redstone Protection: OFF'
   redstone_toggle_lore:
-    - '&7Allow redstone interactions?'
+    - '&7ON: Blocks redstone use inside this claim.'
+    - '&7OFF: Redstone behaves normally.'
 
-  button_vehicles_on: '&a🛶 Vehicles: Usable'
-  button_vehicles_off: '&c🛶 Vehicles: Locked'
+  button_vehicles_on: '&a🛶 Vehicle Protection: ON'
+  button_vehicles_off: '&c🛶 Vehicle Protection: OFF'
   vehicles_toggle_lore:
-    - '&7Allow boats, minecarts, etc?'
+    - '&7ON: Boats, minecarts, etc. are locked/protected.'
+    - '&7OFF: Others can use or break them.'
 
   button_safe_on: '&a🛡 SafeZone: ON'
   button_safe_off: '&c🛡 SafeZone: OFF'
   safe_toggle_lore:
-    - '&7Override all protections.'
+    - '&7ON: Overrides most flags and enforces full protection.'
   safe_zone_enabled: '&aSafeZone enabled.'
   safe_zone_disabled: '&cSafeZone disabled.'
 
   button_fly_on: '&b🕊 Flight: ON'
   button_fly_off: '&c🕊 Flight: OFF'
   fly_toggle_lore: 
-    - "&7Enable flight in claim."
+    - "&7Enable flight in this claim."
     - "&7Cost to enable: &6{COST}"
   flight_enabled: '&aFlight enabled.'
   flight_disabled: '&cFlight disabled.'
@@ -1684,12 +1737,12 @@ modern_english:
   button_entry_on: '&a🚪 Entry: Allowed'
   button_entry_off: '&c🚪 Entry: Denied'
   entry_toggle_lore:
-    - '&7Lock claim from strangers?'
+    - '&7When Denied, strangers cannot enter the claim.'
 
   button_shop_on: '&a🛒 Shop: Public'
   button_shop_off: '&c🛒 Shop: Private'
   shop_toggle_lore: 
-    - "&7Allow usage of shop chests?"
+    - "&7Allow usage of shop chests/signs?"
     - "&7Cost: &6{COST}"
     
   button_cosmetics: '&dCosmetics'

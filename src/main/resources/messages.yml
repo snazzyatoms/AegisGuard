@@ -285,7 +285,7 @@ old_english:
 
   # --- Leveling & Zoning ---
   level_gui_title: "&dAscension of the Holdfast"
-  level_current_status: "&bThe Present Estate of Thy Holding"
+  level_current_status: "&bThe Present Standing of Thy Holding"
   level_upgrade_button: "&aRaise Thy Holdfast unto Level &f{LEVEL}"
   level_max_reached: "&6Thy holding may ascend no further."
   level_up_success: "&d⚡ Lo, thy holding hath risen unto Level &f{LEVEL}&d!"
@@ -293,6 +293,7 @@ old_english:
   level_button_lore:
     - "&7Ascend thy plot to unlock"
     - "&7greater size and power."
+
   
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
@@ -967,14 +968,15 @@ hybrid_english:
 
   # --- Leveling, Zoning, Biome ---
   level_gui_title: "&dDominion Ascension"
-  level_current_status: "&bCurrent Standing of Thy Estate"
+  level_current_status: "&bCurrent Standing of Thy Holding"
   level_upgrade_button: "&aAscend unto Level &f{LEVEL}"
-  level_max_reached: "&6Thy estate hath reached its peak."
-  level_up_success: "&d⚡ Thy estate hath ascended to level &f{LEVEL}&d!"
+  level_max_reached: "&6Thy holding hath reached its peak."
+  level_up_success: "&d⚡ Thy holding hath ascended to Level &f{LEVEL}&d!"
   level_up_fail_cost: "&c❌ Thy coffers lack the wealth to empower this ascension."
   level_button_lore:
     - "&7Ascend your plot to unlock"
     - "&7greater size and power."
+
   
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
@@ -1591,15 +1593,15 @@ modern_english:
   settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
 
   # --- Leveling & Zoning ---
-  level_gui_title: "&dEstate Ascension"
-  level_current_status: "&bCurrent Estate Level"
-  level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
-  level_max_reached: "&6Max Level Reached"
-  level_up_success: "&d⚡ Your estate has ascended to level &f{LEVEL}&d!"
-  level_up_fail_cost: "&cYou don't have enough funds to level up this estate."
-  level_button_lore:
-    - "&7Upgrade claim size"
-    - "&7and unlock features."
+level_gui_title: "&dPlot Ascension"
+level_current_status: "&bCurrent Plot Level"
+level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
+level_max_reached: "&6Maximum Level Reached"
+level_up_success: "&d⚡ Your plot has ascended to Level &f{LEVEL}&d!"
+level_up_fail_cost: "&cYou don't have enough funds to upgrade this plot."
+level_button_lore:
+  - "&7Upgrade claim size"
+  - "&7and unlock new features."
 
   zone_gui_title: "&3Zone Manager"
   zone_created: "&a✔ Zone '{ZONE}' created."

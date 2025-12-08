@@ -2,6 +2,7 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.flags.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -60,13 +61,6 @@ public class RolesGUI {
 
     public RolesGUI(AegisGuard plugin) {
         this.plugin = plugin;
-    }
-
-    // --- SIMPLE TRISTATE USED BY THE GUI ---
-    public enum TriState {
-        INHERIT,
-        ALLOW,
-        DENY
     }
 
     // --- HOLDERS ---

@@ -1,6 +1,6 @@
 package com.aegisguard.data;
 
-import com.aegisguard.gui.RolesGUI;
+import com.aegisguard.flags.TriState;
 import org.bukkit.Location;
 
 import java.util.Collection;
@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * IDataStore (Interface) - v1.2.2
+ * IDataStore (Interface) - v1.2.2+
  *
  * Core contract for PLOT storage.
  * Implementations:
- *  - MySQLDataStore (remote database)
+ *  - SQLDataStore / MySQLDataStore (remote database)
  *  - YMLDataStore   (flat-file)
  *
  * Responsibilities:
@@ -189,27 +189,35 @@ public interface IDataStore {
     // ----------------------------------------
 
     /**
-     * Returns the effective tri-state flag for a specific role on a plot.
+     * Returns the tri-state flag override for a specific role on a plot.
      * Used by the Roles GUI to render the current state.
      *
-     * @param plot    Plot to query
-     * @param roleId  Role identifier (e.g. "member", "guest", custom)
-     * @param flagKey Flag key (e.g. "build", "interact", "container")
+     * This is a *raw override* value:
+     *  - INHERIT: no explicit per-role override stored for this flag.
+     *  - ALLOW / DENY: explicit override for this role on this plot.
+     *
+     * @param plot     Plot to query
+     * @param roleName Role identifier (e.g. "member", "guest", custom)
+     * @param flagKey  Flag key (e.g. "pvp", "containers", "entry")
      * @return TriState flag value (ALLOW, DENY, INHERIT)
      */
-    RolesGUI.TriState getRoleFlagState(Plot plot, String roleId, String flagKey);
+    TriState getRoleFlagState(Plot plot, String roleName, String flagKey);
 
     /**
-     * Sets the tri-state flag for a specific role on a plot.
+     * Sets the tri-state flag override for a specific role on a plot.
      * Implementations should persist this change and mark the
      * datastore as dirty.
      *
-     * @param plot    Plot to modify
-     * @param roleId  Role identifier
-     * @param flagKey Flag key
-     * @param state   New tri-state value
+     * Semantics:
+     *  - INHERIT: remove any stored override for this role+flag.
+     *  - ALLOW / DENY: store explicit override.
+     *
+     * @param plot     Plot to modify
+     * @param roleName Role identifier
+     * @param flagKey  Flag key
+     * @param state    New tri-state value
      */
-    void setRoleFlagState(Plot plot, String roleId, String flagKey, RolesGUI.TriState state);
+    void setRoleFlagState(Plot plot, String roleName, String flagKey, TriState state);
 
     // ----------------------------------------
     // --- WILDERNESS REVERT ------------------

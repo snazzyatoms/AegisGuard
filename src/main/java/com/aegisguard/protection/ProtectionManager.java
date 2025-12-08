@@ -24,6 +24,7 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -299,6 +300,9 @@ public class ProtectionManager implements Listener {
                     p.setFallDistance(0);
                 });
             }
+
+            // NEW: clear any plot-level buffs when leaving this plot
+            clearPlotBuffs(p, from);
         }
 
         // --- Entering plot (before entry checks so custom events still fire) ---
@@ -344,6 +348,16 @@ public class ProtectionManager implements Listener {
 
             applyPlotBuffs(p, to);
         }
+    }
+
+    // NEW: clear buffs on player quit so nothing lingers between sessions
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        clearPlotBuffs(p, plot);
+        buffCooldowns.remove(p.getUniqueId());
+        messageCooldowns.remove(p.getUniqueId());
     }
 
     // --------------------------------------------------
@@ -506,7 +520,7 @@ public class ProtectionManager implements Listener {
                     if (type != null) {
                         p.addPotionEffect(new PotionEffect(
                                 type,
-                                100,           // 5 seconds, refreshed while in plot
+                                100,           // ~5 seconds, refreshed while in plot
                                 amp,
                                 true,
                                 false,
@@ -518,6 +532,32 @@ public class ProtectionManager implements Listener {
             }
         }
         buffCooldowns.put(p.getUniqueId(), now + 2000);
+    }
+
+    /**
+     * Remove all plot-level buffs that could have been applied by this plot.
+     * Called when a player leaves a plot or disconnects so effects don't linger.
+     */
+    private void clearPlotBuffs(Player p, Plot plot) {
+        if (!plugin.cfg().isLevelingEnabled() || plot == null) return;
+
+        for (int i = 1; i <= plot.getLevel(); i++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(i);
+            if (rewards == null) continue;
+
+            for (String reward : rewards) {
+                if (!reward.startsWith("EFFECT:")) continue;
+                try {
+                    String[] parts = reward.split(":");
+                    if (parts.length < 2) continue;
+                    PotionEffectType type = PotionEffectType.getByName(parts[1]);
+                    if (type != null) {
+                        p.removePotionEffect(type);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     // --------------------------------------------------

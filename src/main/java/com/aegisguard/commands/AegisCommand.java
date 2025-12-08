@@ -3,14 +3,15 @@ package com.aegisguard.commands;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
-import com.aegisguard.util.TeleportUtil; // ✅ NEW: Folia-safe teleports
+import com.aegisguard.util.TeleportUtil; // ✅ Folia-safe teleports
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location; // FIXED: Added missing import
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;    // FIXED: Added missing import
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class AegisCommand implements CommandExecutor, TabCompleter {
@@ -35,15 +37,16 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
     // Command List for Tab Completion
     private static final String[] SUB_COMMANDS = {
-        "wand", "menu", "claim", "unclaim", "resize", "help",
-        "setspawn", "home", "welcome", "farewell",
-        "sell", "unsell", "market", "auction",
-        "kick", "ban", "unban", "visit", 
-        "level", "zone", "like",
-        "rename", "stuck", "setdesc", "merge", "sidebar" 
+            "wand", "menu", "claim", "unclaim", "resize", "help",
+            "setspawn", "home", "welcome", "farewell",
+            "sell", "unsell", "market", "auction",
+            "kick", "ban", "unban", "visit",
+            "level", "zone", "like",
+            "rename", "stuck", "setdesc", "merge", "sidebar",
+            "consume"
     };
-    
-    private static final String[] RESIZE_DIRECTIONS = { "north", "south", "east", "west" };
+
+    private static final String[] RESIZE_DIRECTIONS = {"north", "south", "east", "west"};
 
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
@@ -63,22 +66,29 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase()) {
             case "wand":
+                // ✅ Anti-duplication: only one wand/scepter per player
+                if (SelectionService.playerHasAnyWand(p)) {
+                    plugin.msg().send(p, "wand_already_owned");
+                    plugin.effects().playError(p);
+                    break;
+                }
                 p.getInventory().addItem(createScepter());
                 plugin.msg().send(p, "wand_given");
+                plugin.effects().playConfirm(p);
                 break;
-            
+
             case "menu":
                 plugin.gui().openMain(p);
                 break;
-            
+
             case "claim":
                 plugin.selection().confirmClaim(p);
                 break;
-            
+
             case "unclaim":
                 plugin.selection().unclaimHere(p);
                 break;
-            
+
             case "resize":
                 handleResize(p, args);
                 break;
@@ -98,26 +108,29 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             // --- UTILITIES ---
             case "visit":
-                if (!plugin.cfg().isTravelSystemEnabled()) { sendMsg(p, "&cTravel system is disabled."); return true; }
+                if (!plugin.cfg().isTravelSystemEnabled()) {
+                    sendMsg(p, "&cTravel system is disabled.");
+                    return true;
+                }
                 plugin.gui().visit().open(p, 0, false);
                 break;
 
             case "setspawn":
                 handleSetSpawn(p);
                 break;
-            
+
             case "home":
                 handleHome(p);
                 break;
-            
+
             case "welcome":
                 handleWelcomeFarewell(p, args, true);
                 break;
-            
+
             case "farewell":
                 handleWelcomeFarewell(p, args, false);
                 break;
-            
+
             case "stuck":
                 handleStuck(p);
                 break;
@@ -129,34 +142,34 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "setdesc":
                 handleSetDesc(p, args);
                 break;
-            
+
             // --- NEW: MERGE ---
             case "merge":
                 if (args.length < 2) {
-                     sendMsg(p, "&cUsage: /ag merge <N/S/E/W>");
+                    sendMsg(p, "&cUsage: /ag merge <N/S/E/W>");
                 } else {
-                     plugin.selection().attemptMerge(p, args[1]);
+                    plugin.selection().attemptMerge(p, args[1]);
                 }
                 break;
-                
+
             // --- NEW: SIDEBAR ---
             case "sidebar":
                 plugin.getSidebar().toggle(p);
                 break;
-            
+
             // --- ECONOMY ---
             case "market":
                 plugin.gui().market().open(p, 0);
                 break;
-            
+
             case "sell":
                 handleSell(p, args);
                 break;
-            
+
             case "unsell":
                 handleUnsell(p);
                 break;
-            
+
             case "auction":
                 plugin.gui().auction().open(p, 0);
                 break;
@@ -165,11 +178,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "level":
                 openLevelMenu(p);
                 break;
-                
+
             case "zone":
                 openZoneMenu(p);
                 break;
-                
+
             case "like":
                 handleLike(p);
                 break;
@@ -186,7 +199,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     // --- HANDLERS ---
-    
+
     private void handleRename(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null) {
@@ -197,23 +210,23 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plugin.msg().send(p, "no_perm");
             return;
         }
-        
+
         if (args.length < 2) {
             sendMsg(p, "&cUsage: /ag rename <Name>");
             return;
         }
-        
+
         String name = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         name = ChatColor.translateAlternateColorCodes('&', name);
-        
+
         if (name.length() > 32) {
             sendMsg(p, "&cName is too long (Max 32 chars).");
             return;
         }
-        
+
         plot.setEntryTitle(name);
         plugin.store().setDirty(true);
-        
+
         sendMsg(p, "&a✔ Plot renamed to: &r" + name);
         plugin.effects().playConfirm(p);
     }
@@ -228,18 +241,18 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plugin.msg().send(p, "no_perm");
             return;
         }
-        
+
         if (args.length < 2) {
             sendMsg(p, "&cUsage: /ag setdesc <Description>");
             return;
         }
-        
+
         String desc = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         desc = ChatColor.translateAlternateColorCodes('&', desc);
-        
+
         plot.setDescription(desc);
         plugin.store().setDirty(true);
-        
+
         sendMsg(p, "&a✔ Plot description updated.");
         plugin.effects().playConfirm(p);
     }
@@ -250,32 +263,32 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendMsg(p, "&cYou are not inside a plot.");
             return;
         }
-        
+
         Location loc = p.getLocation();
         int x = loc.getBlockX();
         int z = loc.getBlockZ();
-        
+
         // Find nearest edge
         int dX1 = Math.abs(x - plot.getX1());
         int dX2 = Math.abs(x - plot.getX2());
         int dZ1 = Math.abs(z - plot.getZ1());
         int dZ2 = Math.abs(z - plot.getZ2());
-        
+
         int min = Math.min(Math.min(dX1, dX2), Math.min(dZ1, dZ2));
-        
+
         Location target = loc.clone();
-        
+
         // Push 2 blocks out
         if (min == dX1) target.setX(plot.getX1() - 2);
         else if (min == dX2) target.setX(plot.getX2() + 2);
         else if (min == dZ1) target.setZ(plot.getZ1() - 2);
         else target.setZ(plot.getZ2() + 2);
-        
+
         // Safe Y
         World world = loc.getWorld();
         int safeY = world.getHighestBlockYAt(target);
         target.setY(safeY + 1);
-        
+
         // ✅ Folia-safe teleport
         TeleportUtil.safeTeleport(plugin, p, target);
         sendMsg(p, "&e✨ You have been moved to safety.");
@@ -296,7 +309,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendMsg(p, "&cAmount must be a number.");
             return;
         }
-        
+
         if (amount <= 0) {
             sendMsg(p, "&cAmount must be positive.");
             return;
@@ -311,21 +324,33 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleKick(Player p, String[] args) {
-        if (args.length < 2) { sendMsg(p, "&cUsage: /ag kick <player>"); return; }
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag kick <player>");
+            return;
+        }
         Plot kPlot = plugin.store().getPlotAt(p.getLocation());
-        
-        if (kPlot == null) { plugin.msg().send(p, "no_plot_here"); return; }
-        
+
+        if (kPlot == null) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+
         if (!kPlot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
             plugin.msg().send(p, "no_perm");
             return;
         }
-        
+
         Player kTarget = Bukkit.getPlayer(args[1]);
-        if (kTarget == null) { sendMsg(p, "&cPlayer not found."); return; }
-        
-        if (!kPlot.isInside(kTarget.getLocation())) { sendMsg(p, "&cPlayer is not in your plot."); return; }
-        
+        if (kTarget == null) {
+            sendMsg(p, "&cPlayer not found.");
+            return;
+        }
+
+        if (!kPlot.isInside(kTarget.getLocation())) {
+            sendMsg(p, "&cPlayer is not in your plot.");
+            return;
+        }
+
         if (kTarget.hasPermission("aegis.admin.bypass") || kTarget.isOp()) {
             sendMsg(p, "&cYou cannot kick a Server Operator.");
             return;
@@ -340,20 +365,27 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleBan(Player p, String[] args) {
-        if (args.length < 2) { sendMsg(p, "&cUsage: /ag ban <player>"); return; }
-        Plot bPlot = plugin.store().getPlotAt(p.getLocation());
-        
-        if (bPlot == null || !bPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here"); return;
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag ban <player>");
+            return;
         }
-        
+        Plot bPlot = plugin.store().getPlotAt(p.getLocation());
+
+        if (bPlot == null || !bPlot.getOwner().equals(p.getUniqueId())) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+
         OfflinePlayer bTarget = Bukkit.getOfflinePlayer(args[1]);
-        if (bTarget.getUniqueId().equals(p.getUniqueId())) { sendMsg(p, "&cCannot ban yourself."); return; }
-        
+        if (bTarget.getUniqueId().equals(p.getUniqueId())) {
+            sendMsg(p, "&cCannot ban yourself.");
+            return;
+        }
+
         bPlot.addBan(bTarget.getUniqueId());
         plugin.store().setDirty(true);
         sendMsg(p, "&cBanned " + bTarget.getName());
-        
+
         if (bTarget.isOnline() && bPlot.isInside(bTarget.getPlayer().getLocation())) {
             // ✅ Folia-safe: eject banned player to spawn
             Player online = bTarget.getPlayer();
@@ -366,11 +398,15 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleUnban(Player p, String[] args) {
-        if (args.length < 2) { sendMsg(p, "&cUsage: /ag unban <player>"); return; }
+        if (args.length < 2) {
+            sendMsg(p, "&cUsage: /ag unban <player>");
+            return;
+        }
         Plot uPlot = plugin.store().getPlotAt(p.getLocation());
-        
+
         if (uPlot == null || !uPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here"); return;
+            plugin.msg().send(p, "no_plot_here");
+            return;
         }
         OfflinePlayer uTarget = Bukkit.getOfflinePlayer(args[1]);
         uPlot.removeBan(uTarget.getUniqueId());
@@ -397,10 +433,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleHome(Player p) {
-        if (!plugin.cfg().allowHomeTeleport()) { sendMsg(p, "&cHome teleport is disabled."); return; }
-        
+        if (!plugin.cfg().allowHomeTeleport()) {
+            sendMsg(p, "&cHome teleport is disabled.");
+            return;
+        }
+
         Plot homePlot = plugin.store().getPlotAt(p.getLocation());
-        
+
         // If standing in wilderness, try to find their first plot
         if (homePlot == null || !homePlot.getOwner().equals(p.getUniqueId())) {
             List<Plot> plots = plugin.store().getPlots(p.getUniqueId());
@@ -411,7 +450,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 return;
             }
         }
-        
+
         if (homePlot.getSpawnLocation() == null) {
             plugin.msg().send(p, "home-fail-no-spawn");
             plugin.effects().playError(p);
@@ -455,13 +494,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         try {
             double price = Double.parseDouble(args[1]);
-            if (price <= 0) { sendMsg(p, "&cPrice must be positive."); return; }
-            
+            if (price <= 0) {
+                sendMsg(p, "&cPrice must be positive.");
+                return;
+            }
+
             plot.setForSale(true, price);
             plugin.store().setDirty(true);
-            
-            plugin.msg().send(p, "market-for-sale", Map.of("PRICE", plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT)));
-        } catch (NumberFormatException e) { sendMsg(p, "&cInvalid number."); }
+
+            plugin.msg().send(p, "market-for-sale",
+                    Map.of("PRICE",
+                            plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT)));
+        } catch (NumberFormatException e) {
+            sendMsg(p, "&cInvalid number.");
+        }
     }
 
     private void handleUnsell(Player p) {
@@ -474,45 +520,54 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.store().setDirty(true);
         plugin.msg().send(p, "market-not-for-sale");
     }
-    
+
     // --- GUI SHORTCUTS ---
-    
+
     private void openLevelMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here"); return;
+            plugin.msg().send(p, "no_plot_here");
+            return;
         }
         if (plugin.cfg().isLevelingEnabled()) plugin.gui().leveling().open(p, plot);
         else sendMsg(p, "&cLeveling is disabled.");
     }
-    
+
     private void openZoneMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here"); return;
+            plugin.msg().send(p, "no_plot_here");
+            return;
         }
         if (plugin.cfg().isZoningEnabled()) plugin.gui().zoning().open(p, plot);
         else sendMsg(p, "&cZoning is disabled.");
     }
-    
+
     private void handleLike(Player p) {
-        if (!plugin.cfg().isLikesEnabled()) { plugin.msg().send(p, "like_disabled"); return; }
-        
+        if (!plugin.cfg().isLikesEnabled()) {
+            plugin.msg().send(p, "like_disabled");
+            return;
+        }
+
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null) { plugin.msg().send(p, "no_plot_here"); return; }
-        
+        if (plot == null) {
+            plugin.msg().send(p, "no_plot_here");
+            return;
+        }
+
         if (plot.getOwner().equals(p.getUniqueId())) {
             plugin.msg().send(p, "like_own_plot");
             return;
         }
-        
+
         if (plugin.cfg().oneLikePerPlayer() && plot.hasLiked(p.getUniqueId())) {
-             plot.toggleLike(p.getUniqueId()); // Toggle OFF
-             plugin.msg().send(p, "like_removed");
+            plot.toggleLike(p.getUniqueId()); // Toggle OFF
+            plugin.msg().send(p, "like_removed");
         } else {
-             plot.toggleLike(p.getUniqueId()); // Toggle ON
-             plugin.msg().send(p, "like_success", Map.of("AMOUNT", String.valueOf(plot.getLikes())));
-             plugin.effects().playConfirm(p);
+            plot.toggleLike(p.getUniqueId()); // Toggle ON
+            plugin.msg().send(p, "like_success",
+                    Map.of("AMOUNT", String.valueOf(plot.getLikes())));
+            plugin.effects().playConfirm(p);
         }
         plugin.store().setDirty(true);
     }
@@ -548,12 +603,27 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                     ChatColor.translateAlternateColorCodes('&', "&7Left/Right-click: Select corners")
             ));
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
-            meta.getPersistentDataContainer().set(SelectionService.WAND_KEY, PersistentDataType.BYTE, (byte) 1);
+
+            // Mark as Aegis Wand for SelectionService
+            meta.getPersistentDataContainer().set(
+                    SelectionService.WAND_KEY,
+                    PersistentDataType.BYTE,
+                    (byte) 1
+            );
+
+            // ✅ Unique ID so future instances don't stack with each other
+            NamespacedKey idKey = new NamespacedKey(plugin, "wand_id");
+            meta.getPersistentDataContainer().set(
+                    idKey,
+                    PersistentDataType.STRING,
+                    UUID.randomUUID().toString()
+            );
+
             rod.setItemMeta(meta);
         }
         return rod;
     }
-    
+
     private void sendHelp(Player player) {
         sendMsg(player, plugin.msg().get(player, "help_header"));
         List<String> helpLines = plugin.msg().getList(player, "help_lines");

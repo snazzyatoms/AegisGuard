@@ -87,12 +87,12 @@ public class PlotFlagsGUI {
         inv.setItem(16, safeItem);
 
         // --- 3. MECHANICS / INTERACTION ---
-        addProtectionFlagButton(player, inv, plot, 19, "containers",   Material.CHEST,      "button_containers", "container_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 20, "piston-use",   Material.PISTON,     "button_piston",     "piston_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 21, "farm",         Material.WHEAT,      "button_farm",       "farm_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 22, "animals",      Material.COW_SPAWN_EGG, "button_animals", "animals_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 23, "redstone",     Material.REDSTONE,   "button_redstone",   "redstone_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 24, "vehicles",     Material.OAK_BOAT,   "button_vehicles",   "vehicles_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 19, "containers",   Material.CHEST,          "button_containers", "container_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 20, "piston-use",   Material.PISTON,         "button_piston",     "piston_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 21, "farm",         Material.WHEAT,          "button_farm",       "farm_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 22, "animals",      Material.COW_SPAWN_EGG,  "button_animals",    "animals_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 23, "redstone",     Material.REDSTONE,       "button_redstone",   "redstone_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 24, "vehicles",     Material.OAK_BOAT,       "button_vehicles",   "vehicles_toggle_lore");
 
         // --- 4. SHOP INTERACT (Paid) ---
         double shopCost = plugin.cfg().getShopInteractCost();
@@ -143,12 +143,25 @@ public class PlotFlagsGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e, PlotFlagsHolder holder) {
+        // Always cancel to prevent item pickup/move
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
+        // Make sure this really is our GUI, not some random inventory
+        if (!(e.getInventory().getHolder() instanceof PlotFlagsHolder)) {
+            return;
+        }
+
+        // Ignore clicks coming from the player's own inventory
+        int rawSlot = e.getRawSlot();
+        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) {
+            return;
+        }
 
         Plot plot = holder.getPlot();
         if (plot == null) return;
 
+        // Permission gate: only owner or admins may edit flags
         if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             return;
@@ -156,7 +169,7 @@ public class PlotFlagsGUI {
 
         boolean refresh = false;
 
-        switch (e.getSlot()) {
+        switch (rawSlot) {
             case 10 -> { // PvP
                 toggleFlag(player, plot, "pvp");
                 refresh = true;
@@ -224,17 +237,21 @@ public class PlotFlagsGUI {
             }
 
             case 31 -> { // Cosmetics submenu
+                plugin.effects().playMenuFlip(player);
                 plugin.gui().cosmetics().open(player, plot);
             }
             case 48 -> { // Back to main menu
+                plugin.effects().playMenuFlip(player);
                 plugin.gui().openMain(player);
             }
             case 49 -> { // Exit
+                plugin.effects().playMenuClose(player);
                 player.closeInventory();
             }
         }
 
         // Only re-open when we actually changed a flag in THIS GUI.
+        // Back / Exit / Cosmetics do NOT re-open this menu, so no stacking.
         if (refresh) {
             open(player, plot);
         }

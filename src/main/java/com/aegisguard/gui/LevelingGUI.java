@@ -22,6 +22,7 @@ import java.util.Map;
  * LevelingGUI
  * - Richer progression view for plot levels.
  * - Shows a level track, current tier, and next tier preview.
+ * - Texts pulled from messages.yml so styles can swap between Old / Hybrid / Modern English.
  */
 public class LevelingGUI {
 
@@ -141,6 +142,13 @@ public class LevelingGUI {
 
             upgradeLore.add("");
             upgradeLore.add("§eClick to ascend to §bLevel " + nextLvl);
+            upgradeLore.add("");
+
+            // Pull in generic leveling description from messages.yml so it changes with language style
+            List<String> buttonLore = plugin.msg().getList(player, "level_button_lore");
+            if (buttonLore != null && !buttonLore.isEmpty()) {
+                upgradeLore.addAll(buttonLore);
+            }
 
             inv.setItem(31, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
@@ -272,7 +280,7 @@ public class LevelingGUI {
             plot.setLevel(nextLvlFinal);
             plugin.store().setDirty(true);
 
-            // 4. Feedback
+            // 4. Feedback (fully localized success line)
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
             plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvlFinal)));
             plugin.effects().playConfirm(player);

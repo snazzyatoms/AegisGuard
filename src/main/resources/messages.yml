@@ -347,103 +347,150 @@ old_english:
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
-  # --- Wards Info (Flags Help) ---
+    # --- Wards Info (Flags Help) ---
   button_flags_info: "&6📜 Wards & Protections"
   flags_info_lore:
     - "&7These sigils govern the safety of thy land."
-    - "&aGreen: &7Awake and guarding."
-    - "&cRed: &7Slumbering; protection withdrawn."
+    - "&aGreen: &7Ward &aAwake&7; added protections are in force."
+    - "&cRed: &7Ward &cSilent&7; the realm returneth to common law."
     - " "
     - "&7Hover each ward to learn what it"
-    - "&7shieldeth or permitteth."
+    - "&7shieldeth or permitteth when Awake or Silent."
 
   # --- Wards (Flags) ---
   button_pvp_on: "&a⚔ PvP Ward: Awake"
   button_pvp_off: "&c⚔ PvP Ward: Silent"
   pvp_toggle_lore:
-    - "&7Forbiddeth blade upon blade in thy claim."
-  
+    - "&7When &aAwake (green)&7, no blade may"
+    - "&7draw blood within thy dominion."
+    - "&7When &cSilent (red)&7, combat heedeth"
+    - "&7only the ordinary laws of the realm."
+
   button_containers_on: "&a📦 Relics Ward: Awake"
   button_containers_off: "&c📦 Relics Ward: Silent"
   container_toggle_lore:
-    - "&7Bars prying hands from chests & devices."
-  
+    - "&7When &aAwake (green)&7, only those thou"
+    - "&7hast trusted may open chests & devices."
+    - "&7When &cSilent (red)&7, any hand may"
+    - "&7test the latches, as common law alloweth."
+
   button_mobs_on: "&a🧟 Monster Ward: Awake"
   button_mobs_off: "&c🧟 Monster Ward: Silent"
   mob_toggle_lore:
-    - "&7Still the claws of hostile beasts."
+    - "&7When &aAwake (green)&7, claw and fang of"
+    - "&7hostile beasts may not rise against thee."
+    - "&7When &cSilent (red)&7, creatures of the"
+    - "&7dark behave as in untamed wilds."
 
   button_pets_on: "&a🐾 Beast Ward: Awake"
   button_pets_off: "&c🐾 Beast Ward: Silent"
   pet_toggle_lore:
-    - "&7Shield tamed beasts from harm."
+    - "&7When &aAwake (green)&7, tamed companions"
+    - "&7are spared from harm."
+    - "&7When &cSilent (red)&7, thy beasts are as"
+    - "&7any mortal creature and may be struck."
 
   button_entity_on: "&a🗿 Entity Ward: Awake"
   button_entity_off: "&c🗿 Entity Ward: Silent"
   entity_toggle_lore:
-    - "&7Guard armor stands, frames, and relics."
+    - "&7When &aAwake (green)&7, armor stands,"
+    - "&7frames, and relics are shielded."
+    - "&7When &cSilent (red)&7, such effigies may"
+    - "&7be broken or turned by wandering hands."
 
   button_farm_on: "&a🌾 Harvest Ward: Awake"
   button_farm_off: "&c🌾 Harvest Ward: Silent"
   farm_toggle_lore:
-    - "&7Spare thy crops from trampling."
+    - "&7When &aAwake (green)&7, the furrows of"
+    - "&7thy crops may not be trampled."
+    - "&7When &cSilent (red)&7, trampling and ruin"
+    - "&7may befall thy harvest."
 
   button_tnt_on: "&a💥 Blast Ward: Awake"
   button_tnt_off: "&c💥 Blast Ward: Silent"
   tnt_toggle_lore:
-    - "&7Shield thy claim from all explosions."
+    - "&7When &aAwake (green)&7, no explosion may"
+    - "&7mar thy stones or soil."
+    - "&7When &cSilent (red)&7, thunder and fire"
+    - "&7rend the land as is their nature."
 
   button_fire_on: "&a🔥 Flame Ward: Awake"
   button_fire_off: "&c🔥 Flame Ward: Silent"
   fire_toggle_lore:
-    - "&7Quench the spread of wayward flames."
+    - "&7When &aAwake (green)&7, wandering flame"
+    - "&7may not leap from block to block."
+    - "&7When &cSilent (red)&7, fire spreadeth"
+    - "&7freely, as in the wild."
 
   button_piston_on: "&a🔩 Piston Ward: Awake"
   button_piston_off: "&c🔩 Piston Ward: Silent"
   piston_toggle_lore:
-    - "&7Halt the movement of blocks across thy borders."
+    - "&7When &aAwake (green)&7, pistons may not"
+    - "&7thrust blocks across thy borders."
+    - "&7When &cSilent (red)&7, redstone engines"
+    - "&7move stone as they please."
 
   button_animals_on: "&a🐮 Herd Ward: Awake"
   button_animals_off: "&c🐮 Herd Ward: Silent"
   animals_toggle_lore:
-    - "&7Shield docile beasts from harm."
+    - "&7When &aAwake (green)&7, peaceful herds"
+    - "&7are spared from slaughter."
+    - "&7When &cSilent (red)&7, cattle and flock"
+    - "&7may be culled as any beast."
 
   button_redstone_on: "&a⚡ Rune Ward: Awake"
   button_redstone_off: "&c⚡ Rune Ward: Silent"
   redstone_toggle_lore:
-    - "&7Still or stir the runes of redstone."
+    - "&7When &aAwake (green)&7, the runes of"
+    - "&7redstone lie stilled within thy claim."
+    - "&7When &cSilent (red)&7, circuits and"
+    - "&7contraptions whir as normal."
 
   button_vehicles_on: "&a🛶 Carriage Ward: Awake"
   button_vehicles_off: "&c🛶 Carriage Ward: Silent"
   vehicles_toggle_lore:
-    - "&7Govern boats, carts, and like contraptions."
+    - "&7When &aAwake (green)&7, boats, carts and"
+    - "&7like contraptions are kept from theft."
+    - "&7When &cSilent (red)&7, such vessels may"
+    - "&7be taken or broken by others."
 
   button_safe_on: "&a🛡 Sanctuary: Awakened"
   button_safe_off: "&c🛡 Sanctuary: Slumbering"
   safe_toggle_lore:
-    - "&7A master ward that enforceth all protections."
+    - "&7When &aAwake (green)&7, a master ward"
+    - "&7bindeth all protections at once."
+    - "&7When &cSilent (red)&7, each lesser ward"
+    - "&7speaketh for itself alone."
   safe_zone_enabled: "&a🛡 Sanctuary is declared. All within is protected."
   safe_zone_disabled: "&c⚠ Sanctuary withdrawn. Individual wards now apply."
 
   button_fly_on: "&b🕊 Flight: Awakened"
   button_fly_off: "&c🕊 Flight: Grounded"
   fly_toggle_lore: 
-    - "&7Allow flight within this domain."
-    - "&7Cost to enable: &6{COST}"
+    - "&7When &aAwake (green)&7, wings unseen bear"
+    - "&7thee aloft within this dominion."
+    - "&7When &cSilent (red)&7, feet must cling"
+    - "&7to earth as in common lands."
+    - "&7Cost to awaken: &6{COST}"
   flight_enabled: "&a🕊 Flight bestowed upon thee."
   flight_disabled: "&c🕊 Flight withdrawn."
 
   button_entry_on: "&a🚪 Public Access: Open"
   button_entry_off: "&c🚪 Public Access: Sealed"
   entry_toggle_lore:
-    - "&7If Sealed, strangers cannot enter."
+    - "&7When &aOpen (green)&7, wanderers may"
+    - "&7cross thy borders freely."
+    - "&7When &cSealed (red)&7, strangers are"
+    - "&7turned back at the threshold."
 
   button_shop_on: "&a🛒 Trade Access: Open"
   button_shop_off: "&c🛒 Trade Access: Sealed"
   shop_toggle_lore: 
-    - "&7Allow travelers to trade via signs/chests."
-    - "&7(Protects contents, but allows clicks)."
-    - "&7Cost: &6{COST}"
+    - "&7When &aOpen (green)&7, travelers may"
+    - "&7use shop signs and trade devices."
+    - "&7When &cSealed (red)&7, such dealings"
+    - "&7are barred to outsiders."
+    - "&7Cost to open: &6{COST}"
     
   button_cosmetics: "&dPlot Cosmetics"
   cosmetics_lore:

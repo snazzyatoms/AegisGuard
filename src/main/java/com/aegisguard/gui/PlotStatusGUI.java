@@ -10,97 +10,101 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class LevelingGUI {
+public class PlotStatusGUI {
 
     private final AegisGuard plugin;
 
-    public LevelingGUI(AegisGuard plugin) {
+    public PlotStatusGUI(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    public static class LevelingHolder implements InventoryHolder {
+    public static class PlotStatusHolder implements InventoryHolder {
         private final Plot plot;
-        public LevelingHolder(Plot plot) { this.plot = plot; }
+        public PlotStatusHolder(Plot plot) { this.plot = plot; }
         public Plot getPlot() { return plot; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, Plot plot) {
-        if (plot == null) return;
+        if (plot == null) {
+            plugin.msg().send(player, "no_plot_here");
+            return;
+        }
 
-        String title = plugin.msg().get(player, "level_gui_title");
-        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 27, title);
+        // Title
+        String titleKey = plugin.msg().get(player, "plot_status_gui_title");
+        String title = GUIManager.safeText(titleKey, "§8Plot Status Codex");
+
+        Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot), 54, title);
 
         // Filler
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 27; i++) {
+        for (int i = 0; i < 54; i++) {
             inv.setItem(i, filler);
         }
 
-        int currentLevel = plot.getLevel();
+        int level = plot.getLevel();
         int maxLevel = plugin.cfg().getMaxLevel();
+        String owner = plot.getOwnerName();
+        String world = plot.getWorld();
 
-        // 1. Current Status Indicator
-        inv.setItem(11, GUIManager.createItem(
-                Material.BOOK,
-                plugin.msg().get(player, "level_current_status"),
-                List.of(
-                    "&7Level: &b" + currentLevel,
-                    "&7Max: &e" + maxLevel
-                )
-        ));
-
-        // 2. Upgrade Button (Dynamic Logic)
-        ItemStack upgradeButton;
-
-        if (currentLevel >= maxLevel) {
-            // MAX LEVEL REACHED
-            upgradeButton = GUIManager.createItem(
-                    Material.BARRIER,
-                    plugin.msg().get(player, "level_max_reached"),
-                    List.of("&7You have reached the highest", "&7level allowed.")
-            );
-        } else {
-            // CAN UPGRADE
-            int nextLevel = currentLevel + 1;
-            double cost = plugin.cfg().getLevelCost(nextLevel);
-            
-            // --- DYNAMIC LORE SWITCHING ---
-            // If the config says leveling increases size, show standard lore.
-            // If not, show the "static" lore so we don't mislead players.
-            // TODO: Ensure this method matches your ConfigManager!
-            boolean levelingExpandsSize = plugin.cfg().isLevelingExpansionEnabled(); 
-            
-            List<String> lore;
-            if (levelingExpandsSize) {
-                lore = plugin.msg().getList(player, "level_button_lore");
-            } else {
-                // Fallback to static lore if expansion is disabled
-                lore = plugin.msg().getList(player, "level_button_lore_static");
-                // Safety: if the new key is missing in old configs, default to standard
-                if (lore.isEmpty()) {
-                    lore = plugin.msg().getList(player, "level_button_lore");
-                }
-            }
-
-            // Append Cost
-            lore.add("");
-            lore.add("&7Cost: &6" + cost);
-            lore.add("");
-            lore.add("&eClick to Upgrade");
-
-            String btnTitle = plugin.msg().get(player, "level_upgrade_button")
-                    .replace("{LEVEL}", String.valueOf(nextLevel));
-
-            upgradeButton = GUIManager.createItem(Material.EXPERIENCE_BOTTLE, btnTitle, lore);
+        // Biome formatting
+        String biomeRaw = plot.getCustomBiome();
+        String biomeName = (biomeRaw == null || biomeRaw.isEmpty()) ? "Natural" : biomeRaw;
+        biomeName = biomeName.toLowerCase().replace("_", " ");
+        if (!biomeName.isEmpty()) {
+            biomeName = Character.toUpperCase(biomeName.charAt(0)) + biomeName.substring(1);
         }
 
-        inv.setItem(15, upgradeButton);
+        // 1. Header Info
+        List<String> headerLore = new ArrayList<>();
+        headerLore.add("§7Owner: §f" + owner);
+        headerLore.add("§7World: §f" + world);
+        headerLore.add("§7Biome: §a" + biomeName);
+        headerLore.add("");
+        headerLore.add("§7Plot Level: §b" + level + "§7 / §f" + maxLevel);
+        
+        String headerTitleKey = plugin.msg().get(player, "plot_status_header_title");
+        inv.setItem(4, GUIManager.createItem(
+                Material.NETHER_STAR,
+                GUIManager.safeText(headerTitleKey, "§6Plot Information"),
+                headerLore
+        ));
 
-        // Back Button
+        // 2. Blessings
+        List<String> buffsLore = new ArrayList<>();
+        buffsLore.add("§7Active Blessings:");
+        List<String> buffs = buildBuffList(level);
+        if (buffs.isEmpty()) {
+            buffsLore.add("§8- (None)");
+        } else {
+            buffsLore.addAll(buffs);
+        }
+
+        String blessingsTitleKey = plugin.msg().get(player, "plot_status_blessings_title");
         inv.setItem(22, GUIManager.createItem(
+                Material.ENCHANTED_BOOK,
+                GUIManager.safeText(blessingsTitleKey, "§dActive Blessings"),
+                buffsLore
+        ));
+
+        // 3. Territory
+        List<String> territoryLore = new ArrayList<>();
+        territoryLore.add("§7Territory Rules:");
+        territoryLore.add("§bAegis Menu §7→ §b" + plugin.msg().get(player, "button_expand"));
+
+        String territoryTitleKey = plugin.msg().get(player, "plot_status_territory_title");
+        inv.setItem(24, GUIManager.createItem(
+                Material.GRASS_BLOCK,
+                GUIManager.safeText(territoryTitleKey, "§aTerritory & Growth"),
+                territoryLore
+        ));
+
+        // 4. Back
+        inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
                 plugin.msg().get(player, "button_back"),
                 plugin.msg().getList(player, "back_lore")
@@ -110,54 +114,25 @@ public class LevelingGUI {
         GUIManager.playClick(player);
     }
 
-    public void handleClick(Player player, InventoryClickEvent e, LevelingHolder holder) {
+    public void handleClick(Player player, InventoryClickEvent e, PlotStatusHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-
-        int slot = e.getSlot();
-        Plot plot = holder.getPlot();
-
-        // UPGRADE BUTTON
-        if (slot == 15) {
-            int currentLevel = plot.getLevel();
-            int maxLevel = plugin.cfg().getMaxLevel();
-
-            if (currentLevel >= maxLevel) {
-                GUIManager.playError(player);
-                return;
-            }
-
-            // Perform Upgrade Logic
-            int nextLevel = currentLevel + 1;
-            double cost = plugin.cfg().getLevelCost(nextLevel);
-
-            if (plugin.econ().has(player, cost)) {
-                plugin.econ().withdraw(player, cost);
-                plot.setLevel(nextLevel);
-                
-                // Only expand radius if enabled in config
-                if (plugin.cfg().isLevelingExpansionEnabled()) {
-                    int addedRadius = plugin.cfg().getRadiusGain(nextLevel);
-                    // Add expansion logic here (omitted for brevity)
-                }
-
-                String successMsg = plugin.msg().get(player, "level_up_success")
-                        .replace("{LEVEL}", String.valueOf(nextLevel));
-                player.sendMessage(successMsg);
-                GUIManager.playSuccess(player);
-                
-                // Re-open to refresh the GUI
-                open(player, plot); 
-            } else {
-                plugin.msg().send(player, "level_up_fail_cost");
-                GUIManager.playError(player);
-            }
-        }
-
-        // BACK BUTTON
-        if (slot == 22) {
+        if (e.getSlot() == 49) {
             GUIManager.playClick(player);
             plugin.gui().openMain(player);
         }
+    }
+
+    private List<String> buildBuffList(int level) {
+        List<String> result = new ArrayList<>();
+        if (level <= 0) return result;
+        for (int i = 1; i <= level; i++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(i);
+            if (rewards == null) continue;
+            for (String reward : rewards) {
+                result.add("§a✦ " + reward);
+            }
+        }
+        return result;
     }
 }

@@ -130,34 +130,29 @@ old_english:
   request_expired: "&c❌ This petition has expired or vanished."
   
   # EXPANSION TIERS (Old English)
-  expansion_tier1_name: "&aYeoman's Grant (+5)"
+  expansion_tier1_name: "&aYeoman's Grant"
   expansion_tier1_lore:
     - "&7A modest addition."
-    - "&7Gain &a+5 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_tier2_name: "&eKnight's Fee (+10)"
+  expansion_tier2_name: "&eKnight's Fee"
   expansion_tier2_lore:
     - "&7A respectable widening."
-    - "&7Gain &e+10 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_tier3_name: "&fBaron's Estate (+20)"
+  expansion_tier3_name: "&fBaron's Estate"
   expansion_tier3_lore:
     - "&7Land fit for a lord."
-    - "&7Gain &f+20 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_tier4_name: "&6Duke's Domain (+35)"
+  expansion_tier4_name: "&6Duke's Domain"
   expansion_tier4_lore:
     - "&7A vast stretch of earth."
-    - "&7Gain &6+35 blocks &7radius."
     - " "
     - "&eClick to Petition"
-  expansion_tier5_name: "&bRoyal Charter (+50)"
+  expansion_tier5_name: "&bRoyal Charter"
   expansion_tier5_lore:
     - "&7A kingdom unto itself."
-    - "&7Gain &b+50 blocks &7radius."
     - " "
     - "&eClick to Petition"
   
@@ -288,7 +283,7 @@ old_english:
   level_up_fail_cost: "&c❌ Thy treasury is wanting; this rite of ascension must await fuller coffers."
   level_button_lore:
     - "&7Ascend thy plot to unlock"
-    - "&7greater size and power."
+    - "&7greater power and prestige."
 
   
   zone_gui_title: "&3Sub-Dominion Manager"
@@ -340,6 +335,9 @@ old_english:
 
   # --- Plot Status GUI ---
   plot_status_gui_title: "&b⚔ Ledger of Dominion Status"
+  plot_status_header_title: "&6Tale of the Land"
+  plot_status_blessings_title: "&dBlessings & Boons"
+  plot_status_territory_title: "&aRealm & Borders"
   plot_status_overview_name: "&aOverview of Thy Holding"
   plot_status_overview_lore:
     - "&7Survey the breadth, level, and"
@@ -713,7 +711,6 @@ old_english:
     - '&e/aegis help &7- Study this sacred guide'
 
 
-
 # ======================================
 # HYBRID ENGLISH STYLE (Fantasy RPG)
 # ======================================
@@ -795,7 +792,7 @@ hybrid_english:
   auction_item_lore:
     - "&eLeft-Click: &7Preview Land"
     - "&aRight-Click: &7Place Bid"
-
+  
   # --- Market ---
   market-gui-title: "&2Real Estate Market"
   market-teleport: "&eWarping to {PLAYER}'s land..."
@@ -813,13 +810,13 @@ hybrid_english:
 
   # --- Expansion ---
   expansion_gui_title: "&d§lExpansion Petition"
-  button_expand: "&dRequest More Land"
+  button_expand: "&dRequest Upgrades"
   expand_lore:
     - "&7Petition the server"
-    - "&7for larger borders."
+    - "&7for better standing."
   button_submit_request: "&aSubmit Petition"
   submit_request_lore:
-    - "&7Choose your desired size."
+    - "&7Choose your desired tier."
   button_view_requests_admin: "&cReview Petitions (Admin)"
   view_requests_admin_lore:
     - "&7Approve or deny player requests."
@@ -834,32 +831,32 @@ hybrid_english:
   request_expired: "&c❌ This petition has expired."
   
   # FIXED: All 5 Tiers
-  expansion_tier1_name: "&aMinor Expansion (+5)"
+  expansion_tier1_name: "&aMinor Expansion"
   expansion_tier1_lore:
-    - "&7Increase borders by &a+5 blocks&7."
+    - "&7A small improvement."
     - " "
     - "&eClick to Request"
-  expansion_tier2_name: "&eStandard Expansion (+10)"
+  expansion_tier2_name: "&eStandard Expansion"
   expansion_tier2_lore:
-    - "&7Increase borders by &e+10 blocks&7."
+    - "&7A decent upgrade."
     - " "
     - "&eClick to Request"
-  expansion_tier3_name: "&fMajor Expansion (+20)"
+  expansion_tier3_name: "&fMajor Expansion"
   expansion_tier3_lore:
-    - "&7Increase borders by &f+20 blocks&7."
+    - "&7A large improvement."
     - " "
     - "&eClick to Request"
-  expansion_tier4_name: "&6Noble Expansion (+35)"
+  expansion_tier4_name: "&6Noble Expansion"
   expansion_tier4_lore:
-    - "&7Increase borders by &6+35 blocks&7."
+    - "&7A grand upgrade."
     - " "
     - "&eClick to Request"
-  expansion_tier5_name: "&bImperial Expansion (+50)"
+  expansion_tier5_name: "&bImperial Expansion"
   expansion_tier5_lore:
-    - "&7Increase borders by &b+50 blocks&7."
+    - "&7The ultimate upgrade."
     - " "
     - "&eClick to Request"
-
+  
   expansion_locked_lore:
     - "&cYou must stand within"
     - "&cyour own land to petition."
@@ -911,7 +908,7 @@ hybrid_english:
 
   # --- Main Menu ---
   menu_title: "&b⚔ Aegis Menu ⚔"
-
+  
   button_claim_land: "&a🛡 Claim Land"
   claim_land_lore:
     - "&7Secure this area."
@@ -928,26 +925,26 @@ hybrid_english:
   plot_flags_locked_lore:
     - "&cYou must stand in your"
     - "&cland to edit wards."
-
+    
   button_roles: "&eTrust & Roles"
   roles_lore:
     - "&7Manage your allies."
   roles_locked_lore:
     - "&cYou must stand in your"
     - "&cland to manage allies."
-
+    
   button_player_settings: "&9Your Settings"
   player_settings_lore:
     - "&7Personalize your experience."
-
+  
   button_market: "&eMarketplace"
   market_lore:
     - "&7Buy and sell deeds."
-
+    
   button_auction: "&cAuctions"
   auction_lore:
     - "&7Bid on abandoned lands."
-
+  
   button_info: "&6📜 Guidebook"
   info_message: "&7Read the Guidebook to learn more."
   info_lore:
@@ -977,7 +974,7 @@ hybrid_english:
     - "&6🚩 Wards: &7PvP, Mobs, etc."
     - "&b👥 Allies: &7Trust friends."
     - "&d✨ Glamours: &7Visual borders."
-    - "&a🌿 Biomes: &7Change grass colors."
+    - "&a🌿 Biomes: &7Change biome color."
   codex_security_title: "&c§lIV. Security"
   codex_security_lore:
     - "&7Protect your borders:"
@@ -1034,7 +1031,7 @@ hybrid_english:
   level_up_fail_cost: "&c❌ Thy coffers lack the wealth to empower this ascension."
   level_button_lore:
     - "&7Ascend your plot to unlock"
-    - "&7greater size and power."
+    - "&7greater power and status."
 
   
   zone_gui_title: "&3Sub-Dominion Manager"
@@ -1080,6 +1077,9 @@ hybrid_english:
 
   # --- Plot Status GUI ---
   plot_status_gui_title: "&b⚔ Dominion Status"
+  plot_status_header_title: "&6Dominion Info"
+  plot_status_blessings_title: "&dActive Blessings"
+  plot_status_territory_title: "&aTerritory Info"
   plot_status_overview_name: "&aDominion Overview"
   plot_status_overview_lore:
     - "&7See level, size, and key stats"
@@ -1123,7 +1123,7 @@ hybrid_english:
   container_toggle_lore:
     - '&7When &aON&7, only trusted players may open containers.'
     - '&7When &cOFF&7, anyone may use them (if other rules allow).'
-
+  
   button_mobs_on: '&a🧟 Monster Ward: Blocked'
   button_mobs_off: '&c🧟 Monster Ward: Allowed'
   mob_toggle_lore:
@@ -2138,14 +2138,14 @@ modern_english:
   button_back: "&e⟵ Back"
   back_lore:
     - "&7Return to the previous page."
-  
+   
   button_back_menu: "&fReturn to Menu"
   back_menu_lore:
     - "&7Go back to the main dashboard."
 
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"
-  
+   
   button_exit: "&c✖ Close"
   button_exit_lore:
     - "&7Close this menu."
@@ -2447,9 +2447,16 @@ modern_english:
   level_max_reached: "&6Maximum Level Reached"
   level_up_success: "&d⚡ Your plot has ascended to Level &f{LEVEL}&d!"
   level_up_fail_cost: "&cYou don't have enough funds to upgrade this plot."
+  
+  # LORE: Used when leveling expands claim size
   level_button_lore:
     - "&7Upgrade claim size"
     - "&7and unlock new features."
+
+  # LORE: Used when leveling DOES NOT expand claim size (Added this for you)
+  level_button_lore_static:
+    - "&7Upgrade your claim to"
+    - "&7unlock new features."
 
   zone_gui_title: "&3Zone Manager"
   zone_created: "&a✔ Zone '{ZONE}' created."
@@ -2487,6 +2494,13 @@ modern_english:
   like_own_plot: "&cCannot like own claim."
   like_disabled: '&cLikes disabled.'
 
+  # --- Plot Status GUI ---
+  # These match the Java file I sent you previously
+  plot_status_gui_title: "&b⚔ Claim Status"
+  plot_status_header_title: "&6Claim Information"
+  plot_status_blessings_title: "&dActive Blessings"
+  plot_status_territory_title: "&aTerritory & Growth"
+
   title_entering: '&b{PLOT_NAME}'
   subtitle_entering: '&7{OWNER}'
   title_entering_wilderness: '&aWilderness'
@@ -2507,13 +2521,13 @@ modern_english:
   pvp_toggle_lore:
     - '&7ON: Players cannot damage each other in this claim.'
     - '&7OFF: PvP follows normal server rules.'
-  
+   
   button_containers_on: '&a📦 Container Protection: ON'
   button_containers_off: '&c📦 Container Protection: OFF'
   container_toggle_lore:
     - '&7ON: Only trusted players can open containers.'
     - '&7OFF: Anyone may open containers (if roles allow).'
-  
+   
   button_mobs_on: '&a🧟 Mob Protection: ON'
   button_mobs_off: '&c🧟 Mob Protection: OFF'
   mob_toggle_lore:
@@ -2730,22 +2744,6 @@ modern_english:
 
   wilderness_revert_start: '&7Reverting wilderness...'
   wilderness_revert_end: '&7Reverted {AMOUNT} blocks.'
-
-  # --- Plot Status GUI (New) ---
-  plot_status_gui_title: "&9Claim Status"
-  plot_status_owner: "&7Owner: &f{OWNER}"
-  plot_status_location: "&7World: &f{WORLD} &8(&e{X}&7, &e{Z}&8)"
-  plot_status_level: "&7Level: &b{LEVEL}"
-  plot_status_size: "&7Size: &e{WIDTH}x{LENGTH}"
-  plot_status_value: "&7Value: &6{VALUE}"
-  plot_status_upkeep: "&7Upkeep: &e{UPKEEP}"
-  plot_status_likes: "&7Likes: &d{LIKES}"
-  plot_status_members: "&7Members: &a{MEMBERS}"
-  plot_status_flags_header: "&7Active Settings:"
-  plot_status_flag_entry: "&8- &f{FLAG_NAME}&7: &a{STATE}"
-  plot_status_footer:
-    - "&8This summary reflects the"
-    - "&8current state of your claim."
 
   help_header: '&bAegisGuard Help'
   help_lines:

@@ -291,7 +291,6 @@ public class ProtectionManager implements Listener {
         // --- Leaving plot ---
         if (from != null && !from.equals(to)) {
             Bukkit.getPluginManager().callEvent(new PlotLeaveEvent(from, p));
-            plugin.getSidebar().hideSidebar(p);
 
             if (!from.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, from.getFarewellMessage());
@@ -318,8 +317,6 @@ public class ProtectionManager implements Listener {
                 e.setCancelled(true);
                 return;
             }
-
-            plugin.getSidebar().showSidebar(p, to);
 
             if (!to.getOwner().equals(p.getUniqueId())) {
                 sendPlotMessage(p, to.getWelcomeMessage());

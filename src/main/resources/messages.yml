@@ -128,6 +128,10 @@ old_english:
   expansion_overlap_fail: "&c❌ Thou canst not expand here; thy neighbors are too close."
   expansion_invalid_size: "&c❌ The new size must be greater than the old."
   request_expired: "&c❌ This petition has expired or vanished."
+
+  # NEW: admin request feedback (fixes Missing: admin_request_approved/denied)
+  admin_request_approved: "&a✔ Thou hast granted this petition."
+  admin_request_denied: "&c✖ Thou hast denied this petition."
   
   # EXPANSION TIERS (Old English)
   expansion_tier1_name: "&aYeoman's Grant"
@@ -231,6 +235,9 @@ old_english:
   roles_locked_lore:
     - "&cThou must stand in thy"
     - "&cland to manage companions."
+
+  # NEW: Plot Status button (fixes Missing: plot_status_button_title)
+  plot_status_button_title: "&dDominion Status"
     
   button_player_settings: "&9Thine Preferences"
   player_settings_lore:
@@ -284,7 +291,6 @@ old_english:
   level_button_lore:
     - "&7Ascend thy plot to unlock"
     - "&7greater power and prestige."
-
   
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
@@ -355,12 +361,21 @@ old_english:
     - "&7Behold likes, visitors, and the"
     - "&7esteem thy land commandeth."
 
+  # NEW: nicer Active Blessings book formatting
+  plot_status_blessings_book_title: "&dActive Blessings"
+  plot_status_blessings_book_header:
+    - "&7The land is bound by these"
+    - "&7boons. Only the highest tier of"
+    - "&7each blessing is recorded herein."
+  plot_status_blessings_entry_format: "&a{EFFECT}&7 &o(Tier {TIER})"
+  plot_status_blessings_none: "&7No blessings currently grace this soil."
+
   title_entering: '&b{PLOT_NAME}'
   subtitle_entering: '&7Owned by {OWNER}'
   title_entering_wilderness: '&aThe Wilds'
   subtitle_entering_wilderness: '&7Untamed Lands'
 
-    # --- Wards Info (Flags Help) ---
+  # --- Wards Info (Flags Help) ---
   button_flags_info: "&6📜 Wards & Protections"
   flags_info_lore:
     - "&7These sigils govern the safety of thy land."
@@ -493,10 +508,7 @@ old_english:
   entry_toggle_lore:
     - "&7When &aOpen (green)&7, wanderers may"
     - "&7cross thy borders freely."
-    - "&7When &cSealed (red)&7, strangers are"
-    - "&7turned back at the threshold."
-
-  button_shop_on: "&a🛒 Trade Access: Open"
+ 	button_shop_on: "&a🛒 Trade Access: Open"
   button_shop_off: "&c🛒 Trade Access: Sealed"
   shop_toggle_lore: 
     - "&7When &aOpen (green)&7, travelers may"
@@ -697,8 +709,8 @@ old_english:
     - '&e/aegis claim &7- Bind land to thy will'
     - '&e/aegis unclaim &7- Release thine claim'
     - '&e/aegis resize <dir> <amt> &7- Expand thy dominion'
-    - '&e/aegis home &7- Travel to thy plot''s arrival point'
-    - '&e/aegis setspawn &7- Set thy plot''s arrival point'
+    - '&e/aegis home &7- Travel to thy plot's arrival point'
+    - '&e/aegis setspawn &7- Set thy plot's arrival point'
     - '&e/aegis welcome [msg] &7- Set a welcome message (leave blank to clear)'
     - '&e/aegis farewell [msg] &7- Set a farewell message (leave blank to clear)'
     - '&e/aegis sell <price> &7- Put thy plot up for sale'

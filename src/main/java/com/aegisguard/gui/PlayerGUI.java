@@ -41,16 +41,27 @@ public class PlayerGUI {
 
         // --- 2. HEADER ---
         
-        // Codex (Slot 4)
-        inv.setItem(4, GUIManager.createItem(Material.WRITABLE_BOOK, 
-            plugin.msg().get(player, "button_info"), 
-            plugin.msg().getList(player, "info_lore")));
+        // Codex (Global Info) (Slot 4)
+        inv.setItem(4, GUIManager.createItem(
+            Material.WRITABLE_BOOK,
+            plugin.msg().get(player, "button_info"),
+            plugin.msg().getList(player, "info_lore")
+        ));
+
+        // Plot Status Codex (Slot 11)
+        inv.setItem(11, GUIManager.createItem(
+            Material.ENCHANTED_BOOK,
+            plugin.msg().get(player, "plot_status_button_title"),
+            plugin.msg().getList(player, "plot_status_button_lore")
+        ));
 
         // Travel (Slot 13)
         if (plugin.cfg().isTravelSystemEnabled()) {
-             inv.setItem(13, GUIManager.createItem(Material.COMPASS,
+            inv.setItem(13, GUIManager.createItem(
+                Material.COMPASS,
                 plugin.msg().get(player, "visit_gui_title"),
-                plugin.msg().getList(player, "visit_button_lore")));
+                plugin.msg().getList(player, "visit_button_lore")
+            ));
         }
 
         // --- 3. CORE MANAGEMENT ---
@@ -63,29 +74,32 @@ public class PlayerGUI {
         // Claim Land (Slot 20)
         boolean hasSelection = plugin.selection().hasSelection(player);
         if (hasSelection) {
-            inv.setItem(20, GUIManager.createItem(Material.LIGHTNING_ROD, 
-                plugin.msg().get(player, "button_claim_land"), 
+            inv.setItem(20, GUIManager.createItem(
+                Material.LIGHTNING_ROD,
+                plugin.msg().get(player, "button_claim_land"),
                 plugin.msg().getList(player, "claim_land_ready_lore")
             ));
         } else {
-            inv.setItem(20, GUIManager.createItem(Material.BARRIER, 
-                // Fallback to red text if specific locked key missing, though button_claim_land usually has colors
-                "§c" + plugin.msg().get(player, "button_claim_land"), 
-                plugin.msg().getList(player, "claim_land_lore") // Default lore explains how to get wand
+            inv.setItem(20, GUIManager.createItem(
+                Material.BARRIER,
+                "§c" + plugin.msg().get(player, "button_claim_land"),
+                plugin.msg().getList(player, "claim_land_lore")
             ));
         }
 
         // Flags (Slot 22)
         Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
-        inv.setItem(22, GUIManager.createItem(flagIcon, 
-            plugin.msg().get(player, "button_plot_flags"), 
+        inv.setItem(22, GUIManager.createItem(
+            flagIcon,
+            plugin.msg().get(player, "button_plot_flags"),
             plugin.msg().getList(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore")
         ));
 
         // Roles (Slot 24)
         Material roleIcon = canManage ? Material.PLAYER_HEAD : Material.SKELETON_SKULL;
-        inv.setItem(24, GUIManager.createItem(roleIcon, 
-            plugin.msg().get(player, "button_roles"), 
+        inv.setItem(24, GUIManager.createItem(
+            roleIcon,
+            plugin.msg().get(player, "button_roles"),
             plugin.msg().getList(player, canManage ? "roles_lore" : "roles_locked_lore")
         ));
         
@@ -93,24 +107,27 @@ public class PlayerGUI {
         
         // Leveling (Slot 29)
         if (plugin.cfg().isLevelingEnabled()) {
-            inv.setItem(29, GUIManager.createItem(Material.EXPERIENCE_BOTTLE, 
-                plugin.msg().get(player, "level_gui_title"), 
+            inv.setItem(29, GUIManager.createItem(
+                Material.EXPERIENCE_BOTTLE,
+                plugin.msg().get(player, "level_gui_title"),
                 plugin.msg().getList(player, "level_button_lore")
             ));
         }
         
         // Zoning (Slot 31)
         if (plugin.cfg().isZoningEnabled()) {
-             inv.setItem(31, GUIManager.createItem(Material.IRON_BARS, 
-                plugin.msg().get(player, "zone_gui_title"), 
+            inv.setItem(31, GUIManager.createItem(
+                Material.IRON_BARS,
+                plugin.msg().get(player, "zone_gui_title"),
                 plugin.msg().getList(player, "zone_button_lore")
             ));
         }
         
         // Biomes (Slot 33)
         if (plugin.cfg().isBiomesEnabled()) {
-             inv.setItem(33, GUIManager.createItem(Material.SPORE_BLOSSOM, 
-                plugin.msg().get(player, "biome_gui_title"), 
+            inv.setItem(33, GUIManager.createItem(
+                Material.SPORE_BLOSSOM,
+                plugin.msg().get(player, "biome_gui_title"),
                 plugin.msg().getList(player, "biome_button_lore")
             ));
         }
@@ -118,21 +135,24 @@ public class PlayerGUI {
         // --- 5. ECONOMY & EXPANSION ---
         
         // Market (Slot 38)
-        inv.setItem(38, GUIManager.createItem(Material.GOLD_INGOT, 
-            plugin.msg().get(player, "button_market"), 
+        inv.setItem(38, GUIManager.createItem(
+            Material.GOLD_INGOT,
+            plugin.msg().get(player, "button_market"),
             plugin.msg().getList(player, "market_lore")
         ));
 
         // Expansion (Slot 40)
-        inv.setItem(40, GUIManager.createItem(Material.DIAMOND_PICKAXE, 
-            plugin.msg().get(player, "button_expand"), 
+        inv.setItem(40, GUIManager.createItem(
+            Material.DIAMOND_PICKAXE,
+            plugin.msg().get(player, "button_expand"),
             plugin.msg().getList(player, "expand_lore")
         ));
 
         // Auctions (Slot 42)
         if (plugin.cfg().isUpkeepEnabled()) {
-             inv.setItem(42, GUIManager.createItem(Material.LAVA_BUCKET, 
-                plugin.msg().get(player, "button_auction"), 
+            inv.setItem(42, GUIManager.createItem(
+                Material.LAVA_BUCKET,
+                plugin.msg().get(player, "button_auction"),
                 plugin.msg().getList(player, "auction_lore")
             ));
         }
@@ -140,21 +160,25 @@ public class PlayerGUI {
         // --- 6. FOOTER ---
         
         // Settings (Slot 48)
-        inv.setItem(48, GUIManager.createItem(Material.COMPARATOR, 
-            plugin.msg().get(player, "button_player_settings"), 
+        inv.setItem(48, GUIManager.createItem(
+            Material.COMPARATOR,
+            plugin.msg().get(player, "button_player_settings"),
             plugin.msg().getList(player, "player_settings_lore")
         ));
 
         // Admin (Slot 49)
         if (plugin.isAdmin(player)) {
-            inv.setItem(49, GUIManager.createItem(Material.REDSTONE_BLOCK, 
-                plugin.msg().get(player, "admin_menu_title"), 
-                List.of("§7Operator Access Only"))); // Safe to hardcode or add admin_access_lore key
+            inv.setItem(49, GUIManager.createItem(
+                Material.REDSTONE_BLOCK,
+                plugin.msg().get(player, "admin_menu_title"),
+                List.of("§7Operator Access Only")
+            ));
         }
 
         // Exit (Slot 50)
-        inv.setItem(50, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
+        inv.setItem(50, GUIManager.createItem(
+            Material.BARRIER,
+            plugin.msg().get(player, "button_exit"),
             plugin.msg().getList(player, "exit_lore")
         ));
 
@@ -172,10 +196,23 @@ public class PlayerGUI {
         boolean canManage = isOwner || isAdmin;
 
         switch (e.getSlot()) {
-            case 4: plugin.gui().info().open(player); break;
+            case 4:
+                plugin.gui().info().open(player);
+                break;
+
+            case 11:
+                // Plot Status Codex
+                if (plot != null) {
+                    plugin.gui().plotStatus().open(player, plot);
+                } else {
+                    plugin.msg().send(player, "no_plot_here");
+                }
+                break;
             
             case 13: 
-                if (plugin.cfg().isTravelSystemEnabled()) plugin.gui().visit().open(player, 0, false); 
+                if (plugin.cfg().isTravelSystemEnabled()) {
+                    plugin.gui().visit().open(player, 0, false);
+                }
                 break;
 
             case 20: // Claim
@@ -183,7 +220,7 @@ public class PlayerGUI {
                     player.closeInventory();
                     plugin.selection().confirmClaim(player);
                 } else {
-                    GUIManager.playSuccess(player); 
+                    GUIManager.playSuccess(player);
                     player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
                 break;
@@ -221,18 +258,30 @@ public class PlayerGUI {
                 break;
 
             // Economy
-            case 38: plugin.gui().market().open(player, 0); break;
-            case 40: plugin.gui().expansionRequest().open(player); break;
-            case 42: if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0); break;
+            case 38:
+                plugin.gui().market().open(player, 0);
+                break;
+            case 40:
+                plugin.gui().expansionRequest().open(player);
+                break;
+            case 42:
+                if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0);
+                break;
 
             // System
-            case 48: plugin.gui().settings().open(player); break;
-            case 49: if (isAdmin) plugin.gui().admin().open(player); break;
-            case 50: player.closeInventory(); break;
+            case 48:
+                plugin.gui().settings().open(player);
+                break;
+            case 49:
+                if (isAdmin) plugin.gui().admin().open(player);
+                break;
+            case 50:
+                player.closeInventory();
+                break;
         }
         
         if (e.getSlot() != 20 && e.getSlot() != 50) {
-             GUIManager.playClick(player);
+            GUIManager.playClick(player);
         }
     }
 }

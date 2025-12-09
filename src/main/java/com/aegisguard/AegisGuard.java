@@ -12,7 +12,6 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;    // ✅ CORRECT: GUI package for 1.2.x
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.gui.SidebarManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
 // import com.aegisguard.hooks.JobsRebornHook;
@@ -65,7 +64,6 @@ public class AegisGuard extends JavaPlugin {
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
-    private SidebarManager sidebarManager;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -101,7 +99,6 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
-    public SidebarManager getSidebar() { return sidebarManager; }
     public boolean isFolia() { return isFolia; }
 
     // Hooks – removed for 1.2.2 (only in 1.3.0)
@@ -154,7 +151,6 @@ public class AegisGuard extends JavaPlugin {
         this.effectUtil = new EffectUtil(this);
         this.expansionManager = new ExpansionRequestManager(this);
         this.discord = new DiscordWebhook(this);
-        this.sidebarManager = new SidebarManager(this);
         this.protection = new ProtectionManager(this);
 
         // Load Data

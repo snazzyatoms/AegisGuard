@@ -836,6 +836,8 @@ hybrid_english:
   expansion_exists: "&c❌ You already have a pending petition."
   expansion_approved: "&a✔ Your petition was granted by {PLAYER}."
   expansion_denied: "&c❌ Your petition was denied by {PLAYER}."
+  admin_request_approved: "&a✔ You approved this petition."
+  admin_request_denied: "&c✖ You denied this petition."
   expansion_payment_failed: "&c❌ Petition failed; insufficient gold."
   expansion_limit_reached: "&c❌ You have reached the absolute limit."
   expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
@@ -962,6 +964,9 @@ hybrid_english:
   info_lore:
     - "&7Learn the commands."
 
+  # Button in the menu that opens the Plot Status GUI
+  plot_status_button_title: "&dDominion Status"
+
   # --- Codex ---
   codex_gui_title: "&9§lGuardian's Guide"
   codex_claim_title: "&e§lI. Claiming Land"
@@ -1045,7 +1050,6 @@ hybrid_english:
     - "&7Ascend your plot to unlock"
     - "&7greater power and status."
 
-  
   zone_gui_title: "&3Sub-Dominion Manager"
   zone_created: "&a✔ A new zone '{ZONE}' hath been marked."
   zone_deleted: "&c✖ The zone '{ZONE}' hath been dissolved."
@@ -1108,6 +1112,14 @@ hybrid_english:
   plot_status_social_lore:
     - "&7See likes, visitors and reputation"
     - "&7earned by this dominion."
+
+  plot_status_blessings_book_title: "&dActive Blessings"
+  plot_status_blessings_book_header:
+    - "&7These blessings shape your land."
+    - "&7Only the highest tier of each"
+    - "&7effect is shown here."
+  plot_status_blessings_entry_format: "&a✦ {EFFECT} &7(Tier {TIER})"
+  plot_status_blessings_none: "&7No blessings are currently active."
 
   title_entering: '&b{PLOT_NAME}'
   subtitle_entering: '&7Dominion of {OWNER}'
@@ -1366,6 +1378,7 @@ hybrid_english:
     - '&e/ag welcome [msg]'
     - '&e/ag market'
     - '&e/ag help'
+
 
 
 
@@ -2143,21 +2156,21 @@ hybrid_english:
 
     
 # ======================================
-# MODERN ENGLISH STYLE (Clean & Standard)
+# MODERN ENGLISH STYLE
 # ======================================
 modern_english:
   # --- Navigation ---
   button_back: "&e⟵ Back"
   back_lore:
-    - "&7Return to the previous page."
-   
-  button_back_menu: "&fReturn to Menu"
+    - "&7Go back to the previous page."
+
+  button_back_menu: "&fBack to Menu"
   back_menu_lore:
-    - "&7Go back to the main dashboard."
+    - "&7Return to the main menu."
 
   button_prev_page: "&fPrevious Page"
   button_next_page: "&fNext Page"
-   
+
   button_exit: "&c✖ Close"
   button_exit_lore:
     - "&7Close this menu."
@@ -2165,607 +2178,638 @@ modern_english:
     - "&7Close this menu."
 
   # --- General Errors ---
-  role_edit_self_error: "&cError: You cannot edit your own role."
-  no_perm: "&cError: Insufficient permissions."
-  players_only: "&cError: Command restricted to players."
+  role_edit_self_error: "&c❌ You cannot change your own role. You might lock yourself out."
+  no_perm: "&cYou do not have permission for that."
+  players_only: "&cOnly players can use this command."
   usage_main: "&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>"
 
-  sound_global_enabled: "&a✔ Plugin sounds enabled."
-  sound_global_disabled: "&c✖ Plugin sounds disabled."
+  sound_global_enabled: "&a✔ Global sounds enabled."
+  sound_global_disabled: "&c✖ Global sounds disabled."
 
   # --- Claiming & Wand ---
-  wand_given: "&a⚡ You received the Aegis Scepter."
-  wand_already_on: "&eYour Aegis Scepter is already active in your inventory."
-  corner1_set: "&a⚡ Position 1 set at &e{X}, {Z}."
-  corner2_set: "&b⚡ Position 2 set at &e{X}, {Z}."
-  must_select: "&c❌ You must select 2 corners with the Wand first."
+  wand_given: "&a⚡ You received the Aegis Wand."
+  wand_already_on: "&eYou already have the Aegis Wand."
+  corner1_set: "&a⚡ First corner set at &e{X}, {Z}."
+  corner2_set: "&b⚡ Second corner set at &e{X}, {Z}."
+  must_select: "&c❌ You must select two corners with the wand first."
   corners_diff_world: "&c❌ Both corners must be in the same world."
-  wand_consumed: "&a✔ Claim Tool consumed."
-  wand_not_found: "&c❌ Claim Tool not found in inventory."
-  wand_already_owned: "&eYou already have a Claim Tool. Use it instead of requesting another."
+  wand_consumed: "&a⚡ Your selection wand has been used up."
+  wand_not_found: "&c❌ You are not holding the required wand."
+  wand_already_owned: "&eYou already have a wand. Use that one instead of creating a new one."
 
-  resize-success: "&a✔ Claim resized {DIRECTION} by {AMOUNT} blocks."
-  resize-fail-overlap: "&c❌ Resize failed! It would overlap another claim."
-  resize-fail-max-area: "&c❌ Resize failed! It exceeds the {AMOUNT} block limit."
+  resize-success: "&a✔ Plot expanded {DIRECTION} by {AMOUNT} blocks."
+  resize-fail-overlap: "&c❌ Expansion failed. The new area overlaps another plot."
+  resize-fail-max-area: "&c❌ Expansion failed. You would exceed the {AMOUNT} block limit."
 
   # --- Merging ---
   merge_invalid_dir: "&c❌ Invalid direction. Use NORTH, SOUTH, EAST, or WEST."
-  merge_no_plot: "&c❌ No claim found in that direction."
-  merge_not_owner: "&c❌ You do not own the adjacent claim."
-  merge_not_aligned: "&c❌ Claims are not aligned. Edges must match exactly."
-  merge_success: "&a✔ Claims successfully merged!"
+  merge_no_plot: "&c❌ There is no plot in that direction."
+  merge_not_owner: "&c❌ You do not own the neighboring plot."
+  merge_not_aligned: "&c❌ The plots are not aligned. Edges must match."
+  merge_success: "&a⚡ The plots have been merged into one."
 
   # --- Economy & Limits ---
-  max_claims_reached: "&c❌ Limit reached: You can only have {AMOUNT} claim(s)."
-  need_vault: "&c❌ Insufficient funds. Cost: &e${AMOUNT}&c."
-  cost_deducted: "&e💰 Charged &6${AMOUNT}&e."
-  items_deducted: "&e💰 Paid &6{AMOUNT} {ITEM}&e."
-  vault_refund: "&e💰 Refunded &6${AMOUNT}&e ({PERCENT}%)."
+  max_claims_reached: "&c❌ You reached your limit of {AMOUNT} plot(s)."
+  need_vault: "&c❌ You need &e{AMOUNT}&c more to do that."
+  cost_deducted: "&e💰 Charged &6{AMOUNT}&e for this action."
+  items_deducted: "&e💰 Consumed &6{AMOUNT} {ITEM}&e."
+  vault_refund: "&e💰 Refunded &6{AMOUNT}&e ({PERCENT}%)."
   item_refund: "&e💰 Refunded &6{AMOUNT} {ITEM}&e ({PERCENT}%)."
 
-  upkeep_paid: "&e💰 Paid &6{AMOUNT}&e for claim upkeep."
-  upkeep_failed_warning: "&cAlert: Upkeep due. Deposit funds soon."
-  plot_expired_upkeep: "&cAlert: Claim deleted due to unpaid upkeep."
-  plot-is-locked: "&cError: This claim is locked."
+  upkeep_paid: "&e💰 Upkeep of &6{AMOUNT}&e paid."
+  upkeep_failed_warning: "&c❌ Warning: You could not afford upkeep. Your plot may expire."
+  plot_expired_upkeep: "&c❌ Your plot expired due to missed upkeep payments."
+  plot-is-locked: "&c❌ This plot is locked and cannot be modified."
 
   # --- Auctions ---
-  plot-now-auctioned: "&e⚠ Your claim is now being auctioned!"
-  auction-gui-title: "&6Claim Auctions"
-  auction-bid-own: "&cError: You cannot bid on your own expired claim."
-  auction-already-highest: "&eYou are already the highest bidder."
-  auction-outbid: "&e{PLAYER} has outbid you!"
-  auction-bid-success: "&a✔ Bid of &6{AMOUNT}&a accepted."
-  auction-sold: "&a✔ Your claim was sold to {PLAYER} for &6{AMOUNT}&a."
-  auction-won: "&a✔ You won the auction for {PLOT_OWNER}'s claim for &6{AMOUNT}&a!"
-  auction_item_name: "&eAuction: {OWNER}'s Claim"
+  plot-now-auctioned: "&e⚠ Your plot is now in auction."
+  auction-gui-title: "&6Plot Auctions"
+  auction-bid-own: "&cYou cannot bid on your own plot."
+  auction-already-highest: "&eYou already hold the highest bid."
+  auction-outbid: "&eYou have been outbid by {PLAYER}."
+  auction-bid-success: "&a✔ Bid of &6{AMOUNT}&a accepted. You are now the highest bidder."
+  auction-sold: "&a✔ Your plot was sold to {PLAYER} for &6{AMOUNT}&a."
+  auction-won: "&a✔ You won {PLOT_OWNER}'s plot for &6{AMOUNT}&a."
+  auction_item_name: "&eAuction: {OWNER}'s Plot"
   auction_current_bid: "&7Current Bid: &e{AMOUNT}"
   auction_highest_bidder: "&7Highest Bidder: &f{PLAYER}"
   auction_item_lore:
-    - "&eLeft-Click: &7Preview Claim"
+    - "&eLeft-Click: &7Preview Plot"
     - "&aRight-Click: &7Place Bid"
 
   # --- Market ---
-  market-gui-title: "&2Real Estate"
-  market-teleport: "&eTeleporting to {PLAYER}'s claim..."
-  market-buy-own: "&cError: Cannot buy your own claim."
-  market-buy-success: "&a✔ Bought {PLAYER}'s claim for &6{PRICE}&a!"
-  market-sold: "&a✔ {PLAYER} bought your claim for &6{PRICE}&a!"
-  market-for-sale: "&a✔ Claim listed for &6{PRICE}&a."
-  market-not-for-sale: "&e✔ Claim unlisted."
-  market-rent-soon: "&eRentals coming soon."
+  market-gui-title: "&2Plot Market"
+  market-teleport: "&eTeleporting to {PLAYER}'s plot..."
+  market-buy-own: "&cYou cannot buy your own plot."
+  market-buy-success: "&a✔ You bought {PLAYER}'s plot for &6{PRICE}&a."
+  market-sold: "&a✔ {PLAYER} bought your plot for &6{PRICE}&a."
+  market-for-sale: "&a✔ Your plot is now listed for &6{PRICE}&a."
+  market-not-for-sale: "&e✔ Your plot is no longer listed for sale."
+  market-rent-soon: "&eRenting will be available in a future update."
   market_type_rent: "&bFor Rent"
   market_type_sale: "&aFor Sale"
   market_item_lore:
-    - "&eLeft-Click: &7Preview Claim"
-    - "&aRight-Click: &7Purchase Deed"
+    - "&eLeft-Click: &7Preview Plot"
+    - "&aRight-Click: &7Buy Plot"
 
-  # --- Expansion Request ---
-  expansion_gui_title: "&dExpansion Request"
-  button_expand: "&dRequest Expansion"
+  # --- Expansion / Level Requests ---
+  expansion_gui_title: "&dExpansion Requests"
+  button_expand: "&dRequest Upgrade"
   expand_lore:
-    - "&7Request a larger claim"
-    - "&7limit from admins."
+    - "&7Request a plot size upgrade"
+    - "&7from server staff."
   button_submit_request: "&aSubmit Request"
   submit_request_lore:
-    - "&7Select request size."
-  button_view_requests_admin: "&cReview Requests (Admin)"
+    - "&7Choose the size tier you want."
+  button_view_requests_admin: "&cView Requests (Admin)"
   view_requests_admin_lore:
-    - "&7Approve or Deny requests."
-  expansion_submitted: "&a✔ Request submitted successfully."
-  expansion_exists: "&c❌ You already have a pending request."
-  expansion_approved: "&a✔ Your request was approved by {PLAYER}."
-  expansion_denied: "&c❌ Your request was denied by {PLAYER}."
-  expansion_payment_failed: "&c❌ Request failed; insufficient funds."
-  expansion_limit_reached: "&c❌ Server limit reached ({LIMIT})."
-  expansion_overlap_fail: "&c❌ Cannot expand; neighbors are too close."
-  expansion_invalid_size: "&c❌ New size must be larger."
-  request_expired: "&c❌ Request expired."
+    - "&7Approve or deny player requests."
+  expansion_submitted: "&a✔ Your expansion request was submitted."
+  expansion_exists: "&c❌ You already have a pending expansion request."
+  expansion_approved: "&a✔ Your expansion request was approved by {PLAYER}."
+  expansion_denied: "&c❌ Your expansion request was denied by {PLAYER}."
+  admin_request_approved: "&a✔ You approved this request."
+  admin_request_denied: "&c✖ You denied this request."
+  expansion_payment_failed: "&c❌ Expansion failed. Not enough balance."
+  expansion_limit_reached: "&c❌ You reached the maximum possible size."
+  expansion_overlap_fail: "&c❌ Cannot expand. The new area would overlap another plot."
+  expansion_invalid_size: "&c❌ New size must be larger than the current one."
+  request_expired: "&c❌ This request has expired."
 
-  expansion_tier1_name: "&aSmall Upgrade (+5)"
+  expansion_tier1_name: "&aSmall Upgrade"
   expansion_tier1_lore:
-    - "&7Radius: &a+5 blocks"
+    - "&7A minor size increase."
     - " "
-    - "&eClick to Submit"
-  expansion_tier2_name: "&eMedium Upgrade (+10)"
+    - "&eClick to Request"
+  expansion_tier2_name: "&eStandard Upgrade"
   expansion_tier2_lore:
-    - "&7Radius: &e+10 blocks"
+    - "&7A reasonable size increase."
     - " "
-    - "&eClick to Submit"
-  expansion_tier3_name: "&fLarge Upgrade (+20)"
+    - "&eClick to Request"
+  expansion_tier3_name: "&fLarge Upgrade"
   expansion_tier3_lore:
-    - "&7Radius: &f+20 blocks"
+    - "&7A big size increase."
     - " "
-    - "&eClick to Submit"
-  expansion_tier4_name: "&6Huge Upgrade (+35)"
+    - "&eClick to Request"
+  expansion_tier4_name: "&6Major Upgrade"
   expansion_tier4_lore:
-    - "&7Radius: &6+35 blocks"
+    - "&7A very large size increase."
     - " "
-    - "&eClick to Submit"
-  expansion_tier5_name: "&bMassive Upgrade (+50)"
+    - "&eClick to Request"
+  expansion_tier5_name: "&bMax Upgrade"
   expansion_tier5_lore:
-    - "&7Radius: &b+50 blocks"
+    - "&7The largest allowed upgrade."
     - " "
-    - "&eClick to Submit"
+    - "&eClick to Request"
 
   expansion_locked_lore:
-    - "&cYou must be standing"
-    - "&cin your own claim."
+    - "&cYou must stand inside"
+    - "&cyour own plot to request an upgrade."
   expansion_admin_title: "&8Pending Requests"
   expansion_none_title: "&cNo Requests"
   expansion_none_lore:
-    - "&7No pending requests found."
+    - "&7No players have requested upgrades."
   expansion_admin_actions:
     - "&aLeft-Click: &7Approve"
     - "&cRight-Click: &7Deny"
 
-  # --- Travel ---
-  visit_gui_title: "&9Travel Menu"
-  visit_title_warps: "&6Server Waypoints"
-  visit_title_trusted: "&9Trusted Claims"
-  visit_switch_trusted: "&bView: Trusted Claims"
+  # --- Visit / Travel ---
+  visit_gui_title: "&9Visit Menu"
+  visit_title_warps: "&6Public Warps"
+  visit_title_trusted: "&9Trusted Plots"
+  visit_switch_trusted: "&bView: Trusted Plots"
   visit_switch_trusted_lore:
-    - "&7View claims where you are a member."
-  visit_switch_warps: "&6View: Server Waypoints"
+    - "&7Show plots where you are trusted."
+  visit_switch_warps: "&6View: Public Warps"
   visit_switch_warps_lore:
-    - "&7View public server locations."
+    - "&7Show public server warps."
   visit_warp_lore:
-    - "&7Click to warp."
+    - "&7Click to teleport."
   visit_plot_name: "&e{PLOT}"
   visit_plot_lore:
     - "&7World: &f{WORLD}"
-    - "&7Status: &a{ROLE}"
+    - "&7Access: &a{ROLE}"
     - " "
     - "&eClick to Teleport"
 
-  home-set-success: "&a✔ Claim spawn set to your location."
-  home-fail-outside: "&c❌ You must be inside your claim to set spawn."
-  home-fail-no-spawn: "&c❌ No spawn point set! Use /ag setspawn."
+  home-set-success: "&a✔ Home location set for this plot."
+  home-fail-outside: "&c❌ You must be inside your plot to set its home."
+  home-fail-no-spawn: "&c❌ No home set for this plot. Use /ag setspawn first."
   welcome-set: "&a✔ Welcome message updated."
-  welcome-cleared: "&e✔ Welcome message removed."
+  welcome-cleared: "&e✔ Welcome message cleared."
   farewell-set: "&a✔ Farewell message updated."
-  farewell-cleared: "&e✔ Farewell message removed."
+  farewell-cleared: "&e✔ Farewell message cleared."
 
-  plot_created: "&a✔ Claim created successfully."
-  plot_unclaimed: "&e⚠ Claim removed."
-  no_plot_here: "&c❌ You are not standing in a claim."
+  plot_created: "&a✔ Plot successfully created."
+  plot_unclaimed: "&e⚠ You unclaimed this plot."
+  no_plot_here: "&c❌ You are not standing inside one of your plots."
 
   cannot_break: "&c❌ You cannot break blocks here."
   cannot_place: "&c❌ You cannot place blocks here."
-  cannot_interact: "&c❌ You cannot interact here."
-  cannot_attack: "&c❌ PvP is disabled here."
-  plot_entry_denied: "&c⛔ Entry denied. This claim is private."
-  plot_banned_entry: "&c⛔ You are BANNED from this claim!"
+  cannot_interact: "&c❌ You cannot interact with that here."
+  cannot_attack: "&c❌ You cannot attack here."
+  plot_entry_denied: "&c⛔ You are not allowed to enter this plot."
+  plot_banned_entry: "&c⛔ You are banned from this plot."
 
   # --- Main Menu ---
-  menu_title: "&b⚔ AegisGuard Menu"
+  menu_title: "&b⚔ Aegis Menu ⚔"
 
-  button_claim_land: "&a🛡 Create Claim"
+  button_claim_land: "&a🛡 Claim Land"
   claim_land_lore:
-    - "&7Secure this area."
+    - "&7Claim the area you selected."
+
   claim_land_ready_lore:
-    - "&7Create claim from"
+    - "&7Create a plot from your"
     - "&7current selection."
     - " "
-    - "&eClick to Confirm"
+    - "&eClick to Claim"
 
-  button_plot_flags: "&6Settings"
-  plot_flags_title: "&9⚙ Settings"
+  button_plot_flags: "&6Plot Protections"
+  plot_flags_title: "&9⚙ Protections"
   plot_flags_lore:
-    - "&7Manage claim rules."
+    - "&7Configure protection flags."
   plot_flags_locked_lore:
-    - "&cStand in your claim"
-    - "&cto edit settings."
+    - "&cYou must stand inside your plot"
+    - "&cto edit its flags."
 
-  button_roles: "&eMembers"
+  button_roles: "&eTrust & Roles"
   roles_lore:
-    - "&7Manage trusted players."
+    - "&7Manage trusted players and roles."
   roles_locked_lore:
-    - "&cStand in your claim"
-    - "&cto manage members."
+    - "&cYou must stand inside your plot"
+    - "&cto manage trusted players."
 
-  button_player_settings: "&9Preferences"
+  button_player_settings: "&9Your Settings"
   player_settings_lore:
-    - "&7Edit local settings."
+    - "&7Customize your personal settings."
 
-  button_market: "&eMarketplace"
+  button_market: "&eMarket"
   market_lore:
-    - "&7Buy and sell claims."
+    - "&7Buy and sell plots."
 
   button_auction: "&cAuctions"
   auction_lore:
-    - "&7Bid on expired claims."
+    - "&7Bid on expired and abandoned plots."
 
-  button_info: "&6📜 Help"
-  info_message: "&7Read the guide."
+  button_info: "&6📜 Guide"
+  info_message: "&7Open the guide to learn how AegisGuard works."
   info_lore:
-    - "&7Commands & Info."
+    - "&7View basic help and commands."
 
-  # --- Codex ---
-  codex_gui_title: "&9§lGuardian's Guide"
-  codex_claim_title: "&e§lI. Claiming"
+  # Button in the menu that opens the Plot Status GUI
+  plot_status_button_title: "&dPlot Status"
+
+  # --- Guide / Codex ---
+  codex_gui_title: "&9§lAegisGuard Guide"
+  codex_claim_title: "&e§lI. Claiming Land"
   codex_claim_lore:
-    - "&7How to protect land:"
+    - "&7How to claim a plot:"
     - " "
-    - "&f1. &7Use &b/ag wand &7to get the tool."
-    - "&f2. &7Right-Click first corner."
-    - "&f3. &7Left-Click second corner."
-    - "&f4. &7Use &a/ag claim &7to buy."
-  codex_travel_title: "&b§lII. Travel"
+    - "&f1. &7Use &b/ag wand &7to get the wand."
+    - "&f2. &7Right-click the first corner."
+    - "&f3. &7Left-click the second corner."
+    - "&f4. &7Use &a/ag claim &7to buy the plot."
+  codex_travel_title: "&b§lII. Teleporting"
   codex_travel_lore:
-    - "&7Fast travel commands:"
+    - "&7Teleport around your plots:"
     - " "
-    - "&e/ag home &7- Teleport to claim."
-    - "&e/ag setspawn &7- Set spawn point."
-    - "&e/ag visit &7- Visit friends."
-  codex_menus_title: "&d§lIII. Menu"
+    - "&e/ag home &7- Go to your plot home."
+    - "&e/ag setspawn &7- Set plot home."
+    - "&e/ag visit &7- Visit warps and trusted plots."
+  codex_menus_title: "&d§lIII. Menus"
   codex_menus_lore:
     - "&7Use &b/ag menu&7 to manage:"
     - " "
-    - "&6🚩 Settings: &7PvP, Mobs, etc."
-    - "&b👥 Members: &7Trust players."
-    - "&d✨ Cosmetics: &7Particle effects."
-    - "&a🌿 Biomes: &7Change biome type."
+    - "&6⚙ Flags: &7Protection options."
+    - "&b👥 Roles: &7Trusted players."
+    - "&d✨ Cosmetics: &7Visual effects."
+    - "&a🌿 Biomes: &7Change biome visuals."
   codex_security_title: "&c§lIV. Security"
   codex_security_lore:
-    - "&7Manage visitors:"
+    - "&7Security controls:"
     - " "
-    - "&c/ag kick &7- Kick player."
-    - "&4/ag ban &7- Ban player."
+    - "&c/ag kick &7- Remove a player from your plot."
+    - "&4/ag ban &7- Ban a player from your plot."
   codex_economy_title: "&6§lV. Economy"
   codex_economy_lore:
-    - "&7Managing funds:"
+    - "&7Economy features:"
     - " "
-    - "&eUpkeep: &7Tax system."
-    - "&aMarket: &7Buy/Sell claims."
+    - "&eUpkeep: &7Pay to keep your plot active."
+    - "&aMarket: &7Buy and sell plots."
   codex_identity_title: "&3§lVI. Utility"
   codex_identity_lore:
-    - "&7Customize:"
+    - "&7Utility commands:"
     - " "
-    - "&b/ag rename &7- Set name."
-    - "&e/ag stuck &7- Unstuck."
+    - "&b/ag rename &7- Rename your plot."
+    - "&e/ag stuck &7- Escape if stuck."
   codex_advanced_title: "&5§lVII. Advanced"
   codex_advanced_lore:
-    - "&dLeveling: &7Upgrade limits."
-    - "&eZones: &7Create rentals."
+    - "&dLeveling: &7Upgrade plot size."
+    - "&eZones: &7Create rental zones inside plots."
 
-  # --- Utility ---
+  # --- Utility Chapter Tile ---
   button_utility_chapter: "&3§lVI. Utility"
   utility_chapter_lore:
     - "&7Useful commands:"
     - " "
     - "&b/ag rename <Name>"
-    - "&7Rename claim."
+    - "&7Rename your plot."
     - " "
     - "&b/ag setdesc <Text>"
-    - "&7Set description."
+    - "&7Set a plot description."
     - " "
     - "&e/ag stuck"
-    - "&7Teleport to safety."
+    - "&7Teleport out if you are trapped."
 
-  settings_menu_title: "&9⚙ Preferences"
-  button_sounds_on: "&a🔊 Sounds: ON"
-  button_sounds_off: "&c🔇 Sounds: OFF"
+  # --- Settings / Personal ---
+  settings_menu_title: "&9⚙ Settings"
+  button_sounds_on: "&a🔊 Sounds: On"
+  button_sounds_off: "&c🔇 Sounds: Off"
   button_sounds_disabled_global: "&7🔇 Sounds: Disabled by Server"
   sounds_toggle_lore:
-    - "&7Toggle GUI sounds."
+    - "&7Toggle plugin sounds for yourself."
   sounds_toggle_global_disabled_lore:
-    - "&7Server has disabled sounds."
-  settings_gui_not_toggle: "&cThese are examples. Use Claim Settings."
+    - "&7The server has disabled all plugin sounds."
+  settings_gui_not_toggle: "&cThese are examples. Use Plot Protections to change behavior."
 
-  # --- Leveling & Zoning ---
-  level_gui_title: "&dPlot Ascension"
+  # --- Leveling / Zones / Biome ---
+  level_gui_title: "&dPlot Level"
   level_current_status: "&bCurrent Plot Level"
   level_upgrade_button: "&aUpgrade to Level &f{LEVEL}"
-  level_max_reached: "&6Maximum Level Reached"
-  level_up_success: "&d⚡ Your plot has ascended to Level &f{LEVEL}&d!"
-  level_up_fail_cost: "&cYou don't have enough funds to upgrade this plot."
-  
-  # LORE: Used when leveling expands claim size
+  level_max_reached: "&6This plot is already at max level."
+  level_up_success: "&d⚡ Your plot has been upgraded to level &f{LEVEL}&d."
+  level_up_fail_cost: "&c❌ You do not have enough to upgrade this plot."
   level_button_lore:
-    - "&7Upgrade claim size"
-    - "&7and unlock new features."
-
-  # LORE: Used when leveling DOES NOT expand claim size (Added this for you)
-  level_button_lore_static:
-    - "&7Upgrade your claim to"
-    - "&7unlock new features."
+    - "&7Upgrade your plot to unlock"
+    - "&7more space and features."
 
   zone_gui_title: "&3Zone Manager"
   zone_created: "&a✔ Zone '{ZONE}' created."
   zone_deleted: "&c✖ Zone '{ZONE}' deleted."
-  zone_rented: "&a✔ {PLAYER} rented '{ZONE}'."
-  zone_not_rented: "&7Zone is available."
+  zone_rented: "&a✔ {PLAYER} rented zone '{ZONE}'."
+  zone_not_rented: "&7This zone is currently unrented."
   zone_status_rented: "&cRented"
   zone_status_available: "&aAvailable"
-  zone_evict_action: "&cLeft-Click to Evict"
-  zone_delete_action: "&cRight-Click to Delete"
+  zone_evict_action: "&cLeft-Click: Evict"
+  zone_delete_action: "&cRight-Click: Delete"
   button_zone_create: "&aCreate Zone"
   zone_create_ready_lore:
-    - "&7Create zone from selection."
+    - "&7Create a new zone from your"
+    - "&7current wand selection."
+    - " "
+    - "&eClick to Create"
   zone_create_locked_lore:
-    - "&cSelect area with Wand first."
-  zone_evicted: "&eTenant evicted from {ZONE}."
+    - "&cYou must select corners"
+    - "&cwith the wand first."
+  zone_evicted: "&e{PLAYER} has been evicted from zone {ZONE}."
   zone_button_lore:
-    - "&7Create sub-claims"
-    - "&7for rentals."
+    - "&7Create and manage rental zones"
+    - "&7inside your plot."
 
-  biome_gui_title: "&2Biome"
-  biome_changed: "&a✔ Biome set to {BIOME}."
-  biome_cost_paid: "&e💰 Paid &6{AMOUNT}&e."
+  biome_gui_title: "&2Biome Changer"
+  biome_changed: "&a✔ Biome changed to {BIOME}."
+  biome_cost_paid: "&e💰 Charged &6{AMOUNT}&e for the biome change."
   biome_select_lore:
-    - "&7Set biome to {BIOME}."
+    - "&7Change the biome of your plot"
+    - "&7to {BIOME}."
     - "&7Cost: &e{COST}"
     - " "
-    - "&8[&c!&8] &7Visuals Only"
+    - "&8[Note] &7Visual effect only."
   biome_button_lore:
-    - "&7Change biome color."
+    - "&7Change the biome look of your plot."
 
-  # --- Likes ---
-  like_success: "&a✔ Liked! Total: &e{AMOUNT}"
-  like_removed: "&eLike removed."
-  like_own_plot: "&cCannot like own claim."
-  like_disabled: '&cLikes disabled.'
+  # --- Likes / Social ---
+  like_success: "&a✔ You liked this plot. Total likes: &e{AMOUNT}"
+  like_removed: "&eYou removed your like from this plot."
+  like_own_plot: "&cYou cannot like your own plot."
+  like_disabled: '&cPlot likes are disabled on this server.'
 
   # --- Plot Status GUI ---
-  # These match the Java file I sent you previously
-  plot_status_gui_title: "&b⚔ Claim Status"
-  plot_status_header_title: "&6Claim Information"
-  plot_status_blessings_title: "&dActive Blessings"
-  plot_status_territory_title: "&aTerritory & Growth"
+  plot_status_gui_title: "&b⚔ Plot Status"
+  plot_status_header_title: "&6Plot Overview"
+  plot_status_blessings_title: "&dActive Effects"
+  plot_status_territory_title: "&aTerritory Info"
+  plot_status_overview_name: "&aOverview"
+  plot_status_overview_lore:
+    - "&7View level, size, and key stats"
+    - "&7for this plot."
+  plot_status_flags_name: "&6Flags & Rules"
+  plot_status_flags_lore:
+    - "&7See which protections are active"
+    - "&7and how this plot behaves."
+  plot_status_economy_name: "&eEconomy"
+  plot_status_economy_lore:
+    - "&7Check upkeep, costs and refunds"
+    - "&7for this plot."
+  plot_status_social_name: "&dSocial Activity"
+  plot_status_social_lore:
+    - "&7View likes, visitors and activity"
+    - "&7for this plot."
+
+  plot_status_blessings_book_title: "&dActive Effects"
+  plot_status_blessings_book_header:
+    - "&7These effects are currently applied"
+    - "&7to this plot. Only the highest tier"
+    - "&7of each effect is shown."
+  plot_status_blessings_entry_format: "&a✦ {EFFECT} &7(Tier {TIER})"
+  plot_status_blessings_none: "&7No active effects on this plot."
 
   title_entering: '&b{PLOT_NAME}'
-  subtitle_entering: '&7{OWNER}'
+  subtitle_entering: '&7Owned by {OWNER}'
   title_entering_wilderness: '&aWilderness'
-  subtitle_entering_wilderness: ''
+  subtitle_entering_wilderness: '&7Unclaimed land'
 
-  # --- Wards Info (Flags Help) ---
-  button_flags_info: "&6📜 Ward Info"
+  # --- Flags Info (Overview) ---
+  button_flags_info: "&6📜 Flag Overview"
   flags_info_lore:
-    - "&7Wards control protection rules for this claim."
-    - "&aGreen = ON&7: Protection enforced."
-    - "&cRed = OFF&7: Vanilla behaviour."
+    - "&7These toggles control how protection works"
+    - "&7inside this plot."
+    - "&aGreen: &7Enabled (more protection)."
+    - "&cRed: &7Disabled (normal server behavior)."
     - " "
-    - "&7Hover each icon to see exactly what it does."
+    - "&7Hover each icon to see details."
 
-  # --- Flags ---
-  button_pvp_on: '&a⚔ PvP Protection: ON'
-  button_pvp_off: '&c⚔ PvP Protection: OFF'
+  # --- Protection Flags ---
+  button_pvp_on: '&a⚔ PvP: Disabled'
+  button_pvp_off: '&c⚔ PvP: Allowed'
   pvp_toggle_lore:
-    - '&7ON: Players cannot damage each other in this claim.'
-    - '&7OFF: PvP follows normal server rules.'
-   
-  button_containers_on: '&a📦 Container Protection: ON'
-  button_containers_off: '&c📦 Container Protection: OFF'
+    - '&7When &aON&7, players cannot damage each other here.'
+    - '&7When &cOFF&7, PvP follows normal server rules.'
+
+  button_containers_on: '&a📦 Containers: Protected'
+  button_containers_off: '&c📦 Containers: Open'
   container_toggle_lore:
-    - '&7ON: Only trusted players can open containers.'
-    - '&7OFF: Anyone may open containers (if roles allow).'
-   
-  button_mobs_on: '&a🧟 Mob Protection: ON'
-  button_mobs_off: '&c🧟 Mob Protection: OFF'
+    - '&7When &aON&7, only trusted players can open containers.'
+    - '&7When &cOFF&7, anyone can open them (if allowed by other rules).'
+
+  button_mobs_on: '&a🧟 Monsters: Blocked'
+  button_mobs_off: '&c🧟 Monsters: Allowed'
   mob_toggle_lore:
-    - '&7ON: Hostile mobs cannot spawn or attack here.'
-    - '&7OFF: Mobs behave normally.'
+    - '&7When &aON&7, hostile mobs cannot spawn or attack inside this plot.'
+    - '&7When &cOFF&7, hostile mobs work normally.'
 
-  button_pets_on: '&a🐾 Pet Protection: ON'
-  button_pets_off: '&c🐾 Pet Protection: OFF'
+  button_pets_on: '&a🐾 Pets: Protected'
+  button_pets_off: '&c🐾 Pets: Vulnerable'
   pet_toggle_lore:
-    - '&7ON: Tamed pets are protected from damage.'
-    - '&7OFF: Pets can be damaged normally.'
+    - '&7When &aON&7, tamed pets are protected from damage.'
+    - '&7When &cOFF&7, pets can be harmed normally.'
 
-  button_entity_on: '&a🗿 Entity Protection: ON'
-  button_entity_off: '&c🗿 Entity Protection: OFF'
+  button_entity_on: '&a🗿 Entities: Protected'
+  button_entity_off: '&c🗿 Entities: Vulnerable'
   entity_toggle_lore:
-    - '&7ON: Item frames, armor stands, etc. are protected.'
-    - '&7OFF: They can be broken or modified.'
+    - '&7When &aON&7, item frames, armor stands and displays are protected.'
+    - '&7When &cOFF&7, they can be broken or changed by others.'
 
-  button_farm_on: '&a🌾 Crop Protection: ON'
-  button_farm_off: '&c🌾 Crop Protection: OFF'
+  button_farm_on: '&a🌾 Crops: Protected'
+  button_farm_off: '&c🌾 Crops: Vulnerable'
   farm_toggle_lore:
-    - '&7ON: Crops cannot be trampled.'
-    - '&7OFF: Crops can be trampled.'
+    - '&7When &aON&7, crops cannot be trampled.'
+    - '&7When &cOFF&7, crops can be damaged as normal.'
 
-  button_tnt_on: '&a💥 Explosion Protection: ON'
-  button_tnt_off: '&c💥 Explosion Protection: OFF'
+  button_tnt_on: '&a💥 Explosions: Protected'
+  button_tnt_off: '&c💥 Explosions: Normal'
   tnt_toggle_lore:
-    - '&7ON: Explosions cannot damage blocks here.'
-    - '&7OFF: Explosion damage is allowed.'
+    - '&7When &aON&7, TNT and explosions cannot damage this plot.'
+    - '&7When &cOFF&7, explosions behave normally.'
 
-  button_fire_on: '&a🔥 Fire Spread Protection: ON'
-  button_fire_off: '&c🔥 Fire Spread Protection: OFF'
+  button_fire_on: '&a🔥 Fire Spread: Off'
+  button_fire_off: '&c🔥 Fire Spread: On'
   fire_toggle_lore:
-    - '&7ON: Fire cannot spread.'
-    - '&7OFF: Fire spreads normally.'
+    - '&7When &aON&7, fire does not spread.'
+    - '&7When &cOFF&7, fire can spread normally.'
 
-  button_piston_on: '&a🔩 Piston Protection: ON'
-  button_piston_off: '&c🔩 Piston Protection: OFF'
+  button_piston_on: '&a🔩 Pistons: Limited'
+  button_piston_off: '&c🔩 Pistons: Normal'
   piston_toggle_lore:
-    - '&7ON: Pistons cannot move blocks across claim borders.'
-    - '&7OFF: Pistons behave normally.'
+    - '&7When &aON&7, pistons cannot move blocks across plot borders.'
+    - '&7When &cOFF&7, pistons behave normally.'
 
-  button_animals_on: '&a🐮 Animal Protection: ON'
-  button_animals_off: '&c🐮 Animal Protection: OFF'
+  button_animals_on: '&a🐮 Animals: Protected'
+  button_animals_off: '&c🐮 Animals: Vulnerable'
   animals_toggle_lore:
-    - '&7ON: Passive animals are protected from damage.'
-    - '&7OFF: They can be harmed normally.'
+    - '&7When &aON&7, passive animals are protected from damage.'
+    - '&7When &cOFF&7, they can be harmed normally.'
 
-  button_redstone_on: '&a⚡ Redstone Protection: ON'
-  button_redstone_off: '&c⚡ Redstone Protection: OFF'
+  button_redstone_on: '&a⚡ Redstone: Blocked'
+  button_redstone_off: '&c⚡ Redstone: Allowed'
   redstone_toggle_lore:
-    - '&7ON: Blocks redstone use inside this claim.'
-    - '&7OFF: Redstone behaves normally.'
+    - '&7When &aON&7, redstone usage is blocked inside this plot.'
+    - '&7When &cOFF&7, redstone works normally.'
 
-  button_vehicles_on: '&a🛶 Vehicle Protection: ON'
-  button_vehicles_off: '&c🛶 Vehicle Protection: OFF'
+  button_vehicles_on: '&a🛶 Vehicles: Locked'
+  button_vehicles_off: '&c🛶 Vehicles: Free'
   vehicles_toggle_lore:
-    - '&7ON: Boats, minecarts, etc. are locked/protected.'
-    - '&7OFF: Others can use or break them.'
+    - '&7When &aON&7, boats and minecarts are protected or locked.'
+    - '&7When &cOFF&7, they can be used or broken by others.'
 
-  button_safe_on: '&a🛡 SafeZone: ON'
-  button_safe_off: '&c🛡 SafeZone: OFF'
+  button_safe_on: '&a🛡 Safe Zone: On'
+  button_safe_off: '&c🛡 Safe Zone: Off'
   safe_toggle_lore:
-    - '&7ON: Overrides most flags and enforces full protection.'
-  safe_zone_enabled: '&aSafeZone enabled.'
-  safe_zone_disabled: '&cSafeZone disabled.'
+    - '&7Safe Zone provides stronger protection and overrides several flags.'
+  safe_zone_enabled: '&a🛡 Safe Zone enabled for this plot.'
+  safe_zone_disabled: '&c⚠ Safe Zone disabled for this plot.'
 
-  button_fly_on: '&b🕊 Flight: ON'
-  button_fly_off: '&c🕊 Flight: OFF'
-  fly_toggle_lore: 
-    - "&7Enable flight in this claim."
+  button_fly_on: '&b🕊 Flight: Enabled'
+  button_fly_off: '&c🕊 Flight: Disabled'
+  fly_toggle_lore:
+    - "&7Allow or block flight inside this plot."
     - "&7Cost to enable: &6{COST}"
-  flight_enabled: '&aFlight enabled.'
-  flight_disabled: '&cFlight disabled.'
+  flight_enabled: '&a🕊 Flight enabled in this plot.'
+  flight_disabled: '&c🕊 Flight removed in this plot.'
 
-  button_entry_on: '&a🚪 Entry: Allowed'
-  button_entry_off: '&c🚪 Entry: Denied'
+  button_entry_on: '&a🚪 Entry: Open'
+  button_entry_off: '&c🚪 Entry: Closed'
   entry_toggle_lore:
-    - '&7When Denied, strangers cannot enter the claim.'
+    - '&7When closed, untrusted players cannot enter this plot.'
 
-  button_shop_on: '&a🛒 Shop: Public'
-  button_shop_off: '&c🛒 Shop: Private'
-  shop_toggle_lore: 
-    - "&7Allow usage of shop chests/signs?"
+  button_shop_on: '&a🛒 Shop Access: Open'
+  button_shop_off: '&c🛒 Shop Access: Closed'
+  shop_toggle_lore:
+    - "&7Allow players to use shop signs or trade interfaces"
+    - "&7while keeping containers protected."
     - "&7Cost: &6{COST}"
-    
+
   button_cosmetics: '&dCosmetics'
   cosmetics_lore:
-    - '&7Visual border effects.'
-  cosmetics_gui_title: '&dCosmetics'
+    - '&7Visual border and effect options.'
+  cosmetics_gui_title: '&dPlot Cosmetics'
   cosmetics_border_none: '&cNo Effect'
   cosmetics_status_selected: "&a(Active)"
   cosmetics_status_free: "&aFree"
   cosmetics_click_buy: "&eLeft-Click: Buy"
   cosmetics_click_apply: "&eLeft-Click: Apply"
-  cosmetics_click_disable: "&7Click to remove."
-  cosmetics_removed: "&eEffect removed."
-  cosmetics_already_active: "&cEffect already active."
-  cosmetic_purchased: '&a✔ Purchased.'
+  cosmetics_click_disable: "&7Click to remove effect."
+  cosmetics_removed: "&eCosmetic effect removed."
+  cosmetics_already_active: "&cThis cosmetic is already active."
+  cosmetic_purchased: '&a✔ Cosmetic purchased.'
 
-  flag_toggled: '&eSetting {FLAG}: &f{STATUS}'
+  flag_toggled: '&e⚙ Flag {FLAG}: &f{STATUS}'
 
-  # Server / inheritance tooltips
-  server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
-  admin_forced_flag_notice: '&7[Admin] Flag is forced at {LEVEL} level. Editing disabled here.'
+  # Inheritance / admin override notes
+  server_zone_forced_flag: '&cThis flag is controlled by a Server Zone.'
+  admin_forced_flag_notice: '&7[Admin] This is forced at a higher level and cannot be changed here.'
   flag_inherited_from_world: '&7Inherited from: &fWorld'
-  flag_inherited_from_zone: '&7Inherited from: &fZone'
-  flag_inherited_from_plot: '&7Inherited from: &fClaim'
+  flag_inherited_from_zone: '&7Inherited from: &fServer Zone'
+  flag_inherited_from_plot: '&7Inherited from: &fPlot'
 
-  # --- Role Flags (Modern) ---
-  role_flags_gui_title: "&9⚙ Role Permissions: {ROLE}"
-  role_flags_legend_title: "&7How this works"
+  # --- Role Flags (Per-role Flag Behavior) ---
+  role_flags_gui_title: "&9⚙ Role Flags: {ROLE}"
+  role_flags_legend_title: "&7Flag Behavior"
   role_flags_legend_lore:
-    - "&7Inherit: Use normal claim/world rules."
+    - "&7How role flags work:"
     - " "
-    - "&aAllow: &7Role can bypass this restriction."
-    - "&cDeny: &7Role is always blocked."
+    - "&fInherit: &7Use normal flag rules."
+    - "&aAllow: &7Let this role bypass the flag."
+    - "&cDeny: &7Always block this role."
     - " "
-    - "&7Use this to fine-tune what members of"
-    - "&7this role are actually allowed to do."
+    - "&7Use this to fine-tune what each role"
+    - "&7can do inside this plot."
 
   role_flag_state_inherit: "Inherit"
-  role_flag_state_allow: "Allow"
-  role_flag_state_deny: "Deny"
+  role_flag_state_allow: "Allow (Bypass)"
+  role_flag_state_deny: "Deny (Block)"
 
-  role_flag_name_pvp: "&bPvP"
-  role_flag_name_containers: "&bContainers"
-  role_flag_name_mobs: "&bHostile Mobs"
-  role_flag_name_pets: "&bPets"
-  role_flag_name_entities: "&bEntities"
-  role_flag_name_farm: "&bCrops"
-  role_flag_name_tnt: "&bExplosions"
-  role_flag_name_fire: "&bFire"
-  role_flag_name_piston: "&bPistons"
-  role_flag_name_entry: "&bClaim Entry"
-  role_flag_name_shop: "&bShops"
-  role_flag_name_fly: "&bFlight"
-  role_flag_name_animals: "&bAnimals"
-  role_flag_name_redstone: "&bRedstone"
-  role_flag_name_vehicles: "&bVehicles"
+  role_flag_name_pvp: "&bPvP Flag"
+  role_flag_name_containers: "&bContainers Flag"
+  role_flag_name_mobs: "&bMonsters Flag"
+  role_flag_name_pets: "&bPets Flag"
+  role_flag_name_entities: "&bEntities Flag"
+  role_flag_name_farm: "&bFarming Flag"
+  role_flag_name_tnt: "&bExplosions Flag"
+  role_flag_name_fire: "&bFire Flag"
+  role_flag_name_piston: "&bPistons Flag"
+  role_flag_name_entry: "&bEntry Flag"
+  role_flag_name_shop: "&bShop Flag"
+  role_flag_name_fly: "&bFlight Flag"
+  role_flag_name_animals: "&bAnimals Flag"
+  role_flag_name_redstone: "&bRedstone Flag"
+  role_flag_name_vehicles: "&bVehicles Flag"
 
   role_flag_lore_common:
-    - "&7Per-role permissions for this claim."
-    - "&7Overrides normal flag rules if set."
+    - "&7Change how this role interacts with"
+    - "&7the selected protection inside this plot."
     - " "
     - "&eClick to cycle: Inherit → Allow → Deny"
 
-  roles_gui_title: '&eMembers'
+  roles_gui_title: '&eTrusted Players'
   roles_manage_title: '&bManage: {PLAYER}'
-  trusted_plot_selector_title: '&bSelect Claim'
-  add_trusted_title: '&aAdd Member'
-  button_add_trusted: '&aAdd Member'
+  trusted_plot_selector_title: '&bSelect a Plot'
+  add_trusted_title: '&aAdd Trusted Player'
+  button_add_trusted: '&aAdd Trusted'
   add_trusted_lore:
-    - '&7Trust a nearby player.'
-  button_remove_trusted: '&cRemove'
-  role_self: '&cCannot edit yourself.'
-  role_is_owner: '&cCannot edit owner.'
-  role_set_to: '&a✔ {PLAYER} is now {ROLE}.'
-  role_removed: '&e✔ {PLAYER} removed.'
+    - '&7Add a player as trusted to this plot.'
+  button_remove_trusted: '&cRemove Trusted'
+  role_self: '&cYou cannot change your own trust settings here.'
+  role_is_owner: '&cYou cannot change the owner role.'
+  role_set_to: '&a✔ {PLAYER} is now set to role {ROLE}.'
+  role_removed: '&e✔ {PLAYER} is no longer trusted on this plot.'
 
   # --- Admin Tools ---
-  admin_menu_title: '&c⚙ Admin'
-  admin_reloading: '&7Reloading...'
-  admin_reload_complete: '&a✔ Done.'
-  button_admin_auto_remove: '&6Auto-Wipe Bans'
+  admin_menu_title: '&c⚙ Admin Menu'
+  admin_reloading: '&7Reloading configuration...'
+  admin_reload_complete: '&a✔ Reload complete.'
+  button_admin_auto_remove: '&6Auto-remove Banned Plots'
   admin_auto_remove_lore:
-    - '&7Delete plots of banned players.'
+    - '&7Automatically remove plots owned by banned players.'
   button_admin_bypass_limit: '&dBypass Limits'
   admin_bypass_limit_lore:
-    - '&7Ignore claim limits.'
-  button_admin_broadcast: '&bLog Actions'
+    - '&7Allow admins to bypass plot limits.'
+  button_admin_broadcast: '&bLog Admin Actions'
   admin_broadcast_lore:
-    - '&7Broadcast admin usage.'
-  button_admin_unlimited: "&aInfinite Claims"
+    - '&7Log admin actions to console or chat.'
+  button_admin_unlimited: "&aUnlimited Plots"
   admin_unlimited_lore:
-    - "&7Allow admins unlimited land."
-  button_admin_sync: "&bGlobal Sync"
+    - "&7Allow admins unlimited claims."
+  button_admin_sync: "&bSync Data"
   admin_sync_lore:
-    - "&7Sync data across network."
+    - "&7Synchronize data across all servers."
   button_admin_perf: "&cPerformance Mode"
   admin_perf_lore:
-    - "&7Reduce particles."
+    - "&7Reduce visual effects to improve performance."
   button_admin_diagnostics: "&bDiagnostics"
-  button_admin_reload: "&eReload Config"
+  button_admin_reload: "&eReload Plugin"
 
-  admin_auto_remove_enabled: '&a✔ Auto-Wipe ON.'
-  admin_auto_remove_disabled: '&c✖ Auto-Wipe OFF.'
-  admin_bypass_enabled: '&a✔ Limit Bypass ON.'
-  admin_bypass_disabled: '&c✖ Limit Bypass OFF.'
-  admin_broadcast_enabled: '&a✔ Logging ON.'
-  admin_broadcast_disabled: '&c✖ Logging OFF.'
-  admin_removed_banned: '&eWiped plots for: {PLAYER}'
+  admin_auto_remove_enabled: '&a✔ Auto-remove for banned players: ON.'
+  admin_auto_remove_disabled: '&c✖ Auto-remove for banned players: OFF.'
+  admin_bypass_enabled: '&a✔ Limit bypass: ON.'
+  admin_bypass_disabled: '&c✖ Limit bypass: OFF.'
+  admin_broadcast_enabled: '&a✔ Admin action logging: ON.'
+  admin_broadcast_disabled: '&c✖ Admin action logging: OFF.'
+  admin_removed_banned: '&eRemoved plots owned by: {PLAYER}.'
 
-  admin_plot_list_title: '&cGlobal Plot List'
+  admin_plot_list_title: '&cAll Plots'
   admin_plot_item_name: "&bOwner: &f{OWNER}"
   admin_server_zone_tag: "&c[SERVER ZONE]"
   admin_plot_actions:
     - "&eLeft-Click: &7Teleport"
     - "&cRight-Click: &7Delete"
-  admin_plot_teleport: '&eTeleported to {PLAYER}.'
-  admin_plot_deleted: '&c✖ Deleted {PLAYER}.'
-  button_back_admin: "&fBack to Admin"
+  admin_plot_teleport: '&eTeleported to plot owned by {PLAYER}.'
+  admin_plot_deleted: '&c✖ Deleted plot owned by {PLAYER}.'
+  button_back_admin: "&fBack to Admin Menu"
 
   admin-zone-created: '&a✔ Server Zone created.'
-  admin-zone-deleted: '&c✖ Server Zone deleted.'
-  admin-zone-not-found: '&c❌ Not a Server Zone.'
-  admin_zone_flags_title: '&cZone Settings'
+  admin-zone-deleted: '&c✖ Server Zone removed.'
+  admin-zone-not-found: '&c❌ This area is not a Server Zone.'
+  admin_zone_flags_title: '&cServer Zone Flags'
   flag_build_lore:
-    - '&7Allow building?'
+    - '&7Whether building is allowed here.'
   flag_containers_lore:
-    - '&7Allow containers?'
+    - '&7Whether containers can be used here.'
   flag_interact_lore:
-    - '&7Allow interactions?'
+    - '&7Whether general interaction is allowed here.'
 
-  wilderness_revert_start: '&7Reverting wilderness...'
-  wilderness_revert_end: '&7Reverted {AMOUNT} blocks.'
+  wilderness_revert_start: '[AegisGuard] Starting wilderness restore...'
+  wilderness_revert_end: '[AegisGuard] Reverted {AMOUNT} blocks to wilderness.'
 
   help_header: '&bAegisGuard Help'
   help_lines:
-    - '&e/ag wand'
-    - '&e/ag menu'
-    - '&e/ag claim'
-    - '&e/ag unclaim'
-    - '&e/ag resize <dir> <amt>'
-    - '&e/ag home'
-    - '&e/ag setspawn'
-    - '&e/ag welcome [msg]'
-    - '&e/ag market'
-    - '&e/ag help'
+    - '&e/ag wand &7- Get the selection wand.'
+    - '&e/ag menu &7- Open the main menu.'
+    - '&e/ag claim &7- Claim your selected area.'
+    - '&e/ag unclaim &7- Unclaim your current plot.'
+    - '&e/ag resize <dir> <amt> &7- Expand your plot.'
+    - '&e/ag home &7- Teleport to your plot home.'
+    - '&e/ag setspawn &7- Set your plot home.'
+    - '&e/ag welcome [msg] &7- Set a welcome message.'
+    - '&e/ag market &7- Open the plot market.'
+    - '&e/ag help &7- Show this help list.'

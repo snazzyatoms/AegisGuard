@@ -22,7 +22,7 @@ import java.util.Map;
  * LevelingGUI
  * - Richer progression view for plot levels.
  * - Shows a level track, current tier, and next tier preview.
- * - Texts pulled from messages.yml so styles can swap between Old / Hybrid / Modern English.
+ * - Dynamic lore: Changes based on whether plot expansion is enabled in config.
  */
 public class LevelingGUI {
 
@@ -144,8 +144,20 @@ public class LevelingGUI {
             upgradeLore.add("§eClick to ascend to §bLevel " + nextLvl);
             upgradeLore.add("");
 
-            // Pull in generic leveling description from messages.yml so it changes with language style
-            List<String> buttonLore = plugin.msg().getList(player, "level_button_lore");
+            // --- DYNAMIC LORE SWITCH ---
+            // If expansion is ON, use normal lore.
+            // If expansion is OFF, use static lore (so it doesn't mention size).
+            List<String> buttonLore;
+            if (plugin.cfg().isLevelingExpansionEnabled()) {
+                buttonLore = plugin.msg().getList(player, "level_button_lore");
+            } else {
+                buttonLore = plugin.msg().getList(player, "level_button_lore_static");
+                // Fallback if key missing in old configs
+                if (buttonLore == null || buttonLore.isEmpty()) {
+                    buttonLore = plugin.msg().getList(player, "level_button_lore");
+                }
+            }
+
             if (buttonLore != null && !buttonLore.isEmpty()) {
                 upgradeLore.addAll(buttonLore);
             }

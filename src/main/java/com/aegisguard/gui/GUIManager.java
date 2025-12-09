@@ -44,6 +44,9 @@ public class GUIManager {
     private final ZoningGUI zoningGUI;
     private final BiomeGUI biomeGUI;
 
+    // New: Plot Status Codex (replaces sidebar)
+    private final PlotStatusGUI plotStatusGUI;
+
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
         
@@ -66,6 +69,9 @@ public class GUIManager {
         this.levelingGUI = new LevelingGUI(plugin);
         this.zoningGUI = new ZoningGUI(plugin);
         this.biomeGUI = new BiomeGUI(plugin);
+
+        // New: Plot Status Codex GUI
+        this.plotStatusGUI = new PlotStatusGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -105,6 +111,9 @@ public class GUIManager {
     public LevelingGUI leveling() { return levelingGUI; }
     public ZoningGUI zoning() { return zoningGUI; }
     public BiomeGUI biomes() { return biomeGUI; }
+
+    // New: Plot Status Codex
+    public PlotStatusGUI plotStatus() { return plotStatusGUI; }
 
     // Economy
     public PlotMarketGUI market() { return plotMarketGUI; }

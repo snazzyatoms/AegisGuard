@@ -17,6 +17,7 @@ import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.InfoGUI.InfoHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
+import com.aegisguard.gui.PlotStatusGUI.PlotStatusHolder; // Added this import
 
 // v1.1.0 Features
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
@@ -70,7 +71,8 @@ public class GUIListener implements Listener {
                 || holder instanceof PlotMarketHolder
                 || holder instanceof PlotAuctionHolder
                 || holder instanceof ExpansionHolder
-                || holder instanceof ExpansionAdminHolder;
+                || holder instanceof ExpansionAdminHolder
+                || holder instanceof PlotStatusHolder; // Registered here
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -102,14 +104,16 @@ public class GUIListener implements Listener {
         }
 
         // 2) Block ALL clicks that originate in the player's own inventory
-        //    while the GUI is open (prevents dragging items into GUI).
+        //    while the GUI is open.
+        //    This effectively freezes the player's inventory so they cannot
+        //    pick up items to move them into the GUI.
         if (e.getClickedInventory() != null
                 && e.getClickedInventory().equals(player.getInventory())) {
             e.setCancelled(true);
             return;
         }
 
-        // From here on, we only care about clicks in the top inventory.
+        // From here on, we only care about clicks in the top inventory (the GUI itself).
         Inventory clickedInv = e.getClickedInventory();
         if (clickedInv == null || !clickedInv.equals(top)) {
             return;
@@ -179,6 +183,9 @@ public class GUIListener implements Listener {
         else if (holder instanceof ExpansionAdminHolder) {
             new com.aegisguard.expansions.ExpansionRequestAdminGUI(plugin).handleClick(player, e);
         }
+        else if (holder instanceof PlotStatusHolder castHolder) {
+            new PlotStatusGUI(plugin).handleClick(player, e, castHolder);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -189,13 +196,8 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null || !isAegisGuiHolder(holder)) return;
 
-        // If any dragged slot touches the top inventory, cancel it.
-        int topSize = top.getSize();
-        for (int slot : e.getRawSlots()) {
-            if (slot < topSize) {
-                e.setCancelled(true);
-                return;
-            }
-        }
+        // Strict: If you try to drag ANY items while this GUI is open, cancel it.
+        // This prevents picking up an item in the bottom inv and "swiping" it across the top.
+        e.setCancelled(true);
     }
 }

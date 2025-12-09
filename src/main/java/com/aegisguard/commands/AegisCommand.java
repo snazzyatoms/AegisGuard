@@ -42,7 +42,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "sell", "unsell", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "like",
-            "rename", "stuck", "setdesc", "merge", "sidebar",
+            "rename", "stuck", "setdesc", "merge",
             "consume"
     };
 
@@ -150,11 +150,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 } else {
                     plugin.selection().attemptMerge(p, args[1]);
                 }
-                break;
-
-            // --- NEW: SIDEBAR ---
-            case "sidebar":
-                plugin.getSidebar().toggle(p);
                 break;
 
             // --- ECONOMY ---

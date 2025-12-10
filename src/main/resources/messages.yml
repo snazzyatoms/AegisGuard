@@ -351,29 +351,47 @@ old_english:
   like_disabled: '&cSocial standing is ignored in this realm.'
   
   # --- Plot Status GUI ---
+  button_plot_status: '&b⚔ Ledger of Dominion Status'
+  plot_status_button_lore:
+  - '&7Unfurl a full report of'
+  - '&7thy land, its boons, and its growth.'
+
   plot_status_gui_title: '&b⚔ Ledger of Dominion Status'
   plot_status_header_title: '&6Tale of the Land'
-  plot_status_blessings_title: '&dBlessings & Boons'
-  plot_status_territory_title: '&aRealm & Borders'
+  plot_status_blessings_title: '&dActive Blessings & Boons'
+  plot_status_territory_title: '&aRealm, Reach & Growth'
+  
   plot_status_overview_name: '&aOverview of Thy Holding'
   plot_status_overview_lore:
-  - '&7Survey the breadth, level, and'
-  - '&7vitality of this guarded dominion.'
+  - '&7Survey the lifeblood of this dominion:'
+  - '&7its keeper, realm, climate, and tier.'
   - ' '
-  - '&8Only thy strongest blessings are'
-  - '&8recorded; lesser tiers hide in the margins.'
+  - '&8Higher levels unlock greater favour,'
+  - '&8wider borders, and rarer blessings.'
+
   plot_status_flags_name: '&6Wards & Enchantments'
   plot_status_flags_lore:
-  - '&7Review which wards stand'
-  - '&7Awake or lie Silent.'
-  plot_status_economy_name: '&eTreasury & Tribute'
+  - '&7Gaze upon the sigils that guard thy land:'
+  - '&7PvP, beasts, flame, stonecraft, and more.'
+  - ' '
+  - '&8A ward &aAwake &8bindeth the realm with law;'
+  - '&8a ward &cSilent &8returneth it to common ways.'
+
+  plot_status_economy_name: '&eTreasury, Tribute & Deeds'
   plot_status_economy_lore:
-  - '&7Glimpse upkeep, tribute rendered,'
-  - '&7and the cost of sovereignty.'
-  plot_status_social_name: '&dFavour & Renown'
+  - '&7Behold the burdens and boons of coin:'
+  - '&7upkeep rendered, refunds, and market dealings.'
+  - ' '
+  - '&8Neglect thy tribute, and the land'
+  - '&8may be reclaimed by the wilds or the auctioneer.'
+
+  plot_status_social_name: '&dFavour, Renown & Footfalls'
   plot_status_social_lore:
-  - '&7Behold likes, visitors, and the'
-  - '&7esteem thy land commandeth.'
+  - '&7Mark how others behold this dominion:'
+  - '&7its likes, visitors, and quiet admirers.'
+  - ' '
+  - '&8A plot oft trod and favored is whispered of'
+  - '&8in taverns as a land of note.'
   
   title_entering: '&b{PLOT_NAME}'
   subtitle_entering: '&7Owned by {OWNER}'
@@ -1072,30 +1090,48 @@ hybrid_english:
   like_own_plot: '&cYou cannot like your own land.'
   like_disabled: '&cLikes and social rating are disabled in this world.'
   
-  # --- Plot Status GUI (Unified Style) ---
+  # --- Plot Status GUI ---
+  button_plot_status: '&b⚔ Plot Status Ledger'
+  plot_status_button_lore:
+  - '&7Review the current state of'
+  - '&7your land, its power, and its reach.'
+
   plot_status_gui_title: '&b⚔ Plot Status Ledger'
-  plot_status_header_title: '&6Story of This Land'
-  plot_status_blessings_title: '&dBlessings & Bonuses'
-  plot_status_territory_title: '&aTerritory & Borders'
+  plot_status_header_title: '&6Chronicle of the Land'
+  plot_status_blessings_title: '&dActive Blessings & Bonuses'
+  plot_status_territory_title: '&aTerritory, Borders & Growth'
+
   plot_status_overview_name: '&aOverview of Your Plot'
   plot_status_overview_lore:
-  - '&7View the size, level, and general'
-  - '&7health of this protected land.'
+  - '&7Inspect the core details of this land:'
+  - '&7its owner, world, biome, and level.'
   - ' '
-  - '&8Only your strongest perks and levels'
-  - '&8are shown here; weaker tiers are hidden.'
+  - '&8Higher levels unlock stronger effects,'
+  - '&8wider borders, and new capabilities.'
+
   plot_status_flags_name: '&6Wards & Protections'
   plot_status_flags_lore:
-  - '&7See which wards are active'
-  - '&7and which are currently disabled.'
-  plot_status_economy_name: '&eEconomy & Upkeep'
+  - '&7View which protections govern this plot:'
+  - '&7PvP, mobs, fire, redstone, and more.'
+  - ' '
+  - '&8Enabled wards enforce safety;'
+  - '&8disabled wards follow server rules.'
+
+  plot_status_economy_name: '&eEconomy, Upkeep & Ownership'
   plot_status_economy_lore:
-  - '&7Check upkeep, recent tributes,'
-  - '&7and economic details of your land.'
-  plot_status_social_name: '&dFame & Visitors'
+  - '&7Review upkeep status and recent costs,'
+  - '&7including tributes and refunds.'
+  - ' '
+  - '&8Failure to pay upkeep may result'
+  - '&8in auctions or loss of ownership.'
+
+  plot_status_social_name: '&dReputation & Foot Traffic'
   plot_status_social_lore:
-  - '&7See likes, visitors, and how'
-  - '&7well-known your land has become.'
+  - '&7Track how others interact with this land:'
+  - '&7likes received, visits made, and popularity.'
+  - ' '
+  - '&8Well-traveled lands gain recognition'
+  - '&8across the realm.'
   
   # --- Wards Info (Flags Help) ---
   button_flags_info: '&6📜 Wards & Protections'
@@ -1836,30 +1872,48 @@ modern_english:
   like_own_plot: '&cError: You cannot like your own claim.'
   like_disabled: '&cLikes are disabled on this server/world.'
   
-  # --- Plot Status GUI ---
+ # --- Plot Status GUI ---
+  button_plot_status: '&b⚔ Claim Status'
+  plot_status_button_lore:
+  - '&7View detailed information about'
+  - '&7your claim, its protections, and growth.'
+
   plot_status_gui_title: '&b⚔ Claim Status'
   plot_status_header_title: '&6Claim Information'
-  plot_status_blessings_title: '&dActive Bonuses'
-  plot_status_territory_title: '&aTerritory & Growth'
+  plot_status_blessings_title: '&dActive Bonuses & Effects'
+  plot_status_territory_title: '&aTerritory, Size & Progression'
+
   plot_status_overview_name: '&aClaim Overview'
   plot_status_overview_lore:
-  - '&7View the size, level, and general'
-  - '&7health of this protected claim.'
+  - '&7Displays the core details of this claim,'
+  - '&7including owner, world, biome, and level.'
   - ' '
-  - '&8Only your highest unlocked perks'
-  - '&8are shown here; weaker tiers are hidden.'
-  plot_status_flags_name: '&6Protection & Wards'
+  - '&8Only the highest unlocked bonuses are shown'
+  - '&8to keep this view concise and readable.'
+
+  plot_status_flags_name: '&6Protections & Wards'
   plot_status_flags_lore:
-  - '&7See which protection flags are'
-  - '&7currently enabled or disabled.'
-  plot_status_economy_name: '&eEconomy & Upkeep'
+  - '&7Lists all active protection settings,'
+  - '&7such as PvP, mobs, fire, and interactions.'
+  - ' '
+  - '&8Disabled protections follow normal'
+  - '&8server behavior.'
+
+  plot_status_economy_name: '&eEconomy, Upkeep & Costs'
   plot_status_economy_lore:
-  - '&7Review upkeep costs, recent payments,'
-  - '&7and other claim-related expenses.'
-  plot_status_social_name: '&dVisitors & Popularity'
+  - '&7Shows upkeep status, recent payments,'
+  - '&7refunds, and marketplace information.'
+  - ' '
+  - '&8Unpaid upkeep may result in claim'
+  - '&8expiration or auction.'
+
+  plot_status_social_name: '&dVisitors & Reputation'
   plot_status_social_lore:
-  - '&7Check likes, visits, and how'
-  - '&7popular this claim has become.'
+  - '&7Tracks visits, likes, and overall'
+  - '&7visibility of this claim.'
+  - ' '
+  - '&8Highly visited claims gain community'
+  - '&8recognition.''
   
   # --- Wards Info (Flags Help) ---
   button_flags_info: '&6📜 Ward Info'

@@ -859,13 +859,13 @@ hybrid_english:
   expansion_submitted: '&a✔ Request submitted.'
   expansion_exists: '&c❌ You already have a pending request.'
 
-  # Player-facing results (single visible line)
-  expansion_approved: '&a✔ Your request was approved by Admin.'
-  expansion_denied: '&c❌ Your request was denied by Admin.'
+  # Expansion result keys (kept for compatibility, silenced to prevent duplicates)
+  expansion_approved: ''
+  expansion_denied: ''
 
-  # --- Admin Request Aliases (Compatibility - Silenced to prevent duplicates) ---
-  admin_request_approved: ''
-  admin_request_denied: ''
+  # Admin request result keys (primary visible lines)
+  admin_request_approved: '&a✔ Your request was approved by Admin.'
+  admin_request_denied: '&c❌ Your request was denied by Admin.'
 
   expansion_payment_failed: '&c❌ Insufficient funds.'
   expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
@@ -1111,13 +1111,13 @@ modern_english:
   expansion_submitted: '&a✔ Expansion request submitted.'
   expansion_exists: '&c❌ You already have a pending expansion request.'
 
-  # Player-facing results (single visible line)
-  expansion_approved: '&a✔ Your expansion request was approved by Admin.'
-  expansion_denied: '&c❌ Your expansion request was denied by Admin.'
+  # Expansion result keys (kept for compatibility, silenced to prevent duplicates)
+  expansion_approved: ''
+  expansion_denied: ''
 
-  # --- Admin Request Aliases (Compatibility - Silenced to prevent duplicates) ---
-  admin_request_approved: ''
-  admin_request_denied: ''
+  # Admin request result keys (primary visible lines)
+  admin_request_approved: '&a✔ Your expansion request was approved by Admin.'
+  admin_request_denied: '&c❌ Your expansion request was denied by Admin.'
 
   expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
   expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'

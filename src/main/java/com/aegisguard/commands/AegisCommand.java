@@ -593,10 +593,12 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         ItemMeta meta = rod.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&bAegis Scepter"));
+
+            // ✅ Lore cleaned: removed "Right-click: Open Aegis Menu"
             meta.setLore(Arrays.asList(
-                    ChatColor.translateAlternateColorCodes('&', "&7Right-click: Open Aegis Menu"),
                     ChatColor.translateAlternateColorCodes('&', "&7Left/Right-click: Select corners")
             ));
+
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 
             // Mark as Aegis Wand for SelectionService

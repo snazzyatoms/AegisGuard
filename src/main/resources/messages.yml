@@ -340,7 +340,7 @@ old_english:
   like_disabled: '&cSocial standing is ignored in this realm.'
   
   # --- Plot Status GUI ---
-  button_plot_status: '&b⚔ Ledger of Dominion Status'
+  button_plot_status_button_title: '&b⚔ Ledger of Dominion Status'
   plot_status_button_lore:
     - '&7Unfurl a full report of'
     - '&7thy land, its boons, and its growth.'
@@ -913,7 +913,7 @@ hybrid_english:
     - '&eClick to Travel'
 
   # --- Plot Status GUI ---
-  plot_status_gui_title: '&b⚔ Plot Status Ledger'
+  button_plot_status_button_title:: '&b⚔ Plot Status Ledger'
   plot_status_header_title: '&6Story of This Land'
   plot_status_blessings_title: '&dActive Blessings'
   plot_status_territory_title: '&aTerritory & Growth'
@@ -1353,7 +1353,7 @@ modern_english:
   like_disabled: '&cLikes are disabled on this server/world.'
   
   # --- Plot Status GUI ---
-  plot_status_gui_title: '&b⚔ Claim Status'
+  button_plot_status_button_title: '&b⚔ Claim Status'
   plot_status_header_title: '&6Claim Information'
   plot_status_blessings_title: '&dActive Bonuses & Effects'
   plot_status_territory_title: '&aTerritory, Size & Progression'

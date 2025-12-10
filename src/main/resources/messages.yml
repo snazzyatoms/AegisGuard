@@ -338,13 +338,17 @@ old_english:
   like_removed: '&eYou removed your favor.'
   like_own_plot: '&cThou cannot bestow favor upon thine own land.'
   like_disabled: '&cSocial standing is ignored in this realm.'
-  
   # --- Plot Status GUI ---
-  button_plot_status_button_title: '&b⚔ Ledger of Dominion Status'
-  plot_status_button_lore:
-    - '&7Unfurl a full report of'
-    - '&7thy land, its boons, and its growth.'
-  
+  button_plot_status: '&b📜 Ledger of Dominion Status'
+  plot_status_button_title: '&b📜 Ledger of Dominion Status'
+
+  plot_status_lore:
+  - '&7Behold the tale of thy dominion:'
+  - '&7its boons, wards, tribute, and renown.'
+  - ' '
+  - '&8Open this ledger to review the full'
+  - '&8standing of thy guarded land.'
+
   plot_status_gui_title: '&b⚔ Ledger of Dominion Status'
   plot_status_header_title: '&6Tale of the Land'
   plot_status_blessings_title: '&dActive Blessings & Boons'
@@ -913,18 +917,28 @@ hybrid_english:
     - '&eClick to Travel'
 
   # --- Plot Status GUI ---
-  button_plot_status_button_title:: '&b⚔ Plot Status Ledger'
+  button_plot_status: '&b📜 Plot Status Ledger'
+  plot_status_button_title: '&b📜 Plot Status Ledger'
+
+  plot_status_lore:
+  - '&7Review the current state of your land:'
+  - '&7blessings, wards, growth, and reputation.'
+  - ' '
+  - '&8A concise record of what empowers'
+  - '&8and defines this protected territory.'
+
+  plot_status_gui_title: '&b⚔ Plot Status Ledger'
   plot_status_header_title: '&6Story of This Land'
   plot_status_blessings_title: '&dActive Blessings'
   plot_status_territory_title: '&aTerritory & Growth'
 
   plot_status_overview_name: '&aPlot Overview'
   plot_status_overview_lore:
-    - '&7See ownership, level, biome,'
-    - '&7and general condition.'
-    - ' '
-    - '&8Only the strongest bonuses'
-    - '&8are displayed.'
+  - '&7See ownership, level, biome,'
+  - '&7and general condition.'
+  - ' '
+  - '&8Only the strongest bonuses'
+  - '&8are displayed.'
 
   plot_status_flags_name: '&6Wards & Protections'
   plot_status_flags_lore:
@@ -1353,18 +1367,28 @@ modern_english:
   like_disabled: '&cLikes are disabled on this server/world.'
   
   # --- Plot Status GUI ---
-  button_plot_status_button_title: '&b⚔ Claim Status'
+  button_plot_status: '&b📊 Claim Status'
+  plot_status_button_title: '&b📊 Claim Status'
+
+  plot_status_lore:
+  - '&7View a clean breakdown of claim'
+  - '&7details, bonuses, territory, and growth.'
+  - ' '
+  - '&8Only your strongest unlocked bonuses'
+  - '&8are displayed to keep this view clean.'
+
+  plot_status_gui_title: '&b⚔ Claim Status'
   plot_status_header_title: '&6Claim Information'
   plot_status_blessings_title: '&dActive Bonuses & Effects'
   plot_status_territory_title: '&aTerritory, Size & Progression'
-  
+
   plot_status_overview_name: '&aClaim Overview'
   plot_status_overview_lore:
-    - '&7Displays the core details of this claim,'
-    - '&7including owner, world, biome, and level.'
-    - ' '
-    - '&8Only the highest unlocked bonuses are shown'
-    - '&8to keep this view concise and readable.'
+  - '&7Shows the primary attributes of this claim,'
+  - '&7including owner, world, biome, and level.'
+  - ' '
+  - '&8Only the highest unlocked bonuses'
+  - '&8are shown for clarity.'
   
   plot_status_flags_name: '&6Protections & Wards'
   plot_status_flags_lore:

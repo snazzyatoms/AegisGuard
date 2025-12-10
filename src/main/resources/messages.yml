@@ -123,14 +123,13 @@ old_english:
   expansion_submitted: '&a✔ Thy petition for expansion hath been sent to the Council.'
   expansion_exists: '&c❌ Thou already hast a petition pending.'
 
-  # Player-facing results (single visible line)
-  expansion_approved: '&a✔ Rejoice! Thy petition hath been granted by Admin.'
-  expansion_denied: '&c❌ Alas, thy petition hath been denied by Admin.'
+  # Expansion result keys (kept for compatibility, silenced to prevent duplicates)
+  expansion_approved: ''
+  expansion_denied: ''
 
-  # --- Admin Request Aliases (Compatibility - Silenced to prevent duplicates) ---
-  admin_request_approved: ''
-  admin_request_denied: ''
-
+  # Admin request result keys (primary visible lines)
+  admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by Admin.'
+  admin_request_denied: '&c❌ Alas, thy petition hath been denied by Admin.'
   expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
   expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
   expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'

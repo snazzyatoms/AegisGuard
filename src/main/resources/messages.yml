@@ -107,7 +107,7 @@ old_english:
     - '&eLeft-Click: &7Gaze upon the land'
     - '&aRight-Click: &7Purchase the Deed'
   
-  # --- Expansion ---
+# --- Expansion ---
   expansion_gui_title: '&d§lLand Expansion Petition'
   button_expand: '&dRequest Expansion'
   expand_lore:
@@ -119,10 +119,16 @@ old_english:
   button_view_requests_admin: '&cReview Petitions (Admin)'
   view_requests_admin_lore:
     - '&7Judge the pleas of thy subjects.'
+
   expansion_submitted: '&a✔ Thy petition for expansion hath been sent to the Council.'
   expansion_exists: '&c❌ Thou already hast a petition pending.'
   expansion_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
   expansion_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
+
+  # --- Admin Request Aliases (Compatibility) ---
+  admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
+  admin_request_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
+
   expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
   expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
   expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'
@@ -848,16 +854,21 @@ hybrid_english:
   button_view_requests_admin: '&cReview Requests'
   view_requests_admin_lore:
     - '&7Approve or deny expansion requests.'
+
   expansion_submitted: '&a✔ Request submitted.'
   expansion_exists: '&c❌ You already have a pending request.'
   expansion_approved: '&a✔ Your request was approved by {PLAYER}.'
   expansion_denied: '&c❌ Your request was denied by {PLAYER}.'
+
+  # --- Admin Request Aliases (Compatibility) ---
+  admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
+  admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+
   expansion_payment_failed: '&c❌ Insufficient funds.'
   expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
   expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
   expansion_invalid_size: '&c❌ Expansion must increase size.'
   request_expired: '&c❌ Request expired.'
-
   expansion_tier1_name: '&aSmall Expansion (+5)'
   expansion_tier1_lore:
     - '&7Increase radius by 5 blocks.'
@@ -1093,10 +1104,16 @@ modern_english:
   view_requests_admin_lore:
     - '&7View and manage all current'
     - '&7expansion requests.'
+
   expansion_submitted: '&a✔ Expansion request submitted.'
   expansion_exists: '&c❌ You already have a pending expansion request.'
   expansion_approved: '&a✔ Your expansion request was approved by {PLAYER}.'
   expansion_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
+
+  # --- Admin Request Aliases (Compatibility) ---
+  admin_request_approved: '&a✔ Your expansion request was approved by {PLAYER}.'
+  admin_request_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
+
   expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
   expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'
   expansion_overlap_fail: '&c❌ Cannot expand; another claim is too close.'

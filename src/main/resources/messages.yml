@@ -126,8 +126,8 @@ old_english:
   expansion_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
 
   # --- Admin Request Aliases (Compatibility) ---
-  admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
-  admin_request_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
+  admin_request_approved: ''&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
+  admin_request_denied: ''&c❌ Alas, thy petition hath been denied by {PLAYER}.'
 
   expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
   expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
@@ -861,8 +861,8 @@ hybrid_english:
   expansion_denied: '&c❌ Your request was denied by {PLAYER}.'
 
   # --- Admin Request Aliases (Compatibility) ---
-  admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
-  admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+  admin_request_approved: ''&a✔ Your request was approved by {PLAYER}.'
+  admin_request_denied: ''&c❌ Your request was denied by {PLAYER}.'
 
   expansion_payment_failed: '&c❌ Insufficient funds.'
   expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
@@ -1111,8 +1111,8 @@ modern_english:
   expansion_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
 
   # --- Admin Request Aliases (Compatibility) ---
-  admin_request_approved: '&a✔ Your expansion request was approved by {PLAYER}.'
-  admin_request_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
+  admin_request_approved: ''&a✔ Your expansion request was approved by {PLAYER}.'
+  admin_request_denied: ''&c❌ Your expansion request was denied by {PLAYER}.'
 
   expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
   expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'

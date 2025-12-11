@@ -38,19 +38,23 @@ public class ZoningGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "zone_gui_title"), "§3Sub-Claim Manager");
+        String title = GUIManager.safeText(
+                line(player, "zone_gui_title", "§3Sub-Claim Manager"),
+                "§3Sub-Claim Manager"
+        );
         Inventory inv = Bukkit.createInventory(new ZoningHolder(plot), 54, title);
 
         // --- 1. LIST ZONES ---
         List<Zone> zones = plot.getZones();
         int slot = 0;
-        
+
         for (Zone zone : zones) {
-            if (slot >= 45) break; 
-            
+            if (slot >= 45) break;
+
             boolean isRented = zone.isRented();
-            String status = isRented ? plugin.msg().get(player, "zone_status_rented") : plugin.msg().get(player, "zone_status_available");
-            if (status == null) status = isRented ? "§cRented" : "§aAvailable"; // Fallback
+            String status = isRented
+                    ? line(player, "zone_status_rented", "§cRented")
+                    : line(player, "zone_status_available", "§aAvailable");
 
             String renterName = "None";
             String timeRemaining = "";
@@ -64,46 +68,68 @@ public class ZoningGUI {
             // Localized Lore
             List<String> lore = new ArrayList<>();
             lore.add("§7Status: " + status);
-            lore.add("§7Price: §6" + plugin.eco().format(zone.getRentPrice(), com.aegisguard.economy.CurrencyType.VAULT));
+            lore.add("§7Price: §6" + plugin.eco().format(
+                    zone.getRentPrice(),
+                    com.aegisguard.economy.CurrencyType.VAULT
+            ));
             lore.add(" ");
-            
+
             if (isRented) {
                 lore.add("§7Tenant: §f" + renterName);
                 lore.add("§7Expires: §f" + timeRemaining);
                 lore.add(" ");
-                lore.add(plugin.msg().get(player, "zone_evict_action")); // "Left-Click to Evict"
+
+                String evictAction = line(player, "zone_evict_action", "§eLeft-Click to Evict");
+                if (!evictAction.isEmpty()) {
+                    lore.add(evictAction);
+                }
             }
-            lore.add(plugin.msg().get(player, "zone_delete_action")); // "Right-Click to Delete"
+
+            String deleteAction = line(player, "zone_delete_action", "§cRight-Click to Delete");
+            if (!deleteAction.isEmpty()) {
+                lore.add(deleteAction);
+            }
 
             inv.setItem(slot, GUIManager.createItem(
-                isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
-                "§b" + zone.getName(),
-                lore
+                    isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
+                    "§b" + zone.getName(),
+                    lore
             ));
-            
+
             slot++;
         }
-        
+
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         // --- 2. ACTIONS ---
-        
+
         // Create Button (Slot 49)
         boolean hasSelection = plugin.selection().hasSelection(player);
+
+        String createName = line(player, "button_zone_create", "§aCreate New Zone");
+        List<String> readyLore = lines(player, "zone_create_ready_lore", List.of(
+                "§7Your wand selection will be used",
+                "§7to define this sub-claim.",
+                "",
+                "§eClick to create a new zone."
+        ));
+        List<String> lockedLore = lines(player, "zone_create_locked_lore", List.of(
+                "§cYou must select an area",
+                "§cwith the Aegis wand first."
+        ));
+
         inv.setItem(49, GUIManager.createItem(
-            Material.EMERALD_BLOCK, 
-            plugin.msg().get(player, "button_zone_create"), // "Create New Zone"
-            hasSelection ? 
-                plugin.msg().getList(player, "zone_create_ready_lore") :
-                plugin.msg().getList(player, "zone_create_locked_lore")
+                Material.EMERALD_BLOCK,
+                createName,
+                hasSelection ? readyLore : lockedLore
         ));
 
         // Back (Slot 45)
-        inv.setItem(45, GUIManager.createItem(Material.ARROW, 
-            plugin.msg().get(player, "button_back"), 
-            plugin.msg().getList(player, "back_lore")));
-        
+        String backName = line(player, "button_back", "§fBack");
+        List<String> backLore = lines(player, "back_lore", List.of("§7Return to Aegis menu."));
+        inv.setItem(45, GUIManager.createItem(Material.ARROW, backName, backLore));
+
         player.openInventory(inv);
         GUIManager.playClick(player);
     }
@@ -111,20 +137,20 @@ public class ZoningGUI {
     public void handleClick(Player player, InventoryClickEvent e, ZoningHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-        
+
         Plot plot = holder.getPlot();
-        
+
         // --- NAVIGATION ---
         if (e.getSlot() == 45) {
             plugin.gui().openMain(player);
             return;
         }
-        
+
         // --- CREATE ZONE ---
         if (e.getSlot() == 49) {
             if (plugin.selection().hasSelection(player)) {
                 String name = "Zone-" + (plot.getZones().size() + 1);
-                player.performCommand("ag zone create " + name + " 100"); 
+                player.performCommand("ag zone create " + name + " 100");
                 player.closeInventory();
             } else {
                 plugin.effects().playError(player);
@@ -132,16 +158,22 @@ public class ZoningGUI {
             }
             return;
         }
-        
+
         // --- ZONE MANAGEMENT ---
-        if (e.getSlot() < 45 && e.getCurrentItem().getType() != Material.AIR && e.getCurrentItem().getType() != Material.GRAY_STAINED_GLASS_PANE) {
+        if (e.getSlot() < 45
+                && e.getCurrentItem().getType() != Material.AIR
+                && e.getCurrentItem().getType() != Material.GRAY_STAINED_GLASS_PANE) {
+
             String name = ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
             Zone target = null;
-            
+
             for (Zone z : plot.getZones()) {
-                if (z.getName().equalsIgnoreCase(name)) { target = z; break; }
+                if (z.getName().equalsIgnoreCase(name)) {
+                    target = z;
+                    break;
+                }
             }
-            
+
             if (target == null) return;
 
             // Delete
@@ -150,7 +182,7 @@ public class ZoningGUI {
                 plugin.store().setDirty(true);
                 player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
                 plugin.msg().send(player, "zone_deleted", Map.of("ZONE", target.getName()));
-                open(player, plot); 
+                open(player, plot);
             }
             // Evict
             else if (e.isLeftClick()) {
@@ -158,11 +190,28 @@ public class ZoningGUI {
                     target.evict();
                     plugin.store().setDirty(true);
                     plugin.msg().send(player, "zone_evicted", Map.of("ZONE", target.getName()));
-                    open(player, plot); 
+                    open(player, plot);
                 } else {
                     plugin.msg().send(player, "zone_not_rented");
                 }
             }
         }
+    }
+
+    // --------------------------------------------------
+    // LANGUAGE HELPERS (New Engine)
+    // --------------------------------------------------
+
+    private String line(Player player, String key, String fallback) {
+        return plugin.msg().get(player, key, fallback);
+    }
+
+    private String line(Player player, String key, String fallback, Map<String, String> placeholders) {
+        return plugin.msg().get(player, key, fallback, placeholders);
+    }
+
+    private List<String> lines(Player player, String key, List<String> fallback) {
+        List<String> result = plugin.msg().getList(player, key);
+        return (result == null || result.isEmpty()) ? fallback : result;
     }
 }

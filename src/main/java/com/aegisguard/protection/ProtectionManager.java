@@ -49,21 +49,38 @@ public class ProtectionManager implements Listener {
     }
 
     // --------------------------------------------------
-    // FLAG HELPERS (sync with messages.yml semantics)
+    // LANGUAGE (Codex helper)
+    // --------------------------------------------------
+
+    /**
+     * Local helper to read protection-related messages from the Aegis Codex.
+     * Falls back to a hardcoded string if Codex is unavailable or the key is missing.
+     */
+    private String tr(Player player, String key, String fallback) {
+        try {
+            if (plugin.codex() != null) {
+                String value = plugin.codex().tr(player, key);
+                if (value != null && !value.trim().isEmpty()) {
+                    return value;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return fallback;
+    }
+
+    // --------------------------------------------------
+    // FLAG HELPERS (sync with Codex semantics)
     // --------------------------------------------------
 
     /**
      * Generic "is this protection ON" helper.
      *
-     * Semantics (UPDATED):
+     * Semantics:
      *  - Every flag is ultimately controlled by the plot's own flag value.
-     *  - Safe zones / server zones only bias the DEFAULT to "ON" for important flags
+     *  - Safe zones / server zones bias the DEFAULT to "ON" for important flags
      *    when no explicit flag has been set yet.
      *  - Once the player/admin toggles a flag in the GUI, that explicit value always wins.
-     *
-     * This matches the UI idea:
-     *  - Green = protected / restricted
-     *  - Red   = vulnerable / vanilla-like
      */
     private boolean isProtectionActive(Plot plot, String flagKey, boolean defaultValue) {
         if (plot == null || flagKey == null) {
@@ -105,11 +122,6 @@ public class ProtectionManager implements Listener {
      *
      * Returns true when the associated protection is ACTIVE, not when
      * the vanilla behavior is allowed.
-     *
-     * Examples:
-     *  - PVP:     true  => PvP blocked, player is safe
-     *  - Mobs:    true  => mob protection ON, hostile mobs restricted
-     *  - Animals: true  => animals & pets protected from harm / interaction
      */
     public boolean isFlagEnabled(Plot plot, String flagKey) {
         if (plot == null || flagKey == null) {
@@ -137,28 +149,20 @@ public class ProtectionManager implements Listener {
 
     /**
      * Strongly typed helper used by mob-barrier / GUIs.
-     * This is the single source of truth for "mob protection ON?"
+     * Single source of truth for "mob protection ON?"
      */
     public boolean isMobProtectionEnabled(Plot plot) {
         return isProtectionActive(plot, "mobs", false);
     }
 
     /**
-     * Safe zone helper. Safe zones now primarily represent structural /
-     * environmental protections (explosions, block damage, etc.).
-     *
-     * Combat protections like PVP / mobs are still individually controlled
-     * by their own flags so players + server owners have proper choice.
+     * Safe zone helper. Safe zones primarily represent structural / environmental
+     * protections (explosions, block damage, etc.).
      */
     public boolean isSafeZoneEnabled(Plot plot) {
         return plot != null && plot.getFlag("safe_zone", false);
     }
 
-    /**
-     * Toggles the safe zone flag for a plot and persists it.
-     * Safe zones primarily protect structures & environment; they no longer
-     * automatically force mob / pvp protection, which are now full-choice flags.
-     */
     public void toggleSafeZone(Plot plot, boolean enabled) {
         if (plot == null) {
             return;
@@ -173,7 +177,6 @@ public class ProtectionManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent e) {
-        // Only interested in hostile-type mobs for this protection
         if (!(e.getEntity() instanceof Monster
                 || e.getEntity() instanceof Slime
                 || e.getEntity() instanceof Phantom)) {
@@ -202,14 +205,13 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // NEW: explicit damage guard so mobs cannot hurt you inside protected plots
+    // Hostile mobs cannot damage players inside protected plots
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobDamagePlayer(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) {
             return;
         }
 
-        // Resolve the TRUE mob source (handles projectiles)
         Entity damager = e.getDamager();
         Entity source = damager;
 
@@ -217,7 +219,6 @@ public class ProtectionManager implements Listener {
             source = shooter;
         }
 
-        // Only care about hostile mobs here
         if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
             return;
         }
@@ -227,24 +228,21 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // Mob protection ON => no damage to players from hostile mobs in this plot
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
             plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
         }
     }
 
-    // NEW: hostile mobs cannot damage animals or tameable pets when animals protection is ON
+    // hostile mobs cannot damage animals or tameable pets when animals protection is ON
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobDamageAnimal(EntityDamageByEntityEvent e) {
         Entity target = e.getEntity();
 
-        // Only care about animals & tameable pets
         if (!(target instanceof Animals) && !(target instanceof Tameable)) {
             return;
         }
 
-        // Resolve mob source (handles projectiles)
         Entity damager = e.getDamager();
         Entity source = damager;
 
@@ -252,7 +250,6 @@ public class ProtectionManager implements Listener {
             source = shooter;
         }
 
-        // Only care about hostile mobs here
         if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
             return;
         }
@@ -262,10 +259,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // Animals flag: true = animals (including tameables) protected
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
-            // No player to play the effect to, so just use the mob target location
             plugin.effects().playEffect("animals", "deny", null, target.getLocation());
         }
     }
@@ -278,7 +273,7 @@ public class ProtectionManager implements Listener {
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getTo() == null) return;
 
-        // Only react when changing X/Z; ignore head movement / tiny jitters
+        // Only react when changing X/Z
         if (e.getFrom().getBlockX() == e.getTo().getBlockX()
                 && e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
             return;
@@ -305,7 +300,7 @@ public class ProtectionManager implements Listener {
                 });
             }
 
-            // NEW: clear any plot-level buffs when leaving this plot
+            // Clear plot-level buffs when leaving
             clearPlotBuffs(p, from);
         }
 
@@ -326,7 +321,7 @@ public class ProtectionManager implements Listener {
                 plugin.effects().playCustomEffect(p, to.getEntryEffect(), to.getCenter(plugin));
             }
 
-            // Flight flag matches messages.yml: ON => allow flight for trusted players
+            // Flight: ON => allow trusted players to fly
             if (to.getFlag("fly", false) && to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                 plugin.runMain(p, () -> p.setAllowFlight(true));
             }
@@ -337,14 +332,24 @@ public class ProtectionManager implements Listener {
             // Banned from this plot
             if (to.isBanned(p.getUniqueId())) {
                 e.setCancelled(true);
-                sendPlotMessage(p, plugin.msg().get(p, "plot_banned_entry"));
+                String bannedMsg = tr(
+                        p,
+                        "plot_banned_entry",
+                        "&c⛔ You are banned from entering this claim."
+                );
+                sendPlotMessage(p, bannedMsg);
                 return;
             }
 
             // Entry flag: true = OPEN, false = CLOSED (for non-trusted)
             if (!to.getFlag("entry", true) && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                 e.setCancelled(true);
-                sendPlotMessage(p, plugin.msg().get(p, "plot_entry_denied"));
+                String deniedMsg = tr(
+                        p,
+                        "plot_entry_denied",
+                        "&c⛔ Entry denied. This claim is private."
+                );
+                sendPlotMessage(p, deniedMsg);
                 return;
             }
 
@@ -352,7 +357,7 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // NEW: clear buffs on player quit so nothing lingers between sessions
+    // Clear buffs on player quit so nothing lingers between sessions
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
@@ -400,7 +405,6 @@ public class ProtectionManager implements Listener {
     public void onAnimalDamage(EntityDamageByEntityEvent e) {
         Entity target = e.getEntity();
 
-        // Livestock + tameable pets
         if (!(target instanceof Animals) && !(target instanceof Tameable)) {
             return;
         }
@@ -411,7 +415,6 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(target.getLocation());
-        // animals flag: true = animals (and tameables) protected, false = vanilla
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", p, target.getLocation());
@@ -536,10 +539,6 @@ public class ProtectionManager implements Listener {
         buffCooldowns.put(p.getUniqueId(), now + 2000);
     }
 
-    /**
-     * Remove all plot-level buffs that could have been applied by this plot.
-     * Called when a player leaves a plot or disconnects so effects don't linger.
-     */
     private void clearPlotBuffs(Player p, Plot plot) {
         if (!plugin.cfg().isLevelingEnabled() || plot == null) return;
 
@@ -571,6 +570,7 @@ public class ProtectionManager implements Listener {
         long now = System.currentTimeMillis();
         if (messageCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return;
 
+        // Still using MessagesUtil purely as a formatter/prefix helper.
         plugin.runMain(p, () -> p.sendMessage(plugin.msg().color(msg)));
         messageCooldowns.put(p.getUniqueId(), now + TimeUnit.SECONDS.toMillis(5));
     }

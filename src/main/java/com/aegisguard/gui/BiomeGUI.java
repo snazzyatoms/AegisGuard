@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * BiomeGUI
  * - Allows changing the biome of a plot.
- * - FIX: Added Back and Exit buttons for proper navigation flow.
+ * - Uses language engine helpers with safe fallbacks.
  */
 public class BiomeGUI {
 
@@ -41,58 +41,76 @@ public class BiomeGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(plugin.msg().get(player, "biome_gui_title"), "§2Change Biome");
+        String title = GUIManager.safeText(
+                plugin.msg().get(player, "biome_gui_title"),
+                "§2Change Biome"
+        );
         Inventory inv = Bukkit.createInventory(new BiomeHolder(plot), 45, title);
 
-        // Background Filler
+        // Background Filler (bottom row only, main grid will be overridden)
         ItemStack filler = GUIManager.getFiller();
         for (int i = 36; i < 45; i++) inv.setItem(i, filler);
 
         List<String> allowedBiomes = plugin.cfg().getAllowedBiomes();
         double cost = plugin.cfg().getBiomeChangeCost();
         CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
-        String costStr = (cost > 0 && !plugin.isAdmin(player)) ? plugin.eco().format(cost, type) : "Free";
-        String currentBiomeStr = plot.getCustomBiome(); 
-        
+        String costStr = (cost > 0 && !plugin.isAdmin(player))
+                ? plugin.eco().format(cost, type)
+                : "Free";
+
+        String currentBiomeStr = plot.getCustomBiome();
+
         int slot = 0;
         for (String biomeName : allowedBiomes) {
             if (slot >= 36) break;
-            
+
             try {
                 Biome biome = Biome.valueOf(biomeName.toUpperCase());
                 Material iconMat = getBiomeIcon(biome);
                 String prettyName = formatName(biome.name());
-                
-                List<String> lore = new ArrayList<>(plugin.msg().getList(player, "biome_select_lore"));
-                if (lore.isEmpty()) {
-                    lore.add("§7Cost: " + costStr);
-                    lore.add(" ");
-                    lore.add("§eClick to Apply");
-                } else {
-                    lore.replaceAll(line -> line.replace("{BIOME}", prettyName).replace("{COST}", costStr));
-                }
+
+                // Default lore if no language key is present
+                List<String> defaultLore = new ArrayList<>();
+                defaultLore.add("§7Cost: " + costStr);
+                defaultLore.add(" ");
+                defaultLore.add("§eClick to Apply");
+
+                // Localized lore (with {BIOME} / {COST} placeholders)
+                List<String> lore = new ArrayList<>(lines(player, "biome_select_lore", defaultLore));
+                lore.replaceAll(line ->
+                        line.replace("{BIOME}", prettyName)
+                            .replace("{COST}", costStr)
+                );
 
                 ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
-                
+
                 if (currentBiomeStr != null && currentBiomeStr.equalsIgnoreCase(biome.name())) {
                     addGlow(icon);
                 }
 
                 inv.setItem(slot++, icon);
-                
+
             } catch (IllegalArgumentException ignored) {
                 // Skip invalid config biomes
             }
         }
 
         // --- NAVIGATION BUTTONS ---
-        
+
         // Back Button (Returns to Flags Menu)
-        inv.setItem(40, GUIManager.createItem(Material.ARROW, "§fBack to Flags", List.of("§7Return to Plot Settings.")));
-        
+        inv.setItem(40, GUIManager.createItem(
+                Material.ARROW,
+                line(player, "biome_button_back", "§fBack to Flags", Map.of()),
+                lines(player, "biome_back_lore", List.of("§7Return to Plot Settings."))
+        ));
+
         // Exit Button (Closes entirely)
-        inv.setItem(44, GUIManager.createItem(Material.BARRIER, "§cExit Menu", List.of("§7Close the Biome Changer.")));
-        
+        inv.setItem(44, GUIManager.createItem(
+                Material.BARRIER,
+                line(player, "biome_button_exit", "§cExit Menu", Map.of()),
+                lines(player, "biome_exit_lore", List.of("§7Close the Biome Changer."))
+        ));
+
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
@@ -104,7 +122,7 @@ public class BiomeGUI {
 
         // Navigation
         if (e.getSlot() == 40) { // Back to Flags
-            plugin.gui().flags().open(player, plot); 
+            plugin.gui().flags().open(player, plot);
             plugin.effects().playMenuFlip(player);
             return;
         }
@@ -116,15 +134,23 @@ public class BiomeGUI {
 
         // Selection
         if (e.getSlot() < 36 && e.getCurrentItem().getType() != Material.AIR) {
-            String displayName = e.getCurrentItem().getItemMeta().getDisplayName();
+            ItemMeta meta = e.getCurrentItem().getItemMeta();
+            if (meta == null || meta.getDisplayName() == null) return;
+
+            String displayName = meta.getDisplayName();
             String rawBiome = displayName.replace("§a", "").toUpperCase().replace(" ", "_");
-            
+
             try {
                 Biome newBiome = Biome.valueOf(rawBiome);
-                
+
                 // Don't charge if already set
                 if (plot.getCustomBiome() != null && plot.getCustomBiome().equals(newBiome.name())) {
-                    player.sendMessage("§cThis biome is already active.");
+                    player.sendMessage(line(
+                            player,
+                            "biome_already_active",
+                            "§cThis biome is already active.",
+                            Map.of()
+                    ));
                     return;
                 }
 
@@ -134,26 +160,34 @@ public class BiomeGUI {
                 // Transaction
                 if (cost > 0 && !plugin.isAdmin(player)) {
                     if (!plugin.eco().withdraw(player, cost, type)) {
-                        plugin.msg().send(player, "need_vault", Map.of("AMOUNT", plugin.eco().format(cost, type)));
+                        plugin.msg().send(player, "need_vault",
+                                Map.of("AMOUNT", plugin.eco().format(cost, type)));
                         plugin.effects().playError(player);
                         return;
                     }
-                    plugin.msg().send(player, "cost_deducted", Map.of("AMOUNT", plugin.eco().format(cost, type)));
+                    plugin.msg().send(player, "cost_deducted",
+                            Map.of("AMOUNT", plugin.eco().format(cost, type)));
                 }
 
                 // Apply
                 player.closeInventory();
-                player.sendMessage("§eTerraforming... this may take a moment.");
-                
+                player.sendMessage(line(
+                        player,
+                        "biome_terraforming",
+                        "§eTerraforming... this may take a moment.",
+                        Map.of()
+                ));
+
                 applyBiomeChange(plot, newBiome);
-                
+
                 plot.setCustomBiome(newBiome.name());
                 plugin.store().setDirty(true);
-                
-                plugin.msg().send(player, "biome_changed", Map.of("BIOME", formatName(newBiome.name())));
+
+                plugin.msg().send(player, "biome_changed",
+                        Map.of("BIOME", formatName(newBiome.name())));
                 plugin.effects().playConfirm(player);
-                
-                // Force client update
+
+                // Force client update (soft hint)
                 refreshChunks(player, plot);
 
             } catch (Exception ex) {
@@ -175,7 +209,7 @@ public class BiomeGUI {
         int maxY = world.getMaxHeight();
 
         // Optimized Loop: Minecraft stores biomes in 4x4x4 cubes.
-        for (int x = minX; x <= maxX; x += 4) { 
+        for (int x = minX; x <= maxX; x += 4) {
             for (int z = minZ; z <= maxZ; z += 4) {
                 for (int y = minY; y < maxY; y += 4) {
                     if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
@@ -185,10 +219,15 @@ public class BiomeGUI {
             }
         }
     }
-    
+
     private void refreshChunks(Player player, Plot plot) {
         // We will just inform the user as a fallback.
-        player.sendMessage("§7(Note: You may need to reconnect or leave the area to see visual changes fully.)");
+        player.sendMessage(line(
+                player,
+                "biome_refresh_hint",
+                "§7(Note: You may need to reconnect or leave the area to see visual changes fully.)",
+                Map.of()
+        ));
     }
 
     private Material getBiomeIcon(Biome biome) {
@@ -208,7 +247,7 @@ public class BiomeGUI {
         if (name.contains("END")) return Material.END_STONE;
         return Material.GRASS_BLOCK;
     }
-    
+
     private String formatName(String input) {
         String[] words = input.split("_");
         StringBuilder sb = new StringBuilder();
@@ -218,7 +257,7 @@ public class BiomeGUI {
         }
         return sb.toString().trim();
     }
-    
+
     private void addGlow(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -226,5 +265,45 @@ public class BiomeGUI {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             item.setItemMeta(meta);
         }
+    }
+
+    // --------------------------------------------------
+    // LANGUAGE ENGINE BRIDGE
+    // --------------------------------------------------
+
+    /**
+     * Single-line helper with variables + safe fallback.
+     * If the key is missing / empty / equals the key name, fallback is used.
+     */
+    private String line(Player player, String key, String fallback, Map<String, String> vars) {
+        String raw = null;
+        try {
+            if (vars == null || vars.isEmpty()) {
+                raw = plugin.msg().get(player, key);
+            } else {
+                raw = plugin.msg().get(player, key, vars);
+            }
+        } catch (Throwable ignored) {
+        }
+        if (raw == null || raw.isEmpty() || raw.equalsIgnoreCase(key)) {
+            return fallback;
+        }
+        return raw;
+    }
+
+    /**
+     * Multi-line helper for lore blocks.
+     * If the key is missing or empty, returns the provided fallback list.
+     */
+    private List<String> lines(Player player, String key, List<String> fallback) {
+        List<String> raw = null;
+        try {
+            raw = plugin.msg().getList(player, key);
+        } catch (Throwable ignored) {
+        }
+        if (raw == null || raw.isEmpty()) {
+            return fallback;
+        }
+        return raw;
     }
 }

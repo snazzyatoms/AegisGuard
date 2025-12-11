@@ -7,6 +7,12 @@ import org.bukkit.World;
 
 public class ExpansionRequest {
 
+    public enum Status {
+        PENDING,
+        APPROVED,
+        DENIED
+    }
+
     private final UUID requester;
     private final UUID plotOwner;
     private final UUID plotId;
@@ -19,8 +25,13 @@ public class ExpansionRequest {
     private boolean approved;
     private boolean denied;
 
-    public ExpansionRequest(UUID requester, UUID plotOwner, UUID plotId, String worldName,
-                            int currentRadius, int requestedRadius, double cost) {
+    public ExpansionRequest(UUID requester,
+                            UUID plotOwner,
+                            UUID plotId,
+                            String worldName,
+                            int currentRadius,
+                            int requestedRadius,
+                            double cost) {
         this.requester = requester;
         this.plotOwner = plotOwner;
         this.plotId = plotId;
@@ -63,9 +74,28 @@ public class ExpansionRequest {
         this.approved = false;
     }
 
-    public synchronized String getStatus() {
-        if (approved) return "APPROVED";
-        if (denied) return "DENIED";
-        return "PENDING";
+    /**
+     * Internal status enum for logic.
+     * Use this in managers instead of comparing raw strings.
+     */
+    public synchronized Status getStatus() {
+        if (approved) return Status.APPROVED;
+        if (denied) return Status.DENIED;
+        return Status.PENDING;
+    }
+
+    /**
+     * Language-engine friendly key.
+     * GUIs / managers can feed this into plugin.msg().get/send().
+     *
+     * Example usage in a GUI:
+     *   line(player, request.getStatusLangKey(), "§7Pending");
+     */
+    public synchronized String getStatusLangKey() {
+        return switch (getStatus()) {
+            case APPROVED -> "expansion_status_approved";
+            case DENIED   -> "expansion_status_denied";
+            case PENDING  -> "expansion_status_pending";
+        };
     }
 }

@@ -53,19 +53,26 @@ public class AdminPlotListGUI {
         allPlots.sort(Comparator.comparing(Plot::getOwnerName, String.CASE_INSENSITIVE_ORDER));
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
-        if (page < 0) page = 0;
+        if (page < 0) {
+            page = 0;
+        }
         if (page >= maxPages && maxPages > 0) {
             page = maxPages - 1;
         } else if (maxPages == 0) {
             page = 0;
         }
 
-        String title = GUIManager.safeText(plugin.msg().get(player, "admin_plot_list_title"), "§cAll Plots")
+        String baseTitle = plugin.codex().tr(player, "admin_plot_list_title");
+        if (baseTitle == null || baseTitle.isEmpty()) {
+            baseTitle = "§cAll Plots";
+        }
+
+        String title = GUIManager.safeText(baseTitle, "§cAll Plots")
                 + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
 
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
-        // Fill background
+        // Fill footer background
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
@@ -82,29 +89,41 @@ public class AdminPlotListGUI {
             if (meta != null) {
                 try {
                     meta.setOwningPlayer(owner);
-                } catch (Exception ex) {
-                    // Fallback if offline lookup fails
+                } catch (Exception ignored) {
+                    // Offline lookup may fail; fallback still shows head
                 }
 
                 String ownerName = plot.getOwnerName() != null ? plot.getOwnerName() : "Unknown";
-                // Localized Name
-                String nameFormat = plugin.msg().get(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
-                if (nameFormat == null) nameFormat = "§bOwner: §f" + ownerName;
+
+                // Localized display name: "admin_plot_item_name" with {OWNER}
+                String nameFormat = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
+                if (nameFormat == null || nameFormat.isEmpty()) {
+                    nameFormat = "§bOwner: §f" + ownerName;
+                }
                 meta.setDisplayName(nameFormat);
 
                 List<String> lore = new ArrayList<>();
+                // These are more "debug-style" tech lines, kept as static text for now.
                 lore.add("§7ID: §e" + plot.getPlotId().toString().substring(0, 8));
                 lore.add("§7World: §f" + plot.getWorld());
                 lore.add("§7Bounds: §a" + plot.getX1() + ", " + plot.getZ1());
                 lore.add("§7       to §a" + plot.getX2() + ", " + plot.getZ2());
 
                 if (plot.isServerZone()) {
-                    lore.add(plugin.msg().get(player, "admin_server_zone_tag", "§c[SERVER ZONE]"));
+                    String zoneTag = plugin.codex().tr(player, "admin_server_zone_tag");
+                    if (zoneTag == null || zoneTag.isEmpty()) {
+                        zoneTag = "§c[SERVER ZONE]";
+                    }
+                    lore.add(zoneTag);
                 }
+
                 lore.add(" ");
 
-                // Add localized actions
-                lore.addAll(plugin.msg().getList(player, "admin_plot_actions"));
+                // Localized action hints (e.g. "Left-click: Teleport, Right-click: Delete")
+                List<String> actions = plugin.codex().list(player, "admin_plot_actions");
+                if (actions != null && !actions.isEmpty()) {
+                    lore.addAll(actions);
+                }
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -112,22 +131,34 @@ public class AdminPlotListGUI {
             inv.setItem(i, head);
         }
 
-        // Navigation
+        // Navigation buttons
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
+            inv.setItem(45, GUIManager.createItem(
+                    Material.ARROW,
+                    plugin.codex().tr(player, "button_prev_page"),
+                    null
+            ));
         }
 
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR,
-                plugin.msg().get(player, "button_back_admin"),
-                List.of("§7Return to Admin Menu")));
+        inv.setItem(48, GUIManager.createItem(
+                Material.NETHER_STAR,
+                plugin.codex().tr(player, "button_back_admin"),
+                List.of("§7Return to Admin Menu") // can get a codex list later if you add a key
+        ));
 
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
+            inv.setItem(53, GUIManager.createItem(
+                    Material.ARROW,
+                    plugin.codex().tr(player, "button_next_page"),
+                    null
+            ));
         }
 
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")));
+        inv.setItem(49, GUIManager.createItem(
+                Material.BARRIER,
+                plugin.codex().tr(player, "button_exit"),
+                plugin.codex().list(player, "exit_lore")
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -140,13 +171,25 @@ public class AdminPlotListGUI {
         int slot = e.getSlot();
         int currentPage = holder.getPage();
 
-        // Nav
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, currentPage - 1); return; }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, currentPage + 1); return; }
-        if (slot == 48) { plugin.gui().admin().open(player); return; }
-        if (slot == 49) { player.closeInventory(); return; }
+        // Navigation
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
+            open(player, currentPage - 1);
+            return;
+        }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
+            open(player, currentPage + 1);
+            return;
+        }
+        if (slot == 48) {
+            plugin.gui().admin().open(player);
+            return;
+        }
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
 
-        // Listing
+        // Listing actions
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
             if (plotIndex >= holder.getPlots().size()) return;
@@ -159,14 +202,13 @@ public class AdminPlotListGUI {
             }
 
             if (e.getClick().isLeftClick()) {
-                // Teleport
+                // Teleport to plot center
                 Location loc = plot.getCenter(plugin);
                 if (loc != null && loc.getWorld() != null) {
                     int y = loc.getWorld().getHighestBlockYAt(loc);
                     loc.setY(y + 1);
 
-                    TeleportUtil.safeTeleport(plugin, player, loc); // ✅ region-thread safe
-
+                    TeleportUtil.safeTeleport(plugin, player, loc); // Folia/Paper safe
                     plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                     player.closeInventory();
@@ -174,7 +216,7 @@ public class AdminPlotListGUI {
                     player.sendMessage("§cInvalid world or location.");
                 }
             } else if (e.getClick().isRightClick()) {
-                // Delete
+                // Delete plot
                 plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
                 plugin.effects().playUnclaim(player);

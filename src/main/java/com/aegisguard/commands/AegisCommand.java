@@ -52,10 +52,39 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
     }
 
+    // --------------------------------------------------
+    // LANGUAGE (Codex helpers)
+    // --------------------------------------------------
+
+    /**
+     * Read a localized line from the Codex for this player, with a safe fallback.
+     */
+    private String tr(Player player, String key, String fallback) {
+        try {
+            if (plugin.codex() != null) {
+                String value = plugin.codex().tr(player, key);
+                if (value != null && !value.trim().isEmpty()) {
+                    return value;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return fallback;
+    }
+
+    /**
+     * Convenience wrapper: fetch from Codex and send to player (colored).
+     */
+    private void sendKey(Player player, String key, String fallback) {
+        String msg = tr(player, key, fallback);
+        sendMsg(player, msg);
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player p)) {
-            plugin.msg().send(sender, "players_only");
+            // Console / non-player can just get a plain English message
+            sender.sendMessage(ChatColor.RED + "This command can only be used by players.");
             return true;
         }
 
@@ -68,12 +97,16 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "wand":
                 // ✅ Anti-duplication: only one wand/scepter per player
                 if (SelectionService.playerHasAnyWand(p)) {
-                    plugin.msg().send(p, "wand_already_owned");
+                    sendKey(p,
+                            "wand_already_owned",
+                            "&cYou already possess an Aegis Scepter.");
                     plugin.effects().playError(p);
                     break;
                 }
                 p.getInventory().addItem(createScepter());
-                plugin.msg().send(p, "wand_given");
+                sendKey(p,
+                        "wand_given",
+                        "&aYou feel the power of the Aegis Scepter in your hand.");
                 plugin.effects().playConfirm(p);
                 break;
 
@@ -198,11 +231,15 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void handleRename(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside your claim to do that.");
             return;
         }
         if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
-            plugin.msg().send(p, "no_perm");
+            sendKey(p,
+                    "no_perm",
+                    "&cYou lack permission to manage this plot.");
             return;
         }
 
@@ -229,11 +266,15 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void handleSetDesc(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside your claim to do that.");
             return;
         }
         if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
-            plugin.msg().send(p, "no_perm");
+            sendKey(p,
+                    "no_perm",
+                    "&cYou lack permission to manage this plot.");
             return;
         }
 
@@ -326,12 +367,16 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         Plot kPlot = plugin.store().getPlotAt(p.getLocation());
 
         if (kPlot == null) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside your claim to do that.");
             return;
         }
 
         if (!kPlot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
-            plugin.msg().send(p, "no_perm");
+            sendKey(p,
+                    "no_perm",
+                    "&cYou lack permission to manage this plot.");
             return;
         }
 
@@ -367,7 +412,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         Plot bPlot = plugin.store().getPlotAt(p.getLocation());
 
         if (bPlot == null || !bPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            // Keeping the same key semantic as before
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
 
@@ -400,7 +448,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         Plot uPlot = plugin.store().getPlotAt(p.getLocation());
 
         if (uPlot == null || !uPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         OfflinePlayer uTarget = Bukkit.getOfflinePlayer(args[1]);
@@ -412,18 +462,24 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void handleSetSpawn(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             plugin.effects().playError(p);
             return;
         }
         if (!plot.isInside(p.getLocation())) {
-            plugin.msg().send(p, "home-fail-outside");
+            sendKey(p,
+                    "home-fail-outside",
+                    "&cYour home must be inside your claim.");
             plugin.effects().playError(p);
             return;
         }
         plot.setSpawnLocation(p.getLocation());
         plugin.store().setDirty(true);
-        plugin.msg().send(p, "home-set-success");
+        sendKey(p,
+                "home-set-success",
+                "&aHome position set for this claim.");
         plugin.effects().playConfirm(p);
     }
 
@@ -440,14 +496,18 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             List<Plot> plots = plugin.store().getPlots(p.getUniqueId());
             if (plots != null && !plots.isEmpty()) homePlot = plots.get(0);
             else {
-                plugin.msg().send(p, "no_plot_here");
+                sendKey(p,
+                        "no_plot_here",
+                        "&cYou do not own any plots.");
                 plugin.effects().playError(p);
                 return;
             }
         }
 
         if (homePlot.getSpawnLocation() == null) {
-            plugin.msg().send(p, "home-fail-no-spawn");
+            sendKey(p,
+                    "home-fail-no-spawn",
+                    "&cNo home location has been set for this claim.");
             plugin.effects().playError(p);
             return;
         }
@@ -460,27 +520,48 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void handleWelcomeFarewell(Player p, String[] args, boolean isWelcome) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         if (args.length < 2) {
             if (isWelcome) plot.setWelcomeMessage(null);
             else plot.setFarewellMessage(null);
             plugin.store().setDirty(true);
-            plugin.msg().send(p, isWelcome ? "welcome-cleared" : "farewell-cleared");
+            if (isWelcome) {
+                sendKey(p,
+                        "welcome-cleared",
+                        "&eWelcome message cleared.");
+            } else {
+                sendKey(p,
+                        "farewell-cleared",
+                        "&eFarewell message cleared.");
+            }
             return;
         }
         String msg = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         if (isWelcome) plot.setWelcomeMessage(msg);
         else plot.setFarewellMessage(msg);
         plugin.store().setDirty(true);
-        plugin.msg().send(p, isWelcome ? "welcome-set" : "farewell-set");
+
+        if (isWelcome) {
+            sendKey(p,
+                    "welcome-set",
+                    "&aWelcome message set.");
+        } else {
+            sendKey(p,
+                    "farewell-set",
+                    "&aFarewell message set.");
+        }
     }
 
     private void handleSell(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         if (args.length < 2) {
@@ -497,9 +578,18 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plot.setForSale(true, price);
             plugin.store().setDirty(true);
 
-            plugin.msg().send(p, "market-for-sale",
-                    Map.of("PRICE",
-                            plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT)));
+            String formatted = plugin.eco().format(
+                    price,
+                    com.aegisguard.economy.CurrencyType.VAULT
+            );
+
+            String msg = tr(
+                    p,
+                    "market-for-sale",
+                    "&aPlot listed for &e{PRICE}&a."
+            ).replace("{PRICE}", formatted);
+
+            sendMsg(p, msg);
         } catch (NumberFormatException e) {
             sendMsg(p, "&cInvalid number.");
         }
@@ -508,12 +598,17 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void handleUnsell(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         plot.setForSale(false, 0);
         plugin.store().setDirty(true);
-        plugin.msg().send(p, "market-not-for-sale");
+
+        sendKey(p,
+                "market-not-for-sale",
+                "&eThis plot is no longer listed for sale.");
     }
 
     // --- GUI SHORTCUTS ---
@@ -521,7 +616,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void openLevelMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         if (plugin.cfg().isLevelingEnabled()) plugin.gui().leveling().open(p, plot);
@@ -531,7 +628,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private void openZoneMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot you own to do that.");
             return;
         }
         if (plugin.cfg().isZoningEnabled()) plugin.gui().zoning().open(p, plot);
@@ -540,28 +639,42 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
     private void handleLike(Player p) {
         if (!plugin.cfg().isLikesEnabled()) {
-            plugin.msg().send(p, "like_disabled");
+            sendKey(p,
+                    "like_disabled",
+                    "&cLikes are currently disabled on this server.");
             return;
         }
 
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null) {
-            plugin.msg().send(p, "no_plot_here");
+            sendKey(p,
+                    "no_plot_here",
+                    "&cYou must be standing inside a plot to do that.");
             return;
         }
 
         if (plot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "like_own_plot");
+            sendKey(p,
+                    "like_own_plot",
+                    "&cYou cannot like your own plot.");
             return;
         }
 
         if (plugin.cfg().oneLikePerPlayer() && plot.hasLiked(p.getUniqueId())) {
             plot.toggleLike(p.getUniqueId()); // Toggle OFF
-            plugin.msg().send(p, "like_removed");
+            sendKey(p,
+                    "like_removed",
+                    "&eYour like has been removed from this plot.");
         } else {
             plot.toggleLike(p.getUniqueId()); // Toggle ON
-            plugin.msg().send(p, "like_success",
-                    Map.of("AMOUNT", String.valueOf(plot.getLikes())));
+            String amount = String.valueOf(plot.getLikes());
+            String msg = tr(
+                    p,
+                    "like_success",
+                    "&aYou liked this plot. &f({AMOUNT} total likes)"
+            ).replace("{AMOUNT}", amount);
+
+            sendMsg(p, msg);
             plugin.effects().playConfirm(p);
         }
         plugin.store().setDirty(true);
@@ -622,10 +735,33 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(Player player) {
-        sendMsg(player, plugin.msg().get(player, "help_header"));
-        List<String> helpLines = plugin.msg().getList(player, "help_lines");
+        String header = tr(
+                player,
+                "help_header",
+                "&bAegisGuard &7Commands:"
+        );
+        sendMsg(player, header);
+
+        List<String> helpLines = null;
+        try {
+            if (plugin.codex() != null) {
+                helpLines = plugin.codex().trList(player, "help_lines");
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // Transitional: fall back to legacy messages.yml list if Codex doesn’t provide one yet
+        if (helpLines == null || helpLines.isEmpty()) {
+            try {
+                helpLines = plugin.msg().getList(player, "help_lines");
+            } catch (Throwable ignored) {
+            }
+        }
+
         if (helpLines != null) {
-            for (String line : helpLines) sendMsg(player, line);
+            for (String line : helpLines) {
+                sendMsg(player, line);
+            }
         }
     }
 

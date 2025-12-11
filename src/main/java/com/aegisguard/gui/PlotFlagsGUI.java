@@ -49,11 +49,13 @@ public class PlotFlagsGUI {
 
     public void open(Player player, Plot plot) {
         if (plot == null) {
+            // Chat feedback stays on MessagesUtil
             plugin.msg().send(player, "no_plot_here");
             return;
         }
 
-        String title = GUIManager.safeText(plugin.msg().get(player, "plot_flags_title"), "§9Plot Flags");
+        String baseTitle = plugin.codex().tr(player, "plot_flags_title");
+        String title = GUIManager.safeText(baseTitle, "§9Plot Flags");
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(plot), 54, title);
 
         // --- 1. BORDER ---
@@ -78,10 +80,18 @@ public class PlotFlagsGUI {
 
         // Safe Zone: structural / environment umbrella, admin-only toggle
         boolean safeOn = plugin.protection().isSafeZoneEnabled(plot);
+        String safeLabelKey = "button_safe" + (safeOn ? "_on" : "_off");
+        String safeName = plugin.codex().tr(player, safeLabelKey);
+        if (safeName == null || safeName.isEmpty()) {
+            safeName = safeOn ? "§aSafe Zone: ON" : "§cSafe Zone: OFF";
+        }
+        List<String> safeLore = plugin.codex().list(player, "safe_toggle_lore");
+        if (safeLore == null) safeLore = List.of();
+
         ItemStack safeItem = GUIManager.createItem(
                 Material.SHIELD,
-                plugin.msg().get(player, "button_safe" + (safeOn ? "_on" : "_off")),
-                plugin.msg().getList(player, "safe_toggle_lore")
+                safeName,
+                safeLore
         );
         if (safeOn) glow(safeItem);
         inv.setItem(16, safeItem);
@@ -109,33 +119,57 @@ public class PlotFlagsGUI {
                 ? plugin.eco().format(flyCost, CurrencyType.VAULT)
                 : "Free";
 
+        List<String> flyLore = plugin.codex().list(player, "fly_toggle_lore");
+        if (flyLore == null) flyLore = List.of();
+        flyLore = replace(flyLore, "{COST}", costString);
+
+        String flyKey = canFly ? "button_fly_on" : "button_fly_off";
+        String flyName = plugin.codex().tr(player, flyKey);
+        if (flyName == null || flyName.isEmpty()) {
+            flyName = canFly ? "§aFlight: ON" : "§cFlight: OFF";
+        }
+
         ItemStack flyIcon = GUIManager.createItem(
                 Material.FEATHER,
-                canFly ? plugin.msg().get(player, "button_fly_on")
-                       : plugin.msg().get(player, "button_fly_off"),
-                replace(plugin.msg().getList(player, "fly_toggle_lore"), "{COST}", costString)
+                flyName,
+                flyLore
         );
         if (canFly) glow(flyIcon);
         inv.setItem(30, flyIcon);
 
         // Cosmetics
+        String cosName = plugin.codex().tr(player, "button_cosmetics");
+        if (cosName == null || cosName.isEmpty()) cosName = "§bCosmetics";
+        List<String> cosLore = plugin.codex().list(player, "cosmetics_lore");
+        if (cosLore == null) cosLore = List.of();
+
         inv.setItem(31, GUIManager.createItem(
                 Material.NETHER_STAR,
-                plugin.msg().get(player, "button_cosmetics"),
-                plugin.msg().getList(player, "cosmetics_lore")
+                cosName,
+                cosLore
         ));
 
         // --- NAV ---
+        String backName = plugin.codex().tr(player, "button_back");
+        if (backName == null || backName.isEmpty()) backName = "§fBack";
+        List<String> backLore = plugin.codex().list(player, "back_lore");
+        if (backLore == null) backLore = List.of();
+
         inv.setItem(48, GUIManager.createItem(
                 Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
+                backName,
+                backLore
         ));
+
+        String exitName = plugin.codex().tr(player, "button_exit");
+        if (exitName == null || exitName.isEmpty()) exitName = "§cClose";
+        List<String> exitLore = plugin.codex().list(player, "exit_lore");
+        if (exitLore == null) exitLore = List.of();
 
         inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")
+                exitName,
+                exitLore
         ));
 
         player.openInventory(inv);
@@ -147,7 +181,6 @@ public class PlotFlagsGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        // Make sure this really is our GUI, not some random inventory
         if (!(e.getInventory().getHolder() instanceof PlotFlagsHolder)) {
             return;
         }
@@ -251,7 +284,6 @@ public class PlotFlagsGUI {
         }
 
         // Only re-open when we actually changed a flag in THIS GUI.
-        // Back / Exit / Cosmetics do NOT re-open this menu, so no stacking.
         if (refresh) {
             open(player, plot);
         }
@@ -260,8 +292,7 @@ public class PlotFlagsGUI {
     // ---------------- HELPERS ----------------
 
     private void toggleFlag(Player p, Plot plot, String flag) {
-        // Use the *real* protection state (including safe_zone/server bias),
-        // then explicitly flip it so player choice always wins.
+        // Use the real protection state, then explicitly flip so player choice always wins.
         boolean currentlyOn = plugin.protection().isFlagEnabled(plot, flag);
         boolean newValue = !currentlyOn;
 
@@ -295,13 +326,19 @@ public class PlotFlagsGUI {
      */
     private void addProtectionFlagButton(Player p, Inventory inv, Plot plot, int slot,
                                          String flag, Material mat, String nameKey, String loreKey) {
-        // Use ProtectionManager so GUI matches actual protection behavior.
         boolean on = plugin.protection().isFlagEnabled(plot, flag);
-        ItemStack item = GUIManager.createItem(
-                mat,
-                plugin.msg().get(p, nameKey + (on ? "_on" : "_off")),
-                plugin.msg().getList(p, loreKey)
-        );
+
+        String fullKey = nameKey + (on ? "_on" : "_off");
+        String name = plugin.codex().tr(p, fullKey);
+        if (name == null || name.isEmpty()) {
+            // Simple fallback if a codex entry is missing
+            name = (on ? "§a" : "§c") + fullKey;
+        }
+
+        List<String> lore = plugin.codex().list(p, loreKey);
+        if (lore == null) lore = List.of();
+
+        ItemStack item = GUIManager.createItem(mat, name, lore);
         if (on) glow(item);
         inv.setItem(slot, item);
     }
@@ -309,12 +346,18 @@ public class PlotFlagsGUI {
     private void addPaidFlagButton(Player p, Inventory inv, Plot plot, int slot,
                                    String flag, Material mat, String nameKey, String loreKey, String cost) {
         boolean on = plot.getFlag(flag, false);
-        List<String> lore = replace(plugin.msg().getList(p, loreKey), "{COST}", cost);
-        ItemStack item = GUIManager.createItem(
-                mat,
-                plugin.msg().get(p, nameKey + (on ? "_on" : "_off")),
-                lore
-        );
+
+        String fullKey = nameKey + (on ? "_on" : "_off");
+        String name = plugin.codex().tr(p, fullKey);
+        if (name == null || name.isEmpty()) {
+            name = (on ? "§a" : "§c") + fullKey;
+        }
+
+        List<String> rawLore = plugin.codex().list(p, loreKey);
+        if (rawLore == null) rawLore = List.of();
+        List<String> lore = replace(rawLore, "{COST}", cost);
+
+        ItemStack item = GUIManager.createItem(mat, name, lore);
         if (on) glow(item);
         inv.setItem(slot, item);
     }
@@ -330,7 +373,9 @@ public class PlotFlagsGUI {
 
     private List<String> replace(List<String> list, String key, String value) {
         List<String> out = new ArrayList<>();
-        for (String s : list) out.add(s.replace(key, value));
+        for (String s : list) {
+            out.add(s.replace(key, value));
+        }
         return out;
     }
 }

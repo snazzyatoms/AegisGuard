@@ -180,6 +180,7 @@ public class GUIManager {
 
     /**
      * Creates a standardized GUI Item with color translation.
+     * Signature: (Material, name, lore)
      */
     public static ItemStack createItem(Material mat, String name, List<String> lore) {
         ItemStack item = new ItemStack(mat);
@@ -196,6 +197,14 @@ public class GUIManager {
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    /**
+     * Convenience overload: (name, Material, lore)
+     * Lets callers pass the display name first if they prefer.
+     */
+    public static ItemStack createItem(String name, Material mat, List<String> lore) {
+        return createItem(mat, name, lore);
     }
 
     /**

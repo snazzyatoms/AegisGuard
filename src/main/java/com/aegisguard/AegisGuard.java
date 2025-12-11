@@ -19,6 +19,7 @@ import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
+import com.aegisguard.language.CodexEngine;       // ✅ NEW: Language Engine
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.protection.ProtectionManager;
@@ -60,7 +61,13 @@ public class AegisGuard extends JavaPlugin {
     private SelectionService selection;
     private VaultHook vault;
     private EconomyManager ecoManager;
+
+    /** 🔤 NEW: Aegis Codex language engine (1.2.4+) */
+    private CodexEngine codex;
+
+    /** 📜 LEGACY: messages.yml-backed utility (to be removed in future) */
     private MessagesUtil messages;
+
     private WorldRulesManager worldRules;
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
@@ -93,7 +100,20 @@ public class AegisGuard extends JavaPlugin {
     public VaultHook vault() { return vault; }
     public EconomyManager eco() { return ecoManager; }
     public EconomyManager getEconomy() { return ecoManager; }
+
+    /**
+     * 🌐 New language engine entrypoint.
+     * Prefer this for all NEW message lookups in 1.2.4+.
+     */
+    public CodexEngine codex() { return codex; }
+
+    /**
+     * 📜 Legacy messages.yml access.
+     * Marked deprecated so we can hunt usages and migrate to codex().
+     */
+    @Deprecated
     public MessagesUtil msg() { return messages; }
+
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
@@ -124,6 +144,10 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
 
+        // --- 1.a NEW: Ensure Codex language files exist ---
+        ensureCodexFiles();
+
+        // --- 1.b LEGACY: messages.yml (kept for now, to be phased out) ---
         if (!new File(getDataFolder(), "messages.yml").exists()) {
             saveResource("messages.yml", false);
         }
@@ -142,8 +166,24 @@ public class AegisGuard extends JavaPlugin {
         }
 
         // --- 3. INIT MANAGERS (v1.2.2 Structure) ---
+
+        // 3.a NEW: Language Engine (Codex)
+        //      Loads codex.yml, core.yml, and style files (old/hybrid/modern)
+        try {
+            this.codex = new CodexEngine(this);
+            getLogger().info("✅ Aegis Codex language engine initialized.");
+        } catch (Throwable t) {
+            getLogger().severe("❌ Failed to initialize CodexEngine! Falling back to legacy messages.yml: " + t.getMessage());
+            this.codex = null;
+        }
+
         this.selection = new SelectionService(this);
+
+        // 3.b LEGACY MessagesUtil - still present for:
+        //  - existing msg().get(...) calls (until migrated)
+        //  - player sound + preference storage
         this.messages = new MessagesUtil(this);
+
         this.gui = new GUIManager(this);
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
@@ -157,8 +197,12 @@ public class AegisGuard extends JavaPlugin {
         this.plotStore.load();
 
         runGlobalAsync(() -> {
+            // In 1.2.4 we keep using MessagesUtil for player prefs
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
+
+            // In the future we can migrate player language/sound prefs into Codex
+            // and stop touching messages.yml entirely.
         });
 
         // Register Events
@@ -246,10 +290,49 @@ public class AegisGuard extends JavaPlugin {
         }
 
         if (expansionManager != null) expansionManager.saveSync();
+
+        // Legacy player prefs still live on MessagesUtil in 1.2.4
         if (messages != null) messages.savePlayerData();
+
+        // In the future, if CodexEngine starts tracking per-player profiles,
+        // we can add something like:
+        // if (codex != null) codex.saveProfilesSync();
 
         instance = null;
         getLogger().info("AegisGuard disabled.");
+    }
+
+    // --- NEW: CODEx FILE BOOTSTRAP ---
+
+    /**
+     * Ensure all Codex language files exist in the plugin data folder.
+     * This avoids hard crashes the first time the new engine runs.
+     */
+    private void ensureCodexFiles() {
+        File codexDir = new File(getDataFolder(), "codex");
+        if (!codexDir.exists() && !codexDir.mkdirs()) {
+            getLogger().warning("[AegisGuard] Failed to create codex directory; language engine may not function correctly.");
+        }
+
+        // These paths assume resources are packaged in the JAR under /codex/*
+        saveCodexResourceIfMissing("codex.yml");
+        saveCodexResourceIfMissing("core.yml");
+        saveCodexResourceIfMissing("old_english.yml");
+        saveCodexResourceIfMissing("hybrid_english.yml");
+        saveCodexResourceIfMissing("modern_english.yml");
+    }
+
+    private void saveCodexResourceIfMissing(String name) {
+        File target = new File(getDataFolder(), "codex" + File.separator + name);
+        if (!target.exists()) {
+            try {
+                saveResource("codex/" + name, false);
+                getLogger().info("[AegisGuard] Installed default codex file: " + name);
+            } catch (IllegalArgumentException ex) {
+                // Resource missing from JAR – log but don't hard-crash server
+                getLogger().warning("[AegisGuard] Missing bundled codex resource: codex/" + name + " (" + ex.getMessage() + ")");
+            }
+        }
     }
 
     // --- UTILITY METHODS (Fixed) ---
@@ -351,6 +434,7 @@ public class AegisGuard extends JavaPlugin {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
             if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
+            // Future: if (codex != null && codex.isProfileDirty()) codex.saveProfiles();
         };
         autoSaveTask = scheduleAsyncRepeating(logic, interval);
     }

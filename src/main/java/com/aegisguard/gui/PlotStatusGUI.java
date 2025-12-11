@@ -36,9 +36,9 @@ public class PlotStatusGUI {
             return;
         }
 
-        // Title
-        String titleKey = plugin.msg().get(player, "plot_status_gui_title");
-        String title = GUIManager.safeText(titleKey, "§8Plot Status Codex");
+        // Title (Codex → fallback)
+        String baseTitle = plugin.codex().tr(player, "plot_status_gui_title");
+        String title = GUIManager.safeText(baseTitle, "§8Plot Status Codex");
 
         Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot), 54, title);
 
@@ -69,14 +69,26 @@ public class PlotStatusGUI {
         headerLore.add("");
         headerLore.add("§7Plot Level: §b" + level + "§7 / §f" + maxLevel);
 
-        String headerTitleKey = plugin.msg().get(player, "plot_status_header_title");
+        String headerTitleBase = plugin.codex().tr(player, "plot_status_header_title");
+        String headerTitle = GUIManager.safeText(headerTitleBase, "§6Plot Information");
         inv.setItem(4, GUIManager.createItem(
                 Material.NETHER_STAR,
-                GUIManager.safeText(headerTitleKey, "§6Plot Information"),
+                headerTitle,
                 headerLore
         ));
 
-        // 2. Blessings (fancy + deduped)
+        // 2. Protections & Risks (live from ProtectionManager / flags)
+        List<String> protectionLore = buildProtectionLore(plot);
+        String protTitleBase = plugin.codex().tr(player, "plot_status_protection_title");
+        String protTitle = GUIManager.safeText(protTitleBase, "§cProtections & Risks");
+
+        inv.setItem(20, GUIManager.createItem(
+                Material.SHIELD,
+                protTitle,
+                protectionLore
+        ));
+
+        // 3. Blessings (fancy + deduped)
         List<String> buffsLore = new ArrayList<>();
         buffsLore.add("§7Active Blessings:");
         buffsLore.add("");
@@ -90,30 +102,38 @@ public class PlotStatusGUI {
             buffsLore.add("§8Only your highest tier of each blessing is shown.");
         }
 
-        String blessingsTitleKey = plugin.msg().get(player, "plot_status_blessings_title");
+        String blessingsTitleBase = plugin.codex().tr(player, "plot_status_blessings_title");
+        String blessingsTitle = GUIManager.safeText(blessingsTitleBase, "§dActive Blessings");
         inv.setItem(22, GUIManager.createItem(
                 Material.ENCHANTED_BOOK,
-                GUIManager.safeText(blessingsTitleKey, "§dActive Blessings"),
+                blessingsTitle,
                 buffsLore
         ));
 
-        // 3. Territory
+        // 4. Territory card (unchanged, but title via Codex)
         List<String> territoryLore = new ArrayList<>();
         territoryLore.add("§7Territory Rules:");
         territoryLore.add("§bAegis Menu §7→ §b" + plugin.msg().get(player, "button_expand"));
 
-        String territoryTitleKey = plugin.msg().get(player, "plot_status_territory_title");
+        String territoryTitleBase = plugin.codex().tr(player, "plot_status_territory_title");
+        String territoryTitle = GUIManager.safeText(territoryTitleBase, "§aTerritory & Growth");
         inv.setItem(24, GUIManager.createItem(
                 Material.GRASS_BLOCK,
-                GUIManager.safeText(territoryTitleKey, "§aTerritory & Growth"),
+                territoryTitle,
                 territoryLore
         ));
 
-        // 4. Back
+        // 5. Back
+        String backName = plugin.codex().tr(player, "button_back");
+        if (backName == null || backName.isEmpty()) backName = "§fBack";
+
+        List<String> backLore = plugin.codex().list(player, "back_lore");
+        if (backLore == null) backLore = plugin.msg().getList(player, "back_lore");
+
         inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
+                backName,
+                backLore
         ));
 
         player.openInventory(inv);
@@ -128,6 +148,73 @@ public class PlotStatusGUI {
             plugin.gui().openMain(player);
         }
     }
+
+    // --------------------------------------------------
+    // PROTECTION OVERVIEW (live from ProtectionManager)
+    // --------------------------------------------------
+
+    private List<String> buildProtectionLore(Plot plot) {
+        List<String> lore = new ArrayList<>();
+
+        boolean pvpProtected       = plugin.protection().isFlagEnabled(plot, "pvp");
+        boolean mobProtected       = plugin.protection().isMobProtectionEnabled(plot);
+        boolean animalsProtected   = plugin.protection().isFlagEnabled(plot, "animals");
+        boolean containersProtected= plugin.protection().isFlagEnabled(plot, "containers");
+        boolean redstoneProtected  = plugin.protection().isFlagEnabled(plot, "redstone");
+        boolean vehiclesProtected  = plugin.protection().isFlagEnabled(plot, "vehicles");
+        boolean safeZone           = plugin.protection().isSafeZoneEnabled(plot);
+
+        boolean shopEnabled        = plot.getFlag("shop-interact", false);
+        boolean flyEnabled         = plot.getFlag("fly", false);
+
+        // Entry: true = OPEN, false = CLOSED for non-trusted
+        boolean entryOpen          = plot.getFlag("entry", true);
+
+        lore.add("§7Combat & Hostiles:");
+        lore.add(formatProtectionLine("PvP", pvpProtected));
+        lore.add(formatProtectionLine("Hostile mobs", mobProtected));
+        lore.add(formatProtectionLine("Animals & pets", animalsProtected));
+        lore.add("");
+
+        lore.add("§7Environment & Access:");
+        lore.add(formatSafeZoneLine(safeZone));
+        lore.add(formatEntryLine(entryOpen));
+        lore.add(formatProtectionLine("Containers", containersProtected));
+        lore.add(formatProtectionLine("Redstone & doors", redstoneProtected));
+        lore.add(formatProtectionLine("Vehicles", vehiclesProtected));
+        lore.add("");
+
+        lore.add("§7Perks & Services:");
+        lore.add(formatSimpleToggleLine("Market shop interact", shopEnabled));
+        lore.add(formatSimpleToggleLine("Flight inside this plot", flyEnabled));
+
+        return lore;
+    }
+
+    private String formatProtectionLine(String label, boolean protectedOn) {
+        // true = protection ON (safe), false = vulnerable
+        String state = protectedOn ? "§aProtected" : "§cVulnerable";
+        return "§f- " + label + ": " + state;
+    }
+
+    private String formatSafeZoneLine(boolean safeZone) {
+        String state = safeZone ? "§aEnabled" : "§7Disabled";
+        return "§f- Safe zone: " + state;
+    }
+
+    private String formatEntryLine(boolean open) {
+        String state = open ? "§aOpen" : "§cClosed";
+        return "§f- Entry gate: " + state;
+    }
+
+    private String formatSimpleToggleLine(String label, boolean enabled) {
+        String state = enabled ? "§aEnabled" : "§7Inactive";
+        return "§f- " + label + ": " + state;
+    }
+
+    // --------------------------------------------------
+    // BLESSINGS (unchanged, just used by leveling/buffs)
+    // --------------------------------------------------
 
     /**
      * Build a clean, professional blessing list:

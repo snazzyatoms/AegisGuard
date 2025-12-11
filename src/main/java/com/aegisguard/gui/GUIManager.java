@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GUIManager {
@@ -118,6 +119,50 @@ public class GUIManager {
     // Economy
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
+
+    // ======================================
+    // --- LANGUAGE GATEWAY (Codex Engine) ---
+    // ======================================
+
+    /**
+     * Centralized text lookup using the Aegis Codex engine.
+     *
+     * Usage example in other GUIs:
+     *   String title = plugin.gui().tr(player, "menu_title", "&b⚔ AegisGuard Menu");
+     */
+    public String tr(Player player, String key, String fallback) {
+        try {
+            if (plugin.codex() != null) {
+                String value = plugin.codex().tr(player, key);
+                if (value != null && !value.trim().isEmpty()) {
+                    return value;
+                }
+            }
+        } catch (Throwable ignored) {
+            // If Codex blows up, we silently fall back to the hardcoded text.
+        }
+        return fallback;
+    }
+
+    /**
+     * List/lore variant for language lookups.
+     *
+     * Usage example:
+     *   List<String> lore = plugin.gui().trList(player, "menu.main.lore", Arrays.asList("&7Line 1", "&7Line 2"));
+     */
+    public List<String> trList(Player player, String key, List<String> fallback) {
+        try {
+            if (plugin.codex() != null) {
+                List<String> value = plugin.codex().trList(player, key);
+                if (value != null && !value.isEmpty()) {
+                    return value;
+                }
+            }
+        } catch (Throwable ignored) {
+            // Same idea: protect against language engine issues.
+        }
+        return fallback == null ? Collections.emptyList() : fallback;
+    }
 
     // ======================================
     // --- UTILITIES (Static Helpers) ---

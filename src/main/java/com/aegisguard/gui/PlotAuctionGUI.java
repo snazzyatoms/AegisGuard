@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.util.TeleportUtil; // ✅ Folia-safe teleports
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -152,7 +153,8 @@ public class PlotAuctionGUI {
             if (e.getClick().isLeftClick()) {
                 Location loc = plot.getCenter(plugin);
                 if (loc != null) {
-                    player.teleport(loc);
+                    // ✅ Folia/Paper-safe teleport
+                    TeleportUtil.safeTeleport(plugin, player, loc);
                     player.closeInventory();
                     plugin.msg().send(player, "market-teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);

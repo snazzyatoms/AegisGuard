@@ -4,9 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -56,7 +54,7 @@ public class ExpansionRequestManager {
         }
 
         if (hasPendingRequest(requester.getUniqueId())) {
-            plugin.msg().send(requester, "expansion_exists"); 
+            plugin.msg().send(requester, "expansion_exists");
             return false;
         }
 
@@ -76,10 +74,10 @@ public class ExpansionRequestManager {
 
         // 3. Cost Check
         double cost = calculateSmartCost(currentRadius, newRadius);
-        CurrencyType type = CurrencyType.VAULT; 
+        CurrencyType type = CurrencyType.VAULT;
         
         if (!plugin.eco().has(requester, cost, type)) {
-            plugin.msg().send(requester, "expansion_payment_failed"); // Reusing or creating "insufficient_funds"
+            plugin.msg().send(requester, "expansion_payment_failed");
             return false;
         }
 
@@ -125,19 +123,19 @@ public class ExpansionRequestManager {
         // 1. Charge Player
         Player p = requester.getPlayer();
         if (p != null) {
-             if (!plugin.eco().withdraw(p, req.getCost(), type)) {
-                 denyRequest(req);
-                 plugin.msg().send(p, "expansion_payment_failed");
-                 return false;
-             }
+            if (!plugin.eco().withdraw(p, req.getCost(), type)) {
+                denyRequest(req);
+                plugin.msg().send(p, "expansion_payment_failed");
+                return false;
+            }
         } else {
-             // Offline charge via Vault
-             if (plugin.cfg().useVault()) {
-                 if (!plugin.vault().charge(requester, req.getCost())) {
-                     denyRequest(req);
-                     return false;
-                 }
-             }
+            // Offline charge via Vault
+            if (plugin.cfg().useVault()) {
+                if (!plugin.vault().charge(requester, req.getCost())) {
+                    denyRequest(req);
+                    return false;
+                }
+            }
         }
 
         // 2. Get Plot
@@ -165,7 +163,9 @@ public class ExpansionRequestManager {
         setDirty(true);
 
         if (p != null) {
-            plugin.msg().send(p, "expansion_approved", Map.of("PLAYER", "Admin"));
+            // Localizable actor label ("Admin", "Steward", etc.)
+            String actor = plugin.gui().tr(p, "expansion_actor_admin", "Admin");
+            plugin.msg().send(p, "expansion_approved", Map.of("PLAYER", actor));
             plugin.effects().playConfirm(p);
         }
         return true;
@@ -177,8 +177,12 @@ public class ExpansionRequestManager {
         
         OfflinePlayer target = Bukkit.getOfflinePlayer(req.getRequester());
         if (target.isOnline()) {
-            plugin.msg().send(target.getPlayer(), "expansion_denied", Map.of("PLAYER", "Admin"));
-            plugin.effects().playError(target.getPlayer());
+            Player p = target.getPlayer();
+            if (p != null) {
+                String actor = plugin.gui().tr(p, "expansion_actor_admin", "Admin");
+                plugin.msg().send(p, "expansion_denied", Map.of("PLAYER", actor));
+                plugin.effects().playError(p);
+            }
         }
         
         activeRequests.remove(req.getRequester());
@@ -190,7 +194,7 @@ public class ExpansionRequestManager {
 
     private double calculateSmartCost(int currentRadius, int newRadius) {
         double baseCost = plugin.cfg().raw().getDouble("expansions.cost_per_block", 10.0);
-        double multiplier = plugin.cfg().raw().getDouble("expansions.cost_multiplier", 1.1); 
+        double multiplier = plugin.cfg().raw().getDouble("expansions.cost_multiplier", 1.1);
         int blocksAdded = newRadius - currentRadius;
         
         double totalCost = baseCost * blocksAdded;
@@ -206,9 +210,9 @@ public class ExpansionRequestManager {
         int buffer = plugin.cfg().raw().getInt("expansions.buffer_zone", 5);
         int r = newRadius + buffer;
 
-        int x1 = cX - r; 
+        int x1 = cX - r;
         int z1 = cZ - r;
-        int x2 = cX + r; 
+        int x2 = cX + r;
         int z2 = cZ + r;
 
         return plugin.store().isAreaOverlapping(oldPlot, oldPlot.getWorld(), x1, z1, x2, z2);

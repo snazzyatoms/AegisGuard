@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.util.TeleportUtil; // ✅ Folia-safe teleports
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -103,7 +104,6 @@ public class PlotMarketGUI {
                 
                 // Add localized action hints
                 lore.addAll(plugin.msg().getList(player, "market_item_lore")); 
-                // If missing, fallback logic would go here, but assuming messages.yml is updated.
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -157,17 +157,18 @@ public class PlotMarketGUI {
             if (plot == null) return;
 
             // Teleport (Left Click)
-            if (e.isLeftClick()) {
+            if (e.getClick().isLeftClick()) {
                 Location center = plot.getCenter(plugin);
                 if (center != null) {
-                    player.teleport(center);
+                    // ✅ Folia/Paper-safe teleport
+                    TeleportUtil.safeTeleport(plugin, player, center);
                     player.closeInventory();
                     plugin.msg().send(player, "market-teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                 }
             } 
             // Buy/Rent (Right Click)
-            else if (e.isRightClick()) {
+            else if (e.getClick().isRightClick()) {
                 if (plot.isForSale()) {
                     handleBuy(player, plot);
                 } else if (plot.isForRent()) {
@@ -202,7 +203,7 @@ public class PlotMarketGUI {
         // 3. Pay Seller
         OfflinePlayer seller = Bukkit.getOfflinePlayer(plot.getOwner());
         if (seller.hasPlayedBefore()) {
-            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT); // Logic usually handles offline via Vault hook
+            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT); // Vault hook should handle this safely
         }
 
         // 4. Transfer
@@ -211,11 +212,17 @@ public class PlotMarketGUI {
         plugin.store().setDirty(true);
 
         // 5. Notify
-        plugin.msg().send(buyer, "market-buy-success", Map.of("PRICE", plugin.eco().format(price, CurrencyType.VAULT), "PLAYER", seller.getName()));
+        plugin.msg().send(buyer, "market-buy-success", Map.of(
+                "PRICE", plugin.eco().format(price, CurrencyType.VAULT),
+                "PLAYER", seller.getName()
+        ));
         plugin.effects().playClaimSuccess(buyer);
         
         if (seller.isOnline()) {
-            plugin.msg().send(seller.getPlayer(), "market-sold", Map.of("PRICE", plugin.eco().format(price, CurrencyType.VAULT), "PLAYER", buyer.getName()));
+            plugin.msg().send(seller.getPlayer(), "market-sold", Map.of(
+                    "PRICE", plugin.eco().format(price, CurrencyType.VAULT),
+                    "PLAYER", buyer.getName()
+            ));
         }
         
         buyer.closeInventory();

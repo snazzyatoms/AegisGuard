@@ -1,0 +1,27 @@
+# ======================================
+# AegisGuard v1.2.4 - Aegis Codex Engine
+# ======================================
+
+# Which style is used by default if nothing else is specified
+default_style: old_english
+
+# If a key is missing in the active style, fall back to this style
+fallback_style: modern_english
+
+# All available styles
+available_styles:
+  - old_english
+  - hybrid_english
+  - modern_english
+
+# Mapping of style IDs to their codex files
+file_map:
+  old_english: old_english.yml
+  hybrid_english: hybrid_english.yml
+  modern_english: modern_english.yml
+
+# Shared/global text file
+core_file: core.yml
+
+# Optional server-owner override file (per-server tweaks)
+overrides_file: overrides.yml

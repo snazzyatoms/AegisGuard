@@ -169,15 +169,47 @@ public class SelectionService implements Listener {
 
         plugin.store().addPlot(plot);
 
-        // --- DISCORD ---
+        // --- DISCORD (CLAIM) --- 
         if (plugin.getDiscord().isEnabled() && !isServerClaim) {
+            // Language-aware text via Codex / GUI gateway
+            String title = plugin.gui().tr(
+                    p,
+                    "discord_claim_title",
+                    "🚩 New Land Claimed"
+            );
+
+            String descTemplate = plugin.gui().tr(
+                    p,
+                    "discord_claim_description",
+                    "{PLAYER} has established a new territory!"
+            );
+            String description = descTemplate.replace("{PLAYER}", p.getName());
+
+            String worldLabel = plugin.gui().tr(
+                    p,
+                    "discord_claim_world_label",
+                    "World"
+            );
+            String sizeLabel = plugin.gui().tr(
+                    p,
+                    "discord_claim_size_label",
+                    "Size"
+            );
+
+            String footer = plugin.gui().tr(
+                    p,
+                    "discord_claim_footer",
+                    "AegisGuard"
+            );
+
             DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
-                .setTitle("🚩 New Land Claimed")
-                .setColor(Color.GREEN)
-                .setDescription(p.getName() + " has established a new territory!")
-                .addField("World", plot.getWorld(), true)
-                .addField("Size", width + "x" + length, true)
-                .setFooter("AegisGuard v1.1.2", null);
+                    .setTitle(ChatColor.stripColor(title))
+                    .setColor(Color.GREEN)
+                    .setDescription(ChatColor.stripColor(description))
+                    .addField(ChatColor.stripColor(worldLabel), plot.getWorld(), true)
+                    .addField(ChatColor.stripColor(sizeLabel), width + "x" + length, true)
+                    .setFooter(ChatColor.stripColor(footer), null);
+
             plugin.getDiscord().send(embed);
         }
 
@@ -270,14 +302,14 @@ public class SelectionService implements Listener {
         
         // 1. Cost Check
         if (plugin.cfg().isMergeEnabled()) {
-             double cost = plugin.cfg().getMergeCost();
-             if (cost > 0 && !plugin.isAdmin(p)) {
-                 if (!plugin.vault().charge(p, cost)) {
-                     plugin.msg().send(p, "need_vault",
-                             Map.of("AMOUNT", plugin.vault().format(cost)));
-                     return;
-                 }
-             }
+            double cost = plugin.cfg().getMergeCost();
+            if (cost > 0 && !plugin.isAdmin(p)) {
+                if (!plugin.vault().charge(p, cost)) {
+                    plugin.msg().send(p, "need_vault",
+                            Map.of("AMOUNT", plugin.vault().format(cost)));
+                    return;
+                }
+            }
         }
 
         // --- PERFORM MERGE ---
@@ -304,16 +336,35 @@ public class SelectionService implements Listener {
         p.spawnParticle(Particle.EXPLOSION_LARGE, p.getLocation(), 3);
         p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1f);
         
-        // Discord
+        // Discord (MERGE)
         if (plugin.getDiscord().isEnabled()) {
+            String title = plugin.gui().tr(
+                    p,
+                    "discord_merge_title",
+                    "🔄 Plot Merge Completed"
+            );
+
+            String descTemplate = plugin.gui().tr(
+                    p,
+                    "discord_merge_description",
+                    "{PLAYER} merged two claims."
+            );
+            String description = descTemplate.replace("{PLAYER}", p.getName());
+
+            String sizeLabel = plugin.gui().tr(
+                    p,
+                    "discord_merge_size_label",
+                    "New Size"
+            );
+
+            String newSize = (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1);
+
             plugin.getDiscord().send(
                 new DiscordWebhook.EmbedObject()
-                    .setTitle("🔄 Plot Merge Completed")
+                    .setTitle(ChatColor.stripColor(title))
                     .setColor(new Color(0, 100, 200))
-                    .setDescription(p.getName() + " merged two claims.")
-                    .addField("New Size",
-                            (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1),
-                            true)
+                    .setDescription(ChatColor.stripColor(description))
+                    .addField(ChatColor.stripColor(sizeLabel), newSize, true)
             );
         }
     }

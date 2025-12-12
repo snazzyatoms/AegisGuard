@@ -16,6 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class LevelingListener implements Listener {
@@ -31,16 +32,32 @@ public class LevelingListener implements Listener {
     public void onLevelUp(PlotLevelUpEvent e) {
         Plot plot = e.getPlot();
         int newLevel = e.getNewLevel();
+        Player p = e.getPlayer();
         List<String> rewards = plugin.cfg().getLevelRewards(newLevel);
+
+        // 1. Give Global Claim Block Reward (Configured in config.yml)
+        if (plugin.cfg().raw().getBoolean("claim_blocks.earn.level_up.enabled", true)) {
+            int globalReward = plugin.cfg().raw().getInt("claim_blocks.earn.level_up.per_level", 500);
+            if (globalReward > 0) {
+                plugin.getClaimBlockManager().getOrCreate(p.getUniqueId()).addEarnedBlocks(globalReward);
+                // Send feedback via Codex
+                String msg = plugin.codex().tr(p, "claim_blocks_earned_level", 
+                        Map.of("AMOUNT", String.valueOf(globalReward), "LEVEL", String.valueOf(newLevel)));
+                // Fallback if key missing
+                if (msg.equals("claim_blocks_earned_level")) msg = "§dAscension Bonus: §e+" + globalReward + " Claim Blocks!";
+                p.sendMessage(msg);
+            }
+        }
 
         if (rewards == null) return;
 
         for (String reward : rewards) {
+            // 2. Existing Rewards
             if (reward.startsWith("RADIUS:")) {
                 try {
                     int amount = Integer.parseInt(reward.split(":")[1]);
                     plot.expand(amount);
-                    e.getPlayer().sendMessage("§a⚡ Your land boundaries have expanded by " + amount + " blocks!");
+                    p.sendMessage("§a⚡ Your land boundaries have expanded by " + amount + " blocks!");
                 } catch (Exception ex) {}
             }
             else if (reward.startsWith("MEMBERS:")) {
@@ -48,16 +65,28 @@ public class LevelingListener implements Listener {
                     int amount = Integer.parseInt(reward.split(":")[1]);
                     int currentMax = plot.getMaxMembers();
                     plot.setMaxMembers(currentMax + amount);
-                    e.getPlayer().sendMessage("§a⚡ You can now trust " + amount + " more players!");
+                    p.sendMessage("§a⚡ You can now trust " + amount + " more players!");
+                } catch (Exception ex) {}
+            }
+            // 3. Specific Level Reward (Optional override: CLAIM_BLOCKS:1000)
+            else if (reward.startsWith("CLAIM_BLOCKS:")) {
+                try {
+                    int amount = Integer.parseInt(reward.split(":")[1]);
+                    plugin.getClaimBlockManager().getOrCreate(p.getUniqueId()).addEarnedBlocks(amount);
+                    p.sendMessage("§e⚡ Extra Bonus: +" + amount + " Claim Blocks!");
                 } catch (Exception ex) {}
             }
         }
-        // This method relies on the Interface update below
+        
         plugin.store().savePlot(plot);
         
-        if (plot.contains(e.getPlayer().getLocation())) {
-            applyBuffs(e.getPlayer(), plot);
+        // Re-apply buffs instantly if they are standing in it
+        if (plot.contains(p.getLocation())) {
+            applyBuffs(p, plot);
         }
+        
+        // Save block data immediately
+        plugin.getClaimBlockManager().saveAsync();
     }
 
     @EventHandler

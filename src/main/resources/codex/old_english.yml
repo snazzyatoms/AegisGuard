@@ -288,6 +288,12 @@ level_button_lore:
   - '&7Ascend thy plot to unlock'
   - '&7greater power and prestige.'
 
+# Ascension headers used in the Plot Ascension GUI
+level_header_owner: '&dLord / Lady:&f {owner}'
+level_header_world: '&dRealm:&f {world}'
+level_header_level: '&dDominion Rank:&f {level}'
+level_header_multiplier: '&dBlessing Multiplier:&f {multiplier}x'
+
 zone_gui_title: '&3Sub-Dominion Manager'
 zone_created: '&a✔ A new zone ''{ZONE}'' hath been marked.'
 zone_deleted: '&c✖ The zone ''{ZONE}'' hath been dissolved.'
@@ -342,6 +348,7 @@ plot_status_gui_title: '&b⚔ Ledger of Dominion Status'
 plot_status_header_title: '&6Tale of the Land'
 plot_status_blessings_title: '&dActive Blessings & Boons'
 plot_status_territory_title: '&aRealm, Reach & Growth'
+plot_status_protection_title: '&cCombat & Hostiles'
 
 plot_status_overview_name: '&aOverview of Thy Holding'
 plot_status_overview_lore:

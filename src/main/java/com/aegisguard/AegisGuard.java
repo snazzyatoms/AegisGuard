@@ -2,6 +2,7 @@ package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.claimblocks.ClaimBlockManager; // ✅ NEW: Claim Block Manager
+import com.aegisguard.claimblocks.ClaimBlockTask;    // ✅ NEW: Earning Task
 import com.aegisguard.commands.AegisCommand;
 // import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
@@ -90,6 +91,7 @@ public class AegisGuard extends JavaPlugin {
     private Object upkeepTask;
     private Object wildernessRevertTask;
     private Object mobBarrierTask;
+    private Object claimBlockTask; // ✅ NEW
 
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
@@ -263,6 +265,7 @@ public class AegisGuard extends JavaPlugin {
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask();
         startMobBarrierTask();
+        startClaimBlockTask(); // ✅ NEW
 
         initializeHooks();
         getLogger().info("AegisGuard enabled successfully.");
@@ -294,6 +297,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(upkeepTask);
         cancelTaskReflectively(wildernessRevertTask);
         cancelTaskReflectively(mobBarrierTask);
+        cancelTaskReflectively(claimBlockTask); // ✅ NEW
 
         // Force Save on Disable
         if (plotStore != null) {
@@ -481,5 +485,15 @@ public class AegisGuard extends JavaPlugin {
         long interval = cfg().raw().getLong("mob_barrier.check_interval_ticks", 60);
         MobBarrierTask task = new MobBarrierTask(this);
         mobBarrierTask = scheduleAsyncRepeating(task::run, interval);
+    }
+
+    private void startClaimBlockTask() {
+        // Safe check if disabled in config
+        if (!cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true)) return;
+
+        long earnIntervalMinutes = cfg().raw().getLong("claim_blocks.earn.playtime.interval_minutes", 10);
+        long intervalTicks = earnIntervalMinutes * 60 * 20; // Convert minutes to ticks
+        
+        claimBlockTask = scheduleAsyncRepeating(new ClaimBlockTask(this), intervalTicks);
     }
 }

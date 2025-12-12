@@ -1,0 +1,245 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Hybrid English
+# Migrated from messages.yml: hybrid_english
+# ======================================
+
+# --- Navigation ---
+button_back: '&e⟵ Return'
+back_lore:
+  - '&7Return to the previous page.'
+
+button_back_menu: '&fReturn to Menu'
+back_menu_lore:
+  - '&7Return to the main dashboard.'
+
+button_prev_page: '&fPrevious Page'
+button_next_page: '&fNext Page'
+
+button_exit: '&c✖ Close'
+button_exit_lore:
+  - '&7Close this menu.'
+exit_lore:
+  - '&7Close this menu.'
+
+# --- General Errors ---
+role_edit_self_error: '&c❌ You cannot change your own role.'
+no_perm: '&cYou lack permission to do that.'
+players_only: '&cOnly players may use this command.'
+usage_main: '&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>'
+
+sound_global_enabled: '&a✔ Interface sounds enabled.'
+sound_global_disabled: '&c✖ Interface sounds disabled.'
+
+# --- Claiming & Wand ---
+wand_given: '&a⚡ You received the Aegis Scepter.'
+wand_already_on: '&eYou already carry the Aegis Scepter.'
+corner1_set: '&a⚡ First boundary set at &e{X}, {Z}.'
+corner2_set: '&b⚡ Second boundary set at &e{X}, {Z}.'
+must_select: '&c❌ You must select two boundary points.'
+corners_diff_world: '&c❌ Both corners must be in the same world.'
+wand_consumed: '&a✔ The Scepter fades after use.'
+wand_not_found: '&c❌ You are not holding a Scepter.'
+wand_already_owned: '&eYou already possess a Scepter.'
+
+resize-success: '&a✔ Plot expanded {DIRECTION} by {AMOUNT} blocks.'
+resize-fail-overlap: '&c❌ Expansion failed due to overlap.'
+resize-fail-max-area: '&c❌ Expansion exceeds maximum size ({AMOUNT}).'
+
+# --- Merging ---
+merge_invalid_dir: '&c❌ Invalid direction. Use NORTH, SOUTH, EAST, or WEST.'
+merge_no_plot: '&c❌ No plot found in that direction.'
+merge_not_owner: '&c❌ You do not own the adjacent plot.'
+merge_not_aligned: '&c❌ Plot borders are not aligned.'
+merge_success: '&a⚡ The plots have merged into one.'
+
+# --- Economy & Limits ---
+max_claims_reached: '&c❌ You have reached your plot limit ({AMOUNT}).'
+need_vault: '&c❌ You need &e{AMOUNT}&c more currency.'
+cost_deducted: '&e💰 Charged &6{AMOUNT}&e.'
+items_deducted: '&e💰 Paid &6{AMOUNT} {ITEM}&e.'
+vault_refund: '&e💰 Refunded &6{AMOUNT}&e ({PERCENT}%).'
+item_refund: '&e💰 Returned &6{AMOUNT} {ITEM}&e ({PERCENT}%).'
+
+upkeep_paid: '&e💰 Upkeep of &6{AMOUNT}&e paid.'
+upkeep_failed_warning: '&c❌ Warning! Upkeep is due.'
+plot_expired_upkeep: '&c❌ Plot expired due to unpaid upkeep.'
+plot-is-locked: '&c❌ This plot is locked.'
+
+# --- Auctions ---
+plot-now-auctioned: '&e⚠ Your plot has entered auction.'
+auction-gui-title: '&6Plot Auctions'
+auction-bid-own: '&cYou cannot bid on your own plot.'
+auction-already-highest: '&eYou already hold the highest bid.'
+auction-outbid: '&e{PLAYER} has outbid you.'
+auction-bid-success: '&a✔ Bid of &6{AMOUNT}&a accepted.'
+auction-sold: '&a✔ Plot sold to {PLAYER} for &6{AMOUNT}&a.'
+auction-won: '&a✔ You won the auction for &6{AMOUNT}&a.'
+auction_item_name: '&eAuction: {OWNER}''s Plot'
+auction_current_bid: '&7Current Bid: &e{AMOUNT}'
+auction_highest_bidder: '&7Highest Bidder: &f{PLAYER}'
+auction_item_lore:
+  - '&eLeft-Click: &7Preview Plot'
+  - '&aRight-Click: &7Place Bid'
+
+# --- Market ---
+market-gui-title: '&2Land Market'
+market-teleport: '&eTraveling to {PLAYER}''s plot...'
+market-buy-own: '&cYou cannot buy your own plot.'
+market-buy-success: '&a✔ Purchased plot for &6{PRICE}&a.'
+market-sold: '&a✔ Plot sold for &6{PRICE}&a.'
+market-for-sale: '&a✔ Plot listed for &6{PRICE}&a.'
+market-not-for-sale: '&e✔ Plot removed from market.'
+market-rent-soon: '&eRenting coming soon.'
+market_type_rent: '&bFor Rent'
+market_type_sale: '&aFor Sale'
+market_item_lore:
+  - '&eLeft-Click: &7Preview Plot'
+  - '&aRight-Click: &7Purchase'
+
+# --- Expansion Requests ---
+expansion_gui_title: '&dLand Expansion Request'
+button_expand: '&dRequest Expansion'
+expand_lore:
+  - '&7Request additional land size.'
+button_view_requests_admin: '&cReview Requests'
+view_requests_admin_lore:
+  - '&7Approve or deny expansion requests.'
+
+expansion_submitted: '&a✔ Request submitted.'
+expansion_exists: '&c❌ You already have a pending request.'
+
+# Expansion result keys (kept for compatibility, silenced to prevent duplicates)
+expansion_approved: ''
+expansion_denied: ''
+
+# Admin request result keys (primary visible lines)
+admin_request_approved: '&a✔ Your request was approved by Admin.'
+admin_request_denied: '&c❌ Your request was denied by Admin.'
+
+expansion_payment_failed: '&c❌ Insufficient funds.'
+expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
+expansion_invalid_size: '&c❌ Expansion must increase size.'
+request_expired: '&c❌ Request expired.'
+
+expansion_tier1_name: '&aSmall Expansion (+5)'
+expansion_tier1_lore:
+  - '&7Increase radius by 5 blocks.'
+  - ' '
+  - '&eClick to Submit'
+expansion_tier2_name: '&eMedium Expansion (+10)'
+expansion_tier2_lore:
+  - '&7Increase radius by 10 blocks.'
+  - ' '
+  - '&eClick to Submit'
+expansion_tier3_name: '&fLarge Expansion (+20)'
+expansion_tier3_lore:
+  - '&7Increase radius by 20 blocks.'
+  - ' '
+  - '&eClick to Submit'
+expansion_tier4_name: '&6Huge Expansion (+35)'
+expansion_tier4_lore:
+  - '&7Increase radius by 35 blocks.'
+  - ' '
+  - '&eClick to Submit'
+expansion_tier5_name: '&bMassive Expansion (+50)'
+expansion_tier5_lore:
+  - '&7Increase radius by 50 blocks.'
+  - ' '
+  - '&eClick to Submit'
+
+expansion_locked_lore:
+  - '&cYou must stand in'
+  - '&cyour own plot.'
+
+expansion_admin_title: '&8Pending Requests'
+expansion_none_title: '&cNo Requests'
+expansion_none_lore:
+  - '&7No pending requests.'
+
+expansion_admin_actions:
+  - '&aLeft-Click: &7Approve'
+  - '&cRight-Click: &7Deny'
+
+# --- Travel ---
+visit_gui_title: '&9Travel Network'
+visit_title_warps: '&6Server Waypoints'
+visit_title_trusted: '&9Trusted Plots'
+visit_switch_trusted: '&bView Trusted'
+visit_switch_trusted_lore:
+  - '&7Plots where you are trusted.'
+visit_switch_warps: '&6View Waypoints'
+visit_switch_warps_lore:
+  - '&7Public server locations.'
+visit_warp_lore:
+  - '&7Click to travel.'
+visit_plot_name: '&e{PLOT}'
+visit_plot_lore:
+  - '&7World: &f{WORLD}'
+  - '&7Role: &a{ROLE}'
+  - ' '
+  - '&eClick to Travel'
+
+# --- Plot Status GUI ---
+button_plot_status: '&b📜 Plot Status Ledger'
+plot_status_button_title: '&b📜 Plot Status Ledger'
+
+plot_status_lore:
+  - '&7Review the current state of your land:'
+  - '&7blessings, wards, growth, and reputation.'
+  - ' '
+  - '&8A concise record of what empowers'
+  - '&8and defines this protected territory.'
+
+plot_status_gui_title: '&b⚔ Plot Status Ledger'
+plot_status_header_title: '&6Story of This Land'
+plot_status_blessings_title: '&dActive Blessings'
+plot_status_territory_title: '&aTerritory & Growth'
+
+plot_status_overview_name: '&aPlot Overview'
+plot_status_overview_lore:
+  - '&7See ownership, level, biome,'
+  - '&7and general condition.'
+  - ' '
+  - '&8Only the strongest bonuses'
+  - '&8are displayed.'
+
+plot_status_flags_name: '&6Wards & Protections'
+plot_status_flags_lore:
+  - '&7Active and inactive protections.'
+  - '&7Control safety and behavior.'
+
+plot_status_economy_name: '&eEconomy & Upkeep'
+plot_status_economy_lore:
+  - '&7Upkeep costs and payments.'
+  - '&7Financial health of the plot.'
+
+plot_status_social_name: '&dFame & Visitors'
+plot_status_social_lore:
+  - '&7Likes, visits, and popularity.'
+
+title_entering: '&b{PLOT_NAME}'
+subtitle_entering: '&7Owned by {OWNER}'
+title_entering_wilderness: '&aWilderness'
+subtitle_entering_wilderness: '&7Unclaimed Land'
+
+# --- Main Menu ---
+menu_title: '&b⚔ Guardian Codex'
+
+button_plot_status: '&b⚔ Plot Status'
+plot_status_lore:
+  - '&7View detailed plot information.'
+
+# --- Help ---
+help_header: '&bAegisGuard Help'
+help_lines:
+  - '&e/ag wand'
+  - '&e/ag menu'
+  - '&e/ag claim'
+  - '&e/ag unclaim'
+  - '&e/ag resize <dir> <amt>'
+  - '&e/ag home'
+  - '&e/ag setspawn'
+  - '&e/ag visit'
+  - '&e/ag market'
+  - '&e/ag help'

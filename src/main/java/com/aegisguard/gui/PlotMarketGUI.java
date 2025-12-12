@@ -3,7 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
-import com.aegisguard.util.TeleportUtil; // ✅ Folia-safe teleports
+import com.aegisguard.util.TeleportUtil; // Folia-safe teleports
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -64,14 +64,19 @@ public class PlotMarketGUI {
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
 
-        String title = GUIManager.safeText(plugin.msg().get(player, "market_gui_title"), "§2Real Estate")
-                + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        String baseTitle = GUIManager.safeText(
+                plugin.msg().get(player, "market_gui_title"),
+                "§2Real Estate"
+        );
+        String title = baseTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
 
         Inventory inv = Bukkit.createInventory(new PlotMarketHolder(allPlots, page), 54, title);
 
-        // 3. Fill Background
+        // 3. Fill Background (bottom row only, so listings stay empty)
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 45; i < 54; i++) {
+            inv.setItem(i, filler);
+        }
 
         // 4. Populate Listings
         int startIndex = page * PLOTS_PER_PAGE;
@@ -80,30 +85,37 @@ public class PlotMarketGUI {
             if (plotIndex >= allPlots.size()) break;
 
             Plot plot = allPlots.get(plotIndex);
-            boolean isRent = plot.isForRent(); 
+            boolean isRent = plot.isForRent();
             OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-            
-            String priceStr = plugin.eco().format(isRent ? plot.getRentPrice() : plot.getSalePrice(), CurrencyType.VAULT);
-            
-            // Localized Type Strings
-            String typeStr = isRent ? plugin.msg().get(player, "market_type_rent") : plugin.msg().get(player, "market_type_sale");
-            if (typeStr == null) typeStr = isRent ? "§bFor Rent" : "§aFor Sale";
+
+            double rawPrice = isRent ? plot.getRentPrice() : plot.getSalePrice();
+            String priceStr = plugin.eco().format(rawPrice, CurrencyType.VAULT);
+
+            // Localized Type Strings (safe)
+            String typeKey = isRent ? "market_type_rent" : "market_type_sale";
+            String defaultType = isRent ? "§bFor Rent" : "§aFor Sale";
+            String typeStr = GUIManager.safeText(plugin.msg().get(player, typeKey), defaultType);
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(owner);
                 meta.setDisplayName(typeStr + ": §e" + priceStr);
-                
+
                 List<String> lore = new ArrayList<>();
                 lore.add("§7Owner: §f" + (owner.getName() != null ? owner.getName() : "Unknown"));
                 lore.add("§7World: §f" + plot.getWorld());
                 lore.add("§7Size: §e" + (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1));
-                if (plot.getDescription() != null) lore.add("§7Note: §f" + plot.getDescription());
+                if (plot.getDescription() != null && !plot.getDescription().isEmpty()) {
+                    lore.add("§7Note: §f" + plot.getDescription());
+                }
                 lore.add(" ");
-                
-                // Add localized action hints
-                lore.addAll(plugin.msg().getList(player, "market_item_lore")); 
+
+                // Localized action hints (safe list)
+                lore.addAll(lines(player, "market_item_lore", List.of(
+                        "§eLeft Click: §7Preview claim",
+                        "§aRight Click: §7Purchase"
+                )));
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -112,21 +124,38 @@ public class PlotMarketGUI {
         }
 
         // 5. Navigation Buttons
+
+        // Previous page
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_prev_page"), null));
-        }
-        
-        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, 
-            plugin.msg().get(player, "button_back_menu"), 
-            plugin.msg().getList(player, "back_menu_lore")));
-        
-        if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(Material.ARROW, plugin.msg().get(player, "button_next_page"), null));
+            inv.setItem(45, GUIManager.createItem(
+                    Material.ARROW,
+                    GUIManager.safeText(plugin.msg().get(player, "button_prev_page"), "§fPrevious Page"),
+                    null
+            ));
         }
 
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, 
-            plugin.msg().get(player, "button_exit"), 
-            plugin.msg().getList(player, "exit_lore")));
+        // Back to main menu
+        inv.setItem(48, GUIManager.createItem(
+                Material.NETHER_STAR,
+                GUIManager.safeText(plugin.msg().get(player, "button_back_menu"), "§fReturn to Menu"),
+                lines(player, "back_menu_lore", List.of("§7Go back to the main dashboard."))
+        ));
+
+        // Next page
+        if (page < maxPages - 1) {
+            inv.setItem(53, GUIManager.createItem(
+                    Material.ARROW,
+                    GUIManager.safeText(plugin.msg().get(player, "button_next_page"), "§fNext Page"),
+                    null
+            ));
+        }
+
+        // Exit
+        inv.setItem(49, GUIManager.createItem(
+                Material.BARRIER,
+                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§c✖ Close"),
+                lines(player, "exit_lore", List.of("§7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -152,7 +181,7 @@ public class PlotMarketGUI {
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             int index = (page * PLOTS_PER_PAGE) + slot;
             if (index >= holder.getPlots().size()) return;
-            
+
             Plot plot = holder.getPlots().get(index);
             if (plot == null) return;
 
@@ -160,13 +189,13 @@ public class PlotMarketGUI {
             if (e.getClick().isLeftClick()) {
                 Location center = plot.getCenter(plugin);
                 if (center != null) {
-                    // ✅ Folia/Paper-safe teleport
+                    // Folia/Paper-safe teleport
                     TeleportUtil.safeTeleport(plugin, player, center);
                     player.closeInventory();
                     plugin.msg().send(player, "market-teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                 }
-            } 
+            }
             // Buy/Rent (Right Click)
             else if (e.getClick().isRightClick()) {
                 if (plot.isForSale()) {
@@ -185,7 +214,7 @@ public class PlotMarketGUI {
             plugin.effects().playError(buyer);
             return;
         }
-        
+
         int max = plugin.cfg().getWorldMaxClaims(buyer.getWorld());
         int current = plugin.store().getPlots(buyer.getUniqueId()).size();
         if (current >= max && max > 0 && !plugin.isAdmin(buyer)) {
@@ -196,14 +225,16 @@ public class PlotMarketGUI {
         // 2. Transaction
         double price = plot.getSalePrice();
         if (!plugin.eco().withdraw(buyer, price, CurrencyType.VAULT)) {
-            plugin.msg().send(buyer, "need_vault", Map.of("AMOUNT", plugin.eco().format(price, CurrencyType.VAULT)));
+            plugin.msg().send(buyer, "need_vault", Map.of(
+                    "AMOUNT", plugin.eco().format(price, CurrencyType.VAULT)
+            ));
             return;
         }
 
         // 3. Pay Seller
         OfflinePlayer seller = Bukkit.getOfflinePlayer(plot.getOwner());
         if (seller.hasPlayedBefore()) {
-            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT); // Vault hook should handle this safely
+            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT);
         }
 
         // 4. Transfer
@@ -217,18 +248,47 @@ public class PlotMarketGUI {
                 "PLAYER", seller.getName()
         ));
         plugin.effects().playClaimSuccess(buyer);
-        
+
         if (seller.isOnline()) {
             plugin.msg().send(seller.getPlayer(), "market-sold", Map.of(
                     "PRICE", plugin.eco().format(price, CurrencyType.VAULT),
                     "PLAYER", buyer.getName()
             ));
         }
-        
+
         buyer.closeInventory();
     }
-    
+
     private void handleRent(Player renter, Plot plot) {
         renter.sendMessage(plugin.msg().get(renter, "market-rent-soon")); // "Coming Soon" message
+    }
+
+    // -----------------------------
+    // Small lore helper like in LevelingGUI
+    // -----------------------------
+    private List<String> lines(Player player, String key, List<String> fallback) {
+        List<String> raw;
+        try {
+            raw = plugin.msg().getList(player, key);
+        } catch (Throwable ignored) {
+            raw = null;
+        }
+
+        if (raw == null || raw.isEmpty()) {
+            return fallback;
+        }
+
+        List<String> cleaned = new ArrayList<>();
+        for (String line : raw) {
+            String fixed = GUIManager.safeText(line, "");
+            if (fixed != null && !fixed.isEmpty()) {
+                cleaned.add(fixed);
+            }
+        }
+
+        if (cleaned.isEmpty()) {
+            return fallback;
+        }
+        return cleaned;
     }
 }

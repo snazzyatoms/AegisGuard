@@ -60,6 +60,12 @@ old_english:
   plot_expired_upkeep: '&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!'
   plot-is-locked: '&c❌ This dominion is locked pending tribute and cannot be altered.'
 
+  # --- Plot Levels / Ascension ---
+  level_header_owner: '&dLord / Lady:&f {owner}'
+  level_header_world: '&dRealm:&f {world}'
+  level_header_level: '&dDominion Rank:&f {level}'
+  level_header_multiplier: '&dBlessing Multiplier:&f {multiplier}x'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Thy dominion is now up for public auction!'
   auction-bid-own: '&cThou canst not bid upon thine own expired dominion.'
@@ -228,6 +234,12 @@ hybrid_english:
   plot_expired_upkeep: '&c❌ Plot expired due to unpaid upkeep.'
   plot-is-locked: '&c❌ This plot is locked.'
 
+  # --- Plot Levels / Ascension ---
+  level_header_owner: '&dOwner:&f {owner}'
+  level_header_world: '&dWorld:&f {world}'
+  level_header_level: '&dPlot Level:&f {level}'
+  level_header_multiplier: '&dLevel Multiplier:&f {multiplier}x'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your plot has entered auction.'
   auction-bid-own: '&cYou cannot bid on your own plot.'
@@ -395,6 +407,12 @@ modern_english:
   upkeep_failed_warning: '&c⚠ Upkeep is due and your balance is too low.'
   plot_expired_upkeep: '&c❌ Your claim was removed due to unpaid upkeep.'
   plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
+
+  # --- Plot Levels / Ascension ---
+  level_header_owner: '&dOwner:&f {owner}'
+  level_header_world: '&dWorld:&f {world}'
+  level_header_level: '&dCurrent Level:&f {level}'
+  level_header_multiplier: '&dXP Multiplier:&f {multiplier}x'
 
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your claim is now being auctioned!'

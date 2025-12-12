@@ -180,6 +180,12 @@ visit_plot_lore:
   - ' '
   - '&eClick to Travel'
 
+# --- Ascension Headers (Plot Level GUI) ---
+level_header_owner: '&dOwner:&f {owner}'
+level_header_world: '&dWorld:&f {world}'
+level_header_level: '&dCurrent Level:&f {level}'
+level_header_multiplier: '&dReward Multiplier:&f {multiplier}x'
+
 # --- Plot Status GUI ---
 button_plot_status: '&b📜 Plot Status Ledger'
 plot_status_button_title: '&b📜 Plot Status Ledger'
@@ -195,6 +201,7 @@ plot_status_gui_title: '&b⚔ Plot Status Ledger'
 plot_status_header_title: '&6Story of This Land'
 plot_status_blessings_title: '&dActive Blessings'
 plot_status_territory_title: '&aTerritory & Growth'
+plot_status_protection_title: '&cCombat & Hostiles'
 
 plot_status_overview_name: '&aPlot Overview'
 plot_status_overview_lore:
@@ -225,10 +232,6 @@ subtitle_entering_wilderness: '&7Unclaimed Land'
 
 # --- Main Menu ---
 menu_title: '&b⚔ Guardian Codex'
-
-button_plot_status: '&b⚔ Plot Status'
-plot_status_lore:
-  - '&7View detailed plot information.'
 
 # --- Help ---
 help_header: '&bAegisGuard Help'

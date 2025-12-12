@@ -21,6 +21,24 @@ button_exit_lore:
 exit_lore:
   - '&7Close this menu.'
 
+# GUI-specific Back Buttons
+expansion_button_back: '&e⟵ Back to Expansion'
+market_button_back: '&e⟵ Back to Real Estate'
+realestate_button_back: '&e⟵ Back to Real Estate'
+domain_market_button_back: '&e⟵ Back to Domain Marketplace'
+auction_button_back: '&e⟵ Back to Auctions'
+
+expansion_button_back_lore:
+  - '&7Return to the expansion options.'
+market_button_back_lore:
+  - '&7Return to the claim listings.'
+realestate_button_back_lore:
+  - '&7Return to the real estate overview.'
+domain_market_button_back_lore:
+  - '&7Return to the domain listings.'
+auction_button_back_lore:
+  - '&7Return to the auction overview.'
+
 # --- General Errors ---
 role_edit_self_error: '&cError: You cannot edit your own role.'
 no_perm: '&cError: You do not have permission for this.'
@@ -343,10 +361,72 @@ level_header_world: '&dWorld:&f {world}'
 level_header_level: '&dCurrent Level:&f {level}'
 level_header_multiplier: '&dReward Multiplier:&f {multiplier}x'
 
+# Current bonuses panel
+level_current_blessing_name: '&dCurrent Bonuses'
+level_current_blessing_title: '&dActive Bonuses'
+level_current_blessing_footer_1: '&8Higher levels unlock stronger'
+level_current_blessing_footer_2: '&8bonuses for this claim.'
+
+# plural aliases (Codex compatibility)
+level_current_blessings_name: '&dCurrent Bonuses'
+level_current_blessings_title: '&dActive Bonuses'
+level_current_blessings_footer_1: '&8Higher levels unlock stronger'
+level_current_blessings_footer_2: '&8bonuses for this claim.'
+
+# Track / cube states
+level_track_title_completed: '&aTrack Completed'
+"level_track_completed_[1]": '&7You have unlocked every level'
+"level_track_completed_[2]": '&7in this progression track.'
+level_track_completed_1: '&7You have unlocked every level'
+level_track_completed_2: '&7in this progression track.'
+level_track_buffs_title: '&dUnlocked Bonuses'
+level_track_footer_mastered: '&6No further upgrades are available in this track.'
+
+level_track_title_current: '&dCurrent Track'
+"level_track_current_[1]": '&7These bonuses are currently'
+"level_track_current_[2]": '&7active on this claim.'
+
+level_track_title_locked: '&cTrack Locked'
+"level_track_locked_[1]": '&7Further upgrades in this track'
+"level_track_locked_[2]": '&7are locked until you progress.'
+
+"level_track_next_[1]": '&7Next upgrade in this track'
+level_track_next_cost: '&eCost: &6{COST}'
+level_track_footer_next: '&6Upgrade to unlock these bonuses.'
+level_track_footer_progress: '&7Progress toward the next upgrade.'
+
+# Optional cube display names / lore for the emerald / gold / red blocks
+level_track_completed_name: '&aTrack Completed'
+level_track_completed_lore:
+  - '&7All levels in this track have'
+  - '&7already been unlocked.'
+
+level_track_current_name: '&dCurrent Track'
+level_track_current_lore:
+  - '&7These bonuses are currently'
+  - '&7active on this claim.'
+
+level_track_locked_name: '&cTrack Locked'
+level_track_locked_lore:
+  - '&7Further upgrades in this track are'
+  - '&7locked until you progress.'
+
+level_track_next_name: '&dNext Upgrade in Track'
+level_track_next_lore:
+  - '&7Upgrade to unlock the next bonuses.'
+  - '&7Upgrade cost: &6{COST}'
+
+# Upgrade button section
 level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
 level_max_reached: '&6Maximum level reached for this plot.'
 level_up_success: '&d⚡ Your plot has been upgraded to Level &f{LEVEL}&d!'
 level_up_fail_cost: '&c❌ You do not have enough funds to upgrade this plot.'
+
+level_upgrade_tier: '&dNext Tier'
+level_upgrade_next_tier: '&dNext Tier'
+level_upgrade_cost: '&eCost: &6{COST}'
+level_upgrade_new_buffs_title: '&dNew Bonuses'
+level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
 
 # LORE: Used when leveling expands claim size
 level_button_lore:

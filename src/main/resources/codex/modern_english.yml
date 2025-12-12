@@ -336,6 +336,13 @@ settings_gui_not_toggle: '&cThese examples cannot be changed here. Use Claim Set
 # --- Leveling & Zoning ---
 level_gui_title: '&dPlot Ascension'
 level_current_status: '&bCurrent Plot Level'
+
+# Ascension headers (per-plot info)
+level_header_owner: '&dOwner:&f {owner}'
+level_header_world: '&dWorld:&f {world}'
+level_header_level: '&dCurrent Level:&f {level}'
+level_header_multiplier: '&dReward Multiplier:&f {multiplier}x'
+
 level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
 level_max_reached: '&6Maximum level reached for this plot.'
 level_up_success: '&d⚡ Your plot has been upgraded to Level &f{LEVEL}&d!'
@@ -406,6 +413,7 @@ plot_status_gui_title: '&b⚔ Claim Status'
 plot_status_header_title: '&6Claim Information'
 plot_status_blessings_title: '&dActive Bonuses & Effects'
 plot_status_territory_title: '&aTerritory, Size & Progression'
+plot_status_protection_title: '&cCombat & Hostiles'
 
 plot_status_overview_name: '&aClaim Overview'
 plot_status_overview_lore:

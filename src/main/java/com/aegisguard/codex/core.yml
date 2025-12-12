@@ -4,3 +4,8 @@
 # ======================================
 
 prefix: '&8[&bAegisGuard&8]&r '
+
+# Who shows up as the "actor" when an admin approves/denies expansion requests.
+# Used by ExpansionRequestManager via:
+#   plugin.gui().tr(player, "expansion_actor_admin", "Admin")
+expansion_actor_admin: '&cAegis Steward'

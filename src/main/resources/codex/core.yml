@@ -11,6 +11,146 @@ prefix: '&8[&bAegisGuard&8]&r '
 expansion_actor_admin: '&cAegis Steward'
 
 # ======================================
+# Shared navigation buttons (used by multiple GUIs)
+# ======================================
+
+button_back: '&e⟵ Back'
+back_lore:
+  - '&7Return to the previous page.'
+
+button_back_menu: '&fReturn to Menu'
+back_menu_lore:
+  - '&7Return to the main menu.'
+
+button_prev_page: '&fPrevious Page'
+button_next_page: '&fNext Page'
+
+button_exit: '&c✖ Close'
+button_exit_lore:
+  - '&7Close this menu.'
+exit_lore:
+  - '&7Close this menu.'
+
+# Generic "expand" button text used in tooltips (eg. Realm, Reach & Growth hint)
+button_expand: '&dRequest Expansion'
+
+# ======================================
+# Plot Ascension / Level Track (shared text)
+# ======================================
+
+# Header shown in the Plot Ascension Codex status item
+level_current_status: '&bCurrent Plot Level'
+
+# Titles for the small “track” preview items
+level_track_title_current: '&bCurrent Progress'
+level_track_title_completed: '&aTrack Completed'
+
+# Lines for the “current” track preview (in-progress)
+level_track_current_[1]: '&7Each level unlocks new bonuses.'
+level_track_current_[2]: '&7Reach the final level to master this track.'
+level_track_current_[3]: '&7Hover other items to see future rewards.'
+
+# Lines for the “completed” track preview
+level_track_completed_[1]: '&7All level milestones are unlocked.'
+level_track_completed_[2]: '&7You have reached the final tier of this track.'
+level_track_completed_[3]: '&7Future changes will be mostly cosmetic.'
+
+# Section header above the list of buffs for a track
+level_track_buffs_title: '&dUnlocked Bonuses'
+
+# Footer line shown when a track is fully mastered
+level_track_footer_mastered: '&6This progression track is fully mastered.'
+
+# (These high-level ascension keys also exist in style files, but we provide
+# safe fallbacks here in case a GUI reads from core only.)
+level_gui_title: '&dPlot Ascension Codex'
+level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
+level_max_reached: '&6Maximum level reached for this plot.'
+level_up_success: '&d⚡ Your plot has been upgraded to Level &f{LEVEL}&d!'
+level_up_fail_cost: '&c❌ You do not have enough funds to upgrade this plot.'
+level_button_lore:
+  - '&7Upgrade your plot to increase'
+  - '&7its size and unlock new features.'
+level_button_lore_static:
+  - '&7Upgrade your plot to unlock'
+  - '&7new perks and features.'
+
+# ======================================
+# Land Expansion Petition (Expansion Request GUI)
+# ======================================
+
+expansion_gui_title: '&dLand Expansion Petition'
+
+# Main “request expansion” button in the petition menu
+button_expand_title: '&dRequest Expansion'
+# (Some code paths may still call just "button_expand"; we already set that above.)
+
+expand_lore:
+  - '&7Request a larger protected radius'
+  - '&7for your current dominion.'
+
+# Player-facing result lines
+expansion_submitted: '&a✔ Expansion request submitted.'
+expansion_exists: '&c❌ You already have a pending expansion request.'
+expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
+expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Cannot expand; another claim is too close.'
+expansion_invalid_size: '&c❌ The new size must be larger than the old one.'
+request_expired: '&c❌ This expansion request has expired or no longer exists.'
+
+# Kept blank in styles to avoid double-messages; but we give safe text here
+expansion_approved: '&a✔ Your expansion request was approved.'
+expansion_denied: '&c❌ Your expansion request was denied.'
+
+# Tier buttons (names + simple generic lore)
+expansion_tier1_name: '&aTier I Expansion'
+expansion_tier1_lore:
+  - '&7Expand your dominion by &a+5&7 radius.'
+  - '&eClick to submit a request.'
+
+expansion_tier2_name: '&eTier II Expansion'
+expansion_tier2_lore:
+  - '&7Expand your dominion by &e+10&7 radius.'
+  - '&eClick to submit a request.'
+
+expansion_tier3_name: '&fTier III Expansion'
+expansion_tier3_lore:
+  - '&7Expand your dominion by &f+20&7 radius.'
+  - '&eClick to submit a request.'
+
+expansion_tier4_name: '&6Tier IV Expansion'
+expansion_tier4_lore:
+  - '&7Expand your dominion by &6+35&7 radius.'
+  - '&eClick to submit a request.'
+
+expansion_tier5_name: '&bTier V Expansion'
+expansion_tier5_lore:
+  - '&7Expand your dominion by &b+50&7 radius.'
+  - '&eClick to submit a request.'
+
+expansion_locked_lore:
+  - '&cYou must be standing inside'
+  - '&cyour own plot to request expansion.'
+
+# Admin review button + list titles
+button_view_requests_admin: '&cReview Requests (Admin)'
+view_requests_admin_lore:
+  - '&7View and manage all current'
+  - '&7land expansion petitions.'
+
+expansion_admin_title: '&8Pending Expansion Requests'
+expansion_none_title: '&cNo Requests'
+expansion_none_lore:
+  - '&7There are no expansion requests right now.'
+
+expansion_admin_actions:
+  - '&aLeft-Click: &7Approve'
+  - '&cRight-Click: &7Deny'
+
+expansion_admin_granted_broadcast: '&6⚖ {PLAYER} approved an expansion for {TARGET}.'
+expansion_admin_denied_broadcast: '&c⚖ {PLAYER} denied an expansion request from {TARGET}.'
+
+# ======================================
 # Discord notifications (shared defaults)
 # These can be overridden per-style in the style codex files if desired.
 # ======================================
@@ -26,31 +166,3 @@ discord_claim_footer: 'AegisGuard'
 discord_merge_title: '🔄 Plot Merge Completed'
 discord_merge_description: '{PLAYER} merged two claims.'
 discord_merge_size_label: 'New Size'
-
-# ======================================
-# Shared GUI labels / fallbacks
-# These are used by multiple Codex screens and
-# act as a safety net across all styles.
-# ======================================
-
-# Buttons & basic actions
-button_back: '&e⟵ Back'
-button_exit: '&c✖ Close'
-button_expand: '&dRequest Expansion'
-button_view_requests_admin: '&cReview Requests (Admin)'
-
-# Plot Status / Leveling (Ascension)
-level_current_status: '&bCurrent Plot Status'
-
-level_track_title_completed: '&aTrack Complete'
-level_track_completed_[1]: '&7You have fully completed'
-level_track_completed_[2]: '&7this progression track.'
-level_track_buffs_title: '&dUnlocked Bonuses'
-level_track_footer_mastered: '&6You have mastered this ascension path.'
-
-# Expansion tier names (fallbacks)
-expansion_tier1_name: '&aSmall Expansion (+5)'
-expansion_tier2_name: '&eMedium Expansion (+10)'
-expansion_tier3_name: '&fLarge Expansion (+20)'
-expansion_tier4_name: '&6Huge Expansion (+35)'
-expansion_tier5_name: '&bMassive Expansion (+50)'

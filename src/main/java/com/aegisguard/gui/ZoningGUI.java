@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * ZoningGUI
  * - Manages Sub-Claims (Rentals) inside a plot.
- * - Fully localized for dynamic language switching.
+ * - [Fix] Updated to use CodexEngine to resolve [Missing] keys.
  */
 public class ZoningGUI {
 
@@ -38,10 +38,10 @@ public class ZoningGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(
-                line(player, "zone_gui_title", "§3Sub-Claim Manager"),
-                "§3Sub-Claim Manager"
-        );
+        // [Fix] Use Codex for title
+        String title = plugin.codex().tr(player, "zone_gui_title");
+        if (title.equals("zone_gui_title")) title = "§3Sub-Claim Manager"; // Safety fallback
+
         Inventory inv = Bukkit.createInventory(new ZoningHolder(plot), 54, title);
 
         // --- 1. LIST ZONES ---
@@ -52,9 +52,10 @@ public class ZoningGUI {
             if (slot >= 45) break;
 
             boolean isRented = zone.isRented();
+            // [Fix] Use Codex for status text
             String status = isRented
-                    ? line(player, "zone_status_rented", "§cRented")
-                    : line(player, "zone_status_available", "§aAvailable");
+                    ? plugin.codex().tr(player, "zone_status_rented")
+                    : plugin.codex().tr(player, "zone_status_available");
 
             String renterName = "None";
             String timeRemaining = "";
@@ -79,16 +80,12 @@ public class ZoningGUI {
                 lore.add("§7Expires: §f" + timeRemaining);
                 lore.add(" ");
 
-                String evictAction = line(player, "zone_evict_action", "§eLeft-Click to Evict");
-                if (!evictAction.isEmpty()) {
-                    lore.add(evictAction);
-                }
+                String evictAction = plugin.codex().tr(player, "zone_evict_action");
+                lore.add(evictAction);
             }
 
-            String deleteAction = line(player, "zone_delete_action", "§cRight-Click to Delete");
-            if (!deleteAction.isEmpty()) {
-                lore.add(deleteAction);
-            }
+            String deleteAction = plugin.codex().tr(player, "zone_delete_action");
+            lore.add(deleteAction);
 
             inv.setItem(slot, GUIManager.createItem(
                     isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
@@ -107,17 +104,12 @@ public class ZoningGUI {
         // Create Button (Slot 49)
         boolean hasSelection = plugin.selection().hasSelection(player);
 
-        String createName = line(player, "button_zone_create", "§aCreate New Zone");
-        List<String> readyLore = lines(player, "zone_create_ready_lore", List.of(
-                "§7Your wand selection will be used",
-                "§7to define this sub-claim.",
-                "",
-                "§eClick to create a new zone."
-        ));
-        List<String> lockedLore = lines(player, "zone_create_locked_lore", List.of(
-                "§cYou must select an area",
-                "§cwith the Aegis wand first."
-        ));
+        // [Fix] Use Codex for button name
+        String createName = plugin.codex().tr(player, "button_zone_create");
+        
+        // [Fix] Use Codex for LoRes (Lists)
+        List<String> readyLore = plugin.codex().trList(player, "zone_create_ready_lore");
+        List<String> lockedLore = plugin.codex().trList(player, "zone_create_locked_lore");
 
         inv.setItem(49, GUIManager.createItem(
                 Material.EMERALD_BLOCK,
@@ -126,8 +118,10 @@ public class ZoningGUI {
         ));
 
         // Back (Slot 45)
-        String backName = line(player, "button_back", "§fBack");
-        List<String> backLore = lines(player, "back_lore", List.of("§7Return to Aegis menu."));
+        // [Fix] Use Codex for back button
+        String backName = plugin.codex().tr(player, "button_back");
+        List<String> backLore = plugin.codex().trList(player, "back_lore");
+        
         inv.setItem(45, GUIManager.createItem(Material.ARROW, backName, backLore));
 
         player.openInventory(inv);
@@ -154,7 +148,7 @@ public class ZoningGUI {
                 player.closeInventory();
             } else {
                 plugin.effects().playError(player);
-                player.sendMessage(plugin.msg().get(player, "must_select"));
+                player.sendMessage(plugin.codex().tr(player, "must_select"));
             }
             return;
         }
@@ -181,7 +175,8 @@ public class ZoningGUI {
                 plot.removeZone(target);
                 plugin.store().setDirty(true);
                 player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
-                plugin.msg().send(player, "zone_deleted", Map.of("ZONE", target.getName()));
+                // Chat feedback using codex
+                player.sendMessage(plugin.codex().tr(player, "zone_deleted", Map.of("ZONE", target.getName())));
                 open(player, plot);
             }
             // Evict
@@ -189,73 +184,12 @@ public class ZoningGUI {
                 if (target.isRented()) {
                     target.evict();
                     plugin.store().setDirty(true);
-                    plugin.msg().send(player, "zone_evicted", Map.of("ZONE", target.getName()));
+                    player.sendMessage(plugin.codex().tr(player, "zone_evicted", Map.of("ZONE", target.getName())));
                     open(player, plot);
                 } else {
-                    plugin.msg().send(player, "zone_not_rented");
+                    player.sendMessage(plugin.codex().tr(player, "zone_not_rented"));
                 }
             }
         }
-    }
-
-    // --------------------------------------------------
-    // LANGUAGE HELPERS (New Engine – hardened)
-    // --------------------------------------------------
-
-    private String line(Player player, String key, String fallback) {
-        String raw;
-        try {
-            raw = plugin.msg().get(player, key);
-        } catch (Throwable ignored) {
-            raw = null;
-        }
-
-        if (raw == null || raw.isEmpty()
-                || raw.equalsIgnoreCase(key)
-                || raw.startsWith("[Missing:")) {
-            return fallback;
-        }
-        return raw;
-    }
-
-    private String line(Player player, String key, String fallback, Map<String, String> placeholders) {
-        String raw;
-        try {
-            raw = plugin.msg().get(player, key, placeholders);
-        } catch (Throwable ignored) {
-            raw = null;
-        }
-
-        if (raw == null || raw.isEmpty()
-                || raw.equalsIgnoreCase(key)
-                || raw.startsWith("[Missing:")) {
-            return fallback;
-        }
-        return raw;
-    }
-
-    private List<String> lines(Player player, String key, List<String> fallback) {
-        List<String> result;
-        try {
-            result = plugin.msg().getList(player, key);
-        } catch (Throwable ignored) {
-            result = null;
-        }
-
-        if (result == null || result.isEmpty()) {
-            return fallback;
-        }
-
-        List<String> cleaned = new ArrayList<>();
-        for (String s : result) {
-            if (s == null) continue;
-            if (s.startsWith("[Missing:")) continue;
-            cleaned.add(s);
-        }
-
-        if (cleaned.isEmpty()) {
-            return fallback;
-        }
-        return cleaned;
     }
 }

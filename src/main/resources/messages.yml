@@ -121,6 +121,27 @@ old_english:
   level_upgrade_new_buffs_title: '&dNew Blessings'
   level_upgrade_click_hint: '&eClick to attempt ascension.'
 
+  # --- Track Block Items (extra aliases for big cubes) ---
+  # Completed track (emerald / gold block)
+  level_track_completed_title: '&aPath Mastered'
+  level_track_completed_lore_1: '&7All steps of this path are'
+  level_track_completed_lore_2: '&7fulfilled; thou hast mastered it.'
+
+  # Current track (active path)
+  level_track_current_title: '&dCurrent Path'
+  level_track_current_lore_1: '&7These boons are active upon'
+  level_track_current_lore_2: '&7thy dominion at present.'
+
+  # Locked track
+  level_track_locked_title: '&cPath Bound'
+  level_track_locked_lore_1: '&7Further rites are sealed;'
+  level_track_locked_lore_2: '&7thou must ascend in order.'
+
+  # Next step / upcoming tier
+  level_track_next_title: '&dNext Step on this Path'
+  level_track_next_lore_1: '&7Advance to unlock these blessings.'
+  level_track_next_lore_2: '&7Tribute required: &6{COST}'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Thy dominion is now up for public auction!'
   auction-bid-own: '&cThou canst not bid upon thine own expired dominion.'
@@ -129,6 +150,7 @@ old_english:
   auction-bid-success: '&a✔ Thou hast bid &6{AMOUNT}&a! Thou art now the highest bidder.'
   auction-sold: '&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee.'
   auction-won: '&a✔ Thou hast won the auction for {PLOT_OWNER}''s old dominion for &6{AMOUNT}&a!'
+  auction_button_back: '&e⟵ Return to Auctions'
 
   # --- Market ---
   market-teleport: '&eSpiriting thee to {PLAYER}''s plot...'
@@ -138,6 +160,9 @@ old_english:
   market-for-sale: '&a✔ Thy dominion is now for sale for &6{PRICE}&a.'
   market-not-for-sale: '&e✔ Thy dominion is no longer for sale.'
   market-rent-soon: '&ePlot renting shall be decreed in a future age.'
+  market_button_back: '&e⟵ Return to Market'
+  realestate_button_back: '&e⟵ Return to Estates'
+  domain_market_button_back: '&e⟵ Return to Domain Market'
 
   # --- Expansion Requests ---
   expansion_submitted: '&a✔ Thy petition for expansion hath been sent to the Council.'
@@ -156,6 +181,7 @@ old_english:
   expansion_gui_title: '&d§lLand Expansion Petition'
   button_expand: '&dRequest Expansion'
   button_view_requests_admin: '&cReview Petitions (Admin)'
+  expansion_button_back: '&e⟵ Return to Previous Menu'
   expansion_admin_title: '&8Pending Petitions'
   expansion_none_title: '&cNo Petitions'
   expansion_none_lore:
@@ -369,6 +395,23 @@ hybrid_english:
   level_upgrade_new_buffs_title: '&dNew Bonuses'
   level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
 
+  # --- Track Block Items (extra aliases for big cubes) ---
+  level_track_completed_title: '&aTrack Completed'
+  level_track_completed_lore_1: '&7All milestones in this track'
+  level_track_completed_lore_2: '&7have been unlocked.'
+
+  level_track_current_title: '&dCurrent Track'
+  level_track_current_lore_1: '&7These bonuses are currently'
+  level_track_current_lore_2: '&7active on your plot.'
+
+  level_track_locked_title: '&cTrack Locked'
+  level_track_locked_lore_1: '&7Further upgrades in this track'
+  level_track_locked_lore_2: '&7are locked until you progress.'
+
+  level_track_next_title: '&dNext Upgrade in this Track'
+  level_track_next_lore_1: '&7Upgrade to unlock the next bonuses.'
+  level_track_next_lore_2: '&7Cost to advance: &6{COST}'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your plot has entered auction.'
   auction-bid-own: '&cYou cannot bid on your own plot.'
@@ -377,6 +420,7 @@ hybrid_english:
   auction-bid-success: '&a✔ Bid of &6{AMOUNT}&a accepted.'
   auction-sold: '&a✔ Plot sold to {PLAYER} for &6{AMOUNT}&a.'
   auction-won: '&a✔ You won the auction for &6{AMOUNT}&a.'
+  auction_button_back: '&e⟵ Back to Auctions'
 
   # --- Market ---
   market-teleport: '&eTraveling to {PLAYER}''s plot...'
@@ -386,6 +430,9 @@ hybrid_english:
   market-for-sale: '&a✔ Plot listed for &6{PRICE}&a.'
   market-not-for-sale: '&e✔ Plot removed from market.'
   market-rent-soon: '&eRenting coming soon.'
+  market_button_back: '&e⟵ Back to Market'
+  realestate_button_back: '&e⟵ Back to Real Estate'
+  domain_market_button_back: '&e⟵ Back to Domain Market'
 
   # --- Expansion Requests ---
   expansion_submitted: '&a✔ Request submitted.'
@@ -404,6 +451,7 @@ hybrid_english:
   expansion_gui_title: '&dLand Expansion Request'
   button_expand: '&dRequest Expansion'
   button_view_requests_admin: '&cReview Requests'
+  expansion_button_back: '&e⟵ Back to Previous Menu'
   expansion_admin_title: '&8Pending Requests'
   expansion_none_title: '&cNo Requests'
   expansion_none_lore:
@@ -617,6 +665,23 @@ modern_english:
   level_upgrade_new_buffs_title: '&dNew Bonuses'
   level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
 
+  # --- Track Block Items (extra aliases for big cubes) ---
+  level_track_completed_title: '&aTrack Completed'
+  level_track_completed_lore_1: '&7You have unlocked every level'
+  level_track_completed_lore_2: '&7in this progression track.'
+
+  level_track_current_title: '&dCurrent Track'
+  level_track_current_lore_1: '&7These bonuses are currently'
+  level_track_current_lore_2: '&7active on this claim.'
+
+  level_track_locked_title: '&cTrack Locked'
+  level_track_locked_lore_1: '&7Further upgrades in this track'
+  level_track_locked_lore_2: '&7are locked until you progress.'
+
+  level_track_next_title: '&dNext Upgrade in this Track'
+  level_track_next_lore_1: '&7Upgrade to unlock the next bonuses.'
+  level_track_next_lore_2: '&7Upgrade cost: &6{COST}'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your claim is now being auctioned!'
   auction-bid-own: '&cError: You cannot bid on your own expired claim.'
@@ -625,6 +690,7 @@ modern_english:
   auction-bid-success: '&a✔ Bid of &6{AMOUNT}&a accepted. You are now the highest bidder.'
   auction-sold: '&a✔ Your claim was sold to {PLAYER} for &6{AMOUNT}&a.'
   auction-won: '&a✔ You won the auction for {PLOT_OWNER}''s claim for &6{AMOUNT}&a!'
+  auction_button_back: '&e⟵ Back to Auctions'
 
   # --- Market ---
   market-teleport: '&eTeleporting to {PLAYER}''s claim...'
@@ -634,6 +700,9 @@ modern_english:
   market-for-sale: '&a✔ Claim listed for &6{PRICE}&a.'
   market-not-for-sale: '&e✔ Claim listing removed.'
   market-rent-soon: '&eRentals will be available in a future update.'
+  market_button_back: '&e⟵ Back to Market'
+  realestate_button_back: '&e⟵ Back to Real Estate'
+  domain_market_button_back: '&e⟵ Back to Domain Market'
 
   # --- Expansion Requests ---
   expansion_submitted: '&a✔ Expansion request submitted.'
@@ -652,6 +721,7 @@ modern_english:
   expansion_gui_title: '&dExpansion Request'
   button_expand: '&dRequest Expansion'
   button_view_requests_admin: '&cReview Requests (Admin)'
+  expansion_button_back: '&e⟵ Back to Previous Menu'
   expansion_admin_title: '&8Pending Expansion Requests'
   expansion_none_title: '&cNo Requests'
   expansion_none_lore:

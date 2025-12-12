@@ -1,8 +1,10 @@
 package com.aegisguard.admin;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.claimblocks.ClaimBlockData; // ✅ Import Data
 import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -24,7 +26,8 @@ import java.util.List;
 public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
-    private static final String[] SUB_COMMANDS = { "reload", "bypass", "menu", "convert", "wand" };
+    // ✅ Added "blocks" to subcommands
+    private static final String[] SUB_COMMANDS = { "reload", "bypass", "menu", "convert", "wand", "blocks" };
 
     public AdminCommand(AegisGuard plugin) {
         this.plugin = plugin;
@@ -34,15 +37,22 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         // --- CONSOLE HANDLING ---
         if (!(sender instanceof Player p)) {
+            // Console allows reload and blocks, but restricts GUI stuff
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.cfg().reload();
                 plugin.msg().reload();
                 plugin.worldRules().reload();
                 plugin.store().load();
                 sender.sendMessage("[AegisGuard] Reload complete.");
-            } else {
-                sender.sendMessage("[AegisGuard] GUI commands are player-only. Use 'aegisadmin reload' to reload config.");
+                return true;
+            } 
+            // Allow console to edit blocks
+            if (args.length > 0 && args[0].equalsIgnoreCase("blocks")) {
+                handleBlocks(sender, args);
+                return true;
             }
+            
+            sender.sendMessage("[AegisGuard] GUI commands are player-only. Use 'aegisadmin reload' or 'aegisadmin blocks'.");
             return true;
         }
 
@@ -70,8 +80,6 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 break;
                 
             case "bypass":
-                // Toggle permission logic isn't usually done via command unless hooking into LuckPerms API.
-                // For a simple plugin, we usually just inform them they have the permission node.
                 if (p.hasPermission("aegis.admin.bypass")) {
                     p.sendMessage(ChatColor.YELLOW + "⚠ You currently have Bypass Mode enabled via permissions.");
                 } else {
@@ -117,10 +125,65 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 plugin.effects().playClaimSuccess(p);
                 break;
 
+            // --- CLAIM BLOCKS MANAGEMENT ---
+            case "blocks":
+                handleBlocks(sender, args);
+                break;
+
             default:
-                p.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /agadmin <reload|bypass|menu|convert|wand>");
+                p.sendMessage(ChatColor.RED + "Unknown subcommand. Usage: /agadmin <reload|bypass|menu|convert|wand|blocks>");
         }
         return true;
+    }
+
+    /**
+     * Logic for /agadmin blocks <give|take|set> <player> <amount>
+     */
+    private void handleBlocks(CommandSender sender, String[] args) {
+        if (args.length < 4) {
+            sender.sendMessage(ChatColor.RED + "Usage: /agadmin blocks <give|take|set> <player> <amount>");
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(args[2]);
+        if (target == null) {
+            sender.sendMessage(ChatColor.RED + "Player '" + args[2] + "' not found (must be online).");
+            return;
+        }
+
+        long amount;
+        try {
+            amount = Long.parseLong(args[3]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "Invalid amount.");
+            return;
+        }
+
+        ClaimBlockData data = plugin.getClaimBlockManager().getOrCreate(target.getUniqueId());
+        String mode = args[1].toLowerCase();
+
+        switch (mode) {
+            case "give":
+            case "add":
+                data.addBonusBlocks(amount);
+                sender.sendMessage(ChatColor.GREEN + "✔ Added " + amount + " bonus blocks to " + target.getName());
+                break;
+            case "take":
+            case "remove":
+                data.addBonusBlocks(-amount);
+                sender.sendMessage(ChatColor.YELLOW + "✔ Removed " + amount + " bonus blocks from " + target.getName());
+                break;
+            case "set":
+                data.setBonusBlocks(amount);
+                sender.sendMessage(ChatColor.GOLD + "✔ Set " + target.getName() + "'s bonus blocks to " + amount);
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "Invalid action. Use: give, take, set");
+                return;
+        }
+
+        // Save immediately so it persists even if server crashes
+        plugin.getClaimBlockManager().saveAsync();
     }
 
     private ItemStack createAdminScepter() {
@@ -150,6 +213,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             StringUtil.copyPartialMatches(args[0], Arrays.asList(SUB_COMMANDS), completions);
             Collections.sort(completions);
             return completions;
+        }
+        // Tab complete for "blocks"
+        if (args.length == 2 && args[0].equalsIgnoreCase("blocks")) {
+            List<String> sub = Arrays.asList("give", "take", "set");
+            List<String> completions = new ArrayList<>();
+            StringUtil.copyPartialMatches(args[1], sub, completions);
+            return completions;
+        }
+        // Tab complete player names for blocks command
+        if (args.length == 3 && args[0].equalsIgnoreCase("blocks")) {
+            return null; // Bukkit default player list
         }
         return null;
     }

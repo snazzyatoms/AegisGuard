@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class PlotStatusGUI {
 
@@ -123,6 +124,28 @@ public class PlotStatusGUI {
                 territoryLore
         ));
 
+        // -------------------------------------------------------------
+        // ✅ NEW: DOMAIN REGISTRY (Claim Block Budget)
+        // -------------------------------------------------------------
+        UUID plotOwnerUUID = plot.getOwner();
+        long totalBlocks = plugin.getClaimBlockManager().getTotalBlocks(plotOwnerUUID);
+        long usedBlocks = plugin.getClaimBlockManager().getUsedBlocks(plotOwnerUUID);
+        long availBlocks = plugin.getClaimBlockManager().getAvailableBlocks(plotOwnerUUID);
+
+        List<String> budgetLore = new ArrayList<>();
+        budgetLore.add("§7Available: §a" + availBlocks);
+        budgetLore.add("§7Used: §c" + usedBlocks);
+        budgetLore.add("§7Total Capacity: §e" + totalBlocks);
+        budgetLore.add("");
+        budgetLore.add("§8This budget applies to all plots");
+        budgetLore.add("§8owned by §f" + owner + "§8.");
+
+        inv.setItem(26, GUIManager.createItem(
+                Material.PAPER,
+                "§6📜 Domain Registry",
+                budgetLore
+        ));
+
         // 5. Back
         String backName = plugin.codex().tr(player, "button_back");
         if (backName == null || backName.isEmpty()) backName = "§fBack";
@@ -156,19 +179,19 @@ public class PlotStatusGUI {
     private List<String> buildProtectionLore(Plot plot) {
         List<String> lore = new ArrayList<>();
 
-        boolean pvpProtected       = plugin.protection().isFlagEnabled(plot, "pvp");
-        boolean mobProtected       = plugin.protection().isMobProtectionEnabled(plot);
-        boolean animalsProtected   = plugin.protection().isFlagEnabled(plot, "animals");
-        boolean containersProtected= plugin.protection().isFlagEnabled(plot, "containers");
-        boolean redstoneProtected  = plugin.protection().isFlagEnabled(plot, "redstone");
-        boolean vehiclesProtected  = plugin.protection().isFlagEnabled(plot, "vehicles");
-        boolean safeZone           = plugin.protection().isSafeZoneEnabled(plot);
+        boolean pvpProtected        = plugin.protection().isFlagEnabled(plot, "pvp");
+        boolean mobProtected        = plugin.protection().isMobProtectionEnabled(plot);
+        boolean animalsProtected    = plugin.protection().isFlagEnabled(plot, "animals");
+        boolean containersProtected = plugin.protection().isFlagEnabled(plot, "containers");
+        boolean redstoneProtected   = plugin.protection().isFlagEnabled(plot, "redstone");
+        boolean vehiclesProtected   = plugin.protection().isFlagEnabled(plot, "vehicles");
+        boolean safeZone            = plugin.protection().isSafeZoneEnabled(plot);
 
-        boolean shopEnabled        = plot.getFlag("shop-interact", false);
-        boolean flyEnabled         = plot.getFlag("fly", false);
+        boolean shopEnabled         = plot.getFlag("shop-interact", false);
+        boolean flyEnabled          = plot.getFlag("fly", false);
 
         // Entry: true = OPEN, false = CLOSED for non-trusted
-        boolean entryOpen          = plot.getFlag("entry", true);
+        boolean entryOpen           = plot.getFlag("entry", true);
 
         lore.add("§7Combat & Hostiles:");
         lore.add(formatProtectionLine("PvP", pvpProtected));
@@ -216,19 +239,11 @@ public class PlotStatusGUI {
     // BLESSINGS (unchanged, just used by leveling/buffs)
     // --------------------------------------------------
 
-    /**
-     * Build a clean, professional blessing list:
-     * - Merges rewards from level 1..level
-     * - Keeps only the highest tier per blessing
-     * - Formats EFFECT and MEMBERS nicely
-     */
     private List<String> buildBuffList(int level) {
         List<String> result = new ArrayList<>();
         if (level <= 0) return result;
 
-        // key -> highest numeric tier (if any)
         Map<String, Integer> highestTier = new LinkedHashMap<>();
-        // key -> raw reward string (for formatting later)
         Map<String, String> rewardByKey = new LinkedHashMap<>();
 
         for (int i = 1; i <= level; i++) {
@@ -245,15 +260,12 @@ public class PlotStatusGUI {
                 Integer tier = null;
 
                 if (parts.length == 3 && isInteger(parts[2])) {
-                    // e.g. EFFECT:SPEED:2
                     key = (parts[0] + ":" + parts[1]).toUpperCase();
                     tier = Integer.parseInt(parts[2]);
                 } else if (parts.length == 2 && isInteger(parts[1])) {
-                    // e.g. MEMBERS:2
                     key = parts[0].toUpperCase();
                     tier = Integer.parseInt(parts[1]);
                 } else {
-                    // Non-numeric or custom reward, treat whole line as key
                     key = reward.toUpperCase();
                 }
 
@@ -275,7 +287,6 @@ public class PlotStatusGUI {
             String reward = entry.getValue();
             String[] parts = reward.split(":");
 
-            // EFFECT:TYPE:LEVEL
             if (parts.length == 3 && isInteger(parts[2]) && parts[0].equalsIgnoreCase("EFFECT")) {
                 String effectKey = parts[1];
                 int tier = Integer.parseInt(parts[2]);
@@ -295,14 +306,12 @@ public class PlotStatusGUI {
                 continue;
             }
 
-            // MEMBERS:AMOUNT
             if (parts.length == 2 && isInteger(parts[1]) && parts[0].equalsIgnoreCase("MEMBERS")) {
                 int amount = Integer.parseInt(parts[1]);
                 result.add("§a✦ §fTrusted member slots: §b+" + amount);
                 continue;
             }
 
-            // Fallback – pretty print anything unknown
             String pretty = reward.replace("EFFECT:", "")
                                   .replace("MEMBERS:", "")
                                   .replace(":", " ");

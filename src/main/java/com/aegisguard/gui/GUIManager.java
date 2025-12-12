@@ -128,7 +128,7 @@ public class GUIManager {
      * Centralized text lookup using the Aegis Codex engine.
      *
      * Usage example in other GUIs:
-     *   String title = plugin.gui().tr(player, "menu_title", "&b⚔ AegisGuard Menu");
+     * String title = plugin.gui().tr(player, "menu_title", "&b⚔ AegisGuard Menu");
      */
     public String tr(Player player, String key, String fallback) {
         try {
@@ -148,7 +148,7 @@ public class GUIManager {
      * List/lore variant for language lookups.
      *
      * Usage example:
-     *   List<String> lore = plugin.gui().trList(player, "menu.main.lore", Arrays.asList("&7Line 1", "&7Line 2"));
+     * List<String> lore = plugin.gui().trList(player, "menu.main.lore", Arrays.asList("&7Line 1", "&7Line 2"));
      */
     public List<String> trList(Player player, String key, List<String> fallback) {
         try {
@@ -241,5 +241,28 @@ public class GUIManager {
 
     private static String color(String text) {
         return ChatColor.translateAlternateColorCodes('&', text);
+    }
+
+    /**
+     * ✅ NEW: Generate a "Domain Registry" item for the main menu.
+     * Shows: Total, Used, Available Claim Blocks.
+     * Updated: Uses PAPER icon to avoid conflict with Economy Gold Ingot.
+     */
+    public ItemStack createLedgerItem(Player p) {
+        long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());
+        long used = plugin.getClaimBlockManager().getUsedBlocks(p.getUniqueId());
+        long available = plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId());
+
+        String title = tr(p, "ledger_title", "&6📜 Domain Registry");
+        List<String> lore = new ArrayList<>();
+        
+        // These keys should go into codex/core.yml eventually
+        lore.add(tr(p, "ledger_available", "&7Available: &a" + available));
+        lore.add(tr(p, "ledger_used", "&7Used: &c" + used));
+        lore.add(tr(p, "ledger_total", "&7Total Capacity: &e" + total));
+        lore.add(" ");
+        lore.add("&eClick to view detailed stats.");
+
+        return createItem(Material.PAPER, title, lore);
     }
 }

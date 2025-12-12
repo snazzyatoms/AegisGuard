@@ -89,6 +89,12 @@ old_english:
   level_current_blessing_footer_1: '&8Higher levels grant richer favour'
   level_current_blessing_footer_2: '&8and broader dominion.'
 
+  # plural aliases (Codex compatibility)
+  level_current_blessings_name: '&dPresent Blessings'
+  level_current_blessings_title: '&dBoons Now Upon Thy Land'
+  level_current_blessings_footer_1: '&8Higher levels grant richer favour'
+  level_current_blessings_footer_2: '&8and broader dominion.'
+
   level_track_title_completed: '&aPath Mastered'
   "level_track_completed_[1]": '&7All steps of this path are'
   "level_track_completed_[2]": '&7fulfilled; thou hast mastered it.'
@@ -97,7 +103,20 @@ old_english:
   level_track_buffs_title: '&dEnduring Blessings'
   level_track_footer_mastered: '&6No further ascension is possible in this track.'
 
+  # additional track states
+  level_track_title_current: '&dCurrent Path'
+  "level_track_current_[1]": '&7These boons are active upon'
+  "level_track_current_[2]": '&7thy dominion at present.'
+  level_track_title_locked: '&cPath Bound'
+  "level_track_locked_[1]": '&7Further rites are sealed;'
+  "level_track_locked_[2]": '&7thou must ascend in order.'
+  "level_track_next_[1]": '&7Next ascension within this path'
+  level_track_next_cost: '&eTribute Required: &6{COST}'
+  level_track_footer_next: '&6Advance to claim these blessings.'
+  level_track_footer_progress: '&7Progress toward the next ascension.'
+
   level_upgrade_tier: '&dNext Tier'
+  level_upgrade_next_tier: '&dNext Tier'
   level_upgrade_cost: '&eCost: &6{COST}'
   level_upgrade_new_buffs_title: '&dNew Blessings'
   level_upgrade_click_hint: '&eClick to attempt ascension.'
@@ -181,6 +200,8 @@ old_english:
   # --- Biomes ---
   biome_changed: '&a✔ The land transforms around you! Biome set to {BIOME}.'
   biome_cost_paid: '&e💰 Tribute of &6{AMOUNT}&e hath been rendered to shift the climate.'
+  biome_button_back: '&e⟵ Return to Plot Settings'
+  biome_button_exit: '&c✖ Close the Biome Changer'
 
   # --- Likes ---
   like_success: '&a✔ Verily, thou hast favored this dominion! Total likes: &e{AMOUNT}'
@@ -316,6 +337,12 @@ hybrid_english:
   level_current_blessing_footer_1: '&8Higher levels unlock stronger'
   level_current_blessing_footer_2: '&8bonuses and extra benefits.'
 
+  # plural aliases (Codex compatibility)
+  level_current_blessings_name: '&dCurrent Bonuses'
+  level_current_blessings_title: '&dBonuses Currently Active'
+  level_current_blessings_footer_1: '&8Higher levels unlock stronger'
+  level_current_blessings_footer_2: '&8bonuses and extra benefits.'
+
   level_track_title_completed: '&aTrack Completed'
   "level_track_completed_[1]": '&7All milestones in this track'
   "level_track_completed_[2]": '&7have been unlocked.'
@@ -324,7 +351,20 @@ hybrid_english:
   level_track_buffs_title: '&dUnlocked Bonuses'
   level_track_footer_mastered: '&6This progression track is fully mastered.'
 
+  # additional track states
+  level_track_title_current: '&dCurrent Track'
+  "level_track_current_[1]": '&7These bonuses are currently'
+  "level_track_current_[2]": '&7active on your plot.'
+  level_track_title_locked: '&cTrack Locked'
+  "level_track_locked_[1]": '&7Further upgrades in this track'
+  "level_track_locked_[2]": '&7are locked until you progress.'
+  "level_track_next_[1]": '&7Next upgrade in this track'
+  level_track_next_cost: '&eUpgrade Cost: &6{COST}'
+  level_track_footer_next: '&6Upgrade to unlock these bonuses.'
+  level_track_footer_progress: '&7Progress toward the next upgrade.'
+
   level_upgrade_tier: '&dNext Tier'
+  level_upgrade_next_tier: '&dNext Tier'
   level_upgrade_cost: '&eUpgrade Cost: &6{COST}'
   level_upgrade_new_buffs_title: '&dNew Bonuses'
   level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
@@ -408,6 +448,8 @@ hybrid_english:
   # --- Biomes ---
   biome_changed: '&a✔ The land shifts; biome set to {BIOME}.'
   biome_cost_paid: '&e💰 Paid &6{AMOUNT}&e to change biome.'
+  biome_button_back: '&e⟵ Back to Plot Settings'
+  biome_button_exit: '&c✖ Close Biome Changer'
 
   # --- Likes ---
   like_success: '&a✔ You liked this plot. Total likes: &e{AMOUNT}'
@@ -543,6 +585,12 @@ modern_english:
   level_current_blessing_footer_1: '&8Higher levels unlock stronger'
   level_current_blessing_footer_2: '&8bonuses for this claim.'
 
+  # plural aliases (Codex compatibility)
+  level_current_blessings_name: '&dCurrent Bonuses'
+  level_current_blessings_title: '&dActive Bonuses'
+  level_current_blessings_footer_1: '&8Higher levels unlock stronger'
+  level_current_blessings_footer_2: '&8bonuses for this claim.'
+
   level_track_title_completed: '&aTrack Completed'
   "level_track_completed_[1]": '&7You have unlocked every level'
   "level_track_completed_[2]": '&7in this progression track.'
@@ -551,7 +599,20 @@ modern_english:
   level_track_buffs_title: '&dUnlocked Bonuses'
   level_track_footer_mastered: '&6No further upgrades are available in this track.'
 
+  # additional track states
+  level_track_title_current: '&dCurrent Track'
+  "level_track_current_[1]": '&7These bonuses are currently'
+  "level_track_current_[2]": '&7active on this claim.'
+  level_track_title_locked: '&cTrack Locked'
+  "level_track_locked_[1]": '&7Further upgrades in this track'
+  "level_track_locked_[2]": '&7are locked until you progress.'
+  "level_track_next_[1]": '&7Next upgrade in this track'
+  level_track_next_cost: '&eCost: &6{COST}'
+  level_track_footer_next: '&6Upgrade to unlock these bonuses.'
+  level_track_footer_progress: '&7Progress toward the next upgrade.'
+
   level_upgrade_tier: '&dNext Tier'
+  level_upgrade_next_tier: '&dNext Tier'
   level_upgrade_cost: '&eCost: &6{COST}'
   level_upgrade_new_buffs_title: '&dNew Bonuses'
   level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
@@ -635,6 +696,8 @@ modern_english:
   # --- Biomes ---
   biome_changed: '&a✔ Biome set to {BIOME}.'
   biome_cost_paid: '&e💰 Paid &6{AMOUNT}&e to change biome.'
+  biome_button_back: '&e⟵ Back to Plot Settings'
+  biome_button_exit: '&c✖ Close Biome Changer'
 
   # --- Likes ---
   like_success: '&a✔ You liked this claim. Total likes: &e{AMOUNT}'

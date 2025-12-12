@@ -92,6 +92,24 @@ public class MessagesUtil implements Listener {
         return format(applyPlaceholders(getRawForPlayer(player, key), placeholders));
     }
 
+    /**
+     * New overload used by ZoningGUI:
+     * get(player, key, defaultValue, placeholdersMap)
+     */
+    public String get(Player player, String key, String def, Map<String, String> placeholders) {
+        String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
+        String path = style + "." + key;
+
+        // Try player style first
+        String raw = messages.getString(path);
+        if (raw == null) {
+            // Fallback to default style, then to provided default string
+            raw = messages.getString(defaultStyle + "." + key, def);
+        }
+
+        return format(applyPlaceholders(raw, placeholders));
+    }
+
     public List<String> getList(Player player, String key) {
         return getList(player, key, null);
     }

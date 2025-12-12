@@ -95,10 +95,10 @@ public class LevelingGUI {
         ));
 
         headerLore.add(line(
-            player,
-            "level_header_multiplier",
-            "§7XP Cost Multiplier: §f" + plugin.cfg().getLevelCostMultiplier(),
-            Map.of("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier()))
+                player,
+                "level_header_multiplier",
+                "§7XP Cost Multiplier: §f" + plugin.cfg().getLevelCostMultiplier(),
+                Map.of("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier()))
         ));
 
         if (plugin.cfg().isLevelingExpansionEnabled()) {
@@ -254,10 +254,20 @@ public class LevelingGUI {
                 upgradeLore.addAll(buttonLore);
             }
 
+            // Button title – supports both {level} and {LEVEL}, with a nice fallback
+            String upgradeTitle = line(
+                    player,
+                    "level_upgrade_button",
+                    "§aUpgrade to Level §f" + nextLvl,
+                    Map.of(
+                            "level", String.valueOf(nextLvl),
+                            "LEVEL", String.valueOf(nextLvl)
+                    )
+            );
+
             inv.setItem(31, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
-                    plugin.msg().get(player, "level_upgrade_button",
-                            Map.of("level", String.valueOf(nextLvl))),
+                    upgradeTitle,
                     upgradeLore
             ));
         } else {
@@ -301,10 +311,13 @@ public class LevelingGUI {
         // ----------------------------------------------------------------
         // 6. NAVIGATION
         // ----------------------------------------------------------------
+        String backName = line(player, "button_back", "§fBack", Map.of());
+        List<String> backLore = lines(player, "back_lore", List.of("§7Return to Aegis menu."));
+
         inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
-                plugin.msg().get(player, "button_back"),
-                plugin.msg().getList(player, "back_lore")
+                backName,
+                backLore
         ));
 
         player.openInventory(inv);
@@ -393,8 +406,11 @@ public class LevelingGUI {
             plugin.store().setDirty(true);
 
             // 4. Feedback (fully localized success line)
+            plugin.msg().send(player, "level_up_success", Map.of(
+                    "level", String.valueOf(nextLvlFinal),
+                    "LEVEL", String.valueOf(nextLvlFinal)
+            ));
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            plugin.msg().send(player, "level_up_success", Map.of("level", String.valueOf(nextLvlFinal)));
             plugin.effects().playConfirm(player);
 
             // Refresh menu
@@ -583,7 +599,7 @@ public class LevelingGUI {
 
     /**
      * Single-line helper with variables + safe fallback.
-     * If the key is missing / empty / equals the key name, fallback is used.
+     * Treats null, empty, key-name, and "[Missing: ...]" as missing.
      */
     private String line(Player player, String key, String fallback, Map<String, String> vars) {
         String raw = null;
@@ -595,7 +611,10 @@ public class LevelingGUI {
             }
         } catch (Throwable ignored) {
         }
-        if (raw == null || raw.isEmpty() || raw.equalsIgnoreCase(key)) {
+        if (raw == null
+                || raw.isEmpty()
+                || raw.equalsIgnoreCase(key)
+                || raw.startsWith("[Missing:")) {
             return fallback;
         }
         return raw;
@@ -603,7 +622,8 @@ public class LevelingGUI {
 
     /**
      * Multi-line helper for bigger lore blocks.
-     * If the key is missing or empty, returns the provided fallback list.
+     * If the key is missing, empty, or all lines are "[Missing: ...]",
+     * returns the provided fallback list.
      */
     private List<String> lines(Player player, String key, List<String> fallback) {
         List<String> raw = null;
@@ -614,6 +634,17 @@ public class LevelingGUI {
         if (raw == null || raw.isEmpty()) {
             return fallback;
         }
-        return raw;
+
+        List<String> cleaned = new ArrayList<>();
+        for (String s : raw) {
+            if (s == null) continue;
+            if (s.startsWith("[Missing:")) continue;
+            cleaned.add(s);
+        }
+
+        if (cleaned.isEmpty()) {
+            return fallback;
+        }
+        return cleaned;
     }
 }

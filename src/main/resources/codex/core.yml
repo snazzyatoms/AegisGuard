@@ -26,3 +26,31 @@ discord_claim_footer: 'AegisGuard'
 discord_merge_title: '🔄 Plot Merge Completed'
 discord_merge_description: '{PLAYER} merged two claims.'
 discord_merge_size_label: 'New Size'
+
+# ======================================
+# Shared GUI labels / fallbacks
+# These are used by multiple Codex screens and
+# act as a safety net across all styles.
+# ======================================
+
+# Buttons & basic actions
+button_back: '&e⟵ Back'
+button_exit: '&c✖ Close'
+button_expand: '&dRequest Expansion'
+button_view_requests_admin: '&cReview Requests (Admin)'
+
+# Plot Status / Leveling (Ascension)
+level_current_status: '&bCurrent Plot Status'
+
+level_track_title_completed: '&aTrack Complete'
+level_track_completed_[1]: '&7You have fully completed'
+level_track_completed_[2]: '&7this progression track.'
+level_track_buffs_title: '&dUnlocked Bonuses'
+level_track_footer_mastered: '&6You have mastered this ascension path.'
+
+# Expansion tier names (fallbacks)
+expansion_tier1_name: '&aSmall Expansion (+5)'
+expansion_tier2_name: '&eMedium Expansion (+10)'
+expansion_tier3_name: '&fLarge Expansion (+20)'
+expansion_tier4_name: '&6Huge Expansion (+35)'
+expansion_tier5_name: '&bMassive Expansion (+50)'

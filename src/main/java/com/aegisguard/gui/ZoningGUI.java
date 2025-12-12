@@ -199,19 +199,63 @@ public class ZoningGUI {
     }
 
     // --------------------------------------------------
-    // LANGUAGE HELPERS (New Engine)
+    // LANGUAGE HELPERS (New Engine – hardened)
     // --------------------------------------------------
 
     private String line(Player player, String key, String fallback) {
-        return plugin.msg().get(player, key, fallback);
+        String raw;
+        try {
+            raw = plugin.msg().get(player, key);
+        } catch (Throwable ignored) {
+            raw = null;
+        }
+
+        if (raw == null || raw.isEmpty()
+                || raw.equalsIgnoreCase(key)
+                || raw.startsWith("[Missing:")) {
+            return fallback;
+        }
+        return raw;
     }
 
     private String line(Player player, String key, String fallback, Map<String, String> placeholders) {
-        return plugin.msg().get(player, key, fallback, placeholders);
+        String raw;
+        try {
+            raw = plugin.msg().get(player, key, placeholders);
+        } catch (Throwable ignored) {
+            raw = null;
+        }
+
+        if (raw == null || raw.isEmpty()
+                || raw.equalsIgnoreCase(key)
+                || raw.startsWith("[Missing:")) {
+            return fallback;
+        }
+        return raw;
     }
 
     private List<String> lines(Player player, String key, List<String> fallback) {
-        List<String> result = plugin.msg().getList(player, key);
-        return (result == null || result.isEmpty()) ? fallback : result;
+        List<String> result;
+        try {
+            result = plugin.msg().getList(player, key);
+        } catch (Throwable ignored) {
+            result = null;
+        }
+
+        if (result == null || result.isEmpty()) {
+            return fallback;
+        }
+
+        List<String> cleaned = new ArrayList<>();
+        for (String s : result) {
+            if (s == null) continue;
+            if (s.startsWith("[Missing:")) continue;
+            cleaned.add(s);
+        }
+
+        if (cleaned.isEmpty()) {
+            return fallback;
+        }
+        return cleaned;
     }
 }

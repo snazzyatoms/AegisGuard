@@ -1,6 +1,7 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
+import com.aegisguard.claimblocks.ClaimBlockManager; // ✅ NEW: Claim Block Manager
 import com.aegisguard.commands.AegisCommand;
 // import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
@@ -65,6 +66,9 @@ public class AegisGuard extends JavaPlugin {
     /** 🔤 NEW: Aegis Codex language engine (1.2.4+) */
     private CodexEngine codex;
 
+    /** 🧱 NEW: Claim Block Manager (1.2.4+) */
+    private ClaimBlockManager claimBlockManager;
+
     /** 📜 LEGACY: messages.yml-backed utility (to be removed in future) */
     private MessagesUtil messages;
 
@@ -106,6 +110,11 @@ public class AegisGuard extends JavaPlugin {
      * Prefer this for all NEW message lookups in 1.2.4+.
      */
     public CodexEngine codex() { return codex; }
+    
+    /**
+     * 🧱 New Claim Block Manager entrypoint.
+     */
+    public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
 
     /**
      * 📜 Legacy messages.yml access.
@@ -168,7 +177,7 @@ public class AegisGuard extends JavaPlugin {
         // --- 3. INIT MANAGERS (v1.2.2 Structure) ---
 
         // 3.a NEW: Language Engine (Codex)
-        //      Loads codex.yml, core.yml, and style files (old/hybrid/modern)
+        //     Loads codex.yml, core.yml, and style files (old/hybrid/modern)
         try {
             this.codex = new CodexEngine(this);
             getLogger().info("✅ Aegis Codex language engine initialized.");
@@ -183,6 +192,9 @@ public class AegisGuard extends JavaPlugin {
         //  - existing msg().get(...) calls (until migrated)
         //  - player sound + preference storage
         this.messages = new MessagesUtil(this);
+
+        // 3.c NEW: Claim Block Manager (Bank)
+        this.claimBlockManager = new ClaimBlockManager(this);
 
         this.gui = new GUIManager(this);
         this.vault = new VaultHook(this);
@@ -200,7 +212,7 @@ public class AegisGuard extends JavaPlugin {
             // In 1.2.4 we keep using MessagesUtil for player prefs
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
-
+            
             // In the future we can migrate player language/sound prefs into Codex
             // and stop touching messages.yml entirely.
         });
@@ -290,6 +302,7 @@ public class AegisGuard extends JavaPlugin {
         }
 
         if (expansionManager != null) expansionManager.saveSync();
+        if (claimBlockManager != null) claimBlockManager.shutdown();
 
         // Legacy player prefs still live on MessagesUtil in 1.2.4
         if (messages != null) messages.savePlayerData();
@@ -433,6 +446,7 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
+            if (claimBlockManager != null) claimBlockManager.save(); // ✅ NEW
             if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
             // Future: if (codex != null && codex.isProfileDirty()) codex.saveProfiles();
         };

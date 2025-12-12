@@ -2,8 +2,8 @@ package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.*;
@@ -12,15 +12,22 @@ import java.util.*;
  * CodexEngine
  *
  * Centralized language / style system for AegisGuard.
- * Loads (from plugins/AegisGuard/codecs/):
- *  - codex.yml        (style map + file map)
- *  - core.yml         (shared/global keys)
- *  - overrides.yml    (per-server overrides, optional)
- *  - one style file per style (old_english.yml, hybrid_english.yml, modern_english.yml)
+ * Data layout on disk:
+ *   plugins/AegisGuard/codex/codex.yml
+ *   plugins/AegisGuard/codex/core.yml
+ *   plugins/AegisGuard/codex/overrides.yml (optional)
+ *   plugins/AegisGuard/codex/old_english.yml
+ *   plugins/AegisGuard/codex/hybrid_english.yml
+ *   plugins/AegisGuard/codex/modern_english.yml
+ *
+ * Resources in the JAR live under /codex/* (src/main/resources/codex/*).
  */
 public class CodexEngine {
 
+    private static final String DATA_SUBDIR = "codex";
+
     private final AegisGuard plugin;
+    private final File codexFolder;
 
     private String defaultStyle;
     private String fallbackStyle;
@@ -33,6 +40,7 @@ public class CodexEngine {
 
     public CodexEngine(AegisGuard plugin) {
         this.plugin = plugin;
+        this.codexFolder = new File(plugin.getDataFolder(), DATA_SUBDIR);
         reload();
     }
 
@@ -41,20 +49,15 @@ public class CodexEngine {
      * Safe to call from /aegis reload, etc.
      */
     public void reload() {
-        File dataFolder = plugin.getDataFolder();
-        if (!dataFolder.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dataFolder.mkdirs();
+        if (!codexFolder.exists() && !codexFolder.mkdirs()) {
+            plugin.getLogger().warning("[Codex] Failed to create codex folder at " + codexFolder.getPath());
+            return;
         }
 
-        // All codex-related files live under the "codecs/" subfolder.
-        final String basePath = "codecs/";
-
-        // Main codex mapping file
-        String codexFileName = basePath + "codex.yml";
+        String codexFileName = "codex.yml";
 
         ensureResourceExists(codexFileName);
-        File codexFile = new File(dataFolder, codexFileName);
+        File codexFile = new File(codexFolder, codexFileName);
         if (!codexFile.exists()) {
             plugin.getLogger().warning("[Codex] " + codexFileName + " not found. Codex engine will be inactive.");
             return;
@@ -68,16 +71,15 @@ public class CodexEngine {
         this.availableStyles.clear();
         this.availableStyles.addAll(cfg.getStringList("available_styles"));
 
-        // These are base names in codex.yml; we prepend "codecs/" here.
-        String coreFileName = basePath + cfg.getString("core_file", "core.yml");
-        String overridesFileName = basePath + cfg.getString("overrides_file", "overrides.yml");
+        String coreFileName = cfg.getString("core_file", "core.yml");
+        String overridesFileName = cfg.getString("overrides_file", "overrides.yml");
 
         // Core (shared)
         ensureResourceExists(coreFileName);
         this.coreBundle = loadYaml(coreFileName);
 
-        // Overrides (server-owner tweaks, optional)
-        File overridesFile = new File(dataFolder, overridesFileName);
+        // Overrides (optional)
+        File overridesFile = new File(codexFolder, overridesFileName);
         if (overridesFile.exists()) {
             this.overridesBundle = loadYaml(overridesFileName);
         } else {
@@ -87,13 +89,11 @@ public class CodexEngine {
         // Style bundles
         this.styleBundles.clear();
         for (String style : availableStyles) {
-            String styleBaseName = cfg.getString("file_map." + style);
-            if (styleBaseName == null || styleBaseName.isEmpty()) {
+            String styleFileName = cfg.getString("file_map." + style);
+            if (styleFileName == null || styleFileName.isEmpty()) {
                 plugin.getLogger().warning("[Codex] No file_map entry for style '" + style + "'.");
                 continue;
             }
-
-            String styleFileName = basePath + styleBaseName;
             ensureResourceExists(styleFileName);
             this.styleBundles.put(style, loadYaml(styleFileName));
         }
@@ -101,28 +101,23 @@ public class CodexEngine {
         plugin.getLogger().info("[Codex] Loaded styles: " + String.join(", ", availableStyles));
     }
 
-    /**
-     * Ensure a resource from the JAR exists in the plugin data folder.
-     *
-     * @param resourcePath Path relative to the JAR root, e.g. "codecs/codex.yml".
-     */
-    private void ensureResourceExists(String resourcePath) {
-        if (resourcePath == null || resourcePath.isEmpty()) return;
+    /** Ensure plugins/AegisGuard/codex/<resourceName> exists, copying from JAR if bundled. */
+    private void ensureResourceExists(String resourceName) {
+        if (resourceName == null || resourceName.isEmpty()) return;
 
-        File target = new File(plugin.getDataFolder(), resourcePath);
-        if (target.exists()) {
-            return;
-        }
+        File target = new File(codexFolder, resourceName);
+        if (target.exists()) return;
 
         try {
-            plugin.saveResource(resourcePath, false);
+            // Look inside the JAR at /codex/<resourceName>
+            plugin.saveResource("codex/" + resourceName, false);
         } catch (IllegalArgumentException ignored) {
-            // Resource not packaged in the jar; server owner may be providing it manually.
+            // Not bundled; server owner may provide their own file.
         }
     }
 
-    private YamlConfiguration loadYaml(String relativePath) {
-        File f = new File(plugin.getDataFolder(), relativePath);
+    private YamlConfiguration loadYaml(String fileName) {
+        File f = new File(codexFolder, fileName);
         return YamlConfiguration.loadConfiguration(f);
     }
 
@@ -167,8 +162,7 @@ public class CodexEngine {
 
     private String resolveStyle(CommandSender sender) {
         if (sender instanceof Player player) {
-            // TODO: per-player style later.
-            // For now, use global default.
+            // Future: per-player style or language preference
         }
 
         return (defaultStyle != null && !defaultStyle.isEmpty())

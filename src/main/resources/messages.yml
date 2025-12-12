@@ -25,6 +25,10 @@ old_english:
   sound_global_enabled: '&a✔ The realm again resoundeth with Aegis’s voice.'
   sound_global_disabled: '&c✖ Aegis’s voice is hushed for all.'
 
+  # --- Shared GUI Buttons (legacy fallbacks) ---
+  button_back: '&e⟵ Return'
+  button_exit: '&c✖ Depart'
+
   # --- Claiming & Wand ---
   wand_given: '&a⚡ Behold! The Aegis Scepter is bestowed upon thee.'
   wand_already_on: '&eNay, traveler; the Aegis Scepter is already borne upon thy person.'
@@ -66,6 +70,38 @@ old_english:
   level_header_level: '&dDominion Rank:&f {level}'
   level_header_multiplier: '&dBlessing Multiplier:&f {multiplier}x'
 
+  # --- Ascension GUI (legacy fallbacks) ---
+  level_gui_title: '&dAscension of the Holdfast'
+  level_current_status: '&bThe Present Standing of Thy Holding'
+  level_upgrade_button: '&aRaise Thy Holdfast unto Level &f{LEVEL}'
+  level_max_reached: '&6Thy holding may ascend no further.'
+  level_up_success: '&d⚡ Lo, thy holding hath risen unto Level &f{LEVEL}&d!'
+  level_up_fail_cost: '&c❌ Thy treasury is wanting; this rite of ascension must await fuller coffers.'
+  level_button_lore:
+    - '&7Ascend thy plot to unlock'
+    - '&7greater power and prestige.'
+  level_button_lore_static:
+    - '&7Ascend thy plot to unlock'
+    - '&7new boons and favour.'
+
+  level_current_blessing_name: '&dPresent Blessings'
+  level_current_blessing_title: '&dBoons Now Upon Thy Land'
+  level_current_blessing_footer_1: '&8Higher levels grant richer favour'
+  level_current_blessing_footer_2: '&8and broader dominion.'
+
+  level_track_title_completed: '&aPath Mastered'
+  "level_track_completed_[1]": '&7All steps of this path are'
+  "level_track_completed_[2]": '&7fulfilled; thou hast mastered it.'
+  level_track_completed_1: '&7All steps of this path are'
+  level_track_completed_2: '&7fulfilled; thou hast mastered it.'
+  level_track_buffs_title: '&dEnduring Blessings'
+  level_track_footer_mastered: '&6No further ascension is possible in this track.'
+
+  level_upgrade_tier: '&dNext Tier'
+  level_upgrade_cost: '&eCost: &6{COST}'
+  level_upgrade_new_buffs_title: '&dNew Blessings'
+  level_upgrade_click_hint: '&eClick to attempt ascension.'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Thy dominion is now up for public auction!'
   auction-bid-own: '&cThou canst not bid upon thine own expired dominion.'
@@ -96,6 +132,23 @@ old_english:
   expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'
   expansion_invalid_size: '&c❌ The new size must be greater than the old.'
   request_expired: '&c❌ This petition has expired or vanished.'
+
+  # --- Expansion GUI (legacy fallbacks) ---
+  expansion_gui_title: '&d§lLand Expansion Petition'
+  button_expand: '&dRequest Expansion'
+  button_view_requests_admin: '&cReview Petitions (Admin)'
+  expansion_admin_title: '&8Pending Petitions'
+  expansion_none_title: '&cNo Petitions'
+  expansion_none_lore:
+    - '&7The subjects are content.'
+  expansion_tier1_name: '&aYeoman''s Grant'
+  expansion_tier2_name: '&eKnight''s Fee'
+  expansion_tier3_name: '&fBaron''s Estate'
+  expansion_tier4_name: '&6Duke''s Domain'
+  expansion_tier5_name: '&bRoyal Charter'
+  expansion_locked_lore:
+    - '&cThou must stand within'
+    - '&cthine own land to petition.'
 
   # --- Home / Messages ---
   home-set-success: '&a✔ Thy plot''s arrival point hath been set to thy location.'
@@ -199,6 +252,10 @@ hybrid_english:
   sound_global_enabled: '&a✔ Interface sounds enabled.'
   sound_global_disabled: '&c✖ Interface sounds disabled.'
 
+  # --- Shared GUI Buttons (legacy fallbacks) ---
+  button_back: '&e⟵ Return'
+  button_exit: '&c✖ Close'
+
   # --- Claiming & Wand ---
   wand_given: '&a⚡ You received the Aegis Scepter.'
   wand_already_on: '&eYou already carry the Aegis Scepter.'
@@ -240,6 +297,38 @@ hybrid_english:
   level_header_level: '&dPlot Level:&f {level}'
   level_header_multiplier: '&dLevel Multiplier:&f {multiplier}x'
 
+  # --- Ascension GUI (legacy fallbacks) ---
+  level_gui_title: '&dPlot Ascension Codex'
+  level_current_status: '&bCurrent Plot Status'
+  level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
+  level_max_reached: '&6Maximum level reached for this plot.'
+  level_up_success: '&d⚡ Your plot has been upgraded to Level &f{LEVEL}&d!'
+  level_up_fail_cost: '&c❌ You do not have enough currency to upgrade.'
+  level_button_lore:
+    - '&7Upgrade your plot to unlock'
+    - '&7larger size and new perks.'
+  level_button_lore_static:
+    - '&7Upgrade your plot to unlock'
+    - '&7additional perks and bonuses.'
+
+  level_current_blessing_name: '&dCurrent Bonuses'
+  level_current_blessing_title: '&dBonuses Currently Active'
+  level_current_blessing_footer_1: '&8Higher levels unlock stronger'
+  level_current_blessing_footer_2: '&8bonuses and extra benefits.'
+
+  level_track_title_completed: '&aTrack Completed'
+  "level_track_completed_[1]": '&7All milestones in this track'
+  "level_track_completed_[2]": '&7have been unlocked.'
+  level_track_completed_1: '&7All milestones in this track'
+  level_track_completed_2: '&7have been unlocked.'
+  level_track_buffs_title: '&dUnlocked Bonuses'
+  level_track_footer_mastered: '&6This progression track is fully mastered.'
+
+  level_upgrade_tier: '&dNext Tier'
+  level_upgrade_cost: '&eUpgrade Cost: &6{COST}'
+  level_upgrade_new_buffs_title: '&dNew Bonuses'
+  level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your plot has entered auction.'
   auction-bid-own: '&cYou cannot bid on your own plot.'
@@ -270,6 +359,23 @@ hybrid_english:
   expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
   expansion_invalid_size: '&c❌ Expansion must increase size.'
   request_expired: '&c❌ Request expired.'
+
+  # --- Expansion GUI (legacy fallbacks) ---
+  expansion_gui_title: '&dLand Expansion Request'
+  button_expand: '&dRequest Expansion'
+  button_view_requests_admin: '&cReview Requests'
+  expansion_admin_title: '&8Pending Requests'
+  expansion_none_title: '&cNo Requests'
+  expansion_none_lore:
+    - '&7No pending requests.'
+  expansion_tier1_name: '&aSmall Expansion (+5)'
+  expansion_tier2_name: '&eMedium Expansion (+10)'
+  expansion_tier3_name: '&fLarge Expansion (+20)'
+  expansion_tier4_name: '&6Huge Expansion (+35)'
+  expansion_tier5_name: '&bMassive Expansion (+50)'
+  expansion_locked_lore:
+    - '&cYou must stand in'
+    - '&cyour own plot.'
 
   # --- Home / Messages ---
   home-set-success: '&a✔ Plot home set.'
@@ -373,6 +479,10 @@ modern_english:
   sound_global_enabled: '&a✔ AegisGuard sounds have been enabled.'
   sound_global_disabled: '&c✖ AegisGuard sounds have been disabled.'
 
+  # --- Shared GUI Buttons (legacy fallbacks) ---
+  button_back: '&e⟵ Back'
+  button_exit: '&c✖ Close'
+
   # --- Claiming & Wand ---
   wand_given: '&a⚡ You received the Aegis Scepter.'
   wand_already_on: '&eYou already have the Aegis Scepter in your inventory.'
@@ -414,6 +524,38 @@ modern_english:
   level_header_level: '&dCurrent Level:&f {level}'
   level_header_multiplier: '&dXP Multiplier:&f {multiplier}x'
 
+  # --- Ascension GUI (legacy fallbacks) ---
+  level_gui_title: '&dPlot Ascension'
+  level_current_status: '&bCurrent Claim Level'
+  level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
+  level_max_reached: '&6This claim is already at maximum level.'
+  level_up_success: '&d⚡ Claim upgraded to Level &f{LEVEL}&d!'
+  level_up_fail_cost: '&c❌ You do not have enough funds to upgrade this claim.'
+  level_button_lore:
+    - '&7Upgrade your claim to increase size'
+    - '&7and unlock extra features.'
+  level_button_lore_static:
+    - '&7Upgrade your claim to unlock'
+    - '&7new bonuses and features.'
+
+  level_current_blessing_name: '&dCurrent Bonuses'
+  level_current_blessing_title: '&dActive Bonuses'
+  level_current_blessing_footer_1: '&8Higher levels unlock stronger'
+  level_current_blessing_footer_2: '&8bonuses for this claim.'
+
+  level_track_title_completed: '&aTrack Completed'
+  "level_track_completed_[1]": '&7You have unlocked every level'
+  "level_track_completed_[2]": '&7in this progression track.'
+  level_track_completed_1: '&7You have unlocked every level'
+  level_track_completed_2: '&7in this progression track.'
+  level_track_buffs_title: '&dUnlocked Bonuses'
+  level_track_footer_mastered: '&6No further upgrades are available in this track.'
+
+  level_upgrade_tier: '&dNext Tier'
+  level_upgrade_cost: '&eCost: &6{COST}'
+  level_upgrade_new_buffs_title: '&dNew Bonuses'
+  level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
+
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Your claim is now being auctioned!'
   auction-bid-own: '&cError: You cannot bid on your own expired claim.'
@@ -444,6 +586,23 @@ modern_english:
   expansion_overlap_fail: '&c❌ Cannot expand; another claim is too close.'
   expansion_invalid_size: '&c❌ The new size must be larger than the old one.'
   request_expired: '&c❌ This expansion request has expired or no longer exists.'
+
+  # --- Expansion GUI (legacy fallbacks) ---
+  expansion_gui_title: '&dExpansion Request'
+  button_expand: '&dRequest Expansion'
+  button_view_requests_admin: '&cReview Requests (Admin)'
+  expansion_admin_title: '&8Pending Expansion Requests'
+  expansion_none_title: '&cNo Requests'
+  expansion_none_lore:
+    - '&7There are no expansion requests right now.'
+  expansion_tier1_name: '&aSmall Upgrade'
+  expansion_tier2_name: '&eMedium Upgrade'
+  expansion_tier3_name: '&fLarge Upgrade'
+  expansion_tier4_name: '&6Huge Upgrade'
+  expansion_tier5_name: '&bMassive Upgrade'
+  expansion_locked_lore:
+    - '&cYou must be standing inside'
+    - '&cyour own claim to request expansion.'
 
   # --- Home / Messages ---
   home-set-success: '&a✔ Claim home set to your current location.'

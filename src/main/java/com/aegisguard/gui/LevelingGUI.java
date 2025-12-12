@@ -23,7 +23,8 @@ import java.util.Map;
  * - Richer progression view for plot levels.
  * - Shows a level track, current tier, and next tier preview.
  * - Dynamic lore: Changes based on whether plot expansion is enabled in config.
- * - Now wired into the language engine helpers, with safe fallbacks.
+ * - Fully wired into the language engine helpers, with safe fallbacks.
+ * - Placeholder names aligned to messages.yml / codex ({owner}, {world}, {level}, {multiplier}, {COST}, etc).
  */
 public class LevelingGUI {
 
@@ -66,36 +67,52 @@ public class LevelingGUI {
         // ----------------------------------------------------------------
         List<String> headerLore = new ArrayList<>();
 
-        headerLore.add(line(player, "level_header_owner",
+        // {owner}, {world}, {level}, {multiplier} – matches codex/messages.yml
+        headerLore.add(line(
+                player,
+                "level_header_owner",
                 "§7Owner: §f" + plot.getOwnerName(),
-                Map.of("OWNER", String.valueOf(plot.getOwnerName()))
+                Map.of("owner", plot.getOwnerName())
         ));
 
-        headerLore.add(line(player, "level_header_world",
+        headerLore.add(line(
+                player,
+                "level_header_world",
                 "§7World: §f" + plot.getWorld(),
-                Map.of("WORLD", plot.getWorld())
+                Map.of("world", plot.getWorld())
         ));
 
         headerLore.add("");
 
-        headerLore.add(line(player, "level_header_level",
+        headerLore.add(line(
+                player,
+                "level_header_level",
                 "§7Current Level: §b" + currentLvl + "§7 / §f" + maxLvl,
-                Map.of("LEVEL", String.valueOf(currentLvl), "MAX", String.valueOf(maxLvl))
+                Map.of(
+                        "level", String.valueOf(currentLvl),
+                        "max", String.valueOf(maxLvl)
+                )
         ));
 
-        headerLore.add(line(player, "level_header_multiplier",
-                "§7XP Cost Multiplier: §f" + plugin.cfg().getLevelCostMultiplier(),
-                Map.of("MULT", String.valueOf(plugin.cfg().getLevelCostMultiplier()))
+        headerLore.add(line(
+            player,
+            "level_header_multiplier",
+            "§7XP Cost Multiplier: §f" + plugin.cfg().getLevelCostMultiplier(),
+            Map.of("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier()))
         ));
 
         if (plugin.cfg().isLevelingExpansionEnabled()) {
             int amount = plugin.cfg().getLevelingExpansionAmount();
             headerLore.add("");
-            headerLore.add(line(player, "level_header_growth_title",
+            headerLore.add(line(
+                    player,
+                    "level_header_growth_title",
                     "§bTerritory Growth:",
                     Map.of()
             ));
-            headerLore.add(line(player, "level_header_growth_line",
+            headerLore.add(line(
+                    player,
+                    "level_header_growth_line",
                     "§7+§f" + amount + " §7block radius per level.",
                     Map.of("AMOUNT", String.valueOf(amount))
             ));
@@ -133,7 +150,7 @@ public class LevelingGUI {
                 player,
                 "level_current_blessings_title",
                 "§7Level §b" + currentLvl + " §7Buffs:",
-                Map.of("LEVEL", String.valueOf(currentLvl))
+                Map.of("level", String.valueOf(currentLvl))
         ));
 
         currentBuffLore.addAll(formatBuffs(currentLvl));
@@ -172,14 +189,18 @@ public class LevelingGUI {
                     player,
                     "level_upgrade_next_tier",
                     "§7Next Tier: §bLevel " + nextLvl,
-                    Map.of("LEVEL", String.valueOf(nextLvl))
+                    Map.of("level", String.valueOf(nextLvl))
             ));
 
+            // {COST} matches codex/messages; TYPE is optional
             upgradeLore.add(line(
                     player,
                     "level_upgrade_cost",
                     "§7Cost: §e" + costStr + " §7(" + type.name() + ")",
-                    Map.of("AMOUNT", costStr, "TYPE", type.name())
+                    Map.of(
+                            "COST", costStr,
+                            "TYPE", type.name()
+                    )
             ));
 
             upgradeLore.add("");
@@ -213,13 +234,11 @@ public class LevelingGUI {
                     player,
                     "level_upgrade_click_hint",
                     "§eClick to ascend to §bLevel " + nextLvl,
-                    Map.of("LEVEL", String.valueOf(nextLvl))
+                    Map.of("level", String.valueOf(nextLvl))
             ));
             upgradeLore.add("");
 
             // --- DYNAMIC LORE SWITCH ---
-            // If expansion is ON, use normal lore.
-            // If expansion is OFF, use static lore (so it doesn't mention size).
             List<String> buttonLore;
             if (plugin.cfg().isLevelingExpansionEnabled()) {
                 buttonLore = plugin.msg().getList(player, "level_button_lore");
@@ -238,7 +257,7 @@ public class LevelingGUI {
             inv.setItem(31, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
                     plugin.msg().get(player, "level_upgrade_button",
-                            Map.of("LEVEL", String.valueOf(nextLvl))),
+                            Map.of("level", String.valueOf(nextLvl))),
                     upgradeLore
             ));
         } else {
@@ -375,7 +394,7 @@ public class LevelingGUI {
 
             // 4. Feedback (fully localized success line)
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvlFinal)));
+            plugin.msg().send(player, "level_up_success", Map.of("level", String.valueOf(nextLvlFinal)));
             plugin.effects().playConfirm(player);
 
             // Refresh menu
@@ -404,7 +423,7 @@ public class LevelingGUI {
                     player,
                     "level_track_title_completed",
                     "§aLevel " + level + " §7(Completed)",
-                    Map.of("LEVEL", String.valueOf(level))
+                    Map.of("level", String.valueOf(level))
             );
             lore.add(line(
                     player,
@@ -424,7 +443,7 @@ public class LevelingGUI {
                     player,
                     "level_track_title_current",
                     "§eLevel " + level + " §7(Current)",
-                    Map.of("LEVEL", String.valueOf(level))
+                    Map.of("level", String.valueOf(level))
             );
             lore.add(line(
                     player,
@@ -444,7 +463,7 @@ public class LevelingGUI {
                     player,
                     "level_track_title_locked",
                     "§cLevel " + level + " §7(Locked)",
-                    Map.of("LEVEL", String.valueOf(level))
+                    Map.of("level", String.valueOf(level))
             );
             if (level == currentLvl + 1) {
                 lore.add(line(
@@ -460,7 +479,7 @@ public class LevelingGUI {
                         "level_track_next_cost",
                         "§7Cost: §e" + plugin.eco().format(cost, type),
                         Map.of(
-                                "AMOUNT", plugin.eco().format(cost, type),
+                                "COST", plugin.eco().format(cost, type),
                                 "TYPE", type.name()
                         )
                 ));

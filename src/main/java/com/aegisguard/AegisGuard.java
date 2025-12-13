@@ -337,6 +337,10 @@ public class AegisGuard extends JavaPlugin {
         saveCodexResourceIfMissing("old_english.yml");
         saveCodexResourceIfMissing("hybrid_english.yml");
         saveCodexResourceIfMissing("modern_english.yml");
+        
+        // ✅ NEW: Added Spanish Files
+        saveCodexResourceIfMissing("spanish_mx.yml");
+        saveCodexResourceIfMissing("spanish_ar.yml");
     }
 
     private void saveCodexResourceIfMissing(String name) {

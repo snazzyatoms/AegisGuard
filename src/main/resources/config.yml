@@ -193,12 +193,57 @@ claims:
 
     world_nether:
       allow_claims: true
-      use_vault: false     # Example: maybe use ITEM or EXP here via currencies
+      use_vault: false      # Example: maybe use ITEM or EXP here via currencies
       max_claims_per_player: 1
       max_radius: 32
 
     world_the_end:
       allow_claims: false   # Disable claiming in The End entirely.
+
+
+# ==============================================================================
+# 🧱 CLAIM BLOCK ECONOMY (NEW v1.2.4)
+# ==============================================================================
+# This system replaces "infinite land" with a budget.
+# Players must earn "claim blocks" to expand their territory.
+# ==============================================================================
+claim_blocks:
+  enabled: true
+
+  # How many claim blocks a new player starts with.
+  # Example: 1000 blocks ≈ a 31x31 plot area.
+  starting_blocks: 1000
+
+  # ---------------------------------------------------------------------------
+  # 🛑 First Claim Limiter
+  # ---------------------------------------------------------------------------
+  # Prevents new players from making a massive plot immediately, even if they have blocks.
+  # Once they make their first plot, this limit is removed forever.
+  first_claim_limit:
+    enabled: true
+    # Maximum area for the very first plot.
+    # 1000 blocks ≈ 31x31 radius (Standard starter house size).
+    max_area: 1000
+
+  # ---------------------------------------------------------------------------
+  # 💰 Earning Methods
+  # ---------------------------------------------------------------------------
+  earn:
+    playtime:
+      enabled: true
+      # How often to give blocks (in minutes).
+      interval_minutes: 10
+      # How many blocks to give per interval.
+      blocks_per_interval: 50
+      # Notify player in chat when they earn blocks?
+      notify: true
+
+    level_up:
+      enabled: true
+      # Blocks given when a player levels up their plot (Ascension).
+      # Note: You can also use "CLAIM_BLOCKS:<amount>" in the leveling rewards section
+      # to give specific amounts for specific levels (e.g., massive bonus at Level 30).
+      per_level: 500
 
 
 # ==============================================================================
@@ -249,6 +294,7 @@ leveling:
   #  - "MEMBERS:<SLOTS>"
   #  - "FLAG:<flag-name>"
   #  - "FLIGHT"
+  #  - "CLAIM_BLOCKS:<AMOUNT>" (New v1.2.4)
   rewards:
     # --- TIER 1: FOUNDATIONS (MOVEMENT & LABOR) ---
     1:
@@ -534,13 +580,13 @@ sounds:
   global_enabled: true
   players: {}   # Reserved for player-specific sound overrides (future use).
 
-  menu_open:   { sound: BLOCK_CHEST_OPEN,    volume: 0.7, pitch: 1.0 }
-  menu_flip:   { sound: UI_BUTTON_CLICK,     volume: 0.7, pitch: 1.2 }
-  menu_close:  { sound: BLOCK_CHEST_CLOSE,   volume: 0.7, pitch: 1.0 }
-  confirm:     { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
-  error:       { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
+  menu_open:    { sound: BLOCK_CHEST_OPEN,     volume: 0.7, pitch: 1.0 }
+  menu_flip:    { sound: UI_BUTTON_CLICK,      volume: 0.7, pitch: 1.2 }
+  menu_close:   { sound: BLOCK_CHEST_CLOSE,    volume: 0.7, pitch: 1.0 }
+  confirm:      { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
+  error:        { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
   claim_success: { sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
-  unclaim:     { sound: ENTITY_VILLAGER_NO,  volume: 0.8, pitch: 0.9 }
+  unclaim:      { sound: ENTITY_VILLAGER_NO,   volume: 0.8, pitch: 0.9 }
 
 
 # ==============================================================================

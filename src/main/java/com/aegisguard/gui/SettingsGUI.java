@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * SettingsGUI
  * - Handles personal player preferences (sounds, language, notifications).
- * - Text is now driven by the Codex engine instead of messages.yml.
+ * - Updated to support Spanish (MX/AR).
  */
 public class SettingsGUI {
 
@@ -75,7 +75,6 @@ public class SettingsGUI {
         ));
 
         // --- 3. NOTIFICATIONS (Slot 16) ---
-        // (Assuming you store this in config per player, simplified here)
         String notifMode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
@@ -126,8 +125,11 @@ public class SettingsGUI {
                 // Use Codex for reading & writing language style
                 String style = plugin.codex().getPlayerStyle(player);
                 String nextStyle = switch (style) {
-                    case "old_english"   -> "modern_english";
-                    case "modern_english"-> "hybrid_english";
+                    case "old_english"    -> "modern_english";
+                    case "modern_english" -> "hybrid_english";
+                    case "hybrid_english" -> "spanish_mx"; // ✅
+                    case "spanish_mx"     -> "spanish_ar"; // ✅
+                    case "spanish_ar"     -> "old_english"; // Loop back
                     default               -> "old_english";
                 };
                 plugin.codex().setPlayerStyle(player, nextStyle);
@@ -162,6 +164,8 @@ public class SettingsGUI {
         return switch (style) {
             case "modern_english" -> "§aModern";
             case "hybrid_english" -> "§eHybrid";
+            case "spanish_mx"     -> "§bEspañol (Latino)"; // ✅
+            case "spanish_ar"     -> "§bEspañol (Arg)";    // ✅
             default               -> "§dOld English"; // Default
         };
     }

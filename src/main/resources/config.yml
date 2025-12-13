@@ -93,14 +93,6 @@ storage:
 
 
 # ==============================================================================
-# 📊 SIDEBAR (SCOREBOARD)
-# ==============================================================================
-sidebar:
-  enabled: false
-  # When enabled, AegisGuard can show claim info in a sidebar scoreboard.
-
-
-# ==============================================================================
 # 💱 CURRENCY MAPPING
 # ==============================================================================
 # Which currency source is used for each feature:

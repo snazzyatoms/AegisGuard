@@ -125,24 +125,41 @@ public class PlotStatusGUI {
         ));
 
         // -------------------------------------------------------------
-        // ✅ NEW: DOMAIN REGISTRY (Claim Block Budget)
+        // ✅ NEW: DOMAIN REGISTRY (Synchronized with ClaimBlockData)
         // -------------------------------------------------------------
         UUID plotOwnerUUID = plot.getOwner();
+        
+        // Data Retrieval
         long totalBlocks = plugin.getClaimBlockManager().getTotalBlocks(plotOwnerUUID);
         long usedBlocks = plugin.getClaimBlockManager().getUsedBlocks(plotOwnerUUID);
         long availBlocks = plugin.getClaimBlockManager().getAvailableBlocks(plotOwnerUUID);
 
         List<String> budgetLore = new ArrayList<>();
-        budgetLore.add("§7Available: §a" + availBlocks);
-        budgetLore.add("§7Used: §c" + usedBlocks);
-        budgetLore.add("§7Total Capacity: §e" + totalBlocks);
+        
+        // Codex Lookups (So this translates too!)
+        String availLabel = plugin.codex().tr(player, "ledger_available");
+        if (availLabel.equals("ledger_available")) availLabel = "§7Available: §a";
+        
+        String usedLabel = plugin.codex().tr(player, "ledger_used");
+        if (usedLabel.equals("ledger_used")) usedLabel = "§7Used: §c";
+        
+        String totalLabel = plugin.codex().tr(player, "ledger_total");
+        if (totalLabel.equals("ledger_total")) totalLabel = "§7Total Capacity: §e";
+
+        budgetLore.add(availLabel + availBlocks);
+        budgetLore.add(usedLabel + usedBlocks);
+        budgetLore.add(totalLabel + totalBlocks);
         budgetLore.add("");
         budgetLore.add("§8This budget applies to all plots");
         budgetLore.add("§8owned by §f" + owner + "§8.");
 
+        // Title via Codex
+        String ledgerTitle = plugin.codex().tr(player, "ledger_title");
+        if (ledgerTitle.equals("ledger_title")) ledgerTitle = "§6📜 Domain Registry";
+
         inv.setItem(26, GUIManager.createItem(
                 Material.PAPER,
-                "§6📜 Domain Registry",
+                ledgerTitle,
                 budgetLore
         ));
 

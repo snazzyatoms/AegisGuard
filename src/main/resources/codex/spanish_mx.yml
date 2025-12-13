@@ -2,6 +2,61 @@
 # NEUTRAL SPANISH STYLE (Español Neutro/Latinoamérica)
 # ======================================
 spanish_mx:
+  # --- Menú Principal (Main Menu) ---
+  menu_title: '&b⚔ Menú AegisGuard'
+  
+  button_claim_land: '&a🛡 Crear Parcela'
+  claim_land_lore:
+  - '&7Comienza a proteger esta área.'
+  claim_land_ready_lore:
+  - '&7Crear una nueva parcela basada'
+  - '&7en tu selección actual.'
+  - ' '
+  - '&eClic para Confirmar'
+
+  button_plot_flags: '&6Ajustes'
+  plot_flags_title: '&9⚙ Ajustes de Parcela'
+  plot_flags_lore:
+  - '&7Gestiona las reglas de protección.'
+  plot_flags_locked_lore:
+  - '&cDebes estar dentro de tu parcela'
+  - '&cpara editar sus ajustes.'
+
+  button_roles: '&eMiembros'
+  roles_lore:
+  - '&7Gestiona jugadores de confianza.'
+  roles_locked_lore:
+  - '&cDebes estar dentro de tu parcela'
+  - '&cpara gestionar miembros.'
+
+  button_player_settings: '&9Preferencias'
+  player_settings_lore:
+  - '&7Ajusta tu idioma y sonidos.'
+
+  button_market: '&eMercado'
+  market_lore:
+  - '&7Compra y vende terrenos.'
+
+  button_auction: '&cSubastas'
+  auction_lore:
+  - '&7Puja por terrenos expirados.'
+
+  button_info: '&6📜 Ayuda y Guía'
+  info_message: '&7Abriendo la Guía del Guardián...'
+  info_lore:
+  - '&7Ver comandos y consejos.'
+
+  button_plot_status: '&b📜 Estado de la Parcela'
+  plot_status_button_title: '&b📜 Estado de la Parcela'
+  plot_status_button_lore:
+  - '&7Ver información detallada:'
+  - '&7protecciones, crecimiento,'
+  - '&7economía y visitantes.'
+  plot_status_lore:
+  - '&7Ver información detallada:'
+  - '&7protecciones, crecimiento,'
+  - '&7economía y visitantes.'
+
   # --- Navegación ---
   button_back: '&e⟵ Regresar'
   back_lore:
@@ -180,7 +235,7 @@ spanish_mx:
   
   # --- Visita / Viaje ---
   visit_gui_title: '&9Sistema de Viaje'
-  visit_title_warps: '&6Puntos de Teletransporte'
+  visit_title_warps: '&6Puntos de Teletransporte (Warps)'
   visit_title_trusted: '&9Parcelas de Confianza'
   visit_switch_trusted: '&bVer: Parcelas de Confianza'
   visit_switch_trusted_lore:
@@ -284,6 +339,12 @@ spanish_mx:
   - '&eClic para ciclar: Heredar → Permitir → Denegar'
   
   # --- Herramientas de Administrador ---
+  button_admin_plots: '&bRevisar Todas las Parcelas'
+  button_admin_requests: '&cVer Solicitudes Pendientes'
+  button_admin_zones: '&6Zonas del Servidor'
+  button_admin_diagnostics: '&bDiagnósticos'
+  button_admin_reload: '&eRecargar Configuración'
+  
   admin_menu_title: '&c⚙ Administración'
   admin_reloading: '&7Recargando configuración...'
   admin_reload_complete: '&a✔ Recarga completa.'
@@ -313,9 +374,6 @@ spanish_mx:
   admin_perf_lore:
   - '&7Reducir efectos cosméticos.'
   
-  button_admin_diagnostics: '&bDiagnósticos'
-  button_admin_reload: '&eRecargar Config'
-  
   admin_auto_remove_enabled: '&a✔ Eliminación Automática ON.'
   admin_auto_remove_disabled: '&c✖ Eliminación Automática OFF.'
   admin_bypass_enabled: '&a✔ Omisión de Límite ON.'
@@ -332,7 +390,7 @@ spanish_mx:
   - '&cClic Derecho: &7Eliminar'
   admin_plot_teleport: '&eTeletransportado a la parcela de {PLAYER}.'
   admin_plot_deleted: '&c✖ Parcela de {PLAYER} eliminada.'
-  button_back_admin: '&fVolver a Admin'
+  button_back_admin: '&fVolver a Administrador'
   
   admin-zone-created: '&a✔ Zona de Servidor creada.'
   admin-zone-deleted: '&c✖ Zona de Servidor eliminada.'
@@ -370,78 +428,66 @@ spanish_mx:
   - '&e/aegis stuck &7- Teletransportarse a un lugar seguro.'
   - '&e/aegis help &7- Ver este menú.'
 
-  # =========================================================
-  # ✅ NEW: Bloques de Reclamo / Registro de Dominio (Budget)
-  # =========================================================
-  ledger_title: '&6📜 Registro de Dominio'
-  ledger_available: '&7Disponible: &a'
-  ledger_used: '&7Usado: &c'
-  ledger_total: '&7Capacidad Total: &e'
-
-  claim_blocks_not_enough: '&c❌ Necesitas &e{NEEDED}&c bloques de reclamo más para reclamar esta área.'
-  first_claim_limit_reached: '&c❌ ¡Límite de primer reclamo excedido! Tamaño máx: &e{LIMIT}&c bloques. (Seleccionaste &e{AREA}&c)'
-  claim_blocks_earned_playtime: '&a✔ Ganaste &e{AMOUNT}&a bloques de reclamo por jugar. Total: &e{TOTAL}&a.'
-  claim_blocks_earned_level: '&d⚡ Bono de Ascensión: &e+{AMOUNT} Bloques de Reclamo!'
-
-  # --- Menú Principal ---
-  menu_title: '&b⚔ Menú AegisGuard'
-
-  button_claim_land: '&a🛡 Crear Parcela'
-  claim_land_lore:
-  - '&7Comienza a proteger esta área.'
-  claim_land_ready_lore:
-  - '&7Crear una nueva parcela basada'
-  - '&7en tu selección actual.'
+  # --- CODEX (Guía del Guardián) - TRADUCIDO ---
+  codex_gui_title: '&9§lLa Guía del Guardián'
+  codex_claim_title: '&e§lI. Reclamar Tierras'
+  codex_claim_lore:
+  - '&7Cómo proteger terreno:'
   - ' '
-  - '&eClic para Confirmar'
+  - '&f1. &7Usa &b/ag wand &7para obtener la varita.'
+  - '&f2. &7Clic derecho en la primera esquina.'
+  - '&f3. &7Clic izquierdo en la esquina opuesta.'
+  - '&f4. &7Usa &a/ag claim &7para comprar la parcela.'
+  codex_travel_title: '&b§lII. Viajes'
+  codex_travel_lore:
+  - '&7Comandos de viaje rápido:'
+  - ' '
+  - '&e/ag home &7- Ir a tu parcela.'
+  - '&e/ag setspawn &7- Fijar el punto de llegada.'
+  - '&e/ag visit &7- Visitar parcelas de otros.'
+  codex_menus_title: '&d§lIII. Menús'
+  codex_menus_lore:
+  - '&7Usa &b/ag menu&7 para gestionar:'
+  - ' '
+  - '&6🚩 Ajustes: &7PvP, mobs, fuego, etc.'
+  - '&b👥 Miembros: &7Jugadores de confianza.'
+  - '&d✨ Cosméticos: &7Bordes y efectos visuales.'
+  - '&a🌿 Biomas: &7Cambiar apariencia del bioma.'
+  codex_security_title: '&c§lIV. Seguridad'
+  codex_security_lore:
+  - '&7Gestiona visitantes y problemas:'
+  - ' '
+  - '&c/ag kick &7- Expulsar a un jugador.'
+  - '&4/ag ban &7- Banear entrada a tu parcela.'
+  codex_economy_title: '&6§lV. Economía'
+  codex_economy_lore:
+  - '&7Conceptos básicos:'
+  - ' '
+  - '&eMantenimiento: &7Paga para conservar tu parcela.'
+  - '&aMercado: &7Compra y vende terrenos.'
+  codex_identity_title: '&3§lVI. Identidad'
+  codex_identity_lore:
+  - '&7Personaliza tu parcela:'
+  - ' '
+  - '&b/ag rename &7- Ponle un nombre.'
+  - '&e/ag stuck &7- Escapa si te quedas atascado.'
+  codex_advanced_title: '&5§lVII. Avanzado'
+  codex_advanced_lore:
+  - '&dAscensión: &7Mejora tu parcela para ganar ventajas.'
+  - '&eZonas: &7Crea áreas de alquiler dentro de tu parcela.'
 
-  button_plot_flags: '&6Ajustes'
-  plot_flags_title: '&9⚙ Ajustes de Parcela'
-  plot_flags_lore:
-  - '&7Gestiona las reglas de protección.'
-  plot_flags_locked_lore:
-  - '&cDebes estar dentro de tu parcela'
-  - '&cpara editar sus ajustes.'
+  # --- Settings (Menu Preferencias) ---
+  settings_menu_title: '&9⚙ Preferencias'
+  button_sounds_on: '&a🔊 Sonidos: ON'
+  button_sounds_off: '&c🔇 Sonidos: OFF'
+  button_sounds_disabled_global: '&7🔇 Sonidos: Desact. por Server'
+  sounds_toggle_lore:
+  - '&7Activar/Desactivar sonidos del menú.'
+  sounds_toggle_global_disabled_lore:
+  - '&7Los sonidos están desactivados globalmente.'
+  settings_gui_not_toggle: '&cEstos ejemplos no se cambian aquí.'
 
-  button_roles: '&eMiembros'
-  roles_lore:
-  - '&7Gestiona jugadores de confianza.'
-  roles_locked_lore:
-  - '&cDebes estar dentro de tu parcela'
-  - '&cpara gestionar miembros.'
-
-  button_player_settings: '&9Preferencias'
-  player_settings_lore:
-  - '&7Ajusta tu idioma y sonidos.'
-
-  button_market: '&eMercado'
-  market_lore:
-  - '&7Compra y vende terrenos.'
-
-  button_auction: '&cSubastas'
-  auction_lore:
-  - '&7Puja por terrenos expirados.'
-
-  button_info: '&6📜 Ayuda y Guía'
-  info_message: '&7Abriendo la Guía del Guardián...'
-  info_lore:
-  - '&7Ver comandos y consejos.'
-
-  button_plot_status: '&b📜 Estado de la Parcela'
-  plot_status_button_title: '&b📜 Estado de la Parcela'
-  plot_status_lore:
-  - '&7Ver información detallada:'
-  - '&7protecciones, crecimiento,'
-  - '&7economía y visitantes.'
-
-  # --- Plot Status GUI ---
-  plot_status_gui_title: '&b⚔ Estado de la Parcela'
-  plot_status_header_title: '&6Información de la Parcela'
-  plot_status_blessings_title: '&dBonificaciones Activas'
-  plot_status_territory_title: '&aTerritorio y Crecimiento'
-  plot_status_protection_title: '&cCombate y Hostiles'
-
-  # --- Ascension / Leveling ---
+  # --- Leveling & Zoning ---
   level_gui_title: '&dAscensión de Parcela'
   level_current_status: '&bNivel Actual'
   level_header_owner: '&dDueño:&f {owner}'
@@ -633,13 +679,51 @@ spanish_mx:
   - '&7Verde = ON (Protegido/Seguro)'
   - '&7Rojo = OFF (Normal/Vulnerable)'
 
-  # --- Settings ---
-  settings_menu_title: '&9⚙ Preferencias'
-  button_sounds_on: '&a🔊 Sonidos: ON'
-  button_sounds_off: '&c🔇 Sonidos: OFF'
-  button_sounds_disabled_global: '&7🔇 Sonidos: Desact. por Server'
-  sounds_toggle_lore:
-  - '&7Activar/Desactivar sonidos del menú.'
-  sounds_toggle_global_disabled_lore:
-  - '&7Los sonidos están desactivados globalmente.'
-  settings_gui_not_toggle: '&cEstos ejemplos no se cambian aquí.'
+  # --- Plot Status GUI ---
+  plot_status_gui_title: '&b⚔ Estado de la Parcela'
+  plot_status_header_title: '&6Información de la Parcela'
+  plot_status_blessings_title: '&dBonificaciones Activas'
+  plot_status_territory_title: '&aTerritorio y Crecimiento'
+  plot_status_protection_title: '&cCombate y Hostiles'
+
+  plot_status_overview_name: '&aResumen de Parcela'
+  plot_status_overview_lore:
+  - '&7Muestra los atributos principales:'
+  - '&7dueño, mundo, bioma y nivel.'
+  - ' '
+  - '&8Solo se muestran los bonos'
+  - '&8más fuertes desbloqueados.'
+
+  plot_status_flags_name: '&6Protecciones y Reglas'
+  plot_status_flags_lore:
+  - '&7Lista todas las protecciones activas:'
+  - '&7PvP, mobs, fuego, etc.'
+  - ' '
+  - '&8Si están desactivadas, aplican'
+  - '&8las reglas normales del server.'
+
+  plot_status_economy_name: '&eEconomía y Costos'
+  plot_status_economy_lore:
+  - '&7Estado del mantenimiento, pagos,'
+  - '&7reembolsos y datos del mercado.'
+  - ' '
+  - '&8El no pagar mantenimiento puede causar'
+  - '&8la expiración de la parcela.'
+
+  plot_status_social_name: '&dVisitas y Reputación'
+  plot_status_social_lore:
+  - '&7Rastrea visitas, likes y la'
+  - '&7visibilidad general de la parcela.'
+
+  # =========================================================
+  # ✅ NEW: Bloques de Reclamo / Registro de Dominio (Budget)
+  # =========================================================
+  ledger_title: '&6📜 Registro de Dominio'
+  ledger_available: '&7Disponible: &a'
+  ledger_used: '&7Usado: &c'
+  ledger_total: '&7Capacidad Total: &e'
+
+  claim_blocks_not_enough: '&c❌ Necesitas &e{NEEDED}&c bloques de reclamo más para reclamar esta área.'
+  first_claim_limit_reached: '&c❌ ¡Límite de primer reclamo excedido! Tamaño máx: &e{LIMIT}&c bloques. (Seleccionaste &e{AREA}&c)'
+  claim_blocks_earned_playtime: '&a✔ Ganaste &e{AMOUNT}&a bloques de reclamo por jugar. Total: &e{TOTAL}&a.'
+  claim_blocks_earned_level: '&d⚡ Bono de Ascensión: &e+{AMOUNT} Bloques de Reclamo!'

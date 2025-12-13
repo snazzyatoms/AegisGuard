@@ -2,8 +2,8 @@ package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.*;
@@ -13,13 +13,10 @@ import java.util.*;
  *
  * Centralized language / style system for AegisGuard.
  * Loads:
- *  - codex.yml (style map + file map)
- *  - core.yml (shared/global keys)
- *  - overrides.yml (per-server overrides)
- *  - one style file per style (old_english.yml, hybrid_english.yml, modern_english.yml)
- *
- * This is intentionally lightweight. It can be expanded later
- * with per-player style profiles without breaking callers.
+ * - codex.yml (style map + file map)
+ * - core.yml (shared/global keys)
+ * - overrides.yml (per-server overrides)
+ * - one style file per style (old_english, hybrid, spanish_mx, etc.)
  */
 public class CodexEngine {
 
@@ -28,7 +25,9 @@ public class CodexEngine {
     private String defaultStyle;
     private String fallbackStyle;
 
-    private final Set<String> availableStyles = new HashSet<>();
+    // ✅ CHANGED: Use List to preserve the order defined in codex.yml
+    private final List<String> availableStyles = new ArrayList<>();
+    
     private final Map<String, YamlConfiguration> styleBundles = new HashMap<>();
 
     private YamlConfiguration coreBundle;
@@ -155,8 +154,26 @@ public class CodexEngine {
         return fallbackStyle;
     }
 
-    public Set<String> getAvailableStyles() {
-        return Collections.unmodifiableSet(availableStyles);
+    /**
+     * Returns the list of available styles in the order defined in codex.yml.
+     */
+    public List<String> getAvailableStyles() {
+        return Collections.unmodifiableList(availableStyles);
+    }
+
+    /**
+     * ✅ NEW: Helper to get the next style in the cycle.
+     * Useful for Settings GUI buttons.
+     */
+    public String getNextStyle(String currentStyle) {
+        if (availableStyles.isEmpty()) return defaultStyle;
+        
+        int index = availableStyles.indexOf(currentStyle);
+        // If not found or at the end of the list, loop back to start
+        if (index == -1 || index >= availableStyles.size() - 1) {
+            return availableStyles.get(0);
+        }
+        return availableStyles.get(index + 1);
     }
 
     /* --------------------------------------------------------
@@ -213,7 +230,6 @@ public class CodexEngine {
 
     /**
      * Set a player's style. Returns true if the style is valid and was applied.
-     * (Currently stored in memory only for 1.2.4 – no persistence yet.)
      */
     public boolean setPlayerStyle(Player player, String style) {
         if (player == null || style == null) return false;
@@ -275,10 +291,6 @@ public class CodexEngine {
         return key;
     }
 
-    /**
-     * Resolve a list of lines (for lore, multi-line prompts, etc.)
-     * Uses the same priority order as {@link #resolve(String, String)}.
-     */
     private List<String> resolveList(String style, String key) {
         if (key == null || key.isEmpty()) {
             return Collections.emptyList();

@@ -1,0 +1,279 @@
+# ======================================
+# ARGENTINE SPANISH STYLE (Español Argentino)
+# ======================================
+spanish_ar:
+  # --- Navegación ---
+  button_back: '&e⟵ Volver'
+  back_lore:
+  - '&7Volvés a la página anterior, ¿viste?'
+  
+  button_back_menu: '&fVolver al Menú Principal'
+  back_menu_lore:
+  - '&7Volvés al índice principal, che.'
+  
+  button_exit: '&c✖ Salir'
+  button_exit_lore:
+  - '&7Cerrás este menú, ¡dale!'
+  exit_lore:
+  - '&7Cerrás este menú.'
+  
+  button_prev_page: '&fPágina Anterior'
+  button_next_page: '&fPágina Siguiente'
+  
+  # --- Errores Generales ---
+  role_edit_self_error: '&c❌ ¡No, capo! No podés tocar tu propio rol. ¡Te re-zarpás, te vas a quedar afuera!'
+  no_perm: '&c¡Ni a palos! No tenés permiso para hacer esa movida, che.'
+  players_only: '&c¡Solo los pibes que juegan pueden usar este comando, eh!'
+  usage_main: '&eUsá así: /aegis <wand|menu|claim|unclaim|resize|help> (¡dale!)'
+  
+  sound_global_enabled: '&a✔ ¡Se escucha la voz de Aegis en el reino, mirá vos!'
+  sound_global_disabled: '&c✖ ¡Silenciaron la voz de Aegis para todos, qué bajón!'
+  
+  # --- Reclamo y Varita ---
+  wand_given: '&a⚡ ¡Mirá vos! Te dieron la &bVarita de Aegis, ¡un caño!'
+  wand_already_on: '&eNah, loco; ya tenés la Varita de Aegis encima, ¡usala!'
+  corner1_set: '&a⚡ Marcaste la primera punta en &e{X}, {Z}. ¡Posta!'
+  corner2_set: '&b⚡ Marcaste la segunda punta en &e{X}, {Z}.'
+  must_select: '&c❌ Tenés que marcar las dos puntas con la Varita, ¡ponete las pilas!'
+  corners_diff_world: '&c❌ ¡Las puntas están en reinos (mundos) diferentes! Tienen que estar en el mismo, obvio.'
+  wand_consumed: '&a⚡ La Varita se gastó, la tierra quedó claimada posta.'
+  wand_not_found: '&c❌ No encontré la Varita que necesitás.'
+  wand_already_owned: '&eYa tenés la Varita de Aegis. Usá esa en lugar de pedir otra, che.'
+  
+  resize-success: '&a✔ Tu parcela se agrandó {DIRECTION} por {AMOUNT} bloques.'
+  resize-fail-overlap: '&c❌ ¡No podés agrandar! Se te choca con otro claim, ¡sos re-invasor!'
+  resize-fail-max-area: '&c❌ ¡No podés agrandar! Te zarpás del límite de &e{AMOUNT}&c bloques, che.'
+  
+  # --- Fusión ---
+  merge_invalid_dir: '&c❌ Decí una dirección bien: NORTE, SUR, ESTE u OESTE.'
+  merge_no_plot: '&c❌ No hay ninguna parcela al lado para fusionar.'
+  merge_not_owner: '&c❌ No sos el dueño de la parcela de al lado.'
+  merge_not_aligned: '&c❌ Las parcelas no coinciden. Tienen que estar pegadas de toque.'
+  merge_success: '&a⚡ ¡Mirá vos! ¡Las parcelas se fusionaron en una sola re-grande!'
+  
+  # --- Economía y Límites ---
+  max_claims_reached: '&c❌ ¡Llegaste al tope! Solo podés tener {AMOUNT} parcela(s), ¿viste?'
+  need_vault: '&c❌ Te faltan &e{AMOUNT}&c mangos (oro). ¡A laburar!'
+  cost_deducted: '&e💰 Se te descontaron &6{AMOUNT}&e, ¡a pagar la joda!'
+  items_deducted: '&e💰 Le diste &6{AMOUNT} {ITEM}&e a la tierra.'
+  vault_refund: '&e💰 Recuperaste &6{AMOUNT}&e mangos ({PERCENT}%). ¡Bien ahí!'
+  item_refund: '&e💰 La tierra te devuelve &6{AMOUNT} {ITEM}&e ({PERCENT}%).'
+  
+  upkeep_paid: '&e💰 Pagaste &6{AMOUNT}&e para mantener tu parcela.'
+  upkeep_failed_warning: '&c❌ ¡Atento! Estás sin un peso. Tenés que pagar el mantenimiento de la parcela.'
+  plot_expired_upkeep: '&c❌ ¡Chau plot! La naturaleza te afanó la parcela por no pagar el mantenimiento.'
+  plot-is-locked: '&c❌ Esta parcela está re-bloqueada hasta que pagues el tributo, ¡poné la tarasca!'
+  
+  # --- Subastas ---
+  plot-now-auctioned: '&e⚠ ¡Tu parcela está en subasta pública! ¡A ver quién la compra!'
+  auction-gui-title: '&6Subastas de Parcelas'
+  auction-bid-own: '&cNo podés pujar por tu propia parcela caducada, ¡gil!'
+  auction-already_highest: '&eVos ya sos el que va ganando, ¿para qué pujás de nuevo?'
+  auction-outbid: '&e¡{PLAYER} te ganó la puja por una parcela!'
+  auction-bid-success: '&a✔ ¡Pusiste &6{AMOUNT}&a! Sos el que va ganando, ¡dale, seguila!'
+  auction-sold: '&a✔ Vendiste tu parcela en subasta a {PLAYER}. Te dieron &6{AMOUNT}&a.'
+  auction-won: '&a✔ ¡Ganaste la subasta por la parcela de {PLOT_OWNER} por &6{AMOUNT}&a! ¡Sos un capo!'
+  auction_item_name: '&eSubasta: Parcela Vieja de {OWNER}'
+  auction_current_bid: '&7Puja Actual: &e{AMOUNT}'
+  auction_highest_bidder: '&7Mejor Postor: &f{PLAYER}'
+  auction_item_lore:
+  - '&eClic Izquierdo: &7Ver la parcela'
+  - '&aClic Derecho: &7Pujar'
+  
+  # --- Mercado ---
+  market-gui-title: '&2Mercado de Parcelas'
+  market-teleport: '&e¡Viajando a la parcela de {PLAYER}...'
+  market-buy-own: '&cNo podés comprar tu propia parcela, ¡gil!'
+  market-buy-success: '&a✔ ¡Compraste la parcela de {PLAYER} por &6{PRICE}&a! ¡Qué grande!'
+  market-sold: '&a✔ ¡{PLAYER} compró tu parcela por &6{PRICE}&a! ¡Cerraste un negoción!'
+  market-for-sale: '&a✔ Tu parcela está ahora a la venta por &6{PRICE}&a.'
+  market-not-for-sale: '&e✔ Tu parcela ya no está a la venta.'
+  market-rent-soon: '&eLa función de alquilar parcelas la metemos en otra actualización.'
+  market_type_rent: '&bEn Alquiler'
+  market_type_sale: '&aEn Venta'
+  market_item_lore:
+  - '&eClic Izquierdo: &7Ver la parcela'
+  - '&aClic Derecho: &7Comprar el Título'
+  
+  # --- Expansión ---
+  expansion_gui_title: '&d§lPedido de Expansión de Parcela'
+  button_expand: '&dPedir Expansión'
+  expand_lore:
+  - '&7Pedís a un Admin'
+  - '&7tierras más grandes.'
+  button_submit_request: '&aEnviar Pedido'
+  submit_request_lore:
+  - '&7Elegí qué tan grande querés la expansión.'
+  button_view_requests_admin: '&cVer Pedidos (Admin)'
+  view_requests_admin_lore:
+  - '&7Revisá lo que piden los pibes.'
+  
+  expansion_submitted: '&a✔ Tu pedido de expansión ya está en el Consejo (Admin).'
+  expansion_exists: '&c❌ Ya tenés un pedido pendiente, ¡esperá un toque!'
+  
+  # Claves de resultado de expansión (mantenidas por compatibilidad, silenciadas)
+  expansion_approved: ''
+  expansion_denied: ''
+  
+  # Claves de resultado de petición de Admin (líneas visibles principales)
+  admin_request_approved: '&a✔ ¡Felicidades! Un Admin te dio el ok para la expansión.'
+  admin_request_denied: '&c❌ Ufa, un Admin te bochó el pedido de expansión.'
+  expansion_payment_failed: '&c❌ Falló el pedido; no tenés la tarasca (dinero).'
+  expansion_limit_reached: '&c❌ ¡Llegaste al re-límite de expansión ({LIMIT})!'
+  expansion_overlap_fail: '&c❌ No podés expandir acá; estás re-cerca de otra parcela.'
+  expansion_invalid_size: '&c❌ El nuevo tamaño tiene que ser más grande que el anterior, ¡obvio!'
+  request_expired: '&c❌ Este pedido ya caducó o se perdió.'
+  
+  # NIVELES DE EXPANSIÓN (Argentino)
+  expansion_tier1_name: '&aParcela Chiquita'
+  expansion_tier1_lore:
+  - '&7Un pedacito extra.'
+  - ' '
+  - '&eClic para Pedir'
+  expansion_tier2_name: '&eParcela Pasable'
+  expansion_tier2_lore:
+  - '&7Un buen estirón.'
+  - ' '
+  - '&eClic para Pedir'
+  expansion_tier3_name: '&fParcela Grande'
+  expansion_tier3_lore:
+  - '&7Tierra para un capo.'
+  - ' '
+  - '&eClic para Pedir'
+  expansion_tier4_name: '&6Dominio Zarpado'
+  expansion_tier4_lore:
+  - '&7Una re-extensión de tierra.'
+  - ' '
+  - '&eClic para Pedir'
+  expansion_tier5_name: '&bTerritorio Máximo'
+  expansion_tier5_lore:
+  - '&7Un reino para vos solo.'
+  - ' '
+  - '&eClic para Pedir'
+  
+  expansion_locked_lore:
+  - '&cTenés que estar dentro'
+  - '&cde tu propia parcela para pedir.'
+  expansion_admin_title: '&8Pedidos Pendientes'
+  expansion_none_title: '&cNo Hay Pedidos Pendientes'
+  expansion_none_lore:
+  - '&7Los pibes están conformes, che.'
+  expansion_admin_actions:
+  - '&aClic Izquierdo: &7Aprobar (Dale!)'
+  - '&cClic Derecho: &7Denegar (Bochá)'
+  expansion_admin_granted_broadcast: '&6⚖ {PLAYER} aprobó un pedido de expansión para {TARGET}. ¡Qué grande!'
+  expansion_admin_denied_broadcast: '&c⚖ {PLAYER} denegó el pedido de {TARGET}. ¡Qué bajón!'
+  
+  # --- Visita / Viaje ---
+  visit_gui_title: '&9Sistema de Viaje'
+  visit_title_warps: '&6Puntos de Teletransporte (Warps)'
+  visit_title_trusted: '&9Parcelas de Confianza'
+  visit_switch_trusted: '&bVer: Parcelas de Confianza'
+  visit_switch_trusted_lore:
+  - '&7Parcelas donde sos invitado o tenés rol.'
+  visit_switch_warps: '&6Ver: Puntos de Teletransporte'
+  visit_switch_warps_lore:
+  - '&7Lugares públicos del servidor.'
+  visit_warp_lore:
+  - '&7Clic para viajar.'
+  visit_plot_name: '&e{PLOT}'
+  visit_plot_lore:
+  - '&7Mundo: &f{WORLD}'
+  - '&7Estatus: &a{ROLE}'
+  - ' '
+  - '&eClic para Viajar'
+  
+  home-set-success: '&a✔ El punto de llegada (home) de tu parcela se fijó acá.'
+  home-fail-outside: '&c❌ Tenés que estar dentro de tu parcela para poner el punto de llegada.'
+  home-fail-no-spawn: '&c❌ ¡No pusiste punto de llegada! Usá /ag setspawn.'
+  welcome-set: '&a✔ El mensaje de bienvenida de tu parcela está listo.'
+  welcome-cleared: '&e✔ Borraste el mensaje de bienvenida de tu parcela.'
+  farewell-set: '&a✔ El mensaje de despedida de tu parcela está listo.'
+  farewell-cleared: '&e✔ Borraste el mensaje de despedida de tu parcela.'
+  
+  plot_created: '&a✔ ¡Listo! Tu tierra está protegida por Aegis, ¡posta!'
+  plot_unclaimed: '&e✔ Liberaste tu tierra a la naturaleza.'
+  plot-too-small: '&c❌ Nah, viajero; el dominio es muy chiquito.'
+  
+  # --- Roles ---
+  roles_gui_title: '&eManejar Roles de la Parcela'
+  roles_manage_title: '&bManejar: {PLAYER}'
+  trusted_plot_selector_title: '&bElegí una Parcela para Manejar'
+  button_add_trusted: '&aAñadir un Amigo'
+  add_trusted_lore:
+  - '&7Clickeá una cabeza para darle un rol.'
+  button_remove_trusted: '&cEchar de la Parcela'
+  role_self: '&cNo podés tocar tu propio rol.'
+  role_is_owner: '&cNo podés tocar el rol del dueño (vos).'
+  role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}. ¡Bien ahí!'
+  role_not_found: '&c❌ El pibe {PLAYER} no está en este dominio, ¡qué macana!'
+  
+  # --- Flags ---
+  toggle_on: '&a✔ Activaste {FLAG}.'
+  toggle_off: '&c✖ Desactivaste {FLAG}.'
+  toggle_fail_cost: '&c❌ Te faltan &e{AMOUNT}&c mangos para activar {FLAG}.'
+  flag_no_perm: '&cNo tenés permiso para tocar {FLAG}.'
+  flag_denied: '&c❌ No te dejan hacer eso en {PLOT}, ¡tomátelas!'
+  
+  # --- Descripciones de Flags (Lore) ---
+  flag_lore_allow: '&7Permitido: &a{STATUS}'
+  flag_lore_cost: '&7Costo para activar: &6{COST}'
+  flag_lore_allow_status_inherit: '&eHeredado del Mundo'
+  flag_lore_allow_status_allow: '&aPermitido por Parcela'
+  flag_lore_allow_status_deny: '&cDengado por Parcela'
+  flag_lore_role_status_inherit: '&eHeredado de la Parcela'
+  flag_lore_role_status_allow: '&aPermitido para usar'
+  flag_lore_role_status_deny: '&cDengado para usar'
+  flag_lore_toggle_action: '&eClic para cambiar: Heredar → Permitir → Denegar'
+  
+  # --- Herramientas de Administrador ---
+  button_admin_plots: '&bRevisar Todas las Parcelas'
+  button_admin_requests: '&cVer Pedidos Pendientes'
+  button_admin_zones: '&6Zonas del Servidor'
+  button_admin_diagnostics: '&bDiagnósticos'
+  button_admin_reload: '&eRecargar Config'
+  
+  admin_auto_remove_enabled: '&a✔ Borrado Automático ON.'
+  admin_auto_remove_disabled: '&c✖ Borrado Automático OFF.'
+  admin_bypass_enabled: '&a✔ Omitir Límite ON.'
+  admin_bypass_disabled: '&c✖ Omitir Límite OFF.'
+  admin_broadcast_enabled: '&a✔ Registro ON.'
+  admin_broadcast_disabled: '&c✖ Registro OFF.'
+  admin_removed_banned: '&eParcelas borradas para: {PLAYER}'
+  
+  admin_plot_list_title: '&cLista Global de Parcelas'
+  admin_plot_item_name: '&bDueño: &f{OWNER}'
+  admin_server_zone_tag: '&c[ZONA DEL SERVER]'
+  admin_plot_actions:
+  - '&eClic Izquierdo: &7Teletransportar'
+  - '&cClic Derecho: &7Borrar'
+  admin_plot_teleport: '&eTeletransportado a la parcela de {PLAYER}.'
+  admin_plot_deleted: '&c✖ Borrada la parcela de {PLAYER}.'
+  button_back_admin: '&fVolver a Admin'
+  
+  admin-zone-created: '&a✔ Zona del Server creada.'
+  admin-zone-deleted: '&c✖ Zona del Server borrada.'
+  admin-zone-not-found: '&c❌ No estás en una Zona del Server.'
+  admin_zone_flags_title: '&cAjustes de Zona'
+  flag_build_lore:
+  - '&7¿Permitir construir/romper?'
+  - '&cSi está OFF, nadie puede construir/romper.'
+  flag_containers_lore:
+  - '&7¿Permitir contenedores?'
+  - '&cSi está OFF, nadie puede abrir cofres/contenedores.'
+  flag_interact_lore:
+  - '&7¿Permitir puertas/botones?'
+  - '&cSi está OFF, nadie puede interactuar con ellos.'
+
+  # =========================================================
+  # ✅ NEW: Bloques de Reclamo / Registro de Dominio (Budget)
+  # =========================================================
+  ledger_title: '&6📜 Registro de Dominio'
+  ledger_available: '&7Disponible: &a'
+  ledger_used: '&7Usado: &c'
+  ledger_total: '&7Capacidad Total: &e'
+
+  claim_blocks_not_enough: '&c❌ Te faltan &e{NEEDED}&c bloques de reclamo para agarrar esta tierra, che.'
+  first_claim_limit_reached: '&c❌ ¡Te zarpaste! El primer claim no puede pasar de &e{LIMIT}&c bloques. (Marcaste &e{AREA}&c)'
+  claim_blocks_earned_playtime: '&a✔ Ganaste &e{AMOUNT}&a bloques por viciar un rato. Total: &e{TOTAL}&a.'
+  claim_blocks_earned_level: '&d⚡ Bono de Ascensión: &e+{AMOUNT} Bloques, ¡qué grande!'

@@ -43,6 +43,26 @@ public class SelectionService implements Listener {
         return loc1.containsKey(p.getUniqueId()) && loc2.containsKey(p.getUniqueId());
     }
 
+    /**
+     * ✅ ADDED: Calculates the area of the current selection.
+     * Required for Claim Block budget checks in AegisCommand.
+     */
+    public long getSelectionArea(Player p) {
+        if (!hasSelection(p)) return 0;
+
+        Location l1 = loc1.get(p.getUniqueId());
+        Location l2 = loc2.get(p.getUniqueId());
+
+        if (l1 == null || l2 == null) return 0;
+        if (l1.getWorld() == null || l2.getWorld() == null) return 0;
+        if (!l1.getWorld().equals(l2.getWorld())) return 0;
+
+        long width = Math.abs(l1.getBlockX() - l2.getBlockX()) + 1;
+        long length = Math.abs(l1.getBlockZ() - l2.getBlockZ()) + 1;
+
+        return width * length;
+    }
+
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
@@ -111,7 +131,7 @@ public class SelectionService implements Listener {
         // --- VALIDATION ---
         if (!isServerClaim) {
             if (!plugin.worldRules().allowClaims(p.getWorld())) {
-                plugin.msg().send(p, "admin-zone-no-claims");
+                plugin.msg().send(p, "admin-zone-no-claims"); // fallback key if needed, or use no_perm
                 return;
             }
 
@@ -171,36 +191,12 @@ public class SelectionService implements Listener {
 
         // --- DISCORD (CLAIM) --- 
         if (plugin.getDiscord().isEnabled() && !isServerClaim) {
-            // Language-aware text via Codex / GUI gateway
-            String title = plugin.gui().tr(
-                    p,
-                    "discord_claim_title",
-                    "🚩 New Land Claimed"
-            );
-
-            String descTemplate = plugin.gui().tr(
-                    p,
-                    "discord_claim_description",
-                    "{PLAYER} has established a new territory!"
-            );
+            String title = plugin.gui().tr(p, "discord_claim_title", "🚩 New Land Claimed");
+            String descTemplate = plugin.gui().tr(p, "discord_claim_description", "{PLAYER} has established a new territory!");
             String description = descTemplate.replace("{PLAYER}", p.getName());
-
-            String worldLabel = plugin.gui().tr(
-                    p,
-                    "discord_claim_world_label",
-                    "World"
-            );
-            String sizeLabel = plugin.gui().tr(
-                    p,
-                    "discord_claim_size_label",
-                    "Size"
-            );
-
-            String footer = plugin.gui().tr(
-                    p,
-                    "discord_claim_footer",
-                    "AegisGuard"
-            );
+            String worldLabel = plugin.gui().tr(p, "discord_claim_world_label", "World");
+            String sizeLabel = plugin.gui().tr(p, "discord_claim_size_label", "Size");
+            String footer = plugin.gui().tr(p, "discord_claim_footer", "AegisGuard");
 
             DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
                     .setTitle(ChatColor.stripColor(title))
@@ -338,25 +334,10 @@ public class SelectionService implements Listener {
         
         // Discord (MERGE)
         if (plugin.getDiscord().isEnabled()) {
-            String title = plugin.gui().tr(
-                    p,
-                    "discord_merge_title",
-                    "🔄 Plot Merge Completed"
-            );
-
-            String descTemplate = plugin.gui().tr(
-                    p,
-                    "discord_merge_description",
-                    "{PLAYER} merged two claims."
-            );
+            String title = plugin.gui().tr(p, "discord_merge_title", "🔄 Plot Merge Completed");
+            String descTemplate = plugin.gui().tr(p, "discord_merge_description", "{PLAYER} merged two claims.");
             String description = descTemplate.replace("{PLAYER}", p.getName());
-
-            String sizeLabel = plugin.gui().tr(
-                    p,
-                    "discord_merge_size_label",
-                    "New Size"
-            );
-
+            String sizeLabel = plugin.gui().tr(p, "discord_merge_size_label", "New Size");
             String newSize = (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1);
 
             plugin.getDiscord().send(
@@ -443,35 +424,19 @@ public class SelectionService implements Listener {
         }
     }
 
-    /**
-     * Legacy helper kept for compatibility.
-     * Now treats BOTH normal Aegis Wand and Sentinel Scepter as "wands".
-     */
     public boolean isWand(ItemStack item) {
         return isAnyWand(item);
     }
 
-    /**
-     * Static helper: check if an ItemStack is any Aegis selection item
-     * (player wand OR server/sentinel wand).
-     */
     public static boolean isAnyWand(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
-
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         return pdc.has(WAND_KEY, PersistentDataType.BYTE)
                 || pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
     }
 
-    /**
-     * Static helper for commands:
-     * "Does this player already have ANY Aegis selection wand/scepter?"
-     *
-     * Use this in /aegis wand, /aegis scepter, etc. to prevent duplicates.
-     */
     public static boolean playerHasAnyWand(Player p) {
         for (ItemStack stack : p.getInventory().getContents()) {
             if (isAnyWand(stack)) {
@@ -494,6 +459,7 @@ public class SelectionService implements Listener {
     }
     
     public void resizePlot(Player p, String direction, int amount) {
-        // Intentionally left as-is; you mentioned this is handled elsewhere or to be filled later.
+        // Note: Resize logic is complex and usually requires its own class or method.
+        // Ensure you implement budget checks here if you add code later.
     }
 }

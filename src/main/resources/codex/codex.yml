@@ -13,12 +13,16 @@ available_styles:
   - old_english
   - hybrid_english
   - modern_english
+  - spanish_mx       # ✅ New: Español Neutro (Latinoamérica)
+  - spanish_ar       # ✅ New: Español Argentino
 
 # Mapping of style IDs to their codex files
 file_map:
   old_english: old_english.yml
   hybrid_english: hybrid_english.yml
   modern_english: modern_english.yml
+  spanish_mx: spanish_mx.yml       # ✅ Mapped to file
+  spanish_ar: spanish_ar.yml       # ✅ Mapped to file
 
 # Shared/global text file
 core_file: core.yml

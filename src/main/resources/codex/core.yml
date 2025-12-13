@@ -6,8 +6,6 @@
 prefix: '&8[&bAegisGuard&8]&r '
 
 # Who shows up as the "actor" when an admin approves/denies expansion requests.
-# Used by ExpansionRequestManager via:
-#   plugin.gui().tr(player, "expansion_actor_admin", "Admin")
 expansion_actor_admin: '&cAegis Steward'
 
 # ======================================
@@ -31,38 +29,30 @@ button_exit_lore:
 exit_lore:
   - '&7Close this menu.'
 
-# Generic "expand" button text used in tooltips (eg. Realm, Reach & Growth hint)
+# Generic "expand" button text used in tooltips
 button_expand: '&dRequest Expansion'
 
 # ======================================
 # Plot Ascension / Level Track (shared text)
 # ======================================
 
-# Header shown in the Plot Ascension Codex status item
 level_current_status: '&bCurrent Plot Level'
 
-# Titles for the small “track” preview items
 level_track_title_current: '&bCurrent Progress'
 level_track_title_completed: '&aTrack Completed'
 
-# Lines for the “current” track preview (in-progress)
 level_track_current_[1]: '&7Each level unlocks new bonuses.'
 level_track_current_[2]: '&7Reach the final level to master this track.'
 level_track_current_[3]: '&7Hover other items to see future rewards.'
 
-# Lines for the “completed” track preview
 level_track_completed_[1]: '&7All level milestones are unlocked.'
 level_track_completed_[2]: '&7You have reached the final tier of this track.'
 level_track_completed_[3]: '&7Future changes will be mostly cosmetic.'
 
-# Section header above the list of buffs for a track
 level_track_buffs_title: '&dUnlocked Bonuses'
-
-# Footer line shown when a track is fully mastered
 level_track_footer_mastered: '&6This progression track is fully mastered.'
 
-# (These high-level ascension keys also exist in style files, but we provide
-# safe fallbacks here in case a GUI reads from core only.)
+# Fallback values for high-level ascension keys
 level_gui_title: '&dPlot Ascension Codex'
 level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
 level_max_reached: '&6Maximum level reached for this plot.'
@@ -80,16 +70,11 @@ level_button_lore_static:
 # ======================================
 
 expansion_gui_title: '&dLand Expansion Petition'
-
-# Main “request expansion” button in the petition menu
 button_expand_title: '&dRequest Expansion'
-# (Some code paths may still call just "button_expand"; we already set that above.)
-
 expand_lore:
   - '&7Request a larger protected radius'
   - '&7for your current dominion.'
 
-# Player-facing result lines
 expansion_submitted: '&a✔ Expansion request submitted.'
 expansion_exists: '&c❌ You already have a pending expansion request.'
 expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
@@ -98,31 +83,25 @@ expansion_overlap_fail: '&c❌ Cannot expand; another claim is too close.'
 expansion_invalid_size: '&c❌ The new size must be larger than the old one.'
 request_expired: '&c❌ This expansion request has expired or no longer exists.'
 
-# Kept blank in styles to avoid double-messages; but we give safe text here
 expansion_approved: '&a✔ Your expansion request was approved.'
 expansion_denied: '&c❌ Your expansion request was denied.'
 
-# Tier buttons (names + simple generic lore)
 expansion_tier1_name: '&aTier I Expansion'
 expansion_tier1_lore:
   - '&7Expand your dominion by &a+5&7 radius.'
   - '&eClick to submit a request.'
-
 expansion_tier2_name: '&eTier II Expansion'
 expansion_tier2_lore:
   - '&7Expand your dominion by &e+10&7 radius.'
   - '&eClick to submit a request.'
-
 expansion_tier3_name: '&fTier III Expansion'
 expansion_tier3_lore:
   - '&7Expand your dominion by &f+20&7 radius.'
   - '&eClick to submit a request.'
-
 expansion_tier4_name: '&6Tier IV Expansion'
 expansion_tier4_lore:
   - '&7Expand your dominion by &6+35&7 radius.'
   - '&eClick to submit a request.'
-
 expansion_tier5_name: '&bTier V Expansion'
 expansion_tier5_lore:
   - '&7Expand your dominion by &b+50&7 radius.'
@@ -132,7 +111,6 @@ expansion_locked_lore:
   - '&cYou must be standing inside'
   - '&cyour own plot to request expansion.'
 
-# Admin review button + list titles
 button_view_requests_admin: '&cReview Requests (Admin)'
 view_requests_admin_lore:
   - '&7View and manage all current'
@@ -142,27 +120,85 @@ expansion_admin_title: '&8Pending Expansion Requests'
 expansion_none_title: '&cNo Requests'
 expansion_none_lore:
   - '&7There are no expansion requests right now.'
-
 expansion_admin_actions:
   - '&aLeft-Click: &7Approve'
   - '&cRight-Click: &7Deny'
-
 expansion_admin_granted_broadcast: '&6⚖ {PLAYER} approved an expansion for {TARGET}.'
 expansion_admin_denied_broadcast: '&c⚖ {PLAYER} denied an expansion request from {TARGET}.'
 
 # ======================================
-# Discord notifications (shared defaults)
-# These can be overridden per-style in the style codex files if desired.
+# Plot Status GUI (New v1.2.4 Keys)
 # ======================================
+plot_status_gui_title: '&b⚔ Claim Status'
+plot_status_header_title: '&6Claim Information'
+plot_status_blessings_title: '&dActive Bonuses & Effects'
+plot_status_territory_title: '&aTerritory, Size & Progression'
+plot_status_protection_title: '&cCombat & Hostiles'
 
-# Discord – Claim
+plot_status_button_title: '&b📜 Claim Status'
+plot_status_button_lore:
+  - '&7View detailed information about'
+  - '&7your claim: protections, growth,'
+  - '&7economy, and visitors.'
+plot_status_lore:
+  - '&7View detailed information about'
+  - '&7your claim: protections, growth,'
+  - '&7economy, and visitors.'
+
+plot_status_overview_name: '&aClaim Overview'
+plot_status_overview_lore:
+  - '&7Shows the primary attributes of this claim,'
+  - '&7including owner, world, biome, and level.'
+  - ' '
+  - '&8Only the highest unlocked bonuses'
+  - '&8are shown for clarity.'
+
+plot_status_flags_name: '&6Protections & Wards'
+plot_status_flags_lore:
+  - '&7Lists all active protection settings,'
+  - '&7such as PvP, mobs, fire, and interactions.'
+  - ' '
+  - '&8Disabled protections follow normal'
+  - '&8server behavior.'
+
+plot_status_economy_name: '&eEconomy, Upkeep & Costs'
+plot_status_economy_lore:
+  - '&7Shows upkeep status, recent payments,'
+  - '&7refunds, and marketplace information.'
+  - ' '
+  - '&8Unpaid upkeep may result in claim'
+  - '&8expiration or auction.'
+
+plot_status_social_name: '&dVisitors & Reputation'
+plot_status_social_lore:
+  - '&7Tracks visits, likes, and overall'
+  - '&7visibility of this claim.'
+  - ' '
+  - '&8Highly visited claims gain community'
+  - '&8recognition.'
+
+# ======================================
+# Claim Blocks / Ledger (New v1.2.4 Keys)
+# ======================================
+ledger_title: '&6📜 Domain Registry'
+ledger_available: '&7Available: &a'
+ledger_used: '&7Used: &c'
+ledger_total: '&7Total Capacity: &e'
+
+claim_blocks_not_enough: '&c❌ You need &e{NEEDED}&c more claim blocks to claim this area.'
+first_claim_limit_reached: '&c❌ First claim limit exceeded! Max size: &e{LIMIT}&c blocks. (You selected &e{AREA}&c)'
+claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for playing. Total: &e{TOTAL}&a.'
+claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
+
+# ======================================
+# Discord notifications
+# ======================================
 discord_claim_title: '🚩 New Land Claimed'
 discord_claim_description: '{PLAYER} has established a new territory!'
 discord_claim_world_label: 'World'
 discord_claim_size_label: 'Size'
 discord_claim_footer: 'AegisGuard'
 
-# Discord – Merge
 discord_merge_title: '🔄 Plot Merge Completed'
 discord_merge_description: '{PLAYER} merged two claims.'
 discord_merge_size_label: 'New Size'

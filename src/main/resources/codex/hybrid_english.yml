@@ -247,6 +247,19 @@ level_track_next_lore:
   - '&7Upgrade to unlock the next bonuses.'
   - '&7Upgrade cost: &6{COST}'
 
+# =========================================================
+# ✅ NEW: Claim Blocks / Domain Registry (Budget System)
+# =========================================================
+ledger_title: '&6📜 Domain Registry'
+ledger_available: '&7Available: &a'
+ledger_used: '&7Used: &c'
+ledger_total: '&7Total Capacity: &e'
+
+claim_blocks_not_enough: '&c❌ You need &e{NEEDED}&c more claim blocks to claim this area.'
+first_claim_limit_reached: '&c❌ First claim limit exceeded! Max size: &e{LIMIT}&c blocks. (You selected &e{AREA}&c)'
+claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for playing. Total: &e{TOTAL}&a.'
+claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
+
 # --- Plot Status GUI ---
 button_plot_status: '&b📜 Plot Status Ledger'
 plot_status_button_title: '&b📜 Plot Status Ledger'

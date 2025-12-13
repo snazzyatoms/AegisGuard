@@ -19,6 +19,24 @@ spanish_ar:
   
   button_prev_page: '&fPágina Anterior'
   button_next_page: '&fPágina Siguiente'
+
+  # Botones de retroceso específicos
+  expansion_button_back: '&e⟵ Volver a Pedidos'
+  market_button_back: '&e⟵ Volver al Mercado'
+  realestate_button_back: '&e⟵ Volver a Inmobiliaria'
+  domain_market_button_back: '&e⟵ Volver a Dominios'
+  auction_button_back: '&e⟵ Volver a Subastas'
+
+  expansion_button_back_lore:
+  - '&7Volvés a las opciones de expansión.'
+  market_button_back_lore:
+  - '&7Volvés a la lista de terrenos.'
+  realestate_button_back_lore:
+  - '&7Volvés a la gestión inmobiliaria.'
+  domain_market_button_back_lore:
+  - '&7Volvés a los listados de dominio.'
+  auction_button_back_lore:
+  - '&7Volvés a ver las subastas.'
   
   # --- Errores Generales ---
   role_edit_self_error: '&c❌ ¡No, capo! No podés tocar tu propio rol. ¡Te re-zarpás, te vas a quedar afuera!'
@@ -111,13 +129,9 @@ spanish_ar:
   expansion_submitted: '&a✔ Tu pedido de expansión ya está en el Consejo (Admin).'
   expansion_exists: '&c❌ Ya tenés un pedido pendiente, ¡esperá un toque!'
   
-  # Claves de resultado de expansión (mantenidas por compatibilidad, silenciadas)
-  expansion_approved: ''
-  expansion_denied: ''
-  
-  # Claves de resultado de petición de Admin (líneas visibles principales)
-  admin_request_approved: '&a✔ ¡Felicidades! Un Admin te dio el ok para la expansión.'
-  admin_request_denied: '&c❌ Ufa, un Admin te bochó el pedido de expansión.'
+  # Claves de resultado de expansión
+  expansion_approved: '&a✔ ¡Felicidades! Un Admin te dio el ok para la expansión.'
+  expansion_denied: '&c❌ Ufa, un Admin te bochó el pedido de expansión.'
   expansion_payment_failed: '&c❌ Falló el pedido; no tenés la tarasca (dinero).'
   expansion_limit_reached: '&c❌ ¡Llegaste al re-límite de expansión ({LIMIT})!'
   expansion_overlap_fail: '&c❌ No podés expandir acá; estás re-cerca de otra parcela.'
@@ -194,7 +208,21 @@ spanish_ar:
   plot_created: '&a✔ ¡Listo! Tu tierra está protegida por Aegis, ¡posta!'
   plot_unclaimed: '&e✔ Liberaste tu tierra a la naturaleza.'
   plot-too-small: '&c❌ Nah, viajero; el dominio es muy chiquito.'
+  no_plot_here: '&c❌ No estás parado en ningún terreno tuyo.'
   
+  cannot_break: '&c❌ No podés romper acá; está protegido.'
+  cannot_place: '&c❌ No podés poner bloques acá; está protegido.'
+  cannot_interact: '&c❌ No tenés permiso para tocar eso acá.'
+  cannot_attack: '&c❌ El PvP está desactivado, bajá las armas.'
+  plot_entry_denied: '&c⛔ Entrada prohibida. Propiedad privada.'
+  plot_banned_entry: '&c⛔ Estás BANEADO de acá, tomatelas.'
+
+  # --- Títulos de Entrada ---
+  title_entering: '&b{PLOT_NAME}'
+  subtitle_entering: '&7Propiedad de {OWNER}'
+  title_entering_wilderness: '&aNaturaleza'
+  subtitle_entering_wilderness: '&7Tierra de Nadie'
+
   # --- Roles ---
   roles_gui_title: '&eManejar Roles de la Parcela'
   roles_manage_title: '&bManejar: {PLAYER}'
@@ -207,6 +235,7 @@ spanish_ar:
   role_is_owner: '&cNo podés tocar el rol del dueño (vos).'
   role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}. ¡Bien ahí!'
   role_not_found: '&c❌ El pibe {PLAYER} no está en este dominio, ¡qué macana!'
+  role_removed: '&e✔ {PLAYER} fue echado de tu parcela.'
   
   # --- Flags ---
   toggle_on: '&a✔ Activaste {FLAG}.'
@@ -214,6 +243,7 @@ spanish_ar:
   toggle_fail_cost: '&c❌ Te faltan &e{AMOUNT}&c mangos para activar {FLAG}.'
   flag_no_perm: '&cNo tenés permiso para tocar {FLAG}.'
   flag_denied: '&c❌ No te dejan hacer eso en {PLOT}, ¡tomátelas!'
+  flag_toggled: '&eActualizado {FLAG}: &f{STATUS}'
   
   # --- Descripciones de Flags (Lore) ---
   flag_lore_allow: '&7Permitido: &a{STATUS}'
@@ -225,11 +255,64 @@ spanish_ar:
   flag_lore_role_status_allow: '&aPermitido para usar'
   flag_lore_role_status_deny: '&cDengado para usar'
   flag_lore_toggle_action: '&eClic para cambiar: Heredar → Permitir → Denegar'
+
+  # Nombres de Flags para Roles
+  role_flag_state_inherit: Heredar
+  role_flag_state_allow: Permitir
+  role_flag_state_deny: Denegar
+
+  role_flag_name_pvp: '&bPvP'
+  role_flag_name_containers: '&bContenedores'
+  role_flag_name_mobs: '&bMobs Hostiles'
+  role_flag_name_pets: '&bMascotas'
+  role_flag_name_entities: '&bEntidades'
+  role_flag_name_farm: '&bCultivos'
+  role_flag_name_tnt: '&bExplosiones'
+  role_flag_name_fire: '&bFuego'
+  role_flag_name_piston: '&bPistones'
+  role_flag_name_entry: '&bEntrada'
+  role_flag_name_shop: '&bTiendas'
+  role_flag_name_fly: '&bVuelo'
+  role_flag_name_animals: '&bAnimales'
+  role_flag_name_redstone: '&bRedstone'
+  role_flag_name_vehicles: '&bVehículos'
+
+  role_flag_lore_common:
+  - '&7Permisos por rol para esta parcela.'
+  - '&7Anula las reglas normales si se establece.'
+  - ' '
+  - '&eClic para ciclar: Heredar → Permitir → Denegar'
   
   # --- Herramientas de Administrador ---
-  button_admin_plots: '&bRevisar Todas las Parcelas'
-  button_admin_requests: '&cVer Pedidos Pendientes'
-  button_admin_zones: '&6Zonas del Servidor'
+  admin_menu_title: '&c⚙ Panel de Admin'
+  admin_reloading: '&7Recargando config...'
+  admin_reload_complete: '&a✔ Recarga completa.'
+  
+  button_admin_auto_remove: '&6Borrar Baneados'
+  admin_auto_remove_lore:
+  - '&7Borrar parcelas de'
+  - '&7jugadores baneados.'
+  
+  button_admin_bypass_limit: '&dOmitir Límites'
+  admin_bypass_limit_lore:
+  - '&7Admins ignoran límites.'
+  
+  button_admin_broadcast: '&bRegistro de Acciones'
+  admin_broadcast_lore:
+  - '&7Anunciar acciones admin.'
+  
+  button_admin_unlimited: '&aParcelas Infinitas'
+  admin_unlimited_lore:
+  - '&7Admins tienen parcelas infinitas.'
+  
+  button_admin_sync: '&bSync Global'
+  admin_sync_lore:
+  - '&7Sincronizar datos en la red.'
+  
+  button_admin_perf: '&cModo Rendimiento'
+  admin_perf_lore:
+  - '&7Menos efectos, más FPS.'
+  
   button_admin_diagnostics: '&bDiagnósticos'
   button_admin_reload: '&eRecargar Config'
   
@@ -265,6 +348,28 @@ spanish_ar:
   - '&7¿Permitir puertas/botones?'
   - '&cSi está OFF, nadie puede interactuar con ellos.'
 
+  wilderness_revert_start: '&7Arrancando reversión de naturaleza...'
+  wilderness_revert_end: '&7Reversión lista. Bloques restaurados: &f{AMOUNT}&7.'
+
+  # --- Ayuda ---
+  help_header: '&bAyuda de AegisGuard'
+  help_lines:
+  - '&e/aegis wand &7- Agarrar la varita.'
+  - '&e/aegis menu &7- Abrir el menú.'
+  - '&e/aegis claim &7- Crear una parcela.'
+  - '&e/aegis unclaim &7- Borrar tu parcela.'
+  - '&e/aegis resize <dir> <cant> &7- Cambiar tamaño.'
+  - '&e/aegis home &7- Ir a casa.'
+  - '&e/aegis setspawn &7- Fijar el home.'
+  - '&e/aegis welcome [msg] &7- Fijar mensaje de bienvenida.'
+  - '&e/aegis farewell [msg] &7- Fijar mensaje de despedida.'
+  - '&e/aegis market &7- Abrir el mercado.'
+  - '&e/aegis auction &7- Ver subastas.'
+  - '&e/aegis rename <nombre> &7- Renombrar parcela.'
+  - '&e/aegis setdesc <texto> &7- Poner descripción.'
+  - '&e/aegis stuck &7- Desatascarse.'
+  - '&e/aegis help &7- Ver este menú.'
+
   # =========================================================
   # ✅ NEW: Bloques de Reclamo / Registro de Dominio (Budget)
   # =========================================================
@@ -277,3 +382,264 @@ spanish_ar:
   first_claim_limit_reached: '&c❌ ¡Te zarpaste! El primer claim no puede pasar de &e{LIMIT}&c bloques. (Marcaste &e{AREA}&c)'
   claim_blocks_earned_playtime: '&a✔ Ganaste &e{AMOUNT}&a bloques por viciar un rato. Total: &e{TOTAL}&a.'
   claim_blocks_earned_level: '&d⚡ Bono de Ascensión: &e+{AMOUNT} Bloques, ¡qué grande!'
+
+  # --- Menú Principal ---
+  menu_title: '&b⚔ Menú de Aegis'
+
+  button_claim_land: '&a🛡 Clavar Claim'
+  claim_land_lore:
+  - '&7Hacé tuya esta tierra.'
+  claim_land_ready_lore:
+  - '&7Crear una parcela con'
+  - '&7lo que marcaste recién.'
+  - ' '
+  - '&eClic para Confirmar'
+
+  button_plot_flags: '&6Configuración'
+  plot_flags_title: '&9⚙ Configuración del Claim'
+  plot_flags_lore:
+  - '&7Manejá las reglas de tu tierra.'
+  plot_flags_locked_lore:
+  - '&cTenés que estar adentro del claim'
+  - '&cpara tocar la configuración.'
+
+  button_roles: '&eLos Pibes (Miembros)'
+  roles_lore:
+  - '&7Manejá a tus amigos.'
+  roles_locked_lore:
+  - '&cTenés que estar adentro del claim'
+  - '&cpara manejar a la gente.'
+
+  button_player_settings: '&9Tus Cosas'
+  player_settings_lore:
+  - '&7Cambiá el idioma y los ruiditos.'
+
+  button_market: '&eMercado'
+  market_lore:
+  - '&7Comprá y vendé terrenos.'
+
+  button_auction: '&cSubastas'
+  auction_lore:
+  - '&7Ofertá por terrenos abandonados.'
+
+  button_info: '&6📜 La Guía'
+  info_message: '&7Abriendo el manual...'
+  info_lore:
+  - '&7Mirá los comandos y trucos.'
+
+  button_plot_status: '&b📜 Estado del Rancho'
+  plot_status_button_title: '&b📜 Estado del Rancho'
+  plot_status_lore:
+  - '&7Fijate cómo está tu tierra:'
+  - '&7protecciones, nivel,'
+  - '&7guita y visitas.'
+
+  # --- Plot Status GUI ---
+  plot_status_gui_title: '&b⚔ Estado del Rancho'
+  plot_status_header_title: '&6Info del Rancho'
+  plot_status_blessings_title: '&dBonos Activos'
+  plot_status_territory_title: '&aTerritorio y Crecimiento'
+  plot_status_protection_title: '&cCombate y Hostiles'
+
+  # --- Ascension / Leveling ---
+  level_gui_title: '&dAscensión de Parcela'
+  level_current_status: '&bNivel Actual'
+  level_header_owner: '&dDueño:&f {owner}'
+  level_header_world: '&dMundo:&f {world}'
+  level_header_level: '&dNivel Actual:&f {level}'
+  level_header_multiplier: '&dMultiplicador:&f {multiplier}x'
+  
+  level_current_blessings_name: '&dBonos Actuales'
+  level_current_blessings_title: '&dBonos Activos'
+  level_current_blessings_footer_1: '&8Niveles más altos desbloquean'
+  level_current_blessings_footer_2: '&8mejores bonos para este terreno.'
+
+  level_track_title_completed: '&aCamino Completado'
+  level_track_footer_mastered: '&6Camino dominado al máximo.'
+  level_track_title_current: '&dCamino Actual'
+  level_track_title_locked: '&cCamino Bloqueado'
+  level_track_footer_next: '&6Mejorá para desbloquear esto.'
+  level_track_footer_progress: '&7Progreso hacia la siguiente mejora.'
+  
+  level_upgrade_button: '&aMejorar a Nivel &f{LEVEL}'
+  level_max_reached: '&6Nivel máximo alcanzado.'
+  level_up_success: '&d⚡ ¡Tu parcela subió al Nivel &f{LEVEL}&d! ¡Bien ahí!'
+  level_up_fail_cost: '&c❌ No tenés suficientes fondos para mejorar esta parcela.'
+  level_button_lore:
+  - '&7Mejorá tu parcela para aumentar'
+  - '&7su tamaño y desbloquear funciones.'
+  level_button_lore_static:
+  - '&7Mejorá tu parcela para desbloquear'
+  - '&7nuevas ventajas y funciones.'
+
+  # --- Zoning ---
+  zone_gui_title: '&3Gestor de Zonas'
+  zone_created: '&a✔ Zona ''{ZONE}'' creada.'
+  zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
+  zone_rented: '&a✔ {PLAYER} alquiló ''{ZONE}''.'
+  zone_not_rented: '&7Zona disponible.'
+  zone_status_rented: '&cAlquilada'
+  zone_status_available: '&aDisponible'
+  zone_evict_action: '&cClic Izq: Desalojar'
+  zone_delete_action: '&cClic Der: Borrar Zona'
+  button_zone_create: '&aCrear Zona'
+  zone_create_ready_lore:
+  - '&7Crear zona basada en'
+  - '&7tu selección actual.'
+  zone_create_locked_lore:
+  - '&cPrimero tenés que seleccionar un área'
+  - '&ccon la Varita de Aegis.'
+  zone_evicted: '&eInquilino desalojado de {ZONE}.'
+  zone_button_lore:
+  - '&7Crea y gestiona sub-parcelas'
+  - '&7que pueden ser alquiladas.'
+
+  # --- Biomes ---
+  biome_gui_title: '&2Bioma'
+  biome_changed: '&a✔ Bioma cambiado a {BIOME}.'
+  biome_cost_paid: '&e💰 Pagaste &6{AMOUNT}&e para cambiar el bioma.'
+  biome_select_lore:
+  - '&7Establece el bioma a {BIOME}.'
+  - '&7Costo: &e{COST}'
+  - ' '
+  - '&8[&c!&8] &7Solo cambio visual.'
+  - '&7Los bloques no se reemplazan.'
+  biome_button_lore:
+  - '&7Cambia el estilo visual'
+  - '&7del bioma de tu parcela.'
+
+  # --- Likes ---
+  like_success: '&a✔ Te gusta esto. Likes totales: &e{AMOUNT}'
+  like_removed: '&eSacaste tu like.'
+  like_own_plot: '&cError: No podés darle like a tu propia parcela.'
+  like_disabled: '&cLikes desactivados en este servidor.'
+
+  # --- Flags (Botones) ---
+  button_pvp_on: '&a⚔ PvP: ON'
+  button_pvp_off: '&c⚔ PvP: OFF'
+  pvp_toggle_lore:
+  - '&7ON: Jugadores no pueden dañarse.'
+  - '&7OFF: PvP normal.'
+
+  button_containers_on: '&a📦 Contenedores: Protegidos'
+  button_containers_off: '&c📦 Contenedores: Públicos'
+  container_toggle_lore:
+  - '&7ON: Solo miembros abren cofres.'
+  - '&7OFF: Cualquiera puede abrir cofres.'
+
+  button_mobs_on: '&a🧟 Mobs: Protegido'
+  button_mobs_off: '&c🧟 Mobs: Normal'
+  mob_toggle_lore:
+  - '&7ON: Mobs hostiles no te atacan acá.'
+  - '&7OFF: Comportamiento normal.'
+
+  button_pets_on: '&a🐾 Mascotas: Protegidas'
+  button_pets_off: '&c🐾 Mascotas: Vulnerables'
+  pet_toggle_lore:
+  - '&7ON: Mascotas invulnerables.'
+  - '&7OFF: Mascotas pueden recibir daño.'
+
+  button_entity_on: '&a🗿 Entidades: Protegidas'
+  button_entity_off: '&c🗿 Entidades: Vulnerables'
+  entity_toggle_lore:
+  - '&7ON: Marcos y soportes protegidos.'
+  - '&7OFF: Pueden ser rotos.'
+
+  button_farm_on: '&a🌾 Cultivos: Protegidos'
+  button_farm_off: '&c🌾 Cultivos: Vulnerables'
+  farm_toggle_lore:
+  - '&7ON: No se pueden pisotear cultivos.'
+  - '&7OFF: Se rompen al pisar.'
+
+  button_tnt_on: '&a💥 Explosiones: OFF'
+  button_tnt_off: '&c💥 Explosiones: ON'
+  tnt_toggle_lore:
+  - '&7ON: Explosiones no rompen bloques.'
+  - '&7OFF: Explosiones causan daño.'
+
+  button_fire_on: '&a🔥 Fuego: Contenido'
+  button_fire_off: '&c🔥 Fuego: Se Expande'
+  fire_toggle_lore:
+  - '&7ON: El fuego no se propaga.'
+  - '&7OFF: El fuego se propaga normal.'
+
+  button_piston_on: '&a🔩 Pistones: Bloqueados'
+  button_piston_off: '&c🔩 Pistones: Normal'
+  piston_toggle_lore:
+  - '&7ON: Pistones no mueven bloques fuera/dentro.'
+  - '&7OFF: Pistones funcionan normal.'
+
+  button_animals_on: '&a🐮 Animales: Protegidos'
+  button_animals_off: '&c🐮 Animales: Vulnerables'
+  animals_toggle_lore:
+  - '&7ON: Animales pasivos invulnerables.'
+  - '&7OFF: Pueden ser matados.'
+
+  button_redstone_on: '&a⚡ Redstone: Bloqueada'
+  button_redstone_off: '&c⚡ Redstone: Permitida'
+  redstone_toggle_lore:
+  - '&7ON: Mecanismos de redstone detenidos.'
+  - '&7OFF: Redstone funciona normal.'
+
+  button_vehicles_on: '&a🛶 Vehículos: Protegidos'
+  button_vehicles_off: '&c🛶 Vehículos: Vulnerables'
+  vehicles_toggle_lore:
+  - '&7ON: Botes/vagonetas protegidos.'
+  - '&7OFF: Cualquiera puede romperlos/usarlos.'
+
+  button_safe_on: '&a🛡 Zona Segura: ON'
+  button_safe_off: '&c🛡 Zona Segura: OFF'
+  safe_toggle_lore:
+  - '&7ON: Protección maestra activada.'
+  - '&7OFF: Usar flags individuales.'
+  safe_zone_enabled: '&aZona Segura activada.'
+  safe_zone_disabled: '&cZona Segura desactivada.'
+
+  button_fly_on: '&b🕊 Vuelo: ON'
+  button_fly_off: '&c🕊 Vuelo: OFF'
+  fly_toggle_lore:
+  - '&7Habilita volar en tu parcela.'
+  - '&7Costo: &6{COST}'
+  flight_enabled: '&aVuelo activado.'
+  flight_disabled: '&cVuelo desactivado.'
+
+  button_entry_on: '&a🚪 Entrada: Permitida'
+  button_entry_off: '&c🚪 Entrada: Denegada'
+  entry_toggle_lore:
+  - '&7Si Denegada, extraños no pueden entrar.'
+
+  button_shop_on: '&a🛒 Tienda: Pública'
+  button_shop_off: '&c🛒 Tienda: Privada'
+  shop_toggle_lore:
+  - '&7Permite a visitantes usar tiendas/interactuar.'
+  - '&7Costo: &6{COST}'
+
+  button_cosmetics: '&dCosméticos'
+  cosmetics_lore:
+  - '&7Efectos visuales para tu parcela.'
+  cosmetics_gui_title: '&dCosméticos'
+  cosmetics_border_none: '&cSin Efecto'
+  cosmetics_status_selected: '&a(Activo)'
+  cosmetics_status_free: '&aGratis'
+  cosmetics_click_buy: '&eClic Izq: Comprar'
+  cosmetics_click_apply: '&eClic Izq: Aplicar'
+  cosmetics_click_disable: '&7Clic para quitar.'
+  cosmetics_removed: '&eEfecto removido.'
+  cosmetics_already_active: '&cEste efecto ya está activo.'
+  cosmetic_purchased: '&a✔ Cosmético comprado y aplicado.'
+
+  button_flags_info: '&6📜 Info de Protección'
+  flags_info_lore:
+  - '&7Verde = ON (Protegido/Seguro)'
+  - '&7Rojo = OFF (Normal/Vulnerable)'
+
+  # --- Settings ---
+  settings_menu_title: '&9⚙ Preferencias'
+  button_sounds_on: '&a🔊 Sonidos: ON'
+  button_sounds_off: '&c🔇 Sonidos: OFF'
+  button_sounds_disabled_global: '&7🔇 Sonidos: Desact. por Server'
+  sounds_toggle_lore:
+  - '&7Activar/Desactivar sonidos del menú.'
+  sounds_toggle_global_disabled_lore:
+  - '&7Los sonidos están desactivados globalmente.'
+  settings_gui_not_toggle: '&cEstos ejemplos no se cambian aquí.'

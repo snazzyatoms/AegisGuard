@@ -250,22 +250,21 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         // 1. Check Budget (Claim Blocks)
         if (!blocks.canAfford(uuid, area)) {
             long missing = area - blocks.getAvailableBlocks(uuid);
-            sendKey(p, "claim_blocks_not_enough", 
-                "&c❌ You need &e" + missing + "&c more claim blocks to claim this area.",
-                Map.of("NEEDED", String.valueOf(missing), "AREA", String.valueOf(area))
+            sendKey(p, "claim_blocks_not_enough",
+                    "&c❌ You need &e" + missing + "&c more claim blocks to claim this area.",
+                    Map.of("NEEDED", String.valueOf(missing), "AREA", String.valueOf(area))
             );
             plugin.effects().playError(p);
             return;
         }
 
         // 2. Check First Claim Limit (Starter Flag)
-        // If they haven't used their starter, enforce the limit (default 2500 blocks or config)
         if (!blocks.getOrCreate(uuid).hasClaimedStarter() && !p.hasPermission("aegis.admin.bypass-limits")) {
-            long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000); // Changed default to ~32x32 based on conversation
+            long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000);
             if (area > maxStarter) {
-                sendKey(p, "first_claim_limit_reached", 
-                    "&c❌ First claim limit exceeded! Max size: &e" + maxStarter + "&c blocks. (You selected &e" + area + "&c)",
-                    Map.of("LIMIT", String.valueOf(maxStarter), "AREA", String.valueOf(area))
+                sendKey(p, "first_claim_limit_reached",
+                        "&c❌ First claim limit exceeded! Max size: &e" + maxStarter + "&c blocks. (You selected &e" + area + "&c)",
+                        Map.of("LIMIT", String.valueOf(maxStarter), "AREA", String.valueOf(area))
                 );
                 plugin.effects().playError(p);
                 return;
@@ -273,28 +272,18 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         // 3. Attempt creation via SelectionService
-        // We pass a callback or rely on SelectionService to return boolean.
-        // Assuming confirmClaim handles the internal plot creation logic.
-        // Ideally, SelectionService should verify and return success, but we hook in here.
-        
-        // Note: For 1.2.4 structure, we will assume SelectionService creates the plot.
-        // We need to commit the starter flag *after* success.
-        
-        // Since confirmClaim is void in your previous code, let's trust it runs.
-        // In a perfect world, SelectionService returns boolean success.
         plugin.selection().confirmClaim(p);
-        
-        // IF successful (we assume success if confirmClaim didn't throw), mark starter as used.
-        // Ideally, modify SelectionService to return true/false, but for now:
-        if (plugin.store().getPlotAt(p.getLocation()) != null 
-            && plugin.store().getPlotAt(p.getLocation()).getOwner().equals(uuid)) {
-            
+
+        // Mark starter as used only after success
+        if (plugin.store().getPlotAt(p.getLocation()) != null
+                && plugin.store().getPlotAt(p.getLocation()).getOwner().equals(uuid)) {
+
             if (!blocks.getOrCreate(uuid).hasClaimedStarter()) {
                 blocks.setStarterClaimed(uuid, true);
             }
-            
+
             // Recalculate cache
-            blocks.getUsedBlocks(uuid); 
+            blocks.getUsedBlocks(uuid);
         }
     }
 
@@ -411,9 +400,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendMsg(p, "&cInvalid direction. Use: &f" + String.join(", ", RESIZE_DIRECTIONS));
             return;
         }
-        
-        // Note: Resize also consumes claim blocks. 
-        // Ideally, integrate budget check into SelectionService.resizePlot too!
+
         plugin.selection().resizePlot(p, direction, amount);
     }
 
@@ -536,24 +523,33 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.effects().playConfirm(p);
     }
 
+    // ✅ UPDATED: crash-safe savePlot after welcome/farewell changes
     private void handleWelcomeFarewell(Player p, String[] args, boolean isWelcome) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
             sendKey(p, "no_plot_here", "&cYou must be standing inside a plot you own to do that.");
             return;
         }
+
         if (args.length < 2) {
             if (isWelcome) plot.setWelcomeMessage(null);
             else plot.setFarewellMessage(null);
+
+            plugin.store().savePlot(plot);      // ✅ instant persist (crash-safe)
             plugin.store().setDirty(true);
+
             if (isWelcome) sendKey(p, "welcome-cleared", "&eWelcome message cleared.");
             else sendKey(p, "farewell-cleared", "&eFarewell message cleared.");
             return;
         }
+
         String msg = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         if (isWelcome) plot.setWelcomeMessage(msg);
         else plot.setFarewellMessage(msg);
+
+        plugin.store().savePlot(plot);          // ✅ instant persist (crash-safe)
         plugin.store().setDirty(true);
+
         if (isWelcome) sendKey(p, "welcome-set", "&aWelcome message set.");
         else sendKey(p, "farewell-set", "&aFarewell message set.");
     }

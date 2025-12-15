@@ -173,10 +173,6 @@ public class AegisGuard extends JavaPlugin {
 
         this.configMgr = new AGConfig(this);
 
-        // ✅ NEW: protection hook compatibility layer (registers WorldGuard hook, etc.)
-        this.protectionHooks = new ProtectionHookManager(this);
-        this.protectionHooks.registerDefaults();
-
         // --- 2. STORAGE INIT ---
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
 
@@ -282,7 +278,9 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         startClaimBlockTask(); // ✅ NEW
 
+        // ✅ Hooks (includes protection compatibility layer)
         initializeHooks();
+
         getLogger().info("AegisGuard enabled successfully.");
     }
 
@@ -295,6 +293,15 @@ public class AegisGuard extends JavaPlugin {
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new AegisPAPIExpansion(this).register();
+        }
+
+        // ✅ NEW: protection hook compatibility layer (WorldGuard, GP, Towny, etc.)
+        try {
+            this.protectionHooks = new ProtectionHookManager(this);
+            this.protectionHooks.registerDefaults();
+        } catch (Throwable t) {
+            this.protectionHooks = null;
+            getLogger().warning("ProtectionHookManager could not be initialized: " + t.getMessage());
         }
 
         // mcMMO / Jobs hooks are 1.3.0-only and intentionally disabled in 1.2.2

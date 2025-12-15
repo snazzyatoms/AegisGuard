@@ -20,8 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlotGreetingListener implements Listener {
 
     private final AegisGuard plugin;
-
-    // Tracks the last plot the player was in (by plotId). Prevents spam.
     private final Map<UUID, UUID> lastPlotId = new ConcurrentHashMap<>();
 
     public PlotGreetingListener(AegisGuard plugin) {
@@ -34,7 +32,7 @@ public class PlotGreetingListener implements Listener {
         Location to = e.getTo();
         if (to == null) return;
 
-        // Skip micro-moves (most important anti-spam)
+        // Anti-spam: ignore same-block moves
         if (from.getWorld() == to.getWorld()
                 && from.getBlockX() == to.getBlockX()
                 && from.getBlockY() == to.getBlockY()
@@ -44,39 +42,36 @@ public class PlotGreetingListener implements Listener {
 
         Player player = e.getPlayer();
 
-        Plot fromPlot = plugin.data().getPlotAt(from);
-        Plot toPlot = plugin.data().getPlotAt(to);
+        Plot fromPlot = plugin.store().getPlotAt(from);
+        Plot toPlot = plugin.store().getPlotAt(to);
 
         UUID fromId = (fromPlot == null) ? null : fromPlot.getPlotId();
         UUID toId = (toPlot == null) ? null : toPlot.getPlotId();
 
-        // If nothing changed, bail (extra anti-spam safety)
         UUID last = lastPlotId.get(player.getUniqueId());
         if ((toId == null && last == null) || (toId != null && toId.equals(last))) {
             return;
         }
 
-        // Leaving a plot
+        // Leave
         if (fromPlot != null && (toPlot == null || !fromId.equals(toId))) {
             plugin.getServer().getPluginManager().callEvent(new PlotLeaveEvent(fromPlot, player));
             sendFarewell(player, fromPlot);
         }
 
-        // Entering a plot
+        // Enter
         if (toPlot != null && (fromPlot == null || !toId.equals(fromId))) {
             PlotEnterEvent enter = new PlotEnterEvent(toPlot, player);
             plugin.getServer().getPluginManager().callEvent(enter);
 
-            // If someone cancels entry, bounce them back
             if (enter.isCancelled()) {
-                player.teleportAsync(from); // Paper/Folia safe
+                player.teleportAsync(from); // Folia/Paper-safe
                 return;
             }
 
             sendWelcome(player, toPlot);
         }
 
-        // Update tracker
         lastPlotId.put(player.getUniqueId(), toId);
     }
 
@@ -86,16 +81,17 @@ public class PlotGreetingListener implements Listener {
     }
 
     private void sendWelcome(Player player, Plot plot) {
-        String msg = plot.getWelcomeMessage();
+        // Don’t message the owner unless you want that
+        // if (plot.getOwner().equals(player.getUniqueId())) return;
 
-        // Default fallback if owner never set one
+        String msg = plot.getWelcomeMessage();
         if (msg == null || msg.isBlank()) {
             msg = "&bEntering: &f" + plot.getOwnerName() + "&b's claim";
         }
 
         player.sendMessage(color(msg));
 
-        // Optional: if you want Titles too, use entryTitle/entrySubtitle when present
+        // Optional title/subtitle if you want
         String title = plot.getEntryTitle();
         String sub = plot.getEntrySubtitle();
         if (title != null && !title.isBlank()) {
@@ -105,11 +101,9 @@ public class PlotGreetingListener implements Listener {
 
     private void sendFarewell(Player player, Plot plot) {
         String msg = plot.getFarewellMessage();
-
         if (msg == null || msg.isBlank()) {
             msg = "&7Leaving: &f" + plot.getOwnerName() + "&7's claim";
         }
-
         player.sendMessage(color(msg));
     }
 

@@ -1,41 +1,32 @@
 package com.aegisguard.hooks.protection;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
 /**
- * Implementations should be lightweight and safe:
- * - return ABSTAIN if the plugin isn't enabled or anything is uncertain
- * - never throw; fail open as ABSTAIN (manager decides)
+ * Generic "other protection plugin" adapter.
+ * Use reflection unless the plugin offers a stable public API dependency.
  */
 public interface ProtectionHook {
 
-    /**
-     * Display name of the hooked plugin ("WorldGuard", "GriefPrevention", etc.)
-     */
-    String getName();
+    /** Human/plugin identifier (ex: "WorldGuard", "GriefPrevention"). */
+    String id();
+
+    /** True if the hooked plugin is present AND the hook initialized successfully. */
+    boolean isActive();
 
     /**
-     * Whether this hook is currently usable (plugin present/enabled + dependencies satisfied).
+     * True if THIS location is inside another plugin's protected area/claim/region.
+     * This is used to prevent AegisGuard from overlapping or "fighting" other protection systems.
      */
-    boolean isAvailable();
+    boolean isProtectedElsewhere(Location location);
 
     /**
-     * Check if a player can build (place/break) at a location.
+     * Area scan helper: returns true if ANY sampled points in the area are protected elsewhere.
+     * Used for "can I claim here?" checks.
      */
-    ProtectionResult canBuild(Player player, Location location);
-
-    /**
-     * Optional: check if player can interact (doors, chests, buttons).
-     */
-    default ProtectionResult canInteract(Player player, Location location) {
-        return ProtectionResult.ABSTAIN;
-    }
-
-    /**
-     * Optional: check if PvP is allowed at a location.
-     */
-    default ProtectionResult canPvp(Player attacker, Player victim, Location location) {
-        return ProtectionResult.ABSTAIN;
+    default boolean isAreaProtectedElsewhere(String world, int x1, int z1, int x2, int z2) {
+        // Default implementation: conservative sampling at chunk corners + center-ish.
+        // Hooks can override for better precision.
+        return false;
     }
 }

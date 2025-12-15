@@ -11,6 +11,9 @@ language_styles:
     - old_english
     - hybrid_english
     - modern_english
+    - spanish_mx
+    - spanish_ar
+
 
 # ======================================
 # OLD ENGLISH STYLE (Default)

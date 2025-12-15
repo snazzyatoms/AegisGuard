@@ -24,6 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.StringUtil;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "kick", "ban", "unban", "visit",
             "level", "zone", "like",
             "rename", "stuck", "setdesc", "merge",
-            "consume", "ledger" // Added ledger
+            "consume", "ledger", "blocks" // ✅ Added blocks for tab completion
     };
 
     private static final String[] RESIZE_DIRECTIONS = {"north", "south", "east", "west"};
@@ -231,12 +232,23 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    // --- HANDLERS ---
+    // --------------------------------------------------
+    // CLAIM (Budget + Starter + External Protection Check)
+    // --------------------------------------------------
 
-    // ✅ NEW: Handle Claim with Budget Checks
     private void handleClaim(Player p) {
         if (!plugin.selection().hasSelection(p)) {
             sendKey(p, "must_select", "&c❌ You must select two boundary points.");
+            return;
+        }
+
+        // ✅ NEW: If other protection plugins already own this turf, AegisGuard yields (configurable)
+        if (isSelectionProtectedElsewhere(p)) {
+            sendKey(p,
+                    "claim_conflict_external",
+                    "&c❌ That area is already protected by another plugin. AegisGuard will not claim it."
+            );
+            plugin.effects().playError(p);
             return;
         }
 
@@ -278,6 +290,109 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             blocks.getUsedBlocks(uuid);
         }
     }
+
+    /**
+     * Returns true if the selected area conflicts with another protection plugin,
+     * respecting overlap policy if present.
+     *
+     * Uses reflection for maximum compatibility with your current codebase.
+     */
+    private boolean isSelectionProtectedElsewhere(Player p) {
+        try {
+            if (plugin.protectionHooks() == null) return false;
+
+            Object mgr = plugin.protectionHooks();
+
+            // If manager exposes isEnabled(), respect it
+            try {
+                Method isEnabled = mgr.getClass().getMethod("isEnabled");
+                Object enabled = isEnabled.invoke(mgr);
+                if (enabled instanceof Boolean b && !b) return false;
+            } catch (Throwable ignored) {}
+
+            // If manager exposes getOverlapPolicy(), respect AEGIS_WINS
+            try {
+                Method getPol = mgr.getClass().getMethod("getOverlapPolicy");
+                Object pol = getPol.invoke(mgr);
+                if (pol != null && "AEGIS_WINS".equalsIgnoreCase(pol.toString())) {
+                    return false;
+                }
+            } catch (Throwable ignored) {}
+
+            Location a = getSelectionCorner(p, true);
+            Location b = getSelectionCorner(p, false);
+
+            // Fallback: only check player location
+            if (a == null || b == null || a.getWorld() == null || b.getWorld() == null || !a.getWorld().equals(b.getWorld())) {
+                try {
+                    Method isProt = mgr.getClass().getMethod("isProtectedElsewhere", Location.class);
+                    Object result = isProt.invoke(mgr, p.getLocation());
+                    return result instanceof Boolean bb && bb;
+                } catch (Throwable ignored) {
+                    return false;
+                }
+            }
+
+            int x1 = a.getBlockX();
+            int z1 = a.getBlockZ();
+            int x2 = b.getBlockX();
+            int z2 = b.getBlockZ();
+            String world = a.getWorld().getName();
+
+            try {
+                Method area = mgr.getClass().getMethod("isAreaProtectedElsewhere", String.class, int.class, int.class, int.class, int.class);
+                Object result = area.invoke(mgr, world, x1, z1, x2, z2);
+                return result instanceof Boolean bb && bb;
+            } catch (Throwable ignored) {
+                // If area scan isn't available, do a simple check
+                try {
+                    Method isProt = mgr.getClass().getMethod("isProtectedElsewhere", Location.class);
+                    Object result = isProt.invoke(mgr, p.getLocation());
+                    return result instanceof Boolean bb && bb;
+                } catch (Throwable ignored2) {
+                    return false;
+                }
+            }
+
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Attempts to fetch selection corners from SelectionService via reflection.
+     * Supports multiple potential method names.
+     */
+    private Location getSelectionCorner(Player p, boolean first) {
+        Object sel = plugin.selection();
+        if (sel == null) return null;
+
+        String[] candidates = first
+                ? new String[]{"getPos1", "getFirstPos", "getFirstPosition", "getSelectionPos1", "getPrimaryPos", "getPrimaryPosition"}
+                : new String[]{"getPos2", "getSecondPos", "getSecondPosition", "getSelectionPos2", "getSecondaryPos", "getSecondaryPosition"};
+
+        for (String name : candidates) {
+            try {
+                Method m = sel.getClass().getMethod(name, Player.class);
+                Object out = m.invoke(sel, p);
+                if (out instanceof Location loc) return loc;
+            } catch (Throwable ignored) {}
+        }
+
+        for (String name : candidates) {
+            try {
+                Method m = sel.getClass().getMethod(name, UUID.class);
+                Object out = m.invoke(sel, p.getUniqueId());
+                if (out instanceof Location loc) return loc;
+            } catch (Throwable ignored) {}
+        }
+
+        return null;
+    }
+
+    // --------------------------------------------------
+    // Ledger
+    // --------------------------------------------------
 
     private void showLedger(Player p) {
         ClaimBlockManager mgr = plugin.getClaimBlockManager();

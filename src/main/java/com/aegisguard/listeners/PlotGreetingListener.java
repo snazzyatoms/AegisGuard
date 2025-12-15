@@ -5,66 +5,115 @@ import com.aegisguard.api.events.PlotEnterEvent;
 import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlotGreetingListener implements Listener {
 
     private final AegisGuard plugin;
+
+    // Tracks the last plot the player was in (by plotId). Prevents spam.
+    private final Map<UUID, UUID> lastPlotId = new ConcurrentHashMap<>();
 
     public PlotGreetingListener(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEnter(PlotEnterEvent e) {
-        Plot plot = e.getPlot();
-        var p = e.getPlayer();
+    public void onMove(PlayerMoveEvent e) {
+        Location from = e.getFrom();
+        Location to = e.getTo();
+        if (to == null) return;
 
-        // Title/Sub (from plot custom OR codex default)
-        String title = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
-                ? plot.getEntryTitle()
-                : plugin.codex().tr(p, "title_entering", Map.of("PLOT_NAME", safe(plot), "OWNER", plot.getOwnerName()));
+        // Skip micro-moves (most important anti-spam)
+        if (from.getWorld() == to.getWorld()
+                && from.getBlockX() == to.getBlockX()
+                && from.getBlockY() == to.getBlockY()
+                && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
 
-        String sub = (plot.getEntrySubtitle() != null && !plot.getEntrySubtitle().isBlank())
-                ? plot.getEntrySubtitle()
-                : plugin.codex().tr(p, "subtitle_entering", Map.of("PLOT_NAME", safe(plot), "OWNER", plot.getOwnerName()));
+        Player player = e.getPlayer();
 
-        p.sendTitle(cc(title), cc(sub), 10, 40, 10);
+        Plot fromPlot = plugin.data().getPlotAt(from);
+        Plot toPlot = plugin.data().getPlotAt(to);
 
-        // Welcome message (plot custom, optional)
-        String welcome = plot.getWelcomeMessage();
-        if (welcome != null && !welcome.isBlank()) {
-            p.sendMessage(cc(welcome
-                    .replace("{PLOT}", safe(plot))
-                    .replace("{OWNER}", plot.getOwnerName() == null ? "" : plot.getOwnerName())
-            ));
+        UUID fromId = (fromPlot == null) ? null : fromPlot.getPlotId();
+        UUID toId = (toPlot == null) ? null : toPlot.getPlotId();
+
+        // If nothing changed, bail (extra anti-spam safety)
+        UUID last = lastPlotId.get(player.getUniqueId());
+        if ((toId == null && last == null) || (toId != null && toId.equals(last))) {
+            return;
+        }
+
+        // Leaving a plot
+        if (fromPlot != null && (toPlot == null || !fromId.equals(toId))) {
+            plugin.getServer().getPluginManager().callEvent(new PlotLeaveEvent(fromPlot, player));
+            sendFarewell(player, fromPlot);
+        }
+
+        // Entering a plot
+        if (toPlot != null && (fromPlot == null || !toId.equals(fromId))) {
+            PlotEnterEvent enter = new PlotEnterEvent(toPlot, player);
+            plugin.getServer().getPluginManager().callEvent(enter);
+
+            // If someone cancels entry, bounce them back
+            if (enter.isCancelled()) {
+                player.teleportAsync(from); // Paper/Folia safe
+                return;
+            }
+
+            sendWelcome(player, toPlot);
+        }
+
+        // Update tracker
+        lastPlotId.put(player.getUniqueId(), toId);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        lastPlotId.remove(e.getPlayer().getUniqueId());
+    }
+
+    private void sendWelcome(Player player, Plot plot) {
+        String msg = plot.getWelcomeMessage();
+
+        // Default fallback if owner never set one
+        if (msg == null || msg.isBlank()) {
+            msg = "&bEntering: &f" + plot.getOwnerName() + "&b's claim";
+        }
+
+        player.sendMessage(color(msg));
+
+        // Optional: if you want Titles too, use entryTitle/entrySubtitle when present
+        String title = plot.getEntryTitle();
+        String sub = plot.getEntrySubtitle();
+        if (title != null && !title.isBlank()) {
+            player.sendTitle(color(title), color(sub == null ? "" : sub), 10, 40, 10);
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onLeave(PlotLeaveEvent e) {
-        Plot plot = e.getPlot();
-        var p = e.getPlayer();
+    private void sendFarewell(Player player, Plot plot) {
+        String msg = plot.getFarewellMessage();
 
-        String farewell = plot.getFarewellMessage();
-        if (farewell != null && !farewell.isBlank()) {
-            p.sendMessage(cc(farewell
-                    .replace("{PLOT}", safe(plot))
-                    .replace("{OWNER}", plot.getOwnerName() == null ? "" : plot.getOwnerName())
-            ));
+        if (msg == null || msg.isBlank()) {
+            msg = "&7Leaving: &f" + plot.getOwnerName() + "&7's claim";
         }
+
+        player.sendMessage(color(msg));
     }
 
-    private String safe(Plot plot) {
-        // if you later add plot names, swap this
-        return (plot.getOwnerName() != null ? plot.getOwnerName() : "Unknown") + "'s Claim";
-    }
-
-    private String cc(String s) {
+    private String color(String s) {
         return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s);
     }
 }

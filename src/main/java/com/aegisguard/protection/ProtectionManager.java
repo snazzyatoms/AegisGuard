@@ -4,7 +4,9 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotEnterEvent;
 import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
+import com.aegisguard.hooks.protection.HookAction;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
@@ -49,13 +51,27 @@ public class ProtectionManager implements Listener {
     }
 
     // --------------------------------------------------
-    // LANGUAGE (Codex helper)
+    // COMPATIBILITY (external protection plugins)
     // --------------------------------------------------
 
     /**
-     * Local helper to read protection-related messages from the Aegis Codex.
-     * Falls back to a hardcoded string if Codex is unavailable or the key is missing.
+     * If another protection plugin claims/controls this location, AegisGuard yields.
+     * This prevents “double-cancels”, conflicting behavior, and message spam.
      */
+    private boolean shouldYieldToExternalProtection(Location loc, Player actor, HookAction action) {
+        try {
+            if (plugin.protectionHooks() != null) {
+                return plugin.protectionHooks().shouldBypass(loc, actor, action);
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    // --------------------------------------------------
+    // LANGUAGE (Codex helper)
+    // --------------------------------------------------
+
     private String tr(Player player, String key, String fallback) {
         try {
             if (plugin.codex() != null) {
@@ -73,15 +89,6 @@ public class ProtectionManager implements Listener {
     // FLAG HELPERS (sync with Codex semantics)
     // --------------------------------------------------
 
-    /**
-     * Generic "is this protection ON" helper.
-     *
-     * Semantics:
-     *  - Every flag is ultimately controlled by the plot's own flag value.
-     *  - Safe zones / server zones bias the DEFAULT to "ON" for important flags
-     *    when no explicit flag has been set yet.
-     *  - Once the player/admin toggles a flag in the GUI, that explicit value always wins.
-     */
     private boolean isProtectionActive(Plot plot, String flagKey, boolean defaultValue) {
         if (plot == null || flagKey == null) {
             return false;
@@ -89,11 +96,8 @@ public class ProtectionManager implements Listener {
 
         String key = flagKey.toLowerCase();
 
-        // Start from the caller's default (e.g. pvp/animals default ON, others OFF)
         boolean effectiveDefault = defaultValue;
 
-        // In server/safe zones, lean towards safety by default for important flags,
-        // but do NOT hard-force them; explicit per-plot values still override.
         if (plot.isServerZone() || plot.getFlag("safe_zone", false)) {
             switch (key) {
                 case "pvp":
@@ -112,17 +116,9 @@ public class ProtectionManager implements Listener {
             }
         }
 
-        // Stored value (if present) always wins over the derived default.
         return plot.getFlag(key, effectiveDefault);
     }
 
-    /**
-     * Public helper used by GUIs / hooks to check a plot flag in a
-     * protection-centric way.
-     *
-     * Returns true when the associated protection is ACTIVE, not when
-     * the vanilla behavior is allowed.
-     */
     public boolean isFlagEnabled(Plot plot, String flagKey) {
         if (plot == null || flagKey == null) {
             return false;
@@ -131,9 +127,6 @@ public class ProtectionManager implements Listener {
         String key = flagKey.toLowerCase();
         boolean defaultValue;
 
-        // Match in-world behavior:
-        // - pvp & animals default to ON (protection enabled)
-        // - everything else defaults to OFF unless explicitly set
         switch (key) {
             case "pvp":
             case "animals":
@@ -147,18 +140,10 @@ public class ProtectionManager implements Listener {
         return isProtectionActive(plot, key, defaultValue);
     }
 
-    /**
-     * Strongly typed helper used by mob-barrier / GUIs.
-     * Single source of truth for "mob protection ON?"
-     */
     public boolean isMobProtectionEnabled(Plot plot) {
         return isProtectionActive(plot, "mobs", false);
     }
 
-    /**
-     * Safe zone helper. Safe zones primarily represent structural / environmental
-     * protections (explosions, block damage, etc.).
-     */
     public boolean isSafeZoneEnabled(Plot plot) {
         return plot != null && plot.getFlag("safe_zone", false);
     }
@@ -184,8 +169,12 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(e.getLocation());
+        if (plot == null) return;
 
-        // Mob protection ON => block hostile spawns in this dominion
+        if (shouldYieldToExternalProtection(e.getLocation(), null, HookAction.MOB_SPAWN)) {
+            return;
+        }
+
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
         }
@@ -198,14 +187,17 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) return;
 
-        // Mob protection ON => hostile mobs cannot target players in this plot
+        if (shouldYieldToExternalProtection(player.getLocation(), player, HookAction.MOB_TARGET)) {
+            return;
+        }
+
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
         }
     }
 
-    // Hostile mobs cannot damage players inside protected plots
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobDamagePlayer(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player victim)) {
@@ -228,13 +220,16 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        if (shouldYieldToExternalProtection(victim.getLocation(), victim, HookAction.MOB_DAMAGE_PLAYER)) {
+            return;
+        }
+
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
             plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
         }
     }
 
-    // hostile mobs cannot damage animals or tameable pets when animals protection is ON
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobDamageAnimal(EntityDamageByEntityEvent e) {
         Entity target = e.getEntity();
@@ -259,6 +254,10 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        if (shouldYieldToExternalProtection(target.getLocation(), null, HookAction.MOB_DAMAGE_ANIMAL)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", null, target.getLocation());
@@ -273,7 +272,6 @@ public class ProtectionManager implements Listener {
     public void onPlayerMove(PlayerMoveEvent e) {
         if (e.getTo() == null) return;
 
-        // Only react when changing X/Z
         if (e.getFrom().getBlockX() == e.getTo().getBlockX()
                 && e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
             return;
@@ -283,7 +281,6 @@ public class ProtectionManager implements Listener {
         Plot from = plugin.store().getPlotAt(e.getFrom());
         Plot to = plugin.store().getPlotAt(e.getTo());
 
-        // --- Leaving plot ---
         if (from != null && !from.equals(to)) {
             Bukkit.getPluginManager().callEvent(new PlotLeaveEvent(from, p));
 
@@ -291,7 +288,6 @@ public class ProtectionManager implements Listener {
                 sendPlotMessage(p, from.getFarewellMessage());
             }
 
-            // Disable flight when leaving a fly-enabled plot (unless admin)
             if (from.getFlag("fly", false) && !plugin.isAdmin(p)) {
                 plugin.runMain(p, () -> {
                     p.setFlying(false);
@@ -300,11 +296,9 @@ public class ProtectionManager implements Listener {
                 });
             }
 
-            // Clear plot-level buffs when leaving
             clearPlotBuffs(p, from);
         }
 
-        // --- Entering plot (before entry checks so custom events still fire) ---
         if (to != null && !to.equals(from)) {
             PlotEnterEvent enter = new PlotEnterEvent(to, p);
             Bukkit.getPluginManager().callEvent(enter);
@@ -321,15 +315,12 @@ public class ProtectionManager implements Listener {
                 plugin.effects().playCustomEffect(p, to.getEntryEffect(), to.getCenter(plugin));
             }
 
-            // Flight: ON => allow trusted players to fly
             if (to.getFlag("fly", false) && to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                 plugin.runMain(p, () -> p.setAllowFlight(true));
             }
         }
 
-        // --- Entry / ban logic + buffs ---
         if (to != null) {
-            // Banned from this plot
             if (to.isBanned(p.getUniqueId())) {
                 e.setCancelled(true);
                 String bannedMsg = tr(
@@ -341,7 +332,6 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
-            // Entry flag: true = OPEN, false = CLOSED (for non-trusted)
             if (!to.getFlag("entry", true) && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                 e.setCancelled(true);
                 String deniedMsg = tr(
@@ -357,7 +347,6 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    // Clear buffs on player quit so nothing lingers between sessions
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
@@ -384,13 +373,16 @@ public class ProtectionManager implements Listener {
 
         Player attacker = resolveAttacker(e.getDamager());
         if (attacker == null) {
-            return; // not a player-sourced attack
+            return;
         }
         if (plugin.isAdmin(attacker)) {
-            return; // admins bypass PvP rules
+            return;
         }
 
-        // pvp flag: true = PvP protection ON (block PvP)
+        if (shouldYieldToExternalProtection(victim.getLocation(), attacker, HookAction.PVP)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "pvp", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -415,6 +407,12 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(target.getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(target.getLocation(), p, HookAction.ANIMAL_DAMAGE)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", p, target.getLocation());
@@ -435,6 +433,12 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(clicked.getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(clicked.getLocation(), p, HookAction.ANIMAL_INTERACT)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", p, clicked.getLocation());
@@ -457,10 +461,10 @@ public class ProtectionManager implements Listener {
         Material type = e.getClickedBlock().getType();
         boolean redstone =
                 type.name().contains("BUTTON") ||
-                type.name().contains("LEVER") ||
-                type.name().contains("PRESSURE_PLATE") ||
-                type.name().contains("DOOR") ||
-                type.name().contains("TRAPDOOR");
+                        type.name().contains("LEVER") ||
+                        type.name().contains("PRESSURE_PLATE") ||
+                        type.name().contains("DOOR") ||
+                        type.name().contains("TRAPDOOR");
 
         if (!redstone) {
             return;
@@ -472,7 +476,12 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
-        // redstone flag: true = redstone / mechanisms blocked
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(e.getClickedBlock().getLocation(), p, HookAction.REDSTONE_INTERACT)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "redstone", false)) {
             e.setCancelled(true);
             plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
@@ -493,7 +502,12 @@ public class ProtectionManager implements Listener {
         }
 
         Plot plot = plugin.store().getPlotAt(e.getVehicle().getLocation());
-        // vehicles flag: true = vehicles protected, false = vanilla
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(e.getVehicle().getLocation(), p, HookAction.VEHICLE_ENTER)) {
+            return;
+        }
+
         if (isProtectionActive(plot, "vehicles", false)) {
             e.setCancelled(true);
             plugin.effects().playEffect("vehicles", "deny", p, e.getVehicle().getLocation());
@@ -525,7 +539,7 @@ public class ProtectionManager implements Listener {
                     if (type != null) {
                         p.addPotionEffect(new PotionEffect(
                                 type,
-                                100,           // ~5 seconds, refreshed while in plot
+                                100,
                                 amp,
                                 true,
                                 false,
@@ -570,7 +584,6 @@ public class ProtectionManager implements Listener {
         long now = System.currentTimeMillis();
         if (messageCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return;
 
-        // Still using MessagesUtil purely as a formatter/prefix helper.
         plugin.runMain(p, () -> p.sendMessage(plugin.msg().color(msg)));
         messageCooldowns.put(p.getUniqueId(), now + TimeUnit.SECONDS.toMillis(5));
     }

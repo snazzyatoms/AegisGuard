@@ -24,6 +24,7 @@ import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.language.CodexEngine;       // ✅ NEW: Language Engine
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
+import com.aegisguard.listeners.PlotGreetingListener; // ✅ NEW: Plot enter/leave greeting listener
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;   // ✅ NEW: wand anti-dupe / safety listener
@@ -112,7 +113,7 @@ public class AegisGuard extends JavaPlugin {
      * Prefer this for all NEW message lookups in 1.2.4+.
      */
     public CodexEngine codex() { return codex; }
-    
+
     /**
      * 🧱 New Claim Block Manager entrypoint.
      */
@@ -214,7 +215,7 @@ public class AegisGuard extends JavaPlugin {
             // In 1.2.4 we keep using MessagesUtil for player prefs
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
-            
+
             // In the future we can migrate player language/sound prefs into Codex
             // and stop touching messages.yml entirely.
         });
@@ -223,6 +224,9 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
+
+        // ✅ NEW: Plot enter/leave greetings (welcome/farewell + titles)
+        Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
 
         // ✅ NEW: Wand safety (no dupes, no chest-moving, drop = vanish)
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
@@ -337,7 +341,7 @@ public class AegisGuard extends JavaPlugin {
         saveCodexResourceIfMissing("old_english.yml");
         saveCodexResourceIfMissing("hybrid_english.yml");
         saveCodexResourceIfMissing("modern_english.yml");
-        
+
         // ✅ NEW: Added Spanish Files
         saveCodexResourceIfMissing("spanish_mx.yml");
         saveCodexResourceIfMissing("spanish_ar.yml");
@@ -497,7 +501,7 @@ public class AegisGuard extends JavaPlugin {
 
         long earnIntervalMinutes = cfg().raw().getLong("claim_blocks.earn.playtime.interval_minutes", 10);
         long intervalTicks = earnIntervalMinutes * 60 * 20; // Convert minutes to ticks
-        
+
         claimBlockTask = scheduleAsyncRepeating(new ClaimBlockTask(this), intervalTicks);
     }
 }

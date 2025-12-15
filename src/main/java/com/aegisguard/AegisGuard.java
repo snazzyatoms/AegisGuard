@@ -24,7 +24,7 @@ import com.aegisguard.hooks.WildernessRevertTask;
 import com.aegisguard.language.CodexEngine;       // ✅ NEW: Language Engine
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
-import com.aegisguard.listeners.PlotGreetingListener; // ✅ NEW: Greeting listener
+import com.aegisguard.listeners.PlotGreetingListener; // ✅ NEW: Greeting Listener
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;   // ✅ NEW: wand anti-dupe / safety listener
@@ -225,7 +225,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
 
-        // ✅ NEW: Plot enter/leave greetings (welcome/farewell)
+        // ✅ NEW: Greeting listener (welcome/farewell on plot enter/leave)
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
 
         // ✅ NEW: Wand safety (no dupes, no chest-moving, drop = vanish)
@@ -314,10 +314,6 @@ public class AegisGuard extends JavaPlugin {
 
         // Legacy player prefs still live on MessagesUtil in 1.2.4
         if (messages != null) messages.savePlayerData();
-
-        // In the future, if CodexEngine starts tracking per-player profiles,
-        // we can add something like:
-        // if (codex != null) codex.saveProfilesSync();
 
         instance = null;
         getLogger().info("AegisGuard disabled.");

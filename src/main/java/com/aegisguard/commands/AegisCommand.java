@@ -240,14 +240,12 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        // Calculate Area
         long area = plugin.selection().getSelectionArea(p);
-        if (area <= 0) return; // Should be handled by selection service, but safety first
+        if (area <= 0) return;
 
         ClaimBlockManager blocks = plugin.getClaimBlockManager();
         UUID uuid = p.getUniqueId();
 
-        // 1. Check Budget (Claim Blocks)
         if (!blocks.canAfford(uuid, area)) {
             long missing = area - blocks.getAvailableBlocks(uuid);
             sendKey(p, "claim_blocks_not_enough",
@@ -258,7 +256,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        // 2. Check First Claim Limit (Starter Flag)
         if (!blocks.getOrCreate(uuid).hasClaimedStarter() && !p.hasPermission("aegis.admin.bypass-limits")) {
             long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000);
             if (area > maxStarter) {
@@ -271,18 +268,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // 3. Attempt creation via SelectionService
         plugin.selection().confirmClaim(p);
 
-        // Mark starter as used only after success
-        if (plugin.store().getPlotAt(p.getLocation()) != null
-                && plugin.store().getPlotAt(p.getLocation()).getOwner().equals(uuid)) {
-
+        Plot at = plugin.store().getPlotAt(p.getLocation());
+        if (at != null && uuid.equals(at.getOwner())) {
             if (!blocks.getOrCreate(uuid).hasClaimedStarter()) {
                 blocks.setStarterClaimed(uuid, true);
             }
-
-            // Recalculate cache
             blocks.getUsedBlocks(uuid);
         }
     }
@@ -300,8 +292,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         sendMsg(p, "&7Available: &a" + avail);
         sendMsg(p, "&8&m------------------------");
     }
-
-    // --- EXISTING HANDLERS (Unchanged logic, just cleanup) ---
 
     private void handleRename(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
@@ -324,7 +314,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         plot.setEntryTitle(name);
+
+        // ✅ Persist immediately (prevents loss on crash/restart)
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
+
         sendMsg(p, "&a✔ Plot renamed to: &r" + name);
         plugin.effects().playConfirm(p);
     }
@@ -346,7 +340,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         String desc = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
         desc = ChatColor.translateAlternateColorCodes('&', desc);
         plot.setDescription(desc);
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
+
         sendMsg(p, "&a✔ Plot description updated.");
         plugin.effects().playConfirm(p);
     }
@@ -453,7 +451,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         bPlot.addBan(bTarget.getUniqueId());
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(bPlot);
         plugin.store().setDirty(true);
+
         sendMsg(p, "&cBanned " + bTarget.getName());
         if (bTarget.isOnline() && bPlot.isInside(bTarget.getPlayer().getLocation())) {
             Player online = bTarget.getPlayer();
@@ -477,7 +479,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         OfflinePlayer uTarget = Bukkit.getOfflinePlayer(args[1]);
         uPlot.removeBan(uTarget.getUniqueId());
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(uPlot);
         plugin.store().setDirty(true);
+
         sendMsg(p, "&aUnbanned " + uTarget.getName());
     }
 
@@ -494,7 +500,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         plot.setSpawnLocation(p.getLocation());
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
+
         sendKey(p, "home-set-success", "&aHome position set for this claim.");
         plugin.effects().playConfirm(p);
     }
@@ -523,7 +533,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.effects().playConfirm(p);
     }
 
-    // ✅ UPDATED: crash-safe savePlot after welcome/farewell changes
     private void handleWelcomeFarewell(Player p, String[] args, boolean isWelcome) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
@@ -531,11 +540,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        // Clear if no message text provided
         if (args.length < 2) {
             if (isWelcome) plot.setWelcomeMessage(null);
             else plot.setFarewellMessage(null);
 
-            plugin.store().savePlot(plot);      // ✅ instant persist (crash-safe)
+            // ✅ Persist immediately (this is the big fix)
+            plugin.store().savePlot(plot);
             plugin.store().setDirty(true);
 
             if (isWelcome) sendKey(p, "welcome-cleared", "&eWelcome message cleared.");
@@ -547,7 +558,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         if (isWelcome) plot.setWelcomeMessage(msg);
         else plot.setFarewellMessage(msg);
 
-        plugin.store().savePlot(plot);          // ✅ instant persist (crash-safe)
+        // ✅ Persist immediately (prevents loss on crash/restart)
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
 
         if (isWelcome) sendKey(p, "welcome-set", "&aWelcome message set.");
@@ -571,7 +583,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 return;
             }
             plot.setForSale(true, price);
+
+            // ✅ Persist immediately
+            plugin.store().savePlot(plot);
             plugin.store().setDirty(true);
+
             String formatted = plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT);
             String msg = tr(p, "market-for-sale", "&aPlot listed for &e{PRICE}&a.").replace("{PRICE}", formatted);
             sendMsg(p, msg);
@@ -587,7 +603,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         plot.setForSale(false, 0);
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
+
         sendKey(p, "market-not-for-sale", "&eThis plot is no longer listed for sale.");
     }
 
@@ -625,6 +645,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendKey(p, "like_own_plot", "&cYou cannot like your own plot.");
             return;
         }
+
         if (plugin.cfg().oneLikePerPlayer() && plot.hasLiked(p.getUniqueId())) {
             plot.toggleLike(p.getUniqueId());
             sendKey(p, "like_removed", "&eYour like has been removed from this plot.");
@@ -635,6 +656,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendMsg(p, msg);
             plugin.effects().playConfirm(p);
         }
+
+        // ✅ Persist immediately
+        plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
     }
 

@@ -203,8 +203,12 @@ public class AegisGuard extends JavaPlugin {
         //  - player sound + preference storage
         this.messages = new MessagesUtil(this);
 
-        // 3.c NEW: Claim Block Manager (Bank)
-        this.claimBlockManager = new ClaimBlockManager(this);
+        // 3.c NEW: Claim Block Manager (Bank) — only if enabled
+        if (cfg().raw().getBoolean("claim_blocks.enabled", true)) {
+            this.claimBlockManager = new ClaimBlockManager(this);
+        } else {
+            this.claimBlockManager = null;
+        }
 
         this.gui = new GUIManager(this);
         this.vault = new VaultHook(this);
@@ -296,12 +300,19 @@ public class AegisGuard extends JavaPlugin {
         }
 
         // ✅ NEW: protection hook compatibility layer (WorldGuard, GP, Towny, etc.)
-        try {
-            this.protectionHooks = new ProtectionHookManager(this);
-            this.protectionHooks.registerDefaults();
-        } catch (Throwable t) {
+        // Respect config toggle: hooks.protection_compat.enabled
+        boolean compatEnabled = cfg() != null && cfg().raw().getBoolean("hooks.protection_compat.enabled", true);
+        if (compatEnabled) {
+            try {
+                this.protectionHooks = new ProtectionHookManager(this);
+                this.protectionHooks.registerDefaults();
+            } catch (Throwable t) {
+                this.protectionHooks = null;
+                getLogger().warning("ProtectionHookManager could not be initialized: " + t.getMessage());
+            }
+        } else {
             this.protectionHooks = null;
-            getLogger().warning("ProtectionHookManager could not be initialized: " + t.getMessage());
+            getLogger().info("[AegisGuard] Protection compatibility hooks disabled in config (hooks.protection_compat.enabled=false).");
         }
 
         // mcMMO / Jobs hooks are 1.3.0-only and intentionally disabled in 1.2.2
@@ -513,12 +524,18 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startClaimBlockTask() {
-        // Safe check if disabled in config
+        // Feature toggle: claim_blocks.enabled
+        if (!cfg().raw().getBoolean("claim_blocks.enabled", true)) return;
+
+        // Safe check if playtime earning disabled in config
         if (!cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true)) return;
 
         long earnIntervalMinutes = cfg().raw().getLong("claim_blocks.earn.playtime.interval_minutes", 10);
         long intervalTicks = earnIntervalMinutes * 60 * 20; // Convert minutes to ticks
 
-        claimBlockTask = scheduleAsyncRepeating(new ClaimBlockTask(this), intervalTicks);
+        ClaimBlockTask task = new ClaimBlockTask(this);
+
+        // ✅ FIX: schedule the task logic consistently (avoids Runnable/type mismatch)
+        claimBlockTask = scheduleAsyncRepeating(task::run, intervalTicks);
     }
 }

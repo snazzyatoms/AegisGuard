@@ -21,6 +21,7 @@ import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
+import com.aegisguard.hooks.protection.ProtectionHookManager; // ✅ NEW: Protection hook manager (compatibility layer)
 import com.aegisguard.language.CodexEngine;       // ✅ NEW: Language Engine
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
@@ -65,6 +66,9 @@ public class AegisGuard extends JavaPlugin {
     private VaultHook vault;
     private EconomyManager ecoManager;
 
+    /** ✅ NEW: Compatibility layer for other protection plugins (WorldGuard, etc.) */
+    private ProtectionHookManager protectionHooks;
+
     /** 🔤 NEW: Aegis Codex language engine (1.2.4+) */
     private CodexEngine codex;
 
@@ -107,6 +111,9 @@ public class AegisGuard extends JavaPlugin {
     public VaultHook vault() { return vault; }
     public EconomyManager eco() { return ecoManager; }
     public EconomyManager getEconomy() { return ecoManager; }
+
+    /** ✅ NEW: Protection plugin compatibility entrypoint */
+    public ProtectionHookManager protectionHooks() { return protectionHooks; }
 
     /**
      * 🌐 New language engine entrypoint.
@@ -165,6 +172,10 @@ public class AegisGuard extends JavaPlugin {
         }
 
         this.configMgr = new AGConfig(this);
+
+        // ✅ NEW: protection hook compatibility layer (registers WorldGuard hook, etc.)
+        this.protectionHooks = new ProtectionHookManager(this);
+        this.protectionHooks.registerDefaults();
 
         // --- 2. STORAGE INIT ---
         String storageType = cfg().raw().getString("storage.type", "yml").toLowerCase();
@@ -314,6 +325,9 @@ public class AegisGuard extends JavaPlugin {
 
         // Legacy player prefs still live on MessagesUtil in 1.2.4
         if (messages != null) messages.savePlayerData();
+
+        // ✅ NEW: tidy release
+        protectionHooks = null;
 
         instance = null;
         getLogger().info("AegisGuard disabled.");

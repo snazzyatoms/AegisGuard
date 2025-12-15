@@ -9,18 +9,25 @@ website: https://discord.gg/Y2NpuR7UZE
 folia-supported: true
 
 softdepend:
+  # Economy / Utilities
   - Vault
-  - Dynmap
   - PlaceholderAPI
   - CoreProtect
-  - WorldGuard
+
+  # Maps / Visualization
+  - Dynmap
+
+  # Regions / Protection (compatibility layer yields to these when present)
   - WorldEdit
+  - WorldGuard
   - GriefPrevention
+  - GriefDefender
   - PlotSquared
   - Towny
-  - Lands
-  - GriefDefender
   - Residence
+  - Lands
+
+  # Gameplay hooks (non-protection, but safe as optional integrations)
   - mcMMO
   - Jobs
 

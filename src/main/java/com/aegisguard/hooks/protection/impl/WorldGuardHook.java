@@ -2,64 +2,64 @@ package com.aegisguard.hooks.protection.impl;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.hooks.protection.ProtectionHook;
-import com.aegisguard.hooks.protection.ProtectionResult;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.regions.RegionQuery;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
-/**
- * WorldGuard compatibility:
- * - If WorldGuard is present and denies BUILD, we deny.
- * - Otherwise ABSTAIN/ALLOW.
- */
 public class WorldGuardHook implements ProtectionHook {
 
     private final AegisGuard plugin;
+    private boolean active = false;
 
     public WorldGuardHook(AegisGuard plugin) {
         this.plugin = plugin;
+        try {
+            // Ensure classes exist
+            Class.forName("com.sk89q.worldguard.WorldGuard");
+            active = true;
+        } catch (Throwable t) {
+            active = false;
+        }
     }
 
     @Override
-    public String getName() {
+    public String id() {
         return "WorldGuard";
     }
 
     @Override
-    public boolean isAvailable() {
-        return plugin.getServer().getPluginManager().isPluginEnabled("WorldGuard");
+    public boolean isActive() {
+        return active;
     }
 
     @Override
-    public ProtectionResult canBuild(Player player, Location location) {
-        if (player == null || location == null || location.getWorld() == null) {
-            return ProtectionResult.ABSTAIN;
-        }
-        if (!isAvailable()) return ProtectionResult.ABSTAIN;
+    public boolean isProtectedElsewhere(Location location) {
+        if (!active || location == null || location.getWorld() == null) return false;
 
         try {
-            // WorldGuard uses WorldEdit locations
-            com.sk89q.worldedit.util.Location weLoc = BukkitAdapter.adapt(location);
+            var container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            var query = container.createQuery();
+            ApplicableRegionSet set = query.getApplicableRegions(BukkitAdapter.adapt(location));
 
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionQuery query = container.createQuery();
+            if (set == null) return false;
 
-            // Checks BUILD flag and membership etc.
-            boolean canBuild = query.testState(
-                    weLoc,
-                    WorldGuardPlugin.inst().wrapPlayer(player),
-                    Flags.BUILD
-            );
+            for (ProtectedRegion r : set) {
+                if (r == null) continue;
 
-            return canBuild ? ProtectionResult.ABSTAIN : ProtectionResult.DENY;
+                // Ignore the global region (WorldGuard uses __global__).
+                String id = r.getId();
+                if (id != null && id.equalsIgnoreCase("__global__")) continue;
+
+                // Any non-global region counts as "protected elsewhere".
+                return true;
+            }
         } catch (Throwable t) {
-            // If WG API changes or fails, do not hard-break AegisGuard.
-            return ProtectionResult.ABSTAIN;
+            // If WG API hiccups, fail open (don’t block claims) to avoid weird false positives.
+            return false;
         }
+
+        return false;
     }
 }

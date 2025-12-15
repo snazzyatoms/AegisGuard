@@ -277,6 +277,7 @@ public class YMLDataStore implements IDataStore {
         writePlotToConfig(plot);
         try {
             config.save(file);
+            isDirty = false;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -471,6 +472,7 @@ public class YMLDataStore implements IDataStore {
     public void addPlot(Plot plot) {
         cachePlot(plot);
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
@@ -492,6 +494,7 @@ public class YMLDataStore implements IDataStore {
                     config.set(plotId.toString(), null);
                     try {
                         config.save(file);
+                        isDirty = false;
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -510,6 +513,7 @@ public class YMLDataStore implements IDataStore {
             }
             try {
                 config.save(file);
+                isDirty = false;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -520,25 +524,49 @@ public class YMLDataStore implements IDataStore {
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
         plot.setRole(playerUUID, role);
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
     public void removePlayerRole(Plot plot, UUID playerUUID) {
         plot.removeRole(playerUUID);
         savePlot(plot);
+        isDirty = true;
     }
 
+    /**
+     * FIXED: Ownership transfer must reset plot internals (roles/bans/likes/role-flags/title/desc)
+     * exactly like Plot.internalSetOwner() intends, per IDataStore contract.
+     */
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
-        List<Plot> oldList = plotsByOwner.get(plot.getOwner());
-        if (oldList != null) oldList.remove(plot);
+        if (plot == null || newOwner == null) return;
 
-        plot.setOwner(newOwner);
-        plot.setOwnerName(newOwnerName);
+        UUID oldOwner = plot.getOwner();
 
+        // 1) Remove from old owner's cache
+        List<Plot> oldList = plotsByOwner.get(oldOwner);
+        if (oldList != null) {
+            oldList.remove(plot);
+            if (oldList.isEmpty()) {
+                plotsByOwner.remove(oldOwner);
+            }
+        }
+
+        // 2) Reset plot internals safely (clears roles/bans/likes/role flags, sets new owner role)
+        plot.internalSetOwner(newOwner, newOwnerName);
+
+        // 3) Re-add to new owner's cache
         plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
 
+        // 4) Ensure chunk index stays consistent
+        // (coordinates do not change on owner transfer, but re-indexing is cheap insurance)
+        deIndexPlot(plot);
+        cachePlot(plot);
+
+        // 5) Persist immediately
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
@@ -621,5 +649,6 @@ public class YMLDataStore implements IDataStore {
         plot.setRoleFlagState(roleName, flagKey, state == null ? TriState.INHERIT : state);
         // Persist immediately so YML stays in sync with in-memory plot
         savePlot(plot);
+        isDirty = true;
     }
 }

@@ -54,6 +54,72 @@ hooks:
   pl3xmap:
     enabled: true
 
+  # ---------------------------------------------------------------------------
+  # 🧩 Protection Plugin Compatibility Layer (NEW v1.2.4+)
+  # ---------------------------------------------------------------------------
+  # This prevents “claim wars” between AegisGuard and other protection plugins.
+  #
+  # overlap_policy:
+  #   EXTERNAL_WINS     -> If another plugin says “no”, AegisGuard yields (recommended).
+  #   AEGIS_WINS        -> AegisGuard ignores external denies (not recommended).
+  #   DENY_IF_CONFLICT  -> If overlap detected, deny the action safely.
+  #
+  # Important:
+  #  - This does NOT remove AegisGuard protection.
+  #  - It only decides what AegisGuard should do when another plugin also claims authority.
+  protection_compat:
+    enabled: true
+
+    # Recommended: let other claim/region plugins win if they deny.
+    overlap_policy: EXTERNAL_WINS
+
+    # If true, AegisGuard will only consult plugins that are actually installed.
+    only_check_installed_plugins: true
+
+    # If true, log which plugin caused a deny (useful for debugging “why can’t I build?”)
+    debug_logging: false
+
+    # Which external systems we respect (popular ones only)
+    plugins:
+      worldguard:
+        enabled: true
+        priority: 100
+
+      griefprevention:
+        enabled: true
+        priority: 90
+
+      griefdefender:
+        enabled: true
+        priority: 90
+
+      plotsquared:
+        enabled: true
+        priority: 80
+
+      towny:
+        enabled: true
+        priority: 80
+
+      lands:
+        enabled: true
+        priority: 80
+
+      residence:
+        enabled: true
+        priority: 70
+
+    # Which action types should consult external protection first
+    checks:
+      block_break: true
+      block_place: true
+      interact: true
+      container_access: true
+      entity_damage: true
+      pvp: true
+      vehicle_use: true
+      redstone_use: true
+
 
 # ------------------------------------------------------------------------------
 # 💾 DATA STORAGE

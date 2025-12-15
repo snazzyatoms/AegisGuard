@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
  * - Stores advanced plot data in 'settings' blob (progression, market, warps, cosmetics, likes, bans...).
  * - UPDATED: Adds full Zone (sub-claim) persistence via aegis_zones table.
  * - UPDATED: Persists per-role flag overrides via Plot.serializeRoleFlags()/deserializeRoleFlags().
+ *
+ * FIXES:
+ * - Ownership transfer now removes/adds by plotId (not instance) to prevent duplicate cache entries.
+ * - SQLite wilderness log table creation uses AUTOINCREMENT-compatible DDL.
+ * - removeAllPlots() cleans up zones for removed plots (prevents orphan zone rows).
  */
 public class SQLDataStore implements IDataStore {
 
@@ -34,6 +39,9 @@ public class SQLDataStore implements IDataStore {
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
     private volatile boolean isDirty = false;
+
+    // Track DB type for DDL quirks
+    private String storageType = "sqlite";
 
     // --- QUERIES ---
     private static final String CREATE_PLOTS_TABLE =
@@ -52,7 +60,6 @@ public class SQLDataStore implements IDataStore {
                     " settings TEXT" +
                     " )";
 
-    // 3D zones: x1,y1,z1,x2,y2,z2 + rent info
     private static final String CREATE_ZONES_TABLE =
             "CREATE TABLE IF NOT EXISTS aegis_zones (" +
                     " zone_id VARCHAR(36)," +
@@ -66,7 +73,6 @@ public class SQLDataStore implements IDataStore {
                     " PRIMARY KEY (zone_id)" +
                     " )";
 
-    // REPLACE INTO for cross-DB upsert of plots
     private static final String UPSERT_PLOT =
             "REPLACE INTO aegis_plots " +
                     "(plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, level, xp, last_upkeep, flags, roles, settings) " +
@@ -74,12 +80,16 @@ public class SQLDataStore implements IDataStore {
 
     private static final String DELETE_PLOT =
             "DELETE FROM aegis_plots WHERE plot_id = ?";
+
     private static final String DELETE_PLOTS_BY_OWNER =
             "DELETE FROM aegis_plots WHERE owner_uuid = ?";
 
-    // Zones maintenance
+    private static final String SELECT_PLOT_IDS_BY_OWNER =
+            "SELECT plot_id FROM aegis_plots WHERE owner_uuid = ?";
+
     private static final String DELETE_ZONES_BY_PLOT =
             "DELETE FROM aegis_zones WHERE plot_id = ?";
+
     private static final String INSERT_ZONE =
             "INSERT INTO aegis_zones " +
                     "(zone_id, plot_id, name, x1, y1, z1, x2, y2, z2, renter, price, expires) " +
@@ -100,14 +110,14 @@ public class SQLDataStore implements IDataStore {
 
     private void connect() {
         ConfigurationSection db = plugin.cfg().raw().getConfigurationSection("storage.database");
-        String type = plugin.cfg().raw().getString("storage.type", "sqlite");
+        storageType = plugin.cfg().raw().getString("storage.type", "sqlite");
 
         HikariConfig config = new HikariConfig();
         config.setPoolName("AegisGuard-Pool");
         config.setConnectionTimeout(30000);
         config.setLeakDetectionThreshold(10000);
 
-        if (type.equalsIgnoreCase("mysql") || type.equalsIgnoreCase("mariadb")) {
+        if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
             String host = db.getString("host", "localhost");
             int port = db.getInt("port", 3306);
             String database = db.getString("database", "aegisguard");
@@ -130,6 +140,10 @@ public class SQLDataStore implements IDataStore {
             }
             config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
             config.setDriverClassName("org.sqlite.JDBC");
+
+            // SQLite plays nicer with small pools.
+            config.setMaximumPoolSize(1);
+
             plugin.getLogger().info("Using local SQLite database file: " + file.getName());
         }
 
@@ -137,13 +151,25 @@ public class SQLDataStore implements IDataStore {
 
         try (Connection conn = hikari.getConnection();
              Statement s = conn.createStatement()) {
+
             s.execute(CREATE_PLOTS_TABLE);
             s.execute(CREATE_ZONES_TABLE);
-            s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
-                    "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
-                    "world VARCHAR(32), x INT, y INT, z INT, " +
-                    "old_material VARCHAR(32), new_material VARCHAR(32), " +
-                    "timestamp BIGINT, player_uuid VARCHAR(36) )");
+
+            // ✅ Fix: SQLite cannot use AUTO_INCREMENT.
+            if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
+                s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
+                        "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
+                        "world VARCHAR(32), x INT, y INT, z INT, " +
+                        "old_material VARCHAR(32), new_material VARCHAR(32), " +
+                        "timestamp BIGINT, player_uuid VARCHAR(36) )");
+            } else {
+                s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "world TEXT, x INTEGER, y INTEGER, z INTEGER, " +
+                        "old_material TEXT, new_material TEXT, " +
+                        "timestamp INTEGER, player_uuid TEXT )");
+            }
+
         } catch (SQLException e) {
             plugin.getLogger().severe("Database Error: " + e.getMessage());
         }
@@ -155,11 +181,8 @@ public class SQLDataStore implements IDataStore {
         plotsByChunk.clear();
 
         int count = 0;
-
-        // Temp index to allow attaching zones after plots are loaded
         Map<UUID, Plot> plotsById = new HashMap<>();
 
-        // 1) Load plots
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_plots")) {
 
@@ -184,7 +207,7 @@ public class SQLDataStore implements IDataStore {
                     plot.setXp(rs.getDouble("xp"));
                     plot.setLastUpkeepPayment(rs.getLong("last_upkeep"));
 
-                    // Restore Flags
+                    // Flags
                     String flagsStr = rs.getString("flags");
                     if (flagsStr != null && !flagsStr.isEmpty()) {
                         for (String part : flagsStr.split(",")) {
@@ -195,7 +218,7 @@ public class SQLDataStore implements IDataStore {
                         }
                     }
 
-                    // Restore Roles
+                    // Roles
                     String rolesStr = rs.getString("roles");
                     if (rolesStr != null && !rolesStr.isEmpty()) {
                         for (String part : rolesStr.split(",")) {
@@ -204,13 +227,12 @@ public class SQLDataStore implements IDataStore {
                                 try {
                                     UUID u = UUID.fromString(kv[0]);
                                     plot.setRole(u, kv[1]);
-                                } catch (IllegalArgumentException ignored) {
-                                }
+                                } catch (IllegalArgumentException ignored) {}
                             }
                         }
                     }
 
-                    // Restore Advanced Settings from 'settings'
+                    // Settings
                     String settings = rs.getString("settings");
                     if (settings != null && !settings.isEmpty()) {
                         applySettings(plot, settings);
@@ -227,7 +249,6 @@ public class SQLDataStore implements IDataStore {
             e.printStackTrace();
         }
 
-        // 2) Load zones and attach to plots
         int zoneCount = 0;
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zones")) {
@@ -239,7 +260,7 @@ public class SQLDataStore implements IDataStore {
                 try {
                     UUID plotId = UUID.fromString(rs.getString("plot_id"));
                     Plot parent = plotsById.get(plotId);
-                    if (parent == null) continue; // Orphaned zone; plot was deleted
+                    if (parent == null) continue;
 
                     String name = rs.getString("name");
 
@@ -261,30 +282,29 @@ public class SQLDataStore implements IDataStore {
                     if (renterStr != null && !renterStr.isEmpty() && expires > now) {
                         try {
                             UUID renter = UUID.fromString(renterStr);
-                            // Keep the same absolute expiration using remaining duration
                             zone.rentTo(renter, expires - now);
-                        } catch (IllegalArgumentException ignored) {
-                        }
+                        } catch (IllegalArgumentException ignored) {}
                     }
 
                     parent.addZone(zone);
                     zoneCount++;
-                } catch (Exception ignored) {
-                    // Corrupt zone row; skip
-                }
+                } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         plugin.getLogger().info("Loaded " + count + " plots and " + zoneCount + " zones from Database.");
+        isDirty = false;
     }
 
     @Override
     public void save() {
-        // Bulk save routine (e.g. on auto-save task)
+        // Bulk save routine
         for (Collection<Plot> plots : plotsByOwner.values()) {
-            for (Plot p : plots) {
+            // avoid CME if something modifies the list during save
+            List<Plot> snapshot = new ArrayList<>(plots);
+            for (Plot p : snapshot) {
                 savePlot(p);
             }
         }
@@ -292,7 +312,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void saveSync() {
-        // Called on shutdown
         save();
         if (hikari != null && !hikari.isClosed()) {
             hikari.close();
@@ -303,7 +322,7 @@ public class SQLDataStore implements IDataStore {
     public void savePlot(Plot plot) {
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection()) {
-                // 1) Upsert plot row
+
                 try (PreparedStatement ps = conn.prepareStatement(UPSERT_PLOT)) {
                     ps.setString(1, plot.getPlotId().toString());
                     ps.setString(2, plot.getOwner().toString());
@@ -316,18 +335,12 @@ public class SQLDataStore implements IDataStore {
                     ps.setInt(9, plot.getLevel());
                     ps.setDouble(10, plot.getXp());
                     ps.setLong(11, plot.getLastUpkeepPayment());
-
-                    // Serialize Flags & Roles
                     ps.setString(12, plot.serializeFlags());
                     ps.setString(13, plot.serializeRoles());
-
-                    // Advanced settings blob (includes roleFlags now)
                     ps.setString(14, serializeSettings(plot));
-
                     ps.executeUpdate();
                 }
 
-                // 2) Refresh zones for this plot
                 try (PreparedStatement del = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
                     del.setString(1, plot.getPlotId().toString());
                     del.executeUpdate();
@@ -399,39 +412,26 @@ public class SQLDataStore implements IDataStore {
         UUID bidder = plot.getCurrentBidder();
         add.accept("currentBidder", bidder != null ? bidder.toString() : null);
 
-        // Likes
         if (!plot.getLikedBy().isEmpty()) {
-            String liked = plot.getLikedBy().stream()
-                    .map(UUID::toString)
-                    .collect(Collectors.joining(","));
+            String liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.joining(","));
             add.accept("likedBy", liked);
         }
 
-        // Bans
         if (!plot.getBannedPlayers().isEmpty()) {
-            String banned = plot.getBannedPlayers().stream()
-                    .map(UUID::toString)
-                    .collect(Collectors.joining(","));
+            String banned = plot.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.joining(","));
             add.accept("banned", banned);
         }
 
-        // Cosmetics
         add.accept("borderParticle", plot.getBorderParticle());
         add.accept("ambientParticle", plot.getAmbientParticle());
         add.accept("entryEffect", plot.getEntryEffect());
 
-        // Warp
         add.accept("isServerWarp", String.valueOf(plot.isServerWarp()));
         add.accept("warpName", plot.getWarpName());
         add.accept("warpIcon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
 
-        // NEW: per-role flag overrides (only non-INHERIT values are serialized)
         String roleFlags = plot.serializeRoleFlags();
-        if (!roleFlags.isEmpty()) {
-            add.accept("roleFlags", roleFlags);
-        }
-
-        // Zones are stored in aegis_zones, not in settings.
+        if (!roleFlags.isEmpty()) add.accept("roleFlags", roleFlags);
 
         return sb.toString();
     }
@@ -473,7 +473,6 @@ public class SQLDataStore implements IDataStore {
                     case "customBiome":
                         plot.setCustomBiome(value);
                         break;
-
                     case "plotStatus":
                         plot.setPlotStatus(value);
                         break;
@@ -520,25 +519,17 @@ public class SQLDataStore implements IDataStore {
                     }
 
                     case "likedBy": {
-                        String[] uuids = value.split(",");
-                        for (String uStr : uuids) {
+                        for (String uStr : value.split(",")) {
                             if (uStr.isEmpty()) continue;
-                            try {
-                                plot.toggleLike(UUID.fromString(uStr));
-                            } catch (IllegalArgumentException ignored) {
-                            }
+                            try { plot.toggleLike(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
                         }
                         break;
                     }
 
                     case "banned": {
-                        String[] uuids = value.split(",");
-                        for (String uStr : uuids) {
+                        for (String uStr : value.split(",")) {
                             if (uStr.isEmpty()) continue;
-                            try {
-                                plot.addBan(UUID.fromString(uStr));
-                            } catch (IllegalArgumentException ignored) {
-                            }
+                            try { plot.addBan(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
                         }
                         break;
                     }
@@ -566,19 +557,15 @@ public class SQLDataStore implements IDataStore {
                             try {
                                 Material icon = Material.valueOf(value);
                                 plot.setServerWarp(plot.isServerWarp(), plot.getWarpName(), icon);
-                            } catch (IllegalArgumentException ignored) {
-                            }
+                            } catch (IllegalArgumentException ignored) {}
                         }
                         break;
 
-                    // NEW: per-role flag overrides
                     case "roleFlags":
                         plot.deserializeRoleFlags(value);
                         break;
                 }
-            } catch (Exception ignored) {
-                // Avoid hard-crashing loads because of malformed settings
-            }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -601,7 +588,6 @@ public class SQLDataStore implements IDataStore {
         int z2 = Math.max(c1.getBlockZ(), c2.getBlockZ());
 
         Plot plot = new Plot(id, owner, ownerName, c1.getWorld().getName(), x1, z1, x2, z2, System.currentTimeMillis());
-
         addPlot(plot);
     }
 
@@ -612,16 +598,13 @@ public class SQLDataStore implements IDataStore {
         isDirty = true;
     }
 
-    /**
-     * FIXED (important): ensure plotsByChunk is de-indexed so deleted plots don't become "ghosts".
-     */
     @Override
     public void removePlot(UUID owner, UUID plotId) {
         Plot removed = null;
 
         List<Plot> list = plotsByOwner.get(owner);
         if (list != null) {
-            for (Iterator<Plot> it = list.iterator(); it.hasNext(); ) {
+            for (Iterator<Plot> it = list.iterator(); it.hasNext();) {
                 Plot p = it.next();
                 if (p.getPlotId().equals(plotId)) {
                     removed = p;
@@ -629,14 +612,10 @@ public class SQLDataStore implements IDataStore {
                     break;
                 }
             }
-            if (list.isEmpty()) {
-                plotsByOwner.remove(owner);
-            }
+            if (list.isEmpty()) plotsByOwner.remove(owner);
         }
 
-        if (removed != null) {
-            deIndexPlot(removed);
-        }
+        if (removed != null) deIndexPlot(removed);
 
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection()) {
@@ -665,11 +644,36 @@ public class SQLDataStore implements IDataStore {
 
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection()) {
+
+                // ✅ First collect plot ids so we can delete zones too
+                List<String> plotIds = new ArrayList<>();
+                try (PreparedStatement sel = conn.prepareStatement(SELECT_PLOT_IDS_BY_OWNER)) {
+                    sel.setString(1, owner.toString());
+                    try (ResultSet rs = sel.executeQuery()) {
+                        while (rs.next()) {
+                            String pid = rs.getString(1);
+                            if (pid != null) plotIds.add(pid);
+                        }
+                    }
+                }
+
+                // Delete zones for those plots
+                if (!plotIds.isEmpty()) {
+                    try (PreparedStatement delZones = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delZones.setString(1, pid);
+                            delZones.addBatch();
+                        }
+                        delZones.executeBatch();
+                    }
+                }
+
+                // Delete plots
                 try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOTS_BY_OWNER)) {
                     ps.setString(1, owner.toString());
                     ps.executeUpdate();
                 }
-                // Optional zone cleanup by owner could be added if zones stored owner_uuid too.
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -679,41 +683,40 @@ public class SQLDataStore implements IDataStore {
     }
 
     /**
-     * HARDENED: Ownership transfer should:
-     * - Remove from old owner's list (and remove empty key)
-     * - Reset plot internals via internalSetOwner()
-     * - Prevent duplicates under new owner
-     * - Keep chunk index consistent (re-index safety)
-     * - Persist immediately
+     * HARDENED: Ownership transfer:
+     * - Removes from old owner's list by plotId (not instance)
+     * - Clears chunk index then re-adds
+     * - Calls internalSetOwner()
+     * - Adds to new owner's list with plotId dedupe
      */
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         if (plot == null || newOwner == null) return;
 
+        UUID plotId = plot.getPlotId();
         UUID oldOwner = plot.getOwner();
 
-        // 1) Remove from old owner list
-        List<Plot> oldList = plotsByOwner.get(oldOwner);
-        if (oldList != null) {
-            oldList.remove(plot);
-            if (oldList.isEmpty()) {
-                plotsByOwner.remove(oldOwner);
+        // 1) Remove from old owner list by plotId
+        if (oldOwner != null) {
+            List<Plot> oldList = plotsByOwner.get(oldOwner);
+            if (oldList != null) {
+                oldList.removeIf(p -> p != null && plotId.equals(p.getPlotId()));
+                if (oldList.isEmpty()) plotsByOwner.remove(oldOwner);
             }
         }
 
-        // 2) Re-index safety (coords don't change, but keeps chunk sets clean)
+        // 2) Remove from chunk index
         deIndexPlot(plot);
 
-        // 3) Reset internals + swap owner/name (clears roles/bans/likes/role flags/title/desc properly)
+        // 3) Reset internals
         plot.internalSetOwner(newOwner, newOwnerName);
 
-        // 4) Add to new owner list (dedupe safe)
+        // 4) Add to new owner list with plotId dedupe
         List<Plot> newList = plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>());
-        if (!newList.contains(plot)) {
-            newList.add(plot);
-        }
+        boolean alreadyThere = newList.stream().anyMatch(p -> p != null && plotId.equals(p.getPlotId()));
+        if (!alreadyThere) newList.add(plot);
 
-        // 5) Re-add to chunk index
+        // 5) Re-index
         indexPlot(plot);
 
         // 6) Persist
@@ -742,32 +745,28 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================
+    // ==============================================================  
     // --- ROLE FLAG STATE (TriState) --------------------------------
-    // ==============================================================
+    // ==============================================================  
 
     @Override
     public TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
-        if (plot == null || roleId == null || flagKey == null) {
-            return TriState.INHERIT;
-        }
+        if (plot == null || roleId == null || flagKey == null) return TriState.INHERIT;
         return plot.getRoleFlagState(roleId, flagKey);
     }
 
     @Override
     public void setRoleFlagState(Plot plot, String roleId, String flagKey, TriState state) {
-        if (plot == null || roleId == null || flagKey == null || state == null) {
-            return;
-        }
+        if (plot == null || roleId == null || flagKey == null || state == null) return;
 
         plot.setRoleFlagState(roleId, flagKey, state);
         savePlot(plot);
         isDirty = true;
     }
 
-    // ==============================================================
-    // --- Indexing Helpers ---
-    // ==============================================================
+    // ==============================================================  
+    // --- Indexing Helpers ---  
+    // ==============================================================  
 
     private void indexPlot(Plot plot) {
         String w = plot.getWorld();
@@ -805,29 +804,12 @@ public class SQLDataStore implements IDataStore {
                 }
             }
         }
+        if (worldChunks.isEmpty()) plotsByChunk.remove(plot.getWorld());
     }
 
-    // NEW: proper implementation returning a mutable set
-    private Set<String> getChunksInArea(String world, int x1, int z1, int x2, int z2) {
-        Set<String> result = new HashSet<>();
-
-        int minChunkX = x1 >> 4;
-        int maxChunkX = x2 >> 4;
-        int minChunkZ = z1 >> 4;
-        int maxChunkZ = z2 >> 4;
-
-        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
-            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
-                result.add(cx + "," + cz);
-            }
-        }
-
-        return result;
-    }
-
-    // ==============================================================
-    // --- Wilderness Logging ---
-    // ==============================================================
+    // ==============================================================  
+    // --- Wilderness Logging ---  
+    // ==============================================================  
 
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -845,20 +827,18 @@ public class SQLDataStore implements IDataStore {
                 ps.setLong(7, System.currentTimeMillis());
                 ps.setString(8, playerUUID.toString());
                 ps.executeUpdate();
-            } catch (SQLException e) {
-                // Suppress minor logging errors
-            }
+            } catch (SQLException ignored) {}
         });
     }
 
     @Override
     public void revertWildernessBlocks(long timestamp, int limit) {
-        // TODO: implement rollback logic if you want SQL-driven wilderness revert
+        // TODO
     }
 
-    // ==============================================================
-    // --- Basic Accessors ---
-    // ==============================================================
+    // ==============================================================  
+    // --- Basic Accessors ---  
+    // ==============================================================  
 
     @Override
     public boolean isDirty() {
@@ -872,7 +852,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public List<Plot> getPlots(UUID owner) {
-        // Changed: never return Collections.emptyList() to avoid UnsupportedOperationException
         List<Plot> list = plotsByOwner.get(owner);
         return (list != null) ? new ArrayList<>(list) : new ArrayList<>();
     }

@@ -2,10 +2,17 @@ package com.aegisguard.selection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotClaimEvent;
+import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.data.Plot;
-import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.hooks.DiscordWebhook;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,12 +32,12 @@ import java.util.UUID;
 public class SelectionService implements Listener {
 
     private final AegisGuard plugin;
-    
+
     // Selection Cache
     private final Map<UUID, Location> loc1 = new HashMap<>();
     private final Map<UUID, Location> loc2 = new HashMap<>();
     private final Map<UUID, Boolean> selectionIsServer = new HashMap<>();
-    
+
     // NBT Keys
     public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
     public static final NamespacedKey SERVER_WAND_KEY = new NamespacedKey("aegisguard", "server_wand");
@@ -67,7 +74,7 @@ public class SelectionService implements Listener {
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         ItemStack item = e.getItem();
-        
+
         if (item == null || item.getType() == Material.AIR) return;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
@@ -78,7 +85,7 @@ public class SelectionService implements Listener {
 
         if (!isNormal && !isServer) return;
 
-        e.setCancelled(true); 
+        e.setCancelled(true);
         selectionIsServer.put(p.getUniqueId(), isServer);
 
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null) {
@@ -89,7 +96,7 @@ public class SelectionService implements Listener {
                     "Z", String.valueOf(loc.getBlockZ())
             ));
             playSelectionEffect(p, loc, isServer);
-            
+
         } else if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getClickedBlock() != null) {
             Location loc = e.getClickedBlock().getLocation();
             loc2.put(p.getUniqueId(), loc);
@@ -103,7 +110,7 @@ public class SelectionService implements Listener {
 
     public void confirmClaim(Player p) {
         UUID uuid = p.getUniqueId();
-        
+
         if (!hasSelection(p)) {
             plugin.msg().send(p, "must_select");
             plugin.effects().playError(p);
@@ -114,41 +121,98 @@ public class SelectionService implements Listener {
         Location l1 = loc1.get(uuid);
         Location l2 = loc2.get(uuid);
 
+        if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null) {
+            plugin.msg().send(p, "must_select");
+            plugin.effects().playError(p);
+            return;
+        }
+
         if (!l1.getWorld().equals(l2.getWorld())) {
             plugin.msg().send(p, "corners_diff_world");
             return;
         }
-        
+
         int minX = Math.min(l1.getBlockX(), l2.getBlockX());
         int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
         int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
         int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
-        
+
         int width = maxX - minX + 1;
         int length = maxZ - minZ + 1;
         int radius = Math.max(width, length) / 2;
-        
+
+        // ✅ NEW: Claim Blocks sanity check here too (in case claim is triggered elsewhere)
+        if (!isServerClaim && plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) {
+            ClaimBlockManager mgr = plugin.getClaimBlockManager();
+            if (mgr != null) {
+                long area = (long) width * (long) length;
+
+                // First claim limiter (safety net)
+                if (!mgr.getOrCreate(uuid).hasClaimedStarter() && !p.hasPermission("aegis.admin.bypass-limits")) {
+                    if (plugin.cfg().raw().getBoolean("claim_blocks.first_claim_limit.enabled", true)) {
+                        long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000);
+                        if (area > maxStarter) {
+                            plugin.msg().send(p, "first_claim_limit_reached", Map.of(
+                                    "LIMIT", String.valueOf(maxStarter),
+                                    "AREA", String.valueOf(area)
+                            ));
+                            plugin.effects().playError(p);
+                            return;
+                        }
+                    }
+                }
+
+                if (!mgr.canAfford(uuid, area)) {
+                    long missing = area - mgr.getAvailableBlocks(uuid);
+                    plugin.msg().send(p, "claim_blocks_not_enough", Map.of(
+                            "NEEDED", String.valueOf(missing),
+                            "AREA", String.valueOf(area)
+                    ));
+                    plugin.effects().playError(p);
+                    return;
+                }
+            }
+        }
+
         // --- VALIDATION ---
         if (!isServerClaim) {
-            if (!plugin.worldRules().allowClaims(p.getWorld())) {
-                plugin.msg().send(p, "admin-zone-no-claims"); // fallback key if needed, or use no_perm
+            World w = p.getWorld();
+
+            if (!plugin.worldRules().allowClaims(w)) {
+                plugin.msg().send(p, "admin-zone-no-claims");
                 return;
             }
 
-            if (plugin.store().isAreaOverlapping(null, l1.getWorld().getName(), minX, minZ, maxX, maxZ)) {
+            // ✅ NEW: Protection compatibility layer (WorldGuard/Towny/etc)
+            // If another protection system owns the area, AegisGuard yields.
+            if (plugin.protectionHooks() != null) {
+                try {
+                    boolean elsewhere = plugin.protectionHooks()
+                            .isAreaProtectedElsewhere(w.getName(), minX, minZ, maxX, maxZ);
+                    if (elsewhere) {
+                        plugin.msg().send(p, "resize-fail-overlap");
+                        plugin.effects().playError(p);
+                        return;
+                    }
+                } catch (Throwable ignored) {
+                    // Never crash claim flow if a hook misbehaves.
+                }
+            }
+
+            if (plugin.store().isAreaOverlapping(null, w.getName(), minX, minZ, maxX, maxZ)) {
                 plugin.msg().send(p, "resize-fail-overlap");
                 plugin.effects().playError(p);
                 return;
             }
 
-            int limitRadius = plugin.cfg().getWorldMaxRadius(p.getWorld());
+            int limitRadius = plugin.cfg().getWorldMaxRadius(w);
             if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
                 plugin.msg().send(p, "resize-fail-max-area", Map.of("AMOUNT", String.valueOf(limitRadius)));
                 return;
             }
-            
-            double cost = plugin.cfg().getWorldVaultCost(p.getWorld());
-            if (plugin.cfg().useVault(p.getWorld()) && cost > 0) {
+
+            double cost = plugin.cfg().getWorldVaultCost(w);
+            if (plugin.cfg().useVault(w) && cost > 0) {
                 if (!plugin.vault().charge(p, cost)) {
                     plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
                     return;
@@ -160,7 +224,7 @@ public class SelectionService implements Listener {
         // --- CREATION ---
         Plot plot;
         long now = System.currentTimeMillis();
-        
+
         if (isServerClaim) {
             plot = new Plot(
                     UUID.randomUUID(),
@@ -182,14 +246,25 @@ public class SelectionService implements Listener {
             );
             plugin.worldRules().applyDefaults(plot);
         }
-        
+
         PlotClaimEvent event = new PlotClaimEvent(plot, p);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) return;
 
         plugin.store().addPlot(plot);
 
-        // --- DISCORD (CLAIM) --- 
+        // ✅ NEW: Mark starter claim as claimed (if enabled)
+        if (!isServerClaim && plugin.getClaimBlockManager() != null && plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) {
+            try {
+                if (!plugin.getClaimBlockManager().getOrCreate(uuid).hasClaimedStarter()) {
+                    plugin.getClaimBlockManager().setStarterClaimed(uuid, true);
+                }
+                // Touch used blocks to refresh any cached calculations, if applicable
+                plugin.getClaimBlockManager().getUsedBlocks(uuid);
+            } catch (Throwable ignored) {}
+        }
+
+        // --- DISCORD (CLAIM) ---
         if (plugin.getDiscord().isEnabled() && !isServerClaim) {
             String title = plugin.gui().tr(p, "discord_claim_title", "🚩 New Land Claimed");
             String descTemplate = plugin.gui().tr(p, "discord_claim_description", "{PLAYER} has established a new territory!");
@@ -217,14 +292,14 @@ public class SelectionService implements Listener {
             plugin.msg().send(p, "plot_created");
             plugin.effects().playClaimSuccess(p);
         }
-        
+
         loc1.remove(uuid);
         loc2.remove(uuid);
         selectionIsServer.remove(uuid);
-        
+
         if (!isServerClaim) handleWandConsumption(p);
     }
-    
+
     /* -----------------------------
      * PLOT MERGING (Language Aware)
      * ----------------------------- */
@@ -270,7 +345,7 @@ public class SelectionService implements Listener {
         }
 
         Plot targetPlot = plugin.store().getPlotAt(new Location(p.getWorld(), checkX, 64, checkZ));
-        
+
         if (targetPlot == null) {
             plugin.msg().send(p, "merge_no_plot");
             return;
@@ -295,7 +370,7 @@ public class SelectionService implements Listener {
             plugin.msg().send(p, "merge_not_aligned");
             return;
         }
-        
+
         // 1. Cost Check
         if (plugin.cfg().isMergeEnabled()) {
             double cost = plugin.cfg().getMergeCost();
@@ -323,15 +398,15 @@ public class SelectionService implements Listener {
         currentPlot.setZ1(newZ1);
         currentPlot.setX2(newX2);
         currentPlot.setZ2(newZ2);
-        
+
         // 3. Save
         plugin.store().addPlot(currentPlot);
-        
+
         // 4. Feedback
         plugin.msg().send(p, "merge_success");
         p.spawnParticle(Particle.EXPLOSION_LARGE, p.getLocation(), 3);
         p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1f);
-        
+
         // Discord (MERGE)
         if (plugin.getDiscord().isEnabled()) {
             String title = plugin.gui().tr(p, "discord_merge_title", "🔄 Plot Merge Completed");
@@ -341,11 +416,11 @@ public class SelectionService implements Listener {
             String newSize = (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1);
 
             plugin.getDiscord().send(
-                new DiscordWebhook.EmbedObject()
-                    .setTitle(ChatColor.stripColor(title))
-                    .setColor(new Color(0, 100, 200))
-                    .setDescription(ChatColor.stripColor(description))
-                    .addField(ChatColor.stripColor(sizeLabel), newSize, true)
+                    new DiscordWebhook.EmbedObject()
+                            .setTitle(ChatColor.stripColor(title))
+                            .setColor(new Color(0, 100, 200))
+                            .setDescription(ChatColor.stripColor(description))
+                            .addField(ChatColor.stripColor(sizeLabel), newSize, true)
             );
         }
     }
@@ -358,35 +433,43 @@ public class SelectionService implements Listener {
             plugin.msg().send(p, "no_plot_here");
             return;
         }
-        
+
         if (!plot.getOwner().equals(p.getUniqueId()) && !p.hasPermission("aegis.admin")) {
             plugin.msg().send(p, "no_perm");
             return;
         }
-        
+
+        UUID owner = plot.getOwner();
         plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
         plugin.msg().send(p, "plot_unclaimed");
         plugin.effects().playUnclaim(p);
-        
+
+        // ✅ NEW: refresh claim-block calculations if enabled
+        if (plugin.getClaimBlockManager() != null && plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) {
+            try {
+                plugin.getClaimBlockManager().getUsedBlocks(owner);
+            } catch (Throwable ignored) {}
+        }
+
         String world = p.getWorld().getName();
         if (plugin.cfg().raw().getBoolean("claims.per_world." + world + ".refund_on_unclaim", false)) {
-             double originalCost = plugin.cfg().getWorldVaultCost(p.getWorld());
-             double percent = plugin.cfg().raw().getDouble("claims.per_world." + world + ".refund_percent", 50.0);
-             double refund = originalCost * (percent / 100.0);
-             if (refund > 0) {
-                 plugin.vault().give(p, refund);
-                 plugin.msg().send(p, "vault_refund", Map.of(
-                         "AMOUNT", plugin.vault().format(refund),
-                         "PERCENT", String.valueOf(percent)
-                 ));
-             }
+            double originalCost = plugin.cfg().getWorldVaultCost(p.getWorld());
+            double percent = plugin.cfg().raw().getDouble("claims.per_world." + world + ".refund_percent", 50.0);
+            double refund = originalCost * (percent / 100.0);
+            if (refund > 0) {
+                plugin.vault().give(p, refund);
+                plugin.msg().send(p, "vault_refund", Map.of(
+                        "AMOUNT", plugin.vault().format(refund),
+                        "PERCENT", String.valueOf(percent)
+                ));
+            }
         }
     }
 
     private void handleWandConsumption(Player p) {
         boolean consume = plugin.cfg().raw().getBoolean("claims.consume_wand_on_claim", true);
         boolean adminBypass = plugin.cfg().raw().getBoolean("claims.admin_keep_wand", true);
-        
+
         if (consume) {
             if (adminBypass && plugin.isAdmin(p)) return;
             consumeWand(p);
@@ -406,7 +489,7 @@ public class SelectionService implements Listener {
             }
         }
     }
-    
+
     public void manualConsumeWand(Player p) {
         boolean found = false;
         ItemStack[] contents = p.getInventory().getContents();
@@ -445,7 +528,7 @@ public class SelectionService implements Listener {
         }
         return false;
     }
-    
+
     private void playSelectionEffect(Player p, Location loc, boolean isServer) {
         try {
             Particle particle = isServer ? Particle.SOUL_FIRE_FLAME : Particle.VILLAGER_HAPPY;
@@ -457,7 +540,7 @@ public class SelectionService implements Listener {
             );
         } catch (Exception ignored) {}
     }
-    
+
     public void resizePlot(Player p, String direction, int amount) {
         // Note: Resize logic is complex and usually requires its own class or method.
         // Ensure you implement budget checks here if you add code later.

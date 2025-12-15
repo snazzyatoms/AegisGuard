@@ -23,6 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlotGreetingListener implements Listener {
 
     private final AegisGuard plugin;
+
+    /**
+     * Stores the last plot UUID the player was in.
+     * NOTE: ConcurrentHashMap does NOT allow null values.
+     * We treat "not present in map" as "wilderness / no plot".
+     */
     private final Map<UUID, UUID> lastPlotId = new ConcurrentHashMap<>();
 
     public PlotGreetingListener(AegisGuard plugin) {
@@ -31,7 +37,7 @@ public class PlotGreetingListener implements Listener {
 
     /**
      * Prime the cache so players don't get a "Leaving/Entering" burst
-     * the moment they wiggle their mouse after joining.
+     * the moment they wiggle after joining.
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
@@ -39,7 +45,10 @@ public class PlotGreetingListener implements Listener {
 
         Player p = e.getPlayer();
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        lastPlotId.put(p.getUniqueId(), plot == null ? null : plot.getPlotId());
+        UUID pid = (plot == null) ? null : plot.getPlotId();
+
+        if (pid == null) lastPlotId.remove(p.getUniqueId());
+        else lastPlotId.put(p.getUniqueId(), pid);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -50,10 +59,11 @@ public class PlotGreetingListener implements Listener {
         Location to = e.getTo();
         if (to == null) return;
 
-        // Anti-spam: ignore same-block moves
-        if (sameBlock(from, to)) return;
+        // Anti-spam / performance: plot checks only need X/Z
+        if (sameXZBlock(from, to)) return;
 
         Player player = e.getPlayer();
+        UUID playerId = player.getUniqueId();
 
         Plot fromPlot = plugin.store().getPlotAt(from);
         Plot toPlot = plugin.store().getPlotAt(to);
@@ -61,18 +71,19 @@ public class PlotGreetingListener implements Listener {
         UUID fromId = (fromPlot == null) ? null : fromPlot.getPlotId();
         UUID toId = (toPlot == null) ? null : toPlot.getPlotId();
 
-        UUID last = lastPlotId.get(player.getUniqueId());
+        boolean hadLast = lastPlotId.containsKey(playerId);
+        UUID last = hadLast ? lastPlotId.get(playerId) : null;
 
-        // Nothing changed relative to what we last recorded
-        if (Objects.equals(toId, last)) return;
-
-        // --- Leave ---
-        if (fromPlot != null && !Objects.equals(fromId, toId)) {
-            plugin.getServer().getPluginManager().callEvent(new PlotLeaveEvent(fromPlot, player));
-            sendFarewell(player, fromPlot);
+        // If nothing changed relative to what we last recorded, bail
+        if (toId == null) {
+            if (!hadLast) return; // wilderness -> wilderness
+        } else {
+            if (hadLast && Objects.equals(toId, last)) return; // same plot as last recorded
         }
 
-        // --- Enter ---
+        // --- IMPORTANT FIX ---
+        // If moving from one plot to another, validate ENTER first.
+        // If ENTER is denied, do NOT fire LEAVE or farewell.
         if (toPlot != null && !Objects.equals(toId, fromId)) {
             PlotEnterEvent enter = new PlotEnterEvent(toPlot, player);
 
@@ -84,16 +95,25 @@ public class PlotGreetingListener implements Listener {
             plugin.getServer().getPluginManager().callEvent(enter);
 
             if (enter.isCancelled()) {
-                // ✅ 1.16+ compatible + Folia-safe via your util
                 TeleportUtil.safeTeleport(plugin, player, from);
-                // Do NOT update lastPlotId; they didn't actually enter.
-                return;
+                return; // Do not update lastPlotId; they did not enter.
             }
+        }
 
+        // --- Leave (only after enter succeeded, if there was a plot change) ---
+        if (fromPlot != null && !Objects.equals(fromId, toId)) {
+            plugin.getServer().getPluginManager().callEvent(new PlotLeaveEvent(fromPlot, player));
+            sendFarewell(player, fromPlot);
+        }
+
+        // --- Enter (only if actually changed plot) ---
+        if (toPlot != null && !Objects.equals(toId, fromId)) {
             sendWelcome(player, toPlot);
         }
 
-        lastPlotId.put(player.getUniqueId(), toId);
+        // Update last state: remove for wilderness, store for plots
+        if (toId == null) lastPlotId.remove(playerId);
+        else lastPlotId.put(playerId, toId);
     }
 
     @EventHandler
@@ -109,13 +129,11 @@ public class PlotGreetingListener implements Listener {
         }
     }
 
-    private boolean sameBlock(Location a, Location b) {
+    private boolean sameXZBlock(Location a, Location b) {
         if (a == null || b == null) return false;
         if (a.getWorld() == null || b.getWorld() == null) return false;
         if (a.getWorld() != b.getWorld()) return false;
-        return a.getBlockX() == b.getBlockX()
-                && a.getBlockY() == b.getBlockY()
-                && a.getBlockZ() == b.getBlockZ();
+        return a.getBlockX() == b.getBlockX() && a.getBlockZ() == b.getBlockZ();
     }
 
     private boolean canEnter(Player player, Plot plot) {
@@ -132,12 +150,8 @@ public class PlotGreetingListener implements Listener {
     }
 
     private void sendWelcome(Player player, Plot plot) {
-        // Don’t message the owner unless you want that:
-        // if (plot.getOwner().equals(player.getUniqueId())) return;
-
         String msg = plot.getWelcomeMessage();
         if (msg == null || msg.trim().isEmpty()) {
-            // Prefer Codex if available, otherwise fallback
             msg = tr(player,
                     "greetings.enter",
                     "&bEntering: &f{OWNER}&b's claim",
@@ -146,7 +160,6 @@ public class PlotGreetingListener implements Listener {
 
         player.sendMessage(color(msg));
 
-        // Optional title/subtitle if you want (uses plot fields)
         String title = plot.getEntryTitle();
         String sub = plot.getEntrySubtitle();
         if (title != null && !title.trim().isEmpty()) {
@@ -172,7 +185,7 @@ public class PlotGreetingListener implements Listener {
                 if (v != null && !v.trim().isEmpty()) return v;
             }
         } catch (Throwable ignored) {}
-        // apply placeholders to fallback too
+
         String out = fallback;
         if (placeholders != null) {
             for (Map.Entry<String, String> e : placeholders.entrySet()) {

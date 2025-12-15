@@ -8,25 +8,20 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClaimBlockManager {
 
     private final AegisGuard plugin;
-    private final Map<UUID, ClaimBlockData> cache = new HashMap<>();
+
+    // Thread-safe map because saveAsync() can iterate while the main thread updates values
+    private final Map<UUID, ClaimBlockData> cache = new ConcurrentHashMap<>();
+
     private final File file;
     private FileConfiguration data;
-
-    // ✅ NEW: used-blocks cache to reduce repeated plot scans
-    private final Map<UUID, Long> usedCache = new HashMap<>();
-    private final Map<UUID, Long> usedCacheUntil = new HashMap<>();
-    private static final long USED_CACHE_TTL_MS = 2000; // 2s is enough to stop spam rescans
-
-    // ✅ NEW: throttle save spam
-    private volatile boolean saveQueued = false;
 
     public ClaimBlockManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -34,7 +29,21 @@ public class ClaimBlockManager {
         load();
     }
 
-    // --- Core Math ---
+    // --------------------------------------------------
+    // Feature Toggle
+    // --------------------------------------------------
+
+    /**
+     * Master switch for claim block economy.
+     * If disabled, claims should not be blocked by budgets.
+     */
+    public boolean isEnabled() {
+        return plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
+    }
+
+    // --------------------------------------------------
+    // Core Math
+    // --------------------------------------------------
 
     /**
      * How many blocks does this player have in TOTAL (Wallet Size)?
@@ -50,40 +59,19 @@ public class ClaimBlockManager {
      * How many blocks are currently sitting on the ground as Plots?
      */
     public long getUsedBlocks(UUID uuid) {
-        if (uuid == null) return 0;
-
-        long now = System.currentTimeMillis();
-        Long until = usedCacheUntil.get(uuid);
-        if (until != null && until > now) {
-            return usedCache.getOrDefault(uuid, 0L);
-        }
-
         long used = 0;
 
-        // ✅ Null-safe store access
-        List<Plot> plots = null;
-        try {
-            plots = plugin.store().getPlots(uuid);
-        } catch (Throwable ignored) {}
-
+        // Null-safe: some DataStores may return null for "no plots"
+        List<Plot> plots = plugin.store().getPlots(uuid);
         if (plots != null) {
             for (Plot plot : plots) {
                 if (plot == null) continue;
-                try {
-                    used += plot.getArea();
-                } catch (Throwable ignored) {}
+                used += plot.getArea();
             }
         }
 
-        // Update caches
-        usedCache.put(uuid, used);
-        usedCacheUntil.put(uuid, now + USED_CACHE_TTL_MS);
-
-        // Update ClaimBlockData cache too (your existing behavior)
-        try {
-            getOrCreate(uuid).setUsedBlocksCache(used);
-        } catch (Throwable ignored) {}
-
+        // Update cache
+        getOrCreate(uuid).setUsedBlocksCache(used);
         return used;
     }
 
@@ -92,14 +80,15 @@ public class ClaimBlockManager {
      */
     public long getAvailableBlocks(UUID uuid) {
         long available = getTotalBlocks(uuid) - getUsedBlocks(uuid);
-        return Math.max(0, available);
+        return Math.max(0L, available);
     }
 
     /**
      * Check if player can afford a new claim of X size.
      */
     public boolean canAfford(UUID uuid, long areaNeeded) {
-        if (uuid == null) return false;
+        // If system is disabled, do not restrict claims
+        if (!isEnabled()) return true;
 
         // Admins bypass
         Player p = plugin.getServer().getPlayer(uuid);
@@ -108,33 +97,12 @@ public class ClaimBlockManager {
         return getAvailableBlocks(uuid) >= areaNeeded;
     }
 
-    // --- Cache Control (NEW) ---
-
-    /**
-     * ✅ NEW: Invalidate used-block cache (call after claim/unclaim/merge/resize).
-     */
-    public void invalidateUsed(UUID uuid) {
-        if (uuid == null) return;
-        usedCache.remove(uuid);
-        usedCacheUntil.remove(uuid);
-    }
-
-    /**
-     * ✅ NEW: Force an immediate recompute of used blocks.
-     */
-    public long refreshUsed(UUID uuid) {
-        invalidateUsed(uuid);
-        return getUsedBlocks(uuid);
-    }
-
-    // --- Data Management ---
+    // --------------------------------------------------
+    // Data Management
+    // --------------------------------------------------
 
     public ClaimBlockData getOrCreate(UUID uuid) {
-        if (uuid == null) throw new IllegalArgumentException("uuid cannot be null");
-        if (!cache.containsKey(uuid)) {
-            cache.put(uuid, new ClaimBlockData(uuid));
-        }
-        return cache.get(uuid);
+        return cache.computeIfAbsent(uuid, ClaimBlockData::new);
     }
 
     public void setStarterClaimed(UUID uuid, boolean claimed) {
@@ -143,29 +111,9 @@ public class ClaimBlockManager {
         saveAsync();
     }
 
-    // Optional helpers (nice for tasks/shops later, won’t break anything)
-    public void addEarnedBlocks(UUID uuid, long amount) {
-        if (uuid == null || amount <= 0) return;
-        ClaimBlockData cbd = getOrCreate(uuid);
-        cbd.setEarnedBlocks(cbd.getEarnedBlocks() + amount);
-        saveAsync();
-    }
-
-    public void addBonusBlocks(UUID uuid, long amount) {
-        if (uuid == null || amount <= 0) return;
-        ClaimBlockData cbd = getOrCreate(uuid);
-        cbd.setBonusBlocks(cbd.getBonusBlocks() + amount);
-        saveAsync();
-    }
-
-    public void addBoughtBlocks(UUID uuid, long amount) {
-        if (uuid == null || amount <= 0) return;
-        ClaimBlockData cbd = getOrCreate(uuid);
-        cbd.setBoughtBlocks(cbd.getBoughtBlocks() + amount);
-        saveAsync();
-    }
-
-    // --- Persistence (YAML) ---
+    // --------------------------------------------------
+    // Persistence (YAML)
+    // --------------------------------------------------
 
     public void load() {
         if (!file.exists()) {
@@ -193,7 +141,8 @@ public class ClaimBlockManager {
                     cbd.setClaimedStarter(data.getBoolean(path + ".starter_claimed", false));
 
                     cache.put(uuid, cbd);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -201,12 +150,12 @@ public class ClaimBlockManager {
     public void save() {
         if (data == null) return;
 
-        for (Map.Entry<UUID, ClaimBlockData> entry : cache.entrySet()) {
-            UUID uuid = entry.getKey();
+        // Snapshot to avoid async iteration issues
+        for (Map.Entry<UUID, ClaimBlockData> entry : Map.copyOf(cache).entrySet()) {
+            String path = "players." + entry.getKey().toString();
             ClaimBlockData cbd = entry.getValue();
-            if (uuid == null || cbd == null) continue;
+            if (cbd == null) continue;
 
-            String path = "players." + uuid;
             data.set(path + ".earned", cbd.getEarnedBlocks());
             data.set(path + ".bonus", cbd.getBonusBlocks());
             data.set(path + ".bought", cbd.getBoughtBlocks());
@@ -221,17 +170,8 @@ public class ClaimBlockManager {
     }
 
     public void saveAsync() {
-        // ✅ NEW: coalesce spam into one async save
-        if (saveQueued) return;
-        saveQueued = true;
-
-        plugin.runGlobalAsync(() -> {
-            try {
-                save();
-            } finally {
-                saveQueued = false;
-            }
-        });
+        // Use plugin's Folia-safe async runner
+        plugin.runGlobalAsync(this::save);
     }
 
     public void shutdown() {

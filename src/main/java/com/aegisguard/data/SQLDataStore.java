@@ -612,11 +612,30 @@ public class SQLDataStore implements IDataStore {
         isDirty = true;
     }
 
+    /**
+     * FIXED (important): ensure plotsByChunk is de-indexed so deleted plots don't become "ghosts".
+     */
     @Override
     public void removePlot(UUID owner, UUID plotId) {
+        Plot removed = null;
+
         List<Plot> list = plotsByOwner.get(owner);
         if (list != null) {
-            list.removeIf(p -> p.getPlotId().equals(plotId));
+            for (Iterator<Plot> it = list.iterator(); it.hasNext(); ) {
+                Plot p = it.next();
+                if (p.getPlotId().equals(plotId)) {
+                    removed = p;
+                    it.remove();
+                    break;
+                }
+            }
+            if (list.isEmpty()) {
+                plotsByOwner.remove(owner);
+            }
+        }
+
+        if (removed != null) {
+            deIndexPlot(removed);
         }
 
         plugin.runGlobalAsync(() -> {
@@ -633,6 +652,8 @@ public class SQLDataStore implements IDataStore {
                 e.printStackTrace();
             }
         });
+
+        isDirty = true;
     }
 
     @Override
@@ -648,35 +669,70 @@ public class SQLDataStore implements IDataStore {
                     ps.setString(1, owner.toString());
                     ps.executeUpdate();
                 }
-                // Clean up zones for all plots owned by this UUID (brute-force if needed)
-                // Optional: if you also store owner_uuid in zones, you could target more precisely.
+                // Optional zone cleanup by owner could be added if zones stored owner_uuid too.
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
+
+        isDirty = true;
     }
 
+    /**
+     * HARDENED: Ownership transfer should:
+     * - Remove from old owner's list (and remove empty key)
+     * - Reset plot internals via internalSetOwner()
+     * - Prevent duplicates under new owner
+     * - Keep chunk index consistent (re-index safety)
+     * - Persist immediately
+     */
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
-        List<Plot> oldList = plotsByOwner.get(plot.getOwner());
-        if (oldList != null) oldList.remove(plot);
+        if (plot == null || newOwner == null) return;
 
+        UUID oldOwner = plot.getOwner();
+
+        // 1) Remove from old owner list
+        List<Plot> oldList = plotsByOwner.get(oldOwner);
+        if (oldList != null) {
+            oldList.remove(plot);
+            if (oldList.isEmpty()) {
+                plotsByOwner.remove(oldOwner);
+            }
+        }
+
+        // 2) Re-index safety (coords don't change, but keeps chunk sets clean)
+        deIndexPlot(plot);
+
+        // 3) Reset internals + swap owner/name (clears roles/bans/likes/role flags/title/desc properly)
         plot.internalSetOwner(newOwner, newOwnerName);
-        plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>()).add(plot);
 
+        // 4) Add to new owner list (dedupe safe)
+        List<Plot> newList = plotsByOwner.computeIfAbsent(newOwner, k -> new ArrayList<>());
+        if (!newList.contains(plot)) {
+            newList.add(plot);
+        }
+
+        // 5) Re-add to chunk index
+        indexPlot(plot);
+
+        // 6) Persist
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
     public void addPlayerRole(Plot plot, UUID uuid, String role) {
         plot.setRole(uuid, role);
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
     public void removePlayerRole(Plot plot, UUID uuid) {
         plot.removeRole(uuid);
         savePlot(plot);
+        isDirty = true;
     }
 
     @Override
@@ -686,17 +742,15 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================  
+    // ==============================================================
     // --- ROLE FLAG STATE (TriState) --------------------------------
-    // ==============================================================  
+    // ==============================================================
 
     @Override
     public TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
         if (plot == null || roleId == null || flagKey == null) {
             return TriState.INHERIT;
         }
-
-        // Delegate to Plot’s internal tri-state storage
         return plot.getRoleFlagState(roleId, flagKey);
     }
 
@@ -711,9 +765,9 @@ public class SQLDataStore implements IDataStore {
         isDirty = true;
     }
 
-    // ==============================================================  
-    // --- Indexing Helpers ---  
-    // ==============================================================  
+    // ==============================================================
+    // --- Indexing Helpers ---
+    // ==============================================================
 
     private void indexPlot(Plot plot) {
         String w = plot.getWorld();
@@ -771,9 +825,9 @@ public class SQLDataStore implements IDataStore {
         return result;
     }
 
-    // ==============================================================  
-    // --- Wilderness Logging ---  
-    // ==============================================================  
+    // ==============================================================
+    // --- Wilderness Logging ---
+    // ==============================================================
 
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -802,9 +856,9 @@ public class SQLDataStore implements IDataStore {
         // TODO: implement rollback logic if you want SQL-driven wilderness revert
     }
 
-    // ==============================================================  
-    // --- Basic Accessors ---  
-    // ==============================================================  
+    // ==============================================================
+    // --- Basic Accessors ---
+    // ==============================================================
 
     @Override
     public boolean isDirty() {

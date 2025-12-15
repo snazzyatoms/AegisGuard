@@ -1,6 +1,7 @@
 # ======================================
 # AegisGuard v1.2.4 - Codex: Modern English
 # Migrated from messages.yml: modern_english
+# Completed to match Old English key contract
 # ======================================
 
 # --- Navigation ---
@@ -39,6 +40,8 @@ domain_market_button_back_lore:
 auction_button_back_lore:
   - '&7Return to the auction overview.'
 
+button_back_admin: '&fBack to Admin'
+
 # --- General Errors ---
 role_edit_self_error: '&cError: You cannot edit your own role.'
 no_perm: '&cError: You do not have permission for this.'
@@ -72,10 +75,10 @@ merge_success: '&a✔ Claims successfully merged!'
 
 # --- Economy & Limits ---
 max_claims_reached: '&c❌ Claim limit reached: You can only own {AMOUNT} claim(s).'
-need_vault: '&c❌ Insufficient funds. You need &e${AMOUNT}&c.'
-cost_deducted: '&e💰 Charged &6${AMOUNT}&e.'
+need_vault: '&c❌ Insufficient funds. You need &e{AMOUNT}&c.'
+cost_deducted: '&e💰 Charged &6{AMOUNT}&e.'
 items_deducted: '&e💰 Paid &6{AMOUNT} {ITEM}&e.'
-vault_refund: '&e💰 Refunded &6${AMOUNT}&e (&f{PERCENT}%&e).'
+vault_refund: '&e💰 Refunded &6{AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Refunded &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 
 upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
@@ -214,6 +217,7 @@ farewell-cleared: '&e✔ Farewell message cleared.'
 
 plot_created: '&a✔ Claim created successfully.'
 plot_unclaimed: '&e⚠ Claim removed.'
+plot_too_small: '&c❌ The selected area is too small.'
 no_plot_here: '&c❌ You are not standing inside your claim.'
 
 cannot_break: '&c❌ You cannot break blocks here; this area is protected.'
@@ -273,11 +277,14 @@ info_message: '&7Open the Guardian''s Guide for help and tips.'
 info_lore:
   - '&7View commands, explanations, and usage tips.'
 
-button_plot_status: '&b📜 Claim Status'
+button_plot_status: '&b📊 Claim Status'
+plot_status_button_title: '&b📊 Claim Status'
 plot_status_lore:
-  - '&7View detailed information about'
-  - '&7your claim: protections, growth,'
-  - '&7economy, and visitors.'
+  - '&7View a clean breakdown of claim'
+  - '&7details, bonuses, territory, and growth.'
+  - ' '
+  - '&8Only your strongest unlocked bonuses'
+  - '&8are displayed to keep this view clean.'
 
 # --- Codex ---
 codex_gui_title: '&9§lGuardian''s Guide'
@@ -341,6 +348,7 @@ utility_chapter_lore:
   - '&e/ag stuck'
   - '&7Teleport to the nearest safe spot.'
 
+# --- Preferences ---
 settings_menu_title: '&9⚙ Preferences'
 button_sounds_on: '&a🔊 Sounds: ON'
 button_sounds_off: '&c🔇 Sounds: OFF'
@@ -355,11 +363,11 @@ settings_gui_not_toggle: '&cThese examples cannot be changed here. Use Claim Set
 level_gui_title: '&dPlot Ascension'
 level_current_status: '&bCurrent Plot Level'
 
-# Ascension headers (per-plot info)
-level_header_owner: '&dOwner:&f {owner}'
-level_header_world: '&dWorld:&f {world}'
-level_header_level: '&dCurrent Level:&f {level}'
-level_header_multiplier: '&dReward Multiplier:&f {multiplier}x'
+# Ascension headers (normalized placeholders)
+level_header_owner: '&dOwner:&f {OWNER}'
+level_header_world: '&dWorld:&f {WORLD}'
+level_header_level: '&dCurrent Level:&f {LEVEL}'
+level_header_multiplier: '&dReward Multiplier:&f {MULTIPLIER}x'
 
 # Current bonuses panel
 level_current_blessing_name: '&dCurrent Bonuses'
@@ -395,7 +403,7 @@ level_track_next_cost: '&eCost: &6{COST}'
 level_track_footer_next: '&6Upgrade to unlock these bonuses.'
 level_track_footer_progress: '&7Progress toward the next upgrade.'
 
-# Optional cube display names / lore for the emerald / gold / red blocks
+# Optional cube display names / lore
 level_track_completed_name: '&aTrack Completed'
 level_track_completed_lore:
   - '&7All levels in this track have'
@@ -428,16 +436,14 @@ level_upgrade_cost: '&eCost: &6{COST}'
 level_upgrade_new_buffs_title: '&dNew Bonuses'
 level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
 
-# LORE: Used when leveling expands claim size
 level_button_lore:
   - '&7Upgrade your plot to increase'
   - '&7its size and unlock new features.'
-
-# LORE: Used when leveling DOES NOT expand claim size
 level_button_lore_static:
   - '&7Upgrade your plot to unlock'
   - '&7new perks and features.'
 
+# --- Zones ---
 zone_gui_title: '&3Zone Manager'
 zone_created: '&a✔ Zone ''{ZONE}'' created.'
 zone_deleted: '&c✖ Zone ''{ZONE}'' deleted.'
@@ -459,6 +465,7 @@ zone_button_lore:
   - '&7Create and manage sub-claims'
   - '&7that can be rented out.'
 
+# --- Biomes ---
 biome_gui_title: '&2Biome'
 biome_changed: '&a✔ Biome set to {BIOME}.'
 biome_cost_paid: '&e💰 Paid &6{AMOUNT}&e to change biome.'
@@ -479,7 +486,7 @@ like_own_plot: '&cError: You cannot like your own claim.'
 like_disabled: '&cLikes are disabled on this server/world.'
 
 # =========================================================
-# ✅ NEW: Claim Blocks / Domain Registry (Budget System)
+# ✅ Claim Blocks / Domain Registry (Budget System)
 # =========================================================
 ledger_title: '&6📜 Domain Registry'
 ledger_available: '&7Available: &a'
@@ -492,16 +499,6 @@ claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for pl
 claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
 
 # --- Plot Status GUI ---
-button_plot_status: '&b📊 Claim Status'
-plot_status_button_title: '&b📊 Claim Status'
-
-plot_status_lore:
-  - '&7View a clean breakdown of claim'
-  - '&7details, bonuses, territory, and growth.'
-  - ' '
-  - '&8Only your strongest unlocked bonuses'
-  - '&8are displayed to keep this view clean.'
-
 plot_status_gui_title: '&b⚔ Claim Status'
 plot_status_header_title: '&6Claim Information'
 plot_status_blessings_title: '&dActive Bonuses & Effects'
@@ -548,6 +545,24 @@ flags_info_lore:
   - '&cRed = OFF&7: Normal server rules apply.'
   - ' '
   - '&7Hover each icon to see exactly what it does.'
+
+# --- Generic Flag Messages (added for parity) ---
+toggle_on: '&a✔ Enabled {FLAG}.'
+toggle_off: '&c✖ Disabled {FLAG}.'
+toggle_fail_cost: '&c❌ You need &e{AMOUNT}&c to enable {FLAG}.'
+flag_no_perm: '&cYou do not have permission to change {FLAG}.'
+flag_denied: '&c❌ You cannot do that in {PLOT}.'
+flag_toggled: '&eUpdated {FLAG}: &f{STATUS}'
+
+flag_lore_allow: '&7Allowed: &a{STATUS}'
+flag_lore_cost: '&7Enable Cost: &6{COST}'
+flag_lore_allow_status_inherit: '&eInherited from World'
+flag_lore_allow_status_allow: '&aAllowed by Claim'
+flag_lore_allow_status_deny: '&cDenied by Claim'
+flag_lore_role_status_inherit: '&eInherited from Claim'
+flag_lore_role_status_allow: '&aAllowed for Role'
+flag_lore_role_status_deny: '&cDenied for Role'
+flag_lore_toggle_action: '&eClick to cycle: Inherit → Allow → Deny'
 
 # --- Flags ---
 button_pvp_on: '&a⚔ PvP Protection: ON'
@@ -653,6 +668,7 @@ shop_toggle_lore:
   - '&7and trade setups inside this claim.'
   - '&7Cost to enable: &6{COST}'
 
+# --- Cosmetics ---
 button_cosmetics: '&dCosmetics'
 cosmetics_lore:
   - '&7Visual effects and border cosmetics.'
@@ -666,8 +682,6 @@ cosmetics_click_disable: '&7Click to remove.'
 cosmetics_removed: '&eCosmetic effect removed.'
 cosmetics_already_active: '&cThis cosmetic is already active.'
 cosmetic_purchased: '&a✔ Cosmetic purchased and applied.'
-
-flag_toggled: '&eUpdated {FLAG}: &f{STATUS}'
 
 # Server / inheritance tooltips
 server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
@@ -714,6 +728,7 @@ role_flag_lore_common:
   - ' '
   - '&eClick to cycle: Inherit → Allow → Deny'
 
+# --- Roles ---
 roles_gui_title: '&eMembers'
 roles_manage_title: '&bManage: {PLAYER}'
 trusted_plot_selector_title: '&bSelect Claim'
@@ -726,12 +741,18 @@ button_remove_trusted: '&cRemove'
 role_self: '&cYou cannot edit your own role.'
 role_is_owner: '&cYou cannot edit the owner''s role.'
 role_set_to: '&a✔ {PLAYER} is now set to role: {ROLE}.'
+role_not_found: '&c❌ Player {PLAYER} is not trusted on this claim.'
 role_removed: '&e✔ {PLAYER} has been removed from your claim.'
 
 # --- Admin Tools ---
 admin_menu_title: '&c⚙ Admin'
 admin_reloading: '&7Reloading configuration and data...'
 admin_reload_complete: '&a✔ Reload complete.'
+
+button_admin_plots: '&bView All Claims'
+button_admin_requests: '&cView Requests'
+button_admin_zones: '&6Server Zones'
+
 button_admin_auto_remove: '&6Auto-Wipe Bans'
 admin_auto_remove_lore:
   - '&7Automatically delete claims owned'
@@ -770,7 +791,6 @@ admin_plot_actions:
   - '&cRight-Click: &7Delete'
 admin_plot_teleport: '&eTeleported to {PLAYER}''s claim.'
 admin_plot_deleted: '&c✖ Deleted {PLAYER}''s claim.'
-button_back_admin: '&fBack to Admin'
 
 admin-zone-created: '&a✔ Server Zone created.'
 admin-zone-deleted: '&c✖ Server Zone deleted.'

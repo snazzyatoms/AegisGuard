@@ -9,12 +9,12 @@ import java.util.UUID;
 public class ClaimBlockData {
 
     private final UUID playerUUID;
-    
+
     // The "Bank Account"
     private long earnedBlocks;      // From playtime/events
     private long bonusBlocks;       // From admin commands/ranks
     private long boughtBlocks;      // From economy/marketplace
-    
+
     // The "Starter" Flag
     // If true, they have already used their "Free First Claim" coupon.
     // They cannot claim another "Starter" plot even if they delete their current one.
@@ -22,6 +22,9 @@ public class ClaimBlockData {
 
     // Transient (not saved to DB, calculated at runtime)
     private transient long usedBlocksCache = 0;
+
+    // ✅ NEW (Transient): helps debugging / GUI freshness if you ever want it
+    private transient long lastUsedCacheUpdate = 0L;
 
     public ClaimBlockData(UUID playerUUID) {
         this.playerUUID = playerUUID;
@@ -36,16 +39,25 @@ public class ClaimBlockData {
     public UUID getOwner() { return playerUUID; }
 
     public long getEarnedBlocks() { return earnedBlocks; }
-    public void setEarnedBlocks(long earned) { this.earnedBlocks = earned; }
-    public void addEarnedBlocks(long amount) { this.earnedBlocks += amount; }
+    public void setEarnedBlocks(long earned) { this.earnedBlocks = Math.max(0, earned); }
+    public void addEarnedBlocks(long amount) {
+        if (amount <= 0) return;
+        this.earnedBlocks = Math.max(0, this.earnedBlocks + amount);
+    }
 
     public long getBonusBlocks() { return bonusBlocks; }
-    public void setBonusBlocks(long bonus) { this.bonusBlocks = bonus; }
-    public void addBonusBlocks(long amount) { this.bonusBlocks += amount; }
+    public void setBonusBlocks(long bonus) { this.bonusBlocks = Math.max(0, bonus); }
+    public void addBonusBlocks(long amount) {
+        if (amount <= 0) return;
+        this.bonusBlocks = Math.max(0, this.bonusBlocks + amount);
+    }
 
     public long getBoughtBlocks() { return boughtBlocks; }
-    public void setBoughtBlocks(long bought) { this.boughtBlocks = bought; }
-    public void addBoughtBlocks(long amount) { this.boughtBlocks += amount; }
+    public void setBoughtBlocks(long bought) { this.boughtBlocks = Math.max(0, bought); }
+    public void addBoughtBlocks(long amount) {
+        if (amount <= 0) return;
+        this.boughtBlocks = Math.max(0, this.boughtBlocks + amount);
+    }
 
     public boolean hasClaimedStarter() { return claimedStarter; }
     public void setClaimedStarter(boolean claimed) { this.claimedStarter = claimed; }
@@ -55,5 +67,25 @@ public class ClaimBlockData {
      * but we cache it here for quick GUI display.
      */
     public long getUsedBlocksCache() { return usedBlocksCache; }
-    public void setUsedBlocksCache(long used) { this.usedBlocksCache = used; }
+    public void setUsedBlocksCache(long used) {
+        this.usedBlocksCache = Math.max(0, used);
+        this.lastUsedCacheUpdate = System.currentTimeMillis();
+    }
+
+    // ✅ NEW helpers (do not change existing logic; just convenience)
+
+    /** Earned + Bonus + Bought (does NOT include starter config amount). */
+    public long getTotalNonStarter() {
+        return Math.max(0, earnedBlocks) + Math.max(0, bonusBlocks) + Math.max(0, boughtBlocks);
+    }
+
+    /** Full total including starter config amount provided by the manager/config. */
+    public long getTotalWithStarter(long starterFromConfig) {
+        return Math.max(0, starterFromConfig) + getTotalNonStarter();
+    }
+
+    /** Optional: when was usedBlocksCache last refreshed? (0 = never) */
+    public long getLastUsedCacheUpdate() {
+        return lastUsedCacheUpdate;
+    }
 }

@@ -12,7 +12,7 @@ folia-supported: true
 commands:
   aegis:
     description: Main AegisGuard command.
-    usage: /aegis <help|menu|claim|wand|home|spawn|merge>
+    usage: /aegis <help|menu|wand|claim|unclaim|resize|merge|setspawn|home|welcome|farewell|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -41,7 +41,6 @@ permissions:
       aegis.unclaim: true
       aegis.resize: true
       aegis.merge: true
-      # Sidebar permission removed here
       aegis.home: true
       aegis.spawn: true
       aegis.setspawn: true
@@ -51,6 +50,7 @@ permissions:
       aegis.setdesc: true
       aegis.stuck: true
       aegis.visit: true
+      aegis.ledger: true
       # Features
       aegis.market: true
       aegis.sell: true
@@ -60,7 +60,7 @@ permissions:
       aegis.level: true
       aegis.biome: true
       aegis.like: true
-      # Moderation
+      # Moderation (owner tools)
       aegis.kick: true
       aegis.ban: true
       aegis.unban: true
@@ -101,7 +101,6 @@ permissions:
   aegis.merge:
     description: Merge adjacent plots.
     default: true
-  # aegis.sidebar removed from here
   aegis.home:
     description: Teleport to plot spawn.
     default: true
@@ -116,6 +115,9 @@ permissions:
     default: true
   aegis.stuck:
     description: Use unstuck command.
+    default: true
+  aegis.ledger:
+    description: View your claim block ledger (/aegis ledger or /aegis blocks).
     default: true
 
   # --- IDENTITY & SOCIAL ---

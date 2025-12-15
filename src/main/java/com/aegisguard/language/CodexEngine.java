@@ -2,6 +2,7 @@ package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -27,7 +28,7 @@ public class CodexEngine {
 
     // ✅ CHANGED: Use List to preserve the order defined in codex.yml
     private final List<String> availableStyles = new ArrayList<>();
-    
+
     private final Map<String, YamlConfiguration> styleBundles = new HashMap<>();
 
     private YamlConfiguration coreBundle;
@@ -95,7 +96,11 @@ public class CodexEngine {
                 continue;
             }
             ensureResourceExists("codex/" + styleFileName);
-            this.styleBundles.put(style, loadYaml("codex" + File.separator + styleFileName));
+
+            YamlConfiguration raw = loadYaml("codex" + File.separator + styleFileName);
+            YamlConfiguration normalized = normalizeStyleYaml(style, raw);
+
+            this.styleBundles.put(style, normalized);
         }
 
         plugin.getLogger().info("[Codex] Loaded styles: " + String.join(", ", availableStyles));
@@ -121,6 +126,50 @@ public class CodexEngine {
     private YamlConfiguration loadYaml(String relativePath) {
         File f = new File(plugin.getDataFolder(), relativePath);
         return YamlConfiguration.loadConfiguration(f);
+    }
+
+    /**
+     * ✅ NEW: Normalize style YAMLs so translations can be wrapped or unwrapped.
+     *
+     * Supports:
+     * - Flat files: menu_title: ...
+     * - Wrapped files: spanish_mx: { menu_title: ... }
+     * - Single-root wrapper files (one top-level key): { some_root: { ... } }
+     */
+    private YamlConfiguration normalizeStyleYaml(String style, YamlConfiguration cfg) {
+        if (cfg == null) return new YamlConfiguration();
+
+        Set<String> top = cfg.getKeys(false);
+        if (top == null || top.isEmpty()) return cfg;
+
+        // Case 1: Exact wrapper matches style id (spanish_mx:, spanish_ar:, etc.)
+        if (style != null && cfg.isConfigurationSection(style)) {
+            ConfigurationSection sec = cfg.getConfigurationSection(style);
+            return flattenSection(sec);
+        }
+
+        // Case 2: File has one single wrapper root (common in older messages.yml style blocks)
+        if (top.size() == 1) {
+            String only = top.iterator().next();
+            if (cfg.isConfigurationSection(only)) {
+                ConfigurationSection sec = cfg.getConfigurationSection(only);
+                return flattenSection(sec);
+            }
+        }
+
+        // Otherwise: assume already flat
+        return cfg;
+    }
+
+    private YamlConfiguration flattenSection(ConfigurationSection sec) {
+        YamlConfiguration out = new YamlConfiguration();
+        if (sec == null) return out;
+
+        for (String key : sec.getKeys(true)) {
+            Object val = sec.get(key);
+            out.set(key, val);
+        }
+        return out;
     }
 
     /* --------------------------------------------------------
@@ -167,7 +216,7 @@ public class CodexEngine {
      */
     public String getNextStyle(String currentStyle) {
         if (availableStyles.isEmpty()) return defaultStyle;
-        
+
         int index = availableStyles.indexOf(currentStyle);
         // If not found or at the end of the list, loop back to start
         if (index == -1 || index >= availableStyles.size() - 1) {
@@ -256,34 +305,61 @@ public class CodexEngine {
                 : "old_english";
     }
 
+    /**
+     * ✅ NEW: Generate candidate keys so BOTH hyphen-style and underscore-style keys work.
+     */
+    private List<String> keyCandidates(String key) {
+        if (key == null || key.isEmpty()) return Collections.emptyList();
+
+        LinkedHashSet<String> out = new LinkedHashSet<>();
+        out.add(key);
+
+        if (key.indexOf('-') >= 0) out.add(key.replace('-', '_'));
+        if (key.indexOf('_') >= 0) out.add(key.replace('_', '-'));
+
+        // (Optional sanity) also allow accidental double separators
+        out.add(key.replace('-', '_').replaceAll("__+", "_"));
+        out.add(key.replace('_', '-').replaceAll("--+", "-"));
+
+        return new ArrayList<>(out);
+    }
+
     private String resolve(String style, String key) {
         if (key == null || key.isEmpty()) {
             return "";
         }
 
-        // 1) Overrides (highest priority)
-        if (overridesBundle != null && overridesBundle.contains(key)) {
-            return overridesBundle.getString(key, key);
-        }
-
-        // 2) Style-specific bundle
-        if (style != null) {
-            YamlConfiguration styleCfg = styleBundles.get(style);
-            if (styleCfg != null && styleCfg.contains(key)) {
-                return styleCfg.getString(key, key);
+        for (String k : keyCandidates(key)) {
+            // 1) Overrides (highest priority)
+            if (overridesBundle != null && overridesBundle.contains(k)) {
+                return overridesBundle.getString(k, k);
             }
         }
 
-        // 3) Core bundle (shared)
-        if (coreBundle != null && coreBundle.contains(key)) {
-            return coreBundle.getString(key, key);
+        for (String k : keyCandidates(key)) {
+            // 2) Style-specific bundle
+            if (style != null) {
+                YamlConfiguration styleCfg = styleBundles.get(style);
+                if (styleCfg != null && styleCfg.contains(k)) {
+                    return styleCfg.getString(k, k);
+                }
+            }
         }
 
-        // 4) Fallback style bundle
-        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
-            if (fbCfg != null && fbCfg.contains(key)) {
-                return fbCfg.getString(key, key);
+        for (String k : keyCandidates(key)) {
+            // 3) Core bundle (shared)
+            if (coreBundle != null && coreBundle.contains(k)) {
+                return coreBundle.getString(k, k);
+            }
+        }
+
+        for (String k : keyCandidates(key)) {
+            // 4) Fallback style bundle
+            if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
+                YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
+                if (fbCfg != null && fbCfg.contains(k)) {
+                    return fbCfg.getString(k, k);
+                }
             }
         }
 
@@ -299,44 +375,52 @@ public class CodexEngine {
         List<String> result;
 
         // 1) Overrides
-        if (overridesBundle != null && overridesBundle.contains(key)) {
-            result = overridesBundle.getStringList(key);
-            if (!result.isEmpty()) return result;
-
-            String single = overridesBundle.getString(key);
-            if (single != null) return Collections.singletonList(single);
-        }
-
-        // 2) Style-specific bundle
-        if (style != null) {
-            YamlConfiguration styleCfg = styleBundles.get(style);
-            if (styleCfg != null && styleCfg.contains(key)) {
-                result = styleCfg.getStringList(key);
+        for (String k : keyCandidates(key)) {
+            if (overridesBundle != null && overridesBundle.contains(k)) {
+                result = overridesBundle.getStringList(k);
                 if (!result.isEmpty()) return result;
 
-                String single = styleCfg.getString(key);
+                String single = overridesBundle.getString(k);
                 if (single != null) return Collections.singletonList(single);
             }
         }
 
-        // 3) Core bundle
-        if (coreBundle != null && coreBundle.contains(key)) {
-            result = coreBundle.getStringList(key);
-            if (!result.isEmpty()) return result;
+        // 2) Style-specific bundle
+        for (String k : keyCandidates(key)) {
+            if (style != null) {
+                YamlConfiguration styleCfg = styleBundles.get(style);
+                if (styleCfg != null && styleCfg.contains(k)) {
+                    result = styleCfg.getStringList(k);
+                    if (!result.isEmpty()) return result;
 
-            String single = coreBundle.getString(key);
-            if (single != null) return Collections.singletonList(single);
+                    String single = styleCfg.getString(k);
+                    if (single != null) return Collections.singletonList(single);
+                }
+            }
+        }
+
+        // 3) Core bundle
+        for (String k : keyCandidates(key)) {
+            if (coreBundle != null && coreBundle.contains(k)) {
+                result = coreBundle.getStringList(k);
+                if (!result.isEmpty()) return result;
+
+                String single = coreBundle.getString(k);
+                if (single != null) return Collections.singletonList(single);
+            }
         }
 
         // 4) Fallback style
-        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
-            if (fbCfg != null && fbCfg.contains(key)) {
-                result = fbCfg.getStringList(key);
-                if (!result.isEmpty()) return result;
+        for (String k : keyCandidates(key)) {
+            if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
+                YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
+                if (fbCfg != null && fbCfg.contains(k)) {
+                    result = fbCfg.getStringList(k);
+                    if (!result.isEmpty()) return result;
 
-                String single = fbCfg.getString(key);
-                if (single != null) return Collections.singletonList(single);
+                    String single = fbCfg.getString(k);
+                    if (single != null) return Collections.singletonList(single);
+                }
             }
         }
 
@@ -350,12 +434,27 @@ public class CodexEngine {
 
         String out = input;
         for (Map.Entry<String, String> e : placeholders.entrySet()) {
-            String value = (e.getValue() == null) ? "" : e.getValue();
-            String brace = "{" + e.getKey() + "}";
-            String percent = "%" + e.getKey() + "%";
+            String rawKey = e.getKey();
+            if (rawKey == null || rawKey.isEmpty()) continue;
 
-            out = out.replace(brace, value);
-            out = out.replace(percent, value);
+            String value = (e.getValue() == null) ? "" : e.getValue();
+
+            // Support {KEY}, %KEY%, and ${KEY}
+            String brace = "{" + rawKey + "}";
+            String braceLower = "{" + rawKey.toLowerCase(Locale.ROOT) + "}";
+            String braceUpper = "{" + rawKey.toUpperCase(Locale.ROOT) + "}";
+
+            String percent = "%" + rawKey + "%";
+            String percentLower = "%" + rawKey.toLowerCase(Locale.ROOT) + "%";
+            String percentUpper = "%" + rawKey.toUpperCase(Locale.ROOT) + "%";
+
+            String dollar = "${" + rawKey + "}";
+            String dollarLower = "${" + rawKey.toLowerCase(Locale.ROOT) + "}";
+            String dollarUpper = "${" + rawKey.toUpperCase(Locale.ROOT) + "}";
+
+            out = out.replace(brace, value).replace(braceLower, value).replace(braceUpper, value);
+            out = out.replace(percent, value).replace(percentLower, value).replace(percentUpper, value);
+            out = out.replace(dollar, value).replace(dollarLower, value).replace(dollarUpper, value);
         }
         return out;
     }

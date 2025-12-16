@@ -14,7 +14,6 @@ language_styles:
     - spanish_mx
     - spanish_ar
 
-
 # ======================================
 # OLD ENGLISH STYLE (Default)
 # ======================================
@@ -66,6 +65,7 @@ old_english:
   upkeep_failed_warning: '&c❌ Warning! Thy coffers are empty. Tribute for thy plot''s upkeep is due.'
   plot_expired_upkeep: '&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!'
   plot-is-locked: '&c❌ This dominion is locked pending tribute and cannot be altered.'
+  plot_is_locked: '&c❌ This dominion is locked pending tribute and cannot be altered.' # alias
 
   # --- Plot Levels / Ascension ---
   level_header_owner: '&dLord / Lady:&f {owner}'
@@ -125,22 +125,18 @@ old_english:
   level_upgrade_click_hint: '&eClick to attempt ascension.'
 
   # --- Track Block Items (extra aliases for big cubes) ---
-  # Completed track (emerald / gold block)
   level_track_completed_title: '&aPath Mastered'
   level_track_completed_lore_1: '&7All steps of this path are'
   level_track_completed_lore_2: '&7fulfilled; thou hast mastered it.'
 
-  # Current track (active path)
   level_track_current_title: '&dCurrent Path'
   level_track_current_lore_1: '&7These boons are active upon'
   level_track_current_lore_2: '&7thy dominion at present.'
 
-  # Locked track
   level_track_locked_title: '&cPath Bound'
   level_track_locked_lore_1: '&7Further rites are sealed;'
   level_track_locked_lore_2: '&7thou must ascend in order.'
 
-  # Next step / upcoming tier
   level_track_next_title: '&dNext Step on this Path'
   level_track_next_lore_1: '&7Advance to unlock these blessings.'
   level_track_next_lore_2: '&7Tribute required: &6{COST}'
@@ -154,6 +150,8 @@ old_english:
   auction-sold: '&a✔ Thy dominion hath been sold at auction to {PLAYER}. A tithe of &6{AMOUNT}&a hath been granted to thee.'
   auction-won: '&a✔ Thou hast won the auction for {PLOT_OWNER}''s old dominion for &6{AMOUNT}&a!'
   auction_button_back: '&e⟵ Return to Auctions'
+  auction_bid_too_low: '&c❌ Thy bid is too meager. Increase it by at least &6{AMOUNT}&c.'
+  auction_bid_failed_funds: '&c❌ Thy coffers deny this bid.'
 
   # --- Market ---
   market-teleport: '&eSpiriting thee to {PLAYER}''s plot...'
@@ -289,6 +287,32 @@ old_english:
     - '&e/aegis stuck &7- Escape a trap or prison'
     - '&e/aegis help &7- Study this sacred guide'
 
+  # =================================================================
+  # NEW v1.2.4 LEGACY FALLBACK KEYS (for non-Codex system messages)
+  # =================================================================
+  # --- Claim Blocks (NEW v1.2.4) ---
+  claim_blocks_balance: '&e⛏ Thy Claim Blocks: &6{BALANCE}'
+  claim_blocks_earned: '&a⛏ Thou hast earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
+  claim_blocks_spent: '&e⛏ Thou hast spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
+  claim_blocks_insufficient: '&c❌ Thou lackest Claim Blocks! Need &6{AMOUNT}&c more.'
+  claim_blocks_first_claim_limit: '&c❌ Thy first dominion is bound by decree: max area &6{MAX}&c.'
+  claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+
+  # --- External Protection Compatibility (NEW v1.2.4) ---
+  claim_denied_external: '&c⛔ The land is claimed by &f{PLUGIN}&c. AegisGuard shall not contest it.'
+  claim_denied_external_generic: '&c⛔ Claim denied: protected by another realm''s decree.'
+
+  # --- Welcome / Farewell Listener Output (NEW v1.2.4) ---
+  plot_welcome_show: '&a✦ {OWNER}&a bids thee welcome: &f{MESSAGE}'
+  plot_farewell_show: '&e✦ {OWNER}&e bids thee farewell: &f{MESSAGE}'
+
+  # --- Unstuck (NEW v1.2.4) ---
+  unstuck_warmup: '&e⏳ The rite begins... deliverance in &6{SECONDS}&e seconds.'
+  unstuck_cancelled: '&c❌ The rite is broken. Thou hast moved.'
+  unstuck_on_cooldown: '&c❌ Patience. Thou must wait &6{SECONDS}&c seconds.'
+  unstuck_success: '&a✔ Delivered unto safer ground.'
+  unstuck_failed: '&c❌ The rite failed. No safe ground was found.'
+
 # ======================================
 # HYBRID ENGLISH STYLE (Fantasy RPG)
 # ======================================
@@ -340,6 +364,7 @@ hybrid_english:
   upkeep_failed_warning: '&c❌ Warning! Upkeep is due.'
   plot_expired_upkeep: '&c❌ Plot expired due to unpaid upkeep.'
   plot-is-locked: '&c❌ This plot is locked.'
+  plot_is_locked: '&c❌ This plot is locked.' # alias
 
   # --- Plot Levels / Ascension ---
   level_header_owner: '&dOwner:&f {owner}'
@@ -424,6 +449,8 @@ hybrid_english:
   auction-sold: '&a✔ Plot sold to {PLAYER} for &6{AMOUNT}&a.'
   auction-won: '&a✔ You won the auction for &6{AMOUNT}&a.'
   auction_button_back: '&e⟵ Back to Auctions'
+  auction_bid_too_low: '&c❌ Bid too low. Increase by at least &6{AMOUNT}&c.'
+  auction_bid_failed_funds: '&c❌ You do not have enough currency to place that bid.'
 
   # --- Market ---
   market-teleport: '&eTraveling to {PLAYER}''s plot...'
@@ -559,6 +586,29 @@ hybrid_english:
     - '&e/ag stuck &7- Escape if you are trapped.'
     - '&e/ag help &7- Show this help.'
 
+  # --- Claim Blocks (NEW v1.2.4) ---
+  claim_blocks_balance: '&e⛏ Claim Blocks: &6{BALANCE}'
+  claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(New: &f{BALANCE}&7)'
+  claim_blocks_spent: '&e⛏ Spent &6{AMOUNT}&e Claim Blocks. &7(Left: &f{BALANCE}&7)'
+  claim_blocks_insufficient: '&c❌ Not enough Claim Blocks. Need &6{AMOUNT}&c more.'
+  claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
+  claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+
+  # --- External Protection Compatibility (NEW v1.2.4) ---
+  claim_denied_external: '&c⛔ Claim denied: protected by &f{PLUGIN}&c.'
+  claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
+
+  # --- Welcome / Farewell Listener Output (NEW v1.2.4) ---
+  plot_welcome_show: '&a✦ {OWNER}&a says: &f{MESSAGE}'
+  plot_farewell_show: '&e✦ {OWNER}&e says: &f{MESSAGE}'
+
+  # --- Unstuck (NEW v1.2.4) ---
+  unstuck_warmup: '&e⏳ Unstucking in &6{SECONDS}&e seconds... Don’t move.'
+  unstuck_cancelled: '&c❌ Unstuck cancelled (movement detected).'
+  unstuck_on_cooldown: '&c❌ Unstuck cooldown: &6{SECONDS}&c seconds remaining.'
+  unstuck_success: '&a✔ Teleported to safety.'
+  unstuck_failed: '&c❌ Unstuck failed: no safe location found.'
+
 # ======================================
 # MODERN ENGLISH STYLE (Clean & Standard)
 # ======================================
@@ -610,6 +660,7 @@ modern_english:
   upkeep_failed_warning: '&c⚠ Upkeep is due and your balance is too low.'
   plot_expired_upkeep: '&c❌ Your claim was removed due to unpaid upkeep.'
   plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
+  plot_is_locked: '&c❌ This claim is locked and cannot be modified.' # alias
 
   # --- Plot Levels / Ascension ---
   level_header_owner: '&dOwner:&f {owner}'
@@ -694,6 +745,8 @@ modern_english:
   auction-sold: '&a✔ Your claim was sold to {PLAYER} for &6{AMOUNT}&a.'
   auction-won: '&a✔ You won the auction for {PLOT_OWNER}''s claim for &6{AMOUNT}&a!'
   auction_button_back: '&e⟵ Back to Auctions'
+  auction_bid_too_low: '&c❌ Bid too low. Minimum increase: &6{AMOUNT}&c.'
+  auction_bid_failed_funds: '&c❌ You do not have enough funds to place that bid.'
 
   # --- Market ---
   market-teleport: '&eTeleporting to {PLAYER}''s claim...'
@@ -829,282 +882,33 @@ modern_english:
     - '&e/aegis stuck &7- Teleport to safety if you are stuck.'
     - '&e/aegis help &7- View this help menu.'
 
-# ======================================
-# SPANISH (AR) STYLE (Español Argentino)
-# NOTE: Renamed from argentine_spanish -> spanish_ar to match language_styles.available
-# ======================================
-spanish_ar:
-  # --- General / Permissions ---
-  role_edit_self_error: '&c❌ No podés cambiar tu propio rol. ¡Te podés dejar afuera!'
-  no_perm: '&cNo tenés permiso para hacer eso.'
-  players_only: '&cEste comando es solo para jugadores.'
-  usage_main: '&eUsá: /aegis <wand|menu|claim|unclaim|resize|help>'
+  # --- Claim Blocks (NEW v1.2.4) ---
+  claim_blocks_balance: '&e⛏ Claim Blocks: &6{BALANCE}'
+  claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(New: &f{BALANCE}&7)'
+  claim_blocks_spent: '&e⛏ Spent &6{AMOUNT}&e Claim Blocks. &7(Left: &f{BALANCE}&7)'
+  claim_blocks_insufficient: '&c❌ Not enough Claim Blocks. Need &6{AMOUNT}&c more.'
+  claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
+  claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
 
-  sound_global_enabled: '&a✔ Sonidos de interfaz activados.'
-  sound_global_disabled: '&c✖ Sonidos de interfaz desactivados.'
+  # --- External Protection Compatibility (NEW v1.2.4) ---
+  claim_denied_external: '&c⛔ Claim denied: protected by &f{PLUGIN}&c.'
+  claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
 
-  # --- Shared GUI Buttons (legacy fallbacks) ---
-  button_back: '&e⟵ Volver'
-  button_exit: '&c✖ Cerrar'
+  # --- Welcome / Farewell Listener Output (NEW v1.2.4) ---
+  plot_welcome_show: '&a✦ Welcome from {OWNER}: &f{MESSAGE}'
+  plot_farewell_show: '&e✦ Farewell from {OWNER}: &f{MESSAGE}'
 
-  # --- Claiming & Wand ---
-  wand_given: '&a⚡ Recibiste el Cetro de Aegis.'
-  wand_already_on: '&eYa tenés el Cetro de Aegis.'
-  corner1_set: '&a⚡ Primer punto marcado en &e{X}, {Z}.'
-  corner2_set: '&b⚡ Segundo punto marcado en &e{X}, {Z}.'
-  must_select: '&c❌ Tenés que marcar dos puntos con el Cetro.'
-  corners_diff_world: '&c❌ Ambos puntos tienen que estar en el mismo mundo.'
-  wand_consumed: '&a✔ El Cetro se consume después de usarlo.'
-  wand_not_found: '&c❌ No estás sosteniendo el Cetro.'
-  wand_already_owned: '&eYa tenés un Cetro. Usá el que tenés.'
-
-  # --- Resizing & Merging ---
-  resize-success: '&a✔ El claim se expandió {DIRECTION} por {AMOUNT} bloques.'
-  resize-fail-overlap: '&c❌ No se pudo expandir: se superpone con otro claim.'
-  resize-fail-max-area: '&c❌ No se pudo expandir: excede el límite de {AMOUNT} bloques.'
-
-  merge_invalid_dir: '&c❌ Dirección inválida. Usá NORTH, SOUTH, EAST o WEST.'
-  merge_no_plot: '&c❌ No hay un claim en esa dirección para fusionar.'
-  merge_not_owner: '&c❌ No sos el dueño del claim de al lado.'
-  merge_not_aligned: '&c❌ Los bordes no están alineados. Tienen que coincidir.'
-  merge_success: '&a⚡ ¡Listo! Los claims se fusionaron en uno.'
-
-  # --- Economy & Limits ---
-  max_claims_reached: '&c❌ Llegaste a tu límite de claims ({AMOUNT}).'
-  need_vault: '&c❌ Te faltan &e{AMOUNT}&c de dinero.'
-  cost_deducted: '&e💰 Se cobró &6{AMOUNT}&e.'
-  items_deducted: '&e💰 Pagaste &6{AMOUNT} {ITEM}&e.'
-  vault_refund: '&e💰 Reembolso de &6{AMOUNT}&e ({PERCENT}%).'
-  item_refund: '&e💰 Se devolvió &6{AMOUNT} {ITEM}&e ({PERCENT}%).'
-
-  upkeep_paid: '&e💰 Mantenimiento pagado: &6{AMOUNT}&e.'
-  upkeep_failed_warning: '&c❌ Atención: el mantenimiento está pendiente.'
-  plot_expired_upkeep: '&c❌ Tu claim expiró por mantenimiento impago.'
-  plot-is-locked: '&c❌ Este claim está bloqueado.'
-
-  # --- Plot Levels / Ascension ---
-  level_header_owner: '&dDueño/a:&f {owner}'
-  level_header_world: '&dMundo:&f {world}'
-  level_header_level: '&dNivel del Claim:&f {level}'
-  level_header_multiplier: '&dMultiplicador:&f {multiplier}x'
-
-  # --- Ascension GUI (legacy fallbacks) ---
-  level_gui_title: '&dAscensión del Claim'
-  level_current_status: '&bEstado actual del claim'
-  level_upgrade_button: '&aMejorar a Nivel &f{LEVEL}'
-  level_max_reached: '&6Este claim ya está al máximo.'
-  level_up_success: '&d⚡ ¡Tu claim subió a Nivel &f{LEVEL}&d!'
-  level_up_fail_cost: '&c❌ No tenés suficiente dinero para mejorar.'
-  level_button_lore:
-    - '&7Mejorá tu claim para desbloquear'
-    - '&7más tamaño y nuevas ventajas.'
-  level_button_lore_static:
-    - '&7Mejorá tu claim para desbloquear'
-    - '&7nuevas ventajas y bonos.'
-
-  level_current_blessing_name: '&dBonos actuales'
-  level_current_blessing_title: '&dBonos activos'
-  level_current_blessing_footer_1: '&8A más nivel, mejores'
-  level_current_blessing_footer_2: '&8bonos para este claim.'
-
-  # plural aliases (Codex compatibility)
-  level_current_blessings_name: '&dBonos actuales'
-  level_current_blessings_title: '&dBonos activos'
-  level_current_blessings_footer_1: '&8A más nivel, mejores'
-  level_current_blessings_footer_2: '&8bonos para este claim.'
-
-  level_track_title_completed: '&aPista completada'
-  "level_track_completed_[1]": '&7Todos los hitos de esta pista'
-  "level_track_completed_[2]": '&7ya están desbloqueados.'
-  level_track_completed_1: '&7Todos los hitos de esta pista'
-  level_track_completed_2: '&7ya están desbloqueados.'
-  level_track_buffs_title: '&dBonos desbloqueados'
-  level_track_footer_mastered: '&6Esta pista está totalmente dominada.'
-
-  # additional track states
-  level_track_title_current: '&dPista actual'
-  "level_track_current_[1]": '&7Estos bonos están'
-  "level_track_current_[2]": '&7activos en tu claim.'
-  level_track_title_locked: '&cPista bloqueada'
-  "level_track_locked_[1]": '&7Las mejoras siguientes están'
-  "level_track_locked_[2]": '&7bloqueadas hasta avanzar.'
-  "level_track_next_[1]": '&7Próxima mejora en esta pista'
-  level_track_next_cost: '&eCosto: &6{COST}'
-  level_track_footer_next: '&6Mejorá para desbloquear estos bonos.'
-  level_track_footer_progress: '&7Progreso hacia la próxima mejora.'
-
-  level_upgrade_tier: '&dSiguiente tramo'
-  level_upgrade_next_tier: '&dSiguiente tramo'
-  level_upgrade_cost: '&eCosto: &6{COST}'
-  level_upgrade_new_buffs_title: '&dNuevos bonos'
-  level_upgrade_click_hint: '&eClic para mejorar si te alcanza.'
-
-  # --- Track Block Items (extra aliases for big cubes) ---
-  level_track_completed_title: '&aPista completada'
-  level_track_completed_lore_1: '&7Todos los hitos de esta pista'
-  level_track_completed_lore_2: '&7ya están desbloqueados.'
-
-  level_track_current_title: '&dPista actual'
-  level_track_current_lore_1: '&7Estos bonos están'
-  level_track_current_lore_2: '&7activos en tu claim.'
-
-  level_track_locked_title: '&cPista bloqueada'
-  level_track_locked_lore_1: '&7Las mejoras siguientes están'
-  level_track_locked_lore_2: '&7bloqueadas hasta avanzar.'
-
-  level_track_next_title: '&dPróxima mejora en esta pista'
-  level_track_next_lore_1: '&7Mejorá para desbloquear los próximos bonos.'
-  level_track_next_lore_2: '&7Costo: &6{COST}'
-
-  # --- Auctions ---
-  plot-now-auctioned: '&e⚠ Tu claim entró en subasta.'
-  auction-bid-own: '&cNo podés pujar por tu propio claim expirado.'
-  auction-already-highest: '&eYa sos el mejor postor.'
-  auction-outbid: '&e{PLAYER} superó tu oferta.'
-  auction-bid-success: '&a✔ Oferta de &6{AMOUNT}&a aceptada.'
-  auction-sold: '&a✔ Claim vendido a {PLAYER} por &6{AMOUNT}&a.'
-  auction-won: '&a✔ Ganaste la subasta por el claim de {PLOT_OWNER} por &6{AMOUNT}&a.'
-  auction_button_back: '&e⟵ Volver a Subastas'
-
-  # --- Market ---
-  market-teleport: '&eTeletransportándote al claim de {PLAYER}...'
-  market-buy-own: '&cNo podés comprar tu propio claim.'
-  market-buy-success: '&a✔ Compraste el claim de {PLAYER} por &6{PRICE}&a.'
-  market-sold: '&a✔ {PLAYER} compró tu claim por &6{PRICE}&a.'
-  market-for-sale: '&a✔ Tu claim está a la venta por &6{PRICE}&a.'
-  market-not-for-sale: '&e✔ Tu claim ya no está en el mercado.'
-  market-rent-soon: '&eEl alquiler llegará en una actualización futura.'
-  market_button_back: '&e⟵ Volver al Mercado'
-  realestate_button_back: '&e⟵ Volver a Inmobiliaria'
-  domain_market_button_back: '&e⟵ Volver a Mercado de Dominios'
-
-  # --- Expansion Requests ---
-  expansion_submitted: '&a✔ Solicitud enviada.'
-  expansion_exists: '&c❌ Ya tenés una solicitud pendiente.'
-  expansion_approved: ''
-  expansion_denied: ''
-  admin_request_approved: '&a✔ Tu solicitud fue aprobada por {PLAYER}.'
-  admin_request_denied: '&c❌ Tu solicitud fue rechazada por {PLAYER}.'
-  expansion_payment_failed: '&c❌ No tenés fondos suficientes.'
-  expansion_limit_reached: '&c❌ Límite de expansión alcanzado ({LIMIT}).'
-  expansion_overlap_fail: '&c❌ No se puede expandir: se superpone con claims cercanos.'
-  expansion_invalid_size: '&c❌ El nuevo tamaño tiene que ser mayor al actual.'
-  request_expired: '&c❌ La solicitud expiró.'
-
-  # --- Expansion GUI (legacy fallbacks) ---
-  expansion_gui_title: '&dSolicitud de Expansión'
-  button_expand: '&dSolicitar Expansión'
-  button_view_requests_admin: '&cRevisar Solicitudes'
-  expansion_button_back: '&e⟵ Volver al Menú Anterior'
-  expansion_admin_title: '&8Solicitudes Pendientes'
-  expansion_none_title: '&cSin Solicitudes'
-  expansion_none_lore:
-    - '&7No hay solicitudes pendientes.'
-  expansion_tier1_name: '&aExpansión chica (+5)'
-  expansion_tier2_name: '&eExpansión media (+10)'
-  expansion_tier3_name: '&fExpansión grande (+20)'
-  expansion_tier4_name: '&6Expansión enorme (+35)'
-  expansion_tier5_name: '&bExpansión masiva (+50)'
-  expansion_locked_lore:
-    - '&cTenés que estar dentro'
-    - '&cde tu propio claim.'
-
-  # --- Home / Messages ---
-  home-set-success: '&a✔ Home del claim establecido.'
-  home-fail-outside: '&c❌ Tenés que estar dentro de tu claim para setear el home.'
-  home-fail-no-spawn: '&c❌ No hay home seteado. Usá /ag setspawn.'
-  welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
-  welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
-  farewell-set: '&a✔ Mensaje de despedida actualizado.'
-  farewell-cleared: '&e✔ Mensaje de despedida actualizado.'
-
-  # --- Plot Core ---
-  plot_created: '&a✔ Tu tierra ahora está protegida por AegisGuard.'
-  plot_unclaimed: '&e⚠ Tu claim fue liberado.'
-  no_plot_here: '&c❌ No estás parado dentro de tu claim.'
-
-  cannot_break: '&c❌ No podés romper bloques acá; está protegido.'
-  cannot_place: '&c❌ No podés colocar bloques acá; está protegido.'
-  cannot_interact: '&c❌ No podés interactuar con eso acá.'
-  cannot_attack: '&c❌ El combate está deshabilitado en este claim.'
-  plot_entry_denied: '&c⛔ Entrada denegada. Este claim es privado.'
-  plot_banned_entry: '&c⛔ Estás baneado de este claim.'
-
-  # --- Zoning ---
-  zone_created: '&a✔ Zona ''{ZONE}'' creada.'
-  zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
-  zone_rented: '&a✔ {PLAYER} ahora alquila ''{ZONE}''.'
-  zone_not_rented: '&7La zona está disponible.'
-  zone_evicted: '&eInquilino expulsado de {ZONE}.'
-
-  # --- Biomes ---
-  biome_changed: '&a✔ Bioma cambiado a {BIOME}.'
-  biome_cost_paid: '&e💰 Pagaste &6{AMOUNT}&e para cambiar el bioma.'
-  biome_button_back: '&e⟵ Volver a Configuración del Claim'
-  biome_button_exit: '&c✖ Cerrar selector de biomas'
-
-  # --- Likes ---
-  like_success: '&a✔ Le diste like a este claim. Likes totales: &e{AMOUNT}'
-  like_removed: '&eTu like fue removido.'
-  like_own_plot: '&cNo podés darle like a tu propio claim.'
-  like_disabled: '&cLos likes están deshabilitados en este servidor/mundo.'
-
-  # --- Flags / Inheritance ---
-  flag_toggled: '&eActualizado {FLAG}: &f{STATUS}'
-  server_zone_forced_flag: '&cEsta opción está bloqueada por una Zona del Servidor.'
-  admin_forced_flag_notice: '&7[Admin] Esta opción está forzada a nivel {LEVEL} y no se puede cambiar acá.'
-  flag_inherited_from_world: '&7Heredado de: &fconfig del Mundo.'
-  flag_inherited_from_zone: '&7Heredado de: &fZona del Servidor.'
-  flag_inherited_from_plot: '&7Heredado de: &fconfig del Claim.'
-
-  # --- Roles / Trusted ---
-  role_self: '&cNo podés editar tu propio rol.'
-  role_is_owner: '&cNo podés editar el rol del dueño.'
-  role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}.'
-  role_removed: '&e✔ {PLAYER} fue removido del claim.'
-
-  # --- Admin Tools / Zones / Wilderness ---
-  admin_reloading: '&7Recargando configuración y datos...'
-  admin_reload_complete: '&a✔ Recarga completa.'
-  admin_auto_remove_enabled: '&a✔ Auto-Wipe activado.'
-  admin_auto_remove_disabled: '&c✖ Auto-Wipe desactivado.'
-  admin_bypass_enabled: '&a✔ Bypass de límites activado.'
-  admin_bypass_disabled: '&c✖ Bypass de límites desactivado.'
-  admin_broadcast_enabled: '&a✔ Registro de acciones admin activado.'
-  admin_broadcast_disabled: '&c✖ Registro de acciones admin desactivado.'
-  admin_removed_banned: '&eClaims eliminados para jugador baneado: {PLAYER}'
-
-  admin_plot_teleport: '&eTeletransportado al claim de {PLAYER}.'
-  admin_plot_deleted: '&c✖ Claim de {PLAYER} eliminado.'
-
-  admin-zone-created: '&a✔ Zona del Servidor creada.'
-  admin-zone-deleted: '&c✖ Zona del Servidor eliminada.'
-  admin-zone-not-found: '&c❌ No estás parado en una Zona del Servidor.'
-  admin-zone-no-claims: '&c❌ No se permiten claims en esta Zona del Servidor.'
-
-  wilderness_revert_start: '&7Reversión de wilderness iniciada...'
-  wilderness_revert_end: '&7Reversión completa. Bloques revertidos: &f{AMOUNT}&7.'
-
-  # --- Help (Chat) ---
-  help_header: '&bAyuda de AegisGuard'
-  help_lines:
-    - '&e/aegis wand &7- Obtener la varita (herramienta de selección).'
-    - '&e/aegis menu &7- Abrir el menú principal.'
-    - '&e/aegis claim &7- Crear un claim con tu selección.'
-    - '&e/aegis unclaim &7- Eliminar tu claim actual.'
-    - '&e/aegis resize <dir> <amt> &7- Cambiar tamaño del claim.'
-    - '&e/aegis home &7- Ir al home del claim.'
-    - '&e/aegis setspawn &7- Setear el home del claim.'
-    - '&e/aegis market &7- Abrir el mercado.'
-    - '&e/aegis auction &7- Ver subastas activas.'
-    - '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
-    - '&e/aegis help &7- Ver este menú de ayuda.'
+  # --- Unstuck (NEW v1.2.4) ---
+  unstuck_warmup: '&e⏳ Unstucking in &6{SECONDS}&e seconds... Do not move.'
+  unstuck_cancelled: '&c❌ Unstuck cancelled (movement detected).'
+  unstuck_on_cooldown: '&c❌ Unstuck cooldown: &6{SECONDS}&c seconds remaining.'
+  unstuck_success: '&a✔ Teleported to safety.'
+  unstuck_failed: '&c❌ Unstuck failed: no safe location found.'
 
 # ======================================
-# SPANISH (MX) STYLE (Español Neutro/Latinoamérica)
-# NOTE: Renamed from neutral_spanish -> spanish_mx to match language_styles.available
+# SPANISH (MX / Neutral)
 # ======================================
-spanish_mx:
+spanish_mx: &spanish_mx_block
   # --- General / Permissions ---
   role_edit_self_error: '&c❌ No puedes cambiar tu propio rol. ¡Podrías bloquearte!'
   no_perm: '&cNo tienes permiso para hacer eso.'
@@ -1152,6 +956,7 @@ spanish_mx:
   upkeep_failed_warning: '&c❌ Advertencia: el mantenimiento está pendiente.'
   plot_expired_upkeep: '&c❌ Tu parcela expiró por mantenimiento impago.'
   plot-is-locked: '&c❌ Esta parcela está bloqueada.'
+  plot_is_locked: '&c❌ Esta parcela está bloqueada.' # alias
 
   # --- Plot Levels / Ascension ---
   level_header_owner: '&dPropietario:&f {owner}'
@@ -1184,49 +989,6 @@ spanish_mx:
   level_current_blessings_footer_1: '&8Niveles más altos desbloquean'
   level_current_blessings_footer_2: '&8bonos más fuertes para esta parcela.'
 
-  level_track_title_completed: '&aProgreso completado'
-  "level_track_completed_[1]": '&7Todos los hitos de este camino'
-  "level_track_completed_[2]": '&7han sido desbloqueados.'
-  level_track_completed_1: '&7Todos los hitos de este camino'
-  level_track_completed_2: '&7han sido desbloqueados.'
-  level_track_buffs_title: '&dBonos desbloqueados'
-  level_track_footer_mastered: '&6Este camino de progreso está totalmente dominado.'
-
-  # additional track states
-  level_track_title_current: '&dCamino actual'
-  "level_track_current_[1]": '&7Estos bonos están actualmente'
-  "level_track_current_[2]": '&7activos en tu parcela.'
-  level_track_title_locked: '&cCamino bloqueado'
-  "level_track_locked_[1]": '&7Las mejoras adicionales están'
-  "level_track_locked_[2]": '&7bloqueadas hasta que avances.'
-  "level_track_next_[1]": '&7Siguiente mejora en este camino'
-  level_track_next_cost: '&eCosto: &6{COST}'
-  level_track_footer_next: '&6Mejora para desbloquear estos bonos.'
-  level_track_footer_progress: '&7Progreso hacia la siguiente mejora.'
-
-  level_upgrade_tier: '&dSiguiente nivel'
-  level_upgrade_next_tier: '&dSiguiente nivel'
-  level_upgrade_cost: '&eCosto: &6{COST}'
-  level_upgrade_new_buffs_title: '&dNuevos bonos'
-  level_upgrade_click_hint: '&eClic para mejorar si puedes pagarlo.'
-
-  # --- Track Block Items (extra aliases for big cubes) ---
-  level_track_completed_title: '&aProgreso completado'
-  level_track_completed_lore_1: '&7Todos los hitos de este camino'
-  level_track_completed_lore_2: '&7han sido desbloqueados.'
-
-  level_track_current_title: '&dCamino actual'
-  level_track_current_lore_1: '&7Estos bonos están actualmente'
-  level_track_current_lore_2: '&7activos en tu parcela.'
-
-  level_track_locked_title: '&cCamino bloqueado'
-  level_track_locked_lore_1: '&7Las mejoras adicionales están'
-  level_track_locked_lore_2: '&7bloqueadas hasta que avances.'
-
-  level_track_next_title: '&dSiguiente mejora en este camino'
-  level_track_next_lore_1: '&7Mejora para desbloquear los próximos bonos.'
-  level_track_next_lore_2: '&7Costo: &6{COST}'
-
   # --- Auctions ---
   plot-now-auctioned: '&e⚠ Tu parcela ha entrado en subasta.'
   auction-bid-own: '&cNo puedes pujar por tu propia parcela expirada.'
@@ -1236,13 +998,15 @@ spanish_mx:
   auction-sold: '&a✔ Parcela vendida a {PLAYER} por &6{AMOUNT}&a.'
   auction-won: '&a✔ Ganaste la subasta por la parcela de {PLOT_OWNER} por &6{AMOUNT}&a.'
   auction_button_back: '&e⟵ Volver a Subastas'
+  auction_bid_too_low: '&c❌ Puja demasiado baja. Incremento mínimo: &6{AMOUNT}&c.'
+  auction_bid_failed_funds: '&c❌ No tienes fondos suficientes para esa puja.'
 
   # --- Market ---
   market-teleport: '&eTeletransportándote a la parcela de {PLAYER}...'
   market-buy-own: '&cNo puedes comprar tu propia parcela.'
   market-buy-success: '&a✔ Compraste la parcela de {PLAYER} por &6{PRICE}&a.'
   market-sold: '&a✔ {PLAYER} compró tu parcela por &6{PRICE}&a.'
-  market-for-sale: '&a✔ Tu parcela está en venta por &6{PRICE}&a.'
+  market-for-sale: '&a✔ Tu parcela está a la venta por &6{PRICE}&a.'
   market-not-for-sale: '&e✔ Tu parcela ya no está en el mercado.'
   market-rent-soon: '&eEl alquiler llegará en una actualización futura.'
   market_button_back: '&e⟵ Volver al Mercado'
@@ -1261,24 +1025,6 @@ spanish_mx:
   expansion_overlap_fail: '&c❌ No se puede expandir; se superpone con parcelas cercanas.'
   expansion_invalid_size: '&c❌ El nuevo tamaño debe ser mayor que el actual.'
   request_expired: '&c❌ La solicitud expiró.'
-
-  # --- Expansion GUI (legacy fallbacks) ---
-  expansion_gui_title: '&dSolicitud de Expansión'
-  button_expand: '&dSolicitar Expansión'
-  button_view_requests_admin: '&cRevisar Solicitudes'
-  expansion_button_back: '&e⟵ Volver al Menú Anterior'
-  expansion_admin_title: '&8Solicitudes Pendientes'
-  expansion_none_title: '&cSin Solicitudes'
-  expansion_none_lore:
-    - '&7No hay solicitudes pendientes.'
-  expansion_tier1_name: '&aExpansión pequeña (+5)'
-  expansion_tier2_name: '&eExpansión mediana (+10)'
-  expansion_tier3_name: '&fExpansión grande (+20)'
-  expansion_tier4_name: '&6Expansión enorme (+35)'
-  expansion_tier5_name: '&bExpansión masiva (+50)'
-  expansion_locked_lore:
-    - '&cDebes estar dentro'
-    - '&cde tu propia parcela.'
 
   # --- Home / Messages ---
   home-set-success: '&a✔ Punto de llegada de la parcela establecido.'
@@ -1301,61 +1047,6 @@ spanish_mx:
   plot_entry_denied: '&c⛔ Entrada denegada. Esta parcela es privada.'
   plot_banned_entry: '&c⛔ Estás baneado de esta parcela.'
 
-  # --- Zoning ---
-  zone_created: '&a✔ Zona ''{ZONE}'' creada.'
-  zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
-  zone_rented: '&a✔ {PLAYER} ahora está alquilando ''{ZONE}''.'
-  zone_not_rented: '&7La zona está disponible.'
-  zone_evicted: '&eInquilino expulsado de {ZONE}.'
-
-  # --- Biomes ---
-  biome_changed: '&a✔ Bioma cambiado a {BIOME}.'
-  biome_cost_paid: '&e💰 Pagaste &6{AMOUNT}&e para cambiar el bioma.'
-  biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
-  biome_button_exit: '&c✖ Cerrar selector de biomas'
-
-  # --- Likes ---
-  like_success: '&a✔ Te gustó esta parcela. Total de likes: &e{AMOUNT}'
-  like_removed: '&eTu like fue eliminado.'
-  like_own_plot: '&cNo puedes dar like a tu propia parcela.'
-  like_disabled: '&cLos likes están deshabilitados en este servidor/mundo.'
-
-  # --- Flags / Inheritance ---
-  flag_toggled: '&eActualizado {FLAG}: &f{STATUS}'
-  server_zone_forced_flag: '&cEsta opción está bloqueada por una Zona del Servidor.'
-  admin_forced_flag_notice: '&7[Admin] Esta opción está forzada al nivel {LEVEL} y no se puede cambiar aquí.'
-  flag_inherited_from_world: '&7Heredado de: &fAjustes del mundo.'
-  flag_inherited_from_zone: '&7Heredado de: &fZona del servidor.'
-  flag_inherited_from_plot: '&7Heredado de: &fAjustes de la parcela.'
-
-  # --- Roles / Trusted ---
-  role_self: '&cNo puedes editar tu propio rol.'
-  role_is_owner: '&cNo puedes editar el rol del dueño.'
-  role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}.'
-  role_removed: '&e✔ {PLAYER} ha sido removido de tu parcela.'
-
-  # --- Admin Tools / Zones / Wilderness ---
-  admin_reloading: '&7Recargando configuración y datos...'
-  admin_reload_complete: '&a✔ Recarga completa.'
-  admin_auto_remove_enabled: '&a✔ Auto-Wipe activado.'
-  admin_auto_remove_disabled: '&c✖ Auto-Wipe desactivado.'
-  admin_bypass_enabled: '&a✔ Bypass de límites activado.'
-  admin_bypass_disabled: '&c✖ Bypass de límites desactivado.'
-  admin_broadcast_enabled: '&a✔ Registro de acciones admin activado.'
-  admin_broadcast_disabled: '&c✖ Registro de acciones admin desactivado.'
-  admin_removed_banned: '&eParcelas eliminadas para jugador baneado: {PLAYER}'
-
-  admin_plot_teleport: '&eTeletransportado a la parcela de {PLAYER}.'
-  admin_plot_deleted: '&c✖ Parcela de {PLAYER} eliminada.'
-
-  admin-zone-created: '&a✔ Zona del servidor creada.'
-  admin-zone-deleted: '&c✖ Zona del servidor eliminada.'
-  admin-zone-not-found: '&c❌ No estás en una Zona del servidor.'
-  admin-zone-no-claims: '&c❌ No se permiten parcelas en esta Zona del servidor.'
-
-  wilderness_revert_start: '&7Restauración de wilderness iniciada...'
-  wilderness_revert_end: '&7Restauración completa. Bloques revertidos: &f{AMOUNT}&7.'
-
   # --- Help (Chat) ---
   help_header: '&bAyuda de AegisGuard'
   help_lines:
@@ -1370,3 +1061,132 @@ spanish_mx:
     - '&e/aegis auction &7- Ver subastas activas.'
     - '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
     - '&e/aegis help &7- Ver este menú de ayuda.'
+
+  # --- Claim Blocks (NEW v1.2.4) ---
+  claim_blocks_balance: '&e⛏ Bloques de Claim: &6{BALANCE}'
+  claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Claim. &7(Nuevo: &f{BALANCE}&7)'
+  claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Claim. &7(Restante: &f{BALANCE}&7)'
+  claim_blocks_insufficient: '&c❌ No tienes suficientes Bloques de Claim. Te faltan &6{AMOUNT}&c.'
+  claim_blocks_first_claim_limit: '&c❌ Límite del primer claim: área máxima &6{MAX}&c.'
+  claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Claim) &8Total: &f{BALANCE}'
+
+  # --- External Protection Compatibility (NEW v1.2.4) ---
+  claim_denied_external: '&c⛔ Claim denegado: protegido por &f{PLUGIN}&c.'
+  claim_denied_external_generic: '&c⛔ Claim denegado: protegido por otro plugin.'
+
+  # --- Welcome / Farewell Listener Output (NEW v1.2.4) ---
+  plot_welcome_show: '&a✦ Bienvenida de {OWNER}: &f{MESSAGE}'
+  plot_farewell_show: '&e✦ Despedida de {OWNER}: &f{MESSAGE}'
+
+  # --- Unstuck (NEW v1.2.4) ---
+  unstuck_warmup: '&e⏳ Teletransporte de rescate en &6{SECONDS}&e segundos... No te muevas.'
+  unstuck_cancelled: '&c❌ Cancelado (te moviste).'
+  unstuck_on_cooldown: '&c❌ En enfriamiento: faltan &6{SECONDS}&c segundos.'
+  unstuck_success: '&a✔ Teletransportado a un lugar seguro.'
+  unstuck_failed: '&c❌ Falló: no se encontró un lugar seguro.'
+
+# ======================================
+# SPANISH (AR / Argentine)
+# ======================================
+spanish_ar: &spanish_ar_block
+  role_edit_self_error: '&c❌ No podés cambiar tu propio rol. ¡Te podés dejar afuera!'
+  no_perm: '&cNo tenés permiso para hacer eso.'
+  players_only: '&cEste comando es solo para jugadores.'
+  usage_main: '&eUsá: /aegis <wand|menu|claim|unclaim|resize|help>'
+
+  sound_global_enabled: '&a✔ Sonidos de interfaz activados.'
+  sound_global_disabled: '&c✖ Sonidos de interfaz desactivados.'
+
+  button_back: '&e⟵ Volver'
+  button_exit: '&c✖ Cerrar'
+
+  wand_given: '&a⚡ Recibiste el Cetro de Aegis.'
+  wand_already_on: '&eYa tenés el Cetro de Aegis.'
+  corner1_set: '&a⚡ Primer punto marcado en &e{X}, {Z}.'
+  corner2_set: '&b⚡ Segundo punto marcado en &e{X}, {Z}.'
+  must_select: '&c❌ Tenés que marcar dos puntos con el Cetro.'
+  corners_diff_world: '&c❌ Ambos puntos tienen que estar en el mismo mundo.'
+  wand_consumed: '&a✔ El Cetro se consume después de usarlo.'
+  wand_not_found: '&c❌ No estás sosteniendo el Cetro.'
+  wand_already_owned: '&eYa tenés un Cetro. Usá el que tenés.'
+
+  resize-success: '&a✔ El claim se expandió {DIRECTION} por {AMOUNT} bloques.'
+  resize-fail-overlap: '&c❌ No se pudo expandir: se superpone con otro claim.'
+  resize-fail-max-area: '&c❌ No se pudo expandir: excede el límite de {AMOUNT} bloques.'
+
+  merge_invalid_dir: '&c❌ Dirección inválida. Usá NORTH, SOUTH, EAST o WEST.'
+  merge_no_plot: '&c❌ No hay un claim en esa dirección para fusionar.'
+  merge_not_owner: '&c❌ No sos el dueño del claim de al lado.'
+  merge_not_aligned: '&c❌ Los bordes no están alineados. Tienen que coincidir.'
+  merge_success: '&a⚡ ¡Listo! Los claims se fusionaron en uno.'
+
+  max_claims_reached: '&c❌ Llegaste a tu límite de claims ({AMOUNT}).'
+  need_vault: '&c❌ Te faltan &e{AMOUNT}&c de dinero.'
+  cost_deducted: '&e💰 Se cobró &6{AMOUNT}&e.'
+  items_deducted: '&e💰 Pagaste &6{AMOUNT} {ITEM}&e.'
+  vault_refund: '&e💰 Reembolso de &6{AMOUNT}&e ({PERCENT}%).'
+  item_refund: '&e💰 Se devolvió &6{AMOUNT} {ITEM}&e ({PERCENT}%).'
+
+  upkeep_paid: '&e💰 Mantenimiento pagado: &6{AMOUNT}&e.'
+  upkeep_failed_warning: '&c❌ Atención: el mantenimiento está pendiente.'
+  plot_expired_upkeep: '&c❌ Tu claim expiró por mantenimiento impago.'
+  plot-is-locked: '&c❌ Este claim está bloqueado.'
+  plot_is_locked: '&c❌ Este claim está bloqueado.' # alias
+
+  home-set-success: '&a✔ Home del claim establecido.'
+  home-fail-outside: '&c❌ Tenés que estar dentro de tu claim para setear el home.'
+  home-fail-no-spawn: '&c❌ No hay home seteado. Usá /ag setspawn.'
+  welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
+  welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
+  farewell-set: '&a✔ Mensaje de despedida actualizado.'
+  farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+
+  plot_created: '&a✔ Tu tierra ahora está protegida por AegisGuard.'
+  plot_unclaimed: '&e⚠ Tu claim fue liberado.'
+  no_plot_here: '&c❌ No estás parado dentro de tu claim.'
+
+  cannot_break: '&c❌ No podés romper bloques acá; está protegido.'
+  cannot_place: '&c❌ No podés colocar bloques acá; está protegido.'
+  cannot_interact: '&c❌ No podés interactuar con eso acá.'
+  cannot_attack: '&c❌ El combate está deshabilitado en este claim.'
+  plot_entry_denied: '&c⛔ Entrada denegada. Este claim es privado.'
+  plot_banned_entry: '&c⛔ Estás baneado de este claim.'
+
+  help_header: '&bAyuda de AegisGuard'
+  help_lines:
+    - '&e/aegis wand &7- Obtener la varita (herramienta de selección).'
+    - '&e/aegis menu &7- Abrir el menú principal.'
+    - '&e/aegis claim &7- Crear un claim con tu selección.'
+    - '&e/aegis unclaim &7- Eliminar tu claim actual.'
+    - '&e/aegis resize <dir> <amt> &7- Cambiar tamaño del claim.'
+    - '&e/aegis home &7- Ir al home del claim.'
+    - '&e/aegis setspawn &7- Setear el home del claim.'
+    - '&e/aegis market &7- Abrir el mercado.'
+    - '&e/aegis auction &7- Ver subastas activas.'
+    - '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
+    - '&e/aegis help &7- Ver este menú de ayuda.'
+
+  claim_blocks_balance: '&e⛏ Bloques de Claim: &6{BALANCE}'
+  claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Claim. &7(Nuevo: &f{BALANCE}&7)'
+  claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Claim. &7(Restante: &f{BALANCE}&7)'
+  claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Claim. Te faltan &6{AMOUNT}&c.'
+  claim_blocks_first_claim_limit: '&c❌ Límite del primer claim: área máxima &6{MAX}&c.'
+  claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Claim) &8Total: &f{BALANCE}'
+
+  claim_denied_external: '&c⛔ Claim denegado: protegido por &f{PLUGIN}&c.'
+  claim_denied_external_generic: '&c⛔ Claim denegado: protegido por otro plugin.'
+
+  plot_welcome_show: '&a✦ Bienvenida de {OWNER}: &f{MESSAGE}'
+  plot_farewell_show: '&e✦ Despedida de {OWNER}: &f{MESSAGE}'
+
+  unstuck_warmup: '&e⏳ Rescate en &6{SECONDS}&e segundos... No te muevas.'
+  unstuck_cancelled: '&c❌ Cancelado (te moviste).'
+  unstuck_on_cooldown: '&c❌ En enfriamiento: faltan &6{SECONDS}&c segundos.'
+  unstuck_success: '&a✔ Teletransportado a un lugar seguro.'
+  unstuck_failed: '&c❌ Falló: no se encontró un lugar seguro.'
+
+# ======================================
+# LEGACY ALIASES (kept so old configs don’t explode)
+# ======================================
+neutral_spanish: *spanish_mx_block
+argentine_spanish: *spanish_ar_block

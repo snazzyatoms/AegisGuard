@@ -19,27 +19,30 @@ public class GUIManager {
 
     private final AegisGuard plugin;
 
+    // Vanilla client + Bukkit safety (string titles can still explode if too long)
+    private static final int MAX_GUI_TITLE_LEN = 32;
+
     // --- SUB-MENUS ---
     private final PlayerGUI playerGUI;
     private final SettingsGUI settingsGUI;
     private final RolesGUI rolesGUI;
     private final InfoGUI infoGUI;
     private final VisitGUI visitGUI;
-    
+
     // Admin
     private final AdminGUI adminGUI;
     private final AdminPlotListGUI adminPlotListGUI;
     private final ExpansionRequestGUI expansionRequestGUI;
     private final ExpansionRequestAdminGUI expansionAdminGUI;
-    
+
     // Plot Management
     private final PlotFlagsGUI plotFlagsGUI;
     private final PlotCosmeticsGUI plotCosmeticsGUI;
-    
+
     // Economy
     private final PlotMarketGUI plotMarketGUI;
     private final PlotAuctionGUI plotAuctionGUI;
-    
+
     // New v1.1.0+ Features
     private final LevelingGUI levelingGUI;
     private final ZoningGUI zoningGUI;
@@ -50,14 +53,14 @@ public class GUIManager {
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
-        
+
         // Initialize all sub-menus
         this.playerGUI = new PlayerGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
         this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
         this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
-        this.rolesGUI = new RolesGUI(plugin); 
+        this.rolesGUI = new RolesGUI(plugin);
         this.plotFlagsGUI = new PlotFlagsGUI(plugin);
         this.adminPlotListGUI = new AdminPlotListGUI(plugin);
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
@@ -65,7 +68,7 @@ public class GUIManager {
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
         this.infoGUI = new InfoGUI(plugin);
         this.visitGUI = new VisitGUI(plugin);
-        
+
         // New Features
         this.levelingGUI = new LevelingGUI(plugin);
         this.zoningGUI = new ZoningGUI(plugin);
@@ -76,14 +79,14 @@ public class GUIManager {
     }
 
     // --- OPENERS ---
-    
+
     public void openMain(Player player) {
         if (playerGUI != null) {
             playClick(player);
             playerGUI.open(player);
         }
     }
-    
+
     /**
      * Placeholder method for Diagnostics GUI (Fixes AdminGUI error).
      */
@@ -146,9 +149,6 @@ public class GUIManager {
 
     /**
      * List/lore variant for language lookups.
-     *
-     * Usage example:
-     * List<String> lore = plugin.gui().trList(player, "menu.main.lore", Arrays.asList("&7Line 1", "&7Line 2"));
      */
     public List<String> trList(Player player, String key, List<String> fallback) {
         try {
@@ -159,9 +159,77 @@ public class GUIManager {
                 }
             }
         } catch (Throwable ignored) {
-            // Same idea: protect against language engine issues.
         }
         return fallback == null ? Collections.emptyList() : fallback;
+    }
+
+    // ======================================
+    // --- TITLES (Fixes &-codes + length) ---
+    // ======================================
+
+    /**
+     * ✅ GUI TITLE HELPER (Use this in every GUI open() method)
+     *
+     * Fixes:
+     * - "&b" showing in inventory titles (now translated properly)
+     * - Missing keys fallback
+     * - Overlong titles causing Bukkit exceptions
+     *
+     * Example:
+     * String title = plugin.gui().title(player, "menu_title", "&b⚔ AegisGuard Menu");
+     */
+    public String title(Player player, String key, String fallback) {
+        String raw = safeText(tr(player, key, fallback), fallback);
+        String colored = color(raw);
+        return clampInventoryTitle(colored);
+    }
+
+    /**
+     * Same as title(), but if you already have the raw string (not a codex key).
+     */
+    public static String titleRaw(String rawTitle, String fallback) {
+        String raw = safeText(rawTitle, fallback);
+        String colored = ChatColor.translateAlternateColorCodes('&', raw);
+        return clampInventoryTitle(colored);
+    }
+
+    /**
+     * Inventory title clamp that won't cut a color code in half.
+     */
+    private static String clampInventoryTitle(String title) {
+        if (title == null) return "";
+        if (title.length() <= MAX_GUI_TITLE_LEN) return title;
+
+        StringBuilder out = new StringBuilder(MAX_GUI_TITLE_LEN);
+        int i = 0;
+        while (i < title.length() && out.length() < MAX_GUI_TITLE_LEN) {
+            char c = title.charAt(i);
+
+            // Don't end on a dangling color char (§)
+            if (c == ChatColor.COLOR_CHAR) {
+                // Need room for '§' + code
+                if (out.length() + 2 > MAX_GUI_TITLE_LEN) break;
+
+                out.append(c);
+                if (i + 1 < title.length()) {
+                    out.append(title.charAt(i + 1));
+                    i += 2;
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            out.append(c);
+            i++;
+        }
+
+        // Safety: never end with bare §
+        if (out.length() > 0 && out.charAt(out.length() - 1) == ChatColor.COLOR_CHAR) {
+            out.deleteCharAt(out.length() - 1);
+        }
+
+        return out.toString();
     }
 
     // ======================================
@@ -201,7 +269,6 @@ public class GUIManager {
 
     /**
      * Convenience overload: (name, Material, lore)
-     * Lets callers pass the display name first if they prefer.
      */
     public static ItemStack createItem(String name, Material mat, List<String> lore) {
         return createItem(mat, name, lore);
@@ -229,7 +296,7 @@ public class GUIManager {
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
         } catch (Exception ignored) {}
     }
-    
+
     /**
      * Plays a success/purchase sound.
      */
@@ -255,8 +322,7 @@ public class GUIManager {
 
         String title = tr(p, "ledger_title", "&6📜 Domain Registry");
         List<String> lore = new ArrayList<>();
-        
-        // These keys should go into codex/core.yml eventually
+
         lore.add(tr(p, "ledger_available", "&7Available: &a" + available));
         lore.add(tr(p, "ledger_used", "&7Used: &c" + used));
         lore.add(tr(p, "ledger_total", "&7Total Capacity: &e" + total));

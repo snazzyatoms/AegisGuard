@@ -9,6 +9,7 @@ import com.aegisguard.hooks.protection.impl.WorldGuardHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,14 +24,15 @@ import java.util.List;
  *   so plugins don't fight over the same turf.
  *
  * This manager does NOT enforce permissions. It only answers:
+ * - "Should AegisGuard yield here?"
  * - "Is this protected elsewhere?"
  */
 public class ProtectionHookManager {
 
     public enum OverlapPolicy {
-        EXTERNAL_WINS,
-        AEGIS_WINS,
-        DENY_IF_CONFLICT
+        EXTERNAL_WINS,     // AegisGuard yields to external protection.
+        AEGIS_WINS,        // AegisGuard ignores external protection.
+        DENY_IF_CONFLICT   // Claims should be denied if conflict is detected.
     }
 
     private final AegisGuard plugin;
@@ -133,16 +135,20 @@ public class ProtectionHookManager {
         if (loc == null || loc.getWorld() == null) return null;
         if (!isEnabled()) return null;
 
+        OverlapPolicy policy = getOverlapPolicy();
+        if (policy == OverlapPolicy.AEGIS_WINS) return null;
+
         for (ProtectionHook hook : hooks) {
             try {
                 if (hook != null && hook.isActive() && hook.isProtectedElsewhere(loc)) {
                     if (isDebug()) {
                         plugin.getLogger().info("[AegisGuard] External protection hit by " + hook.id()
-                                + " at " + loc.getWorld().getName() + " " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
+                                + " at " + loc.getWorld().getName() + " "
+                                + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
                     }
                     return hook.id();
                 }
-            } catch (Throwable t) {
+            } catch (Throwable ignored) {
                 // Hooks must never crash the server.
             }
         }
@@ -151,9 +157,45 @@ public class ProtectionHookManager {
 
     /**
      * True if ANY hooked protection plugin says this location is inside its region/claim.
+     * NOTE: Policy AEGIS_WINS makes this always false.
      */
     public boolean isProtectedElsewhere(Location loc) {
         return getBlockingHookId(loc) != null;
+    }
+
+    /**
+     * Used by ProtectionManager to decide whether AegisGuard should yield.
+     *
+     * Policy behavior:
+     * - EXTERNAL_WINS: yield if any hook says bypass
+     * - AEGIS_WINS: never yield
+     * - DENY_IF_CONFLICT: do NOT yield (Aegis continues to enforce its own rules),
+     *   but claim creation should still be blocked via isAreaProtectedElsewhere().
+     */
+    public boolean shouldBypass(Location loc, Player actor, HookAction action) {
+        if (loc == null || loc.getWorld() == null) return false;
+        if (!isEnabled()) return false;
+
+        OverlapPolicy policy = getOverlapPolicy();
+        if (policy == OverlapPolicy.AEGIS_WINS) return false;
+        if (policy == OverlapPolicy.DENY_IF_CONFLICT) return false;
+
+        for (ProtectionHook hook : hooks) {
+            try {
+                if (hook != null && hook.shouldBypass(loc, actor, action)) {
+                    if (isDebug()) {
+                        plugin.getLogger().info("[AegisGuard] Yielding to " + hook.id()
+                                + " action=" + (action != null ? action.name() : "null")
+                                + " at " + loc.getWorld().getName() + " "
+                                + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
+                    }
+                    return true;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -162,9 +204,23 @@ public class ProtectionHookManager {
      */
     public boolean isAreaProtectedElsewhere(String worldName, int x1, int z1, int x2, int z2) {
         if (worldName == null) return false;
+        if (!isEnabled()) return false;
+
+        OverlapPolicy policy = getOverlapPolicy();
+        if (policy == OverlapPolicy.AEGIS_WINS) return false; // ignore external protection
+
         World w = Bukkit.getWorld(worldName);
         if (w == null) return false;
-        if (!isEnabled()) return false;
+
+        // Let hooks override with a smarter scan if they want
+        for (ProtectionHook hook : hooks) {
+            try {
+                if (hook != null && hook.isActive() && hook.isAreaProtectedElsewhere(worldName, x1, z1, x2, z2)) {
+                    return true;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
 
         int minX = Math.min(x1, x2);
         int maxX = Math.max(x1, x2);

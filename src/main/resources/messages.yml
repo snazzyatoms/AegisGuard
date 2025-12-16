@@ -829,11 +829,11 @@ modern_english:
     - '&e/aegis stuck &7- Teleport to safety if you are stuck.'
     - '&e/aegis help &7- View this help menu.'
 
-
 # ======================================
-# ARGENTINE SPANISH STYLE (Español Argentino)
+# SPANISH (AR) STYLE (Español Argentino)
+# NOTE: Renamed from argentine_spanish -> spanish_ar to match language_styles.available
 # ======================================
-argentine_spanish:
+spanish_ar:
   # --- General / Permissions ---
   role_edit_self_error: '&c❌ No podés cambiar tu propio rol. ¡Te podés dejar afuera!'
   no_perm: '&cNo tenés permiso para hacer eso.'
@@ -1016,7 +1016,7 @@ argentine_spanish:
   welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
   welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
   farewell-set: '&a✔ Mensaje de despedida actualizado.'
-  farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+  farewell-cleared: '&e✔ Mensaje de despedida actualizado.'
 
   # --- Plot Core ---
   plot_created: '&a✔ Tu tierra ahora está protegida por AegisGuard.'
@@ -1100,11 +1100,11 @@ argentine_spanish:
     - '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
     - '&e/aegis help &7- Ver este menú de ayuda.'
 
-
 # ======================================
-# NEUTRAL SPANISH STYLE (Español Neutro/Latinoamérica)
+# SPANISH (MX) STYLE (Español Neutro/Latinoamérica)
+# NOTE: Renamed from neutral_spanish -> spanish_mx to match language_styles.available
 # ======================================
-neutral_spanish:
+spanish_mx:
   # --- General / Permissions ---
   role_edit_self_error: '&c❌ No puedes cambiar tu propio rol. ¡Podrías bloquearte!'
   no_perm: '&cNo tienes permiso para hacer eso.'

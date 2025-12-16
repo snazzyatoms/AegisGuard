@@ -9,8 +9,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
 public class InfoGUI {
 
     private final AegisGuard plugin;
@@ -24,10 +22,13 @@ public class InfoGUI {
     }
 
     public void open(Player player) {
-        String title = GUIManager.safeText(
-                plugin.codex().tr(player, "codex_gui_title"),
-                "§9§lThe Guardian Codex"
+        // ✅ Fixed: translates &-colors + clamps length + safe fallback
+        String title = plugin.gui().title(
+                player,
+                "codex_gui_title",
+                "&b✦ The Guardian Codex ✦"
         );
+
         Inventory inv = Bukkit.createInventory(new InfoHolder(), 45, title);
 
         ItemStack filler = GUIManager.getFiller();

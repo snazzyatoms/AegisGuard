@@ -19,36 +19,31 @@ import java.util.stream.Collectors;
 /**
  * SQLDataStore (v1.2.2+)
  * - Supports MySQL, MariaDB, and SQLite transparently.
- * - Automatically saves changes immediately (Async) to prevent data loss.
- * - Uses REPLACE INTO for universal compatibility.
- * - Stores advanced plot data in 'settings' blob (progression, market, warps, cosmetics, likes, bans...).
- * - UPDATED: Adds full Zone (sub-claim) persistence via aegis_zones table.
- * - UPDATED: Persists per-role flag overrides via Plot.serializeRoleFlags()/deserializeRoleFlags().
+ * - Immediate async saves to prevent data loss.
+ * - REPLACE INTO for universal compatibility.
+ * - Advanced plot data stored in 'settings' blob.
+ * - Zones stored in aegis_zones.
+ * - Role flag overrides persisted via Plot.serializeRoleFlags()/deserializeRoleFlags().
  *
  * HARDENING:
- * - NEVER NULL collection contract (empty lists/collections returned)
+ * - NEVER NULL collections (emptyList/emptySet)
  * - Thread-safe owner cache (Set-backed)
- * - Overlap checks use chunk index (scales for big servers)
- * - savePlotSync() writes immediately (crash-safe)
- * - Ownership transfer removes/adds by plotId (not instance)
- * - removeAllPlots() cleans up zones for removed plots (prevents orphan zone rows)
+ * - Overlap checks use chunk index (scales on large servers)
+ * - savePlotSync() commits immediately (crash-safe)
  */
 public class SQLDataStore implements IDataStore {
 
     private final AegisGuard plugin;
     private HikariDataSource hikari;
 
-    // --- CACHES ---
-    // Thread-safe: avoids ConcurrentHashMap + ArrayList concurrency hazards
+    // Thread-safe caches
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
     private volatile boolean isDirty = false;
-
-    // Track DB type for DDL quirks
     private String storageType = "sqlite";
 
-    // --- QUERIES ---
+    // --- TABLES ---
     private static final String CREATE_PLOTS_TABLE =
             "CREATE TABLE IF NOT EXISTS aegis_plots (" +
                     " plot_id VARCHAR(36) PRIMARY KEY," +
@@ -114,16 +109,12 @@ public class SQLDataStore implements IDataStore {
 
     private void connect() {
         ConfigurationSection db = plugin.cfg().raw().getConfigurationSection("storage.database");
-        if (db == null) {
-            plugin.getLogger().severe("storage.database section missing in config.yml. Falling back to sqlite.");
-        }
-
         storageType = plugin.cfg().raw().getString("storage.type", "sqlite");
 
-        HikariConfig config = new HikariConfig();
-        config.setPoolName("AegisGuard-Pool");
-        config.setConnectionTimeout(30000);
-        config.setLeakDetectionThreshold(10000);
+        HikariConfig cfg = new HikariConfig();
+        cfg.setPoolName("AegisGuard-Pool");
+        cfg.setConnectionTimeout(30000);
+        cfg.setLeakDetectionThreshold(10000);
 
         if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
             String host = db != null ? db.getString("host", "localhost") : "localhost";
@@ -131,30 +122,27 @@ public class SQLDataStore implements IDataStore {
             String database = db != null ? db.getString("database", "aegisguard") : "aegisguard";
             boolean useSSL = db != null && db.getBoolean("useSSL", false);
 
-            config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&autoReconnect=true");
-            config.setUsername(db != null ? db.getString("username", "root") : "root");
-            config.setPassword(db != null ? db.getString("password", "") : "");
+            cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&autoReconnect=true");
+            cfg.setUsername(db != null ? db.getString("username", "root") : "root");
+            cfg.setPassword(db != null ? db.getString("password", "") : "");
 
-            // Performance optimizations
-            config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            cfg.addDataSourceProperty("cachePrepStmts", "true");
+            cfg.addDataSourceProperty("prepStmtCacheSize", "250");
+            cfg.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
             plugin.getLogger().info("Connecting to MySQL/MariaDB (" + host + ":" + port + ", DB=" + database + ")...");
         } else {
             File file = new File(plugin.getDataFolder(), "aegisguard.db");
             if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
 
-            config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
-            config.setDriverClassName("org.sqlite.JDBC");
-
-            // SQLite: small pool
-            config.setMaximumPoolSize(1);
+            cfg.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
+            cfg.setDriverClassName("org.sqlite.JDBC");
+            cfg.setMaximumPoolSize(1);
 
             plugin.getLogger().info("Using local SQLite database file: " + file.getName());
         }
 
-        this.hikari = new HikariDataSource(config);
+        this.hikari = new HikariDataSource(cfg);
 
         try (Connection conn = hikari.getConnection();
              Statement s = conn.createStatement()) {
@@ -162,7 +150,6 @@ public class SQLDataStore implements IDataStore {
             s.execute(CREATE_PLOTS_TABLE);
             s.execute(CREATE_ZONES_TABLE);
 
-            // ✅ Fix: SQLite cannot use AUTO_INCREMENT.
             if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
                 s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
                         "id INTEGER PRIMARY KEY AUTO_INCREMENT, " +
@@ -182,156 +169,119 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
-    // ==============================================================
-    // --- LOAD ---
-    // ==============================================================
-
     @Override
     public void load() {
         plotsByOwner.clear();
         plotsByChunk.clear();
 
-        int count = 0;
+        int plotCount = 0;
         Map<UUID, Plot> plotsById = new HashMap<>();
 
         try (Connection conn = hikari.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_plots")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_plots");
+             ResultSet rs = ps.executeQuery()) {
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    try {
-                        UUID plotId = UUID.fromString(rs.getString("plot_id"));
-                        UUID ownerId = UUID.fromString(rs.getString("owner_uuid"));
-                        String ownerName = rs.getString("owner_name");
-                        String worldName = rs.getString("world");
+            while (rs.next()) {
+                try {
+                    UUID plotId = UUID.fromString(rs.getString("plot_id"));
+                    UUID ownerId = UUID.fromString(rs.getString("owner_uuid"));
+                    String ownerName = rs.getString("owner_name");
+                    String worldName = rs.getString("world");
+                    if (worldName == null || worldName.isEmpty()) continue;
 
-                        if (worldName == null || worldName.isEmpty()) continue;
+                    int x1 = rs.getInt("x1");
+                    int z1 = rs.getInt("z1");
+                    int x2 = rs.getInt("x2");
+                    int z2 = rs.getInt("z2");
 
-                        // Keep data even if world is unloaded; plot still exists in DB.
-                        int x1 = rs.getInt("x1");
-                        int z1 = rs.getInt("z1");
-                        int x2 = rs.getInt("x2");
-                        int z2 = rs.getInt("z2");
+                    Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2, rs.getLong("last_upkeep"));
+                    plot.setLevel(rs.getInt("level"));
+                    plot.setXp(rs.getDouble("xp"));
 
-                        Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2);
-
-                        plot.setLevel(rs.getInt("level"));
-                        plot.setXp(rs.getDouble("xp"));
-
-                        // Compatibility: your Plot API differs across versions
-                        long last = rs.getLong("last_upkeep");
-                        try {
-                            plot.getClass().getMethod("setLastUpkeep", long.class).invoke(plot, last);
-                        } catch (Throwable ignored) {
-                            try {
-                                plot.getClass().getMethod("setLastUpkeepPayment", long.class).invoke(plot, last);
-                            } catch (Throwable ignored2) {}
+                    String flagsStr = rs.getString("flags");
+                    if (flagsStr != null && !flagsStr.isEmpty()) {
+                        for (String part : flagsStr.split(",")) {
+                            String[] kv = part.split(":", 2);
+                            if (kv.length == 2) plot.setFlag(kv[0], Boolean.parseBoolean(kv[1]));
                         }
-
-                        // Flags
-                        String flagsStr = rs.getString("flags");
-                        if (flagsStr != null && !flagsStr.isEmpty()) {
-                            for (String part : flagsStr.split(",")) {
-                                String[] kv = part.split(":", 2);
-                                if (kv.length == 2) {
-                                    plot.setFlag(kv[0], Boolean.parseBoolean(kv[1]));
-                                }
-                            }
-                        }
-
-                        // Roles
-                        String rolesStr = rs.getString("roles");
-                        if (rolesStr != null && !rolesStr.isEmpty()) {
-                            for (String part : rolesStr.split(",")) {
-                                String[] kv = part.split(":", 2);
-                                if (kv.length == 2) {
-                                    try {
-                                        UUID u = UUID.fromString(kv[0]);
-                                        plot.setRole(u, kv[1]);
-                                    } catch (IllegalArgumentException ignored) {}
-                                }
-                            }
-                        }
-
-                        // Settings
-                        String settings = rs.getString("settings");
-                        if (settings != null && !settings.isEmpty()) {
-                            applySettings(plot, settings);
-                        }
-
-                        cachePlot(plot);
-                        plotsById.put(plotId, plot);
-                        count++;
-                    } catch (Exception ex) {
-                        plugin.getLogger().warning("Skipped invalid plot in DB.");
                     }
+
+                    String rolesStr = rs.getString("roles");
+                    if (rolesStr != null && !rolesStr.isEmpty()) {
+                        for (String part : rolesStr.split(",")) {
+                            String[] kv = part.split(":", 2);
+                            if (kv.length == 2) {
+                                try { plot.setRole(UUID.fromString(kv[0]), kv[1]); } catch (IllegalArgumentException ignored) {}
+                            }
+                        }
+                    }
+
+                    String settings = rs.getString("settings");
+                    if (settings != null && !settings.isEmpty()) applySettings(plot, settings);
+
+                    cachePlot(plot);
+                    plotsById.put(plotId, plot);
+                    plotCount++;
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Skipped invalid plot in DB.");
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         int zoneCount = 0;
         try (Connection conn = hikari.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zones")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zones");
+             ResultSet rs = ps.executeQuery()) {
 
-            try (ResultSet rs = ps.executeQuery()) {
-                long now = System.currentTimeMillis();
+            long now = System.currentTimeMillis();
 
-                while (rs.next()) {
-                    try {
-                        UUID plotId = UUID.fromString(rs.getString("plot_id"));
-                        Plot parent = plotsById.get(plotId);
-                        if (parent == null) continue;
+            while (rs.next()) {
+                try {
+                    UUID plotId = UUID.fromString(rs.getString("plot_id"));
+                    Plot parent = plotsById.get(plotId);
+                    if (parent == null) continue;
 
-                        String name = rs.getString("name");
+                    String name = rs.getString("name");
 
-                        int x1 = rs.getInt("x1");
-                        int y1 = rs.getInt("y1");
-                        int z1 = rs.getInt("z1");
-                        int x2 = rs.getInt("x2");
-                        int y2 = rs.getInt("y2");
-                        int z2 = rs.getInt("z2");
+                    Zone zone = new Zone(
+                            parent,
+                            name,
+                            rs.getInt("x1"), rs.getInt("y1"), rs.getInt("z1"),
+                            rs.getInt("x2"), rs.getInt("y2"), rs.getInt("z2")
+                    );
 
-                        Zone zone = new Zone(parent, name, x1, y1, z1, x2, y2, z2);
+                    zone.setRentPrice(rs.getDouble("price"));
 
-                        double price = rs.getDouble("price");
-                        zone.setRentPrice(price);
+                    String renterStr = rs.getString("renter");
+                    long expires = rs.getLong("expires");
+                    if (renterStr != null && !renterStr.isEmpty() && expires > now) {
+                        try {
+                            UUID renter = UUID.fromString(renterStr);
+                            zone.rentTo(renter, expires - now);
+                        } catch (IllegalArgumentException ignored) {}
+                    }
 
-                        String renterStr = rs.getString("renter");
-                        long expires = rs.getLong("expires");
-
-                        if (renterStr != null && !renterStr.isEmpty() && expires > now) {
-                            try {
-                                UUID renter = UUID.fromString(renterStr);
-                                zone.rentTo(renter, expires - now);
-                            } catch (IllegalArgumentException ignored) {}
-                        }
-
-                        parent.addZone(zone);
-                        zoneCount++;
-                    } catch (Exception ignored) {}
-                }
+                    parent.addZone(zone);
+                    zoneCount++;
+                } catch (Exception ignored) {}
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        plugin.getLogger().info("Loaded " + count + " plots and " + zoneCount + " zones from Database.");
+        plugin.getLogger().info("Loaded " + plotCount + " plots and " + zoneCount + " zones from Database.");
         isDirty = false;
     }
 
-    // ==============================================================
-    // --- SAVE ---
-    // ==============================================================
-
     @Override
     public void save() {
-        // Bulk save routine (snapshot to avoid concurrent modification)
         for (Set<Plot> set : plotsByOwner.values()) {
             if (set == null || set.isEmpty()) continue;
-            List<Plot> snapshot = new ArrayList<>(set);
-            for (Plot p : snapshot) {
+            for (Plot p : new ArrayList<>(set)) {
                 if (p != null) savePlot(p);
             }
         }
@@ -339,7 +289,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void saveSync() {
-        // Save only; DO NOT close pool here (plugin disable should own shutdown)
         save();
     }
 
@@ -349,10 +298,6 @@ public class SQLDataStore implements IDataStore {
         plugin.runGlobalAsync(() -> savePlotInternal(plot));
     }
 
-    /**
-     * ✅ Crash-safe immediate commit path.
-     * SQLDataStore should override IDataStore.savePlotSync to truly commit now.
-     */
     @Override
     public void savePlotSync(Plot plot) {
         if (plot == null) return;
@@ -363,8 +308,7 @@ public class SQLDataStore implements IDataStore {
         if (hikari == null || hikari.isClosed()) return;
 
         try (Connection conn = hikari.getConnection()) {
-            // For SQLite, batching with explicit transaction is cheap and safer.
-            boolean autoCommit = conn.getAutoCommit();
+            boolean auto = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
 
@@ -379,19 +323,7 @@ public class SQLDataStore implements IDataStore {
                     ps.setInt(8, plot.getZ2());
                     ps.setInt(9, plot.getLevel());
                     ps.setDouble(10, plot.getXp());
-
-                    long lastUpkeep = 0L;
-                    try {
-                        Object v = plot.getClass().getMethod("getLastUpkeep").invoke(plot);
-                        if (v instanceof Number) lastUpkeep = ((Number) v).longValue();
-                    } catch (Throwable ignored) {
-                        try {
-                            Object v = plot.getClass().getMethod("getLastUpkeepPayment").invoke(plot);
-                            if (v instanceof Number) lastUpkeep = ((Number) v).longValue();
-                        } catch (Throwable ignored2) {}
-                    }
-
-                    ps.setLong(11, lastUpkeep);
+                    ps.setLong(11, plot.getLastUpkeepPayment());
                     ps.setString(12, plot.serializeFlags());
                     ps.setString(13, plot.serializeRoles());
                     ps.setString(14, serializeSettings(plot));
@@ -407,9 +339,7 @@ public class SQLDataStore implements IDataStore {
                 if (!plot.getZones().isEmpty()) {
                     try (PreparedStatement ins = conn.prepareStatement(INSERT_ZONE)) {
                         for (Zone zone : plot.getZones()) {
-                            String zoneId = UUID.randomUUID().toString();
-
-                            ins.setString(1, zoneId);
+                            ins.setString(1, UUID.randomUUID().toString());
                             ins.setString(2, plot.getPlotId().toString());
                             ins.setString(3, zone.getName());
                             ins.setInt(4, zone.getX1());
@@ -437,21 +367,15 @@ public class SQLDataStore implements IDataStore {
                 try { conn.rollback(); } catch (SQLException ignored) {}
                 plugin.getLogger().severe("Failed to save plot " + plot.getPlotId() + ": " + e.getMessage());
             } finally {
-                try { conn.setAutoCommit(autoCommit); } catch (SQLException ignored) {}
+                try { conn.setAutoCommit(auto); } catch (SQLException ignored) {}
             }
-
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to save plot " + plot.getPlotId() + ": " + e.getMessage());
         }
     }
 
-    // ==============================================================
-    // --- SETTINGS SERIALIZATION ---
-    // ==============================================================
-
     private String serializeSettings(Plot plot) {
         StringBuilder sb = new StringBuilder();
-
         java.util.function.BiConsumer<String, String> add = (k, v) -> {
             if (v == null) return;
             if (sb.length() > 0) sb.append(";");
@@ -473,7 +397,6 @@ public class SQLDataStore implements IDataStore {
         add.accept("isForRent", String.valueOf(plot.isForRent()));
         add.accept("rentPrice", String.valueOf(plot.getRentPrice()));
         add.accept("rentExpires", String.valueOf(plot.getRentExpires()));
-
         UUID renter = plot.getCurrentRenter();
         add.accept("currentRenter", renter != null ? renter.toString() : null);
 
@@ -482,13 +405,10 @@ public class SQLDataStore implements IDataStore {
         add.accept("currentBidder", bidder != null ? bidder.toString() : null);
 
         if (!plot.getLikedBy().isEmpty()) {
-            String liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.joining(","));
-            add.accept("likedBy", liked);
+            add.accept("likedBy", plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.joining(",")));
         }
-
         if (!plot.getBannedPlayers().isEmpty()) {
-            String banned = plot.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.joining(","));
-            add.accept("banned", banned);
+            add.accept("banned", plot.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.joining(",")));
         }
 
         add.accept("borderParticle", plot.getBorderParticle());
@@ -508,142 +428,80 @@ public class SQLDataStore implements IDataStore {
     private void applySettings(Plot plot, String settings) {
         if (settings == null || settings.isEmpty()) return;
 
-        String[] parts = settings.split(";");
-        for (String part : parts) {
+        for (String part : settings.split(";")) {
             if (part.isEmpty()) continue;
             String[] kv = part.split("=", 2);
             if (kv.length != 2) continue;
+
             String key = kv[0];
             String value = kv[1];
 
             try {
                 switch (key) {
-                    case "maxMembers":
-                        plot.setMaxMembers(Integer.parseInt(value));
-                        break;
-                    case "spawn":
-                        plot.setSpawnLocationFromString(value);
-                        break;
-                    case "welcome":
-                        plot.setWelcomeMessage(value);
-                        break;
-                    case "farewell":
-                        plot.setFarewellMessage(value);
-                        break;
-                    case "entryTitle":
-                        plot.setEntryTitle(value);
-                        break;
-                    case "entrySubtitle":
-                        plot.setEntrySubtitle(value);
-                        break;
-                    case "description":
-                        plot.setDescription(value);
-                        break;
-                    case "customBiome":
-                        plot.setCustomBiome(value);
-                        break;
-                    case "plotStatus":
-                        plot.setPlotStatus(value);
-                        break;
+                    case "maxMembers" -> plot.setMaxMembers(Integer.parseInt(value));
+                    case "spawn" -> plot.setSpawnLocationFromString(value);
+                    case "welcome" -> plot.setWelcomeMessage(value);
+                    case "farewell" -> plot.setFarewellMessage(value);
+                    case "entryTitle" -> plot.setEntryTitle(value);
+                    case "entrySubtitle" -> plot.setEntrySubtitle(value);
+                    case "description" -> plot.setDescription(value);
+                    case "customBiome" -> plot.setCustomBiome(value);
+                    case "plotStatus" -> plot.setPlotStatus(value);
 
-                    case "isForSale": {
+                    case "isForSale" -> {
                         boolean fs = Boolean.parseBoolean(value);
                         plot.setForSale(fs, fs ? plot.getSalePrice() : 0.0D);
-                        break;
                     }
-                    case "salePrice": {
-                        double price = Double.parseDouble(value);
-                        plot.setForSale(plot.isForSale(), price);
-                        break;
-                    }
+                    case "salePrice" -> plot.setForSale(plot.isForSale(), Double.parseDouble(value));
 
-                    case "isForRent": {
+                    case "isForRent" -> {
                         boolean fr = Boolean.parseBoolean(value);
                         plot.setForRent(fr, fr ? plot.getRentPrice() : 0.0D);
-                        break;
                     }
-                    case "rentPrice": {
-                        double rp = Double.parseDouble(value);
-                        plot.setForRent(plot.isForRent(), rp);
-                        break;
-                    }
-                    case "rentExpires":
-                        plot.setRenter(plot.getCurrentRenter(), Long.parseLong(value));
-                        break;
-                    case "currentRenter": {
-                        UUID r = UUID.fromString(value);
-                        plot.setRenter(r, plot.getRentExpires());
-                        break;
-                    }
+                    case "rentPrice" -> plot.setForRent(plot.isForRent(), Double.parseDouble(value));
+                    case "rentExpires" -> plot.setRenter(plot.getCurrentRenter(), Long.parseLong(value));
+                    case "currentRenter" -> plot.setRenter(UUID.fromString(value), plot.getRentExpires());
 
-                    case "currentBid": {
-                        double bid = Double.parseDouble(value);
-                        plot.setCurrentBid(bid, plot.getCurrentBidder());
-                        break;
-                    }
-                    case "currentBidder": {
-                        UUID b = UUID.fromString(value);
-                        plot.setCurrentBid(plot.getCurrentBid(), b);
-                        break;
-                    }
+                    case "currentBid" -> plot.setCurrentBid(Double.parseDouble(value), plot.getCurrentBidder());
+                    case "currentBidder" -> plot.setCurrentBid(plot.getCurrentBid(), UUID.fromString(value));
 
-                    case "likedBy": {
+                    case "likedBy" -> {
                         for (String uStr : value.split(",")) {
-                            if (uStr.isEmpty()) continue;
-                            try { plot.toggleLike(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
+                            if (!uStr.isEmpty()) {
+                                try { plot.toggleLike(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
+                            }
                         }
-                        break;
                     }
-
-                    case "banned": {
+                    case "banned" -> {
                         for (String uStr : value.split(",")) {
-                            if (uStr.isEmpty()) continue;
-                            try { plot.addBan(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
+                            if (!uStr.isEmpty()) {
+                                try { plot.addBan(UUID.fromString(uStr)); } catch (IllegalArgumentException ignored) {}
+                            }
                         }
-                        break;
                     }
 
-                    case "borderParticle":
-                        plot.setBorderParticle(value);
-                        break;
-                    case "ambientParticle":
-                        plot.setAmbientParticle(value);
-                        break;
-                    case "entryEffect":
-                        plot.setEntryEffect(value);
-                        break;
+                    case "borderParticle" -> plot.setBorderParticle(value);
+                    case "ambientParticle" -> plot.setAmbientParticle(value);
+                    case "entryEffect" -> plot.setEntryEffect(value);
 
-                    case "isServerWarp": {
-                        boolean isWarp = Boolean.parseBoolean(value);
-                        plot.setServerWarp(isWarp, plot.getWarpName(), plot.getWarpIcon());
-                        break;
-                    }
-                    case "warpName":
-                        plot.setServerWarp(plot.isServerWarp(), value, plot.getWarpIcon());
-                        break;
-                    case "warpIcon":
+                    case "isServerWarp" -> plot.setServerWarp(Boolean.parseBoolean(value), plot.getWarpName(), plot.getWarpIcon());
+                    case "warpName" -> plot.setServerWarp(plot.isServerWarp(), value, plot.getWarpIcon());
+                    case "warpIcon" -> {
                         if (!value.isEmpty()) {
                             try {
-                                Material icon = Material.valueOf(value);
-                                plot.setServerWarp(plot.isServerWarp(), plot.getWarpName(), icon);
+                                plot.setServerWarp(plot.isServerWarp(), plot.getWarpName(), Material.valueOf(value));
                             } catch (IllegalArgumentException ignored) {}
                         }
-                        break;
+                    }
 
-                    case "roleFlags":
-                        plot.deserializeRoleFlags(value);
-                        break;
+                    case "roleFlags" -> plot.deserializeRoleFlags(value);
                 }
             } catch (Exception ignored) {}
         }
     }
 
-    // ==============================================================
-    // --- CACHE / INDEXING HELPERS ---
-    // ==============================================================
-
     private void cachePlot(Plot plot) {
-        // Dedupe-by-id across caches to prevent ghosts
+        // Deduplicate by id to prevent ghosts
         removePlotByIdEverywhere(plot.getPlotId());
 
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet()).add(plot);
@@ -659,10 +517,7 @@ public class SQLDataStore implements IDataStore {
 
             Plot found = null;
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) {
-                    found = p;
-                    break;
-                }
+                if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
             }
             if (found != null) {
                 set.remove(found);
@@ -674,15 +529,14 @@ public class SQLDataStore implements IDataStore {
     private void indexPlot(Plot plot) {
         String w = plot.getWorld();
         int minX = plot.getX1() >> 4;
-        int minZ = plot.getZ1() >> 4;
         int maxX = plot.getX2() >> 4;
+        int minZ = plot.getZ1() >> 4;
         int maxZ = plot.getZ2() >> 4;
 
         Map<String, Set<Plot>> worldChunks = plotsByChunk.computeIfAbsent(w, k -> new ConcurrentHashMap<>());
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                String key = x + "," + z;
+        for (int cx = minX; cx <= maxX; cx++) {
+            for (int cz = minZ; cz <= maxZ; cz++) {
+                String key = cx + "," + cz;
                 worldChunks.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(plot);
             }
         }
@@ -693,13 +547,13 @@ public class SQLDataStore implements IDataStore {
         if (worldChunks == null) return;
 
         int minX = plot.getX1() >> 4;
-        int minZ = plot.getZ1() >> 4;
         int maxX = plot.getX2() >> 4;
+        int minZ = plot.getZ1() >> 4;
         int maxZ = plot.getZ2() >> 4;
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                String key = x + "," + z;
+        for (int cx = minX; cx <= maxX; cx++) {
+            for (int cz = minZ; cz <= maxZ; cz++) {
+                String key = cx + "," + cz;
                 Set<Plot> set = worldChunks.get(key);
                 if (set != null) {
                     set.remove(plot);
@@ -710,9 +564,7 @@ public class SQLDataStore implements IDataStore {
         if (worldChunks.isEmpty()) plotsByChunk.remove(plot.getWorld());
     }
 
-    // ==============================================================
-    // --- IDataStore METHODS ---
-    // ==============================================================
+    // --- IDataStore: Modifications ---
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
@@ -746,10 +598,7 @@ public class SQLDataStore implements IDataStore {
         Set<Plot> set = plotsByOwner.get(owner);
         if (set != null) {
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) {
-                    removed = p;
-                    break;
-                }
+                if (p != null && plotId.equals(p.getPlotId())) { removed = p; break; }
             }
             if (removed != null) set.remove(removed);
             if (set.isEmpty()) plotsByOwner.remove(owner);
@@ -781,15 +630,11 @@ public class SQLDataStore implements IDataStore {
 
         Set<Plot> owned = plotsByOwner.remove(owner);
         if (owned != null) {
-            for (Plot plot : owned) {
-                if (plot != null) deIndexPlot(plot);
-            }
+            for (Plot plot : owned) if (plot != null) deIndexPlot(plot);
         }
 
         plugin.runGlobalAsync(() -> {
             try (Connection conn = hikari.getConnection()) {
-
-                // Collect plot IDs to delete zones
                 List<String> plotIds = new ArrayList<>();
                 try (PreparedStatement sel = conn.prepareStatement(SELECT_PLOT_IDS_BY_OWNER)) {
                     sel.setString(1, owner.toString());
@@ -801,7 +646,6 @@ public class SQLDataStore implements IDataStore {
                     }
                 }
 
-                // Delete zones for those plots
                 if (!plotIds.isEmpty()) {
                     try (PreparedStatement delZones = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
                         for (String pid : plotIds) {
@@ -812,62 +656,15 @@ public class SQLDataStore implements IDataStore {
                     }
                 }
 
-                // Delete plots
                 try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOTS_BY_OWNER)) {
                     ps.setString(1, owner.toString());
                     ps.executeUpdate();
                 }
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
 
-        isDirty = true;
-    }
-
-    /**
-     * HARDENED: Ownership transfer:
-     * - Removes from old owner's set by plotId
-     * - Clears chunk index then re-adds
-     * - Calls internalSetOwner()
-     * - Adds to new owner's set with plotId dedupe
-     */
-    @Override
-    public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
-        if (plot == null || newOwner == null) return;
-
-        UUID plotId = plot.getPlotId();
-        UUID oldOwner = plot.getOwner();
-
-        // Remove from old owner by plotId
-        if (oldOwner != null) {
-            Set<Plot> oldSet = plotsByOwner.get(oldOwner);
-            if (oldSet != null) {
-                Plot found = null;
-                for (Plot p : oldSet) {
-                    if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
-                }
-                if (found != null) oldSet.remove(found);
-                if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
-            }
-        }
-
-        // De-index old
-        deIndexPlot(plot);
-
-        // Reset internals
-        plot.internalSetOwner(newOwner, newOwnerName);
-
-        // Add to new owner (dedupe)
-        removePlotByIdEverywhere(plotId);
-        plotsByOwner.computeIfAbsent(newOwner, k -> ConcurrentHashMap.newKeySet()).add(plot);
-
-        // Re-index
-        indexPlot(plot);
-
-        // Persist
-        savePlot(plot);
         isDirty = true;
     }
 
@@ -888,15 +685,43 @@ public class SQLDataStore implements IDataStore {
     }
 
     @Override
+    public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
+        if (plot == null || newOwner == null) return;
+
+        UUID plotId = plot.getPlotId();
+        UUID oldOwner = plot.getOwner();
+
+        if (oldOwner != null) {
+            Set<Plot> oldSet = plotsByOwner.get(oldOwner);
+            if (oldSet != null) {
+                Plot found = null;
+                for (Plot p : oldSet) {
+                    if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
+                }
+                if (found != null) oldSet.remove(found);
+                if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
+            }
+        }
+
+        deIndexPlot(plot);
+        plot.internalSetOwner(newOwner, newOwnerName);
+
+        removePlotByIdEverywhere(plotId);
+        plotsByOwner.computeIfAbsent(newOwner, k -> ConcurrentHashMap.newKeySet()).add(plot);
+        indexPlot(plot);
+
+        savePlot(plot);
+        isDirty = true;
+    }
+
+    @Override
     public void removeBannedPlots() {
         for (org.bukkit.OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
         }
     }
 
-    // ==============================================================  
-    // --- ROLE FLAG STATE (TriState) --------------------------------
-    // ==============================================================  
+    // --- Role Flag State ---
 
     @Override
     public TriState getRoleFlagState(Plot plot, String roleId, String flagKey) {
@@ -907,15 +732,12 @@ public class SQLDataStore implements IDataStore {
     @Override
     public void setRoleFlagState(Plot plot, String roleId, String flagKey, TriState state) {
         if (plot == null || roleId == null || flagKey == null) return;
-
         plot.setRoleFlagState(roleId, flagKey, state == null ? TriState.INHERIT : state);
         savePlot(plot);
         isDirty = true;
     }
 
-    // ==============================================================  
-    // --- Wilderness Logging ---  
-    // ==============================================================  
+    // --- Wilderness ---
 
     @Override
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
@@ -937,12 +759,6 @@ public class SQLDataStore implements IDataStore {
         });
     }
 
-    /**
-     * ✅ Implemented:
-     * - Pulls old blocks before timestamp
-     * - Reverts in-world (only if world loaded)
-     * - Deletes log rows it successfully processed
-     */
     @Override
     public void revertWildernessBlocks(long timestamp, int limit) {
         if (limit <= 0) return;
@@ -968,21 +784,15 @@ public class SQLDataStore implements IDataStore {
                         if (worldName == null || oldMat == null) continue;
 
                         World w = Bukkit.getWorld(worldName);
-                        if (w == null) continue; // world unloaded, skip
+                        if (w == null) continue;
 
                         Material mat;
-                        try {
-                            mat = Material.valueOf(oldMat);
-                        } catch (IllegalArgumentException ignored) {
-                            continue;
-                        }
+                        try { mat = Material.valueOf(oldMat); }
+                        catch (IllegalArgumentException ignored) { continue; }
 
-                        // Schedule actual block set on main thread (Folia-safe wrapper)
-                        Location loc = new Location(w, x, y, z);
+                        Location l = new Location(w, x, y, z);
                         plugin.runMainGlobal(() -> {
-                            try {
-                                loc.getBlock().setType(mat, false);
-                            } catch (Throwable ignored2) {}
+                            try { l.getBlock().setType(mat, false); } catch (Throwable ignored2) {}
                         });
 
                         ids.add(id);
@@ -1003,19 +813,10 @@ public class SQLDataStore implements IDataStore {
         });
     }
 
-    // ==============================================================  
-    // --- Basic Accessors (NEVER NULL CONTRACT) ---  
-    // ==============================================================  
+    // --- Accessors (NEVER NULL) ---
 
-    @Override
-    public boolean isDirty() {
-        return isDirty;
-    }
-
-    @Override
-    public void setDirty(boolean dirty) {
-        this.isDirty = dirty;
-    }
+    @Override public boolean isDirty() { return isDirty; }
+    @Override public void setDirty(boolean dirty) { this.isDirty = dirty; }
 
     @Override
     public List<Plot> getPlots(UUID owner) {
@@ -1030,18 +831,14 @@ public class SQLDataStore implements IDataStore {
         if (owner == null || plotId == null) return null;
         Set<Plot> set = plotsByOwner.get(owner);
         if (set == null || set.isEmpty()) return null;
-        for (Plot p : set) {
-            if (p != null && plotId.equals(p.getPlotId())) return p;
-        }
+        for (Plot p : set) if (p != null && plotId.equals(p.getPlotId())) return p;
         return null;
     }
 
     @Override
     public Collection<Plot> getAllPlots() {
         List<Plot> all = new ArrayList<>();
-        for (Set<Plot> set : plotsByOwner.values()) {
-            if (set != null && !set.isEmpty()) all.addAll(set);
-        }
+        for (Set<Plot> set : plotsByOwner.values()) if (set != null && !set.isEmpty()) all.addAll(set);
         return all;
     }
 
@@ -1072,31 +869,22 @@ public class SQLDataStore implements IDataStore {
         Set<Plot> chunkPlots = worldChunks.get(key);
         if (chunkPlots == null || chunkPlots.isEmpty()) return null;
 
-        for (Plot p : chunkPlots) {
-            if (p != null && p.isInside(loc)) return p;
-        }
+        for (Plot p : chunkPlots) if (p != null && p.isInside(loc)) return p;
         return null;
     }
 
-    /**
-     * ✅ Scales better: uses chunk index instead of scanning all plots.
-     */
     @Override
-    public boolean isAreaOverlapping(Plot plotToIgnore, String world, int x1, int z1, int x2, int z2) {
+    public boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2) {
         if (world == null || world.isEmpty()) return false;
 
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(world);
         if (worldMap == null || worldMap.isEmpty()) return false;
 
-        int minX = Math.min(x1, x2);
-        int maxX = Math.max(x1, x2);
-        int minZ = Math.min(z1, z2);
-        int maxZ = Math.max(z1, z2);
+        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
 
-        int cMinX = minX >> 4;
-        int cMaxX = maxX >> 4;
-        int cMinZ = minZ >> 4;
-        int cMaxZ = maxZ >> 4;
+        int cMinX = minX >> 4, cMaxX = maxX >> 4;
+        int cMinZ = minZ >> 4, cMaxZ = maxZ >> 4;
 
         Set<Plot> candidates = new HashSet<>();
         for (int cx = cMinX; cx <= cMaxX; cx++) {
@@ -1109,27 +897,18 @@ public class SQLDataStore implements IDataStore {
         for (Plot p : candidates) {
             if (p == null) continue;
             if (!world.equals(p.getWorld())) continue;
-            if (plotToIgnore != null && plotToIgnore.getPlotId().equals(p.getPlotId())) continue;
+            if (ignore != null && ignore.getPlotId().equals(p.getPlotId())) continue;
 
             if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) {
                 return true;
             }
         }
-
         return false;
     }
 
-    // ==============================================================  
-    // --- Shutdown Helper (call from plugin onDisable) ---  
-    // ==============================================================  
-
+    // --- shutdown helper ---
     public void shutdown() {
-        try {
-            saveSync();
-        } catch (Throwable ignored) {}
-
-        if (hikari != null && !hikari.isClosed()) {
-            hikari.close();
-        }
+        try { saveSync(); } catch (Throwable ignored) {}
+        if (hikari != null && !hikari.isClosed()) hikari.close();
     }
 }

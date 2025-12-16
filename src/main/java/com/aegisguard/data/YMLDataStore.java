@@ -12,6 +12,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -21,11 +23,13 @@ import java.util.stream.Collectors;
  * - Manages plot data using 'plots.yml'.
  * - Implements strict IDataStore contract for 1.2.x.
  *
- * Upgrades in this version:
+ * HARDENING:
  *  ✅ getPlots(UUID) NEVER returns null (clean contract)
  *  ✅ Thread-safe owner cache (Set-backed) for Paper/Folia safety
  *  ✅ Fast overlap checks using chunk index (scales better on large servers)
  *  ✅ Defensive de-duplication by plotId
+ *  ✅ Atomic-ish file writes (temp + replace) to reduce corruption risk
+ *  ✅ savePlotSync implemented (interface alignment)
  */
 public class YMLDataStore implements IDataStore {
 
@@ -33,13 +37,11 @@ public class YMLDataStore implements IDataStore {
     private final File file;
     private FileConfiguration config;
 
-    // --- CACHES ---
-    // Thread-safe: avoids ConcurrentHashMap + ArrayList concurrency hazards
+    // Thread-safe caches
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
-
-    // Map<WorldName, Map<ChunkKey, Set<Plot>>> for fast spatial lookups
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
+    private final Object ioLock = new Object();
     private volatile boolean isDirty = false;
 
     public YMLDataStore(AegisGuard plugin) {
@@ -63,22 +65,33 @@ public class YMLDataStore implements IDataStore {
             } catch (IOException ignored) {}
         }
 
-        config = YamlConfiguration.loadConfiguration(file);
+        synchronized (ioLock) {
+            config = YamlConfiguration.loadConfiguration(file);
+        }
+
         int count = 0;
 
-        for (String key : config.getKeys(false)) {
+        Set<String> keys;
+        synchronized (ioLock) {
+            keys = new HashSet<>(config.getKeys(false));
+        }
+
+        for (String key : keys) {
             try {
                 UUID plotId = UUID.fromString(key);
-                ConfigurationSection sec = config.getConfigurationSection(key);
+                ConfigurationSection sec;
+                synchronized (ioLock) {
+                    sec = config.getConfigurationSection(key);
+                }
                 if (sec == null) continue;
 
-                UUID ownerId = UUID.fromString(sec.getString("owner"));
+                String ownerStr = sec.getString("owner");
+                if (ownerStr == null || ownerStr.isEmpty()) continue;
+
+                UUID ownerId = UUID.fromString(ownerStr);
                 String ownerName = sec.getString("owner-name", "Unknown");
                 String worldName = sec.getString("world");
                 if (worldName == null || worldName.isEmpty()) continue;
-
-                // If world missing/unloaded, still load plot data (do not discard claims)
-                // NOTE: getPlotAt will only work for loaded worlds, but data remains intact.
 
                 int x1 = sec.getInt("x1");
                 int z1 = sec.getInt("z1");
@@ -137,9 +150,7 @@ public class YMLDataStore implements IDataStore {
                         String bidderStr = auction.getString("current-bidder");
                         UUID bidder = null;
                         if (bidderStr != null && !bidderStr.isEmpty()) {
-                            try {
-                                bidder = UUID.fromString(bidderStr);
-                            } catch (IllegalArgumentException ignored) {}
+                            try { bidder = UUID.fromString(bidderStr); } catch (IllegalArgumentException ignored) {}
                         }
                         plot.setCurrentBid(bid, bidder);
                     }
@@ -175,16 +186,12 @@ public class YMLDataStore implements IDataStore {
 
                 // Likes
                 for (String uuidStr : sec.getStringList("liked-by")) {
-                    try {
-                        plot.toggleLike(UUID.fromString(uuidStr));
-                    } catch (IllegalArgumentException ignored) {}
+                    try { plot.toggleLike(UUID.fromString(uuidStr)); } catch (IllegalArgumentException ignored) {}
                 }
 
                 // Bans
                 for (String uuidStr : sec.getStringList("banned")) {
-                    try {
-                        plot.addBan(UUID.fromString(uuidStr));
-                    } catch (IllegalArgumentException ignored) {}
+                    try { plot.addBan(UUID.fromString(uuidStr)); } catch (IllegalArgumentException ignored) {}
                 }
 
                 // Cosmetics
@@ -206,9 +213,7 @@ public class YMLDataStore implements IDataStore {
                         String iconName = warp.getString("warp-icon");
                         Material icon = null;
                         if (iconName != null && !iconName.isEmpty()) {
-                            try {
-                                icon = Material.valueOf(iconName);
-                            } catch (IllegalArgumentException ignored) {}
+                            try { icon = Material.valueOf(iconName); } catch (IllegalArgumentException ignored) {}
                         }
                         plot.setServerWarp(isWarp, warpName, icon);
                     }
@@ -261,23 +266,25 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void save() {
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-        // Clear file content (so deleted plots don't linger)
-        for (String k : new HashSet<>(config.getKeys(false))) {
-            config.set(k, null);
-        }
+            // Clear file content (so deleted plots don't linger)
+            for (String k : new HashSet<>(config.getKeys(false))) {
+                config.set(k, null);
+            }
 
-        for (Plot plot : getAllPlots()) {
-            writePlotToConfig(plot);
-        }
+            for (Plot plot : getAllPlots()) {
+                writePlotToConfig(plot);
+            }
 
-        try {
-            config.save(file);
-            isDirty = false;
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save plots.yml!");
-            e.printStackTrace();
+            try {
+                saveConfigAtomically();
+                isDirty = false;
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not save plots.yml!");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -289,14 +296,41 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void savePlot(Plot plot) {
         if (plot == null) return;
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-        writePlotToConfig(plot);
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+
+            writePlotToConfig(plot);
+            try {
+                saveConfigAtomically();
+                isDirty = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void savePlotSync(Plot plot) {
+        savePlot(plot); // YML save is already synchronous
+    }
+
+    private void saveConfigAtomically() throws IOException {
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) parent.mkdirs();
+
+        File tmp = new File(parent, file.getName() + ".tmp");
+
+        config.save(tmp);
+
         try {
-            config.save(file);
-            isDirty = false;
-        } catch (IOException e) {
-            e.printStackTrace();
+            Files.move(tmp.toPath(), file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException atomicNotSupported) {
+            // Fallback if ATOMIC_MOVE not supported on this filesystem
+            Files.move(tmp.toPath(), file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -406,10 +440,6 @@ public class YMLDataStore implements IDataStore {
     // --- ACCESSORS ---
     // ==============================================================
 
-    /**
-     * ✅ NEVER NULL contract:
-     * Always returns a snapshot list (safe to iterate).
-     */
     @Override
     public List<Plot> getPlots(UUID owner) {
         if (owner == null) return Collections.emptyList();
@@ -423,9 +453,7 @@ public class YMLDataStore implements IDataStore {
         if (owner == null || plotId == null) return null;
         Set<Plot> set = plotsByOwner.get(owner);
         if (set == null || set.isEmpty()) return null;
-        for (Plot p : set) {
-            if (p != null && plotId.equals(p.getPlotId())) return p;
-        }
+        for (Plot p : set) if (p != null && plotId.equals(p.getPlotId())) return p;
         return null;
     }
 
@@ -440,12 +468,16 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public Collection<Plot> getPlotsForSale() {
-        return getAllPlots().stream().filter(Plot::isForSale).collect(Collectors.toList());
+        Collection<Plot> all = getAllPlots();
+        if (all.isEmpty()) return Collections.emptyList();
+        return all.stream().filter(Plot::isForSale).collect(Collectors.toList());
     }
 
     @Override
     public Collection<Plot> getPlotsForAuction() {
-        return getAllPlots().stream().filter(p -> "AUCTION".equals(p.getPlotStatus())).collect(Collectors.toList());
+        Collection<Plot> all = getAllPlots();
+        if (all.isEmpty()) return Collections.emptyList();
+        return all.stream().filter(p -> "AUCTION".equals(p.getPlotStatus())).collect(Collectors.toList());
     }
 
     @Override
@@ -467,10 +499,6 @@ public class YMLDataStore implements IDataStore {
         return null;
     }
 
-    /**
-     * ✅ Big-server friendly:
-     * Uses chunk index instead of scanning every plot on the server.
-     */
     @Override
     public boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2) {
         if (world == null || world.isEmpty()) return false;
@@ -488,9 +516,7 @@ public class YMLDataStore implements IDataStore {
         int cMinZ = minZ >> 4;
         int cMaxZ = maxZ >> 4;
 
-        // Deduplicate candidates
         Set<Plot> candidates = new HashSet<>();
-
         for (int cx = cMinX; cx <= cMaxX; cx++) {
             for (int cz = cMinZ; cz <= cMaxZ; cz++) {
                 Set<Plot> set = worldMap.get(cx + "," + cz);
@@ -503,7 +529,6 @@ public class YMLDataStore implements IDataStore {
             if (!world.equals(p.getWorld())) continue;
             if (ignore != null && ignore.getPlotId().equals(p.getPlotId())) continue;
 
-            // AABB overlap
             if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) {
                 return true;
             }
@@ -518,8 +543,10 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
+        if (owner == null || c1 == null || c2 == null || c1.getWorld() == null || c2.getWorld() == null) return;
+
         UUID id = UUID.randomUUID();
-        String ownerName = Bukkit.getOfflinePlayer(owner).getName();
+        String ownerName = Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse("Unknown");
 
         int x1 = Math.min(c1.getBlockX(), c2.getBlockX());
         int x2 = Math.max(c1.getBlockX(), c2.getBlockX());
@@ -535,9 +562,7 @@ public class YMLDataStore implements IDataStore {
         if (plot == null) return;
         isDirty = true;
 
-        // Defensive: ensure no duplicate plotId exists anywhere
         removePlotByIdEverywhere(plot.getPlotId());
-
         cachePlot(plot);
         savePlot(plot);
     }
@@ -557,23 +582,21 @@ public class YMLDataStore implements IDataStore {
                     break;
                 }
             }
-            if (removed != null) {
-                set.remove(removed);
-            }
+            if (removed != null) set.remove(removed);
             if (set.isEmpty()) plotsByOwner.remove(owner);
         }
 
-        if (removed != null) {
-            deIndexPlot(removed);
-        }
+        if (removed != null) deIndexPlot(removed);
 
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
-        config.set(plotId.toString(), null);
-        try {
-            config.save(file);
-            isDirty = false;
-        } catch (IOException e) {
-            e.printStackTrace();
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            config.set(plotId.toString(), null);
+            try {
+                saveConfigAtomically();
+                isDirty = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -584,19 +607,21 @@ public class YMLDataStore implements IDataStore {
 
         Set<Plot> set = plotsByOwner.remove(owner);
         if (set != null) {
-            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            synchronized (ioLock) {
+                if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-            for (Plot p : set) {
-                if (p == null) continue;
-                deIndexPlot(p);
-                config.set(p.getPlotId().toString(), null);
-            }
+                for (Plot p : set) {
+                    if (p == null) continue;
+                    deIndexPlot(p);
+                    config.set(p.getPlotId().toString(), null);
+                }
 
-            try {
-                config.save(file);
-                isDirty = false;
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    saveConfigAtomically();
+                    isDirty = false;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -617,10 +642,6 @@ public class YMLDataStore implements IDataStore {
         savePlot(plot);
     }
 
-    /**
-     * FIXED: Ownership transfer must reset plot internals (roles/bans/likes/role-flags/title/desc).
-     * Also prevents duplicate cache entries.
-     */
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         if (plot == null || newOwner == null) return;
@@ -633,26 +654,22 @@ public class YMLDataStore implements IDataStore {
             return;
         }
 
-        // Remove from old owner cache
+        // Remove from old owner cache (remove all matching plotId just in case)
         if (oldOwner != null) {
             Set<Plot> oldSet = plotsByOwner.get(oldOwner);
             if (oldSet != null) {
-                oldSet.remove(plot);
+                UUID pid = plot.getPlotId();
+                oldSet.removeIf(p -> p != null && pid.equals(p.getPlotId()));
                 if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
             }
         }
 
-        // Remove from chunk index
         deIndexPlot(plot);
-
-        // Reset internals + swap owner/name
         plot.internalSetOwner(newOwner, newOwnerName);
 
-        // Re-add cleanly (dedupe-by-id)
         removePlotByIdEverywhere(plot.getPlotId());
         cachePlot(plot);
 
-        // Persist immediately
         savePlot(plot);
     }
 
@@ -666,11 +683,9 @@ public class YMLDataStore implements IDataStore {
     // --- Indexing Helpers ---
 
     private void cachePlot(Plot plot) {
-        // Owner index
         Set<Plot> ownerSet = plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet());
         ownerSet.add(plot);
 
-        // Chunk index
         String w = plot.getWorld();
         int minX = plot.getX1() >> 4;
         int maxX = plot.getX2() >> 4;
@@ -709,30 +724,22 @@ public class YMLDataStore implements IDataStore {
         if (worldMap.isEmpty()) plotsByChunk.remove(w);
     }
 
-    /**
-     * Defensive de-duplication:
-     * If an old Plot instance with the same plotId exists (different object),
-     * remove it from caches/indexes before caching the new one.
-     */
     private void removePlotByIdEverywhere(UUID plotId) {
         if (plotId == null) return;
 
-        // Remove from owner sets
         for (Map.Entry<UUID, Set<Plot>> entry : plotsByOwner.entrySet()) {
             Set<Plot> set = entry.getValue();
             if (set == null || set.isEmpty()) continue;
 
             Plot found = null;
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) {
-                    found = p;
-                    break;
-                }
+                if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
             }
 
             if (found != null) {
                 set.remove(found);
                 deIndexPlot(found);
+                if (set.isEmpty()) plotsByOwner.remove(entry.getKey());
             }
         }
     }
@@ -751,9 +758,7 @@ public class YMLDataStore implements IDataStore {
     @Override public void logWildernessBlock(Location loc, String o, String n, UUID p) {}
     @Override public void revertWildernessBlocks(long t, int l) {}
 
-    // ----------------------------------------
-    // --- ROLE FLAG OVERRIDES (YML) ----------
-    // ----------------------------------------
+    // --- ROLE FLAG OVERRIDES (YML) ---
 
     @Override
     public TriState getRoleFlagState(Plot plot, String roleName, String flagKey) {
@@ -768,5 +773,10 @@ public class YMLDataStore implements IDataStore {
         isDirty = true;
         plot.setRoleFlagState(roleName, flagKey, state == null ? TriState.INHERIT : state);
         savePlot(plot);
+    }
+
+    @Override
+    public void shutdown() {
+        try { saveSync(); } catch (Throwable ignored) {}
     }
 }

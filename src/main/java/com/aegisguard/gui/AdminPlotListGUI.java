@@ -58,9 +58,10 @@ public class AdminPlotListGUI {
         if (page >= maxPages && maxPages > 0) page = maxPages - 1;
         else if (maxPages == 0) page = 0;
 
-        // ✅ Title fix: translate &-colors + clamp + preserve page suffix
+        // ✅ Title: localized + page suffix, safely clamped to 32 chars (including color codes)
         String suffix = " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
-        String title = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry", suffix);
+        String baseTitle = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry");
+        String title = clampTitleWithSuffix(baseTitle, color(suffix));
 
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
@@ -207,6 +208,29 @@ public class AdminPlotListGUI {
                 open(player, currentPage);
             }
         }
+    }
+
+    private String clampTitleWithSuffix(String base, String suffix) {
+        final int MAX = 32;
+        if (base == null) base = "";
+        if (suffix == null) suffix = "";
+
+        String combined = base + suffix;
+        if (combined.length() <= MAX) return combined;
+
+        // If suffix alone is too long, clamp it hard.
+        if (suffix.length() >= MAX) {
+            String cut = suffix.substring(0, MAX);
+            return cut.endsWith("§") ? cut.substring(0, MAX - 1) : cut;
+        }
+
+        int remainingForBase = MAX - suffix.length();
+        String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
+
+        // Avoid cutting off a color code marker.
+        if (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
+
+        return trimmedBase + suffix;
     }
 
     private String color(String s) {

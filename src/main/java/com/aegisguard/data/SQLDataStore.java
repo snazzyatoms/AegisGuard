@@ -100,6 +100,7 @@ public class SQLDataStore implements IDataStore {
                     "(zone_id, plot_id, name, x1, y1, z1, x2, y2, z2, renter, price, expires) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
+    // Wilderness logging
     private static final String LOG_WILDERNESS =
             "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid) VALUES (?,?,?,?,?,?,?,?)";
     private static final String GET_REVERTABLE_BLOCKS =
@@ -122,23 +123,33 @@ public class SQLDataStore implements IDataStore {
     private void queueDb(Runnable job) {
         if (job == null) return;
 
+        // During shutdown, run inline so nothing gets dropped.
         if (stopping.get()) {
-            // During shutdown, run inline so nothing gets dropped.
-            job.run();
+            try { job.run(); } catch (Throwable ignored) {}
             return;
         }
 
         pendingTasks.incrementAndGet();
-        dbExecutor.execute(() -> {
-            try {
-                job.run();
-            } finally {
-                int left = pendingTasks.decrementAndGet();
-                synchronized (pendingLock) {
-                    if (left <= 0) pendingLock.notifyAll();
+        try {
+            dbExecutor.execute(() -> {
+                try {
+                    job.run();
+                } catch (Throwable ignored) {
+                } finally {
+                    int left = pendingTasks.decrementAndGet();
+                    synchronized (pendingLock) {
+                        if (left <= 0) pendingLock.notifyAll();
+                    }
                 }
+            });
+        } catch (RejectedExecutionException rex) {
+            // Executor is shutting down unexpectedly: run inline and fix the counter.
+            try { job.run(); } catch (Throwable ignored) {}
+            int left = pendingTasks.decrementAndGet();
+            synchronized (pendingLock) {
+                if (left <= 0) pendingLock.notifyAll();
             }
-        });
+        }
     }
 
     private void flushPending(long maxWaitMillis) {
@@ -327,7 +338,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void save() {
-        // queue async saves for all plots
         for (Plot p : getAllPlots()) {
             if (p != null) savePlot(p);
         }
@@ -335,7 +345,6 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void saveSync() {
-        // forced sync commit of all plots
         for (Plot p : getAllPlots()) {
             if (p != null) savePlotInternal(p);
         }
@@ -380,6 +389,7 @@ public class SQLDataStore implements IDataStore {
                     ps.executeUpdate();
                 }
 
+                // Zones: wipe + insert
                 try (PreparedStatement del = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
                     del.setString(1, plot.getPlotId().toString());
                     del.executeUpdate();
@@ -410,7 +420,6 @@ public class SQLDataStore implements IDataStore {
                 }
 
                 conn.commit();
-                isDirty = false;
 
             } catch (SQLException e) {
                 try { conn.rollback(); } catch (SQLException ignored) {}
@@ -497,10 +506,16 @@ public class SQLDataStore implements IDataStore {
                     case "customBiome" -> plot.setCustomBiome(value);
                     case "plotStatus" -> plot.setPlotStatus(value);
 
-                    case "isForSale" -> plot.setForSale(Boolean.parseBoolean(value), plot.getSalePrice());
+                    case "isForSale" -> {
+                        boolean fs = Boolean.parseBoolean(value);
+                        plot.setForSale(fs, fs ? plot.getSalePrice() : 0.0D);
+                    }
                     case "salePrice" -> plot.setForSale(plot.isForSale(), Double.parseDouble(value));
 
-                    case "isForRent" -> plot.setForRent(Boolean.parseBoolean(value), plot.getRentPrice());
+                    case "isForRent" -> {
+                        boolean fr = Boolean.parseBoolean(value);
+                        plot.setForRent(fr, fr ? plot.getRentPrice() : 0.0D);
+                    }
                     case "rentPrice" -> plot.setForRent(plot.isForRent(), Double.parseDouble(value));
                     case "rentExpires" -> plot.setRenter(plot.getCurrentRenter(), Long.parseLong(value));
                     case "currentRenter" -> plot.setRenter(UUID.fromString(value), plot.getRentExpires());
@@ -543,7 +558,9 @@ public class SQLDataStore implements IDataStore {
     }
 
     private void cachePlot(Plot plot) {
+        // Deduplicate by id to prevent ghosts
         removePlotByIdEverywhere(plot.getPlotId());
+
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet()).add(plot);
         indexPlot(plot);
     }
@@ -583,6 +600,7 @@ public class SQLDataStore implements IDataStore {
     }
 
     private void deIndexPlot(Plot plot) {
+        if (plot == null) return;
         Map<String, Set<Plot>> worldChunks = plotsByChunk.get(plot.getWorld());
         if (worldChunks == null) return;
 
@@ -604,7 +622,7 @@ public class SQLDataStore implements IDataStore {
         if (worldChunks.isEmpty()) plotsByChunk.remove(plot.getWorld());
     }
 
-    // --- IDataStore modifications ---
+    // --- IDataStore: Modifications ---
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
@@ -634,17 +652,8 @@ public class SQLDataStore implements IDataStore {
     public void removePlot(UUID owner, UUID plotId) {
         if (owner == null || plotId == null) return;
 
-        Plot removed = null;
-        Set<Plot> set = plotsByOwner.get(owner);
-        if (set != null) {
-            for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) { removed = p; break; }
-            }
-            if (removed != null) set.remove(removed);
-            if (set.isEmpty()) plotsByOwner.remove(owner);
-        }
-
-        if (removed != null) deIndexPlot(removed);
+        // Hard dedupe kill-switch: removes plotId from any cached owner set + chunk index
+        removePlotByIdEverywhere(plotId);
 
         queueDb(() -> {
             try (Connection conn = hikari.getConnection()) {
@@ -727,24 +736,19 @@ public class SQLDataStore implements IDataStore {
         UUID plotId = plot.getPlotId();
         UUID oldOwner = plot.getOwner();
 
-        if (oldOwner != null) {
-            Set<Plot> oldSet = plotsByOwner.get(oldOwner);
-            if (oldSet != null) {
-                Plot found = null;
-                for (Plot p : oldSet) {
-                    if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
-                }
-                if (found != null) oldSet.remove(found);
-                if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
-            }
-        }
+        // Remove ANY cached copies (ghost-killer) before changing state
+        removePlotByIdEverywhere(plotId);
 
-        deIndexPlot(plot);
+        // Update the plot itself
         plot.internalSetOwner(newOwner, newOwnerName);
 
-        removePlotByIdEverywhere(plotId);
-        plotsByOwner.computeIfAbsent(newOwner, k -> ConcurrentHashMap.newKeySet()).add(plot);
-        indexPlot(plot);
+        // Safety: ensure old owner doesn't keep privileges via a leftover role mapping
+        if (oldOwner != null) {
+            try { plot.removeRole(oldOwner); } catch (Throwable ignored) {}
+        }
+
+        // Re-cache under the correct owner + re-index into chunks
+        cachePlot(plot);
 
         savePlot(plot);
         isDirty = true;

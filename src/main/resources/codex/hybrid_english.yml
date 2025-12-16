@@ -101,10 +101,13 @@ upkeep_paid: '&e💰 Upkeep of &6{AMOUNT}&e paid.'
 upkeep_failed_warning: '&c❌ Warning! Upkeep is due.'
 plot_expired_upkeep: '&c❌ Plot expired due to unpaid upkeep.'
 plot-is-locked: '&c❌ This plot is locked until unpaid upkeep is resolved.'
+plot_is_locked: '&c❌ This plot is locked until unpaid upkeep is resolved.' # alias
 
 # --- Auctions ---
 plot-now-auctioned: '&e⚠ Your plot has entered auction.'
 auction-gui-title: '&6Plot Auctions'
+auction_gui_title: '&6Plot Auctions' # alias
+
 auction-bid-own: '&cYou cannot bid on your own plot.'
 auction-already-highest: '&eYou already hold the highest bid.'
 auction-outbid: '&e{PLAYER} has outbid you.'
@@ -120,6 +123,8 @@ auction_item_lore:
 
 # --- Market ---
 market-gui-title: '&2Land Market'
+market_gui_title: '&2Land Market' # alias
+
 market-teleport: '&eTraveling to {PLAYER}''s plot...'
 market-buy-own: '&cYou cannot buy your own plot.'
 market-buy-success: '&a✔ Purchased plot for &6{PRICE}&a.'
@@ -153,8 +158,8 @@ expansion_approved: ''
 expansion_denied: ''
 
 # Admin request result keys (primary visible lines)
-admin_request_approved: '&a✔ Your request was approved by Admin.'
-admin_request_denied: '&c❌ Your request was denied by Admin.'
+admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
+admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
 
 expansion_payment_failed: '&c❌ Insufficient funds.'
 expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
@@ -231,11 +236,17 @@ welcome-cleared: '&e✔ Welcome message cleared.'
 farewell-set: '&a✔ Farewell message set.'
 farewell-cleared: '&e✔ Farewell message cleared.'
 
+# Welcome/Farewell display (listener output)
+plot_welcome_show: '&a✦ {OWNER}&a: &f{MESSAGE}'
+plot_farewell_show: '&e✦ {OWNER}&e: &f{MESSAGE}'
+
 # --- Entry Titles ---
 title_entering: '&b{PLOT_NAME}'
 subtitle_entering: '&7Owned by {OWNER}'
 title_entering_wilderness: '&aWilderness'
 subtitle_entering_wilderness: '&7Unclaimed Land'
+title_entering_wilds: '&aWilderness' # fallback alias
+subtitle_entering_wilds: '&7Unclaimed Land' # fallback alias
 
 # --- Main Menu ---
 menu_title: '&b⚔ Guardian Codex'
@@ -307,15 +318,23 @@ settings_gui_not_toggle: '&cThese examples are not changed here.'
 # --- Ascension / Leveling ---
 level_gui_title: '&dPlot Ascension'
 level_current_status: '&bCurrent Status'
+
+# Header placeholders (both styles supported)
 level_header_owner: '&dOwner:&f {OWNER}'
 level_header_world: '&dWorld:&f {WORLD}'
 level_header_level: '&dCurrent Level:&f {LEVEL}'
 level_header_multiplier: '&dReward Multiplier:&f {MULTIPLIER}x'
+level_header_owner_lower: '&dOwner:&f {owner}' # optional compatibility
+level_header_world_lower: '&dWorld:&f {world}'
+level_header_level_lower: '&dCurrent Level:&f {level}'
+level_header_multiplier_lower: '&dReward Multiplier:&f {multiplier}x'
 
 level_current_blessings_name: '&dCurrent Bonuses'
 level_current_blessings_title: '&dActive Bonuses'
 level_current_blessings_footer_1: '&8Higher levels unlock'
 level_current_blessings_footer_2: '&8stronger bonuses for this plot.'
+level_current_blessing_name: '&dCurrent Bonuses' # alias
+level_current_blessing_title: '&dActive Bonuses' # alias
 
 level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
 level_max_reached: '&6Maximum level reached.'
@@ -553,118 +572,6 @@ shop_toggle_lore:
   - '&7Allow visitors to use shops.'
   - '&7Cost: &6{COST}'
 
-# --- Role Flags (Per-role permissions) ---
-role_flags_gui_title: '&9⚙ Role Flags: {ROLE}'
-role_flags_legend_title: '&7How These Work'
-role_flags_legend_lore:
-  - '&7Inherit: use world/zone/plot rules.'
-  - '&aAllow: bypass normal restrictions.'
-  - '&cDeny: block even if normally allowed.'
-
-role_flag_state_inherit: Inherit
-role_flag_state_allow: Allow
-role_flag_state_deny: Deny
-
-role_flag_name_pvp: '&bPvP'
-role_flag_name_containers: '&bContainers'
-role_flag_name_mobs: '&bHostile Mobs'
-role_flag_name_pets: '&bPets'
-role_flag_name_entities: '&bEntities'
-role_flag_name_farm: '&bCrops'
-role_flag_name_tnt: '&bExplosions'
-role_flag_name_fire: '&bFire'
-role_flag_name_piston: '&bPistons'
-role_flag_name_entry: '&bEntry'
-role_flag_name_shop: '&bShops'
-role_flag_name_fly: '&bFlight'
-role_flag_name_animals: '&bAnimals'
-role_flag_name_redstone: '&bRedstone'
-role_flag_name_vehicles: '&bVehicles'
-
-role_flag_lore_common:
-  - '&7Role-based permissions for this plot.'
-  - '&7Overrides normal plot rules.'
-  - ' '
-  - '&eClick to cycle: Inherit → Allow → Deny'
-
-# --- Roles GUI ---
-roles_gui_title: '&eManage Roles'
-roles_manage_title: '&bManage: {PLAYER}'
-trusted_plot_selector_title: '&bSelect a Plot'
-add_trusted_title: '&aAdd Member'
-button_add_trusted: '&aAdd Player'
-add_trusted_lore:
-  - '&7Click a head to assign a role.'
-button_remove_trusted: '&cRemove from Plot'
-role_self: '&cYou cannot modify your own role.'
-role_is_owner: '&cYou cannot modify the owner''s role.'
-role_set_to: '&a✔ {PLAYER} now has role: {ROLE}.'
-role_not_found: '&c❌ {PLAYER} is not on this plot.'
-role_removed: '&e✔ {PLAYER} removed from your plot.'
-
-# --- Admin Tools ---
-admin_menu_title: '&c⚙ Admin Tools'
-admin_reloading: '&7Reloading configuration...'
-admin_reload_complete: '&a✔ Reload complete.'
-button_admin_plots: '&bView All Plots'
-button_admin_requests: '&cView Requests'
-button_admin_zones: '&6Server Zones'
-button_admin_diagnostics: '&bDiagnostics'
-button_admin_reload: '&eReload'
-button_admin_auto_remove: '&6Purge Banned'
-admin_auto_remove_lore:
-  - '&7Remove plots of'
-  - '&7permanently banned players.'
-button_admin_bypass_limit: '&dBypass Limits'
-admin_bypass_limit_lore:
-  - '&7Admins ignore plot limits.'
-button_admin_broadcast: '&bAction Broadcast'
-admin_broadcast_lore:
-  - '&7Announce admin actions.'
-button_admin_unlimited: '&aUnlimited Plots'
-admin_unlimited_lore:
-  - '&7Admins can have infinite plots.'
-button_admin_sync: '&bGlobal Sync'
-admin_sync_lore:
-  - '&7Sync data across network.'
-button_admin_perf: '&cPerformance Mode'
-admin_perf_lore:
-  - '&7Reduce cosmetic effects.'
-
-admin_auto_remove_enabled: '&a✔ Auto remove ON.'
-admin_auto_remove_disabled: '&c✖ Auto remove OFF.'
-admin_bypass_enabled: '&a✔ Bypass ON.'
-admin_bypass_disabled: '&c✖ Bypass OFF.'
-admin_broadcast_enabled: '&a✔ Broadcast ON.'
-admin_broadcast_disabled: '&c✖ Broadcast OFF.'
-admin_removed_banned: '&eRemoved plots for: {PLAYER}'
-
-admin_plot_list_title: '&cGlobal Plot List'
-admin_plot_item_name: '&bOwner: &f{OWNER}'
-admin_server_zone_tag: '&c[SERVER ZONE]'
-admin_plot_actions:
-  - '&eLeft-Click: &7Teleport'
-  - '&cRight-Click: &7Delete'
-admin_plot_teleport: '&eTeleported to {PLAYER}''s plot.'
-admin_plot_deleted: '&c✖ Deleted {PLAYER}''s plot.'
-
-admin-zone-created: '&a✔ Server Zone created.'
-admin-zone-deleted: '&c✖ Server Zone deleted.'
-admin-zone-not-found: '&c❌ You are not in a Server Zone.'
-admin_zone_flags_title: '&cZone Flags'
-flag_build_lore:
-  - '&7Allow build and break?'
-  - '&cIf OFF, nobody can build/break.'
-flag_containers_lore:
-  - '&7Allow container use?'
-  - '&cIf OFF, nobody can open containers.'
-flag_interact_lore:
-  - '&7Allow doors/buttons?'
-  - '&cIf OFF, nobody can interact.'
-
-wilderness_revert_start: '&7Starting wilderness revert...'
-wilderness_revert_end: '&7Revert complete. Restored: &f{AMOUNT}&7 blocks.'
-
 # --- Cosmetics ---
 button_cosmetics: '&dCosmetics'
 cosmetics_lore:
@@ -681,17 +588,37 @@ cosmetics_already_active: '&cThis effect is already active.'
 cosmetic_purchased: '&a✔ Cosmetic purchased and applied.'
 
 # =========================================================
-# ✅ Claim Blocks / Domain Registry (Budget System)
+# ✅ Claim Blocks / Domain Registry (v1.2.4+)
 # =========================================================
 ledger_title: '&6📜 Domain Registry'
 ledger_available: '&7Available: &a'
 ledger_used: '&7Used: &c'
 ledger_total: '&7Total Capacity: &e'
 
+# Preferred system keys (match the contract from Old English)
+claim_blocks_balance: '&e⛏ Claim Blocks: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Not enough Claim Blocks! Need &6{AMOUNT}&c more.'
+claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+
+# Legacy claim-block keys (kept so older code paths still print something)
 claim_blocks_not_enough: '&c❌ You need &e{NEEDED}&c more claim blocks to claim this area.'
 first_claim_limit_reached: '&c❌ First claim limit exceeded! Max size: &e{LIMIT}&c blocks. (You selected &e{AREA}&c)'
 claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for playing. Total: &e{TOTAL}&a.'
 claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
+
+# --- External Protection Compatibility (v1.2.4+) ---
+claim_denied_external: '&c⛔ This land is protected by &f{PLUGIN}&c. You cannot claim here.'
+claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
+
+# --- Unstuck (v1.2.4+) ---
+unstuck_warmup: '&e⏳ Unstuck starting... teleport in &6{SECONDS}&e seconds.'
+unstuck_cancelled: '&c❌ Unstuck cancelled. You moved.'
+unstuck_on_cooldown: '&c❌ Unstuck cooldown: wait &6{SECONDS}&c seconds.'
+unstuck_success: '&a✔ You have been moved to a safe location.'
+unstuck_failed: '&c❌ No safe location found.'
 
 # --- Plot Status GUI ---
 plot_status_gui_title: '&b⚔ Plot Status Ledger'

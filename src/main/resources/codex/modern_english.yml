@@ -85,10 +85,12 @@ upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
 upkeep_failed_warning: '&c⚠ Upkeep is due and your balance is too low.'
 plot_expired_upkeep: '&c❌ Your claim was removed due to unpaid upkeep.'
 plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
+plot_is_locked: '&c❌ This claim is locked and cannot be modified.' # alias
 
 # --- Auctions ---
 plot-now-auctioned: '&e⚠ Your claim is now being auctioned!'
 auction-gui-title: '&6Claim Auctions'
+auction_gui_title: '&6Claim Auctions' # alias
 auction-bid-own: '&cError: You cannot bid on your own expired claim.'
 auction-already-highest: '&eYou are already the highest bidder.'
 auction-outbid: '&e{PLAYER} has outbid you.'
@@ -104,6 +106,7 @@ auction_item_lore:
 
 # --- Market ---
 market-gui-title: '&2Real Estate'
+market_gui_title: '&2Real Estate' # alias
 market-teleport: '&eTeleporting to {PLAYER}''s claim...'
 market-buy-own: '&cError: You cannot buy your own claim.'
 market-buy-success: '&a✔ You bought {PLAYER}''s claim for &6{PRICE}&a!'
@@ -140,8 +143,8 @@ expansion_approved: ''
 expansion_denied: ''
 
 # Admin request result keys (primary visible lines)
-admin_request_approved: '&a✔ Your expansion request was approved by Admin.'
-admin_request_denied: '&c❌ Your expansion request was denied by Admin.'
+admin_request_approved: '&a✔ Your expansion request was approved by {PLAYER}.'
+admin_request_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
 
 expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
 expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'
@@ -215,6 +218,10 @@ welcome-cleared: '&e✔ Welcome message cleared.'
 farewell-set: '&a✔ Farewell message updated.'
 farewell-cleared: '&e✔ Farewell message cleared.'
 
+# Welcome/Farewell display (listener output)
+plot_welcome_show: '&a✦ {OWNER}&a: &f{MESSAGE}'
+plot_farewell_show: '&e✦ {OWNER}&e: &f{MESSAGE}'
+
 plot_created: '&a✔ Claim created successfully.'
 plot_unclaimed: '&e⚠ Claim removed.'
 plot_too_small: '&c❌ The selected area is too small.'
@@ -232,6 +239,8 @@ title_entering: '&b{PLOT_NAME}'
 subtitle_entering: '&7Owned by {OWNER}'
 title_entering_wilderness: '&aWilderness'
 subtitle_entering_wilderness: '&7Unclaimed Area'
+title_entering_wilds: '&aWilderness' # fallback alias
+subtitle_entering_wilds: '&7Unclaimed Area' # fallback alias
 
 # --- Main Menu ---
 menu_title: '&b⚔ AegisGuard Menu'
@@ -486,328 +495,40 @@ like_own_plot: '&cError: You cannot like your own claim.'
 like_disabled: '&cLikes are disabled on this server/world.'
 
 # =========================================================
-# ✅ Claim Blocks / Domain Registry (Budget System)
+# ✅ Claim Blocks / Domain Registry (v1.2.4+)
 # =========================================================
 ledger_title: '&6📜 Domain Registry'
 ledger_available: '&7Available: &a'
 ledger_used: '&7Used: &c'
 ledger_total: '&7Total Capacity: &e'
 
+# Preferred system keys (match contract from Old English)
+claim_blocks_balance: '&e⛏ Claim Blocks: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Not enough Claim Blocks! Need &6{AMOUNT}&c more.'
+claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+
+# Legacy claim-block keys (kept for older code paths)
 claim_blocks_not_enough: '&c❌ You need &e{NEEDED}&c more claim blocks to claim this area.'
 first_claim_limit_reached: '&c❌ First claim limit exceeded! Max size: &e{LIMIT}&c blocks. (You selected &e{AREA}&c)'
 claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for playing. Total: &e{TOTAL}&a.'
 claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
 
-# --- Plot Status GUI ---
-plot_status_gui_title: '&b⚔ Claim Status'
-plot_status_header_title: '&6Claim Information'
-plot_status_blessings_title: '&dActive Bonuses & Effects'
-plot_status_territory_title: '&aTerritory, Size & Progression'
-plot_status_protection_title: '&cCombat & Hostiles'
+# --- External Protection Compatibility (v1.2.4+) ---
+claim_denied_external: '&c⛔ This area is protected by &f{PLUGIN}&c. You cannot claim here.'
+claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
 
-plot_status_overview_name: '&aClaim Overview'
-plot_status_overview_lore:
-  - '&7Shows the primary attributes of this claim,'
-  - '&7including owner, world, biome, and level.'
-  - ' '
-  - '&8Only the highest unlocked bonuses'
-  - '&8are shown for clarity.'
+# --- Unstuck (v1.2.4+) ---
+unstuck_warmup: '&e⏳ Unstuck starting... teleporting in &6{SECONDS}&e seconds.'
+unstuck_cancelled: '&c❌ Unstuck cancelled. You moved.'
+unstuck_on_cooldown: '&c❌ Unstuck cooldown: wait &6{SECONDS}&c seconds.'
+unstuck_success: '&a✔ You have been moved to a safe location.'
+unstuck_failed: '&c❌ No safe location found.'
 
-plot_status_flags_name: '&6Protections & Wards'
-plot_status_flags_lore:
-  - '&7Lists all active protection settings,'
-  - '&7such as PvP, mobs, fire, and interactions.'
-  - ' '
-  - '&8Disabled protections follow normal'
-  - '&8server behavior.'
-
-plot_status_economy_name: '&eEconomy, Upkeep & Costs'
-plot_status_economy_lore:
-  - '&7Shows upkeep status, recent payments,'
-  - '&7refunds, and marketplace information.'
-  - ' '
-  - '&8Unpaid upkeep may result in claim'
-  - '&8expiration or auction.'
-
-plot_status_social_name: '&dVisitors & Reputation'
-plot_status_social_lore:
-  - '&7Tracks visits, likes, and overall'
-  - '&7visibility of this claim.'
-  - ' '
-  - '&8Highly visited claims gain community'
-  - '&8recognition.'
-
-# --- Wards Info (Flags Help) ---
-button_flags_info: '&6📜 Ward Info'
-flags_info_lore:
-  - '&7Wards control the protection rules for this claim.'
-  - '&aGreen = ON&7: Extra protection is enforced.'
-  - '&cRed = OFF&7: Normal server rules apply.'
-  - ' '
-  - '&7Hover each icon to see exactly what it does.'
-
-# --- Generic Flag Messages (added for parity) ---
-toggle_on: '&a✔ Enabled {FLAG}.'
-toggle_off: '&c✖ Disabled {FLAG}.'
-toggle_fail_cost: '&c❌ You need &e{AMOUNT}&c to enable {FLAG}.'
-flag_no_perm: '&cYou do not have permission to change {FLAG}.'
-flag_denied: '&c❌ You cannot do that in {PLOT}.'
-flag_toggled: '&eUpdated {FLAG}: &f{STATUS}'
-
-flag_lore_allow: '&7Allowed: &a{STATUS}'
-flag_lore_cost: '&7Enable Cost: &6{COST}'
-flag_lore_allow_status_inherit: '&eInherited from World'
-flag_lore_allow_status_allow: '&aAllowed by Claim'
-flag_lore_allow_status_deny: '&cDenied by Claim'
-flag_lore_role_status_inherit: '&eInherited from Claim'
-flag_lore_role_status_allow: '&aAllowed for Role'
-flag_lore_role_status_deny: '&cDenied for Role'
-flag_lore_toggle_action: '&eClick to cycle: Inherit → Allow → Deny'
-
-# --- Flags ---
-button_pvp_on: '&a⚔ PvP Protection: ON'
-button_pvp_off: '&c⚔ PvP Protection: OFF'
-pvp_toggle_lore:
-  - '&7ON: Players cannot damage each other in this claim.'
-  - '&7OFF: PvP follows normal server rules.'
-
-button_containers_on: '&a📦 Container Protection: ON'
-button_containers_off: '&c📦 Container Protection: OFF'
-container_toggle_lore:
-  - '&7ON: Only trusted players can open containers.'
-  - '&7OFF: Anyone may open containers (if roles or server rules allow).'
-
-button_mobs_on: '&a🧟 Mob Protection: ON'
-button_mobs_off: '&c🧟 Mob Protection: OFF'
-mob_toggle_lore:
-  - '&7ON: Hostile mobs cannot damage players here.'
-  - '&7OFF: Hostile mobs behave normally.'
-
-button_pets_on: '&a🐾 Pet Protection: ON'
-button_pets_off: '&c🐾 Pet Protection: OFF'
-pet_toggle_lore:
-  - '&7ON: Tamed pets are protected from damage.'
-  - '&7OFF: Pets can be damaged normally.'
-
-button_entity_on: '&a🗿 Entity Protection: ON'
-button_entity_off: '&c🗿 Entity Protection: OFF'
-entity_toggle_lore:
-  - '&7ON: Item frames, armor stands, and similar entities'
-  - '&7are protected from modification or breaking.'
-  - '&7OFF: They can be changed or broken.'
-
-button_farm_on: '&a🌾 Crop Protection: ON'
-button_farm_off: '&c🌾 Crop Protection: OFF'
-farm_toggle_lore:
-  - '&7ON: Crops cannot be trampled or broken by players.'
-  - '&7OFF: Crops can be damaged as normal.'
-
-button_tnt_on: '&a💥 Explosion Protection: ON'
-button_tnt_off: '&c💥 Explosion Protection: OFF'
-tnt_toggle_lore:
-  - '&7ON: Explosions cannot damage blocks in this claim.'
-  - '&7OFF: Explosion damage is allowed.'
-
-button_fire_on: '&a🔥 Fire Spread Protection: ON'
-button_fire_off: '&c🔥 Fire Spread Protection: OFF'
-fire_toggle_lore:
-  - '&7ON: Fire cannot spread across blocks here.'
-  - '&7OFF: Fire spreads normally.'
-
-button_piston_on: '&a🔩 Piston Protection: ON'
-button_piston_off: '&c🔩 Piston Protection: OFF'
-piston_toggle_lore:
-  - '&7ON: Pistons cannot move blocks across claim borders.'
-  - '&7OFF: Pistons behave normally.'
-
-button_animals_on: '&a🐮 Animal Protection: ON'
-button_animals_off: '&c🐮 Animal Protection: OFF'
-animals_toggle_lore:
-  - '&7ON: Passive animals are protected from damage.'
-  - '&7OFF: They can be harmed normally.'
-
-button_redstone_on: '&a⚡ Redstone Protection: ON'
-button_redstone_off: '&c⚡ Redstone Protection: OFF'
-redstone_toggle_lore:
-  - '&7ON: Redstone use is blocked inside this claim.'
-  - '&7OFF: Redstone works normally.'
-
-button_vehicles_on: '&a🛶 Vehicle Protection: ON'
-button_vehicles_off: '&c🛶 Vehicle Protection: OFF'
-vehicles_toggle_lore:
-  - '&7ON: Boats, minecarts, and similar vehicles are protected.'
-  - '&7OFF: Other players can use or break them.'
-
-button_safe_on: '&a🛡 SafeZone: ON'
-button_safe_off: '&c🛡 SafeZone: OFF'
-safe_toggle_lore:
-  - '&7ON: A master protection mode that applies'
-  - '&7most protections at once.'
-  - '&7OFF: Each protection flag is handled individually.'
-safe_zone_enabled: '&aSafeZone enabled. This claim is fully protected.'
-safe_zone_disabled: '&cSafeZone disabled. Individual flags now apply.'
-
-button_fly_on: '&b🕊 Flight: ON'
-button_fly_off: '&c🕊 Flight: OFF'
-fly_toggle_lore:
-  - '&7Enable or disable flight inside this claim.'
-  - '&7Cost to enable: &6{COST}'
-flight_enabled: '&aFlight enabled for this claim.'
-flight_disabled: '&cFlight disabled for this claim.'
-
-button_entry_on: '&a🚪 Entry: Allowed'
-button_entry_off: '&c🚪 Entry: Denied'
-entry_toggle_lore:
-  - '&7When Denied, untrusted players cannot'
-  - '&7enter this claim at all.'
-
-button_shop_on: '&a🛒 Shop: Public'
-button_shop_off: '&c🛒 Shop: Private'
-shop_toggle_lore:
-  - '&7Control whether visitors can use shop signs'
-  - '&7and trade setups inside this claim.'
-  - '&7Cost to enable: &6{COST}'
-
-# --- Cosmetics ---
-button_cosmetics: '&dCosmetics'
-cosmetics_lore:
-  - '&7Visual effects and border cosmetics.'
-cosmetics_gui_title: '&dCosmetics'
-cosmetics_border_none: '&cNo Effect'
-cosmetics_status_selected: '&a(Active)'
-cosmetics_status_free: '&aFree'
-cosmetics_click_buy: '&eLeft-Click: Buy'
-cosmetics_click_apply: '&eLeft-Click: Apply'
-cosmetics_click_disable: '&7Click to remove.'
-cosmetics_removed: '&eCosmetic effect removed.'
-cosmetics_already_active: '&cThis cosmetic is already active.'
-cosmetic_purchased: '&a✔ Cosmetic purchased and applied.'
-
-# Server / inheritance tooltips
-server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
-admin_forced_flag_notice: '&7[Admin] This flag is forced at {LEVEL} level and cannot be changed here.'
-flag_inherited_from_world: '&7Inherited from: &fWorld settings.'
-flag_inherited_from_zone: '&7Inherited from: &fServer Zone settings.'
-flag_inherited_from_plot: '&7Inherited from: &fClaim-level settings.'
-
-# --- Role Flags (Modern) ---
-role_flags_gui_title: '&9⚙ Role Permissions: {ROLE}'
-role_flags_legend_title: '&7How this works'
-role_flags_legend_lore:
-  - '&7Inherit: Use normal claim/world rules.'
-  - ' '
-  - '&aAllow: &7Role can bypass this restriction.'
-  - '&cDeny: &7Role is always blocked.'
-  - ' '
-  - '&7Use this to fine-tune what members of'
-  - '&7this role are actually allowed to do.'
-
-role_flag_state_inherit: Inherit
-role_flag_state_allow: Allow
-role_flag_state_deny: Deny
-
-role_flag_name_pvp: '&bPvP'
-role_flag_name_containers: '&bContainers'
-role_flag_name_mobs: '&bHostile Mobs'
-role_flag_name_pets: '&bPets'
-role_flag_name_entities: '&bEntities'
-role_flag_name_farm: '&bCrops'
-role_flag_name_tnt: '&bExplosions'
-role_flag_name_fire: '&bFire'
-role_flag_name_piston: '&bPistons'
-role_flag_name_entry: '&bClaim Entry'
-role_flag_name_shop: '&bShops'
-role_flag_name_fly: '&bFlight'
-role_flag_name_animals: '&bAnimals'
-role_flag_name_redstone: '&bRedstone'
-role_flag_name_vehicles: '&bVehicles'
-
-role_flag_lore_common:
-  - '&7Per-role permissions for this claim.'
-  - '&7Overrides normal flag rules if set.'
-  - ' '
-  - '&eClick to cycle: Inherit → Allow → Deny'
-
-# --- Roles ---
-roles_gui_title: '&eMembers'
-roles_manage_title: '&bManage: {PLAYER}'
-trusted_plot_selector_title: '&bSelect Claim'
-add_trusted_title: '&aAdd Member'
-button_add_trusted: '&aAdd Member'
-add_trusted_lore:
-  - '&7Click a player''s head to trust them'
-  - '&7and assign a role on this claim.'
-button_remove_trusted: '&cRemove'
-role_self: '&cYou cannot edit your own role.'
-role_is_owner: '&cYou cannot edit the owner''s role.'
-role_set_to: '&a✔ {PLAYER} is now set to role: {ROLE}.'
-role_not_found: '&c❌ Player {PLAYER} is not trusted on this claim.'
-role_removed: '&e✔ {PLAYER} has been removed from your claim.'
-
-# --- Admin Tools ---
-admin_menu_title: '&c⚙ Admin'
-admin_reloading: '&7Reloading configuration and data...'
-admin_reload_complete: '&a✔ Reload complete.'
-
-button_admin_plots: '&bView All Claims'
-button_admin_requests: '&cView Requests'
-button_admin_zones: '&6Server Zones'
-
-button_admin_auto_remove: '&6Auto-Wipe Bans'
-admin_auto_remove_lore:
-  - '&7Automatically delete claims owned'
-  - '&7by permanently banned players.'
-button_admin_bypass_limit: '&dBypass Limits'
-admin_bypass_limit_lore:
-  - '&7Allow admins to ignore claim limits.'
-button_admin_broadcast: '&bLog Actions'
-admin_broadcast_lore:
-  - '&7Broadcast key admin actions to the server.'
-button_admin_unlimited: '&aInfinite Claims'
-admin_unlimited_lore:
-  - '&7Allow admins unlimited claims.'
-button_admin_sync: '&bGlobal Sync'
-admin_sync_lore:
-  - '&7Sync AegisGuard data across the network.'
-button_admin_perf: '&cPerformance Mode'
-admin_perf_lore:
-  - '&7Reduce cosmetic effects to improve performance.'
-button_admin_diagnostics: '&bDiagnostics'
-button_admin_reload: '&eReload Config'
-
-admin_auto_remove_enabled: '&a✔ Auto-Wipe enabled.'
-admin_auto_remove_disabled: '&c✖ Auto-Wipe disabled.'
-admin_bypass_enabled: '&a✔ Claim limit bypass enabled.'
-admin_bypass_disabled: '&c✖ Claim limit bypass disabled.'
-admin_broadcast_enabled: '&a✔ Admin action logging enabled.'
-admin_broadcast_disabled: '&c✖ Admin action logging disabled.'
-admin_removed_banned: '&eDeleted claims for banned player: {PLAYER}'
-
-admin_plot_list_title: '&cGlobal Plot List'
-admin_plot_item_name: '&bOwner: &f{OWNER}'
-admin_server_zone_tag: '&c[SERVER ZONE]'
-admin_plot_actions:
-  - '&eLeft-Click: &7Teleport'
-  - '&cRight-Click: &7Delete'
-admin_plot_teleport: '&eTeleported to {PLAYER}''s claim.'
-admin_plot_deleted: '&c✖ Deleted {PLAYER}''s claim.'
-
-admin-zone-created: '&a✔ Server Zone created.'
-admin-zone-deleted: '&c✖ Server Zone deleted.'
-admin-zone-not-found: '&c❌ You are not standing in a Server Zone.'
-admin_zone_flags_title: '&cZone Settings'
-flag_build_lore:
-  - '&7If ON, all players may build and break blocks here.'
-  - '&cIf OFF, no players may build or break.'
-flag_containers_lore:
-  - '&7If ON, all players may use containers here.'
-  - '&cIf OFF, no players may open containers.'
-flag_interact_lore:
-  - '&7If ON, all players may use doors and buttons.'
-  - '&cIf OFF, no players may interact with them.'
-
-wilderness_revert_start: '&7Wilderness revert task started...'
-wilderness_revert_end: '&7Wilderness revert task finished. Blocks reverted: &f{AMOUNT}&7.'
+# --- Plot Status GUI (alt title parity) ---
+plot_status_button_title: '&b📊 Claim Status'
 
 # --- Help ---
 help_header: '&bAegisGuard Help'

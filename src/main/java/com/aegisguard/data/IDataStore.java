@@ -9,40 +9,91 @@ import java.util.UUID;
 
 public interface IDataStore {
 
-    // lifecycle
+    // --------------------------------------------------
+    // LIFECYCLE
+    // --------------------------------------------------
+
+    /** Load all plots and related state into memory/caches. */
     void load();
+
+    /**
+     * Save the entire datastore state.
+     * SQL implementations may queue async writes, but must ensure correctness.
+     */
     void save();
+
+    /**
+     * Save the entire datastore state synchronously.
+     * When this returns, data must be persisted to disk/DB.
+     */
     void saveSync();
 
-    // plot saving
+    // --------------------------------------------------
+    // PLOT SAVING
+    // --------------------------------------------------
+
+    /**
+     * Save a single plot.
+     * SQL implementations may queue async writes.
+     * YML implementations typically save immediately (sync).
+     */
     void savePlot(Plot plot);
+
+    /**
+     * Save a single plot synchronously.
+     * When this returns, the plot must be persisted to disk/DB.
+     */
     void savePlotSync(Plot plot);
 
-    // plots
+    // --------------------------------------------------
+    // PLOTS
+    // --------------------------------------------------
+
     void createPlot(UUID owner, Location c1, Location c2);
     void addPlot(Plot plot);
     void removePlot(UUID owner, UUID plotId);
     void removeAllPlots(UUID owner);
+
+    /**
+     * Transfer ownership of a plot to a new owner.
+     * Implementations must ensure caches stay in sync and prior owner privileges do not persist.
+     */
     void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
+
     void removeBannedPlots();
 
-    // roles
+    // --------------------------------------------------
+    // ROLES
+    // --------------------------------------------------
+
     void addPlayerRole(Plot plot, UUID uuid, String role);
     void removePlayerRole(Plot plot, UUID uuid);
 
-    // role flag overrides
+    // --------------------------------------------------
+    // ROLE FLAG OVERRIDES
+    // --------------------------------------------------
+
     TriState getRoleFlagState(Plot plot, String roleId, String flagKey);
     void setRoleFlagState(Plot plot, String roleId, String flagKey, TriState state);
 
-    // wilderness
+    // --------------------------------------------------
+    // WILDERNESS
+    // --------------------------------------------------
+
     void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
     void revertWildernessBlocks(long timestamp, int limit);
 
-    // dirty flag
+    // --------------------------------------------------
+    // DIRTY FLAG
+    // --------------------------------------------------
+
     boolean isDirty();
     void setDirty(boolean dirty);
 
-    // queries
+    // --------------------------------------------------
+    // QUERIES
+    // --------------------------------------------------
+
     List<Plot> getPlots(UUID owner);
     Plot getPlot(UUID owner, UUID plotId);
 
@@ -55,8 +106,10 @@ public interface IDataStore {
 
     /**
      * Optional shutdown hook.
-     * SQL implementations should use this to flush pending async DB tasks and close pools safely.
+     * SQL implementations should flush pending async DB tasks and close pools safely.
      * YML implementations can simply saveSync().
+     *
+     * IMPORTANT: After this returns, no queued writes should still be pending.
      */
     default void shutdown() { }
 }

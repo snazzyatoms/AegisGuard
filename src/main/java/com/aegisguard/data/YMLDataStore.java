@@ -6,12 +6,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -19,11 +22,14 @@ import java.util.stream.Collectors;
 /**
  * YMLDataStore (v1.2.2+)
  * - Manages plot data using 'plots.yml'.
- * - Implements strict IDataStore contract for 1.2.x.
+ * - Strict IDataStore contract for 1.2.x.
  *
- * Notes:
- * - This datastore is synchronous by design (YamlConfiguration is not thread-safe).
- * - savePlotSync simply aliases savePlot.
+ * HARDENING:
+ *  ✅ getPlots(UUID) NEVER returns null
+ *  ✅ Thread-safe owner cache (Set-backed)
+ *  ✅ Chunk index for fast lookups
+ *  ✅ Defensive de-duplication by plotId
+ *  ✅ Atomic-ish disk writes (temp + move) to reduce corruption risk
  */
 public class YMLDataStore implements IDataStore {
 
@@ -31,7 +37,8 @@ public class YMLDataStore implements IDataStore {
     private final File file;
     private FileConfiguration config;
 
-    // Thread-safe caches
+    private final Object ioLock = new Object();
+
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
@@ -48,247 +55,245 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void load() {
-        plotsByOwner.clear();
-        plotsByChunk.clear();
+        synchronized (ioLock) {
+            plotsByOwner.clear();
+            plotsByChunk.clear();
 
-        if (!file.exists()) {
-            try {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
-            } catch (IOException ignored) {}
-        }
+            if (!file.exists()) {
+                try {
+                    file.getParentFile().mkdirs();
+                    file.createNewFile();
+                } catch (IOException ignored) {}
+            }
 
-        config = YamlConfiguration.loadConfiguration(file);
-        int count = 0;
+            config = YamlConfiguration.loadConfiguration(file);
+            int count = 0;
 
-        for (String key : config.getKeys(false)) {
-            try {
-                UUID plotId = UUID.fromString(key);
-                ConfigurationSection sec = config.getConfigurationSection(key);
-                if (sec == null) continue;
+            for (String key : config.getKeys(false)) {
+                try {
+                    UUID plotId = UUID.fromString(key);
+                    ConfigurationSection sec = config.getConfigurationSection(key);
+                    if (sec == null) continue;
 
-                String ownerStr = sec.getString("owner");
-                if (ownerStr == null || ownerStr.isEmpty()) continue;
+                    UUID ownerId = UUID.fromString(sec.getString("owner"));
+                    String ownerName = sec.getString("owner-name", "Unknown");
+                    String worldName = sec.getString("world");
+                    if (worldName == null || worldName.isEmpty()) continue;
 
-                UUID ownerId = UUID.fromString(ownerStr);
-                String ownerName = sec.getString("owner-name", "Unknown");
-                String worldName = sec.getString("world");
-                if (worldName == null || worldName.isEmpty()) continue;
+                    int x1 = sec.getInt("x1");
+                    int z1 = sec.getInt("z1");
+                    int x2 = sec.getInt("x2");
+                    int z2 = sec.getInt("z2");
 
-                int x1 = sec.getInt("x1");
-                int z1 = sec.getInt("z1");
-                int x2 = sec.getInt("x2");
-                int z2 = sec.getInt("z2");
+                    Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2);
 
-                Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2);
+                    plot.setLevel(sec.getInt("level", 1));
+                    plot.setXp(sec.getDouble("xp", 0.0));
+                    plot.setLastUpkeep(sec.getLong("last-upkeep", System.currentTimeMillis()));
+                    plot.setMaxMembers(sec.getInt("max-members", 2));
 
-                // Progression
-                plot.setLevel(sec.getInt("level", 1));
-                plot.setXp(sec.getDouble("xp", 0.0));
-                plot.setLastUpkeep(sec.getLong("last-upkeep", System.currentTimeMillis()));
-                plot.setMaxMembers(sec.getInt("max-members", 2));
+                    plot.setSpawnLocationFromString(sec.getString("spawn-location"));
+                    plot.setWelcomeMessage(sec.getString("welcome-message"));
+                    plot.setFarewellMessage(sec.getString("farewell-message"));
+                    plot.setEntryTitle(sec.getString("entry-title"));
+                    plot.setEntrySubtitle(sec.getString("entry-subtitle"));
+                    plot.setDescription(sec.getString("description"));
+                    plot.setCustomBiome(sec.getString("custom-biome"));
 
-                // Visuals
-                plot.setSpawnLocationFromString(sec.getString("spawn-location"));
-                plot.setWelcomeMessage(sec.getString("welcome-message"));
-                plot.setFarewellMessage(sec.getString("farewell-message"));
-                plot.setEntryTitle(sec.getString("entry-title"));
-                plot.setEntrySubtitle(sec.getString("entry-subtitle"));
-                plot.setDescription(sec.getString("description"));
-                plot.setCustomBiome(sec.getString("custom-biome"));
-
-                // Economy & Market
-                if (sec.isConfigurationSection("market")) {
-                    ConfigurationSection market = sec.getConfigurationSection("market");
-                    if (market != null) {
-                        if (market.getBoolean("is-for-sale", false)) {
-                            plot.setForSale(true, market.getDouble("sale-price", 0.0));
-                        }
-                        if (market.getBoolean("is-for-rent", false)) {
-                            plot.setForRent(true, market.getDouble("rent-price", 0.0));
-                        }
-                        String renterStr = market.getString("current-renter");
-                        if (renterStr != null && !renterStr.isEmpty()) {
-                            try {
-                                UUID renter = UUID.fromString(renterStr);
-                                long expires = market.getLong("rent-expires", 0L);
-                                plot.setRenter(renter, expires);
-                            } catch (IllegalArgumentException ignored) {}
-                        }
-                    }
-                } else {
-                    if (sec.getBoolean("market.is-for-sale", false)) {
-                        plot.setForSale(true, sec.getDouble("market.sale-price", 0.0));
-                    }
-                }
-
-                plot.setPlotStatus(sec.getString("plot-status", "ACTIVE"));
-
-                // Auction
-                if (sec.isConfigurationSection("auction")) {
-                    ConfigurationSection auction = sec.getConfigurationSection("auction");
-                    if (auction != null) {
-                        double bid = auction.getDouble("current-bid", 0.0);
-                        String bidderStr = auction.getString("current-bidder");
-                        UUID bidder = null;
-                        if (bidderStr != null && !bidderStr.isEmpty()) {
-                            try { bidder = UUID.fromString(bidderStr); } catch (IllegalArgumentException ignored) {}
-                        }
-                        plot.setCurrentBid(bid, bidder);
-                    }
-                }
-
-                // Flags
-                if (sec.isConfigurationSection("flags")) {
-                    ConfigurationSection flags = sec.getConfigurationSection("flags");
-                    if (flags != null) {
-                        for (String f : flags.getKeys(false)) {
-                            plot.setFlag(f, flags.getBoolean(f));
-                        }
-                    }
-                }
-
-                // Roles
-                if (sec.isConfigurationSection("roles")) {
-                    ConfigurationSection roles = sec.getConfigurationSection("roles");
-                    if (roles != null) {
-                        for (String pUuid : roles.getKeys(false)) {
-                            try {
-                                plot.setRole(UUID.fromString(pUuid), roles.getString(pUuid));
-                            } catch (Exception ignored) {}
-                        }
-                    }
-                }
-
-                // Role flag overrides
-                String roleFlagsBlob = sec.getString("role-flags");
-                if (roleFlagsBlob != null && !roleFlagsBlob.isEmpty()) {
-                    plot.deserializeRoleFlags(roleFlagsBlob);
-                }
-
-                // Likes
-                for (String uuidStr : sec.getStringList("liked-by")) {
-                    try { plot.toggleLike(UUID.fromString(uuidStr)); } catch (IllegalArgumentException ignored) {}
-                }
-
-                // Bans
-                for (String uuidStr : sec.getStringList("banned")) {
-                    try { plot.addBan(UUID.fromString(uuidStr)); } catch (IllegalArgumentException ignored) {}
-                }
-
-                // Cosmetics
-                if (sec.isConfigurationSection("cosmetics")) {
-                    ConfigurationSection cos = sec.getConfigurationSection("cosmetics");
-                    if (cos != null) {
-                        plot.setBorderParticle(cos.getString("border-particle"));
-                        plot.setAmbientParticle(cos.getString("ambient-particle"));
-                        plot.setEntryEffect(cos.getString("entry-effect"));
-                    }
-                }
-
-                // Warp
-                if (sec.isConfigurationSection("warp")) {
-                    ConfigurationSection warp = sec.getConfigurationSection("warp");
-                    if (warp != null) {
-                        boolean isWarp = warp.getBoolean("is-server-warp", false);
-                        String warpName = warp.getString("warp-name");
-                        String iconName = warp.getString("warp-icon");
-                        Material icon = null;
-                        if (iconName != null && !iconName.isEmpty()) {
-                            try { icon = Material.valueOf(iconName); } catch (IllegalArgumentException ignored) {}
-                        }
-                        plot.setServerWarp(isWarp, warpName, icon);
-                    }
-                }
-
-                // Zones
-                if (sec.isConfigurationSection("zones")) {
-                    ConfigurationSection zonesSec = sec.getConfigurationSection("zones");
-                    if (zonesSec != null) {
-                        for (String zoneName : zonesSec.getKeys(false)) {
-                            ConfigurationSection z = zonesSec.getConfigurationSection(zoneName);
-                            if (z == null) continue;
-
-                            int zx1 = z.getInt("x1");
-                            int zy1 = z.getInt("y1");
-                            int zz1 = z.getInt("z1");
-                            int zx2 = z.getInt("x2");
-                            int zy2 = z.getInt("y2");
-                            int zz2 = z.getInt("z2");
-
-                            Zone zone = new Zone(plot, zoneName, zx1, zy1, zz1, zx2, zy2, zz2);
-                            zone.setRentPrice(z.getDouble("rent-price", 0.0));
-
-                            String renterStr = z.getString("renter");
-                            long exp = z.getLong("rent-expiration", 0L);
+                    if (sec.isConfigurationSection("market")) {
+                        ConfigurationSection market = sec.getConfigurationSection("market");
+                        if (market != null) {
+                            if (market.getBoolean("is-for-sale", false)) {
+                                plot.setForSale(true, market.getDouble("sale-price", 0.0));
+                            }
+                            if (market.getBoolean("is-for-rent", false)) {
+                                plot.setForRent(true, market.getDouble("rent-price", 0.0));
+                            }
+                            String renterStr = market.getString("current-renter");
                             if (renterStr != null && !renterStr.isEmpty()) {
                                 try {
                                     UUID renter = UUID.fromString(renterStr);
-                                    long now = System.currentTimeMillis();
-                                    if (exp > now) zone.rentTo(renter, exp - now);
+                                    long expires = market.getLong("rent-expires", 0L);
+                                    plot.setRenter(renter, expires);
                                 } catch (IllegalArgumentException ignored) {}
                             }
-
-                            plot.addZone(zone);
+                        }
+                    } else {
+                        if (sec.getBoolean("market.is-for-sale", false)) {
+                            plot.setForSale(true, sec.getDouble("market.sale-price", 0.0));
                         }
                     }
+
+                    plot.setPlotStatus(sec.getString("plot-status", "ACTIVE"));
+
+                    if (sec.isConfigurationSection("auction")) {
+                        ConfigurationSection auction = sec.getConfigurationSection("auction");
+                        if (auction != null) {
+                            double bid = auction.getDouble("current-bid", 0.0);
+                            String bidderStr = auction.getString("current-bidder");
+                            UUID bidder = null;
+                            if (bidderStr != null && !bidderStr.isEmpty()) {
+                                try { bidder = UUID.fromString(bidderStr); } catch (IllegalArgumentException ignored) {}
+                            }
+                            plot.setCurrentBid(bid, bidder);
+                        }
+                    }
+
+                    if (sec.isConfigurationSection("flags")) {
+                        ConfigurationSection flags = sec.getConfigurationSection("flags");
+                        if (flags != null) {
+                            for (String f : flags.getKeys(false)) {
+                                plot.setFlag(f, flags.getBoolean(f));
+                            }
+                        }
+                    }
+
+                    if (sec.isConfigurationSection("roles")) {
+                        ConfigurationSection roles = sec.getConfigurationSection("roles");
+                        if (roles != null) {
+                            for (String pUuid : roles.getKeys(false)) {
+                                try { plot.setRole(UUID.fromString(pUuid), roles.getString(pUuid)); }
+                                catch (Exception ignored) {}
+                            }
+                        }
+                    }
+
+                    String roleFlagsBlob = sec.getString("role-flags");
+                    if (roleFlagsBlob != null && !roleFlagsBlob.isEmpty()) {
+                        plot.deserializeRoleFlags(roleFlagsBlob);
+                    }
+
+                    for (String uuidStr : sec.getStringList("liked-by")) {
+                        try { plot.toggleLike(UUID.fromString(uuidStr)); }
+                        catch (IllegalArgumentException ignored) {}
+                    }
+
+                    for (String uuidStr : sec.getStringList("banned")) {
+                        try { plot.addBan(UUID.fromString(uuidStr)); }
+                        catch (IllegalArgumentException ignored) {}
+                    }
+
+                    if (sec.isConfigurationSection("cosmetics")) {
+                        ConfigurationSection cos = sec.getConfigurationSection("cosmetics");
+                        if (cos != null) {
+                            plot.setBorderParticle(cos.getString("border-particle"));
+                            plot.setAmbientParticle(cos.getString("ambient-particle"));
+                            plot.setEntryEffect(cos.getString("entry-effect"));
+                        }
+                    }
+
+                    if (sec.isConfigurationSection("warp")) {
+                        ConfigurationSection warp = sec.getConfigurationSection("warp");
+                        if (warp != null) {
+                            boolean isWarp = warp.getBoolean("is-server-warp", false);
+                            String warpName = warp.getString("warp-name");
+                            String iconName = warp.getString("warp-icon");
+                            Material icon = null;
+                            if (iconName != null && !iconName.isEmpty()) {
+                                try { icon = Material.valueOf(iconName); } catch (IllegalArgumentException ignored) {}
+                            }
+                            plot.setServerWarp(isWarp, warpName, icon);
+                        }
+                    }
+
+                    if (sec.isConfigurationSection("zones")) {
+                        ConfigurationSection zonesSec = sec.getConfigurationSection("zones");
+                        if (zonesSec != null) {
+                            for (String zoneName : zonesSec.getKeys(false)) {
+                                ConfigurationSection z = zonesSec.getConfigurationSection(zoneName);
+                                if (z == null) continue;
+
+                                int zx1 = z.getInt("x1");
+                                int zy1 = z.getInt("y1");
+                                int zz1 = z.getInt("z1");
+                                int zx2 = z.getInt("x2");
+                                int zy2 = z.getInt("y2");
+                                int zz2 = z.getInt("z2");
+
+                                Zone zone = new Zone(plot, zoneName, zx1, zy1, zz1, zx2, zy2, zz2);
+                                zone.setRentPrice(z.getDouble("rent-price", 0.0));
+
+                                String renterStr = z.getString("renter");
+                                long exp = z.getLong("rent-expiration", 0L);
+                                if (renterStr != null && !renterStr.isEmpty()) {
+                                    try {
+                                        UUID renter = UUID.fromString(renterStr);
+                                        long now = System.currentTimeMillis();
+                                        if (exp > now) zone.rentTo(renter, exp - now);
+                                    } catch (IllegalArgumentException ignored) {}
+                                }
+
+                                plot.addZone(zone);
+                            }
+                        }
+                    }
+
+                    cachePlot(plot);
+                    count++;
+
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to load plot: " + key);
                 }
-
-                cachePlot(plot);
-                count++;
-
-            } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load plot: " + key);
             }
-        }
 
-        plugin.getLogger().info("Loaded " + count + " plots from YML.");
-        isDirty = false;
+            plugin.getLogger().info("Loaded " + count + " plots from YML.");
+            isDirty = false;
+        }
     }
 
     @Override
     public void save() {
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
-
-        for (String k : new HashSet<>(config.getKeys(false))) {
-            config.set(k, null);
-        }
-
-        for (Plot plot : getAllPlots()) {
-            writePlotToConfig(plot);
-        }
-
-        try {
-            config.save(file);
-            isDirty = false;
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save plots.yml!");
-            e.printStackTrace();
-        }
+        saveSync();
     }
 
     @Override
     public void saveSync() {
-        save();
-    }
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-    @Override
-    public void savePlot(Plot plot) {
-        if (plot == null) return;
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            for (String k : new HashSet<>(config.getKeys(false))) {
+                config.set(k, null);
+            }
 
-        writePlotToConfig(plot);
-        try {
-            config.save(file);
+            for (Plot plot : getAllPlots()) {
+                writePlotToConfig(plot);
+            }
+
+            safeSaveConfigToDisk();
             isDirty = false;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
+    public void savePlot(Plot plot) {
+        savePlotSync(plot);
+    }
+
+    @Override
     public void savePlotSync(Plot plot) {
-        savePlot(plot);
+        if (plot == null) return;
+
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+
+            writePlotToConfig(plot);
+            safeSaveConfigToDisk();
+            isDirty = false;
+        }
+    }
+
+    private void safeSaveConfigToDisk() {
+        try {
+            File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
+            config.save(tmp);
+            Files.move(tmp.toPath(), file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE);
+        } catch (Exception e) {
+            try {
+                config.save(file);
+            } catch (IOException ignored) {}
+        }
     }
 
     private void writePlotToConfig(Plot plot) {
@@ -402,25 +407,22 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public Collection<Plot> getAllPlots() {
-        List<Plot> all = new ArrayList<>();
+        Map<UUID, Plot> byId = new HashMap<>();
         for (Set<Plot> set : plotsByOwner.values()) {
-            if (set != null && !set.isEmpty()) all.addAll(set);
+            if (set == null || set.isEmpty()) continue;
+            for (Plot p : set) if (p != null) byId.put(p.getPlotId(), p);
         }
-        return all;
+        return byId.values();
     }
 
     @Override
     public Collection<Plot> getPlotsForSale() {
-        Collection<Plot> all = getAllPlots();
-        if (all.isEmpty()) return Collections.emptyList();
-        return all.stream().filter(Plot::isForSale).collect(Collectors.toList());
+        return getAllPlots().stream().filter(Plot::isForSale).collect(Collectors.toList());
     }
 
     @Override
     public Collection<Plot> getPlotsForAuction() {
-        Collection<Plot> all = getAllPlots();
-        if (all.isEmpty()) return Collections.emptyList();
-        return all.stream().filter(p -> "AUCTION".equals(p.getPlotStatus())).collect(Collectors.toList());
+        return getAllPlots().stream().filter(p -> "AUCTION".equals(p.getPlotStatus())).collect(Collectors.toList());
     }
 
     @Override
@@ -447,11 +449,15 @@ public class YMLDataStore implements IDataStore {
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(world);
         if (worldMap == null || worldMap.isEmpty()) return false;
 
-        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
-        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
 
-        int cMinX = minX >> 4, cMaxX = maxX >> 4;
-        int cMinZ = minZ >> 4, cMaxZ = maxZ >> 4;
+        int cMinX = minX >> 4;
+        int cMaxX = maxX >> 4;
+        int cMinZ = minZ >> 4;
+        int cMaxZ = maxZ >> 4;
 
         Set<Plot> candidates = new HashSet<>();
         for (int cx = cMinX; cx <= cMaxX; cx++) {
@@ -466,7 +472,9 @@ public class YMLDataStore implements IDataStore {
             if (!world.equals(p.getWorld())) continue;
             if (ignore != null && ignore.getPlotId().equals(p.getPlotId())) continue;
 
-            if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) return true;
+            if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) {
+                return true;
+            }
         }
 
         return false;
@@ -478,8 +486,6 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
-        if (owner == null || c1 == null || c2 == null || c1.getWorld() == null || c2.getWorld() == null) return;
-
         UUID id = UUID.randomUUID();
         String ownerName = Bukkit.getOfflinePlayer(owner).getName();
 
@@ -498,9 +504,8 @@ public class YMLDataStore implements IDataStore {
         isDirty = true;
 
         removePlotByIdEverywhere(plot.getPlotId());
-
         cachePlot(plot);
-        savePlot(plot);
+        savePlotSync(plot);
     }
 
     @Override
@@ -513,7 +518,10 @@ public class YMLDataStore implements IDataStore {
 
         if (set != null && !set.isEmpty()) {
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) { removed = p; break; }
+                if (p != null && plotId.equals(p.getPlotId())) {
+                    removed = p;
+                    break;
+                }
             }
             if (removed != null) set.remove(removed);
             if (set.isEmpty()) plotsByOwner.remove(owner);
@@ -521,13 +529,11 @@ public class YMLDataStore implements IDataStore {
 
         if (removed != null) deIndexPlot(removed);
 
-        if (config == null) config = YamlConfiguration.loadConfiguration(file);
-        config.set(plotId.toString(), null);
-        try {
-            config.save(file);
+        synchronized (ioLock) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            config.set(plotId.toString(), null);
+            safeSaveConfigToDisk();
             isDirty = false;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -538,21 +544,35 @@ public class YMLDataStore implements IDataStore {
 
         Set<Plot> set = plotsByOwner.remove(owner);
         if (set != null) {
-            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            synchronized (ioLock) {
+                if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-            for (Plot p : set) {
-                if (p == null) continue;
-                deIndexPlot(p);
-                config.set(p.getPlotId().toString(), null);
-            }
+                for (Plot p : set) {
+                    if (p == null) continue;
+                    deIndexPlot(p);
+                    config.set(p.getPlotId().toString(), null);
+                }
 
-            try {
-                config.save(file);
+                safeSaveConfigToDisk();
                 isDirty = false;
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
+        if (plot == null || playerUUID == null) return;
+        isDirty = true;
+        plot.setRole(playerUUID, role);
+        savePlotSync(plot);
+    }
+
+    @Override
+    public void removePlayerRole(Plot plot, UUID playerUUID) {
+        if (plot == null || playerUUID == null) return;
+        isDirty = true;
+        plot.removeRole(playerUUID);
+        savePlotSync(plot);
     }
 
     @Override
@@ -563,7 +583,7 @@ public class YMLDataStore implements IDataStore {
         UUID oldOwner = plot.getOwner();
         if (oldOwner != null && oldOwner.equals(newOwner)) {
             plot.setOwnerName(newOwnerName);
-            savePlot(plot);
+            savePlotSync(plot);
             return;
         }
 
@@ -576,12 +596,13 @@ public class YMLDataStore implements IDataStore {
         }
 
         deIndexPlot(plot);
+
         plot.internalSetOwner(newOwner, newOwnerName);
 
         removePlotByIdEverywhere(plot.getPlotId());
         cachePlot(plot);
 
-        savePlot(plot);
+        savePlotSync(plot);
     }
 
     @Override
@@ -590,24 +611,6 @@ public class YMLDataStore implements IDataStore {
             removeAllPlots(p.getUniqueId());
         }
     }
-
-    @Override
-    public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
-        if (plot == null || playerUUID == null) return;
-        isDirty = true;
-        plot.setRole(playerUUID, role);
-        savePlot(plot);
-    }
-
-    @Override
-    public void removePlayerRole(Plot plot, UUID playerUUID) {
-        if (plot == null || playerUUID == null) return;
-        isDirty = true;
-        plot.removeRole(playerUUID);
-        savePlot(plot);
-    }
-
-    // --- Indexing Helpers ---
 
     private void cachePlot(Plot plot) {
         Set<Plot> ownerSet = plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet());
@@ -660,7 +663,10 @@ public class YMLDataStore implements IDataStore {
 
             Plot found = null;
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
+                if (p != null && plotId.equals(p.getPlotId())) {
+                    found = p;
+                    break;
+                }
             }
 
             if (found != null) {
@@ -670,14 +676,18 @@ public class YMLDataStore implements IDataStore {
         }
     }
 
-    @Override public boolean isDirty() { return isDirty; }
-    @Override public void setDirty(boolean dirty) { this.isDirty = dirty; }
+    @Override
+    public boolean isDirty() {
+        return isDirty;
+    }
 
-    // No-ops for SQL-specific features
+    @Override
+    public void setDirty(boolean dirty) {
+        this.isDirty = dirty;
+    }
+
     @Override public void logWildernessBlock(Location loc, String o, String n, UUID p) {}
     @Override public void revertWildernessBlocks(long t, int l) {}
-
-    // --- ROLE FLAG OVERRIDES (YML) ---
 
     @Override
     public TriState getRoleFlagState(Plot plot, String roleName, String flagKey) {
@@ -690,13 +700,12 @@ public class YMLDataStore implements IDataStore {
         if (plot == null) return;
         isDirty = true;
         plot.setRoleFlagState(roleName, flagKey, state == null ? TriState.INHERIT : state);
-        savePlot(plot);
+        savePlotSync(plot);
     }
 
     @Override
     public void shutdown() {
-        try {
-            if (isDirty) saveSync();
-        } catch (Throwable ignored) {}
+        // YML is sync, so just force save.
+        try { saveSync(); } catch (Throwable ignored) {}
     }
 }

@@ -9,19 +9,32 @@ import java.lang.reflect.Method;
 public class TownyHook implements ProtectionHook {
 
     private final AegisGuard plugin;
+    private final int priority;
 
     private boolean active;
     private Object api;
     private Method isWilderness;
 
+    // Backwards compatible constructor (if anything still calls new TownyHook(plugin))
     public TownyHook(AegisGuard plugin) {
+        this(plugin, 80);
+    }
+
+    // New constructor used by ProtectionHookManager (new TownyHook(plugin, priority))
+    public TownyHook(AegisGuard plugin, int priority) {
         this.plugin = plugin;
+        this.priority = priority;
         init();
     }
 
     @Override
     public String id() {
         return "Towny";
+    }
+
+    @Override
+    public int priority() {
+        return priority;
     }
 
     @Override
@@ -52,7 +65,7 @@ public class TownyHook implements ProtectionHook {
 
         try {
             boolean wilderness = (boolean) isWilderness.invoke(api, location);
-            // If NOT wilderness, Towny considers it managed by Town/Zone rules.
+            // If NOT wilderness, Towny considers it managed by Town/Plot rules.
             return !wilderness;
         } catch (Throwable t) {
             return false;

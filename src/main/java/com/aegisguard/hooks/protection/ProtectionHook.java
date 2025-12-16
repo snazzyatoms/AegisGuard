@@ -1,8 +1,6 @@
 package com.aegisguard.hooks.protection;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Generic "other protection plugin" adapter.
@@ -13,13 +11,16 @@ public interface ProtectionHook {
     /** Human/plugin identifier (ex: "WorldGuard", "GriefPrevention"). */
     String id();
 
-    /** Hook ordering. Higher runs first. */
+    /** True if the hooked plugin is present AND the hook initialized successfully. */
+    boolean isActive();
+
+    /**
+     * Priority for choosing which external plugin "wins" first when multiple hooks claim protection.
+     * Higher = checked earlier.
+     */
     default int priority() {
         return 0;
     }
-
-    /** True if the hooked plugin is present AND the hook initialized successfully. */
-    boolean isActive();
 
     /**
      * True if THIS location is inside another plugin's protected area/claim/region.
@@ -28,21 +29,10 @@ public interface ProtectionHook {
     boolean isProtectedElsewhere(Location location);
 
     /**
-     * Action-aware bypass decision used by ProtectionManager.
+     * Area scan helper: returns true if ANY sampled points in the area are protected elsewhere.
+     * Used for "can I claim here?" checks.
      *
-     * Default behavior (safe + backwards compatible):
-     * If active AND protected elsewhere, AegisGuard yields.
-     *
-     * Hooks can override for action-specific behavior.
-     */
-    default boolean shouldBypass(Location location, @Nullable Player actor, HookAction action) {
-        if (!isActive() || location == null) return false;
-        return isProtectedElsewhere(location);
-    }
-
-    /**
-     * Optional area scan helper for claim creation checks.
-     * Hooks can override for precision (API-based region queries).
+     * Hooks can override for better precision.
      */
     default boolean isAreaProtectedElsewhere(String world, int x1, int z1, int x2, int z2) {
         return false;

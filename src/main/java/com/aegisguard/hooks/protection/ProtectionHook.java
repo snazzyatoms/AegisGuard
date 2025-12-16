@@ -1,8 +1,6 @@
 package com.aegisguard.hooks.protection;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +13,11 @@ public interface ProtectionHook {
     /** Human/plugin identifier (ex: "WorldGuard", "GriefPrevention"). */
     String id();
 
+    /** Hook ordering. Higher runs first. */
+    default int priority() {
+        return 0;
+    }
+
     /** True if the hooked plugin is present AND the hook initialized successfully. */
     boolean isActive();
 
@@ -25,12 +28,12 @@ public interface ProtectionHook {
     boolean isProtectedElsewhere(Location location);
 
     /**
-     * Fine-grained bypass check used by ProtectionManager.
+     * Action-aware bypass decision used by ProtectionManager.
      *
      * Default behavior (safe + backwards compatible):
-     * If the hook is active AND the location is protected elsewhere, AegisGuard yields.
+     * If active AND protected elsewhere, AegisGuard yields.
      *
-     * Hooks may override this to allow/deny specific actions (PVP, MOB_SPAWN, REDSTONE, etc).
+     * Hooks can override for action-specific behavior.
      */
     default boolean shouldBypass(Location location, @Nullable Player actor, HookAction action) {
         if (!isActive() || location == null) return false;
@@ -38,45 +41,10 @@ public interface ProtectionHook {
     }
 
     /**
-     * Area scan helper: returns true if ANY sampled points in the area are protected elsewhere.
-     * Used for "can I claim here?" checks.
-     *
-     * Default implementation: conservative sampling at corners + center.
-     * Hooks can override for better precision (API-based region queries).
+     * Optional area scan helper for claim creation checks.
+     * Hooks can override for precision (API-based region queries).
      */
     default boolean isAreaProtectedElsewhere(String world, int x1, int z1, int x2, int z2) {
-        if (!isActive() || world == null || world.isEmpty()) return false;
-
-        World w = Bukkit.getWorld(world);
-        if (w == null) return false;
-
-        int minX = Math.min(x1, x2);
-        int maxX = Math.max(x1, x2);
-        int minZ = Math.min(z1, z2);
-        int maxZ = Math.max(z1, z2);
-
-        int cx = (minX + maxX) / 2;
-        int cz = (minZ + maxZ) / 2;
-
-        // Avoid getHighestBlockYAt() here (can force chunk loads); use a stable Y.
-        int y = Math.max(1, w.getSeaLevel());
-
-        int[][] points = new int[][]{
-                {minX, minZ},
-                {minX, maxZ},
-                {maxX, minZ},
-                {maxX, maxZ},
-                {cx, cz}
-        };
-
-        for (int[] p : points) {
-            Location sample = new Location(w, p[0] + 0.5, y, p[1] + 0.5);
-            try {
-                if (isProtectedElsewhere(sample)) return true;
-            } catch (Throwable ignored) {
-            }
-        }
-
         return false;
     }
 }

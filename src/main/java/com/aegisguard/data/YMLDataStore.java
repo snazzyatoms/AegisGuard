@@ -4,8 +4,8 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -20,9 +20,12 @@ import java.util.stream.Collectors;
  * YMLDataStore (v1.2.2+)
  * - Manages plot data using 'plots.yml'.
  * - Implements strict IDataStore contract for 1.2.x.
- * - Ensures data persistence with immediate saving on modification.
- * - UPDATED: Saves advanced systems (rent, auction, bans, likes, cosmetics, warps, biomes, zones).
- * - UPDATED: Persists per-role flag overrides via Plot.serializeRoleFlags()/deserializeRoleFlags().
+ *
+ * Upgrades in this version:
+ *  ✅ getPlots(UUID) NEVER returns null (clean contract)
+ *  ✅ Thread-safe owner cache (Set-backed) for Paper/Folia safety
+ *  ✅ Fast overlap checks using chunk index (scales better on large servers)
+ *  ✅ Defensive de-duplication by plotId
  */
 public class YMLDataStore implements IDataStore {
 
@@ -31,7 +34,9 @@ public class YMLDataStore implements IDataStore {
     private FileConfiguration config;
 
     // --- CACHES ---
-    private final Map<UUID, List<Plot>> plotsByOwner = new ConcurrentHashMap<>();
+    // Thread-safe: avoids ConcurrentHashMap + ArrayList concurrency hazards
+    private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
+
     // Map<WorldName, Map<ChunkKey, Set<Plot>>> for fast spatial lookups
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
@@ -53,6 +58,7 @@ public class YMLDataStore implements IDataStore {
 
         if (!file.exists()) {
             try {
+                file.getParentFile().mkdirs();
                 file.createNewFile();
             } catch (IOException ignored) {}
         }
@@ -69,8 +75,10 @@ public class YMLDataStore implements IDataStore {
                 UUID ownerId = UUID.fromString(sec.getString("owner"));
                 String ownerName = sec.getString("owner-name", "Unknown");
                 String worldName = sec.getString("world");
+                if (worldName == null || worldName.isEmpty()) continue;
 
-                if (Bukkit.getWorld(worldName) == null) continue;
+                // If world missing/unloaded, still load plot data (do not discard claims)
+                // NOTE: getPlotAt will only work for loaded worlds, but data remains intact.
 
                 int x1 = sec.getInt("x1");
                 int z1 = sec.getInt("z1");
@@ -280,6 +288,7 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void savePlot(Plot plot) {
+        if (plot == null) return;
         if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
         writePlotToConfig(plot);
@@ -397,25 +406,36 @@ public class YMLDataStore implements IDataStore {
     // --- ACCESSORS ---
     // ==============================================================
 
+    /**
+     * ✅ NEVER NULL contract:
+     * Always returns a snapshot list (safe to iterate).
+     */
     @Override
     public List<Plot> getPlots(UUID owner) {
-        List<Plot> list = plotsByOwner.get(owner);
-        return (list != null) ? new ArrayList<>(list) : new ArrayList<>();
+        if (owner == null) return Collections.emptyList();
+        Set<Plot> set = plotsByOwner.get(owner);
+        if (set == null || set.isEmpty()) return Collections.emptyList();
+        return new ArrayList<>(set);
     }
 
     @Override
     public Plot getPlot(UUID owner, UUID plotId) {
-        List<Plot> userPlots = plotsByOwner.get(owner);
-        if (userPlots == null) return null;
-        for (Plot p : userPlots) {
-            if (p.getPlotId().equals(plotId)) return p;
+        if (owner == null || plotId == null) return null;
+        Set<Plot> set = plotsByOwner.get(owner);
+        if (set == null || set.isEmpty()) return null;
+        for (Plot p : set) {
+            if (p != null && plotId.equals(p.getPlotId())) return p;
         }
         return null;
     }
 
     @Override
     public Collection<Plot> getAllPlots() {
-        return plotsByOwner.values().stream().flatMap(List::stream).collect(Collectors.toList());
+        List<Plot> all = new ArrayList<>();
+        for (Set<Plot> set : plotsByOwner.values()) {
+            if (set != null && !set.isEmpty()) all.addAll(set);
+        }
+        return all;
     }
 
     @Override
@@ -439,24 +459,56 @@ public class YMLDataStore implements IDataStore {
         if (worldMap == null) return null;
 
         Set<Plot> candidates = worldMap.get(key);
-        if (candidates == null) return null;
+        if (candidates == null || candidates.isEmpty()) return null;
 
         for (Plot p : candidates) {
-            if (p.isInside(loc)) return p;
+            if (p != null && p.isInside(loc)) return p;
         }
         return null;
     }
 
+    /**
+     * ✅ Big-server friendly:
+     * Uses chunk index instead of scanning every plot on the server.
+     */
     @Override
     public boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2) {
-        for (Plot p : getAllPlots()) {
-            if (!p.getWorld().equals(world)) continue;
-            if (ignore != null && p.getPlotId().equals(ignore.getPlotId())) continue;
+        if (world == null || world.isEmpty()) return false;
 
-            if (x1 <= p.getX2() && x2 >= p.getX1() && z1 <= p.getZ2() && z2 >= p.getZ1()) {
+        Map<String, Set<Plot>> worldMap = plotsByChunk.get(world);
+        if (worldMap == null || worldMap.isEmpty()) return false;
+
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
+
+        int cMinX = minX >> 4;
+        int cMaxX = maxX >> 4;
+        int cMinZ = minZ >> 4;
+        int cMaxZ = maxZ >> 4;
+
+        // Deduplicate candidates
+        Set<Plot> candidates = new HashSet<>();
+
+        for (int cx = cMinX; cx <= cMaxX; cx++) {
+            for (int cz = cMinZ; cz <= cMaxZ; cz++) {
+                Set<Plot> set = worldMap.get(cx + "," + cz);
+                if (set != null && !set.isEmpty()) candidates.addAll(set);
+            }
+        }
+
+        for (Plot p : candidates) {
+            if (p == null) continue;
+            if (!world.equals(p.getWorld())) continue;
+            if (ignore != null && ignore.getPlotId().equals(p.getPlotId())) continue;
+
+            // AABB overlap
+            if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -475,42 +527,71 @@ public class YMLDataStore implements IDataStore {
         int z2 = Math.max(c1.getBlockZ(), c2.getBlockZ());
 
         Plot plot = new Plot(id, owner, ownerName, c1.getWorld().getName(), x1, z1, x2, z2);
-
         addPlot(plot);
     }
 
     @Override
     public void addPlot(Plot plot) {
+        if (plot == null) return;
         isDirty = true;
+
+        // Defensive: ensure no duplicate plotId exists anywhere
+        removePlotByIdEverywhere(plot.getPlotId());
+
         cachePlot(plot);
         savePlot(plot);
     }
 
     @Override
     public void removePlot(UUID owner, UUID plotId) {
+        if (owner == null || plotId == null) return;
         isDirty = true;
 
-        List<Plot> list = plotsByOwner.get(owner);
         Plot removed = null;
+        Set<Plot> set = plotsByOwner.get(owner);
 
-        if (list != null) {
-            for (Iterator<Plot> it = list.iterator(); it.hasNext(); ) {
-                Plot p = it.next();
-                if (p.getPlotId().equals(plotId)) {
+        if (set != null && !set.isEmpty()) {
+            for (Plot p : set) {
+                if (p != null && plotId.equals(p.getPlotId())) {
                     removed = p;
-                    it.remove();
                     break;
                 }
             }
-            if (list.isEmpty()) plotsByOwner.remove(owner);
+            if (removed != null) {
+                set.remove(removed);
+            }
+            if (set.isEmpty()) plotsByOwner.remove(owner);
         }
 
         if (removed != null) {
             deIndexPlot(removed);
         }
 
-        if (config != null) {
-            config.set(plotId.toString(), null);
+        if (config == null) config = YamlConfiguration.loadConfiguration(file);
+        config.set(plotId.toString(), null);
+        try {
+            config.save(file);
+            isDirty = false;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void removeAllPlots(UUID owner) {
+        if (owner == null) return;
+        isDirty = true;
+
+        Set<Plot> set = plotsByOwner.remove(owner);
+        if (set != null) {
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+
+            for (Plot p : set) {
+                if (p == null) continue;
+                deIndexPlot(p);
+                config.set(p.getPlotId().toString(), null);
+            }
+
             try {
                 config.save(file);
                 isDirty = false;
@@ -521,26 +602,8 @@ public class YMLDataStore implements IDataStore {
     }
 
     @Override
-    public void removeAllPlots(UUID owner) {
-        isDirty = true;
-
-        List<Plot> list = plotsByOwner.remove(owner);
-        if (list != null) {
-            for (Plot p : list) {
-                deIndexPlot(p);
-                if (config != null) config.set(p.getPlotId().toString(), null);
-            }
-            try {
-                if (config != null) config.save(file);
-                isDirty = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
+        if (plot == null || playerUUID == null) return;
         isDirty = true;
         plot.setRole(playerUUID, role);
         savePlot(plot);
@@ -548,6 +611,7 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void removePlayerRole(Plot plot, UUID playerUUID) {
+        if (plot == null || playerUUID == null) return;
         isDirty = true;
         plot.removeRole(playerUUID);
         savePlot(plot);
@@ -560,34 +624,35 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName) {
         if (plot == null || newOwner == null) return;
-
         isDirty = true;
 
         UUID oldOwner = plot.getOwner();
         if (oldOwner != null && oldOwner.equals(newOwner)) {
-            // Same owner transfer: just update name and persist
             plot.setOwnerName(newOwnerName);
             savePlot(plot);
             return;
         }
 
-        // 1) Remove from old owner's cache
-        List<Plot> oldList = plotsByOwner.get(oldOwner);
-        if (oldList != null) {
-            oldList.remove(plot);
-            if (oldList.isEmpty()) plotsByOwner.remove(oldOwner);
+        // Remove from old owner cache
+        if (oldOwner != null) {
+            Set<Plot> oldSet = plotsByOwner.get(oldOwner);
+            if (oldSet != null) {
+                oldSet.remove(plot);
+                if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
+            }
         }
 
-        // 2) Remove from chunk index (coords don't change, but keeps sets clean)
+        // Remove from chunk index
         deIndexPlot(plot);
 
-        // 3) Reset internals + swap owner/name (this is the real fix)
+        // Reset internals + swap owner/name
         plot.internalSetOwner(newOwner, newOwnerName);
 
-        // 4) Re-add to caches/index (SINGLE source of truth: cachePlot)
+        // Re-add cleanly (dedupe-by-id)
+        removePlotByIdEverywhere(plot.getPlotId());
         cachePlot(plot);
 
-        // 5) Persist immediately
+        // Persist immediately
         savePlot(plot);
     }
 
@@ -601,8 +666,11 @@ public class YMLDataStore implements IDataStore {
     // --- Indexing Helpers ---
 
     private void cachePlot(Plot plot) {
-        plotsByOwner.computeIfAbsent(plot.getOwner(), k -> new ArrayList<>()).add(plot);
+        // Owner index
+        Set<Plot> ownerSet = plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet());
+        ownerSet.add(plot);
 
+        // Chunk index
         String w = plot.getWorld();
         int minX = plot.getX1() >> 4;
         int maxX = plot.getX2() >> 4;
@@ -639,6 +707,34 @@ public class YMLDataStore implements IDataStore {
             }
         }
         if (worldMap.isEmpty()) plotsByChunk.remove(w);
+    }
+
+    /**
+     * Defensive de-duplication:
+     * If an old Plot instance with the same plotId exists (different object),
+     * remove it from caches/indexes before caching the new one.
+     */
+    private void removePlotByIdEverywhere(UUID plotId) {
+        if (plotId == null) return;
+
+        // Remove from owner sets
+        for (Map.Entry<UUID, Set<Plot>> entry : plotsByOwner.entrySet()) {
+            Set<Plot> set = entry.getValue();
+            if (set == null || set.isEmpty()) continue;
+
+            Plot found = null;
+            for (Plot p : set) {
+                if (p != null && plotId.equals(p.getPlotId())) {
+                    found = p;
+                    break;
+                }
+            }
+
+            if (found != null) {
+                set.remove(found);
+                deIndexPlot(found);
+            }
+        }
     }
 
     @Override

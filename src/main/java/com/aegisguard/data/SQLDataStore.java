@@ -13,25 +13,21 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.io.File;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
  * SQLDataStore (v1.2.2+)
  * - Supports MySQL, MariaDB, and SQLite transparently.
- * - Immediate async saves to prevent data loss.
- * - REPLACE INTO for universal compatibility.
- * - Advanced plot data stored in 'settings' blob.
- * - Zones stored in aegis_zones.
- * - Role flag overrides persisted via Plot.serializeRoleFlags()/deserializeRoleFlags().
- *
- * HARDENING:
- * - NEVER NULL collections (emptyList/emptySet)
- * - Thread-safe owner cache (Set-backed)
- * - Overlap checks use chunk index (scales on large servers)
- * - saveSync() is truly synchronous (shutdown-safe)
+ * - Uses a SINGLE writer thread for DB operations (prevents overlap/race writes).
+ * - savePlot() is async + COALESCED per plotId (last write wins).
+ * - Deletions use TOMBSTONES to prevent "delete then late save resurrects plot" ghosting.
+ * - saveSync()/savePlotSync()/shutdown() FLUSH pending DB tasks so nothing survives shutdown.
  */
 public class SQLDataStore implements IDataStore {
+
+    private static final long FLUSH_TIMEOUT_MS = 10_000L;
 
     private final AegisGuard plugin;
     private HikariDataSource hikari;
@@ -40,6 +36,19 @@ public class SQLDataStore implements IDataStore {
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
+    // Async writer (single thread)
+    private final ExecutorService dbExecutor;
+
+    // Coalesced plot saves: plotId -> latest Plot reference
+    private final ConcurrentHashMap<UUID, Plot> pendingPlotSaves = new ConcurrentHashMap<>();
+
+    // Tombstones: if a plotId is deleted, any queued save for it is ignored
+    private final Set<UUID> deletedPlotIds = ConcurrentHashMap.newKeySet();
+
+    // Pending task counter (for diagnostics)
+    private final AtomicInteger pendingDbTasks = new AtomicInteger(0);
+
+    private volatile boolean shuttingDown = false;
     private volatile boolean isDirty = false;
     private String storageType = "sqlite";
 
@@ -104,6 +113,13 @@ public class SQLDataStore implements IDataStore {
 
     public SQLDataStore(AegisGuard plugin) {
         this.plugin = plugin;
+
+        this.dbExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "AegisGuard-DBWriter");
+            t.setDaemon(true);
+            return t;
+        });
+
         connect();
     }
 
@@ -169,10 +185,94 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
+    // ==============================================================
+    // --- ASYNC WRITER CORE ---
+    // ==============================================================
+
+    private void submitDbTask(Runnable work) {
+        if (work == null) return;
+
+        // During shutdown (or if executor is dead), run inline to avoid losing work.
+        if (shuttingDown || dbExecutor.isShutdown()) {
+            try { work.run(); } catch (Throwable ignored) {}
+            return;
+        }
+
+        pendingDbTasks.incrementAndGet();
+        try {
+            dbExecutor.execute(() -> {
+                try {
+                    work.run();
+                } finally {
+                    pendingDbTasks.decrementAndGet();
+                }
+            });
+        } catch (RejectedExecutionException ex) {
+            pendingDbTasks.decrementAndGet();
+            // Fallback: run inline so we do not drop data.
+            try { work.run(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private void flushPendingWrites(long timeoutMs) {
+        if (dbExecutor.isShutdown()) return;
+
+        try {
+            Future<?> barrier = dbExecutor.submit(() -> {});
+            barrier.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            plugin.getLogger().warning("DB flush timed out (" + timeoutMs + "ms). PendingTasks=" +
+                    pendingDbTasks.get() + ", PendingPlotSaves=" + pendingPlotSaves.size());
+        } catch (Exception e) {
+            plugin.getLogger().warning("DB flush failed: " + e.getMessage());
+        }
+
+        // Best-effort dirty clear
+        if (pendingDbTasks.get() <= 0 && pendingPlotSaves.isEmpty()) {
+            isDirty = false;
+        }
+    }
+
+    private void enqueuePlotSave(Plot plot) {
+        if (plot == null) return;
+
+        UUID plotId = plot.getPlotId();
+        if (plotId == null) return;
+
+        // Plot is live again, do not treat it as deleted
+        deletedPlotIds.remove(plotId);
+
+        // Coalesce: keep only latest reference for this plotId
+        boolean first = (pendingPlotSaves.put(plotId, plot) == null);
+        if (!first) return;
+
+        submitDbTask(() -> {
+            // If it was deleted after being queued, skip the save (prevents ghost resurrection)
+            if (deletedPlotIds.contains(plotId)) {
+                pendingPlotSaves.remove(plotId);
+                return;
+            }
+
+            Plot latest = pendingPlotSaves.remove(plotId);
+            if (latest == null) return;
+
+            // Re-check tombstone right before write
+            if (deletedPlotIds.contains(plotId)) return;
+
+            savePlotInternal(latest);
+        });
+    }
+
+    // ==============================================================
+    // --- LOAD / SAVE ---
+    // ==============================================================
+
     @Override
     public void load() {
         plotsByOwner.clear();
         plotsByChunk.clear();
+        pendingPlotSaves.clear();
+        deletedPlotIds.clear();
 
         int plotCount = 0;
         Map<UUID, Plot> plotsById = new HashMap<>();
@@ -186,8 +286,6 @@ public class SQLDataStore implements IDataStore {
                     UUID plotId = UUID.fromString(rs.getString("plot_id"));
                     UUID ownerId = UUID.fromString(rs.getString("owner_uuid"));
                     String ownerName = rs.getString("owner_name");
-                    if (ownerName == null || ownerName.isEmpty()) ownerName = "Unknown";
-
                     String worldName = rs.getString("world");
                     if (worldName == null || worldName.isEmpty()) continue;
 
@@ -281,43 +379,61 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public void save() {
+        // Enqueue saves for everything (coalesced)
         for (Set<Plot> set : plotsByOwner.values()) {
             if (set == null || set.isEmpty()) continue;
             for (Plot p : new ArrayList<>(set)) {
-                if (p != null) savePlot(p); // async batch
+                if (p != null) savePlot(p);
             }
         }
     }
 
-    /**
-     * TRUE synchronous flush. Safe for shutdown.
-     */
     @Override
     public void saveSync() {
-        for (Set<Plot> set : plotsByOwner.values()) {
-            if (set == null || set.isEmpty()) continue;
-            for (Plot p : new ArrayList<>(set)) {
-                if (p != null) savePlotSync(p);
-            }
-        }
+        save();
+        flushPendingWrites(FLUSH_TIMEOUT_MS);
     }
 
     @Override
     public void savePlot(Plot plot) {
         if (plot == null) return;
+
         isDirty = true;
-        plugin.runGlobalAsync(() -> savePlotInternal(plot));
+
+        // If we're shutting down, do it inline (no background writes surviving shutdown)
+        if (shuttingDown) {
+            deletedPlotIds.remove(plot.getPlotId());
+            pendingPlotSaves.remove(plot.getPlotId());
+            savePlotInternal(plot);
+            return;
+        }
+
+        enqueuePlotSave(plot);
     }
 
     @Override
     public void savePlotSync(Plot plot) {
         if (plot == null) return;
+
         isDirty = true;
+
+        UUID id = plot.getPlotId();
+        if (id != null) {
+            deletedPlotIds.remove(id);
+            // Cancel any pending coalesced save for this plotId so we do not write stale state later
+            pendingPlotSaves.remove(id);
+        }
+
         savePlotInternal(plot);
+        flushPendingWrites(FLUSH_TIMEOUT_MS);
     }
 
     private void savePlotInternal(Plot plot) {
+        if (plot == null) return;
         if (hikari == null || hikari.isClosed()) return;
+
+        UUID pid = plot.getPlotId();
+        if (pid != null && deletedPlotIds.contains(pid)) return;
 
         try (Connection conn = hikari.getConnection()) {
             boolean auto = conn.getAutoCommit();
@@ -373,7 +489,6 @@ public class SQLDataStore implements IDataStore {
                 }
 
                 conn.commit();
-                isDirty = false;
 
             } catch (SQLException e) {
                 try { conn.rollback(); } catch (SQLException ignored) {}
@@ -385,6 +500,10 @@ public class SQLDataStore implements IDataStore {
             plugin.getLogger().severe("Failed to save plot " + plot.getPlotId() + ": " + e.getMessage());
         }
     }
+
+    // ==============================================================
+    // --- SETTINGS SERIALIZATION ---
+    // ==============================================================
 
     private String serializeSettings(Plot plot) {
         StringBuilder sb = new StringBuilder();
@@ -512,6 +631,10 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
+    // ==============================================================
+    // --- CACHE / INDEX ---
+    // ==============================================================
+
     private void cachePlot(Plot plot) {
         removePlotByIdEverywhere(plot.getPlotId());
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet()).add(plot);
@@ -532,7 +655,6 @@ public class SQLDataStore implements IDataStore {
             if (found != null) {
                 set.remove(found);
                 deIndexPlot(found);
-                if (set.isEmpty()) plotsByOwner.remove(entry.getKey());
             }
         }
     }
@@ -575,14 +697,16 @@ public class SQLDataStore implements IDataStore {
         if (worldChunks.isEmpty()) plotsByChunk.remove(plot.getWorld());
     }
 
-    // --- IDataStore: Modifications ---
+    // ==============================================================
+    // --- IDataStore: MODIFICATIONS ---
+    // ==============================================================
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
         if (owner == null || c1 == null || c2 == null || c1.getWorld() == null || c2.getWorld() == null) return;
 
         UUID id = UUID.randomUUID();
-        String ownerName = Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse("Unknown");
+        String ownerName = Bukkit.getOfflinePlayer(owner).getName();
 
         int x1 = Math.min(c1.getBlockX(), c2.getBlockX());
         int x2 = Math.max(c1.getBlockX(), c2.getBlockX());
@@ -596,19 +720,24 @@ public class SQLDataStore implements IDataStore {
     @Override
     public void addPlot(Plot plot) {
         if (plot == null) return;
+
+        // New plot: not deleted
+        deletedPlotIds.remove(plot.getPlotId());
+        pendingPlotSaves.remove(plot.getPlotId());
+
         cachePlot(plot);
         savePlot(plot);
         isDirty = true;
     }
 
-    /**
-     * Removal is performed synchronously to prevent "it came back after restart" ghost plots.
-     */
     @Override
     public void removePlot(UUID owner, UUID plotId) {
         if (owner == null || plotId == null) return;
 
-        // remove from caches/index first
+        // Tombstone prevents queued saves from resurrecting deleted plot
+        deletedPlotIds.add(plotId);
+        pendingPlotSaves.remove(plotId);
+
         Plot removed = null;
         Set<Plot> set = plotsByOwner.get(owner);
         if (set != null) {
@@ -618,66 +747,75 @@ public class SQLDataStore implements IDataStore {
             if (removed != null) set.remove(removed);
             if (set.isEmpty()) plotsByOwner.remove(owner);
         }
+
         if (removed != null) deIndexPlot(removed);
 
-        // delete from DB immediately
-        try (Connection conn = hikari.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOT)) {
-                ps.setString(1, plotId.toString());
-                ps.executeUpdate();
+        submitDbTask(() -> {
+            try (Connection conn = hikari.getConnection()) {
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOT)) {
+                    ps.setString(1, plotId.toString());
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
+                    ps.setString(1, plotId.toString());
+                    ps.executeUpdate();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            try (PreparedStatement ps = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
-                ps.setString(1, plotId.toString());
-                ps.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        });
 
         isDirty = true;
     }
 
-    /**
-     * Bulk removal is performed synchronously to prevent "after restart, deletions didn't apply".
-     */
     @Override
     public void removeAllPlots(UUID owner) {
         if (owner == null) return;
 
         Set<Plot> owned = plotsByOwner.remove(owner);
         if (owned != null) {
-            for (Plot plot : owned) if (plot != null) deIndexPlot(plot);
+            for (Plot plot : owned) {
+                if (plot == null) continue;
+                UUID pid = plot.getPlotId();
+                if (pid != null) {
+                    deletedPlotIds.add(pid);
+                    pendingPlotSaves.remove(pid);
+                }
+                deIndexPlot(plot);
+            }
         }
 
-        try (Connection conn = hikari.getConnection()) {
-            List<String> plotIds = new ArrayList<>();
-            try (PreparedStatement sel = conn.prepareStatement(SELECT_PLOT_IDS_BY_OWNER)) {
-                sel.setString(1, owner.toString());
-                try (ResultSet rs = sel.executeQuery()) {
-                    while (rs.next()) {
-                        String pid = rs.getString(1);
-                        if (pid != null) plotIds.add(pid);
+        submitDbTask(() -> {
+            try (Connection conn = hikari.getConnection()) {
+                List<String> plotIds = new ArrayList<>();
+                try (PreparedStatement sel = conn.prepareStatement(SELECT_PLOT_IDS_BY_OWNER)) {
+                    sel.setString(1, owner.toString());
+                    try (ResultSet rs = sel.executeQuery()) {
+                        while (rs.next()) {
+                            String pid = rs.getString(1);
+                            if (pid != null) plotIds.add(pid);
+                        }
                     }
                 }
-            }
 
-            if (!plotIds.isEmpty()) {
-                try (PreparedStatement delZones = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
-                    for (String pid : plotIds) {
-                        delZones.setString(1, pid);
-                        delZones.addBatch();
+                if (!plotIds.isEmpty()) {
+                    try (PreparedStatement delZones = conn.prepareStatement(DELETE_ZONES_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delZones.setString(1, pid);
+                            delZones.addBatch();
+                        }
+                        delZones.executeBatch();
                     }
-                    delZones.executeBatch();
                 }
-            }
 
-            try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOTS_BY_OWNER)) {
-                ps.setString(1, owner.toString());
-                ps.executeUpdate();
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_PLOTS_BY_OWNER)) {
+                    ps.setString(1, owner.toString());
+                    ps.executeUpdate();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        });
 
         isDirty = true;
     }
@@ -705,10 +843,17 @@ public class SQLDataStore implements IDataStore {
         UUID plotId = plot.getPlotId();
         UUID oldOwner = plot.getOwner();
 
+        // Plot is not deleted, ensure tombstone cleared
+        if (plotId != null) deletedPlotIds.remove(plotId);
+
         if (oldOwner != null) {
             Set<Plot> oldSet = plotsByOwner.get(oldOwner);
             if (oldSet != null) {
-                oldSet.removeIf(p -> p != null && plotId.equals(p.getPlotId()));
+                Plot found = null;
+                for (Plot p : oldSet) {
+                    if (p != null && plotId.equals(p.getPlotId())) { found = p; break; }
+                }
+                if (found != null) oldSet.remove(found);
                 if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
             }
         }
@@ -753,7 +898,7 @@ public class SQLDataStore implements IDataStore {
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
         if (loc == null || loc.getWorld() == null || playerUUID == null) return;
 
-        plugin.runGlobalAsync(() -> {
+        submitDbTask(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(LOG_WILDERNESS)) {
                 ps.setString(1, loc.getWorld().getName());
@@ -773,7 +918,7 @@ public class SQLDataStore implements IDataStore {
     public void revertWildernessBlocks(long timestamp, int limit) {
         if (limit <= 0) return;
 
-        plugin.runGlobalAsync(() -> {
+        submitDbTask(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(GET_REVERTABLE_BLOCKS)) {
 
@@ -916,9 +1061,50 @@ public class SQLDataStore implements IDataStore {
         return false;
     }
 
+    // ==============================================================
+    // --- SHUTDOWN (NO ASYNC SURVIVES) ---
+    // ==============================================================
+
     @Override
     public void shutdown() {
-        try { saveSync(); } catch (Throwable ignored) {}
-        if (hikari != null && !hikari.isClosed()) hikari.close();
+        shuttingDown = true;
+
+        try {
+            // Flush any queued saves/deletes/logs
+            flushPendingWrites(FLUSH_TIMEOUT_MS);
+
+            // Best-effort final persistence (in case something mutated after last enqueue)
+            try { saveAllNow(); } catch (Throwable ignored) {}
+
+            flushPendingWrites(FLUSH_TIMEOUT_MS);
+        } catch (Throwable ignored) {}
+
+        try {
+            dbExecutor.shutdown();
+            dbExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (Throwable ignored) {
+        } finally {
+            try { dbExecutor.shutdownNow(); } catch (Throwable ignored) {}
+        }
+
+        if (hikari != null && !hikari.isClosed()) {
+            try { hikari.close(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private void saveAllNow() {
+        for (Set<Plot> set : plotsByOwner.values()) {
+            if (set == null || set.isEmpty()) continue;
+            for (Plot p : new ArrayList<>(set)) {
+                if (p == null) continue;
+                UUID pid = p.getPlotId();
+                if (pid != null) {
+                    deletedPlotIds.remove(pid);
+                    pendingPlotSaves.remove(pid);
+                }
+                savePlotInternal(p);
+            }
+        }
+        isDirty = false;
     }
 }

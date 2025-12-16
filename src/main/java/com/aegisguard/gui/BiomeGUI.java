@@ -41,10 +41,13 @@ public class BiomeGUI {
     }
 
     public void open(Player player, Plot plot) {
-        String title = GUIManager.safeText(
-                plugin.msg().get(player, "biome_gui_title"),
-                "§2Change Biome"
+        // ✅ Title fix: translate & colors + safe fallback + clamp length (via GUIManager.title helper)
+        String title = plugin.gui().title(
+                player,
+                "biome_gui_title",
+                "&2✦ Biome Shaper ✦"
         );
+
         Inventory inv = Bukkit.createInventory(new BiomeHolder(plot), 45, title);
 
         // Background Filler (bottom row only, main grid will be overridden)
@@ -79,7 +82,7 @@ public class BiomeGUI {
                 List<String> lore = new ArrayList<>(lines(player, "biome_select_lore", defaultLore));
                 lore.replaceAll(line ->
                         line.replace("{BIOME}", prettyName)
-                            .replace("{COST}", costStr)
+                                .replace("{COST}", costStr)
                 );
 
                 ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
@@ -221,7 +224,6 @@ public class BiomeGUI {
     }
 
     private void refreshChunks(Player player, Plot plot) {
-        // We will just inform the user as a fallback.
         player.sendMessage(line(
                 player,
                 "biome_refresh_hint",
@@ -271,10 +273,6 @@ public class BiomeGUI {
     // LANGUAGE ENGINE BRIDGE
     // --------------------------------------------------
 
-    /**
-     * Single-line helper with variables + safe fallback.
-     * If the key is missing / empty / equals the key name, fallback is used.
-     */
     private String line(Player player, String key, String fallback, Map<String, String> vars) {
         String raw = null;
         try {
@@ -283,24 +281,18 @@ public class BiomeGUI {
             } else {
                 raw = plugin.msg().get(player, key, vars);
             }
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
         if (raw == null || raw.isEmpty() || raw.equalsIgnoreCase(key)) {
             return fallback;
         }
         return raw;
     }
 
-    /**
-     * Multi-line helper for lore blocks.
-     * If the key is missing or empty, returns the provided fallback list.
-     */
     private List<String> lines(Player player, String key, List<String> fallback) {
         List<String> raw = null;
         try {
             raw = plugin.msg().getList(player, key);
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
         if (raw == null || raw.isEmpty()) {
             return fallback;
         }

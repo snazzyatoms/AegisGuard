@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -38,11 +39,12 @@ public class SettingsGUI {
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
-        // Title now comes from Codex (per-style language file)
-        String title = GUIManager.safeText(
-                plugin.codex().tr(player, "settings_menu_title"),
-                "§bAegisGuard — Settings"
-        );
+        // ✅ Title fix: translate & colors + safe fallback + clamp length
+        String rawTitle = (plugin.codex() != null)
+                ? plugin.codex().tr(player, "settings_menu_title")
+                : null;
+
+        String title = formatTitle(rawTitle, "&b⚙ AegisGuard Settings");
         Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
@@ -66,8 +68,10 @@ public class SettingsGUI {
         }
 
         // --- 2. LANGUAGE (Slot 13) ---
-        // Style is now stored/read via Codex instead of MessagesUtil
-        String currentStyle = plugin.codex().getPlayerStyle(player);
+        String currentStyle = (plugin.codex() != null)
+                ? plugin.codex().getPlayerStyle(player)
+                : "old_english";
+
         inv.setItem(13, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
                 "§eLanguage: " + formatStyle(currentStyle),
@@ -122,17 +126,20 @@ public class SettingsGUI {
                 break;
 
             case 13: // Language
-                // Use Codex for reading & writing language style
-                String style = plugin.codex().getPlayerStyle(player);
+                String style = (plugin.codex() != null)
+                        ? plugin.codex().getPlayerStyle(player)
+                        : "old_english";
+
                 String nextStyle = switch (style) {
                     case "old_english"    -> "modern_english";
                     case "modern_english" -> "hybrid_english";
-                    case "hybrid_english" -> "spanish_mx"; // ✅
-                    case "spanish_mx"     -> "spanish_ar"; // ✅
-                    case "spanish_ar"     -> "old_english"; // Loop back
+                    case "hybrid_english" -> "spanish_mx";
+                    case "spanish_mx"     -> "spanish_ar";
+                    case "spanish_ar"     -> "old_english";
                     default               -> "old_english";
                 };
-                plugin.codex().setPlayerStyle(player, nextStyle);
+
+                if (plugin.codex() != null) plugin.codex().setPlayerStyle(player, nextStyle);
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
                 break;
@@ -164,9 +171,21 @@ public class SettingsGUI {
         return switch (style) {
             case "modern_english" -> "§aModern";
             case "hybrid_english" -> "§eHybrid";
-            case "spanish_mx"     -> "§bEspañol (Latino)"; // ✅
-            case "spanish_ar"     -> "§bEspañol (Arg)";    // ✅
-            default               -> "§dOld English"; // Default
+            case "spanish_mx"     -> "§bEspañol (Latino)";
+            case "spanish_ar"     -> "§bEspañol (Arg)";
+            default               -> "§dOld English";
         };
+    }
+
+    // ✅ Central title cleanup for THIS GUI
+    private String formatTitle(String raw, String fallback) {
+        String t = GUIManager.safeText(raw, fallback);
+        t = ChatColor.translateAlternateColorCodes('&', t);
+
+        // Clamp to avoid title-length issues on some versions
+        if (t.length() > 32) t = t.substring(0, 32);
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        return t;
     }
 }

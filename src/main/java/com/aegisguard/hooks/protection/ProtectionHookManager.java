@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,15 +25,15 @@ import java.util.List;
  *   so plugins don't fight over the same turf.
  *
  * This manager does NOT enforce permissions. It only answers:
- * - "Should AegisGuard yield here?"
  * - "Is this protected elsewhere?"
+ * - "Should AegisGuard yield to external protection for this action?"
  */
 public class ProtectionHookManager {
 
     public enum OverlapPolicy {
-        EXTERNAL_WINS,     // AegisGuard yields to external protection.
-        AEGIS_WINS,        // AegisGuard ignores external protection.
-        DENY_IF_CONFLICT   // Claims should be denied if conflict is detected.
+        EXTERNAL_WINS,
+        AEGIS_WINS,
+        DENY_IF_CONFLICT
     }
 
     private final AegisGuard plugin;
@@ -77,28 +78,48 @@ public class ProtectionHookManager {
             return;
         }
 
-        // WorldGuard (compile-time API)
+        // Compile-time hook
         if (isPluginHookEnabled("worldguard")) {
-            tryRegister(new WorldGuardHook(plugin, getPluginPriority("worldguard", 100)));
+            tryRegister(newHook(WorldGuardHook.class, getPluginPriority("worldguard", 100)));
         }
 
-        // Reflection hooks (no compile-time dependency)
+        // Reflection hooks
         if (isPluginHookEnabled("griefprevention")) {
-            tryRegister(new GriefPreventionHook(plugin, getPluginPriority("griefprevention", 90)));
+            tryRegister(newHook(GriefPreventionHook.class, getPluginPriority("griefprevention", 90)));
         }
         if (isPluginHookEnabled("towny")) {
-            tryRegister(new TownyHook(plugin, getPluginPriority("towny", 80)));
+            tryRegister(newHook(TownyHook.class, getPluginPriority("towny", 80)));
         }
         if (isPluginHookEnabled("griefdefender")) {
-            tryRegister(new GriefDefenderHook(plugin, getPluginPriority("griefdefender", 90)));
+            tryRegister(newHook(GriefDefenderHook.class, getPluginPriority("griefdefender", 90)));
         }
         if (isPluginHookEnabled("residence")) {
-            tryRegister(new ResidenceHook(plugin, getPluginPriority("residence", 70)));
+            tryRegister(newHook(ResidenceHook.class, getPluginPriority("residence", 70)));
         }
 
         hooks.sort(Comparator.comparingInt(ProtectionHook::priority).reversed());
 
         plugin.getLogger().info("[AegisGuard] Protection compatibility hooks loaded: " + getActiveHookIds());
+    }
+
+    private ProtectionHook newHook(Class<? extends ProtectionHook> clazz, int priority) {
+        if (clazz == null) return null;
+
+        try {
+            // Prefer (AegisGuard, int) if available
+            try {
+                Constructor<? extends ProtectionHook> c = clazz.getConstructor(AegisGuard.class, int.class);
+                ProtectionHook h = c.newInstance(plugin, priority);
+                return h;
+            } catch (NoSuchMethodException ignored) {
+                // Fall back to (AegisGuard) and wrap with priority
+                Constructor<? extends ProtectionHook> c = clazz.getConstructor(AegisGuard.class);
+                ProtectionHook h = c.newInstance(plugin);
+                return new PrioritizedHook(h, priority);
+            }
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private void tryRegister(ProtectionHook hook) {
@@ -107,11 +128,14 @@ public class ProtectionHookManager {
         boolean enabled = Bukkit.getPluginManager().isPluginEnabled(hook.id());
         if (!enabled) return;
 
-        if (hook.isActive()) {
-            hooks.add(hook);
-            plugin.getLogger().info("[AegisGuard] Hooked into " + hook.id() + " (protection compatibility).");
-        } else {
-            plugin.getLogger().warning("[AegisGuard] " + hook.id() + " detected, but hook failed to initialize.");
+        try {
+            if (hook.isActive()) {
+                hooks.add(hook);
+                plugin.getLogger().info("[AegisGuard] Hooked into " + hook.id() + " (protection compatibility).");
+            } else {
+                plugin.getLogger().warning("[AegisGuard] " + hook.id() + " detected, but hook failed to initialize.");
+            }
+        } catch (Throwable ignored) {
         }
     }
 
@@ -122,7 +146,9 @@ public class ProtectionHookManager {
     public List<String> getActiveHookIds() {
         List<String> ids = new ArrayList<>();
         for (ProtectionHook h : hooks) {
-            if (h != null && h.isActive()) ids.add(h.id());
+            try {
+                if (h != null && h.isActive()) ids.add(h.id());
+            } catch (Throwable ignored) {}
         }
         return ids;
     }
@@ -135,9 +161,6 @@ public class ProtectionHookManager {
         if (loc == null || loc.getWorld() == null) return null;
         if (!isEnabled()) return null;
 
-        OverlapPolicy policy = getOverlapPolicy();
-        if (policy == OverlapPolicy.AEGIS_WINS) return null;
-
         for (ProtectionHook hook : hooks) {
             try {
                 if (hook != null && hook.isActive() && hook.isProtectedElsewhere(loc)) {
@@ -149,53 +172,34 @@ public class ProtectionHookManager {
                     return hook.id();
                 }
             } catch (Throwable ignored) {
-                // Hooks must never crash the server.
             }
         }
         return null;
     }
 
-    /**
-     * True if ANY hooked protection plugin says this location is inside its region/claim.
-     * NOTE: Policy AEGIS_WINS makes this always false.
-     */
     public boolean isProtectedElsewhere(Location loc) {
         return getBlockingHookId(loc) != null;
     }
 
     /**
-     * Used by ProtectionManager to decide whether AegisGuard should yield.
-     *
-     * Policy behavior:
-     * - EXTERNAL_WINS: yield if any hook says bypass
-     * - AEGIS_WINS: never yield
-     * - DENY_IF_CONFLICT: do NOT yield (Aegis continues to enforce its own rules),
-     *   but claim creation should still be blocked via isAreaProtectedElsewhere().
+     * Used by ProtectionManager. If this returns true, AegisGuard should yield and let the other plugin decide.
      */
     public boolean shouldBypass(Location loc, Player actor, HookAction action) {
         if (loc == null || loc.getWorld() == null) return false;
         if (!isEnabled()) return false;
 
+        String blocker = getBlockingHookId(loc);
+        if (blocker == null) return false;
+
         OverlapPolicy policy = getOverlapPolicy();
         if (policy == OverlapPolicy.AEGIS_WINS) return false;
-        if (policy == OverlapPolicy.DENY_IF_CONFLICT) return false;
 
-        for (ProtectionHook hook : hooks) {
-            try {
-                if (hook != null && hook.shouldBypass(loc, actor, action)) {
-                    if (isDebug()) {
-                        plugin.getLogger().info("[AegisGuard] Yielding to " + hook.id()
-                                + " action=" + (action != null ? action.name() : "null")
-                                + " at " + loc.getWorld().getName() + " "
-                                + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
-                    }
-                    return true;
-                }
-            } catch (Throwable ignored) {
-            }
+        if (isDebug()) {
+            plugin.getLogger().info("[AegisGuard] Yielding to external protection (" + blocker + ") for action=" + action);
         }
 
-        return false;
+        // EXTERNAL_WINS and DENY_IF_CONFLICT both mean "AegisGuard does not interfere here".
+        return true;
     }
 
     /**
@@ -204,30 +208,19 @@ public class ProtectionHookManager {
      */
     public boolean isAreaProtectedElsewhere(String worldName, int x1, int z1, int x2, int z2) {
         if (worldName == null) return false;
+        World w = Bukkit.getWorld(worldName);
+        if (w == null) return false;
         if (!isEnabled()) return false;
 
         OverlapPolicy policy = getOverlapPolicy();
-        if (policy == OverlapPolicy.AEGIS_WINS) return false; // ignore external protection
-
-        World w = Bukkit.getWorld(worldName);
-        if (w == null) return false;
-
-        // Let hooks override with a smarter scan if they want
-        for (ProtectionHook hook : hooks) {
-            try {
-                if (hook != null && hook.isActive() && hook.isAreaProtectedElsewhere(worldName, x1, z1, x2, z2)) {
-                    return true;
-                }
-            } catch (Throwable ignored) {
-            }
-        }
+        if (policy == OverlapPolicy.AEGIS_WINS) return false;
 
         int minX = Math.min(x1, x2);
         int maxX = Math.max(x1, x2);
         int minZ = Math.min(z1, z2);
         int maxZ = Math.max(z1, z2);
 
-        int step = 16; // chunk grid sampling
+        int step = 16; // chunk-grid sampling
         long samples = 0;
 
         int y = clampY(w, 64);
@@ -236,15 +229,14 @@ public class ProtectionHookManager {
             for (int z = minZ; z <= maxZ; z += step) {
                 samples++;
                 if (samples > 4000) {
-                    // Too large: fail-safe (treat as protected) to avoid big lag scans.
-                    return true;
+                    return true; // fail-safe to avoid lag
                 }
                 Location loc = new Location(w, x + 0.5, y, z + 0.5);
                 if (isProtectedElsewhere(loc)) return true;
             }
         }
 
-        // Also check corners
+        // corners
         Location c1 = new Location(w, minX + 0.5, y, minZ + 0.5);
         Location c2 = new Location(w, maxX + 0.5, y, maxZ + 0.5);
         Location c3 = new Location(w, minX + 0.5, y, maxZ + 0.5);
@@ -260,5 +252,26 @@ public class ProtectionHookManager {
         if (y < min) y = min;
         if (y > max) y = max;
         return y;
+    }
+
+    /**
+     * Priority wrapper so hook implementations do not NEED to implement constructors or priority storage.
+     */
+    private static final class PrioritizedHook implements ProtectionHook {
+        private final ProtectionHook delegate;
+        private final int priority;
+
+        private PrioritizedHook(ProtectionHook delegate, int priority) {
+            this.delegate = delegate;
+            this.priority = priority;
+        }
+
+        @Override public String id() { return delegate.id(); }
+        @Override public boolean isActive() { return delegate.isActive(); }
+        @Override public int priority() { return priority; }
+        @Override public boolean isProtectedElsewhere(Location location) { return delegate.isProtectedElsewhere(location); }
+        @Override public boolean isAreaProtectedElsewhere(String world, int x1, int z1, int x2, int z2) {
+            return delegate.isAreaProtectedElsewhere(world, x1, z1, x2, z2);
+        }
     }
 }

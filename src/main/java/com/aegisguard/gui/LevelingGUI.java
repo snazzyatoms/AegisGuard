@@ -21,6 +21,8 @@ import java.util.Map;
  * LevelingGUI
  * - Updated to use CodexEngine (v1.2.4) List API.
  * - Fixes the "[Missing: level_track_...]" bugs.
+ *
+ * ✅ Title fix: uses plugin.gui().title(...) (color translate + safe fallback + clamp)
  */
 public class LevelingGUI {
 
@@ -39,19 +41,22 @@ public class LevelingGUI {
 
     public void open(Player player, Plot plot) {
         if (plot == null) {
-            // Can use codex or simple msg
             plugin.msg().send(player, "no_plot_here");
             return;
         }
 
-        String title = plugin.codex().tr(player, "level_gui_title");
+        // ✅ Title fix: translate & colors + safe fallback + clamp length
+        String title = plugin.gui().title(
+                player,
+                "level_gui_title",
+                "&6✦ Dominion Ascension ✦"
+        );
+
         Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 54, title);
 
         // --- Filler border ---
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         int currentLvl = plot.getLevel();
         int maxLvl = plugin.cfg().getMaxLevel();
@@ -59,8 +64,6 @@ public class LevelingGUI {
         // ----------------------------------------------------------------
         // 1. HEADER: Plot & current level summary
         // ----------------------------------------------------------------
-        // Note: In your codex files, these header lines seem to be single keys.
-        // We will fetch them individually as you did before, but via Codex.
         List<String> headerLore = new ArrayList<>();
 
         headerLore.add(plugin.codex().tr(player, "level_header_owner", Map.of("owner", plot.getOwnerName())));
@@ -70,17 +73,14 @@ public class LevelingGUI {
                 "level", String.valueOf(currentLvl),
                 "max", String.valueOf(maxLvl)
         )));
-        headerLore.add(plugin.codex().tr(player, "level_header_multiplier", Map.of("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier()))));
+        headerLore.add(plugin.codex().tr(player, "level_header_multiplier",
+                Map.of("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier()))));
 
-        // Growth info (if enabled)
         if (plugin.cfg().isLevelingExpansionEnabled()) {
             int amount = plugin.cfg().getLevelingExpansionAmount();
             headerLore.add("");
-            // You might want to add these keys to your YAMLs if they are missing, 
-            // or rely on the fallback provided by tr() if you had one. 
-            // For now, I'll use hardcoded text if key is missing to be safe, 
-            // but ideally these go into core.yml
-            String growthTitle = plugin.codex().tr(player, "level_header_growth_title"); 
+
+            String growthTitle = plugin.codex().tr(player, "level_header_growth_title");
             if (growthTitle.equals("level_header_growth_title")) growthTitle = "§bTerritory Growth:";
             headerLore.add(growthTitle);
 
@@ -102,7 +102,7 @@ public class LevelingGUI {
         int half = windowSize / 2;
         int start = Math.max(1, currentLvl - half);
         int end = Math.min(maxLvl, start + windowSize - 1);
-        
+
         if (end - start + 1 < windowSize && start > 1) {
             start = Math.max(1, end - windowSize + 1);
         }
@@ -116,12 +116,9 @@ public class LevelingGUI {
         // 3. CURRENT BUFFS PANEL (left)
         // ----------------------------------------------------------------
         List<String> currentBuffLore = new ArrayList<>();
-        // Use codex tr()
         currentBuffLore.add(plugin.codex().tr(player, "level_current_blessings_title", Map.of("level", String.valueOf(currentLvl))));
         currentBuffLore.addAll(formatBuffs(currentLvl));
         currentBuffLore.add("");
-        
-        // Footer lines
         currentBuffLore.add(plugin.codex().tr(player, "level_current_blessings_footer_1"));
         currentBuffLore.add(plugin.codex().tr(player, "level_current_blessings_footer_2"));
 
@@ -142,7 +139,6 @@ public class LevelingGUI {
 
             List<String> upgradeLore = new ArrayList<>();
             upgradeLore.add(plugin.codex().tr(player, "level_upgrade_next_tier", Map.of("level", String.valueOf(nextLvl))));
-            
             upgradeLore.add(plugin.codex().tr(player, "level_upgrade_cost", Map.of(
                     "COST", costStr,
                     "TYPE", type.name()
@@ -154,13 +150,16 @@ public class LevelingGUI {
 
             if (plugin.cfg().isLevelingExpansionEnabled()) {
                 upgradeLore.add("");
-                // Again, fallback logic if keys missing in YAML
+
                 String tTitle = plugin.codex().tr(player, "level_upgrade_territory_title");
                 if (tTitle.equals("level_upgrade_territory_title")) tTitle = "§bTerritory Gain:";
                 upgradeLore.add(tTitle);
-                
-                String tLine = plugin.codex().tr(player, "level_upgrade_territory_line", Map.of("AMOUNT", String.valueOf(plugin.cfg().getLevelingExpansionAmount())));
-                if (tLine.equals("level_upgrade_territory_line")) tLine = "§7+§f" + plugin.cfg().getLevelingExpansionAmount() + " §7radius on this upgrade.";
+
+                String tLine = plugin.codex().tr(player, "level_upgrade_territory_line",
+                        Map.of("AMOUNT", String.valueOf(plugin.cfg().getLevelingExpansionAmount())));
+                if (tLine.equals("level_upgrade_territory_line")) {
+                    tLine = "§7+§f" + plugin.cfg().getLevelingExpansionAmount() + " §7radius on this upgrade.";
+                }
                 upgradeLore.add(tLine);
             }
 
@@ -168,19 +167,14 @@ public class LevelingGUI {
             upgradeLore.add(plugin.codex().tr(player, "level_upgrade_click_hint", Map.of("level", String.valueOf(nextLvl))));
             upgradeLore.add("");
 
-            // --- DYNAMIC LORE SWITCH (List) ---
             List<String> buttonLore;
             if (plugin.cfg().isLevelingExpansionEnabled()) {
                 buttonLore = plugin.codex().trList(player, "level_button_lore");
             } else {
                 buttonLore = plugin.codex().trList(player, "level_button_lore_static");
-                if (buttonLore.isEmpty()) {
-                    buttonLore = plugin.codex().trList(player, "level_button_lore");
-                }
+                if (buttonLore.isEmpty()) buttonLore = plugin.codex().trList(player, "level_button_lore");
             }
-            if (!buttonLore.isEmpty()) {
-                upgradeLore.addAll(buttonLore);
-            }
+            if (!buttonLore.isEmpty()) upgradeLore.addAll(buttonLore);
 
             inv.setItem(31, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
@@ -188,10 +182,8 @@ public class LevelingGUI {
                     upgradeLore
             ));
         } else {
-            // Maxed out
             List<String> maxLore = plugin.codex().trList(player, "level_max_reached_lore");
             if (maxLore.isEmpty()) {
-                // Hardcoded fallback if key missing
                 maxLore = List.of("§7Your dominion has reached", "§7its highest tier.", "", "§aEnjoy your full power.");
             }
 
@@ -208,13 +200,13 @@ public class LevelingGUI {
         if (plugin.cfg().isLevelingExpansionEnabled()) {
             List<String> expansionLore = plugin.codex().trList(player, "level_expansion_lore");
             if (expansionLore.isEmpty()) {
-                 expansionLore = List.of(
-                     "§bTerritory Growth Rules:",
-                     "§7Each upgrade expands your",
-                     "§7claim radius outward evenly."
-                 );
+                expansionLore = List.of(
+                        "§bTerritory Growth Rules:",
+                        "§7Each upgrade expands your",
+                        "§7claim radius outward evenly."
+                );
             }
-            
+
             String exTitle = plugin.codex().tr(player, "level_expansion_title");
             if (exTitle.equals("level_expansion_title")) exTitle = "§aTerritory Expansion";
 
@@ -250,13 +242,11 @@ public class LevelingGUI {
 
         int slot = e.getSlot();
 
-        // Back to main menu
         if (slot == 49) {
             plugin.gui().openMain(player);
             return;
         }
 
-        // Upgrade button
         if (slot == 31 && e.getCurrentItem().getType() == Material.EXPERIENCE_BOTTLE) {
             int nextLvl = plot.getLevel() + 1;
             int maxLvl = plugin.cfg().getMaxLevel();
@@ -268,14 +258,12 @@ public class LevelingGUI {
             double cost = calculateCost(nextLvl);
             CurrencyType type = plugin.cfg().getLevelCostType();
 
-            // 1. Check Funds
             if (!plugin.eco().withdraw(player, cost, type)) {
                 plugin.msg().send(player, "level_up_fail_cost");
                 plugin.effects().playError(player);
                 return;
             }
 
-            // 2. Handle Expansion
             if (plugin.cfg().isLevelingExpansionEnabled()) {
                 int expandAmount = plugin.cfg().getLevelingExpansionAmount();
                 int newX1 = plot.getX1() - expandAmount;
@@ -283,32 +271,28 @@ public class LevelingGUI {
                 int newX2 = plot.getX2() + expandAmount;
                 int newZ2 = plot.getZ2() + expandAmount;
 
-                // Overlap Check
                 if (plugin.store().isAreaOverlapping(plot, plot.getWorld(), newX1, newZ1, newX2, newZ2)) {
-                    plugin.eco().deposit(player, cost, type); // Refund
+                    plugin.eco().deposit(player, cost, type);
                     plugin.msg().send(player, "level_up_fail_overlap");
                     plugin.effects().playError(player);
                     return;
                 }
 
-                // Limit Check
                 int newRadius = (newX2 - newX1) / 2;
-                int maxRadius = plugin.cfg().getWorldMaxRadius(player.getWorld());
-                if (newRadius > maxRadius && !player.hasPermission("aegis.admin.bypass")) {
-                    plugin.eco().deposit(player, cost, type); // Refund
-                    plugin.msg().send(player, "level_up_fail_world_limit", Map.of("LIMIT", String.valueOf(maxRadius)));
+                int maxRadiusWorld = plugin.cfg().getWorldMaxRadius(player.getWorld());
+                if (newRadius > maxRadiusWorld && !player.hasPermission("aegis.admin.bypass")) {
+                    plugin.eco().deposit(player, cost, type);
+                    plugin.msg().send(player, "level_up_fail_world_limit", Map.of("LIMIT", String.valueOf(maxRadiusWorld)));
                     plugin.effects().playError(player);
                     return;
                 }
 
-                // Apply Resize
                 plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 plot.setX1(newX1); plot.setX2(newX2);
                 plot.setZ1(newZ1); plot.setZ2(newZ2);
                 plugin.store().addPlot(plot);
             }
 
-            // 3. Fire Event & Apply Level
             int nextLvlFinal = nextLvl;
             PlotLevelUpEvent event = new PlotLevelUpEvent(plot, player, nextLvlFinal);
             Bukkit.getPluginManager().callEvent(event);
@@ -316,19 +300,15 @@ public class LevelingGUI {
             plot.setLevel(nextLvlFinal);
             plugin.store().setDirty(true);
 
-            // 4. Feedback
-            // Use codex placeholders here too
             plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvlFinal)));
-            
+
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
             plugin.effects().playConfirm(player);
 
-            // Refresh menu
             open(player, plot);
             return;
         }
 
-        // Preview clicks
         if (slot >= 19 && slot <= 25) {
             GUIManager.playClick(player);
         }
@@ -343,11 +323,10 @@ public class LevelingGUI {
         String titleKey;
         String loreKey;
 
-        // Determine which keys to look up based on state
         if (level < currentLvl) {
             mat = Material.EMERALD_BLOCK;
-            titleKey = "level_track_completed_name"; // in yaml: "Track Completed"
-            loreKey = "level_track_completed_lore"; // in yaml: list of strings
+            titleKey = "level_track_completed_name";
+            loreKey = "level_track_completed_lore";
         } else if (level == currentLvl) {
             mat = Material.GOLD_BLOCK;
             titleKey = "level_track_current_name";
@@ -356,40 +335,33 @@ public class LevelingGUI {
             mat = Material.REDSTONE_BLOCK;
             titleKey = "level_track_locked_name";
             loreKey = "level_track_locked_lore";
-            
+
             if (level == currentLvl + 1) {
-                // "Next" item special case
                 titleKey = "level_track_next_name";
                 loreKey = "level_track_next_lore";
             }
         }
 
-        // [THE FIX] Fetch Title using Codex
         String title = plugin.codex().tr(player, titleKey);
-        // Fallback if key missing (optional safety)
         if (title.equals(titleKey)) title = "§7Level " + level;
 
-        // [THE FIX] Fetch List Lore using Codex
-        // This automatically grabs the whole list from YAML, fixing the [Missing] bug.
         Map<String, String> vars = Map.of(
-            "level", String.valueOf(level),
-            "COST", plugin.eco().format(calculateCost(level), plugin.cfg().getLevelCostType())
+                "level", String.valueOf(level),
+                "COST", plugin.eco().format(calculateCost(level), plugin.cfg().getLevelCostType())
         );
         List<String> lore = plugin.codex().trList(player, loreKey, vars);
-        
-        // Add buff summary at the bottom
+
         lore.add("");
         lore.add(plugin.codex().tr(player, "level_track_buffs_title"));
         lore.addAll(formatBuffs(level));
 
-        // Add footer based on state
         lore.add("");
         if (level == currentLvl + 1 && level <= maxLvl) {
-             lore.add(plugin.codex().tr(player, "level_track_footer_next"));
+            lore.add(plugin.codex().tr(player, "level_track_footer_next"));
         } else if (level > currentLvl + 1) {
-             lore.add(plugin.codex().tr(player, "level_track_footer_progress"));
+            lore.add(plugin.codex().tr(player, "level_track_footer_progress"));
         } else if (level <= currentLvl) {
-             lore.add(plugin.codex().tr(player, "level_track_footer_mastered"));
+            lore.add(plugin.codex().tr(player, "level_track_footer_mastered"));
         }
 
         return GUIManager.createItem(mat, title, lore);

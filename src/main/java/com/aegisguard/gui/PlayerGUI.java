@@ -30,11 +30,13 @@ public class PlayerGUI {
     }
 
     public void open(Player player) {
-        // Title from Codex (per-style language file)
-        String title = GUIManager.safeText(
-                plugin.codex().tr(player, "menu_title"),
-                "§8AegisGuard Dashboard"
+        // ✅ Fixed: translates &-colors + clamps length + safe fallback
+        String title = plugin.gui().title(
+                player,
+                "menu_title",
+                "&b⚔ AegisGuard Menu"
         );
+
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 54, title);
 
         // --- 1. Glass Borders ---

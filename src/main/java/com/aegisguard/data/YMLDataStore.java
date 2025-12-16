@@ -12,8 +12,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -23,13 +21,9 @@ import java.util.stream.Collectors;
  * - Manages plot data using 'plots.yml'.
  * - Implements strict IDataStore contract for 1.2.x.
  *
- * HARDENING:
- *  ✅ getPlots(UUID) NEVER returns null (clean contract)
- *  ✅ Thread-safe owner cache (Set-backed) for Paper/Folia safety
- *  ✅ Fast overlap checks using chunk index (scales better on large servers)
- *  ✅ Defensive de-duplication by plotId
- *  ✅ Atomic-ish file writes (temp + replace) to reduce corruption risk
- *  ✅ savePlotSync implemented (interface alignment)
+ * Notes:
+ * - This datastore is synchronous by design (YamlConfiguration is not thread-safe).
+ * - savePlotSync simply aliases savePlot.
  */
 public class YMLDataStore implements IDataStore {
 
@@ -41,7 +35,6 @@ public class YMLDataStore implements IDataStore {
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
-    private final Object ioLock = new Object();
     private volatile boolean isDirty = false;
 
     public YMLDataStore(AegisGuard plugin) {
@@ -65,24 +58,13 @@ public class YMLDataStore implements IDataStore {
             } catch (IOException ignored) {}
         }
 
-        synchronized (ioLock) {
-            config = YamlConfiguration.loadConfiguration(file);
-        }
-
+        config = YamlConfiguration.loadConfiguration(file);
         int count = 0;
 
-        Set<String> keys;
-        synchronized (ioLock) {
-            keys = new HashSet<>(config.getKeys(false));
-        }
-
-        for (String key : keys) {
+        for (String key : config.getKeys(false)) {
             try {
                 UUID plotId = UUID.fromString(key);
-                ConfigurationSection sec;
-                synchronized (ioLock) {
-                    sec = config.getConfigurationSection(key);
-                }
+                ConfigurationSection sec = config.getConfigurationSection(key);
                 if (sec == null) continue;
 
                 String ownerStr = sec.getString("owner");
@@ -266,25 +248,22 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void save() {
-        synchronized (ioLock) {
-            if (config == null) config = YamlConfiguration.loadConfiguration(file);
+        if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-            // Clear file content (so deleted plots don't linger)
-            for (String k : new HashSet<>(config.getKeys(false))) {
-                config.set(k, null);
-            }
+        for (String k : new HashSet<>(config.getKeys(false))) {
+            config.set(k, null);
+        }
 
-            for (Plot plot : getAllPlots()) {
-                writePlotToConfig(plot);
-            }
+        for (Plot plot : getAllPlots()) {
+            writePlotToConfig(plot);
+        }
 
-            try {
-                saveConfigAtomically();
-                isDirty = false;
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not save plots.yml!");
-                e.printStackTrace();
-            }
+        try {
+            config.save(file);
+            isDirty = false;
+        } catch (IOException e) {
+            plugin.getLogger().severe("Could not save plots.yml!");
+            e.printStackTrace();
         }
     }
 
@@ -296,52 +275,28 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void savePlot(Plot plot) {
         if (plot == null) return;
+        if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-        synchronized (ioLock) {
-            if (config == null) config = YamlConfiguration.loadConfiguration(file);
-
-            writePlotToConfig(plot);
-            try {
-                saveConfigAtomically();
-                isDirty = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        writePlotToConfig(plot);
+        try {
+            config.save(file);
+            isDirty = false;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void savePlotSync(Plot plot) {
-        savePlot(plot); // YML save is already synchronous
-    }
-
-    private void saveConfigAtomically() throws IOException {
-        File parent = file.getParentFile();
-        if (parent != null && !parent.exists()) parent.mkdirs();
-
-        File tmp = new File(parent, file.getName() + ".tmp");
-
-        config.save(tmp);
-
-        try {
-            Files.move(tmp.toPath(), file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING,
-                    StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException atomicNotSupported) {
-            // Fallback if ATOMIC_MOVE not supported on this filesystem
-            Files.move(tmp.toPath(), file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-        }
+        savePlot(plot);
     }
 
     private void writePlotToConfig(Plot plot) {
         String key = plot.getPlotId().toString();
 
-        // Replace section cleanly
         config.set(key, null);
         ConfigurationSection sec = config.createSection(key);
 
-        // Core
         sec.set("owner", plot.getOwner().toString());
         sec.set("owner-name", plot.getOwnerName());
         sec.set("world", plot.getWorld());
@@ -350,13 +305,11 @@ public class YMLDataStore implements IDataStore {
         sec.set("x2", plot.getX2());
         sec.set("z2", plot.getZ2());
 
-        // Progression
         sec.set("level", plot.getLevel());
         sec.set("xp", plot.getXp());
         sec.set("last-upkeep", plot.getLastUpkeep());
         sec.set("max-members", plot.getMaxMembers());
 
-        // Visuals
         sec.set("spawn-location", plot.getSpawnLocationString());
         sec.set("welcome-message", plot.getWelcomeMessage());
         sec.set("farewell-message", plot.getFarewellMessage());
@@ -365,7 +318,6 @@ public class YMLDataStore implements IDataStore {
         sec.set("description", plot.getDescription());
         sec.set("custom-biome", plot.getCustomBiome());
 
-        // Market
         ConfigurationSection market = sec.createSection("market");
         market.set("is-for-sale", plot.isForSale());
         market.set("sale-price", plot.getSalePrice());
@@ -377,49 +329,40 @@ public class YMLDataStore implements IDataStore {
 
         sec.set("plot-status", plot.getPlotStatus());
 
-        // Auction
         ConfigurationSection auction = sec.createSection("auction");
         auction.set("current-bid", plot.getCurrentBid());
         UUID bidder = plot.getCurrentBidder();
         auction.set("current-bidder", bidder != null ? bidder.toString() : null);
 
-        // Flags
         ConfigurationSection flags = sec.createSection("flags");
         for (Map.Entry<String, Boolean> entry : plot.getFlags().entrySet()) {
             flags.set(entry.getKey(), entry.getValue());
         }
 
-        // Roles
         ConfigurationSection roles = sec.createSection("roles");
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
             roles.set(entry.getKey().toString(), entry.getValue());
         }
 
-        // Role flags blob
         String roleFlagsBlob = plot.serializeRoleFlags();
         sec.set("role-flags", roleFlagsBlob.isEmpty() ? null : roleFlagsBlob);
 
-        // Likes
         List<String> liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.toList());
         sec.set("liked-by", liked.isEmpty() ? null : liked);
 
-        // Bans
         List<String> banned = plot.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.toList());
         sec.set("banned", banned.isEmpty() ? null : banned);
 
-        // Cosmetics
         ConfigurationSection cos = sec.createSection("cosmetics");
         cos.set("border-particle", plot.getBorderParticle());
         cos.set("ambient-particle", plot.getAmbientParticle());
         cos.set("entry-effect", plot.getEntryEffect());
 
-        // Warp
         ConfigurationSection warp = sec.createSection("warp");
         warp.set("is-server-warp", plot.isServerWarp());
         warp.set("warp-name", plot.getWarpName());
         warp.set("warp-icon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
 
-        // Zones
         ConfigurationSection zonesSec = sec.createSection("zones");
         for (Zone zone : plot.getZones()) {
             ConfigurationSection z = zonesSec.createSection(zone.getName());
@@ -493,9 +436,7 @@ public class YMLDataStore implements IDataStore {
         Set<Plot> candidates = worldMap.get(key);
         if (candidates == null || candidates.isEmpty()) return null;
 
-        for (Plot p : candidates) {
-            if (p != null && p.isInside(loc)) return p;
-        }
+        for (Plot p : candidates) if (p != null && p.isInside(loc)) return p;
         return null;
     }
 
@@ -506,15 +447,11 @@ public class YMLDataStore implements IDataStore {
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(world);
         if (worldMap == null || worldMap.isEmpty()) return false;
 
-        int minX = Math.min(x1, x2);
-        int maxX = Math.max(x1, x2);
-        int minZ = Math.min(z1, z2);
-        int maxZ = Math.max(z1, z2);
+        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
 
-        int cMinX = minX >> 4;
-        int cMaxX = maxX >> 4;
-        int cMinZ = minZ >> 4;
-        int cMaxZ = maxZ >> 4;
+        int cMinX = minX >> 4, cMaxX = maxX >> 4;
+        int cMinZ = minZ >> 4, cMaxZ = maxZ >> 4;
 
         Set<Plot> candidates = new HashSet<>();
         for (int cx = cMinX; cx <= cMaxX; cx++) {
@@ -529,9 +466,7 @@ public class YMLDataStore implements IDataStore {
             if (!world.equals(p.getWorld())) continue;
             if (ignore != null && ignore.getPlotId().equals(p.getPlotId())) continue;
 
-            if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) {
-                return true;
-            }
+            if (minX <= p.getX2() && maxX >= p.getX1() && minZ <= p.getZ2() && maxZ >= p.getZ1()) return true;
         }
 
         return false;
@@ -546,7 +481,7 @@ public class YMLDataStore implements IDataStore {
         if (owner == null || c1 == null || c2 == null || c1.getWorld() == null || c2.getWorld() == null) return;
 
         UUID id = UUID.randomUUID();
-        String ownerName = Optional.ofNullable(Bukkit.getOfflinePlayer(owner).getName()).orElse("Unknown");
+        String ownerName = Bukkit.getOfflinePlayer(owner).getName();
 
         int x1 = Math.min(c1.getBlockX(), c2.getBlockX());
         int x2 = Math.max(c1.getBlockX(), c2.getBlockX());
@@ -563,6 +498,7 @@ public class YMLDataStore implements IDataStore {
         isDirty = true;
 
         removePlotByIdEverywhere(plot.getPlotId());
+
         cachePlot(plot);
         savePlot(plot);
     }
@@ -577,10 +513,7 @@ public class YMLDataStore implements IDataStore {
 
         if (set != null && !set.isEmpty()) {
             for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) {
-                    removed = p;
-                    break;
-                }
+                if (p != null && plotId.equals(p.getPlotId())) { removed = p; break; }
             }
             if (removed != null) set.remove(removed);
             if (set.isEmpty()) plotsByOwner.remove(owner);
@@ -588,15 +521,13 @@ public class YMLDataStore implements IDataStore {
 
         if (removed != null) deIndexPlot(removed);
 
-        synchronized (ioLock) {
-            if (config == null) config = YamlConfiguration.loadConfiguration(file);
-            config.set(plotId.toString(), null);
-            try {
-                saveConfigAtomically();
-                isDirty = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (config == null) config = YamlConfiguration.loadConfiguration(file);
+        config.set(plotId.toString(), null);
+        try {
+            config.save(file);
+            isDirty = false;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -607,39 +538,21 @@ public class YMLDataStore implements IDataStore {
 
         Set<Plot> set = plotsByOwner.remove(owner);
         if (set != null) {
-            synchronized (ioLock) {
-                if (config == null) config = YamlConfiguration.loadConfiguration(file);
+            if (config == null) config = YamlConfiguration.loadConfiguration(file);
 
-                for (Plot p : set) {
-                    if (p == null) continue;
-                    deIndexPlot(p);
-                    config.set(p.getPlotId().toString(), null);
-                }
+            for (Plot p : set) {
+                if (p == null) continue;
+                deIndexPlot(p);
+                config.set(p.getPlotId().toString(), null);
+            }
 
-                try {
-                    saveConfigAtomically();
-                    isDirty = false;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                config.save(file);
+                isDirty = false;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
-        if (plot == null || playerUUID == null) return;
-        isDirty = true;
-        plot.setRole(playerUUID, role);
-        savePlot(plot);
-    }
-
-    @Override
-    public void removePlayerRole(Plot plot, UUID playerUUID) {
-        if (plot == null || playerUUID == null) return;
-        isDirty = true;
-        plot.removeRole(playerUUID);
-        savePlot(plot);
     }
 
     @Override
@@ -654,12 +567,10 @@ public class YMLDataStore implements IDataStore {
             return;
         }
 
-        // Remove from old owner cache (remove all matching plotId just in case)
         if (oldOwner != null) {
             Set<Plot> oldSet = plotsByOwner.get(oldOwner);
             if (oldSet != null) {
-                UUID pid = plot.getPlotId();
-                oldSet.removeIf(p -> p != null && pid.equals(p.getPlotId()));
+                oldSet.remove(plot);
                 if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
             }
         }
@@ -678,6 +589,22 @@ public class YMLDataStore implements IDataStore {
         for (OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
         }
+    }
+
+    @Override
+    public void addPlayerRole(Plot plot, UUID playerUUID, String role) {
+        if (plot == null || playerUUID == null) return;
+        isDirty = true;
+        plot.setRole(playerUUID, role);
+        savePlot(plot);
+    }
+
+    @Override
+    public void removePlayerRole(Plot plot, UUID playerUUID) {
+        if (plot == null || playerUUID == null) return;
+        isDirty = true;
+        plot.removeRole(playerUUID);
+        savePlot(plot);
     }
 
     // --- Indexing Helpers ---
@@ -739,20 +666,12 @@ public class YMLDataStore implements IDataStore {
             if (found != null) {
                 set.remove(found);
                 deIndexPlot(found);
-                if (set.isEmpty()) plotsByOwner.remove(entry.getKey());
             }
         }
     }
 
-    @Override
-    public boolean isDirty() {
-        return isDirty;
-    }
-
-    @Override
-    public void setDirty(boolean dirty) {
-        this.isDirty = dirty;
-    }
+    @Override public boolean isDirty() { return isDirty; }
+    @Override public void setDirty(boolean dirty) { this.isDirty = dirty; }
 
     // No-ops for SQL-specific features
     @Override public void logWildernessBlock(Location loc, String o, String n, UUID p) {}
@@ -769,7 +688,6 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void setRoleFlagState(Plot plot, String roleName, String flagKey, TriState state) {
         if (plot == null) return;
-
         isDirty = true;
         plot.setRoleFlagState(roleName, flagKey, state == null ? TriState.INHERIT : state);
         savePlot(plot);
@@ -777,6 +695,8 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void shutdown() {
-        try { saveSync(); } catch (Throwable ignored) {}
+        try {
+            if (isDirty) saveSync();
+        } catch (Throwable ignored) {}
     }
 }

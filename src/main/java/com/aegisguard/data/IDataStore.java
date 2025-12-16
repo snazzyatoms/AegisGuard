@@ -1,56 +1,82 @@
-package com.aegisguard.data;
+// Adjust package to match your project structure:
+package com.aegisguard.storage;
 
-import com.aegisguard.flags.TriState;
-import org.bukkit.Location;
+import com.aegisguard.data.Plot;
+import com.aegisguard.data.Zone;
+import com.aegisguard.data.PlayerData;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
+/**
+ * IDataStore = storage contract ONLY.
+ * No SQL/YAML implementation logic belongs in this interface.
+ *
+ * Implementations:
+ *  - SqlDataStore (Hikari/MySQL/SQLite)
+ *  - YamlDataStore (files)
+ *
+ * Folia-safe note:
+ * All methods are async-friendly via CompletableFuture so implementations can do I/O off-thread.
+ */
 public interface IDataStore {
 
-    // lifecycle
-    void load();
-    void save();
-    void saveSync();
+    enum Type {
+        SQL,
+        YAML
+    }
 
-    void savePlot(Plot plot);
-    void savePlotSync(Plot plot);
+    Type getType();
 
-    // plots
-    void createPlot(UUID owner, Location c1, Location c2);
-    void addPlot(Plot plot);
-    void removePlot(UUID owner, UUID plotId);
-    void removeAllPlots(UUID owner);
-    void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
+    /**
+     * Initialize connections / load files / prepare schema, etc.
+     */
+    CompletableFuture<Void> init();
 
-    // roles
-    void addPlayerRole(Plot plot, UUID uuid, String role);
-    void removePlayerRole(Plot plot, UUID uuid);
+    /**
+     * Flush pending writes and close resources.
+     */
+    CompletableFuture<Void> shutdown();
 
-    // banned players cleanup
-    void removeBannedPlots();
+    // ------------------------------------------------------------
+    // Plots
+    // ------------------------------------------------------------
 
-    // role flag overrides
-    TriState getRoleFlagState(Plot plot, String roleId, String flagKey);
-    void setRoleFlagState(Plot plot, String roleId, String flagKey, TriState state);
+    CompletableFuture<Optional<Plot>> loadPlot(String plotId);
 
-    // wilderness logging + revert
-    void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID);
-    void revertWildernessBlocks(long timestamp, int limit);
+    CompletableFuture<List<Plot>> loadPlotsByOwner(UUID owner);
 
-    // accessors
-    boolean isDirty();
-    void setDirty(boolean dirty);
+    CompletableFuture<List<Plot>> loadAllPlots();
 
-    List<Plot> getPlots(UUID owner);
-    Plot getPlot(UUID owner, UUID plotId);
+    CompletableFuture<Void> savePlot(Plot plot);
 
-    Collection<Plot> getAllPlots();
-    Collection<Plot> getPlotsForSale();
-    Collection<Plot> getPlotsForAuction();
+    CompletableFuture<Void> deletePlot(String plotId);
 
-    Plot getPlotAt(Location loc);
+    // ------------------------------------------------------------
+    // Zones (sub-plots / rentals / server zones if you model them here)
+    // ------------------------------------------------------------
 
-    boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2);
+    CompletableFuture<List<Zone>> loadZonesForPlot(String plotId);
+
+    CompletableFuture<Void> saveZone(Zone zone);
+
+    CompletableFuture<Void> deleteZone(String zoneId);
+
+    // ------------------------------------------------------------
+    // Player Data (claim blocks, preferences, language, sound toggles, etc.)
+    // ------------------------------------------------------------
+
+    CompletableFuture<Optional<PlayerData>> loadPlayer(UUID playerId);
+
+    CompletableFuture<Void> savePlayer(PlayerData data);
+
+    // ------------------------------------------------------------
+    // Optional: convenience helpers
+    // ------------------------------------------------------------
+
+    default CompletableFuture<Boolean> plotExists(String plotId) {
+        return loadPlot(plotId).thenApply(Optional::isPresent);
+    }
 }

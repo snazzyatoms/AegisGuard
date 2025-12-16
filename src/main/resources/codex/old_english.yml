@@ -85,10 +85,13 @@ upkeep_paid: '&e💰 Tribute of &6{AMOUNT}&e hath been rendered for thy plot''s 
 upkeep_failed_warning: '&c❌ Warning! Thy coffers are empty. Tribute for thy plot''s upkeep is due.'
 plot_expired_upkeep: '&c❌ Thy plot hath been reclaimed by the wilds for lack of tribute!'
 plot-is-locked: '&c❌ This dominion is locked pending tribute and cannot be altered.'
+plot_is_locked: '&c❌ This dominion is locked pending tribute and cannot be altered.' # alias
 
 # --- Auctions ---
-plot-now-auctioned: '&e⚠ Thy dominion is now up for public auction!'
 auction-gui-title: '&6Dominion Auctions'
+auction_gui_title: '&6Dominion Auctions' # alias
+
+plot-now-auctioned: '&e⚠ Thy dominion is now up for public auction!'
 auction-bid-own: '&cThou canst not bid upon thine own expired dominion.'
 auction-already-highest: '&eThou art already the highest bidder.'
 auction-outbid: '&e{PLAYER} hath outbid thee for a dominion!'
@@ -104,6 +107,8 @@ auction_item_lore:
 
 # --- Market ---
 market-gui-title: '&2Dominion Marketplace'
+market_gui_title: '&2Dominion Marketplace' # alias
+
 market-teleport: '&eSpiriting thee to {PLAYER}''s plot...'
 market-buy-own: '&cThou canst not purchase thine own dominion.'
 market-buy-success: '&a✔ Thou hast purchased {PLAYER}''s dominion for &6{PRICE}&a!'
@@ -138,8 +143,8 @@ expansion_approved: ''
 expansion_denied: ''
 
 # Admin request result keys (primary visible lines)
-admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by Admin.'
-admin_request_denied: '&c❌ Alas, thy petition hath been denied by Admin.'
+admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
+admin_request_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
 expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
 expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
 expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'
@@ -212,6 +217,10 @@ welcome-set: '&a✔ Thy plot''s welcome message hath been writ.'
 welcome-cleared: '&e✔ Thy plot''s welcome message hath been erased.'
 farewell-set: '&a✔ Thy plot''s farewell message hath been writ.'
 farewell-cleared: '&e✔ Thy plot''s farewell message hath been erased.'
+
+# Welcome/Farewell display (listener output)
+plot_welcome_show: '&a✦ {OWNER}&a bids thee welcome: &f{MESSAGE}'
+plot_farewell_show: '&e✦ {OWNER}&e bids thee farewell: &f{MESSAGE}'
 
 plot_created: '&a✔ Verily, thy land is now shielded under Aegis Guard.'
 plot_unclaimed: '&e⚠ Thy claim hath been released unto the wilds.'
@@ -425,21 +434,39 @@ like_own_plot: '&cThou cannot bestow favor upon thine own land.'
 like_disabled: '&cSocial standing is ignored in this realm.'
 
 # =========================================================
-# ✅ NEW: Claim Blocks / Domain Registry (Old English)
+# ✅ Claim Blocks / Domain Registry (Old English) (v1.2.4+)
 # =========================================================
 ledger_title: '&6📜 Domain Registry'
 ledger_available: '&7Available: &a'
 ledger_used: '&7Used: &c'
 ledger_total: '&7Total Capacity: &e'
 
+# Preferred system keys (match messages.yml fallback naming)
+claim_blocks_balance: '&e⛏ Thy Claim Blocks: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Thou hast earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Thou hast spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Thou lackest Claim Blocks! Need &6{AMOUNT}&c more.'
+claim_blocks_first_claim_limit: '&c❌ Thy first dominion is bound by decree: max area &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+
+# Legacy claim-block keys (kept so older code paths still print something)
 claim_blocks_not_enough: '&c❌ Thou lackest &e{NEEDED}&c more claim blocks to bind this land.'
 first_claim_limit_reached: '&c❌ Thy first dominion may not exceed &e{LIMIT}&c blocks. (Thou marked &e{AREA}&c)'
 claim_blocks_earned_playtime: '&a✔ Thy wanderings have earned thee &e{AMOUNT}&a claim blocks. Total: &e{TOTAL}&a.'
 claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
 
-# --- Plot Status GUI ---
-plot_status_button_title: '&b📜 Ledger of Dominion Status'
+# --- External Protection Compatibility (v1.2.4+) ---
+claim_denied_external: '&c⛔ The land is claimed by &f{PLUGIN}&c. AegisGuard shall not contest it.'
+claim_denied_external_generic: '&c⛔ Claim denied: protected by another realm''s decree.'
 
+# --- Unstuck (v1.2.4+) ---
+unstuck_warmup: '&e⏳ The rite begins... deliverance in &6{SECONDS}&e seconds.'
+unstuck_cancelled: '&c❌ The rite is broken. Thou hast moved.'
+unstuck_on_cooldown: '&c❌ Patience. Thou must wait &6{SECONDS}&c seconds.'
+unstuck_success: '&a✔ Delivered unto safer ground.'
+unstuck_failed: '&c❌ The rite failed. No safe ground was found.'
+
+# --- Plot Status GUI ---
 plot_status_gui_title: '&b⚔ Ledger of Dominion Status'
 plot_status_header_title: '&6Tale of the Land'
 plot_status_blessings_title: '&dActive Blessings & Boons'

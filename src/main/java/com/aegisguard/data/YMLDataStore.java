@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * YMLDataStore (v1.2.2+)
+ * YMLDataStore (v1.2.4 hardened)
  * - Manages plot data using 'plots.yml'.
  * - Strict IDataStore contract for 1.2.x.
  *
@@ -30,6 +29,7 @@ import java.util.stream.Collectors;
  *  ✅ Chunk index for fast lookups
  *  ✅ Defensive de-duplication by plotId
  *  ✅ Atomic-ish disk writes (temp + move) to reduce corruption risk
+ *  ✅ Transfer safety: old owner cannot retain privileges (role cleanup + cache purge)
  */
 public class YMLDataStore implements IDataStore {
 
@@ -75,7 +75,10 @@ public class YMLDataStore implements IDataStore {
                     ConfigurationSection sec = config.getConfigurationSection(key);
                     if (sec == null) continue;
 
-                    UUID ownerId = UUID.fromString(sec.getString("owner"));
+                    String ownerStr = sec.getString("owner");
+                    if (ownerStr == null || ownerStr.isEmpty()) continue;
+
+                    UUID ownerId = UUID.fromString(ownerStr);
                     String ownerName = sec.getString("owner-name", "Unknown");
                     String worldName = sec.getString("world");
                     if (worldName == null || worldName.isEmpty()) continue;
@@ -100,6 +103,7 @@ public class YMLDataStore implements IDataStore {
                     plot.setDescription(sec.getString("description"));
                     plot.setCustomBiome(sec.getString("custom-biome"));
 
+                    // Market
                     if (sec.isConfigurationSection("market")) {
                         ConfigurationSection market = sec.getConfigurationSection("market");
                         if (market != null) {
@@ -119,6 +123,7 @@ public class YMLDataStore implements IDataStore {
                             }
                         }
                     } else {
+                        // legacy keys fallback
                         if (sec.getBoolean("market.is-for-sale", false)) {
                             plot.setForSale(true, sec.getDouble("market.sale-price", 0.0));
                         }
@@ -126,6 +131,7 @@ public class YMLDataStore implements IDataStore {
 
                     plot.setPlotStatus(sec.getString("plot-status", "ACTIVE"));
 
+                    // Auction
                     if (sec.isConfigurationSection("auction")) {
                         ConfigurationSection auction = sec.getConfigurationSection("auction");
                         if (auction != null) {
@@ -139,6 +145,7 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    // Flags
                     if (sec.isConfigurationSection("flags")) {
                         ConfigurationSection flags = sec.getConfigurationSection("flags");
                         if (flags != null) {
@@ -148,12 +155,16 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    // Roles (skip owner entry if present)
                     if (sec.isConfigurationSection("roles")) {
                         ConfigurationSection roles = sec.getConfigurationSection("roles");
                         if (roles != null) {
                             for (String pUuid : roles.getKeys(false)) {
-                                try { plot.setRole(UUID.fromString(pUuid), roles.getString(pUuid)); }
-                                catch (Exception ignored) {}
+                                try {
+                                    UUID u = UUID.fromString(pUuid);
+                                    if (u.equals(ownerId)) continue; // owner should not be a role entry
+                                    plot.setRole(u, roles.getString(pUuid));
+                                } catch (Exception ignored) {}
                             }
                         }
                     }
@@ -173,6 +184,7 @@ public class YMLDataStore implements IDataStore {
                         catch (IllegalArgumentException ignored) {}
                     }
 
+                    // Cosmetics
                     if (sec.isConfigurationSection("cosmetics")) {
                         ConfigurationSection cos = sec.getConfigurationSection("cosmetics");
                         if (cos != null) {
@@ -182,6 +194,7 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    // Warp
                     if (sec.isConfigurationSection("warp")) {
                         ConfigurationSection warp = sec.getConfigurationSection("warp");
                         if (warp != null) {
@@ -196,6 +209,7 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    // Zones
                     if (sec.isConfigurationSection("zones")) {
                         ConfigurationSection zonesSec = sec.getConfigurationSection("zones");
                         if (zonesSec != null) {
@@ -228,6 +242,7 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    // Cache with dedupe safety
                     cachePlot(plot);
                     count++;
 
@@ -284,6 +299,9 @@ public class YMLDataStore implements IDataStore {
 
     private void safeSaveConfigToDisk() {
         try {
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+
             File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
             config.save(tmp);
             Files.move(tmp.toPath(), file.toPath(),
@@ -344,8 +362,12 @@ public class YMLDataStore implements IDataStore {
             flags.set(entry.getKey(), entry.getValue());
         }
 
+        // Roles: skip owner entry if it somehow exists
         ConfigurationSection roles = sec.createSection("roles");
+        UUID ownerId = plot.getOwner();
         for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
+            if (entry.getKey() == null) continue;
+            if (ownerId != null && ownerId.equals(entry.getKey())) continue;
             roles.set(entry.getKey().toString(), entry.getValue());
         }
 
@@ -486,6 +508,8 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void createPlot(UUID owner, Location c1, Location c2) {
+        if (owner == null || c1 == null || c2 == null || c1.getWorld() == null || c2.getWorld() == null) return;
+
         UUID id = UUID.randomUUID();
         String ownerName = Bukkit.getOfflinePlayer(owner).getName();
 
@@ -510,24 +534,11 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public void removePlot(UUID owner, UUID plotId) {
-        if (owner == null || plotId == null) return;
+        if (plotId == null) return;
         isDirty = true;
 
-        Plot removed = null;
-        Set<Plot> set = plotsByOwner.get(owner);
-
-        if (set != null && !set.isEmpty()) {
-            for (Plot p : set) {
-                if (p != null && plotId.equals(p.getPlotId())) {
-                    removed = p;
-                    break;
-                }
-            }
-            if (removed != null) set.remove(removed);
-            if (set.isEmpty()) plotsByOwner.remove(owner);
-        }
-
-        if (removed != null) deIndexPlot(removed);
+        // Ghost-killer: remove plotId from ANY cached owner set + chunk index
+        removePlotByIdEverywhere(plotId);
 
         synchronized (ioLock) {
             if (config == null) config = YamlConfiguration.loadConfiguration(file);
@@ -580,26 +591,27 @@ public class YMLDataStore implements IDataStore {
         if (plot == null || newOwner == null) return;
         isDirty = true;
 
+        UUID plotId = plot.getPlotId();
         UUID oldOwner = plot.getOwner();
+
         if (oldOwner != null && oldOwner.equals(newOwner)) {
             plot.setOwnerName(newOwnerName);
             savePlotSync(plot);
             return;
         }
 
-        if (oldOwner != null) {
-            Set<Plot> oldSet = plotsByOwner.get(oldOwner);
-            if (oldSet != null) {
-                oldSet.remove(plot);
-                if (oldSet.isEmpty()) plotsByOwner.remove(oldOwner);
-            }
-        }
+        // Hard purge any cached copies first (prevents owner ghosts)
+        removePlotByIdEverywhere(plotId);
 
-        deIndexPlot(plot);
-
+        // Transfer owner
         plot.internalSetOwner(newOwner, newOwnerName);
 
-        removePlotByIdEverywhere(plot.getPlotId());
+        // Ensure old owner cannot retain permissions via a leftover role entry
+        if (oldOwner != null) {
+            try { plot.removeRole(oldOwner); } catch (Throwable ignored) {}
+        }
+
+        // Re-cache under new owner + re-index
         cachePlot(plot);
 
         savePlotSync(plot);
@@ -613,6 +625,9 @@ public class YMLDataStore implements IDataStore {
     }
 
     private void cachePlot(Plot plot) {
+        // Safety net: always dedupe by plotId before indexing
+        removePlotByIdEverywhere(plot.getPlotId());
+
         Set<Plot> ownerSet = plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet());
         ownerSet.add(plot);
 
@@ -632,6 +647,8 @@ public class YMLDataStore implements IDataStore {
     }
 
     private void deIndexPlot(Plot plot) {
+        if (plot == null) return;
+
         String w = plot.getWorld();
         Map<String, Set<Plot>> worldMap = plotsByChunk.get(w);
         if (worldMap == null) return;
@@ -675,6 +692,10 @@ public class YMLDataStore implements IDataStore {
             }
         }
     }
+
+    // ==============================================================
+    // --- MISC / CONTRACT ---
+    // ==============================================================
 
     @Override
     public boolean isDirty() {

@@ -11,12 +11,18 @@ import org.bukkit.Location;
 public class WorldGuardHook implements ProtectionHook {
 
     private final AegisGuard plugin;
+    private final int priority;
     private boolean active = false;
 
     public WorldGuardHook(AegisGuard plugin) {
+        this(plugin, 100);
+    }
+
+    public WorldGuardHook(AegisGuard plugin, int priority) {
         this.plugin = plugin;
+        this.priority = priority;
+
         try {
-            // Ensure classes exist
             Class.forName("com.sk89q.worldguard.WorldGuard");
             active = true;
         } catch (Throwable t) {
@@ -30,6 +36,11 @@ public class WorldGuardHook implements ProtectionHook {
     }
 
     @Override
+    public int priority() {
+        return priority;
+    }
+
+    @Override
     public boolean isActive() {
         return active;
     }
@@ -40,24 +51,22 @@ public class WorldGuardHook implements ProtectionHook {
 
         try {
             var container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            if (container == null) return false;
+
             var query = container.createQuery();
             ApplicableRegionSet set = query.getApplicableRegions(BukkitAdapter.adapt(location));
-
             if (set == null) return false;
 
             for (ProtectedRegion r : set) {
                 if (r == null) continue;
 
-                // Ignore the global region (WorldGuard uses __global__).
                 String id = r.getId();
                 if (id != null && id.equalsIgnoreCase("__global__")) continue;
 
-                // Any non-global region counts as "protected elsewhere".
-                return true;
+                return true; // any non-global region
             }
         } catch (Throwable t) {
-            // If WG API hiccups, fail open (don’t block claims) to avoid weird false positives.
-            return false;
+            return false; // fail-open
         }
 
         return false;

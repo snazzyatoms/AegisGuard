@@ -24,7 +24,7 @@ import java.util.Map;
  * AdminPlotListGUI
  * - A paginated GUI for admins to view and manage all plots.
  * - Fully localized for language switching.
- * - [Fix] Added ChatColor translation to fix "weird lettering" (raw & codes).
+ * - ✅ Title fixed via GUIManager.title() (translates & colors + clamps)
  */
 public class AdminPlotListGUI {
 
@@ -51,28 +51,16 @@ public class AdminPlotListGUI {
 
     public void open(Player player, int page) {
         List<Plot> allPlots = new ArrayList<>(plugin.store().getAllPlots());
-        // Sort by Owner Name A-Z
         allPlots.sort(Comparator.comparing(Plot::getOwnerName, String.CASE_INSENSITIVE_ORDER));
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
-        if (page < 0) {
-            page = 0;
-        }
-        if (page >= maxPages && maxPages > 0) {
-            page = maxPages - 1;
-        } else if (maxPages == 0) {
-            page = 0;
-        }
+        if (page < 0) page = 0;
+        if (page >= maxPages && maxPages > 0) page = maxPages - 1;
+        else if (maxPages == 0) page = 0;
 
-        String baseTitle = plugin.codex().tr(player, "admin_plot_list_title");
-        if (baseTitle == null || baseTitle.isEmpty()) {
-            baseTitle = "&cAll Plots";
-        }
-
-        // [Fix] Colorize the title so "&c" becomes red
-        String titleRaw = GUIManager.safeText(baseTitle, "&cAll Plots")
-                + " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
-        String title = color(titleRaw);
+        // ✅ Title fix: translate &-colors + clamp + preserve page suffix
+        String suffix = " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        String title = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry", suffix);
 
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
@@ -91,24 +79,15 @@ public class AdminPlotListGUI {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                try {
-                    meta.setOwningPlayer(owner);
-                } catch (Exception ignored) {
-                    // Offline lookup may fail; fallback still shows head
-                }
+                try { meta.setOwningPlayer(owner); } catch (Exception ignored) {}
 
                 String ownerName = plot.getOwnerName() != null ? plot.getOwnerName() : "Unknown";
 
-                // Localized display name: "admin_plot_item_name" with {OWNER}
                 String nameFormat = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
-                if (nameFormat == null || nameFormat.isEmpty()) {
-                    nameFormat = "&bOwner: &f" + ownerName;
-                }
-                // [Fix] Colorize the name format
+                if (nameFormat == null || nameFormat.isEmpty()) nameFormat = "&bOwner: &f" + ownerName;
                 meta.setDisplayName(color(nameFormat));
 
                 List<String> lore = new ArrayList<>();
-                // [Fix] Colorize static lines too
                 lore.add(color("&7ID: &e" + plot.getPlotId().toString().substring(0, 8)));
                 lore.add(color("&7World: &f" + plot.getWorld()));
                 lore.add(color("&7Bounds: &a" + plot.getX1() + ", " + plot.getZ1()));
@@ -116,22 +95,15 @@ public class AdminPlotListGUI {
 
                 if (plot.isServerZone()) {
                     String zoneTag = plugin.codex().tr(player, "admin_server_zone_tag");
-                    if (zoneTag == null || zoneTag.isEmpty()) {
-                        zoneTag = "&c[SERVER ZONE]";
-                    }
-                    // [Fix] Colorize zone tag
+                    if (zoneTag == null || zoneTag.isEmpty()) zoneTag = "&c[SERVER ZONE]";
                     lore.add(color(zoneTag));
                 }
 
                 lore.add(" ");
 
-                // Localized action hints (e.g. "Left-click: Teleport, Right-click: Delete")
                 List<String> actions = plugin.codex().list(player, "admin_plot_actions");
                 if (actions != null && !actions.isEmpty()) {
-                    for (String line : actions) {
-                        // [Fix] Colorize every line of the actions lore
-                        lore.add(color(line));
-                    }
+                    for (String line : actions) lore.add(color(line));
                 }
 
                 meta.setLore(lore);
@@ -187,7 +159,6 @@ public class AdminPlotListGUI {
         int slot = e.getSlot();
         int currentPage = holder.getPage();
 
-        // Navigation
         if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
             open(player, currentPage - 1);
             return;
@@ -205,7 +176,6 @@ public class AdminPlotListGUI {
             return;
         }
 
-        // Listing actions
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
             if (plotIndex >= holder.getPlots().size()) return;
@@ -218,13 +188,12 @@ public class AdminPlotListGUI {
             }
 
             if (e.getClick().isLeftClick()) {
-                // Teleport to plot center
                 Location loc = plot.getCenter(plugin);
                 if (loc != null && loc.getWorld() != null) {
                     int y = loc.getWorld().getHighestBlockYAt(loc);
                     loc.setY(y + 1);
 
-                    TeleportUtil.safeTeleport(plugin, player, loc); // Folia/Paper safe
+                    TeleportUtil.safeTeleport(plugin, player, loc);
                     plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                     player.closeInventory();
@@ -232,18 +201,14 @@ public class AdminPlotListGUI {
                     player.sendMessage(color("&cInvalid world or location."));
                 }
             } else if (e.getClick().isRightClick()) {
-                // Delete plot
                 plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
                 plugin.effects().playUnclaim(player);
-                open(player, currentPage); // Refresh list
+                open(player, currentPage);
             }
         }
     }
 
-    /**
-     * Helper to translate color codes (e.g. &a -> Green)
-     */
     private String color(String s) {
         if (s == null) return "";
         return ChatColor.translateAlternateColorCodes('&', s);

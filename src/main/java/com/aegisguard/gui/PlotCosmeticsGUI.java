@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,6 +24,8 @@ import java.util.Map;
  * PlotCosmeticsGUI
  * - Allows players to buy and apply particle borders.
  * - Fully localized via Codex.
+ *
+ * ✅ Title fix: translate & colors + safe fallback + clamp length
  */
 public class PlotCosmeticsGUI {
 
@@ -47,8 +50,12 @@ public class PlotCosmeticsGUI {
             return;
         }
 
-        String baseTitle = plugin.codex().tr(player, "cosmetics_gui_title");
-        String title = GUIManager.safeText(baseTitle, "§dPlot Cosmetics");
+        // ✅ Title fix (Codex key -> colored -> clamped)
+        String rawTitle = (plugin.codex() != null)
+                ? plugin.codex().tr(player, "cosmetics_gui_title")
+                : null;
+
+        String title = formatTitle(rawTitle, "&d✦ Plot Cosmetics ✦");
         Inventory inv = Bukkit.createInventory(new CosmeticsHolder(plot), 54, title);
 
         // Fill Footer
@@ -57,7 +64,7 @@ public class PlotCosmeticsGUI {
 
         ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles");
         String currentBorder = plot.getBorderParticle();
-        
+
         // Slot 0: Reset/None
         String resetName = plugin.codex().tr(player, "cosmetics_border_none");
         if (resetName == null || resetName.isEmpty()) resetName = "§cDisable Border";
@@ -134,18 +141,18 @@ public class PlotCosmeticsGUI {
                 }
 
                 ItemStack icon = GUIManager.createItem(material, displayName, lore);
-                
+
                 // Store Key in NBT
                 ItemMeta meta = icon.getItemMeta();
                 if (meta != null) {
                     meta.getPersistentDataContainer().set(KEY_PARTICLE_ID, PersistentDataType.STRING, key);
                     icon.setItemMeta(meta);
                 }
-                
+
                 inv.setItem(slot++, icon);
             }
         }
-        
+
         // Navigation
         String backName = plugin.codex().tr(player, "button_back");
         if (backName == null || backName.isEmpty()) backName = "§fBack";
@@ -174,7 +181,6 @@ public class PlotCosmeticsGUI {
         }
 
         if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
-            // Chat/system text: still MessagesUtil
             plugin.msg().send(player, "no_perm");
             player.closeInventory();
             return;
@@ -183,7 +189,7 @@ public class PlotCosmeticsGUI {
         int slot = e.getSlot();
 
         // Nav
-        if (slot == 48) { 
+        if (slot == 48) {
             plugin.gui().flags().open(player, plot);
             return;
         }
@@ -197,7 +203,7 @@ public class PlotCosmeticsGUI {
             if (plot.getBorderParticle() != null) {
                 plot.setBorderParticle(null);
                 plugin.store().setDirty(true);
-                plugin.msg().send(player, "cosmetics_removed"); // chat key
+                plugin.msg().send(player, "cosmetics_removed");
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
             }
@@ -211,18 +217,17 @@ public class PlotCosmeticsGUI {
 
         String key = meta.getPersistentDataContainer().get(KEY_PARTICLE_ID, PersistentDataType.STRING);
         ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles." + key);
-        
+
         if (section != null) {
             String particleName = section.getString("particle");
-            
-            // Check if already selected
+
             if (particleName != null && particleName.equalsIgnoreCase(plot.getBorderParticle())) {
-                player.sendMessage(plugin.msg().get(player, "cosmetics_already_active")); // chat key
+                player.sendMessage(plugin.msg().get(player, "cosmetics_already_active"));
                 return;
             }
 
             double price = section.getDouble("price", 0.0);
-            
+
             if (price > 0 && !plugin.isAdmin(player)) {
                 if (!plugin.eco().withdraw(player, price, CurrencyType.VAULT)) {
                     plugin.msg().send(
@@ -233,13 +238,24 @@ public class PlotCosmeticsGUI {
                     plugin.effects().playError(player);
                     return;
                 }
-                plugin.msg().send(player, "cosmetic_purchased"); // chat key
+                plugin.msg().send(player, "cosmetic_purchased");
             }
 
             plot.setBorderParticle(particleName);
             plugin.store().setDirty(true);
             plugin.effects().playConfirm(player);
-            open(player, plot); 
+            open(player, plot);
         }
+    }
+
+    // ✅ Central title cleanup for THIS GUI
+    private String formatTitle(String raw, String fallback) {
+        String t = GUIManager.safeText(raw, fallback);
+        t = ChatColor.translateAlternateColorCodes('&', t);
+
+        if (t.length() > 32) t = t.substring(0, 32);
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        return t;
     }
 }

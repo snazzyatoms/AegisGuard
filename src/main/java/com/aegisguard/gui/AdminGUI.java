@@ -2,6 +2,7 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -34,15 +35,18 @@ public class AdminGUI {
             return;
         }
 
-        String rawTitle = plugin.codex().tr(player, "admin_menu_title");
-        String title = GUIManager.safeText(rawTitle, "§c§lHigh Guardian Tools");
+        // ✅ Title fix: translate & colors + safe fallback + clamp length
+        String rawTitle = (plugin.codex() != null)
+                ? plugin.codex().tr(player, "admin_menu_title")
+                : null;
+
+        String title = formatTitle(rawTitle, "&c&l⚔ High Guardian Tools ⚔");
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 45; i++) inv.setItem(i, filler);
 
         // --- SETTINGS TOGGLES ---
-        // Each toggle uses dynamic keys: "button_admin_auto_remove", "admin_auto_remove_lore", etc.
         addToggle(player, inv, 10, "admin.auto_remove_banned", "button_admin_auto_remove", "admin_auto_remove_lore", Material.TNT, false);
         addToggle(player, inv, 11, "admin.bypass_claim_limit", "button_admin_bypass_limit", "admin_bypass_limit_lore", Material.NETHER_STAR, false);
         addToggle(player, inv, 12, "admin.broadcast_admin_actions", "button_admin_broadcast", "admin_broadcast_lore", Material.BEACON, false);
@@ -60,7 +64,7 @@ public class AdminGUI {
         inv.setItem(29, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
                 plugin.codex().tr(player, "admin_plot_list_title"),
-                List.of("§7View/TP to any plot.") // can be codex-ified later with admin_plot_list_lore
+                List.of("§7View/TP to any plot.")
         ));
 
         String diagName = GUIManager.safeText(
@@ -106,7 +110,6 @@ public class AdminGUI {
         if (e.getCurrentItem() == null) return;
 
         switch (e.getSlot()) {
-            // Toggles
             case 10:
                 flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false);
                 open(player);
@@ -132,7 +135,6 @@ public class AdminGUI {
                 open(player);
                 break;
 
-            // Tools
             case 28:
                 plugin.gui().expansionAdmin().open(player);
                 plugin.effects().playMenuFlip(player);
@@ -148,7 +150,7 @@ public class AdminGUI {
                 plugin.effects().playMenuFlip(player);
                 break;
 
-            case 31: // Reload
+            case 31:
                 plugin.msg().send(player, "admin_reloading");
                 plugin.runGlobalAsync(() -> {
                     plugin.cfg().reload();
@@ -178,7 +180,7 @@ public class AdminGUI {
         boolean val = plugin.getConfig().getBoolean(path, def);
 
         String name = plugin.codex().tr(p, nameKey);
-        if (name == null) name = "Setting"; // Fallback
+        if (name == null) name = "Setting";
 
         String status = val ? "§aON" : "§cOFF";
         Material icon = val ? mat : Material.GRAY_DYE;
@@ -197,8 +199,21 @@ public class AdminGUI {
         plugin.saveConfig();
         plugin.cfg().reload();
 
-        // Optional feedback message if keys provided
         if (next && msgOn != null) plugin.msg().send(p, msgOn);
         if (!next && msgOff != null) plugin.msg().send(p, msgOff);
+    }
+
+    // ✅ Central title cleanup for THIS GUI (we'll reuse this pattern in each GUI file)
+    private String formatTitle(String raw, String fallback) {
+        String t = GUIManager.safeText(raw, fallback);
+        t = ChatColor.translateAlternateColorCodes('&', t);
+
+        // Vanilla inventory titles are short; clamp to avoid IllegalArgumentException
+        if (t.length() > 32) t = t.substring(0, 32);
+
+        // If we clipped right after a section sign, remove it
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        return t;
     }
 }

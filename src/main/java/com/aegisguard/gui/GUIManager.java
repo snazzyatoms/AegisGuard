@@ -19,9 +19,6 @@ public class GUIManager {
 
     private final AegisGuard plugin;
 
-    // Vanilla client + Bukkit safety (string titles can still explode if too long)
-    private static final int MAX_GUI_TITLE_LEN = 32;
-
     // --- SUB-MENUS ---
     private final PlayerGUI playerGUI;
     private final SettingsGUI settingsGUI;
@@ -148,6 +145,31 @@ public class GUIManager {
     }
 
     /**
+     * ✅ NEW: Safe inventory title formatter
+     * - translates & color codes
+     * - safe fallback if missing
+     * - clamps length to avoid client/title glitches
+     *
+     * Use in GUIs:
+     * String title = plugin.gui().title(player, "codex_gui_title", "&b✦ The Guardian Codex ✦");
+     */
+    public String title(Player player, String key, String fallback) {
+        String raw = null;
+        try {
+            if (plugin.codex() != null) raw = plugin.codex().tr(player, key);
+        } catch (Throwable ignored) {}
+
+        String t = safeText(raw, fallback);
+        t = ChatColor.translateAlternateColorCodes('&', t);
+
+        // Safe clamp: prevents weird cut-off formatting / glyph issues on some clients
+        if (t.length() > 32) t = t.substring(0, 32);
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        return t;
+    }
+
+    /**
      * List/lore variant for language lookups.
      */
     public List<String> trList(Player player, String key, List<String> fallback) {
@@ -159,77 +181,9 @@ public class GUIManager {
                 }
             }
         } catch (Throwable ignored) {
+            // Same idea: protect against language engine issues.
         }
         return fallback == null ? Collections.emptyList() : fallback;
-    }
-
-    // ======================================
-    // --- TITLES (Fixes &-codes + length) ---
-    // ======================================
-
-    /**
-     * ✅ GUI TITLE HELPER (Use this in every GUI open() method)
-     *
-     * Fixes:
-     * - "&b" showing in inventory titles (now translated properly)
-     * - Missing keys fallback
-     * - Overlong titles causing Bukkit exceptions
-     *
-     * Example:
-     * String title = plugin.gui().title(player, "menu_title", "&b⚔ AegisGuard Menu");
-     */
-    public String title(Player player, String key, String fallback) {
-        String raw = safeText(tr(player, key, fallback), fallback);
-        String colored = color(raw);
-        return clampInventoryTitle(colored);
-    }
-
-    /**
-     * Same as title(), but if you already have the raw string (not a codex key).
-     */
-    public static String titleRaw(String rawTitle, String fallback) {
-        String raw = safeText(rawTitle, fallback);
-        String colored = ChatColor.translateAlternateColorCodes('&', raw);
-        return clampInventoryTitle(colored);
-    }
-
-    /**
-     * Inventory title clamp that won't cut a color code in half.
-     */
-    private static String clampInventoryTitle(String title) {
-        if (title == null) return "";
-        if (title.length() <= MAX_GUI_TITLE_LEN) return title;
-
-        StringBuilder out = new StringBuilder(MAX_GUI_TITLE_LEN);
-        int i = 0;
-        while (i < title.length() && out.length() < MAX_GUI_TITLE_LEN) {
-            char c = title.charAt(i);
-
-            // Don't end on a dangling color char (§)
-            if (c == ChatColor.COLOR_CHAR) {
-                // Need room for '§' + code
-                if (out.length() + 2 > MAX_GUI_TITLE_LEN) break;
-
-                out.append(c);
-                if (i + 1 < title.length()) {
-                    out.append(title.charAt(i + 1));
-                    i += 2;
-                    continue;
-                } else {
-                    break;
-                }
-            }
-
-            out.append(c);
-            i++;
-        }
-
-        // Safety: never end with bare §
-        if (out.length() > 0 && out.charAt(out.length() - 1) == ChatColor.COLOR_CHAR) {
-            out.deleteCharAt(out.length() - 1);
-        }
-
-        return out.toString();
     }
 
     // ======================================
@@ -312,8 +266,6 @@ public class GUIManager {
 
     /**
      * ✅ NEW: Generate a "Domain Registry" item for the main menu.
-     * Shows: Total, Used, Available Claim Blocks.
-     * Updated: Uses PAPER icon to avoid conflict with Economy Gold Ingot.
      */
     public ItemStack createLedgerItem(Player p) {
         long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());

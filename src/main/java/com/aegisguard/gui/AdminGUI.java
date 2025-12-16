@@ -2,7 +2,6 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -35,12 +34,13 @@ public class AdminGUI {
             return;
         }
 
-        // ✅ Title fix: translate & colors + safe fallback + clamp length
-        String rawTitle = (plugin.codex() != null)
-                ? plugin.codex().tr(player, "admin_menu_title")
-                : null;
+        // ✅ Title fix: translate & colors + safe fallback + clamp length (centralized)
+        String title = plugin.gui().title(
+                player,
+                "admin_menu_title",
+                "&c&l⚔ High Guardian Tools ⚔"
+        );
 
-        String title = formatTitle(rawTitle, "&c&l⚔ High Guardian Tools ⚔");
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
 
         ItemStack filler = GUIManager.getFiller();
@@ -201,19 +201,5 @@ public class AdminGUI {
 
         if (next && msgOn != null) plugin.msg().send(p, msgOn);
         if (!next && msgOff != null) plugin.msg().send(p, msgOff);
-    }
-
-    // ✅ Central title cleanup for THIS GUI (we'll reuse this pattern in each GUI file)
-    private String formatTitle(String raw, String fallback) {
-        String t = GUIManager.safeText(raw, fallback);
-        t = ChatColor.translateAlternateColorCodes('&', t);
-
-        // Vanilla inventory titles are short; clamp to avoid IllegalArgumentException
-        if (t.length() > 32) t = t.substring(0, 32);
-
-        // If we clipped right after a section sign, remove it
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
     }
 }

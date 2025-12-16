@@ -10,19 +10,30 @@ import java.lang.reflect.Method;
 public class GriefPreventionHook implements ProtectionHook {
 
     private final AegisGuard plugin;
+    private final int priority;
 
     private boolean active;
     private Object dataStore;
     private Method getClaimAt;
 
     public GriefPreventionHook(AegisGuard plugin) {
+        this(plugin, 90);
+    }
+
+    public GriefPreventionHook(AegisGuard plugin, int priority) {
         this.plugin = plugin;
+        this.priority = priority;
         init();
     }
 
     @Override
     public String id() {
         return "GriefPrevention";
+    }
+
+    @Override
+    public int priority() {
+        return priority;
     }
 
     @Override

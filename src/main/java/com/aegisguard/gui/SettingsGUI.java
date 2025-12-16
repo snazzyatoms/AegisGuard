@@ -3,7 +3,6 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -39,12 +38,13 @@ public class SettingsGUI {
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
-        // ✅ Title fix: translate & colors + safe fallback + clamp length
-        String rawTitle = (plugin.codex() != null)
-                ? plugin.codex().tr(player, "settings_menu_title")
-                : null;
+        // ✅ Title fix: translate & colors + safe fallback + clamp length (centralized)
+        String title = plugin.gui().title(
+                player,
+                "settings_menu_title",
+                "&b⚙ AegisGuard Settings"
+        );
 
-        String title = formatTitle(rawTitle, "&b⚙ AegisGuard Settings");
         Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
@@ -175,17 +175,5 @@ public class SettingsGUI {
             case "spanish_ar"     -> "§bEspañol (Arg)";
             default               -> "§dOld English";
         };
-    }
-
-    // ✅ Central title cleanup for THIS GUI
-    private String formatTitle(String raw, String fallback) {
-        String t = GUIManager.safeText(raw, fallback);
-        t = ChatColor.translateAlternateColorCodes('&', t);
-
-        // Clamp to avoid title-length issues on some versions
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
     }
 }

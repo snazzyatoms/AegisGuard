@@ -1,11 +1,8 @@
 package com.aegisguard.hooks.protection;
 
 /**
- * HookAction
- * Identifies what AegisGuard is trying to do at a location so external protection hooks
- * can decide whether AegisGuard should yield (bypass) to another plugin.
- *
- * This is NOT a result enum (ALLOW/DENY). It’s an "action category" enum.
+ * Describes what AegisGuard is trying to do at a location.
+ * Hooks can decide whether AegisGuard should yield to an external protection plugin.
  */
 public enum HookAction {
 
@@ -22,11 +19,10 @@ public enum HookAction {
     ANIMAL_DAMAGE,
     ANIMAL_INTERACT,
 
-    // --- Redstone / Mechanisms ---
+    // --- Interaction ---
     REDSTONE_INTERACT,
+    VEHICLE_ENTER,
 
-    // --- Vehicles ---
-    VEHICLE_ENTER
-
-    // Add more as you expand hooks (BUILD_BREAK, BUILD_PLACE, CONTAINER_OPEN, etc.)
+    // --- Generic / fallback ---
+    OTHER
 }

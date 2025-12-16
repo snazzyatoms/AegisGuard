@@ -53,6 +53,10 @@ public interface IDataStore {
     Plot getPlotAt(Location loc);
     boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2);
 
-    // optional shutdown hook (keeps impls happy)
+    /**
+     * Optional shutdown hook.
+     * SQL implementations should use this to flush pending async DB tasks and close pools safely.
+     * YML implementations can simply saveSync().
+     */
     default void shutdown() { }
 }

@@ -4,6 +4,7 @@
 # Split from legacy single-file language pack
 # ======================================
 
+# --- General / Permissions ---
 role_edit_self_error: '&c❌ No podés cambiar tu propio rol. ¡Te podés dejar afuera!'
 no_perm: '&cNo tenés permiso para hacer eso.'
 players_only: '&cEste comando es solo para jugadores.'
@@ -12,6 +13,7 @@ usage_main: '&eUsá: /aegis <wand|menu|claim|unclaim|resize|help>'
 sound_global_enabled: '&a✔ Sonidos de interfaz activados.'
 sound_global_disabled: '&c✖ Sonidos de interfaz desactivados.'
 
+# --- Claiming & Wand ---
 wand_given: '&a⚡ Recibiste el Cetro de Aegis.'
 wand_already_on: '&eYa tenés el Cetro de Aegis.'
 corner1_set: '&a⚡ Primer punto marcado en &e{X}, {Z}.'
@@ -22,6 +24,7 @@ wand_consumed: '&a✔ El Cetro se consume después de usarlo.'
 wand_not_found: '&c❌ No estás sosteniendo el Cetro.'
 wand_already_owned: '&eYa tenés un Cetro. Usá el que tenés.'
 
+# --- Resizing & Merging ---
 resize-success: '&a✔ El claim se expandió {DIRECTION} por {AMOUNT} bloques.'
 resize-fail-overlap: '&c❌ No se pudo expandir: se superpone con otro claim.'
 resize-fail-max-area: '&c❌ No se pudo expandir: excede el límite de {AMOUNT} bloques.'
@@ -32,6 +35,7 @@ merge_not_owner: '&c❌ No sos el dueño del claim de al lado.'
 merge_not_aligned: '&c❌ Los bordes no están alineados. Tienen que coincidir.'
 merge_success: '&a⚡ ¡Listo! Los claims se fusionaron en uno.'
 
+# --- Economy & Limits ---
 max_claims_reached: '&c❌ Llegaste a tu límite de claims ({AMOUNT}).'
 need_vault: '&c❌ Te faltan &e{AMOUNT}&c de dinero.'
 cost_deducted: '&e💰 Se cobró &6{AMOUNT}&e.'
@@ -43,42 +47,119 @@ upkeep_paid: '&e💰 Mantenimiento pagado: &6{AMOUNT}&e.'
 upkeep_failed_warning: '&c❌ Atención: el mantenimiento está pendiente.'
 plot_expired_upkeep: '&c❌ Tu claim expiró por mantenimiento impago.'
 plot-is-locked: '&c❌ Este claim está bloqueado.'
-plot_is_locked: '&c❌ Este claim está bloqueado.' # alias
+plot_is_locked: '&c❌ Este claim está bloqueado.'
 
-home-set-success: '&a✔ Home del claim establecido.'
-home-fail-outside: '&c❌ Tenés que estar dentro de tu claim para setear el home.'
-home-fail-no-spawn: '&c❌ No hay home seteado. Usá /ag setspawn.'
-welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
-welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
-farewell-set: '&a✔ Mensaje de despedida actualizado.'
-farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+# --- Auctions ---
+plot-now-auctioned: '&e⚠ Tu claim ahora está en subasta.'
+auction-bid-own: '&cNo podés pujar por tu propio claim expirado.'
+auction-already-highest: '&eYa sos el mejor postor.'
+auction-outbid: '&e{PLAYER} te superó la puja.'
+auction-bid-success: '&a✔ Puja de &6{AMOUNT}&a aceptada.'
+auction-sold: '&a✔ Claim vendido a {PLAYER} por &6{AMOUNT}&a.'
+auction-won: '&a✔ Ganaste la subasta por el claim de {PLOT_OWNER} por &6{AMOUNT}&a.'
+auction_bid_too_low: '&c❌ Puja muy baja. Subí al menos &6{AMOUNT}&c.'
+auction_bid_failed_funds: '&c❌ No tenés fondos para esa puja.'
 
-plot_created: '&a✔ Tu tierra ahora está protegida por AegisGuard.'
-plot_unclaimed: '&e⚠ Tu claim fue liberado.'
-no_plot_here: '&c❌ No estás parado dentro de tu claim.'
+# --- Market ---
+market-buy-own: '&cNo podés comprar tu propio claim.'
+market-buy-success: '&a✔ Compraste el claim de {PLAYER} por &6{PRICE}&a.'
+market-sold: '&a✔ {PLAYER} compró tu claim por &6{PRICE}&a.'
+market-for-sale: '&a✔ Tu claim está a la venta por &6{PRICE}&a.'
+market-not-for-sale: '&e✔ Tu claim ya no está en el mercado.'
+market-rent-soon: '&eEl alquiler llega en una actualización futura.'
 
-cannot_break: '&c❌ No podés romper bloques acá; está protegido.'
-cannot_place: '&c❌ No podés colocar bloques acá; está protegido.'
-cannot_interact: '&c❌ No podés interactuar con eso acá.'
-cannot_attack: '&c❌ El combate está deshabilitado en este claim.'
-plot_entry_denied: '&c⛔ Entrada denegada. Este claim es privado.'
-plot_banned_entry: '&c⛔ Estás baneado de este claim.'
+# --- Biomes ---
+biome_changed: '&a✔ Bioma cambiado a {BIOME}.'
+biome_cost_paid: '&e💰 Se cobró &6{AMOUNT}&e por cambiar el bioma.'
 
-claim_blocks_balance: '&e⛏ Bloques de Claim: &6{BALANCE}'
-claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Claim. &7(Nuevo: &f{BALANCE}&7)'
-claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Claim. &7(Restante: &f{BALANCE}&7)'
-claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Claim. Te faltan &6{AMOUNT}&c.'
-claim_blocks_first_claim_limit: '&c❌ Límite del primer claim: área máxima &6{MAX}&c.'
-claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Claim) &8Total: &f{BALANCE}'
+# --- Likes ---
+like_success: '&a✔ Te gustó este claim. Total: &e{AMOUNT}'
+like_removed: '&eQuitaste tu like.'
+like_own_plot: '&cNo podés dar like a tu propio claim.'
+like_disabled: '&cLos likes están deshabilitados en este server.'
 
+# --- Flags / Inheritance ---
+flag_toggled: '&e⚙ {FLAG} ahora está &f{STATUS}&e.'
+server_zone_forced_flag: '&cEste ajuste está bloqueado por una Zona del Server.'
+admin_forced_flag_notice: '&7[Admin] Este ajuste está forzado al nivel {LEVEL} y no se puede cambiar acá.'
+flag_inherited_from_world: '&7Herencia: &fMundo.'
+flag_inherited_from_zone: '&7Herencia: &fZona del Server.'
+flag_inherited_from_plot: '&7Herencia: &fClaim.'
+
+# --- Roles / Trusted ---
+role_self: '&cNo podés editar tu propio rol.'
+role_is_owner: '&cNo podés editar el rol del dueño.'
+role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}.'
+role_removed: '&e✔ {PLAYER} fue removido del claim.'
+
+# --- Admin Tools / Zones / Wilderness ---
+admin_reloading: '&7Recargando configuración y datos...'
+admin_reload_complete: '&a✔ Recarga completa.'
+admin_auto_remove_enabled: '&a✔ Auto-purge activado.'
+admin_auto_remove_disabled: '&c✖ Auto-purge desactivado.'
+admin_bypass_enabled: '&a✔ Bypass de límite activado.'
+admin_bypass_disabled: '&c✖ Bypass de límite desactivado.'
+admin_broadcast_enabled: '&a✔ Broadcast admin activado.'
+admin_broadcast_disabled: '&c✖ Broadcast admin desactivado.'
+admin_removed_banned: '&eSe purgaron claims del baneado: {PLAYER}'
+
+admin_plot_teleport: '&eTeletransportado al claim de {PLAYER}.'
+admin_plot_deleted: '&c✖ Se eliminó el claim de {PLAYER}.'
+
+admin-zone-created: '&a✔ Zona del Server creada.'
+admin-zone-deleted: '&c✖ Zona del Server eliminada.'
+admin-zone-not-found: '&c❌ No estás parado en una Zona del Server.'
+admin-zone-no-claims: '&c❌ No se permiten claims en esta zona.'
+
+wilderness_revert_start: '&7Restauración del wilderness iniciada...'
+wilderness_revert_end: '&7Restauración terminada. Bloques restaurados: &f{AMOUNT}&7.'
+
+# --- External Protection Compatibility (v1.2.4) ---
 claim_denied_external: '&c⛔ Claim denegado: protegido por &f{PLUGIN}&c.'
 claim_denied_external_generic: '&c⛔ Claim denegado: protegido por otro plugin.'
 
+# --- Welcome / Farewell Listener Output (v1.2.4) ---
 plot_welcome_show: '&a✦ Bienvenida de {OWNER}: &f{MESSAGE}'
 plot_farewell_show: '&e✦ Despedida de {OWNER}: &f{MESSAGE}'
 
+# --- Unstuck (v1.2.4) ---
 unstuck_warmup: '&e⏳ Rescate en &6{SECONDS}&e segundos... No te muevas.'
 unstuck_cancelled: '&c❌ Cancelado (te moviste).'
 unstuck_on_cooldown: '&c❌ En enfriamiento: faltan &6{SECONDS}&c segundos.'
 unstuck_success: '&a✔ Teletransportado a un lugar seguro.'
 unstuck_failed: '&c❌ Falló: no se encontró un lugar seguro.'
+
+# --- Home / Messages ---
+home-set-success: '&a✔ Home del claim seteado.'
+home-fail-outside: '&c❌ Tenés que estar dentro del claim para setear el home.'
+home-fail-no-spawn: '&c❌ Todavía no hay home seteado. Usá /ag setspawn.'
+welcome-set: '&a✔ Mensaje de bienvenida seteado.'
+welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
+farewell-set: '&a✔ Mensaje de despedida seteado.'
+farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+
+# --- Plot Core ---
+plot_created: '&a✔ Listo, tu tierra quedó protegida por AegisGuard.'
+plot_unclaimed: '&e⚠ Tu claim fue liberado.'
+plot-too-small: '&c❌ Tu claim es demasiado chico. Mínimo: &e{AMOUNT}&c bloques.'
+plot_too_small: '&c❌ Tu claim es demasiado chico. Mínimo: &e{AMOUNT}&c bloques.'
+no_plot_here: '&c❌ Acá no hay un claim tuyo.'
+
+cannot_break: '&c❌ No podés romper acá; está protegido.'
+cannot_place: '&c❌ No podés colocar acá; está protegido.'
+cannot_interact: '&c❌ No podés interactuar con eso acá.'
+cannot_attack: '&c❌ No podés atacar acá.'
+plot_entry_denied: '&c⛔ Entrada denegada. Este claim está cerrado.'
+plot_banned_entry: '&c⛔ Estás baneado de este claim.'
+
+# --- Enter/Leave Titles (if enabled) ---
+title_entering: '&aEntrando: &f{PLOT}'
+subtitle_entering: '&7Dueño: &f{OWNER} &8| &7Rol: &a{ROLE}'
+title_entering_wilderness: '&2Wilderness'
+subtitle_entering_wilderness: '&7Zona sin protección.'
+
+# --- Plot Status names ---
+plot_status_overview_name: '&eResumen'
+plot_status_flags_name: '&cProtecciones'
+plot_status_economy_name: '&6Economía'
+plot_status_social_name: '&bSocial'

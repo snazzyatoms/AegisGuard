@@ -11,6 +11,46 @@
 
 
 # ==============================================================================
+# 🌐 LOCALIZATION (Codex Language Engine)
+# ==============================================================================
+localization:
+  # Global chat prefix (previously how messages.yml handled it)
+  prefix: '&8[&bAegisGuard&8]&r '
+
+  # Folder inside /plugins/AegisGuard/ that contains language folders
+  # Example: /plugins/AegisGuard/lang/old_english/guis.yml
+  folder: 'lang'
+
+  # Default language folder to use when a player has no preference set
+  default_language: old_english
+
+  # If a key is missing in the selected language, try this language next
+  fallback_language: modern_english
+
+  # The files that make up ONE language pack (loaded + merged in this order)
+  bundles:
+    - guis.yml
+    - system.yml
+    - upgrades.yml
+    - expansions.yml
+
+  # Optional: limit what shows in the language selector GUI
+  available_languages:
+    - old_english
+    - hybrid_english
+    - modern_english
+    - spanish_mx
+    - spanish_ar
+
+  # When true, the plugin should copy default language files from the jar
+  # into /plugins/AegisGuard/lang/ on first run (or if missing).
+  extract_defaults: true
+
+  # Debug helpers (optional)
+  debug_missing_keys: false
+
+
+# ==============================================================================
 # 🔌 PLUGIN HOOKS & STORAGE BACKEND
 # ==============================================================================
 hooks:

@@ -11,11 +11,13 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * SettingsGUI
- * - Handles personal player preferences (sounds, language, notifications).
- * - Updated to support Spanish (MX/AR).
+ * - Personal player preferences (sounds, language, notifications)
+ * - Language cycling now uses CodexEngine style order (codex.yml), not hard-coded switch chains.
+ * - Persists language choice to playerdata.yml via CodexEngine.
  */
 public class SettingsGUI {
 
@@ -32,13 +34,9 @@ public class SettingsGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    /* -----------------------------
-     * OPEN
-     * ----------------------------- */
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
-        // ✅ Title fix: translate & colors + safe fallback + clamp length (centralized)
         String title = plugin.gui().title(
                 player,
                 "settings_menu_title",
@@ -50,7 +48,7 @@ public class SettingsGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
-        // --- 1. SOUNDS (Slot 10) ---
+        // --- 1) SOUNDS (Slot 10) ---
         boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
         if (!globalEnabled) {
             inv.setItem(10, GUIManager.createItem(
@@ -67,7 +65,7 @@ public class SettingsGUI {
             ));
         }
 
-        // --- 2. LANGUAGE (Slot 13) ---
+        // --- 2) LANGUAGE (Slot 13) ---
         String currentStyle = (plugin.codex() != null)
                 ? plugin.codex().getPlayerStyle(player)
                 : "old_english";
@@ -78,7 +76,7 @@ public class SettingsGUI {
                 List.of("§7Click to cycle language styles.")
         ));
 
-        // --- 3. NOTIFICATIONS (Slot 16) ---
+        // --- 3) NOTIFICATIONS (Slot 16) ---
         String notifMode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
@@ -87,75 +85,72 @@ public class SettingsGUI {
         ));
 
         // --- NAVIGATION ---
-        inv.setItem(48, GUIManager.createItem(
-                Material.ARROW,
-                "§fBack to Menu",
-                null
-        ));
-        inv.setItem(49, GUIManager.createItem(
-                Material.BARRIER,
-                "§cClose",
-                null
-        ));
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack to Menu", null));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    /* -----------------------------
-     * CLICK HANDLER
-     * ----------------------------- */
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
-        Plot plot = holder.getPlot(); // Preserve context if passed
+        Plot plot = holder.getPlot();
 
         switch (e.getRawSlot()) {
-            case 10: // Sounds
+
+            case 10: { // Sounds
                 if (!plugin.cfg().globalSoundsEnabled()) {
                     plugin.effects().playError(player);
-                } else {
-                    boolean current = plugin.isSoundEnabled(player);
-                    plugin.getConfig().set("sounds.players." + player.getUniqueId(), !current);
-                    plugin.runGlobalAsync(() -> plugin.saveConfig());
-                    plugin.effects().playMenuFlip(player);
-                    open(player, plot);
+                    return;
                 }
-                break;
-
-            case 13: // Language
-                String style = (plugin.codex() != null)
-                        ? plugin.codex().getPlayerStyle(player)
-                        : "old_english";
-
-                String nextStyle = switch (style) {
-                    case "old_english"    -> "modern_english";
-                    case "modern_english" -> "hybrid_english";
-                    case "hybrid_english" -> "spanish_mx";
-                    case "spanish_mx"     -> "spanish_ar";
-                    case "spanish_ar"     -> "old_english";
-                    default               -> "old_english";
-                };
-
-                if (plugin.codex() != null) plugin.codex().setPlayerStyle(player, nextStyle);
+                boolean current = plugin.isSoundEnabled(player);
+                plugin.getConfig().set("sounds.players." + player.getUniqueId(), !current);
+                plugin.runGlobalAsync(plugin::saveConfig);
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
                 break;
+            }
 
-            case 16: // Notifications
+            case 13: { // Language (Codex ordered cycle)
+                if (plugin.codex() == null) {
+                    plugin.effects().playError(player);
+                    return;
+                }
+
+                String current = plugin.codex().getPlayerStyle(player);
+                String next = plugin.codex().getNextStyle(current);
+
+                boolean applied = plugin.codex().setPlayerStyle(player, next);
+                if (applied) {
+                    // Persist to playerdata.yml (async disk IO)
+                    plugin.runGlobalAsync(() -> {
+                        try { plugin.codex().savePlayerData(); } catch (Throwable ignored) {}
+                    });
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.effects().playError(player);
+                }
+
+                open(player, plot);
+                break;
+            }
+
+            case 16: { // Notifications
                 String mode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
                 String nextMode = switch (mode) {
                     case "ACTION_BAR" -> "CHAT";
-                    case "CHAT"       -> "TITLE";
-                    default           -> "ACTION_BAR";
+                    case "CHAT" -> "TITLE";
+                    default -> "ACTION_BAR";
                 };
                 plugin.getConfig().set("notifications." + player.getUniqueId(), nextMode);
-                plugin.runGlobalAsync(() -> plugin.saveConfig());
+                plugin.runGlobalAsync(plugin::saveConfig);
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
                 break;
+            }
 
             case 48:
                 plugin.gui().openMain(player);
@@ -168,12 +163,29 @@ public class SettingsGUI {
     }
 
     private String formatStyle(String style) {
-        return switch (style) {
+        if (style == null || style.isEmpty()) return "§dOld English";
+
+        return switch (style.toLowerCase(Locale.ROOT)) {
+            case "old_english" -> "§dOld English";
             case "modern_english" -> "§aModern";
             case "hybrid_english" -> "§eHybrid";
-            case "spanish_mx"     -> "§bEspañol (Latino)";
-            case "spanish_ar"     -> "§bEspañol (Arg)";
-            default               -> "§dOld English";
+            case "spanish_mx" -> "§bEspañol (LatAm)";
+            case "spanish_ar" -> "§bEspañol (AR)";
+            default -> "§f" + pretty(style);
         };
+    }
+
+    private String pretty(String raw) {
+        String s = raw.replace('_', ' ').trim();
+        if (s.isEmpty()) return raw;
+        String[] parts = s.split("\\s+");
+        StringBuilder out = new StringBuilder();
+        for (String p : parts) {
+            if (p.isEmpty()) continue;
+            out.append(Character.toUpperCase(p.charAt(0)))
+               .append(p.length() > 1 ? p.substring(1).toLowerCase(Locale.ROOT) : "")
+               .append(' ');
+        }
+        return out.toString().trim();
     }
 }

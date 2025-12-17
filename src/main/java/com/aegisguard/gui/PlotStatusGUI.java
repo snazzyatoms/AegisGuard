@@ -33,21 +33,18 @@ public class PlotStatusGUI {
 
     public void open(Player player, Plot plot) {
         if (plot == null) {
-            plugin.msg().send(player, "no_plot_here");
+            // ✅ Codex-only (no MessagesUtil)
+            sendSystem(player, "no_plot_here", "&cYou are not standing in a protected plot.");
             return;
         }
 
-        // Title (Codex → fallback)
-        String baseTitle = plugin.codex().tr(player, "plot_status_gui_title");
-        String title = GUIManager.safeText(baseTitle, "§8Plot Status Codex");
-
+        // ✅ Title via GUIManager helper (colors + clamp + fallback)
+        String title = plugin.gui().title(player, "plot_status_gui_title", "&8Plot Status Codex");
         Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot), 54, title);
 
         // Filler
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         int level = plot.getLevel();
         int maxLevel = plugin.cfg().getMaxLevel();
@@ -58,117 +55,76 @@ public class PlotStatusGUI {
         String biomeRaw = plot.getCustomBiome();
         String biomeName = (biomeRaw == null || biomeRaw.isEmpty()) ? "Natural" : biomeRaw;
         biomeName = biomeName.toLowerCase().replace("_", " ");
-        if (!biomeName.isEmpty()) {
-            biomeName = Character.toUpperCase(biomeName.charAt(0)) + biomeName.substring(1);
-        }
+        if (!biomeName.isEmpty()) biomeName = Character.toUpperCase(biomeName.charAt(0)) + biomeName.substring(1);
 
-        // 1. Header Info
+        // 1) Header Info
         List<String> headerLore = new ArrayList<>();
-        headerLore.add("§7Owner: §f" + owner);
-        headerLore.add("§7World: §f" + world);
-        headerLore.add("§7Biome: §a" + biomeName);
+        headerLore.add("&7Owner: &f" + owner);
+        headerLore.add("&7World: &f" + world);
+        headerLore.add("&7Biome: &a" + biomeName);
         headerLore.add("");
-        headerLore.add("§7Plot Level: §b" + level + "§7 / §f" + maxLevel);
+        headerLore.add("&7Plot Level: &b" + level + "&7 / &f" + maxLevel);
 
-        String headerTitleBase = plugin.codex().tr(player, "plot_status_header_title");
-        String headerTitle = GUIManager.safeText(headerTitleBase, "§6Plot Information");
+        String headerTitle = plugin.gui().tr(player, "plot_status_header_title", "&6Plot Information");
         inv.setItem(4, GUIManager.createItem(
                 Material.NETHER_STAR,
                 headerTitle,
                 headerLore
         ));
 
-        // 2. Protections & Risks (live from ProtectionManager / flags)
-        List<String> protectionLore = buildProtectionLore(plot);
-        String protTitleBase = plugin.codex().tr(player, "plot_status_protection_title");
-        String protTitle = GUIManager.safeText(protTitleBase, "§cProtections & Risks");
-
+        // 2) Protections & Risks
+        String protTitle = plugin.gui().tr(player, "plot_status_protection_title", "&cProtections & Risks");
         inv.setItem(20, GUIManager.createItem(
                 Material.SHIELD,
                 protTitle,
-                protectionLore
+                buildProtectionLore(plot)
         ));
 
-        // 3. Blessings (fancy + deduped)
+        // 3) Blessings
         List<String> buffsLore = new ArrayList<>();
-        buffsLore.add("§7Active Blessings:");
+        buffsLore.add("&7Active Blessings:");
         buffsLore.add("");
 
         List<String> buffs = buildBuffList(level);
         if (buffs.isEmpty()) {
-            buffsLore.add("§8- None unlocked yet.");
+            buffsLore.add("&8- None unlocked yet.");
         } else {
             buffsLore.addAll(buffs);
             buffsLore.add("");
-            buffsLore.add("§8Only your highest tier of each blessing is shown.");
+            buffsLore.add("&8Only your highest tier of each blessing is shown.");
         }
 
-        String blessingsTitleBase = plugin.codex().tr(player, "plot_status_blessings_title");
-        String blessingsTitle = GUIManager.safeText(blessingsTitleBase, "§dActive Blessings");
+        String blessingsTitle = plugin.gui().tr(player, "plot_status_blessings_title", "&dActive Blessings");
         inv.setItem(22, GUIManager.createItem(
                 Material.ENCHANTED_BOOK,
                 blessingsTitle,
                 buffsLore
         ));
 
-        // 4. Territory card (unchanged, but title via Codex)
-        List<String> territoryLore = new ArrayList<>();
-        territoryLore.add("§7Territory Rules:");
-        territoryLore.add("§bAegis Menu §7→ §b" + plugin.msg().get(player, "button_expand"));
+        // 4) Territory
+        String territoryTitle = plugin.gui().tr(player, "plot_status_territory_title", "&aTerritory & Growth");
+        String expandName = plugin.gui().tr(player, "button_expand", "&bExpand");
 
-        String territoryTitleBase = plugin.codex().tr(player, "plot_status_territory_title");
-        String territoryTitle = GUIManager.safeText(territoryTitleBase, "§aTerritory & Growth");
+        List<String> territoryLore = new ArrayList<>();
+        territoryLore.add("&7Territory Rules:");
+        territoryLore.add("&bAegis Menu &7→ &b" + expandName);
+
         inv.setItem(24, GUIManager.createItem(
                 Material.GRASS_BLOCK,
                 territoryTitle,
                 territoryLore
         ));
 
-        // -------------------------------------------------------------
-        // ✅ NEW: DOMAIN REGISTRY (Synchronized with ClaimBlockData)
-        // -------------------------------------------------------------
-        UUID plotOwnerUUID = plot.getOwner();
-        
-        // Data Retrieval
-        long totalBlocks = plugin.getClaimBlockManager().getTotalBlocks(plotOwnerUUID);
-        long usedBlocks = plugin.getClaimBlockManager().getUsedBlocks(plotOwnerUUID);
-        long availBlocks = plugin.getClaimBlockManager().getAvailableBlocks(plotOwnerUUID);
-
-        List<String> budgetLore = new ArrayList<>();
-        
-        // Codex Lookups (So this translates too!)
-        String availLabel = plugin.codex().tr(player, "ledger_available");
-        if (availLabel.equals("ledger_available")) availLabel = "§7Available: §a";
-        
-        String usedLabel = plugin.codex().tr(player, "ledger_used");
-        if (usedLabel.equals("ledger_used")) usedLabel = "§7Used: §c";
-        
-        String totalLabel = plugin.codex().tr(player, "ledger_total");
-        if (totalLabel.equals("ledger_total")) totalLabel = "§7Total Capacity: §e";
-
-        budgetLore.add(availLabel + availBlocks);
-        budgetLore.add(usedLabel + usedBlocks);
-        budgetLore.add(totalLabel + totalBlocks);
-        budgetLore.add("");
-        budgetLore.add("§8This budget applies to all plots");
-        budgetLore.add("§8owned by §f" + owner + "§8.");
-
-        // Title via Codex
-        String ledgerTitle = plugin.codex().tr(player, "ledger_title");
-        if (ledgerTitle.equals("ledger_title")) ledgerTitle = "§6📜 Domain Registry";
-
+        // 5) Domain Registry (Claim Blocks) - safe if feature disabled
         inv.setItem(26, GUIManager.createItem(
                 Material.PAPER,
-                ledgerTitle,
-                budgetLore
+                plugin.gui().tr(player, "ledger_title", "&6📜 Domain Registry"),
+                buildLedgerLore(player, plot)
         ));
 
-        // 5. Back
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = plugin.msg().getList(player, "back_lore");
+        // 6) Back
+        String backName = plugin.gui().tr(player, "button_back", "&fBack");
+        List<String> backLore = plugin.gui().trList(player, "back_lore", List.of("&7Return to the main menu."));
 
         inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
@@ -183,10 +139,42 @@ public class PlotStatusGUI {
     public void handleClick(Player player, InventoryClickEvent e, PlotStatusHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
         if (e.getSlot() == 49) {
             GUIManager.playClick(player);
             plugin.gui().openMain(player);
         }
+    }
+
+    private List<String> buildLedgerLore(Player player, Plot plot) {
+        List<String> lore = new ArrayList<>();
+
+        if (plugin.getClaimBlockManager() == null) {
+            lore.add("&8Claim blocks are disabled.");
+            lore.add("&7Ask an admin to enable:");
+            lore.add("&fclaim_blocks.enabled: &atrue");
+            return lore;
+        }
+
+        UUID ownerUUID = plot.getOwner();
+        String ownerName = plot.getOwnerName();
+
+        long totalBlocks = plugin.getClaimBlockManager().getTotalBlocks(ownerUUID);
+        long usedBlocks  = plugin.getClaimBlockManager().getUsedBlocks(ownerUUID);
+        long availBlocks = plugin.getClaimBlockManager().getAvailableBlocks(ownerUUID);
+
+        String availLabel = plugin.gui().tr(player, "ledger_available", "&7Available: &a");
+        String usedLabel  = plugin.gui().tr(player, "ledger_used", "&7Used: &c");
+        String totalLabel = plugin.gui().tr(player, "ledger_total", "&7Total Capacity: &e");
+
+        lore.add(availLabel + availBlocks);
+        lore.add(usedLabel + usedBlocks);
+        lore.add(totalLabel + totalBlocks);
+        lore.add("");
+        lore.add("&8This budget applies to all plots");
+        lore.add("&8owned by &f" + ownerName + "&8.");
+
+        return lore;
     }
 
     // --------------------------------------------------
@@ -207,16 +195,15 @@ public class PlotStatusGUI {
         boolean shopEnabled         = plot.getFlag("shop-interact", false);
         boolean flyEnabled          = plot.getFlag("fly", false);
 
-        // Entry: true = OPEN, false = CLOSED for non-trusted
         boolean entryOpen           = plot.getFlag("entry", true);
 
-        lore.add("§7Combat & Hostiles:");
+        lore.add("&7Combat & Hostiles:");
         lore.add(formatProtectionLine("PvP", pvpProtected));
         lore.add(formatProtectionLine("Hostile mobs", mobProtected));
         lore.add(formatProtectionLine("Animals & pets", animalsProtected));
         lore.add("");
 
-        lore.add("§7Environment & Access:");
+        lore.add("&7Environment & Access:");
         lore.add(formatSafeZoneLine(safeZone));
         lore.add(formatEntryLine(entryOpen));
         lore.add(formatProtectionLine("Containers", containersProtected));
@@ -224,7 +211,7 @@ public class PlotStatusGUI {
         lore.add(formatProtectionLine("Vehicles", vehiclesProtected));
         lore.add("");
 
-        lore.add("§7Perks & Services:");
+        lore.add("&7Perks & Services:");
         lore.add(formatSimpleToggleLine("Market shop interact", shopEnabled));
         lore.add(formatSimpleToggleLine("Flight inside this plot", flyEnabled));
 
@@ -232,28 +219,27 @@ public class PlotStatusGUI {
     }
 
     private String formatProtectionLine(String label, boolean protectedOn) {
-        // true = protection ON (safe), false = vulnerable
-        String state = protectedOn ? "§aProtected" : "§cVulnerable";
-        return "§f- " + label + ": " + state;
+        String state = protectedOn ? "&aProtected" : "&cVulnerable";
+        return "&f- " + label + ": " + state;
     }
 
     private String formatSafeZoneLine(boolean safeZone) {
-        String state = safeZone ? "§aEnabled" : "§7Disabled";
-        return "§f- Safe zone: " + state;
+        String state = safeZone ? "&aEnabled" : "&7Disabled";
+        return "&f- Safe zone: " + state;
     }
 
     private String formatEntryLine(boolean open) {
-        String state = open ? "§aOpen" : "§cClosed";
-        return "§f- Entry gate: " + state;
+        String state = open ? "&aOpen" : "&cClosed";
+        return "&f- Entry gate: " + state;
     }
 
     private String formatSimpleToggleLine(String label, boolean enabled) {
-        String state = enabled ? "§aEnabled" : "§7Inactive";
-        return "§f- " + label + ": " + state;
+        String state = enabled ? "&aEnabled" : "&7Inactive";
+        return "&f- " + label + ": " + state;
     }
 
     // --------------------------------------------------
-    // BLESSINGS (unchanged, just used by leveling/buffs)
+    // BLESSINGS (unchanged)
     // --------------------------------------------------
 
     private List<String> buildBuffList(int level) {
@@ -289,16 +275,12 @@ public class PlotStatusGUI {
                 Integer current = highestTier.get(key);
                 if (current == null || (tier != null && tier > current)) {
                     rewardByKey.put(key, reward);
-                    if (tier != null) {
-                        highestTier.put(key, tier);
-                    }
+                    if (tier != null) highestTier.put(key, tier);
                 }
             }
         }
 
-        if (rewardByKey.isEmpty()) {
-            return result;
-        }
+        if (rewardByKey.isEmpty()) return result;
 
         for (Map.Entry<String, String> entry : rewardByKey.entrySet()) {
             String reward = entry.getValue();
@@ -311,21 +293,17 @@ public class PlotStatusGUI {
                 String roman = toRoman(tier);
 
                 String color;
-                if (tier >= 4) {
-                    color = "§d"; // epic
-                } else if (tier >= 2) {
-                    color = "§b"; // rare
-                } else {
-                    color = "§a"; // common
-                }
+                if (tier >= 4) color = "&d";
+                else if (tier >= 2) color = "&b";
+                else color = "&a";
 
-                result.add(color + "✦ §f" + effectName + " §7(Effect §f" + roman + "§7)");
+                result.add(color + "✦ &f" + effectName + " &7(Effect &f" + roman + "&7)");
                 continue;
             }
 
             if (parts.length == 2 && isInteger(parts[1]) && parts[0].equalsIgnoreCase("MEMBERS")) {
                 int amount = Integer.parseInt(parts[1]);
-                result.add("§a✦ §fTrusted member slots: §b+" + amount);
+                result.add("&a✦ &fTrusted member slots: &b+" + amount);
                 continue;
             }
 
@@ -334,19 +312,20 @@ public class PlotStatusGUI {
                                   .replace(":", " ");
             pretty = formatName(pretty);
 
-            result.add("§a✦ §f" + pretty);
+            result.add("&a✦ &f" + pretty);
         }
 
         return result;
     }
 
+    private void sendSystem(Player player, String key, String fallback) {
+        String msg = plugin.gui().tr(player, key, fallback);
+        player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', msg));
+    }
+
     private boolean isInteger(String s) {
-        try {
-            Integer.parseInt(s);
-            return true;
-        } catch (NumberFormatException ex) {
-            return false;
-        }
+        try { Integer.parseInt(s); return true; }
+        catch (NumberFormatException ex) { return false; }
     }
 
     private String toRoman(int n) {

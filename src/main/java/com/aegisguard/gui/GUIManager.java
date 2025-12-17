@@ -1,6 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import org.bukkit.ChatColor;
@@ -14,6 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GUIManager {
 
@@ -47,6 +50,9 @@ public class GUIManager {
 
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
+
+    // Hex pattern (&#RRGGBB)
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -127,31 +133,23 @@ public class GUIManager {
     /**
      * Centralized text lookup using the Aegis Codex engine.
      *
-     * Usage example in other GUIs:
-     * String title = plugin.gui().tr(player, "menu_title", "&b⚔ AegisGuard Menu");
+     * IMPORTANT: CodexEngine returns the key itself when missing.
+     * This method prevents raw keys from leaking into the UI by using fallback.
      */
     public String tr(Player player, String key, String fallback) {
+        String value = null;
         try {
-            if (plugin.codex() != null) {
-                String value = plugin.codex().tr(player, key);
-                if (value != null && !value.trim().isEmpty()) {
-                    return value;
-                }
-            }
-        } catch (Throwable ignored) {
-            // If Codex blows up, we silently fall back to the hardcoded text.
-        }
-        return fallback;
+            if (plugin.codex() != null) value = plugin.codex().tr(player, key);
+        } catch (Throwable ignored) {}
+
+        return safeText(key, value, fallback);
     }
 
     /**
-     * ✅ NEW: Safe inventory title formatter
-     * - translates & color codes
+     * ✅ Safe inventory title formatter
+     * - translates & + hex
      * - safe fallback if missing
-     * - clamps length to avoid client/title glitches
-     *
-     * Use in GUIs:
-     * String title = plugin.gui().title(player, "codex_gui_title", "&b✦ The Guardian Codex ✦");
+     * - clamps length to reduce client/title glitches
      */
     public String title(Player player, String key, String fallback) {
         String raw = null;
@@ -159,10 +157,10 @@ public class GUIManager {
             if (plugin.codex() != null) raw = plugin.codex().tr(player, key);
         } catch (Throwable ignored) {}
 
-        String t = safeText(raw, fallback);
-        t = ChatColor.translateAlternateColorCodes('&', t);
+        String t = safeText(key, raw, fallback);
+        t = color(t);
 
-        // Safe clamp: prevents weird cut-off formatting / glyph issues on some clients
+        // Safe clamp: avoid weird cut-off formatting on some clients
         if (t.length() > 32) t = t.substring(0, 32);
         if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
 
@@ -176,13 +174,10 @@ public class GUIManager {
         try {
             if (plugin.codex() != null) {
                 List<String> value = plugin.codex().trList(player, key);
-                if (value != null && !value.isEmpty()) {
-                    return value;
-                }
+                if (value != null && !value.isEmpty()) return value;
             }
-        } catch (Throwable ignored) {
-            // Same idea: protect against language engine issues.
-        }
+        } catch (Throwable ignored) {}
+
         return fallback == null ? Collections.emptyList() : fallback;
     }
 
@@ -191,13 +186,24 @@ public class GUIManager {
     // ======================================
 
     /**
-     * RESTORED: Converts null or placeholder strings to a safe fallback.
-     * Used by all GUIs for reliable display names/titles.
+     * ✅ NEW: Stronger safe fallback logic:
+     * - null/empty -> fallback
+     * - "[Missing...]" -> fallback
+     * - returns-the-key -> fallback (Codex behavior)
      */
-    public static String safeText(String fromMsg, String fallback) {
-        if (fromMsg == null) return fallback;
-        if (fromMsg.contains("[Missing") || fromMsg.contains("null")) return fallback;
-        return fromMsg;
+    public static String safeText(String requestedKey, String fromCodex, String fallback) {
+        if (fallback == null) fallback = "";
+        if (fromCodex == null) return fallback;
+
+        String s = fromCodex.trim();
+        if (s.isEmpty()) return fallback;
+
+        if (s.contains("[Missing") || s.equalsIgnoreCase("null")) return fallback;
+
+        // CodexEngine "not found" behavior: return key
+        if (requestedKey != null && s.equalsIgnoreCase(requestedKey.trim())) return fallback;
+
+        return fromCodex;
     }
 
     /**
@@ -214,72 +220,82 @@ public class GUIManager {
                 for (String line : lore) coloredLore.add(color(line));
                 meta.setLore(coloredLore);
             }
-            // Hide everything for a clean UI look
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
         return item;
     }
 
-    /**
-     * Convenience overload: (name, Material, lore)
-     */
     public static ItemStack createItem(String name, Material mat, List<String> lore) {
         return createItem(mat, name, lore);
     }
 
-    /**
-     * Creates a filler item (Gray Glass Pane) for empty slots.
-     */
     public static ItemStack getFiller() {
         ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(" "); // Empty name
+            meta.setDisplayName(" ");
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
         return item;
     }
 
-    /**
-     * Plays a standard UI click sound.
-     */
     public static void playClick(Player p) {
-        try {
-            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
-        } catch (Exception ignored) {}
+        try { p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f); }
+        catch (Exception ignored) {}
     }
 
-    /**
-     * Plays a success/purchase sound.
-     */
     public static void playSuccess(Player p) {
-        try {
-            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 2.0f);
-        } catch (Exception ignored) {}
-    }
-
-    private static String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text);
+        try { p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 2.0f); }
+        catch (Exception ignored) {}
     }
 
     /**
-     * ✅ NEW: Generate a "Domain Registry" item for the main menu.
+     * Color utility with:
+     * - legacy & codes
+     * - hex codes in the form &#RRGGBB
+     */
+    private static String color(String text) {
+        if (text == null) return "";
+        String msg = text;
+
+        Matcher matcher = HEX_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            String token = matcher.group(0);       // "&#A1B2C3"
+            String hex = matcher.group(1);         // "A1B2C3"
+            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
+            matcher = HEX_PATTERN.matcher(msg);
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', msg);
+    }
+
+    /**
+     * ✅ Domain Registry item for the main menu.
+     * Safe even if claim blocks are disabled.
      */
     public ItemStack createLedgerItem(Player p) {
-        long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());
-        long used = plugin.getClaimBlockManager().getUsedBlocks(p.getUniqueId());
-        long available = plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId());
-
         String title = tr(p, "ledger_title", "&6📜 Domain Registry");
         List<String> lore = new ArrayList<>();
+
+        ClaimBlockManager cb = plugin.getClaimBlockManager();
+        if (cb == null) {
+            lore.add(tr(p, "ledger_disabled", "&7Claim Blocks are disabled on this server."));
+            lore.add(" ");
+            lore.add(tr(p, "ledger_click_disabled", "&8No ledger entries available."));
+            return createItem(Material.PAPER, title, lore);
+        }
+
+        long total = cb.getTotalBlocks(p.getUniqueId());
+        long used = cb.getUsedBlocks(p.getUniqueId());
+        long available = cb.getAvailableBlocks(p.getUniqueId());
 
         lore.add(tr(p, "ledger_available", "&7Available: &a" + available));
         lore.add(tr(p, "ledger_used", "&7Used: &c" + used));
         lore.add(tr(p, "ledger_total", "&7Total Capacity: &e" + total));
         lore.add(" ");
-        lore.add("&eClick to view detailed stats.");
+        lore.add(tr(p, "ledger_click", "&eClick to view detailed stats."));
 
         return createItem(Material.PAPER, title, lore);
     }

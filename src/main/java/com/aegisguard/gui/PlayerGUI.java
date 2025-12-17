@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -10,16 +11,22 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * PlayerGUI
  * - The main dashboard for AegisGuard.
- * - Fully localized via Codex: Text updates based on player language setting.
+ * - Fully localized via Codex (NO messages.yml usage).
  */
 public class PlayerGUI {
 
     private final AegisGuard plugin;
+
+    // Hex pattern (&#RRGGBB) for chat messages
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public PlayerGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -29,14 +36,47 @@ public class PlayerGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    public void open(Player player) {
-        // ✅ Fixed: translates &-colors + clamps length + safe fallback
-        String title = plugin.gui().title(
-                player,
-                "menu_title",
-                "&b⚔ AegisGuard Menu"
-        );
+    /* ---------------------------------------------------------
+     * Helpers (Codex-safe with fallbacks)
+     * --------------------------------------------------------- */
 
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
+    }
+
+    private void send(Player p, String key, String fallback) {
+        // Optional prefix (put this key in core.yml if you want)
+        String prefix = t(p, "prefix", "&8[&bAegisGuard&8]&r ");
+        String msg = t(p, key, fallback);
+        if (msg == null || msg.trim().isEmpty()) return;
+        p.sendMessage(color(prefix + msg));
+    }
+
+    private String color(String text) {
+        if (text == null) return "";
+        String msg = text;
+
+        Matcher matcher = HEX_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            String token = matcher.group(0); // "&#A1B2C3"
+            String hex = matcher.group(1);   // "A1B2C3"
+            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
+            matcher = HEX_PATTERN.matcher(msg);
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', msg);
+    }
+
+    /* ---------------------------------------------------------
+     * OPEN
+     * --------------------------------------------------------- */
+
+    public void open(Player player) {
+        String title = plugin.gui().title(player, "menu_title", "&b⚔ AegisGuard Menu");
         Inventory inv = Bukkit.createInventory(new PlayerMenuHolder(), 54, title);
 
         // --- 1. Glass Borders ---
@@ -53,33 +93,36 @@ public class PlayerGUI {
 
         // --- 2. HEADER ---
 
-        // Codex (Global Info) (Slot 4)
+        // Info (Slot 4)
         inv.setItem(4, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
-                plugin.codex().tr(player, "button_info"),
-                plugin.codex().trList(player, "info_lore")
+                t(player, "button_info", "&bℹ Info"),
+                tl(player, "info_lore", List.of("&7View plugin info and help."))
         ));
 
         // Plot Status Codex (Slot 11)
         inv.setItem(11, GUIManager.createItem(
                 Material.ENCHANTED_BOOK,
-                plugin.codex().tr(player, "plot_status_button_title"),
-                plugin.codex().trList(player, "plot_status_button_lore")
+                t(player, "plot_status_button_title", "&d📜 Plot Status"),
+                tl(player, "plot_status_button_lore", List.of("&7View plot status and details."))
         ));
 
         // Travel (Slot 13)
         if (plugin.cfg().isTravelSystemEnabled()) {
             inv.setItem(13, GUIManager.createItem(
                     Material.COMPASS,
-                    plugin.codex().tr(player, "visit_gui_title"),
-                    plugin.codex().trList(player, "visit_button_lore")
+                    t(player, "visit_gui_title", "&a🧭 Travel"),
+                    tl(player, "visit_button_lore", List.of("&7Visit plots and travel quickly."))
             ));
         }
 
         // --- 3. CORE MANAGEMENT ---
 
         Plot currentPlot = plugin.store().getPlotAt(player.getLocation());
-        boolean isOwner = currentPlot != null && currentPlot.getOwner().equals(player.getUniqueId());
+        boolean isOwner = currentPlot != null
+                && currentPlot.getOwner() != null
+                && currentPlot.getOwner().equals(player.getUniqueId());
+
         boolean isAdmin = plugin.isAdmin(player);
         boolean canManage = isOwner || isAdmin;
 
@@ -88,14 +131,14 @@ public class PlayerGUI {
         if (hasSelection) {
             inv.setItem(20, GUIManager.createItem(
                     Material.LIGHTNING_ROD,
-                    plugin.codex().tr(player, "button_claim_land"),
-                    plugin.codex().trList(player, "claim_land_ready_lore")
+                    t(player, "button_claim_land", "&a🛡 Claim Land"),
+                    tl(player, "claim_land_ready_lore", List.of("&7Ready to claim your selection.", " ", "&eClick to confirm"))
             ));
         } else {
             inv.setItem(20, GUIManager.createItem(
                     Material.BARRIER,
-                    "§c" + plugin.codex().tr(player, "button_claim_land"),
-                    plugin.codex().trList(player, "claim_land_lore")
+                    "&c" + t(player, "button_claim_land", "🛡 Claim Land"),
+                    tl(player, "claim_land_lore", List.of("&7Select two points with your wand first."))
             ));
         }
 
@@ -103,16 +146,22 @@ public class PlayerGUI {
         Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
         inv.setItem(22, GUIManager.createItem(
                 flagIcon,
-                plugin.codex().tr(player, "button_plot_flags"),
-                plugin.codex().trList(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore")
+                t(player, "button_plot_flags", "&6⚙ Plot Flags"),
+                tl(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore",
+                        canManage
+                                ? List.of("&7Manage protection flags for this plot.")
+                                : List.of("&cYou cannot manage flags here."))
         ));
 
         // Roles (Slot 24)
         Material roleIcon = canManage ? Material.PLAYER_HEAD : Material.SKELETON_SKULL;
         inv.setItem(24, GUIManager.createItem(
                 roleIcon,
-                plugin.codex().tr(player, "button_roles"),
-                plugin.codex().trList(player, canManage ? "roles_lore" : "roles_locked_lore")
+                t(player, "button_roles", "&e👥 Roles"),
+                tl(player, canManage ? "roles_lore" : "roles_locked_lore",
+                        canManage
+                                ? List.of("&7Manage member roles and permissions.")
+                                : List.of("&cYou cannot manage roles here."))
         ));
 
         // --- 4. ADVANCED FEATURES ---
@@ -121,8 +170,8 @@ public class PlayerGUI {
         if (plugin.cfg().isLevelingEnabled()) {
             inv.setItem(29, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
-                    plugin.codex().tr(player, "level_gui_title"),
-                    plugin.codex().trList(player, "level_button_lore")
+                    t(player, "level_gui_title", "&a📈 Leveling"),
+                    tl(player, "level_button_lore", List.of("&7Level up your plot for perks."))
             ));
         }
 
@@ -130,8 +179,8 @@ public class PlayerGUI {
         if (plugin.cfg().isZoningEnabled()) {
             inv.setItem(31, GUIManager.createItem(
                     Material.IRON_BARS,
-                    plugin.codex().tr(player, "zone_gui_title"),
-                    plugin.codex().trList(player, "zone_button_lore")
+                    t(player, "zone_gui_title", "&b🏗 Zoning"),
+                    tl(player, "zone_button_lore", List.of("&7Create sub-zones and rentable rooms."))
             ));
         }
 
@@ -139,8 +188,8 @@ public class PlayerGUI {
         if (plugin.cfg().isBiomesEnabled()) {
             inv.setItem(33, GUIManager.createItem(
                     Material.SPORE_BLOSSOM,
-                    plugin.codex().tr(player, "biome_gui_title"),
-                    plugin.codex().trList(player, "biome_button_lore")
+                    t(player, "biome_gui_title", "&d🌿 Biomes"),
+                    tl(player, "biome_button_lore", List.of("&7Change your plot biome."))
             ));
         }
 
@@ -149,23 +198,23 @@ public class PlayerGUI {
         // Market (Slot 38)
         inv.setItem(38, GUIManager.createItem(
                 Material.GOLD_INGOT,
-                plugin.codex().tr(player, "button_market"),
-                plugin.codex().trList(player, "market_lore")
+                t(player, "button_market", "&6💰 Market"),
+                tl(player, "market_lore", List.of("&7Buy and sell plot goods."))
         ));
 
         // Expansion (Slot 40)
         inv.setItem(40, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
-                plugin.codex().tr(player, "button_expand"),
-                plugin.codex().trList(player, "expand_lore")
+                t(player, "button_expand", "&b⛏ Expand"),
+                tl(player, "expand_lore", List.of("&7Request land expansions."))
         ));
 
         // Auctions (Slot 42)
         if (plugin.cfg().isUpkeepEnabled()) {
             inv.setItem(42, GUIManager.createItem(
                     Material.LAVA_BUCKET,
-                    plugin.codex().tr(player, "button_auction"),
-                    plugin.codex().trList(player, "auction_lore")
+                    t(player, "button_auction", "&c🔥 Auctions"),
+                    tl(player, "auction_lore", List.of("&7Bid on plots and listings."))
             ));
         }
 
@@ -174,125 +223,156 @@ public class PlayerGUI {
         // Settings (Slot 48)
         inv.setItem(48, GUIManager.createItem(
                 Material.COMPARATOR,
-                plugin.codex().tr(player, "button_player_settings"),
-                plugin.codex().trList(player, "player_settings_lore")
+                t(player, "button_player_settings", "&e⚙ Settings"),
+                tl(player, "player_settings_lore", List.of("&7Personal preferences and language."))
         ));
 
         // Admin (Slot 49)
         if (plugin.isAdmin(player)) {
             inv.setItem(49, GUIManager.createItem(
                     Material.REDSTONE_BLOCK,
-                    plugin.codex().tr(player, "admin_menu_title"),
-                    List.of("§7Operator Access Only")
+                    t(player, "admin_menu_title", "&c🛠 Admin Menu"),
+                    tl(player, "admin_menu_lore", List.of("&7Operator Access Only"))
             ));
         }
 
         // Exit (Slot 50)
         inv.setItem(50, GUIManager.createItem(
                 Material.BARRIER,
-                plugin.codex().tr(player, "button_exit"),
-                plugin.codex().trList(player, "exit_lore")
+                t(player, "button_exit", "&c✖ Exit"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
         GUIManager.playClick(player);
     }
 
+    /* ---------------------------------------------------------
+     * CLICK HANDLER
+     * --------------------------------------------------------- */
+
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
+        int slot = e.getRawSlot();
+        if (slot < 0 || slot >= 54) return; // ignore bottom inventory
+
         Plot plot = plugin.store().getPlotAt(player.getLocation());
-        boolean isOwner = plot != null && plot.getOwner().equals(player.getUniqueId());
+
+        boolean isOwner = plot != null
+                && plot.getOwner() != null
+                && plot.getOwner().equals(player.getUniqueId());
+
         boolean isAdmin = plugin.isAdmin(player);
         boolean canManage = isOwner || isAdmin;
 
-        switch (e.getSlot()) {
-            case 4:
-                plugin.gui().info().open(player);
-                break;
+        switch (slot) {
+            case 4 -> plugin.gui().info().open(player);
 
-            case 11:
-                // Plot Status Codex
+            case 11 -> {
                 if (plot != null) {
                     plugin.gui().plotStatus().open(player, plot);
                 } else {
-                    plugin.msg().send(player, "no_plot_here");
+                    send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
                 }
-                break;
+            }
 
-            case 13:
+            case 13 -> {
                 if (plugin.cfg().isTravelSystemEnabled()) {
                     plugin.gui().visit().open(player, 0, false);
                 }
-                break;
+            }
 
-            case 20: // Claim
+            case 20 -> { // Claim
                 if (plugin.selection().hasSelection(player)) {
                     player.closeInventory();
                     plugin.selection().confirmClaim(player);
                 } else {
-                    GUIManager.playSuccess(player);
-                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                    send(player, "no_selection", "&cYou need to select two points first.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
                 }
-                break;
+            }
 
-            case 22: // Flags
-                if (canManage) plugin.gui().flags().open(player, plot);
-                else plugin.msg().send(player, "no_plot_here");
-                break;
+            case 22 -> { // Flags
+                if (plot != null && canManage) plugin.gui().flags().open(player, plot);
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
 
-            case 24: // Roles
+            case 24 -> { // Roles
                 if (plot != null && canManage) plugin.gui().roles().open(player);
-                else plugin.msg().send(player, "no_plot_here");
-                break;
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
 
             // Advanced Features
-            case 29: // Leveling
+            case 29 -> {
                 if (plugin.cfg().isLevelingEnabled()) {
                     if (plot != null && canManage) plugin.gui().leveling().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
+                    else {
+                        send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                                plot == null
+                                        ? "&cYou must be standing inside a plot to do that."
+                                        : "&cYou cannot manage this plot.");
+                        if (plugin.effects() != null) plugin.effects().playError(player);
+                    }
                 }
-                break;
+            }
 
-            case 31: // Zoning
+            case 31 -> {
                 if (plugin.cfg().isZoningEnabled()) {
                     if (plot != null && canManage) plugin.gui().zoning().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
+                    else {
+                        send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                                plot == null
+                                        ? "&cYou must be standing inside a plot to do that."
+                                        : "&cYou cannot manage this plot.");
+                        if (plugin.effects() != null) plugin.effects().playError(player);
+                    }
                 }
-                break;
+            }
 
-            case 33: // Biomes
+            case 33 -> {
                 if (plugin.cfg().isBiomesEnabled()) {
                     if (plot != null && canManage) plugin.gui().biomes().open(player, plot);
-                    else plugin.msg().send(player, "no_plot_here");
+                    else {
+                        send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                                plot == null
+                                        ? "&cYou must be standing inside a plot to do that."
+                                        : "&cYou cannot manage this plot.");
+                        if (plugin.effects() != null) plugin.effects().playError(player);
+                    }
                 }
-                break;
+            }
 
             // Economy
-            case 38:
-                plugin.gui().market().open(player, 0);
-                break;
-            case 40:
-                plugin.gui().expansionRequest().open(player);
-                break;
-            case 42:
+            case 38 -> plugin.gui().market().open(player, 0);
+            case 40 -> plugin.gui().expansionRequest().open(player);
+            case 42 -> {
                 if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0);
-                break;
+            }
 
             // System
-            case 48:
-                plugin.gui().settings().open(player);
-                break;
-            case 49:
+            case 48 -> plugin.gui().settings().open(player);
+            case 49 -> {
                 if (isAdmin) plugin.gui().admin().open(player);
-                break;
-            case 50:
-                player.closeInventory();
-                break;
+            }
+            case 50 -> player.closeInventory();
         }
 
-        if (e.getSlot() != 20 && e.getSlot() != 50) {
+        if (slot != 20 && slot != 50) {
             GUIManager.playClick(player);
         }
     }

@@ -43,6 +43,8 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
@@ -75,7 +77,11 @@ public class AegisGuard extends JavaPlugin {
     /** 🧱 NEW: Claim Block Manager (1.2.4+) */
     private ClaimBlockManager claimBlockManager;
 
-    /** 📜 LEGACY: messages.yml-backed utility (to be removed in future) */
+    /**
+     * 📜 LEGACY: MessagesUtil (player prefs + legacy lookups).
+     * NOTE: AegisGuard.java no longer auto-creates messages.yml.
+     * We'll fully remove this after migrating prefs to the new system.
+     */
     private MessagesUtil messages;
 
     private WorldRulesManager worldRules;
@@ -85,9 +91,6 @@ public class AegisGuard extends JavaPlugin {
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
-    // private McMMOHook mcmmoHook;
-    // private JobsRebornHook jobsHook;
-    // Note: CoreProtect usually handled inside Listener or DataStore in 1.2.x
 
     private boolean isFolia = false;
 
@@ -127,7 +130,7 @@ public class AegisGuard extends JavaPlugin {
     public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
 
     /**
-     * 📜 Legacy messages.yml access.
+     * 📜 Legacy access.
      * Marked deprecated so we can hunt usages and migrate to codex().
      */
     @Deprecated
@@ -139,10 +142,6 @@ public class AegisGuard extends JavaPlugin {
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
-
-    // Hooks – removed for 1.2.2 (only in 1.3.0)
-    // public McMMOHook getMcMMO() { return mcmmoHook; }
-    // public JobsRebornHook getJobs() { return jobsHook; }
 
     // Legacy Alias
     public AGConfig getConfigManager() { return configMgr; }
@@ -163,12 +162,21 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
 
-        // --- 1.a NEW: Ensure Codex language files exist ---
-        ensureCodexFiles();
+        // --- 1.a NEW: Ensure language bundle files exist (new split structure) ---
+        ensureLocalizationFiles();
 
-        // --- 1.b LEGACY: messages.yml (kept for now, to be phased out) ---
-        if (!new File(getDataFolder(), "messages.yml").exists()) {
-            saveResource("messages.yml", false);
+        // --- 1.b LEGACY (optional): DO NOT auto-create messages.yml anymore ---
+        // If you still need it temporarily, set: localization.install_legacy_messages_yml: true
+        if (getConfig().getBoolean("localization.install_legacy_messages_yml", false)) {
+            File legacy = new File(getDataFolder(), "messages.yml");
+            if (!legacy.exists()) {
+                try {
+                    saveResource("messages.yml", false);
+                    getLogger().info("[AegisGuard] Installed legacy messages.yml (compat mode enabled).");
+                } catch (IllegalArgumentException ex) {
+                    getLogger().warning("[AegisGuard] messages.yml not bundled in jar (fine): " + ex.getMessage());
+                }
+            }
         }
 
         this.configMgr = new AGConfig(this);
@@ -187,21 +195,24 @@ public class AegisGuard extends JavaPlugin {
         // --- 3. INIT MANAGERS (v1.2.2 Structure) ---
 
         // 3.a NEW: Language Engine (Codex)
-        //     Loads codex.yml, core.yml, and style files (old/hybrid/modern)
         try {
             this.codex = new CodexEngine(this);
             getLogger().info("✅ Aegis Codex language engine initialized.");
         } catch (Throwable t) {
-            getLogger().severe("❌ Failed to initialize CodexEngine! Falling back to legacy messages.yml: " + t.getMessage());
+            getLogger().severe("❌ Failed to initialize CodexEngine! Language system may not function correctly: " + t.getMessage());
             this.codex = null;
         }
 
         this.selection = new SelectionService(this);
 
-        // 3.b LEGACY MessagesUtil - still present for:
-        //  - existing msg().get(...) calls (until migrated)
-        //  - player sound + preference storage
-        this.messages = new MessagesUtil(this);
+        // 3.b LEGACY MessagesUtil (player prefs + remaining legacy lookups)
+        //     Wrapped so messages.yml removal won't hard-crash the whole plugin.
+        try {
+            this.messages = new MessagesUtil(this);
+        } catch (Throwable t) {
+            this.messages = null;
+            getLogger().warning("⚠ MessagesUtil failed to initialize (legacy mode may be unavailable): " + t.getMessage());
+        }
 
         // 3.c NEW: Claim Block Manager (Bank) — only if enabled
         if (cfg().raw().getBoolean("claim_blocks.enabled", true)) {
@@ -223,12 +234,9 @@ public class AegisGuard extends JavaPlugin {
         this.plotStore.load();
 
         runGlobalAsync(() -> {
-            // In 1.2.4 we keep using MessagesUtil for player prefs
+            // While migrating, MessagesUtil may still hold player prefs
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
-
-            // In the future we can migrate player language/sound prefs into Codex
-            // and stop touching messages.yml entirely.
         });
 
         // Register Events
@@ -314,14 +322,6 @@ public class AegisGuard extends JavaPlugin {
             this.protectionHooks = null;
             getLogger().info("[AegisGuard] Protection compatibility hooks disabled in config (hooks.protection_compat.enabled=false).");
         }
-
-        // mcMMO / Jobs hooks are 1.3.0-only and intentionally disabled in 1.2.2
-        // if (Bukkit.getPluginManager().isPluginEnabled("mcMMO")) {
-        //     this.mcmmoHook = new McMMOHook(this);
-        // }
-        // if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
-        //     this.jobsHook = new JobsRebornHook(this);
-        // }
     }
 
     @Override
@@ -341,7 +341,7 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (claimBlockManager != null) claimBlockManager.shutdown();
 
-        // Legacy player prefs still live on MessagesUtil in 1.2.4
+        // Legacy player prefs (until migrated)
         if (messages != null) messages.savePlayerData();
 
         // ✅ NEW: tidy release
@@ -351,40 +351,93 @@ public class AegisGuard extends JavaPlugin {
         getLogger().info("AegisGuard disabled.");
     }
 
-    // --- NEW: CODEx FILE BOOTSTRAP ---
+    // --- NEW: LANGUAGE BUNDLE BOOTSTRAP (Split Files) ---
 
     /**
-     * Ensure all Codex language files exist in the plugin data folder.
-     * This avoids hard crashes the first time the new engine runs.
+     * Ensures the new split language structure exists (per-language folders + bundles):
+     *
+     *   /plugins/AegisGuard/<folder>/<language>/guis.yml
+     *   /plugins/AegisGuard/<folder>/<language>/system.yml
+     *   /plugins/AegisGuard/<folder>/<language>/upgrades.yml
+     *   /plugins/AegisGuard/<folder>/<language>/expansions.yml
+     *
+     * Default folder is "codex" so it matches your existing 1.2.4 naming,
+     * but you can change it in config.yml via localization.folder.
      */
-    private void ensureCodexFiles() {
-        File codexDir = new File(getDataFolder(), "codex");
-        if (!codexDir.exists() && !codexDir.mkdirs()) {
-            getLogger().warning("[AegisGuard] Failed to create codex directory; language engine may not function correctly.");
+    private void ensureLocalizationFiles() {
+        if (!getConfig().getBoolean("localization.extract_defaults", true)) {
+            return;
         }
 
-        // These paths assume resources are packaged in the JAR under /codex/*
-        saveCodexResourceIfMissing("codex.yml");
-        saveCodexResourceIfMissing("core.yml");
-        saveCodexResourceIfMissing("old_english.yml");
-        saveCodexResourceIfMissing("hybrid_english.yml");
-        saveCodexResourceIfMissing("modern_english.yml");
+        String folder = getConfig().getString("localization.folder", "codex");
+        File baseDir = new File(getDataFolder(), folder);
 
-        // ✅ NEW: Added Spanish Files
-        saveCodexResourceIfMissing("spanish_mx.yml");
-        saveCodexResourceIfMissing("spanish_ar.yml");
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            getLogger().warning("[AegisGuard] Failed to create localization folder: " + baseDir.getPath());
+            return;
+        }
+
+        // Optional: keep installing legacy Codex root files for now (until CodexEngine is updated by you/me next)
+        List<String> rootFiles = getConfig().getStringList("localization.root_files");
+        if (rootFiles == null || rootFiles.isEmpty()) {
+            rootFiles = Arrays.asList(
+                    "codex.yml",
+                    "core.yml",
+                    "old_english.yml",
+                    "hybrid_english.yml",
+                    "modern_english.yml",
+                    "spanish_mx.yml",
+                    "spanish_ar.yml"
+            );
+        }
+
+        for (String root : rootFiles) {
+            saveBundledResourceIfMissing(folder + "/" + root);
+        }
+
+        List<String> languages = getConfig().getStringList("localization.available_languages");
+        if (languages == null || languages.isEmpty()) {
+            languages = Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar");
+        }
+
+        List<String> bundles = getConfig().getStringList("localization.bundles");
+        if (bundles == null || bundles.isEmpty()) {
+            bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
+        }
+
+        for (String lang : languages) {
+            File langDir = new File(baseDir, lang);
+            if (!langDir.exists() && !langDir.mkdirs()) {
+                getLogger().warning("[AegisGuard] Failed to create language folder: " + langDir.getPath());
+                continue;
+            }
+
+            for (String bundle : bundles) {
+                saveBundledResourceIfMissing(folder + "/" + lang + "/" + bundle);
+            }
+        }
     }
 
-    private void saveCodexResourceIfMissing(String name) {
-        File target = new File(getDataFolder(), "codex" + File.separator + name);
-        if (!target.exists()) {
-            try {
-                saveResource("codex/" + name, false);
-                getLogger().info("[AegisGuard] Installed default codex file: " + name);
-            } catch (IllegalArgumentException ex) {
-                // Resource missing from JAR – log but don't hard-crash server
-                getLogger().warning("[AegisGuard] Missing bundled codex resource: codex/" + name + " (" + ex.getMessage() + ")");
-            }
+    /**
+     * Saves a resource from the jar into the data folder if missing.
+     * @param jarRelativePath Example: "codex/old_english/guis.yml"
+     */
+    private void saveBundledResourceIfMissing(String jarRelativePath) {
+        File target = new File(getDataFolder(), jarRelativePath.replace("/", File.separator));
+        if (target.exists()) return;
+
+        File parent = target.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            getLogger().warning("[AegisGuard] Failed to create parent folders for: " + target.getPath());
+            return;
+        }
+
+        try {
+            saveResource(jarRelativePath, false);
+            getLogger().info("[AegisGuard] Installed language resource: " + jarRelativePath);
+        } catch (IllegalArgumentException ex) {
+            // Not bundled yet – warn but do not crash
+            getLogger().warning("[AegisGuard] Missing bundled resource: " + jarRelativePath + " (" + ex.getMessage() + ")");
         }
     }
 

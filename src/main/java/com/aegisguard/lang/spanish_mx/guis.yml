@@ -1,0 +1,167 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (MX / Neutral)
+# File: guis.yml
+# Split from legacy single-file language pack
+# ======================================
+
+menu_title: '&b⚔ Menú AegisGuard'
+button_claim_land: '&a🛡 Crear Parcela'
+claim_land_lore:
+- '&7Comienza a proteger esta área.'
+claim_land_ready_lore:
+- '&7Crear una nueva parcela basada'
+- '&7en tu selección actual.'
+- ' '
+- '&eClic para Confirmar'
+plot_flags_title: '&9⚙ Ajustes de Parcela'
+plot_flags_lore:
+- '&7Ajusta las protecciones, roles'
+- '&7y configuraciones de tu parcela.'
+plot_flags_locked_lore:
+- '&cDebes estar dentro'
+- '&cde tu parcela.'
+button_plot_flags: '&6Ajustes'
+button_roles: '&eRoles'
+roles_lore:
+- '&7Gestiona el acceso de jugadores'
+- '&7en tu parcela.'
+roles_locked_lore:
+- '&cDebes estar dentro'
+- '&cde tu parcela.'
+button_player_settings: '&bPreferencias'
+player_settings_lore:
+- '&7Cambia tu idioma, sonidos'
+- '&7y ajustes personales.'
+button_market: '&aMercado'
+market_lore:
+- '&7Compra y vende parcelas'
+- '&7en el mercado.'
+button_auction: '&cSubastas'
+auction_lore:
+- '&7Puja por parcelas'
+- '&7en subasta.'
+button_info: '&eGuía del Guardián'
+info_lore:
+- '&7Abre el Codex'
+- '&7y aprende a usar AegisGuard.'
+button_plot_status: '&b📊 Estado de Parcela'
+plot_status_button_title: '&b📊 Estado de Parcela'
+plot_status_lore:
+- '&7Mira el estado de tu parcela:'
+- '&7bonos, tamaño, crecimiento.'
+- ' '
+- '&8Solo se muestran los bonos'
+- '&8más relevantes para mantenerlo limpio.'
+settings_menu_title: '&9⚙ Preferencias'
+button_sounds_on: '&a🔊 Sonidos: ACTIVADOS'
+button_sounds_off: '&c🔇 Sonidos: DESACTIVADOS'
+button_sounds_disabled_global: '&7🔇 Sonidos: Desactivados por el Servidor'
+sounds_toggle_lore:
+- '&7Activa o desactiva los sonidos'
+- '&7de menús y notificaciones.'
+sounds_toggle_global_disabled_lore:
+- '&7Los sonidos fueron desactivados'
+- '&7globalmente por un admin.'
+button_back: '&e⟵ Regresar'
+button_exit: '&c✖ Cerrar'
+exit_lore:
+- '&7Cierra este menú.'
+button_prev_page: '&fPágina Anterior'
+button_next_page: '&fSiguiente Página'
+button_back_menu: '&fVolver al Menú'
+back_lore:
+- '&7Regresa a la página anterior.'
+back_menu_lore:
+- '&7Regresa al menú principal.'
+ledger_title: '&6📜 Registro del Dominio'
+ledger_available: '&7Disponible: &a'
+ledger_used: '&7Usado: &c'
+ledger_total: '&7Capacidad Total: &e'
+zone_gui_title: '&3Gestor de Zonas'
+zone_button_lore:
+- '&7Crea y administra sub-zonas'
+- '&7que pueden ser rentadas.'
+button_zone_create: '&aCrear Zona'
+zone_create_ready_lore:
+- '&7Crea una zona desde tu'
+- '&7selección actual.'
+zone_create_locked_lore:
+- '&cPrimero selecciona un área'
+- '&ccon la Varita.'
+zone_status_available: '&aDisponible'
+zone_evict_action: '&cClic Izquierdo: Expulsar Inquilino'
+zone_delete_action: '&cClic Derecho: Eliminar Zona'
+biome_gui_title: '&2Bioma'
+biome_button_lore:
+- '&7Cambia el bioma visual'
+- '&7de tu parcela.'
+biome_select_lore:
+- '&7Establecer bioma a {BIOME}.'
+- '&7Costo: &e{COST}'
+- ' '
+- '&8[&c!&8] &7Solo visual'
+- '&7No reemplaza bloques existentes.'
+biome_button_back: '&e⟵ Volver a Ajustes'
+biome_button_exit: '&c✖ Cerrar Biomas'
+help_header: '&bAyuda de AegisGuard'
+help_lines:
+- '&e/aegis wand &7- Obtener la varita (herramienta de selección).'
+- '&e/aegis menu &7- Abrir el menú principal.'
+- '&e/aegis claim &7- Crear una parcela con tu selección.'
+- '&e/aegis unclaim &7- Eliminar tu parcela actual.'
+- '&e/aegis resize <dir> <amt> &7- Cambiar tamaño de la parcela.'
+- '&e/aegis home &7- Ir al home de la parcela.'
+- '&e/aegis setspawn &7- Establecer el home de la parcela.'
+- '&e/aegis market &7- Abrir el mercado.'
+- '&e/aegis auction &7- Ver subastas activas.'
+- '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
+- '&e/aegis help &7- Ver este menú de ayuda.'
+auction_gui_title: '&6Subastas de Parcelas'
+market_gui_title: '&2Bienes Raíces'
+market_type_rent: '&bEn Renta'
+market_type_sale: '&aEn Venta'
+market_button_back: '&e⟵ Volver al Mercado'
+realestate_button_back: '&e⟵ Volver a Bienes Raíces'
+domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
+auction_button_back: '&e⟵ Volver a Subastas'
+auction_item_name: '&eSubasta: Parcela de {OWNER}'
+auction_current_bid: '&7Puja Actual: &e{AMOUNT}'
+auction_highest_bidder: '&7Mejor Postor: &f{PLAYER}'
+auction_item_lore:
+- '&eClic Izquierdo: &7Ver Parcela'
+- '&aClic Derecho: &7Pujar'
+market_item_lore:
+- '&eClic Izquierdo: &7Ver Parcela'
+- '&aClic Derecho: &7Comprar'
+visit_gui_title: '&9Menú de Viaje'
+visit_title_warps: '&6Puntos del Servidor'
+visit_title_trusted: '&9Parcelas Confiadas'
+visit_switch_trusted: '&bVer: Parcelas Confiadas'
+visit_switch_trusted_lore:
+- '&7Ver parcelas donde eres miembro.'
+visit_switch_warps: '&6Ver: Puntos del Servidor'
+visit_switch_warps_lore:
+- '&7Ver ubicaciones públicas.'
+visit_warp_lore:
+- '&7Clic para teletransportarte.'
+visit_plot_name: '&e{PLOT}'
+visit_plot_lore:
+- '&7Mundo: &f{WORLD}'
+- '&7Estado: &a{ROLE}'
+- ' '
+- '&eClic para Teletransportar'
+button_back_admin: '&fVolver al Admin'
+expansion_button_back: '&e⟵ Volver a Expansiones'
+expansion_button_back_lore:
+- '&7Regresa a las opciones de expansión.'
+expansion_gui_title: '&d§lSolicitud de Expansión'
+button_expand: '&dSolicitar Expansión'
+expand_lore:
+- '&7Envía una solicitud'
+- '&7para expandir el tamaño de tu terreno.'
+button_submit_request: '&aEnviar Solicitud'
+submit_request_lore:
+- '&7Selecciona el tamaño de expansión deseado.'
+button_view_requests_admin: '&cVer Solicitudes (Admin)'
+view_requests_admin_lore:
+- '&7Revisa las peticiones de los jugadores.'

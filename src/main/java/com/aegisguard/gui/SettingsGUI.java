@@ -16,8 +16,8 @@ import java.util.Locale;
 /**
  * SettingsGUI
  * - Personal player preferences (sounds, language, notifications)
- * - Language cycling now uses CodexEngine style order (codex.yml), not hard-coded switch chains.
- * - Persists language choice to playerdata.yml via CodexEngine.
+ * - Language cycling uses CodexEngine style order (codex.yml), not hard-coded switch chains.
+ * - NOTE: Persistence will be handled inside CodexEngine later (no savePlayerData() call here).
  */
 public class SettingsGUI {
 
@@ -125,10 +125,7 @@ public class SettingsGUI {
 
                 boolean applied = plugin.codex().setPlayerStyle(player, next);
                 if (applied) {
-                    // Persist to playerdata.yml (async disk IO)
-                    plugin.runGlobalAsync(() -> {
-                        try { plugin.codex().savePlayerData(); } catch (Throwable ignored) {}
-                    });
+                    // ✅ Persistence will be handled inside CodexEngine later.
                     plugin.effects().playMenuFlip(player);
                 } else {
                     plugin.effects().playError(player);
@@ -178,6 +175,7 @@ public class SettingsGUI {
     private String pretty(String raw) {
         String s = raw.replace('_', ' ').trim();
         if (s.isEmpty()) return raw;
+
         String[] parts = s.split("\\s+");
         StringBuilder out = new StringBuilder();
         for (String p : parts) {

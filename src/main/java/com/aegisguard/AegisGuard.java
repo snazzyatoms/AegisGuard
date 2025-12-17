@@ -1,34 +1,31 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
-import com.aegisguard.claimblocks.ClaimBlockManager; // ✅ NEW: Claim Block Manager
-import com.aegisguard.claimblocks.ClaimBlockTask;    // ✅ NEW: Earning Task
+import com.aegisguard.claimblocks.ClaimBlockManager;
+import com.aegisguard.claimblocks.ClaimBlockTask;
 import com.aegisguard.commands.AegisCommand;
-// import com.aegisguard.commands.CommandHandler;
 import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.EconomyManager; // ✅ CORRECT: Economy package for 1.2.x
+import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
-import com.aegisguard.gui.GUIListener;    // ✅ CORRECT: GUI package for 1.2.x
+import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
-// import com.aegisguard.hooks.JobsRebornHook;
-// import com.aegisguard.hooks.McMMOHook;
 import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
-import com.aegisguard.hooks.protection.ProtectionHookManager; // ✅ NEW: Protection hook manager (compatibility layer)
-import com.aegisguard.language.CodexEngine;       // ✅ NEW: Language Engine
+import com.aegisguard.hooks.protection.ProtectionHookManager;
+import com.aegisguard.language.CodexEngine;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
-import com.aegisguard.listeners.PlotGreetingListener; // ✅ NEW: Greeting Listener
+import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
-import com.aegisguard.selection.WandSafetyListener;   // ✅ NEW: wand anti-dupe / safety listener
+import com.aegisguard.selection.WandSafetyListener;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
@@ -52,9 +49,6 @@ public class AegisGuard extends JavaPlugin {
     // --- SINGLETON PATTERN ---
     private static AegisGuard instance;
 
-    /**
-     * Get the main instance of the AegisGuard plugin.
-     */
     public static AegisGuard getInstance() {
         return instance;
     }
@@ -68,19 +62,21 @@ public class AegisGuard extends JavaPlugin {
     private VaultHook vault;
     private EconomyManager ecoManager;
 
-    /** ✅ NEW: Compatibility layer for other protection plugins (WorldGuard, etc.) */
+    /** ✅ Compatibility layer for other protection plugins (WorldGuard, etc.) */
     private ProtectionHookManager protectionHooks;
 
-    /** 🔤 NEW: Aegis Codex language engine (1.2.4+) */
+    /** 🔤 Aegis Codex language engine (1.2.4+) */
     private CodexEngine codex;
 
-    /** 🧱 NEW: Claim Block Manager (1.2.4+) */
+    /** 🧱 Claim Block Manager (1.2.4+) */
     private ClaimBlockManager claimBlockManager;
 
     /**
-     * 📜 LEGACY: MessagesUtil (player prefs + legacy lookups).
-     * NOTE: AegisGuard.java no longer auto-creates messages.yml.
-     * We'll fully remove this after migrating prefs to the new system.
+     * MessagesUtil now acts as:
+     * - playerdata.yml prefs (language choice)
+     * - legacy msg().get(...) compatibility
+     *
+     * ✅ IMPORTANT: This class must NOT depend on messages.yml anymore.
      */
     private MessagesUtil messages;
 
@@ -99,14 +95,14 @@ public class AegisGuard extends JavaPlugin {
     private Object upkeepTask;
     private Object wildernessRevertTask;
     private Object mobBarrierTask;
-    private Object claimBlockTask; // ✅ NEW
+    private Object claimBlockTask;
 
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
-    public IDataStore getDataStore() { return plotStore; } // Alias
+    public IDataStore getDataStore() { return plotStore; }
     public GUIManager gui() { return gui; }
-    public GUIManager getGuiManager() { return gui; } // Alias
+    public GUIManager getGuiManager() { return gui; }
     public ProtectionManager protection() { return protection; }
     public ProtectionManager getProtectionManager() { return protection; }
     public SelectionService selection() { return selection; }
@@ -115,23 +111,15 @@ public class AegisGuard extends JavaPlugin {
     public EconomyManager eco() { return ecoManager; }
     public EconomyManager getEconomy() { return ecoManager; }
 
-    /** ✅ NEW: Protection plugin compatibility entrypoint */
     public ProtectionHookManager protectionHooks() { return protectionHooks; }
 
-    /**
-     * 🌐 New language engine entrypoint.
-     * Prefer this for all NEW message lookups in 1.2.4+.
-     */
     public CodexEngine codex() { return codex; }
 
-    /**
-     * 🧱 New Claim Block Manager entrypoint.
-     */
     public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
 
     /**
-     * 📜 Legacy access.
-     * Marked deprecated so we can hunt usages and migrate to codex().
+     * 📜 Legacy access (compat bridge).
+     * This must NOT read messages.yml anymore.
      */
     @Deprecated
     public MessagesUtil msg() { return messages; }
@@ -143,7 +131,6 @@ public class AegisGuard extends JavaPlugin {
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
 
-    // Legacy Alias
     public AGConfig getConfigManager() { return configMgr; }
 
     @Override
@@ -162,22 +149,11 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
 
-        // --- 1.a NEW: Ensure language bundle files exist (new split structure) ---
+        // --- 1.a Ensure language bundle files exist (new split structure) ---
         ensureLocalizationFiles();
 
-        // --- 1.b LEGACY (optional): DO NOT auto-create messages.yml anymore ---
-        // If you still need it temporarily, set: localization.install_legacy_messages_yml: true
-        if (getConfig().getBoolean("localization.install_legacy_messages_yml", false)) {
-            File legacy = new File(getDataFolder(), "messages.yml");
-            if (!legacy.exists()) {
-                try {
-                    saveResource("messages.yml", false);
-                    getLogger().info("[AegisGuard] Installed legacy messages.yml (compat mode enabled).");
-                } catch (IllegalArgumentException ex) {
-                    getLogger().warning("[AegisGuard] messages.yml not bundled in jar (fine): " + ex.getMessage());
-                }
-            }
-        }
+        // --- 1.b HARD STOP: messages.yml is NOT used anymore ---
+        warnIfLegacyMessagesYmlPresent();
 
         this.configMgr = new AGConfig(this);
 
@@ -192,9 +168,9 @@ public class AegisGuard extends JavaPlugin {
             this.plotStore = new YMLDataStore(this);
         }
 
-        // --- 3. INIT MANAGERS (v1.2.2 Structure) ---
+        // --- 3. INIT MANAGERS ---
 
-        // 3.a NEW: Language Engine (Codex)
+        // 3.a Language Engine (Codex)
         try {
             this.codex = new CodexEngine(this);
             getLogger().info("✅ Aegis Codex language engine initialized.");
@@ -205,16 +181,15 @@ public class AegisGuard extends JavaPlugin {
 
         this.selection = new SelectionService(this);
 
-        // 3.b LEGACY MessagesUtil (player prefs + remaining legacy lookups)
-        //     Wrapped so messages.yml removal won't hard-crash the whole plugin.
+        // 3.b MessagesUtil (prefs + compat)
         try {
             this.messages = new MessagesUtil(this);
         } catch (Throwable t) {
             this.messages = null;
-            getLogger().warning("⚠ MessagesUtil failed to initialize (legacy mode may be unavailable): " + t.getMessage());
+            getLogger().warning("⚠ MessagesUtil failed to initialize (compat mode may be unavailable): " + t.getMessage());
         }
 
-        // 3.c NEW: Claim Block Manager (Bank) — only if enabled
+        // 3.c Claim Block Manager — only if enabled
         if (cfg().raw().getBoolean("claim_blocks.enabled", true)) {
             this.claimBlockManager = new ClaimBlockManager(this);
         } else {
@@ -234,7 +209,6 @@ public class AegisGuard extends JavaPlugin {
         this.plotStore.load();
 
         runGlobalAsync(() -> {
-            // While migrating, MessagesUtil may still hold player prefs
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
         });
@@ -244,10 +218,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
 
-        // ✅ NEW: Greeting listener (welcome/farewell on plot enter/leave)
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
-
-        // ✅ NEW: Wand safety (no dupes, no chest-moving, drop = vanish)
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
 
         if (cfg().isLevelingEnabled()) {
@@ -288,9 +259,9 @@ public class AegisGuard extends JavaPlugin {
         if (cfg().isUpkeepEnabled()) startUpkeepTask();
         startWildernessRevertTask();
         startMobBarrierTask();
-        startClaimBlockTask(); // ✅ NEW
+        startClaimBlockTask();
 
-        // ✅ Hooks (includes protection compatibility layer)
+        // Hooks
         initializeHooks();
 
         getLogger().info("AegisGuard enabled successfully.");
@@ -307,8 +278,6 @@ public class AegisGuard extends JavaPlugin {
             new AegisPAPIExpansion(this).register();
         }
 
-        // ✅ NEW: protection hook compatibility layer (WorldGuard, GP, Towny, etc.)
-        // Respect config toggle: hooks.protection_compat.enabled
         boolean compatEnabled = cfg() != null && cfg().raw().getBoolean("hooks.protection_compat.enabled", true);
         if (compatEnabled) {
             try {
@@ -328,11 +297,10 @@ public class AegisGuard extends JavaPlugin {
     public void onDisable() {
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
-        cancelTaskReflectively(wildernessRevertTask);
+        cancelTaskReflectively(wilderness_revertTask);
         cancelTaskReflectively(mobBarrierTask);
-        cancelTaskReflectively(claimBlockTask); // ✅ NEW
+        cancelTaskReflectively(claimBlockTask);
 
-        // Force Save on Disable
         if (plotStore != null) {
             getLogger().info("Saving plot data...");
             plotStore.saveSync();
@@ -341,29 +309,31 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (claimBlockManager != null) claimBlockManager.shutdown();
 
-        // Legacy player prefs (until migrated)
         if (messages != null) messages.savePlayerData();
 
-        // ✅ NEW: tidy release
         protectionHooks = null;
-
         instance = null;
+
         getLogger().info("AegisGuard disabled.");
     }
 
-    // --- NEW: LANGUAGE BUNDLE BOOTSTRAP (Split Files) ---
+    // ---------------------------------------------------------------------
+    // Legacy file warning
+    // ---------------------------------------------------------------------
 
-    /**
-     * Ensures the new split language structure exists (per-language folders + bundles):
-     *
-     *   /plugins/AegisGuard/<folder>/<language>/guis.yml
-     *   /plugins/AegisGuard/<folder>/<language>/system.yml
-     *   /plugins/AegisGuard/<folder>/<language>/upgrades.yml
-     *   /plugins/AegisGuard/<folder>/<language>/expansions.yml
-     *
-     * Default folder is "codex" so it matches your existing 1.2.4 naming,
-     * but you can change it in config.yml via localization.folder.
-     */
+    private void warnIfLegacyMessagesYmlPresent() {
+        File legacy = new File(getDataFolder(), "messages.yml");
+        if (legacy.exists()) {
+            getLogger().warning("⚠ Detected legacy messages.yml in plugin folder.");
+            getLogger().warning("⚠ AegisGuard v1.2.4+ no longer uses messages.yml.");
+            getLogger().warning("⚠ You may safely delete it (your new language bundles are in the localization folder).");
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Language bundle bootstrap (Split Files)
+    // ---------------------------------------------------------------------
+
     private void ensureLocalizationFiles() {
         if (!getConfig().getBoolean("localization.extract_defaults", true)) {
             return;
@@ -377,7 +347,6 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
 
-        // Optional: keep installing legacy Codex root files for now (until CodexEngine is updated by you/me next)
         List<String> rootFiles = getConfig().getStringList("localization.root_files");
         if (rootFiles == null || rootFiles.isEmpty()) {
             rootFiles = Arrays.asList(
@@ -418,10 +387,6 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
-    /**
-     * Saves a resource from the jar into the data folder if missing.
-     * @param jarRelativePath Example: "codex/old_english/guis.yml"
-     */
     private void saveBundledResourceIfMissing(String jarRelativePath) {
         File target = new File(getDataFolder(), jarRelativePath.replace("/", File.separator));
         if (target.exists()) return;
@@ -436,15 +401,15 @@ public class AegisGuard extends JavaPlugin {
             saveResource(jarRelativePath, false);
             getLogger().info("[AegisGuard] Installed language resource: " + jarRelativePath);
         } catch (IllegalArgumentException ex) {
-            // Not bundled yet – warn but do not crash
             getLogger().warning("[AegisGuard] Missing bundled resource: " + jarRelativePath + " (" + ex.getMessage() + ")");
         }
     }
 
-    // --- UTILITY METHODS (Fixed) ---
+    // ---------------------------------------------------------------------
+    // Utility
+    // ---------------------------------------------------------------------
 
     public boolean isSoundEnabled(Player player) {
-        // Safe check if config is null
         if (configMgr == null || !cfg().globalSoundsEnabled()) return false;
         String key = "sounds.players." + player.getUniqueId();
         return getConfig().getBoolean(key, true);
@@ -452,7 +417,6 @@ public class AegisGuard extends JavaPlugin {
 
     public boolean isAdmin(Player player) {
         if (player == null) return false;
-        // Check config for OP trust
         boolean trustOps = getConfig().getBoolean("admin.trust_operators", true);
         if (!trustOps) {
             return player.hasPermission("aegis.admin");
@@ -460,17 +424,17 @@ public class AegisGuard extends JavaPlugin {
         return player.isOp() || player.hasPermission("aegis.admin");
     }
 
-    // --- SCHEDULERS (FOLIA 1.21+ COMPATIBLE) ---
+    // ---------------------------------------------------------------------
+    // Schedulers (Folia 1.21+ compatible)
+    // ---------------------------------------------------------------------
 
     public void runGlobalAsync(Runnable task) {
         if (isFolia) {
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                // 1.21+ Fix: Use Plugin.class, not JavaPlugin.class
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
             } catch (Exception e) {
-                // Fallback
                 new Thread(task).start();
             }
         } else {
@@ -483,7 +447,6 @@ public class AegisGuard extends JavaPlugin {
         if (isFolia) {
             try {
                 Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
-                // 1.21+ Fix: Use Plugin.class
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
             } catch (Exception e) { e.printStackTrace(); }
@@ -508,7 +471,6 @@ public class AegisGuard extends JavaPlugin {
         if (isFolia) {
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                // 1.21+ Fix: Use Plugin.class
                 Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class);
                 return runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), intervalTicks, intervalTicks);
             } catch (Exception e) {
@@ -532,16 +494,17 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
-    // --- TASKS ---
+    // ---------------------------------------------------------------------
+    // Tasks
+    // ---------------------------------------------------------------------
 
     private void startAutoSaver() {
         long interval = 20L * 60 * 5;
         Runnable logic = () -> {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
-            if (claimBlockManager != null) claimBlockManager.save(); // ✅ NEW
+            if (claimBlockManager != null) claimBlockManager.save();
             if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
-            // Future: if (codex != null && codex.isProfileDirty()) codex.saveProfiles();
         };
         autoSaveTask = scheduleAsyncRepeating(logic, interval);
     }
@@ -552,8 +515,7 @@ public class AegisGuard extends JavaPlugin {
         Runnable logic = () -> {
             if (plotStore == null) return;
             for (com.aegisguard.data.Plot plot : plotStore.getAllPlots()) {
-                // v1.2.1 Logic: use ecoManager to check/charge upkeep
-                // implementation depends on EconomyManager details
+                // upkeep logic (depends on EconomyManager details)
             }
         };
         upkeepTask = scheduleAsyncRepeating(logic, interval);
@@ -562,7 +524,6 @@ public class AegisGuard extends JavaPlugin {
     private void startWildernessRevertTask() {
         if (!cfg().raw().getBoolean("wilderness_revert.enabled", false)) return;
         String storage = cfg().raw().getString("storage.type", "yml");
-        // Only run if SQL is active
         if (!storage.contains("sql") && !storage.contains("mysql")) return;
 
         long interval = 20L * 60 * cfg().raw().getLong("wilderness_revert.check_interval_minutes", 10);
@@ -577,18 +538,13 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startClaimBlockTask() {
-        // Feature toggle: claim_blocks.enabled
         if (!cfg().raw().getBoolean("claim_blocks.enabled", true)) return;
-
-        // Safe check if playtime earning disabled in config
         if (!cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true)) return;
 
         long earnIntervalMinutes = cfg().raw().getLong("claim_blocks.earn.playtime.interval_minutes", 10);
-        long intervalTicks = earnIntervalMinutes * 60 * 20; // Convert minutes to ticks
+        long intervalTicks = earnIntervalMinutes * 60 * 20;
 
         ClaimBlockTask task = new ClaimBlockTask(this);
-
-        // ✅ FIX: schedule the task logic consistently (avoids Runnable/type mismatch)
         claimBlockTask = scheduleAsyncRepeating(task::run, intervalTicks);
     }
 }

@@ -13,11 +13,21 @@ import java.util.*;
  * CodexEngine
  *
  * Centralized language / style system for AegisGuard.
- * Loads:
- * - codex.yml (style map + file map)
+ *
+ * Supports TWO modes:
+ *  1) ✅ Split Bundles (NEW 1.2.4+):
+ *      /codex/<style>/guis.yml
+ *      /codex/<style>/system.yml
+ *      /codex/<style>/upgrades.yml
+ *      /codex/<style>/expansions.yml
+ *
+ *  2) 📜 Legacy Single File per style (codex.yml file_map):
+ *      /codex/old_english.yml, /codex/modern_english.yml, etc.
+ *
+ * Also loads:
+ * - codex.yml (style list + optional legacy file_map)
  * - core.yml (shared/global keys)
  * - overrides.yml (per-server overrides)
- * - one style file per style (old_english, hybrid, spanish_mx, etc.)
  */
 public class CodexEngine {
 
@@ -26,9 +36,10 @@ public class CodexEngine {
     private String defaultStyle;
     private String fallbackStyle;
 
-    // ✅ CHANGED: Use List to preserve the order defined in codex.yml
+    // Preserve codex.yml ordering
     private final List<String> availableStyles = new ArrayList<>();
 
+    // Combined per-style config (merged from bundles or legacy file)
     private final Map<String, YamlConfiguration> styleBundles = new HashMap<>();
 
     private YamlConfiguration coreBundle;
@@ -36,6 +47,9 @@ public class CodexEngine {
 
     /** Simple in-memory per-player style map (1.2.4). */
     private final Map<UUID, String> playerStyles = new HashMap<>();
+
+    // Folder name under plugin data folder (usually "codex")
+    private String folderName = "codex";
 
     public CodexEngine(AegisGuard plugin) {
         this.plugin = plugin;
@@ -53,88 +67,194 @@ public class CodexEngine {
             dataFolder.mkdirs();
         }
 
-        // Main codex config
-        String codexFileName = "codex.yml";
+        // Allow config.yml to override folder (defaults to "codex")
+        this.folderName = plugin.getConfig().getString("localization.folder", "codex");
+        File baseDir = new File(dataFolder, folderName);
+        if (!baseDir.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            baseDir.mkdirs();
+        }
 
-        ensureResourceExists("codex/" + codexFileName); // packaged under /codex in JAR
-        File codexFile = new File(dataFolder, "codex" + File.separator + codexFileName);
+        // codex.yml (always expected)
+        ensureResourceExists("codex/codex.yml"); // resources packaged under /codex in jar
+        File codexFile = new File(baseDir, "codex.yml");
 
         if (!codexFile.exists()) {
-            plugin.getLogger().warning("[Codex] " + codexFileName + " not found. Codex engine will be inactive.");
+            plugin.getLogger().warning("[Codex] codex.yml not found in /" + folderName + "/. Codex engine will be inactive.");
             return;
         }
 
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(codexFile);
 
-        this.defaultStyle = cfg.getString("default_style", "old_english");
-        this.fallbackStyle = cfg.getString("fallback_style", "modern_english");
+        // Styles: prefer config.yml localization overrides if present, else codex.yml
+        String cfgDefault = plugin.getConfig().getString("localization.default_style", "").trim();
+        String cfgFallback = plugin.getConfig().getString("localization.fallback_style", "").trim();
+
+        this.defaultStyle = !cfgDefault.isEmpty()
+                ? cfgDefault
+                : cfg.getString("default_style", "old_english");
+
+        this.fallbackStyle = !cfgFallback.isEmpty()
+                ? cfgFallback
+                : cfg.getString("fallback_style", "modern_english");
+
+        // Available styles: prefer config.yml list if present, else codex.yml
+        List<String> fromConfig = plugin.getConfig().getStringList("localization.available_languages");
+        List<String> fromCodex = cfg.getStringList("available_styles");
 
         this.availableStyles.clear();
-        this.availableStyles.addAll(cfg.getStringList("available_styles"));
+        if (fromConfig != null && !fromConfig.isEmpty()) {
+            this.availableStyles.addAll(fromConfig);
+        } else if (fromCodex != null && !fromCodex.isEmpty()) {
+            this.availableStyles.addAll(fromCodex);
+        } else {
+            // last-resort fallback
+            this.availableStyles.addAll(Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar"));
+        }
 
+        // Core + overrides file names (from codex.yml, with defaults)
         String coreFileName = cfg.getString("core_file", "core.yml");
         String overridesFileName = cfg.getString("overrides_file", "overrides.yml");
 
-        // Core (shared)
         ensureResourceExists("codex/" + coreFileName);
-        this.coreBundle = loadYaml("codex" + File.separator + coreFileName);
+        this.coreBundle = loadYaml(new File(baseDir, coreFileName));
 
-        // Overrides (server-owner tweaks, optional)
-        File overridesFile = new File(dataFolder, "codex" + File.separator + overridesFileName);
+        File overridesFile = new File(baseDir, overridesFileName);
         if (overridesFile.exists()) {
-            this.overridesBundle = loadYaml("codex" + File.separator + overridesFileName);
+            this.overridesBundle = loadYaml(overridesFile);
         } else {
             this.overridesBundle = new YamlConfiguration();
         }
 
-        // Style bundles
-        this.styleBundles.clear();
-        for (String style : availableStyles) {
-            String styleFileName = cfg.getString("file_map." + style);
-            if (styleFileName == null || styleFileName.isEmpty()) {
-                plugin.getLogger().warning("[Codex] No file_map entry for style '" + style + "'.");
-                continue;
-            }
-            ensureResourceExists("codex/" + styleFileName);
-
-            YamlConfiguration raw = loadYaml("codex" + File.separator + styleFileName);
-            YamlConfiguration normalized = normalizeStyleYaml(style, raw);
-
-            this.styleBundles.put(style, normalized);
+        // Bundles list: prefer config.yml, else codex.yml, else defaults
+        List<String> bundles = plugin.getConfig().getStringList("localization.bundles");
+        if (bundles == null || bundles.isEmpty()) {
+            bundles = cfg.getStringList("bundles");
+        }
+        if (bundles == null || bundles.isEmpty()) {
+            bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
         }
 
-        plugin.getLogger().info("[Codex] Loaded styles: " + String.join(", ", availableStyles));
+        // Mode: config.yml can force, otherwise codex.yml can force, otherwise auto-detect
+        String mode = plugin.getConfig().getString("localization.mode", "").trim();
+        if (mode.isEmpty()) mode = cfg.getString("mode", "auto");
+        mode = mode == null ? "auto" : mode.trim().toLowerCase(Locale.ROOT);
+
+        boolean forceLegacy = mode.equals("legacy");
+        boolean forceSplit = mode.equals("split");
+
+        // Auto-detect: if ANY style folder contains any bundle file, we treat it as split mode
+        boolean splitDetected = false;
+        if (!forceLegacy) {
+            for (String style : availableStyles) {
+                if (hasAnySplitBundle(baseDir, style, bundles)) {
+                    splitDetected = true;
+                    break;
+                }
+            }
+        }
+
+        boolean useSplit = forceSplit || (!forceLegacy && splitDetected);
+
+        // Load styles
+        this.styleBundles.clear();
+
+        if (useSplit) {
+            for (String style : availableStyles) {
+                YamlConfiguration merged = new YamlConfiguration();
+
+                File styleDir = new File(baseDir, style);
+                if (!styleDir.exists()) {
+                    // Still allow missing folders, but warn
+                    plugin.getLogger().warning("[Codex] Missing style folder: " + folderName + "/" + style + "/");
+                }
+
+                for (String bundleFile : bundles) {
+                    // Try to extract defaults from jar if present (jar path is always "codex/...")
+                    ensureResourceExists("codex/" + style + "/" + bundleFile);
+
+                    File f = new File(styleDir, bundleFile);
+                    if (!f.exists()) continue;
+
+                    YamlConfiguration partRaw = loadYaml(f);
+                    YamlConfiguration part = normalizeStyleYaml(style, partRaw);
+
+                    mergeYamlLeaves(merged, part);
+                }
+
+                this.styleBundles.put(style, merged);
+            }
+
+            plugin.getLogger().info("[Codex] Mode=split (bundles). Loaded styles: " + String.join(", ", availableStyles));
+        } else {
+            // Legacy file_map mode (codex.yml)
+            for (String style : availableStyles) {
+                String styleFileName = cfg.getString("file_map." + style);
+                if (styleFileName == null || styleFileName.isEmpty()) {
+                    plugin.getLogger().warning("[Codex] No file_map entry for style '" + style + "'.");
+                    continue;
+                }
+
+                ensureResourceExists("codex/" + styleFileName);
+
+                File f = new File(baseDir, styleFileName);
+                if (!f.exists()) {
+                    plugin.getLogger().warning("[Codex] Legacy style file missing: " + folderName + "/" + styleFileName);
+                    continue;
+                }
+
+                YamlConfiguration raw = loadYaml(f);
+                YamlConfiguration normalized = normalizeStyleYaml(style, raw);
+                this.styleBundles.put(style, normalized);
+            }
+
+            plugin.getLogger().info("[Codex] Mode=legacy (file_map). Loaded styles: " + String.join(", ", availableStyles));
+        }
+    }
+
+    private boolean hasAnySplitBundle(File baseDir, String style, List<String> bundles) {
+        File styleDir = new File(baseDir, style);
+        if (!styleDir.exists()) return false;
+        for (String b : bundles) {
+            if (new File(styleDir, b).exists()) return true;
+        }
+        return false;
     }
 
     private void ensureResourceExists(String resourcePath) {
         if (resourcePath == null || resourcePath.isEmpty()) return;
 
-        // resourcePath already includes "codex/..." – mirror that structure in data folder
-        String fileName = resourcePath.replace("codex/", "codex" + File.separator);
-        File target = new File(plugin.getDataFolder(), fileName);
-        if (target.exists()) {
-            return;
+        // Only auto-install resources for the default jar structure (codex/...)
+        // If server owner changes folderName away from "codex", they must provide files manually.
+        if (!resourcePath.startsWith("codex/")) return;
+
+        File target = new File(plugin.getDataFolder(), resourcePath.replace("/", File.separator));
+        if (target.exists()) return;
+
+        File parent = target.getParentFile();
+        if (parent != null && !parent.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            parent.mkdirs();
         }
 
         try {
             plugin.saveResource(resourcePath, false);
         } catch (IllegalArgumentException ignored) {
-            // Resource not packaged in the jar; server owner may be providing it manually.
+            // Not packaged in jar; server owner may provide manually.
         }
     }
 
-    private YamlConfiguration loadYaml(String relativePath) {
-        File f = new File(plugin.getDataFolder(), relativePath);
+    private YamlConfiguration loadYaml(File f) {
         return YamlConfiguration.loadConfiguration(f);
     }
 
     /**
-     * ✅ NEW: Normalize style YAMLs so translations can be wrapped or unwrapped.
+     * Normalize style YAMLs so translations can be wrapped or unwrapped.
      *
      * Supports:
      * - Flat files: menu_title: ...
      * - Wrapped files: spanish_mx: { menu_title: ... }
-     * - Single-root wrapper files (one top-level key): { some_root: { ... } }
+     * - Single-root wrapper files: { some_root: { ... } }
      */
     private YamlConfiguration normalizeStyleYaml(String style, YamlConfiguration cfg) {
         if (cfg == null) return new YamlConfiguration();
@@ -142,34 +262,44 @@ public class CodexEngine {
         Set<String> top = cfg.getKeys(false);
         if (top == null || top.isEmpty()) return cfg;
 
-        // Case 1: Exact wrapper matches style id (spanish_mx:, spanish_ar:, etc.)
+        // Case 1: Exact wrapper matches style id
         if (style != null && cfg.isConfigurationSection(style)) {
             ConfigurationSection sec = cfg.getConfigurationSection(style);
-            return flattenSection(sec);
+            return flattenSectionLeaves(sec);
         }
 
-        // Case 2: File has one single wrapper root (common in older messages.yml style blocks)
+        // Case 2: File has one single wrapper root
         if (top.size() == 1) {
             String only = top.iterator().next();
             if (cfg.isConfigurationSection(only)) {
                 ConfigurationSection sec = cfg.getConfigurationSection(only);
-                return flattenSection(sec);
+                return flattenSectionLeaves(sec);
             }
         }
 
-        // Otherwise: assume already flat
         return cfg;
     }
 
-    private YamlConfiguration flattenSection(ConfigurationSection sec) {
+    private YamlConfiguration flattenSectionLeaves(ConfigurationSection sec) {
         YamlConfiguration out = new YamlConfiguration();
         if (sec == null) return out;
 
         for (String key : sec.getKeys(true)) {
             Object val = sec.get(key);
+            if (val instanceof ConfigurationSection) continue; // only copy leaves
             out.set(key, val);
         }
         return out;
+    }
+
+    private void mergeYamlLeaves(YamlConfiguration target, YamlConfiguration src) {
+        if (target == null || src == null) return;
+
+        for (String key : src.getKeys(true)) {
+            Object val = src.get(key);
+            if (val instanceof ConfigurationSection) continue; // only copy leaves
+            target.set(key, val);
+        }
     }
 
     /* --------------------------------------------------------
@@ -204,21 +334,16 @@ public class CodexEngine {
     }
 
     /**
-     * Returns the list of available styles in the order defined in codex.yml.
+     * Returns the list of available styles in the order defined.
      */
     public List<String> getAvailableStyles() {
         return Collections.unmodifiableList(availableStyles);
     }
 
-    /**
-     * ✅ NEW: Helper to get the next style in the cycle.
-     * Useful for Settings GUI buttons.
-     */
     public String getNextStyle(String currentStyle) {
         if (availableStyles.isEmpty()) return defaultStyle;
 
         int index = availableStyles.indexOf(currentStyle);
-        // If not found or at the end of the list, loop back to start
         if (index == -1 || index >= availableStyles.size() - 1) {
             return availableStyles.get(0);
         }
@@ -226,7 +351,7 @@ public class CodexEngine {
     }
 
     /* --------------------------------------------------------
-     * NEW: List API (for lores / multi-line text)
+     * List API (for lores / multi-line text)
      * -------------------------------------------------------- */
 
     public List<String> trList(CommandSender sender, String key) {
@@ -245,7 +370,6 @@ public class CodexEngine {
         return out;
     }
 
-    // Convenience overloads so you can pass Player directly
     public List<String> trList(Player player, String key) {
         return trList((CommandSender) player, key);
     }
@@ -254,7 +378,6 @@ public class CodexEngine {
         return trList((CommandSender) player, key, placeholders);
     }
 
-    // Short alias used in a bunch of GUIs: codex().list(player, "path")
     public List<String> list(Player player, String key) {
         return trList(player, key);
     }
@@ -264,7 +387,7 @@ public class CodexEngine {
     }
 
     /* --------------------------------------------------------
-     * NEW: Per-player style helpers (simple in-memory)
+     * Per-player style helpers (simple in-memory)
      * -------------------------------------------------------- */
 
     public String getPlayerStyle(Player player) {
@@ -273,13 +396,9 @@ public class CodexEngine {
         if (style != null && availableStyles.contains(style)) {
             return style;
         }
-        // Fallback to global resolution
         return resolveStyle(player);
     }
 
-    /**
-     * Set a player's style. Returns true if the style is valid and was applied.
-     */
     public boolean setPlayerStyle(Player player, String style) {
         if (player == null || style == null) return false;
         style = style.toLowerCase(Locale.ROOT);
@@ -305,9 +424,6 @@ public class CodexEngine {
                 : "old_english";
     }
 
-    /**
-     * ✅ NEW: Generate candidate keys so BOTH hyphen-style and underscore-style keys work.
-     */
     private List<String> keyCandidates(String key) {
         if (key == null || key.isEmpty()) return Collections.emptyList();
 
@@ -317,7 +433,6 @@ public class CodexEngine {
         if (key.indexOf('-') >= 0) out.add(key.replace('-', '_'));
         if (key.indexOf('_') >= 0) out.add(key.replace('_', '-'));
 
-        // (Optional sanity) also allow accidental double separators
         out.add(key.replace('-', '_').replaceAll("__+", "_"));
         out.add(key.replace('_', '-').replaceAll("--+", "-"));
 
@@ -325,19 +440,15 @@ public class CodexEngine {
     }
 
     private String resolve(String style, String key) {
-        if (key == null || key.isEmpty()) {
-            return "";
-        }
+        if (key == null || key.isEmpty()) return "";
 
         for (String k : keyCandidates(key)) {
-            // 1) Overrides (highest priority)
             if (overridesBundle != null && overridesBundle.contains(k)) {
                 return overridesBundle.getString(k, k);
             }
         }
 
         for (String k : keyCandidates(key)) {
-            // 2) Style-specific bundle
             if (style != null) {
                 YamlConfiguration styleCfg = styleBundles.get(style);
                 if (styleCfg != null && styleCfg.contains(k)) {
@@ -347,14 +458,12 @@ public class CodexEngine {
         }
 
         for (String k : keyCandidates(key)) {
-            // 3) Core bundle (shared)
             if (coreBundle != null && coreBundle.contains(k)) {
                 return coreBundle.getString(k, k);
             }
         }
 
         for (String k : keyCandidates(key)) {
-            // 4) Fallback style bundle
             if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
                 YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
                 if (fbCfg != null && fbCfg.contains(k)) {
@@ -363,18 +472,14 @@ public class CodexEngine {
             }
         }
 
-        // 5) Nothing found: return key for easier debugging
         return key;
     }
 
     private List<String> resolveList(String style, String key) {
-        if (key == null || key.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (key == null || key.isEmpty()) return Collections.emptyList();
 
         List<String> result;
 
-        // 1) Overrides
         for (String k : keyCandidates(key)) {
             if (overridesBundle != null && overridesBundle.contains(k)) {
                 result = overridesBundle.getStringList(k);
@@ -385,7 +490,6 @@ public class CodexEngine {
             }
         }
 
-        // 2) Style-specific bundle
         for (String k : keyCandidates(key)) {
             if (style != null) {
                 YamlConfiguration styleCfg = styleBundles.get(style);
@@ -399,7 +503,6 @@ public class CodexEngine {
             }
         }
 
-        // 3) Core bundle
         for (String k : keyCandidates(key)) {
             if (coreBundle != null && coreBundle.contains(k)) {
                 result = coreBundle.getStringList(k);
@@ -410,7 +513,6 @@ public class CodexEngine {
             }
         }
 
-        // 4) Fallback style
         for (String k : keyCandidates(key)) {
             if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
                 YamlConfiguration fbCfg = styleBundles.get(fallbackStyle);
@@ -428,9 +530,7 @@ public class CodexEngine {
     }
 
     private String applyPlaceholders(String input, Map<String, String> placeholders) {
-        if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) {
-            return input;
-        }
+        if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
 
         String out = input;
         for (Map.Entry<String, String> e : placeholders.entrySet()) {
@@ -439,7 +539,6 @@ public class CodexEngine {
 
             String value = (e.getValue() == null) ? "" : e.getValue();
 
-            // Support {KEY}, %KEY%, and ${KEY}
             String brace = "{" + rawKey + "}";
             String braceLower = "{" + rawKey.toLowerCase(Locale.ROOT) + "}";
             String braceUpper = "{" + rawKey.toUpperCase(Locale.ROOT) + "}";

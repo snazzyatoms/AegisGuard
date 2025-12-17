@@ -186,7 +186,16 @@ public class GUIManager {
     // ======================================
 
     /**
-     * ✅ NEW: Stronger safe fallback logic:
+     * ✅ Back-compat overload:
+     * Many older GUIs still call safeText(value, fallback).
+     * This keeps them compiling while still using the stronger 3-arg logic.
+     */
+    public static String safeText(String fromCodex, String fallback) {
+        return safeText(null, fromCodex, fallback);
+    }
+
+    /**
+     * ✅ Stronger safe fallback logic:
      * - null/empty -> fallback
      * - "[Missing...]" -> fallback
      * - returns-the-key -> fallback (Codex behavior)
@@ -201,7 +210,10 @@ public class GUIManager {
         if (s.contains("[Missing") || s.equalsIgnoreCase("null")) return fallback;
 
         // CodexEngine "not found" behavior: return key
-        if (requestedKey != null && s.equalsIgnoreCase(requestedKey.trim())) return fallback;
+        if (requestedKey != null && !requestedKey.trim().isEmpty()
+                && s.equalsIgnoreCase(requestedKey.trim())) {
+            return fallback;
+        }
 
         return fromCodex;
     }
@@ -262,8 +274,8 @@ public class GUIManager {
 
         Matcher matcher = HEX_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String token = matcher.group(0);       // "&#A1B2C3"
-            String hex = matcher.group(1);         // "A1B2C3"
+            String token = matcher.group(0); // "&#A1B2C3"
+            String hex = matcher.group(1);   // "A1B2C3"
             msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
             matcher = HEX_PATTERN.matcher(msg);
         }

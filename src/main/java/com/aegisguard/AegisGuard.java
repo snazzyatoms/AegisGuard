@@ -297,7 +297,10 @@ public class AegisGuard extends JavaPlugin {
     public void onDisable() {
         cancelTaskReflectively(autoSaveTask);
         cancelTaskReflectively(upkeepTask);
-        cancelTaskReflectively(wilderness_revertTask);
+
+        // ✅ FIX: correct task field name
+        cancelTaskReflectively(wildernessRevertTask);
+
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
 

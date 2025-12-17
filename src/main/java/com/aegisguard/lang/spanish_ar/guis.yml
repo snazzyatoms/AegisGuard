@@ -1,0 +1,21 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# File: guis.yml
+# Split from legacy single-file language pack
+# ======================================
+
+button_back: '&e⟵ Volver'
+button_exit: '&c✖ Cerrar'
+help_header: '&bAyuda de AegisGuard'
+help_lines:
+  - '&e/aegis wand &7- Obtener la varita (herramienta de selección).'
+  - '&e/aegis menu &7- Abrir el menú principal.'
+  - '&e/aegis claim &7- Crear un claim con tu selección.'
+  - '&e/aegis unclaim &7- Eliminar tu claim actual.'
+  - '&e/aegis resize <dir> <amt> &7- Cambiar tamaño del claim.'
+  - '&e/aegis home &7- Ir al home del claim.'
+  - '&e/aegis setspawn &7- Setear el home del claim.'
+  - '&e/aegis market &7- Abrir el mercado.'
+  - '&e/aegis auction &7- Ver subastas activas.'
+  - '&e/aegis stuck &7- Teletransportarte a un lugar seguro.'
+  - '&e/aegis help &7- Ver este menú de ayuda.'

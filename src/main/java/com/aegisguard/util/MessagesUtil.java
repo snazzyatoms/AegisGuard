@@ -1,7 +1,6 @@
 package com.aegisguard.util;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.language.CodexEngine;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,6 +14,7 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -22,30 +22,26 @@ import java.util.regex.Pattern;
 
 /**
  * MessagesUtil (AegisGuard v1.2.4+)
- *
- * ✅ Codex-backed compatibility layer:
- * - Provides old msg().get(...) style API so you don't have to refactor EVERYTHING at once.
- * - Reads ALL text from CodexEngine bundles (guis.yml, system.yml, upgrades.yml, expansions.yml).
- *
- * ✅ Player preference persistence:
- * - Stores per-player selected language style in playerdata.yml
- *
- * ❌ No dependency on messages.yml (safe to delete once AegisGuard.java stops re-installing it).
+ * - Compatibility bridge ONLY.
+ * - DOES NOT read or create messages.yml.
+ * - Uses CodexEngine for text lookups.
+ * - Stores player language prefs in playerdata.yml (until fully migrated into Codex profiles).
+ * - Supports hex colors (&#RRGGBB).
  */
 public class MessagesUtil implements Listener {
 
     private final AegisGuard plugin;
 
-    // Player Language Cache (persistent)
+    // Player Language Cache
     private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
-    private String defaultStyle;
+    private String defaultStyle = "old_english";
 
     // Persistence
     private File playerDataFile;
     private FileConfiguration playerData;
     private volatile boolean isPlayerDataDirty = false;
 
-    // Hex Pattern (&#RRGGBB)
+    // Hex Pattern
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public MessagesUtil(AegisGuard plugin) {
@@ -55,88 +51,37 @@ public class MessagesUtil implements Listener {
     }
 
     public void reload() {
-        CodexEngine codex = plugin.codex();
-
-        // Default style comes from Codex first, then config fallback.
-        if (codex != null) {
-            this.defaultStyle = safeLower(codex.getDefaultStyle(), "old_english");
-        } else {
-            this.defaultStyle = safeLower(plugin.getConfig().getString("localization.default_style"), "old_english");
-        }
-
-        plugin.getLogger().info("[AegisGuard] MessagesUtil initialized (Codex-backed). Default style: " + defaultStyle);
+        // Default language: prefer new config path, then legacy path
+        String cfgDefault = plugin.getConfig().getString("localization.default_language", null);
+        if (cfgDefault == null) cfgDefault = plugin.getConfig().getString("language_styles.default", "old_english");
+        this.defaultStyle = cfgDefault == null || cfgDefault.isBlank() ? "old_english" : cfgDefault;
 
         loadPlayerPreferences();
+        plugin.getLogger().info("[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: " + defaultStyle);
     }
 
-    // ---------------------------------------------------------------------
-    // Player-aware accessors (Codex-backed)
-    // ---------------------------------------------------------------------
+    // ----------------------------
+    // Accessors (Player-aware)
+    // ----------------------------
 
     public String get(Player player, String key) {
-        return format(resolveForPlayer(player, key, Collections.emptyMap(), null));
+        return format(getRawForPlayer(player, key));
     }
 
     public String get(Player player, String key, String... kv) {
-        return format(resolveForPlayer(player, key, kvToMap(kv), null));
+        return format(applyPlaceholders(getRawForPlayer(player, key), kv));
     }
 
     public String get(Player player, String key, Map<String, String> placeholders) {
-        return format(resolveForPlayer(player, key, placeholders, null));
-    }
-
-    /**
-     * Overload used by some GUIs:
-     * get(player, key, defaultValue, placeholdersMap)
-     */
-    public String get(Player player, String key, String def, Map<String, String> placeholders) {
-        return format(resolveForPlayer(player, key, placeholders, def));
+        return format(applyPlaceholders(getRawForPlayer(player, key), placeholders));
     }
 
     public List<String> getList(Player player, String key) {
-        return getList(player, key, null);
-    }
+        List<String> list = null;
+        try {
+            if (plugin.codex() != null) list = plugin.codex().trList(player, key);
+        } catch (Throwable ignored) {}
 
-    public List<String> getList(Player player, String key, List<String> fallback) {
-        CodexEngine codex = plugin.codex();
-        if (codex == null || player == null) {
-            return fallback != null ? fallback : Collections.emptyList();
-        }
-
-        List<String> list = codex.trList(player, key);
-        if (list == null || list.isEmpty()) {
-            return fallback != null ? fallback : Collections.emptyList();
-        }
-
-        List<String> colored = new ArrayList<>(list.size());
-        for (String line : list) colored.add(format(line));
-        return colored;
-    }
-
-    // ---------------------------------------------------------------------
-    // Console / default accessors
-    // ---------------------------------------------------------------------
-
-    public String get(String key) {
-        String raw = resolveForSender(null, key, Collections.emptyMap(), null);
-        return format(raw);
-    }
-
-    public String get(String key, String... kv) {
-        String raw = resolveForSender(null, key, kvToMap(kv), null);
-        return format(raw);
-    }
-
-    public String get(String key, Map<String, String> placeholders) {
-        String raw = resolveForSender(null, key, placeholders, null);
-        return format(raw);
-    }
-
-    public List<String> getList(String key) {
-        CodexEngine codex = plugin.codex();
-        if (codex == null) return Collections.emptyList();
-
-        List<String> list = codex.trList((CommandSender) null, key);
         if (list == null || list.isEmpty()) return Collections.emptyList();
 
         List<String> colored = new ArrayList<>(list.size());
@@ -144,34 +89,35 @@ public class MessagesUtil implements Listener {
         return colored;
     }
 
-    /**
-     * Best-effort "has" for legacy call sites.
-     * (Codex returns the key itself if missing.)
-     */
-    public boolean has(String key) {
-        CodexEngine codex = plugin.codex();
-        if (codex == null) return false;
-        String raw = codex.tr(key);
-        return raw != null && !raw.equals(key);
+    // ----------------------------
+    // Accessors (Console / Default)
+    // ----------------------------
+
+    public String get(String key) {
+        // Console lookups should move to Codex too later.
+        return format("&c[Missing: " + key + "]");
     }
 
-    public String color(String text) {
-        return format(text);
+    public List<String> getList(String key) {
+        return Collections.emptyList();
     }
+
+    public boolean has(String key) {
+        // Compat: if Codex exists, treat as "maybe" true.
+        return plugin.codex() != null;
+    }
+
+    public String color(String text) { return format(text); }
 
     public String prefix() {
-        CodexEngine codex = plugin.codex();
-        String raw = (codex != null) ? codex.tr("prefix") : null;
-
-        if (raw == null || raw.isEmpty() || raw.equals("prefix")) {
-            raw = "&8[&bAegisGuard&8]&r ";
-        }
+        // Prefer config prefix if present; otherwise fallback
+        String raw = plugin.getConfig().getString("prefix", "&8[&bAegisGuard&8]&r ");
         return format(raw);
     }
 
-    // ---------------------------------------------------------------------
-    // Sending helpers
-    // ---------------------------------------------------------------------
+    // ----------------------------
+    // Senders
+    // ----------------------------
 
     public void send(CommandSender sender, String key) {
         String msg = (sender instanceof Player p) ? get(p, key) : get(key);
@@ -191,34 +137,28 @@ public class MessagesUtil implements Listener {
         sender.sendMessage(prefix() + msg);
     }
 
-    // ---------------------------------------------------------------------
-    // Player Style System (persistent) + Codex sync
-    // ---------------------------------------------------------------------
+    // ----------------------------
+    // Player Style System (Prefs)
+    // ----------------------------
 
     public void setPlayerStyle(Player player, String style) {
-        if (player == null || style == null) return;
+        if (player == null) return;
+        if (style == null) style = defaultStyle;
 
-        style = style.toLowerCase(Locale.ROOT);
-
-        List<String> valid = getValidStyles();
-        if (valid == null || valid.isEmpty() || !valid.contains(style)) {
+        List<String> valid = getAvailableStyles();
+        if (valid != null && !valid.isEmpty() && !valid.contains(style)) {
             player.sendMessage(ChatColor.RED + "⚠ Invalid language style: " + style);
             return;
         }
 
         playerStyles.put(player.getUniqueId(), style);
-
-        // Sync into CodexEngine (so any codex.tr(player, ...) uses correct style)
-        CodexEngine codex = plugin.codex();
-        if (codex != null) codex.setPlayerStyle(player, style);
-
-        savePlayerPreference(player, style);
+        savePlayerPreference(player.getUniqueId(), style);
 
         String styleName = style.replace("_", " ");
         if (!styleName.isEmpty()) styleName = styleName.substring(0, 1).toUpperCase() + styleName.substring(1);
         player.sendMessage(ChatColor.GOLD + "🕮 Language set to: " + ChatColor.AQUA + styleName);
 
-        // Live GUI Refresh (if open)
+        // Live GUI Refresh (if Settings open)
         plugin.runMain(player, () -> {
             if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
                 InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
@@ -231,84 +171,51 @@ public class MessagesUtil implements Listener {
 
     public String getPlayerStyle(Player player) {
         if (player == null) return defaultStyle;
-
-        // Prefer Codex (source of truth for runtime lookups)
-        CodexEngine codex = plugin.codex();
-        if (codex != null) return codex.getPlayerStyle(player);
-
         return playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
     }
 
-    private List<String> getValidStyles() {
-        CodexEngine codex = plugin.codex();
-        if (codex != null) return codex.getAvailableStyles();
-
-        // Fallback to config list if codex isn't available
-        List<String> cfgList = plugin.getConfig().getStringList("localization.available_languages");
-        if (cfgList == null) return Collections.emptyList();
-
-        List<String> lowered = new ArrayList<>(cfgList.size());
-        for (String s : cfgList) lowered.add(s == null ? "" : s.toLowerCase(Locale.ROOT));
-        return lowered;
+    private List<String> getAvailableStyles() {
+        List<String> styles = plugin.getConfig().getStringList("localization.available_languages");
+        if (styles == null || styles.isEmpty()) {
+            styles = plugin.getConfig().getStringList("language_styles.available");
+        }
+        if (styles == null || styles.isEmpty()) {
+            styles = Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar");
+        }
+        return styles;
     }
 
-    // ---------------------------------------------------------------------
-    // Persistence (playerdata.yml)
-    // ---------------------------------------------------------------------
+    // ----------------------------
+    // Persistence
+    // ----------------------------
 
     public synchronized void loadPlayerPreferences() {
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
         if (!playerDataFile.exists()) {
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                playerDataFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            try { playerDataFile.createNewFile(); } catch (IOException e) { e.printStackTrace(); }
         }
-
         playerData = YamlConfiguration.loadConfiguration(playerDataFile);
-
-        // Keep defaultStyle updated (in case /reload changes codex default)
-        CodexEngine codex = plugin.codex();
-        if (codex != null) {
-            this.defaultStyle = safeLower(codex.getDefaultStyle(), defaultStyle);
-        }
 
         ConfigurationSection section = playerData.getConfigurationSection("players");
         if (section != null) {
-            List<String> valid = getValidStyles();
             for (String uuidStr : section.getKeys(false)) {
                 try {
                     UUID uuid = UUID.fromString(uuidStr);
                     String style = section.getString(uuidStr + ".language_style", defaultStyle);
-                    style = safeLower(style, defaultStyle);
-
-                    // Validate style; if invalid, clamp to default
-                    if (valid != null && !valid.isEmpty() && !valid.contains(style)) {
-                        style = defaultStyle;
-                    }
-
                     playerStyles.put(uuid, style);
                 } catch (IllegalArgumentException ignored) {}
             }
         }
-
-        // Push preferences into Codex runtime map for online players
-        if (codex != null) {
-            for (Player p : plugin.getServer().getOnlinePlayers()) {
-                String style = playerStyles.getOrDefault(p.getUniqueId(), defaultStyle);
-                codex.setPlayerStyle(p, style);
-            }
-        }
-
         plugin.getLogger().info("[AegisGuard] Loaded " + playerStyles.size() + " player language preferences.");
     }
 
-    private synchronized void savePlayerPreference(Player player, String style) {
-        if (playerDataFile == null || playerData == null || player == null) return;
-
-        playerData.set("players." + player.getUniqueId() + ".language_style", style);
+    private synchronized void savePlayerPreference(UUID uuid, String style) {
+        if (playerData == null) {
+            // Ensure file is ready
+            loadPlayerPreferences();
+            if (playerData == null) return;
+        }
+        playerData.set("players." + uuid + ".language_style", style);
         isPlayerDataDirty = true;
     }
 
@@ -322,62 +229,27 @@ public class MessagesUtil implements Listener {
         }
     }
 
-    public boolean isPlayerDataDirty() {
-        return isPlayerDataDirty;
-    }
+    public boolean isPlayerDataDirty() { return isPlayerDataDirty; }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        Player p = e.getPlayer();
-        playerStyles.putIfAbsent(p.getUniqueId(), defaultStyle);
-
-        CodexEngine codex = plugin.codex();
-        if (codex != null) {
-            String style = playerStyles.getOrDefault(p.getUniqueId(), defaultStyle);
-            codex.setPlayerStyle(p, style);
-        }
+        playerStyles.putIfAbsent(e.getPlayer().getUniqueId(), defaultStyle);
     }
 
-    // ---------------------------------------------------------------------
-    // Internal resolution + formatting
-    // ---------------------------------------------------------------------
+    // ----------------------------
+    // Internal Helpers
+    // ----------------------------
 
-    private String resolveForPlayer(Player player, String key, Map<String, String> placeholders, String def) {
-        if (key == null || key.isEmpty()) return "";
+    private String getRawForPlayer(Player player, String key) {
+        try {
+            if (plugin.codex() != null) {
+                String v = plugin.codex().tr(player, key);
+                if (v != null && !v.trim().isEmpty() && !v.trim().equalsIgnoreCase(key)) {
+                    return v;
+                }
+            }
+        } catch (Throwable ignored) {}
 
-        CodexEngine codex = plugin.codex();
-        if (codex == null || player == null) {
-            return missingOrDefault(key, def);
-        }
-
-        // Ensure codex has player style set (in case something bypassed setPlayerStyle)
-        String style = playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
-        codex.setPlayerStyle(player, style);
-
-        String raw = codex.tr(player, key, placeholders == null ? Collections.emptyMap() : placeholders);
-
-        // Codex returns key if missing
-        if (raw == null || raw.isEmpty() || raw.equals(key)) {
-            return missingOrDefault(key, def);
-        }
-        return raw;
-    }
-
-    private String resolveForSender(CommandSender sender, String key, Map<String, String> placeholders, String def) {
-        if (key == null || key.isEmpty()) return "";
-
-        CodexEngine codex = plugin.codex();
-        if (codex == null) return missingOrDefault(key, def);
-
-        String raw = codex.tr(sender, key, placeholders == null ? Collections.emptyMap() : placeholders);
-        if (raw == null || raw.isEmpty() || raw.equals(key)) {
-            return missingOrDefault(key, def);
-        }
-        return raw;
-    }
-
-    private String missingOrDefault(String key, String def) {
-        if (def != null) return def;
         return "&c[Missing: " + key + "]";
     }
 
@@ -387,28 +259,32 @@ public class MessagesUtil implements Listener {
         // Hex Color Support (&#RRGGBB)
         Matcher matcher = HEX_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String token = msg.substring(matcher.start(), matcher.end()); // e.g. "&#FFFFFF"
-            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of(token.substring(1)).toString()); // "#FFFFFF"
+            String token = matcher.group(0); // "&#A1B2C3"
+            String hex = matcher.group(1);   // "A1B2C3"
+            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
             matcher = HEX_PATTERN.matcher(msg);
         }
 
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
 
-    private Map<String, String> kvToMap(String... kv) {
-        if (kv == null || kv.length == 0) return Collections.emptyMap();
-        Map<String, String> out = new HashMap<>();
+    private String applyPlaceholders(String msg, String... kv) {
+        if (msg == null || kv == null || kv.length == 0) return msg;
         for (int i = 0; i + 1 < kv.length; i += 2) {
-            String k = kv[i];
-            String v = kv[i + 1];
-            if (k == null || k.isEmpty()) continue;
-            out.put(k, v == null ? "" : v);
+            String k = kv[i] == null ? "" : kv[i];
+            String v = kv[i + 1] == null ? "" : kv[i + 1];
+            msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
         }
-        return out;
+        return msg;
     }
 
-    private String safeLower(String in, String fallback) {
-        if (in == null || in.trim().isEmpty()) return fallback;
-        return in.trim().toLowerCase(Locale.ROOT);
+    private String applyPlaceholders(String msg, Map<String, String> map) {
+        if (msg == null || map == null || map.isEmpty()) return msg;
+        for (Map.Entry<String, String> e : map.entrySet()) {
+            String k = e.getKey();
+            String v = e.getValue() == null ? "" : e.getValue();
+            msg = msg.replace("{" + k + "}", v).replace("%" + k + "%", v);
+        }
+        return msg;
     }
 }

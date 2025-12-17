@@ -1,0 +1,84 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# File: system.yml
+# Split from legacy single-file language pack
+# ======================================
+
+role_edit_self_error: '&c❌ No podés cambiar tu propio rol. ¡Te podés dejar afuera!'
+no_perm: '&cNo tenés permiso para hacer eso.'
+players_only: '&cEste comando es solo para jugadores.'
+usage_main: '&eUsá: /aegis <wand|menu|claim|unclaim|resize|help>'
+
+sound_global_enabled: '&a✔ Sonidos de interfaz activados.'
+sound_global_disabled: '&c✖ Sonidos de interfaz desactivados.'
+
+wand_given: '&a⚡ Recibiste el Cetro de Aegis.'
+wand_already_on: '&eYa tenés el Cetro de Aegis.'
+corner1_set: '&a⚡ Primer punto marcado en &e{X}, {Z}.'
+corner2_set: '&b⚡ Segundo punto marcado en &e{X}, {Z}.'
+must_select: '&c❌ Tenés que marcar dos puntos con el Cetro.'
+corners_diff_world: '&c❌ Ambos puntos tienen que estar en el mismo mundo.'
+wand_consumed: '&a✔ El Cetro se consume después de usarlo.'
+wand_not_found: '&c❌ No estás sosteniendo el Cetro.'
+wand_already_owned: '&eYa tenés un Cetro. Usá el que tenés.'
+
+resize-success: '&a✔ El claim se expandió {DIRECTION} por {AMOUNT} bloques.'
+resize-fail-overlap: '&c❌ No se pudo expandir: se superpone con otro claim.'
+resize-fail-max-area: '&c❌ No se pudo expandir: excede el límite de {AMOUNT} bloques.'
+
+merge_invalid_dir: '&c❌ Dirección inválida. Usá NORTH, SOUTH, EAST o WEST.'
+merge_no_plot: '&c❌ No hay un claim en esa dirección para fusionar.'
+merge_not_owner: '&c❌ No sos el dueño del claim de al lado.'
+merge_not_aligned: '&c❌ Los bordes no están alineados. Tienen que coincidir.'
+merge_success: '&a⚡ ¡Listo! Los claims se fusionaron en uno.'
+
+max_claims_reached: '&c❌ Llegaste a tu límite de claims ({AMOUNT}).'
+need_vault: '&c❌ Te faltan &e{AMOUNT}&c de dinero.'
+cost_deducted: '&e💰 Se cobró &6{AMOUNT}&e.'
+items_deducted: '&e💰 Pagaste &6{AMOUNT} {ITEM}&e.'
+vault_refund: '&e💰 Reembolso de &6{AMOUNT}&e ({PERCENT}%).'
+item_refund: '&e💰 Se devolvió &6{AMOUNT} {ITEM}&e ({PERCENT}%).'
+
+upkeep_paid: '&e💰 Mantenimiento pagado: &6{AMOUNT}&e.'
+upkeep_failed_warning: '&c❌ Atención: el mantenimiento está pendiente.'
+plot_expired_upkeep: '&c❌ Tu claim expiró por mantenimiento impago.'
+plot-is-locked: '&c❌ Este claim está bloqueado.'
+plot_is_locked: '&c❌ Este claim está bloqueado.' # alias
+
+home-set-success: '&a✔ Home del claim establecido.'
+home-fail-outside: '&c❌ Tenés que estar dentro de tu claim para setear el home.'
+home-fail-no-spawn: '&c❌ No hay home seteado. Usá /ag setspawn.'
+welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
+welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
+farewell-set: '&a✔ Mensaje de despedida actualizado.'
+farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+
+plot_created: '&a✔ Tu tierra ahora está protegida por AegisGuard.'
+plot_unclaimed: '&e⚠ Tu claim fue liberado.'
+no_plot_here: '&c❌ No estás parado dentro de tu claim.'
+
+cannot_break: '&c❌ No podés romper bloques acá; está protegido.'
+cannot_place: '&c❌ No podés colocar bloques acá; está protegido.'
+cannot_interact: '&c❌ No podés interactuar con eso acá.'
+cannot_attack: '&c❌ El combate está deshabilitado en este claim.'
+plot_entry_denied: '&c⛔ Entrada denegada. Este claim es privado.'
+plot_banned_entry: '&c⛔ Estás baneado de este claim.'
+
+claim_blocks_balance: '&e⛏ Bloques de Claim: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Claim. &7(Nuevo: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Claim. &7(Restante: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Claim. Te faltan &6{AMOUNT}&c.'
+claim_blocks_first_claim_limit: '&c❌ Límite del primer claim: área máxima &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Claim) &8Total: &f{BALANCE}'
+
+claim_denied_external: '&c⛔ Claim denegado: protegido por &f{PLUGIN}&c.'
+claim_denied_external_generic: '&c⛔ Claim denegado: protegido por otro plugin.'
+
+plot_welcome_show: '&a✦ Bienvenida de {OWNER}: &f{MESSAGE}'
+plot_farewell_show: '&e✦ Despedida de {OWNER}: &f{MESSAGE}'
+
+unstuck_warmup: '&e⏳ Rescate en &6{SECONDS}&e segundos... No te muevas.'
+unstuck_cancelled: '&c❌ Cancelado (te moviste).'
+unstuck_on_cooldown: '&c❌ En enfriamiento: faltan &6{SECONDS}&c segundos.'
+unstuck_success: '&a✔ Teletransportado a un lugar seguro.'
+unstuck_failed: '&c❌ Falló: no se encontró un lugar seguro.'

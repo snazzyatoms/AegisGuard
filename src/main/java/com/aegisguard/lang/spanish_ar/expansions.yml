@@ -1,0 +1,8 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# File: expansions.yml
+# Split from legacy single-file language pack
+# ======================================
+
+request_expired: '&c❌ La solicitud expiró o ya no existe.'
+expansion_exists: '&c❌ Ya tenés una solicitud pendiente.'

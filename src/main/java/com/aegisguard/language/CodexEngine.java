@@ -358,6 +358,26 @@ public class CodexEngine {
         return trList((CommandSender) player, key, placeholders);
     }
 
+    /* --------------------------------------------------------
+     * ✅ Compat aliases (bring back old GUI calls)
+     * -------------------------------------------------------- */
+
+    public List<String> list(Player player, String key) {
+        return trList(player, key);
+    }
+
+    public List<String> list(Player player, String key, Map<String, String> placeholders) {
+        return trList((CommandSender) player, key, placeholders);
+    }
+
+    public List<String> list(CommandSender sender, String key) {
+        return trList(sender, key);
+    }
+
+    public List<String> list(CommandSender sender, String key, Map<String, String> placeholders) {
+        return trList(sender, key, placeholders);
+    }
+
     public String getDefaultStyle() { return defaultStyle; }
     public String getFallbackStyle() { return fallbackStyle; }
 

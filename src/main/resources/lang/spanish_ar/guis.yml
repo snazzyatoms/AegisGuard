@@ -1,0 +1,281 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# File: guis.yml
+# Split from legacy single-file language pack
+# ======================================
+
+# --- Menú Principal (Main Menu) ---
+menu_title: '&b⚔ Menú de Aegis'
+menu_subtitle: '&7Protegé tu rancho, che.'
+
+button_claim_land: '&a🛡 Reclamar Terreno'
+claim_land_lore:
+- '&7Empezá a proteger esta área.'
+claim_land_ready_lore:
+- '&7Crear una parcela con'
+- '&7lo que marcaste recién.'
+- ' '
+- '&eClick para Confirmar'
+
+button_plot_flags: '&6Ajustes del Rancho'
+plot_flags_lore:
+- '&7Cambiá las reglas de tu plot.'
+- ' '
+- '&eClick para Abrir'
+
+button_trusted: '&dGente de Confianza'
+trusted_lore:
+- '&7Administrá quién puede hacer qué.'
+- ' '
+- '&eClick para Abrir'
+
+button_leveling: '&b⚡ Ascensión'
+leveling_lore:
+- '&7Subí de nivel tu plot'
+- '&7para desbloquear mejoras.'
+- ' '
+- '&eClick para Abrir'
+
+button_market: '&e💰 Mercado'
+market_lore:
+- '&7Vendé o comprá plots.'
+- ' '
+- '&eClick para Abrir'
+
+button_auction: '&6🏷 Subastas'
+auction_lore:
+- '&7Pujá por plots expirados.'
+- ' '
+- '&eClick para Abrir'
+
+button_expansions: '&d📜 Expansiones'
+expansions_lore:
+- '&7Pedí que tu plot crezca.'
+- ' '
+- '&eClick para Abrir'
+
+button_settings: '&7⚙ Ajustes'
+settings_lore:
+- '&7Ajustes del jugador.'
+- ' '
+- '&eClick para Abrir'
+
+button_admin: '&c🛠 Admin'
+admin_lore:
+- '&7Herramientas de moderación.'
+- ' '
+- '&eClick para Abrir'
+
+button_confirm: '&a✔ Confirmar'
+confirm_lore:
+- '&7Confirmar esta acción.'
+- ' '
+- '&eClick para Confirmar'
+
+button_cancel: '&c✖ Cancelar'
+cancel_lore:
+- '&7Cancelar y volver.'
+- ' '
+- '&eClick para Volver'
+
+button_back: '&e⟵ Volver'
+button_exit: '&c✖ Cerrar'
+
+button_prev_page: '&e⟵ Página Anterior'
+button_next_page: '&ePágina Siguiente ⟶'
+
+# --- Admin ---
+admin_menu_title: '&c⚔ Panel de Admin'
+button_back_admin: '&e⟵ Volver a Admin'
+button_reload: '&a⟳ Recargar'
+reload_lore:
+- '&7Recargar configuración y textos.'
+- ' '
+- '&eClick para Recargar'
+
+button_admin_bypass: '&cBypass de Límite'
+admin_bypass_lore:
+- '&7Ignorá límites de claims'
+- '&7para admins/ops.'
+- ' '
+- '&eClick para Alternar'
+
+button_admin_broadcast: '&bBroadcast Admin'
+admin_broadcast_lore:
+- '&7Avisos de acciones admin.'
+- ' '
+- '&eClick para Alternar'
+
+button_auto_remove: '&6Auto-Purge'
+auto_remove_lore:
+- '&7Purgar plots de baneados.'
+- ' '
+- '&eClick para Alternar'
+
+button_admin_plot_list: '&cRegistro de Plots'
+admin_plot_list_lore:
+- '&7Ver todos los plots'
+- '&7y administrarlos.'
+- ' '
+- '&eClick para Abrir'
+
+admin_plot_list_title: '&cRegistro de Plots'
+admin_plot_item_name: '&bDueño: &f{OWNER}'
+admin_plot_actions:
+- '&eClick Izquierdo: &7Teleport'
+- '&cClick Derecho: &7Eliminar Plot'
+
+admin_server_zone_tag: '&c[ZONA DEL SERVER]'
+
+# --- Plot Flags GUI ---
+plot_flags_title: '&6Ajustes del Rancho'
+plot_flags_item_format: '&e{FLAG} &7→ &f{STATUS}'
+plot_flags_footer_inheritance: '&8Herencia: {SOURCE}'
+
+# --- Trusted GUI ---
+trusted_title: '&dGente de Confianza'
+trusted_member_name: '&b{PLAYER}'
+trusted_member_lore:
+- '&7Rol: &f{ROLE}'
+- ' '
+- '&eClick Izquierdo: &7Cambiar Rol'
+- '&cClick Derecho: &7Eliminar'
+
+trusted_add_title: '&a➕ Agregar Jugador'
+trusted_add_lore:
+- '&7Agregá a alguien al plot.'
+- ' '
+- '&eUsá: /ag trust <jugador>'
+
+# --- Leveling GUI ---
+level_gui_title: '&b⚡ Ascensión'
+level_current_status: '&eEstado Actual'
+level_upgrade_button: '&aSubir a Nivel &f{LEVEL}'
+level_max_reached: '&6Ya estás al máximo nivel.'
+level_button_lore:
+- '&7Subí de nivel el plot para'
+- '&7desbloquear más poder.'
+level_button_lore_static:
+- '&7Subí de nivel el plot para'
+- '&7desbloquear nuevas mejoras.'
+
+level_current_blessing_name: '&dBonos Activos'
+level_current_blessing_title: '&dBonos Actualmente Activos'
+level_current_blessing_footer_1: '&8Niveles más altos dan mejores'
+level_current_blessing_footer_2: '&8bonos y más territorio.'
+
+# aliases (compat)
+level_current_blessings_name: '&dBonos Activos'
+level_current_blessings_title: '&dBonos Actualmente Activos'
+level_current_blessings_footer_1: '&8Niveles más altos dan mejores'
+level_current_blessings_footer_2: '&8bonos y más territorio.'
+
+level_track_title_completed: '&aCamino Completado'
+level_track_buffs_title: '&dBonos Desbloqueados'
+level_track_footer_mastered: '&6Este camino ya está completo.'
+
+level_track_title_current: '&dCamino Actual'
+level_track_title_locked: '&cCamino Bloqueado'
+level_track_next_cost: '&eCosto: &6{COST}'
+level_track_footer_next: '&6Subí para desbloquear.'
+level_track_footer_progress: '&7Progreso al próximo nivel.'
+
+level_upgrade_tier: '&dPróximo Tier'
+level_upgrade_next_tier: '&dPróximo Tier'
+level_upgrade_cost: '&eCosto: &6{COST}'
+level_upgrade_new_buffs_title: '&dNuevos Bonos'
+level_upgrade_click_hint: '&eClick para intentar subir.'
+
+# --- Market/Auction GUI ---
+market_gui_title: '&e💰 Mercado'
+auction_gui_title: '&6🏷 Subastas'
+
+auction_button_back: '&e⟵ Volver a Subastas'
+market_button_back: '&e⟵ Volver al Mercado'
+realestate_button_back: '&e⟵ Volver a Bienes Raíces'
+domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
+market_teleport: '&eTeletransportándote al claim de {PLAYER}...'
+
+# --- Biome GUI ---
+biome_gui_title: '&a🌿 Biomas'
+biome_button_back: '&e⟵ Volver a Ajustes del Plot'
+biome_button_exit: '&c✖ Cerrar Biomas'
+
+# --- Help GUI ---
+help_gui_title: '&b📘 Ayuda de Aegis'
+
+# --- Visit GUI ---
+visit_gui_title: '&9Sistema de Viaje'
+visit_title_warps: '&6Warps Públicos'
+visit_title_trusted: '&9Claims de Confianza'
+visit_switch_trusted: '&bVer: Confianza'
+visit_switch_trusted_lore:
+- '&7Claims donde tenés rol o invitación.'
+visit_switch_warps: '&6Ver: Warps'
+visit_switch_warps_lore:
+- '&7Lugares públicos del servidor.'
+visit_warp_lore:
+- '&7Click para viajar.'
+visit_plot_name: '&e{PLOT}'
+visit_plot_lore:
+- '&7Mundo: &f{WORLD}'
+- '&7Rol: &a{ROLE}'
+- ' '
+- '&eClick para Viajar'
+
+# --- Plot Status GUI ---
+plot_status_button_title: '&b📜 Estado del Rancho'
+plot_status_button_lore:
+- '&7Resumen del plot'
+- '&7(boons, reglas, etc).'
+- ' '
+- '&eClick para Abrir'
+
+plot_status_gui_title: '&b⚔ Estado del Rancho'
+plot_status_header_title: '&6Info del Rancho'
+plot_status_blessings_title: '&dBonos Activos'
+plot_status_territory_title: '&aTerritorio y Progreso'
+plot_status_protection_title: '&cCombate y Hostiles'
+
+plot_status_overview_lore:
+- '&7Te muestra lo principal:'
+- '&7dueño, mundo, bioma y nivel.'
+- ' '
+- '&8Para no marearte, solo'
+- '&8se muestran los mejores bonos.'
+
+plot_status_flags_lore:
+- '&7Lista las protecciones activas'
+- '&7(PvP, mobs, fuego, interacción, etc).'
+- ' '
+- '&8Lo que esté apagado usa'
+- '&8las reglas normales del server.'
+
+plot_status_economy_lore:
+- '&7Pagos, costos y reembolsos.'
+- ' '
+- '&8No pagar el mantenimiento puede'
+- '&8terminar en expiración o subasta.'
+
+plot_status_social_lore:
+- '&7Visitas, likes y visibilidad.'
+- ' '
+- '&8Los claims populares ganan'
+- '&8reconocimiento en la comunidad.'
+
+# --- Extras present in AR pack (kept) ---
+plot_status_gui_subtitle: '&7Lo importante del claim, sin chamuyo.'
+button_social: '&b⭐ Social'
+social_lore:
+- '&7Likes, visitas y boludeces.'
+- ' '
+- '&eClick para Abrir'
+button_plot_status: '&b📜 Estado'
+button_visit: '&9🧭 Visitar'
+visit_lore:
+- '&7Warps y lugares de confianza.'
+- ' '
+- '&eClick para Abrir'
+button_plot_status_back: '&e⟵ Volver al Estado'
+button_visit_back: '&e⟵ Volver a Visitar'
+plot_status_footer_hint: '&8Tip: Ajustá flags en "Ajustes del Rancho".'

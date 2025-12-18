@@ -1,0 +1,16 @@
+# ======================================
+# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# File: upgrades.yml
+# Split from legacy single-file language pack
+# ======================================
+
+# --- Claim Blocks ---
+claim_blocks_balance: '&e⛏ Bloques de Claim: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Claim. &7(Nuevo: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Claim. &7(Restante: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Claim. Te faltan &6{AMOUNT}&c.'
+claim_blocks_first_claim_limit: '&c❌ Límite del primer claim: área máxima &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Claim) &8Total: &f{BALANCE}'
+claim_blocks_not_enough: '&c❌ No te alcanza. Necesitás &6{NEEDED}&c Bloques de Claim más.'
+claim_blocks_earned_playtime: '&a⛏ Ganaste Bloques de Claim por jugar: &6{AMOUNT}&a. &7(Total: &f{BALANCE}&7)'
+claim_blocks_earned_level: '&b⛏ Ganaste Bloques de Claim por nivel: &6{AMOUNT}&b. &7(Total: &f{BALANCE}&7)'

@@ -14,7 +14,6 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -54,7 +53,7 @@ public class MessagesUtil implements Listener {
         // Default language: prefer new config path, then legacy path
         String cfgDefault = plugin.getConfig().getString("localization.default_language", null);
         if (cfgDefault == null) cfgDefault = plugin.getConfig().getString("language_styles.default", "old_english");
-        this.defaultStyle = cfgDefault == null || cfgDefault.isBlank() ? "old_english" : cfgDefault;
+        this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault;
 
         loadPlayerPreferences();
         plugin.getLogger().info("[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: " + defaultStyle);
@@ -93,12 +92,28 @@ public class MessagesUtil implements Listener {
     // Accessors (Console / Default)
     // ----------------------------
 
+    /** ✅ NEW: non-player string lookup (default style) */
     public String get(String key) {
-        // Console lookups should move to Codex too later.
-        return format("&c[Missing: " + key + "]");
+        return format(getRawForDefault(key));
+    }
+
+    /** ✅ NEW: fixes your compile error (used by send(sender, key, map)) */
+    public String get(String key, Map<String, String> placeholders) {
+        String raw = getRawForDefault(key);
+        // Codex already supports {key}, %key%, ${key}, but we also keep our compat replacement.
+        raw = applyPlaceholders(raw, placeholders);
+        return format(raw);
+    }
+
+    /** ✅ NEW: fixes your compile error (used by send(sender, key, kv...)) */
+    public String get(String key, String... kv) {
+        String raw = getRawForDefault(key);
+        raw = applyPlaceholders(raw, kv);
+        return format(raw);
     }
 
     public List<String> getList(String key) {
+        // Optional: if you ever want console list lookups later, route to codex().trList(key).
         return Collections.emptyList();
     }
 
@@ -244,6 +259,20 @@ public class MessagesUtil implements Listener {
         try {
             if (plugin.codex() != null) {
                 String v = plugin.codex().tr(player, key);
+                if (v != null && !v.trim().isEmpty() && !v.trim().equalsIgnoreCase(key)) {
+                    return v;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        return "&c[Missing: " + key + "]";
+    }
+
+    /** ✅ NEW: non-player default resolution via Codex */
+    private String getRawForDefault(String key) {
+        try {
+            if (plugin.codex() != null) {
+                String v = plugin.codex().tr(key);
                 if (v != null && !v.trim().isEmpty() && !v.trim().equalsIgnoreCase(key)) {
                     return v;
                 }

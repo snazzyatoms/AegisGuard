@@ -92,20 +92,28 @@ public class MessagesUtil implements Listener {
     // Accessors (Console / Default)
     // ----------------------------
 
-    /** ✅ NEW: non-player string lookup (default style) */
+    /**
+     * ✅ Non-player string lookup (default style)
+     * Fixes calls like: get(key) from console senders.
+     */
     public String get(String key) {
         return format(getRawForDefault(key));
     }
 
-    /** ✅ NEW: fixes your compile error (used by send(sender, key, map)) */
+    /**
+     * ✅ Fixes compile error:
+     * used by send(sender, key, Map<String,String>) when sender is NOT a player.
+     */
     public String get(String key, Map<String, String> placeholders) {
         String raw = getRawForDefault(key);
-        // Codex already supports {key}, %key%, ${key}, but we also keep our compat replacement.
         raw = applyPlaceholders(raw, placeholders);
         return format(raw);
     }
 
-    /** ✅ NEW: fixes your compile error (used by send(sender, key, kv...)) */
+    /**
+     * ✅ Fixes compile error:
+     * used by send(sender, key, String... kv) when sender is NOT a player.
+     */
     public String get(String key, String... kv) {
         String raw = getRawForDefault(key);
         raw = applyPlaceholders(raw, kv);
@@ -113,7 +121,7 @@ public class MessagesUtil implements Listener {
     }
 
     public List<String> getList(String key) {
-        // Optional: if you ever want console list lookups later, route to codex().trList(key).
+        // Optional: route console list lookups to Codex later if you need it.
         return Collections.emptyList();
     }
 
@@ -226,7 +234,6 @@ public class MessagesUtil implements Listener {
 
     private synchronized void savePlayerPreference(UUID uuid, String style) {
         if (playerData == null) {
-            // Ensure file is ready
             loadPlayerPreferences();
             if (playerData == null) return;
         }
@@ -268,7 +275,9 @@ public class MessagesUtil implements Listener {
         return "&c[Missing: " + key + "]";
     }
 
-    /** ✅ NEW: non-player default resolution via Codex */
+    /**
+     * ✅ Non-player default resolution via Codex
+     */
     private String getRawForDefault(String key) {
         try {
             if (plugin.codex() != null) {

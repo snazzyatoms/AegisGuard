@@ -7,6 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -83,7 +84,7 @@ public class CodexEngine {
             dataFolder.mkdirs();
         }
 
-        // Read config (support both your newer naming + older naming)
+        // Read config
         this.primaryFolderName = nvl(plugin.getConfig().getString("localization.folder"), "lang").trim();
         this.fallbackFolderName = nvl(plugin.getConfig().getString("localization.fallback_folder"), "codex").trim();
         this.extractDefaults = plugin.getConfig().getBoolean("localization.extract_defaults", true);
@@ -100,22 +101,24 @@ public class CodexEngine {
             fallbackDir.mkdirs();
         }
 
-        // Bundles list: prefer config.yml, else (optional) codex.yml, else defaults
+        // Bundles list: prefer config.yml, else defaults
         List<String> bundles = plugin.getConfig().getStringList("localization.bundles");
         if (bundles == null || bundles.isEmpty()) {
             bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
         }
 
-        // If we are allowed to extract defaults, seed base files for primary folder
+        // ✅ IMPORTANT FIX:
+        // Seed fallback root files FIRST (codex.yml + core.yml + legacy style ymls),
+        // so fallbackIndex/fallbackCoreBundle can actually load on first boot.
         if (extractDefaults) {
-            // Optional seed files (core/overrides) if you decide to ship them under /lang/
+            seedFallbackRootFilesEarly();
+            // Optional: seed lang-level global files if you ever ship them in /lang/
             maybeExtract(primaryFolderName + "/core.yml");
             maybeExtract(primaryFolderName + "/overrides.yml");
-            // Optional seed file if you still ship a codex.yml under /lang/ (NOT required)
             maybeExtract(primaryFolderName + "/codex.yml");
         }
 
-        // Load optional index files:
+        // Load optional index files
         YamlConfiguration primaryIndex = loadYamlIfExists(new File(primaryDir, "codex.yml"));
         YamlConfiguration fallbackIndex = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
 
@@ -175,14 +178,10 @@ public class CodexEngine {
         // Load core/overrides:
         // Prefer primary folder versions, else fallback folder versions.
         this.primaryCoreBundle = loadPrimaryOrSeed(primaryDir, "core.yml");
-        this.primaryOverridesBundle = loadYamlIfExists(new File(primaryDir, "overrides.yml"));
-        if (this.primaryOverridesBundle == null) this.primaryOverridesBundle = new YamlConfiguration();
+        this.primaryOverridesBundle = loadPrimaryOrSeed(primaryDir, "overrides.yml");
 
-        this.fallbackCoreBundle = loadYamlIfExists(new File(fallbackDir, "core.yml"));
-        if (this.fallbackCoreBundle == null) this.fallbackCoreBundle = new YamlConfiguration();
-
-        this.fallbackOverridesBundle = loadYamlIfExists(new File(fallbackDir, "overrides.yml"));
-        if (this.fallbackOverridesBundle == null) this.fallbackOverridesBundle = new YamlConfiguration();
+        this.fallbackCoreBundle = loadFallbackOrSeed(fallbackDir, "core.yml");
+        this.fallbackOverridesBundle = loadFallbackOrSeed(fallbackDir, "overrides.yml");
 
         // ---------------------------
         // Load PRIMARY (lang) bundles
@@ -218,8 +217,6 @@ public class CodexEngine {
         fallbackStyleBundles.clear();
         loadFallbackCodexBundles(fallbackDir, fallbackIndex, bundles);
 
-        // If primary folder has basically nothing, but codex fallback has data,
-        // we keep primary empty but resolution will automatically fall through to fallback.
         boolean primaryHasAnyKeys = primaryStyleBundles.values().stream()
                 .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
 
@@ -230,23 +227,41 @@ public class CodexEngine {
                 + " | keys=" + (primaryHasAnyKeys ? "yes" : "no")
                 + " | Fallback=" + fallbackFolderName + " keys=" + (fallbackHasAnyKeys ? "yes" : "no"));
 
-        // Clean invalid cached player styles
         pruneInvalidPlayerStyles();
+    }
+
+    private void seedFallbackRootFilesEarly() {
+        // Optional config key (recommended):
+        // localization.fallback_root_files:
+        //  - codex.yml
+        //  - core.yml
+        //  - old_english.yml
+        //  - hybrid_english.yml
+        //  - modern_english.yml
+        //  - spanish_mx.yml
+        //  - spanish_ar.yml
+        List<String> roots = plugin.getConfig().getStringList("localization.fallback_root_files");
+        if (roots == null || roots.isEmpty()) {
+            roots = Arrays.asList(
+                    "codex.yml",
+                    "core.yml",
+                    "overrides.yml",
+                    "old_english.yml",
+                    "hybrid_english.yml",
+                    "modern_english.yml",
+                    "spanish_mx.yml",
+                    "spanish_ar.yml"
+            );
+        }
+
+        for (String f : roots) {
+            if (f == null || f.isBlank()) continue;
+            maybeExtract(fallbackFolderName + "/" + f.trim());
+        }
     }
 
     private void loadFallbackCodexBundles(File fallbackDir, YamlConfiguration fallbackIndex, List<String> bundles) {
         if (fallbackDir == null) return;
-
-        // Optional: seed legacy codex defaults from jar (keeps old behavior alive)
-        if (extractDefaults) {
-            maybeExtract(fallbackFolderName + "/codex.yml");
-            maybeExtract(fallbackFolderName + "/core.yml");
-            maybeExtract(fallbackFolderName + "/old_english.yml");
-            maybeExtract(fallbackFolderName + "/hybrid_english.yml");
-            maybeExtract(fallbackFolderName + "/modern_english.yml");
-            maybeExtract(fallbackFolderName + "/spanish_mx.yml");
-            maybeExtract(fallbackFolderName + "/spanish_ar.yml");
-        }
 
         YamlConfiguration idx = fallbackIndex;
         if (idx == null) idx = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
@@ -274,8 +289,7 @@ public class CodexEngine {
                 YamlConfiguration merged = new YamlConfiguration();
                 File styleDir = new File(fallbackDir, style);
 
-                // We only seed from jar if you actually ship codex/<style>/<bundle>.yml.
-                // This is optional, and we do NOT warn if missing.
+                // Optional: seed codex/<style>/<bundle>.yml only if you ship them
                 if (extractDefaults) {
                     for (String bundleFile : bundles) {
                         maybeExtract(fallbackFolderName + "/" + style + "/" + bundleFile);
@@ -714,9 +728,24 @@ public class CodexEngine {
         return found;
     }
 
+    /**
+     * Checks if a resource exists inside the jar.
+     */
+    private boolean hasBundledResource(String jarPath) {
+        if (jarPath == null || jarPath.isBlank()) return false;
+        try (InputStream in = plugin.getResource(jarPath)) {
+            return in != null;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     private void maybeExtract(String resourcePath) {
         if (!extractDefaults) return;
         if (resourcePath == null || resourcePath.isBlank()) return;
+
+        // ✅ No exceptions, no noise: if jar doesn't contain it, skip.
+        if (!hasBundledResource(resourcePath)) return;
 
         File target = new File(plugin.getDataFolder(), resourcePath.replace("/", File.separator));
         if (target.exists()) return;
@@ -729,8 +758,8 @@ public class CodexEngine {
 
         try {
             plugin.saveResource(resourcePath, false);
-        } catch (IllegalArgumentException ignored) {
-            // Resource not shipped in jar. That's fine.
+        } catch (Throwable ignored) {
+            // Should be extremely rare now.
         }
     }
 
@@ -747,6 +776,15 @@ public class CodexEngine {
         File f = new File(primaryDir, fileName);
         if (!f.exists() && extractDefaults) {
             maybeExtract(primaryFolderName + "/" + fileName);
+        }
+        YamlConfiguration cfg = loadYamlIfExists(f);
+        return (cfg == null) ? new YamlConfiguration() : cfg;
+    }
+
+    private YamlConfiguration loadFallbackOrSeed(File fallbackDir, String fileName) {
+        File f = new File(fallbackDir, fileName);
+        if (!f.exists() && extractDefaults) {
+            maybeExtract(fallbackFolderName + "/" + fileName);
         }
         YamlConfiguration cfg = loadYamlIfExists(f);
         return (cfg == null) ? new YamlConfiguration() : cfg;

@@ -39,6 +39,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -334,7 +335,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     // ---------------------------------------------------------------------
-    // Language bundle bootstrap (Split Files)
+    // Language bundle bootstrap (Safe Extraction)
     // ---------------------------------------------------------------------
 
     private void ensureLocalizationFiles() {
@@ -342,7 +343,27 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
 
-        String folder = getConfig().getString("localization.folder", "codex");
+        // ✅ Primary folder (should be "lang" in v1.2.4+)
+        String primaryFolder = getConfig().getString("localization.folder", "lang");
+        if (primaryFolder == null || primaryFolder.isBlank()) primaryFolder = "lang";
+        primaryFolder = primaryFolder.trim();
+
+        // ✅ Fallback folder (should be "codex")
+        String fallbackFolder = getConfig().getString("localization.fallback_folder", "codex");
+        if (fallbackFolder == null || fallbackFolder.isBlank()) fallbackFolder = "codex";
+        fallbackFolder = fallbackFolder.trim();
+
+        // Install primary split bundles (lang/<style>/<bundle>.yml)
+        installSplitLanguageBundles(primaryFolder);
+
+        // Optionally seed fallback legacy bundle files too (codex/*.yml), safely.
+        // This prevents "empty fallback" on first boot if someone deletes the folder.
+        if (!fallbackFolder.equalsIgnoreCase(primaryFolder)) {
+            installLegacyFallbackFiles(fallbackFolder);
+        }
+    }
+
+    private void installSplitLanguageBundles(String folder) {
         File baseDir = new File(getDataFolder(), folder);
 
         if (!baseDir.exists() && !baseDir.mkdirs()) {
@@ -350,22 +371,10 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
 
-        List<String> rootFiles = getConfig().getStringList("localization.root_files");
-        if (rootFiles == null || rootFiles.isEmpty()) {
-            rootFiles = Arrays.asList(
-                    "codex.yml",
-                    "core.yml",
-                    "old_english.yml",
-                    "hybrid_english.yml",
-                    "modern_english.yml",
-                    "spanish_mx.yml",
-                    "spanish_ar.yml"
-            );
-        }
-
-        for (String root : rootFiles) {
-            saveBundledResourceIfMissing(folder + "/" + root);
-        }
+        // Optional top-level files (only extracted if they exist in the jar)
+        saveBundledResourceIfMissing(folder + "/codex.yml");
+        saveBundledResourceIfMissing(folder + "/core.yml");
+        saveBundledResourceIfMissing(folder + "/overrides.yml");
 
         List<String> languages = getConfig().getStringList("localization.available_languages");
         if (languages == null || languages.isEmpty()) {
@@ -390,7 +399,55 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
+    private void installLegacyFallbackFiles(String folder) {
+        File baseDir = new File(getDataFolder(), folder);
+
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            getLogger().warning("[AegisGuard] Failed to create fallback localization folder: " + baseDir.getPath());
+            return;
+        }
+
+        // Legacy codex mode files. These are OPTIONAL and only extracted if they exist in the jar.
+        List<String> legacyRootFiles = getConfig().getStringList("localization.fallback_root_files");
+        if (legacyRootFiles == null || legacyRootFiles.isEmpty()) {
+            legacyRootFiles = Arrays.asList(
+                    "codex.yml",
+                    "core.yml",
+                    "old_english.yml",
+                    "hybrid_english.yml",
+                    "modern_english.yml",
+                    "spanish_mx.yml",
+                    "spanish_ar.yml",
+                    "overrides.yml"
+            );
+        }
+
+        for (String root : legacyRootFiles) {
+            saveBundledResourceIfMissing(folder + "/" + root);
+        }
+    }
+
+    /**
+     * Checks if a resource exists inside the jar.
+     * This prevents IllegalArgumentException spam from saveResource(...).
+     */
+    private boolean hasBundledResource(String jarRelativePath) {
+        if (jarRelativePath == null || jarRelativePath.isBlank()) return false;
+        try (InputStream in = getResource(jarRelativePath)) {
+            return in != null;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     private void saveBundledResourceIfMissing(String jarRelativePath) {
+        if (jarRelativePath == null || jarRelativePath.isBlank()) return;
+
+        // ✅ If the jar doesn't contain it, silently skip (no WARN spam).
+        if (!hasBundledResource(jarRelativePath)) {
+            return;
+        }
+
         File target = new File(getDataFolder(), jarRelativePath.replace("/", File.separator));
         if (target.exists()) return;
 
@@ -403,8 +460,9 @@ public class AegisGuard extends JavaPlugin {
         try {
             saveResource(jarRelativePath, false);
             getLogger().info("[AegisGuard] Installed language resource: " + jarRelativePath);
-        } catch (IllegalArgumentException ex) {
-            getLogger().warning("[AegisGuard] Missing bundled resource: " + jarRelativePath + " (" + ex.getMessage() + ")");
+        } catch (Throwable ex) {
+            // Extremely rare now, but keep a single warning if something truly weird happens.
+            getLogger().warning("[AegisGuard] Failed to install bundled resource: " + jarRelativePath + " (" + ex.getMessage() + ")");
         }
     }
 

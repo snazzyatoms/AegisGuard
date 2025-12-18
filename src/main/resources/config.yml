@@ -89,6 +89,10 @@ localization:
 
   debug_missing_keys: false
 
+  # Per-player language preferences stored here (UUID -> style id).
+  # (CodexEngine will auto-create this section if missing, but defining it keeps config tidy.)
+  player_styles: {}
+
 
 # ==============================================================================
 # 🔌 PLUGIN HOOKS & INTEGRATIONS

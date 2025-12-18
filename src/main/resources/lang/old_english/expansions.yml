@@ -1,0 +1,16 @@
+# AegisGuard Codex Language Pack (split files)
+# Language: old_english
+# Section: expansions.yml
+# Generated: 2025-12-16 23:08:56Z
+# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+expansion_submitted: '&a✔ Thy petition for expansion hath been sent to the Council.'
+expansion_exists: '&c❌ Thou already hast a petition pending.'
+expansion_approved: ''
+expansion_denied: ''
+admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
+admin_request_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
+expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
+expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'
+expansion_invalid_size: '&c❌ The new size must be greater than the old.'
+request_expired: '&c❌ This petition has expired or vanished.'

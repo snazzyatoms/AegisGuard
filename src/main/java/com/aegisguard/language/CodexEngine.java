@@ -28,8 +28,13 @@ import java.util.*;
  * - codex.yml (style list + optional legacy file_map)
  * - core.yml (shared/global keys)
  * - overrides.yml (per-server overrides)
+ *
+ * ✅ Per-player style persistence (NEW):
+ * - Stored in config.yml: localization.player_styles.<uuid> = <style>
  */
 public class CodexEngine {
+
+    private static final String PLAYER_STYLE_PATH = "localization.player_styles";
 
     private final AegisGuard plugin;
 
@@ -45,7 +50,7 @@ public class CodexEngine {
     private YamlConfiguration coreBundle;
     private YamlConfiguration overridesBundle;
 
-    /** Simple in-memory per-player style map (1.2.4). */
+    /** Simple in-memory per-player style map (hydrated from config.yml). */
     private final Map<UUID, String> playerStyles = new HashMap<>();
 
     // Folder name under plugin data folder (usually "codex")
@@ -112,6 +117,20 @@ public class CodexEngine {
             this.availableStyles.addAll(Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar"));
         }
 
+        // Normalize style IDs (lowercase)
+        normalizeAvailableStyles();
+
+        // Ensure default/fallback are valid
+        this.defaultStyle = normalizeStyleId(this.defaultStyle);
+        this.fallbackStyle = normalizeStyleId(this.fallbackStyle);
+
+        if (!availableStyles.contains(defaultStyle)) {
+            defaultStyle = availableStyles.isEmpty() ? "old_english" : availableStyles.get(0);
+        }
+        if (!availableStyles.contains(fallbackStyle)) {
+            fallbackStyle = defaultStyle;
+        }
+
         // Core + overrides file names (from codex.yml, with defaults)
         String coreFileName = cfg.getString("core_file", "core.yml");
         String overridesFileName = cfg.getString("overrides_file", "overrides.yml");
@@ -165,12 +184,10 @@ public class CodexEngine {
 
                 File styleDir = new File(baseDir, style);
                 if (!styleDir.exists()) {
-                    // Still allow missing folders, but warn
                     plugin.getLogger().warning("[Codex] Missing style folder: " + folderName + "/" + style + "/");
                 }
 
                 for (String bundleFile : bundles) {
-                    // Try to extract defaults from jar if present (jar path is always "codex/...")
                     ensureResourceExists("codex/" + style + "/" + bundleFile);
 
                     File f = new File(styleDir, bundleFile);
@@ -210,6 +227,29 @@ public class CodexEngine {
 
             plugin.getLogger().info("[Codex] Mode=legacy (file_map). Loaded styles: " + String.join(", ", availableStyles));
         }
+
+        // ✅ Clean up any cached player styles that no longer exist.
+        pruneInvalidPlayerStyles();
+    }
+
+    private void normalizeAvailableStyles() {
+        for (int i = 0; i < availableStyles.size(); i++) {
+            availableStyles.set(i, normalizeStyleId(availableStyles.get(i)));
+        }
+        // remove dupes while preserving order
+        LinkedHashSet<String> deduped = new LinkedHashSet<>(availableStyles);
+        availableStyles.clear();
+        availableStyles.addAll(deduped);
+    }
+
+    private String normalizeStyleId(String style) {
+        if (style == null) return "";
+        return style.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void pruneInvalidPlayerStyles() {
+        if (playerStyles.isEmpty()) return;
+        playerStyles.entrySet().removeIf(e -> e.getKey() == null || e.getValue() == null || !availableStyles.contains(e.getValue()));
     }
 
     private boolean hasAnySplitBundle(File baseDir, String style, List<String> bundles) {
@@ -224,8 +264,6 @@ public class CodexEngine {
     private void ensureResourceExists(String resourcePath) {
         if (resourcePath == null || resourcePath.isEmpty()) return;
 
-        // Only auto-install resources for the default jar structure (codex/...)
-        // If server owner changes folderName away from "codex", they must provide files manually.
         if (!resourcePath.startsWith("codex/")) return;
 
         File target = new File(plugin.getDataFolder(), resourcePath.replace("/", File.separator));
@@ -250,11 +288,6 @@ public class CodexEngine {
 
     /**
      * Normalize style YAMLs so translations can be wrapped or unwrapped.
-     *
-     * Supports:
-     * - Flat files: menu_title: ...
-     * - Wrapped files: spanish_mx: { menu_title: ... }
-     * - Single-root wrapper files: { some_root: { ... } }
      */
     private YamlConfiguration normalizeStyleYaml(String style, YamlConfiguration cfg) {
         if (cfg == null) return new YamlConfiguration();
@@ -262,13 +295,11 @@ public class CodexEngine {
         Set<String> top = cfg.getKeys(false);
         if (top == null || top.isEmpty()) return cfg;
 
-        // Case 1: Exact wrapper matches style id
         if (style != null && cfg.isConfigurationSection(style)) {
             ConfigurationSection sec = cfg.getConfigurationSection(style);
             return flattenSectionLeaves(sec);
         }
 
-        // Case 2: File has one single wrapper root
         if (top.size() == 1) {
             String only = top.iterator().next();
             if (cfg.isConfigurationSection(only)) {
@@ -286,7 +317,7 @@ public class CodexEngine {
 
         for (String key : sec.getKeys(true)) {
             Object val = sec.get(key);
-            if (val instanceof ConfigurationSection) continue; // only copy leaves
+            if (val instanceof ConfigurationSection) continue;
             out.set(key, val);
         }
         return out;
@@ -297,7 +328,7 @@ public class CodexEngine {
 
         for (String key : src.getKeys(true)) {
             Object val = src.get(key);
-            if (val instanceof ConfigurationSection) continue; // only copy leaves
+            if (val instanceof ConfigurationSection) continue;
             target.set(key, val);
         }
     }
@@ -325,17 +356,9 @@ public class CodexEngine {
         return applyPlaceholders(raw, placeholders);
     }
 
-    public String getDefaultStyle() {
-        return defaultStyle;
-    }
+    public String getDefaultStyle() { return defaultStyle; }
+    public String getFallbackStyle() { return fallbackStyle; }
 
-    public String getFallbackStyle() {
-        return fallbackStyle;
-    }
-
-    /**
-     * Returns the list of available styles in the order defined.
-     */
     public List<String> getAvailableStyles() {
         return Collections.unmodifiableList(availableStyles);
     }
@@ -343,6 +366,7 @@ public class CodexEngine {
     public String getNextStyle(String currentStyle) {
         if (availableStyles.isEmpty()) return defaultStyle;
 
+        currentStyle = normalizeStyleId(currentStyle);
         int index = availableStyles.indexOf(currentStyle);
         if (index == -1 || index >= availableStyles.size() - 1) {
             return availableStyles.get(0);
@@ -378,32 +402,51 @@ public class CodexEngine {
         return trList((CommandSender) player, key, placeholders);
     }
 
-    public List<String> list(Player player, String key) {
-        return trList(player, key);
-    }
-
-    public List<String> list(CommandSender sender, String key) {
-        return trList(sender, key);
-    }
+    public List<String> list(Player player, String key) { return trList(player, key); }
+    public List<String> list(CommandSender sender, String key) { return trList(sender, key); }
 
     /* --------------------------------------------------------
-     * Per-player style helpers (simple in-memory)
+     * Per-player style helpers (persisted in config.yml)
      * -------------------------------------------------------- */
 
     public String getPlayerStyle(Player player) {
-        if (player == null) return defaultStyle != null ? defaultStyle : "old_english";
-        String style = playerStyles.get(player.getUniqueId());
-        if (style != null && availableStyles.contains(style)) {
-            return style;
+        if (player == null) return (defaultStyle != null && !defaultStyle.isEmpty()) ? defaultStyle : "old_english";
+
+        UUID id = player.getUniqueId();
+
+        // 1) in-memory
+        String cached = playerStyles.get(id);
+        if (cached != null && availableStyles.contains(cached)) return cached;
+
+        // 2) persisted config
+        String stored = plugin.getConfig().getString(PLAYER_STYLE_PATH + "." + id, null);
+        stored = normalizeStyleId(stored);
+        if (!stored.isEmpty() && availableStyles.contains(stored)) {
+            playerStyles.put(id, stored);
+            return stored;
         }
-        return resolveStyle(player);
+
+        // 3) default
+        return (defaultStyle != null && !defaultStyle.isEmpty()) ? defaultStyle : "old_english";
     }
 
     public boolean setPlayerStyle(Player player, String style) {
         if (player == null || style == null) return false;
-        style = style.toLowerCase(Locale.ROOT);
-        if (!availableStyles.contains(style)) return false;
-        playerStyles.put(player.getUniqueId(), style);
+
+        style = normalizeStyleId(style);
+        if (style.isEmpty() || !availableStyles.contains(style)) return false;
+
+        UUID id = player.getUniqueId();
+        playerStyles.put(id, style);
+
+        // ✅ Persist
+        plugin.getConfig().set(PLAYER_STYLE_PATH + "." + id, style);
+
+        // Save async (disk IO)
+        try {
+            plugin.runGlobalAsync(plugin::saveConfig);
+        } catch (Throwable ignored) {}
+
         return true;
     }
 
@@ -412,16 +455,10 @@ public class CodexEngine {
      * -------------------------------------------------------- */
 
     private String resolveStyle(CommandSender sender) {
-        if (sender instanceof Player player) {
-            String style = playerStyles.get(player.getUniqueId());
-            if (style != null && availableStyles.contains(style)) {
-                return style;
-            }
+        if (sender instanceof Player p) {
+            return getPlayerStyle(p);
         }
-
-        return (defaultStyle != null && !defaultStyle.isEmpty())
-                ? defaultStyle
-                : "old_english";
+        return (defaultStyle != null && !defaultStyle.isEmpty()) ? defaultStyle : "old_english";
     }
 
     private List<String> keyCandidates(String key) {

@@ -17,7 +17,8 @@ import java.util.Locale;
  * SettingsGUI
  * - Personal player preferences (sounds, language, notifications)
  * - Language cycling uses CodexEngine style order (codex.yml).
- * - Language persistence is handled via MessagesUtil/playerdata.yml (not CodexEngine.savePlayerData()).
+ * - Language persistence is handled via MessagesUtil/playerdata.yml (autosave).
+ * - ✅ NO CodexEngine.savePlayerData() calls (prevents compile errors).
  */
 public class SettingsGUI {
 
@@ -66,9 +67,7 @@ public class SettingsGUI {
         }
 
         // --- 2) LANGUAGE (Slot 13) ---
-        String currentStyle = (plugin.codex() != null)
-                ? plugin.codex().getPlayerStyle(player)
-                : "old_english";
+        String currentStyle = getCurrentStyle(player);
 
         inv.setItem(13, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
@@ -120,24 +119,18 @@ public class SettingsGUI {
                     return;
                 }
 
-                String current = plugin.codex().getPlayerStyle(player);
+                String current = getCurrentStyle(player);
                 String next = plugin.codex().getNextStyle(current);
 
-                boolean applied = plugin.codex().setPlayerStyle(player, next);
-                if (applied) {
-                    // ✅ Persistence is owned by playerdata.yml (MessagesUtil) and autosave.
-                    // If MessagesUtil is available, flush it asynchronously.
-                    plugin.runGlobalAsync(() -> {
-                        try {
-                            if (plugin.msg() != null) plugin.msg().savePlayerData();
-                        } catch (Throwable ignored) {}
-                    });
-
-                    plugin.effects().playMenuFlip(player);
-                } else {
-                    plugin.effects().playError(player);
+                // ✅ Persist to playerdata.yml via MessagesUtil (no direct save call here)
+                if (plugin.msg() != null) {
+                    plugin.msg().setPlayerStyle(player, next);
                 }
 
+                // ✅ Also update Codex runtime style (instant UI translation refresh)
+                try { plugin.codex().setPlayerStyle(player, next); } catch (Throwable ignored) {}
+
+                plugin.effects().playMenuFlip(player);
                 open(player, plot);
                 break;
             }
@@ -164,6 +157,26 @@ public class SettingsGUI {
                 player.closeInventory();
                 break;
         }
+    }
+
+    private String getCurrentStyle(Player player) {
+        // Prefer persisted prefs (playerdata.yml) if MessagesUtil exists
+        try {
+            if (plugin.msg() != null) {
+                String s = plugin.msg().getPlayerStyle(player);
+                if (s != null && !s.isBlank()) return s;
+            }
+        } catch (Throwable ignored) {}
+
+        // Fallback to Codex runtime cache if present
+        try {
+            if (plugin.codex() != null) {
+                String s = plugin.codex().getPlayerStyle(player);
+                if (s != null && !s.isBlank()) return s;
+            }
+        } catch (Throwable ignored) {}
+
+        return "old_english";
     }
 
     private String formatStyle(String style) {

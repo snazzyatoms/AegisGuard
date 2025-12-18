@@ -50,10 +50,13 @@ public class MessagesUtil implements Listener {
     }
 
     public void reload() {
-        // Default language: prefer new config path, then legacy path
+        // Default language: prefer new config path, then legacy paths
         String cfgDefault = plugin.getConfig().getString("localization.default_language", null);
-        if (cfgDefault == null) cfgDefault = plugin.getConfig().getString("language_styles.default", "old_english");
-        this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault;
+        if (cfgDefault == null) cfgDefault = plugin.getConfig().getString("localization.default_style", null);
+        if (cfgDefault == null) cfgDefault = plugin.getConfig().getString("language_styles.default", null);
+        if (cfgDefault == null) cfgDefault = "old_english";
+
+        this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault.trim();
 
         loadPlayerPreferences();
         plugin.getLogger().info("[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: " + defaultStyle);
@@ -92,28 +95,16 @@ public class MessagesUtil implements Listener {
     // Accessors (Console / Default)
     // ----------------------------
 
-    /**
-     * ✅ Non-player string lookup (default style)
-     * Fixes calls like: get(key) from console senders.
-     */
     public String get(String key) {
         return format(getRawForDefault(key));
     }
 
-    /**
-     * ✅ Fixes compile error:
-     * used by send(sender, key, Map<String,String>) when sender is NOT a player.
-     */
     public String get(String key, Map<String, String> placeholders) {
         String raw = getRawForDefault(key);
         raw = applyPlaceholders(raw, placeholders);
         return format(raw);
     }
 
-    /**
-     * ✅ Fixes compile error:
-     * used by send(sender, key, String... kv) when sender is NOT a player.
-     */
     public String get(String key, String... kv) {
         String raw = getRawForDefault(key);
         raw = applyPlaceholders(raw, kv);
@@ -121,20 +112,21 @@ public class MessagesUtil implements Listener {
     }
 
     public List<String> getList(String key) {
-        // Optional: route console list lookups to Codex later if you need it.
+        // Optional: implement console list lookups later if needed
         return Collections.emptyList();
     }
 
     public boolean has(String key) {
-        // Compat: if Codex exists, treat as "maybe" true.
+        // Best-effort: if Codex exists, we can attempt lookup
         return plugin.codex() != null;
     }
 
     public String color(String text) { return format(text); }
 
     public String prefix() {
-        // Prefer config prefix if present; otherwise fallback
-        String raw = plugin.getConfig().getString("prefix", "&8[&bAegisGuard&8]&r ");
+        // ✅ Fix: prefer localization.prefix, then legacy prefix
+        String raw = plugin.getConfig().getString("localization.prefix", null);
+        if (raw == null) raw = plugin.getConfig().getString("prefix", "&8[&bAegisGuard&8]&r ");
         return format(raw);
     }
 
@@ -275,9 +267,6 @@ public class MessagesUtil implements Listener {
         return "&c[Missing: " + key + "]";
     }
 
-    /**
-     * ✅ Non-player default resolution via Codex
-     */
     private String getRawForDefault(String key) {
         try {
             if (plugin.codex() != null) {

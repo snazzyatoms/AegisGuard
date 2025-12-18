@@ -7,34 +7,73 @@
 # - Leveling, zoning, auctions, and more
 #
 # After editing, run:  /agadmin reload   or restart the server.
+#
+# ⚠️ YAML WARNING:
+# - Indentation matters (spaces only, no tabs).
+# - Inline maps like { key: value } are valid, but ONE missing space can break the file.
+# - If the server prints "InvalidConfigurationException", the config did not parse.
 # ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# ✅ COMPAT (Older code paths may still read these)
+# ------------------------------------------------------------------------------
+# Some legacy/compat utilities may still use these keys. Keeping them here prevents
+# "missing key" surprises when older code reads from the config.
+prefix: '&8[&bAegisGuard&8]&r '
+
+language_styles:
+  # Default language style for legacy systems (older GUI/messages paths)
+  default: old_english
+
+  # Styles/languages allowed in older selectors
+  available:
+    - old_english
+    - hybrid_english
+    - modern_english
+    - spanish_mx
+    - spanish_ar
 
 
 # ==============================================================================
 # 🌐 LOCALIZATION (Codex Language Engine)
 # ==============================================================================
+# What this does:
+# - Controls your Codex language system (per-player language + fallback behavior).
+# Player impact:
+# - Players can switch language/style (if you provide a GUI/command for it).
+# - Missing keys will fall back to another language (if configured).
 localization:
-  # Global chat prefix (previously how messages.yml handled it)
+  # Global chat prefix used when the plugin sends messages
   prefix: '&8[&bAegisGuard&8]&r '
 
-  # Folder inside /plugins/AegisGuard/ that contains language folders
-  # Example: /plugins/AegisGuard/lang/old_english/guis.yml
-  folder: 'lang'
+  # Folder inside /plugins/AegisGuard/ that contains language files.
+  #
+  # IMPORTANT:
+  # Your startup logs show the jar currently extracts to /plugins/AegisGuard/codex/
+  # (Installed language resource: codex/codex.yml, codex/core.yml, etc.)
+  #
+  # ✅ Keep this as "codex" unless you have moved files or updated extraction to "lang".
+  folder: 'codex'
 
-  # Default language folder to use when a player has no preference set
+  # Default language used if a player has no preference set
   default_language: old_english
 
-  # If a key is missing in the selected language, try this language next
+  # Fallback language used if the selected language is missing a key
   fallback_language: modern_english
 
-  # The files that make up ONE language pack (loaded + merged in this order)
+  # CodexEngine compatibility keys (some builds read *_style instead)
+  default_style: old_english
+  fallback_style: modern_english
+
+  # Language pack bundle files (merged in this order)
   bundles:
     - guis.yml
     - system.yml
     - upgrades.yml
     - expansions.yml
 
-  # Optional: limit what shows in the language selector GUI
+  # Languages that appear in your language selector GUI (if you have one)
   available_languages:
     - old_english
     - hybrid_english
@@ -42,21 +81,32 @@ localization:
     - spanish_mx
     - spanish_ar
 
-  # When true, the plugin should copy default language files from the jar
-  # into /plugins/AegisGuard/lang/ on first run (or if missing).
+  # If true, AegisGuard attempts to copy default language files from the jar
+  # into /plugins/AegisGuard/<folder>/ on first run (or if missing).
   extract_defaults: true
 
-  # Debug helpers (optional)
+  # If true, can print extra logs when keys are missing (useful for pack dev)
   debug_missing_keys: false
 
 
 # ==============================================================================
-# 🔌 PLUGIN HOOKS & STORAGE BACKEND
+# 🔌 PLUGIN HOOKS & INTEGRATIONS
 # ==============================================================================
+# What this does:
+# - Enables optional integrations (maps, Discord, protection compatibility, etc.)
+# Admin impact:
+# - Turning these on/off changes what external plugins/services AegisGuard talks to.
 hooks:
+
   # ---------------------------------------------------------------------------
-  # 🌍 Web Map Integrations
+  # 🌍 Web Map Integrations (Dynmap)
   # ---------------------------------------------------------------------------
+  # What this does:
+  # - Draws claim boundaries on Dynmap as a layer.
+  # Player impact:
+  # - Players can see claims visually via the web map.
+  # Warning:
+  # - Large servers with many claims should increase sync interval to reduce load.
   dynmap:
     enabled: true
     layer_name: "AegisGuard Plots"
@@ -68,17 +118,16 @@ hooks:
       fill_color: "00FF00"
       fill_opacity: 0.35
 
-  # Dynmap is optional. If disabled, claims will not be drawn on the web map.
-
   # ---------------------------------------------------------------------------
   # 📣 Discord Webhook Integration
   # ---------------------------------------------------------------------------
+  # What this does:
+  # - Sends selected events (claim create/delete/admin actions) to a Discord channel.
+  # Warning:
+  # - Do NOT leak your webhook URL publicly.
   discord:
     enabled: true
-    # Paste your Webhook URL here:
-    #  - Discord Channel → Edit Channel → Integrations → Webhooks
     webhook_url: "https://discord.com/api/webhooks/..."
-    # Choose which events send a notification to Discord:
     events:
       claim_create: true
       claim_delete: true
@@ -86,8 +135,12 @@ hooks:
       admin_actions: true
 
   # ---------------------------------------------------------------------------
-  # 🗺️ Other Map Plugins (Auto-detected in Map Manager)
+  # 🗺️ Other Map Plugins (Optional)
   # ---------------------------------------------------------------------------
+  # What this does:
+  # - Enables claim rendering/labels for other map plugins (if your build supports them).
+  # Note:
+  # - These are often auto-detected. Setting enabled=false prevents drawing even if detected.
   bluemap:
     enabled: true
     label: "Claims"
@@ -97,15 +150,19 @@ hooks:
   # ---------------------------------------------------------------------------
   # 🧩 Protection Plugin Compatibility (NEW v1.2.4+)
   # ---------------------------------------------------------------------------
-  # If enabled, AegisGuard will check other protection plugins (WorldGuard, Towny, etc.)
-  # before claiming land, to avoid fighting over the same area.
+  # What this does:
+  # - Prevents AegisGuard claims from overlapping other protection systems.
+  # Player impact:
+  # - Players will be blocked from claiming land inside protected areas from other plugins.
+  # Warning:
+  # - If you run multiple protection plugins, EXTERNAL_WINS is the safest policy.
   protection_compat:
     enabled: true
 
     # Policies:
-    # - EXTERNAL_WINS: deny Aegis claims inside external regions/claims
-    # - AEGIS_WINS: ignore other plugins (not recommended unless you know what you're doing)
-    # - DENY_IF_CONFLICT: same as external wins for claim creation (strict)
+    # - EXTERNAL_WINS: deny Aegis claims inside external regions/claims (recommended)
+    # - AEGIS_WINS: ignore other plugins (dangerous unless you know what you're doing)
+    # - DENY_IF_CONFLICT: strict deny on any overlap/conflict
     overlap_policy: EXTERNAL_WINS
 
     # If true, prints extra info about which hook blocked a location.
@@ -130,18 +187,65 @@ hooks:
         priority: 70
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # 💾 DATA STORAGE
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# What this does:
+# - Controls where plots, player data, and other persistent records are stored.
+#
+# Supported/Compatible Storage Options (typical setups):
+# ✅ YML (Flat File):
+#   - Storage type: "yml"
+#   - Data is stored in YAML files on disk.
+#   - Best for: small servers, testing, simple setups.
+#   - Pros: easy backups, no DB needed.
+#   - Cons: not ideal for very large servers or frequent writes.
+#
+# ✅ SQL (Database):
+#   - Storage type: "MySQL" (or "mysql" depending on your implementation)
+#   - Best for: medium/large servers, multi-server setups, heavier use.
+#   - Pros: faster queries at scale, safer concurrency patterns, central storage.
+#   - Cons: requires DB credentials and maintenance.
+#
+# ✅ SQLite (Local DB File):
+#   - This is a "SQL database", but stored as a local file (no separate DB server).
+#   - Some builds support SQLite using the database.file field below.
+#   - If your build does NOT support SQLite, this file setting will be ignored.
+#
+# ⚠️ IMPORTANT:
+# - If you change storage type on a live server, you can strand existing data.
+# - Always backup /plugins/AegisGuard/ before switching storage modes.
 storage:
-  # Options: "yml" (local file) or "MySQL" (database via SQLDataStore)
+  # Options (depending on your build):
+  # - "yml"   → flat-file storage in the plugin folder
+  # - "MySQL" → SQLDataStore (MySQL/MariaDB remote database)
+  #
+  # If you want SQLite and your build supports it, it typically runs under SQL mode
+  # using the database.file setting (no remote host needed).
   type: "yml"
 
   database:
-    # SQLite mode (local .db file, no external SQL server required):
+    # -------------------------------------------------------------------------
+    # SQLite mode (Local .db file)
+    # -------------------------------------------------------------------------
+    # What this does:
+    # - Stores data in a local database file.
+    # Best for:
+    # - People who want SQL behavior without hosting MySQL/MariaDB.
+    # Warning:
+    # - Not all builds enable SQLite. If unsupported, this does nothing.
     file: "aegisguard.db"
 
-    # If you want MySQL/MariaDB instead:
+    # -------------------------------------------------------------------------
+    # MySQL / MariaDB mode (Remote SQL)
+    # -------------------------------------------------------------------------
+    # What this does:
+    # - Stores data in a remote database.
+    # Best for:
+    # - Larger servers, networks, or setups needing robust persistence.
+    # Warning:
+    # - Do NOT share credentials publicly. Use a restricted DB user.
+    #
     # host: "localhost"
     # port: 3306
     # database: "aegisguard"
@@ -153,6 +257,14 @@ storage:
 # ==============================================================================
 # 💱 CURRENCY MAPPING
 # ==============================================================================
+# What this does:
+# - Chooses which economy/currency backend is used per feature category.
+# Player impact:
+# - Determines whether actions cost money/items/other currencies (depending on your system).
+#
+# Common types:
+# - VAULT: uses Vault economy (requires Vault + an economy plugin)
+# - ITEM:  (if supported) costs items instead of money
 currencies:
   claiming: VAULT
   resizing: VAULT
@@ -165,21 +277,33 @@ currencies:
 # ==============================================================================
 # 💰 ECONOMY & PRICES
 # ==============================================================================
+# What this does:
+# - Enables claim costs, resize costs, and paid unlocks.
+# Player impact:
+# - Players may need money/items to claim/upgrade/use features.
+# Warning:
+# - If use_vault=true, you MUST have Vault + an economy plugin installed.
 economy:
   enabled: true
   use_vault: true
+
+  # Base cost to claim a plot (if enabled by your claim logic)
   claim_cost: 100.0
 
+  # Optional item-based cost pattern (if your build supports it in your claim logic)
   item_cost:
     type: DIAMOND
     amount: 5
 
+  # Costs to enable certain paid flags/features
   flag_costs:
     fly: 5000.0
     shop-interact: 500.0
 
+  # How much it costs per block when resizing/expanding
   resize_cost_per_block: 10.0
 
+  # Refund behavior when unclaiming
   refund_on_unclaim: true
   refund_percent: 50.0
 
@@ -187,6 +311,12 @@ economy:
 # ==============================================================================
 # 🧱 CLAIMS & PER-WORLD RULES
 # ==============================================================================
+# What this does:
+# - Controls base claim limits, allowed sizes, merge rules, and per-world overrides.
+# Player impact:
+# - Determines how many claims a player can have and how big they may be.
+# Warnings:
+# - Large max_area values can increase server workload depending on checks/holograms/maps.
 claims:
   max_claims_per_player: 2
   min_radius: 5
@@ -194,7 +324,10 @@ claims:
   max_area: 16000
   preview_seconds: 10
 
+  # Whether claiming consumes the wand item
   consume_wand_on_claim: true
+
+  # Whether admins keep wands even if normal players would consume them
   admin_keep_wand: true
 
   merging:
@@ -207,6 +340,7 @@ claims:
     allow_home_teleport: true
     allow_visit_teleport: true
 
+  # World-specific overrides (use your actual world folder names)
   per_world:
     world:
       allow_claims: true
@@ -228,22 +362,32 @@ claims:
 # ==============================================================================
 # 🧱 CLAIM BLOCK ECONOMY (NEW v1.2.4)
 # ==============================================================================
+# What this does:
+# - Enables a “claim blocks” progression economy.
+# Player impact:
+# - Players have a block budget that limits how much land they can claim.
+# Why it’s good:
+# - Prevents day-1 megaclaims and encourages fair growth over time.
 claim_blocks:
   enabled: true
 
+  # Starting budget given to new players
   starting_blocks: 1000
 
+  # First-claim limiter: prevents first-time claims from being huge
   first_claim_limit:
     enabled: true
     max_area: 1000
 
   earn:
+    # Passive earning over time
     playtime:
       enabled: true
       interval_minutes: 10
       blocks_per_interval: 50
       notify: true
 
+    # Earn blocks on leveling up (if your leveling system triggers this)
     level_up:
       enabled: true
       per_level: 500
@@ -252,6 +396,10 @@ claim_blocks:
 # ==============================================================================
 # 📐 LAND EXPANSIONS (REQUESTS)
 # ==============================================================================
+# What this does:
+# - Controls how expansion requests cost and scale.
+# Player impact:
+# - Expansions may get more expensive over time to prevent runaway growth.
 expansions:
   cost_per_block: 10.0
   cost_multiplier: 1.1
@@ -262,6 +410,10 @@ expansions:
 # ==============================================================================
 # 🏗️ ZONING (SUB-CLAIMS / RENTABLE ROOMS)
 # ==============================================================================
+# What this does:
+# - Enables sub-claims inside a plot (rooms/shops/rentable spaces).
+# Player impact:
+# - Plot owners can create zones and potentially rent/manage them.
 zoning:
   enabled: true
   max_zones_per_plot: 10
@@ -271,15 +423,23 @@ zoning:
 # ==============================================================================
 # 📈 PLOT LEVELING (RPG ASCENSION)
 # ==============================================================================
+# What this does:
+# - Adds an RPG leveling progression system to plots.
+# Player impact:
+# - Players can level plots for effects, perks, member slots, and flags.
+# Warning:
+# - High-level perk stacking can affect balance. Tune rewards thoughtfully.
 leveling:
   enabled: true
   base_cost: 1000.0
   cost_multiplier: 1.5
   max_level: 30
 
+  # If true, the plot automatically expands when leveling (if implemented)
   expand_plot_on_levelup: false
   expansion_amount: 5
 
+  # Rewards granted per level (format depends on your implementation)
   rewards:
     1:
       - "EFFECT:SPEED:1"
@@ -377,6 +537,12 @@ leveling:
 # ==============================================================================
 # 💸 PLOT UPKEEP (RENT-LIKE TAX)
 # ==============================================================================
+# What this does:
+# - Charges recurring costs for owning plots (optional “tax” system).
+# Player impact:
+# - Players who don’t pay may lose plots (depending on implementation).
+# Warning:
+# - Enable only if your community wants upkeep mechanics.
 upkeep:
   enabled: false
   check_interval_hours: 24
@@ -387,6 +553,10 @@ upkeep:
 # ==============================================================================
 # ⚖️ AUCTIONS
 # ==============================================================================
+# What this does:
+# - Controls auction behavior (if your plugin has plot auctions).
+# Player impact:
+# - Players can bid on plots (depending on your auction GUI/commands).
 auction:
   duration_days: 3
   min_bid_increase: 50.0
@@ -396,6 +566,12 @@ auction:
 # ==============================================================================
 # 🌲 WILDERNESS REVERT
 # ==============================================================================
+# What this does:
+# - Reverts wilderness changes after X hours (anti-grief / cleanup tool).
+# Player impact:
+# - Wilderness builds may disappear if built outside claims (if tracked by your system).
+# Warning:
+# - If you want “freebuild wilderness”, disable this.
 wilderness_revert:
   enabled: true
   revert_after_hours: 2
@@ -406,6 +582,10 @@ wilderness_revert:
 # ==============================================================================
 # ⚙️ PROTECTION DEFAULTS & FLAGS
 # ==============================================================================
+# What this does:
+# - Sets default protection behavior within claims.
+# Player impact:
+# - Determines what is allowed or denied in a claim unless a plot flag overrides it.
 protections:
   pvp_protection: true
   no_mobs_in_claims: true
@@ -417,6 +597,7 @@ protections:
   fire-spread: true
   piston-use: true
 
+  # Example toggles/flags
   fly: false
   entry: true
   shop-interact: false
@@ -425,6 +606,12 @@ protections:
 # ==============================================================================
 # 🛡️ ACTIVE MOB BARRIER
 # ==============================================================================
+# What this does:
+# - Actively removes or blocks mobs from entering claims (depending on implementation).
+# Player impact:
+# - Claims become “safer zones” from mob pressure.
+# Warning:
+# - Aggressive mob removal can affect farms. Tune to your community.
 mob_barrier:
   enabled: true
   check_interval_ticks: 60
@@ -434,6 +621,10 @@ mob_barrier:
 # ==============================================================================
 # 🎨 COSMETICS (PARTICLES & ENTRY EFFECTS)
 # ==============================================================================
+# What this does:
+# - Cosmetic purchases like border particles and entry effects.
+# Player impact:
+# - Visual flair. Pure cosmetics (unless you intentionally make them functional).
 cosmetics:
   border_particles:
     flame:
@@ -466,9 +657,18 @@ cosmetics:
 # ==============================================================================
 # 🔮 VISUAL TITLES & NOTIFICATIONS
 # ==============================================================================
+# What this does:
+# - Controls action bar/titles shown when entering claims, confirmations, etc.
+# Player impact:
+# - Better feedback, but too much can feel spammy.
 titles:
   enabled: true
+
+  # Where notifications display:
+  # - ACTION_BAR (subtle, usually best)
+  # - TITLE (big screen text, more dramatic)
   notification_location: ACTION_BAR
+
   fade_in: 10
   stay: 40
   fade_out: 10
@@ -477,6 +677,10 @@ titles:
 # ==============================================================================
 # 🆘 UNSTUCK COMMAND
 # ==============================================================================
+# What this does:
+# - Allows players to escape being stuck (in claim walls, traps, etc.).
+# Warning:
+# - If teleport abuse is a concern, increase cooldown or add permissions.
 unstuck:
   enabled: true
   warmup_seconds: 5
@@ -486,6 +690,12 @@ unstuck:
 # ==============================================================================
 # 🌿 BIOME CHANGING (BIOME GUI)
 # ==============================================================================
+# What this does:
+# - Allows changing a plot’s biome from a whitelist.
+# Player impact:
+# - Cosmetic/environmental changes (snow, grass color, mob spawns, etc. depending on biome).
+# Warning:
+# - Some biomes can affect mob spawns and server balance.
 biomes:
   enabled: true
   cost_per_change: 2000.0
@@ -506,6 +716,10 @@ biomes:
 # ==============================================================================
 # 👍 SOCIAL (LIKES / RATING)
 # ==============================================================================
+# What this does:
+# - Enables player likes/ratings on plots.
+# Player impact:
+# - Encourages discovery and “best plot” culture.
 social:
   likes_enabled: true
   one_like_per_player: true
@@ -514,6 +728,10 @@ social:
 # ==============================================================================
 # 🧩 ADMIN OPTIONS & SENTINEL'S SCEPTER
 # ==============================================================================
+# What this does:
+# - Admin-level toggles, bypasses, and tools.
+# Warning:
+# - "unlimited_plots" can invalidate progression systems if used widely.
 admin:
   auto_remove_banned: false
   bypass_claim_limit: false
@@ -536,22 +754,61 @@ admin:
 # ==============================================================================
 # 🔊 SOUND SCHEME
 # ==============================================================================
+# What this does:
+# - Defines named sound presets used by menus, confirms, errors, etc.
+# Player impact:
+# - Better feedback and “game feel”.
+# YAML Safety:
+# - Expanded mapping (below) is safer than inline { sound: X, volume: Y }.
 sounds:
   global_enabled: true
+
+  # Per-player overrides can be stored here if your system supports it.
   players: {}
 
-  menu_open:    { sound: BLOCK_CHEST_OPEN,      volume: 0.7, pitch: 1.0 }
-  menu_flip:    { sound: UI_BUTTON_CLICK,       volume: 0.7, pitch: 1.2 }
-  menu_close:   { sound: BLOCK_CHEST_CLOSE,     volume: 0.7, pitch: 1.0 }
-  confirm:      { sound: ENTITY_PLAYER_LEVELUP, volume: 0.7, pitch: 1.2 }
-  error:        { sound: BLOCK_NOTE_BLOCK_BASS, volume: 1.0, pitch: 0.8 }
-  claim_success:{ sound: ENTITY_PLAYER_LEVELUP, volume: 1.0, pitch: 1.2 }
-  unclaim:      { sound: ENTITY_VILLAGER_NO,    volume: 0.8, pitch: 0.9 }
+  menu_open:
+    sound: BLOCK_CHEST_OPEN
+    volume: 0.7
+    pitch: 1.0
+
+  menu_flip:
+    sound: UI_BUTTON_CLICK
+    volume: 0.7
+    pitch: 1.2
+
+  menu_close:
+    sound: BLOCK_CHEST_CLOSE
+    volume: 0.7
+    pitch: 1.0
+
+  confirm:
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 0.7
+    pitch: 1.2
+
+  error:
+    sound: BLOCK_NOTE_BLOCK_BASS
+    volume: 1.0
+    pitch: 0.8
+
+  claim_success:
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 1.0
+    pitch: 1.2
+
+  unclaim:
+    sound: ENTITY_VILLAGER_NO
+    volume: 0.8
+    pitch: 0.9
 
 
 # ==============================================================================
 # 💥 PROTECTION FEEDBACK (DENY EFFECTS)
 # ==============================================================================
+# What this does:
+# - Plays particles/sounds when an action is denied (PVP blocked, container blocked, etc.)
+# Player impact:
+# - Players understand instantly WHY something didn’t work.
 protection_effects:
   enabled: true
 
@@ -584,6 +841,12 @@ protection_effects:
 # ==============================================================================
 # 👥 ROLE MANAGEMENT
 # ==============================================================================
+# What this does:
+# - Defines roles used within a plot (owner/member/visitor).
+# Player impact:
+# - Determines what actions each role can do inside a claim.
+# Warning:
+# - If you remove a permission here, players may suddenly lose abilities.
 roles:
   owner:
     name: "&cOwner"

@@ -1,0 +1,17 @@
+# AegisGuard Codex Language Pack (split files)
+# Language: old_english
+# Section: upgrades.yml
+# Generated: 2025-12-16 23:08:56Z
+# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+level_header_owner: '&dLord / Lady:&f {owner}'
+level_header_world: '&dRealm:&f {world}'
+level_header_level: '&dDominion Rank:&f {level}'
+level_header_multiplier: '&dBlessing Multiplier:&f {multiplier}x'
+level_up_success: '&d⚡ Lo, thy holding hath risen unto Level &f{LEVEL}&d!'
+level_up_fail_cost: '&c❌ Thy treasury is wanting; this rite of ascension must await fuller coffers.'
+claim_blocks_balance: '&e⛏ Thy Claim Blocks: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Thou hast earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Thou hast spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Thou lackest Claim Blocks! Need &6{AMOUNT}&c more.'
+claim_blocks_first_claim_limit: '&c❌ Thy first dominion is bound by decree: max area &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'

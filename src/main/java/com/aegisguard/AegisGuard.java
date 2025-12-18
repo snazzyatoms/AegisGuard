@@ -150,7 +150,7 @@ public class AegisGuard extends JavaPlugin {
 
         saveDefaultConfig();
 
-        // --- 1.a Ensure language bundle files exist (new split structure) ---
+        // --- 1.a Ensure language bundle files exist (safe extraction) ---
         ensureLocalizationFiles();
 
         // --- 1.b HARD STOP: messages.yml is NOT used anymore ---
@@ -335,7 +335,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     // ---------------------------------------------------------------------
-    // Language bundle bootstrap (Safe Extraction)
+    // Language bundle bootstrap (Primary lang + Fallback codex, no spam)
     // ---------------------------------------------------------------------
 
     private void ensureLocalizationFiles() {
@@ -343,38 +343,40 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
 
-        // ✅ Primary folder (should be "lang" in v1.2.4+)
+        // ✅ Primary (split bundles)
         String primaryFolder = getConfig().getString("localization.folder", "lang");
         if (primaryFolder == null || primaryFolder.isBlank()) primaryFolder = "lang";
         primaryFolder = primaryFolder.trim();
 
-        // ✅ Fallback folder (should be "codex")
+        // ✅ Fallback (legacy root files)
         String fallbackFolder = getConfig().getString("localization.fallback_folder", "codex");
         if (fallbackFolder == null || fallbackFolder.isBlank()) fallbackFolder = "codex";
         fallbackFolder = fallbackFolder.trim();
 
-        // Install primary split bundles (lang/<style>/<bundle>.yml)
+        // Make sure both folders exist on disk
+        File primaryDir = new File(getDataFolder(), primaryFolder);
+        if (!primaryDir.exists() && !primaryDir.mkdirs()) {
+            getLogger().warning("[AegisGuard] Failed to create localization folder: " + primaryDir.getPath());
+            return;
+        }
+
+        File fallbackDir = new File(getDataFolder(), fallbackFolder);
+        if (!fallbackDir.exists() && !fallbackDir.mkdirs()) {
+            // Not fatal. Primary can still work.
+            getLogger().warning("[AegisGuard] Failed to create fallback localization folder: " + fallbackDir.getPath());
+        }
+
+        // 1) Extract split bundles from PRIMARY
         installSplitLanguageBundles(primaryFolder);
 
-        // Optionally seed fallback legacy bundle files too (codex/*.yml), safely.
-        // This prevents "empty fallback" on first boot if someone deletes the folder.
+        // 2) Seed fallback legacy files from FALLBACK (so codex/core exist where you actually ship them)
         if (!fallbackFolder.equalsIgnoreCase(primaryFolder)) {
             installLegacyFallbackFiles(fallbackFolder);
         }
     }
 
-    private void installSplitLanguageBundles(String folder) {
-        File baseDir = new File(getDataFolder(), folder);
-
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            getLogger().warning("[AegisGuard] Failed to create localization folder: " + baseDir.getPath());
-            return;
-        }
-
-        // Optional top-level files (only extracted if they exist in the jar)
-        saveBundledResourceIfMissing(folder + "/codex.yml");
-        saveBundledResourceIfMissing(folder + "/core.yml");
-        saveBundledResourceIfMissing(folder + "/overrides.yml");
+    private void installSplitLanguageBundles(String primaryFolder) {
+        File baseDir = new File(getDataFolder(), primaryFolder);
 
         List<String> languages = getConfig().getStringList("localization.available_languages");
         if (languages == null || languages.isEmpty()) {
@@ -394,20 +396,20 @@ public class AegisGuard extends JavaPlugin {
             }
 
             for (String bundle : bundles) {
-                saveBundledResourceIfMissing(folder + "/" + lang + "/" + bundle);
+                saveBundledResourceIfMissing(primaryFolder + "/" + lang + "/" + bundle);
             }
         }
     }
 
-    private void installLegacyFallbackFiles(String folder) {
-        File baseDir = new File(getDataFolder(), folder);
+    private void installLegacyFallbackFiles(String fallbackFolder) {
+        File baseDir = new File(getDataFolder(), fallbackFolder);
 
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             getLogger().warning("[AegisGuard] Failed to create fallback localization folder: " + baseDir.getPath());
             return;
         }
 
-        // Legacy codex mode files. These are OPTIONAL and only extracted if they exist in the jar.
+        // These match what you said is inside /resources/codex/
         List<String> legacyRootFiles = getConfig().getStringList("localization.fallback_root_files");
         if (legacyRootFiles == null || legacyRootFiles.isEmpty()) {
             legacyRootFiles = Arrays.asList(
@@ -417,19 +419,18 @@ public class AegisGuard extends JavaPlugin {
                     "hybrid_english.yml",
                     "modern_english.yml",
                     "spanish_mx.yml",
-                    "spanish_ar.yml",
-                    "overrides.yml"
+                    "spanish_ar.yml"
             );
         }
 
         for (String root : legacyRootFiles) {
-            saveBundledResourceIfMissing(folder + "/" + root);
+            saveBundledResourceIfMissing(fallbackFolder + "/" + root);
         }
     }
 
     /**
      * Checks if a resource exists inside the jar.
-     * This prevents IllegalArgumentException spam from saveResource(...).
+     * Prevents IllegalArgumentException spam from saveResource(...).
      */
     private boolean hasBundledResource(String jarRelativePath) {
         if (jarRelativePath == null || jarRelativePath.isBlank()) return false;
@@ -461,7 +462,6 @@ public class AegisGuard extends JavaPlugin {
             saveResource(jarRelativePath, false);
             getLogger().info("[AegisGuard] Installed language resource: " + jarRelativePath);
         } catch (Throwable ex) {
-            // Extremely rare now, but keep a single warning if something truly weird happens.
             getLogger().warning("[AegisGuard] Failed to install bundled resource: " + jarRelativePath + " (" + ex.getMessage() + ")");
         }
     }

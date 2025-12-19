@@ -123,3 +123,57 @@ title_entering: '&aEntering: &f{PLOT}'
 subtitle_entering: '&7Owner: &f{OWNER}'
 title_leaving: '&cLeaving: &f{PLOT}'
 subtitle_leaving: '&7Returning to Wilderness'
+
+# --------------------------------------
+# NEW: Additional chat/command keys (v1.2.4+)
+# --------------------------------------
+travel_system_disabled: '&cTravel system is disabled.'
+home_teleport_disabled: '&cHome teleport is disabled.'
+leveling_disabled: '&cLeveling is disabled.'
+zoning_disabled: '&cZoning is disabled.'
+
+usage_merge: '&cUsage: /ag merge <N/S/E/W>'
+usage_rename: '&cUsage: /ag rename <Name>'
+usage_setdesc: '&cUsage: /ag setdesc <Description>'
+
+rename_too_long: '&cName is too long (Max {MAX} chars).'
+plot_renamed: '&a✔ Plot renamed to: &r{NAME}'
+plot_desc_updated: '&a✔ Plot description updated.'
+
+unstuck_not_in_plot: '&cYou are not inside a plot.'
+
+resize_usage: '&cUsage: /aegis resize <direction> <amount>'
+resize_directions: '&eDirections: &f{DIRS}'
+amount_must_number: '&cAmount must be a number.'
+amount_must_positive: '&cAmount must be positive.'
+invalid_direction: '&cInvalid direction. Use: &f{DIRS}'
+
+kick_usage: '&cUsage: /ag kick <player>'
+ban_usage: '&cUsage: /ag ban <player>'
+unban_usage: '&cUsage: /ag unban <player>'
+
+player_not_found: '&cPlayer not found.'
+player_not_in_plot: '&cPlayer is not in your plot.'
+cannot_kick_operator: '&cYou cannot kick a Server Operator.'
+kicked_target: '§cYou were kicked from {OWNER}''s plot.'
+kicked_sender: '&eKicked {PLAYER}'
+
+ban_self_error: '&cCannot ban yourself.'
+ban_success: '&cBanned {PLAYER}'
+ban_target: '§4You have been BANNED from this plot.'
+unban_success: '&aUnbanned {PLAYER}'
+
+sell_usage: '&cUsage: /ag sell <price>'
+price_must_positive: '&cPrice must be positive.'
+invalid_number: '&cInvalid number.'
+
+claim_blocks_disabled: '&cClaim Blocks are disabled on this server.'
+
+blocks_ledger_title: '&6&lLand Ledger &7({PLAYER})'
+blocks_ledger_total: '&7Total Capacity: &e{TOTAL}'
+blocks_ledger_used: '&7Used Land: &c{USED}'
+blocks_ledger_available: '&7Available: &a{AVAILABLE}'
+
+wand_item_name: '&bAegis Scepter'
+wand_item_lore:
+  - '&7Left/Right-click: Select corners'

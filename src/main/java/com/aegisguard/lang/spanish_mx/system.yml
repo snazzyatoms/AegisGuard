@@ -123,3 +123,62 @@ title_entering: '&aEntrando: &f{PLOT}'
 subtitle_entering: '&7Dueño: &f{OWNER}'
 title_leaving: '&cSaliendo: &f{PLOT}'
 subtitle_leaving: '&7Regresando al Wilderness'
+
+# --------------------------------------
+# NUEVO: Claves adicionales de chat/comandos (v1.2.4+)
+# --------------------------------------
+travel_system_disabled: '&cEl sistema de viaje está deshabilitado.'
+home_teleport_disabled: '&cEl teletransporte al hogar está deshabilitado.'
+leveling_disabled: '&cEl sistema de niveles está deshabilitado.'
+zoning_disabled: '&cEl sistema de zonas está deshabilitado.'
+
+usage_merge: '&cUso: /ag merge <N/S/E/W>'
+usage_rename: '&cUso: /ag rename <Nombre>'
+usage_setdesc: '&cUso: /ag setdesc <Descripción>'
+
+rename_too_long: '&cEl nombre es demasiado largo (Máx {MAX} caracteres).'
+plot_renamed: '&a✔ Parcela renombrada a: &r{NAME}'
+plot_desc_updated: '&a✔ Descripción de la parcela actualizada.'
+
+unstuck_not_in_plot: '&cNo estás dentro de una parcela.'
+
+resize_usage: '&cUso: /aegis resize <dirección> <cantidad>'
+resize_directions: '&eDirecciones: &f{DIRS}'
+amount_must_number: '&cLa cantidad debe ser un número.'
+amount_must_positive: '&cLa cantidad debe ser positiva.'
+invalid_direction: '&cDirección inválida. Usa: &f{DIRS}'
+
+kick_usage: '&cUso: /ag kick <jugador>'
+ban_usage: '&cUso: /ag ban <jugador>'
+unban_usage: '&cUso: /ag unban <jugador>'
+
+player_not_found: '&cJugador no encontrado.'
+player_not_in_plot: '&cEl jugador no está en tu parcela.'
+cannot_kick_operator: '&cNo puedes expulsar a un Operador del Servidor.'
+kicked_target: '§cFuiste expulsado de la parcela de {OWNER}.'
+kicked_sender: '&eExpulsaste a {PLAYER}'
+
+ban_self_error: '&cNo puedes banearte a ti mismo.'
+ban_success: '&cBaneaste a {PLAYER}'
+ban_target: '§4Fuiste BANEADO de esta parcela.'
+unban_success: '&aDesbaneaste a {PLAYER}'
+
+sell_usage: '&cUso: /ag sell <precio>'
+price_must_positive: '&cEl precio debe ser positivo.'
+invalid_number: '&cNúmero inválido.'
+
+claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
+
+blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
+blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'
+blocks_ledger_used: '&7Terreno usado: &c{USED}'
+blocks_ledger_available: '&7Disponible: &a{AVAILABLE}'
+
+wand_item_name: '&bCetro Aegis'
+wand_item_lore:
+  - '&7Clic izq./der.: Seleccionar esquinas'
+
+# --------------------------------------
+# NUEVO: Conflicto de protección externa (usado por AegisCommand)
+# --------------------------------------
+claim_conflict_external: '&c❌ Esa área ya está protegida por otro plugin. AegisGuard no la reclamará.'

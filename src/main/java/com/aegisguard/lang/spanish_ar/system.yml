@@ -167,13 +167,17 @@ sell_usage: '&cUso: /ag sell <precio>'
 price_must_positive: '&cEl precio debe ser positivo.'
 invalid_number: '&cNúmero inválido.'
 
+# Claim Blocks (Ledger + limits)
 claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
+claim_blocks_not_enough: '&c❌ Te faltan &e{AMOUNT}&c Bloques de Parcela.'
+claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
 
 blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
 blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'
 blocks_ledger_used: '&7Terreno usado: &c{USED}'
 blocks_ledger_available: '&7Disponible: &a{AVAILABLE}'
 
+# Wand (item)
 wand_item_name: '&bCetro Aegis'
 wand_item_lore:
   - '&7Clic izq./der.: Seleccionar esquinas'

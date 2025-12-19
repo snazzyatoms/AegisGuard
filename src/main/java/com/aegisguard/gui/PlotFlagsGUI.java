@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * PlotFlagsGUI
  * - Manages protection settings.
- * - Fully localized.
+ * - Fully localized (Codex-backed), with safe readable fallbacks.
  *
  * Semantics:
  *  - GREEN  = Protection ON (safe / restricted)
@@ -47,6 +47,36 @@ public class PlotFlagsGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
+    // -----------------------
+    // Codex helpers (safe)
+    // -----------------------
+
+    private String tr(Player p, String key, String fallback) {
+        try {
+            if (plugin.codex() == null) return fallback;
+            String v = plugin.codex().tr(p, key);
+            // Codex returns key if missing, so treat that as "missing".
+            if (v == null || v.isBlank() || v.equalsIgnoreCase(key)) return fallback;
+            return v;
+        } catch (Throwable ignored) {
+            return fallback;
+        }
+    }
+
+    private List<String> list(Player p, String key, List<String> fallback) {
+        try {
+            if (plugin.codex() == null) return fallback;
+            List<String> v = plugin.codex().list(p, key);
+            return (v == null) ? fallback : v;
+        } catch (Throwable ignored) {
+            return fallback;
+        }
+    }
+
+    private String onOffFallback(boolean on, String baseLabel) {
+        return (on ? "§a" : "§c") + baseLabel + ": " + (on ? "ON" : "OFF");
+    }
+
     public void open(Player player, Plot plot) {
         if (plot == null) {
             // Chat feedback stays on MessagesUtil
@@ -54,7 +84,7 @@ public class PlotFlagsGUI {
             return;
         }
 
-        String baseTitle = plugin.codex().tr(player, "plot_flags_title");
+        String baseTitle = tr(player, "plot_flags_title", "§9Plot Flags");
         String title = GUIManager.safeText(baseTitle, "§9Plot Flags");
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(plot), 54, title);
 
@@ -71,106 +101,74 @@ public class PlotFlagsGUI {
         for (int i : borderSlots) inv.setItem(i, filler);
 
         // --- 2. DANGER / ACCESS FLAGS ---
-        // These use ProtectionManager so the GUI state matches in-world logic.
-        addProtectionFlagButton(player, inv, plot, 10, "pvp",        Material.IRON_SWORD,      "button_pvp",   "pvp_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 11, "tnt-damage", Material.TNT,             "button_tnt",   "tnt_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 12, "fire-spread",Material.FLINT_AND_STEEL, "button_fire",  "fire_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 14, "mobs",       Material.ZOMBIE_HEAD,     "button_mobs",  "mob_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 15, "entry",      Material.OAK_FENCE_GATE,  "button_entry", "entry_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 10, "pvp",         Material.IRON_SWORD,      "button_pvp",   "pvp_toggle_lore",   "PvP");
+        addProtectionFlagButton(player, inv, plot, 11, "tnt-damage",  Material.TNT,             "button_tnt",   "tnt_toggle_lore",   "TNT Damage");
+        addProtectionFlagButton(player, inv, plot, 12, "fire-spread", Material.FLINT_AND_STEEL, "button_fire",  "fire_toggle_lore",  "Fire Spread");
+        addProtectionFlagButton(player, inv, plot, 14, "mobs",        Material.ZOMBIE_HEAD,     "button_mobs",  "mob_toggle_lore",   "Mob Damage");
+        addProtectionFlagButton(player, inv, plot, 15, "entry",       Material.OAK_FENCE_GATE,  "button_entry", "entry_toggle_lore", "Entry");
 
         // Safe Zone: structural / environment umbrella, admin-only toggle
         boolean safeOn = plugin.protection().isSafeZoneEnabled(plot);
         String safeLabelKey = "button_safe" + (safeOn ? "_on" : "_off");
-        String safeName = plugin.codex().tr(player, safeLabelKey);
-        if (safeName == null || safeName.isEmpty()) {
-            safeName = safeOn ? "§aSafe Zone: ON" : "§cSafe Zone: OFF";
-        }
-        List<String> safeLore = plugin.codex().list(player, "safe_toggle_lore");
-        if (safeLore == null) safeLore = List.of();
+        String safeName = tr(player, safeLabelKey, onOffFallback(safeOn, "Safe Zone"));
+        List<String> safeLore = list(player, "safe_toggle_lore", List.of());
 
-        ItemStack safeItem = GUIManager.createItem(
-                Material.SHIELD,
-                safeName,
-                safeLore
-        );
+        ItemStack safeItem = GUIManager.createItem(Material.SHIELD, safeName, safeLore);
         if (safeOn) glow(safeItem);
         inv.setItem(16, safeItem);
 
         // --- 3. MECHANICS / INTERACTION ---
-        addProtectionFlagButton(player, inv, plot, 19, "containers",   Material.CHEST,          "button_containers", "container_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 20, "piston-use",   Material.PISTON,         "button_piston",     "piston_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 21, "farm",         Material.WHEAT,          "button_farm",       "farm_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 22, "animals",      Material.COW_SPAWN_EGG,  "button_animals",    "animals_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 23, "redstone",     Material.REDSTONE,       "button_redstone",   "redstone_toggle_lore");
-        addProtectionFlagButton(player, inv, plot, 24, "vehicles",     Material.OAK_BOAT,       "button_vehicles",   "vehicles_toggle_lore");
+        addProtectionFlagButton(player, inv, plot, 19, "containers", Material.CHEST,         "button_containers", "container_toggle_lore", "Containers");
+        addProtectionFlagButton(player, inv, plot, 20, "piston-use", Material.PISTON,        "button_piston",     "piston_toggle_lore",    "Pistons");
+        addProtectionFlagButton(player, inv, plot, 21, "farm",       Material.WHEAT,         "button_farm",       "farm_toggle_lore",      "Farming");
+        addProtectionFlagButton(player, inv, plot, 22, "animals",    Material.COW_SPAWN_EGG, "button_animals",    "animals_toggle_lore",   "Animals");
+        addProtectionFlagButton(player, inv, plot, 23, "redstone",   Material.REDSTONE,      "button_redstone",   "redstone_toggle_lore",  "Redstone");
+        addProtectionFlagButton(player, inv, plot, 24, "vehicles",   Material.OAK_BOAT,      "button_vehicles",   "vehicles_toggle_lore",  "Vehicles");
 
         // --- 4. SHOP INTERACT (Paid) ---
         double shopCost = plugin.cfg().getShopInteractCost();
+        String free = tr(player, "label_free", "Free");
         String shopCostStr = (shopCost > 0 && !plugin.isAdmin(player))
                 ? plugin.eco().format(shopCost, CurrencyType.VAULT)
-                : "Free";
+                : free;
+
         addPaidFlagButton(player, inv, plot, 25, "shop-interact", Material.EMERALD,
-                "button_shop", "shop_toggle_lore", shopCostStr);
+                "button_shop", "shop_toggle_lore", shopCostStr,
+                "Shop Interact");
 
         // --- 5. PREMIUM: FLY & COSMETICS ---
         boolean canFly = plot.getFlag("fly", false);
         double flyCost = plugin.cfg().getFlightCost();
         String costString = (flyCost > 0 && !plugin.isAdmin(player))
                 ? plugin.eco().format(flyCost, CurrencyType.VAULT)
-                : "Free";
+                : free;
 
-        List<String> flyLore = plugin.codex().list(player, "fly_toggle_lore");
-        if (flyLore == null) flyLore = List.of();
+        List<String> flyLore = list(player, "fly_toggle_lore", List.of());
         flyLore = replace(flyLore, "{COST}", costString);
 
         String flyKey = canFly ? "button_fly_on" : "button_fly_off";
-        String flyName = plugin.codex().tr(player, flyKey);
-        if (flyName == null || flyName.isEmpty()) {
-            flyName = canFly ? "§aFlight: ON" : "§cFlight: OFF";
-        }
+        String flyName = tr(player, flyKey, onOffFallback(canFly, "Flight"));
 
-        ItemStack flyIcon = GUIManager.createItem(
-                Material.FEATHER,
-                flyName,
-                flyLore
-        );
+        ItemStack flyIcon = GUIManager.createItem(Material.FEATHER, flyName, flyLore);
         if (canFly) glow(flyIcon);
         inv.setItem(30, flyIcon);
 
         // Cosmetics
-        String cosName = plugin.codex().tr(player, "button_cosmetics");
-        if (cosName == null || cosName.isEmpty()) cosName = "§bCosmetics";
-        List<String> cosLore = plugin.codex().list(player, "cosmetics_lore");
-        if (cosLore == null) cosLore = List.of();
+        String cosName = tr(player, "button_cosmetics", "§bCosmetics");
+        List<String> cosLore = list(player, "cosmetics_lore", List.of());
 
-        inv.setItem(31, GUIManager.createItem(
-                Material.NETHER_STAR,
-                cosName,
-                cosLore
-        ));
+        inv.setItem(31, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
 
         // --- NAV ---
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
+        String backName = tr(player, "button_back", "§fBack");
+        List<String> backLore = list(player, "back_lore", List.of());
 
-        inv.setItem(48, GUIManager.createItem(
-                Material.ARROW,
-                backName,
-                backLore
-        ));
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, backName, backLore));
 
-        String exitName = plugin.codex().tr(player, "button_exit");
-        if (exitName == null || exitName.isEmpty()) exitName = "§cClose";
-        List<String> exitLore = plugin.codex().list(player, "exit_lore");
-        if (exitLore == null) exitLore = List.of();
+        String exitName = tr(player, "button_exit", "§cClose");
+        List<String> exitLore = list(player, "exit_lore", List.of());
 
-        inv.setItem(49, GUIManager.createItem(
-                Material.BARRIER,
-                exitName,
-                exitLore
-        ));
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, exitName, exitLore));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -203,26 +201,12 @@ public class PlotFlagsGUI {
         boolean refresh = false;
 
         switch (rawSlot) {
-            case 10 -> { // PvP
-                toggleFlag(player, plot, "pvp");
-                refresh = true;
-            }
-            case 11 -> { // TNT damage
-                toggleFlag(player, plot, "tnt-damage");
-                refresh = true;
-            }
-            case 12 -> { // Fire spread
-                toggleFlag(player, plot, "fire-spread");
-                refresh = true;
-            }
-            case 14 -> { // Mobs
-                toggleFlag(player, plot, "mobs");
-                refresh = true;
-            }
-            case 15 -> { // Entry
-                toggleFlag(player, plot, "entry");
-                refresh = true;
-            }
+            case 10 -> { toggleFlag(player, plot, "pvp"); refresh = true; }
+            case 11 -> { toggleFlag(player, plot, "tnt-damage"); refresh = true; }
+            case 12 -> { toggleFlag(player, plot, "fire-spread"); refresh = true; }
+            case 14 -> { toggleFlag(player, plot, "mobs"); refresh = true; }
+            case 15 -> { toggleFlag(player, plot, "entry"); refresh = true; }
+
             case 16 -> { // Safe zone (admin only)
                 if (plugin.isAdmin(player)) {
                     boolean currently = plugin.protection().isSafeZoneEnabled(plot);
@@ -234,65 +218,36 @@ public class PlotFlagsGUI {
                 }
             }
 
-            case 19 -> { // Containers
-                toggleFlag(player, plot, "containers");
-                refresh = true;
-            }
-            case 20 -> { // Piston use
-                toggleFlag(player, plot, "piston-use");
-                refresh = true;
-            }
-            case 21 -> { // Farm
-                toggleFlag(player, plot, "farm");
-                refresh = true;
-            }
+            case 19 -> { toggleFlag(player, plot, "containers"); refresh = true; }
+            case 20 -> { toggleFlag(player, plot, "piston-use"); refresh = true; }
+            case 21 -> { toggleFlag(player, plot, "farm"); refresh = true; }
+            case 22 -> { toggleFlag(player, plot, "animals"); refresh = true; }
+            case 23 -> { toggleFlag(player, plot, "redstone"); refresh = true; }
+            case 24 -> { toggleFlag(player, plot, "vehicles"); refresh = true; }
 
-            case 22 -> { // Animals
-                toggleFlag(player, plot, "animals");
-                refresh = true;
-            }
-            case 23 -> { // Redstone
-                toggleFlag(player, plot, "redstone");
-                refresh = true;
-            }
-            case 24 -> { // Vehicles
-                toggleFlag(player, plot, "vehicles");
-                refresh = true;
-            }
+            case 25 -> { togglePaid(player, plot, "shop-interact", plugin.cfg().getShopInteractCost()); refresh = true; }
+            case 30 -> { togglePaid(player, plot, "fly", plugin.cfg().getFlightCost()); refresh = true; }
 
-            case 25 -> { // Shop interact
-                togglePaid(player, plot, "shop-interact", plugin.cfg().getShopInteractCost());
-                refresh = true;
-            }
-            case 30 -> { // Fly
-                togglePaid(player, plot, "fly", plugin.cfg().getFlightCost());
-                refresh = true;
-            }
-
-            case 31 -> { // Cosmetics submenu
+            case 31 -> {
                 plugin.effects().playMenuFlip(player);
                 plugin.gui().cosmetics().open(player, plot);
             }
-            case 48 -> { // Back to main menu
+            case 48 -> {
                 plugin.effects().playMenuFlip(player);
                 plugin.gui().openMain(player);
             }
-            case 49 -> { // Exit
+            case 49 -> {
                 plugin.effects().playMenuClose(player);
                 player.closeInventory();
             }
         }
 
-        // Only re-open when we actually changed a flag in THIS GUI.
-        if (refresh) {
-            open(player, plot);
-        }
+        if (refresh) open(player, plot);
     }
 
     // ---------------- HELPERS ----------------
 
     private void toggleFlag(Player p, Plot plot, String flag) {
-        // Use the real protection state, then explicitly flip so player choice always wins.
         boolean currentlyOn = plugin.protection().isFlagEnabled(plot, flag);
         boolean newValue = !currentlyOn;
 
@@ -320,23 +275,17 @@ public class PlotFlagsGUI {
         plugin.effects().playConfirm(p);
     }
 
-    /**
-     * Builds a protection flag button whose visual ON/OFF is based on
-     * ProtectionManager’s semantics (green = protected, red = vulnerable).
-     */
     private void addProtectionFlagButton(Player p, Inventory inv, Plot plot, int slot,
-                                         String flag, Material mat, String nameKey, String loreKey) {
+                                         String flag, Material mat,
+                                         String nameKey, String loreKey,
+                                         String fallbackLabel) {
+
         boolean on = plugin.protection().isFlagEnabled(plot, flag);
 
         String fullKey = nameKey + (on ? "_on" : "_off");
-        String name = plugin.codex().tr(p, fullKey);
-        if (name == null || name.isEmpty()) {
-            // Simple fallback if a codex entry is missing
-            name = (on ? "§a" : "§c") + fullKey;
-        }
+        String name = tr(p, fullKey, onOffFallback(on, fallbackLabel));
 
-        List<String> lore = plugin.codex().list(p, loreKey);
-        if (lore == null) lore = List.of();
+        List<String> lore = list(p, loreKey, List.of());
 
         ItemStack item = GUIManager.createItem(mat, name, lore);
         if (on) glow(item);
@@ -344,17 +293,17 @@ public class PlotFlagsGUI {
     }
 
     private void addPaidFlagButton(Player p, Inventory inv, Plot plot, int slot,
-                                   String flag, Material mat, String nameKey, String loreKey, String cost) {
+                                   String flag, Material mat,
+                                   String nameKey, String loreKey,
+                                   String cost,
+                                   String fallbackLabel) {
+
         boolean on = plot.getFlag(flag, false);
 
         String fullKey = nameKey + (on ? "_on" : "_off");
-        String name = plugin.codex().tr(p, fullKey);
-        if (name == null || name.isEmpty()) {
-            name = (on ? "§a" : "§c") + fullKey;
-        }
+        String name = tr(p, fullKey, onOffFallback(on, fallbackLabel));
 
-        List<String> rawLore = plugin.codex().list(p, loreKey);
-        if (rawLore == null) rawLore = List.of();
+        List<String> rawLore = list(p, loreKey, List.of());
         List<String> lore = replace(rawLore, "{COST}", cost);
 
         ItemStack item = GUIManager.createItem(mat, name, lore);
@@ -373,9 +322,7 @@ public class PlotFlagsGUI {
 
     private List<String> replace(List<String> list, String key, String value) {
         List<String> out = new ArrayList<>();
-        for (String s : list) {
-            out.add(s.replace(key, value));
-        }
+        for (String s : list) out.add(s.replace(key, value));
         return out;
     }
 }

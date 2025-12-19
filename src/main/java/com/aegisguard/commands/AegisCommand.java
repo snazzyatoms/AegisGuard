@@ -126,7 +126,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 if (SelectionService.playerHasAnyWand(p)) {
                     sendKey(p, "wand_already_on", "&eYou already have the Aegis Scepter in your inventory.");
                     plugin.effects().playError(p);
-                    break;
+                    // Java 17-safe: inside a switch rule body, return instead of break.
+                    return true;
                 }
                 p.getInventory().addItem(createScepter(p));
                 sendKey(p, "wand_given", "&a⚡ You received the Aegis Scepter.");
@@ -195,7 +196,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "ledger", "blocks" -> showLedger(p);
 
-            case "help", default -> sendHelp(p);
+            // Java 17 fix: do not combine "help" and default in the same label.
+            case "help" -> sendHelp(p);
+            default -> sendHelp(p);
         }
 
         return true;

@@ -152,33 +152,35 @@ kick_usage: '&cUso: /ag kick <jugador>'
 ban_usage: '&cUso: /ag ban <jugador>'
 unban_usage: '&cUso: /ag unban <jugador>'
 
-player_not_found: '&cJugador no encontrado.'
+player_not_found: '&cNo se encontró al jugador.'
 player_not_in_plot: '&cEl jugador no está en tu parcela.'
 cannot_kick_operator: '&cNo puedes expulsar a un Operador del Servidor.'
-kicked_target: '§cFuiste expulsado de la parcela de {OWNER}.'
+kicked_target: '&cFuiste expulsado de la parcela de {OWNER}.'
 kicked_sender: '&eExpulsaste a {PLAYER}'
 
 ban_self_error: '&cNo puedes banearte a ti mismo.'
 ban_success: '&cBaneaste a {PLAYER}'
-ban_target: '§4Fuiste BANEADO de esta parcela.'
+ban_target: '&4Fuiste BANEADO de esta parcela.'
 unban_success: '&aDesbaneaste a {PLAYER}'
 
 sell_usage: '&cUso: /ag sell <precio>'
 price_must_positive: '&cEl precio debe ser positivo.'
 invalid_number: '&cNúmero inválido.'
 
+# Claim Blocks (Ledger + limits)
 claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
+claim_blocks_not_enough: '&c❌ Necesitas &e{AMOUNT}&c Bloques de Parcela más.'
+claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
 
 blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
 blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'
 blocks_ledger_used: '&7Terreno usado: &c{USED}'
 blocks_ledger_available: '&7Disponible: &a{AVAILABLE}'
 
+# Wand (item)
 wand_item_name: '&bCetro Aegis'
 wand_item_lore:
   - '&7Clic izq./der.: Seleccionar esquinas'
 
-# --------------------------------------
-# NUEVO: Conflicto de protección externa (usado por AegisCommand)
-# --------------------------------------
+# (Opcional/compat) Conflicto de protección externa (legacy key)
 claim_conflict_external: '&c❌ Esa área ya está protegida por otro plugin. AegisGuard no la reclamará.'

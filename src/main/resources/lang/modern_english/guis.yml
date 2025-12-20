@@ -221,3 +221,213 @@ help_lines:
   - '&e/aegis setdesc <text> &7- Set a description for your claim.'
   - '&e/aegis stuck &7- Teleport to safety if you are stuck.'
   - '&e/aegis help &7- View this help menu.'
+
+# --------------------------------------
+# Golden Master Additions (Old English parity)
+# --------------------------------------
+
+# Generic / navigation keys used across GUIs
+button_expand: '&dRequest Expansion'
+button_view_requests_admin: '&cReview Requests'
+view_requests_admin_lore:
+  - '&7Approve or deny expansion requests.'
+
+realestate_button_back: '&e⟵ Back to Real Estate'
+domain_market_button_back: '&e⟵ Back to Domain Market'
+biome_button_back: '&e⟵ Back to Claim Settings'
+biome_button_exit: '&c✖ Close Biome Changer'
+expansion_button_back: '&e⟵ Back to Previous Menu'
+
+# Expansion GUI
+expansion_gui_title: '&dLand Expansion Request'
+expansion_admin_title: '&8Pending Requests'
+expansion_none_title: '&cNo Requests'
+expansion_none_lore:
+  - '&7No pending requests.'
+expansion_locked_lore:
+  - '&cYou must stand inside'
+  - '&cyour own claim to do this.'
+
+expansion_tier1_name: '&aSmall Expansion (+5)'
+expansion_tier2_name: '&eMedium Expansion (+10)'
+expansion_tier3_name: '&fLarge Expansion (+20)'
+expansion_tier4_name: '&6Huge Expansion (+35)'
+expansion_tier5_name: '&bMassive Expansion (+50)'
+
+# Leveling GUI (Ascension)
+level_gui_title: '&dPlot Ascension'
+level_current_status: '&bCurrent Plot Status'
+level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
+level_max_reached: '&6Maximum level reached for this claim.'
+level_button_lore:
+  - '&7Upgrade your claim to unlock'
+  - '&7new perks and stronger bonuses.'
+level_button_lore_static:
+  - '&7Upgrade your claim to unlock'
+  - '&7additional perks and bonuses.'
+
+level_current_blessing_name: '&dCurrent Bonuses'
+level_current_blessing_title: '&dBonuses Currently Active'
+level_current_blessing_footer_1: '&8Higher levels unlock stronger'
+level_current_blessing_footer_2: '&8bonuses and extra benefits.'
+
+level_current_blessings_name: '&dCurrent Bonuses'
+level_current_blessings_title: '&dBonuses Currently Active'
+level_current_blessings_footer_1: '&8Higher levels unlock stronger'
+level_current_blessings_footer_2: '&8bonuses and extra benefits.'
+
+level_track_title_completed: '&aTrack Completed'
+level_track_completed_1: '&7All milestones in this track'
+level_track_completed_2: '&7have been unlocked.'
+"level_track_completed_[1]": '&7All milestones in this track'
+"level_track_completed_[2]": '&7have been unlocked.'
+
+level_track_buffs_title: '&dUnlocked Bonuses'
+level_track_footer_mastered: '&6This progression track is fully mastered.'
+
+level_track_title_current: '&dCurrent Track'
+"level_track_current_[1]": '&7These bonuses are currently'
+"level_track_current_[2]": '&7active on your claim.'
+
+level_track_title_locked: '&cTrack Locked'
+"level_track_locked_[1]": '&7Further upgrades in this track'
+"level_track_locked_[2]": '&7are locked until you progress.'
+
+"level_track_next_[1]": '&7Next upgrade in this track'
+level_track_next_cost: '&eUpgrade Cost: &6{COST}'
+level_track_footer_next: '&6Upgrade to unlock these bonuses.'
+level_track_footer_progress: '&7Progress toward the next upgrade.'
+
+level_upgrade_tier: '&dNext Tier'
+level_upgrade_next_tier: '&dNext Tier'
+level_upgrade_cost: '&eUpgrade Cost: &6{COST}'
+level_upgrade_new_buffs_title: '&dNew Bonuses'
+level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
+
+level_track_completed_title: '&aTrack Completed'
+level_track_completed_lore_1: '&7All milestones in this track'
+level_track_completed_lore_2: '&7have been unlocked.'
+
+level_track_current_title: '&dCurrent Track'
+level_track_current_lore_1: '&7These bonuses are currently'
+level_track_current_lore_2: '&7active on your claim.'
+
+level_track_locked_title: '&cTrack Locked'
+level_track_locked_lore_1: '&7Further upgrades in this track'
+level_track_locked_lore_2: '&7are locked until you progress.'
+
+level_track_next_title: '&dNext Upgrade in this Track'
+level_track_next_lore_1: '&7Upgrade to unlock the next bonuses.'
+level_track_next_lore_2: '&7Cost to advance: &6{COST}'
+
+# --------------------------------------
+# Plot Flags GUI (Fixes missing button names + lore)
+# Used by: PlotFlagsGUI.java
+# --------------------------------------
+
+button_pvp_on: '&a⚔ PvP: Protected'
+button_pvp_off: '&c⚔ PvP: Unprotected'
+
+button_tnt_on: '&a💥 TNT: Protected'
+button_tnt_off: '&c💥 TNT: Unprotected'
+
+button_fire_on: '&a🔥 Fire Spread: Blocked'
+button_fire_off: '&c🔥 Fire Spread: Allowed'
+
+button_mobs_on: '&a☠ Mobs: Protected'
+button_mobs_off: '&c☠ Mobs: Unprotected'
+
+button_entry_on: '&a🚪 Entry: Private'
+button_entry_off: '&c🚪 Entry: Public'
+
+button_safe_on: '&a🛡 Safe Zone: Enabled'
+button_safe_off: '&c🛡 Safe Zone: Disabled'
+
+button_containers_on: '&a📦 Containers: Locked'
+button_containers_off: '&c📦 Containers: Unlocked'
+
+button_piston_on: '&a🔩 Pistons: Blocked'
+button_piston_off: '&c🔩 Pistons: Allowed'
+
+button_farm_on: '&a🌾 Farming: Protected'
+button_farm_off: '&c🌾 Farming: Unprotected'
+
+button_animals_on: '&a🐄 Animals: Protected'
+button_animals_off: '&c🐄 Animals: Unprotected'
+
+button_redstone_on: '&a🔴 Redstone: Blocked'
+button_redstone_off: '&c🔴 Redstone: Allowed'
+
+button_vehicles_on: '&a🛶 Vehicles: Blocked'
+button_vehicles_off: '&c🛶 Vehicles: Allowed'
+
+button_shop_on: '&a💎 Shop Interact: Enabled'
+button_shop_off: '&c💎 Shop Interact: Disabled'
+
+button_fly_on: '&a🪽 Flight: Enabled'
+button_fly_off: '&c🪽 Flight: Disabled'
+
+button_cosmetics: '&b✨ Cosmetics'
+
+pvp_toggle_lore:
+  - '&7Blocks PvP combat inside your claim.'
+  - '&eClick to toggle.'
+
+tnt_toggle_lore:
+  - '&7Prevents explosions from damaging your claim.'
+  - '&eClick to toggle.'
+
+fire_toggle_lore:
+  - '&7Stops fire from spreading within your claim.'
+  - '&eClick to toggle.'
+
+mob_toggle_lore:
+  - '&7Prevents hostile mobs from harming players in your claim.'
+  - '&eClick to toggle.'
+
+entry_toggle_lore:
+  - '&7When enabled, untrusted players cannot enter.'
+  - '&eClick to toggle.'
+
+safe_toggle_lore:
+  - '&7Extra safety rules for this claim.'
+  - '&7Admins only.'
+  - '&eClick to toggle.'
+
+container_toggle_lore:
+  - '&7Locks chests and storage blocks from outsiders.'
+  - '&eClick to toggle.'
+
+piston_toggle_lore:
+  - '&7Prevents pistons from pushing/pulling across borders.'
+  - '&eClick to toggle.'
+
+farm_toggle_lore:
+  - '&7Protects crops and farmland from outsiders.'
+  - '&eClick to toggle.'
+
+animals_toggle_lore:
+  - '&7Protects animals from outsiders.'
+  - '&eClick to toggle.'
+
+redstone_toggle_lore:
+  - '&7Blocks redstone interaction by outsiders.'
+  - '&eClick to toggle.'
+
+vehicles_toggle_lore:
+  - '&7Blocks vehicle use by outsiders.'
+  - '&eClick to toggle.'
+
+shop_toggle_lore:
+  - '&7Allows shop interactions inside your claim.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
+
+fly_toggle_lore:
+  - '&7Allows flying inside your claim.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
+
+cosmetics_lore:
+  - '&7Customize the look and feel of your claim.'
+  - '&eClick to open.'

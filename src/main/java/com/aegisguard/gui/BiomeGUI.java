@@ -23,7 +23,8 @@ import java.util.Map;
 /**
  * BiomeGUI
  * - Allows changing the biome of a plot.
- * - Uses language engine helpers with safe fallbacks.
+ * - Fully localized: title + buttons + GUI lore use CodexEngine GUI keys.
+ * - Slot-based biome selection (language-proof).
  */
 public class BiomeGUI {
 
@@ -35,33 +36,55 @@ public class BiomeGUI {
 
     public static class BiomeHolder implements InventoryHolder {
         private final Plot plot;
-        public BiomeHolder(Plot plot) { this.plot = plot; }
+        private final List<Biome> biomesBySlot;
+
+        public BiomeHolder(Plot plot, List<Biome> biomesBySlot) {
+            this.plot = plot;
+            this.biomesBySlot = biomesBySlot;
+        }
+
         public Plot getPlot() { return plot; }
+        public List<Biome> getBiomesBySlot() { return biomesBySlot; }
+
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, Plot plot) {
-        // ✅ Title fix: translate & colors + safe fallback + clamp length (via GUIManager.title helper)
+        // ✅ Localized title (colors + safe fallback + clamp handled by GUIManager.title)
         String title = plugin.gui().title(
                 player,
                 "biome_gui_title",
                 "&2✦ Biome Shaper ✦"
         );
 
-        Inventory inv = Bukkit.createInventory(new BiomeHolder(plot), 45, title);
+        // Build the biomes list in slot order so clicks are language-independent
+        List<Biome> shownBiomes = new ArrayList<>();
 
-        // Background Filler (bottom row only, main grid will be overridden)
+        Inventory inv = Bukkit.createInventory(new BiomeHolder(plot, shownBiomes), 45, title);
+
+        // Background filler (bottom row only)
         ItemStack filler = GUIManager.getFiller();
         for (int i = 36; i < 45; i++) inv.setItem(i, filler);
 
         List<String> allowedBiomes = plugin.cfg().getAllowedBiomes();
         double cost = plugin.cfg().getBiomeChangeCost();
         CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
+
+        String freeText = plugin.gui().tr(player, "cost_free", "&aFree");
         String costStr = (cost > 0 && !plugin.isAdmin(player))
                 ? plugin.eco().format(cost, type)
-                : "Free";
+                : freeText;
 
         String currentBiomeStr = plot.getCustomBiome();
+
+        // ✅ Localized select lore (from guis.yml), with a strong fallback
+        List<String> selectLoreTemplate = plugin.gui().trList(player, "biome_select_lore", List.of(
+                "&7Set your plot biome to {BIOME}.",
+                "&7Cost: &e{COST}",
+                " ",
+                "&8[&c!&8] &7Visual change only",
+                "&7Blocks are not replaced."
+        ));
 
         int slot = 0;
         for (String biomeName : allowedBiomes) {
@@ -69,29 +92,27 @@ public class BiomeGUI {
 
             try {
                 Biome biome = Biome.valueOf(biomeName.toUpperCase());
+
                 Material iconMat = getBiomeIcon(biome);
                 String prettyName = formatName(biome.name());
 
-                // Default lore if no language key is present
-                List<String> defaultLore = new ArrayList<>();
-                defaultLore.add("§7Cost: " + costStr);
-                defaultLore.add(" ");
-                defaultLore.add("§eClick to Apply");
-
-                // Localized lore (with {BIOME} / {COST} placeholders)
-                List<String> lore = new ArrayList<>(lines(player, "biome_select_lore", defaultLore));
+                // Apply placeholders
+                List<String> lore = new ArrayList<>(selectLoreTemplate);
                 lore.replaceAll(line ->
                         line.replace("{BIOME}", prettyName)
                                 .replace("{COST}", costStr)
                 );
 
-                ItemStack icon = GUIManager.createItem(iconMat, "§a" + prettyName, lore);
+                ItemStack icon = GUIManager.createItem(iconMat, "&a" + prettyName, lore);
 
+                // Glow if active
                 if (currentBiomeStr != null && currentBiomeStr.equalsIgnoreCase(biome.name())) {
                     addGlow(icon);
                 }
 
-                inv.setItem(slot++, icon);
+                inv.setItem(slot, icon);
+                shownBiomes.add(biome);
+                slot++;
 
             } catch (IllegalArgumentException ignored) {
                 // Skip invalid config biomes
@@ -100,18 +121,18 @@ public class BiomeGUI {
 
         // --- NAVIGATION BUTTONS ---
 
-        // Back Button (Returns to Flags Menu)
+        // Back (Returns to Flags Menu) - use global GUI keys (already in all GUI language files)
         inv.setItem(40, GUIManager.createItem(
                 Material.ARROW,
-                line(player, "biome_button_back", "§fBack to Flags", Map.of()),
-                lines(player, "biome_back_lore", List.of("§7Return to Plot Settings."))
+                plugin.gui().tr(player, "button_back", "&fBack"),
+                plugin.gui().trList(player, "back_lore", List.of("&7Return to the previous page."))
         ));
 
-        // Exit Button (Closes entirely)
+        // Exit (Closes entirely)
         inv.setItem(44, GUIManager.createItem(
                 Material.BARRIER,
-                line(player, "biome_button_exit", "§cExit Menu", Map.of()),
-                lines(player, "biome_exit_lore", List.of("§7Close the Biome Changer."))
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
@@ -121,6 +142,7 @@ public class BiomeGUI {
     public void handleClick(Player player, InventoryClickEvent e, BiomeHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
         Plot plot = holder.getPlot();
 
         // Navigation
@@ -129,74 +151,68 @@ public class BiomeGUI {
             plugin.effects().playMenuFlip(player);
             return;
         }
-        if (e.getSlot() == 44) { // Exit Menu
+        if (e.getSlot() == 44) { // Exit
             player.closeInventory();
             plugin.effects().playMenuClose(player);
             return;
         }
 
-        // Selection
-        if (e.getSlot() < 36 && e.getCurrentItem().getType() != Material.AIR) {
-            ItemMeta meta = e.getCurrentItem().getItemMeta();
-            if (meta == null || meta.getDisplayName() == null) return;
+        // Selection (slot-based, not display-name parsing)
+        int slot = e.getSlot();
+        if (slot < 0 || slot >= 36) return;
 
-            String displayName = meta.getDisplayName();
-            String rawBiome = displayName.replace("§a", "").toUpperCase().replace(" ", "_");
+        List<Biome> biomes = holder.getBiomesBySlot();
+        if (slot >= biomes.size()) return;
 
-            try {
-                Biome newBiome = Biome.valueOf(rawBiome);
+        Biome newBiome = biomes.get(slot);
 
-                // Don't charge if already set
-                if (plot.getCustomBiome() != null && plot.getCustomBiome().equals(newBiome.name())) {
-                    player.sendMessage(line(
-                            player,
-                            "biome_already_active",
-                            "§cThis biome is already active.",
-                            Map.of()
-                    ));
+        try {
+            // Don't charge if already set
+            if (plot.getCustomBiome() != null && plot.getCustomBiome().equalsIgnoreCase(newBiome.name())) {
+                player.sendMessage(msgLine(player, "biome_already_active", "§cThis biome is already active.", Map.of()));
+                plugin.effects().playError(player);
+                return;
+            }
+
+            double cost = plugin.cfg().getBiomeChangeCost();
+            CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
+
+            // Transaction
+            if (cost > 0 && !plugin.isAdmin(player)) {
+                if (!plugin.eco().withdraw(player, cost, type)) {
+                    plugin.msg().send(player, "need_vault",
+                            Map.of("AMOUNT", plugin.eco().format(cost, type)));
+                    plugin.effects().playError(player);
                     return;
                 }
-
-                double cost = plugin.cfg().getBiomeChangeCost();
-                CurrencyType type = plugin.cfg().getCurrencyFor("biomes");
-
-                // Transaction
-                if (cost > 0 && !plugin.isAdmin(player)) {
-                    if (!plugin.eco().withdraw(player, cost, type)) {
-                        plugin.msg().send(player, "need_vault",
-                                Map.of("AMOUNT", plugin.eco().format(cost, type)));
-                        plugin.effects().playError(player);
-                        return;
-                    }
-                    plugin.msg().send(player, "cost_deducted",
-                            Map.of("AMOUNT", plugin.eco().format(cost, type)));
-                }
-
-                // Apply
-                player.closeInventory();
-                player.sendMessage(line(
-                        player,
-                        "biome_terraforming",
-                        "§eTerraforming... this may take a moment.",
-                        Map.of()
-                ));
-
-                applyBiomeChange(plot, newBiome);
-
-                plot.setCustomBiome(newBiome.name());
-                plugin.store().setDirty(true);
-
-                plugin.msg().send(player, "biome_changed",
-                        Map.of("BIOME", formatName(newBiome.name())));
-                plugin.effects().playConfirm(player);
-
-                // Force client update (soft hint)
-                refreshChunks(player, plot);
-
-            } catch (Exception ex) {
-                player.sendMessage("§cError applying biome: " + ex.getMessage());
-                ex.printStackTrace();
+                plugin.msg().send(player, "cost_deducted",
+                        Map.of("AMOUNT", plugin.eco().format(cost, type)));
             }
+
+            // Apply
+            player.closeInventory();
+            player.sendMessage(msgLine(
+                    player,
+                    "biome_terraforming",
+                    "§eTerraforming... this may take a moment.",
+                    Map.of()
+            ));
+
+            applyBiomeChange(plot, newBiome);
+
+            plot.setCustomBiome(newBiome.name());
+            plugin.store().setDirty(true);
+
+            plugin.msg().send(player, "biome_changed",
+                    Map.of("BIOME", formatName(newBiome.name())));
+            plugin.effects().playConfirm(player);
+
+            // Soft hint
+            refreshChunks(player);
+
+        } catch (Exception ex) {
+            player.sendMessage(msgLine(player, "biome_apply_error", "§cError applying biome.", Map.of()));
+            ex.printStackTrace();
         }
     }
 
@@ -211,20 +227,18 @@ public class BiomeGUI {
         int minY = world.getMinHeight();
         int maxY = world.getMaxHeight();
 
-        // Optimized Loop: Minecraft stores biomes in 4x4x4 cubes.
+        // Minecraft stores biomes in 4x4x4 cubes
         for (int x = minX; x <= maxX; x += 4) {
             for (int z = minZ; z <= maxZ; z += 4) {
                 for (int y = minY; y < maxY; y += 4) {
-                    if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
-                        world.setBiome(x, y, z, biome);
-                    }
+                    world.setBiome(x, y, z, biome);
                 }
             }
         }
     }
 
-    private void refreshChunks(Player player, Plot plot) {
-        player.sendMessage(line(
+    private void refreshChunks(Player player) {
+        player.sendMessage(msgLine(
                 player,
                 "biome_refresh_hint",
                 "§7(Note: You may need to reconnect or leave the area to see visual changes fully.)",
@@ -270,32 +284,17 @@ public class BiomeGUI {
     }
 
     // --------------------------------------------------
-    // LANGUAGE ENGINE BRIDGE
+    // CHAT MESSAGE FALLBACK BRIDGE (messages system)
     // --------------------------------------------------
 
-    private String line(Player player, String key, String fallback, Map<String, String> vars) {
+    private String msgLine(Player player, String key, String fallback, Map<String, String> vars) {
         String raw = null;
         try {
-            if (vars == null || vars.isEmpty()) {
-                raw = plugin.msg().get(player, key);
-            } else {
-                raw = plugin.msg().get(player, key, vars);
-            }
+            if (vars == null || vars.isEmpty()) raw = plugin.msg().get(player, key);
+            else raw = plugin.msg().get(player, key, vars);
         } catch (Throwable ignored) {}
-        if (raw == null || raw.isEmpty() || raw.equalsIgnoreCase(key)) {
-            return fallback;
-        }
-        return raw;
-    }
 
-    private List<String> lines(Player player, String key, List<String> fallback) {
-        List<String> raw = null;
-        try {
-            raw = plugin.msg().getList(player, key);
-        } catch (Throwable ignored) {}
-        if (raw == null || raw.isEmpty()) {
-            return fallback;
-        }
+        if (raw == null || raw.isEmpty() || raw.equalsIgnoreCase(key)) return fallback;
         return raw;
     }
 }

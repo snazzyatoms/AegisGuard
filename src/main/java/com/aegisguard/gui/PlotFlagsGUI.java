@@ -51,30 +51,21 @@ public class PlotFlagsGUI {
     // Codex helpers (safe)
     // -----------------------
 
-    private String tr(Player p, String key, String fallback) {
-        try {
-            if (plugin.codex() == null) return fallback;
-            String v = plugin.codex().tr(p, key);
-            // Codex returns key if missing, so treat that as "missing".
-            if (v == null || v.isBlank() || v.equalsIgnoreCase(key)) return fallback;
-            return v;
-        } catch (Throwable ignored) {
-            return fallback;
-        }
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
     }
 
-    private List<String> list(Player p, String key, List<String> fallback) {
-        try {
-            if (plugin.codex() == null) return fallback;
-            List<String> v = plugin.codex().list(p, key);
-            return (v == null) ? fallback : v;
-        } catch (Throwable ignored) {
-            return fallback;
-        }
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
     }
 
-    private String onOffFallback(boolean on, String baseLabel) {
-        return (on ? "§a" : "§c") + baseLabel + ": " + (on ? "ON" : "OFF");
+    private String onOffFallback(Player p, boolean on, String baseLabel) {
+        // Optional keys if you want them later:
+        // label_on: "ON" / "ACTIVO" etc
+        // label_off: "OFF" / "INACTIVO" etc
+        String onTxt = t(p, "label_on", "ON");
+        String offTxt = t(p, "label_off", "OFF");
+        return (on ? "§a" : "§c") + baseLabel + ": " + (on ? onTxt : offTxt);
     }
 
     public void open(Player player, Plot plot) {
@@ -84,8 +75,13 @@ public class PlotFlagsGUI {
             return;
         }
 
-        String baseTitle = tr(player, "plot_flags_title", "§9Plot Flags");
-        String title = GUIManager.safeText(baseTitle, "§9Plot Flags");
+        // ✅ Title: translate + colors + safe fallback + clamp (centralized)
+        String title = plugin.gui().title(
+                player,
+                "plot_flags_title",
+                "&9Plot Flags"
+        );
+
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(plot), 54, title);
 
         // --- 1. BORDER ---
@@ -110,8 +106,8 @@ public class PlotFlagsGUI {
         // Safe Zone: structural / environment umbrella, admin-only toggle
         boolean safeOn = plugin.protection().isSafeZoneEnabled(plot);
         String safeLabelKey = "button_safe" + (safeOn ? "_on" : "_off");
-        String safeName = tr(player, safeLabelKey, onOffFallback(safeOn, "Safe Zone"));
-        List<String> safeLore = list(player, "safe_toggle_lore", List.of());
+        String safeName = t(player, safeLabelKey, onOffFallback(player, safeOn, "Safe Zone"));
+        List<String> safeLore = tl(player, "safe_toggle_lore", List.of());
 
         ItemStack safeItem = GUIManager.createItem(Material.SHIELD, safeName, safeLore);
         if (safeOn) glow(safeItem);
@@ -127,7 +123,7 @@ public class PlotFlagsGUI {
 
         // --- 4. SHOP INTERACT (Paid) ---
         double shopCost = plugin.cfg().getShopInteractCost();
-        String free = tr(player, "label_free", "Free");
+        String free = t(player, "label_free", "Free");
         String shopCostStr = (shopCost > 0 && !plugin.isAdmin(player))
                 ? plugin.eco().format(shopCost, CurrencyType.VAULT)
                 : free;
@@ -139,36 +135,37 @@ public class PlotFlagsGUI {
         // --- 5. PREMIUM: FLY & COSMETICS ---
         boolean canFly = plot.getFlag("fly", false);
         double flyCost = plugin.cfg().getFlightCost();
-        String costString = (flyCost > 0 && !plugin.isAdmin(player))
+        String flyCostStr = (flyCost > 0 && !plugin.isAdmin(player))
                 ? plugin.eco().format(flyCost, CurrencyType.VAULT)
                 : free;
 
-        List<String> flyLore = list(player, "fly_toggle_lore", List.of());
-        flyLore = replace(flyLore, "{COST}", costString);
+        List<String> flyLore = tl(player, "fly_toggle_lore", List.of());
+        flyLore = replace(flyLore, "{COST}", flyCostStr);
 
         String flyKey = canFly ? "button_fly_on" : "button_fly_off";
-        String flyName = tr(player, flyKey, onOffFallback(canFly, "Flight"));
+        String flyName = t(player, flyKey, onOffFallback(player, canFly, "Flight"));
 
         ItemStack flyIcon = GUIManager.createItem(Material.FEATHER, flyName, flyLore);
         if (canFly) glow(flyIcon);
         inv.setItem(30, flyIcon);
 
         // Cosmetics
-        String cosName = tr(player, "button_cosmetics", "§bCosmetics");
-        List<String> cosLore = list(player, "cosmetics_lore", List.of());
-
+        String cosName = t(player, "button_cosmetics", "&bCosmetics");
+        List<String> cosLore = tl(player, "cosmetics_lore", List.of());
         inv.setItem(31, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
 
         // --- NAV ---
-        String backName = tr(player, "button_back", "§fBack");
-        List<String> backLore = list(player, "back_lore", List.of());
+        inv.setItem(48, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of())
+        ));
 
-        inv.setItem(48, GUIManager.createItem(Material.ARROW, backName, backLore));
-
-        String exitName = tr(player, "button_exit", "§cClose");
-        List<String> exitLore = list(player, "exit_lore", List.of());
-
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, exitName, exitLore));
+        inv.setItem(49, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of())
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -179,15 +176,11 @@ public class PlotFlagsGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        if (!(e.getInventory().getHolder() instanceof PlotFlagsHolder)) {
-            return;
-        }
+        if (!(e.getInventory().getHolder() instanceof PlotFlagsHolder)) return;
 
         // Ignore clicks coming from the player's own inventory
         int rawSlot = e.getRawSlot();
-        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) {
-            return;
-        }
+        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
 
         Plot plot = holder.getPlot();
         if (plot == null) return;
@@ -283,9 +276,9 @@ public class PlotFlagsGUI {
         boolean on = plugin.protection().isFlagEnabled(plot, flag);
 
         String fullKey = nameKey + (on ? "_on" : "_off");
-        String name = tr(p, fullKey, onOffFallback(on, fallbackLabel));
+        String name = t(p, fullKey, onOffFallback(p, on, fallbackLabel));
 
-        List<String> lore = list(p, loreKey, List.of());
+        List<String> lore = tl(p, loreKey, List.of());
 
         ItemStack item = GUIManager.createItem(mat, name, lore);
         if (on) glow(item);
@@ -301,9 +294,9 @@ public class PlotFlagsGUI {
         boolean on = plot.getFlag(flag, false);
 
         String fullKey = nameKey + (on ? "_on" : "_off");
-        String name = tr(p, fullKey, onOffFallback(on, fallbackLabel));
+        String name = t(p, fullKey, onOffFallback(p, on, fallbackLabel));
 
-        List<String> rawLore = list(p, loreKey, List.of());
+        List<String> rawLore = tl(p, loreKey, List.of());
         List<String> lore = replace(rawLore, "{COST}", cost);
 
         ItemStack item = GUIManager.createItem(mat, name, lore);

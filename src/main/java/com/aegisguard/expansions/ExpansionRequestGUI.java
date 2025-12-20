@@ -11,9 +11,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * ExpansionRequestGUI
  * - Allows players to submit requests to increase their plot size.
@@ -35,9 +32,10 @@ public class ExpansionRequestGUI {
     }
 
     public void open(Player player) {
-        // [Fix] Use codex().tr() for titles
-        String title = plugin.codex().tr(player, "expansion_gui_title");
-        
+        // ✅ FIX: Use GUIManager.title() so & / hex colors render in inventory titles
+        // and missing keys don’t leak into the UI.
+        String title = plugin.gui().title(player, "expansion_gui_title", "&dLand Expansion Request");
+
         Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 36, title);
 
         // Background filler
@@ -47,13 +45,11 @@ public class ExpansionRequestGUI {
         }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
-        
-        // [Fix] We pass the player to these helper methods so they use CodexEngine
-        
+
         // --- TIER 1: (+5) ---
         inv.setItem(11, GUIManager.createItem(
                 Material.WOODEN_PICKAXE,
-                plugin.codex().tr(player, "expansion_tier1_name"), 
+                plugin.codex().tr(player, "expansion_tier1_name"),
                 plugin.codex().trList(player, "expansion_tier1_lore")
         ));
 
@@ -94,12 +90,10 @@ public class ExpansionRequestGUI {
             ));
         }
 
-        // --- BACK BUTTON (Slot 27) [The Fix] ---
-        // This was failing because the old system couldn't find "button_back_menu".
-        // CodexEngine has this key in core.yml and the style files.
+        // --- BACK BUTTON (Slot 27) ---
         inv.setItem(27, GUIManager.createItem(
                 Material.NETHER_STAR,
-                plugin.codex().tr(player, "button_back_menu"), 
+                plugin.codex().tr(player, "button_back_menu"),
                 plugin.codex().trList(player, "back_menu_lore")
         ));
 
@@ -166,7 +160,7 @@ public class ExpansionRequestGUI {
 
     private boolean validatePlot(Player player, Plot plot) {
         if (plot == null || !plot.getOwner().equals(player.getUniqueId())) {
-            plugin.msg().send(player, "no_plot_here"); // Kept msg() for simple chat feedback if preferred, or swap to codex
+            plugin.msg().send(player, "no_plot_here");
             plugin.effects().playError(player);
             return false;
         }

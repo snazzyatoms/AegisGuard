@@ -38,9 +38,8 @@ public class ZoningGUI {
     }
 
     public void open(Player player, Plot plot) {
-        // [Fix] Use Codex for title
-        String title = plugin.codex().tr(player, "zone_gui_title");
-        if (title.equals("zone_gui_title")) title = "§3Sub-Claim Manager"; // Safety fallback
+        // ✅ FIXED TITLE (colors + safe fallback + clamp)
+        String title = plugin.gui().title(player, "zone_gui_title", "&3Zone Manager");
 
         Inventory inv = Bukkit.createInventory(new ZoningHolder(plot), 54, title);
 
@@ -52,7 +51,6 @@ public class ZoningGUI {
             if (slot >= 45) break;
 
             boolean isRented = zone.isRented();
-            // [Fix] Use Codex for status text
             String status = isRented
                     ? plugin.codex().tr(player, "zone_status_rented")
                     : plugin.codex().tr(player, "zone_status_available");
@@ -66,7 +64,6 @@ public class ZoningGUI {
                 timeRemaining = zone.getRemainingTimeFormatted();
             }
 
-            // Localized Lore
             List<String> lore = new ArrayList<>();
             lore.add("§7Status: " + status);
             lore.add("§7Price: §6" + plugin.eco().format(
@@ -101,13 +98,9 @@ public class ZoningGUI {
 
         // --- 2. ACTIONS ---
 
-        // Create Button (Slot 49)
         boolean hasSelection = plugin.selection().hasSelection(player);
 
-        // [Fix] Use Codex for button name
         String createName = plugin.codex().tr(player, "button_zone_create");
-        
-        // [Fix] Use Codex for LoRes (Lists)
         List<String> readyLore = plugin.codex().trList(player, "zone_create_ready_lore");
         List<String> lockedLore = plugin.codex().trList(player, "zone_create_locked_lore");
 
@@ -117,11 +110,8 @@ public class ZoningGUI {
                 hasSelection ? readyLore : lockedLore
         ));
 
-        // Back (Slot 45)
-        // [Fix] Use Codex for back button
         String backName = plugin.codex().tr(player, "button_back");
         List<String> backLore = plugin.codex().trList(player, "back_lore");
-        
         inv.setItem(45, GUIManager.createItem(Material.ARROW, backName, backLore));
 
         player.openInventory(inv);
@@ -175,7 +165,6 @@ public class ZoningGUI {
                 plot.removeZone(target);
                 plugin.store().setDirty(true);
                 player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_ANVIL_BREAK, 1f, 1f);
-                // Chat feedback using codex
                 player.sendMessage(plugin.codex().tr(player, "zone_deleted", Map.of("ZONE", target.getName())));
                 open(player, plot);
             }

@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -17,15 +16,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * PlotCosmeticsGUI
  * - Allows players to buy and apply particle borders.
- * - Fully localized via Codex.
+ * - Fully localized via Codex (per-player language styles).
  *
- * ✅ Title fix: translate & colors + safe fallback + clamp length
+ * ✅ Title fix: uses plugin.gui().title(...) (color translate + safe fallback + clamp)
+ * ✅ Uses GUIManager.color() (public) indirectly via GUIManager helpers.
+ * ✅ Supports per-cosmetic localized keys:
+ *    cosmetics_border_<id>_name
+ *    cosmetics_border_<id>_lore
  */
 public class PlotCosmeticsGUI {
 
@@ -50,12 +54,13 @@ public class PlotCosmeticsGUI {
             return;
         }
 
-        // ✅ Title fix (Codex key -> colored -> clamped)
-        String rawTitle = (plugin.codex() != null)
-                ? plugin.codex().tr(player, "cosmetics_gui_title")
-                : null;
+        // ✅ Title is now fully language-aware via GUIManager.title()
+        String title = plugin.gui().title(
+                player,
+                "cosmetics_gui_title",
+                "&d✦ Plot Cosmetics ✦"
+        );
 
-        String title = formatTitle(rawTitle, "&d✦ Plot Cosmetics ✦");
         Inventory inv = Bukkit.createInventory(new CosmeticsHolder(plot), 54, title);
 
         // Fill Footer
@@ -65,22 +70,22 @@ public class PlotCosmeticsGUI {
         ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles");
         String currentBorder = plot.getBorderParticle();
 
-        // Slot 0: Reset/None
-        String resetName = plugin.codex().tr(player, "cosmetics_border_none");
-        if (resetName == null || resetName.isEmpty()) resetName = "§cDisable Border";
+        // ---------------------------------------------
+        // Slot 0: Reset/None (localized)
+        // ---------------------------------------------
+        String resetName = t(player, "cosmetics_border_none", "&cDisable Border");
 
         List<String> noneLore = new ArrayList<>();
         if (currentBorder == null) {
-            String selected = plugin.codex().tr(player, "cosmetics_status_selected");
-            if (selected == null || selected.isEmpty()) selected = "§a(Selected)";
-            noneLore.add(selected);
+            noneLore.add(t(player, "cosmetics_status_selected", "&a(Selected)"));
         } else {
-            String disable = plugin.codex().tr(player, "cosmetics_click_disable");
-            if (disable == null || disable.isEmpty()) disable = "§7Click to disable.";
-            noneLore.add(disable);
+            noneLore.add(t(player, "cosmetics_click_disable", "&7Click to disable."));
         }
         inv.setItem(0, GUIManager.createItem(Material.BARRIER, resetName, noneLore));
 
+        // ---------------------------------------------
+        // Cosmetics list (localized per item where possible)
+        // ---------------------------------------------
         if (section != null) {
             int slot = 1;
             for (String key : section.getKeys(false)) {
@@ -88,61 +93,58 @@ public class PlotCosmeticsGUI {
 
                 String matName = section.getString(key + ".material", "BLAZE_POWDER");
                 String particleName = section.getString(key + ".particle", "FLAME");
-                String rawDisplay = section.getString(key + ".display-name");
-                String displayName = GUIManager.safeText(rawDisplay, "Particle");
+                String rawDisplay = section.getString(key + ".display-name", "&fParticle Border");
                 double price = section.getDouble(key + ".price", 0.0);
 
                 Material material = Material.matchMaterial(matName);
                 if (material == null) material = Material.BLAZE_POWDER;
 
+                CurrencyType type = CurrencyType.VAULT;
+                boolean isSelected = particleName != null && particleName.equalsIgnoreCase(currentBorder);
+
+                // Per-cosmetic localization hooks (override config display-name if present)
+                // Example keys:
+                // cosmetics_border_flame_name
+                // cosmetics_border_flame_lore
+                String perNameKey = "cosmetics_border_" + key + "_name";
+                String perLoreKey = "cosmetics_border_" + key + "_lore";
+
+                String displayName = t(player, perNameKey, rawDisplay);
+
                 List<String> lore = new ArrayList<>();
 
-                // Effect line via Codex
-                String effectLine = plugin.codex().tr(
-                        player,
-                        "cosmetics_effect_line",
-                        Map.of("EFFECT", particleName)
-                );
-                if (effectLine == null || effectLine.isEmpty()) {
-                    effectLine = "§7Effect: " + particleName;
+                // Optional per-cosmetic lore (insert at top if provided)
+                List<String> perLore = tl(player, perLoreKey, Collections.emptyList());
+                if (!perLore.isEmpty()) {
+                    lore.addAll(perLore);
+                    lore.add(" ");
                 }
-                lore.add(effectLine);
+
+                // Effect line (vars)
+                lore.add(tv(player,
+                        "cosmetics_effect_line",
+                        Map.of("EFFECT", (particleName == null ? "?" : particleName)),
+                        "&7Effect: &f" + (particleName == null ? "?" : particleName)
+                ));
                 lore.add(" ");
 
-                CurrencyType type = CurrencyType.VAULT;
-                boolean isSelected = particleName.equalsIgnoreCase(currentBorder);
-
                 if (isSelected) {
-                    String selected = plugin.codex().tr(player, "cosmetics_status_selected");
-                    if (selected == null || selected.isEmpty()) selected = "§a(Selected)";
-                    lore.add(selected);
+                    lore.add(t(player, "cosmetics_status_selected", "&a(Selected)"));
                 } else if (price > 0 && !plugin.isAdmin(player)) {
-                    String costLine = plugin.codex().tr(
-                            player,
+                    lore.add(tv(player,
                             "cosmetics_cost_line",
-                            Map.of("AMOUNT", plugin.eco().format(price, type))
-                    );
-                    if (costLine == null || costLine.isEmpty()) {
-                        costLine = "§7Cost: §e" + plugin.eco().format(price, type);
-                    }
-                    lore.add(costLine);
-
-                    String clickBuy = plugin.codex().tr(player, "cosmetics_click_buy");
-                    if (clickBuy == null || clickBuy.isEmpty()) clickBuy = "§eLeft-Click: Buy";
-                    lore.add(clickBuy);
+                            Map.of("AMOUNT", plugin.eco().format(price, type)),
+                            "&7Cost: &e" + plugin.eco().format(price, type)
+                    ));
+                    lore.add(t(player, "cosmetics_click_buy", "&eLeft-Click: &7Buy"));
                 } else {
-                    String free = plugin.codex().tr(player, "cosmetics_status_free");
-                    if (free == null || free.isEmpty()) free = "§aFree!";
-                    lore.add(free);
-
-                    String apply = plugin.codex().tr(player, "cosmetics_click_apply");
-                    if (apply == null || apply.isEmpty()) apply = "§eLeft-Click: Apply";
-                    lore.add(apply);
+                    lore.add(t(player, "cosmetics_status_free", "&aFree!"));
+                    lore.add(t(player, "cosmetics_click_apply", "&eLeft-Click: &7Apply"));
                 }
 
                 ItemStack icon = GUIManager.createItem(material, displayName, lore);
 
-                // Store Key in NBT
+                // Store config key in PDC
                 ItemMeta meta = icon.getItemMeta();
                 if (meta != null) {
                     meta.getPersistentDataContainer().set(KEY_PARTICLE_ID, PersistentDataType.STRING, key);
@@ -153,18 +155,20 @@ public class PlotCosmeticsGUI {
             }
         }
 
-        // Navigation
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
-        inv.setItem(48, GUIManager.createItem(Material.ARROW, backName, backLore));
+        // ---------------------------------------------
+        // Navigation (localized)
+        // ---------------------------------------------
+        inv.setItem(48, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the previous menu."))
+        ));
 
-        String exitName = plugin.codex().tr(player, "button_exit");
-        if (exitName == null || exitName.isEmpty()) exitName = "§cClose";
-        List<String> exitLore = plugin.codex().list(player, "exit_lore");
-        if (exitLore == null) exitLore = List.of();
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, exitName, exitLore));
+        inv.setItem(49, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -216,46 +220,60 @@ public class PlotCosmeticsGUI {
         if (meta == null || !meta.getPersistentDataContainer().has(KEY_PARTICLE_ID, PersistentDataType.STRING)) return;
 
         String key = meta.getPersistentDataContainer().get(KEY_PARTICLE_ID, PersistentDataType.STRING);
+        if (key == null || key.isBlank()) return;
+
         ConfigurationSection section = plugin.cfg().raw().getConfigurationSection("cosmetics.border_particles." + key);
+        if (section == null) return;
 
-        if (section != null) {
-            String particleName = section.getString("particle");
+        String particleName = section.getString("particle");
+        if (particleName == null || particleName.isBlank()) return;
 
-            if (particleName != null && particleName.equalsIgnoreCase(plot.getBorderParticle())) {
-                player.sendMessage(plugin.msg().get(player, "cosmetics_already_active"));
+        if (particleName.equalsIgnoreCase(plot.getBorderParticle())) {
+            // Language-aware message via msg() (per player language)
+            player.sendMessage(plugin.msg().get(player, "cosmetics_already_active"));
+            return;
+        }
+
+        double price = section.getDouble("price", 0.0);
+
+        if (price > 0 && !plugin.isAdmin(player)) {
+            if (!plugin.eco().withdraw(player, price, CurrencyType.VAULT)) {
+                plugin.msg().send(
+                        player,
+                        "need_vault",
+                        Map.of("AMOUNT", plugin.eco().format(price, CurrencyType.VAULT))
+                );
+                plugin.effects().playError(player);
                 return;
             }
-
-            double price = section.getDouble("price", 0.0);
-
-            if (price > 0 && !plugin.isAdmin(player)) {
-                if (!plugin.eco().withdraw(player, price, CurrencyType.VAULT)) {
-                    plugin.msg().send(
-                            player,
-                            "need_vault",
-                            Map.of("AMOUNT", plugin.eco().format(price, CurrencyType.VAULT))
-                    );
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.msg().send(player, "cosmetic_purchased");
-            }
-
-            plot.setBorderParticle(particleName);
-            plugin.store().setDirty(true);
-            plugin.effects().playConfirm(player);
-            open(player, plot);
+            plugin.msg().send(player, "cosmetic_purchased");
         }
+
+        plot.setBorderParticle(particleName);
+        plugin.store().setDirty(true);
+        plugin.effects().playConfirm(player);
+        open(player, plot);
     }
 
-    // ✅ Central title cleanup for THIS GUI
-    private String formatTitle(String raw, String fallback) {
-        String t = GUIManager.safeText(raw, fallback);
-        t = ChatColor.translateAlternateColorCodes('&', t);
+    // --------------------------------------------------
+    // Language helpers (Codex-safe + fallbacks)
+    // --------------------------------------------------
 
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
+    }
 
-        return t;
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
+    }
+
+    private String tv(Player p, String key, Map<String, String> vars, String fallback) {
+        String raw = null;
+        try {
+            if (plugin.codex() != null) raw = plugin.codex().tr(p, key, vars);
+        } catch (Throwable ignored) {}
+
+        // safeText() returns COLORIZED output and blocks "returned key" / [Missing] leaks.
+        return GUIManager.safeText(key, raw, fallback);
     }
 }

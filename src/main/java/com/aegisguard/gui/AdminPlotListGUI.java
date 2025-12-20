@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -23,16 +22,16 @@ import java.util.Map;
 /**
  * AdminPlotListGUI
  * - A paginated GUI for admins to view and manage all plots.
- * - Fully localized for language switching.
- * - ✅ Title fixed via GUIManager.title() (translates & colors + clamps)
+ * - Fully localized for language switching (titles + item names + lore + buttons).
+ * - ✅ Title fixed via GUIManager.title() (translates & + hex + clamps)
  */
 public class AdminPlotListGUI {
 
     private final AegisGuard plugin;
     private final int PLOTS_PER_PAGE = 45;
 
-    public AdminPlotListGUI(AegisGuard plugin) {
-        this.plugin = plugin;
+    public AdminPlotListGUI(AegisGuard AegisGuard) {
+        this.plugin = AegisGuard;
     }
 
     public static class PlotListHolder implements InventoryHolder {
@@ -51,23 +50,34 @@ public class AdminPlotListGUI {
 
     public void open(Player player, int page) {
         List<Plot> allPlots = new ArrayList<>(plugin.store().getAllPlots());
-        allPlots.sort(Comparator.comparing(Plot::getOwnerName, String.CASE_INSENSITIVE_ORDER));
+
+        // Safer sort (avoid null owner names causing NPE)
+        allPlots.sort(Comparator.comparing(
+                p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
+                String.CASE_INSENSITIVE_ORDER
+        ));
 
         int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
         if (page < 0) page = 0;
         if (page >= maxPages && maxPages > 0) page = maxPages - 1;
         else if (maxPages == 0) page = 0;
 
-        // ✅ Title: localized + page suffix, safely clamped to 32 chars (including color codes)
-        String suffix = " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        // ✅ Localized title + page suffix (clamped safely)
+        String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
         String baseTitle = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry");
-        String title = clampTitleWithSuffix(baseTitle, color(suffix));
+        String title = clampTitleWithSuffix(baseTitle, suffix);
 
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
         // Fill footer background
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
+        // Preload localized lore templates (with fallbacks)
+        String loreIdFmt = tr(player, "admin_plot_lore_id", "&7ID: &e{ID}");
+        String loreWorldFmt = tr(player, "admin_plot_lore_world", "&7World: &f{WORLD}");
+        String loreBoundsFmt = tr(player, "admin_plot_lore_bounds", "&7Bounds: &a{X1}, {Z1}");
+        String loreToFmt = tr(player, "admin_plot_lore_to", "&7        to &a{X2}, {Z2}");
 
         int startIndex = page * PLOTS_PER_PAGE;
         for (int i = 0; i < PLOTS_PER_PAGE; i++) {
@@ -84,28 +94,50 @@ public class AdminPlotListGUI {
 
                 String ownerName = plot.getOwnerName() != null ? plot.getOwnerName() : "Unknown";
 
-                String nameFormat = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
-                if (nameFormat == null || nameFormat.isEmpty()) nameFormat = "&bOwner: &f" + ownerName;
-                meta.setDisplayName(color(nameFormat));
+                // Name: localized with placeholder
+                String rawName = null;
+                try {
+                    rawName = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
+                } catch (Throwable ignored) {}
 
+                String name = GUIManager.safeText(
+                        "admin_plot_item_name",
+                        rawName,
+                        "&bOwner: &f" + ownerName
+                );
+
+                meta.setDisplayName(name);
+
+                // Lore: localized templates + replacements
                 List<String> lore = new ArrayList<>();
-                lore.add(color("&7ID: &e" + plot.getPlotId().toString().substring(0, 8)));
-                lore.add(color("&7World: &f" + plot.getWorld()));
-                lore.add(color("&7Bounds: &a" + plot.getX1() + ", " + plot.getZ1()));
-                lore.add(color("&7        to &a" + plot.getX2() + ", " + plot.getZ2()));
+
+                String shortId = plot.getPlotId().toString();
+                if (shortId.length() > 8) shortId = shortId.substring(0, 8);
+
+                lore.add(GUIManager.color(loreIdFmt.replace("{ID}", shortId)));
+                lore.add(GUIManager.color(loreWorldFmt.replace("{WORLD}", plot.getWorld())));
+                lore.add(GUIManager.color(loreBoundsFmt
+                        .replace("{X1}", String.valueOf(plot.getX1()))
+                        .replace("{Z1}", String.valueOf(plot.getZ1()))
+                ));
+                lore.add(GUIManager.color(loreToFmt
+                        .replace("{X2}", String.valueOf(plot.getX2()))
+                        .replace("{Z2}", String.valueOf(plot.getZ2()))
+                ));
 
                 if (plot.isServerZone()) {
-                    String zoneTag = plugin.codex().tr(player, "admin_server_zone_tag");
-                    if (zoneTag == null || zoneTag.isEmpty()) zoneTag = "&c[SERVER ZONE]";
-                    lore.add(color(zoneTag));
+                    String rawTag = null;
+                    try { rawTag = plugin.codex().tr(player, "admin_server_zone_tag"); } catch (Throwable ignored) {}
+                    lore.add(GUIManager.safeText("admin_server_zone_tag", rawTag, "&c[SERVER ZONE]"));
                 }
 
                 lore.add(" ");
 
-                List<String> actions = plugin.codex().list(player, "admin_plot_actions");
-                if (actions != null && !actions.isEmpty()) {
-                    for (String line : actions) lore.add(color(line));
-                }
+                List<String> actions = plugin.gui().trList(player, "admin_plot_actions", List.of(
+                        "&eLeft-Click: &7Teleport",
+                        "&cRight-Click: &7Delete Plot"
+                ));
+                for (String line : actions) lore.add(GUIManager.color(line));
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -113,40 +145,34 @@ public class AdminPlotListGUI {
             inv.setItem(i, head);
         }
 
-        // Navigation buttons
+        // --- NAV BUTTONS ---
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
-                    color(plugin.codex().tr(player, "button_prev_page")),
+                    plugin.gui().tr(player, "button_prev_page", "&fPrevious Page"),
                     null
             ));
         }
 
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                color(plugin.codex().tr(player, "button_back_admin")),
-                List.of(color("&7Return to Admin Menu"))
+                plugin.gui().tr(player, "button_back_admin", "&fBack to Admin"),
+                plugin.gui().trList(player, "back_admin_lore", List.of("&7Return to Admin Menu."))
         ));
 
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.createItem(
                     Material.ARROW,
-                    color(plugin.codex().tr(player, "button_next_page")),
+                    plugin.gui().tr(player, "button_next_page", "&fNext Page"),
                     null
             ));
         }
 
         // Exit button
-        List<String> exitLore = plugin.codex().list(player, "exit_lore");
-        List<String> coloredExitLore = new ArrayList<>();
-        if (exitLore != null) {
-            for (String s : exitLore) coloredExitLore.add(color(s));
-        }
-
         inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
-                color(plugin.codex().tr(player, "button_exit")),
-                coloredExitLore
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
@@ -183,7 +209,8 @@ public class AdminPlotListGUI {
 
             Plot plot = holder.getPlots().get(plotIndex);
             if (plot == null) {
-                player.sendMessage(color("&cPlot no longer exists."));
+                // Localized error (fallback included)
+                player.sendMessage(plugin.gui().tr(player, "admin_plot_missing", "&cPlot no longer exists."));
                 open(player, currentPage);
                 return;
             }
@@ -195,11 +222,13 @@ public class AdminPlotListGUI {
                     loc.setY(y + 1);
 
                     TeleportUtil.safeTeleport(plugin, player, loc);
+
+                    // Chat feedback stays in msg system (already keyed)
                     plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                     player.closeInventory();
                 } else {
-                    player.sendMessage(color("&cInvalid world or location."));
+                    player.sendMessage(plugin.gui().tr(player, "admin_plot_invalid_location", "&cInvalid world or location."));
                 }
             } else if (e.getClick().isRightClick()) {
                 plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
@@ -233,8 +262,12 @@ public class AdminPlotListGUI {
         return trimmedBase + suffix;
     }
 
-    private String color(String s) {
-        if (s == null) return "";
-        return ChatColor.translateAlternateColorCodes('&', s);
+    /**
+     * Small helper for Codex-aware single-line lookups with fallback.
+     */
+    private String tr(Player p, String key, String fallback) {
+        String raw = null;
+        try { if (plugin.codex() != null) raw = plugin.codex().tr(p, key); } catch (Throwable ignored) {}
+        return GUIManager.safeText(key, raw, fallback);
     }
 }

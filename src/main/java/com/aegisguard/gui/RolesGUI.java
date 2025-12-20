@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,36 +22,44 @@ import java.util.UUID;
 /**
  * RolesGUI
  * - Manage trusted players and their permission levels.
- * - Now also manages per-role flag permissions via a submenu.
- * - Fully localized: Supports instant language switching.
+ * - Also manages per-role flag permissions via a submenu.
+ * - Fully localized (Codex-backed) with safe fallbacks + title clamp.
  */
 public class RolesGUI {
 
     private final AegisGuard plugin;
 
     private static final List<String> ROLE_FLAG_KEYS = List.of(
-        "PVP",
-        "CONTAINERS",
-        "MOBS",
-        "PETS",
-        "ENTITIES",
-        "FARM",
-        "TNT",
-        "FIRE",
-        "PISTON",
-        "ENTRY",
-        "SHOP",
-        "FLY",
-        "ANIMALS",
-        "REDSTONE",
-        "VEHICLES"
+            "PVP",
+            "CONTAINERS",
+            "MOBS",
+            "PETS",
+            "ENTITIES",
+            "FARM",
+            "TNT",
+            "FIRE",
+            "PISTON",
+            "ENTRY",
+            "SHOP",
+            "FLY",
+            "ANIMALS",
+            "REDSTONE",
+            "VEHICLES"
     );
+
+    // Plot selector shows up to 45 items (bottom row reserved for nav)
+    private static final int PLOTS_PER_PAGE = 45;
+    // Manage menu shows up to 18 roles (bottom row reserved for actions)
+    private static final int ROLES_VISIBLE = 18;
 
     public RolesGUI(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    // --- HOLDERS ---
+    // --------------------------------------------------
+    // HOLDERS
+    // --------------------------------------------------
+
     public static class PlotSelectorHolder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }
@@ -99,9 +108,58 @@ public class RolesGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    // --- ENTRY POINT ---
+    // --------------------------------------------------
+    // Codex helpers (safe)
+    // --------------------------------------------------
+
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
+    }
+
+    /**
+     * Map-aware translate with safe fallback.
+     * Tries Codex map API first (since many of your keys use {VARS}).
+     */
+    private String t(Player p, String key, Map<String, String> vars, String fallback) {
+        String raw = null;
+        try {
+            if (plugin.codex() != null) raw = plugin.codex().tr(p, key, vars);
+        } catch (Throwable ignored) {}
+
+        String out = (raw == null || raw.isBlank() || raw.equalsIgnoreCase(key))
+                ? (fallback == null ? "" : fallback)
+                : raw;
+
+        // Also apply vars to fallback strings
+        if (vars != null && !vars.isEmpty()) {
+            for (Map.Entry<String, String> en : vars.entrySet()) {
+                String k = en.getKey();
+                String v = en.getValue() == null ? "" : en.getValue();
+                out = out.replace("{" + k + "}", v).replace("{" + k.toLowerCase() + "}", v);
+            }
+        }
+
+        return out;
+    }
+
+    private String clampTitle(String raw, String fallback) {
+        String tt = GUIManager.safeText(raw, fallback);
+        tt = GUIManager.color(tt);
+        if (tt.length() > 32) tt = tt.substring(0, 32);
+        if (tt.endsWith("§")) tt = tt.substring(0, tt.length() - 1);
+        return tt;
+    }
+
+    // --------------------------------------------------
+    // ENTRY POINT
+    // --------------------------------------------------
+
     public void open(Player player) {
-        // 1. Admin Override
+        // 1) Admin override: if standing in a plot, open directly
         if (plugin.isAdmin(player)) {
             Plot standingPlot = plugin.store().getPlotAt(player.getLocation());
             if (standingPlot != null) {
@@ -110,96 +168,102 @@ public class RolesGUI {
             }
         }
 
-        // 2. Normal User Flow
+        // 2) Normal user flow: pick one of your plots
         List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
-
         if (plots == null || plots.isEmpty()) {
             plugin.msg().send(player, "no_plot_here");
             plugin.effects().playError(player);
             return;
         }
 
-        if (plots.size() > 1) {
-            openPlotSelector(player, plots);
-        } else {
-            openRolesMenu(player, plots.get(0));
-        }
+        if (plots.size() > 1) openPlotSelector(player, plots);
+        else openRolesMenu(player, plots.get(0));
     }
 
-    // --- GUI 1: SELECT PLOT ---
+    // --------------------------------------------------
+    // GUI 1: SELECT PLOT
+    // --------------------------------------------------
+
     private void openPlotSelector(Player player, List<Plot> plots) {
-        // ✅ Title fixed (colors + safe fallback + clamp)
         String title = plugin.gui().title(player, "trusted_plot_selector_title", "&8Select Plot");
         Inventory inv = Bukkit.createInventory(new PlotSelectorHolder(), 54, title);
 
+        // Footer
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
         int slot = 0;
         for (Plot plot : plots) {
-            if (slot >= 54) break;
+            if (slot >= PLOTS_PER_PAGE) break;
 
             List<String> lore = new ArrayList<>();
 
-            String worldLine = plugin.codex().tr(
-                player,
-                "trusted_plot_world_line",
-                Map.of("WORLD", plot.getWorld())
+            String worldLine = t(player, "trusted_plot_world_line",
+                    Map.of("WORLD", plot.getWorld()),
+                    "&7World: &f{WORLD}"
             );
-            if (worldLine == null || worldLine.isEmpty()) {
-                worldLine = "§7World: §f" + plot.getWorld();
-            }
-            lore.add(worldLine);
+            lore.add(GUIManager.color(worldLine));
 
-            int sizeX = plot.getX2() - plot.getX1();
-            int sizeZ = plot.getZ2() - plot.getZ1();
-            String sizeLine = plugin.codex().tr(
-                player,
-                "trusted_plot_size_line",
-                Map.of("X", String.valueOf(sizeX), "Z", String.valueOf(sizeZ))
+            // ✅ Size fix: +1 so it's true width/height
+            int sizeX = (plot.getX2() - plot.getX1()) + 1;
+            int sizeZ = (plot.getZ2() - plot.getZ1()) + 1;
+
+            String sizeLine = t(player, "trusted_plot_size_line",
+                    Map.of("X", String.valueOf(sizeX), "Z", String.valueOf(sizeZ)),
+                    "&7Size: &e{X}x{Z}"
             );
-            if (sizeLine == null || sizeLine.isEmpty()) {
-                sizeLine = "§7Size: §e" + sizeX + "x" + sizeZ;
-            }
-            lore.add(sizeLine);
+            lore.add(GUIManager.color(sizeLine));
 
             lore.add(" ");
 
-            String clickLine = plugin.codex().tr(player, "trusted_plot_click_manage");
-            if (clickLine == null || clickLine.isEmpty()) {
-                clickLine = "§eClick to Manage Roles";
-            }
-            lore.add(clickLine);
+            String clickLine = t(player, "trusted_plot_click_manage", "&eClick to Manage Roles");
+            lore.add(GUIManager.color(clickLine));
 
-            String name = plugin.codex().tr(
-                player,
-                "trusted_plot_name",
-                Map.of("INDEX", String.valueOf(slot + 1))
+            String name = t(player, "trusted_plot_name",
+                    Map.of("INDEX", String.valueOf(slot + 1)),
+                    "&aPlot #{INDEX}"
             );
-            if (name == null || name.isEmpty()) {
-                name = "§aPlot #" + (slot + 1);
-            }
 
-            inv.setItem(slot, GUIManager.createItem(
-                Material.GRASS_BLOCK,
-                name,
-                lore
+            inv.setItem(slot++, GUIManager.createItem(
+                    Material.GRASS_BLOCK,
+                    GUIManager.color(name),
+                    lore
             ));
-            slot++;
         }
+
+        // Nav
+        inv.setItem(49, GUIManager.createItem(
+                Material.NETHER_STAR,
+                t(player, "button_back_menu", "&fReturn to Menu"),
+                tl(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
+        ));
+
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    // --- GUI 2: ROLES LIST ---
+    // --------------------------------------------------
+    // GUI 2: ROLES LIST
+    // --------------------------------------------------
+
     public void openRolesMenu(Player player, Plot plot) {
-        // ✅ Title fixed
         String title = plugin.gui().title(player, "roles_gui_title", "&eManage Plot Roles");
         Inventory inv = Bukkit.createInventory(new RolesMenuHolder(plot), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
+        Map<UUID, String> roleMap = plot.getPlayerRoles();
+        if (roleMap == null) roleMap = new LinkedHashMap<>();
+
         int slot = 0;
-        for (Map.Entry<UUID, String> entry : plot.getPlayerRoles().entrySet()) {
+        for (Map.Entry<UUID, String> entry : roleMap.entrySet()) {
             if (slot >= 45) break;
 
             UUID uuid = entry.getKey();
@@ -209,6 +273,7 @@ public class RolesGUI {
             boolean isViewerOwner = uuid.equals(player.getUniqueId());
             boolean isAdmin = plugin.isAdmin(player);
 
+            // Hide your own owner entry, and hide owner entry from non-admins
             if (isOwnerEntry && isViewerOwner) continue;
             if (isOwnerEntry && !isAdmin) continue;
 
@@ -220,34 +285,22 @@ public class RolesGUI {
             if (meta != null) {
                 meta.setOwningPlayer(member);
 
-                String displayName = plugin.codex().tr(
-                    player,
-                    "roles_member_name",
-                    Map.of("PLAYER", name)
+                String displayName = t(player, "roles_member_name",
+                        Map.of("PLAYER", name),
+                        "&e{PLAYER}"
                 );
-                if (displayName == null || displayName.isEmpty()) {
-                    displayName = "§e" + name;
-                }
                 meta.setDisplayName(GUIManager.color(displayName));
 
                 List<String> lore = new ArrayList<>();
 
-                String roleLine = plugin.codex().tr(
-                    player,
-                    "roles_member_role_line",
-                    Map.of("ROLE", role)
+                String roleLine = t(player, "roles_member_role_line",
+                        Map.of("ROLE", role),
+                        "&7Role: &f{ROLE}"
                 );
-                if (roleLine == null || roleLine.isEmpty()) {
-                    roleLine = "§7Role: §f" + role;
-                }
                 lore.add(GUIManager.color(roleLine));
-
                 lore.add(" ");
 
-                String clickLine = plugin.codex().tr(player, "roles_member_click_lore");
-                if (clickLine == null || clickLine.isEmpty()) {
-                    clickLine = "§eClick to Edit Role & Permissions";
-                }
+                String clickLine = t(player, "roles_member_click_lore", "&eClick to Edit Role & Permissions");
                 lore.add(GUIManager.color(clickLine));
 
                 meta.setLore(lore);
@@ -256,60 +309,59 @@ public class RolesGUI {
             inv.setItem(slot++, head);
         }
 
-        String addName = plugin.codex().tr(player, "button_add_trusted");
-        if (addName == null || addName.isEmpty()) addName = "§aAdd Trusted Player";
-        List<String> addLore = plugin.codex().list(player, "add_trusted_lore");
-        if (addLore == null) addLore = List.of();
-        inv.setItem(49, GUIManager.createItem(Material.EMERALD, addName, addLore));
+        // Footer buttons
+        inv.setItem(49, GUIManager.createItem(
+                Material.EMERALD,
+                t(player, "button_add_trusted", "&aAdd Trusted Player"),
+                tl(player, "add_trusted_lore", List.of("&7Invite a nearby player to this dominion."))
+        ));
 
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
-        inv.setItem(48, GUIManager.createItem(Material.ARROW, backName, backLore));
+        inv.setItem(48, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the main menu."))
+        ));
 
-        String exitName = plugin.codex().tr(player, "button_exit");
-        if (exitName == null || exitName.isEmpty()) exitName = "§cClose";
-        List<String> exitLore = plugin.codex().list(player, "exit_lore");
-        if (exitLore == null) exitLore = List.of();
-        inv.setItem(50, GUIManager.createItem(Material.BARRIER, exitName, exitLore));
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
-    // --- GUI 3: ADD PLAYER ---
+    // --------------------------------------------------
+    // GUI 3: ADD PLAYER
+    // --------------------------------------------------
+
     private void openAddMenu(Player player, Plot plot) {
-        // ✅ Title fixed
         String title = plugin.gui().title(player, "add_trusted_title", "&8Add Trusted Player");
         Inventory inv = Bukkit.createInventory(new RoleAddHolder(plot), 54, title);
 
+        // Footer
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
         int slot = 0;
         for (Player nearby : player.getWorld().getPlayers()) {
-            if (slot >= 54) break;
+            if (slot >= 45) break;
             if (nearby.getLocation().distance(player.getLocation()) > 50) continue;
             if (nearby.equals(player)) continue;
-            if (plot.getPlayerRoles().containsKey(nearby.getUniqueId())) continue;
+            if (plot.getPlayerRoles() != null && plot.getPlayerRoles().containsKey(nearby.getUniqueId())) continue;
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(nearby);
 
-                String headName = plugin.codex().tr(
-                    player,
-                    "add_trusted_player_name",
-                    Map.of("PLAYER", nearby.getName())
+                String headName = t(player, "add_trusted_player_name",
+                        Map.of("PLAYER", nearby.getName()),
+                        "&a{PLAYER}"
                 );
-                if (headName == null || headName.isEmpty()) {
-                    headName = "§a" + nearby.getName();
-                }
 
-                String clickLore = plugin.codex().tr(player, "add_trusted_click_lore");
-                if (clickLore == null || clickLore.isEmpty()) {
-                    clickLore = "§7Click to add to plot.";
-                }
-
+                String clickLore = t(player, "add_trusted_click_lore", "&7Click to add to plot.");
                 meta.setDisplayName(GUIManager.color(headName));
                 meta.setLore(List.of(GUIManager.color(clickLore)));
                 head.setItemMeta(meta);
@@ -318,112 +370,112 @@ public class RolesGUI {
         }
 
         if (slot == 0) {
-            String noneName = plugin.codex().tr(player, "add_trusted_none_title");
-            if (noneName == null || noneName.isEmpty()) {
-                noneName = "§cNo Players Nearby";
-            }
-            List<String> noneLore = plugin.codex().list(player, "add_trusted_none_lore");
-            if (noneLore == null || noneLore.isEmpty()) {
-                noneLore = List.of("§7Ask your friend to stand closer!");
-            }
-            inv.setItem(22, GUIManager.createItem(
-                Material.BARRIER,
-                noneName,
-                noneLore
-            ));
+            String noneName = t(player, "add_trusted_none_title", "&cNo Players Nearby");
+            List<String> noneLore = tl(player, "add_trusted_none_lore", List.of("&7Ask your friend to stand closer!"));
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER, noneName, noneLore));
         }
 
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
-        inv.setItem(49, GUIManager.createItem(Material.ARROW, backName, backLore));
+        inv.setItem(49, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the previous menu."))
+        ));
+
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuFlip(player);
     }
 
-    // --- GUI 4: MANAGE SPECIFIC PLAYER ---
+    // --------------------------------------------------
+    // GUI 4: MANAGE SPECIFIC PLAYER
+    // --------------------------------------------------
+
     private void openManageMenu(Player player, Plot plot, OfflinePlayer target) {
         String targetName = (target.getName() != null) ? target.getName() : "Unknown";
 
-        String raw = plugin.codex().tr(
-            player,
-            "roles_manage_title",
-            Map.of("PLAYER", targetName)
+        String rawTitle = t(player, "roles_manage_title",
+                Map.of("PLAYER", targetName),
+                "&8Manage: {PLAYER}"
         );
 
-        // ✅ Title fixed (handles placeholder titles)
-        String title = titleFromRaw("roles_manage_title", raw, "&8Manage: " + targetName);
+        String title = clampTitle(rawTitle, "&8Manage: " + targetName);
         Inventory inv = Bukkit.createInventory(new RoleManageHolder(plot, target), 27, title);
 
+        // Fill (prevents “holes” looking weird)
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
+
         List<String> roles = plugin.cfg().getRoleNames();
+        if (roles == null) roles = List.of();
+
         String currentRole = plot.getRole(target.getUniqueId());
 
-        for (int i = 0; i < roles.size(); i++) {
-            if (i >= 27) break;
+        // Roles in slots 0..17 (prevents collisions with control buttons)
+        int max = Math.min(roles.size(), ROLES_VISIBLE);
+        for (int i = 0; i < max; i++) {
             String roleName = roles.get(i);
-            boolean isCurrent = roleName.equalsIgnoreCase(currentRole);
+            boolean isCurrent = roleName != null && roleName.equalsIgnoreCase(currentRole);
 
             Material icon = isCurrent ? Material.LIME_DYE : Material.GRAY_DYE;
 
-            String displayRoleName = plugin.codex().tr(
-                player,
-                "roles_role_name",
-                Map.of("ROLE", roleName)
+            String displayRoleName = t(player, "roles_role_name",
+                    Map.of("ROLE", roleName),
+                    (isCurrent ? "&a" : "&7") + roleName
             );
-            if (displayRoleName == null || displayRoleName.isEmpty()) {
-                displayRoleName = (isCurrent ? "§a" : "§7") + roleName;
-            }
 
-            String loreLine = plugin.codex().tr(
-                player,
-                isCurrent ? "roles_role_current_lore" : "roles_role_click_set_lore"
+            String loreLine = t(player,
+                    isCurrent ? "roles_role_current_lore" : "roles_role_click_set_lore",
+                    isCurrent ? "&a(Current Role)" : "&eClick to Set"
             );
-            if (loreLine == null || loreLine.isEmpty()) {
-                loreLine = isCurrent ? "§a(Current Role)" : "§eClick to Set";
-            }
 
             inv.setItem(i, GUIManager.createItem(
-                icon,
-                displayRoleName,
-                List.of(loreLine)
+                    icon,
+                    GUIManager.color(displayRoleName),
+                    List.of(GUIManager.color(loreLine))
             ));
         }
 
-        String removeName = plugin.codex().tr(player, "button_remove_trusted");
-        if (removeName == null || removeName.isEmpty()) removeName = "§cRemove Trusted";
-        List<String> removeLore = plugin.codex().list(player, "remove_trusted_lore");
-        if (removeLore == null || removeLore.isEmpty()) removeLore = List.of("§7Revoke all access.");
-        inv.setItem(22, GUIManager.createItem(Material.REDSTONE_BLOCK, removeName, removeLore));
+        // Buttons row
+        inv.setItem(18, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the roles list."))
+        ));
 
-        String roleDisplay = (currentRole != null) ? currentRole : "Unassigned";
-        String flagsName = plugin.codex().tr(player, "button_role_permissions");
-        if (flagsName == null || flagsName.isEmpty()) flagsName = "§bEdit Role Permissions";
-        List<String> flagsLore = plugin.codex().list(player, "role_permissions_lore");
-        if (flagsLore == null || flagsLore.isEmpty()) {
-            flagsLore = List.of(
-                "§7Role: §f" + roleDisplay,
-                " ",
-                "§7Adjust what this role may do",
-                "§7inside this dominion.",
-                " ",
-                "§eClick to open role flags"
-            );
-        }
-        inv.setItem(24, GUIManager.createItem(Material.BOOK, flagsName, flagsLore));
+        inv.setItem(22, GUIManager.createItem(
+                Material.REDSTONE_BLOCK,
+                t(player, "button_remove_trusted", "&cRemove Trusted"),
+                tl(player, "remove_trusted_lore", List.of("&7Revoke all access."))
+        ));
 
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
-        inv.setItem(18, GUIManager.createItem(Material.ARROW, backName, backLore));
+        String roleDisplay = (currentRole != null) ? currentRole : t(player, "roles_unassigned", "Unassigned");
+
+        inv.setItem(24, GUIManager.createItem(
+                Material.BOOK,
+                t(player, "button_role_permissions", "&bEdit Role Permissions"),
+                tl(player, "role_permissions_lore", List.of(
+                        "&7Role: &f" + roleDisplay,
+                        " ",
+                        "&7Adjust what this role may do",
+                        "&7inside this dominion.",
+                        " ",
+                        "&eClick to open role flags"
+                ))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuFlip(player);
     }
 
-    // --- GUI 5: ROLE FLAG PERMISSIONS ---
+    // --------------------------------------------------
+    // GUI 5: ROLE FLAG PERMISSIONS
+    // --------------------------------------------------
+
     private void openRoleFlagsMenu(Player player, Plot plot, OfflinePlayer target, String roleName) {
         if (roleName == null || roleName.trim().isEmpty()) {
             plugin.msg().send(player, "role_self");
@@ -432,16 +484,17 @@ public class RolesGUI {
             return;
         }
 
-        String raw = plugin.codex().tr(
-            player,
-            "role_flags_title",
-            Map.of("ROLE", roleName)
+        String rawTitle = t(player, "role_flags_title",
+                Map.of("ROLE", roleName),
+                "&8Role Flags: {ROLE}"
         );
-
-        // ✅ Title fixed (handles placeholder titles)
-        String title = titleFromRaw("role_flags_title", raw, "&8Role Flags: " + roleName);
+        String title = clampTitle(rawTitle, "&8Role Flags: " + roleName);
 
         Inventory inv = Bukkit.createInventory(new RoleFlagsHolder(plot, target, roleName), 27, title);
+
+        // Fill
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
         int slot = 0;
         for (String flagKey : ROLE_FLAG_KEYS) {
@@ -454,80 +507,81 @@ public class RolesGUI {
             } catch (NoSuchMethodError ignored) {}
 
             Material icon = mapFlagToIcon(flagKey);
-            ItemStack item = buildRoleFlagItem(flagKey, state, icon);
-            inv.setItem(slot++, item);
+            inv.setItem(slot++, buildRoleFlagItem(player, flagKey, state, icon));
         }
 
-        String backName = plugin.codex().tr(player, "button_back");
-        if (backName == null || backName.isEmpty()) backName = "§fBack";
-        List<String> backLore = plugin.codex().list(player, "back_lore");
-        if (backLore == null) backLore = List.of();
-        inv.setItem(22, GUIManager.createItem(Material.ARROW, backName, backLore));
+        inv.setItem(22, GUIManager.createItem(
+                Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the previous menu."))
+        ));
 
-        String legendName = plugin.codex().tr(player, "role_flags_legend_title");
-        if (legendName == null || legendName.isEmpty()) legendName = "§7Legend";
-        List<String> legendLore = plugin.codex().list(player, "role_flags_legend_lore");
-        if (legendLore == null || legendLore.isEmpty()) {
-            legendLore = List.of(
-                "§aAllow §7= Role may bypass this rule.",
-                "§cDeny  §7= Role is always blocked.",
-                "§7Inherit §7= Follow normal claim logic."
-            );
-        }
-        inv.setItem(26, GUIManager.createItem(Material.PAPER, legendName, legendLore));
+        inv.setItem(26, GUIManager.createItem(
+                Material.PAPER,
+                t(player, "role_flags_legend_title", "&7Legend"),
+                tl(player, "role_flags_legend_lore", List.of(
+                        "&aAllow &7= Role may bypass this rule.",
+                        "&cDeny  &7= Role is always blocked.",
+                        "&7Inherit &7= Follow normal claim logic."
+                ))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuFlip(player);
     }
 
-    // --- HANDLERS ---
+    // --------------------------------------------------
+    // HANDLERS
+    // --------------------------------------------------
 
     public void handlePlotSelectorClick(Player player, InventoryClickEvent e, PlotSelectorHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
-        int index = e.getSlot();
+        int slot = e.getRawSlot();
+        if (slot < 0 || slot >= 54) return;
 
-        if (index >= 0 && index < plots.size()) {
-            openRolesMenu(player, plots.get(index));
-        }
+        if (slot == 49) { plugin.gui().openMain(player); return; }
+        if (slot == 50) { player.closeInventory(); return; }
+
+        if (slot >= PLOTS_PER_PAGE) return;
+
+        List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
+        if (plots == null || plots.isEmpty()) return;
+
+        if (slot >= 0 && slot < plots.size()) openRolesMenu(player, plots.get(slot));
     }
 
     public void handleRolesMenuClick(Player player, InventoryClickEvent e, RolesMenuHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
         Plot plot = holder.getPlot();
+        int slot = e.getRawSlot();
+
+        if (slot == 49) { openAddMenu(player, plot); return; }
+        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 50) { player.closeInventory(); return; }
 
         if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-            if (meta != null && meta.getOwningPlayer() != null) {
-                openManageMenu(player, plot, meta.getOwningPlayer());
-            }
-            return;
+            if (meta != null && meta.getOwningPlayer() != null) openManageMenu(player, plot, meta.getOwningPlayer());
         }
-
-        int slot = e.getSlot();
-        if (slot == 49) openAddMenu(player, plot);
-        else if (slot == 48) plugin.gui().openMain(player);
-        else if (slot == 50) player.closeInventory();
     }
 
     public void handleAddTrustedClick(Player player, InventoryClickEvent e, RoleAddHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
-        Plot plot = holder.getPlot();
 
-        if (e.getSlot() == 49) {
-            openRolesMenu(player, plot);
-            return;
-        }
+        Plot plot = holder.getPlot();
+        int slot = e.getRawSlot();
+
+        if (slot == 49) { openRolesMenu(player, plot); return; }
+        if (slot == 50) { player.closeInventory(); return; }
 
         if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-            if (meta != null && meta.getOwningPlayer() != null) {
-                openManageMenu(player, plot, meta.getOwningPlayer());
-            }
+            if (meta != null && meta.getOwningPlayer() != null) openManageMenu(player, plot, meta.getOwningPlayer());
         }
     }
 
@@ -537,13 +591,9 @@ public class RolesGUI {
 
         Plot plot = holder.getPlot();
         OfflinePlayer target = holder.getTarget();
+        int slot = e.getRawSlot();
 
-        int slot = e.getSlot();
-
-        if (slot == 18) {
-            openRolesMenu(player, plot);
-            return;
-        }
+        if (slot == 18) { openRolesMenu(player, plot); return; }
 
         if (slot == 22) {
             plugin.store().removePlayerRole(plot, target.getUniqueId());
@@ -565,7 +615,10 @@ public class RolesGUI {
         }
 
         List<String> roles = plugin.cfg().getRoleNames();
-        if (slot >= 0 && slot < roles.size()) {
+        if (roles == null) roles = List.of();
+
+        int max = Math.min(roles.size(), ROLES_VISIBLE);
+        if (slot >= 0 && slot < max) {
             String newRole = roles.get(slot);
             plugin.store().addPlayerRole(plot, target.getUniqueId(), newRole);
             plugin.msg().send(player, "role_set_to", Map.of("PLAYER", target.getName(), "ROLE", newRole));
@@ -581,13 +634,9 @@ public class RolesGUI {
         Plot plot = holder.getPlot();
         OfflinePlayer target = holder.getTarget();
         String roleName = holder.getRoleName();
-        int slot = e.getSlot();
+        int slot = e.getRawSlot();
 
-        if (slot == 22) {
-            openManageMenu(player, plot, target);
-            return;
-        }
-
+        if (slot == 22) { openManageMenu(player, plot, target); return; }
         if (slot < 0 || slot >= ROLE_FLAG_KEYS.size()) return;
 
         String flagKey = ROLE_FLAG_KEYS.get(slot);
@@ -608,17 +657,9 @@ public class RolesGUI {
         openRoleFlagsMenu(player, plot, target, roleName);
     }
 
-    // --- SMALL HELPERS ---
-
-    private String titleFromRaw(String requestedKey, String raw, String fallback) {
-        String t = GUIManager.safeText(requestedKey, raw, fallback);
-        t = GUIManager.color(t);
-
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
-    }
+    // --------------------------------------------------
+    // SMALL HELPERS
+    // --------------------------------------------------
 
     private TriState nextTriState(TriState current) {
         if (current == null || current == TriState.INHERIT) return TriState.ALLOW;
@@ -640,42 +681,42 @@ public class RolesGUI {
             case "ENTRY":      return Material.OAK_DOOR;
             case "SHOP":       return Material.EMERALD;
             case "FLY":        return Material.FEATHER;
-            case "ANIMALS":    return Material.CARROT;
+            case "ANIMALS":    return Material.COW_SPAWN_EGG;
             case "REDSTONE":   return Material.REDSTONE;
             case "VEHICLES":   return Material.MINECART;
             default:           return Material.PAPER;
         }
     }
 
-    private ItemStack buildRoleFlagItem(String flagKey, TriState state, Material icon) {
-        String niceName = "§b" + flagKey.substring(0, 1).toUpperCase() + flagKey.substring(1).toLowerCase();
+    private ItemStack buildRoleFlagItem(Player player, String flagKey, TriState state, Material icon) {
+        // Localized flag name (fallback = pretty flagKey)
+        String pretty = flagKey.toLowerCase().replace("_", " ");
+        if (!pretty.isEmpty()) pretty = Character.toUpperCase(pretty.charAt(0)) + pretty.substring(1);
 
-        String stateLabel;
-        String stateColor;
-        switch (state) {
-            case ALLOW:
-                stateLabel = "Allow (Bypass)";
-                stateColor = "§a";
-                break;
-            case DENY:
-                stateLabel = "Deny (Blocked)";
-                stateColor = "§c";
-                break;
-            default:
-                stateLabel = "Inherit";
-                stateColor = "§7";
-                break;
-        }
+        String name = t(player, "role_flag_name_" + flagKey.toUpperCase(), "&b" + pretty);
+
+        String allowLbl   = t(player, "role_flags_state_allow", "&aAllow");
+        String denyLbl    = t(player, "role_flags_state_deny", "&cDeny");
+        String inheritLbl = t(player, "role_flags_state_inherit", "&7Inherit");
+
+        String currentLineKey = "role_flags_current_line";
+        String currentLine = t(player, currentLineKey,
+                Map.of("STATE", state == TriState.ALLOW ? allowLbl : state == TriState.DENY ? denyLbl : inheritLbl),
+                "&7Current: {STATE}"
+        );
 
         List<String> lore = new ArrayList<>();
-        lore.add("§7Current: " + stateColor + stateLabel);
+        lore.add(GUIManager.color(currentLine));
         lore.add(" ");
-        lore.add("§7Inherit: Follow normal plot/world rules.");
-        lore.add("§7Allow: This role may bypass this restriction.");
-        lore.add("§7Deny: This role is always blocked.");
-        lore.add(" ");
-        lore.add("§eClick to cycle");
 
-        return GUIManager.createItem(icon, niceName, lore);
+        lore.addAll(tl(player, "role_flags_item_lore", List.of(
+                "&7Inherit: Follow normal plot/world rules.",
+                "&7Allow: This role may bypass this restriction.",
+                "&7Deny: This role is always blocked.",
+                " ",
+                "&eClick to cycle"
+        )));
+
+        return GUIManager.createItem(icon, GUIManager.color(name), lore);
     }
 }

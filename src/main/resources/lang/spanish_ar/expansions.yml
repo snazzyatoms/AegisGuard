@@ -1,81 +1,55 @@
 # ======================================
-# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# AegisGuard v1.2.4 - Codex: Español (Argentina)
 # File: expansions.yml
-# Split from legacy single-file language pack
+# Parity translation from modern_english/expansions.yml
 # ======================================
 
-expansion_button_back: '&e⟵ Volver a Expansiones'
-expansion_button_back_lore:
-- '&7Volvés a las opciones de expansión.'
-
-expansion_gui_title: '&d§lPedido de Expansión'
-button_expand: '&dPedir Expansión'
-expand_lore:
-- '&7Mandá un pedido'
-- '&7para agrandar tu claim.'
-
-button_submit_request: '&aMandar Pedido'
-submit_request_lore:
-- '&7Elegí el tamaño de expansión que querés.'
-
-button_view_requests_admin: '&cVer Pedidos (Admin)'
+button_expand: '&dSolicitar Expansión'
+button_view_requests_admin: '&cRevisar Solicitudes (Admin)'
 view_requests_admin_lore:
-- '&7Revisá los pedidos de los jugadores.'
-
-expansion_submitted: '&a✔ Tu pedido de expansión fue enviado al Consejo (Admin).'
-expansion_exists: '&c❌ Ya tenés un pedido de expansión pendiente.'
+  - '&7Revisá y aprobá solicitudes de expansión.'
+expansion_submitted: '&a✔ Solicitud de expansión enviada.'
+expansion_exists: '&c❌ Ya tenés una solicitud de expansión pendiente.'
 expansion_approved: ''
 expansion_denied: ''
-admin_request_approved: '&a✔ ¡Tu pedido de expansión fue aprobado por {PLAYER}!'
-admin_request_denied: '&c❌ Tu pedido de expansión fue rechazado por {PLAYER}.'
-expansion_payment_failed: '&c❌ No te alcanzó la guita para pagar la expansión.'
-expansion_limit_reached: '&c❌ Llegaste al límite de expansión ({LIMIT}).'
-expansion_overlap_fail: '&c❌ No se puede expandir: se superpone con otro claim.'
-expansion_invalid_size: '&c❌ El tamaño nuevo tiene que ser más grande que el actual.'
-request_expired: '&c❌ Este pedido expiró o ya no existe.'
-
-expansion_tier1_name: '&aExpansión Mínima'
-expansion_tier1_lore:
-- '&7Una pequeña adición al claim.'
-- ' '
-- '&eClick para Pedir'
-
-expansion_tier2_name: '&eExpansión Chica'
-expansion_tier2_lore:
-- '&7Un aumento moderado de tamaño.'
-- ' '
-- '&eClick para Pedir'
-
-expansion_tier3_name: '&fExpansión Media'
-expansion_tier3_lore:
-- '&7Un tamaño bastante copado.'
-- ' '
-- '&eClick para Pedir'
-
-expansion_tier4_name: '&6Expansión Grande'
-expansion_tier4_lore:
-- '&7Una extensión territorial importante.'
-- ' '
-- '&eClick para Pedir'
-
-expansion_tier5_name: '&bExpansión Máxima'
-expansion_tier5_lore:
-- '&7El máximo territorio permitido.'
-- ' '
-- '&eClick para Pedir'
-
-expansion_locked_lore:
-- '&cTenés que estar dentro'
-- '&cde tu claim para pedir expansión.'
-
-expansion_admin_title: '&8Pedidos Pendientes'
-expansion_none_title: '&cNo hay Pedidos'
+admin_request_approved: '&a✔ Tu solicitud de expansión fue aprobada por {PLAYER}.'
+admin_request_denied: '&c❌ Tu solicitud de expansión fue rechazada por {PLAYER}.'
+expansion_payment_failed: '&c❌ La expansión falló; no tenés suficientes fondos.'
+expansion_limit_reached: '&c❌ Alcanzaste el límite máximo de expansión ({LIMIT}).'
+expansion_overlap_fail: '&c❌ No se puede expandir; otra parcela está demasiado cerca.'
+expansion_invalid_size: '&c❌ El nuevo tamaño tiene que ser mayor que el anterior.'
+request_expired: '&c❌ Esta solicitud de expansión expiró o ya no existe.'
+expansion_gui_title: '&dSolicitud de Expansión'
+expansion_button_back: '&e⟵ Volver al Menú Anterior'
+expansion_admin_title: '&8Solicitudes de Expansión Pendientes'
+expansion_none_title: '&cSin Solicitudes'
 expansion_none_lore:
-- '&7Por ahora nadie pidió nada.'
-
-expansion_admin_actions:
-- '&aClick Izquierdo: &7Aprobar'
-- '&cClick Derecho: &7Rechazar'
-
-expansion_admin_granted_broadcast: '&6⚖ {PLAYER} aprobó un pedido de expansión para {TARGET}.'
-expansion_admin_denied_broadcast: '&c⚖ {PLAYER} rechazó el pedido de expansión de {TARGET}.'
+  - '&7No hay solicitudes de expansión en este momento.'
+expansion_tier1_name: '&aMejora Pequeña'
+expansion_tier2_name: '&eMejora Mediana'
+expansion_tier3_name: '&fMejora Grande'
+expansion_tier4_name: '&6Mejora Enorme'
+expansion_tier5_name: '&bMejora Masiva'
+expansion_locked_lore:
+  - '&cTenés que estar dentro de'
+  - '&ctu propia parcela para solicitar expansión.'
+expansion_cost_lore:
+  - '&7Costo de Expansión: &e{COST}'
+  - '&7Nuevo Tamaño Máximo: &a{NEW_MAX}'
+expansion_tier_lore:
+  - '&7Aumenta el tamaño de la parcela en &a+{AMOUNT}'
+  - '&7Costo: &e{COST}'
+expansion_admin_approve_lore:
+  - '&aClic Izquierdo: Aprobar'
+expansion_admin_deny_lore:
+  - '&cClic Derecho: Rechazar'
+expansion_admin_item_name: '&eSolicitud de &f{PLAYER}'
+expansion_admin_item_lore:
+  - '&7Aumento solicitado: &a+{AMOUNT}'
+  - '&7Costo: &e{COST}'
+  - '&7Mundo: &f{WORLD}'
+  - '&7Expira en: &c{TIME}'
+expansion_broadcast_approved: '&a✔ Solicitud de expansión aprobada para {PLAYER}.'
+expansion_broadcast_denied: '&c❌ Solicitud de expansión rechazada para {PLAYER}.'
+expansion_admin_no_perm: '&c❌ No tenés permiso para gestionar solicitudes.'
+expansion_no_requests: '&7Actualmente no hay solicitudes de expansión.'

@@ -221,3 +221,213 @@ help_lines:
   - '&e/aegis setdesc <text> &7- Establecé una descripción para tu parcela.'
   - '&e/aegis stuck &7- Teletransportate a un lugar seguro si estás atorado.'
   - '&e/aegis help &7- Ver este menú de ayuda.'
+
+# --------------------------------------
+# Paridad Golden Master (Old English) - Adiciones faltantes
+# --------------------------------------
+
+# Navegación / botones usados en múltiples menús
+button_expand: '&dPedir Expansión'
+button_view_requests_admin: '&cRevisar Solicitudes'
+view_requests_admin_lore:
+  - '&7Aprobá o rechazá solicitudes de expansión.'
+
+realestate_button_back: '&e⟵ Volver a Bienes Raíces'
+domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
+biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
+biome_button_exit: '&c✖ Cerrar Cambiador de Bioma'
+expansion_button_back: '&e⟵ Volver al Menú Anterior'
+
+# GUI de Expansión
+expansion_gui_title: '&dSolicitud de Expansión'
+expansion_admin_title: '&8Solicitudes Pendientes'
+expansion_none_title: '&cSin Solicitudes'
+expansion_none_lore:
+  - '&7No hay solicitudes pendientes.'
+expansion_locked_lore:
+  - '&cTenés que estar dentro'
+  - '&cde tu propia parcela para hacer esto.'
+
+expansion_tier1_name: '&aExpansión Pequeña (+5)'
+expansion_tier2_name: '&eExpansión Mediana (+10)'
+expansion_tier3_name: '&fExpansión Grande (+20)'
+expansion_tier4_name: '&6Expansión Enorme (+35)'
+expansion_tier5_name: '&bExpansión Masiva (+50)'
+
+# GUI de Nivelación (Ascensión)
+level_gui_title: '&dAscensión de Parcela'
+level_current_status: '&bEstado Actual de la Parcela'
+level_upgrade_button: '&aMejorar a Nivel &f{LEVEL}'
+level_max_reached: '&6Se alcanzó el nivel máximo para esta parcela.'
+level_button_lore:
+  - '&7Mejorá tu parcela para desbloquear'
+  - '&7nuevas ventajas y bonificaciones.'
+level_button_lore_static:
+  - '&7Mejorá tu parcela para desbloquear'
+  - '&7ventajas y bonos adicionales.'
+
+level_current_blessing_name: '&dBonificaciones Actuales'
+level_current_blessing_title: '&dBonificaciones Activas'
+level_current_blessing_footer_1: '&8Niveles más altos desbloquean'
+level_current_blessing_footer_2: '&8bonos más fuertes y beneficios extra.'
+
+level_current_blessings_name: '&dBonificaciones Actuales'
+level_current_blessings_title: '&dBonificaciones Activas'
+level_current_blessings_footer_1: '&8Niveles más altos desbloquean'
+level_current_blessings_footer_2: '&8bonos más fuertes y beneficios extra.'
+
+level_track_title_completed: '&aRama Completada'
+level_track_completed_1: '&7Todos los hitos de esta rama'
+level_track_completed_2: '&7ya fueron desbloqueados.'
+"level_track_completed_[1]": '&7Todos los hitos de esta rama'
+"level_track_completed_[2]": '&7ya fueron desbloqueados.'
+
+level_track_buffs_title: '&dBonificaciones Desbloqueadas'
+level_track_footer_mastered: '&6Esta rama de progreso ya está completada.'
+
+level_track_title_current: '&dRama Actual'
+"level_track_current_[1]": '&7Estas bonificaciones están'
+"level_track_current_[2]": '&7activas en tu parcela.'
+
+level_track_title_locked: '&cRama Bloqueada'
+"level_track_locked_[1]": '&7Mejoras adicionales en esta rama'
+"level_track_locked_[2]": '&7están bloqueadas hasta que avances.'
+
+"level_track_next_[1]": '&7Siguiente mejora en esta rama'
+level_track_next_cost: '&eCosto de Mejora: &6{COST}'
+level_track_footer_next: '&6Mejorá para desbloquear estas bonificaciones.'
+level_track_footer_progress: '&7Progreso hacia la próxima mejora.'
+
+level_upgrade_tier: '&dSiguiente Etapa'
+level_upgrade_next_tier: '&dSiguiente Etapa'
+level_upgrade_cost: '&eCosto de Mejora: &6{COST}'
+level_upgrade_new_buffs_title: '&dNuevas Bonificaciones'
+level_upgrade_click_hint: '&eClic para mejorar si te alcanza.'
+
+level_track_completed_title: '&aRama Completada'
+level_track_completed_lore_1: '&7Todos los hitos de esta rama'
+level_track_completed_lore_2: '&7ya fueron desbloqueados.'
+
+level_track_current_title: '&dRama Actual'
+level_track_current_lore_1: '&7Estas bonificaciones están'
+level_track_current_lore_2: '&7activas en tu parcela.'
+
+level_track_locked_title: '&cRama Bloqueada'
+level_track_locked_lore_1: '&7Mejoras adicionales en esta rama'
+level_track_locked_lore_2: '&7están bloqueadas hasta que avances.'
+
+level_track_next_title: '&dSiguiente Mejora en esta Rama'
+level_track_next_lore_1: '&7Mejorá para desbloquear las próximas bonificaciones.'
+level_track_next_lore_2: '&7Costo para avanzar: &6{COST}'
+
+# --------------------------------------
+# Plot Flags GUI (nombres + lore completos)
+# Usado por: PlotFlagsGUI.java
+# --------------------------------------
+
+button_pvp_on: '&a⚔ PvP: Protegido'
+button_pvp_off: '&c⚔ PvP: Sin protección'
+
+button_tnt_on: '&a💥 TNT: Protegido'
+button_tnt_off: '&c💥 TNT: Sin protección'
+
+button_fire_on: '&a🔥 Fuego: Bloqueado'
+button_fire_off: '&c🔥 Fuego: Permitido'
+
+button_mobs_on: '&a☠ Mobs: Protegido'
+button_mobs_off: '&c☠ Mobs: Sin protección'
+
+button_entry_on: '&a🚪 Entrada: Privada'
+button_entry_off: '&c🚪 Entrada: Pública'
+
+button_safe_on: '&a🛡 Zona Segura: ACTIVADA'
+button_safe_off: '&c🛡 Zona Segura: DESACTIVADA'
+
+button_containers_on: '&a📦 Contenedores: Bloqueados'
+button_containers_off: '&c📦 Contenedores: Libres'
+
+button_piston_on: '&a🔩 Pistones: Bloqueados'
+button_piston_off: '&c🔩 Pistones: Permitidos'
+
+button_farm_on: '&a🌾 Cultivos: Protegidos'
+button_farm_off: '&c🌾 Cultivos: Sin protección'
+
+button_animals_on: '&a🐄 Animales: Protegidos'
+button_animals_off: '&c🐄 Animales: Sin protección'
+
+button_redstone_on: '&a🔴 Redstone: Bloqueada'
+button_redstone_off: '&c🔴 Redstone: Permitida'
+
+button_vehicles_on: '&a🛶 Vehículos: Bloqueados'
+button_vehicles_off: '&c🛶 Vehículos: Permitidos'
+
+button_shop_on: '&a💎 Tienda: ACTIVADA'
+button_shop_off: '&c💎 Tienda: DESACTIVADA'
+
+button_fly_on: '&a🪽 Vuelo: ACTIVADO'
+button_fly_off: '&c🪽 Vuelo: DESACTIVADO'
+
+button_cosmetics: '&b✨ Cosméticos'
+
+pvp_toggle_lore:
+  - '&7Bloquea el combate PvP dentro de tu parcela.'
+  - '&eClic para alternar.'
+
+tnt_toggle_lore:
+  - '&7Evita que las explosiones dañen tu parcela.'
+  - '&eClic para alternar.'
+
+fire_toggle_lore:
+  - '&7Evita que el fuego se propague dentro de tu parcela.'
+  - '&eClic para alternar.'
+
+mob_toggle_lore:
+  - '&7Evita que mobs hostiles dañen jugadores en tu parcela.'
+  - '&eClic para alternar.'
+
+entry_toggle_lore:
+  - '&7Si está activado, jugadores no confiables no pueden entrar.'
+  - '&eClic para alternar.'
+
+safe_toggle_lore:
+  - '&7Reglas extra de seguridad para esta parcela.'
+  - '&7Solo admins.'
+  - '&eClic para alternar.'
+
+container_toggle_lore:
+  - '&7Bloquea cofres y almacenamientos para visitantes.'
+  - '&eClic para alternar.'
+
+piston_toggle_lore:
+  - '&7Evita que pistones empujen/tiren a través del borde.'
+  - '&eClic para alternar.'
+
+farm_toggle_lore:
+  - '&7Protege cultivos y tierra arada de visitantes.'
+  - '&eClic para alternar.'
+
+animals_toggle_lore:
+  - '&7Protege animales de visitantes.'
+  - '&eClic para alternar.'
+
+redstone_toggle_lore:
+  - '&7Bloquea interacción de redstone para visitantes.'
+  - '&eClic para alternar.'
+
+vehicles_toggle_lore:
+  - '&7Bloquea uso de vehículos para visitantes.'
+  - '&eClic para alternar.'
+
+shop_toggle_lore:
+  - '&7Permite interactuar con tiendas dentro de tu parcela.'
+  - '&7Costo: &6{COST}'
+  - '&eClic para comprar/alternar.'
+
+fly_toggle_lore:
+  - '&7Permite volar dentro de tu parcela.'
+  - '&7Costo: &6{COST}'
+  - '&eClic para comprar/alternar.'
+
+cosmetics_lore:
+  - '&7Personalizá el look y estilo de tu parcela.'
+  - '&eClic para abrir.'

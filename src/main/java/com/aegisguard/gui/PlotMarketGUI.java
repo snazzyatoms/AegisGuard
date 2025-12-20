@@ -24,6 +24,9 @@ import java.util.Map;
  * PlotMarketGUI
  * - A paginated GUI for buying and renting plots.
  * - Fully localized for dynamic language switching.
+ *
+ * ✅ Title now uses plugin.gui().tr(...) + safe page suffix clamp
+ * ✅ All visible strings now go through language keys (with safe fallbacks)
  */
 public class PlotMarketGUI {
 
@@ -63,20 +66,18 @@ public class PlotMarketGUI {
         int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
+        if (maxPages == 0) page = 0;
 
-        String baseTitle = GUIManager.safeText(
-                plugin.msg().get(player, "market_gui_title"),
-                "§2Real Estate"
-        );
-        String title = baseTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        // ✅ Title: localized + page suffix, clamped safely to 32 chars
+        String baseTitle = plugin.gui().tr(player, "market_gui_title", "&2Real Estate");
+        String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
+        String title = clampTitleWithSuffix(baseTitle, suffix);
 
         Inventory inv = Bukkit.createInventory(new PlotMarketHolder(allPlots, page), 54, title);
 
         // 3. Fill Background (bottom row only, so listings stay empty)
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
         // 4. Populate Listings
         int startIndex = page * PLOTS_PER_PAGE;
@@ -93,29 +94,58 @@ public class PlotMarketGUI {
 
             // Localized Type Strings (safe)
             String typeKey = isRent ? "market_type_rent" : "market_type_sale";
-            String defaultType = isRent ? "§bFor Rent" : "§aFor Sale";
+            String defaultType = isRent ? "&bFor Rent" : "&aFor Sale";
             String typeStr = GUIManager.safeText(plugin.msg().get(player, typeKey), defaultType);
+
+            String ownerName = (owner.getName() != null ? owner.getName() : "Unknown");
+            String sizeStr = (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1);
+
+            // Localized display name (with safe fallback)
+            String nameTpl = plugin.msg().get(player, "market_listing_name", Map.of(
+                    "TYPE", typeStr,
+                    "PRICE", priceStr
+            ));
+            if (nameTpl == null || nameTpl.isBlank()) nameTpl = typeStr + ": &e" + priceStr;
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                meta.setOwningPlayer(owner);
-                meta.setDisplayName(typeStr + ": §e" + priceStr);
+                try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
+
+                meta.setDisplayName(GUIManager.color(nameTpl));
 
                 List<String> lore = new ArrayList<>();
-                lore.add("§7Owner: §f" + (owner.getName() != null ? owner.getName() : "Unknown"));
-                lore.add("§7World: §f" + plot.getWorld());
-                lore.add("§7Size: §e" + (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1));
+
+                // ✅ Localized info lines (safe fallbacks)
+                String ownerLine = plugin.msg().get(player, "market_lore_owner", Map.of("OWNER", ownerName));
+                if (ownerLine == null || ownerLine.isBlank()) ownerLine = "&7Owner: &f" + ownerName;
+                lore.add(GUIManager.color(ownerLine));
+
+                String worldLine = plugin.msg().get(player, "market_lore_world", Map.of("WORLD", plot.getWorld()));
+                if (worldLine == null || worldLine.isBlank()) worldLine = "&7World: &f" + plot.getWorld();
+                lore.add(GUIManager.color(worldLine));
+
+                String sizeLine = plugin.msg().get(player, "market_lore_size", Map.of("SIZE", sizeStr));
+                if (sizeLine == null || sizeLine.isBlank()) sizeLine = "&7Size: &e" + sizeStr;
+                lore.add(GUIManager.color(sizeLine));
+
                 if (plot.getDescription() != null && !plot.getDescription().isEmpty()) {
-                    lore.add("§7Note: §f" + plot.getDescription());
+                    String noteLine = plugin.msg().get(player, "market_lore_note", Map.of("NOTE", plot.getDescription()));
+                    if (noteLine == null || noteLine.isBlank()) noteLine = "&7Note: &f" + plot.getDescription();
+                    lore.add(GUIManager.color(noteLine));
                 }
+
                 lore.add(" ");
 
                 // Localized action hints (safe list)
-                lore.addAll(lines(player, "market_item_lore", List.of(
-                        "§eLeft Click: §7Preview claim",
-                        "§aRight Click: §7Purchase"
-                )));
+                List<String> hints = plugin.msg().getList(player, "market_item_lore");
+                if (hints == null || hints.isEmpty()) {
+                    hints = List.of(
+                            "&eLeft Click: &7Preview claim",
+                            "&aRight Click: &7Purchase"
+                    );
+                }
+                for (String s : hints) lore.add(GUIManager.color(s));
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -129,7 +159,7 @@ public class PlotMarketGUI {
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
-                    GUIManager.safeText(plugin.msg().get(player, "button_prev_page"), "§fPrevious Page"),
+                    plugin.gui().tr(player, "button_prev_page", "&fPrevious Page"),
                     null
             ));
         }
@@ -137,15 +167,15 @@ public class PlotMarketGUI {
         // Back to main menu
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                GUIManager.safeText(plugin.msg().get(player, "button_back_menu"), "§fReturn to Menu"),
-                lines(player, "back_menu_lore", List.of("§7Go back to the main dashboard."))
+                plugin.gui().tr(player, "button_back_menu", "&fReturn to Menu"),
+                plugin.gui().trList(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
         ));
 
         // Next page
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.createItem(
                     Material.ARROW,
-                    GUIManager.safeText(plugin.msg().get(player, "button_next_page"), "§fNext Page"),
+                    plugin.gui().tr(player, "button_next_page", "&fNext Page"),
                     null
             ));
         }
@@ -153,8 +183,8 @@ public class PlotMarketGUI {
         // Exit
         inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
-                GUIManager.safeText(plugin.msg().get(player, "button_exit"), "§c✖ Close"),
-                lines(player, "exit_lore", List.of("§7Close this menu."))
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
@@ -171,9 +201,9 @@ public class PlotMarketGUI {
         int slot = e.getSlot();
         int page = holder.getPage();
 
-        // Nav
-        if (slot == 45) { open(player, page - 1); return; }
-        if (slot == 53) { open(player, page + 1); return; }
+        // Nav (only act if the clicked item matches)
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page - 1); return; }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page + 1); return; }
         if (slot == 48) { plugin.gui().openMain(player); return; }
         if (slot == 49) { player.closeInventory(); return; }
 
@@ -231,10 +261,11 @@ public class PlotMarketGUI {
             return;
         }
 
-        // 3. Pay Seller
+        // 3. Pay Seller (safe if offline)
         OfflinePlayer seller = Bukkit.getOfflinePlayer(plot.getOwner());
-        if (seller.hasPlayedBefore()) {
-            plugin.eco().deposit(seller.getPlayer(), price, CurrencyType.VAULT);
+        Player sellerPlayer = seller.getPlayer();
+        if (sellerPlayer != null) {
+            plugin.eco().deposit(sellerPlayer, price, CurrencyType.VAULT);
         }
 
         // 4. Transfer
@@ -249,8 +280,8 @@ public class PlotMarketGUI {
         ));
         plugin.effects().playClaimSuccess(buyer);
 
-        if (seller.isOnline()) {
-            plugin.msg().send(seller.getPlayer(), "market-sold", Map.of(
+        if (sellerPlayer != null && seller.isOnline()) {
+            plugin.msg().send(sellerPlayer, "market-sold", Map.of(
                     "PRICE", plugin.eco().format(price, CurrencyType.VAULT),
                     "PLAYER", buyer.getName()
             ));
@@ -264,31 +295,28 @@ public class PlotMarketGUI {
     }
 
     // -----------------------------
-    // Small lore helper like in LevelingGUI
+    // Title clamp helpers
     // -----------------------------
-    private List<String> lines(Player player, String key, List<String> fallback) {
-        List<String> raw;
-        try {
-            raw = plugin.msg().getList(player, key);
-        } catch (Throwable ignored) {
-            raw = null;
+    private String clampTitleWithSuffix(String base, String suffix) {
+        final int MAX = 32;
+        if (base == null) base = "";
+        if (suffix == null) suffix = "";
+
+        String combined = base + suffix;
+        if (combined.length() <= MAX) return combined;
+
+        // If suffix alone is too long, clamp it hard.
+        if (suffix.length() >= MAX) {
+            String cut = suffix.substring(0, MAX);
+            return cut.endsWith("§") ? cut.substring(0, MAX - 1) : cut;
         }
 
-        if (raw == null || raw.isEmpty()) {
-            return fallback;
-        }
+        int remainingForBase = MAX - suffix.length();
+        String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
 
-        List<String> cleaned = new ArrayList<>();
-        for (String line : raw) {
-            String fixed = GUIManager.safeText(line, "");
-            if (fixed != null && !fixed.isEmpty()) {
-                cleaned.add(fixed);
-            }
-        }
+        // Avoid cutting off a color code marker.
+        if (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
 
-        if (cleaned.isEmpty()) {
-            return fallback;
-        }
-        return cleaned;
+        return trimmedBase + suffix;
     }
 }

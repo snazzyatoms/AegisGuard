@@ -1,6 +1,7 @@
 package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.GUIManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -338,7 +339,8 @@ public class CodexEngine {
     public String tr(CommandSender sender, String key, Map<String, String> placeholders) {
         String style = resolveStyle(sender);
         String raw = resolve(style, key);
-        return applyPlaceholders(raw, placeholders);
+        String out = applyPlaceholders(raw, placeholders);
+        return GUIManager.color(out);
     }
 
     public String tr(String key) {
@@ -347,7 +349,8 @@ public class CodexEngine {
 
     public String tr(String key, Map<String, String> placeholders) {
         String raw = resolve(defaultStyle, key);
-        return applyPlaceholders(raw, placeholders);
+        String out = applyPlaceholders(raw, placeholders);
+        return GUIManager.color(out);
     }
 
     public List<String> trList(CommandSender sender, String key) {
@@ -357,10 +360,13 @@ public class CodexEngine {
     public List<String> trList(CommandSender sender, String key, Map<String, String> placeholders) {
         String style = resolveStyle(sender);
         List<String> rawList = resolveList(style, key);
-        if (rawList.isEmpty()) return Collections.emptyList();
+        if (rawList == null || rawList.isEmpty()) return Collections.emptyList();
 
         List<String> out = new ArrayList<>(rawList.size());
-        for (String line : rawList) out.add(applyPlaceholders(line, placeholders));
+        for (String line : rawList) {
+            String applied = applyPlaceholders(line, placeholders);
+            out.add(GUIManager.color(applied));
+        }
         return out;
     }
 
@@ -646,7 +652,8 @@ public class CodexEngine {
     }
 
     private String applyPlaceholders(String input, Map<String, String> placeholders) {
-        if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
+        if (input == null) return "";
+        if (input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
 
         String out = input;
         for (Map.Entry<String, String> e : placeholders.entrySet()) {

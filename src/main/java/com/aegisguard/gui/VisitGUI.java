@@ -84,11 +84,13 @@ public class VisitGUI {
 
         // Localization Keys: "visit_title_warps" vs "visit_title_trusted"
         String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
-        String defaultTitle = showWarps ? "§6Server Waypoints" : "§9Trusted Plots";
+        String fallbackTitle = showWarps ? "&6Server Waypoints" : "&9Trusted Claims";
 
-        String rawTitle = plugin.codex().tr(player, modeTitleKey);
-        String modeTitle = GUIManager.safeText(rawTitle, defaultTitle);
+        // ✅ Use GUIManager gateway so & codes are translated (no more raw "&9" titles)
+        String modeTitle = plugin.gui().tr(player, modeTitleKey, fallbackTitle);
+
         String title = modeTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
+        title = clampTitle(title);
 
         Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, title);
 
@@ -126,18 +128,21 @@ public class VisitGUI {
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
                 if (meta != null) {
                     meta.setOwningPlayer(owner);
-                    meta.setDisplayName(
-                            plugin.codex().tr(player, "visit_plot_name", Map.of("PLOT", alias))
-                    );
 
-                    List<String> lore = new ArrayList<>(
-                            plugin.codex().list(player, "visit_plot_lore")
-                    );
-                    // Replace placeholders in lore list manually
-                    lore.replaceAll(s -> s
-                            .replace("{WORLD}", plot.getWorld())
-                            .replace("{ROLE}", role)
-                    );
+                    // ✅ Display name: colorize + safe fallback
+                    String dnRaw = plugin.codex().tr(player, "visit_plot_name", Map.of("PLOT", alias));
+                    String displayName = GUIManager.safeText(dnRaw, "&e" + alias);
+                    meta.setDisplayName(displayName);
+
+                    // ✅ Lore: null-safe + placeholder replace + colorize
+                    List<String> baseLore = plugin.codex().list(player, "visit_plot_lore");
+                    if (baseLore == null) baseLore = List.of();
+
+                    List<String> lore = new ArrayList<>(baseLore);
+                    lore.replaceAll(s -> GUIManager.color(
+                            s.replace("{WORLD}", plot.getWorld())
+                             .replace("{ROLE}", role)
+                    ));
 
                     meta.setLore(lore);
                     head.setItemMeta(meta);
@@ -236,5 +241,12 @@ public class VisitGUI {
                 player.closeInventory();
             }
         }
+    }
+
+    private String clampTitle(String t) {
+        if (t == null) return "";
+        if (t.length() > 32) t = t.substring(0, 32);
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+        return t;
     }
 }

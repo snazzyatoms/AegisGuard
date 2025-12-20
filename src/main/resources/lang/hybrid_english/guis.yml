@@ -134,3 +134,118 @@ visit_plot_lore:
 - '&eClick to Travel'
 view_requests_admin_lore:
 - '&7Approve or deny expansion requests.'
+
+# --------------------------------------
+# Plot Flags GUI (Synced keys for PlotFlagsGUI)
+# --------------------------------------
+
+plot_flags_title: '&9&lPlot Flags'
+
+label_free: '&aFree'
+
+button_pvp_on: '&a⚔ PvP: Protected'
+button_pvp_off: '&c⚔ PvP: Unprotected'
+
+button_tnt_on: '&a💥 TNT: Protected'
+button_tnt_off: '&c💥 TNT: Unprotected'
+
+button_fire_on: '&a🔥 Fire Spread: Blocked'
+button_fire_off: '&c🔥 Fire Spread: Allowed'
+
+button_mobs_on: '&a☠ Mobs: Protected'
+button_mobs_off: '&c☠ Mobs: Unprotected'
+
+button_entry_on: '&a🚪 Entry: Private'
+button_entry_off: '&c🚪 Entry: Public'
+
+button_safe_on: '&a🛡 Safe Zone: Enabled'
+button_safe_off: '&c🛡 Safe Zone: Disabled'
+
+button_containers_on: '&a📦 Containers: Locked'
+button_containers_off: '&c📦 Containers: Unlocked'
+
+button_piston_on: '&a🔩 Pistons: Blocked'
+button_piston_off: '&c🔩 Pistons: Allowed'
+
+button_farm_on: '&a🌾 Farming: Protected'
+button_farm_off: '&c🌾 Farming: Unprotected'
+
+button_animals_on: '&a🐄 Animals: Protected'
+button_animals_off: '&c🐄 Animals: Unprotected'
+
+button_redstone_on: '&a🔴 Redstone: Blocked'
+button_redstone_off: '&c🔴 Redstone: Allowed'
+
+button_vehicles_on: '&a🛶 Vehicles: Blocked'
+button_vehicles_off: '&c🛶 Vehicles: Allowed'
+
+button_shop_on: '&a💎 Shop Interact: Enabled'
+button_shop_off: '&c💎 Shop Interact: Disabled'
+
+button_fly_on: '&a🪽 Flight: Enabled'
+button_fly_off: '&c🪽 Flight: Disabled'
+
+button_cosmetics: '&b✨ Cosmetics'
+
+pvp_toggle_lore:
+- '&7Blocks PvP combat inside your plot.'
+- '&eClick to toggle.'
+
+tnt_toggle_lore:
+- '&7Prevents explosions from damaging your plot.'
+- '&eClick to toggle.'
+
+fire_toggle_lore:
+- '&7Stops fire from spreading within your plot.'
+- '&eClick to toggle.'
+
+mob_toggle_lore:
+- '&7Prevents hostile mobs from damaging players in your plot.'
+- '&eClick to toggle.'
+
+entry_toggle_lore:
+- '&7When enabled, untrusted players cannot enter.'
+- '&eClick to toggle.'
+
+safe_toggle_lore:
+- '&7Extra safety rules for this plot.'
+- '&7Admins only.'
+- '&eClick to toggle.'
+
+container_toggle_lore:
+- '&7Locks chests and storage blocks from outsiders.'
+- '&eClick to toggle.'
+
+piston_toggle_lore:
+- '&7Prevents pistons from pushing/pulling across borders.'
+- '&eClick to toggle.'
+
+farm_toggle_lore:
+- '&7Protects crops and farmland from outsiders.'
+- '&eClick to toggle.'
+
+animals_toggle_lore:
+- '&7Protects animals from outsiders.'
+- '&eClick to toggle.'
+
+redstone_toggle_lore:
+- '&7Blocks redstone interaction by outsiders.'
+- '&eClick to toggle.'
+
+vehicles_toggle_lore:
+- '&7Blocks vehicle use by outsiders.'
+- '&eClick to toggle.'
+
+shop_toggle_lore:
+- '&7Allows shop interactions inside your plot.'
+- '&7Cost: &6{COST}'
+- '&eClick to purchase/toggle.'
+
+fly_toggle_lore:
+- '&7Allows flying inside your plot.'
+- '&7Cost: &6{COST}'
+- '&eClick to purchase/toggle.'
+
+cosmetics_lore:
+- '&7Customize the look and feel of your plot.'
+- '&eClick to open.'

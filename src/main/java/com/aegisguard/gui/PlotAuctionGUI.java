@@ -20,18 +20,20 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * PlotAuctionGUI
  * - Allows players to bid on expired plots.
- * - Fully localized.
+ * - Fully localized (title + items + lore + navigation + feedback).
  *
- * ✅ Title fix: translate & colors + safe fallback + clamp length (including page suffix)
+ * ✅ Uses GUIManager.color() (public) and safe localized fallbacks.
+ * ✅ Title clamped safely with page suffix.
  */
 public class PlotAuctionGUI {
 
     private final AegisGuard plugin;
-    private final int PLOTS_PER_PAGE = 45;
+    private static final int PLOTS_PER_PAGE = 45;
 
     public PlotAuctionGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -60,20 +62,26 @@ public class PlotAuctionGUI {
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
         if (maxPages == 0) page = 0;
 
-        // ✅ Base title uses centralized formatter (colors + fallback + clamp)
+        // Base title (already safe + colorized + clamped)
         String baseTitle = plugin.gui().title(
                 player,
                 "auction_gui_title",
                 "&6🏷 Plot Auctions"
         );
 
-        // ✅ Add page suffix, then clamp again (page suffix can push over limits)
-        String fullTitle = clampTitle(baseTitle + " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
-        Inventory inv = Bukkit.createInventory(new PlotAuctionHolder(allPlots, page), 54, fullTitle);
+        // Add page suffix and clamp again
+        String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
+        String title = clampTitleWithSuffix(baseTitle, suffix);
 
-        // Background
+        Inventory inv = Bukkit.createInventory(new PlotAuctionHolder(allPlots, page), 54, title);
+
+        // Footer background
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
+        // Common localized words
+        String noneWord = word(player, "none", "None");
+        String unknownWord = word(player, "unknown_player", "Unknown");
 
         // Listings
         int startIndex = page * PLOTS_PER_PAGE;
@@ -83,43 +91,74 @@ public class PlotAuctionGUI {
 
             Plot plot = allPlots.get(plotIndex);
             OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-            OfflinePlayer currentBidder = plot.getCurrentBidder() != null
-                    ? Bukkit.getOfflinePlayer(plot.getCurrentBidder())
-                    : null;
 
-            String bidderName = currentBidder != null
-                    ? (currentBidder.getName() != null ? currentBidder.getName() : "Unknown")
-                    : "None";
+            UUID bidderId = plot.getCurrentBidder();
+            OfflinePlayer currentBidder = (bidderId != null) ? Bukkit.getOfflinePlayer(bidderId) : null;
+
+            String bidderName = (currentBidder != null && currentBidder.getName() != null)
+                    ? currentBidder.getName()
+                    : (bidderId == null ? noneWord : unknownWord);
+
+            String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank())
+                    ? plot.getOwnerName()
+                    : unknownWord;
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
 
-                // Localized Item Name (✅ now colorized)
-                String itemName = plugin.msg().get(player, "auction_item_name", Map.of("OWNER", plot.getOwnerName()));
-                if (itemName == null || itemName.isBlank()) itemName = "&ePlot Auction (&f" + plot.getOwnerName() + "&e)";
-                meta.setDisplayName(color(itemName));
+                // Localized Item Name
+                String itemName = line(player,
+                        "auction_item_name",
+                        "&ePlot Auction (&f{OWNER}&e)",
+                        Map.of("OWNER", ownerName)
+                );
+                meta.setDisplayName(itemName);
 
-                // Localized Lore (✅ now colorized)
                 List<String> lore = new ArrayList<>();
-                lore.add(color("&7World: &f" + plot.getWorld()));
-                lore.add(color("&7Size: &a" + (plot.getX2() - plot.getX1() + 1) + "x" + (plot.getZ2() - plot.getZ1() + 1)));
+
+                // Localized world/size lines
+                lore.add(line(player,
+                        "auction_lore_world",
+                        "&7World: &f{WORLD}",
+                        Map.of("WORLD", plot.getWorld())
+                ));
+
+                int sizeX = (plot.getX2() - plot.getX1() + 1);
+                int sizeZ = (plot.getZ2() - plot.getZ1() + 1);
+                lore.add(line(player,
+                        "auction_lore_size",
+                        "&7Size: &a{X}x{Z}",
+                        Map.of("X", String.valueOf(sizeX), "Z", String.valueOf(sizeZ))
+                ));
+
                 lore.add(" ");
 
                 String bidStr = plugin.eco().format(plot.getCurrentBid(), CurrencyType.VAULT);
 
-                String bidLine = plugin.msg().get(player, "auction_current_bid", Map.of("AMOUNT", bidStr));
-                String bidderLine = plugin.msg().get(player, "auction_highest_bidder", Map.of("PLAYER", bidderName));
+                lore.add(line(player,
+                        "auction_current_bid",
+                        "&7Current Bid: &e{AMOUNT}",
+                        Map.of("AMOUNT", bidStr)
+                ));
 
-                lore.add(color(bidLine != null ? bidLine : "&7Current Bid: &e" + bidStr));
-                lore.add(color(bidderLine != null ? bidderLine : "&7Highest Bidder: &f" + bidderName));
+                lore.add(line(player,
+                        "auction_highest_bidder",
+                        "&7Highest Bidder: &f{PLAYER}",
+                        Map.of("PLAYER", bidderName)
+                ));
+
                 lore.add(" ");
 
-                List<String> hints = plugin.msg().getList(player, "auction_item_lore");
-                if (hints != null) {
-                    for (String s : hints) lore.add(color(s));
-                }
+                // Action hints
+                lore.addAll(lines(player,
+                        "auction_item_lore",
+                        List.of(
+                                "&eLeft-click: &7Teleport to the plot.",
+                                "&cRight-click: &7Place a bid."
+                        )
+                ));
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -127,33 +166,33 @@ public class PlotAuctionGUI {
             inv.setItem(i, head);
         }
 
-        // Navigation (GUIManager.createItem already translates & in name/lore)
+        // Navigation
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
-                    plugin.msg().get(player, "button_prev_page"),
+                    safeName(player, "button_prev_page", "&fPrevious"),
                     null
             ));
         }
 
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                plugin.msg().get(player, "button_back_menu"),
-                plugin.msg().getList(player, "back_menu_lore")
+                safeName(player, "button_back_menu", "&fBack"),
+                safeLore(player, "back_menu_lore", List.of("&7Return to the previous menu."))
         ));
 
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.createItem(
                     Material.ARROW,
-                    plugin.msg().get(player, "button_next_page"),
+                    safeName(player, "button_next_page", "&fNext"),
                     null
             ));
         }
 
         inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
-                plugin.msg().get(player, "button_exit"),
-                plugin.msg().getList(player, "exit_lore")
+                safeName(player, "button_exit", "&cClose"),
+                safeLore(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
@@ -214,17 +253,20 @@ public class PlotAuctionGUI {
         double newBid = (currentBid == 0) ? minIncrease : currentBid + minIncrease;
 
         if (!plugin.eco().withdraw(bidder, newBid, CurrencyType.VAULT)) {
-            plugin.msg().send(bidder, "need_vault", Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
+            plugin.msg().send(bidder, "need_vault",
+                    Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
             plugin.effects().playError(bidder);
             return;
         }
 
+        // Refund old bidder (if online)
         if (plot.getCurrentBidder() != null) {
             OfflinePlayer oldBidder = Bukkit.getOfflinePlayer(plot.getCurrentBidder());
             if (oldBidder.getPlayer() != null) {
                 plugin.eco().deposit(oldBidder.getPlayer(), currentBid, CurrencyType.VAULT);
                 if (oldBidder.isOnline()) {
-                    plugin.msg().send(oldBidder.getPlayer(), "auction-outbid", Map.of("PLAYER", bidder.getName()));
+                    plugin.msg().send(oldBidder.getPlayer(), "auction-outbid",
+                            Map.of("PLAYER", bidder.getName()));
                 }
             }
         }
@@ -232,27 +274,74 @@ public class PlotAuctionGUI {
         plot.setCurrentBid(newBid, bidder.getUniqueId());
         plugin.store().setDirty(true);
 
-        plugin.msg().send(bidder, "auction-bid-success", Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
+        plugin.msg().send(bidder, "auction-bid-success",
+                Map.of("AMOUNT", plugin.eco().format(newBid, CurrencyType.VAULT)));
         plugin.effects().playConfirm(bidder);
     }
 
     // --------------------------------------------------
-    // Helpers
+    // Localization + Title Safety Helpers
     // --------------------------------------------------
 
-    private String color(String s) {
-        if (s == null) return "";
-        return ChatColor.translateAlternateColorCodes('&', s);
+    private String safeName(Player p, String key, String fallback) {
+        String s = null;
+        try { s = plugin.msg().get(p, key); } catch (Throwable ignored) {}
+        if (s == null || s.isBlank() || s.equalsIgnoreCase(key) || s.contains("[Missing")) s = fallback;
+        return s;
     }
 
-    private String clampTitle(String raw) {
-        String t = GUIManager.safeText(raw, "&6🏷 Plot Auctions");
-        t = ChatColor.translateAlternateColorCodes('&', t);
+    private List<String> safeLore(Player p, String key, List<String> fallback) {
+        List<String> list = null;
+        try { list = plugin.msg().getList(p, key); } catch (Throwable ignored) {}
+        return (list == null || list.isEmpty()) ? (fallback == null ? List.of() : fallback) : list;
+    }
 
-        // Vanilla inventory title safety clamp
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+    private String word(Player p, String key, String fallback) {
+        String s = null;
+        try { s = plugin.msg().get(p, key); } catch (Throwable ignored) {}
+        if (s == null || s.isBlank() || s.equalsIgnoreCase(key) || s.contains("[Missing")) s = fallback;
+        // Return as plain text (no color noise in names)
+        return ChatColor.stripColor(GUIManager.color(s));
+    }
 
-        return t;
+    private String line(Player p, String key, String fallback, Map<String, String> vars) {
+        String s = null;
+        try {
+            if (vars == null || vars.isEmpty()) s = plugin.msg().get(p, key);
+            else s = plugin.msg().get(p, key, vars);
+        } catch (Throwable ignored) {}
+
+        if (s == null || s.isBlank() || s.equalsIgnoreCase(key) || s.contains("[Missing")) s = fallback;
+        return GUIManager.color(s);
+    }
+
+    private List<String> lines(Player p, String key, List<String> fallback) {
+        List<String> list = null;
+        try { list = plugin.msg().getList(p, key); } catch (Throwable ignored) {}
+        if (list == null || list.isEmpty()) list = (fallback == null ? List.of() : fallback);
+
+        List<String> out = new ArrayList<>();
+        for (String s : list) out.add(GUIManager.color(s));
+        return out;
+    }
+
+    private String clampTitleWithSuffix(String base, String suffix) {
+        final int MAX = 32;
+        if (base == null) base = "";
+        if (suffix == null) suffix = "";
+
+        String combined = base + suffix;
+        if (combined.length() <= MAX) return combined;
+
+        if (suffix.length() >= MAX) {
+            String cut = suffix.substring(0, MAX);
+            return cut.endsWith("§") ? cut.substring(0, MAX - 1) : cut;
+        }
+
+        int remainingForBase = MAX - suffix.length();
+        String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
+        if (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
+
+        return trimmedBase + suffix;
     }
 }

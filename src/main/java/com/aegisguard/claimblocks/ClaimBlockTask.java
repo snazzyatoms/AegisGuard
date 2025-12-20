@@ -1,10 +1,12 @@
 package com.aegisguard.claimblocks;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class ClaimBlockTask implements Runnable {
 
@@ -16,6 +18,14 @@ public class ClaimBlockTask implements Runnable {
 
     @Override
     public void run() {
+        // Safety: if someone scheduled this async by accident, hop back to main thread
+        if (!Bukkit.isPrimaryThread()) {
+            Bukkit.getScheduler().runTask(plugin, this);
+            return;
+        }
+
+        if (plugin.getClaimBlockManager() == null) return;
+
         boolean enabled = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true);
         if (!enabled) return;
 
@@ -25,14 +35,32 @@ public class ClaimBlockTask implements Runnable {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!p.hasPermission("aegis.earn.blocks")) continue;
 
-            plugin.getClaimBlockManager().addEarned(p.getUniqueId(), amount);
+            UUID uuid = p.getUniqueId();
 
+            // 1) Award blocks
+            plugin.getClaimBlockManager().addEarned(uuid, amount);
+
+            // 2) Notify (localized + colored)
             if (notify) {
-                long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());
-                String msg = plugin.codex().tr(p, "claim_blocks_earned_playtime",
-                        Map.of("AMOUNT", String.valueOf(amount), "TOTAL", String.valueOf(total))
+                long total = plugin.getClaimBlockManager().getTotalBlocks(uuid);
+
+                String msg = plugin.codex().tr(p,
+                        "claim_blocks_earned_playtime",
+                        Map.of(
+                                "AMOUNT", String.valueOf(amount),
+                                "TOTAL", String.valueOf(total)
+                        )
                 );
-                p.sendMessage(msg);
+
+                // Fallback in case the key is missing in some language pack
+                if (msg == null || msg.isBlank()) {
+                    msg = "&8[&b⛨&8] &aClaim Blocks &8» &a+&e{AMOUNT} &7for playing &8| &fTotal: &e{TOTAL}&r";
+                    msg = msg.replace("{AMOUNT}", String.valueOf(amount))
+                             .replace("{TOTAL}", String.valueOf(total));
+                }
+
+                // ✅ This is the big fix: translate & color codes properly
+                p.sendMessage(GUIManager.color(msg));
             }
         }
     }

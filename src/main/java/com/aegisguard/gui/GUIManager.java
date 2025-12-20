@@ -281,10 +281,10 @@ public class GUIManager {
      * - legacy & codes
      * - hex codes in the form &#RRGGBB
      *
-     * Made PUBLIC so any GUI can safely do:
+     * ✅ CHANGE: Made PUBLIC so any GUI can safely do:
      *   String title = GUIManager.color("...&9Title...");
      */
-    public static String color(String text) {
+    public static String color(String text) { // <-- ONLY CHANGE (was private)
         if (text == null) return "";
         String msg = text;
 

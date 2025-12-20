@@ -50,10 +50,10 @@ public class ExpansionRequestAdminGUI {
     public void open(Player player) {
         ExpansionAdminHolder holder = new ExpansionAdminHolder();
 
-        String title = GUIManager.safeText(
-                plugin.msg().get(player, "expansion_admin_title"),
-                "§8Expansion Requests"
-        );
+        // ✅ FIX: Use GUIManager.title() so & / hex colors render in inventory titles
+        // and missing keys don’t leak into the UI.
+        String title = plugin.gui().title(player, "expansion_admin_title", "&8Pending Requests");
+
         Inventory inv = Bukkit.createInventory(holder, 54, title);
 
         // Fill background footer

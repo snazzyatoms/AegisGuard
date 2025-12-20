@@ -49,7 +49,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     // --------------------------------------------------
-    // LANGUAGE (Codex helpers) - FIXED
+    // LANGUAGE (Codex helpers)
     // --------------------------------------------------
 
     private String tr(CommandSender sender, String key, String fallback) {
@@ -196,6 +196,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "ledger", "blocks" -> showLedger(p);
 
             case "help" -> sendHelp(p);
+
             default -> sendHelp(p);
         }
 

@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * AdminGUI
  * - Central control panel for server administrators.
- * - Fully localized for language switching.
+ * - Fully localized for language switching (title + item names + lore + toggle labels).
  */
 public class AdminGUI {
 
@@ -57,47 +57,51 @@ public class AdminGUI {
         // --- TOOLS ---
         inv.setItem(28, GUIManager.createItem(
                 Material.AMETHYST_CLUSTER,
-                plugin.codex().tr(player, "button_view_requests_admin"),
-                plugin.codex().list(player, "view_requests_admin_lore")
+                plugin.gui().tr(player, "button_view_requests_admin", "&cReview Requests"),
+                plugin.gui().trList(player, "view_requests_admin_lore", List.of(
+                        "&7Approve or deny expansion requests."
+                ))
         ));
 
         inv.setItem(29, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
-                plugin.codex().tr(player, "admin_plot_list_title"),
-                List.of("§7View/TP to any plot.")
+                plugin.gui().tr(player, "admin_plot_list_title", "&bPlot List"),
+                plugin.gui().trList(player, "admin_plot_list_lore", List.of(
+                        "&7View/TP to any plot."
+                ))
         ));
 
-        String diagName = GUIManager.safeText(
-                plugin.codex().tr(player, "button_admin_diagnostics"),
-                "§bDiagnostics"
-        );
         inv.setItem(30, GUIManager.createItem(
                 Material.COMPASS,
-                diagName,
-                List.of("§7View system stats.")
+                plugin.gui().tr(player, "button_admin_diagnostics", "&bDiagnostics"),
+                plugin.gui().trList(player, "admin_diagnostics_lore", List.of(
+                        "&7View system stats."
+                ))
         ));
 
-        String reloadName = GUIManager.safeText(
-                plugin.codex().tr(player, "button_admin_reload"),
-                "§eReload Config"
-        );
         inv.setItem(31, GUIManager.createItem(
                 Material.REPEATER,
-                reloadName,
-                List.of("§7Reload all settings.")
+                plugin.gui().tr(player, "button_admin_reload", "&eReload Config"),
+                plugin.gui().trList(player, "admin_reload_lore", List.of(
+                        "&7Reload all settings."
+                ))
         ));
 
         // --- NAVIGATION ---
         inv.setItem(36, GUIManager.createItem(
                 Material.ARROW,
-                plugin.codex().tr(player, "button_back_menu"),
-                plugin.codex().list(player, "back_menu_lore")
+                plugin.gui().tr(player, "button_back_menu", "&fReturn to Menu"),
+                plugin.gui().trList(player, "back_menu_lore", List.of(
+                        "&7Return to the main dashboard."
+                ))
         ));
 
         inv.setItem(44, GUIManager.createItem(
                 Material.BARRIER,
-                plugin.codex().tr(player, "button_exit"),
-                plugin.codex().list(player, "exit_lore")
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of(
+                        "&7Close this menu."
+                ))
         ));
 
         player.openInventory(inv);
@@ -179,16 +183,21 @@ public class AdminGUI {
     private void addToggle(Player p, Inventory inv, int slot, String path, String nameKey, String loreKey, Material mat, boolean def) {
         boolean val = plugin.getConfig().getBoolean(path, def);
 
-        String name = plugin.codex().tr(p, nameKey);
-        if (name == null) name = "Setting";
+        String name = plugin.gui().tr(p, nameKey, "&eSetting");
 
-        String status = val ? "§aON" : "§cOFF";
+        // ✅ Language-aware ON/OFF labels
+        String status = plugin.gui().tr(
+                p,
+                val ? "toggle_on" : "toggle_off",
+                val ? "&aON" : "&cOFF"
+        );
+
         Material icon = val ? mat : Material.GRAY_DYE;
 
         inv.setItem(slot, GUIManager.createItem(
                 icon,
                 name + ": " + status,
-                plugin.codex().list(p, loreKey)
+                plugin.gui().trList(p, loreKey, List.of("&7Toggle this setting."))
         ));
     }
 

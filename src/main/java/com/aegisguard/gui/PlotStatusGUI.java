@@ -20,8 +20,8 @@ public class PlotStatusGUI {
 
     private final AegisGuard plugin;
 
-    public PlotStatusGUI(AegisGuard plugin) {
-        this.plugin = plugin;
+    public PlotStatusGUI(AegisGuard AegisGuard) {
+        this.plugin = AegisGuard;
     }
 
     public static class PlotStatusHolder implements InventoryHolder {
@@ -33,7 +33,10 @@ public class PlotStatusGUI {
 
     public void open(Player player, Plot plot) {
         if (plot == null) {
+            // ✅ IMPORTANT FIX: System keys should come from system.yml (plugin.msg()),
+            // not guis.yml (plugin.gui()).
             sendSystem(player, "no_plot_here", null, "&cYou are not standing in a protected plot.");
+            try { plugin.effects().playError(player); } catch (Throwable ignored) {}
             return;
         }
 
@@ -108,6 +111,8 @@ public class PlotStatusGUI {
         // --- Territory ---
         String territoryTitle = tr(player, "plot_status_territory_title", null, "&aTerritory & Growth");
         String expandName = tr(player, "button_expand", null, "&bExpand");
+
+        // ✅ IMPORTANT: This key needs to exist in MX/AR guis.yml or you'll see "Aegis Menu" in English.
         String menuName = tr(player, "plot_status_menu_name", null, "&bAegis Menu");
 
         List<String> territoryLore = new ArrayList<>();
@@ -187,13 +192,12 @@ public class PlotStatusGUI {
     }
 
     // --------------------------------------------------
-    // Protection Overview (FULLY language aware)
+    // Protection Overview
     // --------------------------------------------------
 
     private List<String> buildProtectionLore(Player player, Plot plot) {
         List<String> lore = new ArrayList<>();
 
-        // live status
         boolean pvpProtected        = plugin.protection().isFlagEnabled(plot, "pvp");
         boolean mobProtected        = plugin.protection().isMobProtectionEnabled(plot);
         boolean animalsProtected    = plugin.protection().isFlagEnabled(plot, "animals");
@@ -277,7 +281,7 @@ public class PlotStatusGUI {
     }
 
     // --------------------------------------------------
-    // Blessings (fully language aware formats)
+    // Blessings (formats)
     // --------------------------------------------------
 
     private List<String> buildBuffList(Player player, int level) {
@@ -324,17 +328,13 @@ public class PlotStatusGUI {
             String reward = entry.getValue();
             String[] parts = reward.split(":");
 
-            // EFFECT:TYPE:TIER
             if (parts.length == 3 && isInteger(parts[2]) && parts[0].equalsIgnoreCase("EFFECT")) {
                 String effectKey = parts[1];
                 int tier = Integer.parseInt(parts[2]);
                 String effectName = formatName(effectKey);
                 String roman = toRoman(tier);
 
-                String color;
-                if (tier >= 4) color = "&d";
-                else if (tier >= 2) color = "&b";
-                else color = "&a";
+                String color = (tier >= 4) ? "&d" : (tier >= 2) ? "&b" : "&a";
 
                 String fmt = tr(player,
                         "plot_status_blessing_effect_format", "plot_status_buff_effect",
@@ -342,11 +342,10 @@ public class PlotStatusGUI {
                         Map.of("COLOR", color, "EFFECT", effectName, "TIER", roman)
                 );
 
-                result.add(GUIManager.color(fmt));
+                result.add(fmt);
                 continue;
             }
 
-            // MEMBERS:AMOUNT
             if (parts.length == 2 && isInteger(parts[1]) && parts[0].equalsIgnoreCase("MEMBERS")) {
                 int amount = Integer.parseInt(parts[1]);
 
@@ -356,11 +355,10 @@ public class PlotStatusGUI {
                         Map.of("AMOUNT", String.valueOf(amount))
                 );
 
-                result.add(GUIManager.color(fmt));
+                result.add(fmt);
                 continue;
             }
 
-            // Generic fallback (optionally localizable)
             String pretty = reward.replace("EFFECT:", "")
                     .replace("MEMBERS:", "")
                     .replace(":", " ");
@@ -368,14 +366,14 @@ public class PlotStatusGUI {
 
             String gen = tr(player, "plot_status_blessing_generic_format", null, "&a✦ &f{TEXT}",
                     Map.of("TEXT", pretty));
-            result.add(GUIManager.color(gen));
+            result.add(gen);
         }
 
         return result;
     }
 
     // --------------------------------------------------
-    // Language helpers (support modern + legacy keys)
+    // Language helpers (modern + legacy keys)
     // --------------------------------------------------
 
     private String tr(Player player, String key, String legacyKey, String fallback) {
@@ -383,14 +381,55 @@ public class PlotStatusGUI {
     }
 
     private String tr(Player player, String key, String legacyKey, String fallback, Map<String, String> vars) {
-        String out = plugin.gui().tr(player, key, "");
-        if (out == null || out.isBlank()) {
-            if (legacyKey != null) out = plugin.gui().tr(player, legacyKey, "");
-        }
-        if (out == null || out.isBlank()) out = (fallback == null ? "" : fallback);
+        String out = safeGuiGet(player, key);
+        if (out.isBlank() && legacyKey != null) out = safeGuiGet(player, legacyKey);
+        if (out.isBlank()) out = (fallback == null ? "" : fallback);
 
         if (vars != null && !vars.isEmpty()) out = apply(out, vars);
         return GUIManager.color(out);
+    }
+
+    private String safeGuiGet(Player player, String key) {
+        if (key == null || key.isBlank()) return "";
+        String out = "";
+        try {
+            out = plugin.gui().tr(player, key, "");
+        } catch (Throwable ignored) {}
+
+        if (out == null) return "";
+        String t = out.trim();
+        if (t.isEmpty()) return "";
+        if (t.equalsIgnoreCase(key)) return "";
+        if (t.toLowerCase().contains("missing") && t.contains(key)) return "";
+        return out;
+    }
+
+    private void sendSystem(Player player, String key, String legacyKey, String fallback) {
+        String msg = safeSystemGet(player, key);
+        if (msg.isBlank() && legacyKey != null) msg = safeSystemGet(player, legacyKey);
+
+        // ultra-safe fallback: if system lookup fails, try gui lookup
+        if (msg.isBlank()) msg = safeGuiGet(player, key);
+        if (msg.isBlank() && legacyKey != null) msg = safeGuiGet(player, legacyKey);
+
+        if (msg.isBlank()) msg = (fallback == null ? "" : fallback);
+        player.sendMessage(GUIManager.color(msg));
+    }
+
+    private String safeSystemGet(Player player, String key) {
+        if (key == null || key.isBlank()) return "";
+        String out = "";
+        try {
+            // plugin.msg() should be backed by your system.yml now
+            out = plugin.msg().get(player, key);
+        } catch (Throwable ignored) {}
+
+        if (out == null) return "";
+        String t = out.trim();
+        if (t.isEmpty()) return "";
+        if (t.equalsIgnoreCase(key)) return "";
+        if (t.toLowerCase().contains("missing") && t.contains(key)) return "";
+        return out;
     }
 
     private String apply(String s, Map<String, String> vars) {
@@ -409,11 +448,6 @@ public class PlotStatusGUI {
         List<String> out = new ArrayList<>(in.size());
         for (String s : in) out.add(GUIManager.color(s));
         return out;
-    }
-
-    private void sendSystem(Player player, String key, String legacyKey, String fallback) {
-        String msg = tr(player, key, legacyKey, fallback);
-        player.sendMessage(msg);
     }
 
     // --------------------------------------------------

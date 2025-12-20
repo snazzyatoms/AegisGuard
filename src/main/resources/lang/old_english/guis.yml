@@ -104,3 +104,132 @@ help_lines:
 - '&e/aegis auction &7- View dominions for auction'
 - '&e/aegis stuck &7- Escape a trap or prison'
 - '&e/aegis help &7- Study this sacred guide'
+# --------------------------------------
+# Plot Flags GUI (Golden Master) - used by PlotFlagsGUI
+# --------------------------------------
+
+plot_flags_title: '&9&lWards of Thy Holding'
+
+# Optional shared label (used for costs)
+label_free: '&aFree'
+
+# --- Button Names (must have _on and _off) ---
+button_pvp_on: '&a⚔ PvP Ward: Raised'
+button_pvp_off: '&c⚔ PvP Ward: Lowered'
+
+button_tnt_on: '&a💥 TNT Ward: Raised'
+button_tnt_off: '&c💥 TNT Ward: Lowered'
+
+button_fire_on: '&a🔥 Fire Ward: Raised'
+button_fire_off: '&c🔥 Fire Ward: Lowered'
+
+button_mobs_on: '&a☠ Mob Ward: Raised'
+button_mobs_off: '&c☠ Mob Ward: Lowered'
+
+button_entry_on: '&a🚪 Entry Ward: Raised'
+button_entry_off: '&c🚪 Entry Ward: Lowered'
+
+button_safe_on: '&a🛡 Safe Zone: Sanctified'
+button_safe_off: '&c🛡 Safe Zone: Unbound'
+
+button_containers_on: '&a📦 Chests: Sealed'
+button_containers_off: '&c📦 Chests: Unsealed'
+
+button_piston_on: '&a🔩 Pistons: Bound'
+button_piston_off: '&c🔩 Pistons: Unbound'
+
+button_farm_on: '&a🌾 Farming: Guarded'
+button_farm_off: '&c🌾 Farming: Unguarded'
+
+button_animals_on: '&a🐄 Beasts: Guarded'
+button_animals_off: '&c🐄 Beasts: Unguarded'
+
+button_redstone_on: '&a🔴 Redstone: Bound'
+button_redstone_off: '&c🔴 Redstone: Unbound'
+
+button_vehicles_on: '&a🛶 Vehicles: Bound'
+button_vehicles_off: '&c🛶 Vehicles: Unbound'
+
+button_shop_on: '&a💎 Shop Interact: Granted'
+button_shop_off: '&c💎 Shop Interact: Withheld'
+
+button_fly_on: '&a🪽 Flight: Granted'
+button_fly_off: '&c🪽 Flight: Withheld'
+
+button_cosmetics: '&b✨ Adornments'
+
+# --- Lore (lists) ---
+pvp_toggle_lore:
+- '&7When raised, no blade may bite'
+- '&7within thy holding.'
+- '&eClick to toggle this ward.'
+
+tnt_toggle_lore:
+- '&7When raised, explosions are quenched'
+- '&7upon thy dominion.'
+- '&eClick to toggle this ward.'
+
+fire_toggle_lore:
+- '&7When raised, flame shall not spread'
+- '&7across thy land.'
+- '&eClick to toggle this ward.'
+
+mob_toggle_lore:
+- '&7When raised, hostile mobs are hindered'
+- '&7from harming within.'
+- '&eClick to toggle this ward.'
+
+entry_toggle_lore:
+- '&7When raised, strangers are denied'
+- '&7unless welcomed by thy will.'
+- '&eClick to toggle this ward.'
+
+safe_toggle_lore:
+- '&7A great umbrella of safety and order.'
+- '&7Only stewards (admins) may bind it.'
+- '&eClick to toggle (admin only).'
+
+container_toggle_lore:
+- '&7When raised, chests and storages'
+- '&7are sealed to outsiders.'
+- '&eClick to toggle this ward.'
+
+piston_toggle_lore:
+- '&7When raised, pistons cannot meddle'
+- '&7with thy borders.'
+- '&eClick to toggle this ward.'
+
+farm_toggle_lore:
+- '&7When raised, crops and soil are guarded'
+- '&7from unwanted hands.'
+- '&eClick to toggle this ward.'
+
+animals_toggle_lore:
+- '&7When raised, animals are protected'
+- '&7from harm and theft.'
+- '&eClick to toggle this ward.'
+
+redstone_toggle_lore:
+- '&7When raised, redstone devices are blocked'
+- '&7from outsider meddling.'
+- '&eClick to toggle this ward.'
+
+vehicles_toggle_lore:
+- '&7When raised, boats and carts are blocked'
+- '&7from outsider use.'
+- '&eClick to toggle this ward.'
+
+shop_toggle_lore:
+- '&7Permit trade interactions upon thy land.'
+- '&7Tribute required: &6{COST}'
+- '&eClick to purchase/toggle.'
+
+fly_toggle_lore:
+- '&7Grant flight within thy holding.'
+- '&7Tribute required: &6{COST}'
+- '&eClick to purchase/toggle.'
+
+cosmetics_lore:
+- '&7Adorn thy dominion with'
+- '&7sparkle and splendour.'
+- '&eClick to open.'

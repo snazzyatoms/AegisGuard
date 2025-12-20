@@ -431,3 +431,196 @@ fly_toggle_lore:
 cosmetics_lore:
   - '&7Personaliza el estilo y apariencia de tu parcela.'
   - '&eClic para abrir.'
+
+
+# --------------------------------------
+# Plot Status GUI (PlotStatusGUI.java)
+# --------------------------------------
+plot_status_gui_title: '&b✠ Estado de la Parcela'
+
+plot_status_biome_natural: 'Natural'
+
+plot_status_header_title: '&6Información de la Parcela'
+plot_status_header_owner: '&7Dueño: &f{OWNER}'
+plot_status_header_world: '&7Mundo: &f{WORLD}'
+plot_status_header_biome: '&7Bioma: &a{BIOME}'
+plot_status_header_level: '&7Nivel de Parcela: &b{LEVEL}&7 / &f{MAX}'
+
+plot_status_protection_title: '&cCombate y Riesgos'
+plot_status_section_combat: '&7Combate y Hostiles:'
+plot_status_section_environment: '&7Entorno y Acceso:'
+plot_status_section_perks: '&7Beneficios y Servicios:'
+
+plot_status_label_pvp: 'PvP'
+plot_status_label_hostile_mobs: 'Mobs hostiles'
+plot_status_label_animals: 'Animales y mascotas'
+
+plot_status_label_safe_zone: 'Zona segura'
+plot_status_label_entry_gate: 'Puerta de entrada'
+plot_status_label_containers: 'Contenedores'
+plot_status_label_redstone: 'Redstone y puertas'
+plot_status_label_vehicles: 'Vehículos'
+
+plot_status_label_shop_interact: 'Interacción con tienda del mercado'
+plot_status_label_flight: 'Vuelo dentro de esta parcela'
+
+plot_status_state_protected: '&aProtegido'
+plot_status_state_vulnerable: '&cVulnerable'
+
+plot_status_state_enabled: '&aActivado'
+plot_status_state_disabled: '&7Desactivado'
+
+plot_status_state_open: '&aAbierta'
+plot_status_state_closed: '&cCerrada'
+
+plot_status_state_enabled_simple: '&aActivado'
+plot_status_state_inactive: '&7Inactivo'
+
+plot_status_blessings_title: '&dBonificaciones Activas'
+plot_status_blessings_header: '&7Bonificaciones Activas:'
+plot_status_blessings_none: '&8- Ninguna desbloqueada aún.'
+plot_status_blessings_footer: '&8Solo se muestra tu nivel más alto de cada bonificación.'
+
+plot_status_buff_effect: '&f{EFFECT} &7(Efecto &f{TIER}&7)'
+plot_status_buff_members: '&fEspacios de miembro de confianza: &b+{AMOUNT}'
+
+plot_status_territory_title: '&aTerritorio, Tamaño y Progreso'
+plot_status_territory_rules: '&7Reglas del Territorio:'
+plot_status_territory_path: '&bMenú Aegis &7→ &b{EXPAND}'
+
+plot_status_ledger_disabled_1: '&8Los bloques de reclamo están desactivados.'
+plot_status_ledger_disabled_2: '&7Pídele a un admin que habilite:'
+plot_status_ledger_disabled_3: '&fclaim_blocks.enabled: &atrue'
+
+plot_status_ledger_footer_1: '&8Este presupuesto aplica a todas las parcelas'
+plot_status_ledger_footer_2: '&8propiedad de &f{OWNER}&8.'
+
+
+# --------------------------------------
+# Roles / Trusted GUI (RolesGUI.java)
+# --------------------------------------
+trusted_plot_selector_title: '&8Seleccionar Parcela'
+trusted_plot_world_line: '&7Mundo: &f{WORLD}'
+trusted_plot_size_line: '&7Tamaño: &e{X}x{Z}'
+trusted_plot_click_manage: '&eClic para Administrar Roles'
+trusted_plot_name: '&aParcela #{INDEX}'
+
+roles_gui_title: '&eAdministrar Roles de la Parcela'
+roles_member_role_line: '&7Rol: &f{ROLE}'
+roles_member_click_lore: '&eClic para Editar Rol y Permisos'
+
+button_add_trusted: '&aAgregar Jugador de Confianza'
+add_trusted_lore:
+  - '&7Invita a un jugador cercano a este dominio.'
+
+add_trusted_title: '&8Agregar Jugador de Confianza'
+add_trusted_player_name: '&a{PLAYER}'
+add_trusted_click_lore: '&7Clic para añadir a la parcela.'
+add_trusted_none_title: '&cNo hay jugadores cerca'
+add_trusted_none_lore:
+  - '&7Pídele a tu amigo que se acerque.'
+
+roles_manage_title: '&8Administrar: {PLAYER}'
+roles_role_current_lore: '&a(Rol Actual)'
+roles_role_click_set_lore: '&eClic para Asignar'
+
+button_remove_trusted: '&cEliminar Miembro de Confianza'
+remove_trusted_lore:
+  - '&7Revoca todo acceso.'
+
+roles_unassigned: 'Sin asignar'
+
+button_role_permissions: '&bEditar Permisos del Rol'
+role_permissions_lore:
+  - '&7Rol: &f{ROLE}'
+  - ' '
+  - '&7Ajusta lo que este rol puede hacer'
+  - '&7dentro de este dominio.'
+  - ' '
+  - '&eClic para abrir banderas del rol'
+
+role_flags_title: '&8Banderas del Rol: {ROLE}'
+role_flags_legend_title: '&7Leyenda'
+role_flags_legend_lore:
+  - '&aPermitir &7= El rol puede ignorar esta regla.'
+  - '&cDenegar  &7= El rol siempre está bloqueado.'
+  - '&7Heredar &7= Sigue la lógica normal del reclamo.'
+
+role_flags_state_allow: '&aPermitir'
+role_flags_state_deny: '&cDenegar'
+role_flags_state_inherit: '&7Heredar'
+role_flags_current_line: '&7Actual: {STATE}'
+role_flags_item_lore:
+  - '&7Heredar: Seguir reglas normales de parcela/mundo.'
+  - '&7Permitir: Este rol puede ignorar esta restricción.'
+  - '&7Denegar: Este rol siempre está bloqueado.'
+  - ' '
+  - '&eClic para cambiar'
+
+# Nombres de banderas (ROLE_FLAG_KEYS)
+role_flag_name_PVP: '&bPvP'
+role_flag_name_CONTAINERS: '&bContenedores'
+role_flag_name_MOBS: '&bMobs'
+role_flag_name_PETS: '&bMascotas'
+role_flag_name_ENTITIES: '&bEntidades'
+role_flag_name_FARM: '&bCultivos'
+role_flag_name_TNT: '&bTNT'
+role_flag_name_FIRE: '&bFuego'
+role_flag_name_PISTON: '&bPistones'
+role_flag_name_ENTRY: '&bEntrada'
+role_flag_name_SHOP: '&bTienda'
+role_flag_name_FLY: '&bVuelo'
+role_flag_name_ANIMALS: '&bAnimales'
+role_flag_name_REDSTONE: '&bRedstone'
+role_flag_name_VEHICLES: '&bVehículos'
+
+
+# --------------------------------------
+# Admin GUI (AdminGUI.java)
+# --------------------------------------
+admin_menu_title: '&c&l⚔ Herramientas del Alto Guardián ⚔'
+
+toggle_on: '&aACTIVADO'
+toggle_off: '&cDESACTIVADO'
+
+button_admin_auto_remove: '&eAuto-eliminar Baneados'
+admin_auto_remove_lore:
+  - '&7Elimina automáticamente parcelas'
+  - '&7de jugadores baneados.'
+
+button_admin_bypass_limit: '&eIgnorar Límite de Reclamos'
+admin_bypass_limit_lore:
+  - '&7Permite reclamar más allá'
+  - '&7de los límites normales.'
+
+button_admin_broadcast: '&eAnunciar Acciones Admin'
+admin_broadcast_lore:
+  - '&7Anuncia acciones administrativas'
+  - '&7en el chat del servidor.'
+
+button_admin_unlimited: '&eParcelas Ilimitadas'
+admin_unlimited_lore:
+  - '&7Permite crear parcelas'
+  - '&7sin límite (modo admin).'
+
+button_admin_sync: '&eSincronización Proxy'
+admin_sync_lore:
+  - '&7Sincroniza datos entre servidores'
+  - '&7si usas proxy (Bungee/Velocity).'
+
+button_admin_perf: '&eModo Bajo Overhead'
+admin_perf_lore:
+  - '&7Reduce carga del plugin'
+  - '&7para mejorar rendimiento.'
+
+admin_plot_list_title: '&bLista de Parcelas'
+admin_plot_list_lore:
+  - '&7Ver/TP a cualquier parcela.'
+
+button_admin_diagnostics: '&bDiagnósticos'
+admin_diagnostics_lore:
+  - '&7Ver estadísticas del sistema.'
+
+button_admin_reload: '&eRecargar Config'
+admin_reload_lore:
+  - '&7Recargar ajustes y datos.'

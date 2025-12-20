@@ -3,7 +3,6 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -11,22 +10,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * PlayerGUI
  * - The main dashboard for AegisGuard.
- * - Fully localized via Codex (NO messages.yml usage).
+ * - Fully localized via Codex for GUI text.
+ * - Chat feedback uses msg() so it respects per-player language too.
  */
 public class PlayerGUI {
 
     private final AegisGuard plugin;
-
-    // Hex pattern (&#RRGGBB) for chat messages
-    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     public PlayerGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -49,26 +43,19 @@ public class PlayerGUI {
     }
 
     private void send(Player p, String key, String fallback) {
-        // Optional prefix (put this key in core.yml if you want)
-        String prefix = t(p, "prefix", "&8[&bAegisGuard&8]&r ");
-        String msg = t(p, key, fallback);
-        if (msg == null || msg.trim().isEmpty()) return;
-        p.sendMessage(color(prefix + msg));
-    }
-
-    private String color(String text) {
-        if (text == null) return "";
-        String msg = text;
-
-        Matcher matcher = HEX_PATTERN.matcher(msg);
-        while (matcher.find()) {
-            String token = matcher.group(0); // "&#A1B2C3"
-            String hex = matcher.group(1);   // "A1B2C3"
-            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
-            matcher = HEX_PATTERN.matcher(msg);
+        // Pull chat lines from msg() so language packs control chat output too.
+        String prefix = plugin.msg().get(p, "prefix");
+        if (prefix == null || prefix.isBlank() || prefix.equalsIgnoreCase("prefix")) {
+            prefix = "&8[&bAegisGuard&8]&r ";
         }
 
-        return ChatColor.translateAlternateColorCodes('&', msg);
+        String msg = plugin.msg().get(p, key);
+        if (msg == null || msg.isBlank() || msg.equalsIgnoreCase(key) || msg.contains("[Missing")) {
+            msg = fallback;
+        }
+
+        if (msg == null || msg.trim().isEmpty()) return;
+        p.sendMessage(GUIManager.color(prefix + msg));
     }
 
     /* ---------------------------------------------------------

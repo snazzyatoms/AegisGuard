@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * SettingsGUI
@@ -35,6 +36,40 @@ public class SettingsGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
+    // --------------------------------------------------
+    // Codex-safe helpers (with fallbacks)
+    // --------------------------------------------------
+
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
+    }
+
+    private String t(Player p, String key, Map<String, String> vars, String fallback) {
+        // Prefer Codex map-aware translate if available; fall back to gui().tr
+        String raw = null;
+        try {
+            if (plugin.codex() != null) raw = plugin.codex().tr(p, key, vars);
+        } catch (Throwable ignored) {}
+
+        String out = (raw == null || raw.isBlank() || raw.equalsIgnoreCase(key))
+                ? plugin.gui().tr(p, key, fallback)
+                : raw;
+
+        // Apply vars to fallback-shaped strings too
+        if (vars != null && !vars.isEmpty()) {
+            for (var en : vars.entrySet()) {
+                String k = en.getKey();
+                String v = en.getValue() == null ? "" : en.getValue();
+                out = out.replace("{" + k + "}", v).replace("{" + k.toLowerCase(Locale.ROOT) + "}", v);
+            }
+        }
+        return out;
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
+    }
+
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
@@ -49,47 +84,82 @@ public class SettingsGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
-        // --- 1) SOUNDS (Slot 10) ---
+        // --------------------------------------------------
+        // 1) SOUNDS (Slot 10)
+        // --------------------------------------------------
         boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
         if (!globalEnabled) {
             inv.setItem(10, GUIManager.createItem(
                     Material.BARRIER,
-                    "§cSounds Disabled Globally",
-                    List.of("§7Server admin has disabled sounds.")
+                    t(player, "settings_sounds_global_off_name", "&cSounds Disabled Globally"),
+                    tl(player, "settings_sounds_global_off_lore",
+                            List.of("&7A server admin has disabled UI sounds."))
             ));
         } else {
             boolean soundsEnabled = plugin.isSoundEnabled(player);
+
+            String name = soundsEnabled
+                    ? t(player, "settings_sounds_on_name", "&aSounds: ON")
+                    : t(player, "settings_sounds_off_name", "&cSounds: OFF");
+
             inv.setItem(10, GUIManager.createItem(
                     soundsEnabled ? Material.NOTE_BLOCK : Material.JUKEBOX,
-                    soundsEnabled ? "§aSounds: ON" : "§cSounds: OFF",
-                    List.of("§7Toggle UI sound effects.")
+                    name,
+                    tl(player, "settings_sounds_lore",
+                            List.of("&7Toggle AegisGuard menu sound effects."))
             ));
         }
 
-        // --- 2) LANGUAGE (Slot 13) ---
+        // --------------------------------------------------
+        // 2) LANGUAGE (Slot 13)
+        // --------------------------------------------------
         String currentStyle = "old_english";
         try {
             if (plugin.codex() != null) currentStyle = plugin.codex().getPlayerStyle(player);
-            else if (plugin.msg() != null) currentStyle = plugin.msg().getPlayerStyle(player); // fallback only
         } catch (Throwable ignored) {}
+
+        String langDisplay = formatStyle(player, currentStyle);
 
         inv.setItem(13, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
-                "§eLanguage: " + formatStyle(currentStyle),
-                List.of("§7Click to cycle language styles.")
+                t(player, "settings_language_name",
+                        Map.of("LANG", langDisplay),
+                        "&eLanguage: {LANG}"
+                ),
+                tl(player, "settings_language_lore",
+                        List.of("&7Click to cycle language styles."))
         ));
 
-        // --- 3) NOTIFICATIONS (Slot 16) ---
-        String notifMode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
+        // --------------------------------------------------
+        // 3) NOTIFICATIONS (Slot 16)
+        // --------------------------------------------------
+        String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
+        String modeDisplay = notifDisplay(player, mode);
+
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
-                "§bNotifications: " + notifMode,
-                List.of("§7Click to cycle:", "§7Action Bar -> Chat -> Title")
+                t(player, "settings_notifications_name",
+                        Map.of("MODE", modeDisplay),
+                        "&bNotifications: {MODE}"
+                ),
+                tl(player, "settings_notifications_lore",
+                        List.of("&7Click to cycle:", "&7Action Bar -> Chat -> Title"))
         ));
 
-        // --- NAVIGATION ---
-        inv.setItem(48, GUIManager.createItem(Material.ARROW, "§fBack to Menu", null));
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, "§cClose", null));
+        // --------------------------------------------------
+        // NAVIGATION (48/49)
+        // --------------------------------------------------
+        inv.setItem(48, GUIManager.createItem(
+                Material.NETHER_STAR,
+                t(player, "button_back_menu", "&fReturn to Menu"),
+                tl(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
+        ));
+
+        inv.setItem(49, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -100,24 +170,30 @@ public class SettingsGUI {
         if (e.getCurrentItem() == null) return;
 
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
+
+        // Ignore clicks in the player's bottom inventory
+        int rawSlot = e.getRawSlot();
+        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
+
         Plot plot = holder.getPlot();
 
-        switch (e.getRawSlot()) {
+        switch (rawSlot) {
 
-            case 10: { // Sounds
+            case 10 -> { // Sounds
                 if (!plugin.cfg().globalSoundsEnabled()) {
                     plugin.effects().playError(player);
                     return;
                 }
+
                 boolean current = plugin.isSoundEnabled(player);
                 plugin.getConfig().set("sounds.players." + player.getUniqueId(), !current);
                 plugin.runGlobalAsync(plugin::saveConfig);
+
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
-                break;
             }
 
-            case 13: { // Language (Codex ordered cycle + persisted by CodexEngine)
+            case 13 -> { // Language (Codex ordered cycle + persisted by CodexEngine)
                 if (plugin.codex() == null) {
                     plugin.effects().playError(player);
                     return;
@@ -131,42 +207,65 @@ public class SettingsGUI {
                 else plugin.effects().playError(player);
 
                 open(player, plot);
-                break;
             }
 
-            case 16: { // Notifications
-                String mode = plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR");
+            case 16 -> { // Notifications
+                String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
                 String nextMode = switch (mode) {
                     case "ACTION_BAR" -> "CHAT";
                     case "CHAT" -> "TITLE";
                     default -> "ACTION_BAR";
                 };
+
                 plugin.getConfig().set("notifications." + player.getUniqueId(), nextMode);
                 plugin.runGlobalAsync(plugin::saveConfig);
+
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
-                break;
             }
 
-            case 48:
+            case 48 -> {
+                plugin.effects().playMenuFlip(player);
                 plugin.gui().openMain(player);
-                break;
+            }
 
-            case 49:
+            case 49 -> {
+                plugin.effects().playMenuClose(player);
                 player.closeInventory();
-                break;
+            }
         }
     }
 
-    private String formatStyle(String style) {
-        if (style == null || style.isEmpty()) return "§dOld English";
+    // --------------------------------------------------
+    // Display helpers
+    // --------------------------------------------------
+
+    private String normalizeNotif(String mode) {
+        if (mode == null) return "ACTION_BAR";
+        String m = mode.trim().toUpperCase(Locale.ROOT);
+        return switch (m) {
+            case "ACTION_BAR", "CHAT", "TITLE" -> m;
+            default -> "ACTION_BAR";
+        };
+    }
+
+    private String notifDisplay(Player p, String mode) {
+        return switch (mode) {
+            case "CHAT" -> t(p, "settings_notif_mode_chat", "&aChat");
+            case "TITLE" -> t(p, "settings_notif_mode_title", "&dTitle");
+            default -> t(p, "settings_notif_mode_action_bar", "&bAction Bar");
+        };
+    }
+
+    private String formatStyle(Player player, String style) {
+        if (style == null || style.isEmpty()) return t(player, "style_old_english", "§dOld English");
 
         return switch (style.toLowerCase(Locale.ROOT)) {
-            case "old_english" -> "§dOld English";
-            case "modern_english" -> "§aModern";
-            case "hybrid_english" -> "§eHybrid";
-            case "spanish_mx" -> "§bEspañol (LatAm)";
-            case "spanish_ar" -> "§bEspañol (AR)";
+            case "old_english" -> t(player, "style_old_english", "§dOld English");
+            case "modern_english" -> t(player, "style_modern_english", "§aModern");
+            case "hybrid_english" -> t(player, "style_hybrid_english", "§eHybrid");
+            case "spanish_mx" -> t(player, "style_spanish_mx", "§bEspañol (LatAm)");
+            case "spanish_ar" -> t(player, "style_spanish_ar", "§bEspañol (AR)");
             default -> "§f" + pretty(style);
         };
     }
@@ -174,6 +273,7 @@ public class SettingsGUI {
     private String pretty(String raw) {
         String s = raw.replace('_', ' ').trim();
         if (s.isEmpty()) return raw;
+
         String[] parts = s.split("\\s+");
         StringBuilder out = new StringBuilder();
         for (String p : parts) {

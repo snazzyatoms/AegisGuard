@@ -47,9 +47,7 @@ public class RolesGUI {
             "VEHICLES"
     );
 
-    // Plot selector shows up to 45 items (bottom row reserved for nav)
     private static final int PLOTS_PER_PAGE = 45;
-    // Manage menu shows up to 18 roles (bottom row reserved for actions)
     private static final int ROLES_VISIBLE = 18;
 
     public RolesGUI(AegisGuard plugin) {
@@ -109,7 +107,7 @@ public class RolesGUI {
     }
 
     // --------------------------------------------------
-    // Codex helpers (safe)
+    // TRANSLATION HELPERS
     // --------------------------------------------------
 
     private String t(Player p, String key, String fallback) {
@@ -134,13 +132,38 @@ public class RolesGUI {
                 ? (fallback == null ? "" : fallback)
                 : raw;
 
-        // Also apply vars to fallback strings
         if (vars != null && !vars.isEmpty()) {
             for (Map.Entry<String, String> en : vars.entrySet()) {
                 String k = en.getKey();
                 String v = en.getValue() == null ? "" : en.getValue();
                 out = out.replace("{" + k + "}", v).replace("{" + k.toLowerCase() + "}", v);
             }
+        }
+
+        return out;
+    }
+
+    /**
+     * Map-aware list translate with safe fallback.
+     * plugin.gui().trList doesn't know about {VARS}, so we apply replacements here.
+     */
+    private List<String> tl(Player p, String key, Map<String, String> vars, List<String> fallback) {
+        List<String> base = plugin.gui().trList(p, key, fallback);
+        if (base == null) base = List.of();
+
+        List<String> out = new ArrayList<>(base.size());
+        for (String line : base) {
+            String s = (line == null) ? "" : line;
+
+            if (vars != null && !vars.isEmpty()) {
+                for (Map.Entry<String, String> en : vars.entrySet()) {
+                    String k = en.getKey();
+                    String v = en.getValue() == null ? "" : en.getValue();
+                    s = s.replace("{" + k + "}", v).replace("{" + k.toLowerCase() + "}", v);
+                }
+            }
+
+            out.add(GUIManager.color(s));
         }
 
         return out;
@@ -159,7 +182,6 @@ public class RolesGUI {
     // --------------------------------------------------
 
     public void open(Player player) {
-        // 1) Admin override: if standing in a plot, open directly
         if (plugin.isAdmin(player)) {
             Plot standingPlot = plugin.store().getPlotAt(player.getLocation());
             if (standingPlot != null) {
@@ -168,7 +190,6 @@ public class RolesGUI {
             }
         }
 
-        // 2) Normal user flow: pick one of your plots
         List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
         if (plots == null || plots.isEmpty()) {
             plugin.msg().send(player, "no_plot_here");
@@ -188,7 +209,6 @@ public class RolesGUI {
         String title = plugin.gui().title(player, "trusted_plot_selector_title", "&8Select Plot");
         Inventory inv = Bukkit.createInventory(new PlotSelectorHolder(), 54, title);
 
-        // Footer
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
@@ -204,7 +224,6 @@ public class RolesGUI {
             );
             lore.add(GUIManager.color(worldLine));
 
-            // ✅ Size fix: +1 so it's true width/height
             int sizeX = (plot.getX2() - plot.getX1()) + 1;
             int sizeZ = (plot.getZ2() - plot.getZ1()) + 1;
 
@@ -231,7 +250,6 @@ public class RolesGUI {
             ));
         }
 
-        // Nav
         inv.setItem(49, GUIManager.createItem(
                 Material.NETHER_STAR,
                 t(player, "button_back_menu", "&fReturn to Menu"),
@@ -273,7 +291,6 @@ public class RolesGUI {
             boolean isViewerOwner = uuid.equals(player.getUniqueId());
             boolean isAdmin = plugin.isAdmin(player);
 
-            // Hide your own owner entry, and hide owner entry from non-admins
             if (isOwnerEntry && isViewerOwner) continue;
             if (isOwnerEntry && !isAdmin) continue;
 
@@ -309,7 +326,6 @@ public class RolesGUI {
             inv.setItem(slot++, head);
         }
 
-        // Footer buttons
         inv.setItem(49, GUIManager.createItem(
                 Material.EMERALD,
                 t(player, "button_add_trusted", "&aAdd Trusted Player"),
@@ -340,7 +356,6 @@ public class RolesGUI {
         String title = plugin.gui().title(player, "add_trusted_title", "&8Add Trusted Player");
         Inventory inv = Bukkit.createInventory(new RoleAddHolder(plot), 54, title);
 
-        // Footer
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
@@ -406,7 +421,6 @@ public class RolesGUI {
         String title = clampTitle(rawTitle, "&8Manage: " + targetName);
         Inventory inv = Bukkit.createInventory(new RoleManageHolder(plot, target), 27, title);
 
-        // Fill (prevents “holes” looking weird)
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
@@ -415,7 +429,6 @@ public class RolesGUI {
 
         String currentRole = plot.getRole(target.getUniqueId());
 
-        // Roles in slots 0..17 (prevents collisions with control buttons)
         int max = Math.min(roles.size(), ROLES_VISIBLE);
         for (int i = 0; i < max; i++) {
             String roleName = roles.get(i);
@@ -440,7 +453,6 @@ public class RolesGUI {
             ));
         }
 
-        // Buttons row
         inv.setItem(18, GUIManager.createItem(
                 Material.ARROW,
                 t(player, "button_back", "&fBack"),
@@ -453,19 +465,27 @@ public class RolesGUI {
                 tl(player, "remove_trusted_lore", List.of("&7Revoke all access."))
         ));
 
-        String roleDisplay = (currentRole != null) ? currentRole : t(player, "roles_unassigned", "Unassigned");
+        String roleDisplay = (currentRole != null)
+                ? currentRole
+                : t(player, "roles_unassigned", "Unassigned");
 
-        inv.setItem(24, GUIManager.createItem(
-                Material.BOOK,
-                t(player, "button_role_permissions", "&bEdit Role Permissions"),
-                tl(player, "role_permissions_lore", List.of(
-                        "&7Role: &f" + roleDisplay,
+        // ✅ NOW FULLY TRANSLATABLE LORE WITH {ROLE}
+        List<String> permsLore = tl(player, "role_permissions_lore",
+                Map.of("ROLE", roleDisplay),
+                List.of(
+                        "&7Role: &f{ROLE}",
                         " ",
                         "&7Adjust what this role may do",
                         "&7inside this dominion.",
                         " ",
                         "&eClick to open role flags"
-                ))
+                )
+        );
+
+        inv.setItem(24, GUIManager.createItem(
+                Material.BOOK,
+                t(player, "button_role_permissions", "&bEdit Role Permissions"),
+                permsLore
         ));
 
         player.openInventory(inv);
@@ -492,7 +512,6 @@ public class RolesGUI {
 
         Inventory inv = Bukkit.createInventory(new RoleFlagsHolder(plot, target, roleName), 27, title);
 
-        // Fill
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
@@ -689,7 +708,6 @@ public class RolesGUI {
     }
 
     private ItemStack buildRoleFlagItem(Player player, String flagKey, TriState state, Material icon) {
-        // Localized flag name (fallback = pretty flagKey)
         String pretty = flagKey.toLowerCase().replace("_", " ");
         if (!pretty.isEmpty()) pretty = Character.toUpperCase(pretty.charAt(0)) + pretty.substring(1);
 
@@ -699,9 +717,10 @@ public class RolesGUI {
         String denyLbl    = t(player, "role_flags_state_deny", "&cDeny");
         String inheritLbl = t(player, "role_flags_state_inherit", "&7Inherit");
 
-        String currentLineKey = "role_flags_current_line";
-        String currentLine = t(player, currentLineKey,
-                Map.of("STATE", state == TriState.ALLOW ? allowLbl : state == TriState.DENY ? denyLbl : inheritLbl),
+        String stateLabel = (state == TriState.ALLOW) ? allowLbl : (state == TriState.DENY) ? denyLbl : inheritLbl;
+
+        String currentLine = t(player, "role_flags_current_line",
+                Map.of("STATE", stateLabel),
                 "&7Current: {STATE}"
         );
 

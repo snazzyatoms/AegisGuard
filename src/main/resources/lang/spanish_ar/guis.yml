@@ -1,281 +1,433 @@
 # ======================================
-# AegisGuard v1.2.4 - Codex: Spanish (AR / Argentine)
+# AegisGuard v1.2.4 - Codex: Español (Argentina)
 # File: guis.yml
-# Split from legacy single-file language pack
+# Parity translation from modern_english/guis.yml
 # ======================================
 
-# --- Menú Principal (Main Menu) ---
-menu_title: '&b⚔ Menú de Aegis'
-menu_subtitle: '&7Protegé tu rancho, che.'
-
-button_claim_land: '&a🛡 Reclamar Terreno'
-claim_land_lore:
-- '&7Empezá a proteger esta área.'
-claim_land_ready_lore:
-- '&7Crear una parcela con'
-- '&7lo que marcaste recién.'
-- ' '
-- '&eClick para Confirmar'
-
-button_plot_flags: '&6Ajustes del Rancho'
-plot_flags_lore:
-- '&7Cambiá las reglas de tu plot.'
-- ' '
-- '&eClick para Abrir'
-
-button_trusted: '&dGente de Confianza'
-trusted_lore:
-- '&7Administrá quién puede hacer qué.'
-- ' '
-- '&eClick para Abrir'
-
-button_leveling: '&b⚡ Ascensión'
-leveling_lore:
-- '&7Subí de nivel tu plot'
-- '&7para desbloquear mejoras.'
-- ' '
-- '&eClick para Abrir'
-
-button_market: '&e💰 Mercado'
-market_lore:
-- '&7Vendé o comprá plots.'
-- ' '
-- '&eClick para Abrir'
-
-button_auction: '&6🏷 Subastas'
-auction_lore:
-- '&7Pujá por plots expirados.'
-- ' '
-- '&eClick para Abrir'
-
-button_expansions: '&d📜 Expansiones'
-expansions_lore:
-- '&7Pedí que tu plot crezca.'
-- ' '
-- '&eClick para Abrir'
-
-button_settings: '&7⚙ Ajustes'
-settings_lore:
-- '&7Ajustes del jugador.'
-- ' '
-- '&eClick para Abrir'
-
-button_admin: '&c🛠 Admin'
-admin_lore:
-- '&7Herramientas de moderación.'
-- ' '
-- '&eClick para Abrir'
-
-button_confirm: '&a✔ Confirmar'
-confirm_lore:
-- '&7Confirmar esta acción.'
-- ' '
-- '&eClick para Confirmar'
-
-button_cancel: '&c✖ Cancelar'
-cancel_lore:
-- '&7Cancelar y volver.'
-- ' '
-- '&eClick para Volver'
-
-button_back: '&e⟵ Volver'
+button_back: '&e⟵ Atrás'
+back_lore:
+  - '&7Volvé a la página anterior.'
+button_back_menu: '&fVolver al Menú'
+back_menu_lore:
+  - '&7Volvé al panel principal.'
+button_prev_page: '&fPágina Anterior'
+button_next_page: '&fPágina Siguiente'
 button_exit: '&c✖ Cerrar'
-
-button_prev_page: '&e⟵ Página Anterior'
-button_next_page: '&ePágina Siguiente ⟶'
-
-# --- Admin ---
-admin_menu_title: '&c⚔ Panel de Admin'
-button_back_admin: '&e⟵ Volver a Admin'
-button_reload: '&a⟳ Recargar'
-reload_lore:
-- '&7Recargar configuración y textos.'
-- ' '
-- '&eClick para Recargar'
-
-button_admin_bypass: '&cBypass de Límite'
-admin_bypass_lore:
-- '&7Ignorá límites de claims'
-- '&7para admins/ops.'
-- ' '
-- '&eClick para Alternar'
-
-button_admin_broadcast: '&bBroadcast Admin'
-admin_broadcast_lore:
-- '&7Avisos de acciones admin.'
-- ' '
-- '&eClick para Alternar'
-
-button_auto_remove: '&6Auto-Purge'
-auto_remove_lore:
-- '&7Purgar plots de baneados.'
-- ' '
-- '&eClick para Alternar'
-
-button_admin_plot_list: '&cRegistro de Plots'
-admin_plot_list_lore:
-- '&7Ver todos los plots'
-- '&7y administrarlos.'
-- ' '
-- '&eClick para Abrir'
-
-admin_plot_list_title: '&cRegistro de Plots'
-admin_plot_item_name: '&bDueño: &f{OWNER}'
-admin_plot_actions:
-- '&eClick Izquierdo: &7Teleport'
-- '&cClick Derecho: &7Eliminar Plot'
-
-admin_server_zone_tag: '&c[ZONA DEL SERVER]'
-
-# --- Plot Flags GUI ---
-plot_flags_title: '&6Ajustes del Rancho'
-plot_flags_item_format: '&e{FLAG} &7→ &f{STATUS}'
-plot_flags_footer_inheritance: '&8Herencia: {SOURCE}'
-
-# --- Trusted GUI ---
-trusted_title: '&dGente de Confianza'
-trusted_member_name: '&b{PLAYER}'
-trusted_member_lore:
-- '&7Rol: &f{ROLE}'
-- ' '
-- '&eClick Izquierdo: &7Cambiar Rol'
-- '&cClick Derecho: &7Eliminar'
-
-trusted_add_title: '&a➕ Agregar Jugador'
-trusted_add_lore:
-- '&7Agregá a alguien al plot.'
-- ' '
-- '&eUsá: /ag trust <jugador>'
-
-# --- Leveling GUI ---
-level_gui_title: '&b⚡ Ascensión'
-level_current_status: '&eEstado Actual'
-level_upgrade_button: '&aSubir a Nivel &f{LEVEL}'
-level_max_reached: '&6Ya estás al máximo nivel.'
-level_button_lore:
-- '&7Subí de nivel el plot para'
-- '&7desbloquear más poder.'
-level_button_lore_static:
-- '&7Subí de nivel el plot para'
-- '&7desbloquear nuevas mejoras.'
-
-level_current_blessing_name: '&dBonos Activos'
-level_current_blessing_title: '&dBonos Actualmente Activos'
-level_current_blessing_footer_1: '&8Niveles más altos dan mejores'
-level_current_blessing_footer_2: '&8bonos y más territorio.'
-
-# aliases (compat)
-level_current_blessings_name: '&dBonos Activos'
-level_current_blessings_title: '&dBonos Actualmente Activos'
-level_current_blessings_footer_1: '&8Niveles más altos dan mejores'
-level_current_blessings_footer_2: '&8bonos y más territorio.'
-
-level_track_title_completed: '&aCamino Completado'
-level_track_buffs_title: '&dBonos Desbloqueados'
-level_track_footer_mastered: '&6Este camino ya está completo.'
-
-level_track_title_current: '&dCamino Actual'
-level_track_title_locked: '&cCamino Bloqueado'
-level_track_next_cost: '&eCosto: &6{COST}'
-level_track_footer_next: '&6Subí para desbloquear.'
-level_track_footer_progress: '&7Progreso al próximo nivel.'
-
-level_upgrade_tier: '&dPróximo Tier'
-level_upgrade_next_tier: '&dPróximo Tier'
-level_upgrade_cost: '&eCosto: &6{COST}'
-level_upgrade_new_buffs_title: '&dNuevos Bonos'
-level_upgrade_click_hint: '&eClick para intentar subir.'
-
-# --- Market/Auction GUI ---
-market_gui_title: '&e💰 Mercado'
-auction_gui_title: '&6🏷 Subastas'
-
+button_exit_lore:
+  - '&7Cerrá este menú.'
+exit_lore:
+  - '&7Cerrá este menú.'
+market_button_back: '&e⟵ Volver a Bienes Raíces'
 auction_button_back: '&e⟵ Volver a Subastas'
-market_button_back: '&e⟵ Volver al Mercado'
-realestate_button_back: '&e⟵ Volver a Bienes Raíces'
-domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
-market_teleport: '&eTeletransportándote al claim de {PLAYER}...'
-
-# --- Biome GUI ---
-biome_gui_title: '&a🌿 Biomas'
-biome_button_back: '&e⟵ Volver a Ajustes del Plot'
-biome_button_exit: '&c✖ Cerrar Biomas'
-
-# --- Help GUI ---
-help_gui_title: '&b📘 Ayuda de Aegis'
-
-# --- Visit GUI ---
-visit_gui_title: '&9Sistema de Viaje'
-visit_title_warps: '&6Warps Públicos'
-visit_title_trusted: '&9Claims de Confianza'
-visit_switch_trusted: '&bVer: Confianza'
+market_button_back_lore:
+  - '&7Volvé a la lista de parcelas.'
+realestate_button_back_lore:
+  - '&7Volvé a la vista general de bienes raíces.'
+domain_market_button_back_lore:
+  - '&7Volvé a la lista de dominios.'
+auction_button_back_lore:
+  - '&7Volvé a la vista general de subastas.'
+button_back_admin: '&fVolver a Admin'
+auction-gui-title: '&6Subastas de Parcelas'
+auction_gui_title: '&6Subastas de Parcelas'
+auction_item_name: '&eSubasta: Parcela de {OWNER}'
+auction_current_bid: '&7Puja Actual: &e{AMOUNT}'
+auction_highest_bidder: '&7Mayor Postor: &f{PLAYER}'
+auction_item_lore:
+  - '&eClic Izquierdo: &7Previsualizar Parcela'
+  - '&aClic Derecho: &7Hacer Puja'
+market-gui-title: '&2Bienes Raíces'
+market_gui_title: '&2Bienes Raíces'
+market_type_rent: '&bEn Alquiler'
+market_type_sale: '&aEn Venta'
+market_item_lore:
+  - '&eClic Izquierdo: &7Previsualizar Parcela'
+  - '&aClic Derecho: &7Comprar Escritura'
+expand_lore:
+  - '&7Pedí un tamaño de parcela más grande'
+  - '&7a un administrador del servidor.'
+button_submit_request: '&aEnviar Solicitud'
+submit_request_lore:
+  - '&7Elegí hasta dónde querés'
+  - '&7que se expanda tu parcela.'
+visit_gui_title: '&9Menú de Viaje'
+visit_title_warps: '&6Puntos de Ruta del Servidor'
+visit_title_trusted: '&9Parcelas de Confianza'
+visit_switch_trusted: '&bVer: Parcelas de Confianza'
 visit_switch_trusted_lore:
-- '&7Claims donde tenés rol o invitación.'
-visit_switch_warps: '&6Ver: Warps'
+  - '&7Ver parcelas donde sos un miembro de confianza.'
+visit_switch_warps: '&6Ver: Puntos de Ruta del Servidor'
 visit_switch_warps_lore:
-- '&7Lugares públicos del servidor.'
+  - '&7Ver ubicaciones públicas del servidor.'
 visit_warp_lore:
-- '&7Click para viajar.'
+  - '&7Clic para teletransportarte.'
 visit_plot_name: '&e{PLOT}'
 visit_plot_lore:
-- '&7Mundo: &f{WORLD}'
-- '&7Rol: &a{ROLE}'
-- ' '
-- '&eClick para Viajar'
+  - '&7Mundo: &f{WORLD}'
+  - '&7Estado: &a{ROLE}'
+  - ' '
+  - '&eClic para Teletransportarte'
+menu_title: '&b⚔ Menú AegisGuard'
+button_claim_land: '&a🛡 Crear Parcela'
+claim_land_lore:
+  - '&7Empezá a proteger esta área.'
+claim_land_ready_lore:
+  - '&7Creá una nueva parcela desde'
+  - '&7tu selección actual.'
+  - ' '
+  - '&eClic para Confirmar'
+button_plot_flags: '&6Ajustes'
+plot_flags_title: '&9⚙ Ajustes de Parcela'
+plot_flags_lore:
+  - '&7Gestioná las reglas de protección de esta parcela.'
+plot_flags_locked_lore:
+  - '&cTenés que estar dentro de tu parcela'
+  - '&cpara editar sus ajustes.'
+button_roles: '&eMiembros'
+roles_lore:
+  - '&7Gestioná jugadores de confianza.'
+roles_locked_lore:
+  - '&cTenés que estar dentro de tu parcela'
+  - '&cpara gestionar miembros.'
+button_player_settings: '&9Preferencias'
+player_settings_lore:
+  - '&7Ajustá tus preferencias personales e idioma.'
+button_market: '&eMercado'
+market_lore:
+  - '&7Comprá y vendé parcelas con otros jugadores.'
+button_auction: '&cSubastas'
+auction_lore:
+  - '&7Pujá por parcelas vencidas o embargadas.'
+button_info: '&6📜 Ayuda y Guía'
+info_lore:
+  - '&7Ver comandos, explicaciones y consejos de uso.'
+button_plot_status: '&b📊 Estado de Parcela'
+plot_status_button_title: '&b📊 Estado de Parcela'
+plot_status_lore:
+  - '&7Ver un desglose claro de la parcela:'
+  - '&7detalles, bonificaciones, territorio y crecimiento.'
+  - ' '
+  - '&8Solo se muestran tus bonificaciones'
+  - '&8más fuertes desbloqueadas para mantener esta vista limpia.'
+codex_gui_title: '&9§lGuía del Guardián'
+codex_claim_title: '&e§lI. Reclamar'
+codex_claim_lore:
+  - '&7Cómo proteger terreno:'
+  - ' '
+  - '&f1. &7Usá &b/ag wand &7para obtener la herramienta.'
+  - '&f2. &7Clic derecho en la primera esquina.'
+  - '&f3. &7Clic izquierdo en la esquina opuesta.'
+  - '&f4. &7Usá &a/ag claim &7para comprar la parcela.'
+codex_travel_title: '&b§lII. Viaje'
+codex_travel_lore:
+  - '&7Comandos de viaje rápido:'
+  - ' '
+  - '&e/ag home &7- Teletransportarte a tu parcela.'
+  - '&e/ag setspawn &7- Establecer el punto de inicio de tu parcela.'
+  - '&e/ag visit &7- Visitar las parcelas de otros jugadores.'
+codex_menus_title: '&d§lIII. Menús'
+codex_menus_lore:
+  - '&7Usá &b/ag menu&7 para gestionar:'
+  - ' '
+  - '&6🚩 Ajustes: &7PvP, mobs, fuego y más.'
+  - '&b👥 Miembros: &7Jugadores de confianza y roles.'
+  - '&d✨ Cosméticos: &7Partículas de borde y visuales.'
+  - '&a🌿 Biomas: &7Apariencia del bioma de tu parcela.'
+codex_security_title: '&c§lIV. Seguridad'
+codex_security_lore:
+  - '&7Gestioná visitantes y problemáticos:'
+  - ' '
+  - '&c/ag kick &7- Expulsar a un jugador de tu parcela.'
+  - '&4/ag ban &7- Prohibir que un jugador entre.'
+codex_economy_title: '&6§lV. Economía'
+codex_economy_lore:
+  - '&7Conceptos básicos de economía:'
+  - ' '
+  - '&eMantenimiento: &7Pagá mantenimiento para conservar tu parcela.'
+  - '&aMercado: &7Comprá y vendé parcelas con otros.'
+codex_identity_title: '&3§lVI. Identidad'
+codex_identity_lore:
+  - '&7Personalizá tu parcela:'
+  - ' '
+  - '&b/ag rename &7- Establecer un nombre personalizado.'
+  - '&e/ag stuck &7- Escapar si quedás atrapado dentro de bloques.'
+codex_advanced_title: '&5§lVII. Avanzado'
+codex_advanced_lore:
+  - '&dNivelación: &7Mejorá tu parcela para desbloquear ventajas.'
+  - '&eZonas: &7Creá zonas de alquiler dentro de tu parcela.'
+button_utility_chapter: '&3§lVI. Utilidad'
+utility_chapter_lore:
+  - '&7Comandos útiles:'
+  - ' '
+  - '&b/ag rename <Name>'
+  - '&7Renombrá tu parcela.'
+  - ' '
+  - '&b/ag setdesc <Text>'
+  - '&7Establecé una descripción mostrada en menús de Viaje.'
+  - ' '
+  - '&e/ag stuck'
+  - '&7Teletransportate al lugar seguro más cercano.'
+settings_menu_title: '&9⚙ Preferencias'
+button_sounds_on: '&a🔊 Sonidos: ACTIVADOS'
+button_sounds_off: '&c🔇 Sonidos: DESACTIVADOS'
+button_sounds_disabled_global: '&7🔇 Sonidos: Deshabilitados por el Servidor'
+sounds_toggle_lore:
+  - '&7Activá o desactivá los sonidos del menú y notificaciones de AegisGuard.'
+sounds_toggle_global_disabled_lore:
+  - '&7Los sonidos fueron deshabilitados globalmente por un admin.'
+settings_gui_not_toggle: '&cEstos ejemplos no se pueden cambiar acá. Usá Ajustes de Parcela.'
+zone_gui_title: '&3Gestor de Zonas'
+zone_status_available: '&aDisponible'
+zone_evict_action: '&cClic Izquierdo: Desalojar Inquilino'
+zone_delete_action: '&cClic Derecho: Eliminar Zona'
+button_zone_create: '&aCrear Zona'
+zone_create_ready_lore:
+  - '&7Creá una zona desde tu'
+  - '&7selección actual con la varita.'
+zone_create_locked_lore:
+  - '&cPrimero tenés que seleccionar un área'
+  - '&ccon la Varita Aegis.'
+zone_button_lore:
+  - '&7Creá y gestioná sub-parcelas'
+  - '&7que se pueden alquilar.'
+biome_gui_title: '&2Bioma'
+biome_select_lore:
+  - '&7Establecé el bioma de tu parcela a {BIOME}.'
+  - '&7Costo: &e{COST}'
+  - ' '
+  - '&8[&c!&8] &7Solo cambio visual'
+  - '&7Los bloques no se reemplazan.'
+biome_button_lore:
+  - '&7Cambiá el estilo visual del bioma'
+  - '&7de tu parcela.'
+ledger_title: '&6📜 Registro de Dominios'
+ledger_available: '&7Disponible: &a'
+ledger_used: '&7Usado: &c'
+ledger_total: '&7Capacidad Total: &e'
+help_header: '&bAyuda de AegisGuard'
+help_lines:
+  - '&e/aegis wand &7- Obtené la Varita Aegis (herramienta de selección).'
+  - '&e/aegis menu &7- Abrí el menú principal de AegisGuard.'
+  - '&e/aegis claim &7- Creá una parcela desde tu selección actual.'
+  - '&e/aegis unclaim &7- Eliminá tu parcela actual.'
+  - '&e/aegis resize <dir> <amt> &7- Redimensioná tu parcela en una dirección.'
+  - '&e/aegis home &7- Teletransportate al hogar de tu parcela.'
+  - '&e/aegis setspawn &7- Establecé el punto de inicio de tu parcela.'
+  - '&e/aegis welcome [msg] &7- Establecé o borrá un mensaje de bienvenida.'
+  - '&e/aegis farewell [msg] &7- Establecé o borrá un mensaje de despedida.'
+  - '&e/aegis market &7- Abrí el mercado de parcelas.'
+  - '&e/aegis auction &7- Ver subastas de parcelas activas.'
+  - '&e/aegis rename <name> &7- Renombrá tu parcela.'
+  - '&e/aegis setdesc <text> &7- Establecé una descripción para tu parcela.'
+  - '&e/aegis stuck &7- Teletransportate a un lugar seguro si estás atorado.'
+  - '&e/aegis help &7- Ver este menú de ayuda.'
 
-# --- Plot Status GUI ---
-plot_status_button_title: '&b📜 Estado del Rancho'
-plot_status_button_lore:
-- '&7Resumen del plot'
-- '&7(boons, reglas, etc).'
-- ' '
-- '&eClick para Abrir'
+# --------------------------------------
+# Paridad Golden Master (Old English) - Adiciones faltantes
+# --------------------------------------
 
-plot_status_gui_title: '&b⚔ Estado del Rancho'
-plot_status_header_title: '&6Info del Rancho'
-plot_status_blessings_title: '&dBonos Activos'
-plot_status_territory_title: '&aTerritorio y Progreso'
-plot_status_protection_title: '&cCombate y Hostiles'
+# Navegación / botones usados en múltiples menús
+button_expand: '&dPedir Expansión'
+button_view_requests_admin: '&cRevisar Solicitudes'
+view_requests_admin_lore:
+  - '&7Aprobá o rechazá solicitudes de expansión.'
 
-plot_status_overview_lore:
-- '&7Te muestra lo principal:'
-- '&7dueño, mundo, bioma y nivel.'
-- ' '
-- '&8Para no marearte, solo'
-- '&8se muestran los mejores bonos.'
+realestate_button_back: '&e⟵ Volver a Bienes Raíces'
+domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
+biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
+biome_button_exit: '&c✖ Cerrar Cambiador de Bioma'
+expansion_button_back: '&e⟵ Volver al Menú Anterior'
 
-plot_status_flags_lore:
-- '&7Lista las protecciones activas'
-- '&7(PvP, mobs, fuego, interacción, etc).'
-- ' '
-- '&8Lo que esté apagado usa'
-- '&8las reglas normales del server.'
+# GUI de Expansión
+expansion_gui_title: '&dSolicitud de Expansión'
+expansion_admin_title: '&8Solicitudes Pendientes'
+expansion_none_title: '&cSin Solicitudes'
+expansion_none_lore:
+  - '&7No hay solicitudes pendientes.'
+expansion_locked_lore:
+  - '&cTenés que estar dentro'
+  - '&cde tu propia parcela para hacer esto.'
 
-plot_status_economy_lore:
-- '&7Pagos, costos y reembolsos.'
-- ' '
-- '&8No pagar el mantenimiento puede'
-- '&8terminar en expiración o subasta.'
+expansion_tier1_name: '&aExpansión Pequeña (+5)'
+expansion_tier2_name: '&eExpansión Mediana (+10)'
+expansion_tier3_name: '&fExpansión Grande (+20)'
+expansion_tier4_name: '&6Expansión Enorme (+35)'
+expansion_tier5_name: '&bExpansión Masiva (+50)'
 
-plot_status_social_lore:
-- '&7Visitas, likes y visibilidad.'
-- ' '
-- '&8Los claims populares ganan'
-- '&8reconocimiento en la comunidad.'
+# GUI de Nivelación (Ascensión)
+level_gui_title: '&dAscensión de Parcela'
+level_current_status: '&bEstado Actual de la Parcela'
+level_upgrade_button: '&aMejorar a Nivel &f{LEVEL}'
+level_max_reached: '&6Se alcanzó el nivel máximo para esta parcela.'
+level_button_lore:
+  - '&7Mejorá tu parcela para desbloquear'
+  - '&7nuevas ventajas y bonificaciones.'
+level_button_lore_static:
+  - '&7Mejorá tu parcela para desbloquear'
+  - '&7ventajas y bonos adicionales.'
 
-# --- Extras present in AR pack (kept) ---
-plot_status_gui_subtitle: '&7Lo importante del claim, sin chamuyo.'
-button_social: '&b⭐ Social'
-social_lore:
-- '&7Likes, visitas y boludeces.'
-- ' '
-- '&eClick para Abrir'
-button_plot_status: '&b📜 Estado'
-button_visit: '&9🧭 Visitar'
-visit_lore:
-- '&7Warps y lugares de confianza.'
-- ' '
-- '&eClick para Abrir'
-button_plot_status_back: '&e⟵ Volver al Estado'
-button_visit_back: '&e⟵ Volver a Visitar'
-plot_status_footer_hint: '&8Tip: Ajustá flags en "Ajustes del Rancho".'
+level_current_blessing_name: '&dBonificaciones Actuales'
+level_current_blessing_title: '&dBonificaciones Activas'
+level_current_blessing_footer_1: '&8Niveles más altos desbloquean'
+level_current_blessing_footer_2: '&8bonos más fuertes y beneficios extra.'
+
+level_current_blessings_name: '&dBonificaciones Actuales'
+level_current_blessings_title: '&dBonificaciones Activas'
+level_current_blessings_footer_1: '&8Niveles más altos desbloquean'
+level_current_blessings_footer_2: '&8bonos más fuertes y beneficios extra.'
+
+level_track_title_completed: '&aRama Completada'
+level_track_completed_1: '&7Todos los hitos de esta rama'
+level_track_completed_2: '&7ya fueron desbloqueados.'
+"level_track_completed_[1]": '&7Todos los hitos de esta rama'
+"level_track_completed_[2]": '&7ya fueron desbloqueados.'
+
+level_track_buffs_title: '&dBonificaciones Desbloqueadas'
+level_track_footer_mastered: '&6Esta rama de progreso ya está completada.'
+
+level_track_title_current: '&dRama Actual'
+"level_track_current_[1]": '&7Estas bonificaciones están'
+"level_track_current_[2]": '&7activas en tu parcela.'
+
+level_track_title_locked: '&cRama Bloqueada'
+"level_track_locked_[1]": '&7Mejoras adicionales en esta rama'
+"level_track_locked_[2]": '&7están bloqueadas hasta que avances.'
+
+"level_track_next_[1]": '&7Siguiente mejora en esta rama'
+level_track_next_cost: '&eCosto de Mejora: &6{COST}'
+level_track_footer_next: '&6Mejorá para desbloquear estas bonificaciones.'
+level_track_footer_progress: '&7Progreso hacia la próxima mejora.'
+
+level_upgrade_tier: '&dSiguiente Etapa'
+level_upgrade_next_tier: '&dSiguiente Etapa'
+level_upgrade_cost: '&eCosto de Mejora: &6{COST}'
+level_upgrade_new_buffs_title: '&dNuevas Bonificaciones'
+level_upgrade_click_hint: '&eClic para mejorar si te alcanza.'
+
+level_track_completed_title: '&aRama Completada'
+level_track_completed_lore_1: '&7Todos los hitos de esta rama'
+level_track_completed_lore_2: '&7ya fueron desbloqueados.'
+
+level_track_current_title: '&dRama Actual'
+level_track_current_lore_1: '&7Estas bonificaciones están'
+level_track_current_lore_2: '&7activas en tu parcela.'
+
+level_track_locked_title: '&cRama Bloqueada'
+level_track_locked_lore_1: '&7Mejoras adicionales en esta rama'
+level_track_locked_lore_2: '&7están bloqueadas hasta que avances.'
+
+level_track_next_title: '&dSiguiente Mejora en esta Rama'
+level_track_next_lore_1: '&7Mejorá para desbloquear las próximas bonificaciones.'
+level_track_next_lore_2: '&7Costo para avanzar: &6{COST}'
+
+# --------------------------------------
+# Plot Flags GUI (nombres + lore completos)
+# Usado por: PlotFlagsGUI.java
+# --------------------------------------
+
+button_pvp_on: '&a⚔ PvP: Protegido'
+button_pvp_off: '&c⚔ PvP: Sin protección'
+
+button_tnt_on: '&a💥 TNT: Protegido'
+button_tnt_off: '&c💥 TNT: Sin protección'
+
+button_fire_on: '&a🔥 Fuego: Bloqueado'
+button_fire_off: '&c🔥 Fuego: Permitido'
+
+button_mobs_on: '&a☠ Mobs: Protegido'
+button_mobs_off: '&c☠ Mobs: Sin protección'
+
+button_entry_on: '&a🚪 Entrada: Privada'
+button_entry_off: '&c🚪 Entrada: Pública'
+
+button_safe_on: '&a🛡 Zona Segura: ACTIVADA'
+button_safe_off: '&c🛡 Zona Segura: DESACTIVADA'
+
+button_containers_on: '&a📦 Contenedores: Bloqueados'
+button_containers_off: '&c📦 Contenedores: Libres'
+
+button_piston_on: '&a🔩 Pistones: Bloqueados'
+button_piston_off: '&c🔩 Pistones: Permitidos'
+
+button_farm_on: '&a🌾 Cultivos: Protegidos'
+button_farm_off: '&c🌾 Cultivos: Sin protección'
+
+button_animals_on: '&a🐄 Animales: Protegidos'
+button_animals_off: '&c🐄 Animales: Sin protección'
+
+button_redstone_on: '&a🔴 Redstone: Bloqueada'
+button_redstone_off: '&c🔴 Redstone: Permitida'
+
+button_vehicles_on: '&a🛶 Vehículos: Bloqueados'
+button_vehicles_off: '&c🛶 Vehículos: Permitidos'
+
+button_shop_on: '&a💎 Tienda: ACTIVADA'
+button_shop_off: '&c💎 Tienda: DESACTIVADA'
+
+button_fly_on: '&a🪽 Vuelo: ACTIVADO'
+button_fly_off: '&c🪽 Vuelo: DESACTIVADO'
+
+button_cosmetics: '&b✨ Cosméticos'
+
+pvp_toggle_lore:
+  - '&7Bloquea el combate PvP dentro de tu parcela.'
+  - '&eClic para alternar.'
+
+tnt_toggle_lore:
+  - '&7Evita que las explosiones dañen tu parcela.'
+  - '&eClic para alternar.'
+
+fire_toggle_lore:
+  - '&7Evita que el fuego se propague dentro de tu parcela.'
+  - '&eClic para alternar.'
+
+mob_toggle_lore:
+  - '&7Evita que mobs hostiles dañen jugadores en tu parcela.'
+  - '&eClic para alternar.'
+
+entry_toggle_lore:
+  - '&7Si está activado, jugadores no confiables no pueden entrar.'
+  - '&eClic para alternar.'
+
+safe_toggle_lore:
+  - '&7Reglas extra de seguridad para esta parcela.'
+  - '&7Solo admins.'
+  - '&eClic para alternar.'
+
+container_toggle_lore:
+  - '&7Bloquea cofres y almacenamientos para visitantes.'
+  - '&eClic para alternar.'
+
+piston_toggle_lore:
+  - '&7Evita que pistones empujen/tiren a través del borde.'
+  - '&eClic para alternar.'
+
+farm_toggle_lore:
+  - '&7Protege cultivos y tierra arada de visitantes.'
+  - '&eClic para alternar.'
+
+animals_toggle_lore:
+  - '&7Protege animales de visitantes.'
+  - '&eClic para alternar.'
+
+redstone_toggle_lore:
+  - '&7Bloquea interacción de redstone para visitantes.'
+  - '&eClic para alternar.'
+
+vehicles_toggle_lore:
+  - '&7Bloquea uso de vehículos para visitantes.'
+  - '&eClic para alternar.'
+
+shop_toggle_lore:
+  - '&7Permite interactuar con tiendas dentro de tu parcela.'
+  - '&7Costo: &6{COST}'
+  - '&eClic para comprar/alternar.'
+
+fly_toggle_lore:
+  - '&7Permite volar dentro de tu parcela.'
+  - '&7Costo: &6{COST}'
+  - '&eClic para comprar/alternar.'
+
+cosmetics_lore:
+  - '&7Personalizá el look y estilo de tu parcela.'
+  - '&eClic para abrir.'

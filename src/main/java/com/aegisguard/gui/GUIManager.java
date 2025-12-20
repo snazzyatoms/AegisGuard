@@ -135,6 +135,8 @@ public class GUIManager {
      *
      * IMPORTANT: CodexEngine returns the key itself when missing.
      * This method prevents raw keys from leaking into the UI by using fallback.
+     *
+     * NOTE: This returns COLORIZED output (so & codes won't leak into GUI titles).
      */
     public String tr(Player player, String key, String fallback) {
         String value = null;
@@ -157,8 +159,8 @@ public class GUIManager {
             if (plugin.codex() != null) raw = plugin.codex().tr(player, key);
         } catch (Throwable ignored) {}
 
+        // safeText now colorizes, so titles won't show raw & codes anymore.
         String t = safeText(key, raw, fallback);
-        t = color(t);
 
         // Safe clamp: avoid weird cut-off formatting on some clients
         if (t.length() > 32) t = t.substring(0, 32);
@@ -189,6 +191,8 @@ public class GUIManager {
      * ✅ Back-compat overload:
      * Many older GUIs still call safeText(value, fallback).
      * This keeps them compiling while still using the stronger 3-arg logic.
+     *
+     * NOTE: This returns COLORIZED output now.
      */
     public static String safeText(String fromCodex, String fallback) {
         return safeText(null, fromCodex, fallback);
@@ -199,23 +203,32 @@ public class GUIManager {
      * - null/empty -> fallback
      * - "[Missing...]" -> fallback
      * - returns-the-key -> fallback (Codex behavior)
+     *
+     * ✅ ALSO colorizes (& + hex) so GUI TITLES never show raw "&9" etc.
      */
     public static String safeText(String requestedKey, String fromCodex, String fallback) {
         if (fallback == null) fallback = "";
-        if (fromCodex == null) return fallback;
 
-        String s = fromCodex.trim();
-        if (s.isEmpty()) return fallback;
+        String out;
 
-        if (s.contains("[Missing") || s.equalsIgnoreCase("null")) return fallback;
-
-        // CodexEngine "not found" behavior: return key
-        if (requestedKey != null && !requestedKey.trim().isEmpty()
-                && s.equalsIgnoreCase(requestedKey.trim())) {
-            return fallback;
+        if (fromCodex == null) {
+            out = fallback;
+        } else {
+            String s = fromCodex.trim();
+            if (s.isEmpty()) {
+                out = fallback;
+            } else if (s.contains("[Missing") || s.equalsIgnoreCase("null")) {
+                out = fallback;
+            } else if (requestedKey != null && !requestedKey.trim().isEmpty()
+                    && s.equalsIgnoreCase(requestedKey.trim())) {
+                // CodexEngine "not found" behavior: return key
+                out = fallback;
+            } else {
+                out = fromCodex;
+            }
         }
 
-        return fromCodex;
+        return color(out);
     }
 
     /**
@@ -267,8 +280,11 @@ public class GUIManager {
      * Color utility with:
      * - legacy & codes
      * - hex codes in the form &#RRGGBB
+     *
+     * Made PUBLIC so any GUI can safely do:
+     *   String title = GUIManager.color("...&9Title...");
      */
-    private static String color(String text) {
+    public static String color(String text) {
         if (text == null) return "";
         String msg = text;
 
@@ -276,7 +292,12 @@ public class GUIManager {
         while (matcher.find()) {
             String token = matcher.group(0); // "&#A1B2C3"
             String hex = matcher.group(1);   // "A1B2C3"
-            msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
+            try {
+                msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
+            } catch (Throwable ignored) {
+                // If hex coloring isn't supported for any reason, just skip it.
+                msg = msg.replace(token, "");
+            }
             matcher = HEX_PATTERN.matcher(msg);
         }
 

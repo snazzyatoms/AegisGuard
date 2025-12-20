@@ -2,9 +2,9 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.util.TeleportUtil;          // ✅ Use TeleportUtil
+import com.aegisguard.util.TeleportUtil;          // ✅ Folia-safe teleports
 import org.bukkit.Bukkit;
-import org.bukkit.Location;                      // ✅ For target locations
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -23,6 +24,10 @@ import java.util.Map;
  * - Allows players to warp to plots they are trusted on.
  * - Allows warping to public Server Zones (Warps).
  * - Fully localized for language switching.
+ *
+ * ✅ Title fix: uses plugin.gui().title(...) + safe suffix clamp
+ * ✅ Click fix: prevents filler arrows from paging
+ * ✅ Bottom inventory ignored
  */
 public class VisitGUI {
 
@@ -35,7 +40,7 @@ public class VisitGUI {
 
     public static class VisitHolder implements InventoryHolder {
         private final int page;
-        private final boolean showingWarps; // Toggle state
+        private final boolean showingWarps;
         private final List<Plot> plots;
 
         public VisitHolder(List<Plot> plots, int page, boolean showingWarps) {
@@ -50,18 +55,47 @@ public class VisitGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
+    // --------------------------------------------------
+    // Codex-safe helpers (with fallbacks)
+    // --------------------------------------------------
+
+    private String t(Player p, String key, String fallback) {
+        return plugin.gui().tr(p, key, fallback);
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback) {
+        return plugin.gui().trList(p, key, fallback);
+    }
+
+    private String safeRole(String role) {
+        if (role == null || role.isBlank()) return "Member";
+        return role;
+    }
+
+    private void sendSystem(Player p, String key, String fallback) {
+        String msg = t(p, key, fallback);
+        if (msg == null || msg.isBlank()) return;
+        p.sendMessage(GUIManager.color(msg));
+    }
+
+    // --------------------------------------------------
+    // OPEN
+    // --------------------------------------------------
+
     public void open(Player player, int page, boolean showWarps) {
         List<Plot> displayPlots = new ArrayList<>();
 
         // --- FILTER LOGIC ---
         for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+
             if (showWarps) {
-                if (plot.isServerWarp()) {
-                    displayPlots.add(plot);
-                }
+                if (plot.isServerWarp()) displayPlots.add(plot);
             } else {
                 // Trusted Plots (Member/Co-Owner but NOT Owner)
-                if (plot.getPlayerRoles().containsKey(player.getUniqueId())
+                if (plot.getPlayerRoles() != null
+                        && plot.getPlayerRoles().containsKey(player.getUniqueId())
+                        && plot.getOwner() != null
                         && !plot.getOwner().equals(player.getUniqueId())) {
                     displayPlots.add(plot);
                 }
@@ -72,8 +106,8 @@ public class VisitGUI {
         displayPlots.sort((p1, p2) -> {
             String n1 = showWarps ? p1.getWarpName() : p1.getOwnerName();
             String n2 = showWarps ? p2.getWarpName() : p2.getOwnerName();
-            if (n1 == null) n1 = "Unknown";
-            if (n2 == null) n2 = "Unknown";
+            if (n1 == null || n1.isBlank()) n1 = "Unknown";
+            if (n2 == null || n2.isBlank()) n2 = "Unknown";
             return n1.compareToIgnoreCase(n2);
         });
 
@@ -81,22 +115,34 @@ public class VisitGUI {
         int maxPages = (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE);
         if (page < 0) page = 0;
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
+        if (maxPages == 0) page = 0;
 
-        // Localization Keys: "visit_title_warps" vs "visit_title_trusted"
+        // Localized titles
         String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
         String fallbackTitle = showWarps ? "&6Server Waypoints" : "&9Trusted Claims";
 
-        // ✅ Use GUIManager gateway so & codes are translated (no more raw "&9" titles)
-        String modeTitle = plugin.gui().tr(player, modeTitleKey, fallbackTitle);
+        // ✅ Base title via central formatter (colors + fallback + clamp)
+        String baseTitle = plugin.gui().title(player, modeTitleKey, fallbackTitle);
 
-        String title = modeTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")";
-        title = clampTitle(title);
-
-        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, title);
+        // ✅ Add suffix (use § so we don't rely on & here), then clamp
+        String fullTitle = clampTitle(baseTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
+        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, fullTitle);
 
         // Fill Footer
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
+        // Empty state
+        if (displayPlots.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(
+                    Material.BARRIER,
+                    t(player, "visit_empty_title", "&cNothing to visit"),
+                    tl(player, "visit_empty_lore", List.of(
+                            "&7No destinations were found for this mode.",
+                            "&7Try switching tabs."
+                    ))
+            ));
+        }
 
         // Populate Items
         int startIndex = page * PLOTS_PER_PAGE;
@@ -105,6 +151,8 @@ public class VisitGUI {
             if (index >= displayPlots.size()) break;
 
             Plot plot = displayPlots.get(index);
+            if (plot == null) continue;
+
             ItemStack icon;
 
             if (showWarps) {
@@ -112,43 +160,68 @@ public class VisitGUI {
                 Material mat = plot.getWarpIcon() != null ? plot.getWarpIcon() : Material.BEACON;
                 String name = plot.getWarpName() != null ? plot.getWarpName() : "Server Warp";
 
+                String dn = t(player, "visit_warp_name", "&6{WARP}")
+                        .replace("{WARP}", name);
+
+                List<String> lore = tl(player, "visit_warp_lore", List.of(
+                        "&7A public waypoint.",
+                        " ",
+                        "&eClick to teleport"
+                ));
+
                 icon = GUIManager.createItem(
                         mat,
-                        "§6" + name,
-                        plugin.codex().list(player, "visit_warp_lore")
+                        dn,
+                        lore
                 );
             } else {
                 // Trusted Plot
                 OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
-                String role = plot.getRole(player.getUniqueId());
+                String role = safeRole(plot.getRole(player.getUniqueId()));
                 String ownerName = (plot.getOwnerName() != null) ? plot.getOwnerName() : "Unknown";
-                String alias = (plot.getEntryTitle() != null) ? plot.getEntryTitle() : ownerName + "'s Plot";
+                String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
+                        ? plot.getEntryTitle()
+                        : ownerName + "'s Plot";
 
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
                 if (meta != null) {
-                    meta.setOwningPlayer(owner);
+                    try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
 
-                    // ✅ Display name: colorize + safe fallback
-                    String dnRaw = plugin.codex().tr(player, "visit_plot_name", Map.of("PLOT", alias));
+                    // Display name
+                    String dnRaw = null;
+                    try {
+                        if (plugin.codex() != null) dnRaw = plugin.codex().tr(player, "visit_plot_name", Map.of("PLOT", alias));
+                    } catch (Throwable ignored) {}
+
                     String displayName = GUIManager.safeText(dnRaw, "&e" + alias);
-                    meta.setDisplayName(displayName);
+                    meta.setDisplayName(GUIManager.color(displayName));
 
-                    // ✅ Lore: null-safe + placeholder replace + colorize
-                    List<String> baseLore = plugin.codex().list(player, "visit_plot_lore");
-                    if (baseLore == null) baseLore = List.of();
-
-                    List<String> lore = new ArrayList<>(baseLore);
-                    lore.replaceAll(s -> GUIManager.color(
-                            s.replace("{WORLD}", plot.getWorld())
-                             .replace("{ROLE}", role)
+                    // Lore with placeholders
+                    List<String> baseLore = tl(player, "visit_plot_lore", List.of(
+                            "&7World: &f{WORLD}",
+                            "&7Role: &b{ROLE}",
+                            " ",
+                            "&eClick to teleport"
                     ));
+
+                    String worldName = (plot.getWorld() != null ? plot.getWorld() : "Unknown");
+
+                    List<String> lore = new ArrayList<>();
+                    for (String line : baseLore) {
+                        if (line == null) continue;
+                        lore.add(GUIManager.color(
+                                line.replace("{WORLD}", worldName)
+                                    .replace("{ROLE}", role)
+                        ));
+                    }
 
                     meta.setLore(lore);
                     head.setItemMeta(meta);
                 }
                 icon = head;
             }
+
             inv.setItem(i, icon);
         }
 
@@ -156,14 +229,14 @@ public class VisitGUI {
         if (showWarps) {
             inv.setItem(49, GUIManager.createItem(
                     Material.PLAYER_HEAD,
-                    plugin.codex().tr(player, "visit_switch_trusted"),
-                    plugin.codex().list(player, "visit_switch_trusted_lore")
+                    t(player, "visit_switch_trusted", "&9Trusted Claims"),
+                    tl(player, "visit_switch_trusted_lore", List.of("&7Show plots you are trusted on."))
             ));
         } else {
             inv.setItem(49, GUIManager.createItem(
                     Material.BEACON,
-                    plugin.codex().tr(player, "visit_switch_warps"),
-                    plugin.codex().list(player, "visit_switch_warps_lore")
+                    t(player, "visit_switch_warps", "&6Server Waypoints"),
+                    tl(player, "visit_switch_warps_lore", List.of("&7Show server public warps."))
             ));
         }
 
@@ -171,14 +244,14 @@ public class VisitGUI {
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
-                    plugin.codex().tr(player, "button_prev_page"),
+                    t(player, "button_prev_page", "&fPrevious Page"),
                     null
             ));
         }
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.createItem(
                     Material.ARROW,
-                    plugin.codex().tr(player, "button_next_page"),
+                    t(player, "button_next_page", "&fNext Page"),
                     null
             ));
         }
@@ -186,25 +259,43 @@ public class VisitGUI {
         // Back
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                plugin.codex().tr(player, "button_back_menu"),
-                plugin.codex().list(player, "back_menu_lore")
+                t(player, "button_back_menu", "&fReturn to Menu"),
+                tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))
+        ));
+
+        // Exit (does not conflict with toggle @49)
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
     }
 
+    // --------------------------------------------------
+    // CLICK HANDLER
+    // --------------------------------------------------
+
     public void handleClick(Player player, InventoryClickEvent e, VisitHolder holder) {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
+        // Ignore clicks from bottom inventory
+        int rawSlot = e.getRawSlot();
+        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
+
         int slot = e.getSlot();
         boolean warps = holder.isShowingWarps();
 
-        // Nav
-        if (slot == 45) { open(player, holder.getPage() - 1, warps); return; }
-        if (slot == 53) { open(player, holder.getPage() + 1, warps); return; }
+        // Nav (only if the item is actually an arrow)
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, holder.getPage() - 1, warps); return; }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, holder.getPage() + 1, warps); return; }
+
+        // Back / Exit
         if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 50 && e.getCurrentItem().getType() == Material.BARRIER) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
 
         // Switch Mode
         if (slot == 49) {
@@ -216,33 +307,30 @@ public class VisitGUI {
         // Teleport
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() != Material.AIR) {
             int index = (holder.getPage() * PLOTS_PER_PAGE) + slot;
-            if (index < holder.getPlots().size()) {
-                Plot plot = holder.getPlots().get(index);
-                if (plot == null) return;
+            if (index >= holder.getPlots().size()) return;
 
-                // Prefer explicit spawn, fall back to plot center
-                Location target = plot.getSpawnLocation() != null
-                        ? plot.getSpawnLocation()
-                        : plot.getCenter(plugin);
+            Plot plot = holder.getPlots().get(index);
+            if (plot == null) return;
 
-                if (target == null || target.getWorld() == null) {
-                    // Still using existing message key for now
-                    plugin.msg().send(player, "home-fail-no-spawn");
-                    plugin.effects().playError(player);
-                    return;
-                }
+            Location target = plot.getSpawnLocation() != null
+                    ? plot.getSpawnLocation()
+                    : plot.getCenter(plugin);
 
-                // ✅ Folia/Paper-safe teleport
-                TeleportUtil.safeTeleport(plugin, player, target);
-
-                // Reusing existing success key for now
-                plugin.msg().send(player, "home-set-success");
-                plugin.effects().playTeleport(player);
-                player.closeInventory();
+            if (target == null || target.getWorld() == null) {
+                sendSystem(player, "visit_fail_no_spawn", "&cThis destination has no valid spawn set.");
+                plugin.effects().playError(player);
+                return;
             }
+
+            TeleportUtil.safeTeleport(plugin, player, target);
+
+            sendSystem(player, "visit_teleport_success", "&aTeleported.");
+            plugin.effects().playTeleport(player);
+            player.closeInventory();
         }
     }
 
+    // Vanilla inventory title safety clamp (simple, consistent with your other GUIs)
     private String clampTitle(String t) {
         if (t == null) return "";
         if (t.length() > 32) t = t.substring(0, 32);

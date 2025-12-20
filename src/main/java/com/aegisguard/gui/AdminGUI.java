@@ -34,13 +34,8 @@ public class AdminGUI {
             return;
         }
 
-        // ✅ Title fix: translate & colors + safe fallback + clamp length (centralized)
-        String title = plugin.gui().title(
-                player,
-                "admin_menu_title",
-                "&c&l⚔ High Guardian Tools ⚔"
-        );
-
+        // ✅ Title: translated, color-safe, clamped by GUI gateway
+        String title = plugin.gui().title(player, "admin_menu_title", "&c&l⚔ High Guardian Tools ⚔");
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
 
         ItemStack filler = GUIManager.getFiller();
@@ -58,50 +53,38 @@ public class AdminGUI {
         inv.setItem(28, GUIManager.createItem(
                 Material.AMETHYST_CLUSTER,
                 plugin.gui().tr(player, "button_view_requests_admin", "&cReview Requests"),
-                plugin.gui().trList(player, "view_requests_admin_lore", List.of(
-                        "&7Approve or deny expansion requests."
-                ))
+                plugin.gui().trList(player, "view_requests_admin_lore", List.of("&7Approve or deny expansion requests."))
         ));
 
         inv.setItem(29, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
                 plugin.gui().tr(player, "admin_plot_list_title", "&bPlot List"),
-                plugin.gui().trList(player, "admin_plot_list_lore", List.of(
-                        "&7View/TP to any plot."
-                ))
+                plugin.gui().trList(player, "admin_plot_list_lore", List.of("&7View/TP to any plot."))
         ));
 
         inv.setItem(30, GUIManager.createItem(
                 Material.COMPASS,
                 plugin.gui().tr(player, "button_admin_diagnostics", "&bDiagnostics"),
-                plugin.gui().trList(player, "admin_diagnostics_lore", List.of(
-                        "&7View system stats."
-                ))
+                plugin.gui().trList(player, "admin_diagnostics_lore", List.of("&7View system stats."))
         ));
 
         inv.setItem(31, GUIManager.createItem(
                 Material.REPEATER,
                 plugin.gui().tr(player, "button_admin_reload", "&eReload Config"),
-                plugin.gui().trList(player, "admin_reload_lore", List.of(
-                        "&7Reload all settings."
-                ))
+                plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings."))
         ));
 
         // --- NAVIGATION ---
         inv.setItem(36, GUIManager.createItem(
                 Material.ARROW,
                 plugin.gui().tr(player, "button_back_menu", "&fReturn to Menu"),
-                plugin.gui().trList(player, "back_menu_lore", List.of(
-                        "&7Return to the main dashboard."
-                ))
+                plugin.gui().trList(player, "back_menu_lore", List.of("&7Return to the main dashboard."))
         ));
 
         inv.setItem(44, GUIManager.createItem(
                 Material.BARRIER,
                 plugin.gui().tr(player, "button_exit", "&c✖ Close"),
-                plugin.gui().trList(player, "exit_lore", List.of(
-                        "&7Close this menu."
-                ))
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         player.openInventory(inv);
@@ -114,47 +97,18 @@ public class AdminGUI {
         if (e.getCurrentItem() == null) return;
 
         switch (e.getSlot()) {
-            case 10:
-                flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false);
-                open(player);
-                break;
-            case 11:
-                flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false);
-                open(player);
-                break;
-            case 12:
-                flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false);
-                open(player);
-                break;
-            case 13:
-                flipBool(player, "admin.unlimited_plots", null, null, true);
-                open(player);
-                break;
-            case 14:
-                flipBool(player, "sync.proxy.enabled", null, null, false);
-                open(player);
-                break;
-            case 15:
-                flipBool(player, "performance.low_overhead_mode", null, null, false);
-                open(player);
-                break;
+            case 10 -> { flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); open(player); }
+            case 11 -> { flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false); open(player); }
+            case 12 -> { flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false); open(player); }
+            case 13 -> { flipBool(player, "admin.unlimited_plots", null, null, true); open(player); }
+            case 14 -> { flipBool(player, "sync.proxy.enabled", null, null, false); open(player); }
+            case 15 -> { flipBool(player, "performance.low_overhead_mode", null, null, false); open(player); }
 
-            case 28:
-                plugin.gui().expansionAdmin().open(player);
-                plugin.effects().playMenuFlip(player);
-                break;
+            case 28 -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
+            case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
+            case 30 -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
 
-            case 29:
-                plugin.gui().plotList().open(player, 0);
-                plugin.effects().playMenuFlip(player);
-                break;
-
-            case 30:
-                plugin.gui().openDiagnostics(player);
-                plugin.effects().playMenuFlip(player);
-                break;
-
-            case 31:
+            case 31 -> {
                 plugin.msg().send(player, "admin_reloading");
                 plugin.runGlobalAsync(() -> {
                     plugin.cfg().reload();
@@ -167,14 +121,10 @@ public class AdminGUI {
                         open(player);
                     });
                 });
-                break;
+            }
 
-            case 36:
-                plugin.gui().openMain(player);
-                break;
-            case 44:
-                player.closeInventory();
-                break;
+            case 36 -> plugin.gui().openMain(player);
+            case 44 -> player.closeInventory();
         }
     }
 
@@ -192,13 +142,19 @@ public class AdminGUI {
                 val ? "&aON" : "&cOFF"
         );
 
+        // ✅ Language-aware name format (lets Spanish reorder naturally)
+        String format = plugin.gui().tr(p, "admin_toggle_format", "{NAME}: {STATE}");
+        String display = format.replace("{NAME}", name).replace("{STATE}", status);
+
         Material icon = val ? mat : Material.GRAY_DYE;
 
-        inv.setItem(slot, GUIManager.createItem(
-                icon,
-                name + ": " + status,
-                plugin.gui().trList(p, loreKey, List.of("&7Toggle this setting."))
-        ));
+        List<String> lore = plugin.gui().trList(
+                p,
+                loreKey,
+                plugin.gui().trList(p, "admin_toggle_default_lore", List.of("&7Toggle this setting."))
+        );
+
+        inv.setItem(slot, GUIManager.createItem(icon, display, lore));
     }
 
     private void flipBool(Player p, String path, String msgOn, String msgOff, boolean def) {
@@ -208,6 +164,7 @@ public class AdminGUI {
         plugin.saveConfig();
         plugin.cfg().reload();
 
+        // These are chat messages, not GUI strings (make sure Spanish messages files have them too)
         if (next && msgOn != null) plugin.msg().send(p, msgOn);
         if (!next && msgOff != null) plugin.msg().send(p, msgOff);
     }

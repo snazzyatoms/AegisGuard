@@ -10,6 +10,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +21,10 @@ import java.util.Map;
  * - Language cycling uses CodexEngine style order (codex.yml).
  * - ✅ Persistence is handled by CodexEngine (config.yml), NOT MessagesUtil.
  * - ✅ No savePlayerData/savePlayerPreferences calls here.
+ *
+ * + Admin tools:
+ * - ✅ Refresh Language Packs (Codex reload)
+ * - ✅ Reload All Settings (reload config + refresh managers + Codex reload)
  */
 public class SettingsGUI {
 
@@ -147,6 +152,31 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
+        // 4) ADMIN TOOLS (Refresh + Reload)
+        // --------------------------------------------------
+        if (plugin.isAdmin(player)) {
+
+            // Slot 40: Refresh Language Packs (Codex only)
+            inv.setItem(40, GUIManager.createItem(
+                    Material.RECOVERY_COMPASS,
+                    t(player, "settings_refresh_lang_name", "&a🔄 Refresh Language Packs"),
+                    tl(player, "settings_refresh_lang_lore",
+                            List.of("&7Reloads the Codex language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
+            ));
+
+            // Slot 41: Reload All Settings (config + managers + codex)
+            inv.setItem(41, GUIManager.createItem(
+                    Material.REDSTONE,
+                    t(player, "settings_reload_all_name", "&6⚙ Reload All Settings"),
+                    tl(player, "settings_reload_all_lore",
+                            List.of("&7Reloads config.yml and all systems.", "&7Also reloads language bundles.", " ", "&eClick to reload"))
+            ));
+
+        } else {
+            // Optional: leave filler, or show a subtle locked item. Keeping filler avoids clutter.
+        }
+
+        // --------------------------------------------------
         // NAVIGATION (48/49)
         // --------------------------------------------------
         inv.setItem(48, GUIManager.createItem(
@@ -224,6 +254,58 @@ public class SettingsGUI {
                 open(player, plot);
             }
 
+            // --------------------------------------------
+            // Admin tools
+            // --------------------------------------------
+
+            case 40 -> { // Refresh Language Packs (Codex reload)
+                if (!plugin.isAdmin(player)) {
+                    plugin.effects().playError(player);
+                    return;
+                }
+                plugin.effects().playMenuFlip(player);
+
+                plugin.runMainGlobal(() -> {
+                    try {
+                        if (plugin.codex() != null) plugin.codex().reload();
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[SettingsGUI] Codex refresh failed: " + t.getMessage());
+                    }
+                });
+
+                // Re-open so text updates immediately in the new bundles
+                plugin.runMain(player, () -> open(player, plot));
+            }
+
+            case 41 -> { // Reload All Settings (config + managers + codex)
+                if (!plugin.isAdmin(player)) {
+                    plugin.effects().playError(player);
+                    return;
+                }
+                plugin.effects().playMenuFlip(player);
+
+                plugin.runMainGlobal(() -> {
+                    try {
+                        // Reload config.yml from disk
+                        plugin.reloadConfig();
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[SettingsGUI] reloadConfig() failed: " + t.getMessage());
+                    }
+
+                    // Try to reload AGConfig manager if it exposes a reload-style method
+                    tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+
+                    // Reload Codex language engine
+                    try {
+                        if (plugin.codex() != null) plugin.codex().reload();
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[SettingsGUI] Codex reload failed: " + t.getMessage());
+                    }
+                });
+
+                plugin.runMain(player, () -> open(player, plot));
+            }
+
             case 48 -> {
                 plugin.effects().playMenuFlip(player);
                 plugin.gui().openMain(player);
@@ -283,5 +365,24 @@ public class SettingsGUI {
                .append(' ');
         }
         return out.toString().trim();
+    }
+
+    // --------------------------------------------------
+    // Reflection helper (safe no-arg invoke)
+    // --------------------------------------------------
+
+    private static void tryInvokeNoArg(Object target, String... methodNames) {
+        if (target == null || methodNames == null) return;
+        for (String name : methodNames) {
+            if (name == null || name.isBlank()) continue;
+            try {
+                Method m = target.getClass().getMethod(name);
+                m.setAccessible(true);
+                m.invoke(target);
+                return; // success, stop
+            } catch (Throwable ignored) {
+                // try next
+            }
+        }
     }
 }

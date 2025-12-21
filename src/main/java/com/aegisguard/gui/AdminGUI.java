@@ -2,6 +2,7 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -9,12 +10,19 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * AdminGUI
  * - Central control panel for server administrators.
  * - Fully localized for language switching (title + item names + lore + toggle labels).
+ *
+ * ✅ Fixed:
+ * - Reload now refreshes Codex language system properly.
+ * - Added a "Refresh Language Packs" button (Codex reload only).
+ * - Folia-safe scheduling pattern.
  */
 public class AdminGUI {
 
@@ -30,11 +38,11 @@ public class AdminGUI {
 
     public void open(Player player) {
         if (!plugin.isAdmin(player)) {
-            plugin.msg().send(player, "no_perm");
+            sendKey(player, "no_perm", "&cError: You do not have permission for this.");
+            plugin.effects().playError(player);
             return;
         }
 
-        // ✅ Title: translated, color-safe, clamped by GUI gateway
         String title = plugin.gui().title(player, "admin_menu_title", "&c&l⚔ High Guardian Tools ⚔");
         Inventory inv = Bukkit.createInventory(new AdminHolder(), 45, title);
 
@@ -68,10 +76,20 @@ public class AdminGUI {
                 plugin.gui().trList(player, "admin_diagnostics_lore", List.of("&7View system stats."))
         ));
 
+        // Slot 31: Reload All Settings
         inv.setItem(31, GUIManager.createItem(
-                Material.REPEATER,
-                plugin.gui().tr(player, "button_admin_reload", "&eReload Config"),
-                plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings."))
+                Material.REDSTONE,
+                plugin.gui().tr(player, "button_admin_reload_all", plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings")),
+                plugin.gui().trList(player, "admin_reload_all_lore",
+                        plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
+        ));
+
+        // Slot 32: Refresh Language Packs
+        inv.setItem(32, GUIManager.createItem(
+                Material.RECOVERY_COMPASS,
+                plugin.gui().tr(player, "button_admin_refresh_lang", "&aRefresh Language Packs"),
+                plugin.gui().trList(player, "admin_refresh_lang_lore",
+                        List.of("&7Reloads the language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
         ));
 
         // --- NAVIGATION ---
@@ -108,15 +126,68 @@ public class AdminGUI {
             case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
             case 30 -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
 
-            case 31 -> {
-                plugin.msg().send(player, "admin_reloading");
+            case 31 -> { // Reload ALL settings (config + managers + store + codex)
+                if (!plugin.isAdmin(player)) { plugin.effects().playError(player); return; }
+
+                plugin.effects().playMenuFlip(player);
+                sendKey(player, "admin_reloading", "&eReloading AegisGuard settings...");
+
                 plugin.runGlobalAsync(() -> {
-                    plugin.cfg().reload();
-                    plugin.msg().reload();
-                    plugin.worldRules().reload();
-                    plugin.store().load();
+                    // Reload config + main managers on main/global thread
+                    try {
+                        plugin.runMainGlobal(() -> {
+                            try { plugin.reloadConfig(); } catch (Throwable t) {
+                                plugin.getLogger().warning("[AdminGUI] reloadConfig failed: " + t.getMessage());
+                            }
+
+                            tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+                            tryInvokeNoArg(plugin.worldRules(), "reload", "load", "refresh");
+                            try {
+                                if (plugin.codex() != null) plugin.codex().reload();
+                            } catch (Throwable t) {
+                                plugin.getLogger().warning("[AdminGUI] Codex reload failed: " + t.getMessage());
+                            }
+                        });
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[AdminGUI] runMainGlobal reload block failed: " + t.getMessage());
+                    }
+
+                    // Store load can be heavy; keep async like before
+                    try {
+                        if (plugin.store() != null) plugin.store().load();
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[AdminGUI] store.load failed: " + t.getMessage());
+                    }
+
                     plugin.runMain(player, () -> {
-                        plugin.msg().send(player, "admin_reload_complete");
+                        sendKey(player, "admin_reload_complete", "&aReload complete.");
+                        plugin.effects().playConfirm(player);
+                        open(player);
+                    });
+                });
+            }
+
+            case 32 -> { // Refresh ONLY language packs (Codex)
+                if (!plugin.isAdmin(player)) { plugin.effects().playError(player); return; }
+
+                plugin.effects().playMenuFlip(player);
+                sendKey(player, "admin_refreshing_lang", "&aRefreshing language packs...");
+
+                plugin.runGlobalAsync(() -> {
+                    try {
+                        plugin.runMainGlobal(() -> {
+                            try {
+                                if (plugin.codex() != null) plugin.codex().reload();
+                            } catch (Throwable t) {
+                                plugin.getLogger().warning("[AdminGUI] Codex refresh failed: " + t.getMessage());
+                            }
+                        });
+                    } catch (Throwable t) {
+                        plugin.getLogger().warning("[AdminGUI] runMainGlobal refresh block failed: " + t.getMessage());
+                    }
+
+                    plugin.runMain(player, () -> {
+                        sendKey(player, "admin_refresh_lang_complete", "&aLanguage packs refreshed.");
                         plugin.effects().playConfirm(player);
                         open(player);
                     });
@@ -135,16 +206,18 @@ public class AdminGUI {
 
         String name = plugin.gui().tr(p, nameKey, "&eSetting");
 
-        // ✅ Language-aware ON/OFF labels
         String status = plugin.gui().tr(
                 p,
                 val ? "toggle_on" : "toggle_off",
                 val ? "&aON" : "&cOFF"
         );
 
-        // ✅ Language-aware name format (lets Spanish reorder naturally)
         String format = plugin.gui().tr(p, "admin_toggle_format", "{NAME}: {STATE}");
-        String display = format.replace("{NAME}", name).replace("{STATE}", status);
+        String display = format
+                .replace("{NAME}", name)
+                .replace("{STATE}", status)
+                .replace("{name}", name)
+                .replace("{state}", status);
 
         Material icon = val ? mat : Material.GRAY_DYE;
 
@@ -160,12 +233,44 @@ public class AdminGUI {
     private void flipBool(Player p, String path, String msgOn, String msgOff, boolean def) {
         boolean current = plugin.getConfig().getBoolean(path, def);
         boolean next = !current;
-        plugin.getConfig().set(path, next);
-        plugin.saveConfig();
-        plugin.cfg().reload();
 
-        // These are chat messages, not GUI strings (make sure Spanish messages files have them too)
-        if (next && msgOn != null) plugin.msg().send(p, msgOn);
-        if (!next && msgOff != null) plugin.msg().send(p, msgOff);
+        plugin.getConfig().set(path, next);
+
+        // Save async (less chance of hitching on Folia)
+        try {
+            plugin.runGlobalAsync(plugin::saveConfig);
+        } catch (Throwable ignored) {
+            plugin.saveConfig();
+        }
+
+        tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+
+        if (next && msgOn != null) sendKey(p, msgOn, "&aSetting enabled.");
+        if (!next && msgOff != null) sendKey(p, msgOff, "&cSetting disabled.");
+    }
+
+    private void sendKey(Player p, String key, String fallback) {
+        String msg = fallback;
+        try {
+            if (plugin.codex() != null) {
+                String tr = plugin.codex().tr(p, key);
+                if (tr != null && !tr.isBlank() && !tr.equalsIgnoreCase(key)) msg = tr;
+            }
+        } catch (Throwable ignored) {}
+
+        p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+    }
+
+    private static void tryInvokeNoArg(Object target, String... methodNames) {
+        if (target == null || methodNames == null) return;
+        for (String name : methodNames) {
+            if (name == null || name.isBlank()) continue;
+            try {
+                Method m = target.getClass().getMethod(name);
+                m.setAccessible(true);
+                m.invoke(target);
+                return;
+            } catch (Throwable ignored) {}
+        }
     }
 }

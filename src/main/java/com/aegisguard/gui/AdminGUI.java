@@ -12,17 +12,18 @@ import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 /**
  * AdminGUI
  * - Central control panel for server administrators.
  * - Fully localized for language switching (title + item names + lore + toggle labels).
  *
- * ✅ Fixed:
- * - Reload now refreshes Codex language system properly.
- * - Added a "Refresh Language Packs" button (Codex reload only).
- * - Folia-safe scheduling pattern.
+ * ✅ Fixed/Improved:
+ * - Hard admin guard in click handler.
+ * - Toggle format now uses placeholder-aware translation (no manual replace chains).
+ * - Reload All Settings prefers plugin.reloadAegisGuard(true) when available.
+ * - Folia-safe scheduling pattern preserved.
  */
 public class AdminGUI {
 
@@ -79,12 +80,13 @@ public class AdminGUI {
         // Slot 31: Reload All Settings
         inv.setItem(31, GUIManager.createItem(
                 Material.REDSTONE,
-                plugin.gui().tr(player, "button_admin_reload_all", plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings")),
+                plugin.gui().tr(player, "button_admin_reload_all",
+                        plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings")),
                 plugin.gui().trList(player, "admin_reload_all_lore",
                         plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
         ));
 
-        // Slot 32: Refresh Language Packs
+        // Slot 32: Refresh Language Packs (Codex only)
         inv.setItem(32, GUIManager.createItem(
                 Material.RECOVERY_COMPASS,
                 plugin.gui().tr(player, "button_admin_refresh_lang", "&aRefresh Language Packs"),
@@ -111,8 +113,21 @@ public class AdminGUI {
 
     public void handleClick(Player player, InventoryClickEvent e) {
         if (!(e.getInventory().getHolder() instanceof AdminHolder)) return;
+
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+
+        // ✅ Hard guard: only admins can interact with this GUI
+        if (!plugin.isAdmin(player)) {
+            plugin.effects().playError(player);
+            player.closeInventory();
+            return;
+        }
+
+        ItemStack item = e.getCurrentItem();
+        if (item == null || item.getType() == Material.AIR) return;
+
+        // Optional: ignore filler clicks silently
+        if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         switch (e.getSlot()) {
             case 10 -> { flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); open(player); }
@@ -126,33 +141,35 @@ public class AdminGUI {
             case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
             case 30 -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
 
-            case 31 -> { // Reload ALL settings (config + managers + store + codex)
-                if (!plugin.isAdmin(player)) { plugin.effects().playError(player); return; }
-
+            case 31 -> { // Reload ALL settings (central hook preferred)
                 plugin.effects().playMenuFlip(player);
                 sendKey(player, "admin_reloading", "&eReloading AegisGuard settings...");
 
                 plugin.runGlobalAsync(() -> {
-                    // Reload config + main managers on main/global thread
                     try {
                         plugin.runMainGlobal(() -> {
-                            try { plugin.reloadConfig(); } catch (Throwable t) {
-                                plugin.getLogger().warning("[AdminGUI] reloadConfig failed: " + t.getMessage());
-                            }
-
-                            tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
-                            tryInvokeNoArg(plugin.worldRules(), "reload", "load", "refresh");
                             try {
-                                if (plugin.codex() != null) plugin.codex().reload();
+                                // ✅ Prefer your central reload pipeline if present
+                                tryInvokeReloadAegisGuard(true);
                             } catch (Throwable t) {
-                                plugin.getLogger().warning("[AdminGUI] Codex reload failed: " + t.getMessage());
+                                // Fallback if reloadAegisGuard isn't present for some reason
+                                try { plugin.reloadConfig(); } catch (Throwable ex) {
+                                    plugin.getLogger().warning("[AdminGUI] reloadConfig failed: " + ex.getMessage());
+                                }
+                                tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+                                tryInvokeNoArg(plugin.worldRules(), "reload", "load", "refresh");
+                                try {
+                                    if (plugin.codex() != null) plugin.codex().reload();
+                                } catch (Throwable ex) {
+                                    plugin.getLogger().warning("[AdminGUI] Codex reload failed: " + ex.getMessage());
+                                }
                             }
                         });
                     } catch (Throwable t) {
                         plugin.getLogger().warning("[AdminGUI] runMainGlobal reload block failed: " + t.getMessage());
                     }
 
-                    // Store load can be heavy; keep async like before
+                    // Store load can be heavy; keep async
                     try {
                         if (plugin.store() != null) plugin.store().load();
                     } catch (Throwable t) {
@@ -168,8 +185,6 @@ public class AdminGUI {
             }
 
             case 32 -> { // Refresh ONLY language packs (Codex)
-                if (!plugin.isAdmin(player)) { plugin.effects().playError(player); return; }
-
                 plugin.effects().playMenuFlip(player);
                 sendKey(player, "admin_refreshing_lang", "&aRefreshing language packs...");
 
@@ -212,12 +227,13 @@ public class AdminGUI {
                 val ? "&aON" : "&cOFF"
         );
 
-        String format = plugin.gui().tr(p, "admin_toggle_format", "{NAME}: {STATE}");
-        String display = format
-                .replace("{NAME}", name)
-                .replace("{STATE}", status)
-                .replace("{name}", name)
-                .replace("{state}", status);
+        // ✅ Placeholder-aware toggle format (no manual replace chain)
+        String display = plugin.gui().tr(
+                p,
+                "admin_toggle_format",
+                "{NAME}: {STATE}",
+                Map.of("NAME", name, "STATE", status)
+        );
 
         Material icon = val ? mat : Material.GRAY_DYE;
 
@@ -250,6 +266,7 @@ public class AdminGUI {
     }
 
     private void sendKey(Player p, String key, String fallback) {
+        // GUI gateway already returns colorized output, but this keeps legacy behavior safe.
         String msg = fallback;
         try {
             if (plugin.codex() != null) {
@@ -259,6 +276,18 @@ public class AdminGUI {
         } catch (Throwable ignored) {}
 
         p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+    }
+
+    private void tryInvokeReloadAegisGuard(boolean refreshMenus) {
+        // If your plugin has reloadAegisGuard(boolean), call it.
+        // If not, this will throw and we fall back.
+        try {
+            Method m = plugin.getClass().getMethod("reloadAegisGuard", boolean.class);
+            m.setAccessible(true);
+            m.invoke(plugin, refreshMenus);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     private static void tryInvokeNoArg(Object target, String... methodNames) {

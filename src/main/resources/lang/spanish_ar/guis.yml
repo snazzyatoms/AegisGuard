@@ -702,7 +702,7 @@ role_flag_name_VEHICLES: '&bVehículos'
 # --------------------------------------
 # Admin GUI (AdminGUI.java)
 # --------------------------------------
-admin_menu_title: '&c&l Herramientas del Alto Guardián'
+admin_menu_title: '&c&lKit del Alto Guardián'
 
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'

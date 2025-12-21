@@ -10,7 +10,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -171,9 +170,6 @@ public class SettingsGUI {
                     tl(player, "settings_reload_all_lore",
                             List.of("&7Reloads config.yml and all systems.", "&7Also reloads language bundles.", " ", "&eClick to reload"))
             ));
-
-        } else {
-            // Optional: leave filler, or show a subtle locked item. Keeping filler avoids clutter.
         }
 
         // --------------------------------------------------
@@ -197,7 +193,12 @@ public class SettingsGUI {
 
     public void handleClick(Player player, InventoryClickEvent e) {
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+
+        ItemStack currentItem = e.getCurrentItem();
+        if (currentItem == null) return;
+
+        // Optional: ignore filler clicks silently
+        if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
 
@@ -271,13 +272,16 @@ public class SettingsGUI {
                     } catch (Throwable t) {
                         plugin.getLogger().warning("[SettingsGUI] Codex refresh failed: " + t.getMessage());
                     }
+
+                    // Force-refresh open menus for everyone (same idea as reloadAegisGuard(true), but lighter)
+                    closeAegisMenus();
                 });
 
-                // Re-open so text updates immediately in the new bundles
+                // Re-open so text updates immediately
                 plugin.runMain(player, () -> open(player, plot));
             }
 
-            case 41 -> { // Reload All Settings (config + managers + codex)
+            case 41 -> { // Reload All Settings (central hook)
                 if (!plugin.isAdmin(player)) {
                     plugin.effects().playError(player);
                     return;
@@ -286,20 +290,10 @@ public class SettingsGUI {
 
                 plugin.runMainGlobal(() -> {
                     try {
-                        // Reload config.yml from disk
-                        plugin.reloadConfig();
+                        // ✅ Your central reload path (config + managers + bundles + codex + optional gui refresh)
+                        plugin.reloadAegisGuard(true);
                     } catch (Throwable t) {
-                        plugin.getLogger().warning("[SettingsGUI] reloadConfig() failed: " + t.getMessage());
-                    }
-
-                    // Try to reload AGConfig manager if it exposes a reload-style method
-                    tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
-
-                    // Reload Codex language engine
-                    try {
-                        if (plugin.codex() != null) plugin.codex().reload();
-                    } catch (Throwable t) {
-                        plugin.getLogger().warning("[SettingsGUI] Codex reload failed: " + t.getMessage());
+                        plugin.getLogger().warning("[SettingsGUI] reloadAegisGuard(true) failed: " + t.getMessage());
                     }
                 });
 
@@ -368,21 +362,23 @@ public class SettingsGUI {
     }
 
     // --------------------------------------------------
-    // Reflection helper (safe no-arg invoke)
+    // Menu refresh helper
     // --------------------------------------------------
 
-    private static void tryInvokeNoArg(Object target, String... methodNames) {
-        if (target == null || methodNames == null) return;
-        for (String name : methodNames) {
-            if (name == null || name.isBlank()) continue;
+    private void closeAegisMenus() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
             try {
-                Method m = target.getClass().getMethod(name);
-                m.setAccessible(true);
-                m.invoke(target);
-                return; // success, stop
-            } catch (Throwable ignored) {
-                // try next
-            }
+                Inventory top = p.getOpenInventory().getTopInventory();
+                if (top == null) continue;
+                InventoryHolder h = top.getHolder();
+                if (h == null) continue;
+
+                String cn = h.getClass().getName();
+                if (cn.startsWith("com.aegisguard.gui.")
+                        || cn.startsWith("com.aegisguard.expansions.")) {
+                    p.closeInventory();
+                }
+            } catch (Throwable ignored) {}
         }
     }
 }

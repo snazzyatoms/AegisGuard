@@ -17,13 +17,12 @@ import java.util.Map;
 /**
  * SettingsGUI
  * - Personal player preferences (sounds, language, notifications)
- * - Language cycling uses CodexEngine style order (codex.yml).
+ * - Language cycling uses CodexEngine style order (codex.yml or config).
  * - ✅ Persistence is handled by CodexEngine (config.yml), NOT MessagesUtil.
- * - ✅ No savePlayerData/savePlayerPreferences calls here.
  *
  * + Admin tools:
  * - ✅ Refresh Language Packs (Codex reload)
- * - ✅ Reload All Settings (reload config + refresh managers + Codex reload)
+ * - ✅ Reload All Settings (reload config + refresh managers + bundle extraction + Codex reload)
  */
 public class SettingsGUI {
 
@@ -48,30 +47,18 @@ public class SettingsGUI {
         return plugin.gui().tr(p, key, fallback);
     }
 
-    private String t(Player p, String key, Map<String, String> vars, String fallback) {
-        // Prefer Codex map-aware translate if available; fall back to gui().tr
-        String raw = null;
-        try {
-            if (plugin.codex() != null) raw = plugin.codex().tr(p, key, vars);
-        } catch (Throwable ignored) {}
-
-        String out = (raw == null || raw.isBlank() || raw.equalsIgnoreCase(key))
-                ? plugin.gui().tr(p, key, fallback)
-                : raw;
-
-        // Apply vars to fallback-shaped strings too
-        if (vars != null && !vars.isEmpty()) {
-            for (var en : vars.entrySet()) {
-                String k = en.getKey();
-                String v = en.getValue() == null ? "" : en.getValue();
-                out = out.replace("{" + k + "}", v).replace("{" + k.toLowerCase(Locale.ROOT) + "}", v);
-            }
-        }
-        return out;
+    private String t(Player p, String key, String fallback, Map<String, String> placeholders) {
+        // ✅ Uses GUIManager's placeholder-aware translate (also applies placeholders to fallback)
+        return plugin.gui().tr(p, key, fallback, placeholders);
     }
 
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback, Map<String, String> placeholders) {
+        // ✅ Uses GUIManager's placeholder-aware lore translate (fallback also gets placeholders)
+        return plugin.gui().trList(p, key, fallback, placeholders);
     }
 
     public void open(Player player) { open(player, null); }
@@ -126,9 +113,10 @@ public class SettingsGUI {
 
         inv.setItem(13, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
-                t(player, "settings_language_name",
-                        Map.of("LANG", langDisplay),
-                        "&eLanguage: {LANG}"
+                t(player,
+                        "settings_language_name",
+                        "&eLanguage: {LANG}",
+                        Map.of("LANG", langDisplay)
                 ),
                 tl(player, "settings_language_lore",
                         List.of("&7Click to cycle language styles."))
@@ -142,9 +130,10 @@ public class SettingsGUI {
 
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
-                t(player, "settings_notifications_name",
-                        Map.of("MODE", modeDisplay),
-                        "&bNotifications: {MODE}"
+                t(player,
+                        "settings_notifications_name",
+                        "&bNotifications: {MODE}",
+                        Map.of("MODE", modeDisplay)
                 ),
                 tl(player, "settings_notifications_lore",
                         List.of("&7Click to cycle:", "&7Action Bar -> Chat -> Title"))
@@ -160,15 +149,21 @@ public class SettingsGUI {
                     Material.RECOVERY_COMPASS,
                     t(player, "settings_refresh_lang_name", "&a🔄 Refresh Language Packs"),
                     tl(player, "settings_refresh_lang_lore",
-                            List.of("&7Reloads the Codex language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
+                            List.of("&7Reloads the Codex language bundles.",
+                                    "&7Use after editing lang files.",
+                                    " ",
+                                    "&eClick to refresh"))
             ));
 
-            // Slot 41: Reload All Settings (config + managers + codex)
+            // Slot 41: Reload All Settings (central hook)
             inv.setItem(41, GUIManager.createItem(
                     Material.REDSTONE,
                     t(player, "settings_reload_all_name", "&6⚙ Reload All Settings"),
                     tl(player, "settings_reload_all_lore",
-                            List.of("&7Reloads config.yml and all systems.", "&7Also reloads language bundles.", " ", "&eClick to reload"))
+                            List.of("&7Reloads config.yml and all systems.",
+                                    "&7Also reloads language bundles.",
+                                    " ",
+                                    "&eClick to reload"))
             ));
         }
 
@@ -195,7 +190,7 @@ public class SettingsGUI {
         e.setCancelled(true);
 
         ItemStack currentItem = e.getCurrentItem();
-        if (currentItem == null) return;
+        if (currentItem == null || currentItem.getType() == Material.AIR) return;
 
         // Optional: ignore filler clicks silently
         if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
@@ -273,7 +268,7 @@ public class SettingsGUI {
                         plugin.getLogger().warning("[SettingsGUI] Codex refresh failed: " + t.getMessage());
                     }
 
-                    // Force-refresh open menus for everyone (same idea as reloadAegisGuard(true), but lighter)
+                    // Force-refresh open menus for everyone (lighter than full reload)
                     closeAegisMenus();
                 });
 
@@ -290,7 +285,6 @@ public class SettingsGUI {
 
                 plugin.runMainGlobal(() -> {
                     try {
-                        // ✅ Your central reload path (config + managers + bundles + codex + optional gui refresh)
                         plugin.reloadAegisGuard(true);
                     } catch (Throwable t) {
                         plugin.getLogger().warning("[SettingsGUI] reloadAegisGuard(true) failed: " + t.getMessage());
@@ -334,15 +328,15 @@ public class SettingsGUI {
     }
 
     private String formatStyle(Player player, String style) {
-        if (style == null || style.isEmpty()) return t(player, "style_old_english", "§dOld English");
+        if (style == null || style.isEmpty()) return t(player, "style_old_english", "&dOld English");
 
         return switch (style.toLowerCase(Locale.ROOT)) {
-            case "old_english" -> t(player, "style_old_english", "§dOld English");
-            case "modern_english" -> t(player, "style_modern_english", "§aModern");
-            case "hybrid_english" -> t(player, "style_hybrid_english", "§eHybrid");
-            case "spanish_mx" -> t(player, "style_spanish_mx", "§bEspañol (LatAm)");
-            case "spanish_ar" -> t(player, "style_spanish_ar", "§bEspañol (AR)");
-            default -> "§f" + pretty(style);
+            case "old_english" -> t(player, "style_old_english", "&dOld English");
+            case "modern_english" -> t(player, "style_modern_english", "&aModern");
+            case "hybrid_english" -> t(player, "style_hybrid_english", "&eHybrid");
+            case "spanish_mx" -> t(player, "style_spanish_mx", "&bEspañol (LatAm)");
+            case "spanish_ar" -> t(player, "style_spanish_ar", "&bEspañol (AR)");
+            default -> "&f" + pretty(style);
         };
     }
 

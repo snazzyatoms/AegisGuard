@@ -240,7 +240,7 @@ expansion_button_back: '&e⟵ Back to Previous Menu'
 
 # Expansion GUI
 expansion_gui_title: '&dLand Expansion Request'
-expansion_admin_title: '&8Pending Requests'
+expansion_admin_title: '&#5DE0E6&lPetitions &#FFD166&lPending &#C77DFF&l⚔'
 expansion_none_title: '&cNo Requests'
 expansion_none_lore:
   - '&7No pending requests.'

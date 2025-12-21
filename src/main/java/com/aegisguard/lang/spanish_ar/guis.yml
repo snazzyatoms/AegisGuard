@@ -326,7 +326,7 @@ help_lines:
 # GUI de Expansión
 # --------------------------------------
 expansion_gui_title: '&dSolicitud de Expansión'
-expansion_admin_title: '&8Solicitudes Pendientes'
+expansion_admin_title: '&6&lExpansiones Pendientes'
 expansion_none_title: '&cSin Solicitudes'
 expansion_none_lore:
   - '&7No hay solicitudes pendientes.'

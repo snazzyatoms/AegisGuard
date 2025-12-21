@@ -1,7 +1,7 @@
 package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.GUIManager;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * CodexEngine (AegisGuard v1.2.4+)
@@ -35,6 +37,9 @@ import java.util.*;
 public class CodexEngine {
 
     private static final String PLAYER_STYLE_PATH = "localization.player_styles";
+
+    /** Supports hex colors like &#12ABEF */
+    private static final Pattern HEX_PATTERN = Pattern.compile("(?i)&#([0-9a-f]{6})");
 
     private final AegisGuard plugin;
 
@@ -340,7 +345,7 @@ public class CodexEngine {
         String style = resolveStyle(sender);
         String raw = resolve(style, key);
         String out = applyPlaceholders(raw, placeholders);
-        return GUIManager.color(out);
+        return colorize(out);
     }
 
     public String tr(String key) {
@@ -350,7 +355,7 @@ public class CodexEngine {
     public String tr(String key, Map<String, String> placeholders) {
         String raw = resolve(defaultStyle, key);
         String out = applyPlaceholders(raw, placeholders);
-        return GUIManager.color(out);
+        return colorize(out);
     }
 
     public List<String> trList(CommandSender sender, String key) {
@@ -360,12 +365,11 @@ public class CodexEngine {
     public List<String> trList(CommandSender sender, String key, Map<String, String> placeholders) {
         String style = resolveStyle(sender);
         List<String> rawList = resolveList(style, key);
-        if (rawList == null || rawList.isEmpty()) return Collections.emptyList();
+        if (rawList.isEmpty()) return Collections.emptyList();
 
         List<String> out = new ArrayList<>(rawList.size());
         for (String line : rawList) {
-            String applied = applyPlaceholders(line, placeholders);
-            out.add(GUIManager.color(applied));
+            out.add(colorize(applyPlaceholders(line, placeholders)));
         }
         return out;
     }
@@ -652,8 +656,7 @@ public class CodexEngine {
     }
 
     private String applyPlaceholders(String input, Map<String, String> placeholders) {
-        if (input == null) return "";
-        if (input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
+        if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
 
         String out = input;
         for (Map.Entry<String, String> e : placeholders.entrySet()) {
@@ -679,6 +682,33 @@ public class CodexEngine {
             out = out.replace(dollar, value).replace(dollarLower, value).replace(dollarUpper, value);
         }
         return out;
+    }
+
+    /**
+     * Converts:
+     * - &#RRGGBB  -> §x§R§R§G§G§B§B (via Bungee ChatColor)
+     * - &a &b etc -> §a §b etc
+     */
+    private String colorize(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        String out = input;
+
+        // Hex first
+        try {
+            Matcher m = HEX_PATTERN.matcher(out);
+            StringBuffer sb = new StringBuffer();
+            while (m.find()) {
+                String hex = m.group(1);
+                String repl = net.md_5.bungee.api.ChatColor.of("#" + hex).toString();
+                m.appendReplacement(sb, Matcher.quoteReplacement(repl));
+            }
+            m.appendTail(sb);
+            out = sb.toString();
+        } catch (Throwable ignored) {}
+
+        // Standard & codes
+        return ChatColor.translateAlternateColorCodes('&', out);
     }
 
     // ----------------------------

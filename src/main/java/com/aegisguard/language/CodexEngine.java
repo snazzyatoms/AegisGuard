@@ -73,13 +73,7 @@ public class CodexEngine {
     private YamlConfiguration fallbackCoreBundle = new YamlConfiguration();
     private YamlConfiguration fallbackOverridesBundle = new YamlConfiguration();
 
-    /**
-     * Per-player style cache (persisted in config.yml).
-     *
-     * ✅ Small upgrade:
-     * - Use ConcurrentHashMap to reduce the chance of async/cache races (some servers reload/save async).
-     * - Clear cache on reload() so changes in config.yml are immediately reflected.
-     */
+    /** Per-player style cache (persisted in config.yml). */
     private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
 
     public CodexEngine(AegisGuard plugin) {
@@ -91,18 +85,14 @@ public class CodexEngine {
      * Reload language packs.
      */
     public void reload() {
-        // ✅ Small upgrade: hard-clear caches so reload reflects disk/config changes immediately.
-        // (Bundles and styles are rebuilt below; player style cache repopulates on-demand from config.yml.)
-        primaryStyleBundles.clear();
-        fallbackStyleBundles.clear();
-        availableStyles.clear();
-        playerStyles.clear();
-
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists()) {
             //noinspection ResultOfMethodCallIgnored
             dataFolder.mkdirs();
         }
+
+        // ✅ Small upgrade: clear cache so config edits apply immediately after reload.
+        playerStyles.clear();
 
         // Read config
         this.primaryFolderName = nvl(plugin.getConfig().getString("localization.folder"), "lang").trim();
@@ -153,6 +143,7 @@ public class CodexEngine {
         List<String> fromPrimaryIndex = (primaryIndex == null) ? Collections.emptyList() : primaryIndex.getStringList("available_styles");
         List<String> fromFallbackIndex = (fallbackIndex == null) ? Collections.emptyList() : fallbackIndex.getStringList("available_styles");
 
+        availableStyles.clear();
         if (fromConfig != null && !fromConfig.isEmpty()) {
             availableStyles.addAll(fromConfig);
         } else if (detected != null && !detected.isEmpty()) {
@@ -205,6 +196,8 @@ public class CodexEngine {
         // ---------------------------
         // Load PRIMARY (lang) bundles
         // ---------------------------
+        primaryStyleBundles.clear();
+
         for (String style : availableStyles) {
             YamlConfiguration merged = new YamlConfiguration();
             File styleDir = new File(primaryDir, style);
@@ -231,6 +224,7 @@ public class CodexEngine {
         // ------------------------------
         // Load FALLBACK (codex) bundles
         // ------------------------------
+        fallbackStyleBundles.clear();
         loadFallbackCodexBundles(fallbackDir, fallbackIndex, bundles);
 
         boolean primaryHasAnyKeys = primaryStyleBundles.values().stream()

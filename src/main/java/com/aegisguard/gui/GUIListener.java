@@ -24,6 +24,8 @@ import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
 
+import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -34,11 +36,24 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * GUIListener
  * - Central click router for ALL AegisGuard GUIs.
  * - Strictly blocks inventory movement while our menus are open.
+ *
+ * ✅ Upgrade:
+ * - Intercepts "Refresh / Reload" buttons and reloads CodexEngine too.
+ * - Attempts to reopen the same GUI after reload.
  */
 public class GUIListener implements Listener {
 
@@ -89,19 +104,6 @@ public class GUIListener implements Listener {
         // Always cancel: these are menu inventories, never item-storage.
         e.setCancelled(true);
 
-        // 1) Block ALL shift-click / hotbar swaps / offhand / double-click globally
-        ClickType click = e.getClick();
-        switch (click) {
-            case SHIFT_LEFT,
-                 SHIFT_RIGHT,
-                 NUMBER_KEY,
-                 DOUBLE_CLICK,
-                 SWAP_OFFHAND -> {
-                     return;
-                 }
-            default -> { /* continue */ }
-        }
-
         // 2) Block clicks originating in the player's own inventory while GUI open
         if (e.getClickedInventory() != null && e.getClickedInventory().equals(player.getInventory())) {
             return;
@@ -116,6 +118,26 @@ public class GUIListener implements Listener {
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
+
+        // ✅ Global: handle reload/refresh buttons (Codex + config)
+        if (isReloadTrigger(clicked)) {
+            boolean soft = (e.getClick() == ClickType.RIGHT || e.getClick() == ClickType.SHIFT_RIGHT);
+            handleGuiReload(player, holder, soft);
+            return;
+        }
+
+        // 1) Block ALL shift-click / hotbar swaps / offhand / double-click globally
+        ClickType click = e.getClick();
+        switch (click) {
+            case SHIFT_LEFT,
+                 SHIFT_RIGHT,
+                 NUMBER_KEY,
+                 DOUBLE_CLICK,
+                 SWAP_OFFHAND -> {
+                return;
+            }
+            default -> { /* continue */ }
+        }
 
         // Route to the already-initialized GUI instances (no new allocations per click)
         if (holder instanceof PlayerMenuHolder) {
@@ -192,5 +214,303 @@ public class GUIListener implements Listener {
 
         // Strict: block ALL drags while our GUI is open.
         e.setCancelled(true);
+    }
+
+    // ---------------------------------------------------------------------
+    // Reload Detection + Handling
+    // ---------------------------------------------------------------------
+
+    /**
+     * Preferred: tag your reload/refresh item with a PDC string, e.g.:
+     *   key: aegis_action  value: reload
+     *
+     * Fallback: detect by display name keywords.
+     */
+    private boolean isReloadTrigger(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+
+        // 1) PDC detection (best)
+        try {
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            Set<NamespacedKey> keys = pdc.getKeys();
+            if (keys != null && !keys.isEmpty()) {
+                for (NamespacedKey k : keys) {
+                    String kk = (k.getKey() == null ? "" : k.getKey()).toLowerCase(Locale.ROOT);
+                    if (kk.contains("reload") || kk.contains("refresh") || kk.contains("codex") || kk.contains("lang")) {
+                        // If it has an obvious key, treat as reload trigger.
+                        return true;
+                    }
+
+                    // If it stores a string action, inspect the value.
+                    if (pdc.has(k, PersistentDataType.STRING)) {
+                        String v = pdc.get(k, PersistentDataType.STRING);
+                        if (v != null) {
+                            String vv = v.toLowerCase(Locale.ROOT);
+                            if (vv.contains("reload") || vv.contains("refresh") || vv.contains("codex") || vv.contains("lang")) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // common convention: aegis_action=reload
+            NamespacedKey actionKey = new NamespacedKey(plugin, "aegis_action");
+            if (pdc.has(actionKey, PersistentDataType.STRING)) {
+                String v = pdc.get(actionKey, PersistentDataType.STRING);
+                if (v != null) {
+                    String vv = v.toLowerCase(Locale.ROOT);
+                    if (vv.contains("reload") || vv.contains("refresh") || vv.contains("codex") || vv.contains("lang")) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // 2) Display-name fallback
+        String name = meta.hasDisplayName() ? meta.getDisplayName() : "";
+        name = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', name));
+        if (name == null) name = "";
+        String n = name.toLowerCase(Locale.ROOT);
+
+        return n.contains("reload")
+                || n.contains("refresh")
+                || n.contains("recargar")
+                || n.contains("actualizar")
+                || n.contains("refrescar")
+                || n.contains("language")
+                || n.contains("idioma")
+                || n.contains("codex");
+    }
+
+    private void handleGuiReload(Player player, InventoryHolder holder, boolean soft) {
+        // Soft = reload config+codex but don't try to re-open. (Right click)
+        // Normal = reload + try reopen current GUI.
+        try {
+            if (soft) {
+                plugin.reloadAegisGuard(false);
+                plugin.effects().playConfirm(player);
+                return;
+            }
+
+            plugin.reloadAegisGuard(true);
+
+            // Re-open same GUI on next tick-ish (safe with Folia & Bukkit)
+            plugin.runMain(player, () -> {
+                tryReopenSameGui(player, holder);
+            });
+
+            plugin.effects().playConfirm(player);
+        } catch (Throwable t) {
+            plugin.effects().playError(player);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cReload failed: &7" + t.getMessage()));
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Reopen logic (best effort)
+    // ---------------------------------------------------------------------
+
+    private void tryReopenSameGui(Player player, InventoryHolder holder) {
+        // Known simple ones
+        if (holder instanceof PlayerMenuHolder) {
+            plugin.gui().openMain(player);
+            return;
+        }
+        if (holder instanceof InfoHolder) {
+            safeInvokeOpen(plugin.gui().info(), player);
+            return;
+        }
+        if (holder instanceof SettingsGUIHolder) {
+            safeInvokeOpen(plugin.gui().settings(), player);
+            return;
+        }
+        if (holder instanceof AdminHolder) {
+            safeInvokeOpen(plugin.gui().admin(), player);
+            return;
+        }
+
+        // Page-based holders / Plot-based holders: try reflection args
+        Object page = readHolderValue(holder, "getPage", "page", "getCurrentPage", "currentPage");
+        Object plot = readHolderValue(holder, "getPlot", "plot", "getSelectedPlot", "selectedPlot");
+        Object isAdmin = readHolderValue(holder, "isAdmin", "getAdmin", "admin", "isAdminView");
+
+        // Visit GUI
+        if (holder instanceof VisitHolder) {
+            if (!safeInvokeOpen(plugin.gui().visit(), player, page, isAdmin)) {
+                if (!safeInvokeOpen(plugin.gui().visit(), player, page, Boolean.FALSE)) {
+                    if (!safeInvokeOpen(plugin.gui().visit(), player, page)) {
+                        safeInvokeOpen(plugin.gui().visit(), player);
+                    }
+                }
+            }
+            return;
+        }
+
+        // Plot list
+        if (holder instanceof PlotListHolder) {
+            if (!safeInvokeOpen(plugin.gui().plotList(), player, page)) {
+                safeInvokeOpen(plugin.gui().plotList(), player);
+            }
+            return;
+        }
+
+        // Roles menus
+        if (holder instanceof PlotSelectorHolder || holder instanceof RolesMenuHolder || holder instanceof RoleAddHolder || holder instanceof RoleManageHolder) {
+            // Best effort: open roles menu again
+            if (!safeInvokeOpen(plugin.gui().roles(), player, plot)) {
+                if (!safeInvokeOpen(plugin.gui().roles(), player)) {
+                    plugin.gui().openMain(player);
+                }
+            }
+            return;
+        }
+
+        // Flags / Cosmetics / Leveling / Zoning / Biome
+        if (holder instanceof PlotFlagsHolder) {
+            if (!safeInvokeOpen(plugin.gui().flags(), player, plot)) safeInvokeOpen(plugin.gui().flags(), player);
+            return;
+        }
+        if (holder instanceof CosmeticsHolder) {
+            if (!safeInvokeOpen(plugin.gui().cosmetics(), player, plot)) safeInvokeOpen(plugin.gui().cosmetics(), player);
+            return;
+        }
+        if (holder instanceof LevelingHolder) {
+            if (!safeInvokeOpen(plugin.gui().leveling(), player, plot)) safeInvokeOpen(plugin.gui().leveling(), player);
+            return;
+        }
+        if (holder instanceof ZoningHolder) {
+            if (!safeInvokeOpen(plugin.gui().zoning(), player, plot)) safeInvokeOpen(plugin.gui().zoning(), player);
+            return;
+        }
+        if (holder instanceof BiomeHolder) {
+            if (!safeInvokeOpen(plugin.gui().biomes(), player, plot)) safeInvokeOpen(plugin.gui().biomes(), player);
+            return;
+        }
+
+        // Market / Auction
+        if (holder instanceof PlotMarketHolder) {
+            if (!safeInvokeOpen(plugin.gui().market(), player, page)) safeInvokeOpen(plugin.gui().market(), player);
+            return;
+        }
+        if (holder instanceof PlotAuctionHolder) {
+            if (!safeInvokeOpen(plugin.gui().auction(), player, page)) safeInvokeOpen(plugin.gui().auction(), player);
+            return;
+        }
+
+        // Expansion
+        if (holder instanceof ExpansionHolder) {
+            safeInvokeOpen(plugin.gui().expansionRequest(), player);
+            return;
+        }
+        if (holder instanceof ExpansionAdminHolder) {
+            safeInvokeOpen(plugin.gui().expansionAdmin(), player);
+            return;
+        }
+
+        // Plot status
+        if (holder instanceof PlotStatusHolder) {
+            if (!safeInvokeOpen(plugin.gui().plotStatus(), player, plot)) safeInvokeOpen(plugin.gui().plotStatus(), player);
+            return;
+        }
+
+        // Fallback
+        plugin.gui().openMain(player);
+    }
+
+    private Object readHolderValue(Object holder, String... methodCandidates) {
+        if (holder == null || methodCandidates == null) return null;
+        for (String name : methodCandidates) {
+            if (name == null || name.isBlank()) continue;
+            try {
+                Method m = holder.getClass().getMethod(name);
+                return m.invoke(holder);
+            } catch (Throwable ignored) {}
+        }
+        return null;
+    }
+
+    private boolean safeInvokeOpen(Object gui, Object... args) {
+        if (gui == null) return false;
+        if (args == null) args = new Object[0];
+
+        List<Object[]> attempts = new ArrayList<>();
+
+        // Build best-attempt argument lists in priority order
+        // (Player, page, admin) -> (Player, page) -> (Player, plot) -> (Player)
+        if (args.length >= 1 && args[0] instanceof Player p) {
+            Object page = (args.length >= 2) ? args[1] : null;
+            Object third = (args.length >= 3) ? args[2] : null;
+
+            if (page instanceof Number && third instanceof Boolean) {
+                attempts.add(new Object[]{p, ((Number) page).intValue(), (Boolean) third});
+            }
+            if (page instanceof Number) {
+                attempts.add(new Object[]{p, ((Number) page).intValue()});
+            }
+            if (page != null && !(page instanceof Number)) {
+                // sometimes "page" could be stored as Integer already, still handled by Number; otherwise skip
+            }
+
+            Object plot = (args.length >= 2) ? args[1] : null;
+            if (plot != null && !(plot instanceof Number) && !(plot instanceof Boolean)) {
+                attempts.add(new Object[]{p, plot});
+            }
+
+            attempts.add(new Object[]{p});
+        } else {
+            // If caller didn't pass Player first, just try raw
+            attempts.add(args);
+        }
+
+        // Try invoke open(...) with reflection
+        for (Object[] attempt : attempts) {
+            if (attempt == null) continue;
+            if (tryInvoke(gui, "open", attempt)) return true;
+        }
+
+        return false;
+    }
+
+    private boolean tryInvoke(Object target, String methodName, Object[] args) {
+        try {
+            Method[] methods = target.getClass().getMethods();
+            for (Method m : methods) {
+                if (!m.getName().equals(methodName)) continue;
+
+                Class<?>[] ptypes = m.getParameterTypes();
+                if (ptypes.length != args.length) continue;
+
+                boolean ok = true;
+                for (int i = 0; i < ptypes.length; i++) {
+                    Object a = args[i];
+                    Class<?> pt = ptypes[i];
+
+                    if (a == null) { ok = false; break; }
+
+                    // primitive handling
+                    if (pt.isPrimitive()) {
+                        if (pt == int.class && a instanceof Integer) continue;
+                        if (pt == int.class && a instanceof Number) { args[i] = ((Number) a).intValue(); continue; }
+                        if (pt == boolean.class && a instanceof Boolean) continue;
+                        ok = false; break;
+                    }
+
+                    if (!pt.isAssignableFrom(a.getClass())) {
+                        // Allow Number -> Integer for boxed params
+                        if (Number.class.isAssignableFrom(pt) && a instanceof Number) continue;
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok) continue;
+
+                m.invoke(target, args);
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 }

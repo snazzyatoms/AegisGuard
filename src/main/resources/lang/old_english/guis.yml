@@ -27,7 +27,7 @@ biome_button_back: '&e⟵ Return to Plot Settings'
 biome_button_exit: '&c✖ Close the Biome Changer'
 expansion_button_back: '&e⟵ Return to Previous Menu'
 expansion_gui_title: '&d§lLand Expansion Petition'
-expansion_admin_title: '&8Pending Petitions'
+expansion_admin_title: '&6&lPending &e&lPetitions &d&l⚖'
 expansion_none_title: '&cNo Petitions'
 expansion_none_lore:
 - '&7The subjects are content.'

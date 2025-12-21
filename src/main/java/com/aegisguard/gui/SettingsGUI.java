@@ -20,9 +20,9 @@ import java.util.Map;
  * - Language cycling uses CodexEngine style order (codex.yml or config).
  * - ✅ Persistence is handled by CodexEngine (config.yml), NOT MessagesUtil.
  *
- * + Admin tools:
- * - ✅ Refresh Language Packs (Codex reload)
- * - ✅ Reload All Settings (reload config + refresh managers + bundle extraction + Codex reload)
+ * IMPORTANT:
+ * - ❌ No admin tools in this menu anymore.
+ *   Admin-only actions belong in AdminGUI.
  */
 public class SettingsGUI {
 
@@ -48,17 +48,11 @@ public class SettingsGUI {
     }
 
     private String t(Player p, String key, String fallback, Map<String, String> placeholders) {
-        // ✅ Uses GUIManager's placeholder-aware translate (also applies placeholders to fallback)
         return plugin.gui().tr(p, key, fallback, placeholders);
     }
 
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
-    }
-
-    private List<String> tl(Player p, String key, List<String> fallback, Map<String, String> placeholders) {
-        // ✅ Uses GUIManager's placeholder-aware lore translate (fallback also gets placeholders)
-        return plugin.gui().trList(p, key, fallback, placeholders);
     }
 
     public void open(Player player) { open(player, null); }
@@ -140,34 +134,6 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 4) ADMIN TOOLS (Refresh + Reload)
-        // --------------------------------------------------
-        if (plugin.isAdmin(player)) {
-
-            // Slot 40: Refresh Language Packs (Codex only)
-            inv.setItem(40, GUIManager.createItem(
-                    Material.RECOVERY_COMPASS,
-                    t(player, "settings_refresh_lang_name", "&a🔄 Refresh Language Packs"),
-                    tl(player, "settings_refresh_lang_lore",
-                            List.of("&7Reloads the Codex language bundles.",
-                                    "&7Use after editing lang files.",
-                                    " ",
-                                    "&eClick to refresh"))
-            ));
-
-            // Slot 41: Reload All Settings (central hook)
-            inv.setItem(41, GUIManager.createItem(
-                    Material.REDSTONE,
-                    t(player, "settings_reload_all_name", "&6⚙ Reload All Settings"),
-                    tl(player, "settings_reload_all_lore",
-                            List.of("&7Reloads config.yml and all systems.",
-                                    "&7Also reloads language bundles.",
-                                    " ",
-                                    "&eClick to reload"))
-            ));
-        }
-
-        // --------------------------------------------------
         // NAVIGATION (48/49)
         // --------------------------------------------------
         inv.setItem(48, GUIManager.createItem(
@@ -192,7 +158,7 @@ public class SettingsGUI {
         ItemStack currentItem = e.getCurrentItem();
         if (currentItem == null || currentItem.getType() == Material.AIR) return;
 
-        // Optional: ignore filler clicks silently
+        // Ignore filler clicks silently
         if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
@@ -248,50 +214,6 @@ public class SettingsGUI {
 
                 plugin.effects().playMenuFlip(player);
                 open(player, plot);
-            }
-
-            // --------------------------------------------
-            // Admin tools
-            // --------------------------------------------
-
-            case 40 -> { // Refresh Language Packs (Codex reload)
-                if (!plugin.isAdmin(player)) {
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.effects().playMenuFlip(player);
-
-                plugin.runMainGlobal(() -> {
-                    try {
-                        if (plugin.codex() != null) plugin.codex().reload();
-                    } catch (Throwable t) {
-                        plugin.getLogger().warning("[SettingsGUI] Codex refresh failed: " + t.getMessage());
-                    }
-
-                    // Force-refresh open menus for everyone (lighter than full reload)
-                    closeAegisMenus();
-                });
-
-                // Re-open so text updates immediately
-                plugin.runMain(player, () -> open(player, plot));
-            }
-
-            case 41 -> { // Reload All Settings (central hook)
-                if (!plugin.isAdmin(player)) {
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.effects().playMenuFlip(player);
-
-                plugin.runMainGlobal(() -> {
-                    try {
-                        plugin.reloadAegisGuard(true);
-                    } catch (Throwable t) {
-                        plugin.getLogger().warning("[SettingsGUI] reloadAegisGuard(true) failed: " + t.getMessage());
-                    }
-                });
-
-                plugin.runMain(player, () -> open(player, plot));
             }
 
             case 48 -> {
@@ -353,26 +275,5 @@ public class SettingsGUI {
                .append(' ');
         }
         return out.toString().trim();
-    }
-
-    // --------------------------------------------------
-    // Menu refresh helper
-    // --------------------------------------------------
-
-    private void closeAegisMenus() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            try {
-                Inventory top = p.getOpenInventory().getTopInventory();
-                if (top == null) continue;
-                InventoryHolder h = top.getHolder();
-                if (h == null) continue;
-
-                String cn = h.getClass().getName();
-                if (cn.startsWith("com.aegisguard.gui.")
-                        || cn.startsWith("com.aegisguard.expansions.")) {
-                    p.closeInventory();
-                }
-            } catch (Throwable ignored) {}
-        }
     }
 }

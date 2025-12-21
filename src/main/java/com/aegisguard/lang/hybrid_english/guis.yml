@@ -27,7 +27,7 @@ biome_button_back: '&e⟵ Back to Plot Settings'
 biome_button_exit: '&c✖ Close Biome Changer'
 expansion_button_back: '&e⟵ Back to Previous Menu'
 expansion_gui_title: '&dLand Expansion Request'
-expansion_admin_title: '&8Pending Requests'
+expansion_admin_title: '&#A8FF78&lReview &#FFD166&lRequests &#FF6B6B&l✦'
 expansion_none_title: '&cNo Requests'
 expansion_none_lore:
 - '&7No pending requests.'

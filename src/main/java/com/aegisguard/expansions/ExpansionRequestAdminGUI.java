@@ -1,8 +1,8 @@
 package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.gui.GUIManager;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -31,7 +31,7 @@ import java.util.UUID;
 public class ExpansionRequestAdminGUI {
 
     private final AegisGuard plugin;
-    private static final int REQS_PER_PAGE = 45;
+    private static final int REQS_PER_PAGE = 45; // slots 0..44 (top 5 rows)
 
     public ExpansionRequestAdminGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -58,9 +58,21 @@ public class ExpansionRequestAdminGUI {
     }
 
     public void open(Player player, int page) {
-        ExpansionRequestManager manager = plugin.getExpansionRequestManager();
+        // ✅ Hard admin gate (prevents any accidental access path)
+        if (!plugin.isAdmin(player)) {
+            plugin.msg().send(player, "no_perm");
+            plugin.effects().playError(player);
+            return;
+        }
 
-        // Collect + filter pending only (just in case)
+        ExpansionRequestManager manager = plugin.getExpansionRequestManager();
+        if (manager == null) {
+            player.sendMessage("§c[AegisGuard] ExpansionRequestManager not loaded.");
+            plugin.effects().playError(player);
+            return;
+        }
+
+        // Collect + filter pending only (defensive)
         List<ExpansionRequest> requests = new ArrayList<>(manager.getActiveRequests());
         requests.removeIf(r -> r == null || !r.isPending());
 
@@ -76,23 +88,38 @@ public class ExpansionRequestAdminGUI {
         if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
         if (maxPages == 0) page = 0;
 
-        // Title (centralized + suffix clamp)
-        String baseTitle = plugin.gui().title(player, "expansion_admin_title", "&8Expansion Requests");
-        String fullTitle = clampTitle(baseTitle + " &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
+        int safePages = Math.max(1, maxPages);
+
+        // ✅ Title:
+        // 1) Localized base title: expansion_admin_title
+        // 2) Optional paged variant: expansion_admin_title_paged (recommended)
+        //    Fallback stays localized by embedding the baseTitle.
+        String baseTitle = plugin.gui().tr(player, "expansion_admin_title", "&6&lPending Requests");
+        Map<String, String> ph = Map.of(
+                "PAGE", String.valueOf(page + 1),
+                "PAGES", String.valueOf(safePages)
+        );
+
+        String fullTitle = plugin.gui().title(
+                player,
+                "expansion_admin_title_paged",
+                baseTitle + " &7({PAGE}/{PAGES})",
+                ph
+        );
 
         ExpansionAdminHolder holder = new ExpansionAdminHolder(ids, page);
         Inventory inv = Bukkit.createInventory(holder, 54, fullTitle);
 
-        // Footer filler
+        // ✅ Fill all slots for a clean look
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         // Empty state
         if (ids.isEmpty()) {
             inv.setItem(22, GUIManager.createItem(
                     Material.BARRIER,
-                    tr(player, "expansion_none_title", "&cNo Pending Requests"),
-                    trList(player, "expansion_none_lore", List.of(
+                    plugin.gui().tr(player, "expansion_none_title", "&cNo Pending Requests"),
+                    plugin.gui().trList(player, "expansion_none_lore", List.of(
                             "&7There are no active expansion",
                             "&7requests awaiting review."
                     ))
@@ -111,35 +138,45 @@ public class ExpansionRequestAdminGUI {
                 OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
                 String name = (requester.getName() != null) ? requester.getName() : "Unknown";
 
-                String statusText = tr(player, req.getStatusLangKey(), "&7Pending");
+                String statusText = plugin.gui().tr(player, req.getStatusLangKey(), "&7Pending");
                 String ageText = formatAge(System.currentTimeMillis() - req.getTimestamp());
-
                 String costStr = plugin.eco().format(req.getCost(), CurrencyType.VAULT);
 
-                // Item name
-                String itemName = tr(player, "expansion_request_item_name", "&bRequest: &f{PLAYER}")
-                        .replace("{PLAYER}", name);
+                String worldName = safe(req.getWorldName(), "Unknown");
 
-                // Lore (template-driven if present, fallback otherwise)
-                List<String> lore = trList(player, "expansion_request_item_lore", List.of(
-                        "&7World: &f{WORLD}",
-                        "&7Status: {STATUS}",
-                        "&7Age: &f{AGE}",
-                        "&7Radius: &e{CUR} &7→ &a{REQ}",
-                        "&7Cost Due: &6{COST}",
-                        " ",
-                        "&eLeft-click: &7Approve request.",
-                        "&cRight-click: &7Deny request."
-                ));
+                Map<String, String> vars = Map.of(
+                        "PLAYER", name,
+                        "WORLD", worldName,
+                        "STATUS", statusText,
+                        "AGE", ageText,
+                        "CUR", String.valueOf(req.getCurrentRadius()),
+                        "REQ", String.valueOf(req.getRequestedRadius()),
+                        "COST", costStr
+                );
 
-                lore.replaceAll(s -> GUIManager.color(
-                        s.replace("{WORLD}", safe(req.getWorldName(), "Unknown"))
-                         .replace("{STATUS}", statusText)
-                         .replace("{AGE}", ageText)
-                         .replace("{CUR}", String.valueOf(req.getCurrentRadius()))
-                         .replace("{REQ}", String.valueOf(req.getRequestedRadius()))
-                         .replace("{COST}", costStr)
-                ));
+                // ✅ Uses placeholder-aware GUI gateway (Codex or fallback gets vars applied)
+                String itemName = plugin.gui().tr(
+                        player,
+                        "expansion_request_item_name",
+                        "&bRequest: &f{PLAYER}",
+                        vars
+                );
+
+                List<String> lore = plugin.gui().trList(
+                        player,
+                        "expansion_request_item_lore",
+                        List.of(
+                                "&7World: &f{WORLD}",
+                                "&7Status: {STATUS}",
+                                "&7Age: &f{AGE}",
+                                "&7Radius: &e{CUR} &7→ &a{REQ}",
+                                "&7Cost Due: &6{COST}",
+                                " ",
+                                "&eLeft-click: &7Approve request.",
+                                "&cRight-click: &7Deny request."
+                        ),
+                        vars
+                );
 
                 inv.setItem(slot, GUIManager.createItem(Material.PAPER, itemName, lore));
             }
@@ -149,22 +186,22 @@ public class ExpansionRequestAdminGUI {
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
-                    tr(player, "button_prev_page", "&fPrevious Page"),
-                    null
+                    plugin.gui().tr(player, "button_prev_page", "&fPrevious Page"),
+                    plugin.gui().trList(player, "prev_page_lore", List.of("&7Go to the previous page."))
             ));
         }
 
         inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
-                tr(player, "button_back", "&fBack"),
-                trList(player, "back_lore", List.of("&7Return to the previous menu."))
+                plugin.gui().tr(player, "button_back", "&fBack"),
+                plugin.gui().trList(player, "back_lore", List.of("&7Return to the previous menu."))
         ));
 
         if (page < maxPages - 1) {
             inv.setItem(53, GUIManager.createItem(
                     Material.ARROW,
-                    tr(player, "button_next_page", "&fNext Page"),
-                    null
+                    plugin.gui().tr(player, "button_next_page", "&fNext Page"),
+                    plugin.gui().trList(player, "next_page_lore", List.of("&7Go to the next page."))
             ));
         }
 
@@ -174,8 +211,15 @@ public class ExpansionRequestAdminGUI {
 
     public void handleClick(Player player, InventoryClickEvent e) {
         if (!(e.getInventory().getHolder() instanceof ExpansionAdminHolder holder)) return;
-
         e.setCancelled(true);
+
+        // ✅ Hard admin gate in click handler too
+        if (!plugin.isAdmin(player)) {
+            plugin.effects().playError(player);
+            player.closeInventory();
+            return;
+        }
+
         if (e.getCurrentItem() == null) return;
 
         // Ignore clicks from the player's own inventory
@@ -186,8 +230,16 @@ public class ExpansionRequestAdminGUI {
         int page = holder.getPage();
 
         // Nav
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page - 1); plugin.effects().playMenuFlip(player); return; }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page + 1); plugin.effects().playMenuFlip(player); return; }
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
+            open(player, page - 1);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
+            open(player, page + 1);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
 
         // Back to Admin menu
         if (slot == 49) {
@@ -235,20 +287,13 @@ public class ExpansionRequestAdminGUI {
     }
 
     // --------------------------------
-    // Localization helpers (GUI gateway)
+    // System message helper
     // --------------------------------
 
-    private String tr(Player p, String key, String fallback) {
-        return plugin.gui().tr(p, key, fallback);
-    }
-
-    private List<String> trList(Player p, String key, List<String> fallback) {
-        return plugin.gui().trList(p, key, fallback);
-    }
-
     private void sendSystem(Player p, String key, String fallback) {
+        // plugin.gui().tr already returns colorized output
         String msg = plugin.gui().tr(p, key, fallback);
-        p.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', msg));
+        p.sendMessage(msg);
     }
 
     // --------------------------------
@@ -257,16 +302,6 @@ public class ExpansionRequestAdminGUI {
 
     private String safe(String s, String fallback) {
         return (s == null || s.isBlank()) ? fallback : s;
-    }
-
-    private String clampTitle(String raw) {
-        String t = GUIManager.safeText(raw, "&8Expansion Requests");
-        t = GUIManager.color(t);
-
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
     }
 
     private String formatAge(long ms) {

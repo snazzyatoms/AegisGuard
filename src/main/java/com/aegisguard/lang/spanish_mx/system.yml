@@ -167,10 +167,24 @@ sell_usage: '&cUso: /ag sell <precio>'
 price_must_positive: '&cEl precio debe ser positivo.'
 invalid_number: '&cNúmero inválido.'
 
-# Claim Blocks (Ledger + limits)
+# --------------------------------------
+# Claim Blocks (Ledger + limits + Platinum messages)
+# --------------------------------------
+claim_blocks_name: '&bBloques de Parcela de Platino'
+
 claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
 claim_blocks_not_enough: '&c❌ Necesitas &e{AMOUNT}&c Bloques de Parcela más.'
 claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
+
+# ✅ Usado por ClaimBlockTask.java (recompensa por tiempo de juego)
+claim_blocks_earned_playtime: '&a✦ Por jugar, ganaste &b+{AMOUNT}&a Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+
+# Opcionales (listos para usar cuando los emitas desde comandos/tienda/perks)
+claim_blocks_received_starter: '&b✦ Registro inicial: &a+{AMOUNT}&b Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Bono otorgado: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Compra completada: &b+{AMOUNT}&6 Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Parcela. &7Necesitas: &e{NEEDED}&7 | Tienes: &a{AVAILABLE}&7.'
+claim_blocks_cost_preview: '&7Costo del reclamo: &6{COST}&7 bloques.'
 
 blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
 blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'

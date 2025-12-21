@@ -39,7 +39,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "kick", "ban", "unban", "visit",
             "level", "zone", "like",
             "rename", "stuck", "setdesc", "merge",
-            "consume", "ledger", "blocks"
+            "consume", "ledger", "blocks",
+            // ✅ Added: reload support (Codex + config)
+            "reload", "refresh"
     };
 
     private static final String[] RESIZE_DIRECTIONS = {"north", "south", "east", "west"};
@@ -110,7 +112,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
+        // ✅ Allow console for reload/help
         if (!(sender instanceof Player p)) {
+            if (args.length > 0) {
+                String sub = args[0].toLowerCase(Locale.ROOT);
+                if (sub.equals("reload") || sub.equals("refresh")) {
+                    handleReload(sender, args);
+                    return true;
+                }
+                if (sub.equals("help")) {
+                    sendHelp(sender);
+                    return true;
+                }
+            }
+
             // Use Codex for console too (default language).
             sendKey(sender, "players_only", "&cError: This command can only be used by players.");
             return true;
@@ -195,12 +210,56 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "ledger", "blocks" -> showLedger(p);
 
+            // ✅ Added: /aegis reload [soft|nogui]
+            case "reload", "refresh" -> handleReload(p, args);
+
             case "help" -> sendHelp(p);
 
             default -> sendHelp(p);
         }
 
         return true;
+    }
+
+    // --------------------------------------------------
+    // Reload (Config + Codex)
+    // --------------------------------------------------
+
+    private void handleReload(CommandSender sender, String[] args) {
+        // Console is allowed. Players need admin permission.
+        if (sender instanceof Player pp) {
+            if (!plugin.isAdmin(pp) && !pp.hasPermission("aegis.reload")) {
+                sendKey(sender, "reload_no_perm", "&cError: You do not have permission for this.");
+                plugin.effects().playError(pp);
+                return;
+            }
+        }
+
+        boolean refreshGuis = true;
+
+        // Optional: /aegis reload soft  (or nogui) will avoid closing open GUIs.
+        if (args.length >= 2) {
+            String mode = args[1].toLowerCase(Locale.ROOT);
+            if (mode.equals("soft") || mode.equals("nogui") || mode.equals("noguis") || mode.equals("no-gui") || mode.equals("no-guis")) {
+                refreshGuis = false;
+            }
+        }
+
+        sendKey(sender, "reload_start", "&7Reloading AegisGuard settings and language packs...");
+
+        long start = System.currentTimeMillis();
+        try {
+            // This should re-read config + re-seed missing bundles + reload Codex
+            plugin.reloadAegisGuard(refreshGuis);
+        } catch (Throwable t) {
+            sendKey(sender, "reload_failed", "&cReload failed: &7{ERROR}", Map.of("ERROR", String.valueOf(t.getMessage())));
+            if (sender instanceof Player pp) plugin.effects().playError(pp);
+            return;
+        }
+
+        long ms = System.currentTimeMillis() - start;
+        sendKey(sender, "reload_done", "&aReload complete. &7({MS}ms)", Map.of("MS", String.valueOf(ms)));
+        if (sender instanceof Player pp) plugin.effects().playConfirm(pp);
     }
 
     // --------------------------------------------------
@@ -816,15 +875,16 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     // Help
     // --------------------------------------------------
 
-    private void sendHelp(Player player) {
-        sendKey(player, "help_header", "&bAegisGuard Help");
+    private void sendHelp(CommandSender sender) {
+        sendKey(sender, "help_header", "&bAegisGuard Help");
+
         List<String> helpLines = Collections.emptyList();
         try {
-            if (plugin.codex() != null) helpLines = plugin.codex().trList(player, "help_lines");
+            if (plugin.codex() != null) helpLines = plugin.codex().trList(sender, "help_lines");
         } catch (Throwable ignored) {}
 
         if (helpLines != null) {
-            for (String line : helpLines) sendMsg(player, line);
+            for (String line : helpLines) sendMsg(sender, line);
         }
     }
 
@@ -840,11 +900,23 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             Collections.sort(completions);
             return completions;
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("resize") || args[0].equalsIgnoreCase("merge"))) {
-            List<String> completions = new ArrayList<>();
-            StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
-            return completions;
+
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("resize") || args[0].equalsIgnoreCase("merge")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
+                return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("refresh")) {
+                List<String> completions = new ArrayList<>();
+                List<String> modes = Arrays.asList("soft", "nogui");
+                StringUtil.copyPartialMatches(args[1], modes, completions);
+                Collections.sort(completions);
+                return completions;
+            }
         }
+
         return null;
     }
 

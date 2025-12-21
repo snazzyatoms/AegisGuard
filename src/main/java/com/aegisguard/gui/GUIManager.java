@@ -15,6 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,6 +150,20 @@ public class GUIManager {
     }
 
     /**
+     * ✅ NEW: placeholder-aware translate (fallback also gets placeholders applied)
+     */
+    public String tr(Player player, String key, String fallback, Map<String, String> placeholders) {
+        String value = null;
+        try {
+            if (plugin.codex() != null) value = plugin.codex().tr(player, key, placeholders);
+        } catch (Throwable ignored) {}
+
+        String fb = applyPlaceholders(fallback, placeholders);
+        String out = safeText(key, value, fb);
+        return out;
+    }
+
+    /**
      * ✅ Safe inventory title formatter
      * - translates & + hex
      * - safe fallback if missing
@@ -159,10 +175,26 @@ public class GUIManager {
             if (plugin.codex() != null) raw = plugin.codex().tr(player, key);
         } catch (Throwable ignored) {}
 
-        // safeText now colorizes, so titles won't show raw & codes anymore.
         String t = safeText(key, raw, fallback);
 
-        // Safe clamp: avoid weird cut-off formatting on some clients
+        if (t.length() > 32) t = t.substring(0, 32);
+        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        return t;
+    }
+
+    /**
+     * ✅ NEW: placeholder-aware title (fallback also gets placeholders applied)
+     */
+    public String title(Player player, String key, String fallback, Map<String, String> placeholders) {
+        String raw = null;
+        try {
+            if (plugin.codex() != null) raw = plugin.codex().tr(player, key, placeholders);
+        } catch (Throwable ignored) {}
+
+        String fb = applyPlaceholders(fallback, placeholders);
+        String t = safeText(key, raw, fb);
+
         if (t.length() > 32) t = t.substring(0, 32);
         if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
 
@@ -181,6 +213,26 @@ public class GUIManager {
         } catch (Throwable ignored) {}
 
         return fallback == null ? Collections.emptyList() : fallback;
+    }
+
+    /**
+     * ✅ NEW: placeholder-aware lore (fallback also gets placeholders applied)
+     */
+    public List<String> trList(Player player, String key, List<String> fallback, Map<String, String> placeholders) {
+        try {
+            if (plugin.codex() != null) {
+                List<String> value = plugin.codex().trList(player, key, placeholders);
+                if (value != null && !value.isEmpty()) return value;
+            }
+        } catch (Throwable ignored) {}
+
+        if (fallback == null || fallback.isEmpty()) return Collections.emptyList();
+
+        List<String> out = new ArrayList<>(fallback.size());
+        for (String line : fallback) {
+            out.add(applyPlaceholders(line, placeholders));
+        }
+        return out;
     }
 
     // ======================================
@@ -221,7 +273,6 @@ public class GUIManager {
                 out = fallback;
             } else if (requestedKey != null && !requestedKey.trim().isEmpty()
                     && s.equalsIgnoreCase(requestedKey.trim())) {
-                // CodexEngine "not found" behavior: return key
                 out = fallback;
             } else {
                 out = fromCodex;
@@ -229,6 +280,26 @@ public class GUIManager {
         }
 
         return color(out);
+    }
+
+    /**
+     * Simple placeholder helper for GUI fallback strings/lore.
+     * Supports: {KEY} and case variants.
+     */
+    private static String applyPlaceholders(String input, Map<String, String> placeholders) {
+        if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
+
+        String out = input;
+        for (Map.Entry<String, String> e : placeholders.entrySet()) {
+            String k = e.getKey();
+            if (k == null || k.isEmpty()) continue;
+
+            String v = e.getValue() == null ? "" : e.getValue();
+            out = out.replace("{" + k + "}", v)
+                     .replace("{" + k.toLowerCase(Locale.ROOT) + "}", v)
+                     .replace("{" + k.toUpperCase(Locale.ROOT) + "}", v);
+        }
+        return out;
     }
 
     /**
@@ -280,22 +351,18 @@ public class GUIManager {
      * Color utility with:
      * - legacy & codes
      * - hex codes in the form &#RRGGBB
-     *
-     * ✅ CHANGE: Made PUBLIC so any GUI can safely do:
-     *   String title = GUIManager.color("...&9Title...");
      */
-    public static String color(String text) { // <-- ONLY CHANGE (was private)
+    public static String color(String text) {
         if (text == null) return "";
         String msg = text;
 
         Matcher matcher = HEX_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String token = matcher.group(0); // "&#A1B2C3"
-            String hex = matcher.group(1);   // "A1B2C3"
+            String token = matcher.group(0);
+            String hex = matcher.group(1);
             try {
                 msg = msg.replace(token, net.md_5.bungee.api.ChatColor.of("#" + hex).toString());
             } catch (Throwable ignored) {
-                // If hex coloring isn't supported for any reason, just skip it.
                 msg = msg.replace(token, "");
             }
             matcher = HEX_PATTERN.matcher(msg);

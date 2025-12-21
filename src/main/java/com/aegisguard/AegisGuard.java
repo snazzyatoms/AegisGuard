@@ -31,11 +31,11 @@ import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -470,87 +470,6 @@ public class AegisGuard extends JavaPlugin {
     }
 
     // ---------------------------------------------------------------------
-    // Reload API (config + codex + optional GUI refresh)
-    // ---------------------------------------------------------------------
-
-    /**
-     * Reloads Bukkit config.yml, rebuilds AGConfig, re-seeds missing language bundles,
-     * and re-initializes CodexEngine so edited language files are re-read from disk.
-     *
-     * @param refreshOpenGuis If true, closes any open AegisGuard GUI inventories so players
-     *                        can reopen them with fresh titles/lore.
-     */
-    public void reloadAegisGuard(boolean refreshOpenGuis) {
-        final long start = System.currentTimeMillis();
-
-        // 1) Reload config.yml (Bukkit)
-        try {
-            reloadConfig();
-        } catch (Throwable t) {
-            getLogger().warning("⚠ reloadConfig() failed: " + t.getMessage());
-        }
-
-        // 2) Rebuild AGConfig wrapper
-        try {
-            this.configMgr = new AGConfig(this);
-        } catch (Throwable t) {
-            getLogger().warning("⚠ Failed to rebuild AGConfig: " + t.getMessage());
-        }
-
-        // 3) Ensure localization files exist (installs only missing bundled resources)
-        try {
-            ensureLocalizationFiles();
-        } catch (Throwable t) {
-            getLogger().warning("⚠ ensureLocalizationFiles() failed: " + t.getMessage());
-        }
-
-        // 4) Reload Codex (keep old instance if new one fails)
-        CodexEngine old = this.codex;
-        try {
-            this.codex = new CodexEngine(this);
-            getLogger().info("✅ CodexEngine reloaded.");
-        } catch (Throwable t) {
-            this.codex = old;
-            getLogger().severe("❌ Failed to reload CodexEngine (keeping previous instance): " + t.getMessage());
-        }
-
-        // 5) Reload player prefs (language selection etc.)
-        runGlobalAsync(() -> {
-            try {
-                if (messages != null) messages.loadPlayerPreferences();
-            } catch (Throwable ignored) {}
-        });
-
-        // 6) Optional GUI refresh: close plugin GUIs so they reopen with new text
-        if (refreshOpenGuis) {
-            runMainGlobal(() -> {
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    runMain(p, () -> {
-                        try {
-                            InventoryView view = p.getOpenInventory();
-                            if (view == null) return;
-
-                            Inventory top = view.getTopInventory();
-                            if (top == null) return;
-
-                            InventoryHolder holder = top.getHolder();
-                            if (holder == null) return;
-
-                            String holderName = holder.getClass().getName();
-                            if (holderName.startsWith("com.aegisguard.gui")) {
-                                p.closeInventory();
-                            }
-                        } catch (Throwable ignored) {}
-                    });
-                }
-            });
-        }
-
-        final long ms = System.currentTimeMillis() - start;
-        getLogger().info("✅ AegisGuard reload complete (" + ms + "ms).");
-    }
-
-    // ---------------------------------------------------------------------
     // Utility
     // ---------------------------------------------------------------------
 
@@ -691,5 +610,76 @@ public class AegisGuard extends JavaPlugin {
 
         ClaimBlockTask task = new ClaimBlockTask(this);
         claimBlockTask = scheduleAsyncRepeating(task::run, intervalTicks);
+    }
+
+    // ---------------------------------------------------------------------
+    // ✅ Central Reload Hook (Config + Codex + Bundles)
+    // ---------------------------------------------------------------------
+
+    /**
+     * Reloads:
+     * - config.yml (reloadConfig)
+     * - AGConfig manager (rebuild)
+     * - language bundle extraction (ensureLocalizationFiles)
+     * - CodexEngine (codex.reload)
+     *
+     * If refreshGuis=true:
+     * - closes currently open AegisGuard menus (so they re-open with new text)
+     */
+    public void reloadAegisGuard(boolean refreshGuis) {
+        // Always reload config first
+        try {
+            reloadConfig();
+        } catch (Throwable t) {
+            getLogger().warning("[AegisGuard] reloadConfig() failed: " + t.getMessage());
+        }
+
+        // Rebuild AGConfig (most reliable without needing AGConfig internals)
+        try {
+            this.configMgr = new AGConfig(this);
+        } catch (Throwable t) {
+            getLogger().warning("[AegisGuard] AGConfig reload failed: " + t.getMessage());
+        }
+
+        // Re-seed language files (extract defaults for new bundles/keys)
+        try {
+            ensureLocalizationFiles();
+        } catch (Throwable t) {
+            getLogger().warning("[AegisGuard] ensureLocalizationFiles() failed: " + t.getMessage());
+        }
+
+        // Reload Codex bundles
+        try {
+            if (this.codex != null) {
+                this.codex.reload();
+            }
+        } catch (Throwable t) {
+            getLogger().warning("[AegisGuard] CodexEngine reload failed: " + t.getMessage());
+        }
+
+        // Reload player prefs async (not required for language pack reload, but safe)
+        runGlobalAsync(() -> {
+            try {
+                if (messages != null) messages.loadPlayerPreferences();
+            } catch (Throwable ignored) {}
+        });
+
+        // Optionally close open menus so they refresh their text next open
+        if (refreshGuis) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                try {
+                    Inventory top = p.getOpenInventory().getTopInventory();
+                    if (top == null) continue;
+                    InventoryHolder h = top.getHolder();
+                    if (h == null) continue;
+
+                    String cn = h.getClass().getName();
+                    if (cn.startsWith("com.aegisguard.gui.")
+                            || cn.startsWith("com.aegisguard.expansions.")) {
+                        p.closeInventory();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
     }
 }

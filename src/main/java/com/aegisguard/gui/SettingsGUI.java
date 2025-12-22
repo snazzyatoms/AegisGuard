@@ -5,6 +5,7 @@ import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -153,7 +154,13 @@ public class SettingsGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
+        // ✅ Only handle clicks in the TOP inventory (prevents weird cursor focus + misfires)
+        if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
+
+        if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
+
         e.setCancelled(true);
+        e.setResult(Event.Result.DENY);
 
         ItemStack currentItem = e.getCurrentItem();
         if (currentItem == null || currentItem.getType() == Material.AIR) return;
@@ -161,9 +168,7 @@ public class SettingsGUI {
         // Ignore filler clicks silently
         if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-        if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
-
-        // Ignore clicks in the player's bottom inventory
+        // Raw slot is safe now because we already confirmed TOP inventory
         int rawSlot = e.getRawSlot();
         if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
 
@@ -182,7 +187,9 @@ public class SettingsGUI {
                 plugin.runGlobalAsync(plugin::saveConfig);
 
                 plugin.effects().playMenuFlip(player);
-                open(player, plot);
+
+                // ✅ Reopen NEXT tick (prevents flash + cursor snapping)
+                plugin.runMain(player, () -> open(player, plot));
             }
 
             case 13 -> { // Language (Codex ordered cycle + persisted by CodexEngine)
@@ -198,7 +205,8 @@ public class SettingsGUI {
                 if (applied) plugin.effects().playMenuFlip(player);
                 else plugin.effects().playError(player);
 
-                open(player, plot);
+                // ✅ Reopen NEXT tick (prevents flash + cursor snapping)
+                plugin.runMain(player, () -> open(player, plot));
             }
 
             case 16 -> { // Notifications
@@ -213,17 +221,19 @@ public class SettingsGUI {
                 plugin.runGlobalAsync(plugin::saveConfig);
 
                 plugin.effects().playMenuFlip(player);
-                open(player, plot);
+
+                // ✅ Reopen NEXT tick
+                plugin.runMain(player, () -> open(player, plot));
             }
 
             case 48 -> {
                 plugin.effects().playMenuFlip(player);
-                plugin.gui().openMain(player);
+                plugin.runMain(player, () -> plugin.gui().openMain(player));
             }
 
             case 49 -> {
                 plugin.effects().playMenuClose(player);
-                player.closeInventory();
+                plugin.runMain(player, player::closeInventory);
             }
         }
     }

@@ -15,13 +15,11 @@ public class ClaimBlockManager {
 
     private final AegisGuard plugin;
 
-    // Thread-safe cache
     private final Map<UUID, ClaimBlockData> cache = new ConcurrentHashMap<>();
 
     private final File file;
     private FileConfiguration data;
 
-    // Simple IO lock so async saves never fight main thread updates
     private final Object ioLock = new Object();
 
     public ClaimBlockManager(AegisGuard plugin) {
@@ -47,14 +45,41 @@ public class ClaimBlockManager {
         return used;
     }
 
-    public long getAvailableBlocks(UUID uuid) {
-        return getTotalBlocks(uuid) - getUsedBlocks(uuid);
+    public long getSpentBlocks(UUID uuid) {
+        return getOrCreate(uuid).getSpentBlocks();
     }
 
-    public boolean canAfford(UUID uuid, long areaNeeded) {
+    public long getAvailableBlocks(UUID uuid) {
+        long available = getTotalBlocks(uuid) - getUsedBlocks(uuid) - getSpentBlocks(uuid);
+        return Math.max(0, available);
+    }
+
+    public boolean canAfford(UUID uuid, long amount) {
         Player p = plugin.getServer().getPlayer(uuid);
         if (p != null && p.hasPermission("aegis.admin.bypass-limits")) return true;
-        return getAvailableBlocks(uuid) >= areaNeeded;
+        return getAvailableBlocks(uuid) >= amount;
+    }
+
+    // --- Spending for upgrades/features ---
+
+    public boolean spend(UUID uuid, long amount) {
+        if (uuid == null) return false;
+        if (amount <= 0) return true;
+        if (plugin.cfg() == null || !plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) return false;
+
+        if (!canAfford(uuid, amount)) return false;
+
+        getOrCreate(uuid).addSpentBlocks(amount);
+        saveAsync();
+        return true;
+    }
+
+    public void refund(UUID uuid, long amount) {
+        if (uuid == null) return;
+        if (amount <= 0) return;
+
+        getOrCreate(uuid).removeSpentBlocks(amount);
+        saveAsync();
     }
 
     // --- Safer Mutators (always persisted) ---
@@ -108,6 +133,7 @@ public class ClaimBlockManager {
                         cbd.setEarnedBlocks(data.getLong(path + ".earned", 0));
                         cbd.setBonusBlocks(data.getLong(path + ".bonus", 0));
                         cbd.setBoughtBlocks(data.getLong(path + ".bought", 0));
+                        cbd.setSpentBlocks(data.getLong(path + ".spent", 0)); // ✅ NEW
                         cbd.setClaimedStarter(data.getBoolean(path + ".starter_claimed", false));
 
                         cache.put(uuid, cbd);
@@ -121,7 +147,6 @@ public class ClaimBlockManager {
         synchronized (ioLock) {
             if (data == null) data = YamlConfiguration.loadConfiguration(file);
 
-            // snapshot avoids CME
             Map<UUID, ClaimBlockData> snap = new HashMap<>(cache);
 
             for (Map.Entry<UUID, ClaimBlockData> entry : snap.entrySet()) {
@@ -131,6 +156,7 @@ public class ClaimBlockManager {
                 data.set(path + ".earned", cbd.getEarnedBlocks());
                 data.set(path + ".bonus", cbd.getBonusBlocks());
                 data.set(path + ".bought", cbd.getBoughtBlocks());
+                data.set(path + ".spent", cbd.getSpentBlocks()); // ✅ NEW
                 data.set(path + ".starter_claimed", cbd.hasClaimedStarter());
             }
 

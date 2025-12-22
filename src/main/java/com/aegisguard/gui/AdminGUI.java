@@ -32,6 +32,12 @@ import java.util.Map;
  * - Reload/Refresh items self-tag with PDC:
  *     aegis_action = reload_all / refresh_lang
  *   so GUIListener strict reload detection can identify them reliably.
+ *
+ * ✅ 2025-12:
+ * - Reload/Refresh buttons now prefer NEW language keys:
+ *     button_reload_all_settings / reload_all_settings_lore
+ *     button_refresh_language_packs / refresh_language_packs_lore
+ *   with backward-compatible fallback to older keys.
  */
 public class AdminGUI {
 
@@ -86,22 +92,40 @@ public class AdminGUI {
         ));
 
         // Slot 31: Reload All Settings (tagged)
+        // Prefer NEW keys, fallback to legacy keys, then fallback text.
         ItemStack reloadAll = GUIManager.createItem(
                 Material.REDSTONE,
-                plugin.gui().tr(player, "button_admin_reload_all",
-                        plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings")),
-                plugin.gui().trList(player, "admin_reload_all_lore",
-                        plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
+                plugin.gui().tr(
+                        player,
+                        "button_reload_all_settings",
+                        plugin.gui().tr(player, "button_admin_reload_all",
+                                plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings"))
+                ),
+                plugin.gui().trList(
+                        player,
+                        "reload_all_settings_lore",
+                        plugin.gui().trList(player, "admin_reload_all_lore",
+                                plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
+                )
         );
         tagAction(reloadAll, "reload_all");
         inv.setItem(31, reloadAll);
 
         // Slot 32: Refresh Language Packs (Codex only) (tagged)
+        // Prefer NEW keys, fallback to legacy keys, then fallback lore list.
         ItemStack refreshLang = GUIManager.createItem(
                 Material.RECOVERY_COMPASS,
-                plugin.gui().tr(player, "button_admin_refresh_lang", "&aRefresh Language Packs"),
-                plugin.gui().trList(player, "admin_refresh_lang_lore",
-                        List.of("&7Reloads the language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
+                plugin.gui().tr(
+                        player,
+                        "button_refresh_language_packs",
+                        plugin.gui().tr(player, "button_admin_refresh_lang", "&aRefresh Language Packs")
+                ),
+                plugin.gui().trList(
+                        player,
+                        "refresh_language_packs_lore",
+                        plugin.gui().trList(player, "admin_refresh_lang_lore",
+                                List.of("&7Reloads the language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
+                )
         );
         tagAction(refreshLang, "refresh_lang");
         inv.setItem(32, refreshLang);
@@ -152,10 +176,6 @@ public class AdminGUI {
             case 28 -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
             case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
             case 30 -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
-
-            // NOTE:
-            // If your GUIListener intercepts aegis_action reload items globally,
-            // slots 31/32 may never reach this handler (which is totally fine).
 
             case 31 -> { // Reload ALL settings (central hook preferred)
                 plugin.effects().playMenuFlip(player);

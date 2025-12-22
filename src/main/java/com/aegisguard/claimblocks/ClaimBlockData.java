@@ -15,7 +15,7 @@ public class ClaimBlockData {
     private long bonusBlocks;       // From admin commands/ranks
     private long boughtBlocks;      // From economy/marketplace
 
-    // ✅ NEW: Spent blocks (upgrades, services, etc.)
+    // ✅ NEW: spent blocks (used for non-land purchases like leveling upgrades)
     private long spentBlocks;
 
     // The "Starter" Flag
@@ -24,7 +24,6 @@ public class ClaimBlockData {
     // Transient (not saved to DB, calculated at runtime)
     private transient long usedBlocksCache = 0;
 
-    // Transient: helps debugging / GUI freshness
     private transient long lastUsedCacheUpdate = 0L;
 
     public ClaimBlockData(UUID playerUUID) {
@@ -35,8 +34,6 @@ public class ClaimBlockData {
         this.spentBlocks = 0;
         this.claimedStarter = false;
     }
-
-    // --- Getters & Setters ---
 
     public UUID getOwner() { return playerUUID; }
 
@@ -61,13 +58,15 @@ public class ClaimBlockData {
         this.boughtBlocks = Math.max(0, this.boughtBlocks + amount);
     }
 
-    // ✅ NEW: spent
+    // ✅ NEW: Spent blocks
     public long getSpentBlocks() { return spentBlocks; }
     public void setSpentBlocks(long spent) { this.spentBlocks = Math.max(0, spent); }
+
     public void addSpentBlocks(long amount) {
         if (amount <= 0) return;
         this.spentBlocks = Math.max(0, this.spentBlocks + amount);
     }
+
     public void removeSpentBlocks(long amount) {
         if (amount <= 0) return;
         this.spentBlocks = Math.max(0, this.spentBlocks - amount);
@@ -76,22 +75,18 @@ public class ClaimBlockData {
     public boolean hasClaimedStarter() { return claimedStarter; }
     public void setClaimedStarter(boolean claimed) { this.claimedStarter = claimed; }
 
-    /**
-     * Used blocks are calculated by the Manager scanning actual plots,
-     * but we cache it here for quick GUI display.
-     */
     public long getUsedBlocksCache() { return usedBlocksCache; }
     public void setUsedBlocksCache(long used) {
         this.usedBlocksCache = Math.max(0, used);
         this.lastUsedCacheUpdate = System.currentTimeMillis();
     }
 
-    /** Earned + Bonus + Bought - Spent (does NOT include starter config amount). */
+    /** Earned + Bonus + Bought (does NOT include starter config amount). */
     public long getTotalNonStarter() {
-        return Math.max(0, earnedBlocks) + Math.max(0, bonusBlocks) + Math.max(0, boughtBlocks) - Math.max(0, spentBlocks);
+        return Math.max(0, earnedBlocks) + Math.max(0, bonusBlocks) + Math.max(0, boughtBlocks);
     }
 
-    /** Full total including starter config amount (manager/config provides starter). */
+    /** Full total including starter config amount provided by the manager/config. */
     public long getTotalWithStarter(long starterFromConfig) {
         return Math.max(0, starterFromConfig) + getTotalNonStarter();
     }

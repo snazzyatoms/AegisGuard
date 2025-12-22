@@ -180,7 +180,19 @@ currencies:
 # ==============================================================================
 economy:
   enabled: true
+
+  # Legacy / existing toggle used throughout the plugin
   use_vault: true
+
+  # NEW (Vault-aware control):
+  # - If false, AegisGuard behaves as if Vault does not exist (even if installed).
+  # - If true, AegisGuard may use Vault (if present) for any VAULT currency actions.
+  vault:
+    enabled: true
+
+    # If Vault is disabled or missing, and an action supports blocks,
+    # AegisGuard can fall back to claim block progression automatically.
+    fallback_to_blocks: true
 
   claim_cost: 100.0
 
@@ -287,12 +299,65 @@ zoning:
 # ==============================================================================
 leveling:
   enabled: true
+
+  # Money upgrades (Vault or other economy types)
   base_cost: 1000.0
   cost_multiplier: 1.5
   max_level: 30
 
   expand_plot_on_levelup: false
   expansion_amount: 5
+
+  # ---------------------------------------------------------------------------
+  # ✅ NEW: UPGRADE PAYMENT METHODS (Vault-aware + blocks alternative)
+  # ---------------------------------------------------------------------------
+  upgrades:
+    # If true and Vault is available/enabled, the GUI can show a "Pay Money" button.
+    allow_vault_payment: true
+
+    # If true, the GUI can show a "Spend Blocks" button using claim_blocks currency.
+    allow_block_payment: true
+
+    # If Vault is missing/disabled (or economy.use_vault = false, or economy.vault.enabled = false),
+    # AegisGuard should hide/disable the money option and fall back to blocks.
+    fallback_to_blocks_if_vault_unavailable: true
+
+    # OPTION A (best control): explicit per-level block cost.
+    # These values represent the block price to upgrade INTO that level.
+    # Example: blocks_costs.2 is the cost to go from Level 1 -> Level 2.
+    #
+    # Formula used to generate this table (for reference only):
+    # cost = (250 * level^2) - 250
+    blocks_costs:
+      2: 750
+      3: 2000
+      4: 3750
+      5: 6000
+      6: 8750
+      7: 12000
+      8: 15750
+      9: 20000
+      10: 24750
+      11: 30000
+      12: 35750
+      13: 42000
+      14: 48750
+      15: 56000
+      16: 63750
+      17: 72000
+      18: 80750
+      19: 90000
+      20: 99750
+      21: 110000
+      22: 120750
+      23: 132000
+      24: 143750
+      25: 156000
+      26: 168750
+      27: 182000
+      28: 195750
+      29: 210000
+      30: 224750
 
   rewards:
     1:

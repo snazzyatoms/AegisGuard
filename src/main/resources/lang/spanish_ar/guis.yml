@@ -704,6 +704,12 @@ role_flag_name_VEHICLES: '&bVehículos'
 # --------------------------------------
 admin_menu_title: '&c&lKit del Alto Guardián'
 
+# (Agregado para paridad con otras traducciones)
+admin_toggle_format: '{NAME}: {STATE}'
+admin_toggle_default_lore:
+  - '&7Activá o desactivá este ajuste.'
+  - '&eClic para alternar.'
+
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'
 
@@ -749,7 +755,7 @@ button_admin_reload: '&eRecargar Config'
 admin_reload_lore:
   - '&7Recargar ajustes y datos.'
 
-# --- Admin / Settings ---
+# --- Admin / Settings (tus claves existentes, se dejan por compat) ---
 button_refresh_language_packs: '&a🔄 Refrescar Paquetes de Idioma'
 refresh_language_packs_lore:
   - '&7Recargá los paquetes de idioma.'
@@ -763,3 +769,87 @@ reload_all_settings_lore:
   - '&7Usalo después de editar archivos de configuración.'
   - ' '
   - '&eHacé clic para recargar'
+
+# --- AdminGUI.java (CLAVES REALES USADAS EN TU CÓDIGO) ---
+button_admin_reload_all: '&eRecargar Todos los Ajustes'
+admin_reload_all_lore:
+  - '&7Recargá todos los ajustes del plugin.'
+  - '&7Usalo después de editar archivos de configuración.'
+  - ' '
+  - '&eHacé clic para recargar'
+
+button_admin_refresh_lang: '&aRefrescar Paquetes de Idioma'
+admin_refresh_lang_lore:
+  - '&7Recarga los paquetes de idioma.'
+  - '&7Usalo después de editar archivos de idioma.'
+  - ' '
+  - '&eHacé clic para refrescar'
+
+
+# --------------------------------------
+# Leveling GUI (NUEVAS claves: Vault vs Bloques + faltantes del LevelingGUI.java)
+# --------------------------------------
+
+# Panel de estado (header)
+level_header_owner: '&7Dueño: &f{OWNER}'
+level_header_world: '&7Mundo: &f{WORLD}'
+level_header_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
+level_header_multiplier: '&7Multiplicador de costo: &f{MULTIPLIER}'
+level_header_growth_title: '&bCrecimiento del Territorio:'
+level_header_growth_line: '&7+&f{AMOUNT} &7de radio por nivel.'
+
+# Vista previa de ganancia de territorio (si expansión por nivel está activa)
+level_upgrade_territory_title: '&bGanancia de Territorio:'
+level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
+
+# Panel de info de expansión (lado derecho)
+level_expansion_title: '&aExpansión del Territorio'
+level_expansion_lore:
+  - '&bReglas de Crecimiento:'
+  - '&7Cada mejora expande el radio'
+  - '&7de la parcela de forma pareja.'
+
+# Lore cuando llegás al máximo
+level_max_reached_lore:
+  - '&7Tu parcela alcanzó'
+  - '&7su nivel máximo.'
+  - ' '
+  - '&aDisfrutá tu poder completo.'
+
+# Items del track (claves realmente usadas por buildLevelTrackItem)
+level_track_completed_name: '&aEtapa Completada'
+level_track_completed_lore:
+  - '&7Ya desbloqueaste esta etapa.'
+level_track_current_name: '&eEtapa Actual'
+level_track_current_lore:
+  - '&7Estás en esta etapa ahora.'
+level_track_locked_name: '&cEtapa Bloqueada'
+level_track_locked_lore:
+  - '&7Avanzá para desbloquearla.'
+level_track_next_name: '&dSiguiente Etapa'
+level_track_next_lore:
+  - '&7Tu próxima mejora está acá.'
+  - '&7Costo: &6{COST}'
+
+# Pago consciente (Vault vs Bloques)
+level_upgrade_payment_title: '&bForma de Pago:'
+
+# Mejoras con dinero (Vault / economía)
+level_upgrade_cost_money: '&7Costo: &6{COST} &8({TYPE})'
+level_upgrade_button_money: '&aMejorar con Dinero'
+level_upgrade_hint_money: '&eClic para pagar con dinero'
+
+# Mejoras con bloques (progresión)
+level_upgrade_cost_blocks: '&7Costo: &b{BLOCKS} &7Bloques'
+level_upgrade_you_have_blocks: '&7Tenés: &b{BALANCE} &7Bloques'
+level_upgrade_button_blocks: '&bMejorar con Bloques'
+level_upgrade_hint_blocks: '&eClic para gastar tus bloques'
+
+# Mensajes opcionales (seguros aunque no se usen todavía)
+level_upgrade_money_unavailable: '&8El pago con dinero no está disponible.'
+level_upgrade_blocks_unavailable: '&8El pago con bloques no está disponible.'
+level_upgrade_choose_payment: '&7Elegí cómo querés pagar abajo.'
+
+# Opcional: costos para track (futuro polish)
+level_track_next_cost_money: '&eCosto en Dinero: &6{COST}'
+level_track_next_cost_blocks: '&eCosto en Bloques: &b{BLOCKS}'

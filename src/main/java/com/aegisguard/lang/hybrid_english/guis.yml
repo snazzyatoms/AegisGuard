@@ -249,3 +249,71 @@ fly_toggle_lore:
 cosmetics_lore:
 - '&7Customize the look and feel of your plot.'
 - '&eClick to open.'
+
+# --------------------------------------
+# Admin GUI (High Guardian Tools)
+# --------------------------------------
+
+admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
+
+# Toggle formatting + states
+admin_toggle_format: '{NAME}: {STATE}'
+toggle_on: '&aON'
+toggle_off: '&cOFF'
+admin_toggle_default_lore:
+- '&7Toggle this setting.'
+- '&eClick to toggle.'
+
+# --- Admin Toggles (Slots 10-15) ---
+button_admin_auto_remove: '&cAuto-Remove Banned'
+admin_auto_remove_lore:
+- '&7Auto-removes banned players'
+- '&7from plot trust lists.'
+
+button_admin_bypass_limit: '&6Bypass Claim Limit'
+admin_bypass_limit_lore:
+- '&7Allows admins to ignore'
+- '&7claim size restrictions.'
+
+button_admin_broadcast: '&bBroadcast Actions'
+admin_broadcast_lore:
+- '&7Broadcasts admin actions'
+- '&7to server chat.'
+
+button_admin_unlimited: '&aUnlimited Plots'
+admin_unlimited_lore:
+- '&7Allows unlimited plots'
+- '&7for administrators.'
+
+button_admin_sync: '&5Proxy Sync'
+admin_sync_lore:
+- '&7Sync settings through proxy'
+- '&7if enabled.'
+
+button_admin_perf: '&eLow Overhead Mode'
+admin_perf_lore:
+- '&7Performance-focused mode.'
+- '&7Reduced background work.'
+
+# --- Admin Tools (Slots 28-32) ---
+admin_plot_list_title: '&bPlot List'
+admin_plot_list_lore:
+- '&7View/TP to any plot.'
+
+button_admin_diagnostics: '&bDiagnostics'
+admin_diagnostics_lore:
+- '&7View system stats.'
+
+button_admin_reload: '&eReload All Settings'
+button_admin_reload_all: '&eReload All Settings'
+admin_reload_lore:
+- '&7Reload all settings.'
+admin_reload_all_lore:
+- '&7Reload all settings.'
+
+button_admin_refresh_lang: '&aRefresh Language Packs'
+admin_refresh_lang_lore:
+- '&7Reloads the language bundles.'
+- '&7Use after editing lang files.'
+- ' '
+- '&eClick to refresh'

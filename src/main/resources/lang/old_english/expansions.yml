@@ -1,16 +1,25 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: expansions.yml
-# Generated: 2025-12-16 23:08:56Z
+# Organized: 2025-12-21 00:00:00Z
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
-expansion_submitted: '&a✔ Thy petition for expansion hath been sent to the Council.'
-expansion_exists: '&c❌ Thou already hast a petition pending.'
-expansion_approved: ''
-expansion_denied: ''
-admin_request_approved: '&a✔ Rejoice! Thy petition hath been granted by {PLAYER}.'
-admin_request_denied: '&c❌ Alas, thy petition hath been denied by {PLAYER}.'
-expansion_payment_failed: '&c❌ Thy petition failed; thy coffers lack the tribute.'
-expansion_limit_reached: '&c❌ Thou hast reached the absolute limit of expansion ({LIMIT}).'
-expansion_overlap_fail: '&c❌ Thou canst not expand here; thy neighbors are too close.'
-expansion_invalid_size: '&c❌ The new size must be greater than the old.'
-request_expired: '&c❌ This petition has expired or vanished.'
+expansion_submitted: '&a✔ Request submitted.'
+expansion_exists: '&c❌ You already have a pending request.'
+expansion_approved: '&a✔ Request approved.'
+expansion_denied: '&c✖ Request denied.'
+admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
+admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+expansion_payment_failed: '&c❌ Insufficient funds.'
+expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
+expansion_invalid_size: '&c❌ Expansion must increase size.'
+request_expired: '&c❌ Request expired.'
+expansion_not_in_plot: '&c❌ Thou must stand within thine own claim to petition.'
+expansion_request_submitted: '&a✔ Expansion petition submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e⚠ Thou already hast a petition pending.'
+expansion_request_cancelled: '&e✔ Expansion petition cancelled.'
+expansion_request_none_pending: '&cNo expansion petitions are pending.'
+expansion_request_approved_player: '&a✔ Thy expansion petition was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c✖ Thy expansion petition was denied.'
+expansion_request_approved_admin: '&a✔ Approved expansion petition for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Denied expansion petition for &f{PLAYER}&c.'

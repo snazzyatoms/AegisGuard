@@ -500,3 +500,72 @@ admin_refresh_lang_lore:
   - '&7Use after editing files.'
   - ' '
   - '&eClick to refresh'
+
+# --------------------------------------
+# Leveling GUI (NEW keys for Vault vs Blocks + missing LevelingGUI keys)
+# Used by: LevelingGUI.java
+# --------------------------------------
+
+# Header / status panel keys
+level_header_owner: '&7Owner: &f{OWNER}'
+level_header_world: '&7World: &f{WORLD}'
+level_header_level: '&7Level: &e{LEVEL}&7/&f{MAX}'
+level_header_multiplier: '&7Cost Multiplier: &f{MULTIPLIER}'
+level_header_growth_title: '&bTerritory Growth:'
+level_header_growth_line: '&7+&f{AMOUNT} &7block radius per level.'
+
+# Territory preview keys (when expansion-on-levelup is enabled)
+level_upgrade_territory_title: '&bTerritory Gain:'
+level_upgrade_territory_line: '&7+&f{AMOUNT} &7radius on this upgrade.'
+
+# Expansion info panel (right side)
+level_expansion_title: '&aTerritory Expansion'
+level_expansion_lore:
+  - '&bTerritory Growth Rules:'
+  - '&7Each upgrade expands your'
+  - '&7claim radius outward evenly.'
+
+# Max level lore (cap reached)
+level_max_reached_lore:
+  - '&7Your dominion has reached'
+  - '&7its highest tier.'
+  - ' '
+  - '&aEnjoy your full power.'
+
+# Track item keys used by buildLevelTrackItem(...)
+level_track_completed_name: '&aCompleted Tier'
+level_track_completed_lore:
+  - '&7This tier is unlocked.'
+level_track_current_name: '&eCurrent Tier'
+level_track_current_lore:
+  - '&7Your claim is at this tier.'
+level_track_locked_name: '&cLocked Tier'
+level_track_locked_lore:
+  - '&7Advance to unlock this tier.'
+level_track_next_name: '&dNext Tier'
+level_track_next_lore:
+  - '&7Next upgrade available.'
+  - '&7Cost: &6{COST}'
+
+# Currency-aware upgrade labels (Vault vs Claim Blocks)
+level_upgrade_payment_title: '&bPayment Options:'
+
+# Money-based upgrades (Vault/eco)
+level_upgrade_cost_money: '&7Cost: &6{COST} &8({TYPE})'
+level_upgrade_button_money: '&aUpgrade with Money'
+level_upgrade_hint_money: '&eClick to pay with money'
+
+# Block-based upgrades (claim blocks progression)
+level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
+level_upgrade_you_have_blocks: '&7You Have: &b{BALANCE} &7Blocks'
+level_upgrade_button_blocks: '&bUpgrade with Blocks'
+level_upgrade_hint_blocks: '&eClick to spend blocks'
+
+# Optional helper lines for aware behavior (safe even if unused yet)
+level_upgrade_money_unavailable: '&8Money upgrade unavailable.'
+level_upgrade_blocks_unavailable: '&8Block upgrade unavailable.'
+level_upgrade_choose_payment: '&7Choose a payment method below.'
+
+# Optional: track cost variants (future polish)
+level_track_next_cost_money: '&eMoney Cost: &6{COST}'
+level_track_next_cost_blocks: '&eBlock Cost: &b{BLOCKS}'

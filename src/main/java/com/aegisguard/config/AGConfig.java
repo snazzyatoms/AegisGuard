@@ -82,15 +82,6 @@ public class AGConfig {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
 
-        // -------------------------------------------------
-        // Small migration helpers (keeps servers compatible)
-        // -------------------------------------------------
-
-        // If server owners used the older key, map it to the newer one that ClaimBlockManager reads.
-        if (!config.isSet("claim_blocks.starting_blocks") && config.isSet("claim_blocks.starter_amount")) {
-            config.set("claim_blocks.starting_blocks", config.getLong("claim_blocks.starter_amount", 1000L));
-        }
-
         // -------------------------------
         // Defaults (safe, non-invasive)
         // -------------------------------
@@ -115,10 +106,9 @@ public class AGConfig {
         // -------------------------------
         config.addDefault("claim_blocks.enabled", true);
 
-        // Starter blocks (primary key used by ClaimBlockManager)
+        // Starter blocks (primary)
         config.addDefault("claim_blocks.starting_blocks", 1000L);
-
-        // Legacy alias (kept so older configs don't break; will be migrated on reload)
+        // Legacy alias (kept for older configs)
         config.addDefault("claim_blocks.starter_amount", 1000L);
 
         // Playtime earn (used by ClaimBlockTask)
@@ -126,13 +116,21 @@ public class AGConfig {
         config.addDefault("claim_blocks.earn.playtime.interval_minutes", 10L);
         config.addDefault("claim_blocks.earn.playtime.amount", 1L);
 
-        // Level-up earn (optional, language pack includes message)
+        // Level-up earn (optional; language packs include messages)
         config.addDefault("claim_blocks.earn.level_up.enabled", false);
         config.addDefault("claim_blocks.earn.level_up.amount", 0L);
 
-        // First-claim limiter (optional, language pack includes it)
+        // First-claim limiter (optional; language packs include messages)
         config.addDefault("claim_blocks.first_claim_limit.enabled", true);
         config.addDefault("claim_blocks.first_claim_limit.max_area", 2500L); // 50x50 default cap
+
+        // -------------------------------
+        // Tiny migration helper
+        // -------------------------------
+        // If server owners used the older key, map it to the newer one.
+        if (config.isSet("claim_blocks.starter_amount") && !config.isSet("claim_blocks.starting_blocks")) {
+            config.set("claim_blocks.starting_blocks", config.getLong("claim_blocks.starter_amount", 1000L));
+        }
 
         config.options().copyDefaults(true);
         plugin.saveConfig();
@@ -173,10 +171,8 @@ public class AGConfig {
         this.claimBlocksStarterAmount = Math.max(0L, starter);
 
         this.claimBlocksPlaytimeEnabled = config.getBoolean("claim_blocks.earn.playtime.enabled", true);
-        this.claimBlocksPlaytimeIntervalMinutes =
-                Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
-        this.claimBlocksPlaytimeAmount =
-                Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
+        this.claimBlocksPlaytimeIntervalMinutes = Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
+        this.claimBlocksPlaytimeAmount = Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
 
         this.claimBlocksLevelUpEnabled = config.getBoolean("claim_blocks.earn.level_up.enabled", false);
         this.claimBlocksLevelUpAmount = Math.max(0L, config.getLong("claim_blocks.earn.level_up.amount", 0L));
@@ -374,7 +370,15 @@ public class AGConfig {
                 config.getString("admin.wand.name", "&c&lSentinel's Scepter"));
     }
 
-    public List<String> getAdminWandLore() { return new ArrayList<>(); }
+    public List<String> getAdminWandLore() {
+        List<String> lore = config.getStringList("admin.wand.lore");
+        if (lore == null || lore.isEmpty()) return new ArrayList<>();
+        List<String> out = new ArrayList<>(lore.size());
+        for (String line : lore) {
+            out.add(ChatColor.translateAlternateColorCodes('&', line));
+        }
+        return out;
+    }
 
     public int getWorldMaxRadius(World world) {
         if (world != null && config.isSet("claims.per_world." + world.getName() + ".max_radius")) {

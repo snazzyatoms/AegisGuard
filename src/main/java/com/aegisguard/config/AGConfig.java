@@ -44,13 +44,20 @@ public class AGConfig {
 
     // --- Claim Blocks (1.2.4+) ---
     private boolean claimBlocksEnabled;
+
+    /**
+     * "Starter" claim blocks added to every player total.
+     * NOTE: historically you used claim_blocks.starter_amount.
+     * ClaimBlockManager currently reads claim_blocks.starting_blocks.
+     * We support BOTH and auto-migrate starter_amount -> starting_blocks if needed.
+     */
     private long claimBlocksStarterAmount;
 
     private boolean claimBlocksPlaytimeEnabled;
     private long claimBlocksPlaytimeIntervalMinutes;
     private long claimBlocksPlaytimeAmount;
 
-    // NEW (optional): reward on plot level-up
+    // Optional: reward on plot level-up
     private boolean claimBlocksLevelUpEnabled;
     private long claimBlocksLevelUpAmount;
 
@@ -74,6 +81,15 @@ public class AGConfig {
     public void reload() {
         plugin.reloadConfig();
         this.config = plugin.getConfig();
+
+        // -------------------------------------------------
+        // Small migration helpers (keeps servers compatible)
+        // -------------------------------------------------
+
+        // If server owners used the older key, map it to the newer one that ClaimBlockManager reads.
+        if (!config.isSet("claim_blocks.starting_blocks") && config.isSet("claim_blocks.starter_amount")) {
+            config.set("claim_blocks.starting_blocks", config.getLong("claim_blocks.starter_amount", 1000L));
+        }
 
         // -------------------------------
         // Defaults (safe, non-invasive)
@@ -99,19 +115,22 @@ public class AGConfig {
         // -------------------------------
         config.addDefault("claim_blocks.enabled", true);
 
-        // starter ledger (optional)
-        config.addDefault("claim_blocks.starter_amount", 0L);
+        // Starter blocks (primary key used by ClaimBlockManager)
+        config.addDefault("claim_blocks.starting_blocks", 1000L);
 
-        // playtime earn (used by ClaimBlockTask)
+        // Legacy alias (kept so older configs don't break; will be migrated on reload)
+        config.addDefault("claim_blocks.starter_amount", 1000L);
+
+        // Playtime earn (used by ClaimBlockTask)
         config.addDefault("claim_blocks.earn.playtime.enabled", true);
         config.addDefault("claim_blocks.earn.playtime.interval_minutes", 10L);
         config.addDefault("claim_blocks.earn.playtime.amount", 1L);
 
-        // level-up earn (optional, your lang pack already has the message)
+        // Level-up earn (optional, language pack includes message)
         config.addDefault("claim_blocks.earn.level_up.enabled", false);
         config.addDefault("claim_blocks.earn.level_up.amount", 0L);
 
-        // first claim limiter (optional, your lang pack includes it)
+        // First-claim limiter (optional, language pack includes it)
         config.addDefault("claim_blocks.first_claim_limit.enabled", true);
         config.addDefault("claim_blocks.first_claim_limit.max_area", 2500L); // 50x50 default cap
 
@@ -147,7 +166,11 @@ public class AGConfig {
 
         // --- Claim Blocks Cache ---
         this.claimBlocksEnabled = config.getBoolean("claim_blocks.enabled", true);
-        this.claimBlocksStarterAmount = Math.max(0L, config.getLong("claim_blocks.starter_amount", 0L));
+
+        // Prefer starting_blocks (current), fall back to starter_amount (legacy)
+        long starter = config.getLong("claim_blocks.starting_blocks",
+                config.getLong("claim_blocks.starter_amount", 1000L));
+        this.claimBlocksStarterAmount = Math.max(0L, starter);
 
         this.claimBlocksPlaytimeEnabled = config.getBoolean("claim_blocks.earn.playtime.enabled", true);
         this.claimBlocksPlaytimeIntervalMinutes =
@@ -256,6 +279,7 @@ public class AGConfig {
 
     public boolean isClaimBlocksEnabled() { return claimBlocksEnabled; }
 
+    /** Alias-safe getter (starting_blocks + legacy starter_amount). */
     public long getClaimBlocksStarterAmount() { return claimBlocksStarterAmount; }
 
     public boolean isClaimBlocksPlaytimeEnabled() { return claimBlocksPlaytimeEnabled; }

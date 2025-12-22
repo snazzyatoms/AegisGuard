@@ -1,200 +1,45 @@
-# ======================================
-# AegisGuard v1.2.4 - Codex: Español Neutro (LatAm)
-# File: system.yml
-# Parity translation from modern_english/system.yml
-# ======================================
+# --------------------------------------
+# Claim Blocks (paridad extendida)
+# --------------------------------------
 
-prefix: '&8[&bAegisGuard&8]&r '
-role_edit_self_error: '&cError: No puedes editar tu propio rol.'
-no_perm: '&cError: No tienes permiso para esto.'
-players_only: '&cError: Este comando solo puede ser usado por jugadores.'
-usage_main: '&eUso: /aegis <wand|menu|claim|unclaim|resize|help>'
-sound_global_enabled: '&a✔ Los sonidos de AegisGuard han sido habilitados.'
-sound_global_disabled: '&c✖ Los sonidos de AegisGuard han sido deshabilitados.'
-wand_given: '&a⚡ Has recibido el Cetro Aegis.'
-wand_already_on: '&eYa tienes el Cetro Aegis en tu inventario.'
-corner1_set: '&a⚡ Posición 1 establecida en &e{X}, {Z}.'
-corner2_set: '&b⚡ Posición 2 establecida en &e{X}, {Z}.'
-must_select: '&c❌ Primero debes seleccionar dos esquinas con la Varita.'
-corners_diff_world: '&c❌ Ambas esquinas deben estar en el mismo mundo.'
-wand_consumed: '&a✔ Herramienta de parcela usada y consumida.'
-wand_not_found: '&c❌ No se encontró la herramienta de parcela en tu inventario.'
-wand_already_owned: '&eYa tienes una herramienta de parcela. Úsala en lugar de solicitar otra.'
-resize-success: '&a✔ Parcela redimensionada {DIRECTION} por {AMOUNT} bloques.'
-resize-fail-overlap: '&c❌ ¡Error al redimensionar! Se superpondría con otra parcela.'
-resize-fail-max-area: '&c❌ ¡Error al redimensionar! Excedería el límite de {AMOUNT} bloques.'
-merge_invalid_dir: '&c❌ Dirección inválida. Usa NORTH, SOUTH, EAST o WEST.'
-merge_no_plot: '&c❌ No se encontró una parcela en esa dirección.'
-merge_not_owner: '&c❌ No eres dueño de la parcela adyacente.'
-merge_not_aligned: '&c❌ Las parcelas no están alineadas. Los bordes deben coincidir exactamente.'
-merge_success: '&a✔ ¡Parcelas fusionadas con éxito!'
-max_claims_reached: '&c❌ Límite de parcelas alcanzado: solo puedes tener {AMOUNT} parcela(s).'
-need_vault: '&c❌ Fondos insuficientes. Necesitas &e${AMOUNT}&c.'
-cost_deducted: '&e💰 Cobrado &6${AMOUNT}&e.'
-items_deducted: '&e💰 Pagado &6{AMOUNT} {ITEM}&e.'
-vault_refund: '&e💰 Reembolsado &6${AMOUNT}&e (&f{PERCENT}%&e).'
-item_refund: '&e💰 Reembolsado &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
-upkeep_paid: '&e💰 Pagado &6{AMOUNT}&e por mantenimiento de la parcela.'
-upkeep_failed_warning: '&c⚠ El mantenimiento está pendiente y tu saldo es demasiado bajo.'
-plot_expired_upkeep: '&c❌ Tu parcela fue eliminada por falta de pago del mantenimiento.'
-plot-is-locked: '&c❌ Esta parcela está bloqueada y no puede modificarse.'
-plot_is_locked: '&c❌ Esta parcela está bloqueada y no puede modificarse.'
-home-set-success: '&a✔ Hogar de la parcela establecido en tu ubicación actual.'
-home-fail-outside: '&c❌ Debes estar dentro de tu parcela para establecer su hogar.'
-home-fail-no-spawn: '&c❌ ¡No hay hogar establecido! Usa /ag setspawn.'
-welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
-welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
-farewell-set: '&a✔ Mensaje de despedida actualizado.'
-farewell-cleared: '&e✔ Mensaje de despedida borrado.'
-plot_created: '&a✔ Parcela creada con éxito.'
-plot_unclaimed: '&e⚠ Parcela eliminada.'
-no_plot_here: '&c❌ No estás dentro de tu parcela.'
-cannot_break: '&c❌ No puedes romper bloques aquí; esta área está protegida.'
-cannot_place: '&c❌ No puedes colocar bloques aquí; esta área está protegida.'
-cannot_interact: '&c❌ No tienes permitido interactuar con eso aquí.'
-cannot_attack: '&c❌ El PvP está deshabilitado en esta parcela.'
-plot_entry_denied: '&c⛔ Acceso denegado. Esta parcela es privada.'
-plot_banned_entry: '&c⛔ Tienes prohibida la entrada a esta parcela.'
-zone_created: '&a✔ Zona ''{ZONE}'' creada.'
-zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
-zone_rented: '&a✔ {PLAYER} ahora está alquilando ''{ZONE}''.'
-zone_not_rented: '&7La zona está disponible actualmente.'
-zone_evicted: '&eInquilino desalojado de {ZONE}.'
-biome_changed: '&a✔ Bioma establecido a {BIOME}.'
-biome_cost_paid: '&e💰 Pagado &6{AMOUNT}&e para cambiar el bioma.'
-like_success: '&a✔ Te gustó esta parcela. Me gusta totales: &e{AMOUNT}'
-like_removed: '&eTu me gusta ha sido eliminado.'
-like_own_plot: '&cError: No puedes dar me gusta a tu propia parcela.'
-like_disabled: '&cLos me gusta están deshabilitados en este servidor/mundo.'
-flag_toggled: '&eActualizado {FLAG}: &f{STATUS}'
-server_zone_forced_flag: '&cEste ajuste está bloqueado por una Zona del Servidor.'
-admin_forced_flag_notice: '&7[Admin] Este flag está forzado en nivel {LEVEL} y no puede cambiarse aquí.'
-flag_inherited_from_world: '&7Heredado de: &fAjustes del mundo.'
-flag_inherited_from_zone: '&7Heredado de: &fAjustes de Zona del Servidor.'
-flag_inherited_from_plot: '&7Heredado de: &fAjustes a nivel de parcela.'
-role_self: '&cNo puedes editar tu propio rol.'
-role_is_owner: '&cNo puedes editar el rol del propietario.'
-role_set_to: '&a✔ {PLAYER} ahora tiene el rol: {ROLE}.'
-role_removed: '&e✔ {PLAYER} ha sido eliminado de tu parcela.'
-admin_reloading: '&7Recargando configuración y datos...'
-admin_reload_complete: '&a✔ Recarga completa.'
-admin_auto_remove_enabled: '&a✔ Auto-Limpieza habilitada.'
-admin_auto_remove_disabled: '&c✖ Auto-Limpieza deshabilitada.'
-admin_bypass_enabled: '&a✔ Bypass del límite de parcelas habilitado.'
-admin_bypass_disabled: '&c✖ Bypass del límite de parcelas deshabilitado.'
-admin_broadcast_enabled: '&a✔ Registro de acciones de admin habilitado.'
-admin_broadcast_disabled: '&c✖ Registro de acciones de admin deshabilitado.'
-admin_removed_banned: '&eParcelas eliminadas del jugador baneado: {PLAYER}'
-admin_plot_teleport: '&eTeletransportado a la parcela de {PLAYER}.'
-admin_plot_deleted: '&c✖ Parcela de {PLAYER} eliminada.'
-admin-zone-created: '&a✔ Zona del Servidor creada.'
-admin-zone-deleted: '&c✖ Zona del Servidor eliminada.'
-admin-zone-not-found: '&c❌ No estás dentro de una Zona del Servidor.'
-admin-zone-no-claims: '&c❌ No se permiten parcelas en esta Zona del Servidor.'
-wilderness_revert_start: '&7Tarea de reversión del wilderness iniciada...'
-wilderness_revert_end: '&7Tarea de reversión del wilderness finalizada. Bloques revertidos: &f{AMOUNT}&7.'
-market-now-auctioned: '&e⚠ ¡Tu parcela ahora está en subasta!'
-auction-bid-own: '&cError: No puedes pujar por tu propia parcela caducada.'
-auction-already-highest: '&eYa eres el mayor postor.'
-auction-outbid: '&e{PLAYER} te ha superado la puja.'
-auction-bid-success: '&a✔ Puja de &6{AMOUNT}&a aceptada. Ahora eres el mayor postor.'
-auction-sold: '&a✔ Tu parcela fue vendida a {PLAYER} por &6{AMOUNT}&a.'
-auction-won: '&a✔ ¡Ganaste la subasta de la parcela de {PLOT_OWNER} por &6{AMOUNT}&a!'
-auction-bid-tie: '&eTu puja igualó la puja más alta.'
-auction-bid-too-low: '&c❌ Puja demasiado baja. Incremento mínimo: &6{AMOUNT}&c.'
-auction-bid-failed-funds: '&c❌ No tienes suficientes fondos para realizar esa puja.'
-market-teleport: '&eTeletransportando a la parcela de {PLAYER}...'
-market-buy-own: '&cError: No puedes comprar tu propia parcela.'
-market-buy-success: '&a✔ ¡Compraste la parcela de {PLAYER} por &6{PRICE}&a!'
-market-sold: '&a✔ ¡{PLAYER} compró tu parcela por &6{PRICE}&a!'
-market-for-sale: '&a✔ Parcela listada por &6{PRICE}&a.'
-market-not-for-sale: '&e✔ Anuncio de parcela eliminado.'
-market-rent-soon: '&eLos alquileres estarán disponibles en una actualización futura.'
-claim_denied_external: '&c⛔ Parcela denegada: protegida por &f{PLUGIN}&c.'
-claim_denied_external_generic: '&c⛔ Parcela denegada: protegida por otro plugin.'
-plot_welcome_show: '&a✦ Bienvenida de {OWNER}: &f{MESSAGE}'
-plot_farewell_show: '&e✦ Despedida de {OWNER}: &f{MESSAGE}'
-unstuck_warmup: '&e⏳ Desatascando en &6{SECONDS}&e segundos... No te muevas.'
-unstuck_cancelled: '&c❌ Desatascar cancelado (se detectó movimiento).'
-unstuck_on_cooldown: '&c❌ Enfriamiento de desatascar: faltan &6{SECONDS}&c segundos.'
-unstuck_success: '&a✔ Teletransportado a un lugar seguro.'
-unstuck_failed: '&c❌ Desatascar falló: no se encontró una ubicación segura.'
-title_entering: '&aEntrando: &f{PLOT}'
-subtitle_entering: '&7Dueño: &f{OWNER}'
-title_leaving: '&cSaliendo: &f{PLOT}'
-subtitle_leaving: '&7Regresando al Wilderness'
+# Preferida por paridad (si tu código usa esta key en vez de claim_blocks_first_claim_limit)
+first_claim_limit_exceeded: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
+
+# Si otorgás bloques por ascensión/nivelación (por ejemplo, LevelUp / Ascensión)
+claim_blocks_earned_levelup: '&d✦ Recompensa de Ascensión: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+
+# Gasto / reembolso (útil para claim/resize/upgrade/purchases, si lo emites en chat)
+claim_blocks_spent: '&e✦ Has gastado: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Costo del reclamo: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_resize: '&e✦ Costo del redimensionado: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Costo de Ascensión: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Reembolsado: &a+{AMOUNT}&e Bloques de Parcela. &7Total: &e{TOTAL}&7.'
 
 # --------------------------------------
-# NUEVO: Claves adicionales de chat/comandos (v1.2.4+)
+# Admin: refresh de paquetes de idioma (feedback del botón / comando)
 # --------------------------------------
-travel_system_disabled: '&cEl sistema de viaje está deshabilitado.'
-home_teleport_disabled: '&cEl teletransporte al hogar está deshabilitado.'
-leveling_disabled: '&cEl sistema de niveles está deshabilitado.'
-zoning_disabled: '&cEl sistema de zonas está deshabilitado.'
-
-usage_merge: '&cUso: /ag merge <N/S/E/W>'
-usage_rename: '&cUso: /ag rename <Nombre>'
-usage_setdesc: '&cUso: /ag setdesc <Descripción>'
-
-rename_too_long: '&cEl nombre es demasiado largo (Máx {MAX} caracteres).'
-plot_renamed: '&a✔ Parcela renombrada a: &r{NAME}'
-plot_desc_updated: '&a✔ Descripción de la parcela actualizada.'
-
-unstuck_not_in_plot: '&cNo estás dentro de una parcela.'
-
-resize_usage: '&cUso: /aegis resize <dirección> <cantidad>'
-resize_directions: '&eDirecciones: &f{DIRS}'
-amount_must_number: '&cLa cantidad debe ser un número.'
-amount_must_positive: '&cLa cantidad debe ser positiva.'
-invalid_direction: '&cDirección inválida. Usa: &f{DIRS}'
-
-kick_usage: '&cUso: /ag kick <jugador>'
-ban_usage: '&cUso: /ag ban <jugador>'
-unban_usage: '&cUso: /ag unban <jugador>'
-
-player_not_found: '&cNo se encontró al jugador.'
-player_not_in_plot: '&cEl jugador no está en tu parcela.'
-cannot_kick_operator: '&cNo puedes expulsar a un Operador del Servidor.'
-kicked_target: '&cFuiste expulsado de la parcela de {OWNER}.'
-kicked_sender: '&eExpulsaste a {PLAYER}'
-
-ban_self_error: '&cNo puedes banearte a ti mismo.'
-ban_success: '&cBaneaste a {PLAYER}'
-ban_target: '&4Fuiste BANEADO de esta parcela.'
-unban_success: '&aDesbaneaste a {PLAYER}'
-
-sell_usage: '&cUso: /ag sell <precio>'
-price_must_positive: '&cEl precio debe ser positivo.'
-invalid_number: '&cNúmero inválido.'
+admin_lang_refreshing: '&7Actualizando paquetes de idioma...'
+admin_lang_refresh_complete: '&a✔ Paquetes de idioma actualizados.'
+admin_lang_refresh_failed: '&c❌ No se pudieron actualizar los paquetes de idioma. Revisa la consola.'
 
 # --------------------------------------
-# Claim Blocks (Ledger + limits + Platinum messages)
+# Solicitudes de expansión (mensajes de sistema)
 # --------------------------------------
-claim_blocks_name: '&bBloques de Parcela de Platino'
+expansion_not_in_plot: '&c❌ Debes estar dentro de tu propia parcela para hacer esto.'
+expansion_request_submitted: '&a✔ Solicitud de expansión enviada. &7Pedido: &e+{AMOUNT}&7 bloques.'
+expansion_request_already_pending: '&e⚠ Ya tienes una solicitud pendiente.'
+expansion_request_cancelled: '&e✔ Tu solicitud de expansión fue cancelada.'
+expansion_request_none_pending: '&cNo hay solicitudes de expansión pendientes.'
+expansion_request_approved_player: '&a✔ ¡Tu solicitud de expansión fue aprobada! &7Otorgado: &e+{AMOUNT}&7 bloques.'
+expansion_request_denied_player: '&c✖ Tu solicitud de expansión fue rechazada.'
+expansion_request_approved_admin: '&a✔ Aprobaste la solicitud de expansión de &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Rechazaste la solicitud de expansión de &f{PLAYER}&c.'
 
-claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
-claim_blocks_not_enough: '&c❌ Necesitas &e{AMOUNT}&c Bloques de Parcela más.'
-claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
-
-# ✅ Usado por ClaimBlockTask.java (recompensa por tiempo de juego)
-claim_blocks_earned_playtime: '&a✦ Por jugar, ganaste &b+{AMOUNT}&a Bloques de Parcela. &7Total: &e{TOTAL}&7.'
-
-# Opcionales (listos para usar cuando los emitas desde comandos/tienda/perks)
-claim_blocks_received_starter: '&b✦ Registro inicial: &a+{AMOUNT}&b Bloques de Parcela. &7Total: &e{TOTAL}&7.'
-claim_blocks_received_bonus: '&d✦ Bono otorgado: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
-claim_blocks_purchased: '&6✦ Compra completada: &b+{AMOUNT}&6 Bloques de Parcela. &7Total: &e{TOTAL}&7.'
-claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Parcela. &7Necesitas: &e{NEEDED}&7 | Tienes: &a{AVAILABLE}&7.'
-claim_blocks_cost_preview: '&7Costo del reclamo: &6{COST}&7 bloques.'
-
-blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
-blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'
-blocks_ledger_used: '&7Terreno usado: &c{USED}'
-blocks_ledger_available: '&7Disponible: &a{AVAILABLE}'
-
-# Wand (item)
-wand_item_name: '&bCetro Aegis'
-wand_item_lore:
-  - '&7Clic izq./der.: Seleccionar esquinas'
-
-# (Opcional/compat) Conflicto de protección externa (legacy key)
-claim_conflict_external: '&c❌ Esa área ya está protegida por otro plugin. AegisGuard no la reclamará.'
+# --------------------------------------
+# Economía: fallbacks seguros (por si tu código los usa)
+# --------------------------------------
+economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
+vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pide a un admin que instale/configure Vault y un plugin de economía.'
+vault_disabled_here: '&c❌ Los pagos por Vault están deshabilitados aquí.'
+insufficient_funds: '&c❌ Fondos insuficientes. Necesitas: &e${NEEDED}&c | Tienes: &e${AVAILABLE}&c.'
+transaction_failed: '&c❌ La transacción falló. Inténtalo de nuevo en un momento.'

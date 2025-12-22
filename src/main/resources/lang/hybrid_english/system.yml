@@ -181,6 +181,12 @@ claim_blocks_disabled: '&cClaim Blocks are disabled on this server.'
 # --------------------------------------
 claim_blocks_name: '&bPlatinum Claim Blocks'
 
+# Quick Ledger Lines (shared across GUIs/chat)
+claim_blocks_balance: '&e⛏ Claim Blocks: &6{TOTAL}'
+claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(New: &f{TOTAL}&7)'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Total: &f{TOTAL}'
+claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
+
 # ✅ Used by ClaimBlockTask.java (playtime earning message)
 claim_blocks_earned_playtime: '&a✦ Playtime Reward: &b+{AMOUNT}&a Claim Blocks! &7Total: &e{TOTAL}&7.'
 

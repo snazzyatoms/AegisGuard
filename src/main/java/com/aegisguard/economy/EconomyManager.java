@@ -6,8 +6,15 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
+/**
+ * EconomyManager
+ * - Unified currency handling (Vault / EXP / LEVEL / ITEM / CLAIM_BLOCKS)
+ * - Adds safe balance helpers so GUIs can display balances reliably (especially Claim Blocks)
+ * - Keeps all existing behavior; only adds compatibility + safeguards.
+ */
 public class EconomyManager {
 
     private final AegisGuard plugin;
@@ -46,7 +53,7 @@ public class EconomyManager {
 
         if (!has(p, amount, type)) return false;
 
-        // ✅ Switch EXPRESSION: guaranteed return for all paths
+        // Switch EXPRESSION: guarantees a return for every path (fixes "missing return statement").
         return switch (type) {
             case VAULT -> plugin.vault() != null && plugin.vault().charge(p, amount);
 
@@ -110,6 +117,36 @@ public class EconomyManager {
         }
     }
 
+    /**
+     * Balance helper for GUIs.
+     * Returns -1 when balance is not supported/known for that currency.
+     */
+    public double getBalance(Player p, CurrencyType type) {
+        if (p == null || type == null) return -1;
+
+        return switch (type) {
+            case CLAIM_BLOCKS -> {
+                if (plugin.getClaimBlockManager() == null) yield -1;
+                yield plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId());
+            }
+            case VAULT -> tryVaultBalance(p);
+            case EXP -> getTotalExperience(p);
+            case LEVEL -> p.getLevel();
+            case ITEM -> {
+                Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
+                yield countItem(p, mat);
+            }
+            default -> -1;
+        };
+    }
+
+    /**
+     * Alias for older/reflection-based callers.
+     */
+    public double balance(Player p, CurrencyType type) {
+        return getBalance(p, type);
+    }
+
     public String format(double amount, CurrencyType type) {
         if (type == null) return String.valueOf(amount);
 
@@ -130,6 +167,42 @@ public class EconomyManager {
             case CLAIM_BLOCKS -> (long) amount + " Claim Blocks";
             default -> String.valueOf(amount);
         };
+    }
+
+    // ----------------------------
+    // Internals
+    // ----------------------------
+
+    private int countItem(Player p, Material mat) {
+        if (p == null || mat == null) return 0;
+        int total = 0;
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it != null && it.getType() == mat) total += it.getAmount();
+        }
+        return total;
+    }
+
+    private double tryVaultBalance(Player p) {
+        if (plugin.vault() == null) return -1;
+
+        Object v = plugin.vault();
+
+        // Try common wrapper methods without hard-linking to a specific API.
+        for (String methodName : new String[]{"balance", "getBalance", "getPlayerBalance"}) {
+            try {
+                Method m = v.getClass().getMethod(methodName, Player.class);
+                Object out = m.invoke(v, p);
+                return asDouble(out);
+            } catch (Throwable ignored) { }
+        }
+        return -1;
+    }
+
+    private double asDouble(Object o) {
+        if (o == null) return -1;
+        if (o instanceof Number n) return n.doubleValue();
+        try { return Double.parseDouble(String.valueOf(o)); } catch (Throwable ignored) { }
+        return -1;
     }
 
     private String capitalizeWords(String s) {

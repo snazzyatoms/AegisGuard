@@ -15,15 +15,16 @@ public class ClaimBlockData {
     private long bonusBlocks;       // From admin commands/ranks
     private long boughtBlocks;      // From economy/marketplace
 
+    // ✅ NEW: Spent blocks (upgrades, services, etc.)
+    private long spentBlocks;
+
     // The "Starter" Flag
-    // If true, they have already used their "Free First Claim" coupon.
-    // They cannot claim another "Starter" plot even if they delete their current one.
     private boolean claimedStarter;
 
     // Transient (not saved to DB, calculated at runtime)
     private transient long usedBlocksCache = 0;
 
-    // ✅ NEW (Transient): helps debugging / GUI freshness if you ever want it
+    // Transient: helps debugging / GUI freshness
     private transient long lastUsedCacheUpdate = 0L;
 
     public ClaimBlockData(UUID playerUUID) {
@@ -31,6 +32,7 @@ public class ClaimBlockData {
         this.earnedBlocks = 0;
         this.bonusBlocks = 0;
         this.boughtBlocks = 0;
+        this.spentBlocks = 0;
         this.claimedStarter = false;
     }
 
@@ -59,6 +61,18 @@ public class ClaimBlockData {
         this.boughtBlocks = Math.max(0, this.boughtBlocks + amount);
     }
 
+    // ✅ NEW: spent
+    public long getSpentBlocks() { return spentBlocks; }
+    public void setSpentBlocks(long spent) { this.spentBlocks = Math.max(0, spent); }
+    public void addSpentBlocks(long amount) {
+        if (amount <= 0) return;
+        this.spentBlocks = Math.max(0, this.spentBlocks + amount);
+    }
+    public void removeSpentBlocks(long amount) {
+        if (amount <= 0) return;
+        this.spentBlocks = Math.max(0, this.spentBlocks - amount);
+    }
+
     public boolean hasClaimedStarter() { return claimedStarter; }
     public void setClaimedStarter(boolean claimed) { this.claimedStarter = claimed; }
 
@@ -72,19 +86,16 @@ public class ClaimBlockData {
         this.lastUsedCacheUpdate = System.currentTimeMillis();
     }
 
-    // ✅ NEW helpers (do not change existing logic; just convenience)
-
-    /** Earned + Bonus + Bought (does NOT include starter config amount). */
+    /** Earned + Bonus + Bought - Spent (does NOT include starter config amount). */
     public long getTotalNonStarter() {
-        return Math.max(0, earnedBlocks) + Math.max(0, bonusBlocks) + Math.max(0, boughtBlocks);
+        return Math.max(0, earnedBlocks) + Math.max(0, bonusBlocks) + Math.max(0, boughtBlocks) - Math.max(0, spentBlocks);
     }
 
-    /** Full total including starter config amount provided by the manager/config. */
+    /** Full total including starter config amount (manager/config provides starter). */
     public long getTotalWithStarter(long starterFromConfig) {
         return Math.max(0, starterFromConfig) + getTotalNonStarter();
     }
 
-    /** Optional: when was usedBlocksCache last refreshed? (0 = never) */
     public long getLastUsedCacheUpdate() {
         return lastUsedCacheUpdate;
     }

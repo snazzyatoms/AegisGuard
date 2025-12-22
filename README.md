@@ -24,18 +24,12 @@
 
 ## 🔗 Quick Links
 
-**Pages**
-- **Wiki:** https://github.com/snazzyatoms/AegisGuard/wiki  
-- **Issues:** https://github.com/snazzyatoms/AegisGuard/issues  
-- **Releases:** https://github.com/snazzyatoms/AegisGuard/releases  
-
-**Plugin Listings**
-- **Spigot:** https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/  
-- **Hangar:** https://hangar.papermc.io/snazzyatoms/AegisGuard  
-- **CurseForge:** https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy  
-
-**Community**
-- **Discord:** https://discord.gg/Y2NpuR7UZE  
+| **Resource** | **Platform** |
+| :--- | :--- |
+| **Documentation** | [Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki) |
+| **Support** | [Discord Community](https://discord.gg/Y2NpuR7UZE) |
+| **Tracking** | [Issues](https://github.com/snazzyatoms/AegisGuard/issues) • [Releases](https://github.com/snazzyatoms/AegisGuard/releases) |
+| **Downloads** | [Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/) • [Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard) • [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy) |
 
 ---
 
@@ -44,37 +38,34 @@
 AegisGuard is a **modern, Folia-native land protection and economy ecosystem** for Minecraft servers.  
 It doesn’t just lock chunks. It turns land into a **living asset** in your server’s economy.
 
-### Players can
+### 👥 For Players
+* **Visual Claiming:** Claim land using a visual selection wand and intuitive GUI menus.
+* **Living Economy:** Pay **upkeep taxes** to keep claims active.
+* **Real Estate:** List plots on a **Global Marketplace** for sale or rent.
+* **Auction House:** Watch inactive/seized land automatically flow into a server-wide auction.
 
-- Claim land using a **visual selection wand** and intuitive GUI menus.
-- Pay **upkeep taxes** to keep their claims active.
-- List plots on a **Global Marketplace** for sale or rent.
-- Watch inactive land automatically flow into a server-wide **Auction House**.
-
-### Admins can
-
-- Define **Server Zones** (spawn, warzones, markets, jails, etc.).
-- Manage flags, roles, zoning, and protections through GUIs instead of commands.
-- Integrate with **Dynmap / BlueMap / Pl3xMap** and **Vault** for a full ecosystem.
+### 🛡️ For Admins
+* **Zone Management:** Define Server Zones (spawn, warzones, markets, jails) with ease.
+* **GUI-First:** Manage flags, roles, zoning, and protections through menus, not commands.
+* **Integration:** Seamless support for **Dynmap, BlueMap, Pl3xMap**, and **Vault**.
 
 ---
 
 ## ✨ What’s New in v1.2.4
 
-v1.2.4 focuses on **polish, clarity, and the new Codex language structure**.
+**Focus:** Polish, Clarity, and the new **Codex Language Structure**.
 
-- **messages.yml Removed (Migrated to Codex):** The old `messages.yml` system has been **removed** and replaced with the **language folder Codex system**.  
-  All GUI text, chat strings, and translations now live inside per-language folders (instead of a single mega-file).
-- **Codex Language Packs (New Structure):** Language packs are now clean, modular, and easy to maintain or expand.
-- **GUI Text Parity:** Consistent keys and formatting across language packs so missing/partial translations are easier to spot and fix.
-- **Placeholder & Lore Fixes:** Eliminates common issues where placeholders show up unreplaced (example: cost/balance/track placeholders inside lore).
-- **General Stability Pass:** Small fixes that smooth out the day-to-day experience (menus, formatting, and edge cases).
+> [!WARNING]
+> **Migration Alert:** The old `messages.yml` system has been **removed** and replaced with the **Codex system**.
 
-### 🌐 Codex Localization (v1.2.4)
+* **Codex Language Packs:** All GUI text, chat strings, and translations now live inside per-language folders.
+* **GUI Text Parity:** Consistent keys across language packs make fixing missing translations easier.
+* **Placeholder & Lore Fixes:** Fixed issues where placeholders (cost/balance) failed to parse inside lore.
+* **General Stability:** Polish pass on menus, formatting, and edge cases.
 
-v1.2.4 introduces a cleaner layout for translations.
+### 🌐 Codex Localization Structure
+Translations are now modular and cleaner.
 
-**Typical structure:**
 ```text
 plugins/AegisGuard/
 └─ languages/
@@ -83,191 +74,101 @@ plugins/AegisGuard/
    │  ├─ chat.yml
    │  └─ ...
    ├─ hybrid_english/
-   │  ├─ guis.yml
-   │  └─ ...
+   │  └─ guis.yml
    ├─ old_english/
-   │  ├─ guis.yml
-   │  └─ ...
+   │  └─ guis.yml
    └─ spanish_neutral/
-      ├─ guis.yml
-      └─ ...
-🎯 Key Features
-⚡ Folia-Native Architecture
+      └─ guis.yml
+```
 
-Automatically detects Folia / Paper / Spigot at runtime.
+---
 
-Uses Folia scheduling APIs where available for true region-safe execution.
+## 🎯 Key Features
 
-Heavy tasks (upkeep, auctions, data saves, map sync) are designed to stay off the main thread whenever possible.
+### ⚡ Folia-Native Architecture
+* **Auto-Detection:** Automatically detects Folia, Paper, or Spigot at runtime.
+* **Region-Safe:** Uses Folia scheduling APIs for true region-safe execution.
+* **Async Heavy Lifting:** Upkeep, auctions, data saves, and map syncs stay off the main thread.
 
-💰 Living Land Economy
-
+### 💰 Living Land Economy
 Turn land into a real estate loop:
+* **Upkeep System:** Plots require periodic taxes.
+* **Auction House:** Expired or seized plots go up for public auction.
+* **Global Marketplace:** Players buy, sell, and rent plots via GUI.
+* **Flexible Costs:** Support for Vault money, Items, XP, or XP Levels.
 
-Upkeep System: Plots require periodic taxes.
+### 🏰 Empire Building (Player Features)
+* **Claims & Sub-Claims:** Create main plots and defined sub-zones (rooms, shops, apartments) to rent out.
+* **Plot Leveling:** Invest resources to unlock buffs (Speed, Haste, Regen).
+* **Biome Cosmetics:** Change the biome atmosphere of a plot.
+* **Visuals:** Particle borders and holograms replace chat spam.
 
-Auction House: Expired or seized plots go up for public auction.
+### 🛡️ Server Plot Architecture (Admin Tools)
+* **Sentinel’s Scepter:** `/agadmin wand` – Create server-owned zones that ignore limits.
+* **Plot Conversion:** `/agadmin convert` – Seize a player plot and convert it to a server zone instantly.
+* **Master Key Mode:** High-trust permission for staff to adjust plots by presence.
 
-Global Marketplace: Players buy, sell, and rent plots through GUI menus.
+### 🧭 GUI-First Design
+Almost everything is driven by menus:
+* **Guardian Codex:** `/ag menu` – The central hub for claims, settings, travel, and upgrades.
+* **Flags & Roles:** Configure protections and trust levels visually.
 
-Flexible Costs: Use Vault money, items, XP, or XP levels as currency (depending on configuration and your enabled economy options).
+---
 
-🏰 Empire Building (Player Features)
+## 🗺️ Integrations
 
-Claims & Sub-Claims (Zoning): Create main plots, then define sub-zones (rooms, shops, apartments) to rent out.
+AegisGuard supports a full ecosystem approach:
 
-Plot Leveling: Invest resources to level up plots and unlock buffs (Speed, Haste, Regen, etc.).
+* **Economy:** [Vault](https://www.spigotmc.org/resources/vault.34315/) (Required for economy features)
+* **Mapping:** Dynmap, BlueMap, Pl3xMap (Async overlays)
+* **Placeholders:** PlaceholderAPI (HUD/Scoreboard support)
 
-Biome Cosmetics: Change the biome atmosphere of a plot for visual flair.
+---
 
-Particle Borders & Holograms: Show borders and plot info without spamming chat.
+## 📦 Installation & Updates
 
-🛡️ Server Plot Architecture (Admin Tools)
+### Fresh Install
+1.  Download AegisGuard from **[Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard)** or **[Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/)**.
+2.  Drop the `.jar` into `plugins/`.
+3.  Start server to generate configs.
+4.  Join and type `/ag menu`.
 
-Sentinel’s Scepter: /agadmin wand – create server-owned zones that ignore normal limits/costs.
+### 🔁 Updating to v1.2.4
+1.  **Back up** your `plugins/AegisGuard/` folder.
+2.  Replace the jar with v1.2.4.
+3.  Start the server.
+4.  **Note:** If you had custom messages in `messages.yml`, you must now apply them to the new files in `languages/<your_language>/`.
 
-Plot Conversion: /agadmin convert – stand in a player plot and seize it as a server zone.
+---
 
-Master Key Mode: High-trust permission that lets staff adjust plots by presence and authority.
+## ⌨️ Commands (Essentials)
 
-🧭 GUI-First Design
+| Command | Description |
+| :--- | :--- |
+| `/ag menu` | Opens the **Guardian Codex** (Main Hub). |
+| `/agadmin wand` | Gives the **Sentinel’s Scepter** for server zones. |
+| `/agadmin convert` | Converts the plot you are standing in to a Server Zone. |
 
-Almost everything is driven by menus instead of raw commands:
+> Full command list and permissions available on the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki).
 
-Guardian Codex: /ag menu – central hub for claims, settings, travel, and upgrades.
+---
 
-Flags & Roles: Configure protections and trust levels visually.
+## 🧪 Try AegisGuard Live
 
-Cosmetics & Travel: Warp between plots and style your land without typing long commands.
+Test the plugin on our public demo server:
 
-🗺️ Map & Ecosystem Integrations
-
-Dynmap: Async plot overlays on your web map.
-
-BlueMap: 3D map overlays for claims.
-
-Pl3xMap: Lightweight modern map support.
-
-Vault: Economy backbone for upkeep and transactions.
-
-PlaceholderAPI: Placeholders for scoreboards, GUIs, and HUDs.
-
-✅ Compatibility
-
-Minecraft: 1.20.4+ (recommended to stay current with Paper/Folia builds)
-
-Server Software: Folia (recommended), Paper, Spigot
-
-Java: 17+ (recommended for modern server environments)
-
-If you’re running Spigot, you may not benefit from Folia-specific scheduling behavior. Folia/Paper are the intended “full feature” path.
-
-📦 Install
-
-Download AegisGuard from one of the official listings:
-
-Hangar: https://hangar.papermc.io/snazzyatoms/AegisGuard
-
-Spigot: https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/
-
-CurseForge: https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy
-
-Drop the .jar into your server’s plugins/ folder.
-
-Start the server once to generate config files.
-
-Configure economy/storage/language options as desired.
-
-Join and open the main menu:
-
-/ag menu
-
-🔁 Update Guide (v1.2.4)
-
-When updating to v1.2.4, the biggest difference is the Codex language pack structure.
-
-Recommended steps:
-
-Back up your plugins/AegisGuard/ folder.
-
-Replace the old jar with the v1.2.4 jar.
-
-Start the server and let new files generate.
-
-Review your language folder structure (see above).
-
-If your build includes a reload/refresh toggle or admin reload command, use it after edits.
-
-Important note about language files:
-
-v1.2.4 expects language text to live inside per-language folders.
-
-If you previously customized text in messages.yml, re-apply those edits in the appropriate files under languages/<your_language>/.
-
-⌨️ Commands (Essentials)
-
-AegisGuard is GUI-first, but these are the commonly used entry points:
-
-/ag menu
-Opens the Guardian Codex (main hub).
-
-/agadmin wand
-Gives the admin Sentinel’s Scepter for server zones.
-
-/agadmin convert
-Converts the plot you’re standing in into a server-owned zone.
-
-Full command list, permissions, and advanced usage live on the Wiki:
-https://github.com/snazzyatoms/AegisGuard/wiki
-
-🔌 Integrations
-
-AegisGuard supports an ecosystem approach. Common integrations include:
-
-Vault (economy transactions, upkeep, marketplace)
-
-Dynmap / BlueMap / Pl3xMap (claim overlays)
-
-PlaceholderAPI (HUD/scoreboard placeholders)
-
-Integration setup instructions and supported options are maintained on the Wiki:
-https://github.com/snazzyatoms/AegisGuard/wiki
-
-🧪 Try AegisGuard Live
-
-You can test AegisGuard on a public demo server:
-
+```yaml
 IP:       72.5.47.116:25570
 Version:  1.20.4+ (Daily World Reset • Sandbox Mode)
 Command:  /ag menu
-Tip:      Open the Guardian Codex inside the menu to learn how to claim land.
+```
 
-🆘 Support
+---
 
-Discord (fastest): https://discord.gg/Y2NpuR7UZE
+## 🆘 Support & Contributing
 
-Bug Reports / Requests: https://github.com/snazzyatoms/AegisGuard/issues
+* **Discord:** [Join for Support](https://discord.gg/Y2NpuR7UZE)
+* **Bug Reports:** [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues)
+* **Wiki:** [Read the Docs](https://github.com/snazzyatoms/AegisGuard/wiki)
 
-Docs: https://github.com/snazzyatoms/AegisGuard/wiki
-
-When reporting issues, include:
-
-Server software + version (Folia/Paper/Spigot)
-
-Minecraft version
-
-AegisGuard version
-
-Console logs + steps to reproduce
-
-🤝 Contributing
-
-PRs are welcome, especially for:
-
-Translation packs
-
-GUI polish and consistency
-
-Edge-case fixes and performance improvements
-
-If you’re adding a language pack, please keep keys intact and only change values.
+**Contributing:** PRs are welcome! We specifically need help with **Translation Packs** and GUI consistency.

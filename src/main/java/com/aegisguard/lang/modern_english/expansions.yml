@@ -1,55 +1,26 @@
-# ======================================
-# AegisGuard v1.2.4 - Codex: Modern English
-# File: expansions.yml
-# Auto-split from modern_english.yml
-# ======================================
+# AegisGuard Codex Language Pack (split files)
+# Language: modern_english
+# Section: expansions.yml
+# Updated: 2025-12-21
+# Notes: Consolidated expansion request chat messages here (removed from system.yml).
 
-button_expand: '&dRequest Expansion'
-button_view_requests_admin: '&cReview Requests (Admin)'
-view_requests_admin_lore:
-  - '&7Review and approve expansion requests.'
-expansion_submitted: '&a✔ Expansion request submitted.'
-expansion_exists: '&c❌ You already have a pending expansion request.'
-expansion_approved: ''
-expansion_denied: ''
-admin_request_approved: '&a✔ Your expansion request was approved by {PLAYER}.'
-admin_request_denied: '&c❌ Your expansion request was denied by {PLAYER}.'
-expansion_payment_failed: '&c❌ Expansion failed; you do not have enough funds.'
-expansion_limit_reached: '&c❌ You have reached the maximum expansion limit ({LIMIT}).'
-expansion_overlap_fail: '&c❌ Cannot expand; another claim is too close.'
-expansion_invalid_size: '&c❌ The new size must be larger than the old one.'
-request_expired: '&c❌ This expansion request has expired or no longer exists.'
-expansion_gui_title: '&dExpansion Request'
-expansion_button_back: '&e⟵ Back to Previous Menu'
-expansion_admin_title: '&#FFD166&lPending Requests'
-expansion_none_title: '&cNo Requests'
-expansion_none_lore:
-  - '&7There are no expansion requests right now.'
-expansion_tier1_name: '&aSmall Upgrade'
-expansion_tier2_name: '&eMedium Upgrade'
-expansion_tier3_name: '&fLarge Upgrade'
-expansion_tier4_name: '&6Huge Upgrade'
-expansion_tier5_name: '&bMassive Upgrade'
-expansion_locked_lore:
-  - '&cYou must be standing inside'
-  - '&cyour own claim to request expansion.'
-expansion_cost_lore:
-  - '&7Expansion Cost: &e{COST}'
-  - '&7New Max Size: &a{NEW_MAX}'
-expansion_tier_lore:
-  - '&7Increase claim size by &a+{AMOUNT}'
-  - '&7Cost: &e{COST}'
-expansion_admin_approve_lore:
-  - '&aLeft-Click: Approve'
-expansion_admin_deny_lore:
-  - '&cRight-Click: Deny'
-expansion_admin_item_name: '&eRequest from &f{PLAYER}'
-expansion_admin_item_lore:
-  - '&7Requested increase: &a+{AMOUNT}'
-  - '&7Cost: &e{COST}'
-  - '&7World: &f{WORLD}'
-  - '&7Expires in: &c{TIME}'
-expansion_broadcast_approved: '&a✔ Expansion request approved for {PLAYER}.'
-expansion_broadcast_denied: '&c❌ Expansion request denied for {PLAYER}.'
-expansion_admin_no_perm: '&c❌ You do not have permission to manage requests.'
-expansion_no_requests: '&7There are currently no expansion requests.'
+expansion_submitted: '&a✔ Request submitted.'
+expansion_exists: '&c❌ You already have a pending request.'
+expansion_approved: '&a✔ Your expansion request was approved.'
+expansion_denied: '&c❌ Your expansion request was denied.'
+admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
+admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+expansion_payment_failed: '&c❌ Insufficient funds.'
+expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
+expansion_invalid_size: '&c❌ Expansion must increase size.'
+request_expired: '&c❌ Request expired.'
+expansion_not_in_plot: '&c❌ Thou must stand within thine own claim to petition.'
+expansion_request_submitted: '&a✔ Expansion petition submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e⚠ Thou already hast a petition pending.'
+expansion_request_cancelled: '&e✔ Expansion petition cancelled.'
+expansion_request_none_pending: '&cNo expansion petitions are pending.'
+expansion_request_approved_player: '&a✔ Thy expansion petition was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c✖ Thy expansion petition was denied.'
+expansion_request_approved_admin: '&a✔ Approved expansion petition for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Denied expansion petition for &f{PLAYER}&c.'

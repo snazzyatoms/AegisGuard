@@ -29,17 +29,21 @@ public class EconomyManager {
         if (amount <= 0) return true;
         if (type == null) return false;
 
+        // Normalize amount so fractional values cannot bypass checks.
+        final int intCost = toIntCost(amount);
+        final long longCost = toLongCost(amount);
+
         return switch (type) {
             case VAULT -> plugin.vault() != null && plugin.vault().has(p, amount);
-            case EXP -> getTotalExperience(p) >= (int) amount;
-            case LEVEL -> p.getLevel() >= (int) amount;
+            case EXP -> getTotalExperience(p) >= intCost;
+            case LEVEL -> p.getLevel() >= intCost;
             case ITEM -> {
-                Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
-                yield p.getInventory().containsAtLeast(new ItemStack(mat), (int) amount);
+                Material mat = (plugin.cfg() != null) ? plugin.cfg().getWorldItemCostType(p.getWorld()) : Material.DIAMOND;
+                yield p.getInventory().containsAtLeast(new ItemStack(mat), intCost);
             }
             case CLAIM_BLOCKS -> {
                 if (plugin.getClaimBlockManager() == null) yield false;
-                yield plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId()) >= (long) amount;
+                yield plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId()) >= longCost;
             }
             default -> false;
         };
@@ -53,25 +57,28 @@ public class EconomyManager {
 
         if (!has(p, amount, type)) return false;
 
+        final int intCost = toIntCost(amount);
+        final long longCost = toLongCost(amount);
+
         // Switch EXPRESSION: guarantees a return for every path (fixes "missing return statement").
         return switch (type) {
             case VAULT -> plugin.vault() != null && plugin.vault().charge(p, amount);
 
             case EXP -> {
-                setTotalExperience(p, getTotalExperience(p) - (int) amount);
+                setTotalExperience(p, getTotalExperience(p) - intCost);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
                 yield true;
             }
 
             case LEVEL -> {
-                p.setLevel(p.getLevel() - (int) amount);
+                p.setLevel(Math.max(0, p.getLevel() - intCost));
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
                 yield true;
             }
 
             case ITEM -> {
-                Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
-                p.getInventory().removeItem(new ItemStack(mat, (int) amount));
+                Material mat = (plugin.cfg() != null) ? plugin.cfg().getWorldItemCostType(p.getWorld()) : Material.DIAMOND;
+                p.getInventory().removeItem(new ItemStack(mat, intCost));
                 p.updateInventory();
                 p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
                 yield true;
@@ -79,7 +86,7 @@ public class EconomyManager {
 
             case CLAIM_BLOCKS -> {
                 if (plugin.getClaimBlockManager() == null) yield false;
-                boolean ok = plugin.getClaimBlockManager().spend(p.getUniqueId(), (long) amount);
+                boolean ok = plugin.getClaimBlockManager().spend(p.getUniqueId(), longCost);
                 if (ok) p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.15f);
                 yield ok;
             }
@@ -93,22 +100,30 @@ public class EconomyManager {
         if (amount <= 0) return;
         if (type == null) return;
 
+        final int intAmt = toIntAmount(amount);
+        final long longAmt = toLongAmount(amount);
+
         switch (type) {
             case VAULT -> {
                 if (plugin.vault() != null) plugin.vault().give(p, amount);
             }
-            case EXP -> p.giveExp((int) amount);
-            case LEVEL -> p.giveExpLevels((int) amount);
+            case EXP -> {
+                if (intAmt > 0) p.giveExp(intAmt);
+            }
+            case LEVEL -> {
+                if (intAmt > 0) p.giveExpLevels(intAmt);
+            }
             case ITEM -> {
-                Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
-                HashMap<Integer, ItemStack> left = p.getInventory().addItem(new ItemStack(mat, (int) amount));
+                Material mat = (plugin.cfg() != null) ? plugin.cfg().getWorldItemCostType(p.getWorld()) : Material.DIAMOND;
+                int stackAmt = Math.max(1, (int) Math.min(Integer.MAX_VALUE, longAmt));
+                HashMap<Integer, ItemStack> left = p.getInventory().addItem(new ItemStack(mat, stackAmt));
                 for (ItemStack drop : left.values()) {
                     p.getWorld().dropItemNaturally(p.getLocation(), drop);
                 }
             }
             case CLAIM_BLOCKS -> {
                 if (plugin.getClaimBlockManager() != null) {
-                    plugin.getClaimBlockManager().refund(p.getUniqueId(), (long) amount);
+                    plugin.getClaimBlockManager().refund(p.getUniqueId(), longAmt);
                 }
             }
             default -> {
@@ -133,7 +148,7 @@ public class EconomyManager {
             case EXP -> getTotalExperience(p);
             case LEVEL -> p.getLevel();
             case ITEM -> {
-                Material mat = plugin.cfg().getWorldItemCostType(p.getWorld());
+                Material mat = (plugin.cfg() != null) ? plugin.cfg().getWorldItemCostType(p.getWorld()) : Material.DIAMOND;
                 yield countItem(p, mat);
             }
             default -> -1;
@@ -152,19 +167,20 @@ public class EconomyManager {
 
         return switch (type) {
             case VAULT -> plugin.vault() != null ? plugin.vault().format(amount) : String.valueOf(amount);
-            case EXP -> (int) amount + " XP";
-            case LEVEL -> (int) amount + " Levels";
+            case EXP -> toIntAmount(amount) + " XP";
+            case LEVEL -> toIntAmount(amount) + " Levels";
             case ITEM -> {
                 Material mat = (plugin.cfg() != null)
                         ? plugin.cfg().getWorldItemCostType(null)
                         : Material.DIAMOND;
 
+                long amt = toLongAmount(amount);
                 String name = mat.name().toLowerCase().replace("_", " ");
                 name = capitalizeWords(name);
-                if (amount != 1) name += "s";
-                yield (int) amount + " " + name;
+                if (amt != 1) name += "s";
+                yield amt + " " + name;
             }
-            case CLAIM_BLOCKS -> (long) amount + " Claim Blocks";
+            case CLAIM_BLOCKS -> toLongAmount(amount) + " Claim Blocks";
             default -> String.valueOf(amount);
         };
     }
@@ -172,6 +188,24 @@ public class EconomyManager {
     // ----------------------------
     // Internals
     // ----------------------------
+
+    /** Costs should never be fractional; round UP to prevent paying 0 for 0.1, etc. */
+    private int toIntCost(double amount) {
+        return (int) Math.max(0, Math.ceil(amount));
+    }
+
+    private long toLongCost(double amount) {
+        return (long) Math.max(0L, Math.ceil(amount));
+    }
+
+    /** For display/deposit, use normal rounding (more intuitive). */
+    private int toIntAmount(double amount) {
+        return (int) Math.max(0, Math.round(amount));
+    }
+
+    private long toLongAmount(double amount) {
+        return Math.max(0L, Math.round(amount));
+    }
 
     private int countItem(Player p, Material mat) {
         if (p == null || mat == null) return 0;
@@ -237,6 +271,7 @@ public class EconomyManager {
     }
 
     private void setTotalExperience(Player player, int amount) {
+        amount = Math.max(0, amount);
         player.setExp(0);
         player.setLevel(0);
         player.setTotalExperience(0);

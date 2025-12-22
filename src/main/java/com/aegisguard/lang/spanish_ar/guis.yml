@@ -748,3 +748,19 @@ admin_diagnostics_lore:
 button_admin_reload: '&eRecargar Config'
 admin_reload_lore:
   - '&7Recargar ajustes y datos.'
+
+  # --- Admin / Settings ---
+button_refresh_language_packs: '&a🔄 Refrescar Paquetes de Idioma'
+refresh_language_packs_lore:
+  - '&7Recargá los paquetes de idioma.'
+  - '&7Usalo después de editar archivos.'
+  - ' '
+  - '&eHacé clic para refrescar'
+
+button_reload_all_settings: '&a⚙ Recargar Todos los Ajustes'
+reload_all_settings_lore:
+  - '&7Recargá todos los ajustes del plugin.'
+  - '&7Usalo después de editar archivos de configuración.'
+  - ' '
+  - '&eHacé clic para recargar'
+

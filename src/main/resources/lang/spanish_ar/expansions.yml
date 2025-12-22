@@ -21,7 +21,7 @@ expansion_invalid_size: '&c❌ El nuevo tamaño tiene que ser mayor que el anter
 request_expired: '&c❌ Esta solicitud de expansión expiró o ya no existe.'
 expansion_gui_title: '&dSolicitud de Expansión'
 expansion_button_back: '&e⟵ Volver al Menú Anterior'
-expansion_admin_title: '&8Solicitudes de Expansión Pendientes'
+expansion_admin_title: '&6📋 &fSolicitudes Pendientes'
 expansion_none_title: '&cSin Solicitudes'
 expansion_none_lore:
   - '&7No hay solicitudes de expansión en este momento.'

@@ -50,6 +50,10 @@ public class AGConfig {
     private long claimBlocksPlaytimeIntervalMinutes;
     private long claimBlocksPlaytimeAmount;
 
+    // NEW (optional): reward on plot level-up
+    private boolean claimBlocksLevelUpEnabled;
+    private long claimBlocksLevelUpAmount;
+
     private boolean firstClaimLimitEnabled;
     private long firstClaimLimitMaxArea;
 
@@ -91,7 +95,7 @@ public class AGConfig {
         config.addDefault("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
 
         // -------------------------------
-        // Claim Blocks Defaults (NEW)
+        // Claim Blocks Defaults (1.2.4+)
         // -------------------------------
         config.addDefault("claim_blocks.enabled", true);
 
@@ -103,7 +107,11 @@ public class AGConfig {
         config.addDefault("claim_blocks.earn.playtime.interval_minutes", 10L);
         config.addDefault("claim_blocks.earn.playtime.amount", 1L);
 
-        // first claim limiter (optional, but your lang pack includes it)
+        // level-up earn (optional, your lang pack already has the message)
+        config.addDefault("claim_blocks.earn.level_up.enabled", false);
+        config.addDefault("claim_blocks.earn.level_up.amount", 0L);
+
+        // first claim limiter (optional, your lang pack includes it)
         config.addDefault("claim_blocks.first_claim_limit.enabled", true);
         config.addDefault("claim_blocks.first_claim_limit.max_area", 2500L); // 50x50 default cap
 
@@ -134,15 +142,21 @@ public class AGConfig {
         // --- Leveling Payment Routing ---
         this.allowLevelVaultPayment = config.getBoolean("leveling.upgrades.allow_vault_payment", true);
         this.allowLevelBlockPayment = config.getBoolean("leveling.upgrades.allow_block_payment", true);
-        this.fallbackToBlocksIfVaultUnavailable = config.getBoolean("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
+        this.fallbackToBlocksIfVaultUnavailable =
+                config.getBoolean("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
 
         // --- Claim Blocks Cache ---
         this.claimBlocksEnabled = config.getBoolean("claim_blocks.enabled", true);
         this.claimBlocksStarterAmount = Math.max(0L, config.getLong("claim_blocks.starter_amount", 0L));
 
         this.claimBlocksPlaytimeEnabled = config.getBoolean("claim_blocks.earn.playtime.enabled", true);
-        this.claimBlocksPlaytimeIntervalMinutes = Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
-        this.claimBlocksPlaytimeAmount = Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
+        this.claimBlocksPlaytimeIntervalMinutes =
+                Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
+        this.claimBlocksPlaytimeAmount =
+                Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
+
+        this.claimBlocksLevelUpEnabled = config.getBoolean("claim_blocks.earn.level_up.enabled", false);
+        this.claimBlocksLevelUpAmount = Math.max(0L, config.getLong("claim_blocks.earn.level_up.amount", 0L));
 
         this.firstClaimLimitEnabled = config.getBoolean("claim_blocks.first_claim_limit.enabled", true);
         this.firstClaimLimitMaxArea = Math.max(0L, config.getLong("claim_blocks.first_claim_limit.max_area", 2500L));
@@ -166,8 +180,13 @@ public class AGConfig {
     public CurrencyType getCurrencyFor(String feature) {
         String type = config.getString("currencies." + feature, "VAULT");
         if (type == null) return CurrencyType.VAULT;
+
+        String t = type.trim().toUpperCase();
+        // Friendly aliases
+        if (t.equals("MONEY") || t.equals("ECONOMY")) t = "VAULT";
+
         try {
-            return CurrencyType.valueOf(type.trim().toUpperCase());
+            return CurrencyType.valueOf(t);
         } catch (IllegalArgumentException ignored) {
             return CurrencyType.VAULT;
         }
@@ -196,7 +215,9 @@ public class AGConfig {
         if (config.isSet("leveling.cost_type")) {
             String type = config.getString("leveling.cost_type", "VAULT");
             if (type != null) {
-                try { return CurrencyType.valueOf(type.trim().toUpperCase()); }
+                String t = type.trim().toUpperCase();
+                if (t.equals("MONEY") || t.equals("ECONOMY")) t = "VAULT";
+                try { return CurrencyType.valueOf(t); }
                 catch (IllegalArgumentException ignored) {}
             }
         }
@@ -210,49 +231,9 @@ public class AGConfig {
 
     // --- Level upgrade payment routing (Vault vs Claim Blocks) ---
 
-    public boolean allowLevelVaultPayment() {
-        return allowLevelVaultPayment;
-    }
-
-    public boolean allowLevelBlockPayment() {
-        return allowLevelBlockPayment;
-    }
-
-    public boolean fallbackToBlocksIfVaultUnavailable() {
-        return fallbackToBlocksIfVaultUnavailable;
-    }
-
-    // ======================================
-    // --- Claim Blocks (1.2.4+) ---
-    // ======================================
-
-    public boolean isClaimBlocksEnabled() {
-        return claimBlocksEnabled;
-    }
-
-    public long getClaimBlocksStarterAmount() {
-        return claimBlocksStarterAmount;
-    }
-
-    public boolean isClaimBlocksPlaytimeEnabled() {
-        return claimBlocksPlaytimeEnabled;
-    }
-
-    public long getClaimBlocksPlaytimeIntervalMinutes() {
-        return claimBlocksPlaytimeIntervalMinutes;
-    }
-
-    public long getClaimBlocksPlaytimeAmount() {
-        return claimBlocksPlaytimeAmount;
-    }
-
-    public boolean isFirstClaimLimitEnabled() {
-        return firstClaimLimitEnabled;
-    }
-
-    public long getFirstClaimLimitMaxArea() {
-        return firstClaimLimitMaxArea;
-    }
+    public boolean allowLevelVaultPayment() { return allowLevelVaultPayment; }
+    public boolean allowLevelBlockPayment() { return allowLevelBlockPayment; }
+    public boolean fallbackToBlocksIfVaultUnavailable() { return fallbackToBlocksIfVaultUnavailable; }
 
     /**
      * Claim-block cost for leveling up (next level).
@@ -268,6 +249,24 @@ public class AGConfig {
         long lvl = Math.max(1, nextLevel);
         return Math.max(0, (250L * lvl * lvl) - 250L);
     }
+
+    // ======================================
+    // --- Claim Blocks (1.2.4+) ---
+    // ======================================
+
+    public boolean isClaimBlocksEnabled() { return claimBlocksEnabled; }
+
+    public long getClaimBlocksStarterAmount() { return claimBlocksStarterAmount; }
+
+    public boolean isClaimBlocksPlaytimeEnabled() { return claimBlocksPlaytimeEnabled; }
+    public long getClaimBlocksPlaytimeIntervalMinutes() { return claimBlocksPlaytimeIntervalMinutes; }
+    public long getClaimBlocksPlaytimeAmount() { return claimBlocksPlaytimeAmount; }
+
+    public boolean isClaimBlocksLevelUpEnabled() { return claimBlocksLevelUpEnabled; }
+    public long getClaimBlocksLevelUpAmount() { return claimBlocksLevelUpAmount; }
+
+    public boolean isFirstClaimLimitEnabled() { return firstClaimLimitEnabled; }
+    public long getFirstClaimLimitMaxArea() { return firstClaimLimitMaxArea; }
 
     // ======================================
     // --- Standard Getters ---
@@ -326,7 +325,9 @@ public class AGConfig {
         return new ArrayList<>(sec.getKeys(false));
     }
 
-    public List<String> getRolePermissions(String role) { return config.getStringList("roles." + role); }
+    public List<String> getRolePermissions(String role) {
+        return config.getStringList("roles." + role);
+    }
 
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }

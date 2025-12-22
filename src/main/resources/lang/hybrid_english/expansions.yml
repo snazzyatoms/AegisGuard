@@ -5,8 +5,8 @@
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 expansion_submitted: '&a✔ Request submitted.'
 expansion_exists: '&c❌ You already have a pending request.'
-expansion_approved: ''
-expansion_denied: ''
+expansion_approved: '&a✔ Expansion approved.'
+expansion_denied: '&c✖ Expansion denied.'
 admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
 admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
 expansion_payment_failed: '&c❌ Insufficient funds.'

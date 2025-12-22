@@ -1,17 +1,22 @@
-# ======================================
-# AegisGuard v1.2.4 - Codex: Español Neutro (LatAm)
-# File: expansions.yml
-# Parity translation from modern_english/expansions.yml
-# ======================================
+# AegisGuard Codex Language Pack (split files)
+# Language: spanish_mx
+# Section: expansions.yml
+# Organized: 2025-12-22
+# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
-button_expand: '&dSolicitar Expansión'
-button_view_requests_admin: '&cRevisar Solicitudes (Admin)'
-view_requests_admin_lore:
-  - '&7Revisa y aprueba solicitudes de expansión.'
+expansion_not_in_plot: '&c❌ Debes estar dentro de tu propia parcela para hacer esto.'
+expansion_request_submitted: '&a✔ Solicitud de expansión enviada. &7Pedido: &e+{AMOUNT}&7 bloques.'
+expansion_request_already_pending: '&e⚠ Ya tienes una solicitud pendiente.'
+expansion_request_cancelled: '&e✔ Tu solicitud de expansión fue cancelada.'
+expansion_request_none_pending: '&cNo hay solicitudes de expansión pendientes.'
+expansion_request_approved_player: '&a✔ ¡Tu solicitud de expansión fue aprobada! &7Otorgado: &e+{AMOUNT}&7 bloques.'
+expansion_request_denied_player: '&c✖ Tu solicitud de expansión fue rechazada.'
+expansion_request_approved_admin: '&a✔ Aprobaste la solicitud de expansión de &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Rechazaste la solicitud de expansión de &f{PLAYER}&c.'
 expansion_submitted: '&a✔ Solicitud de expansión enviada.'
 expansion_exists: '&c❌ Ya tienes una solicitud de expansión pendiente.'
-expansion_approved: ''
-expansion_denied: ''
+expansion_approved: '&a✔ Tu solicitud de expansión fue aprobada.'
+expansion_denied: '&c❌ Tu solicitud de expansión fue rechazada.'
 admin_request_approved: '&a✔ Tu solicitud de expansión fue aprobada por {PLAYER}.'
 admin_request_denied: '&c❌ Tu solicitud de expansión fue rechazada por {PLAYER}.'
 expansion_payment_failed: '&c❌ La expansión falló; no tienes suficientes fondos.'
@@ -19,36 +24,6 @@ expansion_limit_reached: '&c❌ Has alcanzado el límite máximo de expansión (
 expansion_overlap_fail: '&c❌ No se puede expandir; otra parcela está demasiado cerca.'
 expansion_invalid_size: '&c❌ El nuevo tamaño debe ser mayor que el anterior.'
 request_expired: '&c❌ Esta solicitud de expansión ha expirado o ya no existe.'
-expansion_gui_title: '&dSolicitud de Expansión'
-expansion_button_back: '&e⟵ Volver al Menú Anterior'
-expansion_admin_title: '&6📋 &fSolicitudes Pendientes'
-expansion_none_title: '&cSin Solicitudes'
-expansion_none_lore:
-  - '&7No hay solicitudes de expansión en este momento.'
-expansion_tier1_name: '&aMejora Pequeña'
-expansion_tier2_name: '&eMejora Mediana'
-expansion_tier3_name: '&fMejora Grande'
-expansion_tier4_name: '&6Mejora Enorme'
-expansion_tier5_name: '&bMejora Masiva'
-expansion_locked_lore:
-  - '&cDebes estar dentro de'
-  - '&ctu propia parcela para solicitar expansión.'
-expansion_cost_lore:
-  - '&7Costo de Expansión: &e{COST}'
-  - '&7Nuevo Tamaño Máximo: &a{NEW_MAX}'
-expansion_tier_lore:
-  - '&7Aumenta el tamaño de la parcela en &a+{AMOUNT}'
-  - '&7Costo: &e{COST}'
-expansion_admin_approve_lore:
-  - '&aClic Izquierdo: Aprobar'
-expansion_admin_deny_lore:
-  - '&cClic Derecho: Rechazar'
-expansion_admin_item_name: '&eSolicitud de &f{PLAYER}'
-expansion_admin_item_lore:
-  - '&7Aumento solicitado: &a+{AMOUNT}'
-  - '&7Costo: &e{COST}'
-  - '&7Mundo: &f{WORLD}'
-  - '&7Expira en: &c{TIME}'
 expansion_broadcast_approved: '&a✔ Solicitud de expansión aprobada para {PLAYER}.'
 expansion_broadcast_denied: '&c❌ Solicitud de expansión rechazada para {PLAYER}.'
 expansion_admin_no_perm: '&c❌ No tienes permiso para gestionar solicitudes.'

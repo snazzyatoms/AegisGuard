@@ -1,16 +1,29 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: hybrid_english
 # Section: expansions.yml
-# Generated: 2025-12-16 23:08:56Z
+# Cleaned: 2025-12-21
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+
+# Player-facing
 expansion_submitted: '&a✔ Request submitted.'
 expansion_exists: '&c❌ You already have a pending request.'
-expansion_approved: ''
-expansion_denied: ''
+expansion_approved: '&a✔ Your expansion request was approved.'
+expansion_denied: '&c❌ Your expansion request was denied.'
+request_expired: '&c❌ Request expired.'
+
+# When an admin processes a request (sent to the player)
 admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
 admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+
+# Failure reasons
 expansion_payment_failed: '&c❌ Insufficient funds.'
 expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
 expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
 expansion_invalid_size: '&c❌ Expansion must increase size.'
-request_expired: '&c❌ Request expired.'
+
+# Optional parity (safe if unused)
+expansion_not_found: '&c❌ That expansion request no longer exists.'
+expansion_admin_approved: '&a✔ Approved expansion request for {PLAYER}.'
+expansion_admin_denied: '&c❌ Denied expansion request for {PLAYER}.'
+expansion_apply_success: '&a✔ Expansion applied successfully.'
+expansion_apply_fail: '&c❌ Expansion could not be applied.'

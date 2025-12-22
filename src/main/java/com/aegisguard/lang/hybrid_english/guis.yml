@@ -1,146 +1,83 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: hybrid_english
 # Section: guis.yml
-# Generated: 2025-12-16 23:08:56Z
+# Cleaned: 2025-12-21
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+
+# --------------------------------------
+# Navigation / Common Buttons
+# --------------------------------------
 button_back: '&e⟵ Return'
 back_lore:
-- '&7Return to the previous page.'
+  - '&7Return to the previous page.'
+
 button_back_menu: '&fReturn to Menu'
 back_menu_lore:
-- '&7Return to the main dashboard.'
+  - '&7Return to the main dashboard.'
+
 button_prev_page: '&fPrevious Page'
 button_next_page: '&fNext Page'
+
 button_exit: '&c✖ Close'
 button_exit_lore:
-- '&7Close this menu.'
+  - '&7Close this menu.'
 exit_lore:
-- '&7Close this menu.'
-button_expand: '&dRequest Expansion'
-button_view_requests_admin: '&cReview Requests'
+  - '&7Close this menu.'
+
 button_back_admin: '&fBack (Admin)'
+
 auction_button_back: '&e⟵ Back to Auctions'
 market_button_back: '&e⟵ Back to Market'
 realestate_button_back: '&e⟵ Back to Real Estate'
 domain_market_button_back: '&e⟵ Back to Domain Market'
+
 biome_button_back: '&e⟵ Back to Plot Settings'
 biome_button_exit: '&c✖ Close Biome Changer'
-expansion_button_back: '&e⟵ Back to Previous Menu'
-expansion_gui_title: '&dLand Expansion Request'
-expansion_admin_title: '&#A8FF78Expansion Requests'
-expansion_none_title: '&cNo Requests'
-expansion_none_lore:
-- '&7No pending requests.'
-expansion_tier1_name: '&aSmall Expansion (+5)'
-expansion_tier2_name: '&eMedium Expansion (+10)'
-expansion_tier3_name: '&fLarge Expansion (+20)'
-expansion_tier4_name: '&6Huge Expansion (+35)'
-expansion_tier5_name: '&bMassive Expansion (+50)'
-expansion_locked_lore:
-- '&cYou must stand in'
-- '&cyour own plot.'
-level_gui_title: '&dPlot Ascension Codex'
-level_current_status: '&bCurrent Plot Status'
-level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
-level_max_reached: '&6Maximum level reached for this plot.'
-level_button_lore:
-- '&7Upgrade your plot to unlock'
-- '&7larger size and new perks.'
-level_button_lore_static:
-- '&7Upgrade your plot to unlock'
-- '&7additional perks and bonuses.'
-level_current_blessing_name: '&dCurrent Bonuses'
-level_current_blessing_title: '&dBonuses Currently Active'
-level_current_blessing_footer_1: '&8Higher levels unlock stronger'
-level_current_blessing_footer_2: '&8bonuses and extra benefits.'
-level_current_blessings_name: '&dCurrent Bonuses'
-level_current_blessings_title: '&dBonuses Currently Active'
-level_current_blessings_footer_1: '&8Higher levels unlock stronger'
-level_current_blessings_footer_2: '&8bonuses and extra benefits.'
-level_track_title_completed: '&aTrack Completed'
-level_track_completed_1: '&7All milestones in this track'
-level_track_completed_2: '&7have been unlocked.'
-"level_track_completed_[1]": '&7All milestones in this track'
-"level_track_completed_[2]": '&7have been unlocked.'
-level_track_buffs_title: '&dUnlocked Bonuses'
-level_track_footer_mastered: '&6This progression track is fully mastered.'
-level_track_title_current: '&dCurrent Track'
-"level_track_current_[1]": '&7These bonuses are currently'
-"level_track_current_[2]": '&7active on your plot.'
-level_track_title_locked: '&cTrack Locked'
-"level_track_locked_[1]": '&7Further upgrades in this track'
-"level_track_locked_[2]": '&7are locked until you progress.'
-"level_track_next_[1]": '&7Next upgrade in this track'
-level_track_next_cost: '&eUpgrade Cost: &6{COST}'
-level_track_footer_next: '&6Upgrade to unlock these bonuses.'
-level_track_footer_progress: '&7Progress toward the next upgrade.'
-level_upgrade_tier: '&dNext Tier'
-level_upgrade_next_tier: '&dNext Tier'
-level_upgrade_cost: '&eUpgrade Cost: &6{COST}'
-level_upgrade_new_buffs_title: '&dNew Bonuses'
-level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
-level_track_completed_title: '&aTrack Completed'
-level_track_completed_lore_1: '&7All milestones in this track'
-level_track_completed_lore_2: '&7have been unlocked.'
-level_track_current_title: '&dCurrent Track'
-level_track_current_lore_1: '&7These bonuses are currently'
-level_track_current_lore_2: '&7active on your plot.'
-level_track_locked_title: '&cTrack Locked'
-level_track_locked_lore_1: '&7Further upgrades in this track'
-level_track_locked_lore_2: '&7are locked until you progress.'
-level_track_next_title: '&dNext Upgrade in this Track'
-level_track_next_lore_1: '&7Upgrade to unlock the next bonuses.'
-level_track_next_lore_2: '&7Cost to advance: &6{COST}'
-help_header: '&bAegisGuard Help'
-help_lines:
-- '&e/ag wand &7- Get the Aegis Scepter.'
-- '&e/ag menu &7- Open the Guardian Codex.'
-- '&e/ag claim &7- Claim land from your selection.'
-- '&e/ag unclaim &7- Unclaim your current land.'
-- '&e/ag resize <dir> <amt> &7- Expand your plot.'
-- '&e/ag home &7- Teleport to your plot home.'
-- '&e/ag setspawn &7- Set your plot home point.'
-- '&e/ag market &7- Open the land market.'
-- '&e/ag auction &7- View land auctions.'
-- '&e/ag stuck &7- Escape if you are trapped.'
-- '&e/ag help &7- Show this help.'
+
+# --------------------------------------
+# Auction GUI
+# --------------------------------------
 auction_gui_title: '&6Land Auctions'
 auction_item_name: '&eAuction: {OWNER}''s Plot'
 auction_item_lore:
-- '&7Current Bid: &6{BID}'
-- '&7Highest Bidder: &f{BIDDER}'
-- ' '
-- '&eLeft-Click:&7 Bid'
-- '&cRight-Click:&7 Teleport'
+  - '&7Current Bid: &6{BID}'
+  - '&7Highest Bidder: &f{BIDDER}'
+  - ' '
+  - '&eLeft-Click:&7 Bid'
+  - '&cRight-Click:&7 Teleport'
+
+# --------------------------------------
+# Market GUI
+# --------------------------------------
 market_gui_title: '&6Land Market'
 market_item_name: '&eFor Sale: {OWNER}''s Plot'
 market_item_lore:
-- '&7Price: &6{PRICE}'
-- ' '
-- '&eLeft-Click:&7 Buy'
-- '&cRight-Click:&7 Teleport'
+  - '&7Price: &6{PRICE}'
+  - ' '
+  - '&eLeft-Click:&7 Buy'
+  - '&cRight-Click:&7 Teleport'
+
+# --------------------------------------
+# Visit / Travel GUI
+# --------------------------------------
 visit_gui_title: '&9Travel Network'
 visit_switch_trusted_lore:
-- '&7Plots where you are trusted.'
+  - '&7Plots where you are trusted.'
 visit_switch_warps_lore:
-- '&7Public server locations.'
+  - '&7Public server locations.'
 visit_warp_lore:
-- '&7Click to travel.'
+  - '&7Click to travel.'
 visit_plot_name: '&e{PLOT}'
 visit_plot_lore:
-- '&7World: &f{WORLD}'
-- '&7Role: &a{ROLE}'
-- ' '
-- '&eClick to Travel'
-view_requests_admin_lore:
-- '&7Approve or deny expansion requests.'
+  - '&7World: &f{WORLD}'
+  - '&7Role: &a{ROLE}'
+  - ' '
+  - '&eClick to Travel'
 
 # --------------------------------------
 # Plot Flags GUI (Synced keys for PlotFlagsGUI)
 # --------------------------------------
-
 plot_flags_title: '&9&lPlot Flags'
-
 label_free: '&aFree'
 
 button_pvp_on: '&a⚔ PvP: Protected'
@@ -186,202 +123,129 @@ button_fly_on: '&a🪽 Flight: Enabled'
 button_fly_off: '&c🪽 Flight: Disabled'
 
 button_cosmetics: '&b✨ Cosmetics'
+cosmetics_lore:
+  - '&7Customize the look and feel of your plot.'
+  - '&eClick to open.'
 
 pvp_toggle_lore:
-- '&7Blocks PvP combat inside your plot.'
-- '&eClick to toggle.'
+  - '&7Blocks PvP combat inside your plot.'
+  - '&eClick to toggle.'
 
 tnt_toggle_lore:
-- '&7Prevents explosions from damaging your plot.'
-- '&eClick to toggle.'
+  - '&7Prevents explosions from damaging your plot.'
+  - '&eClick to toggle.'
 
 fire_toggle_lore:
-- '&7Stops fire from spreading within your plot.'
-- '&eClick to toggle.'
+  - '&7Stops fire from spreading within your plot.'
+  - '&eClick to toggle.'
 
 mob_toggle_lore:
-- '&7Prevents hostile mobs from damaging players in your plot.'
-- '&eClick to toggle.'
+  - '&7Prevents hostile mobs from damaging players in your plot.'
+  - '&eClick to toggle.'
 
 entry_toggle_lore:
-- '&7When enabled, untrusted players cannot enter.'
-- '&eClick to toggle.'
+  - '&7When enabled, untrusted players cannot enter.'
+  - '&eClick to toggle.'
 
 safe_toggle_lore:
-- '&7Extra safety rules for this plot.'
-- '&7Admins only.'
-- '&eClick to toggle.'
+  - '&7Extra safety rules for this plot.'
+  - '&7Admins only.'
+  - '&eClick to toggle.'
 
 container_toggle_lore:
-- '&7Locks chests and storage blocks from outsiders.'
-- '&eClick to toggle.'
+  - '&7Locks chests and storage blocks from outsiders.'
+  - '&eClick to toggle.'
 
 piston_toggle_lore:
-- '&7Prevents pistons from pushing/pulling across borders.'
-- '&eClick to toggle.'
+  - '&7Prevents pistons from pushing/pulling across borders.'
+  - '&eClick to toggle.'
 
 farm_toggle_lore:
-- '&7Protects crops and farmland from outsiders.'
-- '&eClick to toggle.'
+  - '&7Protects crops and farmland from outsiders.'
+  - '&eClick to toggle.'
 
 animals_toggle_lore:
-- '&7Protects animals from outsiders.'
-- '&eClick to toggle.'
+  - '&7Protects animals from outsiders.'
+  - '&eClick to toggle.'
 
 redstone_toggle_lore:
-- '&7Blocks redstone interaction by outsiders.'
-- '&eClick to toggle.'
+  - '&7Blocks redstone interaction by outsiders.'
+  - '&eClick to toggle.'
 
 vehicles_toggle_lore:
-- '&7Blocks vehicle use by outsiders.'
-- '&eClick to toggle.'
+  - '&7Blocks vehicle use by outsiders.'
+  - '&eClick to toggle.'
 
 shop_toggle_lore:
-- '&7Allows shop interactions inside your plot.'
-- '&7Cost: &6{COST}'
-- '&eClick to purchase/toggle.'
+  - '&7Allows shop interactions inside your plot.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
 
 fly_toggle_lore:
-- '&7Allows flying inside your plot.'
-- '&7Cost: &6{COST}'
-- '&eClick to purchase/toggle.'
-
-cosmetics_lore:
-- '&7Customize the look and feel of your plot.'
-- '&eClick to open.'
+  - '&7Allows flying inside your plot.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
 
 # --------------------------------------
 # Admin GUI (High Guardian Tools)
 # --------------------------------------
-
 admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
 
-# Toggle formatting + states
 admin_toggle_format: '{NAME}: {STATE}'
 toggle_on: '&aON'
 toggle_off: '&cOFF'
 admin_toggle_default_lore:
-- '&7Toggle this setting.'
-- '&eClick to toggle.'
+  - '&7Toggle this setting.'
+  - '&eClick to toggle.'
 
-# --- Admin Toggles (Slots 10-15) ---
 button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
-- '&7Auto-removes banned players'
-- '&7from plot trust lists.'
+  - '&7Auto-removes banned players'
+  - '&7from plot trust lists.'
 
 button_admin_bypass_limit: '&6Bypass Claim Limit'
 admin_bypass_limit_lore:
-- '&7Allows admins to ignore'
-- '&7claim size restrictions.'
+  - '&7Allows admins to ignore'
+  - '&7claim size restrictions.'
 
 button_admin_broadcast: '&bBroadcast Actions'
 admin_broadcast_lore:
-- '&7Broadcasts admin actions'
-- '&7to server chat.'
+  - '&7Broadcasts admin actions'
+  - '&7to server chat.'
 
 button_admin_unlimited: '&aUnlimited Plots'
 admin_unlimited_lore:
-- '&7Allows unlimited plots'
-- '&7for administrators.'
+  - '&7Allows unlimited plots'
+  - '&7for administrators.'
 
 button_admin_sync: '&5Proxy Sync'
 admin_sync_lore:
-- '&7Sync settings through proxy'
-- '&7if enabled.'
+  - '&7Sync settings through proxy'
+  - '&7if enabled.'
 
 button_admin_perf: '&eLow Overhead Mode'
 admin_perf_lore:
-- '&7Performance-focused mode.'
-- '&7Reduced background work.'
+  - '&7Performance-focused mode.'
+  - '&7Reduced background work.'
 
-# --- Admin Tools (Slots 28-32) ---
 admin_plot_list_title: '&bPlot List'
 admin_plot_list_lore:
-- '&7View/TP to any plot.'
+  - '&7View/TP to any plot.'
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
-- '&7View system stats.'
+  - '&7View system stats.'
 
 button_admin_reload: '&eReload All Settings'
 button_admin_reload_all: '&eReload All Settings'
 admin_reload_lore:
-- '&7Reload all settings.'
+  - '&7Reload all settings.'
 admin_reload_all_lore:
-- '&7Reload all settings.'
+  - '&7Reload all settings.'
 
 button_admin_refresh_lang: '&aRefresh Language Packs'
 admin_refresh_lang_lore:
-- '&7Reloads the language bundles.'
-- '&7Use after editing lang files.'
-- ' '
-- '&eClick to refresh'
-
-# --------------------------------------
-# Leveling GUI (NEW keys for Vault vs Blocks + missing LevelingGUI keys)
-# --------------------------------------
-
-# Header / status panel keys used by LevelingGUI.java
-level_header_owner: '&7Owner: &f{OWNER}'
-level_header_world: '&7World: &f{WORLD}'
-level_header_level: '&7Level: &e{LEVEL}&7/&f{MAX}'
-level_header_multiplier: '&7Cost Multiplier: &f{MULTIPLIER}'
-level_header_growth_title: '&bTerritory Growth:'
-level_header_growth_line: '&7+&f{AMOUNT} &7block radius per level.'
-
-# Territory preview keys used when expansion-on-levelup is enabled
-level_upgrade_territory_title: '&bTerritory Gain:'
-level_upgrade_territory_line: '&7+&f{AMOUNT} &7radius on this upgrade.'
-
-# Expansion info panel (right side) keys
-level_expansion_title: '&aTerritory Expansion'
-level_expansion_lore:
-- '&bTerritory Growth Rules:'
-- '&7Each upgrade expands your'
-- '&7claim radius outward evenly.'
-
-# Max level lore (when you hit cap)
-level_max_reached_lore:
-- '&7Your dominion has reached'
-- '&7its highest tier.'
-- ' '
-- '&aEnjoy your full power.'
-
-# Track item keys used by buildLevelTrackItem(...)
-level_track_completed_name: '&aCompleted Tier'
-level_track_completed_lore:
-- '&7This tier is unlocked.'
-level_track_current_name: '&eCurrent Tier'
-level_track_current_lore:
-- '&7Your plot is at this tier.'
-level_track_locked_name: '&cLocked Tier'
-level_track_locked_lore:
-- '&7Advance to unlock this tier.'
-level_track_next_name: '&dNext Tier'
-level_track_next_lore:
-- '&7Next upgrade available.'
-- '&7Cost: &6{COST}'
-
-# NEW: Currency-aware upgrade labels (Vault vs Claim Blocks)
-level_upgrade_payment_title: '&bPayment Options:'
-
-# For money-based upgrades (Vault/eco)
-level_upgrade_cost_money: '&7Cost: &6{COST} &8({TYPE})'
-level_upgrade_button_money: '&aUpgrade with Money'
-level_upgrade_hint_money: '&eClick to pay with money'
-
-# For block-based upgrades (claim blocks progression)
-level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
-level_upgrade_you_have_blocks: '&7You Have: &b{BALANCE} &7Blocks'
-level_upgrade_button_blocks: '&bUpgrade with Blocks'
-level_upgrade_hint_blocks: '&eClick to spend blocks'
-
-# Optional helper lines for “aware” behavior (safe to keep even if unused yet)
-level_upgrade_money_unavailable: '&8Money upgrade unavailable.'
-level_upgrade_blocks_unavailable: '&8Block upgrade unavailable.'
-level_upgrade_choose_payment: '&7Choose a payment method below.'
-
-# Optional: track cost variants (safe for future GUI polish)
-level_track_next_cost_money: '&eMoney Cost: &6{COST}'
-level_track_next_cost_blocks: '&eBlock Cost: &b{BLOCKS}'
+  - '&7Reloads the language bundles.'
+  - '&7Use after editing lang files.'
+  - ' '
+  - '&eClick to refresh'

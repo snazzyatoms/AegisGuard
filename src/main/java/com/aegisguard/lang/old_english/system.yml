@@ -155,7 +155,6 @@ title_leaving: '&cLeaving: &f{PLOT}'
 subtitle_leaving: '&7Returning to Wilderness'
 
 travel_system_disabled: '&cTravel system is disabled.'
-
 usage_merge: '&cUsage: /ag merge <N/S/E/W>'
 
 claim_blocks_disabled: '&cClaim Blocks are disabled on this server.'
@@ -168,19 +167,59 @@ claim_blocks_name: '&bPlatinum Claim Blocks'
 # ✅ Used by ClaimBlockTask.java (playtime earning message)
 claim_blocks_earned_playtime: '&a✦ Thy wanderings have earned thee &b+{AMOUNT}&a Claim Blocks! &7Total: &e{TOTAL}&7.'
 
-# Optional: if thou announcest starter/bonus/purchased blocks elsewhere
+# ✅ Use if/when thou rewardest blocks on Ascension/Level-Up
+claim_blocks_earned_levelup: '&d✦ Ascension Reward: &b+{AMOUNT}&d Claim Blocks! &7Total: &e{TOTAL}&7.'
+
+# Optional: starter/bonus/purchased blocks
 claim_blocks_received_starter: '&b✦ Starter Ledger: &a+{AMOUNT}&b Claim Blocks bestowed. &7Total: &e{TOTAL}&7.'
 claim_blocks_received_bonus: '&d✦ Bonus Granted: &b+{AMOUNT}&d Claim Blocks granted. &7Total: &e{TOTAL}&7.'
 claim_blocks_purchased: '&6✦ Purchase Complete: &b+{AMOUNT}&6 Claim Blocks added. &7Total: &e{TOTAL}&7.'
 
-# Optional: affordability and preview (wire up if/when needed)
+# Optional: spending/refunds (if/when claim/resize/ascension charge blocks)
+claim_blocks_spent: '&e✦ Spent: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Claim Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_spent_resize: '&e✦ Resize Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Ascension Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Refunded: &a+{AMOUNT}&e Claim Blocks. &7Total: &e{TOTAL}&7.'
+
+# Optional: affordability and preview
 claim_blocks_insufficient: '&c❌ Thou hast not enough Claim Blocks. &7Needed: &e{NEEDED}&7 | Available: &a{AVAILABLE}&7.'
 claim_blocks_cost_preview: '&7Claim Cost: &6{COST}&7 blocks.'
+first_claim_limit_exceeded: '&c❌ Thy first claim exceedeth the allowed limit. &7Max allowed: &e{MAX}&7 blocks.'
 
 blocks_ledger_title: '&6&lLand Ledger &7({PLAYER})'
 blocks_ledger_total: '&7Total Capacity: &e{TOTAL}'
 blocks_ledger_used: '&7Used Land: &c{USED}'
 blocks_ledger_available: '&7Available: &a{AVAILABLE}'
+
+# --------------------------------------
+# Admin Language Refresh (recommended for Codex reload button feedback)
+# --------------------------------------
+admin_lang_refreshing: '&7Refreshing language packs...'
+admin_lang_refresh_complete: '&a✔ Language packs refreshed.'
+admin_lang_refresh_failed: '&c❌ Failed to refresh language packs. Check the console for details.'
+
+# --------------------------------------
+# Expansion Requests (system feedback)
+# --------------------------------------
+expansion_not_in_plot: '&c❌ Thou must stand within thine own claim to request an expansion.'
+expansion_request_submitted: '&a✔ Thy expansion request hath been submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e⚠ Thou already hast a request pending.'
+expansion_request_cancelled: '&e✔ Thy expansion request hath been cancelled.'
+expansion_request_none_pending: '&cNo expansion requests are pending.'
+expansion_request_approved_player: '&a✔ Thy expansion request was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c✖ Thy expansion request was denied.'
+expansion_request_approved_admin: '&a✔ Approved expansion request for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Denied expansion request for &f{PLAYER}&c.'
+
+# --------------------------------------
+# Economy safety (optional, but saves admin headaches)
+# --------------------------------------
+economy_disabled: '&c❌ Economy is disabled on this server.'
+vault_hook_missing: '&c❌ Vault economy is not available. Ask an admin to install/configure Vault and an economy plugin.'
+vault_disabled_here: '&c❌ Vault payments are disabled here.'
+insufficient_funds: '&c❌ Insufficient funds. Needed: &e${NEEDED}&c | Available: &e${AVAILABLE}&c.'
+transaction_failed: '&c❌ Transaction failed. Pray, try again shortly.'
 
 usage_rename: '&cUsage: /ag rename <Name>'
 rename_too_long: '&cName is too long (Max {MAX} chars).'

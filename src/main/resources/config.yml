@@ -257,11 +257,11 @@ claims:
 claim_blocks:
   enabled: true
 
-  starting_blocks: 1000
+  starting_blocks: 500
 
   first_claim_limit:
     enabled: true
-    max_area: 1000
+    max_area: 100
 
   earn:
     playtime:
@@ -272,7 +272,7 @@ claim_blocks:
 
     level_up:
       enabled: true
-      per_level: 500
+      per_level: 600
 
 
 # ==============================================================================

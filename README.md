@@ -39,24 +39,6 @@
 
 ---
 
-## 📚 Table of Contents
-
-- [What is AegisGuard?](#-what-is-aegisguard)
-- [What’s New in v1.2.4](#-whats-new-in-v124)
-- [Key Features](#-key-features)
-- [Compatibility](#-compatibility)
-- [Install](#-install)
-- [Update Guide (v1.2.4)](#-update-guide-v124)
-- [Commands (Essentials)](#-commands-essentials)
-- [Localization (Codex Language Packs)](#-localization-codex-language-packs)
-- [Integrations](#-integrations)
-- [Try AegisGuard Live](#-try-aegisguard-live)
-- [Support](#-support)
-- [Contributing](#-contributing)
-- [License](#-license)
-
----
-
 ## ⚡ What is AegisGuard?
 
 AegisGuard is a **modern, Folia-native land protection and economy ecosystem** for Minecraft servers.  

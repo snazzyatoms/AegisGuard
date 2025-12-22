@@ -14,6 +14,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ import java.util.Map;
  *     {KEY}, (KEY), %KEY%, <KEY>
  *   for any provided vars map.
  *
- * - Also improves block balance display by reading EconomyManager#getBalance when available.
+ * - Also improves block balance display by safely reading EconomyManager balance methods when available.
  */
 public class LevelingGUI {
 
@@ -663,14 +664,12 @@ public class LevelingGUI {
 
     private CurrencyType getBlocksTypeOrNull() {
         try {
-            // Prefer the canonical name used by EconomyManager.
             return CurrencyType.valueOf("CLAIM_BLOCKS");
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) { }
 
         try {
-            // Some older/dev builds may have used BLOCKS.
             return CurrencyType.valueOf("BLOCKS");
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) { }
 
         return null;
     }
@@ -680,14 +679,33 @@ public class LevelingGUI {
         return String.valueOf(Math.max(0, v));
     }
 
+    /**
+     * Balance display:
+     * - Tries EconomyManager#getBalance(Player, CurrencyType) or #balance(Player, CurrencyType) via reflection
+     * - Falls back to ClaimBlockManager for CLAIM_BLOCKS/BLOCKS
+     * - Returns "?" if unknown
+     */
     private String formatBalance(Player p, CurrencyType type) {
         double bal = -1;
-        try {
-            // We added getBalance() to EconomyManager to avoid reflection.
-            bal = plugin.eco().getBalance(p, type);
-        } catch (Throwable ignored) {}
 
-        // Hard fallback for claim-block style currencies
+        // 1) Try eco balance methods via reflection (keeps this GUI compatible across builds)
+        try {
+            Object eco = plugin.eco();
+            if (eco != null && p != null && type != null) {
+                for (String mName : new String[]{"getBalance", "balance"}) {
+                    try {
+                        Method m = eco.getClass().getMethod(mName, Player.class, CurrencyType.class);
+                        Object out = m.invoke(eco, p, type);
+                        if (out instanceof Number n) {
+                            bal = n.doubleValue();
+                            break;
+                        }
+                    } catch (Throwable ignored) { }
+                }
+            }
+        } catch (Throwable ignored) { }
+
+        // 2) Hard fallback for claim-block currencies
         if (bal < 0 && p != null && type != null) {
             String n = type.name().toUpperCase();
             if ((n.equals("CLAIM_BLOCKS") || n.equals("BLOCKS")) && plugin.getClaimBlockManager() != null) {
@@ -743,7 +761,7 @@ public class LevelingGUI {
         String raw = null;
         try {
             if (plugin.codex() != null) raw = plugin.codex().tr(p, key);
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) { }
         return GUIManager.safeText(key, raw, fallback);
     }
 
@@ -751,7 +769,7 @@ public class LevelingGUI {
         String raw = null;
         try {
             if (plugin.codex() != null) raw = plugin.codex().tr(p, key, (vars == null ? Map.of() : vars));
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) { }
         String safe = GUIManager.safeText(key, raw, fallback);
         return applyVarsCompat(safe, vars);
     }
@@ -760,7 +778,7 @@ public class LevelingGUI {
         List<String> out = null;
         try {
             if (plugin.codex() != null) out = plugin.codex().trList(p, key, (vars == null ? Map.of() : vars));
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) { }
 
         if (out == null || out.isEmpty()) return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
 
@@ -799,7 +817,9 @@ public class LevelingGUI {
     }
 
     private List<String> applyVarsCompat(List<String> lines, Map<String, String> vars) {
-        if (lines == null || lines.isEmpty() || vars == null || vars.isEmpty()) return (lines == null ? List.of() : lines);
+        if (lines == null || lines.isEmpty() || vars == null || vars.isEmpty()) {
+            return (lines == null ? List.of() : lines);
+        }
         List<String> out = new ArrayList<>(lines.size());
         for (String line : lines) {
             out.add(applyVarsCompat(line, vars));
@@ -819,7 +839,6 @@ public class LevelingGUI {
             String v = String.valueOf(kv[i + 1]);
             m.put(k, v);
             m.put(k.toLowerCase(), v);
-            // Title-case key (Balance), in case a language pack used it.
             if (!k.isEmpty()) {
                 m.put(Character.toUpperCase(k.charAt(0)) + k.substring(1).toLowerCase(), v);
             }

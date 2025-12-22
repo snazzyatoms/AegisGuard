@@ -1,7 +1,7 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: guis.yml
-# Generated: 2025-12-16 23:08:56Z
+# Organized: 2025-12-21 00:00:00Z
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 button_back: '&e⟵ Return'
 back_lore:
@@ -28,7 +28,6 @@ biome_button_exit: '&c✖ Close the Biome Changer'
 expansion_button_back: '&e⟵ Return to Previous Menu'
 expansion_gui_title: '&d§lLand Expansion Petition'
 expansion_admin_title: '&6&lPending &e&lPetitions &d&l⚖'
-
 expansion_none_title: '&cNo Petitions'
 expansion_none_lore:
 - '&7The subjects are content.'
@@ -40,267 +39,94 @@ expansion_tier2_name: '&eKnight''s Fee'
 expansion_tier3_name: '&fBaron''s Estate'
 expansion_tier4_name: '&6Duke''s Domain'
 expansion_tier5_name: '&bRoyal Charter'
-level_gui_title: '&dAscension of the Holdfast'
-level_current_status: '&bThe Present Standing of Thy Holding'
-level_upgrade_button: '&aRaise Thy Holdfast unto Level &f{LEVEL}'
-level_max_reached: '&6Thy holding may ascend no further.'
-level_button_lore:
-- '&7Ascend thy plot to unlock'
-- '&7greater power and prestige.'
-level_button_lore_static:
-- '&7Ascend thy plot to unlock'
-- '&7new boons and favour.'
-level_current_blessing_name: '&dPresent Blessings'
-level_current_blessing_title: '&dBoons Now Upon Thy Land'
-level_current_blessing_footer_1: '&8Higher levels grant richer favour'
-level_current_blessing_footer_2: '&8and broader dominion.'
-level_current_blessings_name: '&dPresent Blessings'
-level_current_blessings_title: '&dBoons Now Upon Thy Land'
-level_current_blessings_footer_1: '&8Higher levels grant richer favour'
-level_current_blessings_footer_2: '&8and broader dominion.'
-level_track_title_completed: '&aPath Mastered'
-level_track_completed_1: '&7All steps of this path are'
-level_track_completed_2: '&7fulfilled; thou hast mastered it.'
-"level_track_completed_[1]": '&7All steps of this path are'
-"level_track_completed_[2]": '&7fulfilled; thou hast mastered it.'
-level_track_buffs_title: '&dEnduring Blessings'
-level_track_footer_mastered: '&6No further ascension is possible in this track.'
-level_track_title_current: '&dCurrent Path'
-"level_track_current_[1]": '&7These boons are active upon'
-"level_track_current_[2]": '&7thy dominion at present.'
-level_track_title_locked: '&cPath Bound'
-"level_track_locked_[1]": '&7Further rites are sealed;'
-"level_track_locked_[2]": '&7thou must ascend in order.'
-"level_track_next_[1]": '&7Next ascension within this path'
-level_track_next_cost: '&eTribute Required: &6{COST}'
-level_track_footer_next: '&6Advance to claim these blessings.'
-level_track_footer_progress: '&7Progress toward the next ascension.'
-level_upgrade_tier: '&dNext Tier'
-level_upgrade_next_tier: '&dNext Tier'
-level_upgrade_cost: '&eCost: &6{COST}'
-level_upgrade_new_buffs_title: '&dNew Blessings'
-level_upgrade_click_hint: '&eClick to attempt ascension.'
-level_track_completed_title: '&aPath Mastered'
-level_track_completed_lore_1: '&7All steps of this path are'
-level_track_completed_lore_2: '&7fulfilled; thou hast mastered it.'
-level_track_current_title: '&dCurrent Path'
-level_track_current_lore_1: '&7These boons are active upon'
-level_track_current_lore_2: '&7thy dominion at present.'
-level_track_locked_title: '&cPath Bound'
-level_track_locked_lore_1: '&7Further rites are sealed;'
-level_track_locked_lore_2: '&7thou must ascend in order.'
-level_track_next_title: '&dNext Step on this Path'
-level_track_next_lore_1: '&7Advance to unlock these blessings.'
-level_track_next_lore_2: '&7Tribute required: &6{COST}'
-help_header: '&b⚔ &nThe Guardian’s Scroll of Instruction&r'
-help_lines:
-- '&e/aegis wand &7- Receive thine &bAegis Scepter'
-- '&e/aegis menu &7- Summon the Guardian Codex'
-- '&e/aegis claim &7- Bind land to thy will'
-- '&e/aegis unclaim &7- Release thine claim'
-- '&e/aegis resize <dir> <amt> &7- Expand thy dominion'
-- '&e/aegis home &7- Travel to thy plot''s arrival point'
-- '&e/aegis setspawn &7- Mark thy landing spot'
-- '&e/aegis market &7- View dominions for sale'
-- '&e/aegis auction &7- View dominions for auction'
-- '&e/aegis stuck &7- Escape a trap or prison'
-- '&e/aegis help &7- Study this sacred guide'
-# --------------------------------------
-# Plot Flags GUI (Golden Master) - used by PlotFlagsGUI
-# --------------------------------------
-
 plot_flags_title: '&9&lWards of Thy Holding'
-
-# Optional shared label (used for costs)
 label_free: '&aFree'
-
-# --- Button Names (must have _on and _off) ---
 button_pvp_on: '&a⚔ PvP Ward: Raised'
 button_pvp_off: '&c⚔ PvP Ward: Lowered'
-
 button_tnt_on: '&a💥 TNT Ward: Raised'
 button_tnt_off: '&c💥 TNT Ward: Lowered'
-
 button_fire_on: '&a🔥 Fire Ward: Raised'
 button_fire_off: '&c🔥 Fire Ward: Lowered'
-
 button_mobs_on: '&a☠ Mob Ward: Raised'
 button_mobs_off: '&c☠ Mob Ward: Lowered'
-
 button_entry_on: '&a🚪 Entry Ward: Raised'
 button_entry_off: '&c🚪 Entry Ward: Lowered'
-
 button_safe_on: '&a🛡 Safe Zone: Sanctified'
 button_safe_off: '&c🛡 Safe Zone: Unbound'
-
 button_containers_on: '&a📦 Chests: Sealed'
 button_containers_off: '&c📦 Chests: Unsealed'
-
 button_piston_on: '&a🔩 Pistons: Bound'
 button_piston_off: '&c🔩 Pistons: Unbound'
-
 button_farm_on: '&a🌾 Farming: Guarded'
 button_farm_off: '&c🌾 Farming: Unguarded'
-
 button_animals_on: '&a🐄 Beasts: Guarded'
 button_animals_off: '&c🐄 Beasts: Unguarded'
-
 button_redstone_on: '&a🔴 Redstone: Bound'
 button_redstone_off: '&c🔴 Redstone: Unbound'
-
 button_vehicles_on: '&a🛶 Vehicles: Bound'
 button_vehicles_off: '&c🛶 Vehicles: Unbound'
-
 button_shop_on: '&a💎 Shop Interact: Granted'
 button_shop_off: '&c💎 Shop Interact: Withheld'
-
 button_fly_on: '&a🪽 Flight: Granted'
 button_fly_off: '&c🪽 Flight: Withheld'
-
 button_cosmetics: '&b✨ Adornments'
-
-# --- Lore (lists) ---
 pvp_toggle_lore:
 - '&7When raised, no blade may bite'
 - '&7within thy holding.'
 - '&eClick to toggle this ward.'
-
 tnt_toggle_lore:
 - '&7When raised, explosions are quenched'
 - '&7upon thy dominion.'
 - '&eClick to toggle this ward.'
-
 fire_toggle_lore:
 - '&7When raised, flame shall not spread'
 - '&7across thy land.'
 - '&eClick to toggle this ward.'
-
 mob_toggle_lore:
 - '&7When raised, hostile mobs are hindered'
 - '&7from harming within.'
 - '&eClick to toggle this ward.'
-
 entry_toggle_lore:
 - '&7When raised, strangers are denied'
 - '&7unless welcomed by thy will.'
 - '&eClick to toggle this ward.'
-
 safe_toggle_lore:
 - '&7A great umbrella of safety and order.'
 - '&7Only stewards (admins) may bind it.'
 - '&eClick to toggle (admin only).'
-
 container_toggle_lore:
 - '&7When raised, chests and storages'
 - '&7are sealed to outsiders.'
 - '&eClick to toggle this ward.'
-
 piston_toggle_lore:
 - '&7When raised, pistons cannot meddle'
 - '&7with thy borders.'
 - '&eClick to toggle this ward.'
-
 farm_toggle_lore:
 - '&7When raised, crops and soil are guarded'
 - '&7from unwanted hands.'
 - '&eClick to toggle this ward.'
-
 animals_toggle_lore:
 - '&7When raised, animals are protected'
 - '&7from harm and theft.'
 - '&eClick to toggle this ward.'
-
 redstone_toggle_lore:
 - '&7When raised, redstone devices are blocked'
 - '&7from outsider meddling.'
 - '&eClick to toggle this ward.'
-
 vehicles_toggle_lore:
 - '&7When raised, boats and carts are blocked'
 - '&7from outsider use.'
 - '&eClick to toggle this ward.'
-
 shop_toggle_lore:
 - '&7Permit trade interactions upon thy land.'
 - '&7Tribute required: &6{COST}'
 - '&eClick to purchase/toggle.'
-
 fly_toggle_lore:
 - '&7Grant flight within thy holding.'
 - '&7Tribute required: &6{COST}'
 - '&eClick to purchase/toggle.'
-
 cosmetics_lore:
 - '&7Adorn thy dominion with'
 - '&7sparkle and splendour.'
 - '&eClick to open.'
-
-
-# --------------------------------------
-# Leveling GUI (NEW keys for Vault vs Blocks + missing LevelingGUI keys)
-# Used by: LevelingGUI.java
-# --------------------------------------
-
-# Header / status panel keys
-level_header_owner: '&7Owner: &f{OWNER}'
-level_header_world: '&7World: &f{WORLD}'
-level_header_level: '&7Level: &e{LEVEL}&7/&f{MAX}'
-level_header_multiplier: '&7Cost Multiplier: &f{MULTIPLIER}'
-level_header_growth_title: '&bGrowth of Dominion:'
-level_header_growth_line: '&7+&f{AMOUNT} &7block radius with each ascension.'
-
-# Territory preview keys (when expansion-on-levelup is enabled)
-level_upgrade_territory_title: '&bTerritory Gained:'
-level_upgrade_territory_line: '&7+&f{AMOUNT} &7radius upon this ascension.'
-
-# Expansion info panel (right side)
-level_expansion_title: '&aTerritory Expansion'
-level_expansion_lore:
-- '&bRules of Growth:'
-- '&7Each ascension expands thy'
-- '&7borders outward, evenly wrought.'
-
-# Max level lore (cap reached)
-level_max_reached_lore:
-- '&7Thy dominion hath reached'
-- '&7its highest ordained tier.'
-- ' '
-- '&aRejoice in thy full might.'
-
-# Track item keys used by buildLevelTrackItem(...)
-level_track_completed_name: '&aTier Fulfilled'
-level_track_completed_lore:
-- '&7This tier is already claimed.'
-level_track_current_name: '&ePresent Tier'
-level_track_current_lore:
-- '&7Thy holding stands here.'
-level_track_locked_name: '&cTier Sealed'
-level_track_locked_lore:
-- '&7Ascend further to unlock this tier.'
-level_track_next_name: '&dNext Tier'
-level_track_next_lore:
-- '&7The next rite awaiteth.'
-- '&7Tribute: &6{COST}'
-
-# Currency-aware upgrade labels (Vault vs Claim Blocks)
-level_upgrade_payment_title: '&bPayment of Tribute:'
-
-# Money-based upgrades (Vault/eco)
-level_upgrade_cost_money: '&7Cost: &6{COST} &8({TYPE})'
-level_upgrade_button_money: '&aAscend with Coin'
-level_upgrade_hint_money: '&eClick to render coin-tribute'
-
-# Block-based upgrades (claim blocks progression)
-level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
-level_upgrade_you_have_blocks: '&7Thou Hast: &b{BALANCE} &7Blocks'
-level_upgrade_button_blocks: '&bAscend with Blocks'
-level_upgrade_hint_blocks: '&eClick to spend thy blocks'
-
-# Optional helper lines for aware behavior (safe even if unused yet)
-level_upgrade_money_unavailable: '&8Coin-tribute is unavailable.'
-level_upgrade_blocks_unavailable: '&8Block-tribute is unavailable.'
-level_upgrade_choose_payment: '&7Choose thy manner of tribute below.'
-
-# Optional: track cost variants (future polish)
-level_track_next_cost_money: '&eCoin Tribute: &6{COST}'
-level_track_next_cost_blocks: '&eBlock Tribute: &b{BLOCKS}'

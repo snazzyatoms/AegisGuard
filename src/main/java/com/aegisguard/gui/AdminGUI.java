@@ -4,11 +4,14 @@ import com.aegisguard.AegisGuard;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -24,6 +27,11 @@ import java.util.Map;
  * - Toggle format now uses placeholder-aware translation (no manual replace chains).
  * - Reload All Settings prefers plugin.reloadAegisGuard(true) when available.
  * - Folia-safe scheduling pattern preserved.
+ *
+ * ✅ NEW:
+ * - Reload/Refresh items self-tag with PDC:
+ *     aegis_action = reload_all / refresh_lang
+ *   so GUIListener strict reload detection can identify them reliably.
  */
 public class AdminGUI {
 
@@ -77,22 +85,26 @@ public class AdminGUI {
                 plugin.gui().trList(player, "admin_diagnostics_lore", List.of("&7View system stats."))
         ));
 
-        // Slot 31: Reload All Settings
-        inv.setItem(31, GUIManager.createItem(
+        // Slot 31: Reload All Settings (tagged)
+        ItemStack reloadAll = GUIManager.createItem(
                 Material.REDSTONE,
                 plugin.gui().tr(player, "button_admin_reload_all",
                         plugin.gui().tr(player, "button_admin_reload", "&eReload All Settings")),
                 plugin.gui().trList(player, "admin_reload_all_lore",
                         plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
-        ));
+        );
+        tagAction(reloadAll, "reload_all");
+        inv.setItem(31, reloadAll);
 
-        // Slot 32: Refresh Language Packs (Codex only)
-        inv.setItem(32, GUIManager.createItem(
+        // Slot 32: Refresh Language Packs (Codex only) (tagged)
+        ItemStack refreshLang = GUIManager.createItem(
                 Material.RECOVERY_COMPASS,
                 plugin.gui().tr(player, "button_admin_refresh_lang", "&aRefresh Language Packs"),
                 plugin.gui().trList(player, "admin_refresh_lang_lore",
                         List.of("&7Reloads the language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
-        ));
+        );
+        tagAction(refreshLang, "refresh_lang");
+        inv.setItem(32, refreshLang);
 
         // --- NAVIGATION ---
         inv.setItem(36, GUIManager.createItem(
@@ -140,6 +152,10 @@ public class AdminGUI {
             case 28 -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
             case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
             case 30 -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
+
+            // NOTE:
+            // If your GUIListener intercepts aegis_action reload items globally,
+            // slots 31/32 may never reach this handler (which is totally fine).
 
             case 31 -> { // Reload ALL settings (central hook preferred)
                 plugin.effects().playMenuFlip(player);
@@ -215,6 +231,24 @@ public class AdminGUI {
     }
 
     // --- HELPERS ---
+
+    /**
+     * Tags an item so GUIListener strict reload detection can identify it without guessing.
+     * Key: aegis_action
+     * Values: reload / refresh / reload_all / refresh_lang / reload_settings
+     */
+    private void tagAction(ItemStack item, String action) {
+        if (item == null || action == null || action.isBlank()) return;
+
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+
+            NamespacedKey key = new NamespacedKey(plugin, "aegis_action");
+            meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, action.trim().toLowerCase());
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
 
     private void addToggle(Player p, Inventory inv, int slot, String path, String nameKey, String loreKey, Material mat, boolean def) {
         boolean val = plugin.getConfig().getBoolean(path, def);

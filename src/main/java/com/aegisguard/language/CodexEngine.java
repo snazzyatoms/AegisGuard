@@ -39,6 +39,10 @@ import java.util.regex.Pattern;
  * - ✅ Atomic reload swap (prevents half-loaded state during refresh)
  * - ✅ style_order support (cycle order separate from available styles)
  * - ✅ Player style path compat (reads/writes both legacy + canonical)
+ *
+ * Fixes:
+ * - ✅ Language cycling getting "stuck" on one style when auto-detect only finds one folder.
+ *   Auto-detect is now ADDITIVE (never shrinks your style list), unless config locks it.
  */
 public class CodexEngine {
 
@@ -152,7 +156,7 @@ public class CodexEngine {
         YamlConfiguration fallbackIndex = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
 
         // ----------------------------
-        // Styles list precedence
+        // Styles list precedence (FIXED)
         // ----------------------------
         List<String> fromConfig = plugin.getConfig().getStringList("localization.available_languages");
         List<String> detected = detectInstalledStyles(primaryDir, bundles);
@@ -160,20 +164,39 @@ public class CodexEngine {
         List<String> fromPrimaryIndex = (primaryIndex == null) ? Collections.emptyList() : primaryIndex.getStringList("available_styles");
         List<String> fromFallbackIndex = (fallbackIndex == null) ? Collections.emptyList() : fallbackIndex.getStringList("available_styles");
 
-        List<String> newAvailable = new ArrayList<>();
-        if (fromConfig != null && !fromConfig.isEmpty()) {
-            newAvailable.addAll(fromConfig);
-        } else if (detected != null && !detected.isEmpty()) {
-            newAvailable.addAll(detected);
+        // If config defines available_languages, treat it as authoritative.
+        boolean configLocked = fromConfig != null && !fromConfig.isEmpty();
+
+        // Seed list: config > lang/codex.yml > codex/codex.yml > hard defaults
+        List<String> seed;
+        if (configLocked) {
+            seed = fromConfig;
         } else if (fromPrimaryIndex != null && !fromPrimaryIndex.isEmpty()) {
-            newAvailable.addAll(fromPrimaryIndex);
+            seed = fromPrimaryIndex;
         } else if (fromFallbackIndex != null && !fromFallbackIndex.isEmpty()) {
-            newAvailable.addAll(fromFallbackIndex);
+            seed = fromFallbackIndex;
         } else {
-            newAvailable.addAll(Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar"));
+            seed = Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar");
         }
 
-        newAvailable = normalizeAndDedupStyles(newAvailable);
+        List<String> newAvailable = normalizeAndDedupStyles(seed);
+
+        // Auto-detect should never shrink the style list (unless config locks it).
+        if (!configLocked && detected != null && !detected.isEmpty()) {
+            for (String s : detected) {
+                String id = normalizeStyleId(s);
+                if (!id.isEmpty() && !newAvailable.contains(id)) {
+                    newAvailable.add(id);
+                }
+            }
+            newAvailable = normalizeAndDedupStyles(newAvailable);
+        }
+
+        // (Optional) warn if we're effectively stuck
+        if (newAvailable.size() <= 1) {
+            plugin.getLogger().warning("[Codex] Only " + newAvailable.size() + " language style detected/allowed: " + newAvailable
+                    + " (check localization.available_languages and your /lang/<style>/ bundle folders)");
+        }
 
         // ----------------------------
         // Default + fallback language
@@ -459,16 +482,12 @@ public class CodexEngine {
         return trList((CommandSender) player, key, placeholders);
     }
 
-    /**
-     * ✅ Symmetry: default-style list translators
-     */
+    /** ✅ Symmetry: default-style list translators */
     public List<String> trList(String key) {
         return trList(key, Collections.emptyMap());
     }
 
-    /**
-     * ✅ Symmetry: default-style list translators (placeholders)
-     */
+    /** ✅ Symmetry: default-style list translators (placeholders) */
     public List<String> trList(String key, Map<String, String> placeholders) {
         List<String> rawList = resolveList(defaultStyle, key);
         if (rawList.isEmpty()) return Collections.emptyList();
@@ -507,9 +526,7 @@ public class CodexEngine {
         return availableStyles;
     }
 
-    /**
-     * ✅ New: style order (cycle order)
-     */
+    /** ✅ New: style order (cycle order) */
     public List<String> getStyleOrder() {
         return styleOrder;
     }
@@ -910,9 +927,7 @@ public class CodexEngine {
         return found;
     }
 
-    /**
-     * Checks if a resource exists inside the jar.
-     */
+    /** Checks if a resource exists inside the jar. */
     private boolean hasBundledResource(String jarPath) {
         if (jarPath == null || jarPath.isBlank()) return false;
         try (InputStream in = plugin.getResource(jarPath)) {

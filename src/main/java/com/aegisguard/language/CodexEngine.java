@@ -885,9 +885,19 @@ public class CodexEngine {
         return new ArrayList<>(deduped);
     }
 
+    /**
+     * ✅ Improved normalization:
+     * Accepts "Modern English", "modern-english", "modern_english"
+     * and normalizes to "modern_english".
+     */
     private static String normalizeStyleId(String style) {
         if (style == null) return "";
-        return style.trim().toLowerCase(Locale.ROOT);
+
+        String s = style.trim().toLowerCase(Locale.ROOT);
+        s = s.replace(' ', '_').replace('-', '_');
+        s = s.replaceAll("__+", "_");
+
+        return s;
     }
 
     private void pruneInvalidPlayerStyles() {

@@ -1,26 +1,25 @@
-# AegisGuard Codex Language Pack (split files)
-# Language: modern_english
-# Section: expansions.yml
-# Updated: 2025-12-21
-# Notes: Consolidated expansion request chat messages here (removed from system.yml).
+# ======================================
+# AegisGuard v1.2.4 - Codex: Modern English
+# File: expansions.yml
+# ======================================
 
 expansion_submitted: '&a✔ Request submitted.'
 expansion_exists: '&c❌ You already have a pending request.'
-expansion_approved: '&a✔ Your expansion request was approved.'
-expansion_denied: '&c❌ Your expansion request was denied.'
+expansion_approved: '&a✔ Your request was approved.'
+expansion_denied: '&c✖ Your request was denied.'
 admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
 admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
 expansion_payment_failed: '&c❌ Insufficient funds.'
 expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
-expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
+expansion_overlap_fail: '&c❌ Expansion overlaps nearby claims.'
 expansion_invalid_size: '&c❌ Expansion must increase size.'
 request_expired: '&c❌ Request expired.'
-expansion_not_in_plot: '&c❌ Thou must stand within thine own claim to petition.'
-expansion_request_submitted: '&a✔ Expansion petition submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
-expansion_request_already_pending: '&e⚠ Thou already hast a petition pending.'
-expansion_request_cancelled: '&e✔ Expansion petition cancelled.'
-expansion_request_none_pending: '&cNo expansion petitions are pending.'
-expansion_request_approved_player: '&a✔ Thy expansion petition was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
-expansion_request_denied_player: '&c✖ Thy expansion petition was denied.'
-expansion_request_approved_admin: '&a✔ Approved expansion petition for &f{PLAYER}&a.'
-expansion_request_denied_admin: '&c✖ Denied expansion petition for &f{PLAYER}&c.'
+expansion_not_in_plot: '&c❌ You must stand within your own claim to request an expansion.'
+expansion_request_submitted: '&a✔ Expansion request submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e⚠ You already have an expansion request pending.'
+expansion_request_cancelled: '&e✔ Expansion request cancelled.'
+expansion_request_none_pending: '&cNo expansion requests are pending.'
+expansion_request_approved_player: '&a✔ Your expansion request was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c✖ Your expansion request was denied.'
+expansion_request_approved_admin: '&a✔ Approved expansion request for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Denied expansion request for &f{PLAYER}&c.'

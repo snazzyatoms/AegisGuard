@@ -1,74 +1,98 @@
-# ======================================
-# AegisGuard v1.2.4 - Codex: Español (Argentina)
-# File: upgrades.yml
-# Parity translation from modern_english/upgrades.yml
-# ======================================
+# -------------------------------
+# Leveling / Ascension GUI (v1.2.4 currency-aware)
+# -------------------------------
 
-level_header_owner: '&dPropietario:&f {owner}'
-level_header_world: '&dMundo:&f {world}'
-level_header_level: '&dNivel Actual:&f {level}'
-level_header_multiplier: '&dMultiplicador de XP:&f {multiplier}x'
-level_gui_title: '&dAscensión de Parcela'
-level_current_status: '&bNivel Actual de la Parcela'
-level_upgrade_button: '&aMejorar a Nivel &f{LEVEL}'
-level_max_reached: '&6Esta parcela ya está en el nivel máximo.'
-level_up_success: '&d⚡ ¡Parcela mejorada a Nivel &f{LEVEL}&d!'
-level_up_fail_cost: '&c❌ No tenés suficientes fondos para mejorar esta parcela.'
-level_button_lore:
-  - '&7Mejorá tu parcela para aumentar el tamaño'
-  - '&7y desbloquear funciones extra.'
-level_button_lore_static:
-  - '&7Mejorá tu parcela para desbloquear'
-  - '&7nuevos bonos y funciones.'
-level_current_blessing_name: '&dBonos Actuales'
-level_current_blessing_title: '&dBonos Activos'
-level_current_blessing_footer_1: '&8Los niveles más altos desbloquean'
-level_current_blessing_footer_2: '&8bonos más fuertes para esta parcela.'
-level_current_blessings_name: '&dBonos Actuales'
-level_current_blessings_title: '&dBonos Activos'
-level_current_blessings_footer_1: '&8Los niveles más altos desbloquean'
-level_current_blessings_footer_2: '&8bonos más fuertes para esta parcela.'
-level_track_title_completed: '&aRuta Completada'
-level_track_completed_[1]: '&7Desbloqueaste cada nivel'
-level_track_completed_[2]: '&7en esta ruta de progresión.'
-level_track_completed_1: '&7Desbloqueaste cada nivel'
-level_track_completed_2: '&7en esta ruta de progresión.'
-level_track_buffs_title: '&dBonos Desbloqueados'
-level_track_footer_mastered: '&6No hay más mejoras disponibles en esta ruta.'
-level_track_title_current: '&dRuta Actual'
-level_track_current_[1]: '&7Estos bonos están actualmente'
-level_track_current_[2]: '&7activos en esta parcela.'
-level_track_title_locked: '&cRuta Bloqueada'
-level_track_locked_[1]: '&7Las mejoras adicionales en esta ruta'
-level_track_locked_[2]: '&7están bloqueadas hasta que avances.'
-level_track_next_[1]: '&7Siguiente mejora en esta ruta'
-level_track_next_cost: '&eCosto: &6{COST}'
-level_track_footer_next: '&6Mejorá para desbloquear estos bonos.'
-level_track_footer_progress: '&7Progreso hacia la siguiente mejora.'
-level_upgrade_tier: '&dSiguiente Rango'
-level_upgrade_next_tier: '&dSiguiente Rango'
-level_upgrade_cost: '&eCosto: &6{COST}'
-level_upgrade_new_buffs_title: '&dNuevos Bonos'
-level_upgrade_click_hint: '&eHacé clic para mejorar si lo podés pagar.'
-level_track_completed_title: '&aRuta Completada'
-level_track_completed_lore_1: '&7Desbloqueaste cada nivel'
-level_track_completed_lore_2: '&7en esta ruta de progresión.'
-level_track_current_title: '&dRuta Actual'
-level_track_current_lore_1: '&7Estos bonos están actualmente'
-level_track_current_lore_2: '&7activos en esta parcela.'
-level_track_locked_title: '&cRuta Bloqueada'
-level_track_locked_lore_1: '&7Las mejoras adicionales en esta ruta'
-level_track_locked_lore_2: '&7están bloqueadas hasta que avances.'
-level_track_next_title: '&dSiguiente Mejora en esta Ruta'
-level_track_next_lore_1: '&7Mejorá para desbloquear los siguientes bonos.'
-level_track_next_lore_2: '&7Costo de mejora: &6{COST}'
-claim_blocks_balance: '&e⛏ Bloques de Parcela: &6{BALANCE}'
-claim_blocks_earned: '&a⛏ Ganaste &6{AMOUNT}&a Bloques de Parcela. &7(Nuevo: &f{BALANCE}&7)'
-claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Parcela. &7(Restante: &f{BALANCE}&7)'
-claim_blocks_insufficient: '&c❌ No hay suficientes Bloques de Parcela. Necesitás &6{AMOUNT}&c más.'
-claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
-claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques de Parcela) &8Saldo: &f{BALANCE}'
-claim_blocks_not_enough: '&c❌ Necesitás {AMOUNT} Bloques de Parcela más.'
-claim_blocks_earned_chat: '&a+{AMOUNT} Bloques de Parcela &7(Nuevo saldo: {BALANCE})'
-claim_blocks_spent_chat: '&e-{AMOUNT} Bloques de Parcela &7(Restante: {BALANCE})'
-claim_blocks_balance_chat: '&eTus Bloques de Parcela: &6{BALANCE}'
+level_gui_title: '&6✦ Ascensión del Dominio ✦'
+level_current_status: '&eEstado del Dominio'
+
+level_header_owner: '&7Dueño: &f{OWNER}'
+level_header_world: '&7Mundo: &f{WORLD}'
+level_header_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
+level_header_multiplier: '&7Multiplicador de costo: &f{MULTIPLIER}'
+
+level_header_growth_title: '&bCrecimiento de Territorio:'
+level_header_growth_line: '&7+&f{AMOUNT} &7de radio por nivel.'
+
+level_current_blessings_name: '&bBendiciones Actuales'
+level_current_blessings_title: '&bBendiciones en Nivel &f{LEVEL}'
+level_current_blessings_footer_1: '&7Solo se muestran los boons más fuertes desbloqueados.'
+level_current_blessings_footer_2: '&8(Para mantener la vista limpia.)'
+
+level_upgrade_unavailable: '&cNo se puede Mejorar'
+level_upgrade_unavailable_lore:
+  - '&7No hay un método de pago disponible.'
+  - '&8Activá Bloques de Parcela o instalá/habilitá Vault.'
+  - ' '
+  - '&cMejora bloqueada.'
+
+level_upgrade_preview_title: '&eVista previa de Ascensión (Nivel {LEVEL})'
+level_upgrade_next_tier: '&eSiguiente rango: &fNivel {LEVEL}'
+
+level_upgrade_cost_money: '&7Dinero: &6{COST} &8({TYPE})'
+level_upgrade_cost_blocks: '&7Bloques: &b{COST} &7(Tenés &b{BALANCE}&7)'
+level_upgrade_cost_money_disabled: '&8Dinero: Deshabilitado/No disponible'
+level_upgrade_cost_blocks_disabled: '&8Bloques: Deshabilitado/No disponible'
+
+level_upgrade_new_buffs_title: '&bNuevas Bendiciones:'
+level_upgrade_territory_title: '&bGanancia de Territorio:'
+level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
+
+level_upgrade_click_hint: '&eHacé clic para ascender a Nivel {LEVEL}'
+
+level_upgrade_button_money: '&6Mejorar con Dinero (Nivel {LEVEL})'
+level_upgrade_button_blocks: '&bMejorar con Bloques (Nivel {LEVEL})'
+
+level_upgrade_button_money_lore:
+  - '&7Pagá usando la economía del servidor.'
+  - '&7Costo: &6{COST} &8({TYPE})'
+  - ' '
+  - '&eClic para mejorar'
+
+level_upgrade_button_blocks_lore:
+  - '&7Gastá tus bloques ganados.'
+  - '&7Costo: &b{COST} Bloques'
+  - '&7Saldo: &b{BALANCE}'
+  - ' '
+  - '&eClic para mejorar'
+
+level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
+
+level_max_reached: '&aNivel Máximo Alcanzado'
+level_max_reached_lore:
+  - '&7Tu dominio llegó a'
+  - '&7su rango más alto.'
+  - ' '
+  - '&aDisfrutá el poder total.'
+
+level_expansion_title: '&aExpansión de Territorio'
+level_expansion_lore:
+  - '&bReglas de Crecimiento:'
+  - '&7Cada mejora expande el'
+  - '&7radio de tu parcela de forma pareja.'
+
+# Track items (slots 19-25)
+level_track_completed_name: '&aNivel {LEVEL} &7(Completado)'
+level_track_current_name: '&eNivel {LEVEL} &7(Actual)'
+level_track_locked_name: '&cNivel {LEVEL} &7(Bloqueado)'
+level_track_next_name: '&dNivel {LEVEL} &7(Siguiente)'
+
+level_track_completed_lore:
+  - '&7Ya desbloqueaste este nivel.'
+  - '&7Costo: &6{COST}'
+
+level_track_current_lore:
+  - '&7Este es tu nivel actual.'
+  - '&7Costo: &6{COST}'
+
+level_track_locked_lore:
+  - '&7Avanzá para desbloquear.'
+  - '&7Costo: &6{COST}'
+
+level_track_next_lore:
+  - '&7Tu próxima mejora.'
+  - '&7Costo: &6{COST}'
+
+level_track_buffs_title: '&bBendiciones:'
+level_track_footer_next: '&eEl siguiente rango te espera.'
+level_track_footer_progress: '&7Avanzá para desbloquear este rango.'
+level_track_footer_mastered: '&aDominado.'

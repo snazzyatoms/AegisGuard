@@ -320,6 +320,15 @@ level_track_next_title: '&dNext Upgrade in this Track'
 level_track_next_lore_1: '&7Upgrade to unlock the next bonuses.'
 level_track_next_lore_2: '&7Cost to advance: &6{COST}'
 
+level_upgrade_cost_blocks: '&7Cost: &b{COST} Blocks &7(You have &b{BALANCE}&7)'
+level_upgrade_cost_blocks_single: '&7Cost: &b{COST} Blocks &7(You have &b{BALANCE}&7)'
+level_upgrade_button_blocks_lore:
+  - '&7Spend your earned blocks.'
+  - '&7Cost: &b{COST} Blocks'
+  - '&7Balance: &b{BALANCE}'
+  - ''
+  - '&eClick to upgrade'
+
 # --------------------------------------
 # Plot Flags GUI (Fixes missing button names + lore)
 # Used by: PlotFlagsGUI.java

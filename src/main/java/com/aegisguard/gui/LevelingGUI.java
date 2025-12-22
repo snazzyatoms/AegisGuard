@@ -21,10 +21,14 @@ import java.util.Map;
 
 /**
  * LevelingGUI
- * - Currency-aware Ascension:
- *   - If Vault (or money economy) is enabled + present -> show "Pay Money" button.
- *   - If Vault is disabled or missing -> fallback to "Spend Blocks" upgrades.
- *   - If both are available -> show both buttons (money + blocks).
+ *
+ * Fix:
+ * - Resolves unreplaced placeholders like "(COST)" and "(BALANCE)" showing in lore.
+ *   Some language packs historically used parentheses placeholders. We now replace:
+ *     {KEY}, (KEY), %KEY%, <KEY>
+ *   for any provided vars map.
+ *
+ * - Also improves block balance display by reading EconomyManager#getBalance when available.
  */
 public class LevelingGUI {
 
@@ -169,8 +173,6 @@ public class LevelingGUI {
                     : calculateBlocksCost(nextLvl);
             boolean blocksAllowed = (blocksType != null && blocksCost > 0);
 
-            // If money is not available, we want to clearly fallback to blocks.
-            // If BOTH are not available, we show a "cannot upgrade" item.
             if (!moneyAllowed && !blocksAllowed) {
                 List<String> noLore = tl(player, "level_upgrade_unavailable_lore", Map.of(), List.of(
                         "&7No upgrade payment method is available.",
@@ -186,7 +188,7 @@ public class LevelingGUI {
                 ));
 
             } else {
-                // --- Preview item (always shown in the middle if we have at least one method) ---
+                // --- Preview item ---
                 List<String> previewLore = new ArrayList<>();
                 previewLore.add(t(player,
                         "level_upgrade_next_tier",
@@ -247,7 +249,7 @@ public class LevelingGUI {
                         previewLore
                 ));
 
-                // --- Buttons: if both available, show two buttons; otherwise one centered button ---
+                // --- Buttons ---
                 if (moneyAllowed && blocksAllowed) {
 
                     // Slot 30: money button
@@ -294,16 +296,14 @@ public class LevelingGUI {
                     ));
 
                 } else {
-                    // Single method mode: put the one available upgrade button in the center (slot 31),
-                    // replacing the preview, but we keep a nice “preview” inside the lore.
-                    boolean useMoney = moneyAllowed; // if moneyAllowed true and blocks not, use money; else blocks.
+                    // Single method mode: put the one available upgrade button in the center (slot 31)
+                    boolean useMoney = moneyAllowed;
 
                     CurrencyType payType = useMoney ? moneyType : blocksType;
                     double payCost = useMoney ? moneyCost : blocksCost;
 
                     List<String> upgradeLore = new ArrayList<>();
 
-                    // Reuse a compact preview inside the button
                     upgradeLore.add(t(player,
                             "level_upgrade_next_tier",
                             vars("level", String.valueOf(nextLvl)),
@@ -424,9 +424,6 @@ public class LevelingGUI {
             return;
         }
 
-        // Upgrade buttons:
-        // - Dual button mode: slot 30 = money, slot 32 = blocks
-        // - Single button mode: slot 31 = whichever is available
         if (e.getCurrentItem().getType() != Material.EXPERIENCE_BOTTLE) return;
 
         Plot plotNow = holder.getPlot();
@@ -451,8 +448,6 @@ public class LevelingGUI {
         boolean clickedBlocks = (slot == 32);
 
         // Single-button mode uses slot 31:
-        // If money is available -> money
-        // else -> blocks
         if (slot == 31) {
             if (moneyAllowed) {
                 clickedMoney = true;
@@ -464,7 +459,6 @@ public class LevelingGUI {
             }
         }
 
-        // Guard: if button exists but method not allowed (stale GUI / config changed)
         if (clickedMoney && !moneyAllowed) {
             plugin.effects().playError(player);
             plugin.msg().send(player, "level_up_fail_cost");
@@ -481,10 +475,7 @@ public class LevelingGUI {
         CurrencyType payType = clickedMoney ? moneyType : blocksType;
         double payCost = clickedMoney ? moneyCost : blocksCost;
 
-        // Withdraw first
         if (!plugin.eco().withdraw(player, payCost, payType)) {
-            // You can make this message key more specific later (money vs blocks),
-            // but this preserves existing behavior safely.
             plugin.msg().send(player, "level_up_fail_cost");
             plugin.effects().playError(player);
             return;
@@ -515,12 +506,13 @@ public class LevelingGUI {
             }
 
             plugin.store().removePlot(plotNow.getOwner(), plotNow.getPlotId());
-            plotNow.setX1(newX1); plotNow.setX2(newX2);
-            plotNow.setZ1(newZ1); plotNow.setZ2(newZ2);
+            plotNow.setX1(newX1);
+            plotNow.setX2(newX2);
+            plotNow.setZ1(newZ1);
+            plotNow.setZ2(newZ2);
             plugin.store().addPlot(plotNow);
         }
 
-        // Level up event + persist
         PlotLevelUpEvent event = new PlotLevelUpEvent(plotNow, player, nextLvl);
         Bukkit.getPluginManager().callEvent(event);
 
@@ -565,7 +557,6 @@ public class LevelingGUI {
 
         String title = t(player, titleKey, vars("level", String.valueOf(level)), "&7Level " + level);
 
-        // Show the *effective* cost (money if available, otherwise blocks fallback)
         CurrencyType moneyType = plugin.cfg().getLevelCostType();
         boolean moneyAllowed = isMoneyUpgradeAvailable(moneyType);
 
@@ -637,28 +628,22 @@ public class LevelingGUI {
     }
 
     private boolean isBlocksUpgradeEnabled() {
-        // If you already have a config key, keep it. This supports a few likely ones.
         if (!plugin.getConfig().getBoolean("leveling.blocks_upgrades_enabled", true)) return false;
         if (!plugin.getConfig().getBoolean("economy.blocks.enabled", true)) return false;
         return true;
     }
 
     private boolean isMoneyUpgradeAvailable(CurrencyType configuredType) {
-        // If config is explicitly disabling Vault-based money upgrades, respect it.
-        // (Supports common key names; you can standardize later.)
         boolean vaultEnabled = plugin.getConfig().getBoolean("economy.vault.enabled",
                 plugin.getConfig().getBoolean("vault.enabled", true));
 
         if (configuredType == null) return false;
 
-        // If it's a Vault-like currency type, require Vault to be present+enabled.
         if (isVaultLike(configuredType)) {
             if (!vaultEnabled) return false;
             return isVaultPresent();
         }
 
-        // For non-vault currencies, assume available (your eco system handles it).
-        // If you want a master economy toggle later, you can add it here.
         return true;
     }
 
@@ -678,13 +663,13 @@ public class LevelingGUI {
 
     private CurrencyType getBlocksTypeOrNull() {
         try {
-            // Prefer the obvious
-            return CurrencyType.valueOf("BLOCKS");
+            // Prefer the canonical name used by EconomyManager.
+            return CurrencyType.valueOf("CLAIM_BLOCKS");
         } catch (Throwable ignored) {}
 
         try {
-            // Common alternative naming
-            return CurrencyType.valueOf("CLAIM_BLOCKS");
+            // Some older/dev builds may have used BLOCKS.
+            return CurrencyType.valueOf("BLOCKS");
         } catch (Throwable ignored) {}
 
         return null;
@@ -695,44 +680,23 @@ public class LevelingGUI {
         return String.valueOf(Math.max(0, v));
     }
 
-    /**
-     * Attempts to display player balance for the currency if your eco supports it.
-     * If not found, returns "?" safely.
-     */
     private String formatBalance(Player p, CurrencyType type) {
-        double bal = tryGetBalance(p, type);
+        double bal = -1;
+        try {
+            // We added getBalance() to EconomyManager to avoid reflection.
+            bal = plugin.eco().getBalance(p, type);
+        } catch (Throwable ignored) {}
+
+        // Hard fallback for claim-block style currencies
+        if (bal < 0 && p != null && type != null) {
+            String n = type.name().toUpperCase();
+            if ((n.equals("CLAIM_BLOCKS") || n.equals("BLOCKS")) && plugin.getClaimBlockManager() != null) {
+                bal = plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId());
+            }
+        }
+
         if (bal < 0) return "?";
         return formatBlocks(bal);
-    }
-
-    private double tryGetBalance(Player p, CurrencyType type) {
-        if (p == null || type == null) return -1;
-        Object eco = null;
-        try { eco = plugin.eco(); } catch (Throwable ignored) {}
-        if (eco == null) return -1;
-
-        // Try common method signatures via reflection:
-        // getBalance(Player, CurrencyType) / balance(Player, CurrencyType)
-        try {
-            var m = eco.getClass().getMethod("getBalance", Player.class, CurrencyType.class);
-            Object out = m.invoke(eco, p, type);
-            return asDouble(out);
-        } catch (Throwable ignored) {}
-
-        try {
-            var m = eco.getClass().getMethod("balance", Player.class, CurrencyType.class);
-            Object out = m.invoke(eco, p, type);
-            return asDouble(out);
-        } catch (Throwable ignored) {}
-
-        return -1;
-    }
-
-    private double asDouble(Object o) {
-        if (o == null) return -1;
-        if (o instanceof Number n) return n.doubleValue();
-        try { return Double.parseDouble(String.valueOf(o)); } catch (Throwable ignored) {}
-        return -1;
     }
 
     private List<String> formatBuffs(int level) {
@@ -761,13 +725,18 @@ public class LevelingGUI {
 
     private String toRoman(int n) {
         return switch (n) {
-            case 1 -> "I"; case 2 -> "II"; case 3 -> "III";
-            case 4 -> "IV"; case 5 -> "V"; default -> String.valueOf(n);
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            default -> String.valueOf(n);
         };
     }
 
     // --------------------------------------------------
     // SAFE LANGUAGE WRAPPERS (prevents raw keys / [Missing])
+    // + Legacy placeholder patching
     // --------------------------------------------------
 
     private String t(Player p, String key, String fallback) {
@@ -783,7 +752,8 @@ public class LevelingGUI {
         try {
             if (plugin.codex() != null) raw = plugin.codex().tr(p, key, (vars == null ? Map.of() : vars));
         } catch (Throwable ignored) {}
-        return GUIManager.safeText(key, raw, fallback);
+        String safe = GUIManager.safeText(key, raw, fallback);
+        return applyVarsCompat(safe, vars);
     }
 
     private List<String> tl(Player p, String key, Map<String, String> vars, List<String> fallback) {
@@ -792,22 +762,53 @@ public class LevelingGUI {
             if (plugin.codex() != null) out = plugin.codex().trList(p, key, (vars == null ? Map.of() : vars));
         } catch (Throwable ignored) {}
 
-        if (out == null || out.isEmpty()) return (fallback == null ? List.of() : fallback);
+        if (out == null || out.isEmpty()) return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
 
         if (out.size() == 1) {
             String one = out.get(0);
-            if (one == null) return (fallback == null ? List.of() : fallback);
+            if (one == null) return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
             String s = one.trim();
             if (s.isEmpty() || s.contains("[Missing") || s.equalsIgnoreCase(key)) {
-                return (fallback == null ? List.of() : fallback);
+                return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
             }
         }
 
+        return applyVarsCompat(out, vars);
+    }
+
+    /**
+     * Supports multiple placeholder styles:
+     *  - {KEY}
+     *  - (KEY)
+     *  - %KEY%
+     *  - <KEY>
+     */
+    private String applyVarsCompat(String s, Map<String, String> vars) {
+        if (s == null || s.isEmpty() || vars == null || vars.isEmpty()) return s;
+        String out = s;
+        for (Map.Entry<String, String> e : vars.entrySet()) {
+            String k = e.getKey();
+            String v = String.valueOf(e.getValue());
+            out = out
+                    .replace("{" + k + "}", v)
+                    .replace("(" + k + ")", v)
+                    .replace("%" + k + "%", v)
+                    .replace("<" + k + ">", v);
+        }
+        return out;
+    }
+
+    private List<String> applyVarsCompat(List<String> lines, Map<String, String> vars) {
+        if (lines == null || lines.isEmpty() || vars == null || vars.isEmpty()) return (lines == null ? List.of() : lines);
+        List<String> out = new ArrayList<>(lines.size());
+        for (String line : lines) {
+            out.add(applyVarsCompat(line, vars));
+        }
         return out;
     }
 
     /**
-     * Build a vars map that supports BOTH {key} and {KEY}.
+     * Build a vars map that supports BOTH lowercase and uppercase keys.
      */
     private Map<String, String> vars(Object... kv) {
         Map<String, String> m = new HashMap<>();
@@ -817,6 +818,11 @@ public class LevelingGUI {
             String k = String.valueOf(kv[i]);
             String v = String.valueOf(kv[i + 1]);
             m.put(k, v);
+            m.put(k.toLowerCase(), v);
+            // Title-case key (Balance), in case a language pack used it.
+            if (!k.isEmpty()) {
+                m.put(Character.toUpperCase(k.charAt(0)) + k.substring(1).toLowerCase(), v);
+            }
             m.put(k.toUpperCase(), v);
         }
         return m;

@@ -21,7 +21,7 @@ expansion_invalid_size: '&c❌ The new size must be larger than the old one.'
 request_expired: '&c❌ This expansion request has expired or no longer exists.'
 expansion_gui_title: '&dExpansion Request'
 expansion_button_back: '&e⟵ Back to Previous Menu'
-expansion_admin_title: '&8Pending Expansion Requests'
+expansion_admin_title: '&#FFD166&lPending Requests'
 expansion_none_title: '&cNo Requests'
 expansion_none_lore:
   - '&7There are no expansion requests right now.'

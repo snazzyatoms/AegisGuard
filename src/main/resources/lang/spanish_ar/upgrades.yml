@@ -1,98 +1,34 @@
-# -------------------------------
-# Leveling / Ascension GUI (v1.2.4 currency-aware)
-# -------------------------------
+# ======================================
+# AegisGuard v1.2.4 - Codex: Español (AR)
+# File: upgrades.yml
+# Organized split: GUIs / System / Upgrades / Expansions
+# Generated: 2025-12-22 07:14:14Z
+# ======================================
 
-level_gui_title: '&6✦ Ascensión del Dominio ✦'
-level_current_status: '&eEstado del Dominio'
-
-level_header_owner: '&7Dueño: &f{OWNER}'
-level_header_world: '&7Mundo: &f{WORLD}'
-level_header_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
-level_header_multiplier: '&7Multiplicador de costo: &f{MULTIPLIER}'
-
-level_header_growth_title: '&bCrecimiento de Territorio:'
-level_header_growth_line: '&7+&f{AMOUNT} &7de radio por nivel.'
-
-level_current_blessings_name: '&bBendiciones Actuales'
-level_current_blessings_title: '&bBendiciones en Nivel &f{LEVEL}'
-level_current_blessings_footer_1: '&7Solo se muestran los boons más fuertes desbloqueados.'
-level_current_blessings_footer_2: '&8(Para mantener la vista limpia.)'
-
-level_upgrade_unavailable: '&cNo se puede Mejorar'
-level_upgrade_unavailable_lore:
-  - '&7No hay un método de pago disponible.'
-  - '&8Activá Bloques de Parcela o instalá/habilitá Vault.'
-  - ' '
-  - '&cMejora bloqueada.'
-
-level_upgrade_preview_title: '&eVista previa de Ascensión (Nivel {LEVEL})'
-level_upgrade_next_tier: '&eSiguiente rango: &fNivel {LEVEL}'
-
-level_upgrade_cost_money: '&7Dinero: &6{COST} &8({TYPE})'
-level_upgrade_cost_blocks: '&7Bloques: &b{COST} &7(Tenés &b{BALANCE}&7)'
-level_upgrade_cost_money_disabled: '&8Dinero: Deshabilitado/No disponible'
-level_upgrade_cost_blocks_disabled: '&8Bloques: Deshabilitado/No disponible'
-
-level_upgrade_new_buffs_title: '&bNuevas Bendiciones:'
-level_upgrade_territory_title: '&bGanancia de Territorio:'
-level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
-
-level_upgrade_click_hint: '&eHacé clic para ascender a Nivel {LEVEL}'
-
-level_upgrade_button_money: '&6Mejorar con Dinero (Nivel {LEVEL})'
-level_upgrade_button_blocks: '&bMejorar con Bloques (Nivel {LEVEL})'
-
-level_upgrade_button_money_lore:
-  - '&7Pagá usando la economía del servidor.'
-  - '&7Costo: &6{COST} &8({TYPE})'
-  - ' '
-  - '&eClic para mejorar'
-
-level_upgrade_button_blocks_lore:
-  - '&7Gastá tus bloques ganados.'
-  - '&7Costo: &b{COST} Bloques'
-  - '&7Saldo: &b{BALANCE}'
-  - ' '
-  - '&eClic para mejorar'
-
-level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
-
-level_max_reached: '&aNivel Máximo Alcanzado'
-level_max_reached_lore:
-  - '&7Tu dominio llegó a'
-  - '&7su rango más alto.'
-  - ' '
-  - '&aDisfrutá el poder total.'
-
-level_expansion_title: '&aExpansión de Territorio'
-level_expansion_lore:
-  - '&bReglas de Crecimiento:'
-  - '&7Cada mejora expande el'
-  - '&7radio de tu parcela de forma pareja.'
-
-# Track items (slots 19-25)
-level_track_completed_name: '&aNivel {LEVEL} &7(Completado)'
-level_track_current_name: '&eNivel {LEVEL} &7(Actual)'
-level_track_locked_name: '&cNivel {LEVEL} &7(Bloqueado)'
-level_track_next_name: '&dNivel {LEVEL} &7(Siguiente)'
-
-level_track_completed_lore:
-  - '&7Ya desbloqueaste este nivel.'
-  - '&7Costo: &6{COST}'
-
-level_track_current_lore:
-  - '&7Este es tu nivel actual.'
-  - '&7Costo: &6{COST}'
-
-level_track_locked_lore:
-  - '&7Avanzá para desbloquear.'
-  - '&7Costo: &6{COST}'
-
-level_track_next_lore:
-  - '&7Tu próxima mejora.'
-  - '&7Costo: &6{COST}'
-
-level_track_buffs_title: '&bBendiciones:'
-level_track_footer_next: '&eEl siguiente rango te espera.'
-level_track_footer_progress: '&7Avanzá para desbloquear este rango.'
-level_track_footer_mastered: '&aDominado.'
+claim_blocks_name: '&bBloques de Parcela de Platino'
+claim_blocks_disabled: '&cLos Bloques de Parcela están deshabilitados en este servidor.'
+claim_blocks_not_enough: '&c❌ Te faltan &e{AMOUNT}&c Bloques de Parcela.'
+claim_blocks_first_claim_limit: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
+first_claim_limit_exceeded: '&c❌ Límite de primera parcela: área máxima &6{MAX}&c.'
+claim_blocks_earned_playtime: '&a✦ Por jugar, ganaste &b+{AMOUNT}&a Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_earned_levelup: '&d✦ Recompensa de Ascensión: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_received_starter: '&b✦ Registro inicial: &a+{AMOUNT}&b Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Bono otorgado: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Compra completada: &b+{AMOUNT}&6 Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_spent: '&e✦ Gastaste: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Costo del reclamo: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_resize: '&e✦ Costo del redimensionado: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Costo de Ascensión: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Reembolsado: &a+{AMOUNT}&e Bloques de Parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Parcela. &7Necesitás: &e{NEEDED}&7 | Tenés: &a{AVAILABLE}&7.'
+claim_blocks_cost_preview: '&7Costo del reclamo: &6{COST}&7 bloques.'
+blocks_ledger_title: '&6&lRegistro de Terreno &7({PLAYER})'
+blocks_ledger_total: '&7Capacidad total: &e{TOTAL}'
+blocks_ledger_used: '&7Terreno usado: &c{USED}'
+blocks_ledger_available: '&7Disponible: &a{AVAILABLE}'
+level_up_success: '&d⚡ ¡Tu parcela ha subido a Nivel &f{LEVEL}&d!'
+level_up_fail_cost: '&c❌ No tienes suficiente moneda para mejorar.'
+claim_blocks_balance: '&e⛏ Bloques de parcela: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Has ganado &6{AMOUNT}&a Bloques. &7(Nuevo: &f{BALANCE}&7)'
+claim_blocks_spent_simple: '&e⛏ Has gastado &6{AMOUNT}&e Bloques. &7(Restante: &f{BALANCE}&7)'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Bloques) &8Saldo: &f{BALANCE}'

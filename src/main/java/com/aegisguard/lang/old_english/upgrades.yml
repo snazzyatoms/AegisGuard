@@ -1,17 +1,30 @@
-# AegisGuard Codex Language Pack (split files)
-# Language: old_english
-# Section: upgrades.yml
-# Generated: 2025-12-16 23:08:56Z
-# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
-level_header_owner: '&dLord / Lady:&f {owner}'
-level_header_world: '&dRealm:&f {world}'
-level_header_level: '&dDominion Rank:&f {level}'
-level_header_multiplier: '&dBlessing Multiplier:&f {multiplier}x'
-level_up_success: '&d⚡ Lo, thy holding hath risen unto Level &f{LEVEL}&d!'
-level_up_fail_cost: '&c❌ Thy treasury is wanting; this rite of ascension must await fuller coffers.'
-claim_blocks_balance: '&e⛏ Thy Claim Blocks: &6{BALANCE}'
-claim_blocks_earned: '&a⛏ Thou hast earned &6{AMOUNT}&a Claim Blocks. &7(Now: &f{BALANCE}&7)'
-claim_blocks_spent: '&e⛏ Thou hast spent &6{AMOUNT}&e Claim Blocks. &7(Remaining: &f{BALANCE}&7)'
-claim_blocks_insufficient: '&c❌ Thou lackest Claim Blocks! Need &6{AMOUNT}&c more.'
-claim_blocks_first_claim_limit: '&c❌ Thy first dominion is bound by decree: max area &6{MAX}&c.'
+# ======================================
+# AegisGuard v1.2.4 - Codex: Modern English
+# File: upgrades.yml
+# ======================================
+
+level_up_success: '&d⚡ Your claim has been upgraded to Level &f{LEVEL}&d!'
+level_up_fail_cost: '&c❌ You do not have enough currency to upgrade.'
+claim_blocks_name: '&bClaim Blocks'
+claim_blocks_disabled: '&cClaim Blocks are disabled on this server.'
+claim_blocks_balance: '&e⛏ Claim Blocks: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Earned &6{AMOUNT}&a Claim Blocks. &7(New: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Spent &6{AMOUNT}&e Claim Blocks. &7(Left: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Not enough Claim Blocks. &7Needed: &e{NEEDED}&7 | Available: &a{AVAILABLE}&7.'
+claim_blocks_first_claim_limit: '&c❌ First claim limit: max area &6{MAX}&c.'
 claim_blocks_earn_notify: '&7(+{AMOUNT} Claim Blocks) &8Balance: &f{BALANCE}'
+claim_blocks_earned_playtime: '&a✦ Playtime Reward: &b+{AMOUNT}&a Claim Blocks! &7Total: &e{TOTAL}&7.'
+claim_blocks_earned_levelup: '&d✦ Level-Up Reward: &b+{AMOUNT}&d Claim Blocks! &7Total: &e{TOTAL}&7.'
+claim_blocks_received_starter: '&b✦ Starter Ledger: &a+{AMOUNT}&b Claim Blocks granted. &7Total: &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Bonus Granted: &b+{AMOUNT}&d Claim Blocks. &7Total: &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Purchase Complete: &b+{AMOUNT}&6 Claim Blocks. &7Total: &e{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Claim Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_spent_resize: '&e✦ Resize Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Level-Up Cost: &c-{AMOUNT}&e Claim Blocks. &7Remaining: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Refunded: &a+{AMOUNT}&e Claim Blocks. &7Total: &e{TOTAL}&7.'
+claim_blocks_cost_preview: '&7Claim Cost: &6{COST}&7 blocks.'
+first_claim_limit_exceeded: '&c❌ First claim limit exceeded. &7Max allowed: &e{MAX}&7 blocks.'
+blocks_ledger_title: '&6&lLand Ledger &7({PLAYER})'
+blocks_ledger_total: '&7Total Capacity: &e{TOTAL}'
+blocks_ledger_used: '&7Used Land: &c{USED}'
+blocks_ledger_available: '&7Available: &a{AVAILABLE}'

@@ -33,9 +33,25 @@ public class AGConfig {
     private boolean bluemapEnabled;
     private boolean pl3xmapEnabled;
 
-    // --- NEW: Leveling Expansion Toggle ---
+    // --- Leveling Expansion Toggle ---
     private boolean levelingExpansionEnabled;
     private int levelingExpansionAmount;
+
+    // --- Leveling Payment Routing (Vault vs Claim Blocks) ---
+    private boolean allowLevelVaultPayment;
+    private boolean allowLevelBlockPayment;
+    private boolean fallbackToBlocksIfVaultUnavailable;
+
+    // --- Claim Blocks (1.2.4+) ---
+    private boolean claimBlocksEnabled;
+    private long claimBlocksStarterAmount;
+
+    private boolean claimBlocksPlaytimeEnabled;
+    private long claimBlocksPlaytimeIntervalMinutes;
+    private long claimBlocksPlaytimeAmount;
+
+    private boolean firstClaimLimitEnabled;
+    private long firstClaimLimitMaxArea;
 
     // Protections Cache
     private boolean pvpDefault;
@@ -74,8 +90,22 @@ public class AGConfig {
         config.addDefault("leveling.upgrades.allow_block_payment", true);
         config.addDefault("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
 
-        // Claim blocks default toggle (if missing)
+        // -------------------------------
+        // Claim Blocks Defaults (NEW)
+        // -------------------------------
         config.addDefault("claim_blocks.enabled", true);
+
+        // starter ledger (optional)
+        config.addDefault("claim_blocks.starter_amount", 0L);
+
+        // playtime earn (used by ClaimBlockTask)
+        config.addDefault("claim_blocks.earn.playtime.enabled", true);
+        config.addDefault("claim_blocks.earn.playtime.interval_minutes", 10L);
+        config.addDefault("claim_blocks.earn.playtime.amount", 1L);
+
+        // first claim limiter (optional, but your lang pack includes it)
+        config.addDefault("claim_blocks.first_claim_limit.enabled", true);
+        config.addDefault("claim_blocks.first_claim_limit.max_area", 2500L); // 50x50 default cap
 
         config.options().copyDefaults(true);
         plugin.saveConfig();
@@ -100,6 +130,22 @@ public class AGConfig {
         // --- Leveling Expansion Settings ---
         this.levelingExpansionEnabled = config.getBoolean("leveling.expand_plot_on_levelup", false);
         this.levelingExpansionAmount = config.getInt("leveling.expansion_amount", 5);
+
+        // --- Leveling Payment Routing ---
+        this.allowLevelVaultPayment = config.getBoolean("leveling.upgrades.allow_vault_payment", true);
+        this.allowLevelBlockPayment = config.getBoolean("leveling.upgrades.allow_block_payment", true);
+        this.fallbackToBlocksIfVaultUnavailable = config.getBoolean("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
+
+        // --- Claim Blocks Cache ---
+        this.claimBlocksEnabled = config.getBoolean("claim_blocks.enabled", true);
+        this.claimBlocksStarterAmount = Math.max(0L, config.getLong("claim_blocks.starter_amount", 0L));
+
+        this.claimBlocksPlaytimeEnabled = config.getBoolean("claim_blocks.earn.playtime.enabled", true);
+        this.claimBlocksPlaytimeIntervalMinutes = Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
+        this.claimBlocksPlaytimeAmount = Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
+
+        this.firstClaimLimitEnabled = config.getBoolean("claim_blocks.first_claim_limit.enabled", true);
+        this.firstClaimLimitMaxArea = Math.max(0L, config.getLong("claim_blocks.first_claim_limit.max_area", 2500L));
 
         // Protections
         this.pvpDefault = config.getBoolean("protections.pvp_protection", true);
@@ -165,19 +211,47 @@ public class AGConfig {
     // --- Level upgrade payment routing (Vault vs Claim Blocks) ---
 
     public boolean allowLevelVaultPayment() {
-        return config.getBoolean("leveling.upgrades.allow_vault_payment", true);
+        return allowLevelVaultPayment;
     }
 
     public boolean allowLevelBlockPayment() {
-        return config.getBoolean("leveling.upgrades.allow_block_payment", true);
+        return allowLevelBlockPayment;
     }
 
     public boolean fallbackToBlocksIfVaultUnavailable() {
-        return config.getBoolean("leveling.upgrades.fallback_to_blocks_if_vault_unavailable", true);
+        return fallbackToBlocksIfVaultUnavailable;
     }
 
+    // ======================================
+    // --- Claim Blocks (1.2.4+) ---
+    // ======================================
+
     public boolean isClaimBlocksEnabled() {
-        return config.getBoolean("claim_blocks.enabled", true);
+        return claimBlocksEnabled;
+    }
+
+    public long getClaimBlocksStarterAmount() {
+        return claimBlocksStarterAmount;
+    }
+
+    public boolean isClaimBlocksPlaytimeEnabled() {
+        return claimBlocksPlaytimeEnabled;
+    }
+
+    public long getClaimBlocksPlaytimeIntervalMinutes() {
+        return claimBlocksPlaytimeIntervalMinutes;
+    }
+
+    public long getClaimBlocksPlaytimeAmount() {
+        return claimBlocksPlaytimeAmount;
+    }
+
+    public boolean isFirstClaimLimitEnabled() {
+        return firstClaimLimitEnabled;
+    }
+
+    public long getFirstClaimLimitMaxArea() {
+        return firstClaimLimitMaxArea;
     }
 
     /**

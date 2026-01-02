@@ -274,7 +274,7 @@ claim_blocks:
       enabled: true
       per_level: 600
 
-      # ============================================================================
+        # ============================================================================
   # 💱 CLAIMBLOCKS EXCHANGE (NEW v1.2.5)
   # ============================================================================
   # Allows players to BUY/SELL ClaimBlocks using money (Vault).
@@ -286,6 +286,8 @@ claim_blocks:
   # - Fees (money sink)
   # - Sell Lock (minimum hold time before selling)
   # - Optional cap on how many blocks can be locked at once
+  # - Optional permission gate for selling
+  # - Optional worlds allowlist
   #
   # Requires:
   # - economy.use_vault = true
@@ -309,6 +311,18 @@ claim_blocks:
     # If sell price is too close to buy price, buy->sell loops get tempting.
     # 0.0 = no guardrail, 25.0 = recommend at least 25% spread.
     min_spread_percent: 25.0
+
+    # Optional permission gate for selling ClaimBlocks
+    sell_requires_permission:
+      enabled: false
+      permission: "aegis.claimblocks.sell"
+
+    # Restrict exchange usage to specific worlds (optional)
+    worlds_allowed:
+      enabled: false
+      worlds:
+        - world
+        - world_nether
 
     # --------------------------------------------------------------------------
     # CUSTOM SETTINGS (used ONLY when profile: custom)
@@ -337,38 +351,18 @@ claim_blocks:
 
     buy:
       enabled: true
-
-      # Money cost per 1 ClaimBlock purchased
       price_per_block: 10.0
-
-      # Fee applied on top of the total purchase cost (money sink)
-      # Example: 2.5 = +2.5% added to the purchase total
       fee_percent: 2.5
-
-      # Trade limits
       min_per_tx: 1
       max_per_tx: 5000
-
-      # Daily cap (ClaimBlocks) per player for buying
-      # 0 = unlimited
       daily_cap: 25000
 
     sell:
       enabled: true
-
-      # Money received per 1 ClaimBlock sold
       price_per_block: 6.0
-
-      # Fee applied to the total sale value (money sink)
-      # Example: 5.0 = player loses 5% of the sale value
       fee_percent: 5.0
-
-      # Trade limits
       min_per_tx: 1
       max_per_tx: 5000
-
-      # Daily cap (ClaimBlocks) per player for selling
-      # 0 = unlimited
       daily_cap: 15000
 
     # --------------------------------------------------------------------------
@@ -458,6 +452,7 @@ claim_blocks:
           min_per_tx: 1
           max_per_tx: 10000
           daily_cap: 75000
+
 
 
 

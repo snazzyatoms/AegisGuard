@@ -5,6 +5,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -33,7 +34,7 @@ public class VaultHook implements Listener {
 
         // Initial Attempt
         setupEconomy();
-        
+
         // Listen for late-loading plugins
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -99,6 +100,17 @@ public class VaultHook implements Listener {
         return economy.getBalance(p);
     }
 
+    // ✅ NEW (compat): helps GUI/balance reflection that expects Player signatures
+    public double balance(Player p) {
+        if (p == null) return 0.0;
+        return balance((OfflinePlayer) p);
+    }
+
+    // ✅ NEW (compat): common method name
+    public double getBalance(Player p) {
+        return balance(p);
+    }
+
     /**
      * Checks if a player has money (without taking it).
      */
@@ -137,5 +149,17 @@ public class VaultHook implements Listener {
         if (!res.transactionSuccess()) {
             plugin.getLogger().warning("[Vault] Deposit failed for " + p.getName() + ": " + res.errorMessage);
         }
+    }
+
+    // ✅ NEW: boolean deposit helper (exchange can use this for better safety)
+    public boolean deposit(OfflinePlayer p, double amount) {
+        if (economy == null) return false;
+        if (amount <= 0 || !Double.isFinite(amount)) return false;
+
+        EconomyResponse res = economy.depositPlayer(p, amount);
+        if (!res.transactionSuccess()) {
+            plugin.getLogger().warning("[Vault] Deposit failed for " + p.getName() + ": " + res.errorMessage);
+        }
+        return res.transactionSuccess();
     }
 }

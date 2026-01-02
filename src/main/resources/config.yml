@@ -274,6 +274,64 @@ claim_blocks:
       enabled: true
       per_level: 600
 
+  # ============================================================================
+  # 💱 CLAIMBLOCKS EXCHANGE (NEW v1.2.5)
+  # ============================================================================
+  # Allows players to BUY/SELL ClaimBlocks using money (Vault).
+  #
+  # Notes:
+  # - Requires: economy.use_vault = true AND economy.vault.enabled = true AND Vault installed.
+  # - All anti-abuse protections are configurable below.
+  # ============================================================================
+  exchange:
+    enabled: true
+
+    # Prevents rapid buy/sell spam (also helps reduce abuse loops)
+    cooldown_seconds: 10
+
+    # Optional safety guardrail for server owners:
+    # If sell_price is too close to buy_price, it becomes easy to exploit via loops.
+    # This value is informational unless you enforce it in code.
+    # Example: 25.0 means you want at least a 25% spread between buy and sell.
+    min_spread_percent: 0.0
+
+    buy:
+      enabled: true
+
+      # Money cost per 1 ClaimBlock purchased
+      price_per_block: 10.0
+
+      # Fee applied on top of the total purchase cost (money sink)
+      # Example: 2.5 = +2.5% added to the purchase total
+      fee_percent: 2.5
+
+      # Trade limits
+      min_per_tx: 1
+      max_per_tx: 5000
+
+      # Daily cap (ClaimBlocks) per player for buying
+      # 0 = unlimited
+      daily_cap: 25000
+
+    sell:
+      enabled: true
+
+      # Money received per 1 ClaimBlock sold
+      price_per_block: 6.0
+
+      # Fee applied to the total sale value (money sink)
+      # Example: 5.0 = player loses 5% of the sale value
+      fee_percent: 5.0
+
+      # Trade limits
+      min_per_tx: 1
+      max_per_tx: 5000
+
+      # Daily cap (ClaimBlocks) per player for selling
+      # 0 = unlimited
+      daily_cap: 15000
+
+
 
 # ==============================================================================
 # 📐 LAND EXPANSIONS (REQUESTS)

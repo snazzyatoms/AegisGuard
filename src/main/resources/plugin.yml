@@ -51,9 +51,19 @@ permissions:
     children:
       aegis.user: true
       aegis.admin: true
+
+      # ClaimBlocks Exchange (all)
       aegis.claimblocks.exchange: true
+      aegis.claimblocks.buy: true
       aegis.claimblocks.sell: true
+      aegis.claimblocks.exchange.bypass: true
+      aegis.claimblocks.selllock.bypass: true
+
+      # Backward compat node (older configs/servers)
       aegisguard.claimblocks.selllock.bypass: true
+
+      # ClaimBlocks earning
+      aegis.earn.blocks: true
 
   aegis.user:
     description: Recommended permissions for default players.
@@ -77,8 +87,12 @@ permissions:
       aegis.visit: true
       aegis.ledger: true
 
-      # ClaimBlocks Exchange
+      # ClaimBlocks earning (playtime task checks this)
+      aegis.earn.blocks: true
+
+      # ClaimBlocks Exchange (player-facing)
       aegis.claimblocks.exchange: true
+      aegis.claimblocks.buy: true
       aegis.claimblocks.sell: true
 
       # Features
@@ -90,6 +104,7 @@ permissions:
       aegis.level: true
       aegis.biome: true
       aegis.like: true
+
       # Moderation (owner tools)
       aegis.kick: true
       aegis.ban: true
@@ -109,7 +124,11 @@ permissions:
       aegis.convert: true
       aegis.admin.wand: true
 
-      # ClaimBlocks Exchange Admin
+      # ClaimBlocks Exchange Admin / bypass
+      aegis.claimblocks.exchange.bypass: true
+      aegis.claimblocks.selllock.bypass: true
+
+      # Backward compat (keep OPs safe if they used old node)
       aegisguard.claimblocks.selllock.bypass: true
 
   # --- CORE PERMISSIONS ---
@@ -152,6 +171,33 @@ permissions:
   aegis.ledger:
     description: View your claim block ledger (/aegis ledger or /aegis blocks).
     default: true
+
+  # --- CLAIMBLOCKS (EARNING) ---
+  aegis.earn.blocks:
+    description: Earn claim blocks via playtime rewards.
+    default: true
+
+  # --- CLAIMBLOCKS EXCHANGE ---
+  aegis.claimblocks.exchange:
+    description: Access the ClaimBlocks exchange (view/use exchange features).
+    default: true
+  aegis.claimblocks.buy:
+    description: Buy ClaimBlocks using Vault money.
+    default: true
+  aegis.claimblocks.sell:
+    description: Sell ClaimBlocks for Vault money (if sell gate enabled).
+    default: true
+  aegis.claimblocks.exchange.bypass:
+    description: Bypass exchange cooldowns, hourly limits, and daily caps.
+    default: op
+  aegis.claimblocks.selllock.bypass:
+    description: Bypass the ClaimBlocks sell lock hold timer.
+    default: op
+
+  # Backward compatibility (older node name)
+  aegisguard.claimblocks.selllock.bypass:
+    description: (Compat) Bypass the ClaimBlocks sell lock hold timer.
+    default: op
 
   # --- IDENTITY & SOCIAL ---
   aegis.welcome:
@@ -205,17 +251,6 @@ permissions:
   aegis.auction:
     description: View auction house.
     default: true
-
-  # --- CLAIMBLOCKS EXCHANGE ---
-  aegis.claimblocks.exchange:
-    description: Use the ClaimBlocks exchange (buy/sell) features.
-    default: true
-  aegis.claimblocks.sell:
-    description: Sell ClaimBlocks for money (if exchange sell gate is enabled).
-    default: true
-  aegisguard.claimblocks.selllock.bypass:
-    description: Bypass the ClaimBlocks sell lock hold timer.
-    default: op
 
   # --- ADMIN NODES ---
   aegis.reload:

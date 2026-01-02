@@ -1,6 +1,7 @@
 package com.aegisguard.commands;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.data.Plot;
 import com.aegisguard.selection.SelectionService;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class AegisCommand implements CommandExecutor, TabCompleter {
 
     private final AegisGuard plugin;
+    private final ClaimBlockExchangeService exchange;
 
     private static final String[] SUB_COMMANDS = {
             "wand", "menu", "claim", "unclaim", "resize", "help",
@@ -48,6 +50,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
+        this.exchange = new ClaimBlockExchangeService(plugin);
     }
 
     // --------------------------------------------------
@@ -208,7 +211,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "consume" -> plugin.selection().manualConsumeWand(p);
 
-            case "ledger", "blocks" -> showLedger(p);
+            case "ledger" -> showLedger(p);
+
+            case "blocks" -> handleBlocks(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -433,6 +438,96 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         sendKey(p, "blocks_ledger_available", "&7Available: &a{AVAILABLE}",
                 Map.of("AVAILABLE", String.valueOf(avail)));
         sendMsg(p, "&8&m------------------------");
+    }
+
+    // --------------------------------------------------
+    // ClaimBlocks Exchange (/ag blocks ...)
+    // --------------------------------------------------
+
+    private void handleBlocks(Player p, String[] args) {
+        // /ag blocks
+        if (args.length == 1) {
+            showLedger(p);
+            return;
+        }
+
+        String sub = args[1].toLowerCase(Locale.ROOT);
+
+        switch (sub) {
+            case "help" -> {
+                sendMsg(p, "&8&m------------------------");
+                sendMsg(p, "&6&lClaimBlocks Exchange");
+                sendMsg(p, "&e/ag blocks &7- show your ledger");
+                sendMsg(p, "&e/ag blocks rates &7- view buy/sell rates");
+                sendMsg(p, "&e/ag blocks buy <amount> &7- buy claimblocks");
+                sendMsg(p, "&e/ag blocks sell <amount> &7- sell claimblocks");
+                sendMsg(p, "&8&m------------------------");
+            }
+
+            case "rates", "rate", "prices", "price" -> {
+                List<String> lines = exchange.getRatesLines(p);
+                for (String line : lines) sendMsg(p, line);
+            }
+
+            case "buy" -> {
+                if (args.length < 3) {
+                    sendKey(p, "blocks_buy_usage", "&cUsage: /ag blocks buy <amount>");
+                    return;
+                }
+                long amount = parsePositiveLong(args[2]);
+                if (amount <= 0) {
+                    sendKey(p, "blocks_amount_positive", "&cAmount must be a positive number.");
+                    return;
+                }
+
+                ClaimBlockExchangeService.ExchangeResult res = exchange.buy(p, amount);
+                if (!res.success()) {
+                    sendMsg(p, res.message());
+                    plugin.effects().playError(p);
+                    return;
+                }
+
+                sendMsg(p, res.message());
+                plugin.effects().playConfirm(p);
+            }
+
+            case "sell" -> {
+                if (args.length < 3) {
+                    sendKey(p, "blocks_sell_usage", "&cUsage: /ag blocks sell <amount>");
+                    return;
+                }
+                long amount = parsePositiveLong(args[2]);
+                if (amount <= 0) {
+                    sendKey(p, "blocks_amount_positive", "&cAmount must be a positive number.");
+                    return;
+                }
+
+                ClaimBlockExchangeService.ExchangeResult res = exchange.sell(p, amount);
+                if (!res.success()) {
+                    sendMsg(p, res.message());
+                    plugin.effects().playError(p);
+                    return;
+                }
+
+                sendMsg(p, res.message());
+                plugin.effects().playConfirm(p);
+            }
+
+            default -> {
+                // If someone typed something else, show ledger + hint
+                showLedger(p);
+                sendMsg(p, "&7Tip: &e/ag blocks help &7for exchange commands.");
+            }
+        }
+    }
+
+    private long parsePositiveLong(String s) {
+        try {
+            long v = Long.parseLong(s);
+            return v > 0 ? v : -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     // --------------------------------------------------
@@ -914,6 +1009,22 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 StringUtil.copyPartialMatches(args[1], modes, completions);
                 Collections.sort(completions);
                 return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("blocks")) {
+                List<String> completions = new ArrayList<>();
+                List<String> subs = Arrays.asList("rates", "buy", "sell", "help");
+                StringUtil.copyPartialMatches(args[1], subs, completions);
+                Collections.sort(completions);
+                return completions;
+            }
+        }
+
+        if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("blocks")) {
+                if (args[1].equalsIgnoreCase("buy") || args[1].equalsIgnoreCase("sell")) {
+                    return Arrays.asList("1", "10", "64", "100", "500", "1000");
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.2.4
+version: 1.2.5
 api-version: "1.20"
 prefix: AegisGuard
 description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
@@ -51,6 +51,9 @@ permissions:
     children:
       aegis.user: true
       aegis.admin: true
+      aegis.claimblocks.exchange: true
+      aegis.claimblocks.sell: true
+      aegisguard.claimblocks.selllock.bypass: true
 
   aegis.user:
     description: Recommended permissions for default players.
@@ -73,6 +76,11 @@ permissions:
       aegis.stuck: true
       aegis.visit: true
       aegis.ledger: true
+
+      # ClaimBlocks Exchange
+      aegis.claimblocks.exchange: true
+      aegis.claimblocks.sell: true
+
       # Features
       aegis.market: true
       aegis.sell: true
@@ -100,6 +108,9 @@ permissions:
       aegis.delwarp: true
       aegis.convert: true
       aegis.admin.wand: true
+
+      # ClaimBlocks Exchange Admin
+      aegisguard.claimblocks.selllock.bypass: true
 
   # --- CORE PERMISSIONS ---
   aegis.use:
@@ -194,6 +205,17 @@ permissions:
   aegis.auction:
     description: View auction house.
     default: true
+
+  # --- CLAIMBLOCKS EXCHANGE ---
+  aegis.claimblocks.exchange:
+    description: Use the ClaimBlocks exchange (buy/sell) features.
+    default: true
+  aegis.claimblocks.sell:
+    description: Sell ClaimBlocks for money (if exchange sell gate is enabled).
+    default: true
+  aegisguard.claimblocks.selllock.bypass:
+    description: Bypass the ClaimBlocks sell lock hold timer.
+    default: op
 
   # --- ADMIN NODES ---
   aegis.reload:

@@ -274,7 +274,7 @@ claim_blocks:
       enabled: true
       per_level: 600
 
-    # ============================================================================
+      # ============================================================================
   # 💱 CLAIMBLOCKS EXCHANGE (NEW v1.2.5)
   # ============================================================================
   # Allows players to BUY/SELL ClaimBlocks using money (Vault).
@@ -284,12 +284,19 @@ claim_blocks:
   # - Per-transaction limits
   # - Daily caps
   # - Fees (money sink)
+  # - Sell Lock (minimum hold time before selling)
+  # - Optional cap on how many blocks can be locked at once
   #
-  # Presets:
-  # - safe_small     = safest defaults for small servers
-  # - balanced_mid   = balanced for most servers (recommended for medium)
+  # Requires:
+  # - economy.use_vault = true
+  # - economy.vault.enabled = true
+  # - Vault installed + an Economy provider (EssentialsX, CMI, etc.)
+  #
+  # Profiles:
+  # - safe_small     = safest defaults for small/new servers
+  # - balanced_mid   = balanced for most servers
   # - fast_large     = higher throughput for large servers
-  # - custom         = use the manual values below (buy/sell + cooldown)
+  # - custom         = use the manual values in this section (cooldown/buy/sell/sell_lock)
   # ============================================================================
   exchange:
     enabled: true
@@ -299,7 +306,7 @@ claim_blocks:
     profile: safe_small
 
     # Optional guardrail for admins:
-    # If sell price is too close to buy price, loops get tempting.
+    # If sell price is too close to buy price, buy->sell loops get tempting.
     # 0.0 = no guardrail, 25.0 = recommend at least 25% spread.
     min_spread_percent: 25.0
 
@@ -308,20 +315,60 @@ claim_blocks:
     # --------------------------------------------------------------------------
     cooldown_seconds: 10
 
+    # Prevents instant flipping (buy -> sell) by requiring a hold time.
+    # Recommended: EXCHANGE_PURCHASED_ONLY so earned ClaimBlocks aren't punished.
+    sell_lock:
+      enabled: true
+
+      # How long ClaimBlocks must be held before they can be sold (in minutes)
+      hold_minutes: 30
+
+      # Which ClaimBlocks are restricted:
+      # EXCHANGE_PURCHASED_ONLY | ALL
+      scope: EXCHANGE_PURCHASED_ONLY
+
+      # Optional cap: only this many blocks can be "locked" at once.
+      # 0 = unlimited (strictest, safest)
+      # Example: 25000 = only the most recent 25k locked blocks are subject to hold time
+      max_locked_blocks: 0
+
+      # Permission that bypasses the sell lock (admins/staff)
+      bypass_permission: "aegisguard.claimblocks.selllock.bypass"
+
     buy:
       enabled: true
+
+      # Money cost per 1 ClaimBlock purchased
       price_per_block: 10.0
+
+      # Fee applied on top of the total purchase cost (money sink)
+      # Example: 2.5 = +2.5% added to the purchase total
       fee_percent: 2.5
+
+      # Trade limits
       min_per_tx: 1
       max_per_tx: 5000
+
+      # Daily cap (ClaimBlocks) per player for buying
+      # 0 = unlimited
       daily_cap: 25000
 
     sell:
       enabled: true
+
+      # Money received per 1 ClaimBlock sold
       price_per_block: 6.0
+
+      # Fee applied to the total sale value (money sink)
+      # Example: 5.0 = player loses 5% of the sale value
       fee_percent: 5.0
+
+      # Trade limits
       min_per_tx: 1
       max_per_tx: 5000
+
+      # Daily cap (ClaimBlocks) per player for selling
+      # 0 = unlimited
       daily_cap: 15000
 
     # --------------------------------------------------------------------------
@@ -330,9 +377,17 @@ claim_blocks:
     profiles:
 
       # ✅ Safest option for small/new servers.
-      # Lower caps, higher cooldown, heavier sell fee.
+      # Lower caps, higher cooldown, heavier sell fee, longer sell lock.
       safe_small:
         cooldown_seconds: 15
+
+        sell_lock:
+          enabled: true
+          hold_minutes: 60
+          scope: EXCHANGE_PURCHASED_ONLY
+          max_locked_blocks: 0
+          bypass_permission: "aegisguard.claimblocks.selllock.bypass"
+
         buy:
           enabled: true
           price_per_block: 12.0
@@ -340,6 +395,7 @@ claim_blocks:
           min_per_tx: 1
           max_per_tx: 2000
           daily_cap: 5000
+
         sell:
           enabled: true
           price_per_block: 6.0
@@ -351,6 +407,14 @@ claim_blocks:
       # ✅ Recommended “default” for most servers.
       balanced_mid:
         cooldown_seconds: 10
+
+        sell_lock:
+          enabled: true
+          hold_minutes: 30
+          scope: EXCHANGE_PURCHASED_ONLY
+          max_locked_blocks: 0
+          bypass_permission: "aegisguard.claimblocks.selllock.bypass"
+
         buy:
           enabled: true
           price_per_block: 10.0
@@ -358,6 +422,7 @@ claim_blocks:
           min_per_tx: 1
           max_per_tx: 5000
           daily_cap: 25000
+
         sell:
           enabled: true
           price_per_block: 6.0
@@ -370,6 +435,14 @@ claim_blocks:
       # Still protected, just less restrictive.
       fast_large:
         cooldown_seconds: 5
+
+        sell_lock:
+          enabled: true
+          hold_minutes: 10
+          scope: EXCHANGE_PURCHASED_ONLY
+          max_locked_blocks: 25000
+          bypass_permission: "aegisguard.claimblocks.selllock.bypass"
+
         buy:
           enabled: true
           price_per_block: 9.0
@@ -377,6 +450,7 @@ claim_blocks:
           min_per_tx: 1
           max_per_tx: 10000
           daily_cap: 100000
+
         sell:
           enabled: true
           price_per_block: 6.5
@@ -384,6 +458,7 @@ claim_blocks:
           min_per_tx: 1
           max_per_tx: 10000
           daily_cap: 75000
+
 
 
 

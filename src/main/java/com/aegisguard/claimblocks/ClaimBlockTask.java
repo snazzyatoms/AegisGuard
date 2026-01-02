@@ -18,10 +18,16 @@ public class ClaimBlockTask implements Runnable {
 
     @Override
     public void run() {
+        // Master toggle + playtime toggle
+        boolean claimBlocksEnabled = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
+        if (!claimBlocksEnabled) return;
+
         boolean enabled = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true);
         if (!enabled) return;
 
-        int amount = plugin.cfg().raw().getInt("claim_blocks.earn.playtime.blocks_per_interval", 50);
+        long amount = plugin.cfg().raw().getLong("claim_blocks.earn.playtime.blocks_per_interval", 50L);
+        if (amount <= 0) return;
+
         boolean notify = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.notify", false);
 
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -39,10 +45,7 @@ public class ClaimBlockTask implements Runnable {
                         )
                 );
 
-                // Extra safety: if anything returns ampersands, convert them too.
                 msg = ChatColor.translateAlternateColorCodes('&', msg);
-
-                // Force legacy parsing into proper chat components.
                 p.spigot().sendMessage(TextComponent.fromLegacyText(msg));
             }
         }

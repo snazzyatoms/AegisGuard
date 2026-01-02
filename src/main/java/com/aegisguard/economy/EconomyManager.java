@@ -1,6 +1,7 @@
 package com.aegisguard.economy;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.claimblocks.ClaimBlockManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -122,6 +123,7 @@ public class EconomyManager {
                 }
             }
             case CLAIM_BLOCKS -> {
+                // NOTE: Existing behavior preserved: this is used as "refund spent blocks" (upgrades).
                 if (plugin.getClaimBlockManager() != null) {
                     plugin.getClaimBlockManager().refund(p.getUniqueId(), longAmt);
                 }
@@ -183,6 +185,71 @@ public class EconomyManager {
             case CLAIM_BLOCKS -> toLongAmount(amount) + " Claim Blocks";
             default -> String.valueOf(amount);
         };
+    }
+
+    // =========================================================================
+    // ✅ NEW (v1.2.5): Exchange Helpers (Vault <-> ClaimBlocks)
+    // =========================================================================
+
+    /**
+     * Returns true if Vault is allowed by config and the vault wrapper exists.
+     * (Does not guarantee an economy provider is installed, but your VaultHug should handle that.)
+     */
+    public boolean isVaultReady() {
+        if (plugin.cfg() != null) {
+            boolean useVault = plugin.cfg().raw().getBoolean("economy.use_vault", true);
+            boolean vaultEnabled = plugin.cfg().raw().getBoolean("economy.vault.enabled", true);
+            if (!useVault || !vaultEnabled) return false;
+        }
+        return plugin.vault() != null;
+    }
+
+    public boolean hasVaultMoney(Player p, double amount) {
+        if (p == null) return false;
+        if (amount <= 0) return true;
+        return isVaultReady() && plugin.vault().has(p, amount);
+    }
+
+    public boolean withdrawVaultMoney(Player p, double amount) {
+        if (p == null) return false;
+        if (amount <= 0) return true;
+        return isVaultReady() && plugin.vault().charge(p, amount);
+    }
+
+    public void depositVaultMoney(Player p, double amount) {
+        if (p == null) return;
+        if (amount <= 0) return;
+        if (!isVaultReady()) return;
+        plugin.vault().give(p, amount);
+    }
+
+    /**
+     * Add ClaimBlocks that were purchased via the exchange.
+     * This records EXCHANGE lots so sell-lock (EXCHANGE_PURCHASED_ONLY) works properly.
+     */
+    public void grantClaimBlocksFromExchange(Player p, long blocks) {
+        if (p == null) return;
+        if (blocks <= 0) return;
+
+        if (plugin.getClaimBlockManager() != null) {
+            plugin.getClaimBlockManager().addBoughtFromExchange(p.getUniqueId(), blocks);
+        }
+    }
+
+    /**
+     * Withdraw ClaimBlocks for an exchange SELL operation (sell-lock aware).
+     * Use this instead of withdraw(...CLAIM_BLOCKS...) for exchange selling.
+     */
+    public ClaimBlockManager.SaleWithdrawResult withdrawClaimBlocksForExchangeSell(Player p, long blocks, ClaimBlockManager.SellLockConfig lock) {
+        if (p == null) return ClaimBlockManager.SaleWithdrawResult.fail("invalid_player", blocks, 0, 0);
+        if (blocks <= 0) return ClaimBlockManager.SaleWithdrawResult.ok(blocks, 0, 0, 0);
+
+        if (plugin.getClaimBlockManager() == null) {
+            return ClaimBlockManager.SaleWithdrawResult.fail("claimblocks_unavailable", blocks, 0, 0);
+        }
+
+        boolean bypass = p.hasPermission("aegisguard.claimblocks.selllock.bypass");
+        return plugin.getClaimBlockManager().withdrawForExchangeSell(p.getUniqueId(), blocks, lock, bypass);
     }
 
     // ----------------------------

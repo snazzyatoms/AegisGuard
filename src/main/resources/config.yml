@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🛡️ AegisGuard v1.2.4 - Main Configuration
+# 🛡️ AegisGuard v1.2.5 - Main Configuration
 # ==============================================================================
 # This file controls how AegisGuard behaves on your server:
 # - Where and how claims are stored (YML vs SQL)

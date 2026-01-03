@@ -1,6 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
@@ -53,6 +54,9 @@ public class GUIManager {
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
 
+    // ✅ NEW: ClaimBlocks Exchange GUI (v1.2.5+)
+    private final ClaimBlockExchangeGUI claimBlockExchangeGUI;
+
     // Hex pattern (&#RRGGBB)
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
@@ -81,6 +85,18 @@ public class GUIManager {
 
         // New: Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
+
+        // ✅ NEW: ClaimBlocks Exchange GUI init (only if service exists)
+        ClaimBlockExchangeService ex = null;
+        try {
+            ex = plugin.getClaimBlockExchangeService();
+        } catch (Throwable ignored) {}
+
+        if (ex != null) {
+            this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, ex);
+        } else {
+            this.claimBlockExchangeGUI = null;
+        }
     }
 
     // --- OPENERS ---
@@ -90,6 +106,21 @@ public class GUIManager {
             playClick(player);
             playerGUI.open(player);
         }
+    }
+
+    /**
+     * ✅ NEW: Open ClaimBlocks Exchange menu safely.
+     */
+    public void openClaimBlockExchange(Player player) {
+        if (player == null) return;
+
+        if (claimBlockExchangeGUI == null) {
+            player.sendMessage(color("&c[AegisGuard] &7ClaimBlocks Exchange is not available."));
+            return;
+        }
+
+        playClick(player);
+        claimBlockExchangeGUI.open(player);
     }
 
     /**
@@ -128,18 +159,13 @@ public class GUIManager {
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
 
+    // ✅ NEW: Exchange getter
+    public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
+
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---
     // ======================================
 
-    /**
-     * Centralized text lookup using the Aegis Codex engine.
-     *
-     * IMPORTANT: CodexEngine returns the key itself when missing.
-     * This method prevents raw keys from leaking into the UI by using fallback.
-     *
-     * NOTE: This returns COLORIZED output (so & codes won't leak into GUI titles).
-     */
     public String tr(Player player, String key, String fallback) {
         String value = null;
         try {
@@ -149,9 +175,6 @@ public class GUIManager {
         return safeText(key, value, fallback);
     }
 
-    /**
-     * ✅ NEW: placeholder-aware translate (fallback also gets placeholders applied)
-     */
     public String tr(Player player, String key, String fallback, Map<String, String> placeholders) {
         String value = null;
         try {
@@ -163,12 +186,6 @@ public class GUIManager {
         return out;
     }
 
-    /**
-     * ✅ Safe inventory title formatter
-     * - translates & + hex
-     * - safe fallback if missing
-     * - clamps length to reduce client/title glitches
-     */
     public String title(Player player, String key, String fallback) {
         String raw = null;
         try {
@@ -183,9 +200,6 @@ public class GUIManager {
         return t;
     }
 
-    /**
-     * ✅ NEW: placeholder-aware title (fallback also gets placeholders applied)
-     */
     public String title(Player player, String key, String fallback, Map<String, String> placeholders) {
         String raw = null;
         try {
@@ -201,9 +215,6 @@ public class GUIManager {
         return t;
     }
 
-    /**
-     * List/lore variant for language lookups.
-     */
     public List<String> trList(Player player, String key, List<String> fallback) {
         try {
             if (plugin.codex() != null) {
@@ -215,9 +226,6 @@ public class GUIManager {
         return fallback == null ? Collections.emptyList() : fallback;
     }
 
-    /**
-     * ✅ NEW: placeholder-aware lore (fallback also gets placeholders applied)
-     */
     public List<String> trList(Player player, String key, List<String> fallback, Map<String, String> placeholders) {
         try {
             if (plugin.codex() != null) {
@@ -239,25 +247,10 @@ public class GUIManager {
     // --- UTILITIES (Static Helpers) ---
     // ======================================
 
-    /**
-     * ✅ Back-compat overload:
-     * Many older GUIs still call safeText(value, fallback).
-     * This keeps them compiling while still using the stronger 3-arg logic.
-     *
-     * NOTE: This returns COLORIZED output now.
-     */
     public static String safeText(String fromCodex, String fallback) {
         return safeText(null, fromCodex, fallback);
     }
 
-    /**
-     * ✅ Stronger safe fallback logic:
-     * - null/empty -> fallback
-     * - "[Missing...]" -> fallback
-     * - returns-the-key -> fallback (Codex behavior)
-     *
-     * ✅ ALSO colorizes (& + hex) so GUI TITLES never show raw "&9" etc.
-     */
     public static String safeText(String requestedKey, String fromCodex, String fallback) {
         if (fallback == null) fallback = "";
 
@@ -282,10 +275,6 @@ public class GUIManager {
         return color(out);
     }
 
-    /**
-     * Simple placeholder helper for GUI fallback strings/lore.
-     * Supports: {KEY} and case variants.
-     */
     private static String applyPlaceholders(String input, Map<String, String> placeholders) {
         if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
 
@@ -302,10 +291,6 @@ public class GUIManager {
         return out;
     }
 
-    /**
-     * Creates a standardized GUI Item with color translation.
-     * Signature: (Material, name, lore)
-     */
     public static ItemStack createItem(Material mat, String name, List<String> lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
@@ -347,11 +332,6 @@ public class GUIManager {
         catch (Exception ignored) {}
     }
 
-    /**
-     * Color utility with:
-     * - legacy & codes
-     * - hex codes in the form &#RRGGBB
-     */
     public static String color(String text) {
         if (text == null) return "";
         String msg = text;
@@ -371,10 +351,6 @@ public class GUIManager {
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
 
-    /**
-     * ✅ Domain Registry item for the main menu.
-     * Safe even if claim blocks are disabled.
-     */
     public ItemStack createLedgerItem(Player p) {
         String title = tr(p, "ledger_title", "&6📜 Domain Registry");
         List<String> lore = new ArrayList<>();

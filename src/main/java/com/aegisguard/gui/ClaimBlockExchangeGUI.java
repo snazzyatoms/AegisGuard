@@ -3,7 +3,6 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -51,6 +50,8 @@ public class ClaimBlockExchangeGUI implements Listener {
         this.plugin = plugin;
         this.exchange = exchange;
         this.blocks = plugin.getClaimBlockManager();
+
+        // This GUI self-registers; you do NOT need to touch the global GUIListener for it to function.
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -61,7 +62,10 @@ public class ClaimBlockExchangeGUI implements Listener {
         if (s.amount <= 0) s.amount = 100;
         if (s.mode == null) s.mode = Mode.BUY;
 
-        Inventory inv = Bukkit.createInventory(new Holder(p.getUniqueId()), SIZE, color("&8ClaimBlocks Exchange"));
+        Holder holder = new Holder(p.getUniqueId());
+        Inventory inv = Bukkit.createInventory(holder, SIZE, color("&8ClaimBlocks Exchange"));
+        holder.inv = inv;
+
         render(p, inv, s);
         p.openInventory(inv);
         trySound(p, Sound.BLOCK_ENDER_CHEST_OPEN, 0.8f, 1.1f);
@@ -70,7 +74,6 @@ public class ClaimBlockExchangeGUI implements Listener {
     private void render(Player p, Inventory inv, Session s) {
         inv.clear();
 
-        // Background
         ItemStack glass = item(Material.BLACK_STAINED_GLASS_PANE, "&0", List.of());
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, glass);
 
@@ -81,7 +84,7 @@ public class ClaimBlockExchangeGUI implements Listener {
                 (s.mode == Mode.BUY ? "&a&lBUY" : "&7BUY"),
                 List.of(
                         "&7Purchase Claim Blocks with money.",
-                        "&8Permission: &faegis.claimblocks.exchange"
+                        "&8Permission: &f" + plugin.cfg().raw().getString("claim_blocks.exchange.permissions.exchange", "aegis.claimblocks.exchange")
                 )
         ));
 
@@ -90,11 +93,10 @@ public class ClaimBlockExchangeGUI implements Listener {
                 (s.mode == Mode.SELL ? "&e&lSELL" : "&7SELL"),
                 List.of(
                         "&7Sell Claim Blocks for money.",
-                        "&8May require: &faegis.claimblocks.sell"
+                        "&8May require: &f" + plugin.cfg().raw().getString("claim_blocks.exchange.permissions.sell", "aegis.claimblocks.sell")
                 )
         ));
 
-        // Amount controls
         inv.setItem(SLOT_MINUS_100, item(Material.RED_DYE, "&c-100", List.of("&7Decrease amount")));
         inv.setItem(SLOT_MINUS_10, item(Material.RED_DYE, "&c-10", List.of("&7Decrease amount")));
         inv.setItem(SLOT_MINUS_1, item(Material.RED_DYE, "&c-1", List.of("&7Decrease amount")));
@@ -103,7 +105,6 @@ public class ClaimBlockExchangeGUI implements Listener {
         inv.setItem(SLOT_PLUS_10, item(Material.LIME_DYE, "&a+10", List.of("&7Increase amount")));
         inv.setItem(SLOT_PLUS_100, item(Material.LIME_DYE, "&a+100", List.of("&7Increase amount")));
 
-        // Info (balances + quote)
         long avail = (blocks != null) ? blocks.getAvailableBlocks(p.getUniqueId()) : 0;
         long total = (blocks != null) ? blocks.getTotalBlocks(p.getUniqueId()) : 0;
         long spent = (blocks != null) ? blocks.getSpentBlocks(p.getUniqueId()) : 0;
@@ -112,30 +113,33 @@ public class ClaimBlockExchangeGUI implements Listener {
 
         List<String> lore = new ArrayList<>();
         lore.add("&7Exchange Enabled: " + (enabled ? "&aYes" : "&cNo"));
-        lore.add("&7Your Money: &e" + plugin.vault().format(vaultBal));
+        lore.add("&7Your Money: &e" + money(vaultBal));
         lore.add("&7Claim Blocks: &f" + avail + " &8available");
         lore.add("&8Total: &7" + total + "  &8Spent: &7" + spent);
         lore.add(" ");
 
-        if (s.mode == Mode.BUY) {
-            var q = exchange.quoteBuy(s.amount);
-            lore.add("&aBuy Amount: &f" + q.blocks());
-            lore.add("&7Unit: &e" + money(q.unitPrice()));
-            lore.add("&7Subtotal: &e" + money(q.subtotal()));
-            lore.add("&7Fee: &6" + money(q.fee()));
-            lore.add("&aTotal Cost: &e" + money(q.totalOrPayout()));
+        if (exchange != null) {
+            if (s.mode == Mode.BUY) {
+                var q = exchange.quoteBuy(p, s.amount);
+                lore.add("&aBuy Amount: &f" + q.blocks());
+                lore.add("&7Unit: &e" + money(q.unitPrice()));
+                lore.add("&7Subtotal: &e" + money(q.subtotal()));
+                lore.add("&7Fee: &6" + money(q.fee()));
+                lore.add("&aTotal Cost: &e" + money(q.totalOrPayout()));
+            } else {
+                var q = exchange.quoteSell(p, s.amount);
+                lore.add("&eSell Amount: &f" + q.blocks());
+                lore.add("&7Unit: &e" + money(q.unitPrice()));
+                lore.add("&7Gross: &e" + money(q.subtotal()));
+                lore.add("&7Fee: &6" + money(q.fee()));
+                lore.add("&aPayout: &e" + money(q.totalOrPayout()));
+            }
         } else {
-            var q = exchange.quoteSell(s.amount);
-            lore.add("&eSell Amount: &f" + q.blocks());
-            lore.add("&7Unit: &e" + money(q.unitPrice()));
-            lore.add("&7Gross: &e" + money(q.subtotal()));
-            lore.add("&7Fee: &6" + money(q.fee()));
-            lore.add("&aPayout: &e" + money(q.totalOrPayout()));
+            lore.add("&cExchange service is not loaded.");
         }
 
         inv.setItem(SLOT_INFO, item(Material.PAPER, "&b&lExchange Quote", lore));
 
-        // Confirm
         inv.setItem(SLOT_CONFIRM, item(
                 Material.ANVIL,
                 (enabled ? "&a&lCONFIRM" : "&c&lDISABLED"),
@@ -203,15 +207,19 @@ public class ClaimBlockExchangeGUI implements Listener {
                 return;
             }
 
-            if (s.mode == Mode.BUY) {
-                var res = exchange.buy(p, s.amount);
-                handleResult(p, res);
-            } else {
-                var res = exchange.sell(p, s.amount);
-                handleResult(p, res);
+            if (exchange == null) {
+                msg(p, "&cExchange service is missing.");
+                trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
+                return;
             }
 
-            // Re-render to update balances after transaction
+            ClaimBlockExchangeService.Result res =
+                    (s.mode == Mode.BUY)
+                            ? exchange.buyDetailed(p, s.amount)
+                            : exchange.sellDetailed(p, s.amount);
+
+            handleResult(p, res);
+
             render(p, e.getInventory(), s);
         }
     }
@@ -222,14 +230,13 @@ public class ClaimBlockExchangeGUI implements Listener {
         if (!(e.getInventory().getHolder() instanceof Holder h)) return;
         if (!h.owner.equals(p.getUniqueId())) return;
 
-        // keep session around (so amount/mode persists between opens)
         trySound(p, Sound.BLOCK_ENDER_CHEST_CLOSE, 0.7f, 1.0f);
     }
 
     private void handleResult(Player p, ClaimBlockExchangeService.Result res) {
         switch (res.type()) {
             case OK -> {
-                msg(p, "&a" + res.message());
+                msg(p, res.message());
                 trySound(p, Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.25f);
             }
             case NO_PERMISSION -> {
@@ -248,8 +255,16 @@ public class ClaimBlockExchangeGUI implements Listener {
                 msg(p, "&eCooldown: wait &6" + res.longA() + "s&e.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
-            case DAILY_CAP -> {
+            case HOURLY_CAP -> {
+                msg(p, "&eHourly trade limit reached. Try again later.");
+                trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
+            }
+            case DAILY_CAP_BLOCKS -> {
                 msg(p, "&eDaily cap reached. Remaining today: &6" + res.longA() + "&e.");
+                trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
+            }
+            case DAILY_CAP_MONEY -> {
+                msg(p, "&eDaily money cap reached. Remaining today: &6" + money(res.dblA()) + "&e.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             case INSUFFICIENT_FUNDS -> {
@@ -261,7 +276,7 @@ public class ClaimBlockExchangeGUI implements Listener {
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.85f);
             }
             case SELL_LOCKED -> {
-                msg(p, "&eSome purchased blocks are locked. Try later.");
+                msg(p, res.message());
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             default -> {
@@ -282,8 +297,7 @@ public class ClaimBlockExchangeGUI implements Listener {
 
     private void msg(Player p, String s) {
         if (p == null || s == null) return;
-        String out = ChatColor.translateAlternateColorCodes('&', s);
-        p.spigot().sendMessage(TextComponent.fromLegacyText(out));
+        p.sendMessage(ChatColor.translateAlternateColorCodes('&', s));
     }
 
     private void trySound(Player p, Sound s, float v, float pitch) {
@@ -319,7 +333,9 @@ public class ClaimBlockExchangeGUI implements Listener {
 
     private static final class Holder implements InventoryHolder {
         final UUID owner;
+        Inventory inv;
+
         Holder(UUID owner) { this.owner = owner; }
-        @Override public Inventory getInventory() { return null; }
+        @Override public Inventory getInventory() { return inv; }
     }
 }

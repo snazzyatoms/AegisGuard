@@ -1,6 +1,7 @@
 package com.aegisguard;
 
 import com.aegisguard.admin.AdminCommand;
+import com.aegisguard.claimblocks.ClaimBlockExchangeService; // ✅ NEW
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.claimblocks.ClaimBlockTask;
 import com.aegisguard.commands.AegisCommand;
@@ -31,7 +32,6 @@ import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -74,6 +74,9 @@ public class AegisGuard extends JavaPlugin {
 
     /** 🧱 Claim Block Manager (1.2.4+) */
     private ClaimBlockManager claimBlockManager;
+
+    /** 💱 Claim Block Exchange Service (v1.2.5+) */
+    private ClaimBlockExchangeService claimBlockExchange; // ✅ NEW
 
     /**
      * MessagesUtil now acts as:
@@ -120,6 +123,10 @@ public class AegisGuard extends JavaPlugin {
     public CodexEngine codex() { return codex; }
 
     public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
+
+    /** ✅ NEW: Exchange service getter */
+    public ClaimBlockExchangeService exchange() { return claimBlockExchange; }
+    public ClaimBlockExchangeService getClaimBlockExchangeService() { return claimBlockExchange; }
 
     /**
      * 📜 Legacy access (compat bridge).
@@ -198,6 +205,18 @@ public class AegisGuard extends JavaPlugin {
             this.claimBlockManager = new ClaimBlockManager(this);
         } else {
             this.claimBlockManager = null;
+        }
+
+        // ✅ NEW: Claim Block Exchange Service (only meaningful if claim blocks exist)
+        if (this.claimBlockManager != null) {
+            try {
+                this.claimBlockExchange = new ClaimBlockExchangeService(this);
+            } catch (Throwable t) {
+                this.claimBlockExchange = null;
+                getLogger().warning("⚠ ClaimBlockExchangeService failed to initialize: " + t.getMessage());
+            }
+        } else {
+            this.claimBlockExchange = null;
         }
 
         this.gui = new GUIManager(this);
@@ -308,6 +327,9 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
 
+        // ✅ NEW: flush exchange state file on shutdown (best-effort)
+        flushExchangeState();
+
         if (plotStore != null) {
             getLogger().info("Saving plot data...");
             plotStore.saveSync();
@@ -322,6 +344,35 @@ public class AegisGuard extends JavaPlugin {
         instance = null;
 
         getLogger().info("AegisGuard disabled.");
+    }
+
+    // ---------------------------------------------------------------------
+    // ✅ NEW: Exchange flush helper (best-effort, avoids losing last-second trades)
+    // ---------------------------------------------------------------------
+
+    private void flushExchangeState() {
+        if (claimBlockExchange == null) return;
+
+        // If you later add a public "shutdown()" or "saveSync()" to the service,
+        // this will automatically use it.
+        try {
+            Method m = claimBlockExchange.getClass().getMethod("shutdown");
+            m.invoke(claimBlockExchange);
+            return;
+        } catch (Throwable ignored) {}
+
+        try {
+            Method m = claimBlockExchange.getClass().getMethod("saveSync");
+            m.invoke(claimBlockExchange);
+            return;
+        } catch (Throwable ignored) {}
+
+        // Fallback: call internal save() reflectively (private)
+        try {
+            Method m = claimBlockExchange.getClass().getDeclaredMethod("save");
+            m.setAccessible(true);
+            m.invoke(claimBlockExchange);
+        } catch (Throwable ignored) {}
     }
 
     // ---------------------------------------------------------------------
@@ -497,6 +548,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class);
+                //noinspection unchecked
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
             } catch (Exception e) {
                 new Thread(task).start();
@@ -512,6 +564,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 Object scheduler = player.getClass().getMethod("getScheduler").invoke(player);
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
+                //noinspection unchecked
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), null);
             } catch (Exception e) { e.printStackTrace(); }
         } else {
@@ -524,6 +577,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class);
+                //noinspection unchecked
                 runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run());
             } catch (Exception e) { e.printStackTrace(); }
         } else {
@@ -536,6 +590,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 Method runMethod = scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class);
+                //noinspection unchecked
                 return runMethod.invoke(scheduler, this, (Consumer<Object>) t -> task.run(), intervalTicks, intervalTicks);
             } catch (Exception e) {
                 return null;
@@ -569,6 +624,7 @@ public class AegisGuard extends JavaPlugin {
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
             if (claimBlockManager != null) claimBlockManager.save();
             if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
+            // Exchange state auto-saves on trades; shutdown flush handles final save.
         };
         autoSaveTask = scheduleAsyncRepeating(logic, interval);
     }

@@ -8,6 +8,7 @@ import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.BiomeGUI.BiomeHolder;
+import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
 import com.aegisguard.gui.InfoGUI.InfoHolder;
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
 import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
@@ -45,14 +46,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 /**
  * GUIListener
  * - Central click router for ALL AegisGuard GUIs.
  * - Strictly blocks inventory movement while our menus are open.
  *
- * ✅ Upgrade:
+ * Upgrade:
  * - Intercepts "Refresh / Reload" buttons and reloads CodexEngine too.
  * - Attempts to reopen the same GUI after reload.
  */
@@ -64,7 +64,6 @@ public class GUIListener implements Listener {
         this.plugin = plugin;
     }
 
-    // Helper: is this one of our GUIs?
     private boolean isAegisGuiHolder(InventoryHolder holder) {
         return holder instanceof PlayerMenuHolder
                 || holder instanceof VisitHolder
@@ -85,13 +84,10 @@ public class GUIListener implements Listener {
                 || holder instanceof PlotAuctionHolder
                 || holder instanceof ExpansionHolder
                 || holder instanceof ExpansionAdminHolder
-                || holder instanceof PlotStatusHolder;
+                || holder instanceof PlotStatusHolder
+                || holder instanceof ExchangeHolder; // ✅ NEW
     }
 
-    /**
-     * NOTE: ignoreCancelled=false so GUI buttons still work even if another plugin
-     * cancels the click event earlier. We always cancel movement ourselves anyway.
-     */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
@@ -102,33 +98,26 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null || !isAegisGuiHolder(holder)) return;
 
-        // Always cancel: these are menu inventories, never item-storage.
         e.setCancelled(true);
 
-        // 2) Block clicks originating in the player's own inventory while GUI open
         if (e.getClickedInventory() != null && e.getClickedInventory().equals(player.getInventory())) {
             return;
         }
 
-        // Only handle clicks in the top GUI
         Inventory clickedInv = e.getClickedInventory();
         if (clickedInv == null || !clickedInv.equals(top)) return;
 
-        // Sanity: ignore bottom inventory raw slots
         if (e.getRawSlot() < 0 || e.getRawSlot() >= top.getSize()) return;
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
 
-        // ✅ Global: handle reload/refresh buttons (Codex + config)
-        // (STRICT detection to prevent false positives like "Language: ...")
         if (isReloadTrigger(clicked)) {
             boolean soft = (e.getClick() == ClickType.RIGHT || e.getClick() == ClickType.SHIFT_RIGHT);
             handleGuiReload(player, holder, soft);
             return;
         }
 
-        // 1) Block ALL shift-click / hotbar swaps / offhand / double-click globally
         ClickType click = e.getClick();
         switch (click) {
             case SHIFT_LEFT,
@@ -141,7 +130,6 @@ public class GUIListener implements Listener {
             default -> { /* continue */ }
         }
 
-        // Route to the already-initialized GUI instances (no new allocations per click)
         if (holder instanceof PlayerMenuHolder) {
             plugin.gui().player().handleClick(player, e);
         }
@@ -202,6 +190,11 @@ public class GUIListener implements Listener {
         else if (holder instanceof PlotStatusHolder castHolder) {
             plugin.gui().plotStatus().handleClick(player, e, castHolder);
         }
+        else if (holder instanceof ExchangeHolder castHolder) {
+            if (plugin.gui().exchange() != null) {
+                plugin.gui().exchange().handleClick(player, e, castHolder);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -214,28 +207,15 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null || !isAegisGuiHolder(holder)) return;
 
-        // Strict: block ALL drags while our GUI is open.
         e.setCancelled(true);
     }
 
-    // ---------------------------------------------------------------------
-    // Reload Detection + Handling
-    // ---------------------------------------------------------------------
-
-    /**
-     * Reload/refresh detection MUST be strict.
-     * Otherwise "Language: ..." buttons get mistaken for reload triggers.
-     *
-     * Preferred: PDC aegis_action=reload|refresh|reload_all|refresh_lang|reload_settings
-     * Fallback: only allow specific materials + words like reload/refresh/recargar/refrescar/actualizar.
-     */
     private boolean isReloadTrigger(ItemStack item) {
         if (item == null || item.getType().isAir()) return false;
 
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
 
-        // 1) PDC detection (best)
         try {
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
 
@@ -253,8 +233,6 @@ public class GUIListener implements Listener {
             }
         } catch (Throwable ignored) {}
 
-        // 2) Fallback detection (STRICT)
-        // Only allow obvious reload materials so WRITABLE_BOOK ("Language") never matches.
         Material type = item.getType();
         boolean allowedMat =
                 type == Material.REDSTONE ||
@@ -270,7 +248,6 @@ public class GUIListener implements Listener {
         if (name == null) name = "";
         String n = name.toLowerCase(Locale.ROOT);
 
-        // IMPORTANT: do NOT match "language"/"idioma" alone
         return n.contains("reload")
                 || n.contains("refresh")
                 || n.contains("recargar")
@@ -279,8 +256,6 @@ public class GUIListener implements Listener {
     }
 
     private void handleGuiReload(Player player, InventoryHolder holder, boolean soft) {
-        // Soft = reload config+codex but don't try to re-open. (Right click)
-        // Normal = reload + try reopen current GUI.
         try {
             if (soft) {
                 plugin.reloadAegisGuard(false);
@@ -290,7 +265,6 @@ public class GUIListener implements Listener {
 
             plugin.reloadAegisGuard(true);
 
-            // Re-open same GUI on next tick-ish (safe with Folia & Bukkit)
             plugin.runMain(player, () -> {
                 tryReopenSameGui(player, holder);
             });
@@ -302,12 +276,7 @@ public class GUIListener implements Listener {
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Reopen logic (best effort)
-    // ---------------------------------------------------------------------
-
     private void tryReopenSameGui(Player player, InventoryHolder holder) {
-        // Known simple ones
         if (holder instanceof PlayerMenuHolder) {
             plugin.gui().openMain(player);
             return;
@@ -324,13 +293,15 @@ public class GUIListener implements Listener {
             safeInvokeOpen(plugin.gui().admin(), player);
             return;
         }
+        if (holder instanceof ExchangeHolder) {
+            plugin.gui().openClaimBlockExchange(player);
+            return;
+        }
 
-        // Page-based holders / Plot-based holders: try reflection args
         Object page = readHolderValue(holder, "getPage", "page", "getCurrentPage", "currentPage");
         Object plot = readHolderValue(holder, "getPlot", "plot", "getSelectedPlot", "selectedPlot");
         Object isAdmin = readHolderValue(holder, "isAdmin", "getAdmin", "admin", "isAdminView");
 
-        // Visit GUI
         if (holder instanceof VisitHolder) {
             if (!safeInvokeOpen(plugin.gui().visit(), player, page, isAdmin)) {
                 if (!safeInvokeOpen(plugin.gui().visit(), player, page, Boolean.FALSE)) {
@@ -342,7 +313,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Plot list
         if (holder instanceof PlotListHolder) {
             if (!safeInvokeOpen(plugin.gui().plotList(), player, page)) {
                 safeInvokeOpen(plugin.gui().plotList(), player);
@@ -350,9 +320,7 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Roles menus
         if (holder instanceof PlotSelectorHolder || holder instanceof RolesMenuHolder || holder instanceof RoleAddHolder || holder instanceof RoleManageHolder) {
-            // Best effort: open roles menu again
             if (!safeInvokeOpen(plugin.gui().roles(), player, plot)) {
                 if (!safeInvokeOpen(plugin.gui().roles(), player)) {
                     plugin.gui().openMain(player);
@@ -361,7 +329,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Flags / Cosmetics / Leveling / Zoning / Biome
         if (holder instanceof PlotFlagsHolder) {
             if (!safeInvokeOpen(plugin.gui().flags(), player, plot)) safeInvokeOpen(plugin.gui().flags(), player);
             return;
@@ -383,7 +350,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Market / Auction
         if (holder instanceof PlotMarketHolder) {
             if (!safeInvokeOpen(plugin.gui().market(), player, page)) safeInvokeOpen(plugin.gui().market(), player);
             return;
@@ -393,7 +359,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Expansion
         if (holder instanceof ExpansionHolder) {
             safeInvokeOpen(plugin.gui().expansionRequest(), player);
             return;
@@ -403,13 +368,11 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Plot status
         if (holder instanceof PlotStatusHolder) {
             if (!safeInvokeOpen(plugin.gui().plotStatus(), player, plot)) safeInvokeOpen(plugin.gui().plotStatus(), player);
             return;
         }
 
-        // Fallback
         plugin.gui().openMain(player);
     }
 
@@ -431,8 +394,6 @@ public class GUIListener implements Listener {
 
         List<Object[]> attempts = new ArrayList<>();
 
-        // Build best-attempt argument lists in priority order
-        // (Player, page, admin) -> (Player, page) -> (Player, plot) -> (Player)
         if (args.length >= 1 && args[0] instanceof Player p) {
             Object page = (args.length >= 2) ? args[1] : null;
             Object third = (args.length >= 3) ? args[2] : null;
@@ -451,11 +412,9 @@ public class GUIListener implements Listener {
 
             attempts.add(new Object[]{p});
         } else {
-            // If caller didn't pass Player first, just try raw
             attempts.add(args);
         }
 
-        // Try invoke open(...) with reflection
         for (Object[] attempt : attempts) {
             if (attempt == null) continue;
             if (tryInvoke(gui, "open", attempt)) return true;
@@ -480,7 +439,6 @@ public class GUIListener implements Listener {
 
                     if (a == null) { ok = false; break; }
 
-                    // primitive handling
                     if (pt.isPrimitive()) {
                         if (pt == int.class && a instanceof Integer) continue;
                         if (pt == int.class && a instanceof Number) { args[i] = ((Number) a).intValue(); continue; }
@@ -489,7 +447,6 @@ public class GUIListener implements Listener {
                     }
 
                     if (!pt.isAssignableFrom(a.getClass())) {
-                        // Allow Number -> Integer for boxed params
                         if (Number.class.isAssignableFrom(pt) && a instanceof Number) continue;
                         ok = false;
                         break;

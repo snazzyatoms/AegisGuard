@@ -13,6 +13,22 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ClaimBlock Exchange (Vault <-> ClaimBlocks) service.
+ *
+ * ✅ Up-to-date with the "claim_blocks.exchange" config block we standardized:
+ * - claim_blocks.exchange.enabled
+ * - claim_blocks.exchange.profile (safe_small|balanced_mid|fast_large|custom)
+ * - claim_blocks.exchange.min_spread_percent
+ * - claim_blocks.exchange.cooldown_seconds (custom) OR profiles.<name>.cooldown_seconds
+ * - claim_blocks.exchange.buy.* / sell.* (custom) OR profiles.<name>.buy.* / sell.*
+ * - claim_blocks.exchange.sell_lock.* (custom) OR profiles.<name>.sell_lock.*
+ * - claim_blocks.exchange.worlds_allowed.*
+ * - claim_blocks.exchange.sell_requires_permission.*
+ *
+ * 🧩 Backwards-compatible reads:
+ * - Old "rates/limits/fees/permissions" paths are still supported as fallbacks.
+ */
 public class ClaimBlockExchangeService {
 
     public record ExchangeResult(boolean success, String message) {}
@@ -55,11 +71,21 @@ public class ClaimBlockExchangeService {
             return out;
         }
 
-        out.add(color("&7Buy: &e" + s.buyPricePerBlock + " &7per block"));
-        out.add(color("&7Sell: &e" + s.sellPricePerBlock + " &7per block"));
-        out.add(color("&7Fees: &aBuy " + s.buyFeePercent + "% + " + s.buyFeeFlat + " &7| &cSell " + s.sellFeePercent + "% + " + s.sellFeeFlat));
+        // Spread warning (info only)
+        if (s.minSpreadPercent > 0.0 && s.buyEnabled && s.sellEnabled && s.buyPricePerBlock > 0.0) {
+            double spread = 100.0 * (1.0 - (s.sellPricePerBlock / s.buyPricePerBlock));
+            if (spread < s.minSpreadPercent) {
+                out.add(color("&e⚠ Warning: Buy/Sell spread is only &6" + format2(spread) + "%&e (min recommended: "
+                        + format2(s.minSpreadPercent) + "%)."));
+            }
+        }
 
-        out.add(color("&7Cooldown: &e" + s.cooldownSeconds + "s &7| Trades/hour: &e" + s.maxTradesPerHour));
+        out.add(color("&7Buy: " + (s.buyEnabled ? "&aEnabled" : "&cDisabled")
+                + "&7 @ &e" + s.buyPricePerBlock + " &7per block &8| &7Fee: &e" + s.buyFeePercent + "%"));
+        out.add(color("&7Sell: " + (s.sellEnabled ? "&aEnabled" : "&cDisabled")
+                + "&7 @ &e" + s.sellPricePerBlock + " &7per block &8| &7Fee: &e" + s.sellFeePercent + "%"));
+
+        out.add(color("&7Cooldown: &e" + s.cooldownSeconds + "s" + (s.maxTradesPerHour > 0 ? " &7| Trades/hour: &e" + s.maxTradesPerHour : "")));
         out.add(color("&7Buy limits: &e" + s.buyMin + "-" + s.buyMaxPerTrade + " &7per trade, daily: &e" + s.buyDailyCapBlocks));
         out.add(color("&7Sell limits: &e" + s.sellMin + "-" + s.sellMaxPerTrade + " &7per trade, daily: &e" + s.sellDailyCapBlocks));
 
@@ -77,8 +103,10 @@ public class ClaimBlockExchangeService {
         ExchangeSettings s = resolveSettings(p);
 
         if (!s.enabled) return fail("&cExchange is disabled.");
+        if (!s.buyEnabled) return fail("&cBuying ClaimBlocks is disabled.");
         if (!isWorldAllowed(p, s)) return fail("&cExchange is not allowed in this world.");
         if (!isVaultReady()) return fail("&cVault economy is not available.");
+
         if (!hasPerm(p, s.exchangePerm)) return fail("&cYou do not have permission to use the exchange.");
         if (!hasPerm(p, s.buyPerm)) return fail("&cYou do not have permission to buy ClaimBlocks.");
 
@@ -91,26 +119,28 @@ public class ClaimBlockExchangeService {
         boolean bypass = p.hasPermission(s.bypassPerm);
 
         PlayerState st = getState(p.getUniqueId());
-        normalizeWindows(st);
-
         long now = System.currentTimeMillis();
 
-        if (!bypass) {
-            long remainingCd = cooldownRemainingSeconds(st, now, s.cooldownSeconds);
-            if (remainingCd > 0) return fail("&cPlease wait &e" + remainingCd + "s &cbefore trading again.");
+        synchronized (st) {
+            normalizeWindows(st);
 
-            if (s.maxTradesPerHour > 0 && st.tradesThisHour >= s.maxTradesPerHour) {
-                return fail("&cHourly trade limit reached. Try again later.");
-            }
+            if (!bypass) {
+                long remainingCd = cooldownRemainingSeconds(st, now, s.cooldownSeconds);
+                if (remainingCd > 0) return fail("&cPlease wait &e" + remainingCd + "s &cbefore trading again.");
 
-            if (s.buyDailyCapBlocks > 0 && st.boughtTodayBlocks + blocks > s.buyDailyCapBlocks) {
-                long left = Math.max(0, s.buyDailyCapBlocks - st.boughtTodayBlocks);
-                return fail("&cDaily buy cap reached. You can only buy &e" + left + " &cmore today.");
+                if (s.maxTradesPerHour > 0 && st.tradesThisHour >= s.maxTradesPerHour) {
+                    return fail("&cHourly trade limit reached. Try again later.");
+                }
+
+                if (s.buyDailyCapBlocks > 0 && st.boughtTodayBlocks + blocks > s.buyDailyCapBlocks) {
+                    long left = Math.max(0, s.buyDailyCapBlocks - st.boughtTodayBlocks);
+                    return fail("&cDaily buy cap reached. You can only buy &e" + left + " &cmore today.");
+                }
             }
         }
 
         double baseCost = blocks * s.buyPricePerBlock;
-        double fee = (baseCost * (s.buyFeePercent / 100.0)) + s.buyFeeFlat;
+        double fee = (baseCost * (s.buyFeePercent / 100.0)) + s.buyFeeFlat; // buyFeeFlat supported for legacy configs
         double total = baseCost + fee;
 
         if (!plugin.vault().has(p, total)) {
@@ -121,17 +151,23 @@ public class ClaimBlockExchangeService {
             return fail("&cPayment failed. Please try again.");
         }
 
+        // Add purchased blocks (kept as-is to match your current manager/service integration)
         mgr.addBought(p.getUniqueId(), blocks);
+        mgr.saveAsync();
 
-        // Update state
-        st.lastTradeMillis = now;
-        st.tradesThisHour++;
-        st.boughtTodayBlocks += blocks;
-        st.moneySpentToday += total;
-        st.lastAnyGainMillis = now;
+        synchronized (st) {
+            st.lastTradeMillis = now;
+            st.tradesThisHour++;
+            st.boughtTodayBlocks += blocks;
+            st.moneySpentToday += total;
 
-        // Sell lock tracking for purchased blocks
-        addPurchaseLot(st, blocks, now, s.sellLockMaxLockedBlocks);
+            // For sell_lock scope ALL, this should ideally be updated by *any* claimblock gain source.
+            // This tracks exchange buys (and can be called externally via markAnyGain()).
+            st.lastAnyGainMillis = now;
+
+            // Sell lock tracking for purchased blocks
+            addPurchaseLot(st, blocks, now, s.sellLockMaxLockedBlocks);
+        }
 
         saveAsync();
 
@@ -144,6 +180,7 @@ public class ClaimBlockExchangeService {
         ExchangeSettings s = resolveSettings(p);
 
         if (!s.enabled) return fail("&cExchange is disabled.");
+        if (!s.sellEnabled) return fail("&cSelling ClaimBlocks is disabled.");
         if (!isWorldAllowed(p, s)) return fail("&cExchange is not allowed in this world.");
         if (!isVaultReady()) return fail("&cVault economy is not available.");
         if (!hasPerm(p, s.exchangePerm)) return fail("&cYou do not have permission to use the exchange.");
@@ -162,29 +199,31 @@ public class ClaimBlockExchangeService {
         boolean bypass = p.hasPermission(s.bypassPerm);
         boolean bypassLock = p.hasPermission(s.bypassSellLockPerm) || bypass;
 
-        PlayerState st = getState(p.getUniqueId());
-        normalizeWindows(st);
+        UUID uuid = p.getUniqueId();
+        ClaimBlockData cbd = mgr.getOrCreate(uuid);
 
+        PlayerState st = getState(uuid);
         long now = System.currentTimeMillis();
 
-        if (!bypass) {
-            long remainingCd = cooldownRemainingSeconds(st, now, s.cooldownSeconds);
-            if (remainingCd > 0) return fail("&cPlease wait &e" + remainingCd + "s &cbefore trading again.");
+        synchronized (st) {
+            normalizeWindows(st);
 
-            if (s.maxTradesPerHour > 0 && st.tradesThisHour >= s.maxTradesPerHour) {
-                return fail("&cHourly trade limit reached. Try again later.");
-            }
+            if (!bypass) {
+                long remainingCd = cooldownRemainingSeconds(st, now, s.cooldownSeconds);
+                if (remainingCd > 0) return fail("&cPlease wait &e" + remainingCd + "s &cbefore trading again.");
 
-            if (s.sellDailyCapBlocks > 0 && st.soldTodayBlocks + blocks > s.sellDailyCapBlocks) {
-                long left = Math.max(0, s.sellDailyCapBlocks - st.soldTodayBlocks);
-                return fail("&cDaily sell cap reached. You can only sell &e" + left + " &cmore today.");
+                if (s.maxTradesPerHour > 0 && st.tradesThisHour >= s.maxTradesPerHour) {
+                    return fail("&cHourly trade limit reached. Try again later.");
+                }
+
+                if (s.sellDailyCapBlocks > 0 && st.soldTodayBlocks + blocks > s.sellDailyCapBlocks) {
+                    long left = Math.max(0, s.sellDailyCapBlocks - st.soldTodayBlocks);
+                    return fail("&cDaily sell cap reached. You can only sell &e" + left + " &cmore today.");
+                }
             }
         }
 
         // Sellable balance calculation: never allow selling "starter" capacity
-        UUID uuid = p.getUniqueId();
-        ClaimBlockData cbd = mgr.getOrCreate(uuid);
-
         long starter = plugin.cfg().raw().getLong("claim_blocks.starting_blocks", 0);
         long used = mgr.getUsedBlocks(uuid);
         long spent = mgr.getSpentBlocks(uuid);
@@ -201,15 +240,22 @@ public class ClaimBlockExchangeService {
         if (s.sellLockEnabled && !bypassLock) {
             if ("ALL".equalsIgnoreCase(s.sellLockScope)) {
                 long holdMs = s.sellLockHoldMinutes * 60_000L;
-                long until = st.lastAnyGainMillis + holdMs;
+                long until;
+                synchronized (st) {
+                    until = st.lastAnyGainMillis + holdMs;
+                }
                 if (now < until) {
                     long secs = Math.max(1, (until - now + 999) / 1000);
                     return fail("&cSell-lock active. Try again in &e" + secs + "s&c.");
                 }
             } else {
-                pruneLots(st, now, s.sellLockHoldMinutes);
-
-                long lockedPurchased = sumLockedLots(st, now, s.sellLockHoldMinutes);
+                long lockedPurchased;
+                long nextUnlock;
+                synchronized (st) {
+                    pruneLots(st, now, s.sellLockHoldMinutes);
+                    lockedPurchased = sumLockedLots(st, now, s.sellLockHoldMinutes);
+                    nextUnlock = nextUnlockSeconds(st, now, s.sellLockHoldMinutes);
+                }
 
                 // Fairness: assume any over-starter consumption hits bought blocks first,
                 // so locked purchased can't exceed bought remaining after that consumption.
@@ -220,15 +266,14 @@ public class ClaimBlockExchangeService {
                 long allowed = Math.max(0L, nonStarterRemaining - effectiveLocked);
 
                 if (blocks > allowed) {
-                    long next = nextUnlockSeconds(st, now, s.sellLockHoldMinutes);
-                    if (next <= 0) next = (s.sellLockHoldMinutes * 60L);
-                    return fail("&cSell-lock active. You can sell &e" + allowed + " &cnow. Next unlock in ~&e" + next + "s&c.");
+                    if (nextUnlock <= 0) nextUnlock = (s.sellLockHoldMinutes * 60L);
+                    return fail("&cSell-lock active. You can sell &e" + allowed + " &cnow. Next unlock in ~&e" + nextUnlock + "s&c.");
                 }
             }
         }
 
         double base = blocks * s.sellPricePerBlock;
-        double fee = (base * (s.sellFeePercent / 100.0)) + s.sellFeeFlat;
+        double fee = (base * (s.sellFeePercent / 100.0)) + s.sellFeeFlat; // sellFeeFlat supported for legacy configs
         double payout = Math.max(0.0, base - fee);
 
         if (!Double.isFinite(payout) || payout <= 0.0) {
@@ -236,7 +281,7 @@ public class ClaimBlockExchangeService {
         }
 
         // Deduct blocks: earned -> bonus -> bought (but never sell locked purchased)
-        if (!deductForSell(cbd, blocks, starter, used, spent, s, st)) {
+        if (!deductForSell(cbd, blocks, starter, used, spent, s, st, now)) {
             return fail("&cUnable to process sell. (Sell-lock or balance restriction)");
         }
 
@@ -244,10 +289,12 @@ public class ClaimBlockExchangeService {
 
         plugin.vault().give(p, payout);
 
-        st.lastTradeMillis = now;
-        st.tradesThisHour++;
-        st.soldTodayBlocks += blocks;
-        st.moneyEarnedToday += payout;
+        synchronized (st) {
+            st.lastTradeMillis = now;
+            st.tradesThisHour++;
+            st.soldTodayBlocks += blocks;
+            st.moneyEarnedToday += payout;
+        }
 
         saveAsync();
 
@@ -256,16 +303,28 @@ public class ClaimBlockExchangeService {
                 + "&a. &7(Available: &a" + newAvail + "&7)");
     }
 
+    /**
+     * Optional hook: if you want sell_lock.scope=ALL to truly mean "ALL gains",
+     * call this from your earn/level-up code when a player gains claim blocks.
+     */
+    public void markAnyGain(UUID playerId) {
+        if (playerId == null) return;
+        PlayerState st = getState(playerId);
+        synchronized (st) {
+            st.lastAnyGainMillis = System.currentTimeMillis();
+        }
+        saveAsync();
+    }
+
     // -------------------------------------------------------------------------
     // Internal: Deduction rules
     // -------------------------------------------------------------------------
 
     private boolean deductForSell(ClaimBlockData cbd, long amount, long starter, long used, long spent,
-                                 ExchangeSettings s, PlayerState st) {
+                                 ExchangeSettings s, PlayerState st, long now) {
 
         long nonStarterConsumed = Math.max(0L, (used + spent) - starter);
 
-        // Remaining nonstarter was already checked in sell()
         long earned = cbd.getEarnedBlocks();
         long bonus = cbd.getBonusBlocks();
         long bought = cbd.getBoughtBlocks();
@@ -273,8 +332,11 @@ public class ClaimBlockExchangeService {
         // Determine how many bought blocks are unlocked (for EXCHANGE_PURCHASED_ONLY lock)
         long unlockedBought = Long.MAX_VALUE;
         if (s.sellLockEnabled && "EXCHANGE_PURCHASED_ONLY".equalsIgnoreCase(s.sellLockScope)) {
-            pruneLots(st, System.currentTimeMillis(), s.sellLockHoldMinutes);
-            long lockedPurchased = sumLockedLots(st, System.currentTimeMillis(), s.sellLockHoldMinutes);
+            long lockedPurchased;
+            synchronized (st) {
+                pruneLots(st, now, s.sellLockHoldMinutes);
+                lockedPurchased = sumLockedLots(st, now, s.sellLockHoldMinutes);
+            }
 
             long purchasedRemainingAfterConsumption = Math.max(0L, bought - nonStarterConsumed);
             long effectiveLocked = Math.min(lockedPurchased, purchasedRemainingAfterConsumption);
@@ -307,173 +369,175 @@ public class ClaimBlockExchangeService {
     }
 
     // -------------------------------------------------------------------------
-    // Settings resolution (supports profiles + sane defaults)
+    // Settings resolution (profiles + backwards-compat fallbacks)
     // -------------------------------------------------------------------------
 
     private ExchangeSettings resolveSettings(Player p) {
         FileConfiguration cfg = plugin.cfg().raw();
-
         ExchangeSettings s = new ExchangeSettings();
 
-        s.enabled = cfg.getBoolean("claim_blocks.exchange.enabled", false);
+        final String base = "claim_blocks.exchange.";
 
-        s.exchangePerm = cfg.getString("claim_blocks.exchange.permissions.exchange", "aegis.claimblocks.exchange");
-        s.buyPerm = cfg.getString("claim_blocks.exchange.permissions.buy", "aegis.claimblocks.buy");
-        s.sellPerm = cfg.getString("claim_blocks.exchange.permissions.sell", "aegis.claimblocks.sell");
-        s.bypassPerm = cfg.getString("claim_blocks.exchange.permissions.bypass_limits", "aegis.claimblocks.exchange.bypass");
-        s.bypassSellLockPerm = cfg.getString("claim_blocks.exchange.permissions.bypass_sell_lock", "aegis.claimblocks.selllock.bypass");
+        s.enabled = cfg.getBoolean(base + "enabled", false);
 
-        s.sellRequiresPermission = cfg.getBoolean("claim_blocks.exchange.sell_requires_permission.enabled", false);
+        // Spread warning threshold (info/log-only)
+        s.minSpreadPercent = readDouble(cfg,
+                base + "min_spread_percent",
+                base + "min-spread-percent",
+                0.0);
 
-        s.worldsAllowlistEnabled = cfg.getBoolean("claim_blocks.exchange.worlds_allowed.enabled", false);
-        s.worldsAllowed = new HashSet<>(cfg.getStringList("claim_blocks.exchange.worlds_allowed.worlds"));
+        // World allowlist
+        s.worldsAllowlistEnabled = cfg.getBoolean(base + "worlds_allowed.enabled", false);
+        s.worldsAllowed = new HashSet<>(cfg.getStringList(base + "worlds_allowed.worlds"));
 
-        String profile = cfg.getString("claim_blocks.exchange.profile", "safe_small");
-        profile = (profile == null) ? "safe_small" : profile.trim();
+        // Optional sell permission gate
+        s.sellRequiresPermission = cfg.getBoolean(base + "sell_requires_permission.enabled", false);
+
+        // Permissions:
+        // Prefer config if present (legacy), otherwise sane defaults.
+        s.exchangePerm = cfg.getString(base + "permissions.exchange", "aegis.claimblocks.exchange");
+        // IMPORTANT: default buy perm = exchange perm (so you don't *need* a separate "buy" node)
+        s.buyPerm = cfg.getString(base + "permissions.buy", s.exchangePerm);
+        s.sellPerm = cfg.getString(base + "permissions.sell", "aegis.claimblocks.sell");
+        s.bypassPerm = cfg.getString(base + "permissions.bypass_limits", "aegis.claimblocks.exchange.bypass");
+        s.bypassSellLockPerm = cfg.getString(base + "permissions.bypass_sell_lock", "aegisguard.claimblocks.selllock.bypass");
+
+        // Profile selection
+        String profile = cfg.getString(base + "profile", "safe_small");
+        profile = (profile == null || profile.isBlank()) ? "safe_small" : profile.trim();
         boolean useCustom = profile.equalsIgnoreCase("custom");
 
-        String basePath = "claim_blocks.exchange.";
-        String profPath = "claim_blocks.exchange.profiles." + profile + ".";
+        String prof = base + "profiles." + profile + ".";
 
-        // Rates
-        s.buyPricePerBlock = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "rates.buy_price_per_block",
-                basePath + "rates.buy_price_per_block",
-                (useCustom ? basePath : profPath) + "buy.price_per_block",
-                basePath + "buy.price_per_block",
-                10.0);
-
-        s.sellPricePerBlock = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "rates.sell_price_per_block",
-                basePath + "rates.sell_price_per_block",
-                (useCustom ? basePath : profPath) + "sell.price_per_block",
-                basePath + "sell.price_per_block",
-                6.0);
-
-        // Limits
+        // Cooldown (new paths first, then legacy)
         s.cooldownSeconds = (int) readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.cooldown_seconds",
-                basePath + "limits.cooldown_seconds",
-                (useCustom ? basePath : profPath) + "cooldown_seconds",
-                basePath + "cooldown_seconds",
+                (useCustom ? base : prof) + "cooldown_seconds",
+                base + "cooldown_seconds",
+                (useCustom ? base : prof) + "limits.cooldown_seconds",
+                base + "limits.cooldown_seconds",
                 10);
 
+        // Trades/hour (legacy feature, optional; default 0 = unlimited)
         s.maxTradesPerHour = (int) readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.max_trades_per_hour",
-                basePath + "limits.max_trades_per_hour",
-                30);
+                (useCustom ? base : prof) + "limits.max_trades_per_hour",
+                base + "limits.max_trades_per_hour",
+                0);
+
+        // BUY side (new first, then legacy)
+        s.buyEnabled = cfg.getBoolean((useCustom ? base : prof) + "buy.enabled",
+                cfg.getBoolean(base + "buy.enabled", true));
+
+        s.buyPricePerBlock = readDouble(cfg,
+                (useCustom ? base : prof) + "buy.price_per_block",
+                base + "buy.price_per_block",
+                (useCustom ? base : prof) + "rates.buy_price_per_block",
+                base + "rates.buy_price_per_block",
+                10.0);
+
+        s.buyFeePercent = readDouble(cfg,
+                (useCustom ? base : prof) + "buy.fee_percent",
+                base + "buy.fee_percent",
+                (useCustom ? base : prof) + "fees.buy.percent",
+                base + "fees.buy.percent",
+                0.0);
+
+        s.buyFeeFlat = readDouble(cfg,
+                (useCustom ? base : prof) + "fees.buy.flat",
+                base + "fees.buy.flat",
+                0.0);
 
         s.buyMin = (int) readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.buy.min_blocks",
-                basePath + "limits.buy.min_blocks",
-                (useCustom ? basePath : profPath) + "buy.min_per_tx",
-                basePath + "buy.min_per_tx",
+                (useCustom ? base : prof) + "buy.min_per_tx",
+                base + "buy.min_per_tx",
+                (useCustom ? base : prof) + "limits.buy.min_blocks",
+                base + "limits.buy.min_blocks",
                 1);
 
         s.buyMaxPerTrade = readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.buy.max_blocks_per_trade",
-                basePath + "limits.buy.max_blocks_per_trade",
-                (useCustom ? basePath : profPath) + "buy.max_per_tx",
-                basePath + "buy.max_per_tx",
+                (useCustom ? base : prof) + "buy.max_per_tx",
+                base + "buy.max_per_tx",
+                (useCustom ? base : prof) + "limits.buy.max_blocks_per_trade",
+                base + "limits.buy.max_blocks_per_trade",
                 5000);
 
         s.buyDailyCapBlocks = readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.buy.max_blocks_per_day",
-                basePath + "limits.buy.max_blocks_per_day",
-                (useCustom ? basePath : profPath) + "buy.daily_cap",
-                basePath + "buy.daily_cap",
-                25000);
+                (useCustom ? base : prof) + "buy.daily_cap",
+                base + "buy.daily_cap",
+                (useCustom ? base : prof) + "limits.buy.max_blocks_per_day",
+                base + "limits.buy.max_blocks_per_day",
+                0);
+
+        // SELL side (new first, then legacy)
+        s.sellEnabled = cfg.getBoolean((useCustom ? base : prof) + "sell.enabled",
+                cfg.getBoolean(base + "sell.enabled", true));
+
+        s.sellPricePerBlock = readDouble(cfg,
+                (useCustom ? base : prof) + "sell.price_per_block",
+                base + "sell.price_per_block",
+                (useCustom ? base : prof) + "rates.sell_price_per_block",
+                base + "rates.sell_price_per_block",
+                6.0);
+
+        s.sellFeePercent = readDouble(cfg,
+                (useCustom ? base : prof) + "sell.fee_percent",
+                base + "sell.fee_percent",
+                (useCustom ? base : prof) + "fees.sell.percent",
+                base + "fees.sell.percent",
+                0.0);
+
+        s.sellFeeFlat = readDouble(cfg,
+                (useCustom ? base : prof) + "fees.sell.flat",
+                base + "fees.sell.flat",
+                0.0);
 
         s.sellMin = (int) readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.sell.min_blocks",
-                basePath + "limits.sell.min_blocks",
-                (useCustom ? basePath : profPath) + "sell.min_per_tx",
-                basePath + "sell.min_per_tx",
+                (useCustom ? base : prof) + "sell.min_per_tx",
+                base + "sell.min_per_tx",
+                (useCustom ? base : prof) + "limits.sell.min_blocks",
+                base + "limits.sell.min_blocks",
                 1);
 
         s.sellMaxPerTrade = readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.sell.max_blocks_per_trade",
-                basePath + "limits.sell.max_blocks_per_trade",
-                (useCustom ? basePath : profPath) + "sell.max_per_tx",
-                basePath + "sell.max_per_tx",
+                (useCustom ? base : prof) + "sell.max_per_tx",
+                base + "sell.max_per_tx",
+                (useCustom ? base : prof) + "limits.sell.max_blocks_per_trade",
+                base + "limits.sell.max_blocks_per_trade",
                 5000);
 
         s.sellDailyCapBlocks = readLong(cfg,
-                (useCustom ? basePath : profPath) + "limits.sell.max_blocks_per_day",
-                basePath + "limits.sell.max_blocks_per_day",
-                (useCustom ? basePath : profPath) + "sell.daily_cap",
-                basePath + "sell.daily_cap",
-                15000);
-
-        // Fees
-        s.buyFeePercent = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "fees.buy.percent",
-                basePath + "fees.buy.percent",
-                (useCustom ? basePath : profPath) + "buy.fee_percent",
-                basePath + "buy.fee_percent",
-                2.5);
-
-        s.buyFeeFlat = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "fees.buy.flat",
-                basePath + "fees.buy.flat",
-                0.0);
-
-        s.sellFeePercent = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "fees.sell.percent",
-                basePath + "fees.sell.percent",
-                (useCustom ? basePath : profPath) + "sell.fee_percent",
-                basePath + "sell.fee_percent",
-                5.0);
-
-        s.sellFeeFlat = readDouble(cfg,
-                (useCustom ? basePath : profPath) + "fees.sell.flat",
-                basePath + "fees.sell.flat",
-                0.0);
-
-        // Sell lock
-        s.sellLockEnabled = cfg.getBoolean((useCustom ? basePath : profPath) + "sell_lock.enabled",
-                cfg.getBoolean(basePath + "sell_lock.enabled", true));
-
-        s.sellLockHoldMinutes = (int) readLong(cfg,
-                (useCustom ? basePath : profPath) + "sell_lock.hold_minutes",
-                basePath + "sell_lock.hold_minutes",
-                30);
-
-        s.sellLockScope = cfg.getString((useCustom ? basePath : profPath) + "sell_lock.scope",
-                cfg.getString(basePath + "sell_lock.scope", "EXCHANGE_PURCHASED_ONLY"));
-
-        s.sellLockMaxLockedBlocks = readLong(cfg,
-                (useCustom ? basePath : profPath) + "sell_lock.max_locked_blocks",
-                basePath + "sell_lock.max_locked_blocks",
+                (useCustom ? base : prof) + "sell.daily_cap",
+                base + "sell.daily_cap",
+                (useCustom ? base : prof) + "limits.sell.max_blocks_per_day",
+                base + "limits.sell.max_blocks_per_day",
                 0);
 
+        // Sell-lock (new first, then legacy)
+        s.sellLockEnabled = cfg.getBoolean((useCustom ? base : prof) + "sell_lock.enabled",
+                cfg.getBoolean(base + "sell_lock.enabled", true));
+
+        s.sellLockHoldMinutes = (int) readLong(cfg,
+                (useCustom ? base : prof) + "sell_lock.hold_minutes",
+                base + "sell_lock.hold_minutes",
+                30);
+
+        s.sellLockScope = cfg.getString((useCustom ? base : prof) + "sell_lock.scope",
+                cfg.getString(base + "sell_lock.scope", "EXCHANGE_PURCHASED_ONLY"));
+
+        s.sellLockMaxLockedBlocks = readLong(cfg,
+                (useCustom ? base : prof) + "sell_lock.max_locked_blocks",
+                base + "sell_lock.max_locked_blocks",
+                0);
+
+        // Prefer bypass permission defined under sell_lock, otherwise fall back to legacy permission paths
+        String bypassLock = cfg.getString((useCustom ? base : prof) + "sell_lock.bypass_permission", null);
+        if (bypassLock == null || bypassLock.isBlank()) {
+            bypassLock = cfg.getString(base + "sell_lock.bypass_permission", null);
+        }
+        if (bypassLock != null && !bypassLock.isBlank()) {
+            s.bypassSellLockPerm = bypassLock;
+        }
+
         return s;
-    }
-
-    private long readLong(FileConfiguration cfg, String path, long def) {
-        return cfg.contains(path) ? cfg.getLong(path) : def;
-    }
-
-    private long readLong(FileConfiguration cfg, String p1, String p2, long def) {
-        if (cfg.contains(p1)) return cfg.getLong(p1);
-        if (cfg.contains(p2)) return cfg.getLong(p2);
-        return def;
-    }
-
-    private long readLong(FileConfiguration cfg, String p1, String p2, String p3, String p4, long def) {
-        if (cfg.contains(p1)) return cfg.getLong(p1);
-        if (cfg.contains(p2)) return cfg.getLong(p2);
-        if (cfg.contains(p3)) return cfg.getLong(p3);
-        if (cfg.contains(p4)) return cfg.getLong(p4);
-        return def;
-    }
-
-    private double readDouble(FileConfiguration cfg, String p1, String p2, String p3, String p4, double def) {
-        if (cfg.contains(p1)) return cfg.getDouble(p1);
-        if (cfg.contains(p2)) return cfg.getDouble(p2);
-        if (cfg.contains(p3)) return cfg.getDouble(p3);
-        if (cfg.contains(p4)) return cfg.getDouble(p4);
-        return def;
     }
 
     // -------------------------------------------------------------------------
@@ -557,7 +621,6 @@ public class ClaimBlockExchangeService {
                 if (total > maxLockedBlocks) {
                     long overflow = total - maxLockedBlocks;
 
-                    // Reduce this lot by overflow, or remove it
                     long newAmt = lot.amount - overflow;
                     if (newAmt <= 0) {
                         it.remove();
@@ -566,7 +629,7 @@ public class ClaimBlockExchangeService {
                         it.set(new Lot(lot.timeMillis, newAmt));
                         total -= overflow;
                     }
-                    // Remove any older lots entirely
+
                     while (it.hasPrevious()) {
                         it.previous();
                         it.remove();
@@ -580,7 +643,6 @@ public class ClaimBlockExchangeService {
     private void pruneLots(PlayerState st, long now, int holdMinutes) {
         if (holdMinutes <= 0) return;
         long holdMs = holdMinutes * 60_000L;
-
         st.purchaseLots.removeIf(lot -> (now - lot.timeMillis) >= holdMs);
     }
 
@@ -615,8 +677,13 @@ public class ClaimBlockExchangeService {
     private void load() {
         synchronized (ioLock) {
             if (!file.exists()) {
-                try { file.getParentFile().mkdirs(); file.createNewFile(); }
-                catch (IOException e) { e.printStackTrace(); }
+                try {
+                    file.getParentFile().mkdirs();
+                    //noinspection ResultOfMethodCallIgnored
+                    file.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             data = YamlConfiguration.loadConfiguration(file);
 
@@ -652,7 +719,8 @@ public class ClaimBlockExchangeService {
                     }
 
                     cache.put(uuid, st);
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) {
+                }
             }
         }
     }
@@ -671,20 +739,42 @@ public class ClaimBlockExchangeService {
                 ConfigurationSection s = root.getConfigurationSection(path);
                 if (s == null) s = root.createSection(path);
 
-                s.set("last_trade", st.lastTradeMillis);
-                s.set("hour_start", st.hourWindowStartMillis);
-                s.set("hour_trades", st.tradesThisHour);
+                List<Lot> lotsSnapshot;
+                long lastTrade, hourStart, boughtToday, soldToday, lastGain;
+                int hourTrades;
+                String dayKey;
+                double spentToday, earnedToday;
 
-                s.set("day", st.dayKey);
-                s.set("bought_today_blocks", st.boughtTodayBlocks);
-                s.set("sold_today_blocks", st.soldTodayBlocks);
-                s.set("money_spent_today", st.moneySpentToday);
-                s.set("money_earned_today", st.moneyEarnedToday);
+                synchronized (st) {
+                    lastTrade = st.lastTradeMillis;
+                    hourStart = st.hourWindowStartMillis;
+                    hourTrades = st.tradesThisHour;
 
-                s.set("last_any_gain", st.lastAnyGainMillis);
+                    dayKey = st.dayKey;
+                    boughtToday = st.boughtTodayBlocks;
+                    soldToday = st.soldTodayBlocks;
+                    spentToday = st.moneySpentToday;
+                    earnedToday = st.moneyEarnedToday;
+
+                    lastGain = st.lastAnyGainMillis;
+
+                    lotsSnapshot = new ArrayList<>(st.purchaseLots);
+                }
+
+                s.set("last_trade", lastTrade);
+                s.set("hour_start", hourStart);
+                s.set("hour_trades", hourTrades);
+
+                s.set("day", dayKey);
+                s.set("bought_today_blocks", boughtToday);
+                s.set("sold_today_blocks", soldToday);
+                s.set("money_spent_today", spentToday);
+                s.set("money_earned_today", earnedToday);
+
+                s.set("last_any_gain", lastGain);
 
                 List<Map<String, Object>> lots = new ArrayList<>();
-                for (Lot lot : st.purchaseLots) {
+                for (Lot lot : lotsSnapshot) {
                     Map<String, Object> m = new HashMap<>();
                     m.put("t", lot.timeMillis);
                     m.put("a", lot.amount);
@@ -693,13 +783,21 @@ public class ClaimBlockExchangeService {
                 s.set("purchase_lots", lots);
             }
 
-            try { data.save(file); }
-            catch (IOException ex) { ex.printStackTrace(); }
+            try {
+                data.save(file);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     private void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        try {
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        } catch (Throwable t) {
+            // Fallback (rare): if scheduler is unavailable (shutdown), save sync
+            save();
+        }
     }
 
     private PlayerState getState(UUID uuid) {
@@ -722,12 +820,50 @@ public class ClaimBlockExchangeService {
         return ChatColor.translateAlternateColorCodes('&', s == null ? "" : s);
     }
 
+    private static String format2(double d) {
+        return String.format(Locale.US, "%.2f", d);
+    }
+
+    private long readLong(FileConfiguration cfg, String p1, String p2, String p3, String p4, long def) {
+        if (cfg.contains(p1)) return cfg.getLong(p1);
+        if (cfg.contains(p2)) return cfg.getLong(p2);
+        if (cfg.contains(p3)) return cfg.getLong(p3);
+        if (cfg.contains(p4)) return cfg.getLong(p4);
+        return def;
+    }
+
+    private long readLong(FileConfiguration cfg, String p1, String p2, long def) {
+        if (cfg.contains(p1)) return cfg.getLong(p1);
+        if (cfg.contains(p2)) return cfg.getLong(p2);
+        return def;
+    }
+
+    private long readLong(FileConfiguration cfg, String p1, long def) {
+        return cfg.contains(p1) ? cfg.getLong(p1) : def;
+    }
+
+    private double readDouble(FileConfiguration cfg, String p1, String p2, String p3, String p4, double def) {
+        if (cfg.contains(p1)) return cfg.getDouble(p1);
+        if (cfg.contains(p2)) return cfg.getDouble(p2);
+        if (cfg.contains(p3)) return cfg.getDouble(p3);
+        if (cfg.contains(p4)) return cfg.getDouble(p4);
+        return def;
+    }
+
+    private double readDouble(FileConfiguration cfg, String p1, String p2, double def) {
+        if (cfg.contains(p1)) return cfg.getDouble(p1);
+        if (cfg.contains(p2)) return cfg.getDouble(p2);
+        return def;
+    }
+
     // -------------------------------------------------------------------------
     // Data classes
     // -------------------------------------------------------------------------
 
     private static class ExchangeSettings {
         boolean enabled;
+
+        double minSpreadPercent;
 
         String exchangePerm;
         String buyPerm;
@@ -740,24 +876,24 @@ public class ClaimBlockExchangeService {
         boolean worldsAllowlistEnabled;
         Set<String> worldsAllowed = new HashSet<>();
 
-        double buyPricePerBlock;
-        double sellPricePerBlock;
-
         int cooldownSeconds;
-        int maxTradesPerHour;
+        int maxTradesPerHour; // legacy optional
 
+        boolean buyEnabled;
+        double buyPricePerBlock;
+        double buyFeePercent;
+        double buyFeeFlat; // legacy optional
         int buyMin;
         long buyMaxPerTrade;
         long buyDailyCapBlocks;
 
+        boolean sellEnabled;
+        double sellPricePerBlock;
+        double sellFeePercent;
+        double sellFeeFlat; // legacy optional
         int sellMin;
         long sellMaxPerTrade;
         long sellDailyCapBlocks;
-
-        double buyFeePercent;
-        double buyFeeFlat;
-        double sellFeePercent;
-        double sellFeeFlat;
 
         boolean sellLockEnabled;
         int sellLockHoldMinutes;

@@ -1,267 +1,210 @@
-# AegisGuard Codex Language Pack (split files)
-# Language: hybrid_english
-# Section: guis.yml
-# Generated: 2025-12-16 23:08:56Z
-# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
-button_back: '&e⟵ Return'
-back_lore:
-- '&7Return to the previous page.'
-button_back_menu: '&fReturn to Menu'
-back_menu_lore:
-- '&7Return to the main dashboard.'
-button_prev_page: '&fPrevious Page'
-button_next_page: '&fNext Page'
-button_exit: '&c✖ Close'
-button_exit_lore:
+# =========================================================
+# AegisGuard Codex (Hybrid English) - GUIs Bundle
+# File: guis.yml
+# =========================================================
+
+# ----------------------------
+# Common Buttons / Pagination
+# ----------------------------
+
+button_back: '&7⬅ Back'
+button_back_lore:
+- '&7Return to previous menu.'
+
+button_next: '&7➡ Next'
+button_next_lore:
+- '&7Go to the next page.'
+
+button_prev: '&7⬅ Previous'
+button_prev_lore:
+- '&7Go to the previous page.'
+
+button_close: '&c✖ Close'
+button_close_lore:
 - '&7Close this menu.'
+
+button_confirm: '&a✔ Confirm'
+button_confirm_lore:
+- '&7Confirm this action.'
+
+button_cancel: '&c✖ Cancel'
+button_cancel_lore:
+- '&7Cancel and return.'
+
+
+# ----------------------------
+# Player Menu (Main Dashboard)
+# ----------------------------
+
+menu_title: '&b⚔ AegisGuard Menu'
+
+button_info: '&bℹ Info'
+info_lore:
+- '&7View plugin info and help.'
+
+plot_status_button_title: '&d📜 Plot Status'
+plot_status_button_lore:
+- '&7View plot status and details.'
+
+visit_gui_title: '&a🧭 Travel'
+visit_button_lore:
+- '&7Visit plots and travel quickly.'
+
+button_claim_land: '&a🛡 Claim Land'
+claim_land_lore:
+- '&7Select two points with your wand first.'
+claim_land_ready_lore:
+- '&7Ready to claim your selection.'
+- ' '
+- '&eClick to confirm'
+
+button_plot_flags: '&6⚙ Plot Flags'
+plot_flags_lore:
+- '&7Manage protection flags for this plot.'
+plot_flags_locked_lore:
+- '&cYou cannot manage flags here.'
+
+button_roles: '&e👥 Roles'
+roles_lore:
+- '&7Manage member roles and permissions.'
+roles_locked_lore:
+- '&cYou cannot manage roles here.'
+
+level_gui_title: '&a📈 Leveling'
+level_button_lore:
+- '&7Level up your plot for perks.'
+
+zone_gui_title: '&b🏗 Zoning'
+zone_button_lore:
+- '&7Create sub-zones and rentable rooms.'
+
+biome_gui_title: '&d🌿 Biomes'
+biome_button_lore:
+- '&7Change your plot biome.'
+
+button_market: '&6💰 Market'
+market_lore:
+- '&7Buy and sell plot goods.'
+
+button_expand: '&b⛏ Expand'
+expand_lore:
+- '&7Request land expansions.'
+
+button_auction: '&c🔥 Auctions'
+auction_lore:
+- '&7Bid on plots and listings.'
+
+button_player_settings: '&e⚙ Settings'
+player_settings_lore:
+- '&7Personal preferences and language.'
+
+admin_menu_title: '&c🛠 Admin Menu'
+admin_menu_lore:
+- '&7Operator Access Only'
+
+button_exit: '&c✖ Exit'
 exit_lore:
 - '&7Close this menu.'
-button_expand: '&dRequest Expansion'
-button_view_requests_admin: '&cReview Requests'
-button_back_admin: '&fBack (Admin)'
-auction_button_back: '&e⟵ Back to Auctions'
-market_button_back: '&e⟵ Back to Market'
-realestate_button_back: '&e⟵ Back to Real Estate'
-domain_market_button_back: '&e⟵ Back to Domain Market'
-biome_button_back: '&e⟵ Back to Plot Settings'
-biome_button_exit: '&c✖ Close Biome Changer'
-expansion_button_back: '&e⟵ Back to Previous Menu'
-expansion_gui_title: '&dLand Expansion Request'
-expansion_admin_title: '&#A8FF78Expansion Requests'
-expansion_none_title: '&cNo Requests'
-expansion_none_lore:
-- '&7No pending requests.'
-expansion_tier1_name: '&aSmall Expansion (+5)'
-expansion_tier2_name: '&eMedium Expansion (+10)'
-expansion_tier3_name: '&fLarge Expansion (+20)'
-expansion_tier4_name: '&6Huge Expansion (+35)'
-expansion_tier5_name: '&bMassive Expansion (+50)'
-expansion_locked_lore:
-- '&cYou must stand in'
-- '&cyour own plot.'
-help_header: '&bAegisGuard Help'
-help_lines:
-- '&e/ag wand &7- Get the Aegis Scepter.'
-- '&e/ag menu &7- Open the Guardian Codex.'
-- '&e/ag claim &7- Claim land from your selection.'
-- '&e/ag unclaim &7- Unclaim your current land.'
-- '&e/ag resize <dir> <amt> &7- Expand your plot.'
-- '&e/ag home &7- Teleport to your plot home.'
-- '&e/ag setspawn &7- Set your plot home point.'
-- '&e/ag market &7- Open the land market.'
-- '&e/ag auction &7- View land auctions.'
-- '&e/ag stuck &7- Escape if you are trapped.'
-- '&e/ag help &7- Show this help.'
-auction_gui_title: '&6Land Auctions'
-auction_item_name: '&eAuction: {OWNER}''s Plot'
-auction_item_lore:
-- '&7Current Bid: &6{BID}'
-- '&7Highest Bidder: &f{BIDDER}'
+
+
+# ----------------------------
+# Playtime Rewards
+# ----------------------------
+
+playtime_rewards_title: '&b⏳ Playtime Rewards'
+playtime_rewards_lore:
+- '&7Claim daily playtime rewards.'
 - ' '
-- '&eLeft-Click:&7 Bid'
-- '&cRight-Click:&7 Teleport'
-market_gui_title: '&6Land Market'
-market_item_name: '&eFor Sale: {OWNER}''s Plot'
-market_item_lore:
-- '&7Price: &6{PRICE}'
+- '&eClick to view.'
+
+playtime_next_reward: '&7Next Reward: &e{TIME}'
+playtime_claim_now: '&aClaim Now'
+playtime_claim_lore:
+- '&7Reward: &e{REWARD}'
+- '&7Requirements: &f{REQ}'
 - ' '
-- '&eLeft-Click:&7 Buy'
-- '&cRight-Click:&7 Teleport'
-visit_gui_title: '&9Travel Network'
-visit_switch_trusted_lore:
-- '&7Plots where you are trusted.'
-visit_switch_warps_lore:
-- '&7Public server locations.'
-visit_warp_lore:
-- '&7Click to travel.'
-visit_plot_name: '&e{PLOT}'
-visit_plot_lore:
-- '&7World: &f{WORLD}'
-- '&7Role: &a{ROLE}'
+- '&eClick to claim!'
+
+playtime_locked: '&cLocked'
+playtime_locked_lore:
+- '&7You must wait: &e{TIME}'
+- '&7Before claiming again.'
+
+
+# =========================================================
+# ClaimBlocks Exchange (Player Menu + Exchange GUI)
+# =========================================================
+
+# Player Menu button (slot 39)
+button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
+claimblocks_exchange_lore:
+- '&7Buy or sell ClaimBlocks using money.'
 - ' '
-- '&eClick to Travel'
-view_requests_admin_lore:
-- '&7Approve or deny expansion requests.'
-
-# --------------------------------------
-# Plot Flags GUI (Synced keys for PlotFlagsGUI)
-# --------------------------------------
-
-plot_flags_title: '&9&lPlot Flags'
-
-label_free: '&aFree'
-
-button_pvp_on: '&a⚔ PvP: Protected'
-button_pvp_off: '&c⚔ PvP: Unprotected'
-
-button_tnt_on: '&a💥 TNT: Protected'
-button_tnt_off: '&c💥 TNT: Unprotected'
-
-button_fire_on: '&a🔥 Fire Spread: Blocked'
-button_fire_off: '&c🔥 Fire Spread: Allowed'
-
-button_mobs_on: '&a☠ Mobs: Protected'
-button_mobs_off: '&c☠ Mobs: Unprotected'
-
-button_entry_on: '&a🚪 Entry: Private'
-button_entry_off: '&c🚪 Entry: Public'
-
-button_safe_on: '&a🛡 Safe Zone: Enabled'
-button_safe_off: '&c🛡 Safe Zone: Disabled'
-
-button_containers_on: '&a📦 Containers: Locked'
-button_containers_off: '&c📦 Containers: Unlocked'
-
-button_piston_on: '&a🔩 Pistons: Blocked'
-button_piston_off: '&c🔩 Pistons: Allowed'
-
-button_farm_on: '&a🌾 Farming: Protected'
-button_farm_off: '&c🌾 Farming: Unprotected'
-
-button_animals_on: '&a🐄 Animals: Protected'
-button_animals_off: '&c🐄 Animals: Unprotected'
-
-button_redstone_on: '&a🔴 Redstone: Blocked'
-button_redstone_off: '&c🔴 Redstone: Allowed'
-
-button_vehicles_on: '&a🛶 Vehicles: Blocked'
-button_vehicles_off: '&c🛶 Vehicles: Allowed'
-
-button_shop_on: '&a💎 Shop Interact: Enabled'
-button_shop_off: '&c💎 Shop Interact: Disabled'
-
-button_fly_on: '&a🪽 Flight: Enabled'
-button_fly_off: '&c🪽 Flight: Disabled'
-
-button_cosmetics: '&b✨ Cosmetics'
-
-pvp_toggle_lore:
-- '&7Blocks PvP combat inside your plot.'
-- '&eClick to toggle.'
-
-tnt_toggle_lore:
-- '&7Prevents explosions from damaging your plot.'
-- '&eClick to toggle.'
-
-fire_toggle_lore:
-- '&7Stops fire from spreading within your plot.'
-- '&eClick to toggle.'
-
-mob_toggle_lore:
-- '&7Prevents hostile mobs from damaging players in your plot.'
-- '&eClick to toggle.'
-
-entry_toggle_lore:
-- '&7When enabled, untrusted players cannot enter.'
-- '&eClick to toggle.'
-
-safe_toggle_lore:
-- '&7Extra safety rules for this plot.'
-- '&7Admins only.'
-- '&eClick to toggle.'
-
-container_toggle_lore:
-- '&7Locks chests and storage blocks from outsiders.'
-- '&eClick to toggle.'
-
-piston_toggle_lore:
-- '&7Prevents pistons from pushing/pulling across borders.'
-- '&eClick to toggle.'
-
-farm_toggle_lore:
-- '&7Protects crops and farmland from outsiders.'
-- '&eClick to toggle.'
-
-animals_toggle_lore:
-- '&7Protects animals from outsiders.'
-- '&eClick to toggle.'
-
-redstone_toggle_lore:
-- '&7Blocks redstone interaction by outsiders.'
-- '&eClick to toggle.'
-
-vehicles_toggle_lore:
-- '&7Blocks vehicle use by outsiders.'
-- '&eClick to toggle.'
-
-shop_toggle_lore:
-- '&7Allows shop interactions inside your plot.'
-- '&7Cost: &6{COST}'
-- '&eClick to purchase/toggle.'
-
-fly_toggle_lore:
-- '&7Allows flying inside your plot.'
-- '&7Cost: &6{COST}'
-- '&eClick to purchase/toggle.'
-
-cosmetics_lore:
-- '&7Customize the look and feel of your plot.'
 - '&eClick to open.'
 
-# --------------------------------------
-# Admin GUI (High Guardian Tools)
-# --------------------------------------
+button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Exchange'
+claimblocks_exchange_disabled_lore:
+- '&7This feature is currently unavailable.'
+- '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
-admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
+# GUI Title
+claimblocks_exchange_gui_title: '&8ClaimBlocks Exchange'
 
-# Toggle formatting + states
-admin_toggle_format: '{NAME}: {STATE}'
-toggle_on: '&aON'
-toggle_off: '&cOFF'
-admin_toggle_default_lore:
-- '&7Toggle this setting.'
-- '&eClick to toggle.'
+# Mode labels
+claimblocks_exchange_buy_label: 'BUY'
+claimblocks_exchange_sell_label: 'SELL'
 
-# --- Admin Toggles (Slots 10-15) ---
-button_admin_auto_remove: '&cAuto-Remove Banned'
-admin_auto_remove_lore:
-- '&7Auto-removes banned players'
-- '&7from plot trust lists.'
+# Mode lores (supports {PERM})
+claimblocks_exchange_buy_lore:
+- '&7Purchase Claim Blocks with money.'
+- '&8Permission: &f{PERM}'
 
-button_admin_bypass_limit: '&6Bypass Claim Limit'
-admin_bypass_limit_lore:
-- '&7Allows admins to ignore'
-- '&7claim size restrictions.'
+claimblocks_exchange_sell_lore:
+- '&7Sell Claim Blocks for money.'
+- '&8May require: &f{PERM}'
 
-button_admin_broadcast: '&bBroadcast Actions'
-admin_broadcast_lore:
-- '&7Broadcasts admin actions'
-- '&7to server chat.'
+# Amount controls
+claimblocks_exchange_minus_lore:
+- '&7Decrease amount'
 
-button_admin_unlimited: '&aUnlimited Plots'
-admin_unlimited_lore:
-- '&7Allows unlimited plots'
-- '&7for administrators.'
+claimblocks_exchange_plus_lore:
+- '&7Increase amount'
 
-button_admin_sync: '&5Proxy Sync'
-admin_sync_lore:
-- '&7Sync settings through proxy'
-- '&7if enabled.'
+# Quote paper title
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
 
-button_admin_perf: '&eLow Overhead Mode'
-admin_perf_lore:
-- '&7Performance-focused mode.'
-- '&7Reduced background work.'
+# Quote lines (supports placeholders)
+claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_line_money: '&7Your Money: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{AVAILABLE} &8available'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
 
-# --- Admin Tools (Slots 28-32) ---
-admin_plot_list_title: '&bPlot List'
-admin_plot_list_lore:
-- '&7View/TP to any plot.'
+# Buy mode quote
+claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
 
-button_admin_diagnostics: '&bDiagnostics'
-admin_diagnostics_lore:
-- '&7View system stats.'
+# Sell mode quote
+claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
 
-button_admin_reload: '&eReload All Settings'
-button_admin_reload_all: '&eReload All Settings'
-admin_reload_lore:
-- '&7Reload all settings.'
-admin_reload_all_lore:
-- '&7Reload all settings.'
+# Shared lines
+claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
+claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
 
-button_admin_refresh_lang: '&aRefresh Language Packs'
-admin_refresh_lang_lore:
-- '&7Reloads the language bundles.'
-- '&7Use after editing lang files.'
-- ' '
-- '&eClick to refresh'
+# Confirm / Disabled
+claimblocks_exchange_confirm_title: '&a&lCONFIRM'
+claimblocks_exchange_confirm_lore:
+- '&7Click to perform the trade.'
+- '&8Shift-click is ignored.'
+
+claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
+claimblocks_exchange_confirm_disabled_lore:
+- '&7Enable: &fclaim_blocks.exchange.enabled: true'
+- '&8Shift-click is ignored.'
+
+# Close
+claimblocks_exchange_close_title: '&cClose'
+claimblocks_exchange_close_lore:
+- '&7Return to your adventures.'

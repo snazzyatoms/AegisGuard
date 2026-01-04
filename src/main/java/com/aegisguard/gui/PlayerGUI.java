@@ -43,13 +43,21 @@ public class PlayerGUI {
     }
 
     private void send(Player p, String key, String fallback) {
-        // Pull chat lines from msg() so language packs control chat output too.
-        String prefix = plugin.msg().get(p, "prefix");
-        if (prefix == null || prefix.isBlank() || prefix.equalsIgnoreCase("prefix")) {
-            prefix = "&8[&bAegisGuard&8]&r ";
-        }
+        String prefix = "&8[&bAegisGuard&8]&r ";
+        try {
+            if (plugin.msg() != null) {
+                String px = plugin.msg().get(p, "prefix");
+                if (px != null && !px.isBlank() && !px.equalsIgnoreCase("prefix")) {
+                    prefix = px;
+                }
+            }
+        } catch (Throwable ignored) {}
 
-        String msg = plugin.msg().get(p, key);
+        String msg = null;
+        try {
+            if (plugin.msg() != null) msg = plugin.msg().get(p, key);
+        } catch (Throwable ignored) {}
+
         if (msg == null || msg.isBlank() || msg.equalsIgnoreCase(key) || msg.contains("[Missing")) {
             msg = fallback;
         }
@@ -189,6 +197,25 @@ public class PlayerGUI {
                 tl(player, "market_lore", List.of("&7Buy and sell plot goods."))
         ));
 
+        // ✅ ClaimBlocks Exchange (Slot 39)
+        boolean exchangeService = plugin.exchange() != null;
+        boolean exchangeEnabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+        if (exchangeService && exchangeEnabled) {
+            inv.setItem(39, GUIManager.createItem(
+                    Material.EMERALD,
+                    t(player, "button_claimblocks_exchange", "&a💱 ClaimBlocks Exchange"),
+                    tl(player, "claimblocks_exchange_lore",
+                            List.of("&7Buy or sell ClaimBlocks using money.", " ", "&eClick to open."))
+            ));
+        } else {
+            inv.setItem(39, GUIManager.createItem(
+                    Material.GRAY_DYE,
+                    t(player, "button_claimblocks_exchange_disabled", "&7💱 ClaimBlocks Exchange"),
+                    tl(player, "claimblocks_exchange_disabled_lore",
+                            List.of("&7This feature is currently unavailable.", "&8Enable: claim_blocks.exchange.enabled: true"))
+            ));
+        }
+
         // Expansion (Slot 40)
         inv.setItem(40, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
@@ -243,7 +270,7 @@ public class PlayerGUI {
         if (e.getCurrentItem() == null) return;
 
         int slot = e.getRawSlot();
-        if (slot < 0 || slot >= 54) return; // ignore bottom inventory
+        if (slot < 0 || slot >= 54) return;
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
 
@@ -272,7 +299,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 20 -> { // Claim
+            case 20 -> {
                 if (plugin.selection().hasSelection(player)) {
                     player.closeInventory();
                     plugin.selection().confirmClaim(player);
@@ -282,7 +309,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 22 -> { // Flags
+            case 22 -> {
                 if (plot != null && canManage) plugin.gui().flags().open(player, plot);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -293,7 +320,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 24 -> { // Roles
+            case 24 -> {
                 if (plot != null && canManage) plugin.gui().roles().open(player);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -346,16 +373,31 @@ public class PlayerGUI {
 
             // Economy
             case 38 -> plugin.gui().market().open(player, 0);
+
+            // ✅ Exchange
+            case 39 -> {
+                if (plugin.exchange() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false)) {
+                    plugin.gui().openClaimBlockExchange(player);
+                } else {
+                    send(player, "claimblocks_exchange_unavailable",
+                            "&cClaimBlocks Exchange is unavailable right now.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
             case 40 -> plugin.gui().expansionRequest().open(player);
+
             case 42 -> {
                 if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0);
             }
 
             // System
             case 48 -> plugin.gui().settings().open(player);
+
             case 49 -> {
                 if (isAdmin) plugin.gui().admin().open(player);
             }
+
             case 50 -> player.closeInventory();
         }
 

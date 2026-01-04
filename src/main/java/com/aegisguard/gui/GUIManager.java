@@ -1,7 +1,6 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
@@ -54,7 +53,7 @@ public class GUIManager {
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
 
-    // ✅ NEW: ClaimBlocks Exchange GUI (v1.2.5+)
+    // ✅ NEW: ClaimBlocks Exchange GUI
     private final ClaimBlockExchangeGUI claimBlockExchangeGUI;
 
     // Hex pattern (&#RRGGBB)
@@ -86,14 +85,9 @@ public class GUIManager {
         // New: Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
 
-        // ✅ NEW: ClaimBlocks Exchange GUI init (only if service exists)
-        ClaimBlockExchangeService ex = null;
-        try {
-            ex = plugin.getClaimBlockExchangeService();
-        } catch (Throwable ignored) {}
-
-        if (ex != null) {
-            this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, ex);
+        // ✅ NEW: Exchange (only if service exists)
+        if (plugin.exchange() != null) {
+            this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, plugin.exchange());
         } else {
             this.claimBlockExchangeGUI = null;
         }
@@ -109,17 +103,29 @@ public class GUIManager {
     }
 
     /**
-     * ✅ NEW: Open ClaimBlocks Exchange menu safely.
+     * ✅ NEW: open ClaimBlocks Exchange (safe wrapper)
      */
     public void openClaimBlockExchange(Player player) {
         if (player == null) return;
 
-        if (claimBlockExchangeGUI == null) {
-            player.sendMessage(color("&c[AegisGuard] &7ClaimBlocks Exchange is not available."));
+        if (claimBlockExchangeGUI == null || plugin.exchange() == null) {
+            try {
+                player.sendMessage(color("&cClaimBlocks Exchange is unavailable."));
+            } catch (Throwable ignored) {}
             return;
         }
 
-        playClick(player);
+        // Optional config gate (UI already grays out, but this makes it bulletproof)
+        boolean enabled = false;
+        try {
+            enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+        } catch (Throwable ignored) {}
+
+        if (!enabled) {
+            player.sendMessage(color("&cClaimBlocks Exchange is disabled in config.yml."));
+            return;
+        }
+
         claimBlockExchangeGUI.open(player);
     }
 
@@ -159,7 +165,7 @@ public class GUIManager {
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
 
-    // ✅ NEW: Exchange getter
+    // ✅ NEW
     public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
 
     // ======================================
@@ -182,8 +188,7 @@ public class GUIManager {
         } catch (Throwable ignored) {}
 
         String fb = applyPlaceholders(fallback, placeholders);
-        String out = safeText(key, value, fb);
-        return out;
+        return safeText(key, value, fb);
     }
 
     public String title(Player player, String key, String fallback) {
@@ -237,9 +242,7 @@ public class GUIManager {
         if (fallback == null || fallback.isEmpty()) return Collections.emptyList();
 
         List<String> out = new ArrayList<>(fallback.size());
-        for (String line : fallback) {
-            out.add(applyPlaceholders(line, placeholders));
-        }
+        for (String line : fallback) out.add(applyPlaceholders(line, placeholders));
         return out;
     }
 
@@ -260,16 +263,11 @@ public class GUIManager {
             out = fallback;
         } else {
             String s = fromCodex.trim();
-            if (s.isEmpty()) {
-                out = fallback;
-            } else if (s.contains("[Missing") || s.equalsIgnoreCase("null")) {
-                out = fallback;
-            } else if (requestedKey != null && !requestedKey.trim().isEmpty()
-                    && s.equalsIgnoreCase(requestedKey.trim())) {
-                out = fallback;
-            } else {
-                out = fromCodex;
-            }
+            if (s.isEmpty()) out = fallback;
+            else if (s.contains("[Missing") || s.equalsIgnoreCase("null")) out = fallback;
+            else if (requestedKey != null && !requestedKey.trim().isEmpty()
+                    && s.equalsIgnoreCase(requestedKey.trim())) out = fallback;
+            else out = fromCodex;
         }
 
         return color(out);
@@ -285,8 +283,8 @@ public class GUIManager {
 
             String v = e.getValue() == null ? "" : e.getValue();
             out = out.replace("{" + k + "}", v)
-                     .replace("{" + k.toLowerCase(Locale.ROOT) + "}", v)
-                     .replace("{" + k.toUpperCase(Locale.ROOT) + "}", v);
+                    .replace("{" + k.toLowerCase(Locale.ROOT) + "}", v)
+                    .replace("{" + k.toUpperCase(Locale.ROOT) + "}", v);
         }
         return out;
     }

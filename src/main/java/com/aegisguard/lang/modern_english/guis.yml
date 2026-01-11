@@ -78,3 +78,70 @@ claimblocks_exchange_confirm_lore_disabled:
 claimblocks_exchange_close: '&cClose'
 claimblocks_exchange_close_lore:
   - '&7Return to your adventures.'
+
+# --------------------------------------
+# ClaimBlocks Exchange GUI (v1.2.5)
+# Used by: ClaimBlocksExchangeGUI.java (or Exchange GUI handler)
+# --------------------------------------
+
+button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
+claimblocks_exchange_lore:
+  - '&7Buy or sell ClaimBlocks using money.'
+  - ' '
+  - '&eClick to open.'
+
+button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Exchange'
+claimblocks_exchange_disabled_lore:
+  - '&7This feature is currently unavailable.'
+  - '&8Enable: &fclaim_blocks.exchange.enabled: true'
+
+claimblocks_exchange_gui_title: '&8ClaimBlocks Exchange'
+
+claimblocks_exchange_buy_label: 'BUY'
+claimblocks_exchange_sell_label: 'SELL'
+
+claimblocks_exchange_buy_lore:
+  - '&7Purchase Claim Blocks with money.'
+  - '&8Permission: &f{PERM}'
+
+claimblocks_exchange_sell_lore:
+  - '&7Sell Claim Blocks for money.'
+  - '&8May require: &f{PERM}'
+
+claimblocks_exchange_minus_lore:
+  - '&7Decrease amount'
+
+claimblocks_exchange_plus_lore:
+  - '&7Increase amount'
+
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
+
+claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_line_money: '&7Your Money: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{AVAILABLE} &8available'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
+
+claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
+
+claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
+
+claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
+claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
+
+claimblocks_exchange_confirm_title: '&a&lCONFIRM'
+claimblocks_exchange_confirm_lore:
+  - '&7Click to perform the trade.'
+  - '&8Shift-click is ignored.'
+
+claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
+claimblocks_exchange_confirm_disabled_lore:
+  - '&7Enable: &fclaim_blocks.exchange.enabled: true'
+  - '&8Shift-click is ignored.'
+
+claimblocks_exchange_close_title: '&cClose'
+claimblocks_exchange_close_lore:
+  - '&7Return to your adventures.'

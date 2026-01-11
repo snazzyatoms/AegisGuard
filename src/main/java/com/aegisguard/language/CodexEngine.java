@@ -1,7 +1,6 @@
 package com.aegisguard.language;
 
 import com.aegisguard.AegisGuard;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -10,7 +9,8 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,28 +34,18 @@ import java.util.regex.Pattern;
  * Notes:
  * - codex.yml is OPTIONAL in lang mode. If missing, we build settings from config.yml.
  * - codex.yml is still supported in fallback codex folder for legacy file_map mode.
- *
- * Upgrades preserved + added:
- * - ✅ Atomic reload swap (prevents half-loaded state during refresh)
- * - ✅ style_order support (cycle order separate from available styles)
- * - ✅ Player style path compat (reads/writes both legacy + canonical)
- *
- * Fixes:
- * - ✅ Language cycling getting "stuck" on one style when auto-detect only finds one folder.
- *   Auto-detect is now ADDITIVE (never shrinks your style list), unless config locks it.
  */
 public class CodexEngine {
 
-    // Legacy path you already used
     private static final String PLAYER_STYLE_PATH = "localization.player_styles";
 
-    // Canonical path used by newer systems (compat)
-    private static final String CANON_PLAYER_STYLE_FMT = "player_prefs.%s.style";
-
-    /** Supports hex colors like &#12ABEF */
-    private static final Pattern HEX_PATTERN = Pattern.compile("(?i)&#([0-9a-f]{6})");
+    // Supports "&#RRGGBB" hex colors (Paper/Spigot 1.16+ typically)
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     private final AegisGuard plugin;
+
+    // Thread safety: reload vs reads (admin refresh/reload)
+    private final ReadWriteLock rw = new ReentrantReadWriteLock();
 
     // Primary language folder (config: localization.folder)
     private String primaryFolderName = "lang";
@@ -69,34 +59,25 @@ public class CodexEngine {
     private String defaultStyle;
     private String fallbackStyle;
 
-    /**
-     * Styles that exist / are allowed on this server (used for validation + loading).
-     * NOTE: this list is swapped atomically on reload.
-     */
-    private volatile List<String> availableStyles = Collections.emptyList();
+    // Preserve ordering
+    private final List<String> availableStyles = new ArrayList<>();
 
-    /**
-     * Optional style cycling order. If empty, falls back to availableStyles.
-     * NOTE: swapped atomically on reload.
-     */
-    private volatile List<String> styleOrder = Collections.emptyList();
+    // Primary per-style merged bundle map (lang)
+    private final Map<String, YamlConfiguration> primaryStyleBundles = new HashMap<>();
 
-    // Primary per-style merged bundle map (lang) - swapped atomically
-    private volatile Map<String, YamlConfiguration> primaryStyleBundles = Collections.emptyMap();
+    // Fallback per-style merged bundle map (codex)
+    private final Map<String, YamlConfiguration> fallbackStyleBundles = new HashMap<>();
 
-    // Fallback per-style merged bundle map (codex) - swapped atomically
-    private volatile Map<String, YamlConfiguration> fallbackStyleBundles = Collections.emptyMap();
+    // Primary/global bundles
+    private YamlConfiguration primaryCoreBundle = new YamlConfiguration();
+    private YamlConfiguration primaryOverridesBundle = new YamlConfiguration();
 
-    // Primary/global bundles - swapped atomically
-    private volatile YamlConfiguration primaryCoreBundle = new YamlConfiguration();
-    private volatile YamlConfiguration primaryOverridesBundle = new YamlConfiguration();
-
-    // Fallback/global bundles - swapped atomically
-    private volatile YamlConfiguration fallbackCoreBundle = new YamlConfiguration();
-    private volatile YamlConfiguration fallbackOverridesBundle = new YamlConfiguration();
+    // Fallback/global bundles
+    private YamlConfiguration fallbackCoreBundle = new YamlConfiguration();
+    private YamlConfiguration fallbackOverridesBundle = new YamlConfiguration();
 
     /** Per-player style cache (persisted in config.yml). */
-    private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
+    private final Map<UUID, String> playerStyles = new HashMap<>();
 
     public CodexEngine(AegisGuard plugin) {
         this.plugin = plugin;
@@ -104,238 +85,150 @@ public class CodexEngine {
     }
 
     /**
-     * Reload language packs (atomic swap to avoid half-loaded state).
+     * Reload language packs.
      */
     public void reload() {
-        File dataFolder = plugin.getDataFolder();
-        if (!dataFolder.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dataFolder.mkdirs();
-        }
-
-        // ----------------------------
-        // Read config (locals first)
-        // ----------------------------
-        String newPrimaryFolder = nvl(plugin.getConfig().getString("localization.folder"), "lang").trim();
-        String newFallbackFolder = nvl(plugin.getConfig().getString("localization.fallback_folder"), "codex").trim();
-        boolean newExtractDefaults = plugin.getConfig().getBoolean("localization.extract_defaults", true);
-
-        File primaryDir = new File(dataFolder, newPrimaryFolder);
-        if (!primaryDir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            primaryDir.mkdirs();
-        }
-
-        File fallbackDir = new File(dataFolder, newFallbackFolder);
-        if (!fallbackDir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            fallbackDir.mkdirs();
-        }
-
-        // Bundles list: prefer config.yml, else defaults
-        List<String> bundles = plugin.getConfig().getStringList("localization.bundles");
-        if (bundles == null || bundles.isEmpty()) {
-            bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
-        }
-
-        // Seed fallback root files FIRST so fallback index/core exist on first boot
-        if (newExtractDefaults) {
-            // set temporaries so maybeExtract uses correct folder values
-            this.primaryFolderName = newPrimaryFolder;
-            this.fallbackFolderName = newFallbackFolder;
-            this.extractDefaults = true;
-
-            seedFallbackRootFilesEarly();
-            maybeExtract(newPrimaryFolder + "/core.yml");
-            maybeExtract(newPrimaryFolder + "/overrides.yml");
-            maybeExtract(newPrimaryFolder + "/codex.yml");
-        }
-
-        // Load optional index files
-        YamlConfiguration primaryIndex = loadYamlIfExists(new File(primaryDir, "codex.yml"));
-        YamlConfiguration fallbackIndex = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
-
-        // ----------------------------
-        // Styles list precedence (FIXED)
-        // ----------------------------
-        List<String> fromConfig = plugin.getConfig().getStringList("localization.available_languages");
-        List<String> detected = detectInstalledStyles(primaryDir, bundles);
-
-        List<String> fromPrimaryIndex = (primaryIndex == null) ? Collections.emptyList() : primaryIndex.getStringList("available_styles");
-        List<String> fromFallbackIndex = (fallbackIndex == null) ? Collections.emptyList() : fallbackIndex.getStringList("available_styles");
-
-        // If config defines available_languages, treat it as authoritative.
-        boolean configLocked = fromConfig != null && !fromConfig.isEmpty();
-
-        // Seed list: config > lang/codex.yml > codex/codex.yml > hard defaults
-        List<String> seed;
-        if (configLocked) {
-            seed = fromConfig;
-        } else if (fromPrimaryIndex != null && !fromPrimaryIndex.isEmpty()) {
-            seed = fromPrimaryIndex;
-        } else if (fromFallbackIndex != null && !fromFallbackIndex.isEmpty()) {
-            seed = fromFallbackIndex;
-        } else {
-            seed = Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar");
-        }
-
-        List<String> newAvailable = normalizeAndDedupStyles(seed);
-
-        // Auto-detect should never shrink the style list (unless config locks it).
-        if (!configLocked && detected != null && !detected.isEmpty()) {
-            for (String s : detected) {
-                String id = normalizeStyleId(s);
-                if (!id.isEmpty() && !newAvailable.contains(id)) {
-                    newAvailable.add(id);
-                }
+        rw.writeLock().lock();
+        try {
+            File dataFolder = plugin.getDataFolder();
+            if (!dataFolder.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                dataFolder.mkdirs();
             }
-            newAvailable = normalizeAndDedupStyles(newAvailable);
-        }
 
-        // (Optional) warn if we're effectively stuck
-        if (newAvailable.size() <= 1) {
-            plugin.getLogger().warning("[Codex] Only " + newAvailable.size() + " language style detected/allowed: " + newAvailable
-                    + " (check localization.available_languages and your /lang/<style>/ bundle folders)");
-        }
+            // Read config
+            this.primaryFolderName = nvl(plugin.getConfig().getString("localization.folder"), "lang").trim();
+            this.fallbackFolderName = nvl(plugin.getConfig().getString("localization.fallback_folder"), "codex").trim();
+            this.extractDefaults = plugin.getConfig().getBoolean("localization.extract_defaults", true);
 
-        // ----------------------------
-        // Default + fallback language
-        // ----------------------------
-        String cfgDefault = firstNonBlank(
-                plugin.getConfig().getString("localization.default_language"),
-                plugin.getConfig().getString("localization.default_style"),
-                primaryIndex == null ? null : primaryIndex.getString("default_style"),
-                fallbackIndex == null ? null : fallbackIndex.getString("default_style"),
-                "old_english"
-        );
+            File primaryDir = new File(dataFolder, primaryFolderName);
+            if (!primaryDir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                primaryDir.mkdirs();
+            }
 
-        String cfgFallback = firstNonBlank(
-                plugin.getConfig().getString("localization.fallback_language"),
-                plugin.getConfig().getString("localization.fallback_style"),
-                primaryIndex == null ? null : primaryIndex.getString("fallback_style"),
-                fallbackIndex == null ? null : fallbackIndex.getString("fallback_style"),
-                "modern_english"
-        );
+            File fallbackDir = new File(dataFolder, fallbackFolderName);
+            if (!fallbackDir.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                fallbackDir.mkdirs();
+            }
 
-        String newDefaultStyle = normalizeStyleId(cfgDefault);
-        String newFallbackStyle = normalizeStyleId(cfgFallback);
+            // Bundles list: prefer config.yml, else defaults
+            List<String> bundles = plugin.getConfig().getStringList("localization.bundles");
+            if (bundles == null || bundles.isEmpty()) {
+                bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
+            }
 
-        if (!newAvailable.contains(newDefaultStyle)) {
-            newDefaultStyle = newAvailable.isEmpty() ? "old_english" : newAvailable.get(0);
-        }
-        if (!newAvailable.contains(newFallbackStyle)) {
-            newFallbackStyle = newDefaultStyle;
-        }
+            // Seed fallback root files FIRST
+            if (extractDefaults) {
+                seedFallbackRootFilesEarly();
+                maybeExtract(primaryFolderName + "/core.yml");
+                maybeExtract(primaryFolderName + "/overrides.yml");
+                maybeExtract(primaryFolderName + "/codex.yml");
+            }
 
-        // ----------------------------
-        // style_order (cycle order)
-        // ----------------------------
-        List<String> orderCfg = plugin.getConfig().getStringList("localization.style_order");
-        List<String> orderPrimary = primaryIndex == null ? Collections.emptyList() : readStyleOrder(primaryIndex);
-        List<String> orderFallback = fallbackIndex == null ? Collections.emptyList() : readStyleOrder(fallbackIndex);
+            // Load optional index files
+            YamlConfiguration primaryIndex = loadYamlIfExists(new File(primaryDir, "codex.yml"));
+            YamlConfiguration fallbackIndex = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
 
-        List<String> newOrder = null;
-        if (orderCfg != null && !orderCfg.isEmpty()) newOrder = orderCfg;
-        else if (orderPrimary != null && !orderPrimary.isEmpty()) newOrder = orderPrimary;
-        else if (orderFallback != null && !orderFallback.isEmpty()) newOrder = orderFallback;
+            // Styles list precedence
+            List<String> fromConfig = plugin.getConfig().getStringList("localization.available_languages");
+            List<String> detected = detectInstalledStyles(primaryDir, bundles);
+            List<String> fromPrimaryIndex = (primaryIndex == null) ? Collections.emptyList() : primaryIndex.getStringList("available_styles");
+            List<String> fromFallbackIndex = (fallbackIndex == null) ? Collections.emptyList() : fallbackIndex.getStringList("available_styles");
 
-        if (newOrder == null) newOrder = Collections.emptyList();
+            availableStyles.clear();
+            if (fromConfig != null && !fromConfig.isEmpty()) {
+                availableStyles.addAll(fromConfig);
+            } else if (detected != null && !detected.isEmpty()) {
+                availableStyles.addAll(detected);
+            } else if (fromPrimaryIndex != null && !fromPrimaryIndex.isEmpty()) {
+                availableStyles.addAll(fromPrimaryIndex);
+            } else if (fromFallbackIndex != null && !fromFallbackIndex.isEmpty()) {
+                availableStyles.addAll(fromFallbackIndex);
+            } else {
+                availableStyles.addAll(Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar"));
+            }
 
-        newOrder = normalizeAndDedupStyles(newOrder);
+            normalizeAvailableStyles();
 
-        // keep only known styles
-        if (!newOrder.isEmpty()) {
-            List<String> filtered = new ArrayList<>();
-            for (String s : newOrder) if (newAvailable.contains(s)) filtered.add(s);
-            newOrder = filtered;
-        }
+            // Default + fallback language (support BOTH sets of config keys)
+            String cfgDefault = firstNonBlank(
+                    plugin.getConfig().getString("localization.default_language"),
+                    plugin.getConfig().getString("localization.default_style"),
+                    primaryIndex == null ? null : primaryIndex.getString("default_style"),
+                    fallbackIndex == null ? null : fallbackIndex.getString("default_style"),
+                    "old_english"
+            );
 
-        if (newOrder.isEmpty()) {
-            newOrder = new ArrayList<>(newAvailable);
-        }
+            String cfgFallback = firstNonBlank(
+                    plugin.getConfig().getString("localization.fallback_language"),
+                    plugin.getConfig().getString("localization.fallback_style"),
+                    primaryIndex == null ? null : primaryIndex.getString("fallback_style"),
+                    fallbackIndex == null ? null : fallbackIndex.getString("fallback_style"),
+                    "modern_english"
+            );
 
-        // ----------------------------
-        // Load core/overrides (locals)
-        // Prefer primary folder versions, else fallback folder versions.
-        // ----------------------------
-        // Temporarily set these for helpers (which reference fields)
-        this.primaryFolderName = newPrimaryFolder;
-        this.fallbackFolderName = newFallbackFolder;
-        this.extractDefaults = newExtractDefaults;
+            this.defaultStyle = normalizeStyleId(cfgDefault);
+            this.fallbackStyle = normalizeStyleId(cfgFallback);
 
-        YamlConfiguration newPrimaryCore = loadPrimaryOrSeed(primaryDir, "core.yml");
-        YamlConfiguration newPrimaryOverrides = loadPrimaryOrSeed(primaryDir, "overrides.yml");
+            if (!availableStyles.contains(defaultStyle)) {
+                defaultStyle = availableStyles.isEmpty() ? "old_english" : availableStyles.get(0);
+            }
+            if (!availableStyles.contains(fallbackStyle)) {
+                fallbackStyle = defaultStyle;
+            }
 
-        YamlConfiguration newFallbackCore = loadFallbackOrSeed(fallbackDir, "core.yml");
-        YamlConfiguration newFallbackOverrides = loadFallbackOrSeed(fallbackDir, "overrides.yml");
+            // Load core/overrides
+            this.primaryCoreBundle = loadPrimaryOrSeed(primaryDir, "core.yml");
+            this.primaryOverridesBundle = loadPrimaryOrSeed(primaryDir, "overrides.yml");
 
-        // ---------------------------
-        // Load PRIMARY (lang) bundles
-        // ---------------------------
-        Map<String, YamlConfiguration> newPrimaryStyleBundles = new HashMap<>();
+            this.fallbackCoreBundle = loadFallbackOrSeed(fallbackDir, "core.yml");
+            this.fallbackOverridesBundle = loadFallbackOrSeed(fallbackDir, "overrides.yml");
 
-        for (String style : newAvailable) {
-            YamlConfiguration merged = new YamlConfiguration();
-            File styleDir = new File(primaryDir, style);
+            // Load PRIMARY (lang) bundles
+            primaryStyleBundles.clear();
 
-            // Seed missing defaults from jar resources/lang/<style>/<bundle>.yml
-            if (newExtractDefaults) {
+            for (String style : availableStyles) {
+                YamlConfiguration merged = new YamlConfiguration();
+                File styleDir = new File(primaryDir, style);
+
+                if (extractDefaults) {
+                    for (String bundleFile : bundles) {
+                        maybeExtract(primaryFolderName + "/" + style + "/" + bundleFile);
+                    }
+                }
+
                 for (String bundleFile : bundles) {
-                    maybeExtract(newPrimaryFolder + "/" + style + "/" + bundleFile);
+                    File f = new File(styleDir, bundleFile);
+                    if (!f.exists()) continue;
+
+                    YamlConfiguration partRaw = loadYaml(f);
+                    YamlConfiguration part = normalizeStyleYaml(style, partRaw);
+                    mergeYamlLeaves(merged, part);
                 }
+
+                primaryStyleBundles.put(style, merged);
             }
 
-            for (String bundleFile : bundles) {
-                File f = new File(styleDir, bundleFile);
-                if (!f.exists()) continue;
+            // Load FALLBACK (codex) bundles
+            fallbackStyleBundles.clear();
+            loadFallbackCodexBundles(fallbackDir, fallbackIndex, bundles);
 
-                YamlConfiguration partRaw = loadYaml(f);
-                YamlConfiguration part = normalizeStyleYaml(style, partRaw);
-                mergeYamlLeaves(merged, part);
-            }
+            boolean primaryHasAnyKeys = primaryStyleBundles.values().stream()
+                    .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
 
-            newPrimaryStyleBundles.put(style, merged);
+            boolean fallbackHasAnyKeys = fallbackStyleBundles.values().stream()
+                    .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
+
+            plugin.getLogger().info("[Codex] Primary=" + primaryFolderName + " (bundles) styles=" + String.join(", ", availableStyles)
+                    + " | keys=" + (primaryHasAnyKeys ? "yes" : "no")
+                    + " | Fallback=" + fallbackFolderName + " keys=" + (fallbackHasAnyKeys ? "yes" : "no"));
+
+            pruneInvalidPlayerStyles();
+        } finally {
+            rw.writeLock().unlock();
         }
-
-        // ------------------------------
-        // Load FALLBACK (codex) bundles
-        // ------------------------------
-        Map<String, YamlConfiguration> newFallbackStyleBundles = new HashMap<>();
-        loadFallbackCodexBundlesInto(newFallbackStyleBundles, fallbackDir, fallbackIndex, bundles, newAvailable, newExtractDefaults, newFallbackFolder);
-
-        boolean primaryHasAnyKeys = newPrimaryStyleBundles.values().stream()
-                .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
-
-        boolean fallbackHasAnyKeys = newFallbackStyleBundles.values().stream()
-                .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
-
-        plugin.getLogger().info("[Codex] Primary=" + newPrimaryFolder + " (bundles) styles=" + String.join(", ", newAvailable)
-                + " | keys=" + (primaryHasAnyKeys ? "yes" : "no")
-                + " | Fallback=" + newFallbackFolder + " keys=" + (fallbackHasAnyKeys ? "yes" : "no"));
-
-        // ----------------------------
-        // ✅ ATOMIC SWAP (one shot)
-        // ----------------------------
-        this.primaryFolderName = newPrimaryFolder;
-        this.fallbackFolderName = newFallbackFolder;
-        this.extractDefaults = newExtractDefaults;
-
-        this.defaultStyle = newDefaultStyle;
-        this.fallbackStyle = newFallbackStyle;
-
-        this.availableStyles = Collections.unmodifiableList(new ArrayList<>(newAvailable));
-        this.styleOrder = Collections.unmodifiableList(new ArrayList<>(newOrder));
-
-        this.primaryCoreBundle = newPrimaryCore == null ? new YamlConfiguration() : newPrimaryCore;
-        this.primaryOverridesBundle = newPrimaryOverrides == null ? new YamlConfiguration() : newPrimaryOverrides;
-
-        this.fallbackCoreBundle = newFallbackCore == null ? new YamlConfiguration() : newFallbackCore;
-        this.fallbackOverridesBundle = newFallbackOverrides == null ? new YamlConfiguration() : newFallbackOverrides;
-
-        this.primaryStyleBundles = Collections.unmodifiableMap(new HashMap<>(newPrimaryStyleBundles));
-        this.fallbackStyleBundles = Collections.unmodifiableMap(new HashMap<>(newFallbackStyleBundles));
-
-        pruneInvalidPlayerStyles();
     }
 
     private void seedFallbackRootFilesEarly() {
@@ -359,29 +252,20 @@ public class CodexEngine {
         }
     }
 
-    private void loadFallbackCodexBundlesInto(
-            Map<String, YamlConfiguration> outMap,
-            File fallbackDir,
-            YamlConfiguration fallbackIndex,
-            List<String> bundles,
-            List<String> styles,
-            boolean extractDefaultsFlag,
-            String fallbackFolder
-    ) {
+    private void loadFallbackCodexBundles(File fallbackDir, YamlConfiguration fallbackIndex, List<String> bundles) {
         if (fallbackDir == null) return;
 
         YamlConfiguration idx = fallbackIndex;
         if (idx == null) idx = loadYamlIfExists(new File(fallbackDir, "codex.yml"));
         if (idx == null) return;
 
-        // mode: auto/split/legacy
         String mode = nvl(idx.getString("mode"), "auto").trim().toLowerCase(Locale.ROOT);
         boolean forceLegacy = mode.equals("legacy");
         boolean forceSplit = mode.equals("split");
 
         boolean splitDetected = false;
         if (!forceLegacy) {
-            for (String style : styles) {
+            for (String style : availableStyles) {
                 if (hasAnySplitBundle(fallbackDir, style, bundles)) {
                     splitDetected = true;
                     break;
@@ -392,13 +276,13 @@ public class CodexEngine {
         boolean useSplit = forceSplit || (!forceLegacy && splitDetected);
 
         if (useSplit) {
-            for (String style : styles) {
+            for (String style : availableStyles) {
                 YamlConfiguration merged = new YamlConfiguration();
                 File styleDir = new File(fallbackDir, style);
 
-                if (extractDefaultsFlag) {
+                if (extractDefaults) {
                     for (String bundleFile : bundles) {
-                        maybeExtract(fallbackFolder + "/" + style + "/" + bundleFile);
+                        maybeExtract(fallbackFolderName + "/" + style + "/" + bundleFile);
                     }
                 }
 
@@ -411,16 +295,15 @@ public class CodexEngine {
                     mergeYamlLeaves(merged, part);
                 }
 
-                outMap.put(style, merged);
+                fallbackStyleBundles.put(style, merged);
             }
         } else {
-            // Legacy file_map mode
-            for (String style : styles) {
+            for (String style : availableStyles) {
                 String styleFileName = idx.getString("file_map." + style);
                 if (styleFileName == null || styleFileName.isBlank()) continue;
 
-                if (extractDefaultsFlag) {
-                    maybeExtract(fallbackFolder + "/" + styleFileName);
+                if (extractDefaults) {
+                    maybeExtract(fallbackFolderName + "/" + styleFileName);
                 }
 
                 File f = new File(fallbackDir, styleFileName);
@@ -428,7 +311,7 @@ public class CodexEngine {
 
                 YamlConfiguration raw = loadYaml(f);
                 YamlConfiguration normalized = normalizeStyleYaml(style, raw);
-                outMap.put(style, normalized);
+                fallbackStyleBundles.put(style, normalized);
             }
         }
     }
@@ -442,10 +325,16 @@ public class CodexEngine {
     }
 
     public String tr(CommandSender sender, String key, Map<String, String> placeholders) {
-        String style = resolveStyle(sender);
-        String raw = resolve(style, key);
-        String out = applyPlaceholders(raw, placeholders);
-        return colorize(out);
+        final String style;
+        final String raw;
+        rw.readLock().lock();
+        try {
+            style = resolveStyle(sender);
+            raw = resolve(style, key);
+        } finally {
+            rw.readLock().unlock();
+        }
+        return colorize(applyPlaceholders(raw, placeholders));
     }
 
     public String tr(String key) {
@@ -453,9 +342,14 @@ public class CodexEngine {
     }
 
     public String tr(String key, Map<String, String> placeholders) {
-        String raw = resolve(defaultStyle, key);
-        String out = applyPlaceholders(raw, placeholders);
-        return colorize(out);
+        final String raw;
+        rw.readLock().lock();
+        try {
+            raw = resolve(defaultStyle, key);
+        } finally {
+            rw.readLock().unlock();
+        }
+        return colorize(applyPlaceholders(raw, placeholders));
     }
 
     public List<String> trList(CommandSender sender, String key) {
@@ -463,14 +357,20 @@ public class CodexEngine {
     }
 
     public List<String> trList(CommandSender sender, String key, Map<String, String> placeholders) {
-        String style = resolveStyle(sender);
-        List<String> rawList = resolveList(style, key);
-        if (rawList.isEmpty()) return Collections.emptyList();
+        final String style;
+        final List<String> rawList;
+        rw.readLock().lock();
+        try {
+            style = resolveStyle(sender);
+            rawList = resolveList(style, key);
+        } finally {
+            rw.readLock().unlock();
+        }
+
+        if (rawList == null || rawList.isEmpty()) return Collections.emptyList();
 
         List<String> out = new ArrayList<>(rawList.size());
-        for (String line : rawList) {
-            out.add(colorize(applyPlaceholders(line, placeholders)));
-        }
+        for (String line : rawList) out.add(colorize(applyPlaceholders(line, placeholders)));
         return out;
     }
 
@@ -482,63 +382,36 @@ public class CodexEngine {
         return trList((CommandSender) player, key, placeholders);
     }
 
-    /** ✅ Symmetry: default-style list translators */
-    public List<String> trList(String key) {
-        return trList(key, Collections.emptyMap());
-    }
-
-    /** ✅ Symmetry: default-style list translators (placeholders) */
-    public List<String> trList(String key, Map<String, String> placeholders) {
-        List<String> rawList = resolveList(defaultStyle, key);
-        if (rawList.isEmpty()) return Collections.emptyList();
-
-        List<String> out = new ArrayList<>(rawList.size());
-        for (String line : rawList) {
-            out.add(colorize(applyPlaceholders(line, placeholders)));
-        }
-        return out;
-    }
-
-    /* --------------------------------------------------------
-     * ✅ Compat aliases (bring back old GUI calls)
-     * -------------------------------------------------------- */
-
-    public List<String> list(Player player, String key) {
-        return trList(player, key);
-    }
-
-    public List<String> list(Player player, String key, Map<String, String> placeholders) {
-        return trList((CommandSender) player, key, placeholders);
-    }
-
-    public List<String> list(CommandSender sender, String key) {
-        return trList(sender, key);
-    }
-
-    public List<String> list(CommandSender sender, String key, Map<String, String> placeholders) {
-        return trList(sender, key, placeholders);
-    }
+    // Compat aliases
+    public List<String> list(Player player, String key) { return trList(player, key); }
+    public List<String> list(Player player, String key, Map<String, String> placeholders) { return trList((CommandSender) player, key, placeholders); }
+    public List<String> list(CommandSender sender, String key) { return trList(sender, key); }
+    public List<String> list(CommandSender sender, String key, Map<String, String> placeholders) { return trList(sender, key, placeholders); }
 
     public String getDefaultStyle() { return defaultStyle; }
     public String getFallbackStyle() { return fallbackStyle; }
 
     public List<String> getAvailableStyles() {
-        return availableStyles;
-    }
-
-    /** ✅ New: style order (cycle order) */
-    public List<String> getStyleOrder() {
-        return styleOrder;
+        rw.readLock().lock();
+        try {
+            return Collections.unmodifiableList(new ArrayList<>(availableStyles));
+        } finally {
+            rw.readLock().unlock();
+        }
     }
 
     public String getNextStyle(String currentStyle) {
-        List<String> order = (styleOrder == null || styleOrder.isEmpty()) ? availableStyles : styleOrder;
-        if (order == null || order.isEmpty()) return safeDefaultStyle();
+        rw.readLock().lock();
+        try {
+            if (availableStyles.isEmpty()) return defaultStyle;
 
-        currentStyle = normalizeStyleId(currentStyle);
-        int index = order.indexOf(currentStyle);
-        if (index == -1 || index >= order.size() - 1) return order.get(0);
-        return order.get(index + 1);
+            currentStyle = normalizeStyleId(currentStyle);
+            int index = availableStyles.indexOf(currentStyle);
+            if (index == -1 || index >= availableStyles.size() - 1) return availableStyles.get(0);
+            return availableStyles.get(index + 1);
+        } finally {
+            rw.readLock().unlock();
+        }
     }
 
     // ----------------------------
@@ -550,27 +423,27 @@ public class CodexEngine {
 
         UUID id = player.getUniqueId();
 
-        // 1) cached
-        String cached = playerStyles.get(id);
-        if (cached != null && availableStyles.contains(cached)) return cached;
-
-        // 2) canonical (compat)
-        String canon = plugin.getConfig().getString(String.format(CANON_PLAYER_STYLE_FMT, id), null);
-        canon = normalizeStyleId(canon);
-        if (!canon.isEmpty() && availableStyles.contains(canon)) {
-            playerStyles.put(id, canon);
-            return canon;
+        rw.readLock().lock();
+        try {
+            String cached = playerStyles.get(id);
+            if (cached != null && availableStyles.contains(cached)) return cached;
+        } finally {
+            rw.readLock().unlock();
         }
 
-        // 3) legacy path (your original)
         String stored = plugin.getConfig().getString(PLAYER_STYLE_PATH + "." + id, null);
         stored = normalizeStyleId(stored);
-        if (!stored.isEmpty() && availableStyles.contains(stored)) {
-            playerStyles.put(id, stored);
-            return stored;
+
+        rw.readLock().lock();
+        try {
+            if (!stored.isEmpty() && availableStyles.contains(stored)) {
+                playerStyles.put(id, stored);
+                return stored;
+            }
+        } finally {
+            rw.readLock().unlock();
         }
 
-        // 4) default
         return safeDefaultStyle();
     }
 
@@ -578,14 +451,24 @@ public class CodexEngine {
         if (player == null || style == null) return false;
 
         style = normalizeStyleId(style);
-        if (style.isEmpty() || !availableStyles.contains(style)) return false;
+
+        rw.readLock().lock();
+        try {
+            if (style.isEmpty() || !availableStyles.contains(style)) return false;
+        } finally {
+            rw.readLock().unlock();
+        }
 
         UUID id = player.getUniqueId();
-        playerStyles.put(id, style);
 
-        // ✅ Write BOTH paths to preserve compatibility forever.
+        rw.writeLock().lock();
+        try {
+            playerStyles.put(id, style);
+        } finally {
+            rw.writeLock().unlock();
+        }
+
         plugin.getConfig().set(PLAYER_STYLE_PATH + "." + id, style);
-        plugin.getConfig().set(String.format(CANON_PLAYER_STYLE_FMT, id), style);
 
         try {
             plugin.runGlobalAsync(plugin::saveConfig);
@@ -604,9 +487,7 @@ public class CodexEngine {
     }
 
     private String safeDefaultStyle() {
-        String ds = normalizeStyleId(defaultStyle);
-        if (!ds.isEmpty()) return ds;
-        return "old_english";
+        return (defaultStyle != null && !defaultStyle.isEmpty()) ? defaultStyle : "old_english";
     }
 
     private List<String> keyCandidates(String key) {
@@ -627,70 +508,59 @@ public class CodexEngine {
     private String resolve(String style, String key) {
         if (key == null || key.isEmpty()) return "";
 
-        // snapshot references (atomic reload safety)
-        YamlConfiguration pOverrides = this.primaryOverridesBundle;
-        YamlConfiguration pCore = this.primaryCoreBundle;
-        Map<String, YamlConfiguration> pStyles = this.primaryStyleBundles;
-
-        YamlConfiguration fOverrides = this.fallbackOverridesBundle;
-        YamlConfiguration fCore = this.fallbackCoreBundle;
-        Map<String, YamlConfiguration> fStyles = this.fallbackStyleBundles;
-
-        String fbStyle = this.fallbackStyle;
-
         // 1) primary overrides
         for (String k : keyCandidates(key)) {
-            if (pOverrides != null && pOverrides.contains(k)) {
-                return pOverrides.getString(k, k);
+            if (primaryOverridesBundle != null && primaryOverridesBundle.contains(k)) {
+                return primaryOverridesBundle.getString(k, k);
             }
         }
 
         // 2) primary style
         for (String k : keyCandidates(key)) {
-            YamlConfiguration styleCfg = (pStyles == null) ? null : pStyles.get(style);
+            YamlConfiguration styleCfg = primaryStyleBundles.get(style);
             if (styleCfg != null && styleCfg.contains(k)) return styleCfg.getString(k, k);
         }
 
         // 3) primary core
         for (String k : keyCandidates(key)) {
-            if (pCore != null && pCore.contains(k)) {
-                return pCore.getString(k, k);
+            if (primaryCoreBundle != null && primaryCoreBundle.contains(k)) {
+                return primaryCoreBundle.getString(k, k);
             }
         }
 
         // 4) primary fallback style
-        if (fbStyle != null && !fbStyle.equalsIgnoreCase(style)) {
+        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
             for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = (pStyles == null) ? null : pStyles.get(fbStyle);
+                YamlConfiguration fbCfg = primaryStyleBundles.get(fallbackStyle);
                 if (fbCfg != null && fbCfg.contains(k)) return fbCfg.getString(k, k);
             }
         }
 
         // 5) fallback overrides (codex)
         for (String k : keyCandidates(key)) {
-            if (fOverrides != null && fOverrides.contains(k)) {
-                return fOverrides.getString(k, k);
+            if (fallbackOverridesBundle != null && fallbackOverridesBundle.contains(k)) {
+                return fallbackOverridesBundle.getString(k, k);
             }
         }
 
         // 6) fallback style (codex)
         for (String k : keyCandidates(key)) {
-            YamlConfiguration fbStyleCfg = (fStyles == null) ? null : fStyles.get(style);
+            YamlConfiguration fbStyleCfg = fallbackStyleBundles.get(style);
             if (fbStyleCfg != null && fbStyleCfg.contains(k)) return fbStyleCfg.getString(k, k);
         }
 
         // 7) fallback fallback-style (codex)
-        if (fbStyle != null && !fbStyle.equalsIgnoreCase(style)) {
+        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
             for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = (fStyles == null) ? null : fStyles.get(fbStyle);
+                YamlConfiguration fbCfg = fallbackStyleBundles.get(fallbackStyle);
                 if (fbCfg != null && fbCfg.contains(k)) return fbCfg.getString(k, k);
             }
         }
 
         // 8) fallback core (codex)
         for (String k : keyCandidates(key)) {
-            if (fCore != null && fCore.contains(k)) {
-                return fCore.getString(k, k);
+            if (fallbackCoreBundle != null && fallbackCoreBundle.contains(k)) {
+                return fallbackCoreBundle.getString(k, k);
             }
         }
 
@@ -700,33 +570,22 @@ public class CodexEngine {
     private List<String> resolveList(String style, String key) {
         if (key == null || key.isEmpty()) return Collections.emptyList();
 
-        // snapshot references (atomic reload safety)
-        YamlConfiguration pOverrides = this.primaryOverridesBundle;
-        YamlConfiguration pCore = this.primaryCoreBundle;
-        Map<String, YamlConfiguration> pStyles = this.primaryStyleBundles;
-
-        YamlConfiguration fOverrides = this.fallbackOverridesBundle;
-        YamlConfiguration fCore = this.fallbackCoreBundle;
-        Map<String, YamlConfiguration> fStyles = this.fallbackStyleBundles;
-
-        String fbStyle = this.fallbackStyle;
-
         List<String> result;
 
         // 1) primary overrides
         for (String k : keyCandidates(key)) {
-            if (pOverrides != null && pOverrides.contains(k)) {
-                result = pOverrides.getStringList(k);
+            if (primaryOverridesBundle != null && primaryOverridesBundle.contains(k)) {
+                result = primaryOverridesBundle.getStringList(k);
                 if (!result.isEmpty()) return result;
 
-                String single = pOverrides.getString(k);
+                String single = primaryOverridesBundle.getString(k);
                 if (single != null) return Collections.singletonList(single);
             }
         }
 
         // 2) primary style
         for (String k : keyCandidates(key)) {
-            YamlConfiguration styleCfg = (pStyles == null) ? null : pStyles.get(style);
+            YamlConfiguration styleCfg = primaryStyleBundles.get(style);
             if (styleCfg != null && styleCfg.contains(k)) {
                 result = styleCfg.getStringList(k);
                 if (!result.isEmpty()) return result;
@@ -738,19 +597,19 @@ public class CodexEngine {
 
         // 3) primary core
         for (String k : keyCandidates(key)) {
-            if (pCore != null && pCore.contains(k)) {
-                result = pCore.getStringList(k);
+            if (primaryCoreBundle != null && primaryCoreBundle.contains(k)) {
+                result = primaryCoreBundle.getStringList(k);
                 if (!result.isEmpty()) return result;
 
-                String single = pCore.getString(k);
+                String single = primaryCoreBundle.getString(k);
                 if (single != null) return Collections.singletonList(single);
             }
         }
 
         // 4) primary fallback style
-        if (fbStyle != null && !fbStyle.equalsIgnoreCase(style)) {
+        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
             for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = (pStyles == null) ? null : pStyles.get(fbStyle);
+                YamlConfiguration fbCfg = primaryStyleBundles.get(fallbackStyle);
                 if (fbCfg != null && fbCfg.contains(k)) {
                     result = fbCfg.getStringList(k);
                     if (!result.isEmpty()) return result;
@@ -763,18 +622,18 @@ public class CodexEngine {
 
         // 5) fallback overrides
         for (String k : keyCandidates(key)) {
-            if (fOverrides != null && fOverrides.contains(k)) {
-                result = fOverrides.getStringList(k);
+            if (fallbackOverridesBundle != null && fallbackOverridesBundle.contains(k)) {
+                result = fallbackOverridesBundle.getStringList(k);
                 if (!result.isEmpty()) return result;
 
-                String single = fOverrides.getString(k);
+                String single = fallbackOverridesBundle.getString(k);
                 if (single != null) return Collections.singletonList(single);
             }
         }
 
         // 6) fallback style
         for (String k : keyCandidates(key)) {
-            YamlConfiguration fbStyleCfg = (fStyles == null) ? null : fStyles.get(style);
+            YamlConfiguration fbStyleCfg = fallbackStyleBundles.get(style);
             if (fbStyleCfg != null && fbStyleCfg.contains(k)) {
                 result = fbStyleCfg.getStringList(k);
                 if (!result.isEmpty()) return result;
@@ -785,9 +644,9 @@ public class CodexEngine {
         }
 
         // 7) fallback fallback-style
-        if (fbStyle != null && !fbStyle.equalsIgnoreCase(style)) {
+        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
             for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = (fStyles == null) ? null : fStyles.get(fbStyle);
+                YamlConfiguration fbCfg = fallbackStyleBundles.get(fallbackStyle);
                 if (fbCfg != null && fbCfg.contains(k)) {
                     result = fbCfg.getStringList(k);
                     if (!result.isEmpty()) return result;
@@ -800,11 +659,11 @@ public class CodexEngine {
 
         // 8) fallback core
         for (String k : keyCandidates(key)) {
-            if (fCore != null && fCore.contains(k)) {
-                result = fCore.getStringList(k);
+            if (fallbackCoreBundle != null && fallbackCoreBundle.contains(k)) {
+                result = fallbackCoreBundle.getStringList(k);
                 if (!result.isEmpty()) return result;
 
-                String single = fCore.getString(k);
+                String single = fallbackCoreBundle.getString(k);
                 if (single != null) return Collections.singletonList(single);
             }
         }
@@ -841,69 +700,50 @@ public class CodexEngine {
         return out;
     }
 
-    /**
-     * Converts:
-     * - &#RRGGBB  -> §x§R§R§G§G§B§B (via Bungee ChatColor)
-     * - &a &b etc -> §a §b etc
-     */
     private String colorize(String input) {
         if (input == null || input.isEmpty()) return input;
 
-        String out = input;
+        // Standard & colors
+        String out = org.bukkit.ChatColor.translateAlternateColorCodes('&', input);
 
-        // Hex first
-        try {
-            Matcher m = HEX_PATTERN.matcher(out);
-            StringBuffer sb = new StringBuffer();
-            while (m.find()) {
-                String hex = m.group(1);
-                String repl = net.md_5.bungee.api.ChatColor.of("#" + hex).toString();
-                m.appendReplacement(sb, Matcher.quoteReplacement(repl));
+        // Hex &#RRGGBB
+        Matcher m = HEX_PATTERN.matcher(out);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String hex = m.group(1);
+            String rep;
+            try {
+                rep = net.md_5.bungee.api.ChatColor.of("#" + hex).toString();
+            } catch (Throwable t) {
+                rep = ""; // if hex unsupported, just strip the token
             }
-            m.appendTail(sb);
-            out = sb.toString();
-        } catch (Throwable ignored) {}
-
-        // Standard & codes
-        return ChatColor.translateAlternateColorCodes('&', out);
+            m.appendReplacement(sb, Matcher.quoteReplacement(rep));
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     // ----------------------------
     // Helpers
     // ----------------------------
 
-    private static List<String> normalizeAndDedupStyles(List<String> styles) {
-        if (styles == null || styles.isEmpty()) return new ArrayList<>();
-
-        List<String> normalized = new ArrayList<>(styles.size());
-        for (String s : styles) {
-            String n = normalizeStyleId(s);
-            if (!n.isEmpty()) normalized.add(n);
+    private void normalizeAvailableStyles() {
+        for (int i = 0; i < availableStyles.size(); i++) {
+            availableStyles.set(i, normalizeStyleId(availableStyles.get(i)));
         }
-
-        LinkedHashSet<String> deduped = new LinkedHashSet<>(normalized);
-        return new ArrayList<>(deduped);
+        LinkedHashSet<String> deduped = new LinkedHashSet<>(availableStyles);
+        availableStyles.clear();
+        availableStyles.addAll(deduped);
     }
 
-    /**
-     * ✅ Improved normalization:
-     * Accepts "Modern English", "modern-english", "modern_english"
-     * and normalizes to "modern_english".
-     */
-    private static String normalizeStyleId(String style) {
+    private String normalizeStyleId(String style) {
         if (style == null) return "";
-
-        String s = style.trim().toLowerCase(Locale.ROOT);
-        s = s.replace(' ', '_').replace('-', '_');
-        s = s.replaceAll("__+", "_");
-
-        return s;
+        return style.trim().toLowerCase(Locale.ROOT);
     }
 
     private void pruneInvalidPlayerStyles() {
         if (playerStyles.isEmpty()) return;
-        List<String> styles = this.availableStyles;
-        playerStyles.entrySet().removeIf(e -> e.getKey() == null || e.getValue() == null || !styles.contains(e.getValue()));
+        playerStyles.entrySet().removeIf(e -> e.getKey() == null || e.getValue() == null || !availableStyles.contains(e.getValue()));
     }
 
     private boolean hasAnySplitBundle(File baseDir, String style, List<String> bundles) {
@@ -937,7 +777,6 @@ public class CodexEngine {
         return found;
     }
 
-    /** Checks if a resource exists inside the jar. */
     private boolean hasBundledResource(String jarPath) {
         if (jarPath == null || jarPath.isBlank()) return false;
         try (InputStream in = plugin.getResource(jarPath)) {
@@ -950,8 +789,6 @@ public class CodexEngine {
     private void maybeExtract(String resourcePath) {
         if (!extractDefaults) return;
         if (resourcePath == null || resourcePath.isBlank()) return;
-
-        // No exceptions, no noise: if jar doesn't contain it, skip.
         if (!hasBundledResource(resourcePath)) return;
 
         File target = new File(plugin.getDataFolder(), resourcePath.replace("/", File.separator));
@@ -1001,13 +838,11 @@ public class CodexEngine {
         Set<String> top = cfg.getKeys(false);
         if (top == null || top.isEmpty()) return cfg;
 
-        // If wrapped under style key
         if (style != null && cfg.isConfigurationSection(style)) {
             ConfigurationSection sec = cfg.getConfigurationSection(style);
             return flattenSectionLeaves(sec);
         }
 
-        // If wrapped under a single top-level section
         if (top.size() == 1) {
             String only = top.iterator().next();
             if (cfg.isConfigurationSection(only)) {
@@ -1039,21 +874,6 @@ public class CodexEngine {
             if (val instanceof ConfigurationSection) continue;
             target.set(key, val);
         }
-    }
-
-    private static List<String> readStyleOrder(YamlConfiguration idx) {
-        if (idx == null) return Collections.emptyList();
-
-        List<String> order = idx.getStringList("style_order");
-        if (order != null && !order.isEmpty()) return order;
-
-        order = idx.getStringList("styles.order");
-        if (order != null && !order.isEmpty()) return order;
-
-        order = idx.getStringList("order");
-        if (order != null && !order.isEmpty()) return order;
-
-        return Collections.emptyList();
     }
 
     private static String nvl(String s, String def) {

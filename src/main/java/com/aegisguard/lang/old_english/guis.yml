@@ -1,23 +1,167 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: guis.yml
-# Organized: 2025-12-21 00:00:00Z
+# Updated: 2026-01-11
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+
+# -------------------------------------------------
+# Core Nav / Common Buttons
+# -------------------------------------------------
+menu_title: '&b⚔ AegisGuard Menu'
+
 button_back: '&e⟵ Return'
 back_lore:
 - '&7Return to the prior page.'
+
 button_back_menu: '&fReturn to Menu'
 back_menu_lore:
 - '&7Return to the main index.'
+
 button_exit: '&c✖ Depart'
 button_exit_lore:
 - '&7Close this sacred scroll.'
 exit_lore:
 - '&7Close this sacred scroll.'
+
 button_prev_page: '&fPrior Page'
 button_next_page: '&fNext Page'
+
 button_back_admin: '&fReturn (Admin)'
+
+# -------------------------------------------------
+# Player Menu (Main GUI)
+# -------------------------------------------------
+button_info: '&bℹ Tidings'
+info_lore:
+- '&7Read lore, guidance, and counsel.'
+
+plot_status_button_title: '&d📜 Plot Status'
+plot_status_button_lore:
+- '&7Behold thy holding and its marks.'
+
+visit_gui_title: '&a🧭 Travel'
+visit_button_lore:
+- '&7Visit holdings and travel swiftly.'
+
+button_claim_land: '&a🛡 Claim Land'
+claim_land_lore:
+- '&7Choose two points with thy wand first.'
+claim_land_ready_lore:
+- '&7Thy selection is ready.'
+- ' '
+- '&eClick to confirm.'
+
+button_plot_flags: '&6⚙ Wards'
+plot_flags_lore:
+- '&7Govern the wards of this holding.'
+plot_flags_locked_lore:
+- '&cThou may not govern wards here.'
+
+button_roles: '&e👥 Roles'
+roles_lore:
+- '&7Grant roles and duties unto others.'
+roles_locked_lore:
+- '&cThou may not govern roles here.'
+
+level_gui_title: '&a📈 Leveling'
+level_button_lore:
+- '&7Raise thy holding in renown and boon.'
+
+zone_gui_title: '&b🏗 Zoning'
+zone_button_lore:
+- '&7Make sub-zones and rentable chambers.'
+
+biome_gui_title: '&d🌿 Biomes'
+biome_button_lore:
+- '&7Change the breath of the land.'
+
+button_market: '&6💰 Market'
+market_lore:
+- '&7Buy and sell goods of the domain.'
+
 button_expand: '&dRequest Expansion'
+expand_lore:
+- '&7Petition for more land.'
+
+button_auction: '&c🔥 Auctions'
+auction_lore:
+- '&7Bid upon holdings and listings.'
+
+button_player_settings: '&e⚙ Settings'
+player_settings_lore:
+- '&7Personal preferences and tongue.'
+
+admin_menu_title: '&c🛠 Admin Menu'
+admin_menu_lore:
+- '&7Operator Access Only'
+
+# -------------------------------------------------
+# ClaimBlocks Exchange (Player Menu Button)
+# -------------------------------------------------
+button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
+claimblocks_exchange_lore:
+- '&7Buy or sell ClaimBlocks with coin.'
+- ' '
+- '&eClick to open.'
+
+button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Exchange'
+claimblocks_exchange_disabled_lore:
+- '&7This feature is currently unavailable.'
+- '&8Enable: claim_blocks.exchange.enabled: true'
+
+# -------------------------------------------------
+# ClaimBlocks Exchange (Exchange GUI)
+# -------------------------------------------------
+claimblocks_exchange_title: '&8ClaimBlocks Exchange'
+
+claimblocks_exchange_buy_label: 'BUY'
+claimblocks_exchange_sell_label: 'SELL'
+
+claimblocks_exchange_buy_lore:
+- '&7Purchase Claim Blocks with coin.'
+- '&8Permission: &f{PERM}'
+
+claimblocks_exchange_sell_lore:
+- '&7Sell Claim Blocks for coin.'
+- '&8May require: &f{PERM}'
+
+claimblocks_exchange_amount_decrease: '&7Decrease amount'
+claimblocks_exchange_amount_increase: '&7Increase amount'
+
+claimblocks_exchange_info_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_info_money: '&7Thy Coin: &e{MONEY}'
+claimblocks_exchange_info_blocks: '&7Claim Blocks: &f{BLOCKS} &8available'
+claimblocks_exchange_info_total_spent: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
+
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
+
+claimblocks_exchange_quote_buy_amount: '&aBuy Amount: &f{BLOCKS}'
+claimblocks_exchange_quote_sell_amount: '&eSell Amount: &f{BLOCKS}'
+claimblocks_exchange_quote_unit: '&7Unit: &e{AMOUNT}'
+claimblocks_exchange_quote_subtotal: '&7Subtotal: &e{AMOUNT}'
+claimblocks_exchange_quote_gross: '&7Gross: &e{AMOUNT}'
+claimblocks_exchange_quote_fee: '&7Fee: &6{AMOUNT}'
+claimblocks_exchange_quote_total_cost: '&aTotal Cost: &e{AMOUNT}'
+claimblocks_exchange_quote_payout: '&aPayout: &e{AMOUNT}'
+
+claimblocks_exchange_confirm_enabled: '&a&lCONFIRM'
+claimblocks_exchange_confirm_disabled: '&c&lDISABLED'
+
+claimblocks_exchange_confirm_lore_enabled:
+- '&7Click to perform the trade.'
+- '&8Shift-click is ignored.'
+
+claimblocks_exchange_confirm_lore_disabled:
+- '&7Enable: &fclaim_blocks.exchange.enabled: true'
+- '&8Shift-click is ignored.'
+
+claimblocks_exchange_close: '&cClose'
+claimblocks_exchange_close_lore:
+- '&7Return to thy adventures.'
+
+# -------------------------------------------------
+# Existing Expansion / Admin / Other GUI Strings (kept)
+# -------------------------------------------------
 button_view_requests_admin: '&cReview Petitions (Admin)'
 auction_button_back: '&e⟵ Return to Auctions'
 market_button_back: '&e⟵ Return to Market'
@@ -39,8 +183,13 @@ expansion_tier2_name: '&eKnight''s Fee'
 expansion_tier3_name: '&fBaron''s Estate'
 expansion_tier4_name: '&6Duke''s Domain'
 expansion_tier5_name: '&bRoyal Charter'
+
+# -------------------------------------------------
+# Plot Flags (kept)
+# -------------------------------------------------
 plot_flags_title: '&9&lWards of Thy Holding'
 label_free: '&aFree'
+
 button_pvp_on: '&a⚔ PvP Ward: Raised'
 button_pvp_off: '&c⚔ PvP Ward: Lowered'
 button_tnt_on: '&a💥 TNT Ward: Raised'
@@ -70,6 +219,7 @@ button_shop_off: '&c💎 Shop Interact: Withheld'
 button_fly_on: '&a🪽 Flight: Granted'
 button_fly_off: '&c🪽 Flight: Withheld'
 button_cosmetics: '&b✨ Adornments'
+
 pvp_toggle_lore:
 - '&7When raised, no blade may bite'
 - '&7within thy holding.'

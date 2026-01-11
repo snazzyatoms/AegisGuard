@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -17,12 +18,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * ClaimBlockExchangeGUI
- * - Fully Codex-aware (GUI bundle keys in guis.yml)
- * - Chat messages routed through msg() (system.yml keys) to support all languages
- * - Placeholder-ready for future languages
- */
 public class ClaimBlockExchangeGUI {
 
     private final AegisGuard plugin;
@@ -65,8 +60,8 @@ public class ClaimBlockExchangeGUI {
         if (s.amount <= 0) s.amount = 100;
         if (s.mode == null) s.mode = Mode.BUY;
 
-        String title = plugin.gui().title(p, "claimblocks_exchange_gui_title", "&8ClaimBlocks Exchange");
-        Inventory inv = Bukkit.createInventory(new ExchangeHolder(p.getUniqueId()), SIZE, title);
+        String title = plugin.gui().title(p, "claimblocks_exchange_title", "&8ClaimBlocks Exchange");
+        Inventory inv = Bukkit.createInventory(new ExchangeHolder(p.getUniqueId()), SIZE, GUIManager.color(title));
 
         render(p, inv, s);
 
@@ -82,13 +77,14 @@ public class ClaimBlockExchangeGUI {
         if (p == null || e == null || holder == null) return;
         if (!holder.owner.equals(p.getUniqueId())) return;
 
-        // safety: keep GUI locked even if called without GUIListener
+        // Extra safety (GUIListener already cancels)
         e.setCancelled(true);
 
         int slot = e.getRawSlot();
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
 
         if (slot == SLOT_CLOSE) {
+            sessions.remove(p.getUniqueId());
             p.closeInventory();
             return;
         }
@@ -126,17 +122,15 @@ public class ClaimBlockExchangeGUI {
 
         if (slot == SLOT_CONFIRM) {
             boolean enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
-
-            // Hard stop if disabled OR service missing
-            if (!enabled || exchange == null) {
-                send(p, "claimblocks_exchange_msg_disabled", "&cExchange is disabled right now.");
+            if (!enabled) {
+                send(p, "claimblocks_exchange_disabled", "&cExchange is disabled in config.yml.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
-                render(p, e.getInventory(), s);
                 return;
             }
 
-            ClaimBlockExchangeService.Result res =
-                    (s.mode == Mode.BUY) ? exchange.buyTrade(p, s.amount) : exchange.sellTrade(p, s.amount);
+            ClaimBlockExchangeService.Result res = (s.mode == Mode.BUY)
+                    ? exchange.buyTrade(p, s.amount)
+                    : exchange.sellTrade(p, s.amount);
 
             handleResult(p, res);
 
@@ -153,32 +147,31 @@ public class ClaimBlockExchangeGUI {
         inv.clear();
 
         // Background
-        ItemStack glass = item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of(" "));
+        ItemStack glass = item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, glass);
 
         boolean enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
-        boolean usable = enabled && exchange != null;
 
-        // Mode labels
+        // Labels (localized, styled by state)
         String buyLabel = t(p, "claimblocks_exchange_buy_label", "BUY");
         String sellLabel = t(p, "claimblocks_exchange_sell_label", "SELL");
 
         String buyName = (s.mode == Mode.BUY ? "&a&l" : "&7") + buyLabel;
         String sellName = (s.mode == Mode.SELL ? "&e&l" : "&7") + sellLabel;
 
-        String permExchange = plugin.cfg().raw().getString(
-                "claim_blocks.exchange.permissions.exchange", "aegis.claimblocks.exchange"
-        );
-        String permSell = plugin.cfg().raw().getString(
-                "claim_blocks.exchange.permissions.sell", "aegis.claimblocks.sell"
-        );
+        String permExchange = plugin.cfg().raw().getString("claim_blocks.exchange.permissions.exchange", "aegis.claimblocks.exchange");
+        String permSell = plugin.cfg().raw().getString("claim_blocks.exchange.permissions.sell", "aegis.claimblocks.sell");
 
         inv.setItem(SLOT_MODE_BUY, item(
                 Material.EMERALD,
                 buyName,
-                tl(p,
+                tl(
+                        p,
                         "claimblocks_exchange_buy_lore",
-                        List.of("&7Purchase Claim Blocks with money.", "&8Permission: &f{PERM}"),
+                        List.of(
+                                "&7Purchase Claim Blocks with coin.",
+                                "&8Permission: &f{PERM}"
+                        ),
                         Map.of("PERM", permExchange)
                 )
         ));
@@ -186,24 +179,28 @@ public class ClaimBlockExchangeGUI {
         inv.setItem(SLOT_MODE_SELL, item(
                 Material.GOLD_INGOT,
                 sellName,
-                tl(p,
+                tl(
+                        p,
                         "claimblocks_exchange_sell_lore",
-                        List.of("&7Sell Claim Blocks for money.", "&8May require: &f{PERM}"),
+                        List.of(
+                                "&7Sell Claim Blocks for coin.",
+                                "&8May require: &f{PERM}"
+                        ),
                         Map.of("PERM", permSell)
                 )
         ));
 
-        // Amount controls (lore localized)
-        List<String> minusLore = tl(p, "claimblocks_exchange_minus_lore", List.of("&7Decrease amount"));
-        List<String> plusLore = tl(p, "claimblocks_exchange_plus_lore", List.of("&7Increase amount"));
+        // Amount controls
+        String dec = t(p, "claimblocks_exchange_amount_decrease", "&7Decrease amount");
+        String inc = t(p, "claimblocks_exchange_amount_increase", "&7Increase amount");
 
-        inv.setItem(SLOT_MINUS_100, item(Material.RED_DYE, "&c-100", minusLore));
-        inv.setItem(SLOT_MINUS_10, item(Material.RED_DYE, "&c-10", minusLore));
-        inv.setItem(SLOT_MINUS_1, item(Material.RED_DYE, "&c-1", minusLore));
+        inv.setItem(SLOT_MINUS_100, item(Material.RED_DYE, "&c-100", List.of(dec)));
+        inv.setItem(SLOT_MINUS_10, item(Material.RED_DYE, "&c-10", List.of(dec)));
+        inv.setItem(SLOT_MINUS_1, item(Material.RED_DYE, "&c-1", List.of(dec)));
 
-        inv.setItem(SLOT_PLUS_1, item(Material.LIME_DYE, "&a+1", plusLore));
-        inv.setItem(SLOT_PLUS_10, item(Material.LIME_DYE, "&a+10", plusLore));
-        inv.setItem(SLOT_PLUS_100, item(Material.LIME_DYE, "&a+100", plusLore));
+        inv.setItem(SLOT_PLUS_1, item(Material.LIME_DYE, "&a+1", List.of(inc)));
+        inv.setItem(SLOT_PLUS_10, item(Material.LIME_DYE, "&a+10", List.of(inc)));
+        inv.setItem(SLOT_PLUS_100, item(Material.LIME_DYE, "&a+100", List.of(inc)));
 
         // Balances
         long avail = (blocks != null) ? blocks.getAvailableBlocks(p.getUniqueId()) : 0;
@@ -212,64 +209,81 @@ public class ClaimBlockExchangeGUI {
 
         double vaultBal = (plugin.vault() != null) ? plugin.vault().balance(p) : 0.0;
 
-        // Quote lore (fully Codex driven)
+        // Quote lore
         List<String> lore = new ArrayList<>();
 
-        String state = usable ? "&aYes" : "&cNo";
+        String state = enabled
+                ? t(p, "claimblocks_exchange_state_yes", "&aYes")
+                : t(p, "claimblocks_exchange_state_no", "&cNo");
 
-        lore.add(t(p, "claimblocks_exchange_line_enabled", "&7Exchange Enabled: {STATE}")
-                .replace("{STATE}", GUIManager.color(state)));
+        lore.add(apply(
+                t(p, "claimblocks_exchange_info_enabled", "&7Exchange Enabled: {STATE}"),
+                Map.of("STATE", state)
+        ));
 
-        lore.add(t(p, "claimblocks_exchange_line_money", "&7Your Money: &e{MONEY}")
-                .replace("{MONEY}", money(vaultBal)));
+        lore.add(apply(
+                t(p, "claimblocks_exchange_info_money", "&7Thy Coin: &e{MONEY}"),
+                Map.of("MONEY", money(vaultBal))
+        ));
 
-        lore.add(t(p, "claimblocks_exchange_line_blocks", "&7Claim Blocks: &f{AVAILABLE} &8available")
-                .replace("{AVAILABLE}", String.valueOf(avail)));
+        lore.add(apply(
+                t(p, "claimblocks_exchange_info_blocks", "&7Claim Blocks: &f{BLOCKS} &8available"),
+                Map.of("BLOCKS", String.valueOf(avail))
+        ));
 
-        lore.add(t(p, "claimblocks_exchange_line_totals", "&8Total: &7{TOTAL}  &8Spent: &7{SPENT}")
-                .replace("{TOTAL}", String.valueOf(total))
-                .replace("{SPENT}", String.valueOf(spent)));
+        lore.add(apply(
+                t(p, "claimblocks_exchange_info_total_spent", "&8Total: &7{TOTAL}  &8Spent: &7{SPENT}"),
+                Map.of("TOTAL", String.valueOf(total), "SPENT", String.valueOf(spent))
+        ));
 
         lore.add(" ");
 
-        if (exchange != null) {
-            if (s.mode == Mode.BUY) {
-                ClaimBlockExchangeService.Quote q = exchange.quoteBuy(s.amount);
+        if (s.mode == Mode.BUY) {
+            ClaimBlockExchangeService.Quote q = exchange.quoteBuy(s.amount);
 
-                lore.add(t(p, "claimblocks_exchange_line_buy_amount", "&aBuy Amount: &f{AMOUNT}")
-                        .replace("{AMOUNT}", String.valueOf(q.blocks())));
-
-                lore.add(t(p, "claimblocks_exchange_line_unit", "&7Unit: &e{UNIT}")
-                        .replace("{UNIT}", money(q.unitPrice())));
-
-                lore.add(t(p, "claimblocks_exchange_line_subtotal", "&7Subtotal: &e{SUBTOTAL}")
-                        .replace("{SUBTOTAL}", money(q.subtotal())));
-
-                lore.add(t(p, "claimblocks_exchange_line_fee", "&7Fee: &6{FEE}")
-                        .replace("{FEE}", money(q.fee())));
-
-                lore.add(t(p, "claimblocks_exchange_line_total_cost", "&aTotal Cost: &e{TOTAL}")
-                        .replace("{TOTAL}", money(q.totalOrPayout())));
-            } else {
-                ClaimBlockExchangeService.Quote q = exchange.quoteSell(s.amount);
-
-                lore.add(t(p, "claimblocks_exchange_line_sell_amount", "&eSell Amount: &f{AMOUNT}")
-                        .replace("{AMOUNT}", String.valueOf(q.blocks())));
-
-                lore.add(t(p, "claimblocks_exchange_line_unit", "&7Unit: &e{UNIT}")
-                        .replace("{UNIT}", money(q.unitPrice())));
-
-                lore.add(t(p, "claimblocks_exchange_line_gross", "&7Gross: &e{GROSS}")
-                        .replace("{GROSS}", money(q.subtotal())));
-
-                lore.add(t(p, "claimblocks_exchange_line_fee", "&7Fee: &6{FEE}")
-                        .replace("{FEE}", money(q.fee())));
-
-                lore.add(t(p, "claimblocks_exchange_line_payout", "&aPayout: &e{PAYOUT}")
-                        .replace("{PAYOUT}", money(q.totalOrPayout())));
-            }
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_buy_amount", "&aBuy Amount: &f{BLOCKS}"),
+                    Map.of("BLOCKS", String.valueOf(q.blocks()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_unit", "&7Unit: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.unitPrice()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_subtotal", "&7Subtotal: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.subtotal()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_fee", "&7Fee: &6{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.fee()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_total_cost", "&aTotal Cost: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.totalOrPayout()))
+            ));
         } else {
-            lore.add("&cExchange service is not available.");
+            ClaimBlockExchangeService.Quote q = exchange.quoteSell(s.amount);
+
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_sell_amount", "&eSell Amount: &f{BLOCKS}"),
+                    Map.of("BLOCKS", String.valueOf(q.blocks()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_unit", "&7Unit: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.unitPrice()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_gross", "&7Gross: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.subtotal()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_fee", "&7Fee: &6{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.fee()))
+            ));
+            lore.add(apply(
+                    t(p, "claimblocks_exchange_quote_payout", "&aPayout: &e{AMOUNT}"),
+                    Map.of("AMOUNT", money(q.totalOrPayout()))
+            ));
         }
 
         inv.setItem(SLOT_INFO, item(
@@ -278,84 +292,82 @@ public class ClaimBlockExchangeGUI {
                 lore
         ));
 
-        // Confirm button (Codex driven)
-        String confirmTitle = usable
-                ? t(p, "claimblocks_exchange_confirm_title", "&a&lCONFIRM")
-                : t(p, "claimblocks_exchange_confirm_disabled_title", "&c&lDISABLED");
+        // Confirm
+        String confirmLabel = enabled
+                ? t(p, "claimblocks_exchange_confirm_enabled", "&a&lCONFIRM")
+                : t(p, "claimblocks_exchange_confirm_disabled", "&c&lDISABLED");
 
-        List<String> confirmLore = usable
-                ? tl(p, "claimblocks_exchange_confirm_lore",
+        List<String> confirmLore = enabled
+                ? tl(p, "claimblocks_exchange_confirm_lore_enabled",
                         List.of("&7Click to perform the trade.", "&8Shift-click is ignored."))
-                : tl(p, "claimblocks_exchange_confirm_disabled_lore",
+                : tl(p, "claimblocks_exchange_confirm_lore_disabled",
                         List.of("&7Enable: &fclaim_blocks.exchange.enabled: true", "&8Shift-click is ignored."));
 
-        inv.setItem(SLOT_CONFIRM, item(Material.ANVIL, confirmTitle, confirmLore));
+        inv.setItem(SLOT_CONFIRM, item(Material.ANVIL, confirmLabel, confirmLore));
 
-        // Close button (Codex driven)
+        // Close
         inv.setItem(SLOT_CLOSE, item(
                 Material.BARRIER,
-                t(p, "claimblocks_exchange_close_title", "&cClose"),
-                tl(p, "claimblocks_exchange_close_lore", List.of("&7Return to your adventures."))
+                t(p, "claimblocks_exchange_close", "&cClose"),
+                tl(p, "claimblocks_exchange_close_lore", List.of("&7Return to thy adventures."))
         ));
     }
 
     // ------------------------------------------------------------
-    // RESULT HANDLING (system.yml via msg())
+    // RESULT HANDLING (chat localized, service message preserved)
     // ------------------------------------------------------------
 
     private void handleResult(Player p, ClaimBlockExchangeService.Result res) {
         switch (res.type()) {
             case OK -> {
-                // Keep service message as the body (dynamic), but still route through prefix/lang
-                send(p, "claimblocks_exchange_msg_success", "&a{MESSAGE}",
-                        Map.of("MESSAGE", safe(res.message())));
+                send(p, "claimblocks_exchange_success", "&a" + res.message());
                 trySound(p, Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.25f);
             }
             case NO_PERMISSION -> {
-                send(p, "claimblocks_exchange_msg_no_permission", "&cYou do not have permission.");
+                send(p, "claimblocks_exchange_no_permission", "&cYou do not have permission.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case VAULT_UNAVAILABLE -> {
-                send(p, "claimblocks_exchange_msg_vault_unavailable", "&cVault economy is unavailable.");
+                send(p, "claimblocks_exchange_vault_unavailable", "&cVault economy is unavailable.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case WORLD_BLOCKED -> {
-                send(p, "claimblocks_exchange_msg_world_blocked", "&cExchange is not allowed in this world.");
+                send(p, "claimblocks_exchange_world_blocked", "&cExchange is not allowed in this world.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case COOLDOWN -> {
-                send(p, "claimblocks_exchange_msg_cooldown", "&eCooldown: wait &6{SECONDS}s&e.",
+                send(p, "claimblocks_exchange_cooldown", "&eCooldown: wait &6{SECONDS}s&e.",
                         Map.of("SECONDS", String.valueOf(res.longA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             case DAILY_CAP -> {
-                send(p, "claimblocks_exchange_msg_daily_cap", "&eDaily cap reached. Remaining today: &6{REMAINING}&e.",
+                send(p, "claimblocks_exchange_daily_cap", "&eDaily cap reached. Remaining today: &6{REMAINING}&e.",
                         Map.of("REMAINING", String.valueOf(res.longA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             case INSUFFICIENT_FUNDS -> {
-                send(p, "claimblocks_exchange_msg_insufficient_funds", "&cNot enough money. Need: &e{AMOUNT}",
+                send(p, "claimblocks_exchange_insufficient_funds", "&cNot enough money. Need: &e{AMOUNT}",
                         Map.of("AMOUNT", money(res.dblA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.85f);
             }
             case INSUFFICIENT_BLOCKS -> {
-                send(p, "claimblocks_exchange_msg_insufficient_blocks", "&cNot enough sellable Claim Blocks.");
+                send(p, "claimblocks_exchange_insufficient_blocks", "&cNot enough sellable Claim Blocks.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.85f);
             }
             case SELL_LOCKED -> {
-                send(p, "claimblocks_exchange_msg_sell_locked", "&eSome purchased blocks are locked. Try later.");
+                send(p, "claimblocks_exchange_sell_locked", "&eSome purchased blocks are locked. Try later.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             default -> {
-                send(p, "claimblocks_exchange_msg_trade_failed", "&cTrade failed: &7{REASON}",
-                        Map.of("REASON", safe(res.message())));
+                send(p, "claimblocks_exchange_trade_failed", "&cTrade failed: &7{REASON}",
+                        Map.of("REASON", res.message() == null ? "Unknown" : res.message()));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
         }
     }
 
     // ------------------------------------------------------------
-    // Helpers (Codex + msg())
+    // Helpers (Codex + msg() style)
     // ------------------------------------------------------------
 
     private String t(Player p, String key, String fallback) {
@@ -367,7 +379,30 @@ public class ClaimBlockExchangeGUI {
     }
 
     private List<String> tl(Player p, String key, List<String> fallback, Map<String, String> placeholders) {
-        return plugin.gui().trList(p, key, fallback, placeholders);
+        List<String> base = plugin.gui().trList(p, key, fallback);
+        return applyList(base, placeholders);
+    }
+
+    private String apply(String s, Map<String, String> placeholders) {
+        if (s == null) return "";
+        if (placeholders == null || placeholders.isEmpty()) return s;
+
+        String out = s;
+        for (Map.Entry<String, String> e : placeholders.entrySet()) {
+            String k = e.getKey();
+            String v = e.getValue() == null ? "" : e.getValue();
+            out = out.replace("{" + k + "}", v);
+        }
+        return out;
+    }
+
+    private List<String> applyList(List<String> list, Map<String, String> placeholders) {
+        if (list == null) return List.of();
+        if (placeholders == null || placeholders.isEmpty()) return list;
+
+        List<String> out = new ArrayList<>(list.size());
+        for (String line : list) out.add(apply(line, placeholders));
+        return out;
     }
 
     private void send(Player p, String key, String fallback) {
@@ -393,17 +428,13 @@ public class ClaimBlockExchangeGUI {
         if (msg == null || msg.isBlank() || msg.equalsIgnoreCase(key) || msg.contains("[Missing")) {
             msg = fallback;
         }
+
         if (msg == null || msg.trim().isEmpty()) return;
 
-        if (placeholders != null && !placeholders.isEmpty()) {
-            for (Map.Entry<String, String> e : placeholders.entrySet()) {
-                String k = e.getKey();
-                String v = e.getValue() == null ? "" : e.getValue();
-                msg = msg.replace("{" + k + "}", v);
-            }
-        }
+        msg = apply(msg, placeholders);
 
-        p.sendMessage(GUIManager.color(prefix + msg));
+        String out = GUIManager.color(prefix + msg);
+        p.spigot().sendMessage(TextComponent.fromLegacyText(out));
     }
 
     private String money(double amt) {
@@ -431,10 +462,6 @@ public class ClaimBlockExchangeGUI {
         return it;
     }
 
-    private String safe(String s) {
-        return (s == null || s.isBlank()) ? "Unknown" : s;
-    }
-
     private enum Mode { BUY, SELL }
 
     private static final class Session {
@@ -442,7 +469,7 @@ public class ClaimBlockExchangeGUI {
         long amount = 100;
     }
 
-    // IMPORTANT: public so GUIListener can instanceof it
+    // ✅ IMPORTANT: public so GUIListener can instanceof it
     public static final class ExchangeHolder implements InventoryHolder {
         public final UUID owner;
         public ExchangeHolder(UUID owner) { this.owner = owner; }

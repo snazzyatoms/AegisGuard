@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -94,7 +95,7 @@ public class ExpansionRequestAdminGUI {
         // 1) Localized base title: expansion_admin_title
         // 2) Optional paged variant: expansion_admin_title_paged (recommended)
         //    Fallback stays localized by embedding the baseTitle.
-        String baseTitle = plugin.gui().tr(player, "expansion_admin_title", "&6&lPending Requests");
+        String baseTitle = plugin.gui().tr(player, "expansion_admin_title", "&6&lPending Petitions");
         Map<String, String> ph = Map.of(
                 "PAGE", String.valueOf(page + 1),
                 "PAGES", String.valueOf(safePages)
@@ -106,6 +107,9 @@ public class ExpansionRequestAdminGUI {
                 baseTitle + " &7({PAGE}/{PAGES})",
                 ph
         );
+
+        // ✅ Safety: ensure inventory title always renders colors (even if upstream forgot)
+        fullTitle = ChatColor.translateAlternateColorCodes('&', fullTitle);
 
         ExpansionAdminHolder holder = new ExpansionAdminHolder(ids, page);
         Inventory inv = Bukkit.createInventory(holder, 54, fullTitle);
@@ -291,8 +295,8 @@ public class ExpansionRequestAdminGUI {
     // --------------------------------
 
     private void sendSystem(Player p, String key, String fallback) {
-        // plugin.gui().tr already returns colorized output
-        String msg = plugin.gui().tr(p, key, fallback);
+        // plugin.gui().tr already returns colorized output (but fallback may contain & codes)
+        String msg = ChatColor.translateAlternateColorCodes('&', plugin.gui().tr(p, key, fallback));
         p.sendMessage(msg);
     }
 

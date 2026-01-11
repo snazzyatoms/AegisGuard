@@ -640,3 +640,71 @@ level_upgrade_button_blocks_lore:
 - ' '
 - '&eClic para mejorar'
 level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
+
+# --------------------------------------
+# ClaimBlocks Exchange GUI (v1.2.5)
+# Usado por: ClaimBlocksExchangeGUI.java (o el handler del Exchange GUI)
+# --------------------------------------
+
+button_claimblocks_exchange: '&a💱 Intercambio de Bloques de Reclamo'
+claimblocks_exchange_lore:
+- '&7Compra o vende Bloques de Reclamo con dinero.'
+- ' '
+- '&eClic para abrir.'
+
+button_claimblocks_exchange_disabled: '&7💱 Intercambio de Bloques de Reclamo'
+claimblocks_exchange_disabled_lore:
+- '&7Esta función no está disponible ahora.'
+- '&8Activa: &fclaim_blocks.exchange.enabled: true'
+
+claimblocks_exchange_gui_title: '&8Intercambio de Bloques de Reclamo'
+
+claimblocks_exchange_buy_label: 'COMPRAR'
+claimblocks_exchange_sell_label: 'VENDER'
+
+claimblocks_exchange_buy_lore:
+- '&7Compra Bloques de Reclamo con dinero.'
+- '&8Permiso: &f{PERM}'
+
+claimblocks_exchange_sell_lore:
+- '&7Vende Bloques de Reclamo por dinero.'
+- '&8Puede requerir: &f{PERM}'
+
+claimblocks_exchange_minus_lore:
+- '&7Disminuir cantidad'
+
+claimblocks_exchange_plus_lore:
+- '&7Aumentar cantidad'
+
+claimblocks_exchange_quote_title: '&b&lCotización del Intercambio'
+
+claimblocks_exchange_line_enabled: '&7Intercambio Activado: {STATE}'
+claimblocks_exchange_line_money: '&7Tu Dinero: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Bloques de Reclamo: &f{AVAILABLE} &8disponibles'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Gastado: &7{SPENT}'
+
+claimblocks_exchange_line_buy_amount: '&aCantidad a Comprar: &f{AMOUNT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_total_cost: '&aCosto Total: &e{TOTAL}'
+
+claimblocks_exchange_line_sell_amount: '&eCantidad a Vender: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7Bruto: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aRecibes: &e{PAYOUT}'
+
+claimblocks_exchange_line_unit: '&7Por unidad: &e{UNIT}'
+claimblocks_exchange_line_fee: '&7Comisión: &6{FEE}'
+
+claimblocks_exchange_confirm_title: '&a&lCONFIRMAR'
+claimblocks_exchange_confirm_lore:
+- '&7Haz clic para realizar el intercambio.'
+- '&8El shift-clic se ignora.'
+
+claimblocks_exchange_confirm_disabled_title: '&c&lDESHABILITADO'
+claimblocks_exchange_confirm_disabled_lore:
+- '&7Activa: &fclaim_blocks.exchange.enabled: true'
+- '&8El shift-clic se ignora.'
+
+claimblocks_exchange_close_title: '&cCerrar'
+claimblocks_exchange_close_lore:
+- '&7Vuelve a tus aventuras.'
+

@@ -161,6 +161,22 @@ admin_lang_refresh_failed: '&c❌ No se pudieron actualizar los paquetes de idio
 economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
 vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de
   economía.'
+
+# -------------------------------------------------
+# ClaimBlocks Exchange
+# -------------------------------------------------
+claimblocks_exchange_disabled: '&cEl intercambio está deshabilitado en config.yml.'
+claimblocks_exchange_success: '&a¡Intercambio completado!'
+claimblocks_exchange_no_permission: '&cNo tenés permiso.'
+claimblocks_exchange_vault_unavailable: '&cLa economía de Vault no está disponible.'
+claimblocks_exchange_world_blocked: '&cEl intercambio no está permitido en este mundo.'
+claimblocks_exchange_cooldown: '&eEn enfriamiento: esperá &6{SECONDS}s&e.'
+claimblocks_exchange_daily_cap: '&eLímite diario alcanzado. Te queda hoy: &6{REMAINING}&e.'
+claimblocks_exchange_insufficient_funds: '&cNo tenés suficiente dinero. Necesitás: &e{AMOUNT}'
+claimblocks_exchange_insufficient_blocks: '&cNo tenés suficientes ClaimBlocks para vender.'
+claimblocks_exchange_sell_locked: '&eAlgunos ClaimBlocks comprados están bloqueados. Probá más tarde.'
+claimblocks_exchange_trade_failed: '&cEl intercambio falló: &7{REASON}'
+
 vault_disabled_here: '&c❌ Los pagos por Vault están deshabilitados acá.'
 insufficient_funds: '&c❌ Fondos insuficientes. Necesitás: &e${NEEDED}&c | Tenés: &e${AVAILABLE}&c.'
 transaction_failed: '&c❌ La transacción falló. Probá de nuevo en un momento.'

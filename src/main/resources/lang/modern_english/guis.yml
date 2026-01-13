@@ -578,3 +578,75 @@ level_upgrade_choose_payment: '&7Choose a payment method below.'
 # Optional: track cost variants (future polish)
 level_track_next_cost_money: '&eMoney Cost: &6{COST}'
 level_track_next_cost_blocks: '&eBlock Cost: &b{BLOCKS}'
+# ------------------------------------------------------------
+# ClaimBlocks Exchange GUI
+# ------------------------------------------------------------
+
+claimblocks_exchange_gui_title: '&8Claim Block Exchange'
+
+# Button (used in other menus)
+claimblocks_exchange_title: '&bClaim Block Exchange'
+claimblocks_exchange_lore:
+  - '&7Trade Claim Blocks for money.'
+claimblocks_exchange_disabled_lore:
+  - '&8Currently disabled in config.'
+  - '&7Enable: &fclaim_blocks.exchange.enabled: &atrue'
+
+# Background filler
+claimblocks_exchange_filler_name: ' '
+claimblocks_exchange_filler_lore: []
+
+# Mode buttons
+claimblocks_exchange_buy_label: 'Buy'
+claimblocks_exchange_buy_lore:
+  - '&7Purchase Claim Blocks with money.'
+  - '&8Permission: &f{PERM}'
+claimblocks_exchange_sell_label: 'Sell'
+claimblocks_exchange_sell_lore:
+  - '&7Sell Claim Blocks for money.'
+  - '&8May require: &f{PERM}'
+
+# Amount controls
+claimblocks_exchange_minus_100_title: '&c-100'
+claimblocks_exchange_minus_10_title: '&c-10'
+claimblocks_exchange_minus_1_title: '&c-1'
+claimblocks_exchange_plus_1_title: '&a+1'
+claimblocks_exchange_plus_10_title: '&a+10'
+claimblocks_exchange_plus_100_title: '&a+100'
+claimblocks_exchange_plus_lore:
+  - '&7Increase amount.'
+claimblocks_exchange_minus_lore:
+  - '&7Decrease amount.'
+
+# Info lines
+claimblocks_exchange_state_yes: '&aYes'
+claimblocks_exchange_state_no: '&cNo'
+claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_line_money: '&7Your Balance: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{BLOCKS} &8available'
+claimblocks_exchange_line_total_spent: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
+claimblocks_exchange_spacer: ' '
+
+# Quote section
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
+claimblocks_exchange_quote_buy_amount: '&aBuy Amount: &f{BLOCKS}'
+claimblocks_exchange_quote_sell_amount: '&eSell Amount: &f{BLOCKS}'
+claimblocks_exchange_quote_unit: '&7Unit: &e{AMOUNT}'
+claimblocks_exchange_quote_subtotal: '&7Subtotal: &e{AMOUNT}'
+claimblocks_exchange_quote_gross: '&7Gross: &e{AMOUNT}'
+claimblocks_exchange_quote_fee: '&7Fee: &6{AMOUNT}'
+claimblocks_exchange_quote_total_cost: '&aTotal Cost: &e{AMOUNT}'
+claimblocks_exchange_quote_payout: '&aPayout: &e{AMOUNT}'
+
+# Confirm + close
+claimblocks_exchange_confirm_title: '&a&lCONFIRM'
+claimblocks_exchange_confirm_lore:
+  - '&7Click to perform the trade.'
+  - '&8Shift-click is ignored.'
+claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
+claimblocks_exchange_confirm_disabled_lore:
+  - '&7Enable: &fclaim_blocks.exchange.enabled: &atrue'
+  - '&8Shift-click is ignored.'
+claimblocks_exchange_close_title: '&cClose'
+claimblocks_exchange_close_lore:
+  - '&7Close this menu.'

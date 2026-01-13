@@ -1,210 +1,116 @@
-# =========================================================
-# AegisGuard Codex (Hybrid English) - GUIs Bundle
-# File: guis.yml
-# =========================================================
+# ============================
+# AegisGuard • GUI Language
+# Hybrid English Pack
+# ============================
 
 # ----------------------------
-# Common Buttons / Pagination
+# Main Menu / Dashboard
 # ----------------------------
+mainmenu_title: '&8AegisGuard'
 
-button_back: '&7⬅ Back'
-button_back_lore:
-- '&7Return to previous menu.'
+button_claims: '&a📜 Claims'
+claims_lore:
+  - '&7Manage thy claims and boundaries.'
 
-button_next: '&7➡ Next'
-button_next_lore:
-- '&7Go to the next page.'
+button_plots: '&a🏡 Plots'
+plots_lore:
+  - '&7Manage thy plots and permissions.'
 
-button_prev: '&7⬅ Previous'
-button_prev_lore:
-- '&7Go to the previous page.'
+button_admin: '&c🛡 Admin'
+admin_lore:
+  - '&7Admin controls and world rules.'
 
-button_close: '&c✖ Close'
-button_close_lore:
-- '&7Close this menu.'
+button_settings: '&e⚙ Settings'
+settings_lore:
+  - '&7Personal settings and toggles.'
 
-button_confirm: '&a✔ Confirm'
-button_confirm_lore:
-- '&7Confirm this action.'
-
-button_cancel: '&c✖ Cancel'
-button_cancel_lore:
-- '&7Cancel and return.'
+button_close: '&cClose'
+close_lore:
+  - '&7Return to thy adventures.'
 
 
 # ----------------------------
-# Player Menu (Main Dashboard)
+# ClaimBlocks (Player Menu)
 # ----------------------------
+button_claimblocks_ledger: '&b📖 ClaimBlocks Ledger'
+claimblocks_ledger_lore:
+  - '&7View thy ClaimBlocks history and earnings.'
 
-menu_title: '&b⚔ AegisGuard Menu'
-
-button_info: '&bℹ Info'
-info_lore:
-- '&7View plugin info and help.'
-
-plot_status_button_title: '&d📜 Plot Status'
-plot_status_button_lore:
-- '&7View plot status and details.'
-
-visit_gui_title: '&a🧭 Travel'
-visit_button_lore:
-- '&7Visit plots and travel quickly.'
-
-button_claim_land: '&a🛡 Claim Land'
-claim_land_lore:
-- '&7Select two points with your wand first.'
-claim_land_ready_lore:
-- '&7Ready to claim your selection.'
-- ' '
-- '&eClick to confirm'
-
-button_plot_flags: '&6⚙ Plot Flags'
-plot_flags_lore:
-- '&7Manage protection flags for this plot.'
-plot_flags_locked_lore:
-- '&cYou cannot manage flags here.'
-
-button_roles: '&e👥 Roles'
-roles_lore:
-- '&7Manage member roles and permissions.'
-roles_locked_lore:
-- '&cYou cannot manage roles here.'
-
-level_gui_title: '&a📈 Leveling'
-level_button_lore:
-- '&7Level up your plot for perks.'
-
-zone_gui_title: '&b🏗 Zoning'
-zone_button_lore:
-- '&7Create sub-zones and rentable rooms.'
-
-biome_gui_title: '&d🌿 Biomes'
-biome_button_lore:
-- '&7Change your plot biome.'
-
-button_market: '&6💰 Market'
-market_lore:
-- '&7Buy and sell plot goods.'
-
-button_expand: '&b⛏ Expand'
-expand_lore:
-- '&7Request land expansions.'
-
-button_auction: '&c🔥 Auctions'
-auction_lore:
-- '&7Bid on plots and listings.'
-
-button_player_settings: '&e⚙ Settings'
-player_settings_lore:
-- '&7Personal preferences and language.'
-
-admin_menu_title: '&c🛠 Admin Menu'
-admin_menu_lore:
-- '&7Operator Access Only'
-
-button_exit: '&c✖ Exit'
-exit_lore:
-- '&7Close this menu.'
-
-
-# ----------------------------
-# Playtime Rewards
-# ----------------------------
-
-playtime_rewards_title: '&b⏳ Playtime Rewards'
-playtime_rewards_lore:
-- '&7Claim daily playtime rewards.'
-- ' '
-- '&eClick to view.'
-
-playtime_next_reward: '&7Next Reward: &e{TIME}'
-playtime_claim_now: '&aClaim Now'
-playtime_claim_lore:
-- '&7Reward: &e{REWARD}'
-- '&7Requirements: &f{REQ}'
-- ' '
-- '&eClick to claim!'
-
-playtime_locked: '&cLocked'
-playtime_locked_lore:
-- '&7You must wait: &e{TIME}'
-- '&7Before claiming again.'
-
-
-# =========================================================
-# ClaimBlocks Exchange (Player Menu + Exchange GUI)
-# =========================================================
-
-# Player Menu button (slot 39)
 button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
 claimblocks_exchange_lore:
-- '&7Buy or sell ClaimBlocks using money.'
-- ' '
-- '&eClick to open.'
-
-button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Exchange'
+  - '&7Buy or sell ClaimBlocks for coin.'
+  - '&8Buy: &f{BUY_PERM}'
+  - '&8Sell: &f{SELL_PERM}'
 claimblocks_exchange_disabled_lore:
-- '&7This feature is currently unavailable.'
-- '&8Enable: &fclaim_blocks.exchange.enabled: true'
+  - '&cExchange is disabled.'
+  - '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
-# GUI Title
+
+# ----------------------------
+# ClaimBlocks Exchange (GUI)
+# ----------------------------
 claimblocks_exchange_gui_title: '&8ClaimBlocks Exchange'
 
-# Mode labels
 claimblocks_exchange_buy_label: 'BUY'
 claimblocks_exchange_sell_label: 'SELL'
 
-# Mode lores (supports {PERM})
 claimblocks_exchange_buy_lore:
-- '&7Purchase Claim Blocks with money.'
-- '&8Permission: &f{PERM}'
+  - '&7Purchase ClaimBlocks with coin.'
+  - '&8Permission: &f{PERM}'
 
 claimblocks_exchange_sell_lore:
-- '&7Sell Claim Blocks for money.'
-- '&8May require: &f{PERM}'
+  - '&7Sell ClaimBlocks for coin.'
+  - '&8May require: &f{PERM}'
 
-# Amount controls
 claimblocks_exchange_minus_lore:
-- '&7Decrease amount'
+  - '&7Decrease amount.'
 
 claimblocks_exchange_plus_lore:
-- '&7Increase amount'
+  - '&7Increase amount.'
 
-# Quote paper title
+# Spacer / filler
+claimblocks_exchange_filler_name: ' '
+claimblocks_exchange_spacer: ' '
+
+# Amount button titles
+claimblocks_exchange_minus_100_title: '&c-100'
+claimblocks_exchange_minus_10_title: '&c-10'
+claimblocks_exchange_minus_1_title: '&c-1'
+claimblocks_exchange_plus_1_title: '&a+1'
+claimblocks_exchange_plus_10_title: '&a+10'
+claimblocks_exchange_plus_100_title: '&a+100'
+
 claimblocks_exchange_quote_title: '&b&lExchange Quote'
 
-# Quote lines (supports placeholders)
 claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
-claimblocks_exchange_line_money: '&7Your Money: &e{MONEY}'
-claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{AVAILABLE} &8available'
+claimblocks_exchange_state_yes: '&aYes'
+claimblocks_exchange_state_no: '&cNo'
+
+claimblocks_exchange_line_money: '&7Thy Coin: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7ClaimBlocks: &f{AVAILABLE} &8available'
 claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
 
-# Buy mode quote
 claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
+claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
+
+claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
 claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
 claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
 
-# Sell mode quote
-claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
 claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
 claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
 
-# Shared lines
-claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
-claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
-
-# Confirm / Disabled
 claimblocks_exchange_confirm_title: '&a&lCONFIRM'
 claimblocks_exchange_confirm_lore:
-- '&7Click to perform the trade.'
-- '&8Shift-click is ignored.'
+  - '&7Click to perform the trade.'
+  - '&8Shift-click is ignored.'
 
 claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
 claimblocks_exchange_confirm_disabled_lore:
-- '&7Enable: &fclaim_blocks.exchange.enabled: true'
-- '&8Shift-click is ignored.'
+  - '&7Enable: &fclaim_blocks.exchange.enabled: true'
+  - '&8Shift-click is ignored.'
 
-# Close
 claimblocks_exchange_close_title: '&cClose'
 claimblocks_exchange_close_lore:
-- '&7Return to your adventures.'
+  - '&7Return to thy adventures.'

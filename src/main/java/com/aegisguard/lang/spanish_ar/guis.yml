@@ -2,7 +2,7 @@
 # AegisGuard v1.2.4 - Codex: Español (AR)
 # File: guis.yml
 # Organized split: GUIs / System / Upgrades / Expansions
-# Generated: 2025-12-22 07:14:14Z
+# Generated: 2026-01-13 12:59:0Z
 # ======================================
 
 button_back: '&e⟵ Atrás'
@@ -285,14 +285,6 @@ level_track_locked_lore_2: '&7están bloqueadas hasta que avances.'
 level_track_next_title: '&dSiguiente Mejora en esta Rama'
 level_track_next_lore_1: '&7Mejorá para desbloquear las próximas bonificaciones.'
 level_track_next_lore_2: '&7Costo para avanzar: &6{COST}'
-level_upgrade_cost_blocks: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
-level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
-level_upgrade_button_blocks_lore:
-  - '&7Gastá tus bloques ganados.'
-  - '&7Costo: &b{COST} Bloques'
-  - '&7Saldo: &b{BALANCE}'
-  - ''
-  - '&eClic para mejorar'
 
 button_pvp_on: '&a⚔ PvP: Protegido'
 button_pvp_off: '&c⚔ PvP: Sin protección'
@@ -496,6 +488,89 @@ role_flag_name_FLY: '&bVuelo'
 role_flag_name_ANIMALS: '&bAnimales'
 role_flag_name_REDSTONE: '&bRedstone'
 role_flag_name_VEHICLES: '&bVehículos'
+
+# -------------------------------------------------
+# ClaimBlocks Exchange (Botón del menú de jugador)
+# -------------------------------------------------
+button_claimblocks_exchange: '&a💱 Intercambio de ClaimBlocks'
+claimblocks_exchange_lore:
+- '&7Comprá o vendé ClaimBlocks con monedas.'
+- ' '
+- '&eHacé clic para abrir.'
+
+button_claimblocks_exchange_disabled: '&7💱 Intercambio de ClaimBlocks'
+claimblocks_exchange_disabled_lore:
+- '&7Esta función no está disponible por ahora.'
+- '&8Habilitá: &fclaim_blocks.exchange.enabled: true'
+
+# =========================================================
+# ClaimBlocks Exchange (GUI)
+# =========================================================
+claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'
+claimblocks_exchange_filler_name: ' '
+
+claimblocks_exchange_buy_label: 'COMPRAR'
+claimblocks_exchange_sell_label: 'VENDER'
+
+claimblocks_exchange_buy_lore:
+- '&7Comprá Bloques de Reclamo con monedas.'
+- '&8Permiso: &f{PERM}'
+
+claimblocks_exchange_sell_lore:
+- '&7Vendé Bloques de Reclamo por monedas.'
+- '&8Puede requerir: &f{PERM}'
+
+claimblocks_exchange_minus_100_title: '&c-100'
+claimblocks_exchange_minus_10_title: '&c-10'
+claimblocks_exchange_minus_1_title: '&c-1'
+
+claimblocks_exchange_plus_1_title: '&a+1'
+claimblocks_exchange_plus_10_title: '&a+10'
+claimblocks_exchange_plus_100_title: '&a+100'
+
+claimblocks_exchange_minus_lore:
+- '&7Disminuí la cantidad.'
+
+claimblocks_exchange_plus_lore:
+- '&7Aumentá la cantidad.'
+
+claimblocks_exchange_quote_title: '&b&lCotización del Intercambio'
+
+claimblocks_exchange_state_yes: '&aSí'
+claimblocks_exchange_state_no: '&cNo'
+
+claimblocks_exchange_line_enabled: '&7Intercambio habilitado: {STATE}'
+claimblocks_exchange_line_money: '&7Tu dinero: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Bloques de Reclamo: &f{AVAILABLE} &8disponibles'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Gastados: &7{SPENT}'
+
+claimblocks_exchange_spacer: ' '
+
+claimblocks_exchange_line_buy_amount: '&aCantidad a comprar: &f{AMOUNT}'
+claimblocks_exchange_line_sell_amount: '&eCantidad a vender: &f{AMOUNT}'
+
+claimblocks_exchange_line_unit: '&7Precio unitario: &e{UNIT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_gross: '&7Bruto: &e{GROSS}'
+claimblocks_exchange_line_fee: '&7Comisión: &6{FEE}'
+
+claimblocks_exchange_line_total_cost: '&aCosto total: &e{TOTAL}'
+claimblocks_exchange_line_payout: '&aPago: &e{PAYOUT}'
+
+claimblocks_exchange_confirm_title: '&a&lCONFIRMAR'
+claimblocks_exchange_confirm_lore:
+- '&7Hacé clic para realizar el intercambio.'
+- '&8Shift-clic se ignora.'
+
+claimblocks_exchange_confirm_disabled_title: '&c&lDESHABILITADO'
+claimblocks_exchange_confirm_disabled_lore:
+- '&7Habilitá: &fclaim_blocks.exchange.enabled: true'
+- '&8Shift-clic se ignora.'
+
+claimblocks_exchange_close_title: '&cCerrar'
+claimblocks_exchange_close_lore:
+- '&7Volvé a tus aventuras.'
+
 admin_menu_title: '&c&lKit del Alto Guardián'
 admin_toggle_format: '{NAME}: {STATE}'
 admin_toggle_default_lore:
@@ -641,3 +716,8 @@ level_upgrade_button_blocks_lore:
 - ' '
 - '&eClic para mejorar'
 level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
+
+# --------------------------------------
+# ClaimBlocks Exchange GUI (v1.2.5)
+# Usado por: ClaimBlocksExchangeGUI.java (o el handler del Exchange GUI)
+# --------------------------------------

@@ -1,12 +1,26 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: system.yml
-# Organized: 2025-12-21 00:00:00Z
+# Updated: 2026-01-13
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+
+# -------------------------------------------------
+# Prefix
+# -------------------------------------------------
 prefix: '&8[&bAegisGuard&8]&r '
-role_edit_self_error: '&cError: Thou canst not edit thine own role.'
+
+# -------------------------------------------------
+# Core Errors / Permissions
+# -------------------------------------------------
 no_perm: '&cError: Thou hast not permission for this.'
 players_only: '&cError: This command may only be used by players.'
+player_not_found: '&cPlayer not found.'
+invalid_number: '&cInvalid number.'
+role_edit_self_error: '&cError: Thou canst not edit thine own role.'
+
+# -------------------------------------------------
+# Usage / Help
+# -------------------------------------------------
 usage_main: '&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>'
 help_header: '&bAegisGuard Help'
 help_lines:
@@ -21,8 +35,16 @@ help_lines:
 - '&e/ag auction &7- View land auctions.'
 - '&e/ag stuck &7- Escape if you are trapped.'
 - '&e/ag help &7- Show this help.'
+
+# -------------------------------------------------
+# Sounds
+# -------------------------------------------------
 sound_global_enabled: '&a✔ AegisGuard sounds have been enabled.'
 sound_global_disabled: '&c✖ AegisGuard sounds have been disabled.'
+
+# -------------------------------------------------
+# Wand / Corner Selection
+# -------------------------------------------------
 wand_given: '&a⚡ Thou hast received the Aegis Scepter.'
 wand_already_on: '&eThou already hast the Aegis Scepter in thy inventory.'
 wand_consumed: '&a✔ Claim Tool used and consumed.'
@@ -32,48 +54,100 @@ corner1_set: '&a⚡ Position 1 set at &e{X}, {Z}.'
 corner2_set: '&b⚡ Position 2 set at &e{X}, {Z}.'
 must_select: '&c❌ Thou must select two corners with the Wand first.'
 corners_diff_world: '&c❌ Both corners must be in the same world.'
+
+# -------------------------------------------------
+# Claim Create / Remove / Limits
+# -------------------------------------------------
+plot_created: '&a✔ Claim created successfully.'
+plot_unclaimed: '&e⚠ Claim removed.'
+no_plot_here: '&c❌ Thou art not standing inside thy claim.'
+max_claims_reached: '&c❌ Claim limit reached: Thou may only own {AMOUNT} claim(s).'
+claim_denied_external: '&c⛔ Claim denied: protected by &f{PLUGIN}&c.'
+claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
+plot_expired_upkeep: '&c❌ Thy claim was removed due to unpaid upkeep.'
+
+# Compatibility key pair (keep both)
+plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
+plot_is_locked: '&c❌ This claim is locked and cannot be modified.'
+
+# -------------------------------------------------
+# Resize / Merge
+# -------------------------------------------------
+resize_usage: '&cUsage: /aegis resize <direction> <amount>'
+resize_directions: '&eDirections: &f{DIRS}'
+amount_must_number: '&cAmount must be a number.'
+amount_must_positive: '&cAmount must be positive.'
+invalid_direction: '&cInvalid direction. Use: &f{DIRS}'
+
 resize-success: '&a✔ Claim resized {DIRECTION} by {AMOUNT} blocks.'
 resize-fail-overlap: '&c❌ Resize failed! It would overlap another claim.'
 resize-fail-max-area: '&c❌ Resize failed! It would exceed the {AMOUNT} block limit.'
+
+usage_merge: '&cUsage: /ag merge <N/S/E/W>'
 merge_invalid_dir: '&c❌ Invalid direction. Use NORTH, SOUTH, EAST, or WEST.'
 merge_no_plot: '&c❌ No claim found in that direction.'
 merge_not_owner: '&c❌ Thou dost not own the adjacent claim.'
 merge_not_aligned: '&c❌ Claims are not aligned. Edges must match exactly.'
 merge_success: '&a✔ Claims successfully merged!'
-max_claims_reached: '&c❌ Claim limit reached: Thou may only own {AMOUNT} claim(s).'
-need_vault: '&c❌ Insufficient funds. Thou needest &e${AMOUNT}&c.'
-cost_deducted: '&e💰 Charged &6${AMOUNT}&e.'
-items_deducted: '&e💰 Paid &6{AMOUNT} {ITEM}&e.'
-vault_refund: '&e💰 Refunded &6${AMOUNT}&e (&f{PERCENT}%&e).'
-item_refund: '&e💰 Refunded &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
-economy_disabled: '&c❌ Economy is disabled on this server.'
-vault_hook_missing: '&c❌ Vault economy is not available. Ask an admin to install/configure Vault + an economy plugin.'
-vault_disabled_here: '&c❌ Vault payments are disabled here.'
-insufficient_funds: '&c❌ Insufficient funds. Needed: &e${NEEDED}&c | Available: &e${AVAILABLE}&c.'
-transaction_failed: '&c❌ Transaction failed. Please try again later.'
-charged_amount: '&e💰 Charged &6${AMOUNT}&e.'
-refunded_amount: '&e💰 Refunded &6${AMOUNT}&e.'
-upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
-upkeep_failed_warning: '&c⚠ Upkeep is due and thy balance is too low.'
-plot_expired_upkeep: '&c❌ Thy claim was removed due to unpaid upkeep.'
-plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
-plot_is_locked: '&c❌ This claim is locked and cannot be modified.'
+
+# -------------------------------------------------
+# Home / Spawn
+# -------------------------------------------------
 home-set-success: '&a✔ Claim home set to thy current location.'
 home-fail-outside: '&c❌ Thou must be inside thy claim to set its home.'
 home-fail-no-spawn: '&c❌ No home set! Use /ag setspawn.'
+home_teleport_disabled: '&cHome teleport is disabled.'
+
+# -------------------------------------------------
+# Welcome / Farewell Messages
+# -------------------------------------------------
 welcome-set: '&a✔ Welcome message updated.'
 welcome-cleared: '&e✔ Welcome message cleared.'
 farewell-set: '&a✔ Farewell message updated.'
 farewell-cleared: '&e✔ Farewell message cleared.'
-plot_created: '&a✔ Claim created successfully.'
-plot_unclaimed: '&e⚠ Claim removed.'
-no_plot_here: '&c❌ Thou art not standing inside thy claim.'
+plot_welcome_show: '&a✦ Welcome from {OWNER}: &f{MESSAGE}'
+plot_farewell_show: '&e✦ Farewell from {OWNER}: &f{MESSAGE}'
+
+# -------------------------------------------------
+# Protection Denies
+# -------------------------------------------------
 cannot_break: '&c❌ Thou cannot break blocks here; this area is protected.'
 cannot_place: '&c❌ Thou cannot place blocks here; this area is protected.'
 cannot_interact: '&c❌ Thou art not allowed to interact with that here.'
 cannot_attack: '&c❌ PvP is disabled in this claim.'
+
+# -------------------------------------------------
+# Entry / Ban Gates
+# -------------------------------------------------
 plot_entry_denied: '&c⛔ Entry denied. This claim is private.'
 plot_banned_entry: '&c⛔ Thou art banned from entering this claim.'
+
+# -------------------------------------------------
+# Economy / Vault / Payments
+# -------------------------------------------------
+economy_disabled: '&c❌ Economy is disabled on this server.'
+vault_hook_missing: '&c❌ Vault economy is not available. Ask an admin to install/configure Vault + an economy plugin.'
+vault_disabled_here: '&c❌ Vault payments are disabled here.'
+need_vault: '&c❌ Insufficient funds. Thou needest &e${AMOUNT}&c.'
+insufficient_funds: '&c❌ Insufficient funds. Needed: &e${NEEDED}&c | Available: &e${AVAILABLE}&c.'
+transaction_failed: '&c❌ Transaction failed. Please try again later.'
+
+cost_deducted: '&e💰 Charged &6${AMOUNT}&e.'
+charged_amount: '&e💰 Charged &6${AMOUNT}&e.'
+refunded_amount: '&e💰 Refunded &6${AMOUNT}&e.'
+items_deducted: '&e💰 Paid &6{AMOUNT} {ITEM}&e.'
+vault_refund: '&e💰 Refunded &6${AMOUNT}&e (&f{PERCENT}%&e).'
+item_refund: '&e💰 Refunded &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
+
+# -------------------------------------------------
+# Upkeep
+# -------------------------------------------------
+upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
+upkeep_failed_warning: '&c⚠ Upkeep is due and thy balance is too low.'
+
+# -------------------------------------------------
+# Zones / Biomes
+# -------------------------------------------------
 zone_created: '&a✔ Zone ''{ZONE}'' created.'
 zone_deleted: '&c✖ Zone ''{ZONE}'' deleted.'
 zone_rented: '&a✔ {PLAYER} is now renting ''{ZONE}''.'
@@ -81,20 +155,36 @@ zone_not_rented: '&7Zone is currently available.'
 zone_evicted: '&eTenant evicted from {ZONE}.'
 biome_changed: '&a✔ Biome set to {BIOME}.'
 biome_cost_paid: '&e💰 Paid &6{AMOUNT}&e to change biome.'
+
+# -------------------------------------------------
+# Likes
+# -------------------------------------------------
 like_success: '&a✔ Thou liked this claim. Total likes: &e{AMOUNT}'
 like_removed: '&eThy like has been removed.'
 like_own_plot: '&cError: Thou cannot like thine own claim.'
 like_disabled: '&cLikes are disabled on this server/world.'
+
+# -------------------------------------------------
+# Flags / Inheritance Notices
+# -------------------------------------------------
 flag_toggled: '&eUpdated {FLAG}: &f{STATUS}'
 server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
 admin_forced_flag_notice: '&7[Admin] This flag is forced at {LEVEL} level and cannot be changed here.'
 flag_inherited_from_world: '&7Inherited from: &fWorld settings.'
 flag_inherited_from_zone: '&7Inherited from: &fServer Zone settings.'
 flag_inherited_from_plot: '&7Inherited from: &fClaim-level settings.'
+
+# -------------------------------------------------
+# Roles
+# -------------------------------------------------
 role_self: '&cThou cannot edit thine own role.'
 role_is_owner: '&cThou cannot edit the owner''s role.'
 role_set_to: '&a✔ {PLAYER} is now set to role: {ROLE}.'
 role_removed: '&e✔ {PLAYER} has been removed from thy claim.'
+
+# -------------------------------------------------
+# Admin
+# -------------------------------------------------
 admin_reloading: '&7Reloading configuration and data...'
 admin_reload_complete: '&a✔ Reload complete.'
 admin_auto_remove_enabled: '&a✔ Auto-Wipe enabled.'
@@ -109,13 +199,37 @@ admin_lang_refresh_failed: '&c❌ Failed to refresh language packs. Check consol
 admin_removed_banned: '&eDeleted claims for banned player: {PLAYER}'
 admin_plot_teleport: '&eTeleported to {PLAYER}''s claim.'
 admin_plot_deleted: '&c✖ Deleted {PLAYER}''s claim.'
+
+# Compatibility keys (keep both styles)
 admin-zone-created: '&a✔ Server Zone created.'
 admin-zone-deleted: '&c✖ Server Zone deleted.'
 admin-zone-not-found: '&c❌ Thou art not standing in a Server Zone.'
 admin-zone-no-claims: '&c❌ Claims are not allowed in this Server Zone.'
+
+# -------------------------------------------------
+# Wilderness Revert
+# -------------------------------------------------
 wilderness_revert_start: '&7Wilderness revert task started...'
 wilderness_revert_end: '&7Wilderness revert task finished. Blocks reverted: &f{AMOUNT}&7.'
+
+# -------------------------------------------------
+# Market
+# -------------------------------------------------
+market-teleport: '&eTeleporting to {PLAYER}''s claim...'
+market-buy-own: '&cError: Thou cannot buy thine own claim.'
+market-buy-success: '&a✔ Thou bought {PLAYER}''s claim for &6{PRICE}&a!'
+market-sold: '&a✔ {PLAYER} bought thy claim for &6{PRICE}&a!'
+market-for-sale: '&a✔ Claim listed for &6{PRICE}&a.'
+market-not-for-sale: '&e✔ Claim listing removed.'
+market-rent-soon: '&eRentals will be available in a future update.'
 market-now-auctioned: '&e⚠ Thy claim is now being auctioned!'
+
+sell_usage: '&cUsage: /ag sell <price>'
+price_must_positive: '&cPrice must be positive.'
+
+# -------------------------------------------------
+# Auctions
+# -------------------------------------------------
 auction-bid-own: '&cError: Thou cannot bid on thine own expired claim.'
 auction-already-highest: '&eThou art already the highest bidder.'
 auction-outbid: '&e{PLAYER} has outbid thee.'
@@ -125,57 +239,116 @@ auction-won: '&a✔ Thou won the auction for {PLOT_OWNER}''s claim for &6{AMOUNT
 auction-bid-tie: '&eThy bid matched the highest bid.'
 auction-bid-too-low: '&c❌ Bid too low. Minimum increase: &6{AMOUNT}&c.'
 auction-bid-failed-funds: '&c❌ Thou dost not have enough funds to place that bid.'
-market-teleport: '&eTeleporting to {PLAYER}''s claim...'
-market-buy-own: '&cError: Thou cannot buy thine own claim.'
-market-buy-success: '&a✔ Thou bought {PLAYER}''s claim for &6{PRICE}&a!'
-market-sold: '&a✔ {PLAYER} bought thy claim for &6{PRICE}&a!'
-market-for-sale: '&a✔ Claim listed for &6{PRICE}&a.'
-market-not-for-sale: '&e✔ Claim listing removed.'
-market-rent-soon: '&eRentals will be available in a future update.'
-claim_denied_external: '&c⛔ Claim denied: protected by &f{PLUGIN}&c.'
-claim_denied_external_generic: '&c⛔ Claim denied: protected by another plugin.'
-plot_welcome_show: '&a✦ Welcome from {OWNER}: &f{MESSAGE}'
-plot_farewell_show: '&e✦ Farewell from {OWNER}: &f{MESSAGE}'
+
+# -------------------------------------------------
+# Unstuck
+# -------------------------------------------------
 unstuck_warmup: '&e⏳ Unstucking in &6{SECONDS}&e seconds... Do not move.'
 unstuck_cancelled: '&c❌ Unstuck cancelled (movement detected).'
 unstuck_on_cooldown: '&c❌ Unstuck cooldown: &6{SECONDS}&c seconds remaining.'
 unstuck_success: '&a✔ Teleported to safety.'
 unstuck_failed: '&c❌ Unstuck failed: no safe location found.'
+unstuck_not_in_plot: '&cThou art not inside a plot.'
+
+# -------------------------------------------------
+# Titles
+# -------------------------------------------------
 title_entering: '&aEntering: &f{PLOT}'
 subtitle_entering: '&7Owner: &f{OWNER}'
 title_leaving: '&cLeaving: &f{PLOT}'
 subtitle_leaving: '&7Returning to Wilderness'
+
+# -------------------------------------------------
+# Travel
+# -------------------------------------------------
 travel_system_disabled: '&cTravel system is disabled.'
-usage_merge: '&cUsage: /ag merge <N/S/E/W>'
+
+# -------------------------------------------------
+# Rename / Description
+# -------------------------------------------------
 usage_rename: '&cUsage: /ag rename <Name>'
 rename_too_long: '&cName is too long (Max {MAX} chars).'
 plot_renamed: '&a✔ Claim renamed to: &r{NAME}'
 usage_setdesc: '&cUsage: /ag setdesc <Description>'
 plot_desc_updated: '&a✔ Claim description updated.'
-unstuck_not_in_plot: '&cThou art not inside a plot.'
-resize_usage: '&cUsage: /aegis resize <direction> <amount>'
-resize_directions: '&eDirections: &f{DIRS}'
-amount_must_number: '&cAmount must be a number.'
-amount_must_positive: '&cAmount must be positive.'
-invalid_direction: '&cInvalid direction. Use: &f{DIRS}'
+
+# -------------------------------------------------
+# Kick / Ban
+# -------------------------------------------------
 kick_usage: '&cUsage: /ag kick <player>'
-player_not_found: '&cPlayer not found.'
 player_not_in_plot: '&cPlayer is not in thy plot.'
 cannot_kick_operator: '&cThou cannot kick a Server Operator.'
 kicked_target: '&cThou wert kicked from {OWNER}''s claim.'
 kicked_sender: '&eKicked {PLAYER}'
+
 ban_usage: '&cUsage: /ag ban <player>'
 ban_self_error: '&cThou cannot ban thyself.'
 ban_success: '&cBanned {PLAYER}'
 ban_target: '&4Thou hast been BANNED from this plot.'
+
 unban_usage: '&cUsage: /ag unban <player>'
 unban_success: '&aUnbanned {PLAYER}'
-home_teleport_disabled: '&cHome teleport is disabled.'
-sell_usage: '&cUsage: /ag sell <price>'
-price_must_positive: '&cPrice must be positive.'
-invalid_number: '&cInvalid number.'
+
+# -------------------------------------------------
+# Feature Toggles
+# -------------------------------------------------
 leveling_disabled: '&cLeveling is disabled.'
 zoning_disabled: '&cZoning is disabled.'
+
+# -------------------------------------------------
+# Wand Item
+# -------------------------------------------------
 wand_item_name: '&bAegis Scepter'
 wand_item_lore:
 - '&7Left/Right-click: Select corners'
+
+# =================================================
+# ClaimBlocks System
+# =================================================
+
+# Core toggle / notices
+claim_blocks_disabled: '&c❌ ClaimBlocks are forbidden on this realm.'
+claim_blocks_enabled: '&a✔ ClaimBlocks are allowed on this realm.'
+
+# Grant / spend
+claim_blocks_granted: '&a✔ Thou hast been granted &b{AMOUNT}&a ClaimBlocks.'
+claim_blocks_spent: '&e⚠ Thou hast spent &b{AMOUNT}&e ClaimBlocks.'
+
+# Balance readouts (chat)
+claim_blocks_balance_header: '&bClaimBlocks Reckoning'
+claim_blocks_balance_line: '&7Total: &f{TOTAL}  &7Spent: &f{SPENT}  &7Available: &f{AVAILABLE}'
+claim_blocks_balance_total_line: '&7Total: &f{TOTAL}'
+claim_blocks_balance_spent_line: '&7Spent: &f{SPENT}'
+claim_blocks_balance_available_line: '&7Available: &f{AVAILABLE}'
+
+# Shop / purchase flow (if enabled on your server)
+claim_blocks_shop_disabled: '&c❌ The ClaimBlocks stall is closed on this realm.'
+claim_blocks_shop_opening: '&aOpening the ClaimBlocks stall...'
+claim_blocks_shop_no_permission: '&c❌ Thou hast not leave to buy ClaimBlocks.'
+claim_blocks_shop_vault_unavailable: '&c❌ Vault and coin are wanting on this realm.'
+claim_blocks_shop_world_blocked: '&c❌ This deed is not allowed in this world.'
+claim_blocks_shop_purchase_success: '&a✔ Thou bought &b{BLOCKS}&a ClaimBlocks for &6{COST}&a.'
+claim_blocks_shop_purchase_failed: '&c❌ Purchase failed. Try again anon.'
+claim_blocks_shop_not_enough_money: '&c❌ Not enough coin. Need: &e{COST}&c.'
+claim_blocks_shop_invalid_amount: '&c❌ That amount is not right.'
+claim_blocks_shop_amount_must_be_positive: '&c❌ The amount must be positive.'
+claim_blocks_shop_amount_too_low: '&c❌ The least amount is &e{MIN}&c.'
+claim_blocks_shop_amount_too_high: '&c❌ The greatest amount is &e{MAX}&c.'
+
+# First-claim limiter (claim_blocks.first_claim_limit)
+first_claim_limit_exceeded: '&c❌ Þīn forma clǣm is tō micel. &7Mæst allowed: &e{MAX}&7 blocks.'
+
+# -------------------------------------------------
+# ClaimBlocks Exchange (System Messages)
+# -------------------------------------------------
+claimblocks_exchange_disabled: '&cÞes chaffer is disabled in config.yml.'
+claimblocks_exchange_success: '&a✔ Býting gelǣsted: &f{MESSAGE}'
+claimblocks_exchange_no_permission: '&cÞū nǣfst lēafe to use þisne chaffer.'
+claimblocks_exchange_vault_unavailable: '&cVault and coin are wanting on this realm.'
+claimblocks_exchange_world_blocked: '&cChaffer is not allowed in þissum weorolde.'
+claimblocks_exchange_cooldown: '&eHwīl: bid &6{SECONDS}s&e.'
+claimblocks_exchange_daily_cap: '&eDæges mǣt is full. &7Belāf todæg: &6{REMAINING}&e.'
+claimblocks_exchange_insufficient_funds: '&cNǣnig gield genōh. Behōf: &e{AMOUNT}'
+claimblocks_exchange_insufficient_blocks: '&cNǣnige sellaþ ClaimBlocks genōh.'
+claimblocks_exchange_sell_locked: '&eSume gebohte blocks sind locode. Fandige æfter.'
+claimblocks_exchange_trade_failed: '&cBýting aswac: &7{REASON}'

@@ -1,7 +1,7 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: guis.yml
-# Updated: 2026-01-11
+# Updated: 2026-01-13
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
 # -------------------------------------------------
@@ -98,83 +98,97 @@ admin_menu_lore:
 # -------------------------------------------------
 # ClaimBlocks Exchange (Player Menu Button)
 # -------------------------------------------------
-button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
+button_claimblocks_exchange: '&a💱 Ægnung-Bloc Býting'
 claimblocks_exchange_lore:
-- '&7Buy or sell ClaimBlocks with coin.'
+- '&7Bycga oþþe sell Ægnung-Bloc mid feoh.'
 - ' '
-- '&eClick to open.'
+- '&eClic to open.'
 
-button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Exchange'
+button_claimblocks_exchange_disabled: '&7💱 Ægnung-Bloc Býting'
 claimblocks_exchange_disabled_lore:
-- '&7This feature is currently unavailable.'
-- '&8Enable: claim_blocks.exchange.enabled: true'
-
-# =========================================================
-# ClaimBlocks Exchange (v1.2.5)
-# =========================================================
-
-button_claimblocks_exchange: '&a💱 ClaimBlocks Chaffer'
-claimblocks_exchange_lore:
-- '&7Buy or sell ClaimBlocks with coin.'
-- ' '
-- '&eClick to open.'
-
-button_claimblocks_exchange_disabled: '&7💱 ClaimBlocks Chaffer'
-claimblocks_exchange_disabled_lore:
-- '&7This rite is presently unavailable.'
+- '&7Þes dǣl is nū unlǣt.'
 - '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
-claimblocks_exchange_gui_title: '&8ClaimBlocks Chaffer'
+# =========================================================
+# ClaimBlocks Exchange GUI (matches ClaimBlockExchangeGUI.updated.java)
+# =========================================================
 
-claimblocks_exchange_buy_label: 'BUY'
-claimblocks_exchange_sell_label: 'SELL'
+# GUI title (new + legacy key; GUI prefers *_gui_title, falls back to *_title)
+claimblocks_exchange_gui_title: '&8Ægnung-Bloc Býting'
+claimblocks_exchange_title: '&8Ægnung-Bloc Býting'
 
+# Filler/background
+claimblocks_exchange_filler_name: ' '
+
+# Mode labels
+claimblocks_exchange_buy_label: 'BYCGAN'
+claimblocks_exchange_sell_label: 'SELLAN'
+
+# Mode button lore (PERM placeholder)
 claimblocks_exchange_buy_lore:
-- '&7Purchase Claim Blocks with coin.'
-- '&8Permission: &f{PERM}'
+- '&7Bycga Ægnung-Bloc mid feoh.'
+- '&8Behȳfð: &f{PERM}'
 
 claimblocks_exchange_sell_lore:
-- '&7Sell Claim Blocks for coin.'
-- '&8May require: &f{PERM}'
+- '&7Sell Ægnung-Bloc for feoh.'
+- '&8Mæg þurfan: &f{PERM}'
 
+# +/- button titles (these are read from the lang pack)
+claimblocks_exchange_minus_100_title: '&c-100'
+claimblocks_exchange_minus_10_title: '&c-10'
+claimblocks_exchange_minus_1_title: '&c-1'
+claimblocks_exchange_plus_1_title: '&a+1'
+claimblocks_exchange_plus_10_title: '&a+10'
+claimblocks_exchange_plus_100_title: '&a+100'
+
+# +/- button lore
 claimblocks_exchange_minus_lore:
-- '&7Decrease amount'
+- '&7Lǣssa þa rīme.'
 
 claimblocks_exchange_plus_lore:
-- '&7Increase amount'
+- '&7Māra þa rīme.'
 
-claimblocks_exchange_quote_title: '&b&lChaffer Reckoning'
+# Enabled state labels
+claimblocks_exchange_state_yes: '&aGēa'
+claimblocks_exchange_state_no: '&cNǣ'
 
-claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
-claimblocks_exchange_line_money: '&7Thy Coin: &e{MONEY}'
-claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{AVAILABLE} &8available'
-claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
+# Quote card title
+claimblocks_exchange_quote_title: '&b&lBýting Rǣd'
 
-claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
-claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
-claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
+# Info lines (placeholders MUST match GUI)
+claimblocks_exchange_line_enabled: '&7Býting Gelǣded: {STATE}'
+claimblocks_exchange_line_money: '&7Þīn Feoh: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Ægnung-Bloc: &f{AVAILABLE} &8tō handa'
+claimblocks_exchange_line_totals: '&8Summa: &7{TOTAL}  &8Spend: &7{SPENT}'
+claimblocks_exchange_spacer: ' '
 
-claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
-claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
-claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
+# BUY quote lines (placeholders: AMOUNT, UNIT, SUBTOTAL, FEE, TOTAL)
+claimblocks_exchange_line_buy_amount: '&aBycgan Rīme: &f{AMOUNT}'
+claimblocks_exchange_line_unit: '&7Ēnprīs: &e{UNIT}'
+claimblocks_exchange_line_subtotal: '&7Under-sum: &e{SUBTOTAL}'
+claimblocks_exchange_line_fee: '&7Gafol: &6{FEE}'
+claimblocks_exchange_line_total_cost: '&aEall Cost: &e{TOTAL}'
 
-claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
-claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
+# SELL quote lines (placeholders: AMOUNT, UNIT, GROSS, FEE, PAYOUT)
+claimblocks_exchange_line_sell_amount: '&eSellan Rīme: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7Brūt: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aŪtfeoh: &e{PAYOUT}'
 
-claimblocks_exchange_confirm_title: '&a&lCONFIRM'
+# Confirm / Disabled
+claimblocks_exchange_confirm_title: '&a&lGEWISSIA'
 claimblocks_exchange_confirm_lore:
-- '&7Click to perform the trade.'
-- '&8Shift-click is ignored.'
+- '&7Clic to gelǣstan þis býting.'
+- '&8Shift-clic ne bið gehȳred.'
 
-claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
+claimblocks_exchange_confirm_disabled_title: '&c&lFORBODEN'
 claimblocks_exchange_confirm_disabled_lore:
-- '&7Enable: &fclaim_blocks.exchange.enabled: true'
-- '&8Shift-click is ignored.'
+- '&7Set: &fclaim_blocks.exchange.enabled: true'
+- '&8Shift-clic ne bið gehȳred.'
 
-claimblocks_exchange_close_title: '&cClose'
+# Close
+claimblocks_exchange_close_title: '&cBELȲC'
 claimblocks_exchange_close_lore:
-- '&7Return to thy adventures.'
-
+- '&7Hweorf tō þīnum fǣrum.'
 
 # -------------------------------------------------
 # Existing Expansion / Admin / Other GUI Strings (kept)

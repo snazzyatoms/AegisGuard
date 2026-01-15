@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.2.4 - Codex: Modern English
+# AegisGuard v1.2.5 - Codex: Modern English
 # File: system.yml
 # Notes:
 # - GUI-only keys live in guis.yml
@@ -12,6 +12,29 @@ role_edit_self_error: '&cError: You cannot edit your own role.'
 no_perm: '&cError: You don''t have permission for this.'
 players_only: '&cError: This command can only be used by players.'
 usage_main: '&eUsage: /aegis <wand|menu|claim|unclaim|resize|help>'
+
+# ------------------------------------------------------------
+# Claim Enter/Exit Notifications (player toggle)
+# ------------------------------------------------------------
+claim_enter_exit_notify_usage: '&eUsage: &f/aegis notify'
+claim_enter_exit_notify_server_disabled: '&cClaim enter/exit notifications are disabled server-wide.'
+claim_enter_exit_notify_toggle_not_allowed: '&cThis server does not allow players to toggle claim notifications.'
+claim_enter_exit_notify_enabled: '&a✔ Claim enter/exit notifications have been enabled.'
+claim_enter_exit_notify_disabled: '&e✔ Claim enter/exit notifications have been disabled.'
+claim_enter_exit_notify_status: '&7Claim enter/exit notifications: &f{STATE}&7.'
+claim_enter_exit_notify_state_enabled: '&aEnabled'
+claim_enter_exit_notify_state_disabled: '&cDisabled'
+
+# Legacy aliases (kept for compatibility with older code paths)
+claim_notify_usage: '&eUsage: &f/aegis notify'
+claim_notify_server_disabled: '&cClaim enter/exit notifications are disabled server-wide.'
+claim_notify_toggle_not_allowed: '&cThis server does not allow players to toggle claim notifications.'
+claim_notify_enabled: '&a✔ Claim enter/exit notifications have been enabled.'
+claim_notify_disabled: '&e✔ Claim enter/exit notifications have been disabled.'
+claim_notify_status: '&7Claim enter/exit notifications: &f{STATE}&7.'
+claim_notify_state_enabled: '&aEnabled'
+claim_notify_state_disabled: '&cDisabled'
+
 sound_global_enabled: '&a✔ AegisGuard sounds have been enabled.'
 sound_global_disabled: '&c✖ AegisGuard sounds have been disabled.'
 wand_given: '&a⚡ You have received the Aegis Scepter.'
@@ -47,8 +70,11 @@ refunded_amount: '&e💰 Refunded &6${AMOUNT}&e.'
 upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
 upkeep_failed_warning: '&c⚠ Upkeep is due and your balance is too low.'
 plot_expired_upkeep: '&c❌ Your claim was removed due to unpaid upkeep.'
+
+# Lock message (two keys kept as aliases)
 plot-is-locked: '&c❌ This claim is locked and cannot be modified.'
 plot_is_locked: '&c❌ This claim is locked and cannot be modified.'
+
 home-set-success: '&a✔ Claim home set to your current location.'
 home-fail-outside: '&c❌ You must be inside your claim to set its home.'
 home-fail-no-spawn: '&c❌ No home set! Use /ag setspawn.'
@@ -170,6 +196,7 @@ zoning_disabled: '&cZoning is disabled.'
 wand_item_name: '&bAegis Scepter'
 wand_item_lore:
 - '&7Left/Right-click: Select corners'
+
 # ------------------------------------------------------------
 # ClaimBlocks Exchange (chat messages)
 # ------------------------------------------------------------

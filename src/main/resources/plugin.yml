@@ -34,7 +34,7 @@ softdepend:
 commands:
   aegis:
     description: Main AegisGuard command.
-    usage: /aegis <help|menu|wand|claim|unclaim|resize|merge|setspawn|home|welcome|farewell|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
+    usage: /aegis <help|menu|wand|claim|unclaim|resize|merge|setspawn|home|welcome|farewell|notify|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:
@@ -81,6 +81,7 @@ permissions:
       aegis.setspawn: true
       aegis.welcome: true
       aegis.farewell: true
+      aegis.notify: true
       aegis.rename: true
       aegis.setdesc: true
       aegis.stuck: true
@@ -110,6 +111,19 @@ permissions:
       aegis.ban: true
       aegis.unban: true
 
+
+  # Claim entry/exit notification toggle
+  aegis.notify:
+    description: Toggle claim entry/exit notifications for thyself.
+    default: true
+  aegis.notify.others:
+    description: Toggle claim entry/exit notifications for another player.
+    default: op
+    children:
+      aegis.notify: true
+  aegis.notify.bypass:
+    description: Receive claim entry/exit notifications even if server-wide disabled.
+    default: op
   aegis.admin:
     description: Administrative permissions.
     default: op

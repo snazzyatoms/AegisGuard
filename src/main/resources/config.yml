@@ -720,13 +720,38 @@ cosmetics:
 # 🔮 VISUAL TITLES & NOTIFICATIONS
 # ==============================================================================
 titles:
+
+
+  # Claim entry/exit notifications (welcome/farewell title/subtitle + optional chat).
+  # Server owners can disable these server-wide, or restrict them to certain groups via permissions.
+
+  claim_enter_exit:
+    enabled: true
+    # Modes: PER_PLAYER (default), FORCE_ON, FORCE_OFF
+    mode: PER_PLAYER
+
+    # If set, only players with this permission will receive the enter/exit notifications.
+    # Leave blank to allow everyone (subject to mode + player toggles).
+    required_permission: ''
+
+    # Players can toggle their own notifications with /ag notify (if mode is PER_PLAYER).
+    allow_player_toggle: true
+    default_player_setting: true
+    toggle_permission: 'aegis.notify'
+
+    # Users with this permission will still receive notifications even if mode is FORCE_OFF.
+    bypass_permission: 'aegis.notify.bypass'
+
+    show_titles: true
+    show_chat: true
+
+    show_enter: true
+    show_exit: true
   enabled: true
   notification_location: ACTION_BAR
   fade_in: 10
   stay: 40
   fade_out: 10
-
-
 # ==============================================================================
 # 🆘 UNSTUCK COMMAND
 # ==============================================================================

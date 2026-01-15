@@ -1,10 +1,11 @@
-# AegisGuard Codex Language Pack (split files)
-# Language: spanish_mx
-# Section: expansions.yml
-# Organized: 2025-12-22
-# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+# ======================================
+# AegisGuard v1.2.5 - Codex: Español (MX)
+# File: expansions.yml
+# Organized split: GUIs / System / Upgrades / Expansions
+# Generated: 2026-01-15 00:00:00Z
+# ======================================
 
-expansion_not_in_plot: '&c❌ Debes estar dentro de tu propia parcela para hacer esto.'
+expansion_not_in_plot: '&c❌ Tienes que estar dentro de tu propia parcela para hacer esto.'
 expansion_request_submitted: '&a✔ Solicitud de expansión enviada. &7Pedido: &e+{AMOUNT}&7 bloques.'
 expansion_request_already_pending: '&e⚠ Ya tienes una solicitud pendiente.'
 expansion_request_cancelled: '&e✔ Tu solicitud de expansión fue cancelada.'
@@ -20,10 +21,10 @@ expansion_denied: '&c❌ Tu solicitud de expansión fue rechazada.'
 admin_request_approved: '&a✔ Tu solicitud de expansión fue aprobada por {PLAYER}.'
 admin_request_denied: '&c❌ Tu solicitud de expansión fue rechazada por {PLAYER}.'
 expansion_payment_failed: '&c❌ La expansión falló; no tienes suficientes fondos.'
-expansion_limit_reached: '&c❌ Has alcanzado el límite máximo de expansión ({LIMIT}).'
+expansion_limit_reached: '&c❌ Alcanzaste el límite máximo de expansión ({LIMIT}).'
 expansion_overlap_fail: '&c❌ No se puede expandir; otra parcela está demasiado cerca.'
-expansion_invalid_size: '&c❌ El nuevo tamaño debe ser mayor que el anterior.'
-request_expired: '&c❌ Esta solicitud de expansión ha expirado o ya no existe.'
+expansion_invalid_size: '&c❌ El nuevo tamaño tiene que ser mayor que el anterior.'
+request_expired: '&c❌ Esta solicitud de expansión expiró o ya no existe.'
 expansion_broadcast_approved: '&a✔ Solicitud de expansión aprobada para {PLAYER}.'
 expansion_broadcast_denied: '&c❌ Solicitud de expansión rechazada para {PLAYER}.'
 expansion_admin_no_perm: '&c❌ No tienes permiso para gestionar solicitudes.'

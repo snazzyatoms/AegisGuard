@@ -1,30 +1,16 @@
 # AegisGuard Codex Language Pack (split files)
-# Language: spanish_mx
+# Language: hybrid_english
 # Section: expansions.yml
-# Organized: 2025-12-22
+# Generated: 2025-12-16 23:08:56Z
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
-
-expansion_not_in_plot: '&c❌ Debes estar dentro de tu propia parcela para hacer esto.'
-expansion_request_submitted: '&a✔ Solicitud de expansión enviada. &7Pedido: &e+{AMOUNT}&7 bloques.'
-expansion_request_already_pending: '&e⚠ Ya tienes una solicitud pendiente.'
-expansion_request_cancelled: '&e✔ Tu solicitud de expansión fue cancelada.'
-expansion_request_none_pending: '&cNo hay solicitudes de expansión pendientes.'
-expansion_request_approved_player: '&a✔ ¡Tu solicitud de expansión fue aprobada! &7Otorgado: &e+{AMOUNT}&7 bloques.'
-expansion_request_denied_player: '&c✖ Tu solicitud de expansión fue rechazada.'
-expansion_request_approved_admin: '&a✔ Aprobaste la solicitud de expansión de &f{PLAYER}&a.'
-expansion_request_denied_admin: '&c✖ Rechazaste la solicitud de expansión de &f{PLAYER}&c.'
-expansion_submitted: '&a✔ Solicitud de expansión enviada.'
-expansion_exists: '&c❌ Ya tienes una solicitud de expansión pendiente.'
-expansion_approved: '&a✔ Tu solicitud de expansión fue aprobada.'
-expansion_denied: '&c❌ Tu solicitud de expansión fue rechazada.'
-admin_request_approved: '&a✔ Tu solicitud de expansión fue aprobada por {PLAYER}.'
-admin_request_denied: '&c❌ Tu solicitud de expansión fue rechazada por {PLAYER}.'
-expansion_payment_failed: '&c❌ La expansión falló; no tienes suficientes fondos.'
-expansion_limit_reached: '&c❌ Has alcanzado el límite máximo de expansión ({LIMIT}).'
-expansion_overlap_fail: '&c❌ No se puede expandir; otra parcela está demasiado cerca.'
-expansion_invalid_size: '&c❌ El nuevo tamaño debe ser mayor que el anterior.'
-request_expired: '&c❌ Esta solicitud de expansión ha expirado o ya no existe.'
-expansion_broadcast_approved: '&a✔ Solicitud de expansión aprobada para {PLAYER}.'
-expansion_broadcast_denied: '&c❌ Solicitud de expansión rechazada para {PLAYER}.'
-expansion_admin_no_perm: '&c❌ No tienes permiso para gestionar solicitudes.'
-expansion_no_requests: '&7Actualmente no hay solicitudes de expansión.'
+expansion_submitted: '&a✔ Request submitted.'
+expansion_exists: '&c❌ You already have a pending request.'
+expansion_approved: '&a✔ Expansion approved.'
+expansion_denied: '&c✖ Expansion denied.'
+admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
+admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
+expansion_payment_failed: '&c❌ Insufficient funds.'
+expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
+expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
+expansion_invalid_size: '&c❌ Expansion must increase size.'
+request_expired: '&c❌ Request expired.'

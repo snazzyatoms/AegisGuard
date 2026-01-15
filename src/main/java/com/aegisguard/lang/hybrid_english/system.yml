@@ -14,6 +14,22 @@ reload_success: '&aConfig and language packs reloaded.'
 error_generic: '&cAn error hath occurred. Check console logs.'
 
 # ------------------------------------------------------------
+# Claim Entry / Exit Notifications
+# ------------------------------------------------------------
+# Used by: /aegis notify
+# Placeholders:
+#  - {STATE} -> a localized state string (e.g. Enabled/Disabled)
+#
+claim_enter_exit_notify_usage: '&eUsage: &f/aegis notify'
+claim_enter_exit_notify_server_disabled: '&cClaim entry/exit tidings are disabled server-wide.'
+claim_enter_exit_notify_toggle_not_allowed: '&cThy server hath forbidden players from toggling these tidings.'
+claim_enter_exit_notify_enabled: '&a✔ Claim entry/exit tidings are now &aEnabled&a.'
+claim_enter_exit_notify_disabled: '&e✔ Claim entry/exit tidings are now &cDisabled&e.'
+claim_enter_exit_notify_status: '&7Claim entry/exit tidings: &f{STATE}&7.'
+claim_enter_exit_notify_state_enabled: '&aEnabled'
+claim_enter_exit_notify_state_disabled: '&cDisabled'
+
+# ------------------------------------------------------------
 # Claim Blocks (Core)
 # ------------------------------------------------------------
 claim_blocks_disabled: '&cClaimBlocks are disabled on this server.'
@@ -36,6 +52,13 @@ blocks_ledger_line: '&8• &7{DATE} &8| &f{AMOUNT} &8| &7{REASON}'
 # ------------------------------------------------------------
 # ClaimBlocks Exchange
 # ------------------------------------------------------------
+# Placeholders:
+#  - {MESSAGE}
+#  - {SECONDS}
+#  - {REMAINING}
+#  - {AMOUNT}
+#  - {REASON}
+#
 claimblocks_exchange_disabled: '&cThis exchange is disabled in config.yml.'
 claimblocks_exchange_success: '&a✔ Trade complete: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cThou hast not permission to use the exchange.'
@@ -52,3 +75,16 @@ claimblocks_exchange_trade_failed: '&cTrade failed: &7{REASON}'
 # First-claim limiter
 # ------------------------------------------------------------
 first_claim_limit_exceeded: '&cThou hast reached thy first-claim limit: &f{LIMIT}&c.'
+
+# ------------------------------------------------------------
+# Claim Entry/Exit Notifications (Legacy / Alias Keys)
+# Some builds may reference these shorter keys.
+# ------------------------------------------------------------
+claim_notify_usage: '&eUsage: &f/aegis notify'
+claim_notify_server_disabled: '&cClaim entry/exit tidings are disabled server-wide.'
+claim_notify_toggle_not_allowed: '&cThis server forbiddeth players from toggling claim tidings.'
+claim_notify_enabled: '&a✔ Claim entry/exit tidings are now &aEnabled&a.'
+claim_notify_disabled: '&e✖ Claim entry/exit tidings are now &cDisabled&e.'
+claim_notify_status: '&7Claim entry/exit tidings: {STATE}'
+claim_notify_state_enabled: '&aEnabled'
+claim_notify_state_disabled: '&cDisabled'

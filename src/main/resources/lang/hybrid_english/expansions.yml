@@ -1,16 +1,111 @@
-# AegisGuard Codex Language Pack (split files)
-# Language: hybrid_english
-# Section: expansions.yml
-# Generated: 2025-12-16 23:08:56Z
-# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
-expansion_submitted: '&a✔ Request submitted.'
+# ============================
+# AegisGuard • Expansions
+# Hybrid English Pack
+# Updated: 2026-01-15
+# ============================
+
+# ------------------------------------------------------------
+# Core Expansion Messages
+# ------------------------------------------------------------
+expansion_submitted: '&a✔ Request submitted! &7Cost: &6{AMOUNT}'
 expansion_exists: '&c❌ You already have a pending request.'
-expansion_approved: '&a✔ Expansion approved.'
-expansion_denied: '&c✖ Expansion denied.'
-admin_request_approved: '&a✔ Your request was approved by {PLAYER}.'
-admin_request_denied: '&c❌ Your request was denied by {PLAYER}.'
-expansion_payment_failed: '&c❌ Insufficient funds.'
-expansion_limit_reached: '&c❌ Expansion limit reached ({LIMIT}).'
-expansion_overlap_fail: '&c❌ Expansion overlaps nearby plots.'
-expansion_invalid_size: '&c❌ Expansion must increase size.'
-request_expired: '&c❌ Request expired.'
+expansion_approved: '&a✔ Your request was granted by {PLAYER}!'
+expansion_denied: '&c✖ Your request was denied by {PLAYER}.'
+expansion_invalid_size: '&c❌ The requested size must exceed your current bounds.'
+expansion_limit_reached: '&c❌ Maximum radius is {LIMIT} blocks.'
+expansion_payment_failed: '&c❌ Insufficient funds for this expansion.'
+expansion_overlap_fail: '&c❌ Expansion would overlap with another claim.'
+expansion_not_in_plot: '&c❌ You must stand within your own claim to request expansion.'
+
+# Admin notifications (auto-approval mode)
+expansion_auto_admin_notice: '&7[Auto] &b{PLAYER} &7expanded in &f{WORLD} &7from &e{CUR} &7to &a{REQ}'
+
+# ------------------------------------------------------------
+# Actor/Decision Labels (Who approved/denied)
+# ------------------------------------------------------------
+expansion_actor_auto: 'Auto'
+expansion_actor_admin: 'Admin'
+expansion_decided_by_auto: '&bAuto'
+expansion_decided_by_admin: '&eAdmin'
+expansion_decided_by_console: '&7Console'
+expansion_decided_by_none: '&7Awaiting review'
+expansion_decided_by_unknown: '&7Unknown'
+
+# ------------------------------------------------------------
+# Status Labels
+# ------------------------------------------------------------
+expansion_status_pending: '&ePending'
+expansion_status_approved: '&aApproved'
+expansion_status_denied: '&cDenied'
+
+# ------------------------------------------------------------
+# Mode Labels (Queue vs Instant)
+# ------------------------------------------------------------
+expansion_mode_instant: '&bInstant Mode'
+expansion_mode_queue: '&6Queue Mode'
+expansion_mode_item_name: '&fApproval: {MODE}'
+expansion_mode_item_lore:
+- '&7This server is currently using:'
+- '&f{MODE}'
+- ' '
+- '&7Queue Mode: &fAdmins must approve.'
+- '&7Instant Mode: &fAuto-approved when valid.'
+
+# Mode hints (injected into tier lore)
+expansion_mode_hint_instant: '&bInstant Mode:&7 Auto-approved when valid.'
+expansion_mode_hint_queue: '&6Queue Mode:&7 Admin approval required.'
+
+# ------------------------------------------------------------
+# Admin GUI
+# ------------------------------------------------------------
+expansion_admin_title: '&6&lPending Requests'
+expansion_admin_title_paged: '&6&lPending Requests &7({PAGE}/{PAGES})'
+expansion_admin_title_paged_mode: '&6&lPending Requests &7({PAGE}/{PAGES}) &8- {MODE}'
+
+# View mode labels
+expansion_admin_view_pending: '&eQueue'
+expansion_admin_view_all: '&bHistory'
+
+# Empty states
+expansion_none_title: '&cNo Pending Requests'
+expansion_none_lore:
+- '&7There are no active expansion'
+- '&7requests awaiting review.'
+
+expansion_none_history_title: '&7No Recent Requests'
+expansion_none_history_lore:
+- '&7There are no recent expansion'
+- '&7requests to display.'
+
+# Request item in admin GUI
+expansion_request_item_name: '&bRequest: &f{PLAYER}'
+expansion_request_item_lore:
+- '&7World: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Age: &f{AGE}'
+- '&7Radius: &e{CUR} &7→ &a{REQ}'
+- '&7Cost Due: &6{COST}'
+- '&7Decided By: &f{DECIDER}'
+- '&7Decision Age: &f{DECISION_AGE}'
+- ' '
+- '&eLeft-click: &7Approve request.'
+- '&cRight-click: &7Deny request.'
+
+# Admin messages
+admin_request_approved: '&a✔ Approved expansion request for &b{PLAYER}&a.'
+admin_request_denied: '&c✖ Denied expansion request for &b{PLAYER}&c.'
+expansion_admin_already_handled: '&eThat request has already been handled. &7(Decided by: {DECIDER}&7)'
+expansion_admin_approve_failed: '&c❌ Failed to approve request (overlap or economy error).'
+
+# ------------------------------------------------------------
+# Legacy Keys (compatibility)
+# ------------------------------------------------------------
+expansion_request_submitted: '&a✔ Expansion request submitted. &7Requested: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e⚠ You already have a request pending.'
+expansion_request_cancelled: '&e✔ Expansion request cancelled.'
+expansion_request_none_pending: '&cNo expansion requests are pending.'
+expansion_request_approved_player: '&a✔ Your expansion request was approved! &7Granted: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c✖ Your expansion request was denied.'
+expansion_request_approved_admin: '&a✔ Approved expansion request for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c✖ Denied expansion request for &f{PLAYER}&c.'
+request_expired: '&c❌ That request has expired or been handled already.'

@@ -124,6 +124,29 @@ title_entering: '&aEntrando: &f{PLOT}'
 subtitle_entering: '&7Dueño: &f{OWNER}'
 title_leaving: '&cSaliendo: &f{PLOT}'
 subtitle_leaving: '&7Regresando al Wilderness'
+
+# ------------------------------------------------------------
+# Notificaciones de Entrada/Salida (Parcelas)
+# ------------------------------------------------------------
+claim_enter_exit_notify_usage: '&eUso: &f/aegis notify'
+claim_enter_exit_notify_server_disabled: '&cLas notificaciones de entrada/salida de parcelas están deshabilitadas en todo el servidor.'
+claim_enter_exit_notify_toggle_not_allowed: '&cEste servidor no permite que los jugadores alternen las notificaciones de parcelas.'
+claim_enter_exit_notify_enabled: '&a✔ Las notificaciones de entrada/salida de parcelas ahora están &aActivadas&a.'
+claim_enter_exit_notify_disabled: '&e✖ Las notificaciones de entrada/salida de parcelas ahora están &cDesactivadas&e.'
+claim_enter_exit_notify_status: '&7Notificaciones de entrada/salida: {STATE}'
+claim_enter_exit_notify_state_enabled: '&aActivadas'
+claim_enter_exit_notify_state_disabled: '&cDesactivadas'
+
+# Alias de compatibilidad (nombres internos/anteriores)
+claim_notify_usage: '&eUso: &f/aegis notify'
+claim_notify_server_disabled: '&cLas notificaciones de entrada/salida de parcelas están deshabilitadas en todo el servidor.'
+claim_notify_toggle_not_allowed: '&cEste servidor no permite que los jugadores alternen las notificaciones de parcelas.'
+claim_notify_enabled: '&a✔ Las notificaciones de entrada/salida de parcelas ahora están &aActivadas&a.'
+claim_notify_disabled: '&e✖ Las notificaciones de entrada/salida de parcelas ahora están &cDesactivadas&e.'
+claim_notify_status: '&7Notificaciones de entrada/salida: {STATE}'
+claim_notify_state_enabled: '&aActivadas'
+claim_notify_state_disabled: '&cDesactivadas'
+
 travel_system_disabled: '&cEl sistema de viaje está deshabilitado.'
 home_teleport_disabled: '&cEl teletransporte al hogar está deshabilitado.'
 leveling_disabled: '&cEl sistema de niveles está deshabilitado.'
@@ -166,7 +189,7 @@ vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un adm
 # ClaimBlocks Exchange
 # -------------------------------------------------
 claimblocks_exchange_disabled: '&cEl intercambio está deshabilitado en config.yml.'
-claimblocks_exchange_success: '&a¡Intercambio completado!'
+claimblocks_exchange_success: '&a✔ Intercambio completado: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cNo tenés permiso.'
 claimblocks_exchange_vault_unavailable: '&cLa economía de Vault no está disponible.'
 claimblocks_exchange_world_blocked: '&cEl intercambio no está permitido en este mundo.'

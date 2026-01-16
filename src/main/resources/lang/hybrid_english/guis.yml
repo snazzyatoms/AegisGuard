@@ -1,6 +1,7 @@
 # ============================
 # AegisGuard • GUI Language
 # Hybrid English Pack
+# Updated: 2026-01-15
 # ============================
 
 # ----------------------------
@@ -28,6 +29,28 @@ button_close: '&cClose'
 close_lore:
   - '&7Return to thy adventures.'
 
+# ----------------------------
+# Common Navigation Buttons
+# ----------------------------
+button_back: '&e⟵ Return'
+back_lore:
+- '&7Return to the previous page.'
+
+button_back_menu: '&fReturn to Menu'
+back_menu_lore:
+- '&7Return to the main menu.'
+
+button_exit: '&c✖ Close'
+exit_lore:
+- '&7Close this menu.'
+
+button_prev_page: '&fPrevious Page'
+prev_page_lore:
+- '&7Go to the previous page.'
+
+button_next_page: '&fNext Page'
+next_page_lore:
+- '&7Go to the next page.'
 
 # ----------------------------
 # ClaimBlocks (Player Menu)
@@ -45,10 +68,9 @@ claimblocks_exchange_disabled_lore:
   - '&cExchange is disabled.'
   - '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
-
-# ----------------------------
-# ClaimBlocks Exchange (GUI)
-# ----------------------------
+# ============================================================
+# ClaimBlocks Exchange GUI
+# ============================================================
 claimblocks_exchange_gui_title: '&8ClaimBlocks Exchange'
 
 claimblocks_exchange_buy_label: 'BUY'
@@ -114,3 +136,73 @@ claimblocks_exchange_confirm_disabled_lore:
 claimblocks_exchange_close_title: '&cClose'
 claimblocks_exchange_close_lore:
   - '&7Return to thy adventures.'
+
+# ============================================================
+# Expansion GUI (Player-facing)
+# ============================================================
+expansion_gui_title: '&dLand Expansion Request'
+
+# Tier buttons
+expansion_tier1_name: '&aTier I &7(+5)'
+expansion_tier1_lore:
+- '&7Request a small expansion.'
+- '&7Increase radius by &a+5&7.'
+- ' '
+- '&eClick to submit request'
+
+expansion_tier2_name: '&aTier II &7(+10)'
+expansion_tier2_lore:
+- '&7Request a modest expansion.'
+- '&7Increase radius by &a+10&7.'
+- ' '
+- '&eClick to submit request'
+
+expansion_tier3_name: '&aTier III &7(+20)'
+expansion_tier3_lore:
+- '&7Request a major expansion.'
+- '&7Increase radius by &a+20&7.'
+- ' '
+- '&eClick to submit request'
+
+expansion_tier4_name: '&aTier IV &7(+35)'
+expansion_tier4_lore:
+- '&7Request a large expansion.'
+- '&7Increase radius by &a+35&7.'
+- ' '
+- '&eClick to submit request'
+
+expansion_tier5_name: '&aTier V &7(+50)'
+expansion_tier5_lore:
+- '&7Request a massive expansion.'
+- '&7Increase radius by &a+50&7.'
+- ' '
+- '&eClick to submit request'
+
+# ============================================================
+# Expansion Admin GUI
+# ============================================================
+expansion_admin_title: '&6&lPending Requests'
+
+button_view_requests_admin: '&bView Pending Requests'
+view_requests_admin_lore:
+- '&7Review all pending expansion requests.'
+- ' '
+- '&eClick to open admin queue'
+
+# View toggle button
+expansion_admin_view_toggle: '&bView: &fAll'
+expansion_admin_view_toggle_lore:
+- '&7Toggle between queue and history.'
+- '&7Useful for auditing auto-approvals.'
+- ' '
+- '&eClick to switch view.'
+
+# Empty states (already in expansions.yml but repeated here for GUI context)
+expansion_none_title: '&cNo Pending Requests'
+expansion_none_lore:
+- '&7There are no active expansion'
+- '&7requests awaiting review.'
+
+expansion_locked_lore:
+- '&cYou must stand within'
+- '&cyour own land to request expansion.'

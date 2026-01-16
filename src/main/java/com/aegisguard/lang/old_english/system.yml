@@ -376,3 +376,11 @@ claimblocks_exchange_insufficient_funds: '&cNǣnig gield genōh. Behōf: &e{AMOU
 claimblocks_exchange_insufficient_blocks: '&cNǣnige sellaþ ClaimBlocks genōh.'
 claimblocks_exchange_sell_locked: '&eSume gebohte blocks sind locode. Fandige æfter.'
 claimblocks_exchange_trade_failed: '&cBýting aswac: &7{REASON}'
+
+# -------------------------------------------------
+# Snapshots (Admin/System Messages)
+# -------------------------------------------------
+snapshot_not_found: '&cÞæt gemynd ne wæs fund.'
+snapshot_rollback_success: '&a✔ Gemynd ætbering gelǣsted.'
+snapshot_rollback_failed: '&c❌ Ætbering aswāc. Beseoh console gecȳþnesse.'
+snapshot_deleted: '&e✔ Gemynd fordōn.'

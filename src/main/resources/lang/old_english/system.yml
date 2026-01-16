@@ -1,7 +1,7 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: system.yml
-# Updated: 2026-01-13
+# Updated: 2026-01-15
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
 # -------------------------------------------------
@@ -107,6 +107,30 @@ farewell-set: '&a✔ Farewell message updated.'
 farewell-cleared: '&e✔ Farewell message cleared.'
 plot_welcome_show: '&a✦ Welcome from {OWNER}: &f{MESSAGE}'
 plot_farewell_show: '&e✦ Farewell from {OWNER}: &f{MESSAGE}'
+
+# -------------------------------------------------
+# Claim Entry/Exit Notifications (per-player toggle)
+# -------------------------------------------------
+claim_enter_exit_notify_enabled: '&a✔ Þū wilt nū sēon clǣm in-gang and ūt-gang tidings.'
+claim_enter_exit_notify_disabled: '&e✔ Þū wilt nū ne sēon clǣm in-gang and ūt-gang tidings.'
+claim_enter_exit_notify_already_enabled: '&7Þās tidings sind ǣr on.'
+claim_enter_exit_notify_already_disabled: '&7Þās tidings sind ǣr off.'
+claim_enter_exit_notify_forced_disabled_by_server: '&cClǣm in/ūt tidings sind forbodene þurh þone server-aldor.'
+claim_enter_exit_notify_forced_disabled_for_you: '&cClǣm in/ūt tidings sind forbodene for þē.'
+claim_enter_exit_notify_set_for_other: '&a✔ Set {PLAYER} his clǣm tidings to: &f{STATE}&a.'
+claim_enter_exit_notify_target_not_found: '&cPlayer not found.'
+claim_enter_exit_notify_usage: '&cUsage: /aegis notify [on|off|toggle] [player]'
+
+# Legacy aliases (keep until next major)
+claim_notify_enabled: '&a✔ Þū wilt nū sēon clǣm in-gang and ūt-gang tidings.'
+claim_notify_disabled: '&e✔ Þū wilt nū ne sēon clǣm in-gang and ūt-gang tidings.'
+claim_notify_already_enabled: '&7Þās tidings sind ǣr on.'
+claim_notify_already_disabled: '&7Þās tidings sind ǣr off.'
+claim_notify_forced_disabled_by_server: '&cClǣm in/ūt tidings sind forbodene þurh þone server-aldor.'
+claim_notify_forced_disabled_for_you: '&cClǣm in/ūt tidings sind forbodene for þē.'
+claim_notify_set_for_other: '&a✔ Set {PLAYER} his clǣm tidings to: &f{STATE}&a.'
+claim_notify_target_not_found: '&cPlayer not found.'
+claim_notify_usage: '&cUsage: /aegis notify [on|off|toggle] [player]'
 
 # -------------------------------------------------
 # Protection Denies

@@ -211,3 +211,11 @@ claimblocks_exchange_insufficient_funds: '&cNot enough money. Need: &e{AMOUNT}'
 claimblocks_exchange_insufficient_blocks: '&cNot enough sellable Claim Blocks.'
 claimblocks_exchange_sell_locked: '&eSome purchased blocks are locked. Try again later.'
 claimblocks_exchange_trade_failed: '&cTrade failed: &7{REASON}'
+
+# ------------------------------------------------------------
+# Snapshots (Admin/System Messages)
+# ------------------------------------------------------------
+snapshot_not_found: '&c❌ That snapshot could not be found.'
+snapshot_rollback_success: '&a✔ Snapshot rollback applied successfully.'
+snapshot_rollback_failed: '&c❌ Rollback failed. Check console logs.'
+snapshot_deleted: '&e✔ Snapshot deleted.'

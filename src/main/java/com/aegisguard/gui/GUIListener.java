@@ -24,6 +24,7 @@ import com.aegisguard.gui.RolesGUI.RolesMenuHolder;
 import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
+import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -85,7 +86,8 @@ public class GUIListener implements Listener {
                 || holder instanceof ExpansionHolder
                 || holder instanceof ExpansionAdminHolder
                 || holder instanceof PlotStatusHolder
-                || holder instanceof ExchangeHolder; // ✅ NEW
+                || holder instanceof ExchangeHolder
+                || holder instanceof SnapshotHolder; // ✅ NEW: Snapshot Admin GUI
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -195,6 +197,12 @@ public class GUIListener implements Listener {
                 plugin.gui().exchange().handleClick(player, e, castHolder);
             }
         }
+        else if (holder instanceof SnapshotHolder) {
+            // ✅ NEW: Route to SnapshotAdminGUI
+            if (plugin.gui().snapshotAdmin() != null) {
+                plugin.gui().snapshotAdmin().handleClick(player, e);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -295,6 +303,17 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof ExchangeHolder) {
             plugin.gui().openClaimBlockExchange(player);
+            return;
+        }
+
+        // ✅ NEW: Reopen SnapshotAdminGUI
+        if (holder instanceof SnapshotHolder castHolder) {
+            if (plugin.gui().snapshotAdmin() != null) {
+                int page = castHolder.getPage();
+                if (!safeInvokeOpen(plugin.gui().snapshotAdmin(), player, page)) {
+                    safeInvokeOpen(plugin.gui().snapshotAdmin(), player);
+                }
+            }
             return;
         }
 

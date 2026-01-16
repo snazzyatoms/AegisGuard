@@ -3,6 +3,8 @@ package com.aegisguard.expansions;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.snapshots.ClaimSnapshot;
+import com.aegisguard.snapshots.SnapshotManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -15,12 +17,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * ExpansionRequestManager
  * - Handles land expansion requests.
  * - Supports "QUEUE" mode (admin approval) and "INSTANT" mode (auto-approval).
  * - Optional audit/history: records approvals/denials (including AUTO approvals).
+ * - Integrates with SnapshotManager to create PRE_EXPANSION snapshots before applying changes.
  *
  * Persistence:
  *  requests.<requesterUUID>.owner
@@ -119,7 +123,7 @@ public class ExpansionRequestManager {
     // Pending-only map (QUEUE mode uses this)
     private final Map<UUID, ExpansionRequest> activeRequests = new ConcurrentHashMap<>();
 
-    // Recent decisions (APPROVED/DENIED), for audit and “approved by AUTO” visibility
+    // Recent decisions (APPROVED/DENIED), for audit and "approved by AUTO" visibility
     private final Deque<DecisionRecord> history = new ConcurrentLinkedDeque<>();
 
     private final File file;
@@ -161,6 +165,125 @@ public class ExpansionRequestManager {
             return false;
         }
         return true;
+    }
+
+    /* -----------------------------
+     * SNAPSHOT INTEGRATION
+     * ----------------------------- */
+
+    /**
+     * Get the SnapshotManager instance.
+     * @return SnapshotManager or null if not available
+     */
+    private SnapshotManager getSnapshotManager() {
+        return plugin.getSnapshotManager();
+    }
+
+    /**
+     * Check if snapshot creation is enabled for expansions.
+     */
+    private boolean isSnapshotEnabled() {
+        return plugin.cfg().raw().getBoolean("expansions.snapshots.enabled", true);
+    }
+
+    /**
+     * Create a PRE_EXPANSION snapshot before applying an expansion.
+     * @param plot The plot being expanded
+     * @param currentRadius Current radius
+     * @param newRadius Requested new radius
+     * @param triggeredBy UUID of the actor (admin or null for AUTO)
+     * @return The created snapshot, or null if snapshots are disabled or failed
+     */
+    private ClaimSnapshot createExpansionSnapshot(Plot plot, int currentRadius, int newRadius, UUID triggeredBy) {
+        if (!isSnapshotEnabled()) return null;
+
+        SnapshotManager snapshotManager = getSnapshotManager();
+        if (snapshotManager == null) {
+            plugin.getLogger().warning("[Expansions] SnapshotManager not available, skipping snapshot creation");
+            return null;
+        }
+
+        String reason = "Before expansion: radius " + currentRadius + " -> " + newRadius;
+
+        try {
+            ClaimSnapshot snapshot = snapshotManager.createSnapshot(
+                    plot,
+                    ClaimSnapshot.SnapshotType.PRE_EXPANSION,
+                    reason,
+                    triggeredBy
+            );
+
+            plugin.getLogger().info("[Expansions] Created PRE_EXPANSION snapshot " + snapshot.getSnapshotId() +
+                    " for plot " + plot.getPlotId());
+
+            return snapshot;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Expansions] Failed to create snapshot for plot " + plot.getPlotId(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Get all PRE_EXPANSION snapshots for a specific plot.
+     * @param plotId The plot UUID
+     * @return List of expansion snapshots, newest first
+     */
+    public List<ClaimSnapshot> getExpansionSnapshots(UUID plotId) {
+        SnapshotManager snapshotManager = getSnapshotManager();
+        if (snapshotManager == null) return Collections.emptyList();
+
+        return snapshotManager.getSnapshotsForPlot(plotId).stream()
+                .filter(s -> s.getType() == ClaimSnapshot.SnapshotType.PRE_EXPANSION)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all PRE_EXPANSION snapshots across all plots.
+     * @return List of all expansion snapshots, newest first
+     */
+    public List<ClaimSnapshot> getAllExpansionSnapshots() {
+        SnapshotManager snapshotManager = getSnapshotManager();
+        if (snapshotManager == null) return Collections.emptyList();
+
+        return snapshotManager.getAllSnapshots().stream()
+                .filter(s -> s.getType() == ClaimSnapshot.SnapshotType.PRE_EXPANSION)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Rollback an expansion using a snapshot.
+     * @param snapshotId The snapshot to rollback to
+     * @return true if rollback succeeded
+     */
+    public boolean rollbackExpansion(UUID snapshotId) {
+        SnapshotManager snapshotManager = getSnapshotManager();
+        if (snapshotManager == null) {
+            plugin.getLogger().warning("[Expansions] Cannot rollback: SnapshotManager not available");
+            return false;
+        }
+
+        ClaimSnapshot snapshot = snapshotManager.getSnapshot(snapshotId);
+        if (snapshot == null) {
+            plugin.getLogger().warning("[Expansions] Cannot rollback: snapshot " + snapshotId + " not found");
+            return false;
+        }
+
+        if (snapshot.getType() != ClaimSnapshot.SnapshotType.PRE_EXPANSION) {
+            plugin.getLogger().warning("[Expansions] Cannot rollback: snapshot " + snapshotId + " is not a PRE_EXPANSION snapshot");
+            return false;
+        }
+
+        return snapshotManager.rollback(snapshotId);
+    }
+
+    /**
+     * Get the most recent expansion snapshot for a plot.
+     * @param plotId The plot UUID
+     * @return The most recent PRE_EXPANSION snapshot, or null if none
+     */
+    public ClaimSnapshot getLatestExpansionSnapshot(UUID plotId) {
+        List<ClaimSnapshot> snapshots = getExpansionSnapshots(plotId);
+        return snapshots.isEmpty() ? null : snapshots.get(0);
     }
 
     /* -----------------------------
@@ -257,6 +380,9 @@ public class ExpansionRequestManager {
             return false;
         }
 
+        // Create PRE_EXPANSION snapshot before applying changes (AUTO = null triggeredBy)
+        createExpansionSnapshot(oldPlot, currentRadius, newRadius, null);
+
         if (!applyExpansion(oldPlot, newRadius)) {
             refund(Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type);
             plugin.msg().send(requester, "expansion_overlap_fail");
@@ -343,7 +469,10 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // 3) Apply Expansion (re-check overlap at approval time)
+        // 3) Create PRE_EXPANSION snapshot before applying changes
+        createExpansionSnapshot(oldPlot, req.getCurrentRadius(), req.getRequestedRadius(), adminActor);
+
+        // 4) Apply Expansion (re-check overlap at approval time)
         if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
             refund(requester, p, req.getCost(), type);
 
@@ -353,19 +482,19 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // 4) Mark + remove active
+        // 5) Mark + remove active
         req.approve();
         activeRequests.remove(req.getRequester());
         setDirty(true);
 
-        // 5) Notify (online only)
+        // 6) Notify (online only)
         if (p != null) {
             String actor = plugin.gui().tr(p, "expansion_actor_admin", "Admin");
             plugin.msg().send(p, "expansion_approved", Map.of("PLAYER", actor));
             plugin.effects().playConfirm(p);
         }
 
-        // 6) Audit
+        // 7) Audit
         if (isAuditEnabled()) {
             recordDecision(req, ActorType.ADMIN, adminActor, "");
         }
@@ -445,7 +574,7 @@ public class ExpansionRequestManager {
 
         double totalCost = perBlock * addedBlocks;
 
-        // Optional “rapid growth tax” if radius jump is large
+        // Optional "rapid growth tax" if radius jump is large
         int radiusJump = Math.max(0, newRadius - currentRadius);
         if (radiusJump > 10) totalCost *= multiplier;
 
@@ -694,7 +823,7 @@ public class ExpansionRequestManager {
                     long timestamp = data.getLong(path + ".timestamp", System.currentTimeMillis());
                     long decisionTs = data.getLong(path + ".decisionTimestamp", 0L);
 
-                    // Backwards compatibility: older files won’t have status
+                    // Backwards compatibility: older files won't have status
                     String statusStr = data.getString(path + ".status", "PENDING");
                     ExpansionRequest.Status status;
                     try {

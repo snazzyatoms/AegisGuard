@@ -1,8 +1,154 @@
-# ============================================================
-# Expansion Admin GUI (Missing keys added for auto-audit)
-# ============================================================
+# ======================================
+# AegisGuard v1.2.5 - Hybrid English
+# File: guis.yml
+# Updated: 2026-01-16
+# ======================================
 
-# Paged title used by ExpansionRequestAdminGUI
+# ------------------------------------------------------------
+# Common Navigation Buttons
+# ------------------------------------------------------------
+button_back: '&e⟵ Back'
+back_lore:
+  - '&7Return to the previous page.'
+button_back_menu: '&fReturn to Menu'
+back_menu_lore:
+  - '&7Go back to the main dashboard.'
+button_prev_page: '&fPrevious Page'
+prev_page_lore:
+  - '&7Go to the previous page.'
+button_next_page: '&fNext Page'
+next_page_lore:
+  - '&7Go to the next page.'
+button_exit: '&c✖ Close'
+button_exit_lore:
+  - '&7Close this menu.'
+exit_lore:
+  - '&7Close this menu.'
+button_back_admin: '&fBack to Admin'
+
+# ------------------------------------------------------------
+# Main Menu
+# ------------------------------------------------------------
+menu_title: '&b⚔ AegisGuard Menu'
+
+button_claim_land: '&a🛡 Create Claim'
+claim_land_lore:
+  - '&7Start protecting this area.'
+claim_land_ready_lore:
+  - '&7Create a new claim from'
+  - '&7thy current selection.'
+  - ' '
+  - '&eClick to Confirm'
+
+button_plot_flags: '&6Settings'
+plot_flags_title: '&9⚙ Claim Settings'
+plot_flags_lore:
+  - '&7Manage protection rules for this claim.'
+plot_flags_locked_lore:
+  - '&cThou must stand inside thy claim'
+  - '&cto edit its settings.'
+
+button_roles: '&eMembers'
+roles_lore:
+  - '&7Manage trusted players.'
+roles_locked_lore:
+  - '&cThou must stand inside thy claim'
+  - '&cto manage members.'
+
+button_player_settings: '&9Preferences'
+player_settings_lore:
+  - '&7Adjust thy personal settings and language.'
+
+button_market: '&eMarketplace'
+market_lore:
+  - '&7Buy and sell claims with other players.'
+
+button_auction: '&cAuctions'
+auction_lore:
+  - '&7Bid on expired or repossessed claims.'
+
+button_info: '&6📜 Help & Guide'
+info_lore:
+  - '&7View commands, explanations, and usage tips.'
+
+button_plot_status: '&b📊 Claim Status'
+plot_status_button_title: '&b📊 Claim Status'
+plot_status_lore:
+  - '&7View a clean breakdown of claim'
+  - '&7details, bonuses, territory, and growth.'
+
+button_expand: '&dRequest Expansion'
+expand_lore:
+  - '&7Request a larger claim size'
+  - '&7from a server administrator.'
+
+# ------------------------------------------------------------
+# Expansion GUI (Player-facing)
+# ------------------------------------------------------------
+expansion_gui_title: '&dLand Expansion Request'
+
+expansion_tier1_name: '&aSmall Expansion (+5)'
+expansion_tier1_lore:
+  - '&7Request a small expansion.'
+  - '&7Increase radius by &a+5&7.'
+  - ' '
+  - '&eClick to submit request'
+
+expansion_tier2_name: '&eMedium Expansion (+10)'
+expansion_tier2_lore:
+  - '&7Request a modest expansion.'
+  - '&7Increase radius by &a+10&7.'
+  - ' '
+  - '&eClick to submit request'
+
+expansion_tier3_name: '&fLarge Expansion (+20)'
+expansion_tier3_lore:
+  - '&7Request a major expansion.'
+  - '&7Increase radius by &a+20&7.'
+  - ' '
+  - '&eClick to submit request'
+
+expansion_tier4_name: '&6Huge Expansion (+35)'
+expansion_tier4_lore:
+  - '&7Request a large expansion.'
+  - '&7Increase radius by &a+35&7.'
+  - ' '
+  - '&eClick to submit request'
+
+expansion_tier5_name: '&bMassive Expansion (+50)'
+expansion_tier5_lore:
+  - '&7Request a massive expansion.'
+  - '&7Increase radius by &a+50&7.'
+  - ' '
+  - '&eClick to submit request'
+
+# ------------------------------------------------------------
+# Expansion Admin GUI
+# ------------------------------------------------------------
+expansion_admin_title: '&6&lPetitions &e&lPending &d&l⚖'
+
+button_view_requests_admin: '&cReview Requests'
+view_requests_admin_lore:
+  - '&7Approve or deny expansion requests.'
+
+expansion_admin_view_toggle: '&bView: &f{MODE}'
+expansion_admin_view_toggle_lore:
+  - '&7Toggle between queue and history.'
+  - '&7Useful for auditing auto-approvals.'
+  - ' '
+  - '&eClick to switch view.'
+
+expansion_none_title: '&cNo Requests'
+expansion_none_lore:
+  - '&7No pending requests.'
+
+expansion_locked_lore:
+  - '&cThou must stand inside'
+  - '&cthy own claim to do this.'
+
+expansion_button_back: '&e⟵ Back to Previous Menu'
+
+# Expansion admin paged title
 expansion_admin_title_paged: '&6&lPending Requests &7({PAGE}/{PAGES})'
 
 # Queue item (per-request)
@@ -20,40 +166,239 @@ expansion_request_item_lore:
   - '&eLeft-click: &7Approve request.'
   - '&cRight-click: &7Deny request.'
 
-# These are inserted into the lore above
 expansion_request_item_lore_pending_line: '&7Pending For: &f{AGE}'
 expansion_request_item_lore_decision_line: '&7Decision: &f{ACTOR}'
 
-# Decider labels (used by the admin audit display)
 expansion_decided_by_none: '&7Awaiting review'
 expansion_decided_by_auto: '&bAuto-Approval'
 expansion_decided_by_console: '&7Console'
 expansion_decided_by_unknown: '&7Unknown'
 
-# Make sure this supports placeholders (admin GUI passes {MODE} / {HINT})
-expansion_admin_view_toggle: '&bView: &f{MODE}'
+# ------------------------------------------------------------
+# Claim Snapshots GUI (Player/Admin)
+# ------------------------------------------------------------
+snapshot_gui_title: '&d⧉ Claim Snapshots'
+button_snapshots: '&d⧉ Claim Snapshots'
+snapshots_button_lore:
+  - '&7View and rollback claim snapshots.'
+  - '&7Created before expansions & merges.'
+  - ' '
+  - '&eClick to open'
 
-# ============================================================
-# Claim Snapshots Admin GUI
-# ============================================================
+snapshot_empty_gui:
+  - '&7No snapshots found.'
+  - '&7Snapshots art created before'
+  - '&7expansions and merges.'
+
+snapshot_item_name: '&e{TYPE} &7Snapshot'
+snapshot_item_lore:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &e{TYPE}'
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE}'
+  - '&7Triggered By: &f{ACTOR}'
+  - '&7Radius: &a{RADIUS}'
+  - ' '
+  - '&aLeft-click: &7Rollback to this state'
+  - '&cRight-click: &7Delete snapshot'
+
+snapshot_rollback_success: '&a✔ Claim rolled back successfully.'
+snapshot_rollback_failed: '&c❌ Rollback failed. Claim may no longer exist.'
+snapshot_deleted: '&e✔ Snapshot deleted.'
+snapshot_not_found: '&c❌ Snapshot not found.'
 
 snapshots_admin_title: '&6&lClaim Snapshots &7({PAGE}/{PAGES})'
-
 snapshots_none_title: '&cNo Snapshots Found'
 snapshots_none_lore:
-  - '&7There are no claim snapshots'
+  - '&7There art no claim snapshots'
   - '&7available to review.'
 
-snapshot_item_name: '&bSnapshot: &f{SNAPSHOT_ID}'
-snapshot_item_lore:
-  - '&7Owner: &f{PLOT_OWNER}'
-  - '&7Plot ID: &f{PLOT_ID}'
-  - '&7World: &f{WORLD}'
-  - '&7Type: &f{TYPE}'
-  - '&7Age: &f{AGE}'
-  - '&7Radius: &f{RADIUS}'
-  - '&7Reason: &f{REASON}'
-  - '&7Actor: &f{ACTOR}'
-  - ' '
-  - '&eLeft-click: &7Rollback to this snapshot.'
-  - '&cRight-click: &7Delete this snapshot.'
+# ------------------------------------------------------------
+# ClaimBlocks Exchange GUI
+# ------------------------------------------------------------
+claimblocks_exchange_gui_title: '&8Claim Block Exchange'
+claimblocks_exchange_title: '&bClaim Block Exchange'
+claimblocks_exchange_lore:
+  - '&7Trade Claim Blocks for money.'
+claimblocks_exchange_disabled_lore:
+  - '&8Currently disabled in config.'
+  - '&7Enable: &fclaim_blocks.exchange.enabled: &atrue'
+
+claimblocks_exchange_filler_name: ' '
+claimblocks_exchange_filler_lore: []
+
+claimblocks_exchange_buy_label: 'Buy'
+claimblocks_exchange_buy_lore:
+  - '&7Purchase Claim Blocks with money.'
+  - '&8Permission: &f{PERM}'
+claimblocks_exchange_sell_label: 'Sell'
+claimblocks_exchange_sell_lore:
+  - '&7Sell Claim Blocks for money.'
+  - '&8May require: &f{PERM}'
+
+claimblocks_exchange_minus_100_title: '&c-100'
+claimblocks_exchange_minus_10_title: '&c-10'
+claimblocks_exchange_minus_1_title: '&c-1'
+claimblocks_exchange_plus_1_title: '&a+1'
+claimblocks_exchange_plus_10_title: '&a+10'
+claimblocks_exchange_plus_100_title: '&a+100'
+claimblocks_exchange_plus_lore:
+  - '&7Increase amount.'
+claimblocks_exchange_minus_lore:
+  - '&7Decrease amount.'
+
+claimblocks_exchange_state_yes: '&aYes'
+claimblocks_exchange_state_no: '&cNo'
+claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_line_money: '&7Thy Balance: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Claim Blocks: &f{AVAILABLE} &8available'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
+claimblocks_exchange_spacer: ' '
+
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
+claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
+claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
+claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
+claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
+claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
+
+claimblocks_exchange_confirm_title: '&a&lCONFIRM'
+claimblocks_exchange_confirm_lore:
+  - '&7Click to perform the trade.'
+  - '&8Shift-click is ignored.'
+claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
+claimblocks_exchange_confirm_disabled_lore:
+  - '&7Enable: &fclaim_blocks.exchange.enabled: &atrue'
+  - '&8Shift-click is ignored.'
+claimblocks_exchange_close_title: '&cClose'
+claimblocks_exchange_close_lore:
+  - '&7Close this menu.'
+
+# ------------------------------------------------------------
+# Plot Flags GUI
+# ------------------------------------------------------------
+button_pvp_on: '&a⚔ PvP: Protected'
+button_pvp_off: '&c⚔ PvP: Unprotected'
+button_tnt_on: '&a💥 TNT: Protected'
+button_tnt_off: '&c💥 TNT: Unprotected'
+button_fire_on: '&a🔥 Fire Spread: Blocked'
+button_fire_off: '&c🔥 Fire Spread: Allowed'
+button_mobs_on: '&a☠ Mobs: Protected'
+button_mobs_off: '&c☠ Mobs: Unprotected'
+button_entry_on: '&a🚪 Entry: Private'
+button_entry_off: '&c🚪 Entry: Public'
+button_safe_on: '&a🛡 Safe Zone: Enabled'
+button_safe_off: '&c🛡 Safe Zone: Disabled'
+button_containers_on: '&a📦 Containers: Locked'
+button_containers_off: '&c📦 Containers: Unlocked'
+button_piston_on: '&a🔩 Pistons: Blocked'
+button_piston_off: '&c🔩 Pistons: Allowed'
+button_farm_on: '&a🌾 Farming: Protected'
+button_farm_off: '&c🌾 Farming: Unprotected'
+button_animals_on: '&a🐄 Animals: Protected'
+button_animals_off: '&c🐄 Animals: Unprotected'
+button_redstone_on: '&a🔴 Redstone: Blocked'
+button_redstone_off: '&c🔴 Redstone: Allowed'
+button_vehicles_on: '&a🛶 Vehicles: Blocked'
+button_vehicles_off: '&c🛶 Vehicles: Allowed'
+button_shop_on: '&a💎 Shop Interact: Enabled'
+button_shop_off: '&c💎 Shop Interact: Disabled'
+button_fly_on: '&a🪽 Flight: Enabled'
+button_fly_off: '&c🪽 Flight: Disabled'
+button_cosmetics: '&b✨ Cosmetics'
+
+pvp_toggle_lore:
+  - '&7Blocks PvP combat inside thy claim.'
+  - '&eClick to toggle.'
+tnt_toggle_lore:
+  - '&7Prevents explosions from damaging thy claim.'
+  - '&eClick to toggle.'
+fire_toggle_lore:
+  - '&7Stops fire from spreading within thy claim.'
+  - '&eClick to toggle.'
+mob_toggle_lore:
+  - '&7Prevents hostile mobs from harming players.'
+  - '&eClick to toggle.'
+entry_toggle_lore:
+  - '&7When enabled, untrusted players cannot enter.'
+  - '&eClick to toggle.'
+safe_toggle_lore:
+  - '&7Extra safety rules for this claim.'
+  - '&7Admins only.'
+  - '&eClick to toggle.'
+container_toggle_lore:
+  - '&7Locks chests and storage from outsiders.'
+  - '&eClick to toggle.'
+piston_toggle_lore:
+  - '&7Prevents pistons from pushing across borders.'
+  - '&eClick to toggle.'
+farm_toggle_lore:
+  - '&7Protects crops and farmland from outsiders.'
+  - '&eClick to toggle.'
+animals_toggle_lore:
+  - '&7Protects animals from outsiders.'
+  - '&eClick to toggle.'
+redstone_toggle_lore:
+  - '&7Blocks redstone interaction by outsiders.'
+  - '&eClick to toggle.'
+vehicles_toggle_lore:
+  - '&7Blocks vehicle use by outsiders.'
+  - '&eClick to toggle.'
+shop_toggle_lore:
+  - '&7Allows shop interactions inside thy claim.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
+fly_toggle_lore:
+  - '&7Allows flying inside thy claim.'
+  - '&7Cost: &6{COST}'
+  - '&eClick to purchase/toggle.'
+cosmetics_lore:
+  - '&7Customize the look and feel of thy claim.'
+  - '&eClick to open.'
+
+# ------------------------------------------------------------
+# Leveling GUI
+# ------------------------------------------------------------
+level_gui_title: '&dPlot Ascension'
+level_current_status: '&bCurrent Plot Status'
+level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
+level_max_reached: '&6Maximum level reached for this claim.'
+level_button_lore:
+  - '&7Upgrade thy claim to unlock'
+  - '&7new perks and stronger bonuses.'
+
+level_upgrade_payment_title: '&bPayment Options:'
+level_upgrade_cost_money: '&7Cost: &6{COST} &8({TYPE})'
+level_upgrade_button_money: '&aUpgrade with Money'
+level_upgrade_hint_money: '&eClick to pay with money'
+level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
+level_upgrade_you_have_blocks: '&7Thou hast: &b{BALANCE} &7Blocks'
+level_upgrade_button_blocks: '&bUpgrade with Blocks'
+level_upgrade_hint_blocks: '&eClick to spend blocks'
+level_upgrade_money_unavailable: '&8Money upgrade unavailable.'
+level_upgrade_blocks_unavailable: '&8Block upgrade unavailable.'
+level_upgrade_choose_payment: '&7Choose a payment method below.'
+
+# ------------------------------------------------------------
+# Other Menus
+# ------------------------------------------------------------
+visit_gui_title: '&9Travel Menu'
+market_gui_title: '&2Real Estate'
+auction_gui_title: '&6Claim Auctions'
+zone_gui_title: '&3Zone Manager'
+biome_gui_title: '&2Biome'
+settings_menu_title: '&9⚙ Preferences'
+codex_gui_title: '&9§lGuardian''s Guide'
+ledger_title: '&6📜 Domain Registry'
+admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
+
+market_button_back: '&e⟵ Back to Real Estate'
+auction_button_back: '&e⟵ Back to Auctions'
+realestate_button_back: '&e⟵ Back to Real Estate'
+domain_market_button_back: '&e⟵ Back to Domain Market'
+biome_button_back: '&e⟵ Back to Claim Settings'
+biome_button_exit: '&c✖ Close Biome Changer'

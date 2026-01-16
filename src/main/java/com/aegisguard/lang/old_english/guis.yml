@@ -268,6 +268,75 @@ expansion_locked_lore:
 - '&cthine own land to petition.'
 
 # -------------------------------------------------
+# Claim Snapshots GUI (Player/Admin)
+# -------------------------------------------------
+snapshot_gui_title: '&d⧉ Clǣm Gemyndignes'
+button_snapshots: '&d⧉ Clǣm Gemyndignes'
+snapshots_button_lore:
+- '&7Beseoh and ætbere clǣm gemyndignes.'
+- '&7Gesceapen beforan þēodungum.'
+- ' '
+- '&eClick tō openienne'
+
+snapshot_empty_gui:
+- '&7Nān gemyndignes fund.'
+- '&7Gemyndignes sind gesceapene beforan'
+- '&7þēodungum and gemǣnscipe.'
+
+snapshot_item_name: '&e{TYPE} &7Gemynd'
+snapshot_item_lore:
+- '&7Āgende: &f{OWNER}'
+- '&7Weorold: &f{WORLD}'
+- '&7Cynn: &e{TYPE}'
+- '&7Intinga: &f{REASON}'
+- '&7Ieldo: &f{AGE}'
+- '&7Āweaht fram: &f{ACTOR}'
+- '&7Ryne: &a{RADIUS}'
+- ' '
+- '&aWinstra-click: &7Ætbere tō þissum stede'
+- '&cSwīþra-click: &7Fordō gemynd'
+
+snapshot_rollback_success: '&aâœ" Clǣm ætboren gelǣste.'
+snapshot_rollback_failed: '&câŒ Ætbering aswāc. Clǣm mæg nā leng wesan.'
+snapshot_deleted: '&eâœ" Gemynd fordōn.'
+snapshot_not_found: '&câŒ Gemynd ne fund.'
+
+# Admin-specific snapshot keys
+snapshots_admin_title: '&6&lClǣm Gemyndignes &7({PAGE}/{PAGES})'
+snapshots_none_title: '&cNān Gemyndignes Fund'
+snapshots_none_lore:
+- '&7Þǣr ne sind nāne clǣm gemyndignes'
+- '&7tō gesēonne.'
+
+# Expansion admin paged title
+expansion_admin_title_paged: '&6&lBiding Petitions &7({PAGE}/{PAGES})'
+
+# Queue item (per-request)
+expansion_request_item_name: '&bPetition: &f{PLAYER}'
+expansion_request_item_lore:
+- '&7Weorold: &f{WORLD}'
+- '&7Stede: {STATUS}'
+- '&7Ieldo: &f{AGE}'
+- '{PENDING_LINE}'
+- '{DECISION_LINE}'
+- '&7Ryne: &e{CUR} &7â†' &a{REQ}'
+- '&7Gield Behōfed: &6{COST}'
+- '{DECISION_AGE_LINE}'
+- ' '
+- '&eWinstra-click: &7Gewissian petition.'
+- '&cSwīþra-click: &7Withsettan petition.'
+
+# Inserted into lore above
+expansion_request_item_lore_pending_line: '&7Biding For: &f{AGE}'
+expansion_request_item_lore_decision_line: '&7Decision: &f{ACTOR}'
+
+# Decider labels
+expansion_decided_by_none: '&7Awaiting gesihþ'
+expansion_decided_by_auto: '&bSelf-Gewissian'
+expansion_decided_by_console: '&7Console'
+expansion_decided_by_unknown: '&7Uncūþ'
+
+# -------------------------------------------------
 # Existing GUI Buttons (kept)
 # -------------------------------------------------
 auction_button_back: '&eâŸµ Return to Auctions'

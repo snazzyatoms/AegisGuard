@@ -27,6 +27,7 @@ import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;
+import com.aegisguard.snapshots.SnapshotManager;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
@@ -78,6 +79,9 @@ public class AegisGuard extends JavaPlugin {
     // Claim Block Exchange Service (1.2.5+)
     private ClaimBlockExchangeService claimBlockExchange;
 
+    // Snapshot Manager (1.2.5+) - Rollback system for claims
+    private SnapshotManager snapshotManager;
+
     /**
      * MessagesUtil now acts as:
      * - playerdata.yml prefs (language choice)
@@ -126,6 +130,9 @@ public class AegisGuard extends JavaPlugin {
     // NEW: Exchange service getter
     public ClaimBlockExchangeService exchange() { return claimBlockExchange; }
     public ClaimBlockExchangeService getClaimBlockExchangeService() { return claimBlockExchange; }
+
+    // NEW: Snapshot Manager getter
+    public SnapshotManager getSnapshotManager() { return snapshotManager; }
 
     /**
      * Legacy access (compat bridge).
@@ -222,7 +229,21 @@ public class AegisGuard extends JavaPlugin {
             this.claimBlockExchange = null;
         }
 
-        // 3.f GUI AFTER vault/exchange exist
+        // 3.f Snapshot Manager (only if enabled in config)
+        if (cfg().raw().getBoolean("snapshots.enabled", true)) {
+            try {
+                this.snapshotManager = new SnapshotManager(this);
+                getLogger().info("Snapshot Manager initialized.");
+            } catch (Throwable t) {
+                this.snapshotManager = null;
+                getLogger().warning("SnapshotManager failed to initialize: " + t.getMessage());
+            }
+        } else {
+            this.snapshotManager = null;
+            getLogger().info("Snapshot Manager disabled in config.");
+        }
+
+        // 3.g GUI AFTER vault/exchange exist
         this.gui = new GUIManager(this);
 
         this.worldRules = new WorldRulesManager(this);
@@ -237,6 +258,7 @@ public class AegisGuard extends JavaPlugin {
         runGlobalAsync(() -> {
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
+            if (snapshotManager != null) snapshotManager.load();
         });
 
         // Register Events
@@ -340,10 +362,17 @@ public class AegisGuard extends JavaPlugin {
         if (expansionManager != null) expansionManager.saveSync();
         if (claimBlockManager != null) claimBlockManager.shutdown();
 
+        // Save snapshots on shutdown
+        if (snapshotManager != null) {
+            getLogger().info("Saving snapshot data...");
+            snapshotManager.saveSync();
+        }
+
         if (messages != null) messages.savePlayerData();
 
         protectionHooks = null;
         claimBlockExchange = null;
+        snapshotManager = null;
         instance = null;
 
         getLogger().info("AegisGuard disabled.");
@@ -585,6 +614,7 @@ public class AegisGuard extends JavaPlugin {
             if (plotStore != null && plotStore.isDirty()) plotStore.save();
             if (expansionManager != null && expansionManager.isDirty()) expansionManager.save();
             if (claimBlockManager != null) claimBlockManager.save();
+            if (snapshotManager != null && snapshotManager.isDirty()) snapshotManager.save();
             if (messages != null && messages.isPlayerDataDirty()) messages.savePlayerData();
             // Exchange state auto-saves on trades; shutdown flush handles final save.
         };
@@ -677,7 +707,8 @@ public class AegisGuard extends JavaPlugin {
 
                     String cn = h.getClass().getName();
                     if (cn.startsWith("com.aegisguard.gui.")
-                            || cn.startsWith("com.aegisguard.expansions.")) {
+                            || cn.startsWith("com.aegisguard.expansions.")
+                            || cn.startsWith("com.aegisguard.snapshots.")) {
                         p.closeInventory();
                     }
                 } catch (Throwable ignored) {}

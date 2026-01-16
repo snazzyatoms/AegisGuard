@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
+import com.aegisguard.snapshots.SnapshotAdminGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -56,6 +57,9 @@ public class GUIManager {
     // ✅ NEW: ClaimBlocks Exchange GUI
     private final ClaimBlockExchangeGUI claimBlockExchangeGUI;
 
+    // ✅ NEW: Snapshot Admin GUI (Rollback System)
+    private final SnapshotAdminGUI snapshotAdminGUI;
+
     // Hex pattern (&#RRGGBB)
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
@@ -90,6 +94,13 @@ public class GUIManager {
             this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, plugin.exchange());
         } else {
             this.claimBlockExchangeGUI = null;
+        }
+
+        // ✅ NEW: Snapshot Admin GUI (only if SnapshotManager exists)
+        if (plugin.getSnapshotManager() != null) {
+            this.snapshotAdminGUI = new SnapshotAdminGUI(plugin);
+        } else {
+            this.snapshotAdminGUI = null;
         }
     }
 
@@ -130,6 +141,33 @@ public class GUIManager {
     }
 
     /**
+     * ✅ NEW: open Snapshot Admin GUI (safe wrapper)
+     */
+    public void openSnapshotAdmin(Player player) {
+        if (player == null) return;
+
+        if (snapshotAdminGUI == null || plugin.getSnapshotManager() == null) {
+            try {
+                player.sendMessage(color("&cSnapshot system is unavailable."));
+            } catch (Throwable ignored) {}
+            return;
+        }
+
+        // Optional config gate
+        boolean enabled = false;
+        try {
+            enabled = plugin.cfg().raw().getBoolean("snapshots.enabled", true);
+        } catch (Throwable ignored) {}
+
+        if (!enabled) {
+            player.sendMessage(color("&cSnapshots are disabled in config.yml."));
+            return;
+        }
+
+        snapshotAdminGUI.open(player);
+    }
+
+    /**
      * Placeholder method for Diagnostics GUI (Fixes AdminGUI error).
      */
     public void openDiagnostics(Player player) {
@@ -167,6 +205,9 @@ public class GUIManager {
 
     // ✅ NEW
     public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
+
+    // ✅ NEW: Snapshot Admin
+    public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

@@ -84,7 +84,7 @@ localization:
   # NOTE:
   # Your CodexEngine already fails silently if a resource doesn't exist.
   # The WARN spam you saw is coming from AegisGuard.java's installer logger,
-  # which we’ll patch next to only extract resources that exist in the jar.
+  # which we'll patch next to only extract resources that exist in the jar.
   extract_defaults: true
 
   debug_missing_keys: false
@@ -444,9 +444,51 @@ claim_blocks:
           max_locked_blocks: 25000
 
 
+# ==============================================================================
+# 📸 CLAIM SNAPSHOTS (ROLLBACK SYSTEM)
+# ==============================================================================
+# Snapshots capture plot state before risky operations (expansions, merges).
+# Admins can rollback plots to previous states via the Admin GUI.
+#
+# Data stored in: plugins/AegisGuard/claim-snapshots.yml
+snapshots:
+  # Master toggle for the snapshot system
+  enabled: true
 
+  # Maximum number of snapshots to keep in memory/storage
+  # Oldest snapshots are pruned when this limit is exceeded
+  max_snapshots: 100
 
+  # How long to keep snapshots (in minutes)
+  # 10080 = 7 days, 1440 = 1 day, 0 = keep forever (only max_snapshots applies)
+  keep_minutes: 10080
 
+  # Automatic snapshot triggers
+  auto_snapshot:
+    # Create snapshot before plot expansions are applied
+    before_expansion: true
+
+    # Create snapshot before plot merges are applied
+    before_merge: true
+
+  # Admin GUI settings for snapshot viewer
+  admin_gui:
+    # Show snapshot age in human-readable format (e.g., "2d 5h" instead of timestamp)
+    human_readable_age: true
+
+    # Items per page in the snapshot browser
+    items_per_page: 45
+
+  # Console logging
+  logging:
+    # Log snapshot creation to console
+    log_create: true
+
+    # Log snapshot rollbacks to console
+    log_rollback: true
+
+    # Log snapshot deletions to console
+    log_delete: true
 
 
 # ==============================================================================
@@ -458,10 +500,28 @@ expansions:
   # - INSTANT: requests are auto-approved immediately (still recorded for audit)
   approval_mode: QUEUE
 
+  # Snapshot integration for expansions
+  # When enabled, a PRE_EXPANSION snapshot is created before applying any expansion
+  # This allows admins to rollback expansions that cause issues
+  snapshots:
+    enabled: true
+
   # Optional audit trail controls (used by admin GUI / logs)
   audit:
+    enabled: true
     keep_recent_minutes: 60
     include_in_admin_gui_history: true
+    save_to_file: true
+    log_to_console: true
+    max_entries: 250
+
+  # Admin notification settings (for INSTANT mode)
+  approval:
+    # Notify admins when an expansion is auto-approved (INSTANT mode only)
+    notify_admins: true
+
+    # Permission required to receive auto-approval notifications
+    notify_permission: "aegis.admin"
 
   cost_per_block: 10.0
   cost_multiplier: 1.1

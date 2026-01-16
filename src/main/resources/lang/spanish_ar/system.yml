@@ -224,3 +224,11 @@ help_lines:
 - '&e/aegis setdesc <text> &7- Establecé una descripción para tu parcela.'
 - '&e/aegis stuck &7- Teletransportate a un lugar seguro si estás atorado.'
 - '&e/aegis help &7- Ver este menú de ayuda.'
+
+# ------------------------------------------------------------
+# Instantáneas (Mensajes del sistema/admin)
+# ------------------------------------------------------------
+snapshot_not_found: '&c❌ No se pudo encontrar esa instantánea.'
+snapshot_rollback_success: '&a✔ Restauración de instantánea aplicada con éxito.'
+snapshot_rollback_failed: '&c❌ La restauración falló. Revisá los registros de la consola.'
+snapshot_deleted: '&e✔ Instantánea eliminada.'

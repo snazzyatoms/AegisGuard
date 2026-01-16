@@ -346,3 +346,10 @@ claimblocks_exchange_insufficient_blocks: '&cNo tienes suficientes ClaimBlocks p
 claimblocks_exchange_sell_locked: '&eAlgunos ClaimBlocks comprados están bloqueados. Intenta más tarde.'
 claimblocks_exchange_trade_failed: '&cEl intercambio falló: &7{REASON}'
 
+# ------------------------------------------------------------
+# Instantáneas (Mensajes del sistema/admin)
+# ------------------------------------------------------------
+snapshot_not_found: '&c❌ No se pudo encontrar esa instantánea.'
+snapshot_rollback_success: '&a✔ Restauración de instantánea aplicada con éxito.'
+snapshot_rollback_failed: '&c❌ La restauración falló. Revisa los registros de la consola.'
+snapshot_deleted: '&e✔ Instantánea eliminada.'

@@ -13,12 +13,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Level;
 
 /**
  * ExpansionRequestManager
  * - Handles land expansion requests.
- * - Fully localized (uses message keys / Codex-backed messaging).
+ * - Supports "QUEUE" mode (admin approval) and "INSTANT" mode (auto-approval).
+ * - Optional audit/history: records approvals/denials (including AUTO approvals).
  *
  * Persistence:
  *  requests.<requesterUUID>.owner
@@ -30,11 +32,95 @@ import java.util.logging.Level;
  *  requests.<requesterUUID>.timestamp
  *  requests.<requesterUUID>.status
  *  requests.<requesterUUID>.decisionTimestamp
+ *
+ *  history.<safeKey>.requester
+ *  history.<safeKey>.owner
+ *  history.<safeKey>.plotId
+ *  history.<safeKey>.world
+ *  history.<safeKey>.currentRadius
+ *  history.<safeKey>.requestedRadius
+ *  history.<safeKey>.cost
+ *  history.<safeKey>.timestamp
+ *  history.<safeKey>.status
+ *  history.<safeKey>.decisionTimestamp
+ *  history.<safeKey>.actorType
+ *  history.<safeKey>.actor
+ *  history.<safeKey>.note
  */
 public class ExpansionRequestManager {
 
+    public enum ApprovalMode { QUEUE, INSTANT }
+    public enum ActorType { ADMIN, AUTO, SYSTEM, UNKNOWN }
+
+    public static final class DecisionRecord {
+        private final String key;
+        private final UUID requester;
+        private final UUID plotOwner;
+        private final UUID plotId;
+        private final String worldName;
+        private final int currentRadius;
+        private final int requestedRadius;
+        private final double cost;
+        private final long timestamp;
+        private final long decisionTimestamp;
+        private final ExpansionRequest.Status status;
+        private final ActorType actorType;
+        private final UUID actor;
+        private final String note;
+
+        public DecisionRecord(String key,
+                              UUID requester,
+                              UUID plotOwner,
+                              UUID plotId,
+                              String worldName,
+                              int currentRadius,
+                              int requestedRadius,
+                              double cost,
+                              long timestamp,
+                              long decisionTimestamp,
+                              ExpansionRequest.Status status,
+                              ActorType actorType,
+                              UUID actor,
+                              String note) {
+            this.key = key;
+            this.requester = requester;
+            this.plotOwner = plotOwner;
+            this.plotId = plotId;
+            this.worldName = worldName == null ? "" : worldName;
+            this.currentRadius = currentRadius;
+            this.requestedRadius = requestedRadius;
+            this.cost = cost;
+            this.timestamp = timestamp;
+            this.decisionTimestamp = decisionTimestamp;
+            this.status = status == null ? ExpansionRequest.Status.PENDING : status;
+            this.actorType = actorType == null ? ActorType.UNKNOWN : actorType;
+            this.actor = actor;
+            this.note = note == null ? "" : note;
+        }
+
+        public String getKey() { return key; }
+        public UUID getRequester() { return requester; }
+        public UUID getPlotOwner() { return plotOwner; }
+        public UUID getPlotId() { return plotId; }
+        public String getWorldName() { return worldName; }
+        public int getCurrentRadius() { return currentRadius; }
+        public int getRequestedRadius() { return requestedRadius; }
+        public double getCost() { return cost; }
+        public long getTimestamp() { return timestamp; }
+        public long getDecisionTimestamp() { return decisionTimestamp; }
+        public ExpansionRequest.Status getStatus() { return status; }
+        public ActorType getActorType() { return actorType; }
+        public UUID getActor() { return actor; }
+        public String getNote() { return note; }
+    }
+
     private final AegisGuard plugin;
+
+    // Pending-only map (QUEUE mode uses this)
     private final Map<UUID, ExpansionRequest> activeRequests = new ConcurrentHashMap<>();
+
+    // Recent decisions (APPROVED/DENIED), for audit and “approved by AUTO” visibility
+    private final Deque<DecisionRecord> history = new ConcurrentLinkedDeque<>();
 
     private final File file;
     private FileConfiguration data;
@@ -46,12 +132,21 @@ public class ExpansionRequestManager {
         this.file = new File(plugin.getDataFolder(), "expansion-requests.yml");
     }
 
+    /** Pending requests only. */
     public Collection<ExpansionRequest> getActiveRequests() {
         return Collections.unmodifiableCollection(activeRequests.values());
     }
 
+    /** Pending request only (if present). */
     public ExpansionRequest getRequest(UUID requesterId) {
         return activeRequests.get(requesterId);
+    }
+
+    /** Recent decisions (newest first). Useful for admin GUIs / audit views. */
+    public List<DecisionRecord> getRecentDecisions() {
+        List<DecisionRecord> out = new ArrayList<>(history);
+        out.sort(Comparator.comparingLong(DecisionRecord::getDecisionTimestamp).reversed());
+        return out;
     }
 
     /** True only if the stored request is still pending. */
@@ -60,7 +155,7 @@ public class ExpansionRequestManager {
         if (req == null) return false;
 
         if (!req.isPending()) {
-            // Just in case older files loaded non-pending states.
+            // Defensive: older files loaded non-pending states.
             activeRequests.remove(requesterId);
             setDirty(true);
             return false;
@@ -77,8 +172,8 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // Only one pending request per requester
-        if (hasPendingRequest(requester.getUniqueId())) {
+        // Only one pending request per requester (Queue Mode)
+        if (getApprovalMode() == ApprovalMode.QUEUE && hasPendingRequest(requester.getUniqueId())) {
             plugin.msg().send(requester, "expansion_exists");
             return false;
         }
@@ -112,7 +207,12 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // 5) Submit
+        // 5) Branch: QUEUE vs INSTANT
+        if (getApprovalMode() == ApprovalMode.INSTANT) {
+            return processInstantApproval(requester, plot, currentRadius, newRadius, cost, type);
+        }
+
+        // QUEUE Mode: Submit pending request
         ExpansionRequest request = new ExpansionRequest(
                 requester.getUniqueId(),
                 plot.getOwner(),
@@ -136,11 +236,72 @@ public class ExpansionRequestManager {
         return true;
     }
 
+    private boolean processInstantApproval(Player requester,
+                                          Plot plot,
+                                          int currentRadius,
+                                          int newRadius,
+                                          double cost,
+                                          CurrencyType type) {
+
+        // Charge now (instant mode)
+        if (!plugin.eco().withdraw(requester, cost, type)) {
+            plugin.msg().send(requester, "expansion_payment_failed");
+            return false;
+        }
+
+        // Apply expansion (re-check overlap one last time)
+        Plot oldPlot = plugin.store().getPlot(plot.getOwner(), plot.getPlotId());
+        if (oldPlot == null) {
+            refund(Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type);
+            plugin.msg().send(requester, "transaction_failed"); // falls back if missing
+            return false;
+        }
+
+        if (!applyExpansion(oldPlot, newRadius)) {
+            refund(Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type);
+            plugin.msg().send(requester, "expansion_overlap_fail");
+            return false;
+        }
+
+        // Build a request object for audit (not stored as pending)
+        ExpansionRequest req = new ExpansionRequest(
+                requester.getUniqueId(),
+                plot.getOwner(),
+                plot.getPlotId(),
+                requester.getWorld().getName(),
+                currentRadius,
+                newRadius,
+                cost
+        );
+        req.approve(); // status + decision timestamp
+
+        // Notify player: approved by AUTO
+        String actor = plugin.gui().tr(requester, "expansion_actor_auto", "Auto");
+        plugin.msg().send(requester, "expansion_approved", Map.of("PLAYER", actor));
+        plugin.effects().playConfirm(requester);
+
+        // Audit trail
+        if (isAuditEnabled()) {
+            recordDecision(req, ActorType.AUTO, null, "Instant Mode");
+        }
+
+        // Optional admin notice
+        notifyAdminsAutoApproved(requester, req);
+
+        return true;
+    }
+
     /* -----------------------------
      * APPROVE / DENY
      * ----------------------------- */
 
+    /** Backwards compatible: admin GUI may call without actor. */
     public boolean approveRequest(ExpansionRequest req) {
+        return approveRequest(req, null);
+    }
+
+    /** Preferred: pass the admin UUID for clean audit. */
+    public boolean approveRequest(ExpansionRequest req, UUID adminActor) {
         if (req == null) return false;
 
         // Must still be pending to approve
@@ -157,7 +318,6 @@ public class ExpansionRequestManager {
         Player p = requester.getPlayer();
         if (p != null) {
             if (!plugin.eco().withdraw(p, req.getCost(), type)) {
-                // Payment failed: remove request, don't “deny” with admin messaging.
                 removeRequest(req);
                 plugin.msg().send(p, "expansion_payment_failed");
                 return false;
@@ -170,7 +330,6 @@ public class ExpansionRequestManager {
                     return false;
                 }
             } else {
-                // No offline charging supported
                 removeRequest(req);
                 return false;
             }
@@ -188,8 +347,8 @@ public class ExpansionRequestManager {
         if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
             refund(requester, p, req.getCost(), type);
 
-            // Keep semantics: denial due to overlap/rules (this *is* a real deny)
-            denyRequest(req);
+            // Keep semantics: denial due to overlap/rules
+            denyRequest(req, adminActor);
             plugin.getLogger().warning("Expansion approval failed (overlap or invalid bounds) for " + req.getRequester());
             return false;
         }
@@ -205,10 +364,22 @@ public class ExpansionRequestManager {
             plugin.msg().send(p, "expansion_approved", Map.of("PLAYER", actor));
             plugin.effects().playConfirm(p);
         }
+
+        // 6) Audit
+        if (isAuditEnabled()) {
+            recordDecision(req, ActorType.ADMIN, adminActor, "");
+        }
+
         return true;
     }
 
+    /** Backwards compatible: admin GUI may call without actor. */
     public boolean denyRequest(ExpansionRequest req) {
+        return denyRequest(req, null);
+    }
+
+    /** Preferred: pass the admin UUID for clean audit. */
+    public boolean denyRequest(ExpansionRequest req, UUID adminActor) {
         if (req == null) return false;
 
         req.deny();
@@ -225,6 +396,12 @@ public class ExpansionRequestManager {
 
         activeRequests.remove(req.getRequester());
         setDirty(true);
+
+        // Audit
+        if (isAuditEnabled()) {
+            recordDecision(req, ActorType.ADMIN, adminActor, "");
+        }
+
         return true;
     }
 
@@ -321,6 +498,163 @@ public class ExpansionRequestManager {
         return true;
     }
 
+    // --- MODE + AUDIT CONFIG ---
+
+    private ApprovalMode getApprovalMode() {
+        FileConfiguration c = plugin.cfg().raw();
+
+        // Preferred: expansions.approval.mode
+        String mode = c.getString("expansions.approval.mode", "").trim();
+        if (!mode.isEmpty()) {
+            try {
+                return ApprovalMode.valueOf(mode.toUpperCase(Locale.ROOT));
+            } catch (Throwable ignored) { }
+        }
+
+        // Legacy fallbacks (in case you used older naming)
+        String mode2 = c.getString("expansions.approval_mode", "").trim();
+        if (!mode2.isEmpty()) {
+            try {
+                return ApprovalMode.valueOf(mode2.toUpperCase(Locale.ROOT));
+            } catch (Throwable ignored) { }
+        }
+
+        boolean legacyInstant =
+                c.getBoolean("expansions.instant_mode", false)
+                        || c.getBoolean("expansions.instant_mode.enabled", false)
+                        || c.getBoolean("expansions.auto_approve", false)
+                        || c.getBoolean("expansions.auto_approve.enabled", false);
+
+        return legacyInstant ? ApprovalMode.INSTANT : ApprovalMode.QUEUE;
+    }
+
+    private boolean isAuditEnabled() {
+        FileConfiguration c = plugin.cfg().raw();
+        if (c.contains("expansions.audit.enabled")) {
+            return c.getBoolean("expansions.audit.enabled", true);
+        }
+        // Sensible default: if INSTANT mode is on and audit isn't defined, enable it.
+        return getApprovalMode() == ApprovalMode.INSTANT;
+    }
+
+    private int auditMaxEntries() {
+        return Math.max(25, plugin.cfg().raw().getInt("expansions.audit.max_entries", 250));
+    }
+
+    private long auditKeepMinutes() {
+        return Math.max(0L, plugin.cfg().raw().getLong("expansions.audit.keep_recent_minutes", 10080L));
+    }
+
+    private boolean auditSaveToFile() {
+        return plugin.cfg().raw().getBoolean("expansions.audit.save_to_file", true);
+    }
+
+    private boolean auditLogToConsole() {
+        return plugin.cfg().raw().getBoolean("expansions.audit.log_to_console", true);
+    }
+
+    private boolean notifyAdminsOnAuto() {
+        return plugin.cfg().raw().getBoolean("expansions.approval.notify_admins", true);
+    }
+
+    private String notifyPermission() {
+        return plugin.cfg().raw().getString("expansions.approval.notify_permission", "aegis.admin");
+    }
+
+    private void recordDecision(ExpansionRequest req, ActorType actorType, UUID actor, String note) {
+        if (req == null) return;
+
+        pruneHistory();
+
+        String key = safeHistoryKey(req.getRequester(), req.getPlotId(), req.getTimestamp());
+        DecisionRecord record = new DecisionRecord(
+                key,
+                req.getRequester(),
+                req.getPlotOwner(),
+                req.getPlotId(),
+                req.getWorldName(),
+                req.getCurrentRadius(),
+                req.getRequestedRadius(),
+                req.getCost(),
+                req.getTimestamp(),
+                req.getDecisionTimestamp() > 0 ? req.getDecisionTimestamp() : System.currentTimeMillis(),
+                req.getStatus(),
+                actorType,
+                actor,
+                note
+        );
+
+        history.addLast(record);
+
+        // enforce size cap
+        while (history.size() > auditMaxEntries()) {
+            history.pollFirst();
+        }
+
+        setDirty(true);
+
+        if (auditLogToConsole()) {
+            plugin.getLogger().info("[Expansions] " + actorType + " " + record.getStatus()
+                    + " requester=" + record.getRequester()
+                    + " plotId=" + record.getPlotId()
+                    + " world=" + record.getWorldName()
+                    + " radius " + record.getCurrentRadius() + " -> " + record.getRequestedRadius()
+                    + " cost=" + record.getCost()
+                    + (note == null || note.isBlank() ? "" : " note=" + note));
+        }
+    }
+
+    private void pruneHistory() {
+        if (!isAuditEnabled()) return;
+
+        long keepMin = auditKeepMinutes();
+        if (keepMin <= 0) return;
+
+        long cutoff = System.currentTimeMillis() - (keepMin * 60_000L);
+
+        // remove old entries (oldest first)
+        while (true) {
+            DecisionRecord first = history.peekFirst();
+            if (first == null) break;
+            long ts = first.getDecisionTimestamp() > 0 ? first.getDecisionTimestamp() : first.getTimestamp();
+            if (ts >= cutoff) break;
+            history.pollFirst();
+        }
+
+        // enforce hard cap too
+        while (history.size() > auditMaxEntries()) {
+            history.pollFirst();
+        }
+    }
+
+    private void notifyAdminsAutoApproved(Player requester, ExpansionRequest req) {
+        if (!notifyAdminsOnAuto()) return;
+
+        String perm = notifyPermission();
+        String requesterName = requester.getName() == null ? "Unknown" : requester.getName();
+
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online == null) continue;
+            if (!online.hasPermission(perm) && !plugin.isAdmin(online)) continue;
+
+            // Suggested key (add later), fallback included:
+            plugin.msg().send(online,
+                    "expansion_auto_admin_notice",
+                    Map.of(
+                            "PLAYER", requesterName,
+                            "WORLD", req.getWorldName() == null ? "" : req.getWorldName(),
+                            "CUR", String.valueOf(req.getCurrentRadius()),
+                            "REQ", String.valueOf(req.getRequestedRadius())
+                    )
+            );
+        }
+    }
+
+    private String safeHistoryKey(UUID requester, UUID plotId, long timestamp) {
+        // YAML-safe key: no colons
+        return String.valueOf(requester) + "_" + String.valueOf(plotId) + "_" + timestamp;
+    }
+
     // --- PERSISTENCE ---
 
     public boolean isDirty() { return isDirty; }
@@ -340,55 +674,131 @@ public class ExpansionRequestManager {
 
         data = YamlConfiguration.loadConfiguration(file);
         activeRequests.clear();
+        history.clear();
 
-        if (!data.isConfigurationSection("requests")) return;
-
-        for (String key : data.getConfigurationSection("requests").getKeys(false)) {
-            try {
-                UUID reqId = UUID.fromString(key);
-                String path = "requests." + key;
-
-                UUID owner = UUID.fromString(Objects.requireNonNull(data.getString(path + ".owner")));
-                UUID plotId = UUID.fromString(Objects.requireNonNull(data.getString(path + ".plotId")));
-                String world = data.getString(path + ".world", "");
-
-                int currentRadius = data.getInt(path + ".currentRadius");
-                int requestedRadius = data.getInt(path + ".requestedRadius");
-                double cost = data.getDouble(path + ".cost");
-
-                long timestamp = data.getLong(path + ".timestamp", System.currentTimeMillis());
-                long decisionTs = data.getLong(path + ".decisionTimestamp", 0L);
-
-                // Backwards compatibility: older files won’t have status
-                String statusStr = data.getString(path + ".status", "PENDING");
-                ExpansionRequest.Status status;
+        // Pending requests
+        if (data.isConfigurationSection("requests")) {
+            for (String key : data.getConfigurationSection("requests").getKeys(false)) {
                 try {
-                    status = ExpansionRequest.Status.valueOf(statusStr.toUpperCase(Locale.ROOT));
-                } catch (Throwable ignored) {
-                    status = ExpansionRequest.Status.PENDING;
+                    UUID reqId = UUID.fromString(key);
+                    String path = "requests." + key;
+
+                    UUID owner = UUID.fromString(Objects.requireNonNull(data.getString(path + ".owner")));
+                    UUID plotId = UUID.fromString(Objects.requireNonNull(data.getString(path + ".plotId")));
+                    String world = data.getString(path + ".world", "");
+
+                    int currentRadius = data.getInt(path + ".currentRadius");
+                    int requestedRadius = data.getInt(path + ".requestedRadius");
+                    double cost = data.getDouble(path + ".cost");
+
+                    long timestamp = data.getLong(path + ".timestamp", System.currentTimeMillis());
+                    long decisionTs = data.getLong(path + ".decisionTimestamp", 0L);
+
+                    // Backwards compatibility: older files won’t have status
+                    String statusStr = data.getString(path + ".status", "PENDING");
+                    ExpansionRequest.Status status;
+                    try {
+                        status = ExpansionRequest.Status.valueOf(statusStr.toUpperCase(Locale.ROOT));
+                    } catch (Throwable ignored) {
+                        status = ExpansionRequest.Status.PENDING;
+                    }
+
+                    ExpansionRequest req = new ExpansionRequest(
+                            reqId,
+                            owner,
+                            plotId,
+                            world,
+                            currentRadius,
+                            requestedRadius,
+                            cost,
+                            timestamp,
+                            status,
+                            decisionTs
+                    );
+
+                    // Only keep pending requests in the active map
+                    if (req.isPending()) {
+                        activeRequests.put(reqId, req);
+                    }
+
+                } catch (Exception ex) {
+                    plugin.getLogger().log(Level.WARNING, "Skipping invalid expansion request entry: " + key, ex);
                 }
-
-                ExpansionRequest req = new ExpansionRequest(
-                        reqId,
-                        owner,
-                        plotId,
-                        world,
-                        currentRadius,
-                        requestedRadius,
-                        cost,
-                        timestamp,
-                        status,
-                        decisionTs
-                );
-
-                // Only keep pending requests in the active map
-                if (req.isPending()) {
-                    activeRequests.put(reqId, req);
-                }
-
-            } catch (Exception ex) {
-                plugin.getLogger().log(Level.WARNING, "Skipping invalid expansion request entry: " + key, ex);
             }
+        }
+
+        // Decision history (optional)
+        if (data.isConfigurationSection("history")) {
+            for (String hKey : data.getConfigurationSection("history").getKeys(false)) {
+                try {
+                    String path = "history." + hKey;
+
+                    UUID requester = UUID.fromString(Objects.requireNonNull(data.getString(path + ".requester")));
+                    UUID owner = UUID.fromString(Objects.requireNonNull(data.getString(path + ".owner")));
+                    UUID plotId = UUID.fromString(Objects.requireNonNull(data.getString(path + ".plotId")));
+
+                    String world = data.getString(path + ".world", "");
+                    int currentRadius = data.getInt(path + ".currentRadius");
+                    int requestedRadius = data.getInt(path + ".requestedRadius");
+                    double cost = data.getDouble(path + ".cost");
+
+                    long timestamp = data.getLong(path + ".timestamp", System.currentTimeMillis());
+                    long decisionTs = data.getLong(path + ".decisionTimestamp", timestamp);
+
+                    String statusStr = data.getString(path + ".status", "PENDING");
+                    ExpansionRequest.Status status;
+                    try {
+                        status = ExpansionRequest.Status.valueOf(statusStr.toUpperCase(Locale.ROOT));
+                    } catch (Throwable ignored) {
+                        status = ExpansionRequest.Status.PENDING;
+                    }
+
+                    String actorTypeStr = data.getString(path + ".actorType", "UNKNOWN");
+                    ActorType actorType;
+                    try {
+                        actorType = ActorType.valueOf(actorTypeStr.toUpperCase(Locale.ROOT));
+                    } catch (Throwable ignored) {
+                        actorType = ActorType.UNKNOWN;
+                    }
+
+                    UUID actor = null;
+                    String actorStr = data.getString(path + ".actor", "");
+                    if (actorStr != null && !actorStr.isBlank()) {
+                        try { actor = UUID.fromString(actorStr); } catch (Throwable ignored) { }
+                    }
+
+                    String note = data.getString(path + ".note", "");
+
+                    DecisionRecord rec = new DecisionRecord(
+                            hKey,
+                            requester,
+                            owner,
+                            plotId,
+                            world,
+                            currentRadius,
+                            requestedRadius,
+                            cost,
+                            timestamp,
+                            decisionTs,
+                            status,
+                            actorType,
+                            actor,
+                            note
+                    );
+
+                    history.addLast(rec);
+
+                } catch (Exception ex) {
+                    plugin.getLogger().log(Level.WARNING, "Skipping invalid expansion history entry: " + hKey, ex);
+                }
+            }
+        }
+
+        // prune + cap
+        if (isAuditEnabled()) {
+            pruneHistory();
+        } else {
+            history.clear();
         }
 
         setDirty(false);
@@ -399,8 +809,8 @@ public class ExpansionRequestManager {
 
         data.set("requests", null);
 
+        // Persist pending requests only
         for (ExpansionRequest req : activeRequests.values()) {
-            // Only persist pending requests (keeps file clean)
             if (!req.isPending()) continue;
 
             String path = "requests." + req.getRequester();
@@ -416,6 +826,36 @@ public class ExpansionRequestManager {
             data.set(path + ".timestamp", req.getTimestamp());
             data.set(path + ".status", req.getStatus().name());
             data.set(path + ".decisionTimestamp", req.getDecisionTimestamp());
+        }
+
+        // Persist audit history (optional)
+        if (isAuditEnabled() && auditSaveToFile()) {
+            data.set("history", null);
+
+            // Write oldest -> newest
+            for (DecisionRecord rec : history) {
+                String path = "history." + rec.getKey();
+
+                data.set(path + ".requester", rec.getRequester().toString());
+                data.set(path + ".owner", rec.getPlotOwner().toString());
+                data.set(path + ".plotId", rec.getPlotId().toString());
+                data.set(path + ".world", rec.getWorldName());
+
+                data.set(path + ".currentRadius", rec.getCurrentRadius());
+                data.set(path + ".requestedRadius", rec.getRequestedRadius());
+                data.set(path + ".cost", rec.getCost());
+
+                data.set(path + ".timestamp", rec.getTimestamp());
+                data.set(path + ".status", rec.getStatus().name());
+                data.set(path + ".decisionTimestamp", rec.getDecisionTimestamp());
+
+                data.set(path + ".actorType", rec.getActorType().name());
+                data.set(path + ".actor", rec.getActor() == null ? "" : rec.getActor().toString());
+                data.set(path + ".note", rec.getNote());
+            }
+        } else {
+            // Keep file clean if audit disabled
+            data.set("history", null);
         }
 
         try {

@@ -1,15 +1,15 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: guis.yml
-# Updated: 2026-01-13
+# Updated: 2026-01-15
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
 # -------------------------------------------------
 # Core Nav / Common Buttons
 # -------------------------------------------------
-menu_title: '&b⚔ AegisGuard Menu'
+menu_title: '&bâš" AegisGuard Menu'
 
-button_back: '&e⟵ Return'
+button_back: '&eâŸµ Return'
 back_lore:
 - '&7Return to the prior page.'
 
@@ -17,33 +17,38 @@ button_back_menu: '&fReturn to Menu'
 back_menu_lore:
 - '&7Return to the main index.'
 
-button_exit: '&c✖ Depart'
+button_exit: '&câœ– Depart'
 button_exit_lore:
 - '&7Close this sacred scroll.'
 exit_lore:
 - '&7Close this sacred scroll.'
 
 button_prev_page: '&fPrior Page'
+prev_page_lore:
+- '&7Proceed to the prior page.'
+
 button_next_page: '&fNext Page'
+next_page_lore:
+- '&7Proceed to the next page.'
 
 button_back_admin: '&fReturn (Admin)'
 
 # -------------------------------------------------
 # Player Menu (Main GUI)
 # -------------------------------------------------
-button_info: '&bℹ Tidings'
+button_info: '&bâ„¹ Tidings'
 info_lore:
 - '&7Read lore, guidance, and counsel.'
 
-plot_status_button_title: '&d📜 Plot Status'
+plot_status_button_title: '&dðŸ"œ Plot Status'
 plot_status_button_lore:
 - '&7Behold thy holding and its marks.'
 
-visit_gui_title: '&a🧭 Travel'
+visit_gui_title: '&aðŸ§­ Travel'
 visit_button_lore:
 - '&7Visit holdings and travel swiftly.'
 
-button_claim_land: '&a🛡 Claim Land'
+button_claim_land: '&aðŸ›¡ Claim Land'
 claim_land_lore:
 - '&7Choose two points with thy wand first.'
 claim_land_ready_lore:
@@ -51,31 +56,31 @@ claim_land_ready_lore:
 - ' '
 - '&eClick to confirm.'
 
-button_plot_flags: '&6⚙ Wards'
+button_plot_flags: '&6âš™ Wards'
 plot_flags_lore:
 - '&7Govern the wards of this holding.'
 plot_flags_locked_lore:
 - '&cThou may not govern wards here.'
 
-button_roles: '&e👥 Roles'
+button_roles: '&eðŸ'¥ Roles'
 roles_lore:
 - '&7Grant roles and duties unto others.'
 roles_locked_lore:
 - '&cThou may not govern roles here.'
 
-level_gui_title: '&a📈 Leveling'
+level_gui_title: '&aðŸ"ˆ Leveling'
 level_button_lore:
 - '&7Raise thy holding in renown and boon.'
 
-zone_gui_title: '&b🏗 Zoning'
+zone_gui_title: '&bðŸ— Zoning'
 zone_button_lore:
 - '&7Make sub-zones and rentable chambers.'
 
-biome_gui_title: '&d🌿 Biomes'
+biome_gui_title: '&dðŸŒ¿ Biomes'
 biome_button_lore:
 - '&7Change the breath of the land.'
 
-button_market: '&6💰 Market'
+button_market: '&6ðŸ'° Market'
 market_lore:
 - '&7Buy and sell goods of the domain.'
 
@@ -83,30 +88,30 @@ button_expand: '&dRequest Expansion'
 expand_lore:
 - '&7Petition for more land.'
 
-button_auction: '&c🔥 Auctions'
+button_auction: '&cðŸ"¥ Auctions'
 auction_lore:
 - '&7Bid upon holdings and listings.'
 
-button_player_settings: '&e⚙ Settings'
+button_player_settings: '&eâš™ Settings'
 player_settings_lore:
 - '&7Personal preferences and tongue.'
 
-admin_menu_title: '&c🛠 Admin Menu'
+admin_menu_title: '&cðŸ›  Admin Menu'
 admin_menu_lore:
 - '&7Operator Access Only'
 
 # -------------------------------------------------
 # ClaimBlocks Exchange (Player Menu Button)
 # -------------------------------------------------
-button_claimblocks_exchange: '&a💱 Ægnung-Bloc Býting'
+button_claimblocks_exchange: '&aðŸ'± Ã†gnung-Bloc BÃ½ting'
 claimblocks_exchange_lore:
-- '&7Bycga oþþe sell Ægnung-Bloc mid feoh.'
+- '&7Bycga oÃ¾Ã¾e sell Ã†gnung-Bloc mid feoh.'
 - ' '
 - '&eClic to open.'
 
-button_claimblocks_exchange_disabled: '&7💱 Ægnung-Bloc Býting'
+button_claimblocks_exchange_disabled: '&7ðŸ'± Ã†gnung-Bloc BÃ½ting'
 claimblocks_exchange_disabled_lore:
-- '&7Þes dǣl is nū unlǣt.'
+- '&7Ãžes dÇ£l is nÅ« unlÇ£t.'
 - '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
 # =========================================================
@@ -114,8 +119,8 @@ claimblocks_exchange_disabled_lore:
 # =========================================================
 
 # GUI title (new + legacy key; GUI prefers *_gui_title, falls back to *_title)
-claimblocks_exchange_gui_title: '&8Ægnung-Bloc Býting'
-claimblocks_exchange_title: '&8Ægnung-Bloc Býting'
+claimblocks_exchange_gui_title: '&8Ã†gnung-Bloc BÃ½ting'
+claimblocks_exchange_title: '&8Ã†gnung-Bloc BÃ½ting'
 
 # Filler/background
 claimblocks_exchange_filler_name: ' '
@@ -126,12 +131,12 @@ claimblocks_exchange_sell_label: 'SELLAN'
 
 # Mode button lore (PERM placeholder)
 claimblocks_exchange_buy_lore:
-- '&7Bycga Ægnung-Bloc mid feoh.'
-- '&8Behȳfð: &f{PERM}'
+- '&7Bycga Ã†gnung-Bloc mid feoh.'
+- '&8BehÈ³fÃ°: &f{PERM}'
 
 claimblocks_exchange_sell_lore:
-- '&7Sell Ægnung-Bloc for feoh.'
-- '&8Mæg þurfan: &f{PERM}'
+- '&7Sell Ã†gnung-Bloc for feoh.'
+- '&8MÃ¦g Ã¾urfan: &f{PERM}'
 
 # +/- button titles (these are read from the lang pack)
 claimblocks_exchange_minus_100_title: '&c-100'
@@ -143,113 +148,171 @@ claimblocks_exchange_plus_100_title: '&a+100'
 
 # +/- button lore
 claimblocks_exchange_minus_lore:
-- '&7Lǣssa þa rīme.'
+- '&7LÇ£ssa Ã¾a rÄ«me.'
 
 claimblocks_exchange_plus_lore:
-- '&7Māra þa rīme.'
+- '&7MÄra Ã¾a rÄ«me.'
 
 # Enabled state labels
-claimblocks_exchange_state_yes: '&aGēa'
-claimblocks_exchange_state_no: '&cNǣ'
+claimblocks_exchange_state_yes: '&aGÄ"a'
+claimblocks_exchange_state_no: '&cNÇ£'
 
 # Quote card title
-claimblocks_exchange_quote_title: '&b&lBýting Rǣd'
+claimblocks_exchange_quote_title: '&b&lBÃ½ting RÇ£d'
 
 # Info lines (placeholders MUST match GUI)
-claimblocks_exchange_line_enabled: '&7Býting Gelǣded: {STATE}'
-claimblocks_exchange_line_money: '&7Þīn Feoh: &e{MONEY}'
-claimblocks_exchange_line_blocks: '&7Ægnung-Bloc: &f{AVAILABLE} &8tō handa'
+claimblocks_exchange_line_enabled: '&7BÃ½ting GelÇ£ded: {STATE}'
+claimblocks_exchange_line_money: '&7ÃžÄ«n Feoh: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7Ã†gnung-Bloc: &f{AVAILABLE} &8tÅ handa'
 claimblocks_exchange_line_totals: '&8Summa: &7{TOTAL}  &8Spend: &7{SPENT}'
 claimblocks_exchange_spacer: ' '
 
 # BUY quote lines (placeholders: AMOUNT, UNIT, SUBTOTAL, FEE, TOTAL)
-claimblocks_exchange_line_buy_amount: '&aBycgan Rīme: &f{AMOUNT}'
-claimblocks_exchange_line_unit: '&7Ēnprīs: &e{UNIT}'
+claimblocks_exchange_line_buy_amount: '&aBycgan RÄ«me: &f{AMOUNT}'
+claimblocks_exchange_line_unit: '&7Ä'nprÄ«s: &e{UNIT}'
 claimblocks_exchange_line_subtotal: '&7Under-sum: &e{SUBTOTAL}'
 claimblocks_exchange_line_fee: '&7Gafol: &6{FEE}'
 claimblocks_exchange_line_total_cost: '&aEall Cost: &e{TOTAL}'
 
 # SELL quote lines (placeholders: AMOUNT, UNIT, GROSS, FEE, PAYOUT)
-claimblocks_exchange_line_sell_amount: '&eSellan Rīme: &f{AMOUNT}'
-claimblocks_exchange_line_gross: '&7Brūt: &e{GROSS}'
-claimblocks_exchange_line_payout: '&aŪtfeoh: &e{PAYOUT}'
+claimblocks_exchange_line_sell_amount: '&eSellan RÄ«me: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7BrÅ«t: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aÅªtfeoh: &e{PAYOUT}'
 
 # Confirm / Disabled
 claimblocks_exchange_confirm_title: '&a&lGEWISSIA'
 claimblocks_exchange_confirm_lore:
-- '&7Clic to gelǣstan þis býting.'
-- '&8Shift-clic ne bið gehȳred.'
+- '&7Clic to gelÇ£stan Ã¾is bÃ½ting.'
+- '&8Shift-clic ne biÃ° gehÈ³red.'
 
 claimblocks_exchange_confirm_disabled_title: '&c&lFORBODEN'
 claimblocks_exchange_confirm_disabled_lore:
 - '&7Set: &fclaim_blocks.exchange.enabled: true'
-- '&8Shift-clic ne bið gehȳred.'
+- '&8Shift-clic ne biÃ° gehÈ³red.'
 
 # Close
-claimblocks_exchange_close_title: '&cBELȲC'
+claimblocks_exchange_close_title: '&cBELÈ²C'
 claimblocks_exchange_close_lore:
-- '&7Hweorf tō þīnum fǣrum.'
+- '&7Hweorf tÅ Ã¾Ä«num fÇ£rum.'
 
 # -------------------------------------------------
-# Existing Expansion / Admin / Other GUI Strings (kept)
+# Expansion GUI (Player-facing)
 # -------------------------------------------------
-button_view_requests_admin: '&cReview Petitions (Admin)'
-auction_button_back: '&e⟵ Return to Auctions'
-market_button_back: '&e⟵ Return to Market'
-realestate_button_back: '&e⟵ Return to Estates'
-domain_market_button_back: '&e⟵ Return to Domain Market'
-biome_button_back: '&e⟵ Return to Plot Settings'
-biome_button_exit: '&c✖ Close the Biome Changer'
-expansion_button_back: '&e⟵ Return to Previous Menu'
-expansion_gui_title: '&d§lLand Expansion Petition'
-expansion_admin_title: '&6&lPending &e&lPetitions &d&l⚖'
-expansion_none_title: '&cNo Petitions'
-expansion_none_lore:
-- '&7The subjects are content.'
-expansion_locked_lore:
-- '&cThou must stand within'
-- '&cthine own land to petition.'
+expansion_gui_title: '&dLand Expansion Petition'
+
+# Tier buttons (names kept from original)
 expansion_tier1_name: '&aYeoman''s Grant'
 expansion_tier2_name: '&eKnight''s Fee'
 expansion_tier3_name: '&fBaron''s Estate'
 expansion_tier4_name: '&6Duke''s Domain'
 expansion_tier5_name: '&bRoyal Charter'
 
+# Tier lore
+expansion_tier1_lore:
+- '&7Petition for a modest grant.'
+- '&7Increase reach by &a+5&7 blocks.'
+- ' '
+- '&eClick to submit petition'
+
+expansion_tier2_lore:
+- '&7Petition for a knight''s fee.'
+- '&7Increase reach by &a+10&7 blocks.'
+- ' '
+- '&eClick to submit petition'
+
+expansion_tier3_lore:
+- '&7Petition for a baron''s estate.'
+- '&7Increase reach by &a+20&7 blocks.'
+- ' '
+- '&eClick to submit petition'
+
+expansion_tier4_lore:
+- '&7Petition for a ducal domain.'
+- '&7Increase reach by &a+35&7 blocks.'
+- ' '
+- '&eClick to submit petition'
+
+expansion_tier5_lore:
+- '&7Petition for a royal charter.'
+- '&7Increase reach by &a+50&7 blocks.'
+- ' '
+- '&eClick to submit petition'
+
 # -------------------------------------------------
-# Plot Flags (kept)
+# Expansion Admin GUI
+# -------------------------------------------------
+expansion_admin_title: '&6&lBiding Petitions'
+
+button_view_requests_admin: '&bBehold Petitions'
+view_requests_admin_lore:
+- '&7Review all biding expansion petitions.'
+- ' '
+- '&eClick to open steward queue'
+
+# View toggle button
+expansion_admin_view_toggle: '&bBeholdment: &fAll Records'
+expansion_admin_view_toggle_lore:
+- '&7Toggle betwixt queue and chronicle.'
+- '&7Useful for auditing self-wrought grants.'
+- ' '
+- '&eClick to switch beholding.'
+
+# Empty states
+expansion_none_title: '&cNo Biding Petitions'
+expansion_none_lore:
+- '&7There be no petitions'
+- '&7awaiting judgment.'
+
+expansion_locked_lore:
+- '&cThou must stand within'
+- '&cthine own land to petition.'
+
+# -------------------------------------------------
+# Existing GUI Buttons (kept)
+# -------------------------------------------------
+auction_button_back: '&eâŸµ Return to Auctions'
+market_button_back: '&eâŸµ Return to Market'
+realestate_button_back: '&eâŸµ Return to Estates'
+domain_market_button_back: '&eâŸµ Return to Domain Market'
+biome_button_back: '&eâŸµ Return to Plot Settings'
+biome_button_exit: '&câœ– Close the Biome Changer'
+expansion_button_back: '&eâŸµ Return to Previous Menu'
+
+# -------------------------------------------------
+# Plot Flags
 # -------------------------------------------------
 plot_flags_title: '&9&lWards of Thy Holding'
 label_free: '&aFree'
 
-button_pvp_on: '&a⚔ PvP Ward: Raised'
-button_pvp_off: '&c⚔ PvP Ward: Lowered'
-button_tnt_on: '&a💥 TNT Ward: Raised'
-button_tnt_off: '&c💥 TNT Ward: Lowered'
-button_fire_on: '&a🔥 Fire Ward: Raised'
-button_fire_off: '&c🔥 Fire Ward: Lowered'
-button_mobs_on: '&a☠ Mob Ward: Raised'
-button_mobs_off: '&c☠ Mob Ward: Lowered'
-button_entry_on: '&a🚪 Entry Ward: Raised'
-button_entry_off: '&c🚪 Entry Ward: Lowered'
-button_safe_on: '&a🛡 Safe Zone: Sanctified'
-button_safe_off: '&c🛡 Safe Zone: Unbound'
-button_containers_on: '&a📦 Chests: Sealed'
-button_containers_off: '&c📦 Chests: Unsealed'
-button_piston_on: '&a🔩 Pistons: Bound'
-button_piston_off: '&c🔩 Pistons: Unbound'
-button_farm_on: '&a🌾 Farming: Guarded'
-button_farm_off: '&c🌾 Farming: Unguarded'
-button_animals_on: '&a🐄 Beasts: Guarded'
-button_animals_off: '&c🐄 Beasts: Unguarded'
-button_redstone_on: '&a🔴 Redstone: Bound'
-button_redstone_off: '&c🔴 Redstone: Unbound'
-button_vehicles_on: '&a🛶 Vehicles: Bound'
-button_vehicles_off: '&c🛶 Vehicles: Unbound'
-button_shop_on: '&a💎 Shop Interact: Granted'
-button_shop_off: '&c💎 Shop Interact: Withheld'
-button_fly_on: '&a🪽 Flight: Granted'
-button_fly_off: '&c🪽 Flight: Withheld'
-button_cosmetics: '&b✨ Adornments'
+button_pvp_on: '&aâš" PvP Ward: Raised'
+button_pvp_off: '&câš" PvP Ward: Lowered'
+button_tnt_on: '&aðŸ'¥ TNT Ward: Raised'
+button_tnt_off: '&cðŸ'¥ TNT Ward: Lowered'
+button_fire_on: '&aðŸ"¥ Fire Ward: Raised'
+button_fire_off: '&cðŸ"¥ Fire Ward: Lowered'
+button_mobs_on: '&aâ˜  Mob Ward: Raised'
+button_mobs_off: '&câ˜  Mob Ward: Lowered'
+button_entry_on: '&aðŸšª Entry Ward: Raised'
+button_entry_off: '&cðŸšª Entry Ward: Lowered'
+button_safe_on: '&aðŸ›¡ Safe Zone: Sanctified'
+button_safe_off: '&cðŸ›¡ Safe Zone: Unbound'
+button_containers_on: '&aðŸ"¦ Chests: Sealed'
+button_containers_off: '&cðŸ"¦ Chests: Unsealed'
+button_piston_on: '&aðŸ"© Pistons: Bound'
+button_piston_off: '&cðŸ"© Pistons: Unbound'
+button_farm_on: '&aðŸŒ¾ Farming: Guarded'
+button_farm_off: '&cðŸŒ¾ Farming: Unguarded'
+button_animals_on: '&aðŸ„ Beasts: Guarded'
+button_animals_off: '&cðŸ„ Beasts: Unguarded'
+button_redstone_on: '&aðŸ"´ Redstone: Bound'
+button_redstone_off: '&cðŸ"´ Redstone: Unbound'
+button_vehicles_on: '&aðŸ›¶ Vehicles: Bound'
+button_vehicles_off: '&cðŸ›¶ Vehicles: Unbound'
+button_shop_on: '&aðŸ'Ž Shop Interact: Granted'
+button_shop_off: '&cðŸ'Ž Shop Interact: Withheld'
+button_fly_on: '&aðŸª½ Flight: Granted'
+button_fly_off: '&cðŸª½ Flight: Withheld'
+button_cosmetics: '&bâœ¨ Adornments'
 
 pvp_toggle_lore:
 - '&7When raised, no blade may bite'

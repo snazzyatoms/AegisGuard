@@ -28,6 +28,8 @@ import java.util.UUID;
  * - Cost is charged on approval in ExpansionRequestManager (not at submit),
  *   so the GUI labels it as "Cost Due".
  * - Pagination prevents silent truncation beyond 45 requests.
+ * - Optional audit view: when Instant/Auto-Approval mode is enabled,
+ *   admins can toggle into a history view to see what was auto-approved.
  */
 public class ExpansionRequestAdminGUI {
 
@@ -40,14 +42,17 @@ public class ExpansionRequestAdminGUI {
 
     public static class ExpansionAdminHolder implements InventoryHolder {
         private final int page;
+        private final boolean showAll;
         private final List<UUID> requesterIds;
 
-        public ExpansionAdminHolder(List<UUID> requesterIds, int page) {
+        public ExpansionAdminHolder(List<UUID> requesterIds, int page, boolean showAll) {
             this.requesterIds = requesterIds;
             this.page = page;
+            this.showAll = showAll;
         }
 
         public int getPage() { return page; }
+        public boolean isShowAll() { return showAll; }
         public List<UUID> getRequesterIds() { return requesterIds; }
 
         @Override
@@ -59,6 +64,14 @@ public class ExpansionRequestAdminGUI {
     }
 
     public void open(Player player, int page) {
+        // Default view:
+        // - Queue mode: pending-only
+        // - Instant/Auto mode: show all (so admins can audit auto approvals)
+        boolean defaultShowAll = isInstantOrAutoMode();
+        open(player, page, defaultShowAll);
+    }
+
+    private void open(Player player, int page, boolean showAll) {
         // ✅ Hard admin gate (prevents any accidental access path)
         if (!plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
@@ -73,14 +86,21 @@ public class ExpansionRequestAdminGUI {
             return;
         }
 
-        // Collect + filter pending only (defensive)
+        // Collect requests (defensive)
         List<ExpansionRequest> requests = new ArrayList<>(manager.getActiveRequests());
-        requests.removeIf(r -> r == null || !r.isPending());
+        requests.removeIf(r -> r == null);
 
-        // Oldest first feels best for queues
-        requests.sort(Comparator.comparingLong(ExpansionRequest::getTimestamp));
+        // Filter
+        if (!showAll) {
+            requests.removeIf(r -> !r.isPending());
+            // Oldest first feels best for queues
+            requests.sort(Comparator.comparingLong(ExpansionRequest::getTimestamp));
+        } else {
+            // Newest first feels best for audit/history
+            requests.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        }
 
-        // Extract IDs for holder
+        // Extract IDs for holder (manager lookup is by requester UUID)
         List<UUID> ids = new ArrayList<>();
         for (ExpansionRequest r : requests) ids.add(r.getRequester());
 
@@ -93,25 +113,33 @@ public class ExpansionRequestAdminGUI {
 
         // ✅ Title:
         // 1) Localized base title: expansion_admin_title
-        // 2) Optional paged variant: expansion_admin_title_paged (recommended)
-        //    Fallback stays localized by embedding the baseTitle.
+        // 2) Optional paged variant: expansion_admin_title_paged
+        // 3) Optional mode variant: expansion_admin_title_paged_mode
         String baseTitle = plugin.gui().tr(player, "expansion_admin_title", "&6&lPending Petitions");
+
+        String modeLabel = plugin.gui().tr(
+                player,
+                showAll ? "expansion_admin_view_all" : "expansion_admin_view_pending",
+                showAll ? "&bHistory" : "&eQueue"
+        );
+
         Map<String, String> ph = Map.of(
                 "PAGE", String.valueOf(page + 1),
-                "PAGES", String.valueOf(safePages)
+                "PAGES", String.valueOf(safePages),
+                "MODE", modeLabel
         );
 
         String fullTitle = plugin.gui().title(
                 player,
-                "expansion_admin_title_paged",
-                baseTitle + " &7({PAGE}/{PAGES})",
+                "expansion_admin_title_paged_mode",
+                baseTitle + " &7({PAGE}/{PAGES}) &8- {MODE}",
                 ph
         );
 
         // ✅ Safety: ensure inventory title always renders colors (even if upstream forgot)
         fullTitle = ChatColor.translateAlternateColorCodes('&', fullTitle);
 
-        ExpansionAdminHolder holder = new ExpansionAdminHolder(ids, page);
+        ExpansionAdminHolder holder = new ExpansionAdminHolder(ids, page, showAll);
         Inventory inv = Bukkit.createInventory(holder, 54, fullTitle);
 
         // ✅ Fill all slots for a clean look
@@ -122,11 +150,18 @@ public class ExpansionRequestAdminGUI {
         if (ids.isEmpty()) {
             inv.setItem(22, GUIManager.createItem(
                     Material.BARRIER,
-                    plugin.gui().tr(player, "expansion_none_title", "&cNo Pending Requests"),
-                    plugin.gui().trList(player, "expansion_none_lore", List.of(
-                            "&7There are no active expansion",
-                            "&7requests awaiting review."
-                    ))
+                    plugin.gui().tr(
+                            player,
+                            showAll ? "expansion_none_history_title" : "expansion_none_title",
+                            showAll ? "&7No Recent Requests" : "&cNo Pending Requests"
+                    ),
+                    plugin.gui().trList(
+                            player,
+                            showAll ? "expansion_none_history_lore" : "expansion_none_lore",
+                            showAll
+                                    ? List.of("&7There are no recent expansion", "&7requests to display.")
+                                    : List.of("&7There are no active expansion", "&7requests awaiting review.")
+                    )
             ));
         } else {
             int startIndex = page * REQS_PER_PAGE;
@@ -137,7 +172,8 @@ public class ExpansionRequestAdminGUI {
 
                 UUID requesterId = ids.get(index);
                 ExpansionRequest req = manager.getRequest(requesterId);
-                if (req == null || !req.isPending()) continue;
+                if (req == null) continue;
+                if (!showAll && !req.isPending()) continue;
 
                 OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
                 String name = (requester.getName() != null) ? requester.getName() : "Unknown";
@@ -145,8 +181,11 @@ public class ExpansionRequestAdminGUI {
                 String statusText = plugin.gui().tr(player, req.getStatusLangKey(), "&7Pending");
                 String ageText = formatAge(System.currentTimeMillis() - req.getTimestamp());
                 String costStr = plugin.eco().format(req.getCost(), CurrencyType.VAULT);
-
                 String worldName = safe(req.getWorldName(), "Unknown");
+
+                // --- Audit trail (who/what decided this?) ---
+                String decidedBy = buildDeciderLabel(player, req);
+                String decisionAge = req.isPending() ? "-" : formatAge(System.currentTimeMillis() - req.getDecisionTimestamp());
 
                 Map<String, String> vars = Map.of(
                         "PLAYER", name,
@@ -155,7 +194,9 @@ public class ExpansionRequestAdminGUI {
                         "AGE", ageText,
                         "CUR", String.valueOf(req.getCurrentRadius()),
                         "REQ", String.valueOf(req.getRequestedRadius()),
-                        "COST", costStr
+                        "COST", costStr,
+                        "DECIDER", decidedBy,
+                        "DECISION_AGE", decisionAge
                 );
 
                 // ✅ Uses placeholder-aware GUI gateway (Codex or fallback gets vars applied)
@@ -175,6 +216,8 @@ public class ExpansionRequestAdminGUI {
                                 "&7Age: &f{AGE}",
                                 "&7Radius: &e{CUR} &7→ &a{REQ}",
                                 "&7Cost Due: &6{COST}",
+                                "&7Decided By: &f{DECIDER}",
+                                "&7Decision Age: &f{DECISION_AGE}",
                                 " ",
                                 "&eLeft-click: &7Approve request.",
                                 "&cRight-click: &7Deny request."
@@ -182,11 +225,12 @@ public class ExpansionRequestAdminGUI {
                         vars
                 );
 
-                inv.setItem(slot, GUIManager.createItem(Material.PAPER, itemName, lore));
+                Material icon = materialFor(req);
+                inv.setItem(slot, GUIManager.createItem(icon, itemName, lore));
             }
         }
 
-        // Navigation: Prev / Back / Next
+        // Navigation: Prev / View Toggle / Back / Next
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
                     Material.ARROW,
@@ -194,6 +238,26 @@ public class ExpansionRequestAdminGUI {
                     plugin.gui().trList(player, "prev_page_lore", List.of("&7Go to the previous page."))
             ));
         }
+
+        // View toggle button (slot 48)
+        inv.setItem(48, GUIManager.createItem(
+                Material.COMPASS,
+                plugin.gui().tr(
+                        player,
+                        "expansion_admin_view_toggle",
+                        showAll ? "&bView: &fAll" : "&eView: &fPending"
+                ),
+                plugin.gui().trList(
+                        player,
+                        "expansion_admin_view_toggle_lore",
+                        List.of(
+                                "&7Toggle between queue and history.",
+                                "&7Useful for auditing auto-approvals.",
+                                " ",
+                                "&eClick to switch view."
+                        )
+                )
+        ));
 
         inv.setItem(49, GUIManager.createItem(
                 Material.ARROW,
@@ -232,15 +296,23 @@ public class ExpansionRequestAdminGUI {
 
         int slot = e.getSlot();
         int page = holder.getPage();
+        boolean showAll = holder.isShowAll();
 
         // Nav
         if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page - 1);
+            open(player, page - 1, showAll);
             plugin.effects().playMenuFlip(player);
             return;
         }
         if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page + 1);
+            open(player, page + 1, showAll);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+
+        // View toggle
+        if (slot == 48 && e.getCurrentItem().getType() == Material.COMPASS) {
+            open(player, 0, !showAll);
             plugin.effects().playMenuFlip(player);
             return;
         }
@@ -263,13 +335,25 @@ public class ExpansionRequestAdminGUI {
         ExpansionRequestManager manager = plugin.getExpansionRequestManager();
         ExpansionRequest req = manager.getRequest(requesterId);
 
-        if (req == null || !req.isPending()) {
+        if (req == null) {
             sendSystem(player, "request_expired", "&cThat request has already expired or been handled.");
-            open(player, page);
+            open(player, page, showAll);
             return;
         }
 
         String reqName = safe(Bukkit.getOfflinePlayer(requesterId).getName(), "Unknown");
+
+        // History view: do not allow re-approving or denying handled requests.
+        if (!req.isPending()) {
+            String decidedBy = buildDeciderLabel(player, req);
+            sendSystem(
+                    player,
+                    "expansion_admin_already_handled",
+                    "&eThat request has already been handled. &7(Decided by: " + decidedBy + "&7)"
+            );
+            plugin.effects().playError(player);
+            return;
+        }
 
         if (e.getClick().isLeftClick()) {
             // Approve
@@ -287,7 +371,7 @@ public class ExpansionRequestAdminGUI {
             plugin.effects().playUnclaim(player);
         }
 
-        open(player, page); // Refresh GUI
+        open(player, page, showAll); // Refresh GUI
     }
 
     // --------------------------------
@@ -298,6 +382,56 @@ public class ExpansionRequestAdminGUI {
         // plugin.gui().tr already returns colorized output (but fallback may contain & codes)
         String msg = ChatColor.translateAlternateColorCodes('&', plugin.gui().tr(p, key, fallback));
         p.sendMessage(msg);
+    }
+
+    // --------------------------------
+    // Audit helpers
+    // --------------------------------
+
+    private String buildDeciderLabel(Player viewer, ExpansionRequest req) {
+        if (req == null) return plugin.gui().tr(viewer, "expansion_decided_by_unknown", "&7Unknown");
+        if (req.isPending()) return plugin.gui().tr(viewer, "expansion_decided_by_none", "&7Awaiting review");
+
+        // Auto approval
+        if (req.getDecisionActorType() == ExpansionRequest.DecisionActorType.AUTO) {
+            return plugin.gui().tr(viewer, "expansion_decided_by_auto", "&bAuto");
+        }
+
+        // Admin UUID stored
+        UUID actor = req.getDecisionActor();
+        if (actor != null) {
+            OfflinePlayer p = Bukkit.getOfflinePlayer(actor);
+            String name = (p.getName() != null) ? p.getName() : "Admin";
+            return name;
+        }
+
+        // Console/system
+        if (req.getDecisionActorType() == ExpansionRequest.DecisionActorType.CONSOLE) {
+            return plugin.gui().tr(viewer, "expansion_decided_by_console", "&7Console");
+        }
+
+        return plugin.gui().tr(viewer, "expansion_decided_by_unknown", "&7Unknown");
+    }
+
+    private Material materialFor(ExpansionRequest req) {
+        if (req == null) return Material.PAPER;
+        if (req.isPending()) return Material.PAPER;
+        if (req.isApproved()) return Material.LIME_STAINED_GLASS_PANE;
+        return Material.RED_STAINED_GLASS_PANE;
+    }
+
+    private boolean isInstantOrAutoMode() {
+        // Supports a couple of possible config keys (for backwards compatibility while you iterate naming)
+        String mode = plugin.getConfig().getString(
+                "expansions.approval_mode",
+                plugin.getConfig().getString("expansions.mode", "QUEUE")
+        );
+
+        if (mode != null && mode.equalsIgnoreCase("INSTANT")) return true;
+
+        // boolean style toggles
+        if (plugin.getConfig().getBoolean("expansions.auto_approve.enabled", false)) return true;
+        return plugin.getConfig().getBoolean("expansions.auto_approve", false);
     }
 
     // --------------------------------

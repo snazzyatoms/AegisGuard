@@ -453,6 +453,16 @@ claim_blocks:
 # 📐 LAND EXPANSIONS (REQUESTS)
 # ==============================================================================
 expansions:
+  # Approval mode for expansion requests:
+  # - QUEUE: players submit a request, admins approve/deny in the Admin GUI
+  # - INSTANT: requests are auto-approved immediately (still recorded for audit)
+  approval_mode: QUEUE
+
+  # Optional audit trail controls (used by admin GUI / logs)
+  audit:
+    keep_recent_minutes: 60
+    include_in_admin_gui_history: true
+
   cost_per_block: 10.0
   cost_multiplier: 1.1
   max_radius_global: 200

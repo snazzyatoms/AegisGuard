@@ -155,6 +155,75 @@ expansion_locked_lore:
 expansion_button_back: '&e⟵ Back to Previous Menu'
 
 # ------------------------------------------------------------
+# Claim Snapshots GUI (Player/Admin)
+# ------------------------------------------------------------
+snapshot_gui_title: '&d⧉ Claim Snapshots'
+button_snapshots: '&d⧉ Claim Snapshots'
+snapshots_button_lore:
+  - '&7View and rollback claim snapshots.'
+  - '&7Created before expansions & merges.'
+  - ' '
+  - '&eClick to open'
+
+snapshot_empty_gui:
+  - '&7No snapshots found.'
+  - '&7Snapshots are created before'
+  - '&7expansions and merges.'
+
+snapshot_item_name: '&e{TYPE} &7Snapshot'
+snapshot_item_lore:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &e{TYPE}'
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE}'
+  - '&7Triggered By: &f{ACTOR}'
+  - '&7Radius: &a{RADIUS}'
+  - ' '
+  - '&aLeft-click: &7Rollback to this state'
+  - '&cRight-click: &7Delete snapshot'
+
+snapshot_rollback_success: '&a✔ Claim rolled back successfully.'
+snapshot_rollback_failed: '&c❌ Rollback failed. Claim may no longer exist.'
+snapshot_deleted: '&e✔ Snapshot deleted.'
+snapshot_not_found: '&c❌ Snapshot not found.'
+
+# Admin-specific snapshot keys
+snapshots_admin_title: '&6&lClaim Snapshots &7({PAGE}/{PAGES})'
+snapshots_none_title: '&cNo Snapshots Found'
+snapshots_none_lore:
+  - '&7There are no claim snapshots'
+  - '&7available to review.'
+
+# Expansion admin paged title
+expansion_admin_title_paged: '&6&lPending Requests &7({PAGE}/{PAGES})'
+
+# Queue item (per-request)
+expansion_request_item_name: '&bRequest: &f{PLAYER}'
+expansion_request_item_lore:
+  - '&7World: &f{WORLD}'
+  - '&7Status: {STATUS}'
+  - '&7Age: &f{AGE}'
+  - '{PENDING_LINE}'
+  - '{DECISION_LINE}'
+  - '&7Radius: &e{CUR} &7→ &a{REQ}'
+  - '&7Cost Due: &6{COST}'
+  - '{DECISION_AGE_LINE}'
+  - ' '
+  - '&eLeft-click: &7Approve request.'
+  - '&cRight-click: &7Deny request.'
+
+# Inserted into lore above
+expansion_request_item_lore_pending_line: '&7Pending For: &f{AGE}'
+expansion_request_item_lore_decision_line: '&7Decision: &f{ACTOR}'
+
+# Decider labels
+expansion_decided_by_none: '&7Awaiting review'
+expansion_decided_by_auto: '&bAuto-Approval'
+expansion_decided_by_console: '&7Console'
+expansion_decided_by_unknown: '&7Unknown'
+
+# ------------------------------------------------------------
 # ClaimBlocks Exchange GUI
 # ------------------------------------------------------------
 claimblocks_exchange_gui_title: '&8Claim Block Exchange'

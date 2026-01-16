@@ -38,6 +38,8 @@ import java.util.Map;
  *     button_reload_all_settings / reload_all_settings_lore
  *     button_refresh_language_packs / refresh_language_packs_lore
  *   with backward-compatible fallback to older keys.
+ *
+ * ✅ NEW: Snapshot Admin GUI button (slot 33)
  */
 public class AdminGUI {
 
@@ -129,6 +131,32 @@ public class AdminGUI {
         );
         tagAction(refreshLang, "refresh_lang");
         inv.setItem(32, refreshLang);
+
+        // ✅ NEW: Slot 33: Claim Snapshots (Rollback System)
+        boolean snapshotsEnabled = plugin.getSnapshotManager() != null 
+                && plugin.cfg().raw().getBoolean("snapshots.enabled", true);
+        
+        if (snapshotsEnabled) {
+            inv.setItem(33, GUIManager.createItem(
+                    Material.SPYGLASS,
+                    plugin.gui().tr(player, "button_admin_snapshots", "&d📸 Claim Snapshots"),
+                    plugin.gui().trList(player, "admin_snapshots_lore", List.of(
+                            "&7View and manage claim snapshots.",
+                            "&7Rollback plots to previous states.",
+                            " ",
+                            "&eClick to open snapshot browser."
+                    ))
+            ));
+        } else {
+            inv.setItem(33, GUIManager.createItem(
+                    Material.GRAY_DYE,
+                    plugin.gui().tr(player, "button_admin_snapshots_disabled", "&8📸 Snapshots Disabled"),
+                    plugin.gui().trList(player, "admin_snapshots_disabled_lore", List.of(
+                            "&7Snapshot system is disabled.",
+                            "&7Enable in config.yml under 'snapshots.enabled'"
+                    ))
+            ));
+        }
 
         // --- NAVIGATION ---
         inv.setItem(36, GUIManager.createItem(
@@ -243,6 +271,17 @@ public class AdminGUI {
                         open(player);
                     });
                 });
+            }
+
+            // ✅ NEW: Slot 33 - Open Snapshot Admin GUI
+            case 33 -> {
+                if (plugin.getSnapshotManager() != null && plugin.gui().snapshotAdmin() != null) {
+                    plugin.gui().openSnapshotAdmin(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    sendKey(player, "snapshots_disabled", "&cSnapshots are disabled.");
+                    plugin.effects().playError(player);
+                }
             }
 
             case 36 -> plugin.gui().openMain(player);

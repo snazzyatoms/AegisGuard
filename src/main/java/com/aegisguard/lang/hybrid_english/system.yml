@@ -88,3 +88,12 @@ claim_notify_disabled: '&e✖ Claim entry/exit tidings are now &cDisabled&e.'
 claim_notify_status: '&7Claim entry/exit tidings: {STATE}'
 claim_notify_state_enabled: '&aEnabled'
 claim_notify_state_disabled: '&cDisabled'
+
+# ------------------------------------------------------------
+# Snapshots (Admin tools)
+# Used by: SnapshotAdminGUI
+# ------------------------------------------------------------
+snapshot_not_found: '&cThat snapshot could not be found.'
+snapshot_rollback_success: '&a✔ Snapshot rollback applied.'
+snapshot_rollback_failed: '&cRollback failed. Check console logs.'
+snapshot_deleted: '&eSnapshot deleted.'

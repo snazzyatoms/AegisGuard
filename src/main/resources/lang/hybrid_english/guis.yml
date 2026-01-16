@@ -1,208 +1,59 @@
-# ============================
-# AegisGuard • GUI Language
-# Hybrid English Pack
-# Updated: 2026-01-15
-# ============================
+# ============================================================
+# Expansion Admin GUI (Missing keys added for auto-audit)
+# ============================================================
 
-# ----------------------------
-# Main Menu / Dashboard
-# ----------------------------
-mainmenu_title: '&8AegisGuard'
+# Paged title used by ExpansionRequestAdminGUI
+expansion_admin_title_paged: '&6&lPending Requests &7({PAGE}/{PAGES})'
 
-button_claims: '&a📜 Claims'
-claims_lore:
-  - '&7Manage thy claims and boundaries.'
+# Queue item (per-request)
+expansion_request_item_name: '&bRequest: &f{PLAYER}'
+expansion_request_item_lore:
+  - '&7World: &f{WORLD}'
+  - '&7Status: {STATUS}'
+  - '&7Age: &f{AGE}'
+  - '{PENDING_LINE}'
+  - '{DECISION_LINE}'
+  - '&7Radius: &e{CUR} &7→ &a{REQ}'
+  - '&7Cost Due: &6{COST}'
+  - '{DECISION_AGE_LINE}'
+  - ' '
+  - '&eLeft-click: &7Approve request.'
+  - '&cRight-click: &7Deny request.'
 
-button_plots: '&a🏡 Plots'
-plots_lore:
-  - '&7Manage thy plots and permissions.'
+# These are inserted into the lore above
+expansion_request_item_lore_pending_line: '&7Pending For: &f{AGE}'
+expansion_request_item_lore_decision_line: '&7Decision: &f{ACTOR}'
 
-button_admin: '&c🛡 Admin'
-admin_lore:
-  - '&7Admin controls and world rules.'
+# Decider labels (used by the admin audit display)
+expansion_decided_by_none: '&7Awaiting review'
+expansion_decided_by_auto: '&bAuto-Approval'
+expansion_decided_by_console: '&7Console'
+expansion_decided_by_unknown: '&7Unknown'
 
-button_settings: '&e⚙ Settings'
-settings_lore:
-  - '&7Personal settings and toggles.'
-
-button_close: '&cClose'
-close_lore:
-  - '&7Return to thy adventures.'
-
-# ----------------------------
-# Common Navigation Buttons
-# ----------------------------
-button_back: '&e⟵ Return'
-back_lore:
-- '&7Return to the previous page.'
-
-button_back_menu: '&fReturn to Menu'
-back_menu_lore:
-- '&7Return to the main menu.'
-
-button_exit: '&c✖ Close'
-exit_lore:
-- '&7Close this menu.'
-
-button_prev_page: '&fPrevious Page'
-prev_page_lore:
-- '&7Go to the previous page.'
-
-button_next_page: '&fNext Page'
-next_page_lore:
-- '&7Go to the next page.'
-
-# ----------------------------
-# ClaimBlocks (Player Menu)
-# ----------------------------
-button_claimblocks_ledger: '&b📖 ClaimBlocks Ledger'
-claimblocks_ledger_lore:
-  - '&7View thy ClaimBlocks history and earnings.'
-
-button_claimblocks_exchange: '&a💱 ClaimBlocks Exchange'
-claimblocks_exchange_lore:
-  - '&7Buy or sell ClaimBlocks for coin.'
-  - '&8Buy: &f{BUY_PERM}'
-  - '&8Sell: &f{SELL_PERM}'
-claimblocks_exchange_disabled_lore:
-  - '&cExchange is disabled.'
-  - '&8Enable: &fclaim_blocks.exchange.enabled: true'
+# Make sure this supports placeholders (admin GUI passes {MODE} / {HINT})
+expansion_admin_view_toggle: '&bView: &f{MODE}'
 
 # ============================================================
-# ClaimBlocks Exchange GUI
+# Claim Snapshots Admin GUI
 # ============================================================
-claimblocks_exchange_gui_title: '&8ClaimBlocks Exchange'
 
-claimblocks_exchange_buy_label: 'BUY'
-claimblocks_exchange_sell_label: 'SELL'
+snapshots_admin_title: '&6&lClaim Snapshots &7({PAGE}/{PAGES})'
 
-claimblocks_exchange_buy_lore:
-  - '&7Purchase ClaimBlocks with coin.'
-  - '&8Permission: &f{PERM}'
+snapshots_none_title: '&cNo Snapshots Found'
+snapshots_none_lore:
+  - '&7There are no claim snapshots'
+  - '&7available to review.'
 
-claimblocks_exchange_sell_lore:
-  - '&7Sell ClaimBlocks for coin.'
-  - '&8May require: &f{PERM}'
-
-claimblocks_exchange_minus_lore:
-  - '&7Decrease amount.'
-
-claimblocks_exchange_plus_lore:
-  - '&7Increase amount.'
-
-# Spacer / filler
-claimblocks_exchange_filler_name: ' '
-claimblocks_exchange_spacer: ' '
-
-# Amount button titles
-claimblocks_exchange_minus_100_title: '&c-100'
-claimblocks_exchange_minus_10_title: '&c-10'
-claimblocks_exchange_minus_1_title: '&c-1'
-claimblocks_exchange_plus_1_title: '&a+1'
-claimblocks_exchange_plus_10_title: '&a+10'
-claimblocks_exchange_plus_100_title: '&a+100'
-
-claimblocks_exchange_quote_title: '&b&lExchange Quote'
-
-claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
-claimblocks_exchange_state_yes: '&aYes'
-claimblocks_exchange_state_no: '&cNo'
-
-claimblocks_exchange_line_money: '&7Thy Coin: &e{MONEY}'
-claimblocks_exchange_line_blocks: '&7ClaimBlocks: &f{AVAILABLE} &8available'
-claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
-
-claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
-claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
-
-claimblocks_exchange_line_unit: '&7Unit: &e{UNIT}'
-claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
-claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
-claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
-
-claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
-claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
-
-claimblocks_exchange_confirm_title: '&a&lCONFIRM'
-claimblocks_exchange_confirm_lore:
-  - '&7Click to perform the trade.'
-  - '&8Shift-click is ignored.'
-
-claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
-claimblocks_exchange_confirm_disabled_lore:
-  - '&7Enable: &fclaim_blocks.exchange.enabled: true'
-  - '&8Shift-click is ignored.'
-
-claimblocks_exchange_close_title: '&cClose'
-claimblocks_exchange_close_lore:
-  - '&7Return to thy adventures.'
-
-# ============================================================
-# Expansion GUI (Player-facing)
-# ============================================================
-expansion_gui_title: '&dLand Expansion Request'
-
-# Tier buttons
-expansion_tier1_name: '&aTier I &7(+5)'
-expansion_tier1_lore:
-- '&7Request a small expansion.'
-- '&7Increase radius by &a+5&7.'
-- ' '
-- '&eClick to submit request'
-
-expansion_tier2_name: '&aTier II &7(+10)'
-expansion_tier2_lore:
-- '&7Request a modest expansion.'
-- '&7Increase radius by &a+10&7.'
-- ' '
-- '&eClick to submit request'
-
-expansion_tier3_name: '&aTier III &7(+20)'
-expansion_tier3_lore:
-- '&7Request a major expansion.'
-- '&7Increase radius by &a+20&7.'
-- ' '
-- '&eClick to submit request'
-
-expansion_tier4_name: '&aTier IV &7(+35)'
-expansion_tier4_lore:
-- '&7Request a large expansion.'
-- '&7Increase radius by &a+35&7.'
-- ' '
-- '&eClick to submit request'
-
-expansion_tier5_name: '&aTier V &7(+50)'
-expansion_tier5_lore:
-- '&7Request a massive expansion.'
-- '&7Increase radius by &a+50&7.'
-- ' '
-- '&eClick to submit request'
-
-# ============================================================
-# Expansion Admin GUI
-# ============================================================
-expansion_admin_title: '&6&lPending Requests'
-
-button_view_requests_admin: '&bView Pending Requests'
-view_requests_admin_lore:
-- '&7Review all pending expansion requests.'
-- ' '
-- '&eClick to open admin queue'
-
-# View toggle button
-expansion_admin_view_toggle: '&bView: &fAll'
-expansion_admin_view_toggle_lore:
-- '&7Toggle between queue and history.'
-- '&7Useful for auditing auto-approvals.'
-- ' '
-- '&eClick to switch view.'
-
-# Empty states (already in expansions.yml but repeated here for GUI context)
-expansion_none_title: '&cNo Pending Requests'
-expansion_none_lore:
-- '&7There are no active expansion'
-- '&7requests awaiting review.'
-
-expansion_locked_lore:
-- '&cYou must stand within'
-- '&cyour own land to request expansion.'
+snapshot_item_name: '&bSnapshot: &f{SNAPSHOT_ID}'
+snapshot_item_lore:
+  - '&7Owner: &f{PLOT_OWNER}'
+  - '&7Plot ID: &f{PLOT_ID}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &f{TYPE}'
+  - '&7Age: &f{AGE}'
+  - '&7Radius: &f{RADIUS}'
+  - '&7Reason: &f{REASON}'
+  - '&7Actor: &f{ACTOR}'
+  - ' '
+  - '&eLeft-click: &7Rollback to this snapshot.'
+  - '&cRight-click: &7Delete this snapshot.'

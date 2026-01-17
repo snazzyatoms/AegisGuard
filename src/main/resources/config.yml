@@ -209,6 +209,71 @@ economy:
   refund_on_unclaim: true
   refund_percent: 50.0
 
+  # ----------------------------------------------------------------------------
+  # 💰 FAIR INITIAL PRICING (v1.2.5+)
+  # ----------------------------------------------------------------------------
+  # Revamps pricing so creating a massive initial claim doesn't bypass costs.
+  #
+  # OLD MODEL (flat):
+  #   - Any claim costs $100 regardless of size
+  #   - Players could claim huge areas cheaply, then expansion was expensive
+  #
+  # NEW MODEL (fair):
+  #   - Base cost covers 1 chunk (256 blocks)
+  #   - Extra blocks beyond that chunk = expansion rate per block
+  #
+  # FORMULA:
+  #   totalCost = base_cost + max(0, area - base_area) * expansion_rate_per_block
+  #
+  # EXAMPLES (with defaults below):
+  #   - Claim 256 blocks (1 chunk):   $100 + $0     = $100
+  #   - Claim 512 blocks (2 chunks):  $100 + $2,560 = $2,660
+  #   - Claim 1024 blocks (4 chunks): $100 + $7,680 = $7,780
+  #   - Claim 4096 blocks (1 plot):   $100 + $38,400 = $38,500
+  #
+  # This creates a natural progression where players start small and expand,
+  # rather than grabbing massive territory immediately for cheap.
+  # ----------------------------------------------------------------------------
+  fair_pricing:
+    # Master toggle for the fair pricing system
+    # If false, uses legacy flat claim_cost for all claims
+    enabled: true
+
+    # Base cost covers up to base_area blocks (default: 1 chunk = 256)
+    # This is the minimum you pay for any claim
+    base_cost: 100.0
+
+    # How many blocks the base_cost covers (default: 16x16 = 256 = 1 chunk)
+    # Claims at or under this size pay only base_cost
+    base_area: 256
+
+    # Cost per additional block BEYOND base_area
+    # Uses resize_cost_per_block as default if not set
+    expansion_rate_per_block: 10.0
+
+    # If true: claims smaller than base_area pay proportionally less
+    # If false: any claim pays at least base_cost (recommended)
+    # Example with true: 128 blocks = $50 (half of base_cost)
+    # Example with false: 128 blocks = $100 (full base_cost)
+    scale_base_with_area: false
+
+    # Minimum cost floor (prevents $0 claims if scale_base_with_area is true)
+    minimum_cost: 10.0
+
+    # --------------------------------------------------------------------------
+    # CLAIM BLOCK INTEGRATION (if using claim blocks instead of Vault money)
+    # --------------------------------------------------------------------------
+    # Multiplier for claim blocks when area exceeds base_area
+    # 1.0 = no multiplier (1 block = 1 claim block, as usual)
+    # 1.5 = excess blocks cost 50% more claim blocks
+    # 2.0 = excess blocks cost double claim blocks
+    #
+    # Example with 1.5 multiplier, claiming 1000 blocks:
+    #   Base area: 256 claim blocks
+    #   Extra: (1000 - 256) * 1.5 = 1116 claim blocks
+    #   Total: 256 + 1116 = 1372 claim blocks
+    claimblock_multiplier: 1.0
+
 
 # ==============================================================================
 # 🧱 CLAIMS & PER-WORLD RULES

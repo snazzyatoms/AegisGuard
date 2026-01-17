@@ -9,6 +9,7 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
+import com.aegisguard.economy.ClaimPricingCalculator;  // ✅ NEW: Fair Pricing Calculator
 import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
@@ -82,6 +83,9 @@ public class AegisGuard extends JavaPlugin {
     // Snapshot Manager (1.2.5+) - Rollback system for claims
     private SnapshotManager snapshotManager;
 
+    // ✅ NEW: Fair Pricing Calculator (1.2.6+)
+    private ClaimPricingCalculator pricingCalculator;
+
     /**
      * MessagesUtil now acts as:
      * - playerdata.yml prefs (language choice)
@@ -133,6 +137,14 @@ public class AegisGuard extends JavaPlugin {
 
     // NEW: Snapshot Manager getter
     public SnapshotManager getSnapshotManager() { return snapshotManager; }
+
+    // ✅ NEW: Fair Pricing Calculator getter (1.2.6+)
+    /**
+     * Get the claim pricing calculator for fair initial pricing.
+     * Returns null if fair pricing is disabled or failed to initialize.
+     * @return The pricing calculator instance, or null
+     */
+    public ClaimPricingCalculator getPricingCalculator() { return pricingCalculator; }
 
     /**
      * Legacy access (compat bridge).
@@ -216,6 +228,16 @@ public class AegisGuard extends JavaPlugin {
         // 3.d Vault FIRST (exchange + many GUIs rely on it)
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
+
+        // ✅ 3.d2 NEW: Fair Pricing Calculator (after economy manager)
+        try {
+            this.pricingCalculator = new ClaimPricingCalculator(this);
+            boolean enabled = pricingCalculator.isEnabled();
+            getLogger().info("Fair Pricing Calculator initialized (enabled: " + enabled + ")");
+        } catch (Throwable t) {
+            this.pricingCalculator = null;
+            getLogger().warning("ClaimPricingCalculator failed to initialize: " + t.getMessage());
+        }
 
         // 3.e Claim Block Exchange Service (only meaningful if claim blocks exist)
         if (this.claimBlockManager != null) {
@@ -373,6 +395,7 @@ public class AegisGuard extends JavaPlugin {
         protectionHooks = null;
         claimBlockExchange = null;
         snapshotManager = null;
+        pricingCalculator = null;  // ✅ Cleanup pricing calculator
         instance = null;
 
         getLogger().info("AegisGuard disabled.");
@@ -689,6 +712,16 @@ public class AegisGuard extends JavaPlugin {
             }
         } catch (Throwable t) {
             getLogger().warning("[AegisGuard] CodexEngine reload failed: " + t.getMessage());
+        }
+
+        // ✅ NEW: Reload Fair Pricing Calculator
+        try {
+            if (this.pricingCalculator != null) {
+                this.pricingCalculator.reload();
+                getLogger().info("[AegisGuard] Fair Pricing Calculator reloaded.");
+            }
+        } catch (Throwable t) {
+            getLogger().warning("[AegisGuard] ClaimPricingCalculator reload failed: " + t.getMessage());
         }
 
         runGlobalAsync(() -> {

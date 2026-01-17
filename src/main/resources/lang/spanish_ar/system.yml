@@ -2,7 +2,7 @@
 # AegisGuard v1.2.5 - Codex: Español (AR)
 # File: system.yml
 # Organized split: GUIs / System / Upgrades / Expansions
-# Generated: 2025-12-22 07:14:14Z
+# Generated: 2026-01-17
 # ======================================
 
 prefix: '&8[&bAegisGuard&8]&r '
@@ -182,8 +182,7 @@ admin_lang_refreshing: '&7Actualizando paquetes de idioma...'
 admin_lang_refresh_complete: '&a✔ Paquetes de idioma actualizados.'
 admin_lang_refresh_failed: '&c❌ No se pudieron actualizar los paquetes de idioma. Revisá la consola.'
 economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
-vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de
-  economía.'
+vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de economía.'
 
 # -------------------------------------------------
 # ClaimBlocks Exchange
@@ -220,7 +219,7 @@ help_lines:
 - '&e/aegis farewell [msg] &7- Establecé o borrá un mensaje de despedida.'
 - '&e/aegis market &7- Abrí el mercado de parcelas.'
 - '&e/aegis auction &7- Ver subastas de parcelas activas.'
-- '&e/aegis rename <name> &7- Renombrá tu parcela.'
+- '&e/aegis rename <n> &7- Renombrá tu parcela.'
 - '&e/aegis setdesc <text> &7- Establecé una descripción para tu parcela.'
 - '&e/aegis stuck &7- Teletransportate a un lugar seguro si estás atorado.'
 - '&e/aegis help &7- Ver este menú de ayuda.'
@@ -232,3 +231,14 @@ snapshot_not_found: '&c❌ No se pudo encontrar esa instantánea.'
 snapshot_rollback_success: '&a✔ Restauración de instantánea aplicada con éxito.'
 snapshot_rollback_failed: '&c❌ La restauración falló. Revisá los registros de la consola.'
 snapshot_deleted: '&e✔ Instantánea eliminada.'
+
+# ------------------------------------------------------------
+# Sistema de Precios Justos (v1.2.6+)
+# ------------------------------------------------------------
+claim_cost_breakdown: '&c❌ No podés pagar esta parcela.'
+claim_cannot_afford: '&c❌ Necesitás &6{COST}&c para reclamar esta área.'
+claim_success_vault: '&a✔ ¡Reclamaste &e{AREA}&a bloques por &6{COST}&a!'
+claim_success_blocks_fair: '&a✔ ¡Reclamaste &e{AREA}&a bloques (costo: &6{COST}&a ClaimBlocks)!'
+claim_blocks_not_enough_fair: '&c❌ Necesitás &6{AMOUNT}&c ClaimBlocks más.'
+cost_preview_title: '&b📊 Vista Previa del Costo de Parcela'
+invalid_selection: '&c❌ Selección inválida.'

@@ -34,7 +34,7 @@ softdepend:
 commands:
   aegis:
     description: Main AegisGuard command.
-    usage: /aegis <help|menu|wand|claim|unclaim|resize|merge|setspawn|home|welcome|farewell|notify|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
+    usage: /aegis <help|menu|wand|claim|cost|unclaim|resize|merge|setspawn|home|welcome|farewell|notify|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
     aliases: [ag, guard]
     permission: aegis.use
   aegisadmin:

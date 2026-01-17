@@ -2,7 +2,7 @@
 # AegisGuard v1.2.5 - Codex: Español (MX)
 # File: system.yml
 # Organized split: GUIs / System / Upgrades / Expansions
-# Updated: 2026-01-15
+# Updated: 2026-01-17
 # ======================================
 
 # -------------------------------------------------
@@ -37,7 +37,7 @@ help_lines:
 - '&e/aegis notify &7- Activa/desactiva las notificaciones de entrada/salida.'
 - '&e/aegis market &7- Abre el mercado de parcelas.'
 - '&e/aegis auction &7- Ver subastas de parcelas activas.'
-- '&e/aegis rename <name> &7- Renombra tu parcela.'
+- '&e/aegis rename <n> &7- Renombra tu parcela.'
 - '&e/aegis setdesc <text> &7- Establece una descripción para tu parcela.'
 - '&e/aegis stuck &7- Teletranspórtate a un lugar seguro si estás atorado.'
 - '&e/aegis help &7- Ver este menú de ayuda.'
@@ -156,7 +156,7 @@ plot_banned_entry: '&c⛔ Tienes prohibida la entrada a esta parcela.'
 # -------------------------------------------------
 # Economy / Vault / Payments
 # -------------------------------------------------
-economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
+economy_disabled: '&c❌ La economía está desactivada en este servidor.'
 vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pídele a un admin que instale/configure Vault y un plugin de economía.'
 vault_disabled_here: '&c❌ Los pagos por Vault están desactivados aquí.'
 need_vault: '&c❌ Fondos insuficientes. Necesitas &e${AMOUNT}&c.'
@@ -164,38 +164,32 @@ insufficient_funds: '&c❌ Fondos insuficientes. Necesitas: &e${NEEDED}&c | Tien
 transaction_failed: '&c❌ La transacción falló. Intenta de nuevo en un momento.'
 
 cost_deducted: '&e💰 Cobrado &6${AMOUNT}&e.'
+charged_amount: '&e💰 Cobrado &6${AMOUNT}&e.'
+refunded_amount: '&e💰 Reembolsado &6${AMOUNT}&e.'
 items_deducted: '&e💰 Pagado &6{AMOUNT} {ITEM}&e.'
 vault_refund: '&e💰 Reembolsado &6${AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Reembolsado &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 
-# -------------------------------------------------
-# Upkeep
-# -------------------------------------------------
 upkeep_paid: '&e💰 Pagado &6{AMOUNT}&e por mantenimiento de la parcela.'
 upkeep_failed_warning: '&c⚠ El mantenimiento está pendiente y tu saldo es demasiado bajo.'
 
 # -------------------------------------------------
-# Zones / Biomes
+# Zones / Biomes / Flags
 # -------------------------------------------------
 zone_created: '&a✔ Zona ''{ZONE}'' creada.'
 zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
 zone_rented: '&a✔ {PLAYER} ahora está alquilando ''{ZONE}''.'
 zone_not_rented: '&7La zona está disponible actualmente.'
 zone_evicted: '&eInquilino desalojado de {ZONE}.'
+
 biome_changed: '&a✔ Bioma establecido a {BIOME}.'
 biome_cost_paid: '&e💰 Pagado &6{AMOUNT}&e para cambiar el bioma.'
 
-# -------------------------------------------------
-# Likes
-# -------------------------------------------------
 like_success: '&a✔ Te gustó esta parcela. Me gusta totales: &e{AMOUNT}'
 like_removed: '&eTu me gusta fue eliminado.'
 like_own_plot: '&cError: No puedes dar me gusta a tu propia parcela.'
 like_disabled: '&cLos me gusta están desactivados en este servidor/mundo.'
 
-# -------------------------------------------------
-# Flags / Inheritance Notices
-# -------------------------------------------------
 flag_toggled: '&eActualizado {FLAG}: &f{STATUS}'
 server_zone_forced_flag: '&cEste ajuste está bloqueado por una Zona del Servidor.'
 admin_forced_flag_notice: '&7[Admin] Este flag está forzado en nivel {LEVEL} y no se puede cambiar aquí.'
@@ -353,3 +347,14 @@ snapshot_not_found: '&c❌ No se pudo encontrar esa instantánea.'
 snapshot_rollback_success: '&a✔ Restauración de instantánea aplicada con éxito.'
 snapshot_rollback_failed: '&c❌ La restauración falló. Revisa los registros de la consola.'
 snapshot_deleted: '&e✔ Instantánea eliminada.'
+
+# ------------------------------------------------------------
+# Sistema de Precios Justos (v1.2.6+)
+# ------------------------------------------------------------
+claim_cost_breakdown: '&c❌ No puedes pagar esta parcela.'
+claim_cannot_afford: '&c❌ Necesitas &6{COST}&c para reclamar esta área.'
+claim_success_vault: '&a✔ ¡Reclamaste &e{AREA}&a bloques por &6{COST}&a!'
+claim_success_blocks_fair: '&a✔ ¡Reclamaste &e{AREA}&a bloques (costo: &6{COST}&a ClaimBlocks)!'
+claim_blocks_not_enough_fair: '&c❌ Necesitas &6{AMOUNT}&c ClaimBlocks más.'
+cost_preview_title: '&b📊 Vista Previa del Costo de Parcela'
+invalid_selection: '&c❌ Selección inválida.'

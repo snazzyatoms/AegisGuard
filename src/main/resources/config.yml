@@ -335,6 +335,25 @@ claim_blocks:
       blocks_per_interval: 50
       notify: true
 
+      # Anti-AFK system to prevent idle players from earning blocks
+      anti_afk:
+        # Master toggle for anti-AFK detection
+        enabled: true
+
+        # Minimum active time (in seconds) required during each interval to earn blocks
+        # Example: With 10 min intervals and 300 sec requirement, players must be active
+        # for at least 5 minutes out of every 10 to earn blocks
+        required_activity_seconds: 300
+
+        # Consider player AFK after this many minutes of no activity
+        # Players marked AFK will not earn blocks until they become active again
+        afk_timeout_minutes: 5
+
+        # What counts as "activity" for anti-AFK detection
+        track_movement: true       # Walking, running, flying, swimming
+        track_interactions: true   # Block breaking, placing, interactions
+        track_combat: true         # Attacking entities/players
+
     level_up:
       enabled: true
       per_level: 600

@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.2.5 - Codex: Español (AR)
+# AegisGuard v1.2.6 - Codex: Español (AR)
 # File: system.yml
 # Organized split: GUIs / System / Upgrades / Expansions
 # Generated: 2026-01-17
@@ -187,10 +187,8 @@ vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un adm
 # -------------------------------------------------
 # ClaimBlocks Exchange
 # -------------------------------------------------
-# Recompensas de tiempo de juego / Detección AFK
 claim_blocks_earned_playtime: '&a+{AMOUNT} ClaimBlocks &7ganados por tiempo de juego. &8Total: &f{TOTAL}'
 claim_blocks_afk_warning: '&e⚠ Estuviste inactivo por {MINUTES} minutos. Reanudá la actividad para seguir ganando bloques.'
-
 claimblocks_exchange_disabled: '&cEl intercambio está deshabilitado en config.yml.'
 claimblocks_exchange_success: '&a✔ Intercambio completado: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cNo tenés permiso.'
@@ -246,3 +244,54 @@ claim_success_blocks_fair: '&a✔ ¡Reclamaste &e{AREA}&a bloques (costo: &6{COS
 claim_blocks_not_enough_fair: '&c❌ Necesitás &6{AMOUNT}&c ClaimBlocks más.'
 cost_preview_title: '&b📊 Vista Previa del Costo de Parcela'
 invalid_selection: '&c❌ Selección inválida.'
+
+# ------------------------------------------------------------
+# Sistema de Migración (v1.2.6+)
+# Usado por: /agadmin migrate
+# Marcadores: {SOURCE}, {TOTAL}, {IMPORTED}, {SKIPPED}, {ERRORS}, {DURATION}
+# ------------------------------------------------------------
+migration_starting: '&6Iniciando migración desde &e{SOURCE}&6...'
+migration_dry_run_notice: '&e⚠ MODO PRUEBA - No se van a hacer cambios'
+migration_scanning: '&7Buscando parcelas para importar...'
+migration_found_claims: '&7Se encontraron &f{TOTAL}&7 parcelas para procesar...'
+migration_processing: '&7Procesando... &f{CURRENT}/{TOTAL}'
+migration_complete: '&a✔ ¡Migración completada!'
+migration_imported_count: '&aImportadas con éxito: &f{IMPORTED}'
+migration_skipped_overlap: '&eOmitidas (superposición): &f{SKIPPED}'
+migration_skipped_filtered: '&eOmitidas (filtradas): &f{SKIPPED}'
+migration_skipped_errors: '&cOmitidas (errores): &f{ERRORS}'
+migration_duration: '&7Duración: &f{DURATION}ms'
+migration_errors_logged: '&cOcurrieron {COUNT} errores. Revisá la consola para más detalles.'
+migration_in_progress: '&cYa hay una migración en progreso. Por favor esperá.'
+migration_unknown_source: '&cPlugin de origen desconocido: &f{SOURCE}'
+migration_valid_sources: '&7Opciones válidas: griefprevention (gp), griefdefender (gd), lands'
+migration_no_sources_found: '&7No se detectaron datos de plugins compatibles.'
+migration_sources_detected: '&aDatos detectados de:'
+migration_source_item: '&f  • {SOURCE}'
+migration_confirm_warning: '&e⚠ Advertencia de Migración'
+migration_confirm_about: '&7Estás por importar parcelas de:'
+migration_confirm_source: '&b  {SOURCE}'
+migration_confirm_will_do: '&7Esta acción va a hacer lo siguiente:'
+migration_confirm_action_1: '&f  • Crear nuevas parcelas en AegisGuard'
+migration_confirm_action_2: '&f  • Importar dueños y jugadores de confianza'
+migration_confirm_action_3: '&f  • Omitir áreas superpuestas (a menos que uses --force)'
+migration_confirm_instruction: '&aEjecutá el comando de nuevo con --confirm para continuar:'
+migration_confirm_example: '&7/agadmin migrate import {SOURCE} --confirm'
+migration_help_title: '&6Herramienta de Migración de AegisGuard'
+migration_help_desc: '&7Importar parcelas de otros plugins de protección'
+migration_help_commands: '&bComandos:'
+migration_help_list: '&f  /agadmin migrate list'
+migration_help_list_desc: '&7    Mostrar fuentes de migración detectadas'
+migration_help_preview: '&f  /agadmin migrate preview <fuente>'
+migration_help_preview_desc: '&7    Vista previa de lo que se importaría'
+migration_help_import: '&f  /agadmin migrate import <fuente> [opciones]'
+migration_help_import_desc: '&7    Importar parcelas'
+migration_help_sources: '&bFuentes Soportadas:'
+migration_help_source_gp: '&f  griefprevention (gp) &7- GriefPrevention'
+migration_help_source_gd: '&f  griefdefender (gd)   &7- GriefDefender'
+migration_help_source_lands: '&f  lands                &7- Lands'
+migration_help_options: '&bOpciones:'
+migration_help_opt_force: '&f  --force      &7Importar parcelas superpuestas'
+migration_help_opt_trusted: '&f  --no-trusted &7Omitir jugadores de confianza'
+migration_help_opt_flags: '&f  --no-flags   &7Omitir configuración de flags'
+migration_help_opt_world: '&f  --world=nombre &7Filtrar por mundo'

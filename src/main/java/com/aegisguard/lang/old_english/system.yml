@@ -330,6 +330,10 @@ claim_blocks_enabled: '&a✔ ClaimBlocks are allowed on this realm.'
 claim_blocks_granted: '&a✔ Thou hast been granted &b{AMOUNT}&a ClaimBlocks.'
 claim_blocks_spent: '&e⚠ Thou hast spent &b{AMOUNT}&e ClaimBlocks.'
 
+# Playtime rewards / AFK detection
+claim_blocks_earned_playtime: '&a✔ Thou hast earned &b{AMOUNT}&a ClaimBlocks from thy faithful presence. &7Total: &f{TOTAL}'
+claim_blocks_afk_warning: '&e⚠ Thou hast been idle for {MINUTES} minutes. Resume thy activities to continue earning ClaimBlocks.'
+
 # Balance readouts (chat)
 claim_blocks_balance_header: '&bClaimBlocks Reckoning'
 claim_blocks_balance_line: '&7Total: &f{TOTAL}  &7Spent: &f{SPENT}  &7Available: &f{AVAILABLE}'

@@ -1,7 +1,7 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: system.yml
-# Updated: 2026-01-15
+# Updated: 2026-01-17
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
 # -------------------------------------------------
@@ -163,34 +163,26 @@ items_deducted: '&e💰 Paid &6{AMOUNT} {ITEM}&e.'
 vault_refund: '&e💰 Refunded &6${AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Refunded &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 
-# -------------------------------------------------
-# Upkeep
-# -------------------------------------------------
 upkeep_paid: '&e💰 Paid &6{AMOUNT}&e for claim upkeep.'
 upkeep_failed_warning: '&c⚠ Upkeep is due and thy balance is too low.'
 
 # -------------------------------------------------
-# Zones / Biomes
+# Zones / Biomes / Flags
 # -------------------------------------------------
 zone_created: '&a✔ Zone ''{ZONE}'' created.'
 zone_deleted: '&c✖ Zone ''{ZONE}'' deleted.'
 zone_rented: '&a✔ {PLAYER} is now renting ''{ZONE}''.'
 zone_not_rented: '&7Zone is currently available.'
 zone_evicted: '&eTenant evicted from {ZONE}.'
+
 biome_changed: '&a✔ Biome set to {BIOME}.'
 biome_cost_paid: '&e💰 Paid &6{AMOUNT}&e to change biome.'
 
-# -------------------------------------------------
-# Likes
-# -------------------------------------------------
 like_success: '&a✔ Thou liked this claim. Total likes: &e{AMOUNT}'
 like_removed: '&eThy like has been removed.'
 like_own_plot: '&cError: Thou cannot like thine own claim.'
 like_disabled: '&cLikes are disabled on this server/world.'
 
-# -------------------------------------------------
-# Flags / Inheritance Notices
-# -------------------------------------------------
 flag_toggled: '&eUpdated {FLAG}: &f{STATUS}'
 server_zone_forced_flag: '&cThis setting is locked by a Server Zone.'
 admin_forced_flag_notice: '&7[Admin] This flag is forced at {LEVEL} level and cannot be changed here.'
@@ -290,7 +282,7 @@ travel_system_disabled: '&cTravel system is disabled.'
 # -------------------------------------------------
 # Rename / Description
 # -------------------------------------------------
-usage_rename: '&cUsage: /ag rename <Name>'
+usage_rename: '&cUsage: /ag rename <n>'
 rename_too_long: '&cName is too long (Max {MAX} chars).'
 plot_renamed: '&a✔ Claim renamed to: &r{NAME}'
 usage_setdesc: '&cUsage: /ag setdesc <Description>'
@@ -384,3 +376,14 @@ snapshot_not_found: '&cÞæt gemynd ne wæs fund.'
 snapshot_rollback_success: '&a✔ Gemynd ætbering gelǣsted.'
 snapshot_rollback_failed: '&c❌ Ætbering aswāc. Beseoh console gecȳþnesse.'
 snapshot_deleted: '&e✔ Gemynd fordōn.'
+
+# -------------------------------------------------
+# Fair Pricing System (v1.2.6+)
+# -------------------------------------------------
+claim_cost_breakdown: '&c❌ Þū ne miht āfandian þis clǣm.'
+claim_cannot_afford: '&c❌ Þū behōfest &6{COST}&c tō clǣmienne þis land.'
+claim_success_vault: '&a✔ Clǣmod &e{AREA}&a blocks for &6{COST}&a!'
+claim_success_blocks_fair: '&a✔ Clǣmod &e{AREA}&a blocks (cost: &6{COST}&a ClaimBlocks)!'
+claim_blocks_not_enough_fair: '&c❌ Þū behōfest &6{AMOUNT}&c mā ClaimBlocks.'
+cost_preview_title: '&b📊 Clǣm Cost Foresēawung'
+invalid_selection: '&c❌ Ungelic gecorennesse.'

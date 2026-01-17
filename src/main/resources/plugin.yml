@@ -39,7 +39,7 @@ commands:
     permission: aegis.use
   aegisadmin:
     description: Admin management tools.
-    usage: /aegisadmin <menu|reload|bypass>
+    usage: /aegisadmin <menu|reload|bypass|blocks|migrate>
     aliases: [agadmin, aga]
     permission: aegis.admin
 
@@ -64,6 +64,9 @@ permissions:
 
       # ClaimBlocks earning
       aegis.earn.blocks: true
+
+      # Migration (1.2.6+)
+      aegis.admin.migrate: true
 
   aegis.user:
     description: Recommended permissions for default players.
@@ -137,6 +140,7 @@ permissions:
       aegis.delwarp: true
       aegis.convert: true
       aegis.admin.wand: true
+      aegis.admin.migrate: true
 
       # ClaimBlocks Exchange Admin / bypass
       aegis.claimblocks.exchange.bypass: true
@@ -293,4 +297,9 @@ permissions:
     default: op
   aegis.consume:
     description: Manually dispose of a wand item.
+    default: op
+
+  # --- MIGRATION (1.2.5+) ---
+  aegis.admin.migrate:
+    description: Import claims from other protection plugins (GriefPrevention, GriefDefender, Lands).
     default: op

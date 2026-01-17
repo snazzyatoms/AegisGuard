@@ -25,7 +25,7 @@ import com.aegisguard.language.CodexEngine;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
-import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.6+)
+import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.5+)
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;

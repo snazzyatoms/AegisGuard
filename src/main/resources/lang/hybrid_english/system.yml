@@ -23,8 +23,8 @@ error_generic: '&cAn error hath occurred. Check console logs.'
 claim_enter_exit_notify_usage: '&eUsage: &f/aegis notify'
 claim_enter_exit_notify_server_disabled: '&cClaim entry/exit tidings are disabled server-wide.'
 claim_enter_exit_notify_toggle_not_allowed: '&cThy server hath forbidden players from toggling these tidings.'
-claim_enter_exit_notify_enabled: '&a✔ Claim entry/exit tidings are now &aEnabled&a.'
-claim_enter_exit_notify_disabled: '&e✔ Claim entry/exit tidings are now &cDisabled&e.'
+claim_enter_exit_notify_enabled: '&a✓ Claim entry/exit tidings are now &aEnabled&a.'
+claim_enter_exit_notify_disabled: '&e✓ Claim entry/exit tidings are now &cDisabled&e.'
 claim_enter_exit_notify_status: '&7Claim entry/exit tidings: &f{STATE}&7.'
 claim_enter_exit_notify_state_enabled: '&aEnabled'
 claim_enter_exit_notify_state_disabled: '&cDisabled'
@@ -60,7 +60,7 @@ blocks_ledger_line: '&8• &7{DATE} &8| &f{AMOUNT} &8| &7{REASON}'
 #  - {REASON}
 #
 claimblocks_exchange_disabled: '&cThis exchange is disabled in config.yml.'
-claimblocks_exchange_success: '&a✔ Trade complete: &f{MESSAGE}'
+claimblocks_exchange_success: '&a✓ Trade complete: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cThou hast not permission to use the exchange.'
 claimblocks_exchange_vault_unavailable: '&cVault economy is unavailable.'
 claimblocks_exchange_world_blocked: '&cExchange is not allowed in this world.'
@@ -83,7 +83,7 @@ first_claim_limit_exceeded: '&cThou hast reached thy first-claim limit: &f{LIMIT
 claim_notify_usage: '&eUsage: &f/aegis notify'
 claim_notify_server_disabled: '&cClaim entry/exit tidings are disabled server-wide.'
 claim_notify_toggle_not_allowed: '&cThis server forbiddeth players from toggling claim tidings.'
-claim_notify_enabled: '&a✔ Claim entry/exit tidings are now &aEnabled&a.'
+claim_notify_enabled: '&a✓ Claim entry/exit tidings are now &aEnabled&a.'
 claim_notify_disabled: '&e✖ Claim entry/exit tidings are now &cDisabled&e.'
 claim_notify_status: '&7Claim entry/exit tidings: {STATE}'
 claim_notify_state_enabled: '&aEnabled'
@@ -94,6 +94,17 @@ claim_notify_state_disabled: '&cDisabled'
 # Used by: SnapshotAdminGUI
 # ------------------------------------------------------------
 snapshot_not_found: '&cThat snapshot could not be found.'
-snapshot_rollback_success: '&a✔ Snapshot rollback applied.'
+snapshot_rollback_success: '&a✓ Snapshot rollback applied.'
 snapshot_rollback_failed: '&cRollback failed. Check console logs.'
 snapshot_deleted: '&eSnapshot deleted.'
+
+# ------------------------------------------------------------
+# Fair Pricing System (v1.2.6+)
+# ------------------------------------------------------------
+claim_cost_breakdown: '&c❌ Thou canst not afford this claim.'
+claim_cannot_afford: '&c❌ Thou needest &6{COST}&c to claim this area.'
+claim_success_vault: '&a✓ Claimed &e{AREA}&a blocks for &6{COST}&a!'
+claim_success_blocks_fair: '&a✓ Claimed &e{AREA}&a blocks (cost: &6{COST}&a claim blocks)!'
+claim_blocks_not_enough_fair: '&c❌ Thou needest &6{AMOUNT}&c more ClaimBlocks.'
+cost_preview_title: '&b📊 Claim Cost Preview'
+invalid_selection: '&c❌ Invalid selection.'

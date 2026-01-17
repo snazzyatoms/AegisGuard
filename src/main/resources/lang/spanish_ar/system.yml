@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.2.6 - Codex: Español (AR)
+# AegisGuard v1.2.5 - Codex: Español (AR)
 # File: system.yml
 # Organized split: GUIs / System / Upgrades / Expansions
 # Generated: 2026-01-17
@@ -235,7 +235,7 @@ snapshot_rollback_failed: '&c❌ La restauración falló. Revisá los registros 
 snapshot_deleted: '&e✔ Instantánea eliminada.'
 
 # ------------------------------------------------------------
-# Sistema de Precios Justos (v1.2.6+)
+# Sistema de Precios Justos (v1.2.5+)
 # ------------------------------------------------------------
 claim_cost_breakdown: '&c❌ No podés pagar esta parcela.'
 claim_cannot_afford: '&c❌ Necesitás &6{COST}&c para reclamar esta área.'
@@ -246,7 +246,7 @@ cost_preview_title: '&b📊 Vista Previa del Costo de Parcela'
 invalid_selection: '&c❌ Selección inválida.'
 
 # ------------------------------------------------------------
-# Sistema de Migración (v1.2.6+)
+# Sistema de Migración (v1.2.5+)
 # Usado por: /agadmin migrate
 # Marcadores: {SOURCE}, {TOTAL}, {IMPORTED}, {SKIPPED}, {ERRORS}, {DURATION}
 # ------------------------------------------------------------

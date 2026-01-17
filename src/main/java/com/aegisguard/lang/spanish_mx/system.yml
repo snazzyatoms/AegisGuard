@@ -328,6 +328,10 @@ wand_item_lore:
 # -------------------------------------------------
 # ClaimBlocks Exchange (chat messages)
 # -------------------------------------------------
+# Recompensas de tiempo de juego / Detección AFK
+claim_blocks_earned_playtime: '&a+{AMOUNT} ClaimBlocks &7ganados por tiempo de juego. &8Total: &f{TOTAL}'
+claim_blocks_afk_warning: '&e⚠ Has estado inactivo durante {MINUTES} minutos. Reanuda la actividad para ganar bloques.'
+
 claimblocks_exchange_disabled: '&cEl intercambio está desactivado en config.yml.'
 claimblocks_exchange_success: '&a✔ Intercambio completado: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cNo tienes permiso para usar el intercambio.'

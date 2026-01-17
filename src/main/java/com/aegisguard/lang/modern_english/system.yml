@@ -200,6 +200,10 @@ wand_item_lore:
 # ------------------------------------------------------------
 # ClaimBlocks Exchange (chat messages)
 # ------------------------------------------------------------
+# Playtime rewards / AFK detection
+claim_blocks_earned_playtime: '&a+{AMOUNT} Claim Blocks &7earned from playtime. &8Total: &f{TOTAL}'
+claim_blocks_afk_warning: '&e⚠ You''ve been AFK for {MINUTES} minutes. Resume activity to earn claim blocks.'
+
 claimblocks_exchange_disabled: '&cClaim Block Exchange is disabled in config.yml.'
 claimblocks_exchange_success: '&a✓ Trade complete: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cYou do not have permission to use the exchange.'

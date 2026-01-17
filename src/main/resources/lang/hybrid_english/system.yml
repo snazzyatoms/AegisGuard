@@ -38,6 +38,11 @@ claim_blocks_total: '&7Total ClaimBlocks: &f{TOTAL}&7. Spent: &f{SPENT}&7.'
 claim_blocks_earned: '&a+{AMOUNT} ClaimBlocks &7earned.'
 claim_blocks_spent: '&c-{AMOUNT} ClaimBlocks &7spent.'
 claim_blocks_refunded: '&e+{AMOUNT} ClaimBlocks &7refunded.'
+
+# Playtime rewards / AFK detection
+claim_blocks_earned_playtime: '&a+{AMOUNT} ClaimBlocks &7earned from playtime. &8Total: &f{TOTAL}'
+claim_blocks_afk_warning: '&e⚠ Thou hast been inactive for {MINUTES} minutes. Resume activity to continue earning blocks.'
+
 claim_blocks_daily_cap_reached: '&eDaily ClaimBlocks cap reached. Try again tomorrow.'
 claim_blocks_world_blocked: '&cClaimBlocks are not enabled in this world.'
 claim_blocks_cost_preview: '&7This action would cost &f{COST} &7ClaimBlocks.'

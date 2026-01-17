@@ -4,6 +4,8 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.data.Plot;
+import com.aegisguard.economy.ClaimPricingCalculator;  // ✅ NEW: Fair Pricing Calculator
+import com.aegisguard.economy.CurrencyType;  // ✅ NEW: Currency Type enum
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.TeleportUtil;
 
@@ -43,7 +45,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "rename", "stuck", "setdesc", "merge",
             "consume", "ledger", "blocks",
             // ✅ Added: reload support (Codex + config)
-            "reload", "refresh"
+            "reload", "refresh",
+            // ✅ NEW: cost preview command
+            "cost"
     };
 
     private static final String[] RESIZE_DIRECTIONS = {"north", "south", "east", "west"};
@@ -218,6 +222,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
 
+            // ✅ NEW: /aegis cost - Preview claim cost
+            case "cost" -> handleCostPreview(p);
+
             case "help" -> sendHelp(p);
 
             default -> sendHelp(p);
@@ -268,7 +275,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     }
 
     // --------------------------------------------------
-    // CLAIM (Budget + Starter + External Protection Check)
+    // ✅ UPDATED: CLAIM with Fair Pricing Integration
     // --------------------------------------------------
 
     private void handleClaim(Player p) {
@@ -288,45 +295,218 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         long area = plugin.selection().getSelectionArea(p);
         if (area <= 0) return;
 
-        // If claim blocks are disabled, fall back to normal claim.
-        if (!plugin.cfg().raw().getBoolean("claim_blocks.enabled", true) || plugin.getClaimBlockManager() == null) {
-            plugin.selection().confirmClaim(p);
-            return;
-        }
+        // -------------------------------------------------------
+        // Determine which economy systems are active
+        // -------------------------------------------------------
+        boolean useVault = plugin.cfg().raw().getBoolean("economy.enabled", true)
+                && plugin.cfg().raw().getBoolean("economy.use_vault", true)
+                && plugin.eco() != null
+                && plugin.eco().isVaultEnabled();
 
-        ClaimBlockManager blocks = plugin.getClaimBlockManager();
-        UUID uuid = p.getUniqueId();
+        boolean useClaimBlocks = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)
+                && plugin.getClaimBlockManager() != null;
 
-        if (!blocks.canAfford(uuid, area)) {
-            long missing = area - blocks.getAvailableBlocks(uuid);
-            sendKey(p, "claim_blocks_not_enough",
-                    "&c❌ You need {AMOUNT} more Claim Blocks.",
-                    Map.of("AMOUNT", String.valueOf(missing)));
-            plugin.effects().playError(p);
-            return;
-        }
+        // Get pricing calculator (may be null if disabled)
+        ClaimPricingCalculator pricing = plugin.getPricingCalculator();
 
-        if (!blocks.getOrCreate(uuid).hasClaimedStarter() && !p.hasPermission("aegis.admin.bypass-limits")) {
-            long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000);
-            if (area > maxStarter) {
-                sendKey(p, "claim_blocks_first_claim_limit",
-                        "&c❌ First claim limit: max area &6{MAX}&c.",
-                        Map.of("MAX", String.valueOf(maxStarter)));
+        // -------------------------------------------------------
+        // PATH A: Vault Economy (money-based claiming with fair pricing)
+        // -------------------------------------------------------
+        if (useVault && !useClaimBlocks) {
+            double cost;
+
+            // Use fair pricing if available, otherwise fall back to flat cost
+            if (pricing != null && pricing.isEnabled()) {
+                cost = pricing.calculateClaimCost(area);
+            } else {
+                cost = plugin.cfg().raw().getDouble("economy.claim_cost", 100.0);
+            }
+
+            // Check if player can afford
+            if (!plugin.eco().canAfford(p, cost, CurrencyType.VAULT)) {
+                String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
+
+                // Show breakdown if fair pricing is active
+                if (pricing != null && pricing.isEnabled()) {
+                    ClaimPricingCalculator.CostBreakdown breakdown = pricing.getBreakdown(area);
+                    sendKey(p, "claim_cost_breakdown", "&c❌ Cannot afford this claim.");
+                    sendMsg(p, "&7Area: &e" + area + " blocks");
+                    if (breakdown.hasExtraCost()) {
+                        sendMsg(p, "&7Base (" + breakdown.baseBlocks() + " blocks): &e" +
+                                plugin.eco().format(breakdown.baseCost(), CurrencyType.VAULT));
+                        sendMsg(p, "&7Expansion (" + breakdown.extraBlocks() + " blocks): &e" +
+                                plugin.eco().format(breakdown.extraCost(), CurrencyType.VAULT));
+                    }
+                    sendMsg(p, "&7Total: &c" + formatted);
+                } else {
+                    sendKey(p, "claim_cannot_afford",
+                            "&c❌ You need {COST} to claim this area.",
+                            Map.of("COST", formatted));
+                }
                 plugin.effects().playError(p);
                 return;
             }
+
+            // Withdraw money and confirm claim
+            plugin.eco().withdraw(p, cost, CurrencyType.VAULT);
+            plugin.selection().confirmClaim(p);
+
+            String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
+            sendKey(p, "claim_success_vault",
+                    "&a✔ Claimed &e{AREA}&a blocks for &6{COST}&a!",
+                    Map.of("AREA", String.valueOf(area), "COST", formatted));
+            plugin.effects().playConfirm(p);
+            return;
         }
 
-        plugin.selection().confirmClaim(p);
+        // -------------------------------------------------------
+        // PATH B: Claim Blocks (block-based claiming with optional multiplier)
+        // -------------------------------------------------------
+        if (useClaimBlocks) {
+            ClaimBlockManager blocks = plugin.getClaimBlockManager();
+            UUID uuid = p.getUniqueId();
 
-        Plot at = plugin.store().getPlotAt(p.getLocation());
-        if (at != null && uuid.equals(at.getOwner())) {
-            if (!blocks.getOrCreate(uuid).hasClaimedStarter()) {
-                blocks.setStarterClaimed(uuid, true);
+            // Calculate claim block cost (with optional fair pricing multiplier)
+            long blockCost;
+            if (pricing != null && pricing.isEnabled()) {
+                blockCost = pricing.calculateClaimBlockCost(area);
+            } else {
+                blockCost = area;  // 1:1 ratio
             }
-            blocks.getUsedBlocks(uuid);
+
+            if (!blocks.canAfford(uuid, blockCost)) {
+                long missing = blockCost - blocks.getAvailableBlocks(uuid);
+
+                // Show breakdown if fair pricing adds a multiplier
+                if (pricing != null && pricing.isEnabled() && blockCost > area) {
+                    sendKey(p, "claim_blocks_not_enough_fair",
+                            "&c❌ You need {AMOUNT} more Claim Blocks.",
+                            Map.of("AMOUNT", String.valueOf(missing)));
+                    sendMsg(p, "&7Area: &e" + area + " blocks");
+                    sendMsg(p, "&7Cost (with multiplier): &c" + blockCost + " claim blocks");
+                } else {
+                    sendKey(p, "claim_blocks_not_enough",
+                            "&c❌ You need {AMOUNT} more Claim Blocks.",
+                            Map.of("AMOUNT", String.valueOf(missing)));
+                }
+                plugin.effects().playError(p);
+                return;
+            }
+
+            // First claim limit check
+            if (!blocks.getOrCreate(uuid).hasClaimedStarter() && !p.hasPermission("aegis.admin.bypass-limits")) {
+                long maxStarter = plugin.cfg().raw().getLong("claim_blocks.first_claim_limit.max_area", 1000);
+                if (area > maxStarter) {
+                    sendKey(p, "claim_blocks_first_claim_limit",
+                            "&c❌ First claim limit: max area &6{MAX}&c.",
+                            Map.of("MAX", String.valueOf(maxStarter)));
+                    plugin.effects().playError(p);
+                    return;
+                }
+            }
+
+            // Confirm the claim
+            plugin.selection().confirmClaim(p);
+
+            Plot at = plugin.store().getPlotAt(p.getLocation());
+            if (at != null && uuid.equals(at.getOwner())) {
+                if (!blocks.getOrCreate(uuid).hasClaimedStarter()) {
+                    blocks.setStarterClaimed(uuid, true);
+                }
+                blocks.getUsedBlocks(uuid);
+            }
+
+            // Show success with cost info if multiplier was applied
+            if (pricing != null && pricing.isEnabled() && blockCost > area) {
+                sendKey(p, "claim_success_blocks_fair",
+                        "&a✔ Claimed &e{AREA}&a blocks (cost: &6{COST}&a claim blocks)!",
+                        Map.of("AREA", String.valueOf(area), "COST", String.valueOf(blockCost)));
+            }
+            return;
         }
+
+        // -------------------------------------------------------
+        // PATH C: No economy system (free claiming)
+        // -------------------------------------------------------
+        plugin.selection().confirmClaim(p);
     }
+
+    // --------------------------------------------------
+    // ✅ NEW: Cost Preview Command (/ag cost)
+    // --------------------------------------------------
+
+    private void handleCostPreview(Player p) {
+        if (!plugin.selection().hasSelection(p)) {
+            sendKey(p, "must_select", "&c❌ Select two corners first to preview cost.");
+            return;
+        }
+
+        long area = plugin.selection().getSelectionArea(p);
+        if (area <= 0) {
+            sendKey(p, "invalid_selection", "&cInvalid selection.");
+            return;
+        }
+
+        ClaimPricingCalculator pricing = plugin.getPricingCalculator();
+
+        sendMsg(p, "&8&m--------------------------");
+        sendKey(p, "cost_preview_title", "&6&l📊 Claim Cost Preview");
+        sendMsg(p, "&8&m--------------------------");
+        sendMsg(p, "&7Selection Area: &e" + area + " blocks");
+
+        // Show fair pricing breakdown if enabled
+        if (pricing != null && pricing.isEnabled()) {
+            ClaimPricingCalculator.CostBreakdown breakdown = pricing.getBreakdown(area);
+
+            sendMsg(p, "&7Base Area: &a" + breakdown.baseBlocks() + " blocks");
+            if (breakdown.hasExtraCost()) {
+                sendMsg(p, "&7Expansion Area: &c" + breakdown.extraBlocks() + " blocks");
+            }
+            sendMsg(p, "&8&m--------------------------");
+
+            // Vault money cost
+            if (plugin.eco() != null && plugin.eco().isVaultEnabled()) {
+                String baseCostStr = plugin.eco().format(breakdown.baseCost(), CurrencyType.VAULT);
+                sendMsg(p, "&7Base Cost: &a" + baseCostStr);
+
+                if (breakdown.hasExtraCost()) {
+                    String extraCostStr = plugin.eco().format(breakdown.extraCost(), CurrencyType.VAULT);
+                    sendMsg(p, "&7Expansion Cost: &c" + extraCostStr);
+                }
+
+                String totalCostStr = plugin.eco().format(breakdown.totalCost(), CurrencyType.VAULT);
+                sendMsg(p, "&6Total Cost: &e&l" + totalCostStr);
+            }
+        } else {
+            // Legacy flat pricing
+            double cost = plugin.cfg().raw().getDouble("economy.claim_cost", 100.0);
+            if (plugin.eco() != null && plugin.eco().isVaultEnabled()) {
+                String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
+                sendMsg(p, "&7Flat Cost: &e" + formatted);
+            }
+        }
+
+        // Claim blocks cost
+        if (plugin.getClaimBlockManager() != null) {
+            long blockCost;
+            if (pricing != null && pricing.isEnabled()) {
+                blockCost = pricing.calculateClaimBlockCost(area);
+            } else {
+                blockCost = area;
+            }
+            sendMsg(p, "&7Claim Blocks: &b" + blockCost);
+            if (blockCost > area) {
+                sendMsg(p, "&8(Multiplier applied for large claim)");
+            }
+        }
+
+        sendMsg(p, "&8&m--------------------------");
+        plugin.effects().playConfirm(p);
+    }
+
+    // --------------------------------------------------
+    // Protection Check Helpers
+    // --------------------------------------------------
 
     private boolean isSelectionProtectedElsewhere(Player p) {
         try {
@@ -368,8 +548,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             String world = a.getWorld().getName();
 
             try {
-                Method area = mgr.getClass().getMethod("isAreaProtectedElsewhere", String.class, int.class, int.class, int.class, int.class);
-                Object result = area.invoke(mgr, world, x1, z1, x2, z2);
+                Method areaMethod = mgr.getClass().getMethod("isAreaProtectedElsewhere", String.class, int.class, int.class, int.class, int.class);
+                Object result = areaMethod.invoke(mgr, world, x1, z1, x2, z2);
                 return result instanceof Boolean bb && bb;
             } catch (Throwable ignored) {
                 try {
@@ -545,7 +725,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 2) {
-            sendKey(p, "usage_rename", "&cUsage: /ag rename <Name>");
+            sendKey(p, "usage_rename", "&cUsage: /ag rename <n>");
             return;
         }
 
@@ -664,6 +844,32 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendKey(p, "invalid_direction", "&cInvalid direction. Use: &f{DIRS}",
                     Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
             return;
+        }
+
+        // ✅ Optional: Show expansion cost preview if fair pricing is enabled
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot != null && plot.getOwner().equals(p.getUniqueId())) {
+            ClaimPricingCalculator pricing = plugin.getPricingCalculator();
+
+            if (pricing != null && pricing.isEnabled() && plugin.eco() != null && plugin.eco().isVaultEnabled()) {
+                // Calculate additional blocks based on direction
+                long currentWidth = Math.abs(plot.getX2() - plot.getX1()) + 1;
+                long currentLength = Math.abs(plot.getZ2() - plot.getZ1()) + 1;
+                long additionalBlocks;
+
+                if (direction.equals("north") || direction.equals("south")) {
+                    additionalBlocks = currentWidth * amount;
+                } else {
+                    additionalBlocks = currentLength * amount;
+                }
+
+                double expansionCost = pricing.calculateExpansionCost(additionalBlocks);
+
+                if (expansionCost > 0) {
+                    String formatted = plugin.eco().format(expansionCost, CurrencyType.VAULT);
+                    sendMsg(p, "&7Expansion cost: &e" + formatted + " &7for &e" + additionalBlocks + " &7blocks");
+                }
+            }
         }
 
         plugin.selection().resizePlot(p, direction, amount);
@@ -885,7 +1091,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plugin.store().savePlot(plot);
             plugin.store().setDirty(true);
 
-            String formatted = plugin.eco().format(price, com.aegisguard.economy.CurrencyType.VAULT);
+            String formatted = plugin.eco().format(price, CurrencyType.VAULT);
 
             sendKey(p, "market-for-sale", "&a✔ Claim listed for &6{PRICE}&a.",
                     Map.of("PRICE", formatted));

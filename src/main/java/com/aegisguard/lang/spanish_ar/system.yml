@@ -187,6 +187,10 @@ vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un adm
 # -------------------------------------------------
 # ClaimBlocks Exchange
 # -------------------------------------------------
+# Recompensas de tiempo de juego / Detección AFK
+claim_blocks_earned_playtime: '&a+{AMOUNT} ClaimBlocks &7ganados por tiempo de juego. &8Total: &f{TOTAL}'
+claim_blocks_afk_warning: '&e⚠ Estuviste inactivo por {MINUTES} minutos. Reanudá la actividad para seguir ganando bloques.'
+
 claimblocks_exchange_disabled: '&cEl intercambio está deshabilitado en config.yml.'
 claimblocks_exchange_success: '&a✔ Intercambio completado: &f{MESSAGE}'
 claimblocks_exchange_no_permission: '&cNo tenés permiso.'

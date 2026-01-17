@@ -9,7 +9,7 @@ import com.aegisguard.config.AGConfig;
 import com.aegisguard.data.IDataStore;
 import com.aegisguard.data.SQLDataStore;
 import com.aegisguard.data.YMLDataStore;
-import com.aegisguard.economy.ClaimPricingCalculator;  // ✅ NEW: Fair Pricing Calculator
+import com.aegisguard.economy.ClaimPricingCalculator;
 import com.aegisguard.economy.EconomyManager;
 import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
@@ -25,6 +25,7 @@ import com.aegisguard.language.CodexEngine;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
+import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.6+)
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;
@@ -83,8 +84,11 @@ public class AegisGuard extends JavaPlugin {
     // Snapshot Manager (1.2.5+) - Rollback system for claims
     private SnapshotManager snapshotManager;
 
-    // ✅ NEW: Fair Pricing Calculator (1.2.6+)
+    // Fair Pricing Calculator (1.2.6+)
     private ClaimPricingCalculator pricingCalculator;
+
+    // ✅ NEW: Migration Manager (1.2.6+) - Import claims from other plugins
+    private MigrationManager migrationManager;
 
     /**
      * MessagesUtil now acts as:
@@ -131,20 +135,28 @@ public class AegisGuard extends JavaPlugin {
 
     public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
 
-    // NEW: Exchange service getter
+    // Exchange service getter
     public ClaimBlockExchangeService exchange() { return claimBlockExchange; }
     public ClaimBlockExchangeService getClaimBlockExchangeService() { return claimBlockExchange; }
 
-    // NEW: Snapshot Manager getter
+    // Snapshot Manager getter
     public SnapshotManager getSnapshotManager() { return snapshotManager; }
 
-    // ✅ NEW: Fair Pricing Calculator getter (1.2.6+)
+    // Fair Pricing Calculator getter (1.2.6+)
     /**
      * Get the claim pricing calculator for fair initial pricing.
      * Returns null if fair pricing is disabled or failed to initialize.
      * @return The pricing calculator instance, or null
      */
     public ClaimPricingCalculator getPricingCalculator() { return pricingCalculator; }
+
+    // ✅ NEW: Migration Manager getter (1.2.6+)
+    /**
+     * Get the migration manager for importing claims from other protection plugins.
+     * Supports GriefPrevention, GriefDefender, and Lands.
+     * @return The migration manager instance
+     */
+    public MigrationManager getMigrationManager() { return migrationManager; }
 
     /**
      * Legacy access (compat bridge).
@@ -229,7 +241,7 @@ public class AegisGuard extends JavaPlugin {
         this.vault = new VaultHook(this);
         this.ecoManager = new EconomyManager(this);
 
-        // ✅ 3.d2 NEW: Fair Pricing Calculator (after economy manager)
+        // 3.d2 Fair Pricing Calculator (after economy manager)
         try {
             this.pricingCalculator = new ClaimPricingCalculator(this);
             boolean enabled = pricingCalculator.isEnabled();
@@ -265,7 +277,16 @@ public class AegisGuard extends JavaPlugin {
             getLogger().info("Snapshot Manager disabled in config.");
         }
 
-        // 3.g GUI AFTER vault/exchange exist
+        // ✅ 3.g NEW: Migration Manager (always available for admins)
+        try {
+            this.migrationManager = new MigrationManager(this);
+            getLogger().info("Migration Manager initialized (supports GP, GD, Lands).");
+        } catch (Throwable t) {
+            this.migrationManager = null;
+            getLogger().warning("MigrationManager failed to initialize: " + t.getMessage());
+        }
+
+        // 3.h GUI AFTER vault/exchange exist
         this.gui = new GUIManager(this);
 
         this.worldRules = new WorldRulesManager(this);
@@ -395,7 +416,8 @@ public class AegisGuard extends JavaPlugin {
         protectionHooks = null;
         claimBlockExchange = null;
         snapshotManager = null;
-        pricingCalculator = null;  // ✅ Cleanup pricing calculator
+        pricingCalculator = null;
+        migrationManager = null;  // ✅ Cleanup migration manager
         instance = null;
 
         getLogger().info("AegisGuard disabled.");
@@ -714,7 +736,7 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("[AegisGuard] CodexEngine reload failed: " + t.getMessage());
         }
 
-        // ✅ NEW: Reload Fair Pricing Calculator
+        // Reload Fair Pricing Calculator
         try {
             if (this.pricingCalculator != null) {
                 this.pricingCalculator.reload();

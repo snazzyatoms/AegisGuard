@@ -46,7 +46,9 @@ public class ExpansionRequest {
         /** Decision was made by an admin player */
         ADMIN,
         /** Decision was made by auto-approval feature */
-        AUTO
+        AUTO,
+        /** Decision was made via console command */
+        CONSOLE
     }
 
     private final UUID requester;
@@ -72,8 +74,11 @@ public class ExpansionRequest {
     /** Audit trail source for decision. */
     private volatile DecisionBy decisionBy;
 
-    /** UUID of the actor who made the decision (null if SYSTEM/AUTO or pending). */
+    /** UUID of the actor who made the decision (null if SYSTEM/AUTO/CONSOLE or pending). */
     private volatile UUID decisionActor;
+
+    /** Detailed actor type for GUI display */
+    private volatile DecisionActorType decisionActorType;
 
     // --------------------------------------------------
     // Constructors
@@ -100,7 +105,8 @@ public class ExpansionRequest {
                 Status.PENDING,
                 0L,
                 DecisionBy.NONE,
-                null
+                null,
+                DecisionActorType.NONE
         );
     }
 
@@ -132,7 +138,8 @@ public class ExpansionRequest {
                 status,
                 decisionTimestamp,
                 (status == null || status == Status.PENDING) ? DecisionBy.NONE : DecisionBy.ADMIN,
-                null
+                null,
+                (status == null || status == Status.PENDING) ? DecisionActorType.NONE : DecisionActorType.ADMIN
         );
     }
 
@@ -164,13 +171,13 @@ public class ExpansionRequest {
                 status,
                 decisionTimestamp,
                 decisionBy,
-                null
+                null,
+                mapDecisionByToActorType(decisionBy, status)
         );
     }
 
     /**
-     * Full load constructor (recommended for new datastore writes).
-     * Use this when loading from SQL/YML so timestamps, status, decisionBy, and decisionActor are preserved.
+     * Load constructor with DecisionBy and decisionActor (backwards compatible).
      */
     public ExpansionRequest(UUID requester,
                             UUID plotOwner,
@@ -184,6 +191,41 @@ public class ExpansionRequest {
                             long decisionTimestamp,
                             DecisionBy decisionBy,
                             UUID decisionActor) {
+
+        this(
+                requester,
+                plotOwner,
+                plotId,
+                worldName,
+                currentRadius,
+                requestedRadius,
+                cost,
+                timestamp,
+                status,
+                decisionTimestamp,
+                decisionBy,
+                decisionActor,
+                mapDecisionByToActorType(decisionBy, status)
+        );
+    }
+
+    /**
+     * Full load constructor (recommended for new datastore writes).
+     * Use this when loading from SQL/YML so timestamps, status, decisionBy, decisionActor, and decisionActorType are preserved.
+     */
+    public ExpansionRequest(UUID requester,
+                            UUID plotOwner,
+                            UUID plotId,
+                            String worldName,
+                            int currentRadius,
+                            int requestedRadius,
+                            double cost,
+                            long timestamp,
+                            Status status,
+                            long decisionTimestamp,
+                            DecisionBy decisionBy,
+                            UUID decisionActor,
+                            DecisionActorType decisionActorType) {
 
         this.requester = Objects.requireNonNull(requester, "requester");
         this.plotOwner = Objects.requireNonNull(plotOwner, "plotOwner");
@@ -205,10 +247,26 @@ public class ExpansionRequest {
             this.decisionBy = DecisionBy.NONE;
             this.decisionTimestamp = 0L;
             this.decisionActor = null;
+            this.decisionActorType = DecisionActorType.NONE;
         } else {
             this.decisionBy = (decisionBy == null) ? DecisionBy.ADMIN : decisionBy;
             this.decisionActor = decisionActor;
+            this.decisionActorType = (decisionActorType == null) ? mapDecisionByToActorType(this.decisionBy, this.status) : decisionActorType;
         }
+    }
+
+    /**
+     * Helper to map DecisionBy to DecisionActorType for backwards compatibility.
+     */
+    private static DecisionActorType mapDecisionByToActorType(DecisionBy decisionBy, Status status) {
+        if (status == null || status == Status.PENDING || decisionBy == null) {
+            return DecisionActorType.NONE;
+        }
+        return switch (decisionBy) {
+            case NONE -> DecisionActorType.NONE;
+            case AUTO -> DecisionActorType.AUTO;
+            case ADMIN -> DecisionActorType.ADMIN;
+        };
     }
 
     // --------------------------------------------------
@@ -231,7 +289,7 @@ public class ExpansionRequest {
 
     /**
      * Returns the UUID of the actor who made the decision.
-     * May be null if the decision was made by SYSTEM/AUTO or if still pending.
+     * May be null if the decision was made by SYSTEM/AUTO/CONSOLE or if still pending.
      *
      * @return UUID of the decision maker, or null
      */
@@ -241,20 +299,11 @@ public class ExpansionRequest {
 
     /**
      * Returns the type of actor that made the decision.
-     * Maps DecisionBy to DecisionActorType for GUI compatibility.
      *
      * @return DecisionActorType indicating who/what made the decision
      */
     public DecisionActorType getDecisionActorType() {
-        if (status == Status.PENDING || decisionBy == null) {
-            return DecisionActorType.NONE;
-        }
-
-        return switch (decisionBy) {
-            case NONE -> DecisionActorType.NONE;
-            case AUTO -> DecisionActorType.AUTO;
-            case ADMIN -> DecisionActorType.ADMIN;
-        };
+        return decisionActorType;
     }
 
     public boolean isAutoDecision() {
@@ -263,6 +312,10 @@ public class ExpansionRequest {
 
     public boolean isAdminDecision() {
         return decisionBy == DecisionBy.ADMIN;
+    }
+
+    public boolean isConsoleDecision() {
+        return decisionActorType == DecisionActorType.CONSOLE;
     }
 
     /**
@@ -325,7 +378,7 @@ public class ExpansionRequest {
      * If you want AUTO, use approveAuto().
      */
     public synchronized void approve() {
-        setDecision(Status.APPROVED, DecisionBy.ADMIN, null);
+        setDecision(Status.APPROVED, DecisionBy.ADMIN, null, DecisionActorType.ADMIN);
     }
 
     /**
@@ -333,26 +386,26 @@ public class ExpansionRequest {
      * If you want AUTO, use denyAuto().
      */
     public synchronized void deny() {
-        setDecision(Status.DENIED, DecisionBy.ADMIN, null);
+        setDecision(Status.DENIED, DecisionBy.ADMIN, null, DecisionActorType.ADMIN);
     }
 
     /** Auto-approval helper (Instant Mode). */
     public synchronized void approveAuto() {
-        setDecision(Status.APPROVED, DecisionBy.AUTO, null);
+        setDecision(Status.APPROVED, DecisionBy.AUTO, null, DecisionActorType.AUTO);
     }
 
     /** Auto-denial helper (Instant Mode). */
     public synchronized void denyAuto() {
-        setDecision(Status.DENIED, DecisionBy.AUTO, null);
+        setDecision(Status.DENIED, DecisionBy.AUTO, null, DecisionActorType.AUTO);
     }
 
     /** Admin explicit helpers (nice for clarity in manager/GUI code). */
     public synchronized void approveAdmin() {
-        setDecision(Status.APPROVED, DecisionBy.ADMIN, null);
+        setDecision(Status.APPROVED, DecisionBy.ADMIN, null, DecisionActorType.ADMIN);
     }
 
     public synchronized void denyAdmin() {
-        setDecision(Status.DENIED, DecisionBy.ADMIN, null);
+        setDecision(Status.DENIED, DecisionBy.ADMIN, null, DecisionActorType.ADMIN);
     }
 
     /**
@@ -361,7 +414,7 @@ public class ExpansionRequest {
      * @param adminUuid UUID of the admin who approved the request
      */
     public synchronized void approveAdmin(UUID adminUuid) {
-        setDecision(Status.APPROVED, DecisionBy.ADMIN, adminUuid);
+        setDecision(Status.APPROVED, DecisionBy.ADMIN, adminUuid, DecisionActorType.ADMIN);
     }
 
     /**
@@ -370,7 +423,35 @@ public class ExpansionRequest {
      * @param adminUuid UUID of the admin who denied the request
      */
     public synchronized void denyAdmin(UUID adminUuid) {
-        setDecision(Status.DENIED, DecisionBy.ADMIN, adminUuid);
+        setDecision(Status.DENIED, DecisionBy.ADMIN, adminUuid, DecisionActorType.ADMIN);
+    }
+
+    /**
+     * Approve via console command.
+     */
+    public synchronized void approveConsole() {
+        setDecision(Status.APPROVED, DecisionBy.ADMIN, null, DecisionActorType.CONSOLE);
+    }
+
+    /**
+     * Deny via console command.
+     */
+    public synchronized void denyConsole() {
+        setDecision(Status.DENIED, DecisionBy.ADMIN, null, DecisionActorType.CONSOLE);
+    }
+
+    /**
+     * Approve via system (programmatic).
+     */
+    public synchronized void approveSystem() {
+        setDecision(Status.APPROVED, DecisionBy.AUTO, null, DecisionActorType.SYSTEM);
+    }
+
+    /**
+     * Deny via system (programmatic).
+     */
+    public synchronized void denySystem() {
+        setDecision(Status.DENIED, DecisionBy.AUTO, null, DecisionActorType.SYSTEM);
     }
 
     /** Optional helper if admin GUI wants to revert a decision. */
@@ -379,13 +460,15 @@ public class ExpansionRequest {
         this.decisionTimestamp = 0L;
         this.decisionBy = DecisionBy.NONE;
         this.decisionActor = null;
+        this.decisionActorType = DecisionActorType.NONE;
     }
 
-    private void setDecision(Status newStatus, DecisionBy by, UUID actor) {
+    private void setDecision(Status newStatus, DecisionBy by, UUID actor, DecisionActorType actorType) {
         this.status = Objects.requireNonNull(newStatus, "newStatus");
         this.decisionBy = (by == null) ? DecisionBy.ADMIN : by;
         this.decisionTimestamp = System.currentTimeMillis();
         this.decisionActor = actor;
+        this.decisionActorType = (actorType == null) ? DecisionActorType.ADMIN : actorType;
     }
 
     /**
@@ -416,11 +499,12 @@ public class ExpansionRequest {
      * Language-engine friendly key for decision actor type.
      */
     public String getDecisionActorTypeLangKey() {
-        return switch (getDecisionActorType()) {
-            case NONE   -> "expansion_actor_type_none";
-            case SYSTEM -> "expansion_actor_type_system";
-            case ADMIN  -> "expansion_actor_type_admin";
-            case AUTO   -> "expansion_actor_type_auto";
+        return switch (decisionActorType) {
+            case NONE    -> "expansion_actor_type_none";
+            case SYSTEM  -> "expansion_actor_type_system";
+            case ADMIN   -> "expansion_actor_type_admin";
+            case AUTO    -> "expansion_actor_type_auto";
+            case CONSOLE -> "expansion_actor_type_console";
         };
     }
 
@@ -446,6 +530,7 @@ public class ExpansionRequest {
                 ", status=" + status +
                 ", decisionBy=" + decisionBy +
                 ", decisionActor=" + decisionActor +
+                ", decisionActorType=" + decisionActorType +
                 ", timestamp=" + timestamp +
                 ", decisionTimestamp=" + decisionTimestamp +
                 '}';

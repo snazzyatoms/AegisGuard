@@ -26,7 +26,7 @@ public class ClaimBlockExchangeGUI {
 
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
 
-    private static final int SIZE = 45;
+    private static final int SIZE = 54; // Increased to 54 for bottom row with exit button
 
     private static final int SLOT_MODE_BUY = 10;
     private static final int SLOT_MODE_SELL = 12;
@@ -42,6 +42,9 @@ public class ClaimBlockExchangeGUI {
 
     private static final int SLOT_CONFIRM = 31;
     private static final int SLOT_CLOSE = 40;
+    
+    // New exit button slot (bottom row, middle-ish)
+    private static final int SLOT_EXIT = 49;
 
     public ClaimBlockExchangeGUI(AegisGuard plugin, ClaimBlockExchangeService exchange) {
         this.plugin = plugin;
@@ -60,8 +63,8 @@ public class ClaimBlockExchangeGUI {
         if (s.amount <= 0) s.amount = 100;
         if (s.mode == null) s.mode = Mode.BUY;
 
-        // Fully language-pack-driven: fallback = key
-        String title = plugin.gui().title(p, "claimblocks_exchange_gui_title", "claimblocks_exchange_gui_title");
+        // Get title from language pack with color
+        String title = plugin.gui().title(p, "claimblocks_exchange_gui_title", "&8ClaimBlock Exchange");
         Inventory inv = Bukkit.createInventory(new ExchangeHolder(p.getUniqueId()), SIZE, GUIManager.color(title));
 
         render(p, inv, s);
@@ -86,9 +89,11 @@ public class ClaimBlockExchangeGUI {
 
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
 
-        if (slot == SLOT_CLOSE) {
+        // Close button or Exit button
+        if (slot == SLOT_CLOSE || slot == SLOT_EXIT) {
             sessions.remove(p.getUniqueId());
             p.closeInventory();
+            trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
             return;
         }
 
@@ -126,7 +131,7 @@ public class ClaimBlockExchangeGUI {
         if (slot == SLOT_CONFIRM) {
             boolean enabled = isExchangeEnabled();
             if (!enabled) {
-                send(p, "claimblocks_exchange_disabled", "claimblocks_exchange_disabled");
+                send(p, "claimblocks_exchange_disabled", "&cExchange is disabled in config.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
                 return;
             }
@@ -149,15 +154,15 @@ public class ClaimBlockExchangeGUI {
     private void render(Player p, Inventory inv, Session s) {
         inv.clear();
 
-        // Background
-        ItemStack glass = item(Material.BLACK_STAINED_GLASS_PANE, tr(p, "claimblocks_exchange_filler_name"), List.of());
+        // Background filler - NO lore, empty name
+        ItemStack glass = filler(Material.BLACK_STAINED_GLASS_PANE);
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, glass);
 
         boolean enabled = isExchangeEnabled();
 
         // Labels (localized, styled by state)
-        String buyLabel = tr(p, "claimblocks_exchange_buy_label");
-        String sellLabel = tr(p, "claimblocks_exchange_sell_label");
+        String buyLabel = tr(p, "claimblocks_exchange_buy_label", "BUY");
+        String sellLabel = tr(p, "claimblocks_exchange_sell_label", "SELL");
 
         String buyName = (s.mode == Mode.BUY ? "&a&l" : "&7") + buyLabel;
         String sellName = (s.mode == Mode.SELL ? "&e&l" : "&7") + sellLabel;
@@ -168,26 +173,26 @@ public class ClaimBlockExchangeGUI {
         inv.setItem(SLOT_MODE_BUY, item(
                 Material.EMERALD,
                 buyName,
-                trList(p, "claimblocks_exchange_buy_lore", Map.of("PERM", permExchange))
+                trList(p, "claimblocks_exchange_buy_lore", List.of("&7Buy ClaimBlocks with money.", "&8Requires: &f{PERM}"), Map.of("PERM", permExchange))
         ));
 
         inv.setItem(SLOT_MODE_SELL, item(
                 Material.GOLD_INGOT,
                 sellName,
-                trList(p, "claimblocks_exchange_sell_lore", Map.of("PERM", permSell))
+                trList(p, "claimblocks_exchange_sell_lore", List.of("&7Sell ClaimBlocks for money.", "&8Requires: &f{PERM}"), Map.of("PERM", permSell))
         ));
 
         // Amount controls
-        List<String> minusLore = trList(p, "claimblocks_exchange_minus_lore");
-        List<String> plusLore = trList(p, "claimblocks_exchange_plus_lore");
+        List<String> minusLore = trList(p, "claimblocks_exchange_minus_lore", List.of("&7Decrease the amount."));
+        List<String> plusLore = trList(p, "claimblocks_exchange_plus_lore", List.of("&7Increase the amount."));
 
-        inv.setItem(SLOT_MINUS_100, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_100_title"), minusLore));
-        inv.setItem(SLOT_MINUS_10, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_10_title"), minusLore));
-        inv.setItem(SLOT_MINUS_1, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_1_title"), minusLore));
+        inv.setItem(SLOT_MINUS_100, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_100_title", "&c-100"), minusLore));
+        inv.setItem(SLOT_MINUS_10, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_10_title", "&c-10"), minusLore));
+        inv.setItem(SLOT_MINUS_1, item(Material.RED_DYE, tr(p, "claimblocks_exchange_minus_1_title", "&c-1"), minusLore));
 
-        inv.setItem(SLOT_PLUS_1, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_1_title"), plusLore));
-        inv.setItem(SLOT_PLUS_10, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_10_title"), plusLore));
-        inv.setItem(SLOT_PLUS_100, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_100_title"), plusLore));
+        inv.setItem(SLOT_PLUS_1, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_1_title", "&a+1"), plusLore));
+        inv.setItem(SLOT_PLUS_10, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_10_title", "&a+10"), plusLore));
+        inv.setItem(SLOT_PLUS_100, item(Material.LIME_DYE, tr(p, "claimblocks_exchange_plus_100_title", "&a+100"), plusLore));
 
         // Balances
         long avail = (blocks != null) ? blocks.getAvailableBlocks(p.getUniqueId()) : 0;
@@ -200,101 +205,108 @@ public class ClaimBlockExchangeGUI {
         List<String> lore = new ArrayList<>();
 
         String state = enabled
-                ? tr(p, "claimblocks_exchange_state_yes")
-                : tr(p, "claimblocks_exchange_state_no");
+                ? tr(p, "claimblocks_exchange_state_yes", "&aYes")
+                : tr(p, "claimblocks_exchange_state_no", "&cNo");
 
         lore.add(apply(
-                tr(p, "claimblocks_exchange_line_enabled"),
+                tr(p, "claimblocks_exchange_line_enabled", "&7Exchange Enabled: {STATE}"),
                 Map.of("STATE", state)
         ));
 
         lore.add(apply(
-                tr(p, "claimblocks_exchange_line_money"),
+                tr(p, "claimblocks_exchange_line_money", "&7Your Balance: &e{MONEY}"),
                 Map.of("MONEY", money(vaultBal))
         ));
 
         lore.add(apply(
-                tr(p, "claimblocks_exchange_line_blocks"),
+                tr(p, "claimblocks_exchange_line_blocks", "&7ClaimBlocks: &f{AVAILABLE} &8available"),
                 Map.of("AVAILABLE", String.valueOf(avail))
         ));
 
         lore.add(apply(
-                tr(p, "claimblocks_exchange_line_totals"),
+                tr(p, "claimblocks_exchange_line_totals", "&8Total: &7{TOTAL}  &8Spent: &7{SPENT}"),
                 Map.of("TOTAL", String.valueOf(total), "SPENT", String.valueOf(spent))
         ));
 
-        lore.add(tr(p, "claimblocks_exchange_spacer"));
+        lore.add(tr(p, "claimblocks_exchange_spacer", " "));
 
         if (s.mode == Mode.BUY) {
             ClaimBlockExchangeService.Quote q = exchange.quoteBuy(s.amount);
 
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_buy_amount"),
+                    tr(p, "claimblocks_exchange_line_buy_amount", "&aBuy Amount: &f{AMOUNT}"),
                     Map.of("AMOUNT", String.valueOf(q.blocks()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_unit"),
+                    tr(p, "claimblocks_exchange_line_unit", "&7Unit Price: &e{UNIT}"),
                     Map.of("UNIT", money(q.unitPrice()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_subtotal"),
+                    tr(p, "claimblocks_exchange_line_subtotal", "&7Subtotal: &e{SUBTOTAL}"),
                     Map.of("SUBTOTAL", money(q.subtotal()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_fee"),
+                    tr(p, "claimblocks_exchange_line_fee", "&7Fee: &6{FEE}"),
                     Map.of("FEE", money(q.fee()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_total_cost"),
+                    tr(p, "claimblocks_exchange_line_total_cost", "&aTotal Cost: &e{TOTAL}"),
                     Map.of("TOTAL", money(q.totalOrPayout()))
             ));
         } else {
             ClaimBlockExchangeService.Quote q = exchange.quoteSell(s.amount);
 
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_sell_amount"),
+                    tr(p, "claimblocks_exchange_line_sell_amount", "&eSell Amount: &f{AMOUNT}"),
                     Map.of("AMOUNT", String.valueOf(q.blocks()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_unit"),
+                    tr(p, "claimblocks_exchange_line_unit", "&7Unit Price: &e{UNIT}"),
                     Map.of("UNIT", money(q.unitPrice()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_gross"),
+                    tr(p, "claimblocks_exchange_line_gross", "&7Gross: &e{GROSS}"),
                     Map.of("GROSS", money(q.subtotal()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_fee"),
+                    tr(p, "claimblocks_exchange_line_fee", "&7Fee: &6{FEE}"),
                     Map.of("FEE", money(q.fee()))
             ));
             lore.add(apply(
-                    tr(p, "claimblocks_exchange_line_payout"),
+                    tr(p, "claimblocks_exchange_line_payout", "&aPayout: &e{PAYOUT}"),
                     Map.of("PAYOUT", money(q.totalOrPayout()))
             ));
         }
 
         inv.setItem(SLOT_INFO, item(
                 Material.PAPER,
-                tr(p, "claimblocks_exchange_quote_title"),
+                tr(p, "claimblocks_exchange_quote_title", "&b&lExchange Quote"),
                 lore
         ));
 
         // Confirm
         String confirmTitle = enabled
-                ? tr(p, "claimblocks_exchange_confirm_title")
-                : tr(p, "claimblocks_exchange_confirm_disabled_title");
+                ? tr(p, "claimblocks_exchange_confirm_title", "&a&lCONFIRM")
+                : tr(p, "claimblocks_exchange_confirm_disabled_title", "&c&lDISABLED");
 
         List<String> confirmLore = enabled
-                ? trList(p, "claimblocks_exchange_confirm_lore")
-                : trList(p, "claimblocks_exchange_confirm_disabled_lore");
+                ? trList(p, "claimblocks_exchange_confirm_lore", List.of("&7Click to confirm this exchange.", "&8Shift-click is ignored."))
+                : trList(p, "claimblocks_exchange_confirm_disabled_lore", List.of("&7Set: &fclaim_blocks.exchange.enabled: true", "&8Shift-click is ignored."));
 
         inv.setItem(SLOT_CONFIRM, item(Material.ANVIL, confirmTitle, confirmLore));
 
-        // Close
+        // Close button (slot 40)
         inv.setItem(SLOT_CLOSE, item(
                 Material.BARRIER,
-                tr(p, "claimblocks_exchange_close_title"),
-                trList(p, "claimblocks_exchange_close_lore")
+                tr(p, "claimblocks_exchange_close_title", "&cCLOSE"),
+                trList(p, "claimblocks_exchange_close_lore", List.of("&7Return to previous menu."))
+        ));
+        
+        // Exit button (slot 49 - bottom row)
+        inv.setItem(SLOT_EXIT, item(
+                Material.ARROW,
+                tr(p, "button_exit", "&c[X] Exit"),
+                trList(p, "exit_lore", List.of("&7Close this menu."))
         ));
     }
 
@@ -331,47 +343,47 @@ public class ClaimBlockExchangeGUI {
     private void handleResult(Player p, ClaimBlockExchangeService.Result res) {
         switch (res.type()) {
             case OK -> {
-                send(p, "claimblocks_exchange_success", "claimblocks_exchange_success",
+                send(p, "claimblocks_exchange_success", "&a[OK] Exchange complete: &f{MESSAGE}",
                         Map.of("MESSAGE", safe(res.message())));
                 trySound(p, Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.25f);
             }
             case NO_PERMISSION -> {
-                send(p, "claimblocks_exchange_no_permission", "claimblocks_exchange_no_permission");
+                send(p, "claimblocks_exchange_no_permission", "&cYou do not have permission to use the exchange.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case VAULT_UNAVAILABLE -> {
-                send(p, "claimblocks_exchange_vault_unavailable", "claimblocks_exchange_vault_unavailable");
+                send(p, "claimblocks_exchange_vault_unavailable", "&cVault economy is not available.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case WORLD_BLOCKED -> {
-                send(p, "claimblocks_exchange_world_blocked", "claimblocks_exchange_world_blocked");
+                send(p, "claimblocks_exchange_world_blocked", "&cExchange is not allowed in this world.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
             case COOLDOWN -> {
-                send(p, "claimblocks_exchange_cooldown", "claimblocks_exchange_cooldown",
+                send(p, "claimblocks_exchange_cooldown", "&eCooldown: wait &6{SECONDS}s&e.",
                         Map.of("SECONDS", String.valueOf(res.longA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             case DAILY_CAP -> {
-                send(p, "claimblocks_exchange_daily_cap", "claimblocks_exchange_daily_cap",
+                send(p, "claimblocks_exchange_daily_cap", "&eDaily cap reached. &7Remaining today: &6{REMAINING}&e.",
                         Map.of("REMAINING", String.valueOf(res.longA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             case INSUFFICIENT_FUNDS -> {
-                send(p, "claimblocks_exchange_insufficient_funds", "claimblocks_exchange_insufficient_funds",
+                send(p, "claimblocks_exchange_insufficient_funds", "&cInsufficient funds. Need: &e{AMOUNT}",
                         Map.of("AMOUNT", money(res.dblA())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.85f);
             }
             case INSUFFICIENT_BLOCKS -> {
-                send(p, "claimblocks_exchange_insufficient_blocks", "claimblocks_exchange_insufficient_blocks");
+                send(p, "claimblocks_exchange_insufficient_blocks", "&cNot enough ClaimBlocks to sell.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.85f);
             }
             case SELL_LOCKED -> {
-                send(p, "claimblocks_exchange_sell_locked", "claimblocks_exchange_sell_locked");
+                send(p, "claimblocks_exchange_sell_locked", "&eSome purchased blocks are locked. Try again later.");
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.9f);
             }
             default -> {
-                send(p, "claimblocks_exchange_trade_failed", "claimblocks_exchange_trade_failed",
+                send(p, "claimblocks_exchange_trade_failed", "&cExchange failed: &7{REASON}",
                         Map.of("REASON", safe(res.message())));
                 trySound(p, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.8f);
             }
@@ -382,16 +394,34 @@ public class ClaimBlockExchangeGUI {
     // Helpers (Codex + msg() style)
     // ------------------------------------------------------------
 
+    private String tr(Player p, String key, String fallback) {
+        String result = plugin.gui().tr(p, key, fallback);
+        // If result equals the key itself, use fallback
+        if (result == null || result.equals(key) || result.contains("[Missing")) {
+            return fallback;
+        }
+        return result;
+    }
+    
     private String tr(Player p, String key) {
-        return plugin.gui().tr(p, key, key);
+        return tr(p, key, key);
     }
 
+    private List<String> trList(Player p, String key, List<String> fallback) {
+        List<String> result = plugin.gui().trList(p, key, fallback);
+        // If result contains the key itself or is empty, use fallback
+        if (result == null || result.isEmpty() || (result.size() == 1 && result.get(0).equals(key))) {
+            return fallback;
+        }
+        return result;
+    }
+    
     private List<String> trList(Player p, String key) {
-        return plugin.gui().trList(p, key, List.of(key));
+        return trList(p, key, List.of());
     }
 
-    private List<String> trList(Player p, String key, Map<String, String> placeholders) {
-        List<String> base = plugin.gui().trList(p, key, List.of(key));
+    private List<String> trList(Player p, String key, List<String> fallback, Map<String, String> placeholders) {
+        List<String> base = trList(p, key, fallback);
         return applyList(base, placeholders);
     }
 
@@ -437,7 +467,7 @@ public class ClaimBlockExchangeGUI {
             if (plugin.msg() != null) msg = plugin.msg().get(p, key);
         } catch (Throwable ignored) {}
 
-        // Fully language-pack-driven: fallback should not be English.
+        // Use fallback if msg is null, blank, equals key, or is a missing marker
         if (msg == null || msg.isBlank() || msg.equalsIgnoreCase(key) || msg.contains("[Missing")) {
             msg = fallback;
         }
@@ -463,12 +493,28 @@ public class ClaimBlockExchangeGUI {
         try { p.playSound(p.getLocation(), s, v, pitch); } catch (Throwable ignored) {}
     }
 
+    /**
+     * Create a filler item with NO display name and NO lore.
+     * This prevents the raw key from showing up when hovering.
+     */
+    private ItemStack filler(Material mat) {
+        ItemStack it = new ItemStack(mat);
+        ItemMeta meta = it.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(" "); // Single space - invisible but not null
+            meta.setLore(null); // No lore at all
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
+            it.setItemMeta(meta);
+        }
+        return it;
+    }
+
     private ItemStack item(Material mat, String name, List<String> lore) {
         ItemStack it = new ItemStack(mat);
         ItemMeta meta = it.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(GUIManager.color(name == null ? "" : name));
-            if (lore != null) {
+            if (lore != null && !lore.isEmpty()) {
                 List<String> out = new ArrayList<>();
                 for (String line : lore) out.add(GUIManager.color(line));
                 meta.setLore(out);

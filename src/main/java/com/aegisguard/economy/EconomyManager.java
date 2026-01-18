@@ -204,6 +204,27 @@ public class EconomyManager {
         return plugin.vault() != null;
     }
 
+    /**
+     * Alias for isVaultReady() - used by commands and other callers expecting this method name.
+     * Returns true if Vault economy is enabled and available.
+     */
+    public boolean isVaultEnabled() {
+        return isVaultReady();
+    }
+
+    /**
+     * Check if a player can afford a specific amount of a given currency type.
+     * This is a convenience method that wraps has() for callers expecting this signature.
+     *
+     * @param player       The player to check
+     * @param amount       The amount required
+     * @param currencyType The type of currency
+     * @return true if the player can afford the amount
+     */
+    public boolean canAfford(Player player, double amount, CurrencyType currencyType) {
+        return has(player, amount, currencyType);
+    }
+
     public boolean hasVaultMoney(Player p, double amount) {
         if (p == null) return false;
         if (amount <= 0) return true;

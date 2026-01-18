@@ -1,7 +1,7 @@
 # AegisGuard Codex Language Pack (split files)
 # Language: old_english
 # Section: guis.yml
-# Updated: 2026-01-15
+# Updated: 2026-01-18
 # Tip: Keep keys stable for cross-language sync. Values may be edited freely.
 
 # -------------------------------------------------
@@ -103,42 +103,42 @@ admin_menu_lore:
 # -------------------------------------------------
 # ClaimBlocks Exchange (Player Menu Button)
 # -------------------------------------------------
-button_claimblocks_exchange: '&a[Exchange] Aegnung-Bloc Byting'
+button_claimblocks_exchange: '&a[Exchange] ClaimBlock Exchange'
 claimblocks_exchange_lore:
-  - '&7Bycga oththe sell Aegnung-Bloc mid feoh.'
+  - '&7Buy or sell ClaimBlocks with coin.'
   - ' '
-  - '&eClic to open.'
+  - '&eClick to open.'
 
-button_claimblocks_exchange_disabled: '&7[Exchange] Aegnung-Bloc Byting'
+button_claimblocks_exchange_disabled: '&7[Exchange] ClaimBlock Exchange'
 claimblocks_exchange_disabled_lore:
-  - '&7Thes dael is nu unlaet.'
+  - '&7This feature is not enabled.'
   - '&8Enable: &fclaim_blocks.exchange.enabled: true'
 
 # =========================================================
-# ClaimBlocks Exchange GUI (matches ClaimBlockExchangeGUI.updated.java)
+# ClaimBlocks Exchange GUI
 # =========================================================
 
-# GUI title (new + legacy key; GUI prefers *_gui_title, falls back to *_title)
-claimblocks_exchange_gui_title: '&8Aegnung-Bloc Byting'
-claimblocks_exchange_title: '&8Aegnung-Bloc Byting'
+# GUI title - must have color codes
+claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'
+claimblocks_exchange_title: '&8ClaimBlock Exchange'
 
-# Filler/background
+# Filler/background - single space, no tooltip
 claimblocks_exchange_filler_name: ' '
 
 # Mode labels
-claimblocks_exchange_buy_label: 'BYCGAN'
-claimblocks_exchange_sell_label: 'SELLAN'
+claimblocks_exchange_buy_label: 'BUY'
+claimblocks_exchange_sell_label: 'SELL'
 
 # Mode button lore (PERM placeholder)
 claimblocks_exchange_buy_lore:
-  - '&7Bycga Aegnung-Bloc mid feoh.'
-  - '&8Behofth: &f{PERM}'
+  - '&7Purchase ClaimBlocks with thy coin.'
+  - '&8Requires: &f{PERM}'
 
 claimblocks_exchange_sell_lore:
-  - '&7Sell Aegnung-Bloc for feoh.'
-  - '&8Maeg thurfan: &f{PERM}'
+  - '&7Sell ClaimBlocks for coin.'
+  - '&8Requires: &f{PERM}'
 
-# +/- button titles (these are read from the lang pack)
+# +/- button titles
 claimblocks_exchange_minus_100_title: '&c-100'
 claimblocks_exchange_minus_10_title: '&c-10'
 claimblocks_exchange_minus_1_title: '&c-1'
@@ -148,52 +148,52 @@ claimblocks_exchange_plus_100_title: '&a+100'
 
 # +/- button lore
 claimblocks_exchange_minus_lore:
-  - '&7Laessa tha rime.'
+  - '&7Decrease the amount.'
 
 claimblocks_exchange_plus_lore:
-  - '&7Mara tha rime.'
+  - '&7Increase the amount.'
 
 # Enabled state labels
-claimblocks_exchange_state_yes: '&aGea'
-claimblocks_exchange_state_no: '&cNa'
+claimblocks_exchange_state_yes: '&aYea'
+claimblocks_exchange_state_no: '&cNay'
 
 # Quote card title
-claimblocks_exchange_quote_title: '&b&lByting Raed'
+claimblocks_exchange_quote_title: '&b&lExchange Quote'
 
 # Info lines (placeholders MUST match GUI)
-claimblocks_exchange_line_enabled: '&7Byting Gelaeded: {STATE}'
-claimblocks_exchange_line_money: '&7Thin Feoh: &e{MONEY}'
-claimblocks_exchange_line_blocks: '&7Aegnung-Bloc: &f{AVAILABLE} &8to handa'
-claimblocks_exchange_line_totals: '&8Summa: &7{TOTAL}  &8Spend: &7{SPENT}'
+claimblocks_exchange_line_enabled: '&7Exchange Enabled: {STATE}'
+claimblocks_exchange_line_money: '&7Thy Coin: &e{MONEY}'
+claimblocks_exchange_line_blocks: '&7ClaimBlocks: &f{AVAILABLE} &8available'
+claimblocks_exchange_line_totals: '&8Total: &7{TOTAL}  &8Spent: &7{SPENT}'
 claimblocks_exchange_spacer: ' '
 
 # BUY quote lines (placeholders: AMOUNT, UNIT, SUBTOTAL, FEE, TOTAL)
-claimblocks_exchange_line_buy_amount: '&aBycgan Rime: &f{AMOUNT}'
-claimblocks_exchange_line_unit: '&7Anpris: &e{UNIT}'
-claimblocks_exchange_line_subtotal: '&7Under-sum: &e{SUBTOTAL}'
-claimblocks_exchange_line_fee: '&7Gafol: &6{FEE}'
-claimblocks_exchange_line_total_cost: '&aEall Cost: &e{TOTAL}'
+claimblocks_exchange_line_buy_amount: '&aBuy Amount: &f{AMOUNT}'
+claimblocks_exchange_line_unit: '&7Unit Price: &e{UNIT}'
+claimblocks_exchange_line_subtotal: '&7Subtotal: &e{SUBTOTAL}'
+claimblocks_exchange_line_fee: '&7Fee: &6{FEE}'
+claimblocks_exchange_line_total_cost: '&aTotal Cost: &e{TOTAL}'
 
 # SELL quote lines (placeholders: AMOUNT, UNIT, GROSS, FEE, PAYOUT)
-claimblocks_exchange_line_sell_amount: '&eSellan Rime: &f{AMOUNT}'
-claimblocks_exchange_line_gross: '&7Brut: &e{GROSS}'
-claimblocks_exchange_line_payout: '&aUtfeoh: &e{PAYOUT}'
+claimblocks_exchange_line_sell_amount: '&eSell Amount: &f{AMOUNT}'
+claimblocks_exchange_line_gross: '&7Gross: &e{GROSS}'
+claimblocks_exchange_line_payout: '&aPayout: &e{PAYOUT}'
 
 # Confirm / Disabled
-claimblocks_exchange_confirm_title: '&a&lGEWISSIA'
+claimblocks_exchange_confirm_title: '&a&lCONFIRM'
 claimblocks_exchange_confirm_lore:
-  - '&7Clic to gelaestan this byting.'
-  - '&8Shift-clic ne bith gehored.'
+  - '&7Click to confirm this exchange.'
+  - '&8Shift-click is ignored.'
 
-claimblocks_exchange_confirm_disabled_title: '&c&lFORBODEN'
+claimblocks_exchange_confirm_disabled_title: '&c&lDISABLED'
 claimblocks_exchange_confirm_disabled_lore:
   - '&7Set: &fclaim_blocks.exchange.enabled: true'
-  - '&8Shift-clic ne bith gehored.'
+  - '&8Shift-click is ignored.'
 
 # Close
-claimblocks_exchange_close_title: '&cBELUC'
+claimblocks_exchange_close_title: '&cCLOSE'
 claimblocks_exchange_close_lore:
-  - '&7Hweorf to thinum farum.'
+  - '&7Return to thy prior dealings.'
 
 # -------------------------------------------------
 # Expansion GUI (Player-facing)
@@ -241,24 +241,24 @@ expansion_tier5_lore:
 # -------------------------------------------------
 # Expansion Admin GUI
 # -------------------------------------------------
-expansion_admin_title: '&6&lBiding Petitions'
+expansion_admin_title: '&6&lPending Petitions'
 
 button_view_requests_admin: '&bBehold Petitions'
 view_requests_admin_lore:
-  - '&7Review all biding expansion petitions.'
+  - '&7Review all pending expansion petitions.'
   - ' '
   - '&eClick to open steward queue'
 
 # View toggle button
-expansion_admin_view_toggle: '&bBeholdment: &fAll Records'
+expansion_admin_view_toggle: '&bView: &fAll Records'
 expansion_admin_view_toggle_lore:
   - '&7Toggle betwixt queue and chronicle.'
-  - '&7Useful for auditing self-wrought grants.'
+  - '&7Useful for auditing auto-approved grants.'
   - ' '
-  - '&eClick to switch beholding.'
+  - '&eClick to switch view.'
 
 # Empty states
-expansion_none_title: '&cNo Biding Petitions'
+expansion_none_title: '&cNo Pending Petitions'
 expansion_none_lore:
   - '&7There be no petitions'
   - '&7awaiting judgment.'
@@ -270,71 +270,71 @@ expansion_locked_lore:
 # -------------------------------------------------
 # Claim Snapshots GUI (Player/Admin)
 # -------------------------------------------------
-snapshot_gui_title: '&d[Snapshot] Claim Gemyndignes'
-button_snapshots: '&d[Snapshot] Claim Gemyndignes'
+snapshot_gui_title: '&d[Snapshot] Claim Snapshots'
+button_snapshots: '&d[Snapshot] Claim Snapshots'
 snapshots_button_lore:
-  - '&7Beseoh and aetbere claim gemyndignes.'
-  - '&7Gesceapen beforan theodungum.'
+  - '&7View and restore claim snapshots.'
+  - '&7Created before major changes.'
   - ' '
-  - '&eClick to openienne'
+  - '&eClick to open'
 
 snapshot_empty_gui:
-  - '&7Nan gemyndignes fund.'
-  - '&7Gemyndignes sind gesceapene beforan'
-  - '&7theodungum and gemaenscipe.'
+  - '&7No snapshots found.'
+  - '&7Snapshots are created before'
+  - '&7merges and major changes.'
 
-snapshot_item_name: '&e{TYPE} &7Gemynd'
+snapshot_item_name: '&e{TYPE} &7Snapshot'
 snapshot_item_lore:
-  - '&7Agende: &f{OWNER}'
-  - '&7Weorold: &f{WORLD}'
-  - '&7Cynn: &e{TYPE}'
-  - '&7Intinga: &f{REASON}'
-  - '&7Ieldo: &f{AGE}'
-  - '&7Aweaht fram: &f{ACTOR}'
-  - '&7Ryne: &a{RADIUS}'
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &e{TYPE}'
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE}'
+  - '&7Created by: &f{ACTOR}'
+  - '&7Radius: &a{RADIUS}'
   - ' '
-  - '&aWinstra-click: &7Aetbere to thissum stede'
-  - '&cSwitha-click: &7Fordo gemynd'
+  - '&aLeft-click: &7Restore to this state'
+  - '&cRight-click: &7Delete snapshot'
 
-snapshot_rollback_success: '&a[OK] Claim aetboren gelaeste.'
-snapshot_rollback_failed: '&c[X] Aetbering aswac. Claim maeg na leng wesan.'
-snapshot_deleted: '&e[OK] Gemynd fordon.'
-snapshot_not_found: '&c[X] Gemynd ne fund.'
+snapshot_rollback_success: '&a[OK] Claim restored successfully.'
+snapshot_rollback_failed: '&c[X] Restore failed. Claim may no longer exist.'
+snapshot_deleted: '&e[OK] Snapshot deleted.'
+snapshot_not_found: '&c[X] Snapshot not found.'
 
 # Admin-specific snapshot keys
-snapshots_admin_title: '&6&lClaim Gemyndignes &7({PAGE}/{PAGES})'
-snapshots_none_title: '&cNan Gemyndignes Fund'
+snapshots_admin_title: '&6&lClaim Snapshots &7({PAGE}/{PAGES})'
+snapshots_none_title: '&cNo Snapshots Found'
 snapshots_none_lore:
-  - '&7Thaer ne sind nane claim gemyndignes'
-  - '&7to geseonne.'
+  - '&7There are no claim snapshots'
+  - '&7to display.'
 
 # Expansion admin paged title
-expansion_admin_title_paged: '&6&lBiding Petitions &7({PAGE}/{PAGES})'
+expansion_admin_title_paged: '&6&lPending Petitions &7({PAGE}/{PAGES})'
 
 # Queue item (per-request)
 expansion_request_item_name: '&bPetition: &f{PLAYER}'
 expansion_request_item_lore:
-  - '&7Weorold: &f{WORLD}'
-  - '&7Stede: {STATUS}'
-  - '&7Ieldo: &f{AGE}'
+  - '&7World: &f{WORLD}'
+  - '&7Status: {STATUS}'
+  - '&7Age: &f{AGE}'
   - '{PENDING_LINE}'
   - '{DECISION_LINE}'
-  - '&7Ryne: &e{CUR} &7-> &a{REQ}'
-  - '&7Gield Behofed: &6{COST}'
+  - '&7Reach: &e{CUR} &7-> &a{REQ}'
+  - '&7Cost Due: &6{COST}'
   - '{DECISION_AGE_LINE}'
   - ' '
-  - '&eWinstra-click: &7Gewissian petition.'
-  - '&cSwitha-click: &7Withsettan petition.'
+  - '&eLeft-click: &7Approve petition.'
+  - '&cRight-click: &7Deny petition.'
 
 # Inserted into lore above
-expansion_request_item_lore_pending_line: '&7Biding For: &f{AGE}'
+expansion_request_item_lore_pending_line: '&7Pending For: &f{AGE}'
 expansion_request_item_lore_decision_line: '&7Decision: &f{ACTOR}'
 
 # Decider labels
-expansion_decided_by_none: '&7Awaiting gesihth'
-expansion_decided_by_auto: '&bSelf-Gewissian'
+expansion_decided_by_none: '&7Awaiting review'
+expansion_decided_by_auto: '&bAuto-Approved'
 expansion_decided_by_console: '&7Console'
-expansion_decided_by_unknown: '&7Uncuth'
+expansion_decided_by_unknown: '&7Unknown'
 
 # -------------------------------------------------
 # Existing GUI Buttons (kept)

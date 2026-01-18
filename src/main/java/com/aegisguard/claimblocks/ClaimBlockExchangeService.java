@@ -51,10 +51,43 @@ public class ClaimBlockExchangeService {
 
     private final Map<UUID, PlayerState> cache = new ConcurrentHashMap<>();
 
+    /** Tracks whether the service has been shut down. */
+    private volatile boolean shuttingDown = false;
+
     public ClaimBlockExchangeService(AegisGuard plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "claim-block-exchange.yml");
         load();
+    }
+
+    // -------------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------------
+
+    /**
+     * Shuts down the exchange service gracefully.
+     * Saves all pending data and prevents further operations.
+     */
+    public void shutdown() {
+        if (shuttingDown) return;
+        shuttingDown = true;
+
+        // Final synchronous save to ensure all data is persisted
+        try {
+            save();
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[ClaimBlockExchange] Error during shutdown save: " + t.getMessage());
+        }
+
+        // Clear cache to free memory
+        cache.clear();
+    }
+
+    /**
+     * Returns true if the service is currently shutting down or has shut down.
+     */
+    public boolean isShuttingDown() {
+        return shuttingDown;
     }
 
     // -------------------------------------------------------------------------
@@ -84,15 +117,136 @@ public class ClaimBlockExchangeService {
     }
 
     // -------------------------------------------------------------------------
+    // Rate Information (for GUIs and commands)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns formatted lines showing the current exchange rates for display in GUIs/commands.
+     * Optionally personalized for a player (e.g., showing their daily limits remaining).
+     *
+     * @param player The player to personalize for (can be null for generic rates)
+     * @return List of formatted strings describing current exchange rates
+     */
+    public List<String> getRatesLines(Player player) {
+        List<String> lines = new ArrayList<>();
+        ExchangeSettings s = resolveSettings(player);
+
+        if (!s.enabled) {
+            lines.add(color("&cExchange is currently disabled."));
+            return lines;
+        }
+
+        // Header
+        lines.add(color("&6&lClaim Block Exchange Rates"));
+        lines.add(color("&7─────────────────────────"));
+
+        // Buy rates
+        lines.add(color("&a▸ Buy Price: &f" + formatMoney(s.buyPricePerBlock) + " &7per block"));
+        if (s.buyFeePercent > 0 || s.buyFeeFlat > 0) {
+            String feeStr = "";
+            if (s.buyFeePercent > 0) feeStr += String.format("%.1f%%", s.buyFeePercent);
+            if (s.buyFeeFlat > 0) {
+                if (!feeStr.isEmpty()) feeStr += " + ";
+                feeStr += formatMoney(s.buyFeeFlat) + " flat";
+            }
+            lines.add(color("  &7Buy Fee: &f" + feeStr));
+        }
+
+        // Sell rates
+        lines.add(color("&c▸ Sell Price: &f" + formatMoney(s.sellPricePerBlock) + " &7per block"));
+        if (s.sellFeePercent > 0 || s.sellFeeFlat > 0) {
+            String feeStr = "";
+            if (s.sellFeePercent > 0) feeStr += String.format("%.1f%%", s.sellFeePercent);
+            if (s.sellFeeFlat > 0) {
+                if (!feeStr.isEmpty()) feeStr += " + ";
+                feeStr += formatMoney(s.sellFeeFlat) + " flat";
+            }
+            lines.add(color("  &7Sell Fee: &f" + feeStr));
+        }
+
+        // Limits section
+        lines.add(color("&7─────────────────────────"));
+        lines.add(color("&e&lLimits"));
+
+        if (s.buyMin > 1 || s.sellMin > 1) {
+            lines.add(color("&7Min Buy: &f" + s.buyMin + " &7| Min Sell: &f" + s.sellMin));
+        }
+        if (s.buyMaxPerTrade > 0 || s.sellMaxPerTrade > 0) {
+            lines.add(color("&7Max/Trade: Buy &f" + (s.buyMaxPerTrade > 0 ? s.buyMaxPerTrade : "∞")
+                    + " &7| Sell &f" + (s.sellMaxPerTrade > 0 ? s.sellMaxPerTrade : "∞")));
+        }
+        if (s.buyDailyCapBlocks > 0 || s.sellDailyCapBlocks > 0) {
+            lines.add(color("&7Daily Cap: Buy &f" + (s.buyDailyCapBlocks > 0 ? s.buyDailyCapBlocks : "∞")
+                    + " &7| Sell &f" + (s.sellDailyCapBlocks > 0 ? s.sellDailyCapBlocks : "∞")));
+        }
+
+        // Player-specific info
+        if (player != null) {
+            PlayerState st = getState(player.getUniqueId());
+            normalizeWindows(st);
+
+            lines.add(color("&7─────────────────────────"));
+            lines.add(color("&b&lYour Status Today"));
+            lines.add(color("&7Bought: &a" + st.boughtTodayBlocks + " &7blocks"));
+            lines.add(color("&7Sold: &c" + st.soldTodayBlocks + " &7blocks"));
+
+            if (s.buyDailyCapBlocks > 0) {
+                long remaining = Math.max(0, s.buyDailyCapBlocks - st.boughtTodayBlocks);
+                lines.add(color("&7Buy remaining: &a" + remaining + " &7blocks"));
+            }
+            if (s.sellDailyCapBlocks > 0) {
+                long remaining = Math.max(0, s.sellDailyCapBlocks - st.soldTodayBlocks);
+                lines.add(color("&7Sell remaining: &c" + remaining + " &7blocks"));
+            }
+
+            if (s.cooldownSeconds > 0) {
+                long cdRemaining = cooldownRemainingSeconds(st, System.currentTimeMillis(), s.cooldownSeconds);
+                if (cdRemaining > 0) {
+                    lines.add(color("&7Cooldown: &e" + cdRemaining + "s"));
+                }
+            }
+        }
+
+        // Sell-lock info
+        if (s.sellLockEnabled) {
+            lines.add(color("&7─────────────────────────"));
+            lines.add(color("&d⚠ Sell-Lock: &f" + s.sellLockHoldMinutes + " min hold"));
+        }
+
+        return lines;
+    }
+
+    /**
+     * Convenience overload without player context.
+     */
+    public List<String> getRatesLines() {
+        return getRatesLines(null);
+    }
+
+    /**
+     * Formats money amount using Vault if available, otherwise simple format.
+     */
+    private String formatMoney(double amount) {
+        if (plugin.vault() != null) {
+            try {
+                return plugin.vault().format(amount);
+            } catch (Throwable ignored) {}
+        }
+        return String.format("$%.2f", amount);
+    }
+
+    // -------------------------------------------------------------------------
     // Legacy API (kept so older code still compiles)
     // -------------------------------------------------------------------------
 
     public ExchangeResult buy(Player p, long blocks) {
+        if (shuttingDown) return new ExchangeResult(false, color("&cExchange is shutting down."));
         Result r = buyTrade(p, blocks);
         return new ExchangeResult(r.type() == ResultType.OK, color(r.message()));
     }
 
     public ExchangeResult sell(Player p, long blocks) {
+        if (shuttingDown) return new ExchangeResult(false, color("&cExchange is shutting down."));
         Result r = sellTrade(p, blocks);
         return new ExchangeResult(r.type() == ResultType.OK, color(r.message()));
     }
@@ -102,6 +256,8 @@ public class ClaimBlockExchangeService {
     // -------------------------------------------------------------------------
 
     public Result buyTrade(Player p, long blocks) {
+        if (shuttingDown) return Result.err(ResultType.DISABLED, "&cExchange is shutting down.");
+
         ExchangeSettings s = resolveSettings(p);
 
         if (!s.enabled) return Result.err(ResultType.DISABLED, "&cExchange is disabled.");
@@ -179,6 +335,8 @@ public class ClaimBlockExchangeService {
     }
 
     public Result sellTrade(Player p, long blocks) {
+        if (shuttingDown) return Result.err(ResultType.DISABLED, "&cExchange is shutting down.");
+
         ExchangeSettings s = resolveSettings(p);
 
         if (!s.enabled) return Result.err(ResultType.DISABLED, "&cExchange is disabled.");
@@ -713,6 +871,11 @@ public class ClaimBlockExchangeService {
     }
 
     private void saveAsync() {
+        if (shuttingDown) {
+            // During shutdown, save synchronously to ensure data is persisted
+            save();
+            return;
+        }
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
     }
 

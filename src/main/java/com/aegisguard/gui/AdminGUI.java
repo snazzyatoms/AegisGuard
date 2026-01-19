@@ -194,12 +194,36 @@ public class AdminGUI {
         if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         switch (e.getSlot()) {
-            case 10 -> { flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); open(player); }
-            case 11 -> { flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false); open(player); }
-            case 12 -> { flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false); open(player); }
-            case 13 -> { flipBool(player, "admin.unlimited_plots", null, null, true); open(player); }
-            case 14 -> { flipBool(player, "sync.proxy.enabled", null, null, false); open(player); }
-            case 15 -> { flipBool(player, "performance.low_overhead_mode", null, null, false); open(player); }
+            case 10 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); 
+                open(player); 
+            }
+            case 11 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false); 
+                open(player); 
+            }
+            case 12 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false); 
+                open(player); 
+            }
+            case 13 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "admin.unlimited_plots", null, null, true); 
+                open(player); 
+            }
+            case 14 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "sync.proxy.enabled", null, null, false); 
+                open(player); 
+            }
+            case 15 -> { 
+                plugin.effects().playClick(player);
+                flipBool(player, "performance.low_overhead_mode", null, null, false); 
+                open(player); 
+            }
 
             case 28 -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
             case 29 -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }

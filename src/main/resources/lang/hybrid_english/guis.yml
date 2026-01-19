@@ -402,3 +402,85 @@ realestate_button_back: '&e⟵ Back to Real Estate'
 domain_market_button_back: '&e⟵ Back to Domain Market'
 biome_button_back: '&e⟵ Back to Claim Settings'
 biome_button_exit: '&c✖ Close Biome Changer'
+
+# ------------------------------------------------------------
+# Codex GUI (Guardian's Guide)
+# ------------------------------------------------------------
+codex_gui_title: '&b✦ Guardian''s Guide ✦'
+
+codex_claim_title: '&e§lI. Claiming'
+codex_claim_lore:
+- '&7How to protect land:'
+- ' '
+- '&f1. &7Use &b/ag wand &7to get the tool.'
+- '&f2. &7Right-click the first corner.'
+- '&f3. &7Left-click the opposite corner.'
+- '&f4. &7Use &a/ag claim &7to purchase the claim.'
+
+codex_travel_title: '&b§lII. Travel'
+codex_travel_lore:
+- '&7Fast travel commands:'
+- ' '
+- '&e/ag home &7- Teleport to thy claim.'
+- '&e/ag setspawn &7- Set thy claim spawn.'
+- '&e/ag visit &7- Visit other players'' claims.'
+
+codex_menus_title: '&d§lIII. Menus'
+codex_menus_lore:
+- '&7Use &b/ag menu &7to manage:'
+- ' '
+- '&6🚩 Settings: &7PvP, mobs, fire and more.'
+- '&b👥 Members: &7Trusted players and roles.'
+- '&d✨ Cosmetics: &7Border particles and visuals.'
+- '&a🌿 Biomes: &7Claim biome appearance.'
+
+codex_security_title: '&c§lIV. Security'
+codex_security_lore:
+- '&7Manage visitors and troublemakers:'
+- ' '
+- '&c/ag kick &7- Kick a player from thy claim.'
+- '&4/ag ban &7- Ban a player from entering.'
+
+codex_economy_title: '&6§lV. Economy'
+codex_economy_lore:
+- '&7Economy basics:'
+- ' '
+- '&eUpkeep: &7Pay upkeep to keep thy claim.'
+- '&aMarket: &7Buy and sell claims with others.'
+
+codex_identity_title: '&3§lVI. Identity'
+codex_identity_lore:
+- '&7Personalize thy claim:'
+- ' '
+- '&b/ag rename &7- Set a custom name.'
+- '&e/ag stuck &7- Escape if stuck in blocks.'
+
+codex_advanced_title: '&5§lVII. Advanced'
+codex_advanced_lore:
+- '&dLeveling: &7Upgrade thy claim to unlock perks.'
+- '&eZones: &7Create rental zones inside thy claim.'
+
+visit_gui_button_lore:
+- '&7Visit claims and travel quickly.'
+
+biome_button_lore:
+- '&7Change the visual biome style'
+- '&7of thy claim.'
+
+zone_button_lore:
+- '&7Create and manage sub-claims'
+- '&7that can be rented out.'
+
+admin_button_lore:
+- '&7Operator Access Only'
+
+biome_item_lore_visual_only:
+- '&c[!] Visual change only'
+- '&7Blocks themselves are not replaced.'
+
+biome_item_lore_set_biome:
+- '&7Set thy claim''s biome to {BIOME}.'
+- '&7Cost: {COST}'
+
+biome_item_lore_free:
+- '&7Cost: &aFree'

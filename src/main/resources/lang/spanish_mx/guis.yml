@@ -515,3 +515,89 @@ realestate_button_back: '&e⟵ Volver a Bienes Raíces'
 domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
 biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
 biome_button_exit: '&c✖ Cerrar Cambiador de Bioma'
+
+# ------------------------------------------------------------
+# Codex GUI (Guía del Guardián)
+# ------------------------------------------------------------
+codex_gui_title: '&b✦ Guía del Guardián ✦'
+
+codex_claim_title: '&e§lI. Reclamar'
+codex_claim_lore:
+- '&7Cómo proteger terreno:'
+- ' '
+- '&f1. &7Use &b/ag wand &7para obtener la herramienta.'
+- '&f2. &7Clic derecho en la primera esquina.'
+- '&f3. &7Clic izquierdo en la esquina opuesta.'
+- '&f4. &7Use &a/ag claim &7para comprar la parcela.'
+
+codex_travel_title: '&b§lII. Viaje'
+codex_travel_lore:
+- '&7Comandos de viaje rápido:'
+- ' '
+- '&e/ag home &7- Teletransportate a tu parcela.'
+- '&e/ag setspawn &7- Establece el spawn de tu parcela.'
+- '&e/ag visit &7- Visita parcelas de otros jugadores.'
+
+codex_menus_title: '&d§lIII. Menús'
+codex_menus_lore:
+- '&7Use &b/ag menu &7para gestionar:'
+- ' '
+- '&6🚩 Ajustes: &7PvP, mobs, fuego y más.'
+- '&b👥 Miembros: &7Jugadores de confianza y roles.'
+- '&d✨ Cosméticos: &7Partículas de borde y visuales.'
+- '&a🌿 Biomas: &7Apariencia del bioma de la parcela.'
+
+codex_security_title: '&c§lIV. Seguridad'
+codex_security_lore:
+- '&7Gestiona visitantes y problemáticos:'
+- ' '
+- '&c/ag kick &7- Expulsa un jugador de tu parcela.'
+- '&4/ag ban &7- Prohibe la entrada a un jugador.'
+
+codex_economy_title: '&6§lV. Economía'
+codex_economy_lore:
+- '&7Conceptos básicos de economía:'
+- ' '
+- '&eMantenimiento: &7Paga mantenimiento para conservar tu parcela.'
+- '&aMercado: &7Compra y vende parcelas con otros.'
+
+codex_identity_title: '&3§lVI. Identidad'
+codex_identity_lore:
+- '&7Personaliza tu parcela:'
+- ' '
+- '&b/ag rename &7- Establece un nombre personalizado.'
+- '&e/ag stuck &7- Escapa si quedas atrapado en bloques.'
+
+codex_advanced_title: '&5§lVII. Avanzado'
+codex_advanced_lore:
+- '&dNivelación: &7Mejora tu parcela para desbloquear ventajas.'
+- '&eZonas: &7Crea zonas de alquiler dentro de tu parcela.'
+
+# ------------------------------------------------------------
+# PlayerGUI - Main Menu (Menú Principal) Additional Tooltips
+# ------------------------------------------------------------
+visit_gui_button_lore:
+- '&7Visita parcelas y viaja rápidamente.'
+
+biome_button_lore:
+- '&7Cambia el estilo visual del bioma'
+- '&7de tu reclamo.'
+
+zone_button_lore:
+- '&7Crea y gestiona subreclamos'
+- '&7que pueden ser alquilados.'
+
+admin_button_lore:
+- '&7Acceso exclusivo del operador'
+
+# Biome GUI
+biome_item_lore_visual_only:
+- '&c[!] Solo cambio visual'
+- '&7Los bloques en sí no son reemplazados.'
+
+biome_item_lore_set_biome:
+- '&7Establece el bioma de tu parcela a {BIOME}.'
+- '&7Costo: {COST}'
+
+biome_item_lore_free:
+- '&7Costo: &aGratis'

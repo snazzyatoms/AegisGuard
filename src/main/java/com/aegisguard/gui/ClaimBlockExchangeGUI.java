@@ -89,11 +89,23 @@ public class ClaimBlockExchangeGUI {
 
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
 
-        // Close button or Exit button
-        if (slot == SLOT_CLOSE || slot == SLOT_EXIT) {
+        // Exit button - closes the menu
+        if (slot == SLOT_EXIT) {
             sessions.remove(p.getUniqueId());
             p.closeInventory();
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+            return;
+        }
+
+        // Back button - returns to main menu
+        if (slot == SLOT_CLOSE) {
+            sessions.remove(p.getUniqueId());
+            p.closeInventory();
+            trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+            // Open main menu
+            if (plugin.gui() != null) {
+                plugin.gui().open(p);
+            }
             return;
         }
 

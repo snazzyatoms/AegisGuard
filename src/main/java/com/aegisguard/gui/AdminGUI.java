@@ -398,7 +398,7 @@ public class AdminGUI {
         }
         
         // NOW reopen the menu - config is saved and reloaded
-        open(player);
+        open(p);
     }
 
     private void sendKey(Player p, String key, String fallback) {

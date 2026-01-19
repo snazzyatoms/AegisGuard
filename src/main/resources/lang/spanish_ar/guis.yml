@@ -226,8 +226,7 @@ expansion_decided_by_unknown: '&7Desconocido'
 # ------------------------------------------------------------
 # GUI de Intercambio ClaimBlocks
 # ------------------------------------------------------------
-claimblocks_exchange_gui_title: 'claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'b✦ claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'eIntercambio de ClaimBlocks claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'b✦'
-claimblocks_exchange_filler_name: ' '
+claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks 'b✦' 
 
 claimblocks_exchange_buy_label: 'COMPRAR'
 claimblocks_exchange_sell_label: 'VENDER'
@@ -600,3 +599,80 @@ biome_item_lore_set_biome:
 
 biome_item_lore_free:
 - '&7Costo: &aGratis'
+
+# Menú Admin - Traducciones Completas
+button_admin_auto_remove: '&cAuto-Remover Baneados'
+admin_auto_remove_lore:
+- '&7Desreclama automáticamente parcelas'
+- '&7cuando los dueños son baneados.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
+admin_bypass_limit_lore:
+- '&7Los admins ignoran el límite de parcelas.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_broadcast: '&eTransmitir Acciones Admin'
+admin_broadcast_lore:
+- '&7Anuncia acciones de admin al servidor.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_unlimited: '&aDominios Infinitos'
+admin_unlimited_lore:
+- '&7Los admins no tienen límites de parcelas.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_sync: '&dSincronización Proxy'
+admin_sync_lore:
+- '&7Sincroniza datos en red proxy.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_perf: '&cModo Bajo Consumo'
+admin_perf_lore:
+- '&7Reduce uso de recursos del sistema.'
+- ' '
+- '&eAjuste: &f{STATE}'
+
+button_admin_diagnostics: '&bDiagnósticos'
+admin_diagnostics_lore:
+- '&7Mirá estadísticas del sistema.'
+
+button_reload_all_settings: '&eRecargar Todos los Ajustes'
+reload_all_settings_lore:
+- '&7Recarga configuración y sistemas.'
+- ' '
+- '&eClic para recargar'
+
+button_refresh_language_packs: '&aActualizar Paquetes de Idioma'
+refresh_language_packs_lore:
+- '&7Recarga archivos de idioma.'
+- '&7Usá después de editar archivos.'
+- ' '
+- '&eClic para actualizar'
+
+button_admin_snapshots: '&d📸 Instantáneas de Parcelas'
+admin_snapshots_lore:
+- '&7Mirá y gestioná instantáneas.'
+- '&7Restaurá parcelas a estados previos.'
+- ' '
+- '&eClic para abrir'
+
+button_admin_snapshots_disabled: '&8📸 Instantáneas Deshabilitadas'
+admin_snapshots_disabled_lore:
+- '&7Sistema de instantáneas deshabilitado.'
+- '&7Habilitá en config.yml'
+
+admin_plot_list_title: '&bLista de Parcelas'
+admin_plot_list_lore:
+- '&7Mirá y teletransportate a cualquier parcela.'
+
+toggle_on: '&aACTIVADO'
+toggle_off: '&cDESACTIVADO'
+admin_toggle_format: '{NAME}: {STATE}'
+admin_toggle_default_lore:
+- '&7Alterná este ajuste.'

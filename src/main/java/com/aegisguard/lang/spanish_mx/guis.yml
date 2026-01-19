@@ -234,11 +234,9 @@ claimblocks_exchange_sell_label: 'VENDER'
 
 claimblocks_exchange_buy_lore:
 - '&7Compra Bloques de Reclamo con monedas.'
-- '&8Permiso: &f{PERM}'
 
 claimblocks_exchange_sell_lore:
 - '&7Vende Bloques de Reclamo por monedas.'
-- '&8Puede requerir: &f{PERM}'
 
 claimblocks_exchange_minus_100_title: '&c-100'
 claimblocks_exchange_minus_10_title: '&c-10'
@@ -579,6 +577,12 @@ codex_advanced_lore:
 visit_gui_button_lore:
 - '&7Visita parcelas y viaja rápidamente.'
 
+visit_lore:
+- '&7Visita parcelas y viaja rápidamente.'
+
+travel_lore:
+- '&7Visita parcelas y viaja rápidamente.'
+
 biome_button_lore:
 - '&7Cambia el estilo visual del bioma'
 - '&7de tu reclamo.'
@@ -588,6 +592,9 @@ zone_button_lore:
 - '&7que pueden ser alquilados.'
 
 admin_button_lore:
+- '&7Acceso exclusivo del operador'
+
+admin_lore:
 - '&7Acceso exclusivo del operador'
 
 # Biome GUI
@@ -666,3 +673,28 @@ toggle_off: '&cDESACTIVADO'
 admin_toggle_format: '{NAME}: {STATE}'
 admin_toggle_default_lore:
 - '&7Alterna este ajuste.'
+
+# Visit/Travel GUI - Tab and Navigation Translations
+# ------------------------------------------------------------
+visit_trusted_claims_title: '&bParcelas de Confianza'
+visit_server_waypoints_title: '&ePuntos del Servidor'
+visit_nothing_to_visit: '&cNada para visitar'
+visit_nothing_description:
+- '&7No se encontraron destinos para este modo.'
+- '&7Prueba cambiando de pestaña.'
+
+visit_tab_trusted_claims: '&bVer: Parcelas de Confianza'
+visit_tab_trusted_claims_lore:
+- '&7Ver parcelas donde eres un miembro de confianza.'
+
+visit_tab_server_waypoints: '&eVer: Puntos del Servidor'
+visit_tab_server_waypoints_lore:
+- '&7Ver ubicaciones públicas del servidor.'
+
+visit_tab_my_claims: '&aVer: Mis Parcelas'
+visit_tab_my_claims_lore:
+- '&7Ver todas tus parcelas.'
+
+visit_tab_all_claims: '&9Ver: Todas las Parcelas'
+visit_tab_all_claims_lore:
+- '&7Ver todas las parcelas del servidor.'

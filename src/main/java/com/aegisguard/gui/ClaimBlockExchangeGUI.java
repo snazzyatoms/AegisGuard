@@ -41,10 +41,10 @@ public class ClaimBlockExchangeGUI {
     private static final int SLOT_PLUS_100 = 25;
 
     private static final int SLOT_CONFIRM = 31;
-    private static final int SLOT_CLOSE = 40;
+    private static final int SLOT_BACK = 40;     // Arrow - back to menu
     
-    // New exit button slot (bottom row, middle-ish)
-    private static final int SLOT_EXIT = 49;
+    // Exit button slot (bottom right)
+    private static final int SLOT_EXIT = 44;     // Barrier - close GUI
 
     public ClaimBlockExchangeGUI(AegisGuard plugin, ClaimBlockExchangeService exchange) {
         this.plugin = plugin;
@@ -89,7 +89,7 @@ public class ClaimBlockExchangeGUI {
 
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
 
-        // Exit button - closes the menu
+        // Exit button - closes the menu entirely
         if (slot == SLOT_EXIT) {
             sessions.remove(p.getUniqueId());
             p.closeInventory();
@@ -98,7 +98,7 @@ public class ClaimBlockExchangeGUI {
         }
 
         // Back button - returns to main menu
-        if (slot == SLOT_CLOSE) {
+        if (slot == SLOT_BACK) {
             sessions.remove(p.getUniqueId());
             p.closeInventory();
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
@@ -307,17 +307,17 @@ public class ClaimBlockExchangeGUI {
 
         inv.setItem(SLOT_CONFIRM, item(Material.ANVIL, confirmTitle, confirmLore));
 
-        // Close button (slot 40)
-        inv.setItem(SLOT_CLOSE, item(
-                Material.BARRIER,
-                tr(p, "claimblocks_exchange_close_title", "&cCLOSE"),
-                trList(p, "claimblocks_exchange_close_lore", List.of("&7Return to previous menu."))
+        // Back button (slot 40 - arrow, returns to main menu)
+        inv.setItem(SLOT_BACK, item(
+                Material.ARROW,
+                tr(p, "button_back_menu", "&e⟵ Back to Menu"),
+                trList(p, "back_menu_lore", List.of("&7Return to the main panel."))
         ));
         
-        // Exit button (slot 49 - bottom row)
+        // Exit button (slot 44 - barrier, closes GUI)
         inv.setItem(SLOT_EXIT, item(
-                Material.ARROW,
-                tr(p, "button_exit", "&c[X] Exit"),
+                Material.BARRIER,
+                tr(p, "button_exit", "&c✖ Close"),
                 trList(p, "exit_lore", List.of("&7Close this menu."))
         ));
     }

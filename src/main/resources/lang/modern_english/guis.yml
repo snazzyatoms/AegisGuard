@@ -242,11 +242,9 @@ claimblocks_exchange_filler_lore: []
 claimblocks_exchange_buy_label: 'Buy'
 claimblocks_exchange_buy_lore:
   - '&7Purchase Claim Blocks with money.'
-  - '&8Permission: &f{PERM}'
 claimblocks_exchange_sell_label: 'Sell'
 claimblocks_exchange_sell_lore:
   - '&7Sell Claim Blocks for money.'
-  - '&8May require: &f{PERM}'
 
 # Amount controls
 claimblocks_exchange_minus_100_title: '&c-100'
@@ -505,6 +503,30 @@ codex_gui_title: '&9§lGuardian''s Guide'
 ledger_title: '&6📜 Domain Registry'
 admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
 
+# PlayerGUI - Main Menu Additional Tooltips
+visit_gui_button_lore:
+- '&7Visit claims and travel quickly.'
+
+visit_lore:
+- '&7Visit claims and travel quickly.'
+
+travel_lore:
+- '&7Visit claims and travel quickly.'
+
+admin_button_lore:
+- '&7Operator Access Only'
+
+admin_lore:
+- '&7Operator Access Only'
+
+biome_button_lore:
+- '&7Change the visual biome style'
+- '&7of your claim.'
+
+zone_button_lore:
+- '&7Create and manage subclaims'
+- '&7that can be rented out.'
+
 market_button_back: '&e⟵ Back to Real Estate'
 auction_button_back: '&e⟵ Back to Auctions'
 realestate_button_back: '&e⟵ Back to Real Estate'
@@ -567,3 +589,28 @@ admin_plot_list_lore:
 toggle_on: '&aON'
 toggle_off: '&cOFF'
 admin_toggle_format: '{NAME}: {STATE}'
+
+# Visit/Travel GUI - Tab and Navigation Translations
+# ------------------------------------------------------------
+visit_trusted_claims_title: '&bTrusted Claims'
+visit_server_waypoints_title: '&eServer Waypoints'
+visit_nothing_to_visit: '&cNothing to visit'
+visit_nothing_description:
+- '&7No destinations were found for this mode.'
+- '&7Try switching tabs.'
+
+visit_tab_trusted_claims: '&bView: Trusted Claims'
+visit_tab_trusted_claims_lore:
+- '&7View claims where you are a trusted member.'
+
+visit_tab_server_waypoints: '&eView: Server Waypoints'
+visit_tab_server_waypoints_lore:
+- '&7View public server locations.'
+
+visit_tab_my_claims: '&aView: My Claims'
+visit_tab_my_claims_lore:
+- '&7View all your claims.'
+
+visit_tab_all_claims: '&9View: All Claims'
+visit_tab_all_claims_lore:
+- '&7View all server claims.'

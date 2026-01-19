@@ -534,38 +534,26 @@ button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
 - '&7Automatically unclaim plots'
 - '&7when owners are banned.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:
 - '&7Admins ignore max plot count.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_broadcast: '&ebroadcasts Admin Actions'
 admin_broadcast_lore:
 - '&7Announce admin actions server-wide.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_unlimited: '&aInfinite Domains'
 admin_unlimited_lore:
 - '&7Admins have no plot limits.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_sync: '&dProxy Sync'
 admin_sync_lore:
 - '&7Sync data across proxy network.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_perf: '&cLow Overhead Mode'
 admin_perf_lore:
 - '&7Reduce system resource usage.'
-- ' '
-- '&eSetting: &f{STATE}'
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:

@@ -119,7 +119,7 @@ claimblocks_exchange_disabled_lore:
 # =========================================================
 
 # GUI title - must have color codes
-claimblocks_exchange_gui_title: 'claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'b✦ claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'eClaimBlock Exchange claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'b✦'
+claimblocks_exchange_gui_title: '&8ClaimBlock Exchange 'b✦' 
 claimblocks_exchange_title: '&8ClaimBlock Exchange'
 
 # Filler/background - single space, no tooltip
@@ -526,3 +526,82 @@ biome_item_lore_set_biome:
 
 biome_item_lore_free:
 - '&7Cost: &aFree'
+
+# ------------------------------------------------------------
+# Admin Menu - Complete Translations
+# ------------------------------------------------------------
+button_admin_auto_remove: '&cAuto-Remove Banned'
+admin_auto_remove_lore:
+- '&7Automatically unclaim plots'
+- '&7when owners are banned.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_bypass_limit: '&bBypass Claim Limit'
+admin_bypass_limit_lore:
+- '&7Admins ignore max plot count.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_broadcast: '&ebroadcasts Admin Actions'
+admin_broadcast_lore:
+- '&7Announce admin actions server-wide.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_unlimited: '&aInfinite Domains'
+admin_unlimited_lore:
+- '&7Admins have no plot limits.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_sync: '&dProxy Sync'
+admin_sync_lore:
+- '&7Sync data across proxy network.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_perf: '&cLow Overhead Mode'
+admin_perf_lore:
+- '&7Reduce system resource usage.'
+- ' '
+- '&eSetting: &f{STATE}'
+
+button_admin_diagnostics: '&bDiagnostics'
+admin_diagnostics_lore:
+- '&7View system statistics and health.'
+
+button_reload_all_settings: '&eReload All Settings'
+reload_all_settings_lore:
+- '&7Reload configuration and systems.'
+- ' '
+- '&eClick to reload'
+
+button_refresh_language_packs: '&aRefresh Language Packs'
+refresh_language_packs_lore:
+- '&7Reload language bundles only.'
+- '&7Use after editing lang files.'
+- ' '
+- '&eClick to refresh'
+
+button_admin_snapshots: '&d📸 Claim Snapshots'
+admin_snapshots_lore:
+- '&7View and manage claim snapshots.'
+- '&7Rollback plots to prior states.'
+- ' '
+- '&eClick to open browser'
+
+button_admin_snapshots_disabled: '&8📸 Snapshots Disabled'
+admin_snapshots_disabled_lore:
+- '&7Snapshot system is disabled.'
+- '&7Enable in config.yml'
+
+admin_plot_list_title: '&bPlot Ledger'
+admin_plot_list_lore:
+- '&7View and teleport to any plot.'
+
+toggle_on: '&aENABLED'
+toggle_off: '&cDISABLED'
+admin_toggle_format: '{NAME}: {STATE}'
+admin_toggle_default_lore:
+- '&7Toggle this setting.'

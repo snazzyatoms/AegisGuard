@@ -119,7 +119,7 @@ claimblocks_exchange_disabled_lore:
 # =========================================================
 
 # GUI title - must have color codes
-claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'
+claimblocks_exchange_gui_title: 'claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'b✦ claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'eClaimBlock Exchange claimblocks_exchange_gui_title: '&8ClaimBlock Exchange'b✦'
 claimblocks_exchange_title: '&8ClaimBlock Exchange'
 
 # Filler/background - single space, no tooltip

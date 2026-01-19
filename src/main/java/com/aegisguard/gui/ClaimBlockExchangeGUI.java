@@ -104,7 +104,7 @@ public class ClaimBlockExchangeGUI {
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
             // Open main menu
             if (plugin.gui() != null) {
-                plugin.gui().open(p);
+                plugin.gui().openMain(p);
             }
             return;
         }

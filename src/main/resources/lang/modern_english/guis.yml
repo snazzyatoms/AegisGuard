@@ -226,7 +226,7 @@ expansion_decided_by_unknown: '&7Unknown'
 # ------------------------------------------------------------
 # ClaimBlocks Exchange GUI
 # ------------------------------------------------------------
-claimblocks_exchange_gui_title: '&8Claim Block Exchange'
+claimblocks_exchange_gui_title: '&7Claim Block Exchange'
 claimblocks_exchange_title: '&bClaim Block Exchange'
 claimblocks_exchange_lore:
   - '&7Trade Claim Blocks for money.'
@@ -511,3 +511,65 @@ realestate_button_back: '&e⟵ Back to Real Estate'
 domain_market_button_back: '&e⟵ Back to Domain Market'
 biome_button_back: '&e⟵ Back to Claim Settings'
 biome_button_exit: '&c✖ Close Biome Changer'
+
+# Admin Menu Translations
+button_admin_auto_remove: '&cAuto-Remove Banned'
+admin_auto_remove_lore:
+- '&7Auto-unclaim when owner banned'
+- '&eSetting: &f{STATE}'
+
+button_admin_bypass_limit: '&bBypass Claim Limit'
+admin_bypass_limit_lore:
+- '&7Admins ignore plot limits'
+- '&eSetting: &f{STATE}'
+
+button_admin_broadcast: '&eBroadcast Actions'
+admin_broadcast_lore:
+- '&7Announce admin actions'
+- '&eSetting: &f{STATE}'
+
+button_admin_unlimited: '&aUnlimited Plots'
+admin_unlimited_lore:
+- '&7No plot limits for admins'
+- '&eSetting: &f{STATE}'
+
+button_admin_sync: '&dProxy Sync'
+admin_sync_lore:
+- '&7Network data sync'
+- '&eSetting: &f{STATE}'
+
+button_admin_perf: '&cLow Overhead'
+admin_perf_lore:
+- '&7Reduce resource usage'
+- '&eSetting: &f{STATE}'
+
+button_admin_diagnostics: '&bDiagnostics'
+admin_diagnostics_lore:
+- '&7System statistics'
+
+button_reload_all_settings: '&eReload Settings'
+reload_all_settings_lore:
+- '&7Reload config'
+- '&eClick to reload'
+
+button_refresh_language_packs: '&aRefresh Languages'
+refresh_language_packs_lore:
+- '&7Reload language files'
+- '&eClick to refresh'
+
+button_admin_snapshots: '&d📸 Snapshots'
+admin_snapshots_lore:
+- '&7Manage claim snapshots'
+- '&eClick to open'
+
+button_admin_snapshots_disabled: '&8📸 Disabled'
+admin_snapshots_disabled_lore:
+- '&7Snapshots disabled'
+
+admin_plot_list_title: '&bPlot List'
+admin_plot_list_lore:
+- '&7View all plots'
+
+toggle_on: '&aON'
+toggle_off: '&cOFF'
+admin_toggle_format: '{NAME}: {STATE}'

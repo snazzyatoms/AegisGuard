@@ -607,38 +607,26 @@ button_admin_auto_remove: '&cAuto-Remover Baneados'
 admin_auto_remove_lore:
 - '&7Desreclama automáticamente parcelas'
 - '&7cuando los dueños son baneados.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
 admin_bypass_limit_lore:
 - '&7Los admins ignoran el límite de parcelas.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_broadcast: '&eTransmitir Acciones Admin'
 admin_broadcast_lore:
 - '&7Anuncia acciones de admin al servidor.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_unlimited: '&aDominios Infinitos'
 admin_unlimited_lore:
 - '&7Los admins no tienen límites de parcelas.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_sync: '&dSincronización Proxy'
 admin_sync_lore:
 - '&7Sincroniza datos en red proxy.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_perf: '&cModo Bajo Consumo'
 admin_perf_lore:
 - '&7Reduce uso de recursos del sistema.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_diagnostics: '&bDiagnósticos'
 admin_diagnostics_lore:

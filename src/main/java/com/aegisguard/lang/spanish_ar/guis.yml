@@ -226,8 +226,7 @@ expansion_decided_by_unknown: '&7Desconocido'
 # ------------------------------------------------------------
 # GUI de Intercambio ClaimBlocks
 # ------------------------------------------------------------
-claimblocks_exchange_gui_title: 'claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'b✦ claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'eIntercambio de ClaimBlocks claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks'b✦'
-claimblocks_exchange_filler_name: ' '
+claimblocks_exchange_gui_title: '&8Intercambio de ClaimBlocks b✦' 
 
 claimblocks_exchange_buy_label: 'COMPRAR'
 claimblocks_exchange_sell_label: 'VENDER'

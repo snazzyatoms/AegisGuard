@@ -516,32 +516,26 @@ biome_button_exit: '&c✖ Close Biome Changer'
 button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
 - '&7Auto-unclaim when owner banned'
-- '&eSetting: &f{STATE}'
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:
 - '&7Admins ignore plot limits'
-- '&eSetting: &f{STATE}'
 
 button_admin_broadcast: '&eBroadcast Actions'
 admin_broadcast_lore:
 - '&7Announce admin actions'
-- '&eSetting: &f{STATE}'
 
 button_admin_unlimited: '&aUnlimited Plots'
 admin_unlimited_lore:
 - '&7No plot limits for admins'
-- '&eSetting: &f{STATE}'
 
 button_admin_sync: '&dProxy Sync'
 admin_sync_lore:
 - '&7Network data sync'
-- '&eSetting: &f{STATE}'
 
 button_admin_perf: '&cLow Overhead'
 admin_perf_lore:
 - '&7Reduce resource usage'
-- '&eSetting: &f{STATE}'
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:

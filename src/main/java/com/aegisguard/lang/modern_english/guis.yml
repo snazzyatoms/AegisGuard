@@ -226,7 +226,7 @@ expansion_decided_by_unknown: '&7Unknown'
 # ------------------------------------------------------------
 # ClaimBlocks Exchange GUI
 # ------------------------------------------------------------
-claimblocks_exchange_gui_title: '&8Claim Block Exchange'
+claimblocks_exchange_gui_title: '&7Claim Block Exchange'
 claimblocks_exchange_title: '&bClaim Block Exchange'
 claimblocks_exchange_lore:
   - '&7Trade Claim Blocks for money.'

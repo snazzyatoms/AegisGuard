@@ -194,35 +194,35 @@ public class AdminGUI {
         if (item.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         switch (e.getSlot()) {
-            case 10 -> { 
+            case 10 -> { // Auto-Remove Banned
                 GUIManager.playClick(player);
-                flipBool(player, "admin.auto_remove_banned", "admin_auto_remove_enabled", "admin_auto_remove_disabled", false); 
-                open(player); 
+                toggleAndReopen(player, "admin.auto_remove_banned", false, 
+                    "admin_auto_remove_enabled", "admin_auto_remove_disabled");
             }
-            case 11 -> { 
+            case 11 -> { // Bypass Claim Limit
                 GUIManager.playClick(player);
-                flipBool(player, "admin.bypass_claim_limit", "admin_bypass_enabled", "admin_bypass_disabled", false); 
-                open(player); 
+                toggleAndReopen(player, "admin.bypass_claim_limit", false,
+                    "admin_bypass_enabled", "admin_bypass_disabled");
             }
-            case 12 -> { 
+            case 12 -> { // Broadcast Admin Actions
                 GUIManager.playClick(player);
-                flipBool(player, "admin.broadcast_admin_actions", "admin_broadcast_enabled", "admin_broadcast_disabled", false); 
-                open(player); 
+                toggleAndReopen(player, "admin.broadcast_admin_actions", false,
+                    "admin_broadcast_enabled", "admin_broadcast_disabled");
             }
-            case 13 -> { 
+            case 13 -> { // Unlimited Plots
                 GUIManager.playClick(player);
-                flipBool(player, "admin.unlimited_plots", null, null, true); 
-                open(player); 
+                toggleAndReopen(player, "admin.unlimited_plots", true,
+                    null, null);
             }
-            case 14 -> { 
+            case 14 -> { // Proxy Sync
                 GUIManager.playClick(player);
-                flipBool(player, "sync.proxy.enabled", null, null, false); 
-                open(player); 
+                toggleAndReopen(player, "sync.proxy.enabled", false,
+                    null, null);
             }
-            case 15 -> { 
+            case 15 -> { // Low Overhead Mode
                 GUIManager.playClick(player);
-                flipBool(player, "performance.low_overhead_mode", null, null, false); 
-                open(player); 
+                toggleAndReopen(player, "performance.low_overhead_mode", false,
+                    null, null);
             }
 
             case 28 -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
@@ -363,23 +363,42 @@ public class AdminGUI {
         inv.setItem(slot, GUIManager.createItem(icon, display, lore));
     }
 
-    private void flipBool(Player p, String path, String msgOn, String msgOff, boolean def) {
+    /**
+     * Toggle a boolean config value and reopen the menu AFTER saving.
+     * This ensures the GUI shows the updated state.
+     */
+    private void toggleAndReopen(Player p, String path, boolean def, String msgOn, String msgOff) {
+        // Get current value
         boolean current = plugin.getConfig().getBoolean(path, def);
         boolean next = !current;
-
+        
+        // Set new value in memory
         plugin.getConfig().set(path, next);
-
-        // Save async (less chance of hitching on Folia)
+        
+        // Save synchronously to ensure it's written before GUI reopens
         try {
-            plugin.runGlobalAsync(plugin::saveConfig);
-        } catch (Throwable ignored) {
             plugin.saveConfig();
+        } catch (Throwable t) {
+            plugin.getLogger().warning("[AdminGUI] Failed to save config: " + t.getMessage());
         }
-
-        tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
-
-        if (next && msgOn != null) sendKey(p, msgOn, "&aSetting enabled.");
-        if (!next && msgOff != null) sendKey(p, msgOff, "&cSetting disabled.");
+        
+        // Reload the config wrapper if it exists
+        try {
+            if (plugin.cfg() != null) {
+                tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+            }
+        } catch (Throwable ignored) {}
+        
+        // Send confirmation message
+        if (next && msgOn != null) {
+            sendKey(p, msgOn, "&aSetting enabled.");
+        }
+        if (!next && msgOff != null) {
+            sendKey(p, msgOff, "&cSetting disabled.");
+        }
+        
+        // NOW reopen the menu - config is saved and reloaded
+        open(player);
     }
 
     private void sendKey(Player p, String key, String fallback) {

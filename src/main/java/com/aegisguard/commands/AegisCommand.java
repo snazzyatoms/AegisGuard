@@ -1297,55 +1297,39 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
      * When disabled, the player won't receive certain notifications (e.g., claim events, admin messages).
      */
     private void handleNotify(Player p) {
-        // Try to get the current notification state from player's persistent data or config
-        boolean notificationsEnabled = true;
+        // Simple config-based storage path
+        String configPath = "notifications." + p.getUniqueId().toString();
         
+        // Get current state from config (default is true/enabled)
+        boolean currentlyEnabled = plugin.getConfig().getBoolean(configPath, true);
+        
+        // Toggle the state
+        boolean newState = !currentlyEnabled;
+        
+        // Save the new state to config
+        plugin.getConfig().set(configPath, newState);
+        
+        // Save config asynchronously to avoid blocking
         try {
-            // Check if plugin has a method to get/set player notifications
-            // This could be stored in player data, config, or a separate manager
-            if (plugin.store() != null) {
-                // Try reflection to find notification methods
+            plugin.runGlobalAsync(() -> {
                 try {
-                    Method getMethod = plugin.store().getClass().getMethod("getNotifications", UUID.class);
-                    Object result = getMethod.invoke(plugin.store(), p.getUniqueId());
-                    if (result instanceof Boolean) {
-                        notificationsEnabled = (Boolean) result;
-                    }
-                } catch (NoSuchMethodException ignored) {
-                    // Method doesn't exist, use default
-                }
-            }
-        } catch (Throwable t) {
-            // Fall back to checking config or default value
-            notificationsEnabled = plugin.getConfig().getBoolean("player." + p.getUniqueId() + ".notifications", true);
-        }
-        
-        // Toggle the notification state
-        boolean newState = !notificationsEnabled;
-        
-        try {
-            // Try to save the new state
-            if (plugin.store() != null) {
-                try {
-                    Method setMethod = plugin.store().getClass().getMethod("setNotifications", UUID.class, boolean.class);
-                    setMethod.invoke(plugin.store(), p.getUniqueId(), newState);
-                } catch (NoSuchMethodException ignored) {
-                    // Store in config as fallback
-                    plugin.getConfig().set("player." + p.getUniqueId() + ".notifications", newState);
                     plugin.saveConfig();
+                } catch (Throwable t) {
+                    plugin.getLogger().warning("[AegisCommand] Failed to save notification preference: " + t.getMessage());
                 }
-            } else {
-                // Store in config
-                plugin.getConfig().set("player." + p.getUniqueId() + ".notifications", newState);
-                plugin.saveConfig();
-            }
+            });
         } catch (Throwable t) {
-            plugin.getLogger().warning("[AegisCommand] Failed to save notification preference: " + t.getMessage());
-            sendKey(p, "notify_error", "&cFailed to save notification preference.");
-            return;
+            // Fallback: save synchronously
+            try {
+                plugin.saveConfig();
+            } catch (Throwable saveError) {
+                plugin.getLogger().warning("[AegisCommand] Failed to save notification preference: " + saveError.getMessage());
+                sendKey(p, "notify_error", "&cFailed to save notification preference.");
+                return;
+            }
         }
         
-        // Send confirmation message
+        // Send confirmation message based on NEW state
         if (newState) {
             sendKey(p, "notify_enabled", "&aNotifications enabled. You will receive claim and admin notifications.");
             if (plugin.effects() != null) {

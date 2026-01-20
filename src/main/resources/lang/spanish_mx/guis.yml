@@ -4,7 +4,7 @@
 # Updated: 2026-01-20
 # ======================================
 # Uses tú form (Mexican Spanish)
-# All keys synchronized with PlayerGUI.java and VisitGUI.java
+# All keys synchronized with PlayerGUI.java, VisitGUI.java, SettingsGUI.java
 # ======================================
 
 # ------------------------------------------------------------
@@ -44,7 +44,7 @@ plot_status_button_title: '&d📜 Estado de Parcela'
 plot_status_button_lore:
 - '&7Ver estado y detalles de la parcela.'
 
-# Travel Button (Slot 13) - CRITICAL KEY FIX!
+# Travel Button (Slot 13)
 visit_gui_title: '&a🧭 Menú de Viaje'
 visit_button_lore:
 - '&7Visita parcelas y viaja rápidamente.'
@@ -119,7 +119,7 @@ button_player_settings: '&e⚙ Configuración'
 player_settings_lore:
 - '&7Preferencias personales e idioma.'
 
-# Admin Button (Slot 49) - CRITICAL KEY FIX!
+# Admin Button (Slot 49)
 admin_menu_title: '&c🛠 Kit del Alto Guardián'
 admin_menu_lore:
 - '&7Acceso exclusivo del operador'
@@ -131,19 +131,16 @@ not_plot_owner: '&cNo puedes administrar esta parcela.'
 claimblocks_exchange_unavailable: '&cEl intercambio de bloques no está disponible en este momento.'
 
 # ------------------------------------------------------------
-# Visit GUI (VisitGUI.java) - CRITICAL FIXES!
+# Visit GUI (VisitGUI.java)
 # ------------------------------------------------------------
-# GUI Titles
 visit_title_warps: '&6Puntos de Teletransporte (Warp)'
 visit_title_trusted: '&bParcelas de Confianza'
 
-# Empty State - CRITICAL KEY FIX!
 visit_empty_title: '&cNada para visitar'
 visit_empty_lore:
 - '&7No se encontraron destinos para este modo.'
 - '&7Prueba cambiando de pestaña.'
 
-# Tab Switch Buttons
 visit_switch_trusted: '&bParcelas de Confianza'
 visit_switch_trusted_lore:
 - '&7Mostrar parcelas donde eres de confianza.'
@@ -152,14 +149,12 @@ visit_switch_warps: '&6Puntos del Servidor'
 visit_switch_warps_lore:
 - '&7Mostrar puntos de teletransporte públicos.'
 
-# Warp Item Display
 visit_warp_name: '&6{WARP}'
 visit_warp_lore:
 - '&7Un punto de teletransporte público.'
 - ' '
 - '&eClic para teletransportarte'
 
-# Plot Item Display
 visit_plot_name: '&e{PLOT}'
 visit_plot_lore:
 - '&7Mundo: &f{WORLD}'
@@ -167,13 +162,10 @@ visit_plot_lore:
 - ' '
 - '&eClic para teletransportarte'
 
-# Teleport Messages
 visit_fail_no_spawn: '&cEste destino no tiene un punto de aparición válido.'
 visit_teleport_success: '&aTeletransportado.'
 
-# ------------------------------------------------------------
-# Alternate Key Names (for compatibility)
-# ------------------------------------------------------------
+# Alternate Key Names (compatibility)
 visit_lore:
 - '&7Visita parcelas y viaja rápidamente.'
 travel_lore:
@@ -184,6 +176,41 @@ visit_gui_button_lore:
 - '&7Visita parcelas y viaja rápidamente.'
 admin_button_lore:
 - '&7Acceso exclusivo del operador'
+
+# ------------------------------------------------------------
+# Settings GUI (SettingsGUI.java) - LANGUAGE FIX!
+# ------------------------------------------------------------
+settings_menu_title: '&b⚙ Preferencias'
+
+# Sounds Settings
+settings_sounds_on_name: '&aSonidos: ACTIVADO'
+settings_sounds_off_name: '&cSonidos: DESACTIVADO'
+settings_sounds_lore:
+- '&7Alternar efectos de sonido de menú.'
+settings_sounds_global_off_name: '&cSonidos Deshabilitados Globalmente'
+settings_sounds_global_off_lore:
+- '&7Un admin del servidor deshabilitó los sonidos de UI.'
+
+# Language Settings - MATCHING OLD ENGLISH STYLE!
+settings_language_name: '&eIdioma: {LANG}'
+settings_language_lore:
+- '&7Clic para cambiar el estilo de idioma.'
+
+# Language Style Display Names
+style_old_english: '&dInglés Antiguo'
+style_modern_english: '&aInglés Moderno'
+style_hybrid_english: '&eInglés Híbrido'
+style_spanish_mx: '&bEspañol (México)'
+style_spanish_ar: '&bEspañol (Argentina)'
+
+# Notifications Settings
+settings_notifications_name: '&bNotificaciones: {MODE}'
+settings_notifications_lore:
+- '&7Clic para cambiar:'
+- '&7Barra de Acción -> Chat -> Título'
+settings_notif_mode_action_bar: '&bBarra de Acción'
+settings_notif_mode_chat: '&aChat'
+settings_notif_mode_title: '&dTítulo'
 
 # ------------------------------------------------------------
 # Roles GUI
@@ -276,7 +303,6 @@ biome_confirm_lore:
 biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
 biome_button_exit: '&c✖ Cerrar Cambiador de Bioma'
 
-# Biome Names
 biome_plains: '&aLlanuras'
 biome_forest: '&2Bosque'
 biome_desert: '&eDesierto'
@@ -421,37 +447,6 @@ realestate_button_back: '&e⟵ Volver a Bienes Raíces'
 domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
 
 # ------------------------------------------------------------
-# Settings GUI
-# ------------------------------------------------------------
-settings_menu_title: '&9⚙ Preferencias'
-settings_language_name: '&b🌐 Idioma'
-settings_language_lore:
-- '&7Idioma actual: &f{LANG}'
-- ' '
-- '&eClic para cambiar.'
-
-settings_notifications_name: '&b🔔 Notificaciones'
-settings_notifications_lore:
-- '&7Configura qué alertas recibes.'
-- '&7Estado: {STATUS}'
-- ' '
-- '&eClic para alternar.'
-
-settings_particles_name: '&d✨ Partículas'
-settings_particles_lore:
-- '&7Mostrar efectos visuales de parcela.'
-- '&7Estado: {STATUS}'
-- ' '
-- '&eClic para alternar.'
-
-settings_sounds_name: '&a🔊 Sonidos'
-settings_sounds_lore:
-- '&7Efectos de sonido del plugin.'
-- '&7Estado: {STATUS}'
-- ' '
-- '&eClic para alternar.'
-
-# ------------------------------------------------------------
 # ClaimBlocks Exchange GUI
 # ------------------------------------------------------------
 exchange_gui_title: '&a💱 Intercambio de Bloques'
@@ -508,7 +503,6 @@ expansion_status_pending: '&ePendiente'
 expansion_status_approved: '&aAprobado'
 expansion_status_denied: '&cRechazado'
 
-# Admin Expansion Review
 expansion_admin_title: '&c⛏ Revisar Expansiones'
 expansion_admin_item_lore:
 - '&7Jugador: &b{PLAYER}'
@@ -724,7 +718,7 @@ ledger_entry_lore:
 - '&7Por: &b{ACTOR}'
 
 # ------------------------------------------------------------
-# Mensajes de Estado Comunes
+# Common Status Messages
 # ------------------------------------------------------------
 status_enabled: '&aActivado'
 status_disabled: '&cDesactivado'

@@ -481,6 +481,86 @@ level_benefit_lore:
 - '&7{BENEFIT}'
 
 # ------------------------------------------------------------
+# Ascension Codex / Tier System (Plot Leveling GUI)
+# ------------------------------------------------------------
+# Tier Item Names
+tier_current_name: '&6Nivel Actual'
+tier_locked_name: '&8Nivel Bloqueado'
+tier_unlocked_name: '&aNivel Desbloqueado'
+tier_next_name: '&eSiguiente Nivel'
+
+# Tier Lore Lines
+tier_current_lore:
+- '&7Tu parcela está en este nivel.'
+tier_locked_lore:
+- '&cEste nivel aún no está disponible.'
+- '&7Completá el nivel anterior primero.'
+tier_unlocked_lore:
+- '&aNivel desbloqueado y activo.'
+tier_next_lore:
+- '&7El siguiente nivel a desbloquear.'
+
+# Tier Status Headers
+current_tier: '&6Nivel Actual'
+locked_tier: '&8Nivel Bloqueado'
+unlocked_tier: '&aNivel Desbloqueado'
+next_tier: '&eSiguiente Nivel'
+
+# Tier Description
+tier_description: '&7Tu parcela está en este nivel.'
+tier_locked_description: '&cEste nivel aún no está disponible.'
+
+# Bonuses Section
+unlocked_bonuses: '&bBonificaciones Desbloqueadas'
+locked_bonuses: '&7Bonificaciones Bloqueadas'
+no_bonuses: '&7Sin bonificaciones en este nivel.'
+bonus_prefix: '&a✦ '
+
+# Bonus Type Formatting
+bonus_speed: '&bVelocidad {LEVEL}'
+bonus_haste: '&ePresto {LEVEL}'
+bonus_resistance: '&9Resistencia {LEVEL}'
+bonus_strength: '&cFuerza {LEVEL}'
+bonus_jump: '&aSalto {LEVEL}'
+bonus_regeneration: '&dRegeneración {LEVEL}'
+bonus_night_vision: '&1Visión Nocturna'
+bonus_water_breathing: '&3Respiración Acuática'
+bonus_fire_resistance: '&6Resistencia al Fuego'
+bonus_members: '&eMiembros: {COUNT}'
+bonus_claim_blocks: '&aBloques de Reclamo: +{AMOUNT}'
+bonus_homes: '&dHogares: {COUNT}'
+
+# Progression Messages
+progression_mastered: '&dEsta línea de progresión está completamente dominada.'
+progression_locked: '&cProgresión bloqueada. Completá requisitos previos.'
+progression_available: '&eListo para subir de nivel.'
+progression_in_progress: '&7Progresión en curso...'
+
+# Tier Upgrade
+tier_upgrade_cost: '&7Costo: &6{COST}'
+tier_upgrade_requirements: '&7Requisitos:'
+tier_upgrade_click: '&eClic para subir de nivel'
+tier_upgrade_insufficient: '&cNo tenés suficientes recursos.'
+
+# Tier Names (for display)
+tier_name_1: '&7Nivel I'
+tier_name_2: '&fNivel II'
+tier_name_3: '&aNivel III'
+tier_name_4: '&bNivel IV'
+tier_name_5: '&dNivel V'
+tier_name_6: '&6Nivel VI'
+tier_name_7: '&cNivel VII'
+tier_name_8: '&5Nivel VIII'
+tier_name_9: '&eNivel IX'
+tier_name_10: '&6✦ Nivel X ✦'
+
+# Max Tier
+tier_max_reached: '&6★ Nivel Máximo Alcanzado'
+tier_max_lore:
+- '&dDominaste completamente esta parcela.'
+- '&7¡Disfrutá de todas las bonificaciones!'
+
+# ------------------------------------------------------------
 # Market GUI
 # ------------------------------------------------------------
 market_gui_title: '&6💰 Mercado de Parcelas'

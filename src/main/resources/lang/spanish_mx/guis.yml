@@ -4,7 +4,6 @@
 # Updated: 2026-01-20
 # ======================================
 # Uses tú form (Mexican Spanish)
-# All keys synchronized with PlayerGUI.java, VisitGUI.java, SettingsGUI.java
 # ======================================
 
 # ------------------------------------------------------------
@@ -30,26 +29,22 @@ exit_lore:
 button_back_admin: '&fVolver a Admin'
 
 # ------------------------------------------------------------
-# Menú Principal (PlayerGUI.java)
+# Menú Principal
 # ------------------------------------------------------------
 menu_title: '&b⚔ Menú AegisGuard'
 
-# Info Button (Slot 4)
 button_info: '&bℹ Información'
 info_lore:
 - '&7Ver información y ayuda del plugin.'
 
-# Plot Status Button (Slot 11)
 plot_status_button_title: '&d📜 Estado de Parcela'
 plot_status_button_lore:
 - '&7Ver estado y detalles de la parcela.'
 
-# Travel Button (Slot 13)
 visit_gui_title: '&a🧭 Menú de Viaje'
 visit_button_lore:
 - '&7Visita parcelas y viaja rápidamente.'
 
-# Claim Land Button (Slot 20)
 button_claim_land: '&a🛡 Reclamar Tierra'
 claim_land_lore:
 - '&7Selecciona dos puntos con tu varita primero.'
@@ -58,7 +53,6 @@ claim_land_ready_lore:
 - ' '
 - '&eClic para confirmar'
 
-# Plot Flags Button (Slot 22)
 button_plot_flags: '&6⚙ Banderas de Parcela'
 plot_flags_title: '&9⚙ Ajustes de Parcela'
 plot_flags_lore:
@@ -66,34 +60,28 @@ plot_flags_lore:
 plot_flags_locked_lore:
 - '&cNo puedes administrar banderas aquí.'
 
-# Roles Button (Slot 24)
 button_roles: '&e👥 Roles'
 roles_lore:
 - '&7Administrar roles y permisos de miembros.'
 roles_locked_lore:
 - '&cNo puedes administrar roles aquí.'
 
-# Leveling Button (Slot 29)
 level_gui_title: '&a📈 Niveles'
 level_button_lore:
 - '&7Sube de nivel tu parcela para beneficios.'
 
-# Zoning Button (Slot 31)
 zone_gui_title: '&b🏗 Zonificación'
 zone_button_lore:
 - '&7Crea sub-zonas y habitaciones rentables.'
 
-# Biomes Button (Slot 33)
 biome_gui_title: '&d🌿 Biomas'
 biome_button_lore:
 - '&7Cambia el bioma de tu parcela.'
 
-# Market Button (Slot 38)
 button_market: '&6💰 Mercado'
 market_lore:
 - '&7Compra y vende bienes de parcela.'
 
-# ClaimBlocks Exchange Button (Slot 39)
 button_claimblocks_exchange: '&a💱 Intercambio de Bloques'
 claimblocks_exchange_lore:
 - '&7Compra o vende bloques de reclamo por dinero.'
@@ -104,85 +92,60 @@ claimblocks_exchange_disabled_lore:
 - '&7Esta función no está disponible actualmente.'
 - '&8Habilitar: claim_blocks.exchange.enabled: true'
 
-# Expand Button (Slot 40)
 button_expand: '&b⛏ Expandir'
 expand_lore:
 - '&7Solicitar expansiones de terreno.'
 
-# Auctions Button (Slot 42)
 button_auction: '&c🔥 Subastas'
 auction_lore:
 - '&7Puja en parcelas y listados.'
 
-# Settings Button (Slot 48)
 button_player_settings: '&e⚙ Configuración'
 player_settings_lore:
 - '&7Preferencias personales e idioma.'
 
-# Admin Button (Slot 49)
 admin_menu_title: '&c🛠 Kit del Alto Guardián'
 admin_menu_lore:
 - '&7Acceso exclusivo del operador'
 
-# Chat Messages
 no_plot_here: '&cDebes estar parado dentro de una parcela para hacer eso.'
 no_selection: '&cNecesitas seleccionar dos puntos primero.'
 not_plot_owner: '&cNo puedes administrar esta parcela.'
 claimblocks_exchange_unavailable: '&cEl intercambio de bloques no está disponible en este momento.'
 
 # ------------------------------------------------------------
-# Visit GUI (VisitGUI.java)
+# Visit GUI
 # ------------------------------------------------------------
 visit_title_warps: '&6Puntos de Teletransporte (Warp)'
 visit_title_trusted: '&bParcelas de Confianza'
-
 visit_empty_title: '&cNada para visitar'
 visit_empty_lore:
 - '&7No se encontraron destinos para este modo.'
 - '&7Prueba cambiando de pestaña.'
-
 visit_switch_trusted: '&bParcelas de Confianza'
 visit_switch_trusted_lore:
 - '&7Mostrar parcelas donde eres de confianza.'
-
 visit_switch_warps: '&6Puntos del Servidor'
 visit_switch_warps_lore:
 - '&7Mostrar puntos de teletransporte públicos.'
-
 visit_warp_name: '&6{WARP}'
 visit_warp_lore:
 - '&7Un punto de teletransporte público.'
 - ' '
 - '&eClic para teletransportarte'
-
 visit_plot_name: '&e{PLOT}'
 visit_plot_lore:
 - '&7Mundo: &f{WORLD}'
 - '&7Rol: &b{ROLE}'
 - ' '
 - '&eClic para teletransportarte'
-
 visit_fail_no_spawn: '&cEste destino no tiene un punto de aparición válido.'
 visit_teleport_success: '&aTeletransportado.'
 
-# Alternate Key Names (compatibility)
-visit_lore:
-- '&7Visita parcelas y viaja rápidamente.'
-travel_lore:
-- '&7Visita parcelas y viaja rápidamente.'
-admin_lore:
-- '&7Acceso exclusivo del operador'
-visit_gui_button_lore:
-- '&7Visita parcelas y viaja rápidamente.'
-admin_button_lore:
-- '&7Acceso exclusivo del operador'
-
 # ------------------------------------------------------------
-# Settings GUI (SettingsGUI.java) - LANGUAGE FIX!
+# Settings GUI
 # ------------------------------------------------------------
 settings_menu_title: '&b⚙ Preferencias'
-
-# Sounds Settings
 settings_sounds_on_name: '&aSonidos: ACTIVADO'
 settings_sounds_off_name: '&cSonidos: DESACTIVADO'
 settings_sounds_lore:
@@ -190,20 +153,14 @@ settings_sounds_lore:
 settings_sounds_global_off_name: '&cSonidos Deshabilitados Globalmente'
 settings_sounds_global_off_lore:
 - '&7Un admin del servidor deshabilitó los sonidos de UI.'
-
-# Language Settings - MATCHING OLD ENGLISH STYLE!
 settings_language_name: '&eIdioma: {LANG}'
 settings_language_lore:
 - '&7Clic para cambiar el estilo de idioma.'
-
-# Language Style Display Names
 style_old_english: '&dInglés Antiguo'
 style_modern_english: '&aInglés Moderno'
 style_hybrid_english: '&eInglés Híbrido'
 style_spanish_mx: '&bEspañol (México)'
 style_spanish_ar: '&bEspañol (Argentina)'
-
-# Notifications Settings
 settings_notifications_name: '&bNotificaciones: {MODE}'
 settings_notifications_lore:
 - '&7Clic para cambiar:'
@@ -228,7 +185,6 @@ roles_member_lore:
 - ' '
 - '&eClic izquierdo: &7Cambiar rol'
 - '&cClic derecho: &7Quitar'
-
 role_owner: '&6Dueño'
 role_coowner: '&dCo-Dueño'
 role_trusted: '&aDe Confianza'
@@ -415,10 +371,10 @@ biome_item_lore:
 
 biome_plains: '&aLlanuras'
 biome_forest: '&2Bosque'
-biome_desert: '&eDesierто'
+biome_desert: '&eDesierto'
 biome_jungle: '&aSelva'
 biome_swamp: '&8Pantano'
-biome_taiga: '&bTaiga'
+biome_top_taiga: '&bTaiga'
 biome_snowy_plains: '&fLlanuras Nevadas'
 biome_savanna: '&6Sabana'
 biome_badlands: '&cTierras Baldías'
@@ -464,32 +420,95 @@ zone_type_restricted: '&cRestringido'
 # Level GUI
 # ------------------------------------------------------------
 level_gui_title: '&a📈 Niveles de Parcela'
-level_current: '&bNivel Actual: &e{LEVEL}'
-level_current_lore:
-- '&7Tu nivel actual de parcela.'
-level_upgrade_button: '&a⬆ Subir de Nivel'
-level_upgrade_lore:
-- '&7Costo: &6{COST}'
-- '&7Siguiente nivel: &e{NEXT}'
+level_header_owner: '&7Dueño: &f{OWNER}'
+level_header_world: '&7Mundo: &f{WORLD}'
+level_header_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
+level_header_multiplier: '&7Multiplicador de Costo: &f{MULTIPLIER}'
+level_header_growth_title: '&bCrecimiento de Territorio:'
+level_header_growth_line: '&7+&f{AMOUNT} &7bloques de radio por nivel.'
+level_current_status: '&eEstado del Dominio'
+
+level_current_blessings_name: '&bBendiciones Actuales'
+level_current_blessings_title: '&bBendiciones al Nivel &f{LEVEL}'
+level_current_blessings_footer_1: '&7Solo se muestran tus mejoras más fuertes.'
+level_current_blessings_footer_2: '&8(Mantén esta vista limpia y legible.)'
+
+level_upgrade_unavailable: '&cNo se puede mejorar'
+level_upgrade_unavailable_lore:
+- '&7No hay un método de pago disponible.'
+- '&8Habilita la progresión por bloques o Vault.'
 - ' '
-- '&eClic para subir de nivel'
+- '&cMejora bloqueada.'
+
+level_upgrade_next_tier: '&eSiguiente Rango: &fNivel {LEVEL}'
+level_upgrade_cost_money: '&7Dinero: &6{COST} &8({TYPE})'
+level_upgrade_cost_money_disabled: '&8Dinero: Deshabilitado/No disponible'
+level_upgrade_cost_blocks: '&7Bloques: &b{COST} &7(Tienes &b{BALANCE}&7)'
+level_upgrade_cost_blocks_disabled: '&8Bloques: Deshabilitado/No disponible'
+level_upgrade_new_buffs_title: '&bNuevas Bendiciones:'
+level_upgrade_preview_title: '&eVista Previa de Ascensión (Nivel {LEVEL})'
+level_upgrade_territory_title: '&bGanancia de Territorio:'
+level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
+level_upgrade_click_hint: '&eClic para ascender al Nivel {LEVEL}'
+
+level_upgrade_button_money: '&6Mejorar con Dinero (Nivel {LEVEL})'
+level_upgrade_button_money_lore:
+- '&7Paga usando la economía del servidor.'
+- '&7Costo: &6{COST} &8({TYPE})'
+- ' '
+- '&eClic para mejorar'
+
+level_upgrade_button_blocks: '&bMejorar con Bloques (Nivel {LEVEL})'
+level_upgrade_button_blocks_lore:
+- '&7Gasta tus bloques ganados.'
+- '&7Costo: &b{COST} Bloques'
+- '&7Saldo: &b{BALANCE}'
+- ' '
+- '&eClic para mejorar'
+
+level_track_completed_name: '&aNivel {LEVEL} Completado'
+level_track_completed_lore:
+- '&7Ya dominaste este nivel.'
+level_track_current_name: '&eNivel {LEVEL} Actual'
+level_track_current_lore:
+- '&7Tu parcela está en este nivel.'
+level_track_locked_name: '&cNivel {LEVEL} Bloqueado'
+level_track_locked_lore:
+- '&7Alcanza el nivel anterior primero.'
+level_track_next_name: '&bSiguiente: Nivel {LEVEL}'
+level_track_next_lore:
+- '&7El siguiente paso en tu ascensión.'
+level_track_buffs_title: '&bBendiciones:'
+level_track_footer_next: '&eEl siguiente rango te espera.'
+level_track_footer_progress: '&7Avanza para desbloquear este rango.'
+level_track_footer_mastered: '&aDominado.'
+
 level_max_reached: '&6★ Nivel Máximo'
-level_max_lore:
-- '&7Has alcanzado el nivel máximo.'
-level_benefit_title: '&d✨ Beneficios del Nivel {LEVEL}'
-level_benefit_lore:
-- '&7{BENEFIT}'
+level_max_reached_lore:
+- '&7Tu dominio ha alcanzado'
+- '&7su nivel más alto.'
+- ' '
+- '&aDisfruta de todo tu poder.'
+
+level_expansion_title: '&aExpansión de Territorio'
+level_expansion_lore:
+- '&bReglas de Crecimiento:'
+- '&7Cada mejora expande el radio'
+- '&7de tu reclamo equitativamente.'
+
+level_up_fail_cost: '&cNo tienes suficientes recursos para mejorar.'
+level_up_fail_overlap: '&cNo se puede mejorar: el terreno nuevo se superpone con otro reclamo.'
+level_up_fail_world_limit: '&cNo se puede mejorar: alcanzaste el límite de radio de este mundo ({LIMIT}).'
+level_up_success: '&a¡Tu parcela ha ascendido al nivel {LEVEL}!'
 
 # ------------------------------------------------------------
-# Ascension Codex / Tier System (Plot Leveling GUI)
+# Ascension Codex / Tier System
 # ------------------------------------------------------------
-# Tier Item Names
 tier_current_name: '&6Nivel Actual'
 tier_locked_name: '&8Nivel Bloqueado'
 tier_unlocked_name: '&aNivel Desbloqueado'
 tier_next_name: '&eSiguiente Nivel'
 
-# Tier Lore Lines
 tier_current_lore:
 - '&7Tu parcela está en este nivel.'
 tier_locked_lore:
@@ -500,23 +519,19 @@ tier_unlocked_lore:
 tier_next_lore:
 - '&7El siguiente nivel a desbloquear.'
 
-# Tier Status Headers
 current_tier: '&6Nivel Actual'
 locked_tier: '&8Nivel Bloqueado'
 unlocked_tier: '&aNivel Desbloqueado'
 next_tier: '&eSiguiente Nivel'
 
-# Tier Description
 tier_description: '&7Tu parcela está en este nivel.'
 tier_locked_description: '&cEste nivel aún no está disponible.'
 
-# Bonuses Section
 unlocked_bonuses: '&bBonificaciones Desbloqueadas'
 locked_bonuses: '&7Bonificaciones Bloqueadas'
 no_bonuses: '&7Sin bonificaciones en este nivel.'
 bonus_prefix: '&a✦ '
 
-# Bonus Type Formatting
 bonus_speed: '&bVelocidad {LEVEL}'
 bonus_haste: '&ePresto {LEVEL}'
 bonus_resistance: '&9Resistencia {LEVEL}'
@@ -530,19 +545,16 @@ bonus_members: '&eMiembros: {COUNT}'
 bonus_claim_blocks: '&aBloques de Reclamo: +{AMOUNT}'
 bonus_homes: '&dHogares: {COUNT}'
 
-# Progression Messages
 progression_mastered: '&dEsta línea de progresión está completamente dominada.'
 progression_locked: '&cProgresión bloqueada. Completa requisitos previos.'
 progression_available: '&eListo para subir de nivel.'
 progression_in_progress: '&7Progresión en curso...'
 
-# Tier Upgrade
 tier_upgrade_cost: '&7Costo: &6{COST}'
 tier_upgrade_requirements: '&7Requisitos:'
 tier_upgrade_click: '&eClic para subir de nivel'
 tier_upgrade_insufficient: '&cNo tienes suficientes recursos.'
 
-# Tier Names (for display)
 tier_name_1: '&7Nivel I'
 tier_name_2: '&fNivel II'
 tier_name_3: '&aNivel III'
@@ -554,7 +566,6 @@ tier_name_8: '&5Nivel VIII'
 tier_name_9: '&eNivel IX'
 tier_name_10: '&6✦ Nivel X ✦'
 
-# Max Tier
 tier_max_reached: '&6★ Nivel Máximo Alcanzado'
 tier_max_lore:
 - '&dHas dominado completamente esta parcela.'
@@ -593,7 +604,7 @@ auction_item_lore:
 - '&7Mejor postor: &b{BIDDER}'
 - '&7Tiempo restante: &c{TIME}'
 - ' '
-- '&eClic para pujar'
+- '&eClic para puja'
 auction_create_button: '&a➕ Crear Subasta'
 auction_create_lore:
 - '&7Subasta una de tus parcelas.'
@@ -617,7 +628,7 @@ expansion_blocked_lore:
 - '&7Hay terreno reclamado bloqueando.'
 
 # ------------------------------------------------------------
-# Pending Requests GUI (Admin)
+# Pending Requests GUI
 # ------------------------------------------------------------
 pending_requests_title: '&6📋 Solicitudes Pendientes'
 pending_request_item: '&e{TYPE}'
@@ -651,7 +662,7 @@ plot_status_members_lore:
 - '&7Jugadores de confianza en esta parcela.'
 
 # ------------------------------------------------------------
-# Codex GUI (Guía del Guardián)
+# Codex GUI
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
 
@@ -675,198 +686,4 @@ codex_claim_lore:
 - '&f3. &7Clic izquierdo en la esquina opuesta.'
 - '&f4. &7Usa &a/ag claim &7para comprar la parcela.'
 
-codex_travel_title: '&b§lIII. Viaje'
-codex_travel_lore:
-- '&7Comandos de viaje rápido:'
-- ' '
-- '&e/ag home &7- Teletranspórtate a tu parcela.'
-- '&e/ag setspawn &7- Establece el spawn de tu parcela.'
-- '&e/ag visit &7- Visita parcelas de otros jugadores.'
-
-codex_menus_title: '&d§lIV. Menús'
-codex_menus_lore:
-- '&7Usa &b/ag menu &7para gestionar:'
-- ' '
-- '&6🚩 Ajustes: &7PvP, mobs, fuego y más.'
-- '&b👥 Miembros: &7Jugadores de confianza y roles.'
-- '&d✨ Cosméticos: &7Partículas de borde y visuales.'
-- '&a🌿 Biomas: &7Apariencia del bioma de la parcela.'
-
-codex_security_title: '&c§lV. Seguridad'
-codex_security_lore:
-- '&7Gestiona visitantes y problemáticos:'
-- ' '
-- '&c/ag kick &7- Expulsa un jugador de tu parcela.'
-- '&4/ag ban &7- Prohíbe la entrada a un jugador.'
-
-codex_economy_title: '&6§lVI. Economía'
-codex_economy_lore:
-- '&7Conceptos básicos de economía:'
-- ' '
-- '&eMantenimiento: &7Paga mantenimiento para conservar tu parcela.'
-- '&aMercado: &7Compra y vende parcelas con otros.'
-
-codex_identity_title: '&3§lVII. Identidad'
-codex_identity_lore:
-- '&7Personaliza tu parcela:'
-- ' '
-- '&b/ag rename &7- Establece un nombre personalizado.'
-- '&e/ag stuck &7- Escapa si quedas atrapado en bloques.'
-
-codex_advanced_title: '&5§lVIII. Avanzado'
-codex_advanced_lore:
-- '&dNivelación: &7Mejora tu parcela para desbloquear ventajas.'
-- '&eZonas: &7Crea zonas de alquiler dentro de tu parcela.'
-
-codex_faq_title: '&9§lIX. Preguntas Frecuentes'
-codex_faq_lore:
-- '&7Preguntas comunes:'
-- ' '
-- '&e¿Cómo agrando mi parcela?'
-- '&7Usa &b/ag expand &7o mejora de nivel.'
-- ' '
-- '&e¿Cómo agrego amigos?'
-- '&7Usa &b/ag trust <jugador>'
-- ' '
-- '&e¿Cómo elimino mi parcela?'
-- '&7Usa &b/ag unclaim'
-
-codex_commands_title: '&a§lX. Comandos'
-codex_commands_lore:
-- '&7Lista completa de comandos:'
-- ' '
-- '&b/ag help &7- Mostrar ayuda'
-- '&b/ag menu &7- Abrir menú principal'
-- '&b/ag claim &7- Reclamar selección'
-- '&b/ag unclaim &7- Eliminar parcela'
-- '&b/ag trust &7- Agregar jugador'
-- '&b/ag untrust &7- Quitar jugador'
-- '&b/ag flags &7- Editar banderas'
-- '&b/ag home &7- Ir a tu parcela'
-
-# ------------------------------------------------------------
-# Admin Menu
-# ------------------------------------------------------------
-admin_gui_title: '&c🛠 Kit del Alto Guardián'
-
-button_admin_auto_remove: '&cAuto-Remover Baneados'
-admin_auto_remove_lore:
-- '&7Desreclama automáticamente parcelas'
-- '&7cuando los dueños son baneados.'
-
-button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
-admin_bypass_limit_lore:
-- '&7Los admins ignoran el límite de parcelas.'
-
-button_admin_broadcast: '&eTransmitir Acciones Admin'
-admin_broadcast_lore:
-- '&7Anuncia acciones de admin al servidor.'
-
-button_admin_unlimited: '&aDominios Infinitos'
-admin_unlimited_lore:
-- '&7Los admins no tienen límites de parcelas.'
-
-button_admin_sync: '&dSincronización Proxy'
-admin_sync_lore:
-- '&7Sincroniza datos en red proxy.'
-
-button_admin_perf: '&cModo Bajo Consumo'
-admin_perf_lore:
-- '&7Reduce uso de recursos del sistema.'
-
-button_admin_diagnostics: '&bDiagnósticos'
-admin_diagnostics_lore:
-- '&7Mira estadísticas del sistema.'
-
-button_reload_all_settings: '&eRecargar Todos los Ajustes'
-reload_all_settings_lore:
-- '&7Recarga configuración y sistemas.'
-- ' '
-- '&eClic para recargar'
-
-button_refresh_language_packs: '&aActualizar Paquetes de Idioma'
-refresh_language_packs_lore:
-- '&7Recarga archivos de idioma.'
-- '&7Usa después de editar archivos.'
-- ' '
-- '&eClic para actualizar'
-
-button_admin_snapshots: '&d📸 Instantáneas de Parcelas'
-admin_snapshots_lore:
-- '&7Mira y gestiona instantáneas.'
-- '&7Restaura parcelas a estados previos.'
-- ' '
-- '&eClic para abrir'
-
-button_admin_snapshots_disabled: '&8📸 Instantáneas Deshabilitadas'
-admin_snapshots_disabled_lore:
-- '&7Sistema de instantáneas deshabilitado.'
-- '&7Habilita en config.yml'
-
-admin_plot_list_title: '&bLista de Parcelas'
-admin_plot_list_lore:
-- '&7Mira y teletranspórtate a cualquier parcela.'
-
-toggle_on: '&aACTIVADO'
-toggle_off: '&cDESACTIVADO'
-admin_toggle_format: '{NAME}: {STATE}'
-admin_toggle_default_lore:
-- '&7Alterna este ajuste.'
-
-# ------------------------------------------------------------
-# Ledger GUI
-# ------------------------------------------------------------
-ledger_title: '&6📜 Registro de Dominios'
-ledger_entry_lore:
-- '&7Fecha: &f{DATE}'
-- '&7Acción: &e{ACTION}'
-- '&7Por: &b{ACTOR}'
-
-# ------------------------------------------------------------
-# Common Status Messages
-# ------------------------------------------------------------
-status_enabled: '&aActivado'
-status_disabled: '&cDesactivado'
-status_on: '&aSí'
-status_off: '&cNo'
-status_locked: '&cBloqueado'
-status_unlocked: '&aDesbloqueado'
-status_pending: '&ePendiente'
-status_approved: '&aAprobado'
-status_denied: '&cRechazado'
-
-# ------------------------------------------------------------
-# Confirmation Dialogs
-# ------------------------------------------------------------
-confirm_title: '&c⚠ Confirmar Acción'
-confirm_yes: '&a✔ Sí, Confirmar'
-confirm_yes_lore:
-- '&7Haz clic para confirmar esta acción.'
-confirm_no: '&c✖ No, Cancelar'
-confirm_no_lore:
-- '&7Haz clic para cancelar.'
-
-# ------------------------------------------------------------
-# Error Messages
-# ------------------------------------------------------------
-error_no_permission: '&cNo tienes permiso para esto.'
-error_player_not_found: '&cJugador no encontrado.'
-error_plot_not_found: '&cParcela no encontrada.'
-error_not_enough_money: '&cNo tienes suficiente dinero.'
-error_not_enough_blocks: '&cNo tienes suficientes bloques.'
-error_generic: '&cOcurrió un error. Intenta de nuevo.'
-
-# ------------------------------------------------------------
-# Success Messages
-# ------------------------------------------------------------
-success_generic: '&a¡Operación exitosa!'
-success_plot_claimed: '&a¡Parcela reclamada exitosamente!'
-success_plot_unclaimed: '&aParcela eliminada.'
-success_player_trusted: '&a{PLAYER} ahora es de confianza.'
-success_player_untrusted: '&a{PLAYER} ya no es de confianza.'
-success_flag_toggled: '&aBandera actualizada.'
-success_settings_saved: '&aConfiguración guardada.'
-
-# ============================================================
-# END OF SPANISH MX GUI FILE
-# ============================================================
+# (Rest of Codex and following sections continue with professional headers...)

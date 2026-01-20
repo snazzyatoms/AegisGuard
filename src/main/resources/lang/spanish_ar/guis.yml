@@ -27,6 +27,12 @@ button_exit_lore:
 exit_lore:
 - '&7Cerrá este menú.'
 button_back_admin: '&fVolver a Admin'
+label_on: 'ON'
+label_off: 'OFF'
+label_free: '&aGratis'
+label_none: 'Ninguno'
+label_unknown: 'Desconocido'
+label_unnamed: 'Zona sin nombre'
 
 # ------------------------------------------------------------
 # Menú Principal
@@ -114,7 +120,7 @@ not_plot_owner: '&cNo podés administrar esta parcela.'
 claimblocks_exchange_unavailable: '&cEl intercambio de bloques no está disponible en este momento.'
 
 # ------------------------------------------------------------
-# Visit GUI
+# Menú de Viaje
 # ------------------------------------------------------------
 visit_title_warps: '&6Puntos de Teletransporte (Warp)'
 visit_title_trusted: '&bParcelas de Confianza'
@@ -143,7 +149,7 @@ visit_fail_no_spawn: '&cEste destino no tiene un punto de aparición válido.'
 visit_teleport_success: '&aTeletransportado.'
 
 # ------------------------------------------------------------
-# Settings GUI
+# Preferencias
 # ------------------------------------------------------------
 settings_menu_title: '&b⚙ Preferencias'
 settings_sounds_on_name: '&aSonidos: ACTIVADO'
@@ -170,7 +176,7 @@ settings_notif_mode_chat: '&aChat'
 settings_notif_mode_title: '&dTítulo'
 
 # ------------------------------------------------------------
-# Roles GUI
+# Gestión de Roles
 # ------------------------------------------------------------
 roles_gui_title: '&e👥 Gestión de Roles'
 roles_add_button: '&a➕ Agregar Miembro'
@@ -192,7 +198,7 @@ role_visitor: '&7Visitante'
 role_banned: '&cBaneado'
 
 # ------------------------------------------------------------
-# Flags GUI
+# Banderas de Parcela
 # ------------------------------------------------------------
 flags_gui_title: '&6⚙ Banderas de Parcela'
 flag_enabled: '&aActivado'
@@ -363,7 +369,7 @@ flag_suspicious_block_lore:
 - '&7Permitir cepillado de bloques sospechosos.'
 
 # ------------------------------------------------------------
-# Biome GUI
+# Selección de Bioma
 # ------------------------------------------------------------
 biome_gui_title: '&d🌿 Selección de Bioma'
 biome_item_lore:
@@ -396,7 +402,7 @@ biome_mangrove_swamp: '&2Pantano de Manglares'
 biome_the_void: '&8El Vacío'
 
 # ------------------------------------------------------------
-# Zone GUI
+# Gestión de Zonas
 # ------------------------------------------------------------
 zone_gui_title: '&b🏗 Gestión de Zonas'
 zone_create_button: '&a➕ Crear Zona'
@@ -417,7 +423,7 @@ zone_type_storage: '&7Almacén'
 zone_type_restricted: '&cRestringido'
 
 # ------------------------------------------------------------
-# Level GUI
+# Niveles de Parcela
 # ------------------------------------------------------------
 level_gui_title: '&a📈 Niveles de Parcela'
 level_header_owner: '&7Dueño: &f{OWNER}'
@@ -502,7 +508,7 @@ level_up_fail_world_limit: '&cNo se puede mejorar: alcanzaste el límite de radi
 level_up_success: '&a¡Tu parcela ascendió al nivel {LEVEL}!'
 
 # ------------------------------------------------------------
-# Ascension Codex / Tier System
+# Sistema de Rangos de Ascensión
 # ------------------------------------------------------------
 tier_current_name: '&6Nivel Actual'
 tier_locked_name: '&8Nivel Bloqueado'
@@ -572,7 +578,7 @@ tier_max_lore:
 - '&7¡Disfrutá de todas las bonificaciones!'
 
 # ------------------------------------------------------------
-# Market GUI
+# Mercado de Parcelas
 # ------------------------------------------------------------
 market_gui_title: '&6💰 Mercado de Parcelas'
 market_sell_button: '&a💵 Vender Parcela'
@@ -595,7 +601,7 @@ market_your_listing_lore:
 - '&cClic para quitar del mercado'
 
 # ------------------------------------------------------------
-# Auction GUI
+# Subastas
 # ------------------------------------------------------------
 auction_gui_title: '&c🔥 Subastas'
 auction_item_name: '&6{PLOT}'
@@ -611,7 +617,7 @@ auction_create_lore:
 auction_no_auctions: '&7No hay subastas activas.'
 
 # ------------------------------------------------------------
-# Expansion GUI
+# Expansión de Parcela
 # ------------------------------------------------------------
 expansion_gui_title: '&b⛏ Expandir Parcela'
 expansion_direction_north: '&bNorte'
@@ -628,7 +634,7 @@ expansion_blocked_lore:
 - '&7Hay terreno reclamado bloqueando.'
 
 # ------------------------------------------------------------
-# Pending Requests GUI
+# Solicitudes Pendientes
 # ------------------------------------------------------------
 pending_requests_title: '&6📋 Solicitudes Pendientes'
 pending_request_item: '&e{TYPE}'
@@ -642,7 +648,7 @@ pending_request_lore:
 - '&cClic derecho: &7Rechazar'
 
 # ------------------------------------------------------------
-# Plot Status GUI
+# Estado de Parcela
 # ------------------------------------------------------------
 plot_status_title: '&d📜 Estado de Parcela'
 plot_status_name_item: '&b{NAME}'
@@ -662,7 +668,7 @@ plot_status_members_lore:
 - '&7Jugadores de confianza en esta parcela.'
 
 # ------------------------------------------------------------
-# Codex GUI
+# Guía del Guardián (Codex)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
 
@@ -756,7 +762,7 @@ codex_commands_lore:
 - '&b/ag home &7- Ir a tu parcela'
 
 # ------------------------------------------------------------
-# Admin Menu
+# Menú de Administrador
 # ------------------------------------------------------------
 admin_gui_title: '&c🛠 Kit del Alto Guardián'
 
@@ -825,7 +831,7 @@ admin_toggle_default_lore:
 - '&7Alterná este ajuste.'
 
 # ------------------------------------------------------------
-# Ledger GUI
+# Registro de Dominios (Ledger)
 # ------------------------------------------------------------
 ledger_title: '&6📜 Registro de Dominios'
 ledger_entry_lore:
@@ -834,7 +840,7 @@ ledger_entry_lore:
 - '&7Por: &b{ACTOR}'
 
 # ------------------------------------------------------------
-# Common Status Messages
+# Mensajes de Estado Comunes
 # ------------------------------------------------------------
 status_enabled: '&aActivado'
 status_disabled: '&cDesactivado'
@@ -847,7 +853,7 @@ status_approved: '&aAprobado'
 status_denied: '&cRechazado'
 
 # ------------------------------------------------------------
-# Confirmation Dialogs
+# Cuadros de Confirmación
 # ------------------------------------------------------------
 confirm_title: '&c⚠ Confirmar Acción'
 confirm_yes: '&a✔ Sí, Confirmar'
@@ -858,7 +864,7 @@ confirm_no_lore:
 - '&7Hacé clic para cancelar.'
 
 # ------------------------------------------------------------
-# Error Messages
+# Mensajes de Error
 # ------------------------------------------------------------
 error_no_permission: '&cNo tenés permiso para esto.'
 error_player_not_found: '&cJugador no encontrado.'
@@ -868,7 +874,7 @@ error_not_enough_blocks: '&cNo tenés suficientes bloques.'
 error_generic: '&cOcurrió un error. Intentá de nuevo.'
 
 # ------------------------------------------------------------
-# Success Messages
+# Mensajes de Éxito
 # ------------------------------------------------------------
 success_generic: '&a¡Operación exitosa!'
 success_plot_claimed: '&a¡Parcela reclamada exitosamente!'
@@ -877,3 +883,7 @@ success_player_trusted: '&a{PLAYER} ahora es de confianza.'
 success_player_untrusted: '&a{PLAYER} ya no es de confianza.'
 success_flag_toggled: '&aBandera actualizada.'
 success_settings_saved: '&aConfiguración guardada.'
+
+# ============================================================
+# FIN DEL ARCHIVO GUI ESPAÑOL AR
+# ============================================================

@@ -269,138 +269,216 @@ flag_snow_fall_lore:
 - '&7Permitir acumulación de nieve.'
 flag_crop_growth_name: '&a🌾 Crecimiento de Cultivos'
 flag_crop_growth_lore:
-- '&7Permitir que los cultivos crezcan.'
-flag_redstone_name: '&4⚡ Redstone'
+- '&7Permitir que crezcan los cultivos.'
+flag_animal_damage_name: '&e🐄 Daño a Animales'
+flag_animal_damage_lore:
+- '&7Permitir que visitantes dañen animales.'
+flag_vehicle_damage_name: '&6🚗 Daño a Vehículos'
+flag_vehicle_damage_lore:
+- '&7Permitir que visitantes destruyan vehículos.'
+flag_vehicle_use_name: '&6🚂 Uso de Vehículos'
+flag_vehicle_use_lore:
+- '&7Permitir que visitantes usen vehículos.'
+flag_item_pickup_name: '&d📦 Recoger Objetos'
+flag_item_pickup_lore:
+- '&7Permitir que visitantes recojan objetos.'
+flag_item_drop_name: '&d📤 Soltar Objetos'
+flag_item_drop_lore:
+- '&7Permitir que visitantes suelten objetos.'
+flag_chorus_teleport_name: '&5🔮 Teletransporte Chorus'
+flag_chorus_teleport_lore:
+- '&7Permitir teletransporte con fruta chorus.'
+flag_ender_pearl_name: '&a🟢 Perlas de Ender'
+flag_ender_pearl_lore:
+- '&7Permitir uso de perlas de ender.'
+flag_sculk_sensor_name: '&3📡 Sensores Sculk'
+flag_sculk_sensor_lore:
+- '&7Permitir que sensores sculk funcionen.'
+flag_redstone_name: '&c⚡ Redstone'
 flag_redstone_lore:
-- '&7Permitir activación de redstone.'
-flag_interact_name: '&e🚪 Interacción'
-flag_interact_lore:
-- '&7Permitir que visitantes usen puertas/botones.'
-flag_container_access_name: '&6📦 Acceso a Contenedores'
-flag_container_access_lore:
+- '&7Permitir que redstone funcione.'
+flag_button_lever_name: '&6🔘 Botones y Palancas'
+flag_button_lever_lore:
+- '&7Permitir que visitantes usen botones/palancas.'
+flag_door_name: '&8🚪 Puertas'
+flag_door_lore:
+- '&7Permitir que visitantes usen puertas.'
+flag_trapdoor_name: '&6⬜ Trampillas'
+flag_trapdoor_lore:
+- '&7Permitir que visitantes usen trampillas.'
+flag_gate_name: '&a🚧 Portones'
+flag_gate_lore:
+- '&7Permitir que visitantes usen portones.'
+flag_chest_access_name: '&6📦 Acceso a Cofres'
+flag_chest_access_lore:
 - '&7Permitir que visitantes abran cofres.'
-flag_entry_name: '&a🚶 Entrada'
-flag_entry_lore:
-- '&7Permitir que visitantes entren.'
-flag_fly_name: '&b🪶 Vuelo'
-flag_fly_lore:
-- '&7Permitir vuelo en la parcela.'
+flag_container_access_name: '&e🗃 Acceso a Contenedores'
+flag_container_access_lore:
+- '&7Permitir que visitantes accedan a contenedores.'
+flag_anvil_name: '&7⚒ Yunques'
+flag_anvil_lore:
+- '&7Permitir que visitantes usen yunques.'
+flag_beacon_name: '&b✨ Balizas'
+flag_beacon_lore:
+- '&7Permitir que visitantes cambien balizas.'
+flag_bed_name: '&c🛏 Camas'
+flag_bed_lore:
+- '&7Permitir que visitantes usen camas.'
+flag_brewing_name: '&d🧪 Pociones'
+flag_brewing_lore:
+- '&7Permitir que visitantes usen alambiques.'
+flag_enchanting_name: '&5📖 Encantamiento'
+flag_enchanting_lore:
+- '&7Permitir que visitantes usen mesas de encantamiento.'
+flag_furnace_name: '&8🔥 Hornos'
+flag_furnace_lore:
+- '&7Permitir que visitantes usen hornos.'
+flag_jukebox_name: '&d🎵 Tocadiscos'
+flag_jukebox_lore:
+- '&7Permitir que visitantes usen tocadiscos.'
+flag_noteblock_name: '&e🎶 Bloques de Notas'
+flag_noteblock_lore:
+- '&7Permitir que visitantes usen bloques de notas.'
+flag_crafting_name: '&6🔨 Mesas de Trabajo'
+flag_crafting_lore:
+- '&7Permitir que visitantes usen mesas de trabajo.'
+flag_villager_trade_name: '&a🤝 Comercio con Aldeanos'
+flag_villager_trade_lore:
+- '&7Permitir comercio con aldeanos.'
+flag_armorstand_name: '&7🧍 Soportes de Armadura'
+flag_armorstand_lore:
+- '&7Permitir editar soportes de armadura.'
+flag_itemframe_name: '&e🖼 Marcos'
+flag_itemframe_lore:
+- '&7Permitir editar marcos de objetos.'
+flag_painting_name: '&6🎨 Pinturas'
+flag_painting_lore:
+- '&7Permitir colocar/quitar pinturas.'
+flag_lectern_name: '&6📚 Atriles'
+flag_lectern_lore:
+- '&7Permitir que visitantes usen atriles.'
+flag_composter_name: '&2🥬 Compostadores'
+flag_composter_lore:
+- '&7Permitir que visitantes usen compostadores.'
+flag_respawn_anchor_name: '&5⚓ Anclas de Reaparición'
+flag_respawn_anchor_lore:
+- '&7Permitir que visitantes usen anclas de reaparición.'
+flag_lodestone_name: '&7🧲 Magnetitas'
+flag_lodestone_lore:
+- '&7Permitir que visitantes usen magnetitas.'
+flag_bell_name: '&6🔔 Campanas'
+flag_bell_lore:
+- '&7Permitir que visitantes usen campanas.'
+flag_cake_name: '&d🎂 Pasteles'
+flag_cake_lore:
+- '&7Permitir que visitantes coman pasteles.'
+flag_turtle_egg_name: '&a🥚 Huevos de Tortuga'
+flag_turtle_egg_lore:
+- '&7Proteger huevos de tortuga de pisadas.'
+flag_dripleaf_name: '&a🌱 Hojas Goteadoras'
+flag_dripleaf_lore:
+- '&7Permitir inclinación de hojas goteadoras.'
+flag_pressure_plate_name: '&7⬜ Placas de Presión'
+flag_pressure_plate_lore:
+- '&7Permitir activación de placas de presión.'
+flag_tripwire_name: '&8🪤 Cuerdas Trampa'
+flag_tripwire_lore:
+- '&7Permitir activación de cuerdas trampa.'
+flag_target_block_name: '&c🎯 Bloques de Diana'
+flag_target_block_lore:
+- '&7Permitir activación de dianas.'
+flag_hanging_signs_name: '&6🪧 Carteles Colgantes'
+flag_hanging_signs_lore:
+- '&7Permitir edición de carteles colgantes.'
+flag_sign_edit_name: '&6✏ Edición de Carteles'
+flag_sign_edit_lore:
+- '&7Permitir que visitantes editen carteles.'
+flag_dragon_egg_name: '&5🥚 Huevo de Dragón'
+flag_dragon_egg_lore:
+- '&7Permitir interacción con huevo de dragón.'
+flag_decorated_pot_name: '&6🏺 Vasijas Decoradas'
+flag_decorated_pot_lore:
+- '&7Permitir uso de vasijas decoradas.'
+flag_chiseled_bookshelf_name: '&6📚 Libreros Cincelados'
+flag_chiseled_bookshelf_lore:
+- '&7Permitir uso de libreros cincelados.'
+flag_suspicious_block_name: '&e🔍 Bloques Sospechosos'
+flag_suspicious_block_lore:
+- '&7Permitir cepillado de bloques sospechosos.'
 
 # ------------------------------------------------------------
 # Biome GUI
 # ------------------------------------------------------------
-biome_gui_title_full: '&2🌿 Selector de Bioma'
-biome_current: '&7Bioma actual: &a{BIOME}'
-biome_change_cost: '&7Costo: &6{COST}'
-biome_change_free: '&aCambio gratis'
+biome_gui_title: '&d🌿 Selección de Bioma'
 biome_item_lore:
-- '&7Cambiá tu parcela a este bioma.'
-- ' '
-- '&eClic para seleccionar'
-biome_confirm_button: '&aConfirmar Cambio'
-biome_confirm_lore:
-- '&7Cambiá al bioma seleccionado.'
-biome_button_back: '&e⟵ Volver a Ajustes de Parcela'
-biome_button_exit: '&c✖ Cerrar Cambiador de Bioma'
+- '&7Clic para establecer este bioma.'
 
 biome_plains: '&aLlanuras'
 biome_forest: '&2Bosque'
 biome_desert: '&eDesierto'
-biome_jungle: '&aJungla'
-biome_taiga: '&bTaiga'
-biome_snowy: '&fNevado'
+biome_jungle: '&aSelva'
 biome_swamp: '&8Pantano'
+biome_taiga: '&bTaiga'
+biome_snowy_plains: '&fLlanuras Nevadas'
 biome_savanna: '&6Sabana'
 biome_badlands: '&cTierras Baldías'
+biome_mushroom_fields: '&dCampos de Hongos'
 biome_ocean: '&9Océano'
-biome_mushroom: '&dHongos'
-biome_cherry: '&dCerezo'
-biome_mangrove: '&2Manglar'
+biome_deep_ocean: '&1Océano Profundo'
+biome_river: '&bRío'
+biome_beach: '&ePlaya'
+biome_flower_forest: '&dBosque Florido'
+biome_dark_forest: '&8Bosque Oscuro'
+biome_birch_forest: '&fBosque de Abedules'
+biome_old_growth_pine_taiga: '&2Taiga de Pinos Antiguos'
+biome_windswept_hills: '&7Colinas Ventosas'
+biome_meadow: '&aPradera'
+biome_grove: '&fArboleda'
+biome_cherry_grove: '&dArboleda de Cerezos'
+biome_frozen_peaks: '&bPicos Congelados'
+biome_mangrove_swamp: '&2Pantano de Manglares'
+biome_the_void: '&8El Vacío'
 
 # ------------------------------------------------------------
-# Leveling GUI
+# Zone GUI
 # ------------------------------------------------------------
-level_gui_title_full: '&a📈 Niveles de Parcela'
-level_current: '&7Nivel actual: &a{LEVEL}'
-level_max: '&7Nivel máximo: &e{MAX}'
-level_progress: '&7Progreso: &b{PROGRESS}%'
-level_upgrade_button: '&aMejorar Nivel'
-level_upgrade_lore:
-- '&7Subí de nivel tu parcela.'
-- '&7Costo: &6{COST}'
-- ' '
-- '&eClic para mejorar'
-level_max_reached: '&e¡Nivel Máximo!'
-level_max_reached_lore:
-- '&7Tu parcela alcanzó su nivel máximo.'
-- ' '
-- '&aDisfrutá tu poder completo.'
-
-level_perk_size: '&a📐 Tamaño Aumentado'
-level_perk_members: '&e👥 Más Miembros'
-level_perk_flags: '&6🚩 Más Banderas'
-level_perk_homes: '&b🏠 Más Hogares'
-
-level_track_completed_name: '&aEtapa Completada'
-level_track_completed_lore:
-- '&7Ya desbloqueaste esta etapa.'
-level_track_current_name: '&eEtapa Actual'
-level_track_current_lore:
-- '&7Estás en esta etapa ahora.'
-level_track_locked_name: '&cEtapa Bloqueada'
-level_track_locked_lore:
-- '&7Avanzá para desbloquearla.'
-level_track_next_name: '&dSiguiente Etapa'
-level_track_next_lore:
-- '&7Tu próxima mejora está acá.'
-- '&7Costo: &6{COST}'
-
-level_upgrade_payment_title: '&bForma de Pago:'
-level_upgrade_cost_money: '&7Costo: &6{COST} &8({TYPE})'
-level_upgrade_button_money: '&aMejorar con Dinero'
-level_upgrade_hint_money: '&eClic para pagar con dinero'
-level_upgrade_cost_blocks: '&7Costo: &b{BLOCKS} &7Bloques'
-level_upgrade_you_have_blocks: '&7Tenés: &b{BALANCE} &7Bloques'
-level_upgrade_button_blocks: '&bMejorar con Bloques'
-level_upgrade_hint_blocks: '&eClic para gastar tus bloques'
-level_upgrade_money_unavailable: '&8El pago con dinero no está disponible.'
-level_upgrade_blocks_unavailable: '&8El pago con bloques no está disponible.'
-level_upgrade_choose_payment: '&7Elegí cómo querés pagar abajo.'
-level_track_next_cost_money: '&eCosto en Dinero: &6{COST}'
-level_track_next_cost_blocks: '&eCosto en Bloques: &b{BLOCKS}'
-level_upgrade_cost_blocks_single: '&7Costo: &b{COST} Bloques &7(Tenés &b{BALANCE}&7)'
-level_upgrade_button_blocks_lore:
-- '&7Gastá tus bloques ganados.'
-- '&7Costo: &b{COST} Bloques'
-- '&7Saldo: &b{BALANCE}'
-- ''
-- '&eClic para mejorar'
-
-# ------------------------------------------------------------
-# Zoning GUI
-# ------------------------------------------------------------
-zone_gui_title_full: '&b🏗 Gestor de Zonas'
+zone_gui_title: '&b🏗 Gestión de Zonas'
 zone_create_button: '&a➕ Crear Zona'
 zone_create_lore:
 - '&7Creá una nueva sub-zona.'
-- '&7Usá tu varita para seleccionar el área.'
-zone_list_title: '&bTus Zonas'
+zone_item_name: '&e{ZONE}'
 zone_item_lore:
-- '&7Tipo: &e{TYPE}'
-- '&7Tamaño: &b{SIZE}'
+- '&7Tipo: &b{TYPE}'
+- '&7Tamaño: &a{SIZE} bloques'
 - ' '
 - '&eClic para gestionar'
-zone_delete_button: '&c🗑 Eliminar Zona'
-zone_delete_lore:
-- '&7Eliminá esta zona permanentemente.'
-zone_rename_button: '&e✏ Renombrar'
-zone_rename_lore:
-- '&7Cambiá el nombre de esta zona.'
+zone_delete_confirm: '&c¿Eliminar esta zona?'
 
 zone_type_rental: '&6Alquiler'
-zone_type_public: '&aPública'
-zone_type_private: '&cPrivada'
-zone_type_shop: '&dTienda'
+zone_type_shop: '&aComercio'
+zone_type_farm: '&2Granja'
+zone_type_storage: '&7Almacén'
+zone_type_restricted: '&cRestringido'
+
+# ------------------------------------------------------------
+# Level GUI
+# ------------------------------------------------------------
+level_gui_title: '&a📈 Niveles de Parcela'
+level_current: '&bNivel Actual: &e{LEVEL}'
+level_current_lore:
+- '&7Tu nivel actual de parcela.'
+level_upgrade_button: '&a⬆ Subir de Nivel'
+level_upgrade_lore:
+- '&7Costo: &6{COST}'
+- '&7Siguiente nivel: &e{NEXT}'
+- ' '
+- '&eClic para subir de nivel'
+level_max_reached: '&6★ Nivel Máximo'
+level_max_lore:
+- '&7Alcanzaste el nivel máximo.'
+level_benefit_title: '&d✨ Beneficios del Nivel {LEVEL}'
+level_benefit_lore:
+- '&7{BENEFIT}'
 
 # ------------------------------------------------------------
 # Market GUI
@@ -408,103 +486,62 @@ zone_type_shop: '&dTienda'
 market_gui_title: '&6💰 Mercado de Parcelas'
 market_sell_button: '&a💵 Vender Parcela'
 market_sell_lore:
-- '&7Poné tu parcela a la venta.'
-market_browse_button: '&e🔍 Explorar Listados'
-market_browse_lore:
-- '&7Mirá parcelas disponibles.'
-market_my_listings_button: '&b📋 Mis Listados'
-market_my_listings_lore:
-- '&7Gestioná tus parcelas en venta.'
-
-market_listing_item: '&e{NAME}'
-market_listing_lore:
-- '&7Dueño: &b{OWNER}'
-- '&7Precio: &6{PRICE}'
-- '&7Tamaño: &a{SIZE}'
-- ' '
-- '&eClic para ver'
-
-market_buy_button: '&a💰 Comprar'
+- '&7Poné tu parcela en venta.'
+market_buy_button: '&e🛒 Comprar Parcelas'
 market_buy_lore:
-- '&7Comprá esta parcela por &6{PRICE}'
-market_button_back: '&e⟵ Volver a Bienes Raíces'
+- '&7Ver parcelas en venta.'
+market_listing_item: '&e{PLOT}'
+market_listing_lore:
+- '&7Vendedor: &b{SELLER}'
+- '&7Precio: &6{PRICE}'
+- '&7Tamaño: &a{SIZE} bloques'
+- ' '
+- '&eClic para comprar'
+market_your_listing: '&6Tu Listado'
+market_your_listing_lore:
+- '&7Precio: &6{PRICE}'
+- ' '
+- '&cClic para quitar del mercado'
 
 # ------------------------------------------------------------
 # Auction GUI
 # ------------------------------------------------------------
-auction_gui_title: '&c🔥 Subastas de Parcelas'
+auction_gui_title: '&c🔥 Subastas'
+auction_item_name: '&6{PLOT}'
 auction_item_lore:
-- '&7Oferta actual: &6{BID}'
+- '&7Puja actual: &e{BID}'
 - '&7Mejor postor: &b{BIDDER}'
-- '&7Termina en: &e{TIME}'
+- '&7Tiempo restante: &c{TIME}'
 - ' '
-- '&eClic para ofertar'
-auction_bid_button: '&a💰 Hacer Oferta'
-auction_bid_lore:
-- '&7Tu oferta: &6{AMOUNT}'
-auction_button_back: '&e⟵ Volver a Subastas'
-realestate_button_back: '&e⟵ Volver a Bienes Raíces'
-domain_market_button_back: '&e⟵ Volver al Mercado de Dominios'
+- '&eClic para pujar'
+auction_create_button: '&a➕ Crear Subasta'
+auction_create_lore:
+- '&7Subastá una de tus parcelas.'
+auction_no_auctions: '&7No hay subastas activas.'
 
 # ------------------------------------------------------------
-# ClaimBlocks Exchange GUI
+# Expansion GUI
 # ------------------------------------------------------------
-exchange_gui_title: '&a💱 Intercambio de Bloques'
-exchange_balance_item: '&bTu Saldo'
-exchange_balance_lore:
-- '&7Bloques: &a{BLOCKS}'
-- '&7Dinero: &6{MONEY}'
-exchange_buy_button: '&a⬆ Comprar Bloques'
-exchange_buy_lore:
-- '&7Comprá bloques con dinero.'
-- '&7Precio: &6{PRICE} &7por bloque'
-exchange_sell_button: '&c⬇ Vender Bloques'
-exchange_sell_lore:
-- '&7Vendé bloques por dinero.'
-- '&7Precio: &6{PRICE} &7por bloque'
-exchange_amount_item: '&eCantidad: {AMOUNT}'
-exchange_confirm_button: '&a✔ Confirmar'
-exchange_confirm_lore:
-- '&7Confirmá la transacción.'
-exchange_cancel_button: '&c✖ Cancelar'
-exchange_cancel_lore:
-- '&7Cancelá y volvé.'
-
-# ------------------------------------------------------------
-# Expansion Request GUI
-# ------------------------------------------------------------
-expansion_gui_title: '&b⛏ Solicitudes de Expansión'
-expansion_create_button: '&a➕ Nueva Solicitud'
-expansion_create_lore:
-- '&7Solicitá expandir tu parcela.'
-expansion_pending_title: '&eSolicitudes Pendientes'
-expansion_request_item: '&e{DIRECTION}'
-expansion_request_item_lore:
-- '&7Dirección: &b{DIRECTION}'
-- '&7Bloques: &a{BLOCKS}'
-- '&7Estado: &e{STATUS}'
-- ' '
-- '&eClic para ver detalles'
-expansion_request_item_lore_pending_line: '&7Pendiente por: &f{AGE}'
-expansion_request_item_lore_decision_line: '&7Decisión: &f{ACTOR}'
-
-expansion_decided_by_none: '&7Esperando revisión'
-expansion_decided_by_admin: '&bAdmin'
-expansion_decided_by_system: '&eAutomático'
-
+expansion_gui_title: '&b⛏ Expandir Parcela'
 expansion_direction_north: '&bNorte'
 expansion_direction_south: '&6Sur'
 expansion_direction_east: '&aEste'
 expansion_direction_west: '&cOeste'
-expansion_direction_up: '&e⬆ Arriba'
-expansion_direction_down: '&7⬇ Abajo'
+expansion_direction_lore:
+- '&7Expandir {BLOCKS} bloques hacia {DIRECTION}.'
+- '&7Costo: &6{COST}'
+- ' '
+- '&eClic para expandir'
+expansion_blocked_lore:
+- '&cNo se puede expandir en esta dirección.'
+- '&7Hay terreno reclamado bloqueando.'
 
-expansion_status_pending: '&ePendiente'
-expansion_status_approved: '&aAprobado'
-expansion_status_denied: '&cRechazado'
-
-expansion_admin_title: '&c⛏ Revisar Expansiones'
-expansion_admin_item_lore:
+# ------------------------------------------------------------
+# Pending Requests GUI (Admin)
+# ------------------------------------------------------------
+pending_requests_title: '&6📋 Solicitudes Pendientes'
+pending_request_item: '&e{TYPE}'
+pending_request_lore:
 - '&7Jugador: &b{PLAYER}'
 - '&7Parcela: &e{PLOT}'
 - '&7Dirección: &a{DIRECTION}'
@@ -636,38 +673,26 @@ button_admin_auto_remove: '&cAuto-Remover Baneados'
 admin_auto_remove_lore:
 - '&7Desreclama automáticamente parcelas'
 - '&7cuando los dueños son baneados.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
 admin_bypass_limit_lore:
 - '&7Los admins ignoran el límite de parcelas.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_broadcast: '&eTransmitir Acciones Admin'
 admin_broadcast_lore:
 - '&7Anuncia acciones de admin al servidor.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_unlimited: '&aDominios Infinitos'
 admin_unlimited_lore:
 - '&7Los admins no tienen límites de parcelas.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_sync: '&dSincronización Proxy'
 admin_sync_lore:
 - '&7Sincroniza datos en red proxy.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_perf: '&cModo Bajo Consumo'
 admin_perf_lore:
 - '&7Reduce uso de recursos del sistema.'
-- ' '
-- '&eAjuste: &f{STATE}'
 
 button_admin_diagnostics: '&bDiagnósticos'
 admin_diagnostics_lore:

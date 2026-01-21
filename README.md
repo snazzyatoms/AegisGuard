@@ -133,7 +133,6 @@ Configure your settings and language packs as desired
 Open the GUI in-game:
 
 /ag menu
----
 
 
 ---

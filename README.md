@@ -50,6 +50,8 @@ Test the plugin on the public demo server:
 IP:       72.5.47.116:25570
 Version:  1.20.4+ (Daily Reset • Sandbox Mode)
 Start:    /ag menu
+
+
 ---
 
 ## 🧭 Core Pillars

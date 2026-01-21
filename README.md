@@ -1,127 +1,115 @@
-<p align="center">
-  <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
-</p>
+<div align="center">
 
-<p align="center">
-  <strong>Simple. Steadfast. Eternal.</strong>
-</p>
+<img width="100%" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" alt="AegisGuard Banner" />
 
-<p align="center">
-  <a href="https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/"><img src="https://img.shields.io/badge/Spigot-Download-orange?style=for-the-badge"></a>
-  <a href="https://hangar.papermc.io/snazzyatoms/AegisGuard"><img src="https://img.shields.io/badge/Hangar-Download-green?style=for-the-badge"></a>
-  <a href="https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy"><img src="https://img.shields.io/badge/CurseForge-Download-purple?style=for-the-badge"></a>
-  <a href="https://github.com/snazzyatoms/AegisGuard/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge"></a>
-  <a href="https://discord.gg/Y2NpuR7UZE"><img src="https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord&logoColor=white"></a>
-</p>
+# 🛡️ AegisGuard
 
----
+**Simple. Steadfast. Eternal.**
 
-<p align="center">
-  <em>“Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”</em>
-</p>
+*“Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision.”*
+
+[![Spigot](https://img.shields.io/badge/Spigot-Download-orange?style=for-the-badge&logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/)
+[![Hangar](https://img.shields.io/badge/Hangar-Download-green?style=for-the-badge&logo=roots&logoColor=white)](https://hangar.papermc.io/snazzyatoms/AegisGuard)
+[![CurseForge](https://img.shields.io/badge/CurseForge-Download-purple?style=for-the-badge&logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy)
+[![Wiki](https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge&logo=gitbook&logoColor=white)](https://github.com/snazzyatoms/AegisGuard/wiki)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Y2NpuR7UZE)
+
+</div>
 
 ---
 
-# AegisGuard v1.2.5
+## 📖 Overview
 
-AegisGuard is a **modern, Folia-optimized land protection and economy ecosystem** for Minecraft servers (Spigot / Paper / Purpur / Folia).  
-It doesn’t just lock chunks. It turns land into a **living system**: progression, governance, safety nets, and an economy loop designed for long-running worlds.
+**AegisGuard (v1.2.5)** is a modern, **Folia-optimized** land protection and economy ecosystem for Minecraft servers running Spigot, Paper, Purpur, or Folia.
 
-✅ **v1.2.5 is feature-complete** and in final polish (integration sweep, UI checks, permissions, and edge-case gameplay testing).
+It goes beyond simple chunk locking. AegisGuard turns land claiming into a **living system**, integrating progression, governance, safety nets, and a sustainable economy loop designed specifically for long-term survival worlds.
+
+> **State:** ✅ **v1.2.5 is Feature-Complete**
+> *Currently in final polish: Integration sweeps, UI checks, permissions, and edge-case gameplay testing.*
 
 ---
 
-## 🔗 Quick Links
+## 🔗 Quick Access
 
-| Resource | Location |
+| Resource | Description |
 | :--- | :--- |
-| Documentation | **[Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki)** |
-| Support | **[Discord Community](https://discord.gg/Y2NpuR7UZE)** |
-| Tracking | **[Issues](https://github.com/snazzyatoms/AegisGuard/issues)** • **[Releases](https://github.com/snazzyatoms/AegisGuard/releases)** |
-| Downloads | **[Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/)** • **[Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard)** • **[CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy)** |
+| 📚 **Documentation** | [Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki) |
+| 🤝 **Support** | [Discord Community](https://discord.gg/Y2NpuR7UZE) |
+| 🐛 **Tracking** | [Report Issues](https://github.com/snazzyatoms/AegisGuard/issues) • [View Releases](https://github.com/snazzyatoms/AegisGuard/releases) |
 
 ---
 
-## 🧪 Try AegisGuard Live
+## 🧪 Live Demo
 
-Test the plugin on the public demo server:
+Experience AegisGuard firsthand on our public test server.
+*The server resets daily and runs in Sandbox Mode.*
 
 ```yaml
-IP:       72.5.47.116:25570
-Version:  1.20.4+ (Daily Reset • Sandbox Mode)
-Start:    /ag menu
-
-
----
-
-## 🧭 Core Pillars
-
-- **Protection-first**: claims as sanctuaries with intelligent boundaries and reliable controls  
-- **Progression-driven**: structured expansion with pricing that stays fair as worlds grow  
-- **Economy-ready**: ClaimBlocks economy with Vault-based trading and anti-abuse protection  
-- **Admin-grade tooling**: staff controls, conversion utilities, and migration imports  
-- **Localization-friendly**: language packs with consistent keys and clean UX text
+Server IP:    72.5.47.116:25570
+Version:      1.20.4+
+Command:      /ag menu
 
 ---
 
-## ✨ What’s New in v1.2.5 (Highlights)
+✨ What’s New in v1.2.5
+This release focuses on stability, economy depth, and administrative tooling.
 
-v1.2.5 is a major step forward in stability, economy, and admin tooling:
+🆕 Key Highlights
+ClaimBlocks Economy (Vault): Buy/Sell blocks with configurable fees, cooldowns, and transaction caps.
 
-- **ClaimBlocks Economy & Trading** (Vault)
-- **Anti-abuse protections**: fees, cooldowns, and transaction caps
-- **Welcome/Exit controls**: global toggle + per-player mute option (server controlled)
-- **Auto-approval toggle**: Queue Mode vs Instant Mode for claim creation/expansion
-- **Safety nets**: snapshots + rollbacks for risky claim operations
-- **Fairer initial pricing**: prevents oversized first claims from bypassing expansion costs
-- **Playtime rewards**: optional ClaimBlocks earning with anti-AFK limits
-- **Migration tools**: import support to ease switching from other claim plugins
-- **Admin conversion tool**: built-in utilities for staff to manage transitions cleanly
-- **UI polish focus**: menus, navigation reliability, lore/text consistency, and functional flow
+Safety Nets: Automatic snapshots and rollback tools for risky claim operations.
 
----
+Governance: Toggle between Queue Mode (Manual Approval) or Instant Mode (Auto-Approval) for claim creation.
 
-## ✅ Feature Breakdown
+Smart Pricing: Fairer initial costs to prevent "oversized claim" exploits.
 
-### 🛡️ Protection & Claiming
-- Claim-based protection designed for real servers and busy worlds
-- Structured claim growth with pricing rules that encourage fair expansion
-- Reliability-focused UX so players can understand what’s happening and why
+Playtime Rewards: Optional passive ClaimBlock earning with Anti-AFK logic.
 
-### 💰 ClaimBlocks Economy (Vault)
-- Buy and sell ClaimBlocks using your server’s economy provider
-- Built-in anti-exploit rules:
-  - Configurable fees
-  - Cooldowns
-  - Caps and limits
+Migration Suite: Import tools to easily switch from other land claim plugins.
 
-### 🧯 Snapshots & Rollbacks (Safety Nets)
-- Snapshots taken before high-risk claim changes
-- Rollback tools for admins when something goes sideways
+UX Polish: Refined menus, clearer lore, and global/personal toggles for Welcome/Exit messages.
 
-### ⚙️ Governance Controls
-- Auto-approval toggle:
-  - **Queue Mode**: requests require approval
-  - **Instant Mode**: automatic approval for smoother gameplay
+✅ Feature Breakdown
+🛡️ Protection & Claiming
+Battle-Tested: Designed for high-traffic servers and busy worlds.
 
-### 🕒 Rewards & Progression
-- Optional playtime rewards system
-- Anti-AFK protections to keep it honest
+Dynamic Growth: Pricing rules that encourage organic expansion rather than land hoarding.
 
-### 🔁 Migration & Conversion
-- Migration/import tooling to reduce friction when switching from other claim plugins
-- Admin conversion tool included for streamlined server transitions
+User Clarity: Visuals and messages that explain why an action failed or succeeded.
 
-### 🚪 Welcome/Exit Messaging Controls
-- Server owners can toggle welcome/exit messages globally
-- If allowed by the server, players can mute these notifications for themselves
+💰 Economy & Trading
+Vault Integration: Seamlessly link ClaimBlocks to your server currency.
 
-### 🌍 Localization System
-- Language packs built for clarity and consistency
-- Designed to keep GUI text and lore clean, readable, and aligned
+Anti-Abuse: Strict controls on trading to prevent economy inflation:
 
----
+Configurable Transaction Fees
 
+Purchase/Sale Cooldowns
 
+Hard Caps and Limits
 
+🧯 Snapshots & Rollbacks
+Pre-Change Snapshots: The system captures claim data before high-risk changes.
 
+Admin Rollbacks: Restore claims to previous states instantly if a merge or resize goes wrong.
+
+⚙️ Governance & Automation
+Queue Mode: Require staff approval for new claims (ideal for RP/Geo-pol servers).
+
+Instant Mode: Standard survival "claim and go" gameplay.
+
+🔁 Migration Tools
+Importer: Reduce friction when moving to AegisGuard from legacy plugins.
+
+Converter: Built-in utilities for staff to manage database transitions cleanly.
+
+🌍 Localization
+Language Packs: Fully translatable.
+
+Consistency: Standardized GUI text and lore for a professional feel.
+
+<div align="center">
+
+⬆ Back to Top
+
+</div>

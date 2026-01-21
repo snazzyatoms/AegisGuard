@@ -31,6 +31,27 @@ It doesn’t just lock chunks. It turns land into a **living system**: progressi
 
 ---
 
+## 🔗 Quick Links
+
+| Resource | Location |
+| :--- | :--- |
+| Documentation | **[Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki)** |
+| Support | **[Discord Community](https://discord.gg/Y2NpuR7UZE)** |
+| Tracking | **[Issues](https://github.com/snazzyatoms/AegisGuard/issues)** • **[Releases](https://github.com/snazzyatoms/AegisGuard/releases)** |
+| Downloads | **[Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/)** • **[Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard)** • **[CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy)** |
+
+---
+
+## 🧪 Try AegisGuard Live
+
+Test the plugin on the public demo server:
+
+```yaml
+IP:       72.5.47.116:25570
+Version:  1.20.4+ (Daily Reset • Sandbox Mode)
+Start:    /ag menu
+---
+
 ## 🧭 Core Pillars
 
 - **Protection-first**: claims as sanctuaries with intelligent boundaries and reliable controls  
@@ -99,24 +120,6 @@ v1.2.5 is a major step forward in stability, economy, and admin tooling:
 
 ---
 
-## 🔗 Quick Links
 
-| Resource | Location |
-| :--- | :--- |
-| Documentation | **[Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki)** |
-| Support | **[Discord Community](https://discord.gg/Y2NpuR7UZE)** |
-| Tracking | **[Issues](https://github.com/snazzyatoms/AegisGuard/issues)** • **[Releases](https://github.com/snazzyatoms/AegisGuard/releases)** |
-| Downloads | **[Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/)** • **[Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard)** • **[CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy)** |
-
----
-
-## 🧪 Try AegisGuard Live
-
-Test the plugin on the public demo server:
-
-```yaml
-IP:       72.5.47.116:25570
-Version:  1.20.4+ (Daily Reset • Sandbox Mode)
-Start:    /ag menu
 
 

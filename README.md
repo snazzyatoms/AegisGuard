@@ -134,6 +134,8 @@ Open the GUI in-game:
 
 /ag menu
 
+---
+
 Economy Note (Vault)
 
 If you want ClaimBlocks trading, you’ll need:

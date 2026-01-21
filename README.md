@@ -136,52 +136,37 @@ Open the GUI in-game:
 
 ---
 
-Economy Note (Vault)
+## ⚡ Install (Quick Start)
 
-If you want ClaimBlocks trading, you’ll need:
+### 💰 Economy Note (Vault)
 
-Vault
+If you want **ClaimBlocks trading**, you’ll need:
 
-An economy provider (your choice)
+- **Vault**
+- An **economy provider** (your choice)
 
-🧰 Admin Notes (v1.2.5)
+---
+
+## 🧰 Admin Notes (v1.2.5)
 
 v1.2.5 includes tools and safeguards intended to make staff life easier:
 
-Conversion tool for admin workflows
+- **Conversion tool** for admin workflows  
+- **Migration imports** to assist server transitions  
+- **Snapshots / rollbacks** to recover from risky operations  
+- A strong focus on **UI reliability** (menu navigation, text/lore placement, functional flow)
 
-Migration imports to assist server transitions
+---
 
-Snapshots/rollbacks to recover from risky operations
-
-A focus on UI reliability (menu navigation, text/lore placement, functional flow)
-
-🧩 Philosophy
+## 🧩 Philosophy
 
 AegisGuard aims to be:
 
-Friendly to new players
+- **Friendly** to new players  
+- **Powerful** for admins  
+- **Stable** under load  
+- **Expandable** without becoming a spaghetti labyrinth  
 
-Powerful for admins
+If you want a protection plugin that feels like a **system** instead of a **padlock**, welcome to the shield. 🛡️✨
 
-Stable under load
-
-Expandable without becoming a spaghetti labyrinth
-
-If you want a protection plugin that feels like a system instead of a padlock, welcome to the shield.
-
-🤝 Community & Support
-
-Questions, bug reports, suggestions: GitHub Issues
-
-Help, testing, previews, and discussion: Discord
-
-If you find a bug, include:
-
-Server type (Paper/Purpur/Folia)
-
-Version
-
-Console log snippet
-
-Steps to reproduce
+---

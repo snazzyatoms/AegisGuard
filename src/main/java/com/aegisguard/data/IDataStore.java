@@ -105,6 +105,22 @@ public interface IDataStore {
     boolean isAreaOverlapping(Plot ignore, String world, int x1, int z1, int x2, int z2);
 
     /**
+     * Get all plots in a specific world.
+     *
+     * @param worldName The name of the world
+     * @return Collection of plots in the specified world
+     */
+    default Collection<Plot> getPlotsInWorld(String worldName) {
+        if (worldName == null || worldName.isEmpty()) {
+            return List.of();
+        }
+
+        return getAllPlots().stream()
+                .filter(plot -> plot != null && worldName.equalsIgnoreCase(plot.getWorldName()))
+                .toList();
+    }
+
+    /**
      * Optional shutdown hook.
      * SQL implementations should flush pending async DB tasks and close pools safely.
      * YML implementations can simply saveSync().

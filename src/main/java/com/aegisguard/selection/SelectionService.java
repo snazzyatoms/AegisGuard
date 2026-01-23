@@ -1,12 +1,10 @@
 package com.aegisguard.selection;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotClaimEvent;
 import com.aegisguard.claimblocks.ClaimBlockData;
 import com.aegisguard.data.Plot;
-import com.aegisguard.events.PlotClaimEvent;
 import com.aegisguard.hooks.protection.ProtectionHookManager;
-import com.aegisguard.util.MessagesUtil;
-import com.aegisguard.util.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -14,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +79,8 @@ public class SelectionService implements Listener {
         }
 
         // Overlap checks against Aegis plots
-        for (Plot other : plugin.store().getPlotsInWorld(l1.getWorld().getName())) {
+        String worldName = l1.getWorld().getName();
+        for (Plot other : plugin.store().getPlotsInWorld(worldName)) {
             if (other == null) continue;
             if (other.isInPlot(minX, minZ) || other.isInPlot(maxX, maxZ) || other.isInPlot(minX, maxZ) || other.isInPlot(maxX, minZ)) {
                 plugin.msg().send(p, "claim_overlap");
@@ -119,7 +117,7 @@ public class SelectionService implements Listener {
                     UUID.randomUUID(),
                     Plot.SERVER_OWNER_UUID,
                     "Server",
-                    l1.getWorld().getName(),
+                    worldName,
                     minX, minZ, maxX, maxZ, now
             );
             plot.setFlag("build", false);
@@ -132,7 +130,7 @@ public class SelectionService implements Listener {
                     UUID.randomUUID(),
                     p.getUniqueId(),
                     p.getName(),
-                    l1.getWorld().getName(),
+                    worldName,
                     minX, minZ, maxX, maxZ, now
             );
             plugin.worldRules().applyDefaults(plot);

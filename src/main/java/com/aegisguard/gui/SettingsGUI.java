@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * SettingsGUI
@@ -118,9 +119,9 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 3) NOTIFICATIONS (Slot 16)
+        // 3) NOTIFICATIONS MODE (Slot 16) - (ACTION_BAR / CHAT / TITLE)
         // --------------------------------------------------
-        String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
+        String mode = getNotifMode(player);
         String modeDisplay = notifDisplay(player, mode);
 
         inv.setItem(16, GUIManager.createItem(
@@ -132,6 +133,40 @@ public class SettingsGUI {
                 ),
                 tl(player, "settings_notifications_lore",
                         List.of("&7Click to cycle:", "&7Action Bar -> Chat -> Title"))
+        ));
+
+        // --------------------------------------------------
+        // 3B) PLOT GREETINGS TOGGLE (Slot 19) - Enter/Leave messages
+        // --------------------------------------------------
+        boolean greetingsEnabled = getGreetingsEnabled(player);
+
+        inv.setItem(19, GUIManager.createItem(
+                greetingsEnabled ? Material.BELL : Material.BARRIER,
+                greetingsEnabled
+                        ? t(player, "settings_greetings_on_name", "&aPlot Greetings: ON")
+                        : t(player, "settings_greetings_off_name", "&cPlot Greetings: OFF"),
+                tl(player, "settings_greetings_lore",
+                        List.of(
+                                "&7Toggle enter/leave claim messages.",
+                                "&7(Does not affect approvals/denials.)"
+                        ))
+        ));
+
+        // --------------------------------------------------
+        // 3C) ADMIN UPDATES TOGGLE (Slot 22) - approvals/denials, admin decisions
+        // --------------------------------------------------
+        boolean adminUpdates = getAdminUpdatesEnabled(player);
+
+        inv.setItem(22, GUIManager.createItem(
+                adminUpdates ? Material.BOOK : Material.BOOKSHELF,
+                adminUpdates
+                        ? t(player, "settings_admin_updates_on_name", "&aAdmin Updates: ON")
+                        : t(player, "settings_admin_updates_off_name", "&cAdmin Updates: OFF"),
+                tl(player, "settings_admin_updates_lore",
+                        List.of(
+                                "&7Toggle admin notifications:",
+                                "&7approvals, denials, moderation, etc."
+                        ))
         ));
 
         // --------------------------------------------------
@@ -173,6 +208,7 @@ public class SettingsGUI {
         if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
 
         Plot plot = holder.getPlot();
+        UUID uuid = player.getUniqueId();
 
         switch (rawSlot) {
 
@@ -183,7 +219,7 @@ public class SettingsGUI {
                 }
 
                 boolean current = plugin.isSoundEnabled(player);
-                plugin.getConfig().set("sounds.players." + player.getUniqueId(), !current);
+                plugin.getConfig().set("sounds.players." + uuid, !current);
                 plugin.runGlobalAsync(plugin::saveConfig);
 
                 plugin.effects().playMenuFlip(player);
@@ -209,20 +245,51 @@ public class SettingsGUI {
                 plugin.runMain(player, () -> open(player, plot));
             }
 
-            case 16 -> { // Notifications
-                String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
+            case 16 -> { // Notifications MODE (ACTION_BAR/CHAT/TITLE)
+                String mode = getNotifMode(player);
                 String nextMode = switch (mode) {
                     case "ACTION_BAR" -> "CHAT";
                     case "CHAT" -> "TITLE";
                     default -> "ACTION_BAR";
                 };
 
-                plugin.getConfig().set("notifications." + player.getUniqueId(), nextMode);
+                // New structured storage (1.2.6+)
+                setNotifMode(player, nextMode);
+
+                // Keep legacy key as MODE string for compatibility (and to auto-fix boolean collisions)
+                plugin.getConfig().set("notifications." + uuid, nextMode);
+
                 plugin.runGlobalAsync(plugin::saveConfig);
 
                 plugin.effects().playMenuFlip(player);
 
                 // ✅ Reopen NEXT tick
+                plugin.runMain(player, () -> open(player, plot));
+            }
+
+            case 19 -> { // Plot Greetings toggle (enter/leave)
+                boolean current = getGreetingsEnabled(player);
+                setGreetingsEnabled(player, !current);
+
+                // If legacy key was a boolean, convert it into a MODE string to prevent future collisions.
+                Object legacy = plugin.getConfig().get("notifications." + uuid);
+                if (legacy instanceof Boolean) {
+                    // Preserve current mode if possible, otherwise default.
+                    String mode = getNotifMode(player);
+                    plugin.getConfig().set("notifications." + uuid, mode);
+                }
+
+                plugin.runGlobalAsync(plugin::saveConfig);
+                plugin.effects().playMenuFlip(player);
+                plugin.runMain(player, () -> open(player, plot));
+            }
+
+            case 22 -> { // Admin Updates toggle (approvals/denials/mod actions)
+                boolean current = getAdminUpdatesEnabled(player);
+                setAdminUpdatesEnabled(player, !current);
+
+                plugin.runGlobalAsync(plugin::saveConfig);
+                plugin.effects().playMenuFlip(player);
                 plugin.runMain(player, () -> open(player, plot));
             }
 
@@ -236,6 +303,67 @@ public class SettingsGUI {
                 plugin.runMain(player, player::closeInventory);
             }
         }
+    }
+
+    // --------------------------------------------------
+    // 1.2.6 Notification storage helpers (backwards compatible)
+    // --------------------------------------------------
+
+    private String baseNotifPath(Player player) {
+        return "player_notifications.players." + player.getUniqueId();
+    }
+
+    private String getNotifMode(Player player) {
+        String base = baseNotifPath(player);
+
+        // Prefer new structured key
+        String mode = plugin.getConfig().getString(base + ".mode", null);
+        if (mode != null && !mode.trim().isEmpty()) return normalizeNotif(mode);
+
+        // Legacy key (string mode OR boolean toggle from old /aegis notify)
+        Object legacy = plugin.getConfig().get("notifications." + player.getUniqueId());
+        if (legacy instanceof String) {
+            return normalizeNotif((String) legacy);
+        }
+
+        return "ACTION_BAR";
+    }
+
+    private void setNotifMode(Player player, String mode) {
+        String base = baseNotifPath(player);
+        plugin.getConfig().set(base + ".mode", normalizeNotif(mode));
+    }
+
+    private boolean getGreetingsEnabled(Player player) {
+        String base = baseNotifPath(player);
+
+        // New structured key
+        if (plugin.getConfig().contains(base + ".greetings")) {
+            return plugin.getConfig().getBoolean(base + ".greetings", true);
+        }
+
+        // Legacy collision: boolean stored under notifications.<uuid>
+        Object legacy = plugin.getConfig().get("notifications." + player.getUniqueId());
+        if (legacy instanceof Boolean) {
+            return (Boolean) legacy;
+        }
+
+        return true;
+    }
+
+    private void setGreetingsEnabled(Player player, boolean enabled) {
+        String base = baseNotifPath(player);
+        plugin.getConfig().set(base + ".greetings", enabled);
+    }
+
+    private boolean getAdminUpdatesEnabled(Player player) {
+        String base = baseNotifPath(player);
+        return plugin.getConfig().getBoolean(base + ".admin_updates", true);
+    }
+
+    private void setAdminUpdatesEnabled(Player player, boolean enabled) {
+        String base = baseNotifPath(player);
+        plugin.getConfig().set(base + ".admin_updates", enabled);
     }
 
     // --------------------------------------------------

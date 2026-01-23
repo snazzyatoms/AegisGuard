@@ -1047,21 +1047,29 @@ roles:
   owner:
     name: "&cOwner"
     priority: 100
-    permissions:
-      - ALL
+    permissions: [ "ALL" ]
+
+  co_owner:
+    name: "&6Co-Owner"
+    priority: 90
+    permissions: [ "MANAGE", "BUILD", "CONTAINER", "INTERACT" ]
+
+  steward:
+    name: "&dSteward"
+    priority: 80
+    permissions: [ "MANAGE", "BUILD" ]
+
+  builder:
+    name: "&aBuilder"
+    priority: 60
+    permissions: [ "BUILD" ]
 
   member:
-    name: "&aMember"
-    priority: 50
-    permissions:
-      - BLOCK_BREAK
-      - BLOCK_PLACE
-      - INTERACT
-      - CONTAINER
+    name: "&bMember"
+    priority: 40
+    permissions: [ "INTERACT", "CONTAINER" ]
 
   visitor:
     name: "&7Visitor"
-    priority: 0
-    permissions:
-      - USE_DOORS
-      - USE_BUTTONS
+    priority: 10
+    permissions: [ "INTERACT" ]

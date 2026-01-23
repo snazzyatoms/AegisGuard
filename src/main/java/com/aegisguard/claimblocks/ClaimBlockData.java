@@ -131,6 +131,28 @@ public class ClaimBlockData {
         return Math.max(0, starterFromConfig) + getTotalNonStarter();
     }
 
+    /**
+     * Get the number of available (unused) claim blocks.
+     * This is the total blocks minus the used blocks cache.
+     *
+     * @return The number of available blocks
+     */
+    public long getAvailable() {
+        long total = getTotalNonStarter();
+        return Math.max(0, total - usedBlocksCache - spentBlocks);
+    }
+
+    /**
+     * Get the number of available blocks including starter amount.
+     *
+     * @param starterFromConfig The starter amount from config
+     * @return The number of available blocks including starter
+     */
+    public long getAvailableWithStarter(long starterFromConfig) {
+        long total = getTotalWithStarter(starterFromConfig);
+        return Math.max(0, total - usedBlocksCache - spentBlocks);
+    }
+
     public long getLastUsedCacheUpdate() {
         return lastUsedCacheUpdate;
     }

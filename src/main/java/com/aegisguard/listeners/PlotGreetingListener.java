@@ -4,7 +4,11 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotEnterEvent;
 import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
+import com.aegisguard.notify.NotificationMode;
+import com.aegisguard.notify.PlayerNotificationSettings;
 import com.aegisguard.util.TeleportUtil;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -142,14 +146,75 @@ public class PlotGreetingListener implements Listener {
         // If entry is allowed, we're done.
         if (plot.getFlag("entry", true)) return true;
 
-        // Admins can always enter.
-        if (plugin.isAdmin(player) || player.hasPermission("aegis.bypass")) return true;
+        // Admins and bypass can always enter.
+        if (plugin.isAdmin(player) || plugin.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
 
         // Trusted members (roles) can enter even if entry is off.
         return plot.isTrusted(player);
     }
 
+    // ---------------------------------------------------------------------
+    // 1.2.6 QoL: Per-player notification controls (greetings toggle + mode)
+    // ---------------------------------------------------------------------
+
+    private PlayerNotificationSettings getNotificationSettings(Player player) {
+        UUID uuid = player.getUniqueId();
+
+        // New structure (preferred)
+        String base = "player_notifications.players." + uuid;
+
+        boolean greetings = plugin.getConfig().getBoolean(base + ".greetings", true);
+        boolean adminUpdates = plugin.getConfig().getBoolean(base + ".admin_updates", true);
+        String modeRaw = plugin.getConfig().getString(base + ".mode", "CHAT");
+
+        // Legacy compatibility (until migration is fully rolled out everywhere)
+        Object legacy = plugin.getConfig().get("notifications." + uuid);
+        if (legacy instanceof Boolean) {
+            greetings = (Boolean) legacy;
+        } else if (legacy instanceof String) {
+            modeRaw = (String) legacy;
+        }
+
+        NotificationMode mode = NotificationMode.fromString(modeRaw);
+        return new PlayerNotificationSettings(mode, greetings, adminUpdates);
+    }
+
+    private void deliver(Player player, NotificationMode mode, String chatText, String title, String subtitle) {
+        if (mode == null) mode = NotificationMode.CHAT;
+
+        switch (mode) {
+            case ACTION_BAR:
+                sendActionBar(player, chatText);
+                return;
+            case TITLE:
+                String t = (title == null || title.trim().isEmpty()) ? "&bEntering" : title;
+                String sub = (subtitle == null || subtitle.trim().isEmpty()) ? (chatText == null ? "" : chatText) : subtitle;
+                player.sendTitle(color(t), color(sub), 10, 40, 10);
+                return;
+            case CHAT:
+            default:
+                if (chatText != null && !chatText.trim().isEmpty()) {
+                    player.sendMessage(color(chatText));
+                }
+        }
+    }
+
+    private void sendActionBar(Player player, String msg) {
+        if (msg == null) msg = "";
+        try {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(color(msg)));
+        } catch (Throwable t) {
+            // Fallback to chat if actionbar isn't available for some reason
+            player.sendMessage(color(msg));
+        }
+    }
+
     private void sendWelcome(Player player, Plot plot) {
+        PlayerNotificationSettings settings = getNotificationSettings(player);
+        if (settings != null && !settings.greetingsEnabled()) return;
+
+        NotificationMode mode = (settings == null) ? NotificationMode.CHAT : settings.getMode();
+
         String msg = plot.getWelcomeMessage();
         if (msg == null || msg.trim().isEmpty()) {
             msg = tr(player,
@@ -158,16 +223,29 @@ public class PlotGreetingListener implements Listener {
                     Map.of("OWNER", plot.getOwnerName()));
         }
 
-        player.sendMessage(color(msg));
-
-        String title = plot.getEntryTitle();
-        String sub = plot.getEntrySubtitle();
-        if (title != null && !title.trim().isEmpty()) {
-            player.sendTitle(color(title), color(sub == null ? "" : sub), 10, 40, 10);
+        // If TITLE mode, prefer plot-configured title/subtitle. Otherwise, respect mode and do not force titles.
+        String title = null;
+        String sub = null;
+        if (mode == NotificationMode.TITLE) {
+            title = plot.getEntryTitle();
+            sub = plot.getEntrySubtitle();
+            if (title == null || title.trim().isEmpty()) {
+                title = "&bEntering";
+            }
+            if (sub == null || sub.trim().isEmpty()) {
+                sub = msg;
+            }
         }
+
+        deliver(player, mode, msg, title, sub);
     }
 
     private void sendFarewell(Player player, Plot plot) {
+        PlayerNotificationSettings settings = getNotificationSettings(player);
+        if (settings != null && !settings.greetingsEnabled()) return;
+
+        NotificationMode mode = (settings == null) ? NotificationMode.CHAT : settings.getMode();
+
         String msg = plot.getFarewellMessage();
         if (msg == null || msg.trim().isEmpty()) {
             msg = tr(player,
@@ -175,7 +253,16 @@ public class PlotGreetingListener implements Listener {
                     "&7Leaving: &f{OWNER}&7's claim",
                     Map.of("OWNER", plot.getOwnerName()));
         }
-        player.sendMessage(color(msg));
+
+        // For TITLE mode, show a simple leave title (plot doesn’t currently have dedicated leave title fields)
+        String title = null;
+        String sub = null;
+        if (mode == NotificationMode.TITLE) {
+            title = "&7Leaving";
+            sub = msg;
+        }
+
+        deliver(player, mode, msg, title, sub);
     }
 
     private String tr(Player player, String key, String fallback, Map<String, String> placeholders) {

@@ -85,13 +85,13 @@ public class SettingsGUI {
         } else {
             boolean soundsEnabled = plugin.isSoundEnabled(player);
 
-            String name = soundsEnabled
+            String soundsName = soundsEnabled
                     ? t(player, "settings_sounds_on_name", "&aSounds: ON")
                     : t(player, "settings_sounds_off_name", "&cSounds: OFF");
 
             inv.setItem(10, GUIManager.createItem(
                     soundsEnabled ? Material.NOTE_BLOCK : Material.JUKEBOX,
-                    name,
+                    soundsName,
                     tl(player, "settings_sounds_lore",
                             List.of("&7Toggle AegisGuard menu sound effects."))
             ));
@@ -119,18 +119,18 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 3) NOTIFICATIONS (Slot 16) - v1.2.6: Using NotificationManager
+        // 3) NOTIFICATIONS MODE (Slot 16) - v1.2.6: Using NotificationManager
         // --------------------------------------------------
-        String modeDisplay = "&7Unknown";
+        String modeDisplay;
         if (plugin.getNotificationManager() != null) {
             com.aegisguard.notify.PlayerNotificationSettings settings =
                 plugin.getNotificationManager().getSettings(player.getUniqueId());
             modeDisplay = notifDisplay(player, settings.getMode().getConfigValue());
+        } else {
+            // Fallback to local method if NotificationManager unavailable
+            String mode = getNotifMode(player);
+            modeDisplay = notifDisplay(player, mode);
         }
-        // 3) NOTIFICATIONS MODE (Slot 16) - (ACTION_BAR / CHAT / TITLE)
-        // --------------------------------------------------
-        String mode = getNotifMode(player);
-        String modeDisplay = notifDisplay(player, mode);
 
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
@@ -253,29 +253,25 @@ public class SettingsGUI {
                 plugin.runMain(player, () -> open(player, plot));
             }
 
-            case 16 -> { // Notifications - v1.2.6: Using NotificationManager
-                if (plugin.getNotificationManager() == null) {
-                    plugin.effects().playError(player);
-                    return;
+            case 16 -> { // Notifications MODE - v1.2.6: Using NotificationManager
+                if (plugin.getNotificationManager() != null) {
+                    // Use NotificationManager to cycle modes
+                    plugin.getNotificationManager().cycleMode(player.getUniqueId());
+                } else {
+                    // Fallback to local method
+                    String mode = getNotifMode(player);
+                    String nextMode = switch (mode) {
+                        case "ACTION_BAR" -> "CHAT";
+                        case "CHAT" -> "TITLE";
+                        default -> "ACTION_BAR";
+                    };
+                    setNotifMode(player, nextMode);
+
+                    // Keep legacy key as MODE string for compatibility
+                    plugin.getConfig().set("notifications." + uuid, nextMode);
+                    plugin.runGlobalAsync(plugin::saveConfig);
                 }
-            case 16 -> { // Notifications MODE (ACTION_BAR/CHAT/TITLE)
-                String mode = getNotifMode(player);
-                String nextMode = switch (mode) {
-                    case "ACTION_BAR" -> "CHAT";
-                    case "CHAT" -> "TITLE";
-                    default -> "ACTION_BAR";
-                };
 
-                // New structured storage (1.2.6+)
-                setNotifMode(player, nextMode);
-
-                // Keep legacy key as MODE string for compatibility (and to auto-fix boolean collisions)
-                plugin.getConfig().set("notifications." + uuid, nextMode);
-
-                plugin.runGlobalAsync(plugin::saveConfig);
-
-                // Cycle through notification modes
-                plugin.getNotificationManager().cycleMode(player.getUniqueId());
                 plugin.effects().playMenuFlip(player);
 
                 // ✅ Reopen NEXT tick

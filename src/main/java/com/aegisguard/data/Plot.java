@@ -241,6 +241,63 @@ public class Plot {
         playerRoles.remove(playerUUID);
     }
 
+    /**
+     * Check if a player can modify (remove or change role) a specific member.
+     * v1.2.6: Prevents owners from removing themselves and respects admin bypass.
+     *
+     * @param editor       The player attempting the modification
+     * @param targetUUID   The UUID of the member being modified
+     * @return true if modification is allowed
+     */
+    public boolean canModifyMember(Player editor, UUID targetUUID) {
+        if (editor == null || targetUUID == null) return false;
+
+        // Admin bypass: can always modify any plot member
+        if (editor.hasPermission("aegis.admin") || editor.hasPermission("aegis.admin.override")) {
+            return true;
+        }
+
+        // Server plots: only admins can modify
+        if (isServerZone()) {
+            return editor.hasPermission("aegis.admin");
+        }
+
+        // Only owner can modify members (unless admin)
+        if (!isOwner(editor)) {
+            return false;
+        }
+
+        // CRITICAL: Owners cannot remove themselves (prevents plot orphaning)
+        if (editor.getUniqueId().equals(targetUUID)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if a player can manage this plot (admin override or owner).
+     * v1.2.6: Ensures admins are never locked out.
+     *
+     * @param player The player to check
+     * @return true if player can manage the plot
+     */
+    public boolean canManage(Player player) {
+        if (player == null) return false;
+
+        // Admin bypass
+        if (player.hasPermission("aegis.admin") || player.hasPermission("aegis.admin.override")) {
+            return true;
+        }
+
+        // Owner can manage (except server zones)
+        if (!isServerZone() && isOwner(player)) {
+            return true;
+        }
+
+        return false;
+    }
+
     // --- ROLE FLAG OVERRIDES ---
 
     public TriState getRoleFlagState(String roleName, String flagKey) {

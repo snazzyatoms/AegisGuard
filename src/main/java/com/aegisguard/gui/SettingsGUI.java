@@ -118,10 +118,14 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 3) NOTIFICATIONS (Slot 16)
+        // 3) NOTIFICATIONS (Slot 16) - v1.2.6: Using NotificationManager
         // --------------------------------------------------
-        String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
-        String modeDisplay = notifDisplay(player, mode);
+        String modeDisplay = "&7Unknown";
+        if (plugin.getNotificationManager() != null) {
+            com.aegisguard.notify.PlayerNotificationSettings settings =
+                plugin.getNotificationManager().getSettings(player.getUniqueId());
+            modeDisplay = notifDisplay(player, settings.getMode().getConfigValue());
+        }
 
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
@@ -131,7 +135,7 @@ public class SettingsGUI {
                         Map.of("MODE", modeDisplay)
                 ),
                 tl(player, "settings_notifications_lore",
-                        List.of("&7Click to cycle:", "&7Action Bar -> Chat -> Title"))
+                        List.of("&7Click to cycle:", "&7Chat -> Action Bar -> Title"))
         ));
 
         // --------------------------------------------------
@@ -209,17 +213,14 @@ public class SettingsGUI {
                 plugin.runMain(player, () -> open(player, plot));
             }
 
-            case 16 -> { // Notifications
-                String mode = normalizeNotif(plugin.getConfig().getString("notifications." + player.getUniqueId(), "ACTION_BAR"));
-                String nextMode = switch (mode) {
-                    case "ACTION_BAR" -> "CHAT";
-                    case "CHAT" -> "TITLE";
-                    default -> "ACTION_BAR";
-                };
+            case 16 -> { // Notifications - v1.2.6: Using NotificationManager
+                if (plugin.getNotificationManager() == null) {
+                    plugin.effects().playError(player);
+                    return;
+                }
 
-                plugin.getConfig().set("notifications." + player.getUniqueId(), nextMode);
-                plugin.runGlobalAsync(plugin::saveConfig);
-
+                // Cycle through notification modes
+                plugin.getNotificationManager().cycleMode(player.getUniqueId());
                 plugin.effects().playMenuFlip(player);
 
                 // ✅ Reopen NEXT tick

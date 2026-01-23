@@ -26,6 +26,7 @@ import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.5+)
+import com.aegisguard.notify.NotificationManager;  // ✅ NEW: Notification Manager (1.2.6+)
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;
@@ -89,6 +90,9 @@ public class AegisGuard extends JavaPlugin {
 
     // ✅ NEW: Migration Manager (1.2.6+) - Import claims from other plugins
     private MigrationManager migrationManager;
+
+    // ✅ NEW: Notification Manager (1.2.6+) - Player notification preferences
+    private NotificationManager notificationManager;
 
     /**
      * MessagesUtil now acts as:
@@ -157,6 +161,14 @@ public class AegisGuard extends JavaPlugin {
      * @return The migration manager instance
      */
     public MigrationManager getMigrationManager() { return migrationManager; }
+
+    // ✅ NEW: Notification Manager getter (1.2.6+)
+    /**
+     * Get the notification manager for player notification preferences.
+     * Handles greetings, admin updates, and notification modes (chat/actionbar/title).
+     * @return The notification manager instance
+     */
+    public NotificationManager getNotificationManager() { return notificationManager; }
 
     /**
      * Legacy access (compat bridge).
@@ -286,7 +298,16 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("MigrationManager failed to initialize: " + t.getMessage());
         }
 
-        // 3.h GUI AFTER vault/exchange exist
+        // ✅ 3.h NEW: Notification Manager (1.2.6+)
+        try {
+            this.notificationManager = new NotificationManager(this);
+            getLogger().info("Notification Manager initialized.");
+        } catch (Throwable t) {
+            this.notificationManager = null;
+            getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
+        }
+
+        // 3.i GUI AFTER vault/exchange/notifications exist
         this.gui = new GUIManager(this);
 
         this.worldRules = new WorldRulesManager(this);

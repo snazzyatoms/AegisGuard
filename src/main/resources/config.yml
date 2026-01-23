@@ -1042,34 +1042,51 @@ protection_effects:
 
 # ==============================================================================
 # 👥 ROLE MANAGEMENT
+# - icon: Material name used in GUIs (RolesGUI / Permissions views)
+# - display: optional friendly display name used by GUIs (color codes supported)
+# - priority: sorting weight (higher = more powerful)
+# - permissions: your existing role permission list (unchanged)
 # ==============================================================================
 roles:
   owner:
     name: "&cOwner"
+    display: "&cOwner"
+    icon: "NETHERITE_HELMET"
     priority: 100
     permissions: [ "ALL" ]
 
   co_owner:
     name: "&6Co-Owner"
+    display: "&6Co-Owner"
+    icon: "DIAMOND_CHESTPLATE"
     priority: 90
     permissions: [ "MANAGE", "BUILD", "CONTAINER", "INTERACT" ]
 
   steward:
     name: "&dSteward"
+    display: "&dSteward"
+    icon: "BOOK"
     priority: 80
     permissions: [ "MANAGE", "BUILD" ]
 
   builder:
     name: "&aBuilder"
+    display: "&aBuilder"
+    icon: "IRON_PICKAXE"
     priority: 60
     permissions: [ "BUILD" ]
 
   member:
     name: "&bMember"
+    display: "&bMember"
+    icon: "CHEST"
     priority: 40
     permissions: [ "INTERACT", "CONTAINER" ]
 
   visitor:
     name: "&7Visitor"
+    display: "&7Visitor"
+    icon: "FEATHER"
     priority: 10
     permissions: [ "INTERACT" ]
+

@@ -25,8 +25,8 @@ import com.aegisguard.language.CodexEngine;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
-import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.5+)
-import com.aegisguard.notify.NotificationManager;  // ✅ NEW: Notification Manager (1.2.6+)
+import com.aegisguard.migration.MigrationManager;
+import com.aegisguard.notify.NotificationManager;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.protection.BlockProtectionListener;
 import com.aegisguard.selection.SelectionService;
@@ -39,22 +39,15 @@ import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public class AegisGuard extends JavaPlugin {
 
@@ -92,10 +85,10 @@ public class AegisGuard extends JavaPlugin {
     // Fair Pricing Calculator (1.2.6+)
     private ClaimPricingCalculator pricingCalculator;
 
-    // ✅ NEW: Migration Manager (1.2.6+) - Import claims from other plugins
+    // Migration Manager (1.2.6+) - Import claims from other plugins
     private MigrationManager migrationManager;
 
-    // ✅ NEW: Notification Manager (1.2.6+) - Player notification preferences
+    // Notification Manager (1.2.6+) - Player notification preferences
     private NotificationManager notificationManager;
 
     /**
@@ -124,6 +117,9 @@ public class AegisGuard extends JavaPlugin {
     private Object mobBarrierTask;
     private Object claimBlockTask;
 
+    // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
+    private final Set<UUID> bypassMode = ConcurrentHashMap.newKeySet();
+
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
     public IDataStore store() { return plotStore; }
@@ -143,54 +139,45 @@ public class AegisGuard extends JavaPlugin {
 
     public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
 
+    /**
+     * Alias for getClaimBlockManager() - compatibility method
+     */
+    public ClaimBlockManager claimBlocks() { return claimBlockManager; }
+
     // Exchange service getter
     public ClaimBlockExchangeService exchange() { return claimBlockExchange; }
     public ClaimBlockExchangeService getClaimBlockExchangeService() { return claimBlockExchange; }
 
     // Snapshot Manager getter
     public SnapshotManager getSnapshotManager() { return snapshotManager; }
+    public SnapshotManager snapshots() { return snapshotManager; }
 
     // Fair Pricing Calculator getter (1.2.6+)
-    /**
-     * Get the claim pricing calculator for fair initial pricing.
-     * Returns null if fair pricing is disabled or failed to initialize.
-     * @return The pricing calculator instance, or null
-     */
     public ClaimPricingCalculator getPricingCalculator() { return pricingCalculator; }
+    public ClaimPricingCalculator pricing() { return pricingCalculator; }
 
-    // ✅ NEW: Migration Manager getter (1.2.6+)
-    /**
-     * Get the migration manager for importing claims from other protection plugins.
-     * Supports GriefPrevention, GriefDefender, and Lands.
-     * @return The migration manager instance
-     */
+    // Migration Manager getter (1.2.6+)
     public MigrationManager getMigrationManager() { return migrationManager; }
+    public MigrationManager migration() { return migrationManager; }
 
-    // ✅ NEW: Notification Manager getter (1.2.6+)
-    /**
-     * Get the notification manager for player notification preferences.
-     * Handles greetings, admin updates, and notification modes (chat/actionbar/title).
-     * @return The notification manager instance
-     */
+    // Notification Manager getter (1.2.6+)
     public NotificationManager getNotificationManager() { return notificationManager; }
 
     /**
      * Legacy access (compat bridge).
      * This must NOT read messages.yml anymore.
      */
-    @Deprecated
     public MessagesUtil msg() { return messages; }
 
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
+    public ExpansionRequestManager expansions() { return expansionManager; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
 
     public AGConfig getConfigManager() { return configMgr; }
-    // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
-    private final Set<UUID> bypassMode = ConcurrentHashMap.newKeySet();
 
     @Override
     public void onEnable() {
@@ -260,7 +247,7 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminCmd);
         }
 
-        // ✅ 3.h NEW: Notification Manager (1.2.6+)
+        // Notification Manager (1.2.6+)
         try {
             this.notificationManager = new NotificationManager(this);
             getLogger().info("Notification Manager initialized.");
@@ -269,18 +256,7 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
         }
 
-        // 3.i GUI AFTER vault/exchange/notifications exist
-        this.gui = new GUIManager(this);
-
-        this.worldRules = new WorldRulesManager(this);
-        this.effectUtil = new EffectUtil(this);
-        this.expansionManager = new ExpansionRequestManager(this);
-        this.discord = new DiscordWebhook(this);
-        this.protection = new ProtectionManager(this);
-
-        // Load Data
-        this.plotStore.load();
-
+        // Load async data
         runGlobalAsync(() -> {
             if (messages != null) messages.loadPlayerPreferences();
             if (expansionManager != null) expansionManager.load();
@@ -288,7 +264,6 @@ public class AegisGuard extends JavaPlugin {
         });
 
         // Register Events
-        // --- LISTENERS ---
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         Bukkit.getPluginManager().registerEvents(selection, this);
@@ -320,66 +295,6 @@ public class AegisGuard extends JavaPlugin {
     public void onDisable() {
         if (plotStore != null) plotStore.save();
         getLogger().info("AegisGuard disabled.");
-    }
-
-    public AGConfig cfg() {
-        return configMgr;
-    }
-
-    public MessagesUtil msg() {
-        return messages;
-    }
-
-    public IDataStore store() {
-        return plotStore;
-    }
-
-    public GUIManager gui() {
-        return gui;
-    }
-
-    public ProtectionManager protection() {
-        return protection;
-    }
-
-    public SelectionService selection() {
-        return selection;
-    }
-
-    public VaultHook vault() {
-        return vault;
-    }
-
-    public EconomyManager eco() {
-        return ecoManager;
-    }
-
-    public ProtectionHookManager protectionHooks() {
-        return protectionHooks;
-    }
-
-    public WorldRulesManager worldRules() {
-        return worldRules;
-    }
-
-    public EffectUtil effects() {
-        return effectUtil;
-    }
-
-    public ExpansionRequestManager expansions() {
-        return expansionManager;
-    }
-
-    public SnapshotManager snapshots() {
-        return snapshotManager;
-    }
-
-    public ClaimPricingCalculator pricing() {
-        return pricingCalculator;
-    }
-
-    public MigrationManager migration() {
-        return migrationManager;
     }
 
     public boolean isAdmin(Player player) {
@@ -415,14 +330,32 @@ public class AegisGuard extends JavaPlugin {
         return true;
     }
 
+    /**
+     * Check if sounds are enabled for a player.
+     * Checks global config first, then player-specific preference.
+     *
+     * @param player The player to check
+     * @return true if sounds are enabled for this player
+     */
+    public boolean isSoundEnabled(Player player) {
+        if (player == null) return false;
+
+        // Check global setting first
+        if (!cfg().globalSoundsEnabled()) {
+            return false;
+        }
+
+        // Check player-specific setting (default: true)
+        return getConfig().getBoolean("sounds.players." + player.getUniqueId(), true);
+    }
+
     // ---------------------------------------------------------------------
     // Schedulers (Folia 1.21+ compatible)
     // ---------------------------------------------------------------------
 
-    public boolean isFolia() {
-        return isFolia;
-    }
-
+    /**
+     * Run a task on the main thread (Bukkit) or global region (Folia).
+     */
     public void runSync(Runnable task) {
         if (!isFolia) {
             Bukkit.getScheduler().runTask(this, task);
@@ -441,6 +374,64 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
+    /**
+     * Run a task on the entity's region (Folia) or main thread (Bukkit).
+     * This is the correct way to schedule tasks that interact with a specific player.
+     *
+     * @param player The player whose region the task should run on
+     * @param task   The task to run
+     */
+    public void runMain(Player player, Runnable task) {
+        if (player == null || task == null) return;
+
+        if (!isFolia) {
+            Bukkit.getScheduler().runTask(this, task);
+            return;
+        }
+
+        // Folia: use entity scheduler
+        try {
+            Method getScheduler = player.getClass().getMethod("getScheduler");
+            Object entityScheduler = getScheduler.invoke(player);
+
+            Method runMethod = entityScheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
+            runMethod.invoke(entityScheduler, this, (Consumer<Object>) scheduledTask -> task.run(), (Runnable) null);
+        } catch (Throwable t) {
+            // Fallback to global scheduler
+            Bukkit.getScheduler().runTask(this, task);
+        }
+    }
+
+    /**
+     * Run a task asynchronously on the global region.
+     * This is the preferred method for async operations that don't need entity context.
+     *
+     * @param task The task to run
+     */
+    public void runGlobalAsync(Runnable task) {
+        if (task == null) return;
+
+        if (!isFolia) {
+            Bukkit.getScheduler().runTaskAsynchronously(this, task);
+            return;
+        }
+
+        // Folia: use async scheduler
+        try {
+            Method getAsyncScheduler = Bukkit.getServer().getClass().getMethod("getAsyncScheduler");
+            Object asyncScheduler = getAsyncScheduler.invoke(Bukkit.getServer());
+
+            Method runNow = asyncScheduler.getClass().getMethod("runNow", Plugin.class, Consumer.class);
+            runNow.invoke(asyncScheduler, this, (Consumer<Object>) scheduledTask -> task.run());
+        } catch (Throwable t) {
+            // Fallback
+            Bukkit.getScheduler().runTaskAsynchronously(this, task);
+        }
+    }
+
+    /**
+     * Run a task later on the main thread (Bukkit) or global region (Folia).
+     */
     public BukkitTask runLater(long ticks, Runnable task) {
         if (!isFolia) {
             return Bukkit.getScheduler().runTaskLater(this, task, ticks);
@@ -457,6 +448,9 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
+    /**
+     * Run a task asynchronously.
+     */
     public void runAsync(Runnable task) {
         Bukkit.getScheduler().runTaskAsynchronously(this, task);
     }

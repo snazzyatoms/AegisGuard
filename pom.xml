@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <name>AegisGuard</name>
-    <description>Core Hardening & Roles Expansion - v1.2.6</description>
+    <description>Core Hardening &amp; Roles Expansion - v1.2.6</description>
 
     <properties>
         <java.version>17</java.version>

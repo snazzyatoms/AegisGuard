@@ -60,6 +60,105 @@ public class RolesGUI {
     }
 
     // --------------------------------------------------
+    // ✅ v1.2.6: Role Icon & Display Support
+    // --------------------------------------------------
+
+    /**
+     * Get the display name for a role from config (with color codes).
+     * Falls back to capitalized role name if not defined.
+     *
+     * @param roleName The role ID (e.g., "farmer", "moderator")
+     * @return Display name with color codes
+     */
+    private String getRoleDisplayName(String roleName) {
+        if (roleName == null) return "&7Unknown";
+
+        // Try new "display" key (v1.2.6+)
+        String display = plugin.cfg().raw().getString("roles." + roleName + ".display");
+        if (display != null && !display.isEmpty()) {
+            return display;
+        }
+
+        // Fall back to legacy "name" key (v1.2.5 compatibility)
+        String name = plugin.cfg().raw().getString("roles." + roleName + ".name");
+        if (name != null && !name.isEmpty()) {
+            return name;
+        }
+
+        // Final fallback: capitalize role name
+        return capitalizeRole(roleName);
+    }
+
+    /**
+     * Get the icon material for a role from config.
+     * Falls back to sensible defaults based on role name.
+     *
+     * @param roleName The role ID
+     * @return Material for the role icon
+     */
+    private Material getRoleIcon(String roleName) {
+        if (roleName == null) return Material.PAPER;
+
+        // Try to read icon from config
+        String iconStr = plugin.cfg().raw().getString("roles." + roleName + ".icon");
+        if (iconStr != null && !iconStr.isEmpty()) {
+            try {
+                return Material.valueOf(iconStr.toUpperCase().replace(" ", "_"));
+            } catch (IllegalArgumentException ignored) {
+                // Invalid material, fall through to defaults
+            }
+        }
+
+        // Fallback to role-specific defaults
+        return switch (roleName.toLowerCase()) {
+            case "owner" -> Material.DIAMOND;
+            case "member" -> Material.IRON_INGOT;
+            case "visitor" -> Material.FEATHER;
+            case "moderator" -> Material.REDSTONE_TORCH;
+            case "guard" -> Material.IRON_SWORD;
+            case "steward" -> Material.GOLDEN_APPLE;
+            case "farmer" -> Material.IRON_HOE;
+            case "farmland_merchant" -> Material.WHEAT;
+            case "shopkeeper" -> Material.EMERALD;
+            case "redstone_engineer" -> Material.REDSTONE;
+            case "animal_handler" -> Material.WHEAT_SEEDS;
+            case "tenant", "resident" -> Material.OAK_DOOR;
+            case "event_host" -> Material.FIREWORK_ROCKET;
+            case "builder", "builder_plus" -> Material.DIAMOND_PICKAXE;
+            default -> Material.PAPER;
+        };
+    }
+
+    /**
+     * Get the priority of a role for sorting.
+     * Higher priority = more important role.
+     *
+     * @param roleName The role ID
+     * @return Priority value (default 50)
+     */
+    private int getRolePriority(String roleName) {
+        if (roleName == null) return 0;
+        return plugin.cfg().raw().getInt("roles." + roleName + ".priority", 50);
+    }
+
+    /**
+     * Capitalize a role name for display.
+     */
+    private String capitalizeRole(String role) {
+        if (role == null || role.isEmpty()) return "";
+        String[] words = role.toLowerCase().replace("_", " ").split(" ");
+        StringBuilder result = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                result.append(Character.toUpperCase(word.charAt(0)))
+                      .append(word.substring(1))
+                      .append(" ");
+            }
+        }
+        return result.toString().trim();
+    }
+
+    // --------------------------------------------------
     // HOLDERS
     // --------------------------------------------------
 
@@ -355,8 +454,6 @@ public class RolesGUI {
             OfflinePlayer member = Bukkit.getOfflinePlayer(uuid);
             String name = (member.getName() != null) ? member.getName() : "Unknown";
 
-            String roleDisplay = getRoleDisplayName(player, role);
-
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
@@ -370,6 +467,8 @@ public class RolesGUI {
 
                 List<String> lore = new ArrayList<>();
 
+                // v1.2.6: Use role display name
+                String roleDisplay = getRoleDisplayName(role);
                 String roleLine = t(player, "roles_member_role_line",
                         Map.of("ROLE", roleDisplay),
                         "&7Role: &f{ROLE}"
@@ -800,6 +899,7 @@ public class RolesGUI {
         if (e.getCurrentItem() == null) return;
 
         Plot plot = holder.getPlot();
+        int currentPage = holder.getPage();
         int slot = e.getRawSlot();
 
         if (slot == 49) {
@@ -905,7 +1005,6 @@ public class RolesGUI {
                 } else {
                     plugin.msg().send(player, "role_no_permission", Map.of());
                 }
-            if (isTargetOwner && !isAdmin) {
                 plugin.effects().playError(player);
                 return;
             }

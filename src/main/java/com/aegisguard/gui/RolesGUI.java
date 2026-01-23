@@ -55,6 +55,105 @@ public class RolesGUI {
     }
 
     // --------------------------------------------------
+    // ✅ v1.2.6: Role Icon & Display Support
+    // --------------------------------------------------
+
+    /**
+     * Get the display name for a role from config (with color codes).
+     * Falls back to capitalized role name if not defined.
+     *
+     * @param roleName The role ID (e.g., "farmer", "moderator")
+     * @return Display name with color codes
+     */
+    private String getRoleDisplayName(String roleName) {
+        if (roleName == null) return "&7Unknown";
+
+        // Try new "display" key (v1.2.6+)
+        String display = plugin.cfg().raw().getString("roles." + roleName + ".display");
+        if (display != null && !display.isEmpty()) {
+            return display;
+        }
+
+        // Fall back to legacy "name" key (v1.2.5 compatibility)
+        String name = plugin.cfg().raw().getString("roles." + roleName + ".name");
+        if (name != null && !name.isEmpty()) {
+            return name;
+        }
+
+        // Final fallback: capitalize role name
+        return capitalizeRole(roleName);
+    }
+
+    /**
+     * Get the icon material for a role from config.
+     * Falls back to sensible defaults based on role name.
+     *
+     * @param roleName The role ID
+     * @return Material for the role icon
+     */
+    private Material getRoleIcon(String roleName) {
+        if (roleName == null) return Material.PAPER;
+
+        // Try to read icon from config
+        String iconStr = plugin.cfg().raw().getString("roles." + roleName + ".icon");
+        if (iconStr != null && !iconStr.isEmpty()) {
+            try {
+                return Material.valueOf(iconStr.toUpperCase().replace(" ", "_"));
+            } catch (IllegalArgumentException ignored) {
+                // Invalid material, fall through to defaults
+            }
+        }
+
+        // Fallback to role-specific defaults
+        return switch (roleName.toLowerCase()) {
+            case "owner" -> Material.DIAMOND;
+            case "member" -> Material.IRON_INGOT;
+            case "visitor" -> Material.FEATHER;
+            case "moderator" -> Material.REDSTONE_TORCH;
+            case "guard" -> Material.IRON_SWORD;
+            case "steward" -> Material.GOLDEN_APPLE;
+            case "farmer" -> Material.IRON_HOE;
+            case "farmland_merchant" -> Material.WHEAT;
+            case "shopkeeper" -> Material.EMERALD;
+            case "redstone_engineer" -> Material.REDSTONE;
+            case "animal_handler" -> Material.WHEAT_SEEDS;
+            case "tenant", "resident" -> Material.OAK_DOOR;
+            case "event_host" -> Material.FIREWORK_ROCKET;
+            case "builder", "builder_plus" -> Material.DIAMOND_PICKAXE;
+            default -> Material.PAPER;
+        };
+    }
+
+    /**
+     * Get the priority of a role for sorting.
+     * Higher priority = more important role.
+     *
+     * @param roleName The role ID
+     * @return Priority value (default 50)
+     */
+    private int getRolePriority(String roleName) {
+        if (roleName == null) return 0;
+        return plugin.cfg().raw().getInt("roles." + roleName + ".priority", 50);
+    }
+
+    /**
+     * Capitalize a role name for display.
+     */
+    private String capitalizeRole(String role) {
+        if (role == null || role.isEmpty()) return "";
+        String[] words = role.toLowerCase().replace("_", " ").split(" ");
+        StringBuilder result = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                result.append(Character.toUpperCase(word.charAt(0)))
+                      .append(word.substring(1))
+                      .append(" ");
+            }
+        }
+        return result.toString().trim();
+    }
+
+    // --------------------------------------------------
     // HOLDERS
     // --------------------------------------------------
 
@@ -64,8 +163,19 @@ public class RolesGUI {
 
     public static class RolesMenuHolder implements InventoryHolder {
         private final Plot plot;
-        public RolesMenuHolder(Plot plot) { this.plot = plot; }
+        private final int page; // v1.2.6: Pagination support
+
+        public RolesMenuHolder(Plot plot) {
+            this(plot, 0);
+        }
+
+        public RolesMenuHolder(Plot plot, int page) {
+            this.plot = plot;
+            this.page = Math.max(0, page);
+        }
+
         public Plot getPlot() { return plot; }
+        public int getPage() { return page; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -271,8 +381,15 @@ public class RolesGUI {
     // --------------------------------------------------
 
     public void openRolesMenu(Player player, Plot plot) {
+        openRolesMenu(player, plot, 0);
+    }
+
+    /**
+     * v1.2.6: Enhanced with pagination support
+     */
+    public void openRolesMenu(Player player, Plot plot, int page) {
         String title = plugin.gui().title(player, "roles_gui_title", "&eManage Plot Roles");
-        Inventory inv = Bukkit.createInventory(new RolesMenuHolder(plot), 54, title);
+        Inventory inv = Bukkit.createInventory(new RolesMenuHolder(plot, page), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
@@ -280,19 +397,42 @@ public class RolesGUI {
         Map<UUID, String> roleMap = plot.getPlayerRoles();
         if (roleMap == null) roleMap = new LinkedHashMap<>();
 
-        int slot = 0;
+        // Filter and collect visible members
+        List<Map.Entry<UUID, String>> visibleMembers = new ArrayList<>();
         for (Map.Entry<UUID, String> entry : roleMap.entrySet()) {
-            if (slot >= 45) break;
-
             UUID uuid = entry.getKey();
-            String role = entry.getValue();
-
             boolean isOwnerEntry = uuid.equals(plot.getOwner());
             boolean isViewerOwner = uuid.equals(player.getUniqueId());
             boolean isAdmin = plugin.isAdmin(player);
 
+            // Skip self-owner and non-admin viewing owner
             if (isOwnerEntry && isViewerOwner) continue;
             if (isOwnerEntry && !isAdmin) continue;
+
+            visibleMembers.add(entry);
+        }
+
+        // v1.2.6: Sort by role priority (highest first)
+        visibleMembers.sort((a, b) -> {
+            int priorityA = getRolePriority(a.getValue());
+            int priorityB = getRolePriority(b.getValue());
+            return Integer.compare(priorityB, priorityA); // Descending
+        });
+
+        // Pagination
+        int membersPerPage = 45;
+        int totalMembers = visibleMembers.size();
+        int totalPages = (int) Math.ceil((double) totalMembers / membersPerPage);
+        int currentPage = Math.max(0, Math.min(page, totalPages - 1));
+        int startIndex = currentPage * membersPerPage;
+        int endIndex = Math.min(startIndex + membersPerPage, totalMembers);
+
+        // Display members for current page
+        int slot = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            Map.Entry<UUID, String> entry = visibleMembers.get(i);
+            UUID uuid = entry.getKey();
+            String role = entry.getValue();
 
             OfflinePlayer member = Bukkit.getOfflinePlayer(uuid);
             String name = (member.getName() != null) ? member.getName() : "Unknown";
@@ -310,8 +450,10 @@ public class RolesGUI {
 
                 List<String> lore = new ArrayList<>();
 
+                // v1.2.6: Use role display name with icon fallback indication
+                String roleDisplay = getRoleDisplayName(role);
                 String roleLine = t(player, "roles_member_role_line",
-                        Map.of("ROLE", role),
+                        Map.of("ROLE", roleDisplay),
                         "&7Role: &f{ROLE}"
                 );
                 lore.add(GUIManager.color(roleLine));
@@ -324,6 +466,32 @@ public class RolesGUI {
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
+        }
+
+        // v1.2.6: Page navigation buttons
+        if (totalPages > 1) {
+            if (currentPage > 0) {
+                inv.setItem(45, GUIManager.createItem(
+                        Material.ARROW,
+                        t(player, "button_prev_page", "&fPrevious Page"),
+                        tl(player, "prev_page_lore", List.of("&7Go to page " + currentPage))
+                ));
+            }
+
+            // Page indicator
+            inv.setItem(46, GUIManager.createItem(
+                    Material.PAPER,
+                    t(player, "page_indicator", "&ePage " + (currentPage + 1) + "/" + totalPages),
+                    tl(player, "page_lore", List.of("&7Showing members " + (startIndex + 1) + "-" + endIndex + " of " + totalMembers))
+            ));
+
+            if (currentPage < totalPages - 1) {
+                inv.setItem(47, GUIManager.createItem(
+                        Material.ARROW,
+                        t(player, "button_next_page", "&fNext Page"),
+                        tl(player, "next_page_lore", List.of("&7Go to page " + (currentPage + 2)))
+                ));
+            }
         }
 
         inv.setItem(49, GUIManager.createItem(
@@ -576,7 +744,23 @@ public class RolesGUI {
         if (e.getCurrentItem() == null) return;
 
         Plot plot = holder.getPlot();
+        int currentPage = holder.getPage();
         int slot = e.getRawSlot();
+
+        // v1.2.6: Pagination buttons
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
+            // Previous page
+            plugin.effects().playMenuFlip(player);
+            plugin.runMain(player, () -> openRolesMenu(player, plot, currentPage - 1));
+            return;
+        }
+
+        if (slot == 47 && e.getCurrentItem().getType() == Material.ARROW) {
+            // Next page
+            plugin.effects().playMenuFlip(player);
+            plugin.runMain(player, () -> openRolesMenu(player, plot, currentPage + 1));
+            return;
+        }
 
         if (slot == 49) { openAddMenu(player, plot); return; }
         if (slot == 48) { plugin.gui().openMain(player); return; }

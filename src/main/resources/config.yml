@@ -1051,178 +1051,68 @@ protection_effects:
 roles:
   owner:
     name: "&cOwner"
-    display: "&cOwner"
-    icon: "NETHERITE_HELMET"
+    icon: NETHERITE_HELMET
     priority: 100
-    permissions: [ "ALL" ]
+    permissions: ["ALL"]
 
   co_owner:
     name: "&6Co-Owner"
-    display: "&6Co-Owner"
-    icon: "DIAMOND_CHESTPLATE"
+    icon: GOLDEN_HELMET
     priority: 90
-    permissions: [ "MANAGE", "BUILD", "CONTAINER", "INTERACT" ]
+    permissions: ["MANAGE", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP", "FARM", "REDSTONE", "ANIMALS"]
 
   steward:
     name: "&dSteward"
-    display: "&dSteward"
-    icon: "BOOK"
+    icon: ENCHANTED_BOOK
     priority: 80
-    permissions: [ "MANAGE", "BUILD" ]
+    permissions: ["MANAGE", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP"]
+
+  moderator:
+    name: "&9Moderator"
+    icon: WRITABLE_BOOK
+    priority: 75
+    permissions: ["MANAGE", "INTERACT", "CONTAINERS"]
+
+  market_steward:
+    name: "&aMarket Steward"
+    icon: EMERALD
+    priority: 70
+    permissions: ["SHOP", "INTERACT", "CONTAINERS"]
+
+  farmland_merchant:
+    name: "&2Farmland Merchant"
+    icon: HAY_BLOCK
+    priority: 65
+    permissions: ["FARM", "INTERACT", "CONTAINERS", "SHOP"]
 
   builder:
     name: "&aBuilder"
-    display: "&aBuilder"
-    icon: "IRON_PICKAXE"
+    icon: IRON_PICKAXE
     priority: 60
-    permissions: [ "BUILD" ]
+    permissions: ["BLOCK_BREAK", "BLOCK_PLACE"]
+
+  redstone_engineer:
+    name: "&cRedstone Engineer"
+    icon: REDSTONE
+    priority: 55
+    permissions: ["REDSTONE", "INTERACT", "BLOCK_PLACE"]
+
+  animal_handler:
+    name: "&eAnimal Handler"
+    icon: LEAD
+    priority: 50
+    permissions: ["ANIMALS", "INTERACT"]
 
   member:
     name: "&bMember"
-    display: "&bMember"
-    icon: "CHEST"
+    icon: PLAYER_HEAD
     priority: 40
-    permissions: [ "INTERACT", "CONTAINER" ]
+    permissions: ["INTERACT", "CONTAINERS"]
 
   visitor:
     name: "&7Visitor"
-    priority: 0
-    permissions:
-      - USE_DOORS
-      - USE_BUTTONS
-
-  # ============================================================
-  # ✅ v1.2.6: Expanded Role System
-  # ============================================================
-  # These are recommended default roles for advanced land management.
-  # Server owners can customize permissions, icons, and priorities.
-
-  moderator:
-    display: "&cModerator"
-    icon: REDSTONE_TORCH
-    priority: 85
-    permissions:
-      - ALL
-      - MANAGE_MEMBERS
-      - KICK_MEMBERS
-
-  guard:
-    display: "&4Guard"
-    icon: IRON_SWORD
-    priority: 80
-    permissions:
-      - BLOCK_BREAK
-      - BLOCK_PLACE
-      - INTERACT
-      - CONTAINER
-      - MANAGE_FLAGS
-      - KICK_VISITORS
-
-  steward:
-    display: "&6Steward"
-    icon: GOLDEN_APPLE
-    priority: 75
-    permissions:
-      - ALL
-      - MANAGE_FLAGS
-      - MANAGE_ZONES
-
-  farmer:
-    display: "&2Farmer"
-    icon: IRON_HOE
-    priority: 60
-    permissions:
-      - BLOCK_BREAK
-      - BLOCK_PLACE
-      - INTERACT
-      - CONTAINER
-      - FARM
-
-  farmland_merchant:
-    display: "&aFarmland Merchant"
-    icon: WHEAT
-    priority: 55
-    permissions:
-      - INTERACT
-      - CONTAINER
-      - FARM
-      - SELL_ITEMS
-
-  shopkeeper:
-    display: "&eShopkeeper"
-    icon: EMERALD
-    priority: 50
-    permissions:
-      - INTERACT
-      - CONTAINER
-      - MANAGE_SHOP
-
-  redstone_engineer:
-    display: "&cRedstone Engineer"
-    icon: REDSTONE
-    priority: 65
-    permissions:
-      - BLOCK_BREAK
-      - BLOCK_PLACE
-      - INTERACT
-      - REDSTONE
-      - PISTON_USE
-
-  animal_handler:
-    display: "&dAnimal Handler"
-    icon: WHEAT_SEEDS
-    priority: 45
-    permissions:
-      - INTERACT
-      - PETS
-      - ANIMALS
-      - BREED_ANIMALS
-
-  tenant:
-    display: "&bTenant"
     icon: OAK_DOOR
-    priority: 40
-    permissions:
-      - USE_DOORS
-      - USE_BUTTONS
-      - INTERACT
-      - CONTAINER
-      - SLEEP
-
-  resident:
-    display: "&bResident"
-    icon: BED
-    priority: 40
-    permissions:
-      - USE_DOORS
-      - USE_BUTTONS
-      - INTERACT
-      - CONTAINER
-      - SLEEP
-      - VEHICLES
-
-  event_host:
-    display: "&5Event Host"
-    icon: FIREWORK_ROCKET
-    priority: 70
-    permissions:
-      - INTERACT
-      - CONTAINER
-      - MANAGE_EVENTS
-      - SPAWN_ENTITIES
-
-  builder_plus:
-    display: "&3Builder+"
-    icon: DIAMOND_PICKAXE
-    priority: 55
-    permissions:
-      - BLOCK_BREAK
-      - BLOCK_PLACE
-      - INTERACT
-      - CONTAINER
-      - MANAGE_ZONES
-    display: "&7Visitor"
-    icon: "FEATHER"
     priority: 10
-    permissions: [ "INTERACT" ]
+    permissions: ["INTERACT"]
+
 

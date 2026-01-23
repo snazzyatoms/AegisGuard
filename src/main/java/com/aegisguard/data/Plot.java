@@ -15,10 +15,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * Plot (Data Class) - v1.2.2+
+ * Plot (Data Class) - v1.2.6+
  * - Represents a land claim.
  * - 2D (X/Z only) to ensure Bedrock-to-Sky protection.
  * - [Fix] Added getArea() for Claim Block calculation.
+ * - [Fix] Added alias methods for compatibility (getX1, getZ1, etc.)
+ * - [Fix] Added welcome/farewell messages, entry effects, level system
  */
 public class Plot {
 
@@ -60,6 +62,16 @@ public class Plot {
     private String plotName = null;
     private String description = null;
 
+    // --- 1.2.6+ GREETING MESSAGES ---
+    private String welcomeMessage = null;
+    private String farewellMessage = null;
+
+    // --- 1.2.6+ ENTRY EFFECT ---
+    private String entryEffect = null;
+
+    // --- 1.2.6+ LEVELING SYSTEM ---
+    private int level = 1;
+
     // --- FLAGS ---
     private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
 
@@ -92,6 +104,13 @@ public class Plot {
     }
 
     public UUID getId() {
+        return id;
+    }
+
+    /**
+     * Alias for getId() - compatibility method
+     */
+    public UUID getPlotId() {
         return id;
     }
 
@@ -129,6 +148,83 @@ public class Plot {
 
     public int getMaxZ() {
         return maxZ;
+    }
+
+    // --- ALIAS METHODS FOR COMPATIBILITY ---
+
+    /**
+     * Alias for getMinX() - compatibility method
+     */
+    public int getX1() {
+        return minX;
+    }
+
+    /**
+     * Alias for getMinZ() - compatibility method
+     */
+    public int getZ1() {
+        return minZ;
+    }
+
+    /**
+     * Alias for getMaxX() - compatibility method
+     */
+    public int getX2() {
+        return maxX;
+    }
+
+    /**
+     * Alias for getMaxZ() - compatibility method
+     */
+    public int getZ2() {
+        return maxZ;
+    }
+
+    /**
+     * Set minX bound
+     */
+    public void setX1(int x1) {
+        this.minX = x1;
+        normalizeBounds();
+    }
+
+    /**
+     * Set minZ bound
+     */
+    public void setZ1(int z1) {
+        this.minZ = z1;
+        normalizeBounds();
+    }
+
+    /**
+     * Set maxX bound
+     */
+    public void setX2(int x2) {
+        this.maxX = x2;
+        normalizeBounds();
+    }
+
+    /**
+     * Set maxZ bound
+     */
+    public void setZ2(int z2) {
+        this.maxZ = z2;
+        normalizeBounds();
+    }
+
+    /**
+     * Ensure min values are always less than max values
+     */
+    private void normalizeBounds() {
+        int tempMinX = Math.min(minX, maxX);
+        int tempMaxX = Math.max(minX, maxX);
+        int tempMinZ = Math.min(minZ, maxZ);
+        int tempMaxZ = Math.max(minZ, maxZ);
+
+        this.minX = tempMinX;
+        this.maxX = tempMaxX;
+        this.minZ = tempMinZ;
+        this.maxZ = tempMaxZ;
     }
 
     public void setBounds(int minX, int minZ, int maxX, int maxZ) {
@@ -193,6 +289,85 @@ public class Plot {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    // --- 1.2.6+ GREETING MESSAGES ---
+
+    /**
+     * Get the welcome message displayed when entering the plot
+     * @return The welcome message, or null if not set
+     */
+    public String getWelcomeMessage() {
+        return welcomeMessage;
+    }
+
+    /**
+     * Set the welcome message displayed when entering the plot
+     * @param welcomeMessage The message to display, or null to disable
+     */
+    public void setWelcomeMessage(String welcomeMessage) {
+        this.welcomeMessage = welcomeMessage;
+    }
+
+    /**
+     * Get the farewell message displayed when leaving the plot
+     * @return The farewell message, or null if not set
+     */
+    public String getFarewellMessage() {
+        return farewellMessage;
+    }
+
+    /**
+     * Set the farewell message displayed when leaving the plot
+     * @param farewellMessage The message to display, or null to disable
+     */
+    public void setFarewellMessage(String farewellMessage) {
+        this.farewellMessage = farewellMessage;
+    }
+
+    // --- 1.2.6+ ENTRY EFFECT ---
+
+    /**
+     * Get the entry effect played when entering the plot
+     * @return The effect name, or null if not set
+     */
+    public String getEntryEffect() {
+        return entryEffect;
+    }
+
+    /**
+     * Set the entry effect played when entering the plot
+     * @param entryEffect The effect name, or null to disable
+     */
+    public void setEntryEffect(String entryEffect) {
+        this.entryEffect = entryEffect;
+    }
+
+    // --- 1.2.6+ LEVELING SYSTEM ---
+
+    /**
+     * Get the plot's level (for leveling/upgrade system)
+     * @return The plot level (default: 1)
+     */
+    public int getLevel() {
+        return level;
+    }
+
+    /**
+     * Set the plot's level
+     * @param level The new level (minimum: 1)
+     */
+    public void setLevel(int level) {
+        this.level = Math.max(1, level);
+    }
+
+    /**
+     * Increment the plot's level by 1
+     * @return The new level
+     */
+    public int levelUp() {
+        this.level++;
+        return this.level;
     }
 
     public boolean isInside(Location loc) {
@@ -264,14 +439,25 @@ public class Plot {
         return bannedPlayers.contains(playerUUID);
     }
 
+    public boolean isOwner(Player player) {
+        if (player == null) return false;
+        return owner.equals(player.getUniqueId());
+    }
+
+    public boolean isOwner(UUID uuid) {
+        if (uuid == null) return false;
+        return owner.equals(uuid);
+    }
+
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
+        if (playerUUID == null || permission == null || plugin == null) return false;
+
         if (owner.equals(playerUUID)) return true;
+
         if (isBanned(playerUUID)) return false;
 
-        // Admins and explicit bypass can always pass plot permission checks.
         Player online = Bukkit.getPlayer(playerUUID);
         if (online != null) {
-            if (plugin != null && (plugin.isAdmin(online) || plugin.isBypassing(online))) return true;
             if (online.hasPermission("aegis.bypass")) return true;
         }
 

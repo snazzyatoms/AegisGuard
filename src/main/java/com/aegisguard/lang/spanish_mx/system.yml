@@ -137,6 +137,24 @@ claim_notify_state_enabled: '&aActivadas'
 claim_notify_state_disabled: '&cDesactivadas'
 
 # -------------------------------------------------
+# ✅ v1.2.6: Sistema de Notificaciones Mejorado
+# -------------------------------------------------
+notify_unavailable: '&cEl sistema de notificaciones no está disponible en este momento.'
+notify_greetings_enabled: '&a✔ Saludos activados. Ahora verás mensajes de entrada y salida de parcelas.'
+notify_greetings_disabled: '&c✔ Saludos desactivados. Ya no verás mensajes de entrada y salida de parcelas.'
+notify_admin_enabled: '&a✔ Notificaciones administrativas activadas. Ahora recibirás actualizaciones administrativas.'
+notify_admin_disabled: '&c✔ Notificaciones administrativas desactivadas. Las actualizaciones administrativas ahora están ocultas.'
+notify_mode_set: '&a✔ Modo de notificación establecido en: {MODE}'
+notify_mode_usage: '&eUso: &7/aegis notify mode <chat|actionbar|title>\n&7Modos disponibles:\n&7- &bchat &8- &7Mensajes de chat estándar\n&7- &bactionbar &8- &7Notificaciones en la barra de acción (sobre hotbar)\n&7- &btitle &8- &7Notificaciones de título/subtítulo (centro de pantalla)'
+notify_mode_invalid: '&cModo inválido: &7{MODE}\n&eModos válidos: &7chat, actionbar, title'
+notify_status: '&e&l━━━━━━━━━ &6Configuración de Notificaciones &e&l━━━━━━━━━\n&7Saludos: {GREETINGS}\n&7Actualizaciones Admin: {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_usage: '&eComandos de Notificación:\n&7/aegis notify &8- &7Alternar mensajes de saludo\n&7/aegis notify greetings &8- &7Alternar mensajes de entrada/salida\n&7/aegis notify admin &8- &7Alternar notificaciones administrativas\n&7/aegis notify mode <chat|actionbar|title> &8- &7Establecer estilo de notificación\n&7/aegis notify status &8- &7Ver configuración actual'
+
+# RolesGUI v1.2.6: Mensajes de Seguridad
+role_cannot_remove_self: '&c❌ No puedes eliminarte a ti mismo como propietario de la parcela. Transfiere la propiedad primero.'
+role_no_permission: '&c❌ No tienes permiso para modificar este miembro.'
+
+# -------------------------------------------------
 # Protection Denies
 # -------------------------------------------------
 cannot_break: '&c❌ No puedes romper bloques aquí; esta área está protegida.'

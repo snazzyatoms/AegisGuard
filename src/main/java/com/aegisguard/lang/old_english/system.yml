@@ -133,6 +133,24 @@ claim_notify_target_not_found: '&cPlayer not found.'
 claim_notify_usage: '&cUsage: /aegis notify [on|off|toggle] [player]'
 
 # -------------------------------------------------
+# ✅ v1.2.6: Enhanced Notification System
+# -------------------------------------------------
+notify_unavailable: '&cNotification system is unavailable at this time.'
+notify_greetings_enabled: '&a✔ Greetings enabled. Þū shalt sēon clǣm in-gang and ūt-gang tīdinga.'
+notify_greetings_disabled: '&c✔ Greetings disabled. Þū ne shalt sēon clǣm in-gang and ūt-gang tīdinga.'
+notify_admin_enabled: '&a✔ Admin notifications enabled. Þū wilt onfōn ealdor-man tīdinga.'
+notify_admin_disabled: '&c✔ Admin notifications disabled. Ealdor-man tīdinga sind nū hȳded.'
+notify_mode_set: '&a✔ Notification mode set tō: {MODE}'
+notify_mode_usage: '&eUsage: &7/aegis notify mode <chat|actionbar|title>\n&7Available modes:\n&7- &bchat &8- &7Standard chat messages\n&7- &bactionbar &8- &7Action bar notifications (above hotbar)\n&7- &btitle &8- &7Title/subtitle notifications (center screen)'
+notify_mode_invalid: '&cInvalid mode: &7{MODE}\n&eValid modes: &7chat, actionbar, title'
+notify_status: '&e&l━━━━━━━━━ &6Notification Settings &e&l━━━━━━━━━\n&7Greetings: {GREETINGS}\n&7Admin Updates: {ADMIN}\n&7Mode: {MODE}\n&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_usage: '&eNotification Commands:\n&7/aegis notify &8- &7Toggle greeting messages\n&7/aegis notify greetings &8- &7Toggle clǣm in-gang/ūt-gang messages\n&7/aegis notify admin &8- &7Toggle ealdor-man notifications\n&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n&7/aegis notify status &8- &7View current settings'
+
+# RolesGUI v1.2.6: Safety Messages
+role_cannot_remove_self: '&c❌ Þū cannot forþierran þyself as þe plot hlāford. Transfer ownership first.'
+role_no_permission: '&c❌ Þū hast not permission tō geændian þis member.'
+
+# -------------------------------------------------
 # Protection Denies
 # -------------------------------------------------
 cannot_break: '&c❌ Thou cannot break blocks here; this area is protected.'

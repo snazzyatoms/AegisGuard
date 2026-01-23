@@ -119,6 +119,14 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
+        // 3) NOTIFICATIONS (Slot 16) - v1.2.6: Using NotificationManager
+        // --------------------------------------------------
+        String modeDisplay = "&7Unknown";
+        if (plugin.getNotificationManager() != null) {
+            com.aegisguard.notify.PlayerNotificationSettings settings =
+                plugin.getNotificationManager().getSettings(player.getUniqueId());
+            modeDisplay = notifDisplay(player, settings.getMode().getConfigValue());
+        }
         // 3) NOTIFICATIONS MODE (Slot 16) - (ACTION_BAR / CHAT / TITLE)
         // --------------------------------------------------
         String mode = getNotifMode(player);
@@ -132,7 +140,7 @@ public class SettingsGUI {
                         Map.of("MODE", modeDisplay)
                 ),
                 tl(player, "settings_notifications_lore",
-                        List.of("&7Click to cycle:", "&7Action Bar -> Chat -> Title"))
+                        List.of("&7Click to cycle:", "&7Chat -> Action Bar -> Title"))
         ));
 
         // --------------------------------------------------
@@ -245,6 +253,11 @@ public class SettingsGUI {
                 plugin.runMain(player, () -> open(player, plot));
             }
 
+            case 16 -> { // Notifications - v1.2.6: Using NotificationManager
+                if (plugin.getNotificationManager() == null) {
+                    plugin.effects().playError(player);
+                    return;
+                }
             case 16 -> { // Notifications MODE (ACTION_BAR/CHAT/TITLE)
                 String mode = getNotifMode(player);
                 String nextMode = switch (mode) {
@@ -261,6 +274,8 @@ public class SettingsGUI {
 
                 plugin.runGlobalAsync(plugin::saveConfig);
 
+                // Cycle through notification modes
+                plugin.getNotificationManager().cycleMode(player.getUniqueId());
                 plugin.effects().playMenuFlip(player);
 
                 // ✅ Reopen NEXT tick

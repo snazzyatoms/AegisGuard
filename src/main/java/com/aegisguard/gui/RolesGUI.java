@@ -898,6 +898,13 @@ public class RolesGUI {
 
         // Remove trusted
         if (slot == 22) {
+            // v1.2.6: Safety check - prevent owner self-removal and enforce admin override
+            if (!plot.canModifyMember(player, target.getUniqueId())) {
+                if (player.getUniqueId().equals(target.getUniqueId())) {
+                    plugin.msg().send(player, "role_cannot_remove_self", Map.of());
+                } else {
+                    plugin.msg().send(player, "role_no_permission", Map.of());
+                }
             if (isTargetOwner && !isAdmin) {
                 plugin.effects().playError(player);
                 return;

@@ -26,6 +26,7 @@ import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.migration.MigrationManager;  // ✅ NEW: Migration Manager (1.2.5+)
+import com.aegisguard.notify.NotificationManager;  // ✅ NEW: Notification Manager (1.2.6+)
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.protection.BlockProtectionListener;
 import com.aegisguard.selection.SelectionService;
@@ -94,6 +95,9 @@ public class AegisGuard extends JavaPlugin {
     // ✅ NEW: Migration Manager (1.2.6+) - Import claims from other plugins
     private MigrationManager migrationManager;
 
+    // ✅ NEW: Notification Manager (1.2.6+) - Player notification preferences
+    private NotificationManager notificationManager;
+
     /**
      * MessagesUtil now acts as:
      * - playerdata.yml prefs (language choice)
@@ -113,6 +117,78 @@ public class AegisGuard extends JavaPlugin {
 
     private boolean isFolia = false;
 
+    // Task Objects
+    private Object autoSaveTask;
+    private Object upkeepTask;
+    private Object wildernessRevertTask;
+    private Object mobBarrierTask;
+    private Object claimBlockTask;
+
+    // --- GETTERS ---
+    public AGConfig cfg() { return configMgr; }
+    public IDataStore store() { return plotStore; }
+    public IDataStore getDataStore() { return plotStore; }
+    public GUIManager gui() { return gui; }
+    public GUIManager getGuiManager() { return gui; }
+    public ProtectionManager protection() { return protection; }
+    public ProtectionManager getProtectionManager() { return protection; }
+    public SelectionService selection() { return selection; }
+    public SelectionService getSelection() { return selection; }
+    public VaultHook vault() { return vault; }
+    public EconomyManager eco() { return ecoManager; }
+    public EconomyManager getEconomy() { return ecoManager; }
+
+    public ProtectionHookManager protectionHooks() { return protectionHooks; }
+    public CodexEngine codex() { return codex; }
+
+    public ClaimBlockManager getClaimBlockManager() { return claimBlockManager; }
+
+    // Exchange service getter
+    public ClaimBlockExchangeService exchange() { return claimBlockExchange; }
+    public ClaimBlockExchangeService getClaimBlockExchangeService() { return claimBlockExchange; }
+
+    // Snapshot Manager getter
+    public SnapshotManager getSnapshotManager() { return snapshotManager; }
+
+    // Fair Pricing Calculator getter (1.2.6+)
+    /**
+     * Get the claim pricing calculator for fair initial pricing.
+     * Returns null if fair pricing is disabled or failed to initialize.
+     * @return The pricing calculator instance, or null
+     */
+    public ClaimPricingCalculator getPricingCalculator() { return pricingCalculator; }
+
+    // ✅ NEW: Migration Manager getter (1.2.6+)
+    /**
+     * Get the migration manager for importing claims from other protection plugins.
+     * Supports GriefPrevention, GriefDefender, and Lands.
+     * @return The migration manager instance
+     */
+    public MigrationManager getMigrationManager() { return migrationManager; }
+
+    // ✅ NEW: Notification Manager getter (1.2.6+)
+    /**
+     * Get the notification manager for player notification preferences.
+     * Handles greetings, admin updates, and notification modes (chat/actionbar/title).
+     * @return The notification manager instance
+     */
+    public NotificationManager getNotificationManager() { return notificationManager; }
+
+    /**
+     * Legacy access (compat bridge).
+     * This must NOT read messages.yml anymore.
+     */
+    @Deprecated
+    public MessagesUtil msg() { return messages; }
+
+    public WorldRulesManager worldRules() { return worldRules; }
+    public EffectUtil effects() { return effectUtil; }
+    public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
+    public DiscordWebhook getDiscord() { return discord; }
+    public MapHookManager getMapHooks() { return mapHookManager; }
+    public boolean isFolia() { return isFolia; }
+
+    public AGConfig getConfigManager() { return configMgr; }
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
     private final Set<UUID> bypassMode = ConcurrentHashMap.newKeySet();
 
@@ -184,6 +260,34 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminCmd);
         }
 
+        // ✅ 3.h NEW: Notification Manager (1.2.6+)
+        try {
+            this.notificationManager = new NotificationManager(this);
+            getLogger().info("Notification Manager initialized.");
+        } catch (Throwable t) {
+            this.notificationManager = null;
+            getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
+        }
+
+        // 3.i GUI AFTER vault/exchange/notifications exist
+        this.gui = new GUIManager(this);
+
+        this.worldRules = new WorldRulesManager(this);
+        this.effectUtil = new EffectUtil(this);
+        this.expansionManager = new ExpansionRequestManager(this);
+        this.discord = new DiscordWebhook(this);
+        this.protection = new ProtectionManager(this);
+
+        // Load Data
+        this.plotStore.load();
+
+        runGlobalAsync(() -> {
+            if (messages != null) messages.loadPlayerPreferences();
+            if (expansionManager != null) expansionManager.load();
+            if (snapshotManager != null) snapshotManager.load();
+        });
+
+        // Register Events
         // --- LISTENERS ---
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(protection, this);

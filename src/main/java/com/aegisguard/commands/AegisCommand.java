@@ -227,8 +227,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             // ✅ NEW: /aegis cost - Preview claim cost
             case "cost" -> handleCostPreview(p);
 
-            // ✅ NEW: /aegis notify - Toggle player notifications
-            case "notify" -> handleNotify(p);
+            // ✅ NEW: /aegis notify - Manage player notifications (v1.2.6 enhanced)
+            case "notify" -> handleNotify(p, args);
 
             case "help" -> sendHelp(p);
 
@@ -1292,58 +1292,123 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     // --------------------------------------------------
 
     /**
-     * ✅ NEW: /aegis notify
-     * Toggles player notification preferences.
-     * When disabled, the player won't receive certain notifications (e.g., claim events, admin messages).
+     * ✅ v1.2.6: /aegis notify [subcommand]
+     * Manage player notification preferences with granular control.
+     *
+     * Subcommands:
+     * - /aegis notify              → Legacy: toggle greetings (backwards compatible)
+     * - /aegis notify greetings    → Toggle claim enter/exit messages
+     * - /aegis notify admin        → Toggle admin update notifications
+     * - /aegis notify mode <type>  → Set notification mode (chat/actionbar/title)
+     * - /aegis notify status       → Show current notification settings
      */
-    private void handleNotify(Player p) {
-        // Simple config-based storage path
-        String configPath = "notifications." + p.getUniqueId().toString();
-        
-        // Get current state from config (default is true/enabled)
-        boolean currentlyEnabled = plugin.getConfig().getBoolean(configPath, true);
-        
-        // Toggle the state
-        boolean newState = !currentlyEnabled;
-        
-        // Save the new state to config
-        plugin.getConfig().set(configPath, newState);
-        
-        // Save config asynchronously to avoid blocking
+    private void handleNotify(Player p, String[] args) {
+        // Check if NotificationManager is available
+        if (plugin.getNotificationManager() == null) {
+            sendKey(p, "notify_unavailable", "&cNotification system unavailable.");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        // No args: legacy behavior (toggle greetings)
+        if (args.length == 1) {
+            handleNotifyGreetings(p);
+            return;
+        }
+
+        String subcommand = args[1].toLowerCase();
+
+        switch (subcommand) {
+            case "greetings", "greeting", "greet" -> handleNotifyGreetings(p);
+            case "admin", "admins", "adminupdates" -> handleNotifyAdmin(p);
+            case "mode" -> handleNotifyMode(p, args);
+            case "status", "settings", "info" -> handleNotifyStatus(p);
+            default -> {
+                sendKey(p, "notify_usage",
+                    "&eNotification Commands:\n" +
+                    "&7/aegis notify &8- &7Toggle greeting messages\n" +
+                    "&7/aegis notify greetings &8- &7Toggle claim enter/exit messages\n" +
+                    "&7/aegis notify admin &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n" +
+                    "&7/aegis notify status &8- &7View current settings"
+                );
+            }
+        }
+    }
+
+    private void handleNotifyGreetings(Player p) {
+        boolean newState = plugin.getNotificationManager().toggleGreetings(p.getUniqueId());
+
+        if (newState) {
+            sendKey(p, "notify_greetings_enabled", "&aGreetings enabled. You will see claim enter/exit messages.");
+            plugin.effects().playConfirm(p);
+        } else {
+            sendKey(p, "notify_greetings_disabled", "&cGreetings disabled. You will not see claim enter/exit messages.");
+            plugin.effects().playError(p);
+        }
+    }
+
+    private void handleNotifyAdmin(Player p) {
+        boolean newState = plugin.getNotificationManager().toggleAdminUpdates(p.getUniqueId());
+
+        if (newState) {
+            sendKey(p, "notify_admin_enabled", "&aAdmin notifications enabled.");
+            plugin.effects().playConfirm(p);
+        } else {
+            sendKey(p, "notify_admin_disabled", "&cAdmin notifications disabled.");
+            plugin.effects().playError(p);
+        }
+    }
+
+    private void handleNotifyMode(Player p, String[] args) {
+        if (args.length < 3) {
+            sendKey(p, "notify_mode_usage",
+                "&eUsage: &7/aegis notify mode <chat|actionbar|title>\n" +
+                "&7Available modes:\n" +
+                "&7- &bchat &8- &7Standard chat messages\n" +
+                "&7- &bactionbar &8- &7Action bar notifications (above hotbar)\n" +
+                "&7- &btitle &8- &7Title/subtitle notifications (center screen)"
+            );
+            return;
+        }
+
+        String modeStr = args[2].toUpperCase();
+        com.aegisguard.notify.NotificationMode mode;
+
         try {
-            plugin.runGlobalAsync(() -> {
-                try {
-                    plugin.saveConfig();
-                } catch (Throwable t) {
-                    plugin.getLogger().warning("[AegisCommand] Failed to save notification preference: " + t.getMessage());
-                }
-            });
-        } catch (Throwable t) {
-            // Fallback: save synchronously
-            try {
-                plugin.saveConfig();
-            } catch (Throwable saveError) {
-                plugin.getLogger().warning("[AegisCommand] Failed to save notification preference: " + saveError.getMessage());
-                sendKey(p, "notify_error", "&cFailed to save notification preference.");
+            mode = com.aegisguard.notify.NotificationMode.valueOf(modeStr);
+        } catch (IllegalArgumentException e) {
+            // Try alternate names
+            mode = com.aegisguard.notify.NotificationMode.fromString(modeStr);
+            if (mode == null) {
+                sendKey(p, "notify_mode_invalid",
+                    "&cInvalid mode: &7" + args[2] + "\n" +
+                    "&eValid modes: &7chat, actionbar, title"
+                );
+                plugin.effects().playError(p);
                 return;
             }
         }
-        
-        // Send confirmation message based on NEW state
-        if (newState) {
-            sendKey(p, "notify_enabled", "&aNotifications enabled. You will receive claim and admin notifications.");
-            if (plugin.effects() != null) {
-                try {
-                    plugin.effects().playConfirm(p);
-                } catch (Throwable ignored) {}
-            }
-        } else {
-            sendKey(p, "notify_disabled", "&cNotifications disabled. You will not receive claim and admin notifications.");
-            if (plugin.effects() != null) {
-                try {
-                    plugin.effects().playError(p);
-                } catch (Throwable ignored) {}
-            }
-        }
+
+        plugin.getNotificationManager().setMode(p.getUniqueId(), mode);
+        sendKey(p, "notify_mode_set", "&aNotification mode set to: &b" + mode.getDisplayName());
+        plugin.effects().playConfirm(p);
+    }
+
+    private void handleNotifyStatus(Player p) {
+        com.aegisguard.notify.PlayerNotificationSettings settings =
+            plugin.getNotificationManager().getSettings(p.getUniqueId());
+
+        String greetingStatus = settings.isGreetingsEnabled() ? "&aEnabled" : "&cDisabled";
+        String adminStatus = settings.isAdminUpdatesEnabled() ? "&aEnabled" : "&cDisabled";
+        String mode = "&b" + settings.getMode().getDisplayName();
+
+        sendKey(p, "notify_status",
+            "&e&l━━━━━━━━━ &6Notification Settings &e&l━━━━━━━━━\n" +
+            "&7Greetings: " + greetingStatus + "\n" +
+            "&7Admin Updates: " + adminStatus + "\n" +
+            "&7Mode: " + mode + "\n" +
+            "&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        );
     }
 }

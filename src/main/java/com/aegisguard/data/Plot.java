@@ -24,181 +24,261 @@ public class Plot {
 
     public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-    private static final Map<String, Boolean> DEFAULT_FLAGS = Map.ofEntries(
-            Map.entry("pvp", true),
-            Map.entry("mobs", true),
-            Map.entry("animals", true),
-            Map.entry("containers", true),
-            Map.entry("pets", true),
-            Map.entry("entities", true),
-            Map.entry("farm", true),
-            Map.entry("vehicles", true),
-            Map.entry("redstone", false),
-            Map.entry("piston-use", false),
-            Map.entry("tnt-damage", true),
-            Map.entry("fire-spread", true),
-            Map.entry("build", true),
-            Map.entry("interact", true),
-            Map.entry("fly", false),
-            Map.entry("entry", true),
-            Map.entry("safe_zone", false),
-            Map.entry("hunger", true),
-            Map.entry("sleep", true)
-    );
+    private static final Map<String, Boolean> DEFAULT_FLAGS = new ConcurrentHashMap<>();
 
-    // --- Core Identity ---
-    private final UUID plotId;
+    static {
+        // These defaults act as safe fallbacks when no WorldRules are applied.
+        DEFAULT_FLAGS.put("build", true);
+        DEFAULT_FLAGS.put("entry", true);
+        DEFAULT_FLAGS.put("pvp", false);
+        DEFAULT_FLAGS.put("safe_zone", false);
+        DEFAULT_FLAGS.put("fly", false);
+        DEFAULT_FLAGS.put("explosions", false);
+        DEFAULT_FLAGS.put("fire_spread", false);
+    }
+
+    private final UUID id;
     private UUID owner;
     private String ownerName;
-    private final String world;
+    private final String worldName;
 
-    // 2D Coordinates
-    private int x1, z1, x2, z2;
+    private int minX;
+    private int minZ;
+    private int maxX;
+    private int maxZ;
 
-    // --- Data Containers ---
+    private final long createdAt;
+
+    // --- SELL / MARKET / RENT ---
+    private boolean forSale = false;
+    private double salePrice = 0;
+
+    private UUID currentRenter = null;
+    private long rentExpires = 0;
+
+    // --- META ---
+    private String plotName = null;
+    private String description = null;
+
+    // --- FLAGS ---
     private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
+
+    // --- TRUST / BANS ---
+    private final List<UUID> trustedPlayers = new CopyOnWriteArrayList<>();
+    private final List<UUID> bannedPlayers = new CopyOnWriteArrayList<>();
+
+    // --- ROLES ---
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
+
+    // --- ROLE FLAG OVERRIDES (role -> (flagKey -> TriState)) ---
     private final Map<String, Map<String, TriState>> roleFlagStates = new ConcurrentHashMap<>();
-    private final Set<UUID> bannedPlayers = ConcurrentHashMap.newKeySet();
-    private final List<Zone> zones = new CopyOnWriteArrayList<>();
-    private final Set<UUID> likedBy = ConcurrentHashMap.newKeySet();
 
-    // --- Progression ---
-    private int level = 1;
-    private double xp = 0;
-    private int maxMembers = 2;
-
-    // --- Economy & Upkeep ---
-    private long lastUpkeepPayment;
-    private boolean isForSale;
-    private double salePrice;
-    private boolean isForRent;
-    private double rentPrice;
-    private UUID currentRenter;
-    private long rentExpires;
-
-    // --- Auction ---
-    private String plotStatus = "ACTIVE";
-    private double currentBid;
-    private UUID currentBidder;
-
-    // --- Visuals ---
-    private Location spawnLocation;
-    private String welcomeMessage;
-    private String farewellMessage;
-    private String entryTitle;
-    private String entrySubtitle;
-    private String description;
-    private String customBiome;
-
-    // --- Cosmetics ---
-    private String borderParticle;
-    private String ambientParticle;
-    private String entryEffect;
-
-    // --- Server Warps ---
-    private boolean isServerWarp;
-    private String warpName;
-    private Material warpIcon;
-
-    // --- CONSTRUCTORS ---
-
-    public Plot(UUID plotId, UUID owner, String ownerName, String world,
-                int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
-        this.plotId = plotId;
+    public Plot(UUID id, UUID owner, String ownerName, String worldName, int minX, int minZ, int maxX, int maxZ, long createdAt) {
+        this.id = id;
         this.owner = owner;
         this.ownerName = ownerName;
-        this.world = world;
+        this.worldName = worldName;
 
-        this.x1 = Math.min(x1, x2);
-        this.z1 = Math.min(z1, z2);
-        this.x2 = Math.max(x1, x2);
-        this.z2 = Math.max(z1, z2);
+        this.minX = Math.min(minX, maxX);
+        this.maxX = Math.max(minX, maxX);
 
-        this.lastUpkeepPayment = lastUpkeepPayment;
+        this.minZ = Math.min(minZ, maxZ);
+        this.maxZ = Math.max(minZ, maxZ);
 
-        if (!isServerZone()) {
-            this.playerRoles.put(owner, "owner");
-        }
+        this.createdAt = createdAt;
 
-        this.flags.putAll(DEFAULT_FLAGS);
+        // Load defaults
+        DEFAULT_FLAGS.forEach(flags::putIfAbsent);
     }
 
-    public Plot(UUID plotId, UUID owner, String ownerName, String world,
-                int x1, int z1, int x2, int z2) {
-        this(plotId, owner, ownerName, world, x1, z1, x2, z2, System.currentTimeMillis());
+    public UUID getId() {
+        return id;
     }
 
-    // --- CORE LOGIC ---
-
-    /**
-     * Calculate the flat area (width * length) of this plot.
-     * Used for Claim Block calculations.
-     */
-    public long getArea() {
-        long width = Math.abs(this.x1 - this.x2) + 1;
-        long length = Math.abs(this.z1 - this.z2) + 1;
-        return width * length;
+    public UUID getOwner() {
+        return owner;
     }
 
-    public boolean isInside(Location loc) {
-        return contains(loc);
+    public void setOwner(UUID owner) {
+        this.owner = owner;
     }
 
-    public boolean contains(Location loc) {
-        if (loc == null || loc.getWorld() == null) return false;
-        if (!loc.getWorld().getName().equals(world)) return false;
-        int x = loc.getBlockX();
-        int z = loc.getBlockZ();
-        return x >= x1 && x <= x2 && z >= z1 && z <= z2;
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
+
+    public String getWorldName() {
+        return worldName;
+    }
+
+    public int getMinX() {
+        return minX;
+    }
+
+    public int getMinZ() {
+        return minZ;
+    }
+
+    public int getMaxX() {
+        return maxX;
+    }
+
+    public int getMaxZ() {
+        return maxZ;
+    }
+
+    public void setBounds(int minX, int minZ, int maxX, int maxZ) {
+        this.minX = Math.min(minX, maxX);
+        this.maxX = Math.max(minX, maxX);
+
+        this.minZ = Math.min(minZ, maxZ);
+        this.maxZ = Math.max(minZ, maxZ);
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
     }
 
     public boolean isServerZone() {
         return SERVER_OWNER_UUID.equals(owner);
     }
 
-    public Location getCenter(@Nullable AegisGuard plugin) {
-        World w = Bukkit.getWorld(this.world);
-        if (w == null) return null;
-
-        double cX = (x1 + x2) / 2.0 + 0.5;
-        double cZ = (z1 + z2) / 2.0 + 0.5;
-        int y = w.getHighestBlockYAt((int) cX, (int) cZ) + 1;
-
-        return new Location(w, cX, y, cZ);
+    public boolean isForSale() {
+        return forSale;
     }
 
-    // --- LEVELING / SIZE ---
-
-    public void expand(int amount) {
-        this.x1 -= amount;
-        this.z1 -= amount;
-        this.x2 += amount;
-        this.z2 += amount;
+    public void setForSale(boolean forSale) {
+        this.forSale = forSale;
     }
 
-    public int getMaxMembers() {
-        return maxMembers;
+    public double getSalePrice() {
+        return salePrice;
     }
 
-    public void setMaxMembers(int max) {
-        this.maxMembers = max;
+    public void setSalePrice(double salePrice) {
+        this.salePrice = salePrice;
     }
 
-    public boolean isOwner(Player player) {
-        return player.getUniqueId().equals(owner);
+    public UUID getCurrentRenter() {
+        return currentRenter;
+    }
+
+    public void setCurrentRenter(UUID currentRenter) {
+        this.currentRenter = currentRenter;
+    }
+
+    public long getRentExpires() {
+        return rentExpires;
+    }
+
+    public void setRentExpires(long rentExpires) {
+        this.rentExpires = rentExpires;
+    }
+
+    public String getPlotName() {
+        return plotName;
+    }
+
+    public void setPlotName(String plotName) {
+        this.plotName = plotName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public boolean isInside(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        if (!loc.getWorld().getName().equalsIgnoreCase(worldName)) return false;
+
+        int x = loc.getBlockX();
+        int z = loc.getBlockZ();
+
+        return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+    }
+
+    public int getArea() {
+        return (Math.abs(maxX - minX) + 1) * (Math.abs(maxZ - minZ) + 1);
+    }
+
+    public World getWorld() {
+        return Bukkit.getWorld(worldName);
+    }
+
+    public Location getCenter() {
+        World world = getWorld();
+        if (world == null) return null;
+
+        int centerX = (minX + maxX) / 2;
+        int centerZ = (minZ + maxZ) / 2;
+
+        return new Location(world, centerX + 0.5, world.getHighestBlockYAt(centerX, centerZ) + 1.0, centerZ + 0.5);
+    }
+
+    public List<UUID> getTrustedPlayers() {
+        return trustedPlayers;
+    }
+
+    public void trust(UUID playerUUID) {
+        if (!trustedPlayers.contains(playerUUID)) trustedPlayers.add(playerUUID);
+        bannedPlayers.remove(playerUUID);
+    }
+
+    public void untrust(UUID playerUUID) {
+        trustedPlayers.remove(playerUUID);
     }
 
     public boolean isTrusted(Player player) {
-        return playerRoles.containsKey(player.getUniqueId()) && !isBanned(player.getUniqueId());
+        if (player == null) return false;
+        if (owner.equals(player.getUniqueId())) return true;
+        if (trustedPlayers.contains(player.getUniqueId())) return true;
+
+        // Role-based trust: member+ counts as trusted
+        String role = getRole(player.getUniqueId());
+        return role != null && !role.equalsIgnoreCase("visitor");
     }
 
-    // --- PERMISSIONS SYSTEM ---
+    public List<UUID> getBannedPlayers() {
+        return bannedPlayers;
+    }
+
+    public void ban(UUID playerUUID) {
+        if (!bannedPlayers.contains(playerUUID)) bannedPlayers.add(playerUUID);
+        trustedPlayers.remove(playerUUID);
+        playerRoles.remove(playerUUID);
+    }
+
+    public void unban(UUID playerUUID) {
+        bannedPlayers.remove(playerUUID);
+    }
+
+    public boolean isBanned(UUID playerUUID) {
+        return bannedPlayers.contains(playerUUID);
+    }
 
     public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
-        if (isServerZone()) return false;
         if (owner.equals(playerUUID)) return true;
         if (isBanned(playerUUID)) return false;
+
+        // Admins and explicit bypass can always pass plot permission checks.
+        Player online = Bukkit.getPlayer(playerUUID);
+        if (online != null) {
+            if (plugin != null && (plugin.isAdmin(online) || plugin.isBypassing(online))) return true;
+            if (online.hasPermission("aegis.bypass")) return true;
+        }
+
+        // Server zones: require an explicitly assigned role (prevents everyone defaulting to visitor).
+        if (isServerZone() && !playerRoles.containsKey(playerUUID)) {
+            return false;
+        }
 
         if (currentRenter != null && currentRenter.equals(playerUUID)) {
             if (System.currentTimeMillis() < rentExpires) {
@@ -302,66 +382,28 @@ public class Plot {
 
     public TriState getRoleFlagState(String roleName, String flagKey) {
         if (roleName == null || flagKey == null) return TriState.INHERIT;
-        Map<String, TriState> flagsForRole = roleFlagStates.get(roleName.toLowerCase());
-        if (flagsForRole == null) return TriState.INHERIT;
-        return flagsForRole.getOrDefault(flagKey.toLowerCase(), TriState.INHERIT);
+        Map<String, TriState> perRole = roleFlagStates.get(roleName.toLowerCase());
+        if (perRole == null) return TriState.INHERIT;
+        return perRole.getOrDefault(flagKey.toLowerCase(), TriState.INHERIT);
     }
 
     public void setRoleFlagState(String roleName, String flagKey, TriState state) {
         if (roleName == null || flagKey == null || state == null) return;
-        String roleKey = roleName.toLowerCase();
-        String flagKeyLower = flagKey.toLowerCase();
+        roleName = roleName.toLowerCase();
+        flagKey = flagKey.toLowerCase();
+
+        roleFlagStates.putIfAbsent(roleName, new ConcurrentHashMap<>());
+        Map<String, TriState> perRole = roleFlagStates.get(roleName);
 
         if (state == TriState.INHERIT) {
-            Map<String, TriState> flagsForRole = roleFlagStates.get(roleKey);
-            if (flagsForRole != null) {
-                flagsForRole.remove(flagKeyLower);
-                if (flagsForRole.isEmpty()) roleFlagStates.remove(roleKey);
-            }
-            return;
+            perRole.remove(flagKey);
+        } else {
+            perRole.put(flagKey, state);
         }
-
-        roleFlagStates.computeIfAbsent(roleKey, k -> new ConcurrentHashMap<>()).put(flagKeyLower, state);
     }
 
     public Map<String, Map<String, TriState>> getRoleFlagStates() {
-        return Collections.unmodifiableMap(roleFlagStates);
-    }
-
-    public void clearRoleFlagsForRole(String roleName) {
-        if (roleName == null) return;
-        roleFlagStates.remove(roleName.toLowerCase());
-    }
-
-    // --- GETTERS & SETTERS ---
-
-    public UUID getPlotId() { return plotId; }
-    public UUID getOwner() { return owner; }
-    public void setOwner(UUID owner) { this.owner = owner; }
-    public String getOwnerName() { return ownerName; }
-    public void setOwnerName(String name) { this.ownerName = name; }
-    public String getWorld() { return world; }
-    public int getX1() { return x1; }
-    public int getZ1() { return z1; }
-    public int getX2() { return x2; }
-    public int getZ2() { return z2; }
-    public void setX1(int x) { this.x1 = x; }
-    public void setZ1(int z) { this.z1 = z; }
-    public void setX2(int x) { this.x2 = x; }
-    public void setZ2(int z) { this.z2 = z; }
-
-    public void internalSetOwner(UUID newOwner, String newOwnerName) {
-        this.owner = newOwner;
-        this.ownerName = newOwnerName;
-        this.playerRoles.clear();
-        if (!isServerZone()) {
-            this.playerRoles.put(newOwner, "owner");
-        }
-        this.bannedPlayers.clear();
-        this.likedBy.clear();
-        this.roleFlagStates.clear();
-        this.entryTitle = null;
-        this.description = null;
+        return roleFlagStates;
     }
 
     public boolean getFlag(String key, boolean def) {
@@ -373,193 +415,113 @@ public class Plot {
     }
 
     public Map<String, Boolean> getFlags() {
-        return Collections.unmodifiableMap(flags);
+        return flags;
     }
 
-    public String serializeFlags() {
-        return flags.entrySet().stream()
-                .map(e -> e.getKey() + ":" + e.getValue())
-                .collect(Collectors.joining(","));
+    public boolean isInPlot(int x, int z) {
+        return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
     }
 
-    public String serializeRoles() {
-        return playerRoles.entrySet().stream()
-                .map(e -> e.getKey() + ":" + e.getValue())
-                .collect(Collectors.joining(","));
+    public String toPrettyString() {
+        return ChatColorStrip.stripColors(getDisplayName()) + " (" + worldName + ")";
     }
 
-    public String serializeRoleFlags() {
-        if (roleFlagStates.isEmpty()) return "";
-        return roleFlagStates.entrySet().stream()
-                .map(roleEntry -> {
-                    String roleName = roleEntry.getKey();
-                    String flagsPart = roleEntry.getValue().entrySet().stream()
-                            .map(e -> e.getKey() + "=" + e.getValue().name())
-                            .collect(Collectors.joining("|"));
-                    return roleName + ">" + flagsPart;
+    public String getDisplayName() {
+        if (plotName != null && !plotName.isEmpty()) return plotName;
+        if (isServerZone()) return "Server Zone";
+        return ownerName + "'s Plot";
+    }
+
+    public String getTrustedDisplay() {
+        return trustedPlayers.stream()
+                .map(uuid -> {
+                    Player p = Bukkit.getPlayer(uuid);
+                    return p != null ? p.getName() : uuid.toString();
                 })
-                .collect(Collectors.joining(";"));
+                .collect(Collectors.joining(", "));
     }
 
-    public void deserializeRoleFlags(String data) {
-        roleFlagStates.clear();
-        if (data == null || data.isEmpty()) return;
+    public String getBannedDisplay() {
+        return bannedPlayers.stream()
+                .map(uuid -> {
+                    Player p = Bukkit.getPlayer(uuid);
+                    return p != null ? p.getName() : uuid.toString();
+                })
+                .collect(Collectors.joining(", "));
+    }
 
-        String[] roleBlocks = data.split(";");
-        for (String block : roleBlocks) {
-            if (block.isEmpty()) continue;
-            String[] parts = block.split(">");
-            if (parts.length != 2) continue;
+    public Material getIconMaterial() {
+        return Material.GRASS_BLOCK;
+    }
 
-            String roleName = parts[0].toLowerCase();
-            String flagsPart = parts[1];
-            Map<String, TriState> flagsForRole = new ConcurrentHashMap<>();
-            String[] flagTokens = flagsPart.split("\\|");
-            for (String token : flagTokens) {
-                if (token.isEmpty()) continue;
-                String[] kv = token.split("=");
-                if (kv.length != 2) continue;
-                try {
-                    flagsForRole.put(kv[0].toLowerCase(), TriState.valueOf(kv[1]));
-                } catch (IllegalArgumentException ignored) {}
-            }
-            if (!flagsForRole.isEmpty()) roleFlagStates.put(roleName, flagsForRole);
+    // ---------------------------------------------------------------------
+    // 1.2.6 QoL: Unified management + build checks (server zones included)
+    // ---------------------------------------------------------------------
+
+    /**
+     * True if this player should be allowed to manage this plot (flags/roles/settings).
+     * This is the preferred check over direct owner comparisons.
+     */
+    public boolean canManage(@Nullable Player player, @Nullable AegisGuard plugin) {
+        if (player == null) return false;
+
+        if (plugin != null && (plugin.isAdmin(player) || plugin.isBypassing(player))) return true;
+        if (player.hasPermission("aegis.bypass")) return true;
+
+        return hasPermission(player.getUniqueId(), "MANAGE", plugin != null ? plugin : AegisGuard.getInstance());
+    }
+
+    /**
+     * True if this player should be allowed to build (place/break) inside this plot.
+     *
+     * Flag semantics:
+     *  - build=true  -> building is generally allowed
+     *  - build=false -> building is restricted to trusted roles and overrides
+     *
+     * Role flag overrides:
+     *  - build=ALLOW -> always allow building for that role
+     *  - build=DENY  -> always deny building for that role
+     *  - build=INHERIT -> follow plot flag + role permissions
+     */
+    public boolean canBuild(@Nullable Player player, @Nullable AegisGuard plugin, @Nullable String permission) {
+        if (player == null) return false;
+
+        // Admins / bypass always build
+        if (plugin != null && (plugin.isAdmin(player) || plugin.isBypassing(player))) return true;
+        if (player.hasPermission("aegis.bypass")) return true;
+
+        UUID uuid = player.getUniqueId();
+        if (owner.equals(uuid)) return true;
+        if (isBanned(uuid)) return false;
+
+        // Role override beats everything else
+        String roleName = getRole(uuid);
+        TriState override = getRoleFlagState(roleName, "build");
+        if (override == TriState.ALLOW) return true;
+        if (override == TriState.DENY) return false;
+
+        // If building is allowed in this plot, allow it.
+        if (getFlag("build", true)) return true;
+
+        // Building is restricted, require role permission.
+        String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
+
+        // Treat BUILD as a wildcard for place/break checks.
+        if ("BLOCK_BREAK".equals(perm) || "BLOCK_PLACE".equals(perm)) {
+            return hasPermission(uuid, perm, plugin != null ? plugin : AegisGuard.getInstance())
+                    || hasPermission(uuid, "BUILD", plugin != null ? plugin : AegisGuard.getInstance());
         }
+
+        return hasPermission(uuid, perm, plugin != null ? plugin : AegisGuard.getInstance());
     }
 
-    public List<Zone> getZones() { return zones; }
-    public void addZone(Zone zone) { zones.add(Objects.requireNonNull(zone, "zone")); }
-    public void removeZone(Zone zone) { zones.remove(zone); }
-    public Zone getZoneAt(Location loc) {
-        if (loc == null) return null;
-        for (Zone z : zones) {
-            if (z.isInside(loc)) return z;
-        }
-        return null;
+    /** Convenience overload that uses the plugin singleton. */
+    public boolean canBuild(@Nullable Player player, @Nullable String permission) {
+        return canBuild(player, AegisGuard.getInstance(), permission);
     }
 
-    public int getLevel() { return level; }
-    public void setLevel(int level) { this.level = level; }
-    public double getXp() { return xp; }
-    public void setXp(double xp) { this.xp = xp; }
-    public void addXp(double amount) { this.xp += amount; }
-
-    public Set<UUID> getLikedBy() { return Collections.unmodifiableSet(likedBy); }
-    public int getLikes() { return likedBy.size(); }
-    public boolean hasLiked(UUID player) { return likedBy.contains(player); }
-    public void toggleLike(UUID player) {
-        if (likedBy.contains(player)) likedBy.remove(player);
-        else likedBy.add(player);
-    }
-
-    public boolean isBanned(UUID playerUUID) { return bannedPlayers.contains(playerUUID); }
-    public void addBan(UUID playerUUID) {
-        playerRoles.remove(playerUUID);
-        bannedPlayers.add(playerUUID);
-    }
-    public void removeBan(UUID playerUUID) { bannedPlayers.remove(playerUUID); }
-    public Set<UUID> getBannedPlayers() { return Collections.unmodifiableSet(bannedPlayers); }
-
-    public long getLastUpkeep() { return lastUpkeepPayment; }
-    public long getLastUpkeepPayment() { return lastUpkeepPayment; }
-    public void setLastUpkeep(long time) { this.lastUpkeepPayment = time; }
-    public void setLastUpkeepPayment(long time) { this.lastUpkeepPayment = time; }
-
-    public boolean isForSale() { return isForSale; }
-    public void setForSale(boolean forSale, double price) { this.isForSale = forSale; this.salePrice = price; }
-    public double getSalePrice() { return salePrice; }
-
-    public boolean isForRent() { return isForRent; }
-    public double getRentPrice() { return rentPrice; }
-    public void setForRent(boolean forRent, double price) { this.isForRent = forRent; this.rentPrice = price; }
-    public UUID getCurrentRenter() { return currentRenter; }
-    public long getRentExpires() { return rentExpires; }
-    public void setRenter(UUID renter, long expirationTime) {
-        this.currentRenter = renter;
-        this.rentExpires = expirationTime;
-    }
-
-    public String getPlotStatus() { return plotStatus; }
-    public void setPlotStatus(String status) { this.plotStatus = status; }
-    public double getCurrentBid() { return currentBid; }
-    public UUID getCurrentBidder() { return currentBidder; }
-    public void setCurrentBid(double bid, UUID bidder) {
-        this.currentBid = bid;
-        this.currentBidder = bidder;
-    }
-
-    public Location getSpawnLocation() { return spawnLocation; }
-    public void setSpawnLocation(Location loc) { this.spawnLocation = loc; }
-    public String getWelcomeMessage() { return welcomeMessage; }
-    public void setWelcomeMessage(String msg) { this.welcomeMessage = msg; }
-    public String getFarewellMessage() { return farewellMessage; }
-    public void setFarewellMessage(String msg) { this.farewellMessage = msg; }
-
-    public String getSpawnLocationString() {
-        if (spawnLocation == null) return null;
-        return String.format("%s:%.2f:%.2f:%.2f:%.2f:%.2f",
-                spawnLocation.getWorld().getName(),
-                spawnLocation.getX(), spawnLocation.getY(), spawnLocation.getZ(),
-                spawnLocation.getYaw(), spawnLocation.getPitch());
-    }
-
-    public void setSpawnLocationFromString(String s) {
-        if (s == null || s.isEmpty()) { this.spawnLocation = null; return; }
-        try {
-            String[] parts = s.split(":");
-            if (parts.length < 4) return;
-            World world = Bukkit.getWorld(parts[0]);
-            if (world != null) {
-                this.spawnLocation = new Location(world,
-                        Double.parseDouble(parts[1]),
-                        Double.parseDouble(parts[2]),
-                        Double.parseDouble(parts[3]),
-                        parts.length > 4 ? Float.parseFloat(parts[4]) : 0f,
-                        parts.length > 5 ? Float.parseFloat(parts[5]) : 0f
-                );
-            }
-        } catch (Exception ignored) {}
-    }
-
-    public String getEntryTitle() { return entryTitle; }
-    public void setEntryTitle(String title) { this.entryTitle = title; }
-    public String getEntrySubtitle() { return entrySubtitle; }
-    public void setEntrySubtitle(String sub) { this.entrySubtitle = sub; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getCustomBiome() { return customBiome; }
-    public void setCustomBiome(String biome) { this.customBiome = biome; }
-
-    public String getBorderParticle() { return borderParticle; }
-    public void setBorderParticle(String particle) { this.borderParticle = particle; }
-    public String getAmbientParticle() { return ambientParticle; }
-    public void setAmbientParticle(String particle) { this.ambientParticle = particle; }
-    public String getEntryEffect() { return entryEffect; }
-    public void setEntryEffect(String effect) { this.entryEffect = effect; }
-
-    public boolean isServerWarp() { return isServerWarp; }
-    public String getWarpName() { return warpName; }
-    public Material getWarpIcon() { return warpIcon; }
-    public void setServerWarp(boolean isWarp, String name, Material icon) {
-        this.isServerWarp = isWarp;
-        this.warpName = name;
-        this.warpIcon = icon;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Plot plot)) return false;
-        return plotId.equals(plot.plotId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(plotId);
-    }
-
-    @Override
-    public String toString() {
-        return "Plot{id=" + plotId + ", owner=" + ownerName + ", world=" + world + "}";
+    /** Convenience overload that uses the plugin singleton. */
+    public boolean canManage(@Nullable Player player) {
+        return canManage(player, AegisGuard.getInstance());
     }
 }

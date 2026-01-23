@@ -1,123 +1,67 @@
-// ONLY showing the updated confirmClaim() method body for brevity is risky,
-// so here is the FULL FILE replacement with the claim block checks added.
 package com.aegisguard.selection;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.api.events.PlotClaimEvent;
+import com.aegisguard.claimblocks.ClaimBlockData;
 import com.aegisguard.data.Plot;
-import com.aegisguard.hooks.DiscordWebhook;
-import org.bukkit.*;
-import org.bukkit.block.BlockFace;
+import com.aegisguard.events.PlotClaimEvent;
+import com.aegisguard.hooks.protection.ProtectionHookManager;
+import com.aegisguard.util.MessagesUtil;
+import com.aegisguard.util.Strings;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * SelectionService - Claim creation & resizing logic.
+ */
 public class SelectionService implements Listener {
 
     private final AegisGuard plugin;
-
-    private final Map<UUID, Location> loc1 = new HashMap<>();
-    private final Map<UUID, Location> loc2 = new HashMap<>();
-    private final Map<UUID, Boolean> selectionIsServer = new HashMap<>();
-
-    public static final NamespacedKey WAND_KEY = new NamespacedKey("aegisguard", "wand");
-    public static final NamespacedKey SERVER_WAND_KEY = new NamespacedKey("aegisguard", "server_wand");
+    private final Map<UUID, Selection> selections = new HashMap<>();
 
     public SelectionService(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    public boolean hasSelection(Player p) {
-        return p != null && loc1.containsKey(p.getUniqueId()) && loc2.containsKey(p.getUniqueId());
+    public Selection get(UUID uuid) {
+        return selections.get(uuid);
     }
 
-    public long getSelectionArea(Player p) {
-        if (!hasSelection(p)) return 0;
+    public void set(UUID uuid, Selection sel) {
+        if (sel == null) selections.remove(uuid);
+        else selections.put(uuid, sel);
+    }
 
-        Location l1 = loc1.get(p.getUniqueId());
-        Location l2 = loc2.get(p.getUniqueId());
-
-        if (l1 == null || l2 == null) return 0;
-        if (l1.getWorld() == null || l2.getWorld() == null) return 0;
-        if (!l1.getWorld().equals(l2.getWorld())) return 0;
-
-        long width = Math.abs(l1.getBlockX() - l2.getBlockX()) + 1;
-        long length = Math.abs(l1.getBlockZ() - l2.getBlockZ()) + 1;
-        return width * length;
+    public void clear(UUID uuid) {
+        selections.remove(uuid);
     }
 
     @EventHandler
-    public void onInteract(PlayerInteractEvent e) {
-        Player p = e.getPlayer();
-        ItemStack item = e.getItem();
-
-        if (item == null || item.getType() == Material.AIR) return;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        boolean isNormal = pdc.has(WAND_KEY, PersistentDataType.BYTE);
-        boolean isServer = pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
-
-        if (!isNormal && !isServer) return;
-
-        e.setCancelled(true);
-        selectionIsServer.put(p.getUniqueId(), isServer);
-
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock() != null) {
-            Location loc = e.getClickedBlock().getLocation();
-            loc1.put(p.getUniqueId(), loc);
-            plugin.msg().send(p, "corner1_set", Map.of(
-                    "X", String.valueOf(loc.getBlockX()),
-                    "Z", String.valueOf(loc.getBlockZ())
-            ));
-            playSelectionEffect(p, loc, isServer);
-
-        } else if (e.getAction() == Action.LEFT_CLICK_BLOCK && e.getClickedBlock() != null) {
-            Location loc = e.getClickedBlock().getLocation();
-            loc2.put(p.getUniqueId(), loc);
-            plugin.msg().send(p, "corner2_set", Map.of(
-                    "X", String.valueOf(loc.getBlockX()),
-                    "Z", String.valueOf(loc.getBlockZ())
-            ));
-            playSelectionEffect(p, loc, isServer);
-        }
+    public void onQuit(PlayerQuitEvent e) {
+        selections.remove(e.getPlayer().getUniqueId());
     }
 
-    public void confirmClaim(Player p) {
-        if (p == null) return;
-
-        UUID uuid = p.getUniqueId();
-
-        if (!hasSelection(p)) {
-            plugin.msg().send(p, "must_select");
-            plugin.effects().playError(p);
+    public void confirmClaim(Player p, boolean isServerClaim) {
+        Selection sel = selections.get(p.getUniqueId());
+        if (sel == null || sel.getL1() == null || sel.getL2() == null) {
+            plugin.msg().send(p, "selection_missing");
             return;
         }
 
-        boolean isServerClaim = selectionIsServer.getOrDefault(uuid, false);
-
-        Location l1 = loc1.get(uuid);
-        Location l2 = loc2.get(uuid);
-        if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null) {
-            plugin.msg().send(p, "must_select");
-            plugin.effects().playError(p);
-            return;
-        }
+        Location l1 = sel.getL1();
+        Location l2 = sel.getL2();
 
         if (!l1.getWorld().equals(l2.getWorld())) {
-            plugin.msg().send(p, "corners_diff_world");
+            plugin.msg().send(p, "selection_world_mismatch");
             return;
         }
 
@@ -126,70 +70,43 @@ public class SelectionService implements Listener {
         int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
         int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
 
-        int width = maxX - minX + 1;
-        int length = maxZ - minZ + 1;
-        long area = (long) width * (long) length;
+        int width = (maxX - minX) + 1;
+        int depth = (maxZ - minZ) + 1;
 
-        int radius = Math.max(width, length) / 2;
+        int radius = Math.max(width, depth);
 
-        // --- VALIDATION ---
+        int limitRadius = plugin.cfg().raw().getInt("claims.max_radius", 200);
+        if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
+            plugin.msg().send(p, "resize-fail-max-area");
+            return;
+        }
+
+        // Overlap checks against Aegis plots
+        for (Plot other : plugin.store().getPlotsInWorld(l1.getWorld().getName())) {
+            if (other == null) continue;
+            if (other.isInPlot(minX, minZ) || other.isInPlot(maxX, maxZ) || other.isInPlot(minX, maxZ) || other.isInPlot(maxX, minZ)) {
+                plugin.msg().send(p, "claim_overlap");
+                return;
+            }
+        }
+
+        // Compatibility: if other protection plugin present, yield if configured
+        ProtectionHookManager hooks = plugin.protectionHooks();
+        if (hooks != null && !hooks.shouldBypass(p, l1, l2)) {
+            plugin.msg().send(p, "claim_external_protection_conflict");
+            return;
+        }
+
+        // ClaimBlock economy checks (existing)
+        boolean claimBlocksEnabled = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
         if (!isServerClaim) {
-
-            if (!plugin.worldRules().allowClaims(p.getWorld())) {
-                plugin.msg().send(p, "admin-zone-no-claims");
-                return;
-            }
-
-            if (plugin.store().isAreaOverlapping(null, l1.getWorld().getName(), minX, minZ, maxX, maxZ)) {
-                plugin.msg().send(p, "resize-fail-overlap");
-                plugin.effects().playError(p);
-                return;
-            }
-
-            int limitRadius = plugin.cfg().getWorldMaxRadius(p.getWorld());
-            if (radius > limitRadius && !p.hasPermission("aegis.admin.bypass")) {
-                plugin.msg().send(p, "resize-fail-max-area", Map.of("AMOUNT", String.valueOf(limitRadius)));
-                return;
-            }
-
-            // ===============================
-            // ✅ CLAIM BLOCKS IMPLEMENTATION
-            // ===============================
-            boolean claimBlocksEnabled = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
-
             if (claimBlocksEnabled && !p.hasPermission("aegis.admin.bypass-limits")) {
-                boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.starter.enabled", true);
-                long starterMaxArea = plugin.cfg().raw().getLong("claim_blocks.starter.max_area", 2500);
-                boolean hasUsedStarter = plugin.getClaimBlockManager().getOrCreate(uuid).hasClaimedStarter();
-
-                if (starterEnabled && !hasUsedStarter) {
-                    // First claim is allowed, but must be small (starter coupon)
-                    if (area > starterMaxArea) {
-                        plugin.msg().send(p, "claim_blocks_starter_too_large",
-                                Map.of("MAX", String.valueOf(starterMaxArea)));
-                        plugin.effects().playError(p);
-                        return;
-                    }
-                } else {
-                    // Normal claim must fit budget
-                    if (!plugin.getClaimBlockManager().canAfford(uuid, area)) {
-                        long avail = plugin.getClaimBlockManager().getAvailableBlocks(uuid);
-                        plugin.msg().send(p, "claim_blocks_not_enough",
-                                Map.of("NEEDED", String.valueOf(area), "AVAILABLE", String.valueOf(avail)));
-                        plugin.effects().playError(p);
-                        return;
-                    }
-                }
-            }
-
-            // Vault costs (if used)
-            double cost = plugin.cfg().getWorldVaultCost(p.getWorld());
-            if (plugin.cfg().useVault(p.getWorld()) && cost > 0) {
-                if (!plugin.vault().charge(p, cost)) {
-                    plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
+                ClaimBlockData blocks = plugin.claimBlocks().getOrCreate(p.getUniqueId());
+                int required = (width * depth);
+                if (blocks.getAvailable() < required) {
+                    plugin.msg().send(p, "claim_blocks_not_enough");
                     return;
                 }
-                plugin.msg().send(p, "cost_deducted", Map.of("AMOUNT", plugin.vault().format(cost)));
             }
         }
 
@@ -208,6 +125,8 @@ public class SelectionService implements Listener {
             plot.setFlag("build", false);
             plot.setFlag("pvp", false);
             plot.setFlag("safe_zone", true);
+            // 1.2.6 QoL: server plot creators should never be locked out
+            plot.setRole(p.getUniqueId(), "steward");
         } else {
             plot = new Plot(
                     UUID.randomUUID(),
@@ -227,235 +146,21 @@ public class SelectionService implements Listener {
 
         // ✅ Mark starter claim as used AFTER successful save
         if (!isServerClaim) {
-            boolean claimBlocksEnabled = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
             if (claimBlocksEnabled) {
                 boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.starter.enabled", true);
-                if (starterEnabled && !plugin.getClaimBlockManager().getOrCreate(uuid).hasClaimedStarter()) {
-                    plugin.getClaimBlockManager().setStarterClaimed(uuid, true);
+                if (starterEnabled) {
+                    ClaimBlockData blocks = plugin.claimBlocks().getOrCreate(p.getUniqueId());
+                    if (!blocks.hasClaimedStarter()) {
+                        blocks.setClaimedStarter(true);
+                        plugin.claimBlocks().save();
+                    }
                 }
             }
         }
 
-        // --- DISCORD (CLAIM) ---
-        if (plugin.getDiscord().isEnabled() && !isServerClaim) {
-            String title = plugin.gui().tr(p, "discord_claim_title", "🚩 New Land Claimed");
-            String descTemplate = plugin.gui().tr(p, "discord_claim_description", "{PLAYER} has established a new territory!");
-            String description = descTemplate.replace("{PLAYER}", p.getName());
-            String worldLabel = plugin.gui().tr(p, "discord_claim_world_label", "World");
-            String sizeLabel = plugin.gui().tr(p, "discord_claim_size_label", "Size");
-            String footer = plugin.gui().tr(p, "discord_claim_footer", "AegisGuard");
+        selections.remove(p.getUniqueId());
+        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
 
-            DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
-                    .setTitle(ChatColor.stripColor(title))
-                    .setColor(Color.GREEN)
-                    .setDescription(ChatColor.stripColor(description))
-                    .addField(ChatColor.stripColor(worldLabel), plot.getWorld(), true)
-                    .addField(ChatColor.stripColor(sizeLabel), width + "x" + length + " (" + area + ")", true)
-                    .setFooter(ChatColor.stripColor(footer), null);
-
-            plugin.getDiscord().send(embed);
-        }
-
-        // Feedback
-        if (isServerClaim) {
-            plugin.msg().send(p, "admin-zone-created");
-            plugin.effects().playConfirm(p);
-        } else {
-            plugin.msg().send(p, "plot_created");
-            plugin.effects().playClaimSuccess(p);
-        }
-
-        loc1.remove(uuid);
-        loc2.remove(uuid);
-        selectionIsServer.remove(uuid);
-
-        if (!isServerClaim) handleWandConsumption(p);
-    }
-
-    public void attemptMerge(Player p, String direction) {
-        Plot currentPlot = plugin.store().getPlotAt(p.getLocation());
-        if (currentPlot == null || !currentPlot.getOwner().equals(p.getUniqueId())) {
-            plugin.msg().send(p, "no_plot_here");
-            return;
-        }
-
-        BlockFace face;
-        try {
-            face = BlockFace.valueOf(direction.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            plugin.msg().send(p, "merge_invalid_dir");
-            return;
-        }
-
-        int checkX = 0, checkZ = 0;
-
-        switch (face) {
-            case NORTH -> { checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2; checkZ = currentPlot.getZ1() - 1; }
-            case SOUTH -> { checkX = (currentPlot.getX1() + currentPlot.getX2()) / 2; checkZ = currentPlot.getZ2() + 1; }
-            case WEST  -> { checkX = currentPlot.getX1() - 1; checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2; }
-            case EAST  -> { checkX = currentPlot.getX2() + 1; checkZ = (currentPlot.getZ1() + currentPlot.getZ2()) / 2; }
-            default -> { plugin.msg().send(p, "merge_invalid_dir"); return; }
-        }
-
-        Plot targetPlot = plugin.store().getPlotAt(new Location(p.getWorld(), checkX, 64, checkZ));
-        if (targetPlot == null) { plugin.msg().send(p, "merge_no_plot"); return; }
-        if (!targetPlot.getOwner().equals(p.getUniqueId())) { plugin.msg().send(p, "merge_not_owner"); return; }
-
-        boolean aligned;
-        if (face == BlockFace.NORTH || face == BlockFace.SOUTH) {
-            aligned = (currentPlot.getX1() == targetPlot.getX1()) && (currentPlot.getX2() == targetPlot.getX2());
-        } else {
-            aligned = (currentPlot.getZ1() == targetPlot.getZ1()) && (currentPlot.getZ2() == targetPlot.getZ2());
-        }
-        if (!aligned) { plugin.msg().send(p, "merge_not_aligned"); return; }
-
-        if (plugin.cfg().isMergeEnabled()) {
-            double cost = plugin.cfg().getMergeCost();
-            if (cost > 0 && !plugin.isAdmin(p)) {
-                if (!plugin.vault().charge(p, cost)) {
-                    plugin.msg().send(p, "need_vault", Map.of("AMOUNT", plugin.vault().format(cost)));
-                    return;
-                }
-            }
-        }
-
-        int newX1 = Math.min(currentPlot.getX1(), targetPlot.getX1());
-        int newZ1 = Math.min(currentPlot.getZ1(), targetPlot.getZ1());
-        int newX2 = Math.max(currentPlot.getX2(), targetPlot.getX2());
-        int newZ2 = Math.max(currentPlot.getZ2(), targetPlot.getZ2());
-
-        plugin.store().removePlot(p.getUniqueId(), currentPlot.getPlotId());
-        plugin.store().removePlot(p.getUniqueId(), targetPlot.getPlotId());
-
-        currentPlot.setX1(newX1);
-        currentPlot.setZ1(newZ1);
-        currentPlot.setX2(newX2);
-        currentPlot.setZ2(newZ2);
-
-        plugin.store().addPlot(currentPlot);
-
-        plugin.msg().send(p, "merge_success");
-        p.spawnParticle(Particle.EXPLOSION_LARGE, p.getLocation(), 3);
-        p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 1f);
-
-        if (plugin.getDiscord().isEnabled()) {
-            String title = plugin.gui().tr(p, "discord_merge_title", "🔄 Plot Merge Completed");
-            String descTemplate = plugin.gui().tr(p, "discord_merge_description", "{PLAYER} merged two claims.");
-            String description = descTemplate.replace("{PLAYER}", p.getName());
-            String sizeLabel = plugin.gui().tr(p, "discord_merge_size_label", "New Size");
-            String newSize = (newX2 - newX1 + 1) + "x" + (newZ2 - newZ1 + 1);
-
-            plugin.getDiscord().send(
-                    new DiscordWebhook.EmbedObject()
-                            .setTitle(ChatColor.stripColor(title))
-                            .setColor(new Color(0, 100, 200))
-                            .setDescription(ChatColor.stripColor(description))
-                            .addField(ChatColor.stripColor(sizeLabel), newSize, true)
-            );
-        }
-    }
-
-    public void unclaimHere(Player p) {
-        Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null) {
-            plugin.msg().send(p, "no_plot_here");
-            return;
-        }
-
-        if (!plot.getOwner().equals(p.getUniqueId()) && !p.hasPermission("aegis.admin")) {
-            plugin.msg().send(p, "no_perm");
-            return;
-        }
-
-        plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
-        plugin.msg().send(p, "plot_unclaimed");
-        plugin.effects().playUnclaim(p);
-
-        String world = p.getWorld().getName();
-        if (plugin.cfg().raw().getBoolean("claims.per_world." + world + ".refund_on_unclaim", false)) {
-            double originalCost = plugin.cfg().getWorldVaultCost(p.getWorld());
-            double percent = plugin.cfg().raw().getDouble("claims.per_world." + world + ".refund_percent", 50.0);
-            double refund = originalCost * (percent / 100.0);
-            if (refund > 0) {
-                plugin.vault().give(p, refund);
-                plugin.msg().send(p, "vault_refund", Map.of(
-                        "AMOUNT", plugin.vault().format(refund),
-                        "PERCENT", String.valueOf(percent)
-                ));
-            }
-        }
-    }
-
-    private void handleWandConsumption(Player p) {
-        boolean consume = plugin.cfg().raw().getBoolean("claims.consume_wand_on_claim", true);
-        boolean adminBypass = plugin.cfg().raw().getBoolean("claims.admin_keep_wand", true);
-
-        if (consume) {
-            if (adminBypass && plugin.isAdmin(p)) return;
-            consumeWand(p);
-        }
-    }
-
-    public void consumeWand(Player p) {
-        ItemStack[] contents = p.getInventory().getContents();
-        for (int i = 0; i < contents.length; i++) {
-            if (isWand(contents[i])) {
-                if (contents[i].getAmount() > 1) contents[i].setAmount(contents[i].getAmount() - 1);
-                else p.getInventory().setItem(i, null);
-                break;
-            }
-        }
-    }
-
-    public void manualConsumeWand(Player p) {
-        boolean found = false;
-        ItemStack[] contents = p.getInventory().getContents();
-        for (int i = 0; i < contents.length; i++) {
-            if (isWand(contents[i])) {
-                p.getInventory().setItem(i, null);
-                found = true;
-            }
-        }
-        if (found) {
-            plugin.msg().send(p, "wand_consumed");
-            plugin.effects().playUnclaim(p);
-        } else {
-            plugin.msg().send(p, "wand_not_found");
-        }
-    }
-
-    public boolean isWand(ItemStack item) {
-        return isAnyWand(item);
-    }
-
-    public static boolean isAnyWand(ItemStack item) {
-        if (item == null || item.getType() == Material.AIR) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        return pdc.has(WAND_KEY, PersistentDataType.BYTE) || pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
-    }
-
-    public static boolean playerHasAnyWand(Player p) {
-        for (ItemStack stack : p.getInventory().getContents()) {
-            if (isAnyWand(stack)) return true;
-        }
-        return false;
-    }
-
-    private void playSelectionEffect(Player p, Location loc, boolean isServer) {
-        try {
-            Particle particle = isServer ? Particle.SOUL_FIRE_FLAME : Particle.VILLAGER_HAPPY;
-            p.spawnParticle(particle, loc.clone().add(0.5, 1.2, 0.5), 5, 0.2, 0.2, 0.2, 0);
-            p.playSound(p.getLocation(),
-                    isServer ? Sound.BLOCK_BEACON_POWER_SELECT : Sound.ENTITY_EXPERIENCE_ORB_PICKUP,
-                    1f,
-                    1.5f
-            );
-        } catch (Exception ignored) {}
-    }
-
-    public void resizePlot(Player p, String direction, int amount) {
-        // Still stubbed: when you implement it, call ClaimBlockManager.canAfford() for the additional area.
+        plugin.msg().send(p, isServerClaim ? "server_claim_success" : "claim_success");
     }
 }

@@ -51,18 +51,11 @@ public enum NotificationMode {
      * @return Matching mode or ACTION_BAR default
      */
     public static NotificationMode fromString(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null || value.isEmpty()) {
             return ACTION_BAR; // Safe default
         }
 
-        // Normalize legacy variants:
-        // "actionbar", "action bar", "ACTION-BAR", etc -> "ACTION_BAR"
-        String normalized = value.trim().toUpperCase()
-                .replace('-', '_')
-                .replace(' ', '_');
-
-        if (normalized.equals("ACTIONBAR")) normalized = "ACTION_BAR";
-
+        String normalized = value.toUpperCase().trim();
         for (NotificationMode mode : values()) {
             if (mode.configValue.equals(normalized) || mode.name().equals(normalized)) {
                 return mode;

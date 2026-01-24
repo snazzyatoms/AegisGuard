@@ -14,9 +14,14 @@ import java.util.List;
 
 /**
  * PlayerGUI
- * - The main dashboard for AegisGuard.
- * - Fully localized via Codex for GUI text.
- * - Chat feedback uses msg() so it respects per-player language too.
+ * - Main dashboard for AegisGuard.
+ *
+ * 1.2.6 QoL Pass:
+ * - Hard ignore bottom-inventory clicks (prevents edge-case movement / hotbar swaps).
+ * - Ignore filler clicks cleanly.
+ * - Add a PDC-tagged Reload/Refresh entry point for admins (consistent with GUIListener strict detection).
+ * - Safer “service enabled” checks (cfg can be null during reload windows).
+ * - Keeps 1.2.5 layout/structure, only improves reliability + UX.
  */
 public class PlayerGUI {
 
@@ -66,6 +71,10 @@ public class PlayerGUI {
         p.sendMessage(GUIManager.color(prefix + msg));
     }
 
+    private boolean cfgBool(java.util.function.BooleanSupplier s, boolean def) {
+        try { return s.getAsBoolean(); } catch (Throwable ignored) { return def; }
+    }
+
     /* ---------------------------------------------------------
      * OPEN
      * --------------------------------------------------------- */
@@ -103,12 +112,15 @@ public class PlayerGUI {
         ));
 
         // Travel (Slot 13)
-        if (plugin.cfg().isTravelSystemEnabled()) {
+        boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
+        if (travelEnabled) {
             inv.setItem(13, GUIManager.createItem(
                     Material.COMPASS,
                     t(player, "visit_gui_title", "&a🧭 Travel"),
                     tl(player, "visit_button_lore", List.of("&7Visit plots and travel quickly."))
             ));
+        } else {
+            // Optional: keep slot empty when disabled (matches 1.2.5 behavior)
         }
 
         // --- 3. CORE MANAGEMENT ---
@@ -122,7 +134,7 @@ public class PlayerGUI {
         boolean canManage = isOwner || isAdmin;
 
         // Claim Land (Slot 20)
-        boolean hasSelection = plugin.selection().hasSelection(player);
+        boolean hasSelection = plugin.selection() != null && plugin.selection().hasSelection(player);
         if (hasSelection) {
             inv.setItem(20, GUIManager.createItem(
                     Material.LIGHTNING_ROD,
@@ -162,7 +174,8 @@ public class PlayerGUI {
         // --- 4. ADVANCED FEATURES ---
 
         // Leveling (Slot 29)
-        if (plugin.cfg().isLevelingEnabled()) {
+        boolean levelingEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isLevelingEnabled(), false);
+        if (levelingEnabled) {
             inv.setItem(29, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
                     t(player, "level_gui_title", "&a📈 Leveling"),
@@ -171,7 +184,8 @@ public class PlayerGUI {
         }
 
         // Zoning (Slot 31)
-        if (plugin.cfg().isZoningEnabled()) {
+        boolean zoningEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isZoningEnabled(), false);
+        if (zoningEnabled) {
             inv.setItem(31, GUIManager.createItem(
                     Material.IRON_BARS,
                     t(player, "zone_gui_title", "&b🏗 Zoning"),
@@ -180,7 +194,8 @@ public class PlayerGUI {
         }
 
         // Biomes (Slot 33)
-        if (plugin.cfg().isBiomesEnabled()) {
+        boolean biomesEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isBiomesEnabled(), false);
+        if (biomesEnabled) {
             inv.setItem(33, GUIManager.createItem(
                     Material.SPORE_BLOSSOM,
                     t(player, "biome_gui_title", "&d🌿 Biomes"),
@@ -199,7 +214,11 @@ public class PlayerGUI {
 
         // ✅ ClaimBlocks Exchange (Slot 39)
         boolean exchangeService = plugin.exchange() != null;
-        boolean exchangeEnabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+        boolean exchangeEnabled = false;
+        try {
+            exchangeEnabled = plugin.cfg() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+        } catch (Throwable ignored) {}
+
         if (exchangeService && exchangeEnabled) {
             inv.setItem(39, GUIManager.createItem(
                     Material.EMERALD,
@@ -224,7 +243,8 @@ public class PlayerGUI {
         ));
 
         // Auctions (Slot 42)
-        if (plugin.cfg().isUpkeepEnabled()) {
+        boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
+        if (upkeepEnabled) {
             inv.setItem(42, GUIManager.createItem(
                     Material.LAVA_BUCKET,
                     t(player, "button_auction", "&c🔥 Auctions"),
@@ -242,12 +262,26 @@ public class PlayerGUI {
         ));
 
         // Admin (Slot 49)
-        if (plugin.isAdmin(player)) {
-            inv.setItem(49, GUIManager.createItem(
+        if (isAdmin) {
+            ItemStack adminItem = GUIManager.createItem(
                     Material.REDSTONE_BLOCK,
                     t(player, "admin_menu_title", "&c🛠 Admin Menu"),
                     tl(player, "admin_menu_lore", List.of("&7Operator Access Only"))
-            ));
+            );
+            inv.setItem(49, adminItem);
+
+            // ✅ 1.2.6 QoL: small “reload hub” button in the border (slot 47 is border)
+            // This gives admins a consistent reload trigger anywhere without hunting.
+            ItemStack reloadHub = GUIManager.createItem(
+                    Material.REDSTONE,
+                    t(player, "button_reload_all_settings",
+                            t(player, "button_admin_reload", "&eReload All Settings")),
+                    tl(player, "reload_all_settings_lore",
+                            tl(player, "admin_reload_lore", List.of("&7Reload configs + language packs.")))
+            );
+            // PDC tag so GUIListener detects it reliably
+            try { plugin.gui().tagAction(reloadHub, "reload_all"); } catch (Throwable ignored) {}
+            inv.setItem(47, reloadHub);
         }
 
         // Exit (Slot 50)
@@ -269,8 +303,23 @@ public class PlayerGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        int slot = e.getRawSlot();
+        // ✅ 1.2.6 QoL: ignore clicks from bottom inventory (hard safety)
+        int raw = e.getRawSlot();
+        if (raw < 0 || raw >= e.getInventory().getSize()) return;
+
+        int slot = raw;
         if (slot < 0 || slot >= 54) return;
+
+        // ✅ Ignore filler clicks quietly
+        if (GUIManager.isFiller(e.getCurrentItem())) return;
+
+        // Reload hub (admins only) is handled by GUIListener (PDC tag),
+        // but we can safely ignore it here too.
+        String action = null;
+        try { action = plugin.gui().getAction(e.getCurrentItem()); } catch (Throwable ignored) {}
+        if (action != null && (action.equals("reload_all") || action.equals("refresh_lang") || action.equals("reload"))) {
+            return; // GUIListener will intercept reload triggers globally
+        }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
 
@@ -294,13 +343,17 @@ public class PlayerGUI {
             }
 
             case 13 -> {
-                if (plugin.cfg().isTravelSystemEnabled()) {
+                boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
+                if (travelEnabled) {
                     plugin.gui().visit().open(player, 0, false);
+                } else {
+                    send(player, "travel_system_disabled", "&cTravel is disabled.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }
 
             case 20 -> {
-                if (plugin.selection().hasSelection(player)) {
+                if (plugin.selection() != null && plugin.selection().hasSelection(player)) {
                     player.closeInventory();
                     plugin.selection().confirmClaim(player);
                 } else {
@@ -333,7 +386,8 @@ public class PlayerGUI {
 
             // Advanced Features
             case 29 -> {
-                if (plugin.cfg().isLevelingEnabled()) {
+                boolean levelingEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isLevelingEnabled(), false);
+                if (levelingEnabled) {
                     if (plot != null && canManage) plugin.gui().leveling().open(player, plot);
                     else {
                         send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -346,7 +400,8 @@ public class PlayerGUI {
             }
 
             case 31 -> {
-                if (plugin.cfg().isZoningEnabled()) {
+                boolean zoningEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isZoningEnabled(), false);
+                if (zoningEnabled) {
                     if (plot != null && canManage) plugin.gui().zoning().open(player, plot);
                     else {
                         send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -359,7 +414,8 @@ public class PlayerGUI {
             }
 
             case 33 -> {
-                if (plugin.cfg().isBiomesEnabled()) {
+                boolean biomesEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isBiomesEnabled(), false);
+                if (biomesEnabled) {
                     if (plot != null && canManage) plugin.gui().biomes().open(player, plot);
                     else {
                         send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -376,11 +432,16 @@ public class PlayerGUI {
 
             // ✅ Exchange
             case 39 -> {
-                if (plugin.exchange() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false)) {
+                boolean exchangeOk = plugin.exchange() != null;
+                boolean exchangeEnabled = false;
+                try {
+                    exchangeEnabled = plugin.cfg() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+                } catch (Throwable ignored) {}
+
+                if (exchangeOk && exchangeEnabled) {
                     plugin.gui().openClaimBlockExchange(player);
                 } else {
-                    send(player, "claimblocks_exchange_unavailable",
-                            "&cClaimBlocks Exchange is unavailable right now.");
+                    send(player, "claimblocks_exchange_unavailable", "&cClaimBlocks Exchange is unavailable right now.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }
@@ -388,7 +449,8 @@ public class PlayerGUI {
             case 40 -> plugin.gui().expansionRequest().open(player);
 
             case 42 -> {
-                if (plugin.cfg().isUpkeepEnabled()) plugin.gui().auction().open(player, 0);
+                boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
+                if (upkeepEnabled) plugin.gui().auction().open(player, 0);
             }
 
             // System

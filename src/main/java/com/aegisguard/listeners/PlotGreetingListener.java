@@ -160,12 +160,22 @@ public class PlotGreetingListener implements Listener {
     private PlayerNotificationSettings getNotificationSettings(Player player) {
         UUID uuid = player.getUniqueId();
 
-        // New structure (preferred)
+        // ✅ Preferred source: NotificationManager (single truth)
+        try {
+            if (plugin.getNotificationManager() != null) {
+                PlayerNotificationSettings s = plugin.getNotificationManager().getSettings(uuid);
+                if (s != null) return s;
+            }
+        } catch (Throwable ignored) {}
+
+        // Fallback: read config directly (keeps compatibility)
         String base = "player_notifications.players." + uuid;
 
         boolean greetings = plugin.getConfig().getBoolean(base + ".greetings", true);
         boolean adminUpdates = plugin.getConfig().getBoolean(base + ".admin_updates", true);
-        String modeRaw = plugin.getConfig().getString(base + ".mode", "CHAT");
+
+        // ✅ Align default with SettingsGUI
+        String modeRaw = plugin.getConfig().getString(base + ".mode", "ACTION_BAR");
 
         // Legacy compatibility (until migration is fully rolled out everywhere)
         Object legacy = plugin.getConfig().get("notifications." + uuid);
@@ -183,19 +193,19 @@ public class PlotGreetingListener implements Listener {
         if (mode == null) mode = NotificationMode.CHAT;
 
         switch (mode) {
-            case ACTION_BAR:
-                sendActionBar(player, chatText);
-                return;
-            case TITLE:
+            case ACTION_BAR -> sendActionBar(player, chatText);
+            case TITLE -> {
                 String t = (title == null || title.trim().isEmpty()) ? "&bEntering" : title;
-                String sub = (subtitle == null || subtitle.trim().isEmpty()) ? (chatText == null ? "" : chatText) : subtitle;
+                String sub = (subtitle == null || subtitle.trim().isEmpty())
+                        ? (chatText == null ? "" : chatText)
+                        : subtitle;
                 player.sendTitle(color(t), color(sub), 10, 40, 10);
-                return;
-            case CHAT:
-            default:
+            }
+            case CHAT, default -> {
                 if (chatText != null && !chatText.trim().isEmpty()) {
                     player.sendMessage(color(chatText));
                 }
+            }
         }
     }
 
@@ -213,28 +223,26 @@ public class PlotGreetingListener implements Listener {
         PlayerNotificationSettings settings = getNotificationSettings(player);
         if (settings != null && !settings.greetingsEnabled()) return;
 
-        NotificationMode mode = (settings == null) ? NotificationMode.CHAT : settings.getMode();
+        NotificationMode mode = (settings == null) ? NotificationMode.ACTION_BAR : settings.getMode();
 
         String msg = plot.getWelcomeMessage();
         if (msg == null || msg.trim().isEmpty()) {
             msg = tr(player,
                     "greetings.enter",
                     "&bEntering: &f{OWNER}&b's claim",
-                    Map.of("OWNER", plot.getOwnerName()));
+                    Map.of("OWNER", safeOwnerName(plot)));
         }
 
-        // If TITLE mode, prefer plot-configured title/subtitle. Otherwise, respect mode and do not force titles.
         String title = null;
         String sub = null;
+
+        // If TITLE mode, prefer plot-configured title/subtitle.
         if (mode == NotificationMode.TITLE) {
             title = plot.getEntryTitle();
             sub = plot.getEntrySubtitle();
-            if (title == null || title.trim().isEmpty()) {
-                title = "&bEntering";
-            }
-            if (sub == null || sub.trim().isEmpty()) {
-                sub = msg;
-            }
+
+            if (title == null || title.trim().isEmpty()) title = "&bEntering";
+            if (sub == null || sub.trim().isEmpty()) sub = msg;
         }
 
         deliver(player, mode, msg, title, sub);
@@ -244,25 +252,36 @@ public class PlotGreetingListener implements Listener {
         PlayerNotificationSettings settings = getNotificationSettings(player);
         if (settings != null && !settings.greetingsEnabled()) return;
 
-        NotificationMode mode = (settings == null) ? NotificationMode.CHAT : settings.getMode();
+        NotificationMode mode = (settings == null) ? NotificationMode.ACTION_BAR : settings.getMode();
 
         String msg = plot.getFarewellMessage();
         if (msg == null || msg.trim().isEmpty()) {
             msg = tr(player,
                     "greetings.leave",
                     "&7Leaving: &f{OWNER}&7's claim",
-                    Map.of("OWNER", plot.getOwnerName()));
+                    Map.of("OWNER", safeOwnerName(plot)));
         }
 
-        // For TITLE mode, show a simple leave title (plot doesn’t currently have dedicated leave title fields)
         String title = null;
         String sub = null;
+
+        // For TITLE mode, show a simple leave title (plot doesn’t currently have dedicated leave title fields)
         if (mode == NotificationMode.TITLE) {
             title = "&7Leaving";
             sub = msg;
         }
 
         deliver(player, mode, msg, title, sub);
+    }
+
+    private String safeOwnerName(Plot plot) {
+        try {
+            String n = (plot == null) ? null : plot.getOwnerName();
+            if (n == null || n.isBlank()) return "Unknown";
+            return n;
+        } catch (Throwable ignored) {
+            return "Unknown";
+        }
     }
 
     private String tr(Player player, String key, String fallback, Map<String, String> placeholders) {
@@ -276,7 +295,9 @@ public class PlotGreetingListener implements Listener {
         String out = fallback;
         if (placeholders != null) {
             for (Map.Entry<String, String> e : placeholders.entrySet()) {
-                out = out.replace("{" + e.getKey() + "}", e.getValue() == null ? "" : e.getValue());
+                String k = e.getKey();
+                String v = e.getValue() == null ? "" : e.getValue();
+                out = out.replace("{" + k + "}", v);
             }
         }
         return out;

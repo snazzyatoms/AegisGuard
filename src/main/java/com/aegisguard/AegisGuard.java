@@ -281,9 +281,8 @@ public class AegisGuard extends JavaPlugin {
                 if (snapshotManager != null) snapshotManager.load();
             } catch (Throwable ignored) {}
 
-            try {
-                if (notificationManager != null) notificationManager.loadData();
-            } catch (Throwable ignored) {}
+            // ✅ NotificationManager loads data inside constructor + reload()
+            // ❌ Do NOT call notificationManager.loadData() (it's private).
         });
 
         // Register Events
@@ -502,9 +501,13 @@ public class AegisGuard extends JavaPlugin {
         if (worldRules != null) worldRules.reload();
         if (messages != null) messages.reload();
 
-        // Reload notification preferences
+        // ✅ Reload notification preferences safely (don’t recreate unless missing)
         try {
-            this.notificationManager = new NotificationManager(this);
+            if (this.notificationManager == null) {
+                this.notificationManager = new NotificationManager(this);
+            } else {
+                this.notificationManager.reload();
+            }
         } catch (Throwable t) {
             this.notificationManager = null;
         }

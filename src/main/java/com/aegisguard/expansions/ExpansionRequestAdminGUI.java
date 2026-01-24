@@ -6,38 +6,45 @@ import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * ExpansionRequestAdminGUI
- * - Allows admins to view, approve, or deny land expansion requests.
- * - Fully localized with per-player language styles.
+ * ExpansionRequestAdminGUI (1.2.6 QoL pass)
  *
- * Notes:
- * - Cost is charged on approval in ExpansionRequestManager (not at submit),
- *   so the GUI labels it as "Cost Due".
- * - Pagination prevents silent truncation beyond 45 requests.
- * - Optional audit view: when Instant/Auto-Approval mode is enabled,
- *   admins can toggle into a history view to see what was auto-approved.
+ * Improvements:
+ * - PDC action routing (aegis_action) for prev/next/back + view toggle + request entries.
+ * - Request entries store requester UUID in PDC (aegis_requester_id) to avoid index desync.
+ * - Async list building (sorting/filtering) + inventory build on main thread.
+ * - Click safety: only handles top-inventory clicks; ignores filler/air.
+ * - Keeps 1.2.5 structure (45 list slots + footer nav).
  */
 public class ExpansionRequestAdminGUI {
 
     private final AegisGuard plugin;
-    private static final int REQS_PER_PAGE = 45; // slots 0..44 (top 5 rows)
+    private static final int REQS_PER_PAGE = 45; // slots 0..44
+
+    private final NamespacedKey keyAction;
+    private final NamespacedKey keyRequesterId;
 
     public ExpansionRequestAdminGUI(AegisGuard plugin) {
         this.plugin = plugin;
+        this.keyAction = new NamespacedKey(plugin, "aegis_action");
+        this.keyRequesterId = new NamespacedKey(plugin, "aegis_requester_id");
     }
 
     public static class ExpansionAdminHolder implements InventoryHolder {
@@ -64,15 +71,11 @@ public class ExpansionRequestAdminGUI {
     }
 
     public void open(Player player, int page) {
-        // Default view:
-        // - Queue mode: pending-only
-        // - Instant/Auto mode: show all (so admins can audit auto approvals)
         boolean defaultShowAll = isInstantOrAutoMode();
         open(player, page, defaultShowAll);
     }
 
     private void open(Player player, int page, boolean showAll) {
-        // ✅ Hard admin gate (prevents any accidental access path)
         if (!plugin.isAdmin(player)) {
             plugin.msg().send(player, "no_perm");
             plugin.effects().playError(player);
@@ -86,35 +89,57 @@ public class ExpansionRequestAdminGUI {
             return;
         }
 
-        // Collect requests (defensive)
-        List<ExpansionRequest> requests = new ArrayList<>(manager.getActiveRequests());
-        requests.removeIf(r -> r == null);
+        final int requestedPage = page;
+        final boolean requestedShowAll = showAll;
 
-        // Filter
-        if (!showAll) {
-            requests.removeIf(r -> !r.isPending());
-            // Oldest first feels best for queues
-            requests.sort(Comparator.comparingLong(ExpansionRequest::getTimestamp));
-        } else {
-            // Newest first feels best for audit/history
-            requests.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-        }
+        // 1.2.6: sort/filter async, build inventory on main
+        plugin.runGlobalAsync(() -> {
+            List<ExpansionRequest> requests;
+            try {
+                requests = new ArrayList<>(manager.getActiveRequests());
+                requests.removeIf(r -> r == null);
+            } catch (Throwable t) {
+                requests = new ArrayList<>();
+                plugin.getLogger().warning("[ExpansionRequestAdminGUI] getActiveRequests failed: " + t.getMessage());
+            }
 
-        // Extract IDs for holder (manager lookup is by requester UUID)
-        List<UUID> ids = new ArrayList<>();
-        for (ExpansionRequest r : requests) ids.add(r.getRequester());
+            if (!requestedShowAll) {
+                requests.removeIf(r -> !r.isPending());
+                requests.sort(Comparator.comparingLong(ExpansionRequest::getTimestamp));
+            } else {
+                requests.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+            }
 
-        int maxPages = (int) Math.ceil((double) ids.size() / REQS_PER_PAGE);
-        if (page < 0) page = 0;
-        if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
-        if (maxPages == 0) page = 0;
+            List<UUID> ids = new ArrayList<>();
+            for (ExpansionRequest r : requests) {
+                if (r != null && r.getRequester() != null) ids.add(r.getRequester());
+            }
 
-        int safePages = Math.max(1, maxPages);
+            int maxPages = (int) Math.ceil((double) ids.size() / REQS_PER_PAGE);
+            int fixedPage = requestedPage;
+            if (fixedPage < 0) fixedPage = 0;
+            if (maxPages > 0 && fixedPage >= maxPages) fixedPage = maxPages - 1;
+            if (maxPages == 0) fixedPage = 0;
 
-        // ✅ Title:
-        // 1) Localized base title: expansion_admin_title
-        // 2) Optional paged variant: expansion_admin_title_paged
-        // 3) Optional mode variant: expansion_admin_title_paged_mode
+            int safePages = Math.max(1, maxPages);
+
+            final int finalPage = fixedPage;
+            final int finalSafePages = safePages;
+            final int finalMaxPages = maxPages;
+
+            plugin.runMain(player, () -> buildAndOpen(player, manager, ids, finalPage, finalSafePages, finalMaxPages, requestedShowAll));
+        });
+    }
+
+    private void buildAndOpen(
+            Player player,
+            ExpansionRequestManager manager,
+            List<UUID> ids,
+            int page,
+            int safePages,
+            int maxPages,
+            boolean showAll
+    ) {
         String baseTitle = plugin.gui().tr(player, "expansion_admin_title", "&6&lPending Petitions");
 
         String modeLabel = plugin.gui().tr(
@@ -135,20 +160,17 @@ public class ExpansionRequestAdminGUI {
                 baseTitle + " &7({PAGE}/{PAGES}) &8- {MODE}",
                 ph
         );
-
-        // ✅ Safety: ensure inventory title always renders colors (even if upstream forgot)
         fullTitle = ChatColor.translateAlternateColorCodes('&', fullTitle);
 
         ExpansionAdminHolder holder = new ExpansionAdminHolder(ids, page, showAll);
         Inventory inv = Bukkit.createInventory(holder, 54, fullTitle);
 
-        // ✅ Fill all slots for a clean look
+        // Fill all slots
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
-        // Empty state
         if (ids.isEmpty()) {
-            inv.setItem(22, GUIManager.createItem(
+            ItemStack none = GUIManager.createItem(
                     Material.BARRIER,
                     plugin.gui().tr(
                             player,
@@ -162,7 +184,9 @@ public class ExpansionRequestAdminGUI {
                                     ? List.of("&7There are no recent expansion", "&7requests to display.")
                                     : List.of("&7There are no active expansion", "&7requests awaiting review.")
                     )
-            ));
+            );
+            tagAction(none, "expansion_none");
+            inv.setItem(22, none);
         } else {
             int startIndex = page * REQS_PER_PAGE;
 
@@ -171,7 +195,13 @@ public class ExpansionRequestAdminGUI {
                 if (index >= ids.size()) break;
 
                 UUID requesterId = ids.get(index);
-                ExpansionRequest req = manager.getRequest(requesterId);
+
+                ExpansionRequest req;
+                try {
+                    req = manager.getRequest(requesterId);
+                } catch (Throwable t) {
+                    req = null;
+                }
                 if (req == null) continue;
                 if (!showAll && !req.isPending()) continue;
 
@@ -183,7 +213,6 @@ public class ExpansionRequestAdminGUI {
                 String costStr = plugin.eco().format(req.getCost(), CurrencyType.VAULT);
                 String worldName = safe(req.getWorldName(), "Unknown");
 
-                // --- Audit trail (who/what decided this?) ---
                 String decidedBy = buildDeciderLabel(player, req);
                 String decisionAge = req.isPending() ? "-" : formatAge(System.currentTimeMillis() - req.getDecisionTimestamp());
 
@@ -199,7 +228,6 @@ public class ExpansionRequestAdminGUI {
                         "DECISION_AGE", decisionAge
                 );
 
-                // ✅ Uses placeholder-aware GUI gateway (Codex or fallback gets vars applied)
                 String itemName = plugin.gui().tr(
                         player,
                         "expansion_request_item_name",
@@ -226,27 +254,29 @@ public class ExpansionRequestAdminGUI {
                 );
 
                 Material icon = materialFor(req);
-                inv.setItem(slot, GUIManager.createItem(icon, itemName, lore));
+                ItemStack item = GUIManager.createItem(icon, itemName, lore);
+
+                tagAction(item, "expansion_entry");
+                tagRequester(item, requesterId);
+
+                inv.setItem(slot, item);
             }
         }
 
-        // Navigation: Prev / View Toggle / Back / Next
+        // Footer nav (45 / 48 / 49 / 53) - PDC tagged
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(
+            ItemStack prev = GUIManager.createItem(
                     Material.ARROW,
                     plugin.gui().tr(player, "button_prev_page", "&fPrevious Page"),
                     plugin.gui().trList(player, "prev_page_lore", List.of("&7Go to the previous page."))
-            ));
+            );
+            tagAction(prev, "prev_page");
+            inv.setItem(45, prev);
         }
 
-        // View toggle button (slot 48)
-        inv.setItem(48, GUIManager.createItem(
+        ItemStack toggle = GUIManager.createItem(
                 Material.COMPASS,
-                plugin.gui().tr(
-                        player,
-                        "expansion_admin_view_toggle",
-                        showAll ? "&bView: &fAll" : "&eView: &fPending"
-                ),
+                plugin.gui().tr(player, "expansion_admin_view_toggle", showAll ? "&bView: &fAll" : "&eView: &fPending"),
                 plugin.gui().trList(
                         player,
                         "expansion_admin_view_toggle_lore",
@@ -257,20 +287,26 @@ public class ExpansionRequestAdminGUI {
                                 "&eClick to switch view."
                         )
                 )
-        ));
+        );
+        tagAction(toggle, "toggle_view");
+        inv.setItem(48, toggle);
 
-        inv.setItem(49, GUIManager.createItem(
+        ItemStack back = GUIManager.createItem(
                 Material.ARROW,
-                plugin.gui().tr(player, "button_back", "&fBack"),
+                plugin.gui().tr(player, "button_back_admin", plugin.gui().tr(player, "button_back", "&fBack")),
                 plugin.gui().trList(player, "back_lore", List.of("&7Return to the previous menu."))
-        ));
+        );
+        tagAction(back, "back_admin");
+        inv.setItem(49, back);
 
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(
+            ItemStack next = GUIManager.createItem(
                     Material.ARROW,
                     plugin.gui().tr(player, "button_next_page", "&fNext Page"),
                     plugin.gui().trList(player, "next_page_lore", List.of("&7Go to the next page."))
-            ));
+            );
+            tagAction(next, "next_page");
+            inv.setItem(53, next);
         }
 
         player.openInventory(inv);
@@ -281,60 +317,53 @@ public class ExpansionRequestAdminGUI {
         if (!(e.getInventory().getHolder() instanceof ExpansionAdminHolder holder)) return;
         e.setCancelled(true);
 
-        // ✅ Hard admin gate in click handler too
+        // Only handle top inventory clicks
+        if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
+
         if (!plugin.isAdmin(player)) {
             plugin.effects().playError(player);
             player.closeInventory();
             return;
         }
 
-        if (e.getCurrentItem() == null) return;
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
 
-        // Ignore clicks from the player's own inventory
-        int rawSlot = e.getRawSlot();
-        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
-
-        int slot = e.getSlot();
         int page = holder.getPage();
         boolean showAll = holder.isShowAll();
 
-        // Nav
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page - 1, showAll);
-            plugin.effects().playMenuFlip(player);
-            return;
+        String action = getAction(clicked);
+        if (action != null) {
+            switch (action) {
+                case "prev_page" -> { open(player, page - 1, showAll); plugin.effects().playMenuFlip(player); return; }
+                case "next_page" -> { open(player, page + 1, showAll); plugin.effects().playMenuFlip(player); return; }
+                case "toggle_view" -> { open(player, 0, !showAll); plugin.effects().playMenuFlip(player); return; }
+                case "back_admin" -> { plugin.gui().admin().open(player); plugin.effects().playMenuFlip(player); return; }
+                case "expansion_none" -> { plugin.effects().playError(player); return; }
+                case "expansion_entry" -> { /* continue */ }
+                default -> { return; }
+            }
         }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, page + 1, showAll);
-            plugin.effects().playMenuFlip(player);
-            return;
-        }
-
-        // View toggle
-        if (slot == 48 && e.getCurrentItem().getType() == Material.COMPASS) {
-            open(player, 0, !showAll);
-            plugin.effects().playMenuFlip(player);
-            return;
-        }
-
-        // Back to Admin menu
-        if (slot == 49) {
-            plugin.gui().admin().open(player);
-            plugin.effects().playMenuFlip(player);
-            return;
-        }
-
-        // Listing click (only 0..44)
-        if (slot < 0 || slot >= REQS_PER_PAGE) return;
-
-        int index = (page * REQS_PER_PAGE) + slot;
-        if (index < 0 || index >= holder.getRequesterIds().size()) return;
-
-        UUID requesterId = holder.getRequesterIds().get(index);
 
         ExpansionRequestManager manager = plugin.getExpansionRequestManager();
-        ExpansionRequest req = manager.getRequest(requesterId);
+        if (manager == null) {
+            plugin.effects().playError(player);
+            return;
+        }
 
+        UUID requesterId = getRequester(clicked);
+        if (requesterId == null) {
+            // Legacy fallback to index if item wasn't tagged for some reason
+            int slot = e.getSlot();
+            if (slot < 0 || slot >= REQS_PER_PAGE) return;
+
+            int index = (page * REQS_PER_PAGE) + slot;
+            if (index < 0 || index >= holder.getRequesterIds().size()) return;
+
+            requesterId = holder.getRequesterIds().get(index);
+        }
+
+        ExpansionRequest req = manager.getRequest(requesterId);
         if (req == null) {
             sendSystem(player, "request_expired", "&cThat request has already expired or been handled.");
             open(player, page, showAll);
@@ -356,8 +385,8 @@ public class ExpansionRequestAdminGUI {
         }
 
         if (e.getClick().isLeftClick()) {
-            // Approve
-            if (manager.approveRequest(req)) {
+            boolean ok = manager.approveRequest(req);
+            if (ok) {
                 plugin.msg().send(player, "admin_request_approved", Map.of("PLAYER", reqName));
                 plugin.effects().playConfirm(player);
             } else {
@@ -365,13 +394,63 @@ public class ExpansionRequestAdminGUI {
                 plugin.effects().playError(player);
             }
         } else if (e.getClick().isRightClick()) {
-            // Deny
             manager.denyRequest(req);
             plugin.msg().send(player, "admin_request_denied", Map.of("PLAYER", reqName));
             plugin.effects().playUnclaim(player);
+        } else {
+            return;
         }
 
-        open(player, page, showAll); // Refresh GUI
+        open(player, page, showAll);
+    }
+
+    // --------------------------------
+    // PDC helpers
+    // --------------------------------
+
+    private void tagAction(ItemStack item, String action) {
+        if (item == null || action == null || action.isBlank()) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            meta.getPersistentDataContainer().set(keyAction, PersistentDataType.STRING, action.trim().toLowerCase(Locale.ROOT));
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
+
+    private String getAction(ItemStack item) {
+        if (item == null) return null;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            String v = meta.getPersistentDataContainer().get(keyAction, PersistentDataType.STRING);
+            return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private void tagRequester(ItemStack item, UUID requesterId) {
+        if (item == null || requesterId == null) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            meta.getPersistentDataContainer().set(keyRequesterId, PersistentDataType.STRING, requesterId.toString());
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
+
+    private UUID getRequester(ItemStack item) {
+        if (item == null) return null;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            String s = meta.getPersistentDataContainer().get(keyRequesterId, PersistentDataType.STRING);
+            if (s == null || s.isBlank()) return null;
+            return UUID.fromString(s);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     // --------------------------------
@@ -379,7 +458,6 @@ public class ExpansionRequestAdminGUI {
     // --------------------------------
 
     private void sendSystem(Player p, String key, String fallback) {
-        // plugin.gui().tr already returns colorized output (but fallback may contain & codes)
         String msg = ChatColor.translateAlternateColorCodes('&', plugin.gui().tr(p, key, fallback));
         p.sendMessage(msg);
     }
@@ -392,20 +470,16 @@ public class ExpansionRequestAdminGUI {
         if (req == null) return plugin.gui().tr(viewer, "expansion_decided_by_unknown", "&7Unknown");
         if (req.isPending()) return plugin.gui().tr(viewer, "expansion_decided_by_none", "&7Awaiting review");
 
-        // Auto approval
         if (req.getDecisionActorType() == ExpansionRequest.DecisionActorType.AUTO) {
             return plugin.gui().tr(viewer, "expansion_decided_by_auto", "&bAuto");
         }
 
-        // Admin UUID stored
         UUID actor = req.getDecisionActor();
         if (actor != null) {
             OfflinePlayer p = Bukkit.getOfflinePlayer(actor);
-            String name = (p.getName() != null) ? p.getName() : "Admin";
-            return name;
+            return (p.getName() != null) ? p.getName() : "Admin";
         }
 
-        // Console/system
         if (req.getDecisionActorType() == ExpansionRequest.DecisionActorType.CONSOLE) {
             return plugin.gui().tr(viewer, "expansion_decided_by_console", "&7Console");
         }
@@ -421,15 +495,12 @@ public class ExpansionRequestAdminGUI {
     }
 
     private boolean isInstantOrAutoMode() {
-        // Supports a couple of possible config keys (for backwards compatibility while you iterate naming)
         String mode = plugin.getConfig().getString(
                 "expansions.approval_mode",
                 plugin.getConfig().getString("expansions.mode", "QUEUE")
         );
-
         if (mode != null && mode.equalsIgnoreCase("INSTANT")) return true;
 
-        // boolean style toggles
         if (plugin.getConfig().getBoolean("expansions.auto_approve.enabled", false)) return true;
         return plugin.getConfig().getBoolean("expansions.auto_approve", false);
     }

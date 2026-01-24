@@ -4,34 +4,52 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * AdminPlotListGUI
- * - A paginated GUI for admins to view and manage all plots.
- * - Fully localized for language switching (titles + item names + lore + buttons).
- * - ✅ Title fixed via GUIManager.title() (translates & + hex + clamps)
+ * AdminPlotListGUI (1.2.6 QoL pass)
+ * - PDC action routing (aegis_action) for prev/next/back + plot entries.
+ * - Safer delete (SHIFT+RIGHT) to prevent accidental nukes.
+ * - Removes redundant Close button (Esc closes; Back returns).
+ * - Optional robustness: plot entries store plot id/owner in PDC to avoid index desync issues.
+ * - Folia/perf: loads/sorts plot list async, builds inventory on main thread.
  */
 public class AdminPlotListGUI {
 
     private final AegisGuard plugin;
-    private final int PLOTS_PER_PAGE = 45;
+
+    // 45 plot slots (0-44) + 9 footer (45-53)
+    private static final int PLOTS_PER_PAGE = 45;
+
+    private final NamespacedKey keyAction;
+    private final NamespacedKey keyPlotId;
+    private final NamespacedKey keyPlotOwner;
 
     public AdminPlotListGUI(AegisGuard AegisGuard) {
         this.plugin = AegisGuard;
+        this.keyAction = new NamespacedKey(plugin, "aegis_action");
+        this.keyPlotId = new NamespacedKey(plugin, "aegis_plot_id");
+        this.keyPlotOwner = new NamespacedKey(plugin, "aegis_plot_owner");
     }
 
     public static class PlotListHolder implements InventoryHolder {
@@ -49,19 +67,43 @@ public class AdminPlotListGUI {
     }
 
     public void open(Player player, int page) {
-        List<Plot> allPlots = new ArrayList<>(plugin.store().getAllPlots());
+        if (!plugin.isAdmin(player)) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    plugin.gui().tr(player, "no_perm", "&cError: You do not have permission for this.")));
+            plugin.effects().playError(player);
+            return;
+        }
 
-        // Safer sort (avoid null owner names causing NPE)
-        allPlots.sort(Comparator.comparing(
-                p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
-                String.CASE_INSENSITIVE_ORDER
-        ));
+        // 1.2.6: load + sort async (store queries can be heavy), then build/open on main
+        final int requestedPage = page;
+        plugin.runGlobalAsync(() -> {
+            List<Plot> allPlots;
+            try {
+                allPlots = new ArrayList<>(plugin.store().getAllPlots());
+            } catch (Throwable t) {
+                allPlots = new ArrayList<>();
+                plugin.getLogger().warning("[AdminPlotListGUI] Failed to read plots: " + t.getMessage());
+            }
 
-        int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
-        if (page < 0) page = 0;
-        if (page >= maxPages && maxPages > 0) page = maxPages - 1;
-        else if (maxPages == 0) page = 0;
+            allPlots.sort(Comparator.comparing(
+                    p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
+                    String.CASE_INSENSITIVE_ORDER
+            ));
 
+            int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
+            int fixedPage = requestedPage;
+            if (fixedPage < 0) fixedPage = 0;
+            if (fixedPage >= maxPages && maxPages > 0) fixedPage = maxPages - 1;
+            else if (maxPages == 0) fixedPage = 0;
+
+            final int finalPage = fixedPage;
+            final int finalMaxPages = maxPages;
+
+            plugin.runMain(player, () -> buildAndOpen(player, allPlots, finalPage, finalMaxPages));
+        });
+    }
+
+    private void buildAndOpen(Player player, List<Plot> allPlots, int page, int maxPages) {
         // ✅ Localized title + page suffix (clamped safely)
         String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
         String baseTitle = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry");
@@ -69,9 +111,9 @@ public class AdminPlotListGUI {
 
         Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
 
-        // Fill footer background
+        // 1.2.6: fill EVERYTHING with filler so there are no “dead” holes to click/drag into
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         // Preload localized lore templates (with fallbacks)
         String loreIdFmt = tr(player, "admin_plot_lore_id", "&7ID: &e{ID}");
@@ -80,8 +122,9 @@ public class AdminPlotListGUI {
         String loreToFmt = tr(player, "admin_plot_lore_to", "&7        to &a{X2}, {Z2}");
 
         int startIndex = page * PLOTS_PER_PAGE;
-        for (int i = 0; i < PLOTS_PER_PAGE; i++) {
-            int plotIndex = startIndex + i;
+
+        for (int slot = 0; slot < PLOTS_PER_PAGE; slot++) {
+            int plotIndex = startIndex + slot;
             if (plotIndex >= allPlots.size()) break;
 
             Plot plot = allPlots.get(plotIndex);
@@ -97,7 +140,7 @@ public class AdminPlotListGUI {
                 // Name: localized with placeholder
                 String rawName = null;
                 try {
-                    rawName = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
+                    if (plugin.codex() != null) rawName = plugin.codex().tr(player, "admin_plot_item_name", Map.of("OWNER", ownerName));
                 } catch (Throwable ignored) {}
 
                 String name = GUIManager.safeText(
@@ -127,53 +170,60 @@ public class AdminPlotListGUI {
 
                 if (plot.isServerZone()) {
                     String rawTag = null;
-                    try { rawTag = plugin.codex().tr(player, "admin_server_zone_tag"); } catch (Throwable ignored) {}
+                    try { if (plugin.codex() != null) rawTag = plugin.codex().tr(player, "admin_server_zone_tag"); } catch (Throwable ignored) {}
                     lore.add(GUIManager.safeText("admin_server_zone_tag", rawTag, "&c[SERVER ZONE]"));
                 }
 
                 lore.add(" ");
 
+                // 1.2.6: safer delete action
                 List<String> actions = plugin.gui().trList(player, "admin_plot_actions", List.of(
                         "&eLeft-Click: &7Teleport",
-                        "&cRight-Click: &7Delete Plot"
+                        "&cShift-Right-Click: &7Delete Plot"
                 ));
                 for (String line : actions) lore.add(GUIManager.color(line));
 
                 meta.setLore(lore);
+
+                // 1.2.6: tag plot entry with action + ids
+                tagAction(meta, "plot_entry");
+                tagPlot(meta, plot);
+
                 head.setItemMeta(meta);
             }
-            inv.setItem(i, head);
+
+            inv.setItem(slot, head);
         }
 
-        // --- NAV BUTTONS ---
+        // --- NAV BUTTONS (PDC-tagged) ---
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(
+            ItemStack prev = GUIManager.createItem(
                     Material.ARROW,
                     plugin.gui().tr(player, "button_prev_page", "&fPrevious Page"),
                     null
-            ));
+            );
+            tagAction(prev, "prev_page");
+            inv.setItem(45, prev);
         }
 
-        inv.setItem(48, GUIManager.createItem(
+        // 1.2.6: single “Back” control; remove redundant Close button (Esc closes inventory)
+        ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 plugin.gui().tr(player, "button_back_admin", "&fBack to Admin"),
                 plugin.gui().trList(player, "back_admin_lore", List.of("&7Return to Admin Menu."))
-        ));
+        );
+        tagAction(back, "back_admin");
+        inv.setItem(49, back);
 
         if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(
+            ItemStack next = GUIManager.createItem(
                     Material.ARROW,
                     plugin.gui().tr(player, "button_next_page", "&fNext Page"),
                     null
-            ));
+            );
+            tagAction(next, "next_page");
+            inv.setItem(53, next);
         }
-
-        // Exit button
-        inv.setItem(49, GUIManager.createItem(
-                Material.BARRIER,
-                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
-                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
-        ));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -181,61 +231,141 @@ public class AdminPlotListGUI {
 
     public void handleClick(Player player, InventoryClickEvent e, PlotListHolder holder) {
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
 
-        int slot = e.getSlot();
-        int currentPage = holder.getPage();
-
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, currentPage - 1);
-            return;
-        }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) {
-            open(player, currentPage + 1);
-            return;
-        }
-        if (slot == 48) {
-            plugin.gui().admin().open(player);
-            return;
-        }
-        if (slot == 49) {
+        if (!plugin.isAdmin(player)) {
+            plugin.effects().playError(player);
             player.closeInventory();
             return;
         }
 
-        if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
-            int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
-            if (plotIndex >= holder.getPlots().size()) return;
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
 
-            Plot plot = holder.getPlots().get(plotIndex);
-            if (plot == null) {
-                // Localized error (fallback included)
-                player.sendMessage(plugin.gui().tr(player, "admin_plot_missing", "&cPlot no longer exists."));
-                open(player, currentPage);
+        int currentPage = holder.getPage();
+
+        // 1.2.6: action routing (slot-independent)
+        String action = getAction(clicked);
+        if (action != null) {
+            switch (action) {
+                case "prev_page" -> { open(player, currentPage - 1); return; }
+                case "next_page" -> { open(player, currentPage + 1); return; }
+                case "back_admin" -> { plugin.gui().admin().open(player); return; }
+                case "plot_entry" -> { /* handled below */ }
+                default -> { /* ignore */ }
+            }
+        }
+
+        // Plot entry click
+        if (clicked.getType() != Material.PLAYER_HEAD) return;
+
+        Plot plot = resolvePlotFromItem(clicked, holder, currentPage, e.getSlot());
+        if (plot == null) {
+            player.sendMessage(plugin.gui().tr(player, "admin_plot_missing", "&cPlot no longer exists."));
+            open(player, currentPage);
+            return;
+        }
+
+        if (e.getClick().isLeftClick()) {
+            Location loc = plot.getCenter(plugin);
+            if (loc != null && loc.getWorld() != null) {
+                int y = loc.getWorld().getHighestBlockYAt(loc);
+                loc.setY(y + 1);
+
+                TeleportUtil.safeTeleport(plugin, player, loc);
+
+                plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
+                plugin.effects().playConfirm(player);
+                player.closeInventory();
+            } else {
+                player.sendMessage(plugin.gui().tr(player, "admin_plot_invalid_location", "&cInvalid world or location."));
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+
+        // 1.2.6: prevent accidental deletes
+        if (e.getClick().isRightClick()) {
+            if (!e.getClick().isShiftClick()) {
+                player.sendMessage(plugin.gui().tr(player, "admin_plot_delete_hint", "&cShift-Right-Click to delete this plot."));
+                plugin.effects().playError(player);
                 return;
             }
 
-            if (e.getClick().isLeftClick()) {
-                Location loc = plot.getCenter(plugin);
-                if (loc != null && loc.getWorld() != null) {
-                    int y = loc.getWorld().getHighestBlockYAt(loc);
-                    loc.setY(y + 1);
-
-                    TeleportUtil.safeTeleport(plugin, player, loc);
-
-                    // Chat feedback stays in msg system (already keyed)
-                    plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
-                    plugin.effects().playConfirm(player);
-                    player.closeInventory();
-                } else {
-                    player.sendMessage(plugin.gui().tr(player, "admin_plot_invalid_location", "&cInvalid world or location."));
+            plugin.runGlobalAsync(() -> {
+                try {
+                    plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
+                } catch (Throwable t) {
+                    plugin.getLogger().warning("[AdminPlotListGUI] removePlot failed: " + t.getMessage());
                 }
-            } else if (e.getClick().isRightClick()) {
-                plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
-                plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
-                plugin.effects().playUnclaim(player);
-                open(player, currentPage);
+
+                plugin.runMain(player, () -> {
+                    plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
+                    plugin.effects().playUnclaim(player);
+                    open(player, currentPage);
+                });
+            });
+        }
+    }
+
+    private Plot resolvePlotFromItem(ItemStack item, PlotListHolder holder, int currentPage, int slot) {
+        // 1) PDC-first (robust against list/index desync)
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                String plotIdStr = pdc.get(keyPlotId, PersistentDataType.STRING);
+                String ownerStr = pdc.get(keyPlotOwner, PersistentDataType.STRING);
+
+                if (plotIdStr != null && ownerStr != null) {
+                    UUID plotId = UUID.fromString(plotIdStr);
+                    UUID owner = UUID.fromString(ownerStr);
+
+                    for (Plot p : holder.getPlots()) {
+                        if (p == null) continue;
+                        if (owner.equals(p.getOwner()) && plotId.equals(p.getPlotId())) return p;
+                    }
+                }
             }
+        } catch (Throwable ignored) {}
+
+        // 2) Legacy fallback (slot index)
+        if (slot < 0 || slot >= PLOTS_PER_PAGE) return null;
+        int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
+        if (plotIndex < 0 || plotIndex >= holder.getPlots().size()) return null;
+        return holder.getPlots().get(plotIndex);
+    }
+
+    private void tagAction(ItemStack item, String action) {
+        if (item == null || action == null || action.isBlank()) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            tagAction(meta, action);
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
+
+    private void tagAction(ItemMeta meta, String action) {
+        try {
+            meta.getPersistentDataContainer().set(keyAction, PersistentDataType.STRING, action.trim().toLowerCase(Locale.ROOT));
+        } catch (Throwable ignored) {}
+    }
+
+    private void tagPlot(ItemMeta meta, Plot plot) {
+        try {
+            meta.getPersistentDataContainer().set(keyPlotId, PersistentDataType.STRING, plot.getPlotId().toString());
+            meta.getPersistentDataContainer().set(keyPlotOwner, PersistentDataType.STRING, plot.getOwner().toString());
+        } catch (Throwable ignored) {}
+    }
+
+    private String getAction(ItemStack item) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            String v = meta.getPersistentDataContainer().get(keyAction, PersistentDataType.STRING);
+            return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
@@ -247,7 +377,6 @@ public class AdminPlotListGUI {
         String combined = base + suffix;
         if (combined.length() <= MAX) return combined;
 
-        // If suffix alone is too long, clamp it hard.
         if (suffix.length() >= MAX) {
             String cut = suffix.substring(0, MAX);
             return cut.endsWith("§") ? cut.substring(0, MAX - 1) : cut;
@@ -256,7 +385,6 @@ public class AdminPlotListGUI {
         int remainingForBase = MAX - suffix.length();
         String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
 
-        // Avoid cutting off a color code marker.
         if (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
 
         return trimmedBase + suffix;

@@ -7,11 +7,13 @@ import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,17 +56,27 @@ public class GUIManager {
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
 
-    // ✅ NEW: ClaimBlocks Exchange GUI
+    // ✅ ClaimBlocks Exchange GUI
     private final ClaimBlockExchangeGUI claimBlockExchangeGUI;
 
-    // ✅ NEW: Snapshot Admin GUI (Rollback System)
+    // ✅ Snapshot Admin GUI (Rollback System)
     private final SnapshotAdminGUI snapshotAdminGUI;
+
+    // Title limits (Spigot inventory titles)
+    private static final int TITLE_MAX = 32;
 
     // Hex pattern (&#RRGGBB)
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
+    // Cached filler (clone on request)
+    private static final ItemStack FILLER_ITEM = buildFiller();
+
+    // PDC keys (standardized)
+    private final NamespacedKey keyAction;
+
     public GUIManager(AegisGuard plugin) {
         this.plugin = plugin;
+        this.keyAction = new NamespacedKey(plugin, "aegis_action");
 
         // Initialize all sub-menus
         this.playerGUI = new PlayerGUI(plugin);
@@ -86,17 +98,17 @@ public class GUIManager {
         this.zoningGUI = new ZoningGUI(plugin);
         this.biomeGUI = new BiomeGUI(plugin);
 
-        // New: Plot Status Codex GUI
+        // Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
 
-        // ✅ NEW: Exchange (only if service exists)
+        // Exchange (only if service exists)
         if (plugin.exchange() != null) {
             this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, plugin.exchange());
         } else {
             this.claimBlockExchangeGUI = null;
         }
 
-        // ✅ NEW: Snapshot Admin GUI (only if SnapshotManager exists)
+        // Snapshot Admin GUI (only if SnapshotManager exists)
         if (plugin.getSnapshotManager() != null) {
             this.snapshotAdminGUI = new SnapshotAdminGUI(plugin);
         } else {
@@ -114,23 +126,18 @@ public class GUIManager {
     }
 
     /**
-     * ✅ NEW: open ClaimBlocks Exchange (safe wrapper)
+     * ✅ Open ClaimBlocks Exchange (safe wrapper)
      */
     public void openClaimBlockExchange(Player player) {
         if (player == null) return;
 
         if (claimBlockExchangeGUI == null || plugin.exchange() == null) {
-            try {
-                player.sendMessage(color("&cClaimBlocks Exchange is unavailable."));
-            } catch (Throwable ignored) {}
+            try { player.sendMessage(color("&cClaimBlocks Exchange is unavailable.")); } catch (Throwable ignored) {}
             return;
         }
 
-        // Optional config gate (UI already grays out, but this makes it bulletproof)
         boolean enabled = false;
-        try {
-            enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
-        } catch (Throwable ignored) {}
+        try { enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false); } catch (Throwable ignored) {}
 
         if (!enabled) {
             player.sendMessage(color("&cClaimBlocks Exchange is disabled in config.yml."));
@@ -141,23 +148,18 @@ public class GUIManager {
     }
 
     /**
-     * ✅ NEW: open Snapshot Admin GUI (safe wrapper)
+     * ✅ Open Snapshot Admin GUI (safe wrapper)
      */
     public void openSnapshotAdmin(Player player) {
         if (player == null) return;
 
         if (snapshotAdminGUI == null || plugin.getSnapshotManager() == null) {
-            try {
-                player.sendMessage(color("&cSnapshot system is unavailable."));
-            } catch (Throwable ignored) {}
+            try { player.sendMessage(color("&cSnapshot system is unavailable.")); } catch (Throwable ignored) {}
             return;
         }
 
-        // Optional config gate
         boolean enabled = false;
-        try {
-            enabled = plugin.cfg().raw().getBoolean("snapshots.enabled", true);
-        } catch (Throwable ignored) {}
+        try { enabled = plugin.cfg().raw().getBoolean("snapshots.enabled", true); } catch (Throwable ignored) {}
 
         if (!enabled) {
             player.sendMessage(color("&cSnapshots are disabled in config.yml."));
@@ -196,17 +198,17 @@ public class GUIManager {
     public ZoningGUI zoning() { return zoningGUI; }
     public BiomeGUI biomes() { return biomeGUI; }
 
-    // New: Plot Status Codex
+    // Plot Status Codex
     public PlotStatusGUI plotStatus() { return plotStatusGUI; }
 
     // Economy
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
 
-    // ✅ NEW
+    // ✅ ClaimBlocks Exchange
     public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
 
-    // ✅ NEW: Snapshot Admin
+    // ✅ Snapshot Admin
     public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
 
     // ======================================
@@ -218,7 +220,6 @@ public class GUIManager {
         try {
             if (plugin.codex() != null) value = plugin.codex().tr(player, key);
         } catch (Throwable ignored) {}
-
         return safeText(key, value, fallback);
     }
 
@@ -232,6 +233,9 @@ public class GUIManager {
         return safeText(key, value, fb);
     }
 
+    /**
+     * Title (clamped safely to inventory title limits)
+     */
     public String title(Player player, String key, String fallback) {
         String raw = null;
         try {
@@ -239,13 +243,12 @@ public class GUIManager {
         } catch (Throwable ignored) {}
 
         String t = safeText(key, raw, fallback);
-
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
+        return clampInventoryTitle(t, TITLE_MAX);
     }
 
+    /**
+     * Title with placeholders (clamped safely)
+     */
     public String title(Player player, String key, String fallback, Map<String, String> placeholders) {
         String raw = null;
         try {
@@ -254,37 +257,53 @@ public class GUIManager {
 
         String fb = applyPlaceholders(fallback, placeholders);
         String t = safeText(key, raw, fb);
+        return clampInventoryTitle(t, TITLE_MAX);
+    }
 
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-
-        return t;
+    /**
+     * Convenience: build a page suffix and clamp with base title.
+     * Keeps your GUIs consistent and avoids broken color tails.
+     */
+    public String titleWithPageSuffix(Player player, String key, String fallback, int page, int pages) {
+        String base = title(player, key, fallback);
+        String suffix = " §8(" + page + "/" + pages + ")";
+        return clampInventoryTitleWithSuffix(base, suffix, TITLE_MAX);
     }
 
     public List<String> trList(Player player, String key, List<String> fallback) {
+        List<String> out = null;
+
         try {
             if (plugin.codex() != null) {
                 List<String> value = plugin.codex().trList(player, key);
-                if (value != null && !value.isEmpty()) return value;
+                if (value != null && !value.isEmpty()) out = value;
             }
         } catch (Throwable ignored) {}
 
-        return fallback == null ? Collections.emptyList() : fallback;
+        if (out == null) out = (fallback == null ? Collections.emptyList() : fallback);
+
+        // 1.2.6 QoL: always colorize consistently here
+        return colorizeList(out);
     }
 
     public List<String> trList(Player player, String key, List<String> fallback, Map<String, String> placeholders) {
+        List<String> out = null;
+
         try {
             if (plugin.codex() != null) {
                 List<String> value = plugin.codex().trList(player, key, placeholders);
-                if (value != null && !value.isEmpty()) return value;
+                if (value != null && !value.isEmpty()) out = value;
             }
         } catch (Throwable ignored) {}
 
-        if (fallback == null || fallback.isEmpty()) return Collections.emptyList();
+        if (out == null) {
+            if (fallback == null || fallback.isEmpty()) return Collections.emptyList();
+            List<String> applied = new ArrayList<>(fallback.size());
+            for (String line : fallback) applied.add(applyPlaceholders(line, placeholders));
+            out = applied;
+        }
 
-        List<String> out = new ArrayList<>(fallback.size());
-        for (String line : fallback) out.add(applyPlaceholders(line, placeholders));
-        return out;
+        return colorizeList(out);
     }
 
     // ======================================
@@ -335,11 +354,7 @@ public class GUIManager {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (name != null) meta.setDisplayName(color(name));
-            if (lore != null) {
-                List<String> coloredLore = new ArrayList<>();
-                for (String line : lore) coloredLore.add(color(line));
-                meta.setLore(coloredLore);
-            }
+            if (lore != null) meta.setLore(colorizeList(lore));
             meta.addItemFlags(ItemFlag.values());
             item.setItemMeta(meta);
         }
@@ -351,14 +366,16 @@ public class GUIManager {
     }
 
     public static ItemStack getFiller() {
-        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        return FILLER_ITEM.clone();
+    }
+
+    public static boolean isFiller(ItemStack item) {
+        if (item == null) return false;
+        if (item.getType() != Material.GRAY_STAINED_GLASS_PANE) return false;
         ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" ");
-            meta.addItemFlags(ItemFlag.values());
-            item.setItemMeta(meta);
-        }
-        return item;
+        if (meta == null || !meta.hasDisplayName()) return false;
+        String dn = ChatColor.stripColor(meta.getDisplayName());
+        return dn != null && dn.trim().isEmpty();
     }
 
     public static void playClick(Player p) {
@@ -389,6 +406,102 @@ public class GUIManager {
 
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
+
+    private static List<String> colorizeList(List<String> lore) {
+        if (lore == null || lore.isEmpty()) return Collections.emptyList();
+        List<String> out = new ArrayList<>(lore.size());
+        for (String line : lore) out.add(color(line == null ? "" : line));
+        return out;
+    }
+
+    private static ItemStack buildFiller() {
+        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            meta.addItemFlags(ItemFlag.values());
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    /**
+     * Safer title clamp:
+     * - Ensures <= max chars
+     * - Avoids trailing '§'
+     * - Avoids dangling incomplete hex prefix '§x.....' fragments at the end
+     */
+    public static String clampInventoryTitle(String title, int max) {
+        if (title == null) return "";
+        String t = title;
+
+        if (t.length() > max) t = t.substring(0, max);
+
+        // If we cut mid color-code pair, remove the dangling marker.
+        while (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+
+        // If we cut into a hex color sequence (§x§R§R§G§G§B§B), strip the partial tail.
+        int idx = t.lastIndexOf("§x");
+        if (idx >= 0) {
+            int remaining = t.length() - idx;
+            // Full hex sequence length is 14 chars: §x§R§R§G§G§B§B
+            if (remaining < 14) {
+                t = t.substring(0, idx);
+                while (t.endsWith("§")) t = t.substring(0, t.length() - 1);
+            }
+        }
+
+        return t;
+    }
+
+    public static String clampInventoryTitleWithSuffix(String base, String suffix, int max) {
+        if (base == null) base = "";
+        if (suffix == null) suffix = "";
+
+        String combined = base + suffix;
+        if (combined.length() <= max) return clampInventoryTitle(combined, max);
+
+        // If suffix alone is too long, clamp it hard.
+        if (suffix.length() >= max) return clampInventoryTitle(suffix.substring(0, max), max);
+
+        int remainingForBase = max - suffix.length();
+        String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
+
+        // Avoid cutting off a color code marker on the base chunk.
+        while (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
+
+        return clampInventoryTitle(trimmedBase + suffix, max);
+    }
+
+    // ======================================
+    // --- 1.2.6 QoL: PDC Action Helpers ---
+    // ======================================
+
+    public void tagAction(ItemStack item, String action) {
+        if (item == null || action == null || action.isBlank()) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            meta.getPersistentDataContainer().set(keyAction, PersistentDataType.STRING, action.trim().toLowerCase(Locale.ROOT));
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
+
+    public String getAction(ItemStack item) {
+        if (item == null) return null;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            String v = meta.getPersistentDataContainer().get(keyAction, PersistentDataType.STRING);
+            return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    // ======================================
+    // --- LEDGER ITEM ---
+    // ======================================
 
     public ItemStack createLedgerItem(Player p) {
         String title = tr(p, "ledger_title", "&6📜 Domain Registry");

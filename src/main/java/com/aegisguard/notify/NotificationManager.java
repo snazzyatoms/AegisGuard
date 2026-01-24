@@ -22,8 +22,7 @@ import java.util.logging.Level;
 public class NotificationManager {
     private final AegisGuard plugin;
     private final Map<UUID, PlayerNotificationSettings> settingsCache;
-    private FileConfiguration notificationData;
-    private final File dataFile;
+    private File dataFile;
 
     public NotificationManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -35,20 +34,20 @@ public class NotificationManager {
     }
 
     /**
-     * Load notification settings from disk
+     * Load notification settings from disk into cache.
      */
     private void loadData() {
         if (!dataFile.exists()) {
             try {
-                // Ensure folder exists too
-                if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
+                dataFile.getParentFile().mkdirs();
                 dataFile.createNewFile();
             } catch (IOException e) {
                 plugin.getLogger().log(Level.WARNING, "Could not create notifications.yml", e);
+                return;
             }
         }
 
-        notificationData = YamlConfiguration.loadConfiguration(dataFile);
+        FileConfiguration notificationData = YamlConfiguration.loadConfiguration(dataFile);
 
         // Load all settings into cache
         ConfigurationSection playersSection = notificationData.getConfigurationSection("players");
@@ -71,93 +70,100 @@ public class NotificationManager {
     }
 
     /**
-     * Migrate old notification settings from config.yml
+     * Migrate notification settings from config.yml (multiple legacy formats).
      *
-     * Legacy formats we support:
-     * - notifications.<uuid> = "ACTION_BAR"  (mode)
-     * - notifications.<uuid> = true/false    (greetings toggle from older builds)
+     * Legacy sources supported:
+     * 1) notifications.<uuid> = "ACTION_BAR" (mode string)
+     * 2) notifications.<uuid> = true/false (old greetings toggle collision)
+     * 3) player_notifications.players.<uuid>.{mode,greetings,admin_updates}
      */
     private void migrateLegacyData() {
         FileConfiguration config = plugin.getConfig();
-        ConfigurationSection legacySection = config.getConfigurationSection("notifications");
-
-        if (legacySection == null) {
-            return; // No legacy data to migrate
-        }
-
         int migrated = 0;
 
-        for (String uuidString : legacySection.getKeys(false)) {
-            try {
-                UUID playerUUID = UUID.fromString(uuidString);
+        // 1) Newer config-based structure some builds used
+        ConfigurationSection pn = config.getConfigurationSection("player_notifications.players");
+        if (pn != null) {
+            for (String uuidString : pn.getKeys(false)) {
+                try {
+                    UUID playerUUID = UUID.fromString(uuidString);
+                    if (settingsCache.containsKey(playerUUID)) continue;
 
-                // Skip if already migrated
-                if (settingsCache.containsKey(playerUUID)) {
-                    continue;
+                    ConfigurationSection ps = pn.getConfigurationSection(uuidString);
+                    if (ps == null) continue;
+
+                    PlayerNotificationSettings settings = new PlayerNotificationSettings(playerUUID);
+                    settings.setGreetingsEnabled(ps.getBoolean("greetings", true));
+                    settings.setAdminUpdatesEnabled(ps.getBoolean("admin_updates", true));
+                    settings.setMode(NotificationMode.fromString(ps.getString("mode", "ACTION_BAR")));
+
+                    settingsCache.put(playerUUID, settings);
+                    migrated++;
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid UUID in player_notifications.players: " + uuidString);
                 }
+            }
+        }
 
-                Object legacyValue = legacySection.get(uuidString);
+        // 2) Older flat legacy section
+        ConfigurationSection legacySection = config.getConfigurationSection("notifications");
+        if (legacySection != null) {
+            for (String uuidString : legacySection.getKeys(false)) {
+                try {
+                    UUID playerUUID = UUID.fromString(uuidString);
+                    if (settingsCache.containsKey(playerUUID)) continue;
 
-                // Use the shared migration helper (supports String or Boolean)
-                PlayerNotificationSettings settings = PlayerNotificationSettings.fromLegacyConfig(playerUUID, legacyValue);
-                settingsCache.put(playerUUID, settings);
-                migrated++;
+                    Object legacyValue = legacySection.get(uuidString);
 
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Invalid UUID in legacy notifications: " + uuidString);
+                    PlayerNotificationSettings settings = new PlayerNotificationSettings(playerUUID);
+
+                    if (legacyValue instanceof Boolean) {
+                        // Old /aegis notify boolean collision: treat as greetings toggle
+                        settings.setGreetingsEnabled((Boolean) legacyValue);
+                        settings.setMode(NotificationMode.ACTION_BAR);
+                    } else if (legacyValue instanceof String) {
+                        settings.setMode(NotificationMode.fromString((String) legacyValue));
+                        settings.setGreetingsEnabled(true);
+                    }
+
+                    settingsCache.put(playerUUID, settings);
+                    migrated++;
+                } catch (IllegalArgumentException e) {
+                    plugin.getLogger().warning("Invalid UUID in legacy notifications: " + uuidString);
+                }
             }
         }
 
         if (migrated > 0) {
             plugin.getLogger().info("Migrated " + migrated + " legacy notification settings");
-            scheduleSave(); // Persist migrated data (prefer async)
+            saveData();
         }
     }
 
     /**
-     * Save all notification settings to disk
+     * Save all notification settings to disk.
      */
     public void saveData() {
-        if (notificationData == null) {
-            notificationData = YamlConfiguration.loadConfiguration(dataFile);
-        }
+        if (dataFile == null) return;
 
-        // Clear existing data
-        notificationData.set("players", null);
+        YamlConfiguration out = new YamlConfiguration();
+        ConfigurationSection playersSection = out.createSection("players");
 
         // Serialize all settings
-        ConfigurationSection playersSection = notificationData.createSection("players");
         for (Map.Entry<UUID, PlayerNotificationSettings> entry : settingsCache.entrySet()) {
             ConfigurationSection playerSection = playersSection.createSection(entry.getKey().toString());
             entry.getValue().serialize(playerSection);
         }
 
-        // Write to disk
         try {
-            notificationData.save(dataFile);
+            out.save(dataFile);
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not save notifications.yml", e);
         }
     }
 
     /**
-     * Prefer async disk IO if your AegisGuard has runGlobalAsync,
-     * otherwise falls back to sync save safely.
-     */
-    private void scheduleSave() {
-        try {
-            plugin.runGlobalAsync(this::saveData);
-        } catch (Throwable t) {
-            // If runGlobalAsync doesn't exist or fails, do sync.
-            saveData();
-        }
-    }
-
-    /**
      * Get settings for a player (creates defaults if missing)
-     *
-     * @param playerUUID Player UUID
-     * @return Player notification settings
      */
     public PlayerNotificationSettings getSettings(UUID playerUUID) {
         return settingsCache.computeIfAbsent(playerUUID, PlayerNotificationSettings::new);
@@ -165,9 +171,6 @@ public class NotificationManager {
 
     /**
      * Get settings for a player (creates defaults if missing)
-     *
-     * @param player Player
-     * @return Player notification settings
      */
     public PlayerNotificationSettings getSettings(Player player) {
         return getSettings(player.getUniqueId());
@@ -175,19 +178,14 @@ public class NotificationManager {
 
     /**
      * Update settings for a player
-     *
-     * @param settings Updated settings
      */
     public void updateSettings(PlayerNotificationSettings settings) {
         settingsCache.put(settings.getPlayerUUID(), settings);
-        scheduleSave();
+        saveData();
     }
 
     /**
      * Toggle greetings for a player
-     *
-     * @param playerUUID Player UUID
-     * @return New state (true = enabled)
      */
     public boolean toggleGreetings(UUID playerUUID) {
         PlayerNotificationSettings settings = getSettings(playerUUID);
@@ -198,9 +196,6 @@ public class NotificationManager {
 
     /**
      * Toggle admin updates for a player
-     *
-     * @param playerUUID Player UUID
-     * @return New state (true = enabled)
      */
     public boolean toggleAdminUpdates(UUID playerUUID) {
         PlayerNotificationSettings settings = getSettings(playerUUID);
@@ -211,9 +206,6 @@ public class NotificationManager {
 
     /**
      * Cycle notification mode for a player
-     *
-     * @param playerUUID Player UUID
-     * @return New notification mode
      */
     public NotificationMode cycleMode(UUID playerUUID) {
         PlayerNotificationSettings settings = getSettings(playerUUID);
@@ -224,9 +216,6 @@ public class NotificationManager {
 
     /**
      * Set notification mode for a player
-     *
-     * @param playerUUID Player UUID
-     * @param mode       New mode
      */
     public void setMode(UUID playerUUID, NotificationMode mode) {
         PlayerNotificationSettings settings = getSettings(playerUUID);
@@ -236,9 +225,6 @@ public class NotificationManager {
 
     /**
      * Check if player has greetings enabled
-     *
-     * @param playerUUID Player UUID
-     * @return True if greetings enabled
      */
     public boolean hasGreetingsEnabled(UUID playerUUID) {
         return getSettings(playerUUID).isGreetingsEnabled();
@@ -246,9 +232,6 @@ public class NotificationManager {
 
     /**
      * Check if player has admin updates enabled
-     *
-     * @param playerUUID Player UUID
-     * @return True if admin updates enabled
      */
     public boolean hasAdminUpdatesEnabled(UUID playerUUID) {
         return getSettings(playerUUID).isAdminUpdatesEnabled();
@@ -256,9 +239,6 @@ public class NotificationManager {
 
     /**
      * Get notification mode for a player
-     *
-     * @param playerUUID Player UUID
-     * @return Notification mode
      */
     public NotificationMode getMode(UUID playerUUID) {
         return getSettings(playerUUID).getMode();
@@ -266,12 +246,10 @@ public class NotificationManager {
 
     /**
      * Remove settings for a player (cleanup)
-     *
-     * @param playerUUID Player UUID
      */
     public void removeSettings(UUID playerUUID) {
         settingsCache.remove(playerUUID);
-        scheduleSave();
+        saveData();
     }
 
     /**

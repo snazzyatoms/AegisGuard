@@ -174,10 +174,10 @@ public class PlotGreetingListener implements Listener {
         boolean greetings = plugin.getConfig().getBoolean(base + ".greetings", true);
         boolean adminUpdates = plugin.getConfig().getBoolean(base + ".admin_updates", true);
 
-        // ✅ Align default with SettingsGUI
+        // ✅ Align default with SettingsGUI + PlayerNotificationSettings
         String modeRaw = plugin.getConfig().getString(base + ".mode", "ACTION_BAR");
 
-        // Legacy compatibility (until migration is fully rolled out everywhere)
+        // Legacy compatibility (old: notifications.<uuid> could be boolean OR string)
         Object legacy = plugin.getConfig().get("notifications." + uuid);
         if (legacy instanceof Boolean) {
             greetings = (Boolean) legacy;
@@ -190,10 +190,11 @@ public class PlotGreetingListener implements Listener {
     }
 
     private void deliver(Player player, NotificationMode mode, String chatText, String title, String subtitle) {
-        if (mode == null) mode = NotificationMode.CHAT;
+        if (mode == null) mode = NotificationMode.ACTION_BAR;
 
         switch (mode) {
             case ACTION_BAR -> sendActionBar(player, chatText);
+
             case TITLE -> {
                 String t = (title == null || title.trim().isEmpty()) ? "&bEntering" : title;
                 String sub = (subtitle == null || subtitle.trim().isEmpty())
@@ -201,7 +202,8 @@ public class PlotGreetingListener implements Listener {
                         : subtitle;
                 player.sendTitle(color(t), color(sub), 10, 40, 10);
             }
-            case CHAT, default -> {
+
+            case CHAT -> {
                 if (chatText != null && !chatText.trim().isEmpty()) {
                     player.sendMessage(color(chatText));
                 }
@@ -265,7 +267,7 @@ public class PlotGreetingListener implements Listener {
         String title = null;
         String sub = null;
 
-        // For TITLE mode, show a simple leave title (plot doesn’t currently have dedicated leave title fields)
+        // For TITLE mode, show a simple leave title
         if (mode == NotificationMode.TITLE) {
             title = "&7Leaving";
             sub = msg;

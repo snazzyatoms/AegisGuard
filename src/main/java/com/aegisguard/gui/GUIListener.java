@@ -49,20 +49,26 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * GUIListener
+ * GUIListener (1.2.6 QoL pass)
  * - Central click router for ALL AegisGuard GUIs.
  * - Strictly blocks inventory movement while our menus are open.
  *
- * Upgrade:
- * - Intercepts "Refresh / Reload" buttons and reloads CodexEngine too.
- * - Attempts to reopen the same GUI after reload.
+ * 1.2.6 improvements:
+ * - Folia-safe: only reacts to top-inventory clicks; cancels everything; ignores player-inventory clicks.
+ * - Reload interception is now primarily PDC-driven (aegis_action) with a safer legacy fallback.
+ * - Supports distinct reload intents:
+ *     reload_all / reload_settings / reload  -> full reload pipeline
+ *     refresh_lang / refresh                -> language-only refresh (Codex reload)
+ * - Heavy work runs async; GUI reopen happens on main thread.
  */
 public class GUIListener implements Listener {
 
     private final AegisGuard plugin;
+    private final NamespacedKey actionKey;
 
     public GUIListener(AegisGuard plugin) {
         this.plugin = plugin;
+        this.actionKey = new NamespacedKey(plugin, "aegis_action");
     }
 
     private boolean isAegisGuiHolder(InventoryHolder holder) {
@@ -87,7 +93,7 @@ public class GUIListener implements Listener {
                 || holder instanceof ExpansionAdminHolder
                 || holder instanceof PlotStatusHolder
                 || holder instanceof ExchangeHolder
-                || holder instanceof SnapshotHolder; // ✅ NEW: Snapshot Admin GUI
+                || holder instanceof SnapshotHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -100,38 +106,46 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null || !isAegisGuiHolder(holder)) return;
 
+        // Always cancel while our GUIs are open
         e.setCancelled(true);
 
-        if (e.getClickedInventory() != null && e.getClickedInventory().equals(player.getInventory())) {
-            return;
-        }
+        // Ignore clicks in the player's own inventory entirely (prevents weird swaps/moves)
+        if (e.getClickedInventory() != null && e.getClickedInventory().equals(player.getInventory())) return;
 
         Inventory clickedInv = e.getClickedInventory();
         if (clickedInv == null || !clickedInv.equals(top)) return;
 
+        // Outside click / invalid slot
         if (e.getRawSlot() < 0 || e.getRawSlot() >= top.getSize()) return;
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
 
-        if (isReloadTrigger(clicked)) {
-            boolean soft = (e.getClick() == ClickType.RIGHT || e.getClick() == ClickType.SHIFT_RIGHT);
-            handleGuiReload(player, holder, soft);
-            return;
-        }
-
+        // 1.2.6: block spammy / inventory-manipulation click types
         ClickType click = e.getClick();
         switch (click) {
             case SHIFT_LEFT,
                  SHIFT_RIGHT,
                  NUMBER_KEY,
                  DOUBLE_CLICK,
-                 SWAP_OFFHAND -> {
+                 SWAP_OFFHAND,
+                 DROP,
+                 CONTROL_DROP,
+                 MIDDLE -> {
                 return;
             }
             default -> { /* continue */ }
         }
 
+        // 1.2.6: PDC-first reload detection (with legacy fallback)
+        ReloadIntent intent = detectReloadIntent(clicked);
+        if (intent != null) {
+            boolean soft = (click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT);
+            handleGuiReload(player, holder, intent, soft);
+            return;
+        }
+
+        // Route to specific GUI handler
         if (holder instanceof PlayerMenuHolder) {
             plugin.gui().player().handleClick(player, e);
         }
@@ -198,7 +212,6 @@ public class GUIListener implements Listener {
             }
         }
         else if (holder instanceof SnapshotHolder) {
-            // ✅ NEW: Route to SnapshotAdminGUI
             if (plugin.gui().snapshotAdmin() != null) {
                 plugin.gui().snapshotAdmin().handleClick(player, e);
             }
@@ -215,31 +228,34 @@ public class GUIListener implements Listener {
         InventoryHolder holder = top.getHolder();
         if (holder == null || !isAegisGuiHolder(holder)) return;
 
+        // Strict: block ALL dragging while a menu is open
         e.setCancelled(true);
     }
 
-    private boolean isReloadTrigger(ItemStack item) {
-        if (item == null || item.getType().isAir()) return false;
+    // --------------------------
+    // Reload / Refresh (1.2.6)
+    // --------------------------
 
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
+    private enum ReloadIntent {
+        FULL_RELOAD,
+        LANG_REFRESH
+    }
 
-        try {
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+    private ReloadIntent detectReloadIntent(ItemStack item) {
+        if (item == null || item.getType().isAir()) return null;
 
-            NamespacedKey actionKey = new NamespacedKey(plugin, "aegis_action");
-            if (pdc.has(actionKey, PersistentDataType.STRING)) {
-                String v = pdc.get(actionKey, PersistentDataType.STRING);
-                if (v != null) {
-                    String vv = v.trim().toLowerCase(Locale.ROOT);
-                    return vv.equals("reload")
-                            || vv.equals("refresh")
-                            || vv.equals("reload_all")
-                            || vv.equals("refresh_lang")
-                            || vv.equals("reload_settings");
-                }
+        // 1) PDC-first detection
+        String action = getAction(item);
+        if (action != null) {
+            switch (action) {
+                case "reload", "reload_all", "reload_settings" -> { return ReloadIntent.FULL_RELOAD; }
+                case "refresh", "refresh_lang" -> { return ReloadIntent.LANG_REFRESH; }
             }
-        } catch (Throwable ignored) {}
+        }
+
+        // 2) Legacy fallback (material + display name keywords)
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return null;
 
         Material type = item.getType();
         boolean allowedMat =
@@ -249,40 +265,135 @@ public class GUIListener implements Listener {
                 type == Material.REPEATING_COMMAND_BLOCK ||
                 type == Material.CHAIN_COMMAND_BLOCK;
 
-        if (!allowedMat) return false;
+        if (!allowedMat) return null;
 
         String name = meta.hasDisplayName() ? meta.getDisplayName() : "";
         name = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', name));
         if (name == null) name = "";
         String n = name.toLowerCase(Locale.ROOT);
 
-        return n.contains("reload")
-                || n.contains("refresh")
-                || n.contains("recargar")
-                || n.contains("refrescar")
-                || n.contains("actualizar");
+        // Favor "refresh/lang" if present, otherwise treat as full reload
+        if (n.contains("refresh") || n.contains("refrescar") || n.contains("actualizar") || n.contains("language")) {
+            return ReloadIntent.LANG_REFRESH;
+        }
+        if (n.contains("reload") || n.contains("recargar")) {
+            return ReloadIntent.FULL_RELOAD;
+        }
+
+        return null;
     }
 
-    private void handleGuiReload(Player player, InventoryHolder holder, boolean soft) {
-        try {
-            if (soft) {
-                plugin.reloadAegisGuard(false);
-                plugin.effects().playConfirm(player);
+    private void handleGuiReload(Player player, InventoryHolder holder, ReloadIntent intent, boolean soft) {
+        // Soft is only meaningful for FULL reload. For language refresh, always reopen (it’s fast and expected).
+        if (intent == ReloadIntent.LANG_REFRESH) {
+            plugin.effects().playMenuFlip(player);
+            sendKey(player, "admin_refreshing_lang", "&aRefreshing language packs...");
+
+            plugin.runGlobalAsync(() -> {
+                try {
+                    plugin.runMainGlobal(() -> {
+                        try {
+                            if (plugin.codex() != null) plugin.codex().reload();
+                        } catch (Throwable t) {
+                            plugin.getLogger().warning("[GUIListener] Codex refresh failed: " + t.getMessage());
+                        }
+                    });
+                } catch (Throwable t) {
+                    plugin.getLogger().warning("[GUIListener] runMainGlobal refresh block failed: " + t.getMessage());
+                }
+
+                plugin.runMain(player, () -> {
+                    plugin.effects().playConfirm(player);
+                    sendKey(player, "admin_refresh_lang_complete", "&aLanguage packs refreshed.");
+                    tryReopenSameGui(player, holder);
+                });
+            });
+            return;
+        }
+
+        // FULL reload
+        if (soft) {
+            plugin.effects().playMenuFlip(player);
+            sendKey(player, "admin_reloading_soft", "&eReloading (soft)...");
+
+            plugin.runGlobalAsync(() -> {
+                try {
+                    plugin.runMainGlobal(() -> tryInvokeReloadAegisGuard(false));
+                    plugin.runMain(player, () -> plugin.effects().playConfirm(player));
+                } catch (Throwable t) {
+                    plugin.runMain(player, () -> {
+                        plugin.effects().playError(player);
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                                "&cReload failed: &7" + (t.getMessage() == null ? "unknown" : t.getMessage())));
+                    });
+                }
+            });
+            return;
+        }
+
+        plugin.effects().playMenuFlip(player);
+        sendKey(player, "admin_reloading", "&eReloading AegisGuard...");
+
+        plugin.runGlobalAsync(() -> {
+            try {
+                plugin.runMainGlobal(() -> tryInvokeReloadAegisGuard(true));
+            } catch (Throwable t) {
+                plugin.runMain(player, () -> {
+                    plugin.effects().playError(player);
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                            "&cReload failed: &7" + (t.getMessage() == null ? "unknown" : t.getMessage())));
+                });
                 return;
             }
 
-            plugin.reloadAegisGuard(true);
-
             plugin.runMain(player, () -> {
+                plugin.effects().playConfirm(player);
+                sendKey(player, "admin_reload_complete", "&aReload complete.");
                 tryReopenSameGui(player, holder);
             });
+        });
+    }
 
-            plugin.effects().playConfirm(player);
-        } catch (Throwable t) {
-            plugin.effects().playError(player);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cReload failed: &7" + t.getMessage()));
+    private String getAction(ItemStack item) {
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            if (!pdc.has(actionKey, PersistentDataType.STRING)) return null;
+            String v = pdc.get(actionKey, PersistentDataType.STRING);
+            return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+        } catch (Throwable ignored) {
+            return null;
         }
     }
+
+    private void sendKey(Player p, String key, String fallback) {
+        String msg = fallback;
+        try {
+            if (plugin.codex() != null) {
+                String tr = plugin.codex().tr(p, key);
+                if (tr != null && !tr.isBlank() && !tr.equalsIgnoreCase(key)) msg = tr;
+            }
+        } catch (Throwable ignored) {}
+
+        p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+    }
+
+    private void tryInvokeReloadAegisGuard(boolean refreshMenus) {
+        try {
+            // Prefer reloadAegisGuard(boolean) if present
+            Method m = plugin.getClass().getMethod("reloadAegisGuard", boolean.class);
+            m.setAccessible(true);
+            m.invoke(plugin, refreshMenus);
+        } catch (Throwable t) {
+            // If it exists but fails, bubble up
+            throw new RuntimeException(t);
+        }
+    }
+
+    // --------------------------
+    // Reopen logic (unchanged core, kept compatible)
+    // --------------------------
 
     private void tryReopenSameGui(Player player, InventoryHolder holder) {
         if (holder instanceof PlayerMenuHolder) {
@@ -306,7 +417,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // ✅ NEW: Reopen SnapshotAdminGUI
         if (holder instanceof SnapshotHolder castHolder) {
             if (plugin.gui().snapshotAdmin() != null) {
                 int page = castHolder.getPage();

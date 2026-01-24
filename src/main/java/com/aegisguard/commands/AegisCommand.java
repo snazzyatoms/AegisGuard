@@ -822,66 +822,254 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     // Resize
     // --------------------------------------------------
 
-    private void handleResize(Player p, String[] args) {
-        if (args.length < 3) {
-            sendKey(p, "resize_usage", "&cUsage: /aegis resize <direction> <amount>");
-            sendKey(p, "resize_directions", "&eDirections: &f{DIRS}",
-                    Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
-            return;
-        }
-
-        String direction = args[1].toLowerCase(Locale.ROOT);
-
-        int amount;
-        try {
-            amount = Integer.parseInt(args[2]);
-        } catch (NumberFormatException e) {
-            sendKey(p, "amount_must_number", "&cAmount must be a number.");
-            return;
-        }
-
-        if (amount <= 0) {
-            sendKey(p, "amount_must_positive", "&cAmount must be positive.");
-            return;
-        }
-
-        if (!Arrays.asList(RESIZE_DIRECTIONS).contains(direction)) {
-            sendKey(p, "invalid_direction", "&cInvalid direction. Use: &f{DIRS}",
-                    Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
-            return;
-        }
-
-        // ✅ Optional: Show expansion cost preview if fair pricing is enabled
-        Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot != null && plot.getOwner().equals(p.getUniqueId())) {
-            ClaimPricingCalculator pricing = plugin.getPricingCalculator();
-
-            if (pricing != null && pricing.isEnabled() && plugin.eco() != null && plugin.eco().isVaultEnabled()) {
-                // Calculate additional blocks based on direction
-                long currentWidth = Math.abs(plot.getX2() - plot.getX1()) + 1;
-                long currentLength = Math.abs(plot.getZ2() - plot.getZ1()) + 1;
-                long additionalBlocks;
-
-                if (direction.equals("north") || direction.equals("south")) {
-                    additionalBlocks = currentWidth * amount;
-                } else {
-                    additionalBlocks = currentLength * amount;
-                }
-
-                double expansionCost = pricing.calculateExpansionCost(additionalBlocks);
-
-                if (expansionCost > 0) {
-                    String formatted = plugin.eco().format(expansionCost, CurrencyType.VAULT);
-                    sendMsg(p, "&7Expansion cost: &e" + formatted + " &7for &e" + additionalBlocks + " &7blocks");
-                }
-            }
-        }
-
-        plugin.selection().resizePlot(p, direction, amount);
+    
+private void handleResize(Player p, String[] args) {
+    if (args.length < 3) {
+        sendKey(p, "resize_usage", "&cUsage: /aegis resize <direction> <amount>");
+        sendKey(p, "resize_directions", "&eDirections: &f{DIRS}",
+                Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
+        return;
     }
 
-    // --------------------------------------------------
-    // Kick / Ban / Unban
+    String direction = args[1].toLowerCase(Locale.ROOT);
+
+    int amount;
+    try {
+        amount = Integer.parseInt(args[2]);
+    } catch (NumberFormatException e) {
+        sendKey(p, "amount_must_number", "&cAmount must be a number.");
+        return;
+    }
+
+    if (amount <= 0) {
+        sendKey(p, "amount_must_positive", "&cAmount must be positive.");
+        return;
+    }
+
+    if (!Arrays.asList(RESIZE_DIRECTIONS).contains(direction)) {
+        sendKey(p, "invalid_direction", "&cInvalid direction. Use: &f{DIRS}",
+                Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
+        return;
+    }
+
+    Plot plot = plugin.store().getPlotAt(p.getLocation());
+    if (plot == null) {
+        sendKey(p, "no_plot_here", "&c❌ You are not standing inside a claim.");
+        plugin.effects().playError(p);
+        return;
+    }
+
+    boolean canEdit = plot.getOwner().equals(p.getUniqueId()) || plugin.isAdmin(p);
+    if (!canEdit) {
+        sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+        plugin.effects().playError(p);
+        return;
+    }
+
+    // Compute expanded bounds
+    Bounds oldB = Bounds.fromPlot(plot);
+    Bounds newB = oldB.expand(direction, amount);
+
+    // No change guard (shouldn't happen with positive amount, but safe)
+    if (newB.equals(oldB)) {
+        sendKey(p, "resize_no_change", "&eNothing changed.");
+        return;
+    }
+
+    // Limit guard (uses same max radius as claiming)
+    boolean bypassLimits = plugin.isAdmin(p)
+            || p.hasPermission("aegis.admin.bypass")
+            || p.hasPermission("aegis.admin.bypass-limits")
+            || plugin.isBypassing(p);
+
+    int limitRadius = plugin.cfg().raw().getInt("claims.max_radius", 200);
+    if (newB.radius() > limitRadius && !bypassLimits) {
+        sendKey(p, "resize-fail-max-area", "&c❌ Resize failed: exceeds maximum claim size.");
+        plugin.effects().playError(p);
+        return;
+    }
+
+    // Internal overlap checks (other Aegis plots)
+    String worldName = plot.getWorld();
+    if (intersectsOtherPlot(worldName, plot.getId(), newB) && !bypassLimits) {
+        sendKey(p, "claim_overlap", "&c❌ Resize failed: overlaps another claim.");
+        plugin.effects().playError(p);
+        return;
+    }
+
+    // External protection checks (WorldGuard, etc.)
+    if (!bypassLimits && plugin.protectionHooks() != null) {
+        try {
+            Object pol = plugin.protectionHooks().getOverlapPolicy();
+            boolean aegisWins = (pol != null && "AEGIS_WINS".equalsIgnoreCase(String.valueOf(pol)));
+
+            if (!aegisWins && plugin.protectionHooks().isAreaProtectedElsewhere(
+                    worldName, newB.minX(), newB.minZ(), newB.maxX(), newB.maxZ())) {
+                sendKey(p, "claim_denied_external_generic",
+                        "&c⛔ Resize denied: protected by another plugin.");
+                plugin.effects().playError(p);
+                return;
+            }
+        } catch (Throwable ignored) {
+            // If the protection hook errors, fail open for stability (but only for admins/bypass).
+            if (!bypassLimits) {
+                sendKey(p, "claim_denied_external_generic",
+                        "&c⛔ Resize denied: protected by another plugin.");
+                plugin.effects().playError(p);
+                return;
+            }
+        }
+    }
+
+    long oldArea = oldB.area();
+    long newArea = newB.area();
+    long added = newArea - oldArea;
+
+    if (added <= 0) {
+        sendKey(p, "resize_no_gain", "&eThat resize would not add any land.");
+        return;
+    }
+
+    // Economy checks (matches claim precedence: ClaimBlocks first, then Vault)
+    boolean useClaimBlocks = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)
+            && plugin.getClaimBlockManager() != null;
+
+    boolean useVault = plugin.cfg().raw().getBoolean("economy.enabled", true)
+            && plugin.cfg().raw().getBoolean("economy.use_vault", true)
+            && plugin.cfg().raw().getBoolean("economy.vault.enabled", true)
+            && plugin.eco() != null
+            && plugin.eco().isVaultEnabled();
+
+    ClaimPricingCalculator pricing = plugin.getPricingCalculator();
+
+    // Preview / charge
+    if (!bypassLimits) {
+        if (useClaimBlocks) {
+            ClaimBlockManager mgr = plugin.getClaimBlockManager();
+
+            long blockCost = (pricing != null && pricing.isEnabled())
+                    ? pricing.calculateClaimBlockCost(added)
+                    : added;
+
+            if (!mgr.canAfford(p.getUniqueId(), blockCost)) {
+                long missing = blockCost - mgr.getAvailableBlocks(p.getUniqueId());
+                sendKey(p, "claim_blocks_not_enough",
+                        "&c❌ You need {AMOUNT} more Claim Blocks.",
+                        Map.of("AMOUNT", String.valueOf(missing)));
+                plugin.effects().playError(p);
+                return;
+            }
+
+            // Optional hint line (QoL)
+            if (blockCost > added) {
+                sendMsg(p, "&7Resize cost (with multiplier): &c" + blockCost + " &7claim blocks");
+            } else {
+                sendMsg(p, "&7Resize cost: &b" + blockCost + " &7claim blocks");
+            }
+
+        } else if (useVault) {
+            double cost = (pricing != null && pricing.isEnabled())
+                    ? pricing.calculateExpansionCost(added)
+                    : (added * plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0));
+
+            if (cost > 0.0D) {
+                if (!plugin.eco().canAfford(p, cost, CurrencyType.VAULT)) {
+                    String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
+                    sendKey(p, "claim_cannot_afford",
+                            "&c❌ You need {COST} to claim this area.",
+                            Map.of("COST", formatted));
+                    plugin.effects().playError(p);
+                    return;
+                }
+
+                // Show preview line
+                sendMsg(p, "&7Resize cost: &e" + plugin.eco().format(cost, CurrencyType.VAULT)
+                        + " &7for &e" + added + " &7blocks");
+
+                // Withdraw now to avoid free resize if save fails later
+                plugin.eco().withdraw(p, cost, CurrencyType.VAULT);
+            }
+        }
+    }
+
+    // Apply + save
+    plot.setBounds(newB.minX(), newB.minZ(), newB.maxX(), newB.maxZ());
+    plugin.store().savePlot(plot);
+    plugin.store().setDirty(true);
+
+    sendKey(p, "resize_success",
+            "&a✔ Claim resized. &7(Added: &e{ADDED}&7 blocks)",
+            Map.of("ADDED", String.valueOf(added)));
+    plugin.effects().playConfirm(p);
+}
+
+/**
+ * Lightweight rectangle helper for resize math (kept local for stability).
+ */
+private record Bounds(int minX, int minZ, int maxX, int maxZ) {
+
+    static Bounds fromPlot(Plot p) {
+        int mnX = Math.min(p.getX1(), p.getX2());
+        int mxX = Math.max(p.getX1(), p.getX2());
+        int mnZ = Math.min(p.getZ1(), p.getZ2());
+        int mxZ = Math.max(p.getZ1(), p.getZ2());
+        return new Bounds(mnX, mnZ, mxX, mxZ);
+    }
+
+    Bounds expand(String dir, int amt) {
+        int mnX = minX, mxX = maxX, mnZ = minZ, mxZ = maxZ;
+
+        switch (dir.toLowerCase(Locale.ROOT)) {
+            case "north" -> mnZ -= amt; // -Z
+            case "south" -> mxZ += amt; // +Z
+            case "west" -> mnX -= amt;  // -X
+            case "east" -> mxX += amt;  // +X
+        }
+
+        return new Bounds(mnX, mnZ, mxX, mxZ);
+    }
+
+    long area() {
+        long w = (long) (maxX - minX) + 1L;
+        long d = (long) (maxZ - minZ) + 1L;
+        return w * d;
+    }
+
+    int radius() {
+        int w = (maxX - minX) + 1;
+        int d = (maxZ - minZ) + 1;
+        return Math.max(w, d);
+    }
+
+    int minX() { return minX; }
+    int minZ() { return minZ; }
+    int maxX() { return maxX; }
+    int maxZ() { return maxZ; }
+}
+
+private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds) {
+    try {
+        for (Plot other : plugin.store().getPlotsInWorld(worldName)) {
+            if (other == null) continue;
+            if (selfId != null && selfId.equals(other.getId())) continue;
+
+            Bounds ob = Bounds.fromPlot(other);
+
+            boolean overlap = bounds.minX() <= ob.maxX()
+                    && bounds.maxX() >= ob.minX()
+                    && bounds.minZ() <= ob.maxZ()
+                    && bounds.maxZ() >= ob.minZ();
+
+            if (overlap) return true;
+        }
+    } catch (Throwable ignored) {}
+    return false;
+}
+
+// --------------------------------------------------
+// Kick / Ban / Unban
+// --------------------------------------------------
+
     // --------------------------------------------------
 
     private void handleKick(Player p, String[] args) {
@@ -1073,40 +1261,55 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     // Market
     // --------------------------------------------------
 
-    private void handleSell(Player p, String[] args) {
-        Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
-            return;
-        }
-        if (args.length < 2) {
-            sendKey(p, "sell_usage", "&cUsage: /ag sell <price>");
-            return;
-        }
-
-        try {
-            double price = Double.parseDouble(args[1]);
-            if (price <= 0) {
-                sendKey(p, "price_must_positive", "&cPrice must be positive.");
-                return;
-            }
-
-            plot.setForSale(true, price);
-
-            plugin.store().savePlot(plot);
-            plugin.store().setDirty(true);
-
-            String formatted = plugin.eco().format(price, CurrencyType.VAULT);
-
-            sendKey(p, "market-for-sale", "&a✔ Claim listed for &6{PRICE}&a.",
-                    Map.of("PRICE", formatted));
-
-        } catch (NumberFormatException e) {
-            sendKey(p, "invalid_number", "&cInvalid number.");
-        }
+    
+private void handleSell(Player p, String[] args) {
+    Plot plot = plugin.store().getPlotAt(p.getLocation());
+    if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+        sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+        return;
+    }
+    if (args.length < 2) {
+        sendKey(p, "sell_usage", "&cUsage: /ag sell <price>");
+        return;
     }
 
-    private void handleUnsell(Player p) {
+    // Plot sale price is stored as an integer for stability across storage backends.
+    int price;
+    try {
+        double parsed = Double.parseDouble(args[1]);
+        if (parsed <= 0) {
+            sendKey(p, "price_must_positive", "&cPrice must be positive.");
+            return;
+        }
+        price = (int) Math.round(parsed);
+    } catch (NumberFormatException e) {
+        sendKey(p, "invalid_number", "&cInvalid number.");
+        return;
+    }
+
+    if (price <= 0) {
+        sendKey(p, "price_must_positive", "&cPrice must be positive.");
+        return;
+    }
+
+    plot.setForSale(true, price);
+
+    plugin.store().savePlot(plot);
+    plugin.store().setDirty(true);
+
+    String formatted;
+    if (plugin.eco() != null && plugin.eco().isVaultEnabled()) {
+        formatted = plugin.eco().format((double) price, CurrencyType.VAULT);
+    } else {
+        formatted = String.valueOf(price);
+    }
+
+    sendKey(p, "market-for-sale", "&a✔ Claim listed for &6{PRICE}&a.",
+            Map.of("PRICE", formatted));
+}
+
+private void handleUnsell(Player p) {
+(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");

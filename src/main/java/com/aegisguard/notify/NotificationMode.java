@@ -31,7 +31,7 @@ public enum NotificationMode {
     }
 
     /**
-     * Get the config.yml storage value
+     * Get the config storage value
      */
     public String getConfigValue() {
         return configValue;
@@ -45,7 +45,7 @@ public enum NotificationMode {
     }
 
     /**
-     * Parse from config string with safe fallback
+     * Parse from config string with safe fallback.
      *
      * @param value Config value (case-insensitive)
      * @return Matching mode or ACTION_BAR default
@@ -66,24 +66,28 @@ public enum NotificationMode {
     }
 
     /**
-     * Cycle to the next notification mode
-     *
-     * @return Next mode in sequence (wraps around)
+     * Cycle to the next notification mode.
+     * Matches SettingsGUI:
+     * CHAT -> ACTION_BAR -> TITLE -> CHAT
      */
     public NotificationMode next() {
-        NotificationMode[] modes = values();
-        int nextIndex = (this.ordinal() + 1) % modes.length;
-        return modes[nextIndex];
+        return switch (this) {
+            case CHAT -> ACTION_BAR;
+            case ACTION_BAR -> TITLE;
+            case TITLE -> CHAT;
+        };
     }
 
     /**
-     * Cycle to the previous notification mode
-     *
-     * @return Previous mode in sequence (wraps around)
+     * Cycle to the previous notification mode.
+     * Reverse of SettingsGUI:
+     * CHAT <- ACTION_BAR <- TITLE <- CHAT
      */
     public NotificationMode previous() {
-        NotificationMode[] modes = values();
-        int prevIndex = (this.ordinal() - 1 + modes.length) % modes.length;
-        return modes[prevIndex];
+        return switch (this) {
+            case CHAT -> TITLE;
+            case TITLE -> ACTION_BAR;
+            case ACTION_BAR -> CHAT;
+        };
     }
 }

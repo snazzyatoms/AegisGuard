@@ -16,7 +16,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -28,11 +27,12 @@ import java.util.Map;
  * ✅ Title fix: uses plugin.gui().title(...) + safe suffix clamp
  * ✅ Click fix: prevents filler arrows from paging
  * ✅ Bottom inventory ignored
+ * ✅ 1.2.6 QOL: respects travel/visit toggles + access re-check on teleport
  */
 public class VisitGUI {
 
     private final AegisGuard plugin;
-    private final int PLOTS_PER_PAGE = 45;
+    private static final int PLOTS_PER_PAGE = 45;
 
     public VisitGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -76,6 +76,19 @@ public class VisitGUI {
         String msg = t(p, key, fallback);
         if (msg == null || msg.isBlank()) return;
         p.sendMessage(GUIManager.color(msg));
+    }
+
+    private boolean canTeleport(Player p) {
+        // Extra safety for live reloads: command gate may be bypassed if GUI is already open.
+        if (plugin.cfg() != null && !plugin.cfg().isTravelSystemEnabled()) {
+            sendSystem(p, "travel_system_disabled", "&cTravel System is disabled.");
+            return false;
+        }
+        if (plugin.cfg() != null && !plugin.cfg().allowVisitTeleport()) {
+            sendSystem(p, "visit_teleport_disabled", "&cVisiting is currently disabled.");
+            return false;
+        }
+        return true;
     }
 
     // --------------------------------------------------
@@ -176,7 +189,7 @@ public class VisitGUI {
                 );
             } else {
                 // Trusted Plot
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(plot.getOwner());
+                OfflinePlayer owner = (plot.getOwner() != null) ? Bukkit.getOfflinePlayer(plot.getOwner()) : null;
                 String role = safeRole(plot.getRole(player.getUniqueId()));
                 String ownerName = (plot.getOwnerName() != null) ? plot.getOwnerName() : "Unknown";
                 String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
@@ -186,7 +199,9 @@ public class VisitGUI {
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
                 if (meta != null) {
-                    try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
+                    if (owner != null) {
+                        try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
+                    }
 
                     // Display name
                     String dnRaw = null;
@@ -212,7 +227,7 @@ public class VisitGUI {
                         if (line == null) continue;
                         lore.add(GUIManager.color(
                                 line.replace("{WORLD}", worldName)
-                                    .replace("{ROLE}", role)
+                                        .replace("{ROLE}", role)
                         ));
                     }
 
@@ -307,10 +322,33 @@ public class VisitGUI {
         // Teleport
         if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() != Material.AIR) {
             int index = (holder.getPage() * PLOTS_PER_PAGE) + slot;
-            if (index >= holder.getPlots().size()) return;
+            if (index < 0 || index >= holder.getPlots().size()) return;
 
             Plot plot = holder.getPlots().get(index);
             if (plot == null) return;
+
+            // 1.2.6 QOL: re-check access before teleporting (trust/warp might have changed)
+            if (warps) {
+                if (!plot.isServerWarp()) {
+                    sendSystem(player, "visit_not_available", "&cThat waypoint is no longer available.");
+                    plugin.effects().playError(player);
+                    open(player, holder.getPage(), true);
+                    return;
+                }
+            } else {
+                if (plot.getPlayerRoles() == null || !plot.getPlayerRoles().containsKey(player.getUniqueId())
+                        || (plot.getOwner() != null && plot.getOwner().equals(player.getUniqueId()))) {
+                    sendSystem(player, "visit_not_trusted", "&cYou are no longer trusted on that plot.");
+                    plugin.effects().playError(player);
+                    open(player, holder.getPage(), false);
+                    return;
+                }
+            }
+
+            if (!canTeleport(player)) {
+                plugin.effects().playError(player);
+                return;
+            }
 
             Location target = plot.getSpawnLocation() != null
                     ? plot.getSpawnLocation()
@@ -322,11 +360,12 @@ public class VisitGUI {
                 return;
             }
 
-            TeleportUtil.safeTeleport(plugin, player, target);
+            // Close first to avoid double-click spam and to keep Folia-safe teleport predictable
+            player.closeInventory();
 
+            TeleportUtil.safeTeleport(plugin, player, target);
             sendSystem(player, "visit_teleport_success", "&aTeleported.");
             plugin.effects().playTeleport(player);
-            player.closeInventory();
         }
     }
 

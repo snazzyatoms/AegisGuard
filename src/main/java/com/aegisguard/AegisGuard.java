@@ -27,8 +27,8 @@ import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.migration.MigrationManager;
 import com.aegisguard.notify.NotificationManager;
-import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.protection.BlockProtectionListener;
+import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.selection.WandSafetyListener;
 import com.aegisguard.snapshots.SnapshotManager;
@@ -37,13 +37,22 @@ import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -162,6 +171,7 @@ public class AegisGuard extends JavaPlugin {
 
     // Notification Manager getter (1.2.6+)
     public NotificationManager getNotificationManager() { return notificationManager; }
+    public NotificationManager notifications() { return notificationManager; }
 
     /**
      * Legacy access (compat bridge).
@@ -183,7 +193,7 @@ public class AegisGuard extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        // --- 1. ROBUST FOLIA DETECTION (1.21+ Supported) ---
+        // --- 1) Folia detection (safe) ---
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
@@ -194,6 +204,7 @@ public class AegisGuard extends JavaPlugin {
         }
 
         saveDefaultConfig();
+        ensureLocalizationFiles();
 
         // --- CONFIG + MESSAGES ---
         configMgr = new AGConfig(this);
@@ -218,6 +229,15 @@ public class AegisGuard extends JavaPlugin {
         snapshotManager = new SnapshotManager(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
+
+        // Notification Manager (1.2.6+) - per-player notification preferences
+        try {
+            this.notificationManager = new NotificationManager(this);
+            getLogger().info("Notification Manager initialized.");
+        } catch (Throwable t) {
+            this.notificationManager = null;
+            getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
+        }
 
         // ClaimBlocks (1.2.4+)
         claimBlockManager = new ClaimBlockManager(this);
@@ -247,20 +267,23 @@ public class AegisGuard extends JavaPlugin {
             admin.setTabCompleter(adminCmd);
         }
 
-        // Notification Manager (1.2.6+)
-        try {
-            this.notificationManager = new NotificationManager(this);
-            getLogger().info("Notification Manager initialized.");
-        } catch (Throwable t) {
-            this.notificationManager = null;
-            getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
-        }
-
-        // Load async data
+        // Load async data (safe)
         runGlobalAsync(() -> {
-            if (messages != null) messages.loadPlayerPreferences();
-            if (expansionManager != null) expansionManager.load();
-            if (snapshotManager != null) snapshotManager.load();
+            try {
+                if (messages != null) messages.loadPlayerPreferences();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (expansionManager != null) expansionManager.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (snapshotManager != null) snapshotManager.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (notificationManager != null) notificationManager.loadData();
+            } catch (Throwable ignored) {}
         });
 
         // Register Events
@@ -271,17 +294,16 @@ public class AegisGuard extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
-
         Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
-
         Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
-
         Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
 
-        // --- TASKS ---
-        new ClaimBlockTask(this).start();
-        new MobBarrierTask(this).start();
-        new WildernessRevertTask(this).start();
+        // Tasks (robust + cancelable)
+        startAutoSaver();
+        startUpkeepTask();
+        startWildernessRevertTask();
+        startMobBarrierTask();
+        startClaimBlockTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -293,7 +315,44 @@ public class AegisGuard extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (plotStore != null) plotStore.save();
+        // Cancel tasks safely
+        cancelTaskReflectively(autoSaveTask);
+        cancelTaskReflectively(upkeepTask);
+        cancelTaskReflectively(wildernessRevertTask);
+        cancelTaskReflectively(mobBarrierTask);
+        cancelTaskReflectively(claimBlockTask);
+
+        // Save plot + player data safely
+        try {
+            if (plotStore != null) plotStore.saveSync();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save plot store: " + t.getMessage());
+        }
+
+        try {
+            if (claimBlockManager != null) claimBlockManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save claim blocks: " + t.getMessage());
+        }
+
+        try {
+            if (snapshotManager != null) snapshotManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save snapshots: " + t.getMessage());
+        }
+
+        try {
+            if (expansionManager != null) expansionManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save expansion requests: " + t.getMessage());
+        }
+
+        // Save player data
+        if (messages != null) messages.savePlayerData();
+
+        // Save notification prefs
+        if (notificationManager != null) notificationManager.saveData();
+
         getLogger().info("AegisGuard disabled.");
     }
 
@@ -318,6 +377,8 @@ public class AegisGuard extends JavaPlugin {
     /**
      * Toggle runtime bypass mode for this player.
      * Requires permissions (checked by the caller command).
+     *
+     * @return true if bypass is now enabled, false if disabled
      */
     public boolean toggleBypass(Player player) {
         if (player == null) return false;
@@ -333,9 +394,6 @@ public class AegisGuard extends JavaPlugin {
     /**
      * Check if sounds are enabled for a player.
      * Checks global config first, then player-specific preference.
-     *
-     * @param player The player to check
-     * @return true if sounds are enabled for this player
      */
     public boolean isSoundEnabled(Player player) {
         if (player == null) return false;
@@ -350,8 +408,15 @@ public class AegisGuard extends JavaPlugin {
     }
 
     // ---------------------------------------------------------------------
-    // Schedulers (Folia 1.21+ compatible)
+    // Schedulers (Folia compatible) + 1.2.5 compat wrappers
     // ---------------------------------------------------------------------
+
+    /**
+     * 1.2.5 compat: run on main thread (Bukkit) or global region (Folia).
+     */
+    public void runMainGlobal(Runnable task) {
+        runSync(task);
+    }
 
     /**
      * Run a task on the main thread (Bukkit) or global region (Folia).
@@ -376,10 +441,6 @@ public class AegisGuard extends JavaPlugin {
 
     /**
      * Run a task on the entity's region (Folia) or main thread (Bukkit).
-     * This is the correct way to schedule tasks that interact with a specific player.
-     *
-     * @param player The player whose region the task should run on
-     * @param task   The task to run
      */
     public void runMain(Player player, Runnable task) {
         if (player == null || task == null) return;
@@ -397,16 +458,12 @@ public class AegisGuard extends JavaPlugin {
             Method runMethod = entityScheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
             runMethod.invoke(entityScheduler, this, (Consumer<Object>) scheduledTask -> task.run(), (Runnable) null);
         } catch (Throwable t) {
-            // Fallback to global scheduler
             Bukkit.getScheduler().runTask(this, task);
         }
     }
 
     /**
      * Run a task asynchronously on the global region.
-     * This is the preferred method for async operations that don't need entity context.
-     *
-     * @param task The task to run
      */
     public void runGlobalAsync(Runnable task) {
         if (task == null) return;
@@ -424,34 +481,215 @@ public class AegisGuard extends JavaPlugin {
             Method runNow = asyncScheduler.getClass().getMethod("runNow", Plugin.class, Consumer.class);
             runNow.invoke(asyncScheduler, this, (Consumer<Object>) scheduledTask -> task.run());
         } catch (Throwable t) {
-            // Fallback
             Bukkit.getScheduler().runTaskAsynchronously(this, task);
         }
     }
 
     /**
-     * Run a task later on the main thread (Bukkit) or global region (Folia).
+     * Run a task asynchronously (compat wrapper).
      */
-    public BukkitTask runLater(long ticks, Runnable task) {
-        if (!isFolia) {
-            return Bukkit.getScheduler().runTaskLater(this, task, ticks);
-        }
-
-        try {
-            Method getGlobalRegionScheduler = Bukkit.getServer().getClass().getMethod("getGlobalRegionScheduler");
-            Object scheduler = getGlobalRegionScheduler.invoke(Bukkit.getServer());
-
-            Method runDelayed = scheduler.getClass().getMethod("runDelayed", Plugin.class, Consumer.class, long.class);
-            return (BukkitTask) runDelayed.invoke(scheduler, this, (Consumer<Object>) scheduledTask -> task.run(), ticks);
-        } catch (Throwable t) {
-            return Bukkit.getScheduler().runTaskLater(this, task, ticks);
-        }
+    public void runAsync(Runnable task) {
+        runGlobalAsync(task);
     }
 
     /**
-     * Run a task asynchronously.
+     * Reload config + services. 1.2.5 behavior preserved, 1.2.6 additions included.
      */
-    public void runAsync(Runnable task) {
-        Bukkit.getScheduler().runTaskAsynchronously(this, task);
+    public void reloadAegisGuard(boolean refreshGuis) {
+        reloadConfig();
+
+        if (configMgr != null) configMgr.reload();
+        if (worldRules != null) worldRules.reload();
+        if (messages != null) messages.reload();
+
+        // Reload notification preferences
+        try {
+            this.notificationManager = new NotificationManager(this);
+        } catch (Throwable t) {
+            this.notificationManager = null;
+        }
+
+        if (refreshGuis) {
+            runMainGlobal(this::closeAllAegisGUIs);
+        }
+
+        getLogger().info("AegisGuard reloaded successfully.");
+    }
+
+    // ---------------------------------------------------------------------
+    // Task starters (stable + cancelable)
+    // ---------------------------------------------------------------------
+
+    private void startAutoSaver() {
+        long intervalSeconds = getConfig().getLong("storage.autosave_seconds", 300L);
+        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+
+        autoSaveTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    if (plotStore != null) plotStore.save();
+                    if (claimBlockManager != null) claimBlockManager.save();
+                    if (snapshotManager != null) snapshotManager.save();
+                    if (expansionManager != null) expansionManager.save();
+                    if (messages != null) messages.savePlayerData();
+                    if (notificationManager != null) notificationManager.saveData();
+                } catch (Throwable t) {
+                    getLogger().warning("Auto-save error: " + t.getMessage());
+                }
+            }
+        }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+    }
+
+    private void startUpkeepTask() {
+        long intervalSeconds = getConfig().getLong("economy.upkeep.interval_seconds", 3600L);
+        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+
+        upkeepTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    if (ecoManager == null) return;
+                    if (!ecoManager.isVaultEnabled()) return;
+
+                    plotStore.getAllPlots().forEach(plot -> {
+                        try {
+                            double upkeep = getConfig().getDouble("economy.upkeep.cost", 0.0);
+                            if (upkeep <= 0) return;
+
+                            if (plot != null && plot.getOwner() != null) {
+                                if (!ecoManager.withdraw(plot.getOwner(), upkeep)) {
+                                    // If configured, unclaim plots on non-payment (optional)
+                                    boolean unclaim = getConfig().getBoolean("economy.upkeep.unclaim_on_fail", false);
+                                    if (unclaim) {
+                                        plotStore.removePlot(plot.getId());
+                                    }
+                                }
+                            }
+                        } catch (Throwable ignored) {}
+                    });
+                } catch (Throwable t) {
+                    getLogger().warning("Upkeep task error: " + t.getMessage());
+                }
+            }
+        }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+    }
+
+    private void startWildernessRevertTask() {
+        boolean enabled = getConfig().getBoolean("wilderness_revert.enabled", false);
+        if (!enabled) return;
+
+        long intervalSeconds = getConfig().getLong("wilderness_revert.interval_seconds", 300L);
+        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+
+        WildernessRevertTask logic = new WildernessRevertTask(this);
+
+        wildernessRevertTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    logic.run();
+                } catch (Throwable t) {
+                    getLogger().warning("Wilderness revert task error: " + t.getMessage());
+                }
+            }
+        }.runTaskTimer(this, intervalTicks, intervalTicks);
+    }
+
+    private void startMobBarrierTask() {
+        boolean enabled = getConfig().getBoolean("mob_barrier.enabled", false);
+        if (!enabled) return;
+
+        long intervalSeconds = getConfig().getLong("mob_barrier.interval_seconds", 5L);
+        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+
+        MobBarrierTask logic = new MobBarrierTask(this);
+
+        mobBarrierTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    logic.run();
+                } catch (Throwable t) {
+                    getLogger().warning("Mob barrier task error: " + t.getMessage());
+                }
+            }
+        }.runTaskTimer(this, intervalTicks, intervalTicks);
+    }
+
+    private void startClaimBlockTask() {
+        boolean enabled = getConfig().getBoolean("claim_blocks.enabled", true);
+        if (!enabled) return;
+
+        long intervalSeconds = getConfig().getLong("claim_blocks.task.interval_seconds", 60L);
+        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+
+        ClaimBlockTask logic = new ClaimBlockTask(this);
+
+        claimBlockTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    logic.run();
+                } catch (Throwable t) {
+                    getLogger().warning("ClaimBlock task error: " + t.getMessage());
+                }
+            }
+        }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+    }
+
+    private void cancelTaskReflectively(Object task) {
+        if (task == null) return;
+        try {
+            if (task instanceof BukkitTask bt) {
+                bt.cancel();
+                return;
+            }
+            Method cancel = task.getClass().getMethod("cancel");
+            cancel.invoke(task);
+        } catch (Throwable ignored) {}
+    }
+
+    private void closeAllAegisGUIs() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            try {
+                Inventory top = p.getOpenInventory().getTopInventory();
+                if (top == null) continue;
+
+                InventoryHolder holder = top.getHolder();
+                if (holder == null) continue;
+
+                String hn = holder.getClass().getName();
+                if (hn.startsWith("com.aegisguard.gui")) {
+                    p.closeInventory();
+                }
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    private void ensureLocalizationFiles() {
+        // Keep these synced with your /resources packs.
+        List<String> packs = Arrays.asList(
+                "language/system.yml",
+                "language/gui.yml",
+                "language/tasks.yml",
+                "language/roles.yml"
+        );
+
+        for (String rel : packs) {
+            try {
+                File out = new File(getDataFolder(), rel);
+                if (out.exists()) continue;
+
+                out.getParentFile().mkdirs();
+
+                try (InputStream in = getResource(rel)) {
+                    if (in == null) continue;
+                    Files.copy(in, out.toPath());
+                }
+            } catch (Throwable t) {
+                getLogger().warning("Failed to write language file: " + rel + " (" + t.getMessage() + ")");
+            }
+        }
     }
 }

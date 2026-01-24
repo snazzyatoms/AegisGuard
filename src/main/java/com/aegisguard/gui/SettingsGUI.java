@@ -22,9 +22,11 @@ import java.util.UUID;
  * - Language cycling uses CodexEngine style order (codex.yml or config).
  * - ✅ Persistence is handled by CodexEngine (config.yml), NOT MessagesUtil.
  *
- * IMPORTANT:
- * - ❌ No admin tools in this menu anymore.
- *   Admin-only actions belong in AdminGUI.
+ * 1.2.6 QOL:
+ * - Bulletproof top-inventory gating (no bottom-inventory misfires)
+ * - Reload-safe null guards (cfg/codex/notification manager may be null mid-reload)
+ * - Consistent save + reopen pattern (prevents flicker/cursor snap)
+ * - Keeps legacy compatibility with old notifications.<uuid> boolean/string
  */
 public class SettingsGUI {
 
@@ -57,6 +59,19 @@ public class SettingsGUI {
         return plugin.gui().trList(p, key, fallback);
     }
 
+    private void reopenNextTick(Player player, Plot plot) {
+        // Prevents flash + cursor snapping (especially noticeable on some clients)
+        plugin.runMain(player, () -> open(player, plot));
+    }
+
+    private void saveConfigSafe() {
+        try {
+            plugin.saveConfig();
+        } catch (Throwable t) {
+            try { plugin.getLogger().warning("[SettingsGUI] saveConfig failed: " + t.getMessage()); } catch (Throwable ignored) {}
+        }
+    }
+
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
@@ -74,7 +89,11 @@ public class SettingsGUI {
         // --------------------------------------------------
         // 1) SOUNDS (Slot 10)
         // --------------------------------------------------
-        boolean globalEnabled = plugin.cfg().globalSoundsEnabled();
+        boolean globalEnabled = true;
+        try {
+            if (plugin.cfg() != null) globalEnabled = plugin.cfg().globalSoundsEnabled();
+        } catch (Throwable ignored) {}
+
         if (!globalEnabled) {
             inv.setItem(10, GUIManager.createItem(
                     Material.BARRIER,
@@ -83,7 +102,8 @@ public class SettingsGUI {
                             List.of("&7A server admin has disabled UI sounds."))
             ));
         } else {
-            boolean soundsEnabled = plugin.isSoundEnabled(player);
+            boolean soundsEnabled = false;
+            try { soundsEnabled = plugin.isSoundEnabled(player); } catch (Throwable ignored) {}
 
             String soundsName = soundsEnabled
                     ? t(player, "settings_sounds_on_name", "&aSounds: ON")
@@ -100,37 +120,47 @@ public class SettingsGUI {
         // --------------------------------------------------
         // 2) LANGUAGE (Slot 13)
         // --------------------------------------------------
-        String currentStyle = "old_english";
+        if (plugin.codex() == null) {
+            inv.setItem(13, GUIManager.createItem(
+                    Material.BARRIER,
+                    t(player, "settings_language_unavailable_name", "&cLanguage Switching Unavailable"),
+                    tl(player, "settings_language_unavailable_lore",
+                            List.of("&7Codex language engine is not loaded."))
+            ));
+        } else {
+            String currentStyle = "old_english";
+            try { currentStyle = plugin.codex().getPlayerStyle(player); } catch (Throwable ignored) {}
+
+            String langDisplay = formatStyle(player, currentStyle);
+
+            inv.setItem(13, GUIManager.createItem(
+                    Material.WRITABLE_BOOK,
+                    t(player,
+                            "settings_language_name",
+                            "&eLanguage: {LANG}",
+                            Map.of("LANG", langDisplay)
+                    ),
+                    tl(player, "settings_language_lore",
+                            List.of("&7Click to cycle language styles."))
+            ));
+        }
+
+        // --------------------------------------------------
+        // 3) NOTIFICATIONS MODE (Slot 16) - v1.2.6: NotificationManager aware
+        // --------------------------------------------------
+        String mode = "ACTION_BAR";
         try {
-            if (plugin.codex() != null) currentStyle = plugin.codex().getPlayerStyle(player);
+            if (plugin.getNotificationManager() != null) {
+                var settings = plugin.getNotificationManager().getSettings(player.getUniqueId());
+                if (settings != null && settings.getMode() != null) {
+                    mode = normalizeNotif(settings.getMode().getConfigValue());
+                }
+            } else {
+                mode = getNotifMode(player);
+            }
         } catch (Throwable ignored) {}
 
-        String langDisplay = formatStyle(player, currentStyle);
-
-        inv.setItem(13, GUIManager.createItem(
-                Material.WRITABLE_BOOK,
-                t(player,
-                        "settings_language_name",
-                        "&eLanguage: {LANG}",
-                        Map.of("LANG", langDisplay)
-                ),
-                tl(player, "settings_language_lore",
-                        List.of("&7Click to cycle language styles."))
-        ));
-
-        // --------------------------------------------------
-        // 3) NOTIFICATIONS MODE (Slot 16) - v1.2.6: Using NotificationManager
-        // --------------------------------------------------
-        String modeDisplay;
-        if (plugin.getNotificationManager() != null) {
-            com.aegisguard.notify.PlayerNotificationSettings settings =
-                plugin.getNotificationManager().getSettings(player.getUniqueId());
-            modeDisplay = notifDisplay(player, settings.getMode().getConfigValue());
-        } else {
-            // Fallback to local method if NotificationManager unavailable
-            String mode = getNotifMode(player);
-            modeDisplay = notifDisplay(player, mode);
-        }
+        String modeDisplay = notifDisplay(player, mode);
 
         inv.setItem(16, GUIManager.createItem(
                 Material.PAPER,
@@ -197,9 +227,8 @@ public class SettingsGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        // ✅ Only handle clicks in the TOP inventory (prevents weird cursor focus + misfires)
+        // ✅ Only handle clicks in the TOP inventory
         if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
-
         if (!(e.getInventory().getHolder() instanceof SettingsGUIHolder holder)) return;
 
         e.setCancelled(true);
@@ -211,7 +240,6 @@ public class SettingsGUI {
         // Ignore filler clicks silently
         if (currentItem.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-        // Raw slot is safe now because we already confirmed TOP inventory
         int rawSlot = e.getRawSlot();
         if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
 
@@ -221,19 +249,22 @@ public class SettingsGUI {
         switch (rawSlot) {
 
             case 10 -> { // Sounds
-                if (!plugin.cfg().globalSoundsEnabled()) {
+                boolean globalEnabled = true;
+                try { if (plugin.cfg() != null) globalEnabled = plugin.cfg().globalSoundsEnabled(); } catch (Throwable ignored) {}
+
+                if (!globalEnabled) {
                     plugin.effects().playError(player);
                     return;
                 }
 
-                boolean current = plugin.isSoundEnabled(player);
+                boolean current = false;
+                try { current = plugin.isSoundEnabled(player); } catch (Throwable ignored) {}
+
                 plugin.getConfig().set("sounds.players." + uuid, !current);
-                plugin.runGlobalAsync(plugin::saveConfig);
+                saveConfigSafe();
 
                 plugin.effects().playMenuFlip(player);
-
-                // ✅ Reopen NEXT tick (prevents flash + cursor snapping)
-                plugin.runMain(player, () -> open(player, plot));
+                reopenNextTick(player, plot);
             }
 
             case 13 -> { // Language (Codex ordered cycle + persisted by CodexEngine)
@@ -249,59 +280,56 @@ public class SettingsGUI {
                 if (applied) plugin.effects().playMenuFlip(player);
                 else plugin.effects().playError(player);
 
-                // ✅ Reopen NEXT tick (prevents flash + cursor snapping)
-                plugin.runMain(player, () -> open(player, plot));
+                reopenNextTick(player, plot);
             }
 
-            case 16 -> { // Notifications MODE - v1.2.6: Using NotificationManager
-                if (plugin.getNotificationManager() != null) {
-                    // Use NotificationManager to cycle modes
-                    plugin.getNotificationManager().cycleMode(player.getUniqueId());
-                } else {
-                    // Fallback to local method
-                    String mode = getNotifMode(player);
-                    String nextMode = switch (mode) {
-                        case "ACTION_BAR" -> "CHAT";
-                        case "CHAT" -> "TITLE";
-                        default -> "ACTION_BAR";
-                    };
-                    setNotifMode(player, nextMode);
+            case 16 -> { // Notifications MODE
+                try {
+                    if (plugin.getNotificationManager() != null) {
+                        plugin.getNotificationManager().cycleMode(uuid);
+                    } else {
+                        String mode = getNotifMode(player);
+                        String nextMode = switch (mode) {
+                            case "ACTION_BAR" -> "CHAT";
+                            case "CHAT" -> "TITLE";
+                            default -> "ACTION_BAR";
+                        };
 
-                    // Keep legacy key as MODE string for compatibility
-                    plugin.getConfig().set("notifications." + uuid, nextMode);
-                    plugin.runGlobalAsync(plugin::saveConfig);
-                }
+                        setNotifMode(player, nextMode);
+
+                        // Legacy compatibility
+                        plugin.getConfig().set("notifications." + uuid, nextMode);
+                        saveConfigSafe();
+                    }
+                } catch (Throwable ignored) {}
 
                 plugin.effects().playMenuFlip(player);
-
-                // ✅ Reopen NEXT tick
-                plugin.runMain(player, () -> open(player, plot));
+                reopenNextTick(player, plot);
             }
 
             case 19 -> { // Plot Greetings toggle (enter/leave)
                 boolean current = getGreetingsEnabled(player);
                 setGreetingsEnabled(player, !current);
 
-                // If legacy key was a boolean, convert it into a MODE string to prevent future collisions.
+                // Legacy collision: boolean stored under notifications.<uuid>
                 Object legacy = plugin.getConfig().get("notifications." + uuid);
                 if (legacy instanceof Boolean) {
-                    // Preserve current mode if possible, otherwise default.
                     String mode = getNotifMode(player);
                     plugin.getConfig().set("notifications." + uuid, mode);
                 }
 
-                plugin.runGlobalAsync(plugin::saveConfig);
+                saveConfigSafe();
                 plugin.effects().playMenuFlip(player);
-                plugin.runMain(player, () -> open(player, plot));
+                reopenNextTick(player, plot);
             }
 
-            case 22 -> { // Admin Updates toggle (approvals/denials/mod actions)
+            case 22 -> { // Admin Updates toggle
                 boolean current = getAdminUpdatesEnabled(player);
                 setAdminUpdatesEnabled(player, !current);
 
-                plugin.runGlobalAsync(plugin::saveConfig);
+                saveConfigSafe();
                 plugin.effects().playMenuFlip(player);
-                plugin.runMain(player, () -> open(player, plot));
+                reopenNextTick(player, plot);
             }
 
             case 48 -> {

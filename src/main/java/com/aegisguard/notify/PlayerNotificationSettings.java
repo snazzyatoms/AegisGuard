@@ -27,6 +27,17 @@ public class PlayerNotificationSettings {
     }
 
     /**
+     * Lightweight constructor (used for config fallback reads where UUID isn’t required for persistence).
+     * Does NOT get stored by NotificationManager unless you explicitly pass it there.
+     */
+    public PlayerNotificationSettings(NotificationMode mode, boolean greetingsEnabled, boolean adminUpdatesEnabled) {
+        this.playerUUID = new UUID(0L, 0L); // sentinel
+        this.greetingsEnabled = greetingsEnabled;
+        this.adminUpdatesEnabled = adminUpdatesEnabled;
+        this.mode = (mode == null) ? NotificationMode.ACTION_BAR : mode;
+    }
+
+    /**
      * Create from config section
      *
      * @param playerUUID Player UUID
@@ -61,6 +72,10 @@ public class PlayerNotificationSettings {
         return mode;
     }
 
+    // ✅ Aliases used by your listener (keeps your existing calls intact)
+    public boolean greetingsEnabled() { return greetingsEnabled; }
+    public boolean adminUpdatesEnabled() { return adminUpdatesEnabled; }
+
     // === SETTERS ===
 
     public void setGreetingsEnabled(boolean enabled) {
@@ -72,11 +87,7 @@ public class PlayerNotificationSettings {
     }
 
     public void setMode(NotificationMode mode) {
-        if (mode == null) {
-            this.mode = NotificationMode.ACTION_BAR;
-        } else {
-            this.mode = mode;
-        }
+        this.mode = (mode == null) ? NotificationMode.ACTION_BAR : mode;
     }
 
     /**
@@ -124,31 +135,9 @@ public class PlayerNotificationSettings {
      * @return Migrated settings
      */
     public static PlayerNotificationSettings fromLegacyConfig(UUID playerUUID, String legacyValue) {
-        return fromLegacyConfig(playerUUID, (Object) legacyValue);
-    }
-
-    /**
-     * Legacy migration (extended):
-     * Supports older boolean toggle formats too:
-     * - notifications.<uuid> = true/false   (greetings enabled)
-     * - notifications.<uuid> = "ACTION_BAR" (mode)
-     */
-    public static PlayerNotificationSettings fromLegacyConfig(UUID playerUUID, Object legacyValue) {
         PlayerNotificationSettings settings = new PlayerNotificationSettings(playerUUID);
-
-        if (legacyValue instanceof String s) {
-            settings.setMode(NotificationMode.fromString(s));
-            settings.setGreetingsEnabled(true); // Assume enabled if they had a mode entry
-            return settings;
-        }
-
-        if (legacyValue instanceof Boolean b) {
-            settings.setGreetingsEnabled(b);
-            // keep default mode + admin updates
-            return settings;
-        }
-
-        // Unknown legacy type -> defaults
+        settings.setMode(NotificationMode.fromString(legacyValue));
+        settings.setGreetingsEnabled(true); // Assume enabled if they had config entry
         return settings;
     }
 

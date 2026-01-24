@@ -2,40 +2,48 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.util.TeleportUtil;          // ✅ Folia-safe teleports
+import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * VisitGUI
- * - Allows players to warp to plots they are trusted on.
- * - Allows warping to public Server Zones (Warps).
- * - Fully localized for language switching.
- *
- * ✅ Title fix: uses plugin.gui().title(...) + safe suffix clamp
- * ✅ Click fix: prevents filler arrows from paging
- * ✅ Bottom inventory ignored
- * ✅ 1.2.6 QOL: respects travel/visit toggles + access re-check on teleport
+ * VisitGUI (1.2.6 QoL pass)
+ * - PDC action routing (aegis_action) for prev/next/back/close/toggle + visit entries.
+ * - Visit entries store plot id in PDC (aegis_plot_id) to prevent index desync.
+ * - Async list build/sort; inventory build on main thread.
+ * - Full inventory fill (no dead holes).
+ * - Strict top-inventory click handling + ignore filler clicks.
+ * - Keeps your 1.2.5 layout: 0-44 entries, footer nav, toggle at 49.
  */
 public class VisitGUI {
 
     private final AegisGuard plugin;
     private static final int PLOTS_PER_PAGE = 45;
 
+    private final NamespacedKey keyAction;
+    private final NamespacedKey keyPlotId;
+
     public VisitGUI(AegisGuard plugin) {
         this.plugin = plugin;
+        this.keyAction = new NamespacedKey(plugin, "aegis_action");
+        this.keyPlotId = new NamespacedKey(plugin, "aegis_plot_id");
     }
 
     public static class VisitHolder implements InventoryHolder {
@@ -56,15 +64,23 @@ public class VisitGUI {
     }
 
     // --------------------------------------------------
-    // Codex-safe helpers (with fallbacks)
+    // Helpers
     // --------------------------------------------------
 
     private String t(Player p, String key, String fallback) {
         return plugin.gui().tr(p, key, fallback);
     }
 
+    private String t(Player p, String key, String fallback, Map<String, String> vars) {
+        return plugin.gui().tr(p, key, fallback, vars);
+    }
+
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
+    }
+
+    private List<String> tl(Player p, String key, List<String> fallback, Map<String, String> vars) {
+        return plugin.gui().trList(p, key, fallback, vars);
     }
 
     private String safeRole(String role) {
@@ -79,7 +95,6 @@ public class VisitGUI {
     }
 
     private boolean canTeleport(Player p) {
-        // Extra safety for live reloads: command gate may be bypassed if GUI is already open.
         if (plugin.cfg() != null && !plugin.cfg().isTravelSystemEnabled()) {
             sendSystem(p, "travel_system_disabled", "&cTravel System is disabled.");
             return false;
@@ -96,71 +111,92 @@ public class VisitGUI {
     // --------------------------------------------------
 
     public void open(Player player, int page, boolean showWarps) {
-        List<Plot> displayPlots = new ArrayList<>();
+        final int requestedPage = page;
+        final boolean requestedWarps = showWarps;
 
-        // --- FILTER LOGIC ---
-        for (Plot plot : plugin.store().getAllPlots()) {
-            if (plot == null) continue;
+        plugin.runGlobalAsync(() -> {
+            List<Plot> displayPlots = new ArrayList<>();
 
-            if (showWarps) {
-                if (plot.isServerWarp()) displayPlots.add(plot);
-            } else {
-                // Trusted Plots (Member/Co-Owner but NOT Owner)
-                if (plot.getPlayerRoles() != null
-                        && plot.getPlayerRoles().containsKey(player.getUniqueId())
-                        && plot.getOwner() != null
-                        && !plot.getOwner().equals(player.getUniqueId())) {
-                    displayPlots.add(plot);
+            // Filter defensively
+            List<Plot> all;
+            try {
+                all = new ArrayList<>(plugin.store().getAllPlots());
+            } catch (Throwable t) {
+                all = new ArrayList<>();
+                plugin.getLogger().warning("[VisitGUI] Failed to load plots: " + t.getMessage());
+            }
+
+            for (Plot plot : all) {
+                if (plot == null) continue;
+
+                if (requestedWarps) {
+                    if (plot.isServerWarp()) displayPlots.add(plot);
+                } else {
+                    if (plot.getPlayerRoles() != null
+                            && plot.getPlayerRoles().containsKey(player.getUniqueId())
+                            && plot.getOwner() != null
+                            && !plot.getOwner().equals(player.getUniqueId())) {
+                        displayPlots.add(plot);
+                    }
                 }
             }
-        }
 
-        // Sort Alphabetically
-        displayPlots.sort((p1, p2) -> {
-            String n1 = showWarps ? p1.getWarpName() : p1.getOwnerName();
-            String n2 = showWarps ? p2.getWarpName() : p2.getOwnerName();
-            if (n1 == null || n1.isBlank()) n1 = "Unknown";
-            if (n2 == null || n2.isBlank()) n2 = "Unknown";
-            return n1.compareToIgnoreCase(n2);
+            // Sort A-Z
+            displayPlots.sort((p1, p2) -> {
+                String n1 = requestedWarps ? p1.getWarpName() : p1.getOwnerName();
+                String n2 = requestedWarps ? p2.getWarpName() : p2.getOwnerName();
+                if (n1 == null || n1.isBlank()) n1 = "Unknown";
+                if (n2 == null || n2.isBlank()) n2 = "Unknown";
+                return n1.compareToIgnoreCase(n2);
+            });
+
+            int maxPages = (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE);
+            int fixedPage = requestedPage;
+            if (fixedPage < 0) fixedPage = 0;
+            if (maxPages > 0 && fixedPage >= maxPages) fixedPage = maxPages - 1;
+            if (maxPages == 0) fixedPage = 0;
+
+            final int finalPage = fixedPage;
+            final int safePages = Math.max(1, maxPages);
+
+            plugin.runMain(player, () -> buildAndOpen(player, displayPlots, finalPage, safePages, requestedWarps));
         });
+    }
 
-        // Pagination
-        int maxPages = (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE);
-        if (page < 0) page = 0;
-        if (maxPages > 0 && page >= maxPages) page = maxPages - 1;
-        if (maxPages == 0) page = 0;
-
-        // Localized titles
+    private void buildAndOpen(Player player, List<Plot> displayPlots, int page, int safePages, boolean showWarps) {
+        // Title
         String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
         String fallbackTitle = showWarps ? "&6Server Waypoints" : "&9Trusted Claims";
 
-        // ✅ Base title via central formatter (colors + fallback + clamp)
         String baseTitle = plugin.gui().title(player, modeTitleKey, fallbackTitle);
+        String suffix = " §8(" + (page + 1) + "/" + safePages + ")";
 
-        // ✅ Add suffix (use § so we don't rely on & here), then clamp
-        String fullTitle = clampTitle(baseTitle + " §8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
+        String fullTitle = clampTitleWithSuffix(baseTitle, suffix);
+
         Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, fullTitle);
 
-        // Fill Footer
+        // 1.2.6: fill ALL slots
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         // Empty state
         if (displayPlots.isEmpty()) {
-            inv.setItem(22, GUIManager.createItem(
+            ItemStack empty = GUIManager.createItem(
                     Material.BARRIER,
                     t(player, "visit_empty_title", "&cNothing to visit"),
                     tl(player, "visit_empty_lore", List.of(
                             "&7No destinations were found for this mode.",
                             "&7Try switching tabs."
                     ))
-            ));
+            );
+            tagAction(empty, "visit_empty");
+            inv.setItem(22, empty);
         }
 
-        // Populate Items
+        // Populate entries
         int startIndex = page * PLOTS_PER_PAGE;
-        for (int i = 0; i < PLOTS_PER_PAGE; i++) {
-            int index = startIndex + i;
+        for (int slot = 0; slot < PLOTS_PER_PAGE; slot++) {
+            int index = startIndex + slot;
             if (index >= displayPlots.size()) break;
 
             Plot plot = displayPlots.get(index);
@@ -169,121 +205,111 @@ public class VisitGUI {
             ItemStack icon;
 
             if (showWarps) {
-                // Server Warp
-                Material mat = plot.getWarpIcon() != null ? plot.getWarpIcon() : Material.BEACON;
-                String name = plot.getWarpName() != null ? plot.getWarpName() : "Server Warp";
+                Material mat = (plot.getWarpIcon() != null) ? plot.getWarpIcon() : Material.BEACON;
+                String warpName = (plot.getWarpName() != null && !plot.getWarpName().isBlank()) ? plot.getWarpName() : "Server Warp";
 
-                String dn = t(player, "visit_warp_name", "&6{WARP}")
-                        .replace("{WARP}", name);
+                String dn = t(player, "visit_warp_name", "&6{WARP}", Map.of("WARP", warpName));
 
                 List<String> lore = tl(player, "visit_warp_lore", List.of(
                         "&7A public waypoint.",
                         " ",
                         "&eClick to teleport"
-                ));
+                ), Map.of("WARP", warpName));
 
-                icon = GUIManager.createItem(
-                        mat,
-                        dn,
-                        lore
-                );
+                icon = GUIManager.createItem(mat, dn, lore);
             } else {
-                // Trusted Plot
                 OfflinePlayer owner = (plot.getOwner() != null) ? Bukkit.getOfflinePlayer(plot.getOwner()) : null;
+
                 String role = safeRole(plot.getRole(player.getUniqueId()));
-                String ownerName = (plot.getOwnerName() != null) ? plot.getOwnerName() : "Unknown";
+                String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank()) ? plot.getOwnerName() : "Unknown";
+
                 String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
                         ? plot.getEntryTitle()
                         : ownerName + "'s Plot";
 
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                 SkullMeta meta = (SkullMeta) head.getItemMeta();
+
                 if (meta != null) {
                     if (owner != null) {
                         try { meta.setOwningPlayer(owner); } catch (Throwable ignored) {}
                     }
 
-                    // Display name
-                    String dnRaw = null;
-                    try {
-                        if (plugin.codex() != null) dnRaw = plugin.codex().tr(player, "visit_plot_name", Map.of("PLOT", alias));
-                    } catch (Throwable ignored) {}
-
-                    String displayName = GUIManager.safeText(dnRaw, "&e" + alias);
+                    String displayName = t(player, "visit_plot_name", "&e{PLOT}", Map.of("PLOT", alias));
                     meta.setDisplayName(GUIManager.color(displayName));
 
-                    // Lore with placeholders
-                    List<String> baseLore = tl(player, "visit_plot_lore", List.of(
+                    String worldName = (plot.getWorld() != null && !plot.getWorld().isBlank()) ? plot.getWorld() : "Unknown";
+
+                    List<String> lore = tl(player, "visit_plot_lore", List.of(
                             "&7World: &f{WORLD}",
                             "&7Role: &b{ROLE}",
                             " ",
                             "&eClick to teleport"
-                    ));
-
-                    String worldName = (plot.getWorld() != null ? plot.getWorld() : "Unknown");
-
-                    List<String> lore = new ArrayList<>();
-                    for (String line : baseLore) {
-                        if (line == null) continue;
-                        lore.add(GUIManager.color(
-                                line.replace("{WORLD}", worldName)
-                                        .replace("{ROLE}", role)
-                        ));
-                    }
+                    ), Map.of("WORLD", worldName, "ROLE", role));
 
                     meta.setLore(lore);
                     head.setItemMeta(meta);
                 }
+
                 icon = head;
             }
 
-            inv.setItem(i, icon);
+            // 1.2.6: tag entry action + plot id
+            tagAction(icon, "visit_entry");
+            tagPlotId(icon, plot);
+
+            inv.setItem(slot, icon);
         }
 
-        // --- TOGGLE BUTTON (Slot 49) ---
+        // Toggle button (49)
         if (showWarps) {
-            inv.setItem(49, GUIManager.createItem(
+            ItemStack toggle = GUIManager.createItem(
                     Material.PLAYER_HEAD,
                     t(player, "visit_switch_trusted", "&9Trusted Claims"),
                     tl(player, "visit_switch_trusted_lore", List.of("&7Show plots you are trusted on."))
-            ));
+            );
+            tagAction(toggle, "toggle_mode");
+            inv.setItem(49, toggle);
         } else {
-            inv.setItem(49, GUIManager.createItem(
+            ItemStack toggle = GUIManager.createItem(
                     Material.BEACON,
                     t(player, "visit_switch_warps", "&6Server Waypoints"),
                     tl(player, "visit_switch_warps_lore", List.of("&7Show server public warps."))
-            ));
+            );
+            tagAction(toggle, "toggle_mode");
+            inv.setItem(49, toggle);
         }
 
-        // Navigation
+        // Prev / Next (45 / 53)
         if (page > 0) {
-            inv.setItem(45, GUIManager.createItem(
-                    Material.ARROW,
-                    t(player, "button_prev_page", "&fPrevious Page"),
-                    null
-            ));
-        }
-        if (page < maxPages - 1) {
-            inv.setItem(53, GUIManager.createItem(
-                    Material.ARROW,
-                    t(player, "button_next_page", "&fNext Page"),
-                    null
-            ));
+            ItemStack prev = GUIManager.createItem(Material.ARROW, t(player, "button_prev_page", "&fPrevious Page"), null);
+            tagAction(prev, "prev_page");
+            inv.setItem(45, prev);
         }
 
-        // Back
-        inv.setItem(48, GUIManager.createItem(
+        // Back (48)
+        ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 t(player, "button_back_menu", "&fReturn to Menu"),
                 tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))
-        ));
+        );
+        tagAction(back, "back_menu");
+        inv.setItem(48, back);
 
-        // Exit (does not conflict with toggle @49)
-        inv.setItem(50, GUIManager.createItem(
+        // Close (50)
+        ItemStack close = GUIManager.createItem(
                 Material.BARRIER,
                 t(player, "button_exit", "&cClose"),
                 tl(player, "exit_lore", List.of("&7Close this menu."))
-        ));
+        );
+        tagAction(close, "close_menu");
+        inv.setItem(50, close);
+
+        if (page < (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE) - 1) {
+            ItemStack next = GUIManager.createItem(Material.ARROW, t(player, "button_next_page", "&fNext Page"), null);
+            tagAction(next, "next_page");
+            inv.setItem(53, next);
+        }
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -295,85 +321,158 @@ public class VisitGUI {
 
     public void handleClick(Player player, InventoryClickEvent e, VisitHolder holder) {
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
 
-        // Ignore clicks from bottom inventory
-        int rawSlot = e.getRawSlot();
-        if (rawSlot < 0 || rawSlot >= e.getInventory().getSize()) return;
+        // Strict: only top inventory
+        if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
 
-        int slot = e.getSlot();
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
+
+        // Ignore filler clicks
+        if (clicked.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
+
         boolean warps = holder.isShowingWarps();
+        int page = holder.getPage();
 
-        // Nav (only if the item is actually an arrow)
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, holder.getPage() - 1, warps); return; }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, holder.getPage() + 1, warps); return; }
+        String action = getAction(clicked);
+        if (action != null) {
+            switch (action) {
+                case "prev_page" -> { open(player, page - 1, warps); plugin.effects().playMenuFlip(player); return; }
+                case "next_page" -> { open(player, page + 1, warps); plugin.effects().playMenuFlip(player); return; }
+                case "toggle_mode" -> { open(player, 0, !warps); plugin.effects().playMenuFlip(player); return; }
+                case "back_menu" -> { plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); return; }
+                case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
+                case "visit_empty" -> { plugin.effects().playError(player); return; }
+                case "visit_entry" -> { /* continue */ }
+                default -> { return; }
+            }
+        }
 
-        // Back / Exit
-        if (slot == 48) { plugin.gui().openMain(player); return; }
-        if (slot == 50 && e.getCurrentItem().getType() == Material.BARRIER) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
+        // Entry click (0..44)
+        int slot = e.getSlot();
+        if (slot < 0 || slot >= PLOTS_PER_PAGE) return;
 
-        // Switch Mode
-        if (slot == 49) {
-            open(player, 0, !warps);
-            plugin.effects().playMenuFlip(player);
+        Plot plot = resolvePlotFromItem(clicked, holder, page, slot);
+        if (plot == null) return;
+
+        // 1.2.6: re-check access before teleporting
+        if (warps) {
+            if (!plot.isServerWarp()) {
+                sendSystem(player, "visit_not_available", "&cThat waypoint is no longer available.");
+                plugin.effects().playError(player);
+                open(player, page, true);
+                return;
+            }
+        } else {
+            if (plot.getPlayerRoles() == null
+                    || !plot.getPlayerRoles().containsKey(player.getUniqueId())
+                    || (plot.getOwner() != null && plot.getOwner().equals(player.getUniqueId()))) {
+                sendSystem(player, "visit_not_trusted", "&cYou are no longer trusted on that plot.");
+                plugin.effects().playError(player);
+                open(player, page, false);
+                return;
+            }
+        }
+
+        if (!canTeleport(player)) {
+            plugin.effects().playError(player);
             return;
         }
 
-        // Teleport
-        if (slot < PLOTS_PER_PAGE && e.getCurrentItem().getType() != Material.AIR) {
-            int index = (holder.getPage() * PLOTS_PER_PAGE) + slot;
-            if (index < 0 || index >= holder.getPlots().size()) return;
+        Location target = plot.getSpawnLocation() != null
+                ? plot.getSpawnLocation()
+                : plot.getCenter(plugin);
 
-            Plot plot = holder.getPlots().get(index);
-            if (plot == null) return;
+        if (target == null || target.getWorld() == null) {
+            sendSystem(player, "visit_fail_no_spawn", "&cThis destination has no valid spawn set.");
+            plugin.effects().playError(player);
+            return;
+        }
 
-            // 1.2.6 QOL: re-check access before teleporting (trust/warp might have changed)
-            if (warps) {
-                if (!plot.isServerWarp()) {
-                    sendSystem(player, "visit_not_available", "&cThat waypoint is no longer available.");
-                    plugin.effects().playError(player);
-                    open(player, holder.getPage(), true);
-                    return;
-                }
-            } else {
-                if (plot.getPlayerRoles() == null || !plot.getPlayerRoles().containsKey(player.getUniqueId())
-                        || (plot.getOwner() != null && plot.getOwner().equals(player.getUniqueId()))) {
-                    sendSystem(player, "visit_not_trusted", "&cYou are no longer trusted on that plot.");
-                    plugin.effects().playError(player);
-                    open(player, holder.getPage(), false);
-                    return;
-                }
-            }
+        player.closeInventory();
+        TeleportUtil.safeTeleport(plugin, player, target);
+        sendSystem(player, "visit_teleport_success", "&aTeleported.");
+        plugin.effects().playTeleport(player);
+    }
 
-            if (!canTeleport(player)) {
-                plugin.effects().playError(player);
-                return;
-            }
+    // --------------------------------------------------
+    // PDC helpers
+    // --------------------------------------------------
 
-            Location target = plot.getSpawnLocation() != null
-                    ? plot.getSpawnLocation()
-                    : plot.getCenter(plugin);
+    private void tagAction(ItemStack item, String action) {
+        if (item == null || action == null || action.isBlank()) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            meta.getPersistentDataContainer().set(keyAction, PersistentDataType.STRING, action.trim().toLowerCase(Locale.ROOT));
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
 
-            if (target == null || target.getWorld() == null) {
-                sendSystem(player, "visit_fail_no_spawn", "&cThis destination has no valid spawn set.");
-                plugin.effects().playError(player);
-                return;
-            }
-
-            // Close first to avoid double-click spam and to keep Folia-safe teleport predictable
-            player.closeInventory();
-
-            TeleportUtil.safeTeleport(plugin, player, target);
-            sendSystem(player, "visit_teleport_success", "&aTeleported.");
-            plugin.effects().playTeleport(player);
+    private String getAction(ItemStack item) {
+        if (item == null) return null;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return null;
+            String v = meta.getPersistentDataContainer().get(keyAction, PersistentDataType.STRING);
+            return v == null ? null : v.trim().toLowerCase(Locale.ROOT);
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
-    // Vanilla inventory title safety clamp (simple, consistent with your other GUIs)
-    private String clampTitle(String t) {
-        if (t == null) return "";
-        if (t.length() > 32) t = t.substring(0, 32);
-        if (t.endsWith("§")) t = t.substring(0, t.length() - 1);
-        return t;
+    private void tagPlotId(ItemStack item, Plot plot) {
+        if (item == null || plot == null || plot.getPlotId() == null) return;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            meta.getPersistentDataContainer().set(keyPlotId, PersistentDataType.STRING, plot.getPlotId().toString());
+            item.setItemMeta(meta);
+        } catch (Throwable ignored) {}
+    }
+
+    private Plot resolvePlotFromItem(ItemStack item, VisitHolder holder, int page, int slot) {
+        // 1) PDC-first
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                String id = meta.getPersistentDataContainer().get(keyPlotId, PersistentDataType.STRING);
+                if (id != null && !id.isBlank()) {
+                    UUID plotId = UUID.fromString(id);
+                    for (Plot p : holder.getPlots()) {
+                        if (p != null && plotId.equals(p.getPlotId())) return p;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // 2) legacy index fallback
+        int index = (page * PLOTS_PER_PAGE) + slot;
+        if (index < 0 || index >= holder.getPlots().size()) return null;
+        return holder.getPlots().get(index);
+    }
+
+    // --------------------------------------------------
+    // Title clamp
+    // --------------------------------------------------
+
+    private String clampTitleWithSuffix(String base, String suffix) {
+        final int MAX = 32;
+        if (base == null) base = "";
+        if (suffix == null) suffix = "";
+
+        String combined = base + suffix;
+        if (combined.length() <= MAX) return combined;
+
+        if (suffix.length() >= MAX) {
+            String cut = suffix.substring(0, MAX);
+            return cut.endsWith("§") ? cut.substring(0, MAX - 1) : cut;
+        }
+
+        int remainingForBase = MAX - suffix.length();
+        String trimmedBase = base.length() > remainingForBase ? base.substring(0, remainingForBase) : base;
+        if (trimmedBase.endsWith("§")) trimmedBase = trimmedBase.substring(0, Math.max(0, trimmedBase.length() - 1));
+
+        return trimmedBase + suffix;
     }
 }

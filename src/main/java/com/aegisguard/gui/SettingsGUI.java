@@ -2,6 +2,8 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.notify.NotificationMode;
+import com.aegisguard.notify.PlayerNotificationSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -27,6 +29,10 @@ import java.util.UUID;
  * - Reload-safe null guards (cfg/codex/notification manager may be null mid-reload)
  * - Consistent save + reopen pattern (prevents flicker/cursor snap)
  * - Keeps legacy compatibility with old notifications.<uuid> boolean/string
+ *
+ * IMPORTANT (Fix):
+ * - Greetings/Admin Updates/Mode now use NotificationManager (notifications.yml) when available,
+ *   so PlotGreetingListener respects the toggles immediately (no split-brain config vs yml).
  */
 public class SettingsGUI {
 
@@ -70,6 +76,22 @@ public class SettingsGUI {
         } catch (Throwable t) {
             try { plugin.getLogger().warning("[SettingsGUI] saveConfig failed: " + t.getMessage()); } catch (Throwable ignored) {}
         }
+    }
+
+    private void playOpen(Player p) {
+        try { if (plugin.effects() != null) plugin.effects().playMenuOpen(p); } catch (Throwable ignored) {}
+    }
+
+    private void playFlip(Player p) {
+        try { if (plugin.effects() != null) plugin.effects().playMenuFlip(p); } catch (Throwable ignored) {}
+    }
+
+    private void playClose(Player p) {
+        try { if (plugin.effects() != null) plugin.effects().playMenuClose(p); } catch (Throwable ignored) {}
+    }
+
+    private void playError(Player p) {
+        try { if (plugin.effects() != null) plugin.effects().playError(p); } catch (Throwable ignored) {}
     }
 
     public void open(Player player) { open(player, null); }
@@ -146,12 +168,12 @@ public class SettingsGUI {
         }
 
         // --------------------------------------------------
-        // 3) NOTIFICATIONS MODE (Slot 16) - v1.2.6: NotificationManager aware
+        // 3) NOTIFICATIONS MODE (Slot 16) - NotificationManager aware
         // --------------------------------------------------
         String mode = "ACTION_BAR";
         try {
             if (plugin.getNotificationManager() != null) {
-                var settings = plugin.getNotificationManager().getSettings(player.getUniqueId());
+                PlayerNotificationSettings settings = plugin.getNotificationManager().getSettings(player.getUniqueId());
                 if (settings != null && settings.getMode() != null) {
                     mode = normalizeNotif(settings.getMode().getConfigValue());
                 }
@@ -174,7 +196,7 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 3B) PLOT GREETINGS TOGGLE (Slot 19) - Enter/Leave messages
+        // 3B) PLOT GREETINGS TOGGLE (Slot 19)
         // --------------------------------------------------
         boolean greetingsEnabled = getGreetingsEnabled(player);
 
@@ -191,7 +213,7 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
-        // 3C) ADMIN UPDATES TOGGLE (Slot 22) - approvals/denials, admin decisions
+        // 3C) ADMIN UPDATES TOGGLE (Slot 22)
         // --------------------------------------------------
         boolean adminUpdates = getAdminUpdatesEnabled(player);
 
@@ -223,7 +245,7 @@ public class SettingsGUI {
         ));
 
         player.openInventory(inv);
-        plugin.effects().playMenuOpen(player);
+        playOpen(player);
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
@@ -253,7 +275,7 @@ public class SettingsGUI {
                 try { if (plugin.cfg() != null) globalEnabled = plugin.cfg().globalSoundsEnabled(); } catch (Throwable ignored) {}
 
                 if (!globalEnabled) {
-                    plugin.effects().playError(player);
+                    playError(player);
                     return;
                 }
 
@@ -263,13 +285,13 @@ public class SettingsGUI {
                 plugin.getConfig().set("sounds.players." + uuid, !current);
                 saveConfigSafe();
 
-                plugin.effects().playMenuFlip(player);
+                playFlip(player);
                 reopenNextTick(player, plot);
             }
 
             case 13 -> { // Language (Codex ordered cycle + persisted by CodexEngine)
                 if (plugin.codex() == null) {
-                    plugin.effects().playError(player);
+                    playError(player);
                     return;
                 }
 
@@ -277,22 +299,24 @@ public class SettingsGUI {
                 String next = plugin.codex().getNextStyle(current);
 
                 boolean applied = plugin.codex().setPlayerStyle(player, next);
-                if (applied) plugin.effects().playMenuFlip(player);
-                else plugin.effects().playError(player);
+                if (applied) playFlip(player);
+                else playError(player);
 
                 reopenNextTick(player, plot);
             }
 
-            case 16 -> { // Notifications MODE
+            case 16 -> { // Notifications MODE (notifications.yml preferred)
                 try {
+                    NotificationMode newMode = null;
+
                     if (plugin.getNotificationManager() != null) {
-                        plugin.getNotificationManager().cycleMode(uuid);
+                        newMode = plugin.getNotificationManager().cycleMode(uuid);
                     } else {
                         String mode = getNotifMode(player);
                         String nextMode = switch (mode) {
-                            case "ACTION_BAR" -> "CHAT";
-                            case "CHAT" -> "TITLE";
-                            default -> "ACTION_BAR";
+                            case "CHAT" -> "ACTION_BAR";
+                            case "ACTION_BAR" -> "TITLE";
+                            default -> "CHAT";
                         };
 
                         setNotifMode(player, nextMode);
@@ -301,47 +325,113 @@ public class SettingsGUI {
                         plugin.getConfig().set("notifications." + uuid, nextMode);
                         saveConfigSafe();
                     }
+
+                    // Optional mirror keys (keeps fallback consistent if manager ever fails/disabled)
+                    if (newMode != null) {
+                        mirrorToConfig(uuid, newMode, null, null);
+                    }
+
                 } catch (Throwable ignored) {}
 
-                plugin.effects().playMenuFlip(player);
+                playFlip(player);
                 reopenNextTick(player, plot);
             }
 
             case 19 -> { // Plot Greetings toggle (enter/leave)
-                boolean current = getGreetingsEnabled(player);
-                setGreetingsEnabled(player, !current);
+                try {
+                    Boolean newState = null;
 
-                // Legacy collision: boolean stored under notifications.<uuid>
-                Object legacy = plugin.getConfig().get("notifications." + uuid);
-                if (legacy instanceof Boolean) {
-                    String mode = getNotifMode(player);
-                    plugin.getConfig().set("notifications." + uuid, mode);
-                }
+                    if (plugin.getNotificationManager() != null) {
+                        newState = plugin.getNotificationManager().toggleGreetings(uuid);
+                    } else {
+                        boolean current = getGreetingsEnabled(player);
+                        setGreetingsEnabled(player, !current);
 
-                saveConfigSafe();
-                plugin.effects().playMenuFlip(player);
+                        // Legacy collision: boolean stored under notifications.<uuid>
+                        Object legacy = plugin.getConfig().get("notifications." + uuid);
+                        if (legacy instanceof Boolean) {
+                            String mode = getNotifMode(player);
+                            plugin.getConfig().set("notifications." + uuid, mode);
+                        }
+
+                        saveConfigSafe();
+                    }
+
+                    // Optional mirror keys (keeps fallback consistent)
+                    if (newState != null) {
+                        // Preserve current mode/adminUpdates where possible
+                        String modeStr = getNotifMode(player);
+                        boolean admin = getAdminUpdatesEnabled(player);
+                        mirrorToConfig(uuid, NotificationMode.fromString(modeStr), newState, admin);
+                    }
+
+                } catch (Throwable ignored) {}
+
+                playFlip(player);
                 reopenNextTick(player, plot);
             }
 
             case 22 -> { // Admin Updates toggle
-                boolean current = getAdminUpdatesEnabled(player);
-                setAdminUpdatesEnabled(player, !current);
+                try {
+                    Boolean newState = null;
 
-                saveConfigSafe();
-                plugin.effects().playMenuFlip(player);
+                    if (plugin.getNotificationManager() != null) {
+                        newState = plugin.getNotificationManager().toggleAdminUpdates(uuid);
+                    } else {
+                        boolean current = getAdminUpdatesEnabled(player);
+                        setAdminUpdatesEnabled(player, !current);
+                        saveConfigSafe();
+                    }
+
+                    // Optional mirror keys (keeps fallback consistent)
+                    if (newState != null) {
+                        String modeStr = getNotifMode(player);
+                        boolean greet = getGreetingsEnabled(player);
+                        mirrorToConfig(uuid, NotificationMode.fromString(modeStr), greet, newState);
+                    }
+
+                } catch (Throwable ignored) {}
+
+                playFlip(player);
                 reopenNextTick(player, plot);
             }
 
             case 48 -> {
-                plugin.effects().playMenuFlip(player);
+                playFlip(player);
                 plugin.runMain(player, () -> plugin.gui().openMain(player));
             }
 
             case 49 -> {
-                plugin.effects().playMenuClose(player);
+                playClose(player);
                 plugin.runMain(player, player::closeInventory);
             }
         }
+    }
+
+    // --------------------------------------------------
+    // Mirror helper (keeps config fallback consistent without becoming the source of truth)
+    // --------------------------------------------------
+
+    private void mirrorToConfig(UUID uuid, NotificationMode mode, Boolean greetings, Boolean adminUpdates) {
+        try {
+            String base = "player_notifications.players." + uuid;
+
+            if (mode != null) {
+                plugin.getConfig().set(base + ".mode", mode.getConfigValue());
+                // Keep legacy key as a STRING (never boolean) to avoid the old collision
+                plugin.getConfig().set("notifications." + uuid, mode.getConfigValue());
+            }
+
+            if (greetings != null) {
+                plugin.getConfig().set(base + ".greetings", greetings);
+            }
+
+            if (adminUpdates != null) {
+                plugin.getConfig().set(base + ".admin_updates", adminUpdates);
+            }
+
+            saveConfigSafe();
+        } catch (Throwable ignored) {}
     }
 
     // --------------------------------------------------
@@ -353,13 +443,23 @@ public class SettingsGUI {
     }
 
     private String getNotifMode(Player player) {
+        // ✅ Prefer NotificationManager if available
+        try {
+            if (plugin.getNotificationManager() != null) {
+                PlayerNotificationSettings s = plugin.getNotificationManager().getSettings(player.getUniqueId());
+                if (s != null && s.getMode() != null) {
+                    return normalizeNotif(s.getMode().getConfigValue());
+                }
+            }
+        } catch (Throwable ignored) {}
+
         String base = baseNotifPath(player);
 
-        // Prefer new structured key
+        // Prefer structured key
         String mode = plugin.getConfig().getString(base + ".mode", null);
         if (mode != null && !mode.trim().isEmpty()) return normalizeNotif(mode);
 
-        // Legacy key (string mode OR boolean toggle from old /aegis notify)
+        // Legacy key (string mode OR boolean collision from old /aegis notify)
         Object legacy = plugin.getConfig().get("notifications." + player.getUniqueId());
         if (legacy instanceof String) {
             return normalizeNotif((String) legacy);
@@ -374,9 +474,17 @@ public class SettingsGUI {
     }
 
     private boolean getGreetingsEnabled(Player player) {
+        // ✅ Prefer NotificationManager if available
+        try {
+            if (plugin.getNotificationManager() != null) {
+                PlayerNotificationSettings s = plugin.getNotificationManager().getSettings(player.getUniqueId());
+                if (s != null) return s.isGreetingsEnabled();
+            }
+        } catch (Throwable ignored) {}
+
         String base = baseNotifPath(player);
 
-        // New structured key
+        // Structured key
         if (plugin.getConfig().contains(base + ".greetings")) {
             return plugin.getConfig().getBoolean(base + ".greetings", true);
         }
@@ -396,6 +504,14 @@ public class SettingsGUI {
     }
 
     private boolean getAdminUpdatesEnabled(Player player) {
+        // ✅ Prefer NotificationManager if available
+        try {
+            if (plugin.getNotificationManager() != null) {
+                PlayerNotificationSettings s = plugin.getNotificationManager().getSettings(player.getUniqueId());
+                if (s != null) return s.isAdminUpdatesEnabled();
+            }
+        } catch (Throwable ignored) {}
+
         String base = baseNotifPath(player);
         return plugin.getConfig().getBoolean(base + ".admin_updates", true);
     }

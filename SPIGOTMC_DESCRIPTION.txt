@@ -1,0 +1,253 @@
+[CENTER]
+[IMG]https://i.postimg.cc/XYgXg8VX/Chat-GPT-Image-Dec-1-2025-12-31-21-AM.png[/IMG]
+
+[SIZE=5][I][COLOR=#333333]Protect your world. Empower your players. Ascend.[/COLOR][/I][/SIZE]
+
+[SIZE=4][B][COLOR=#2ecc71]⚡ Folia Native[/COLOR] [COLOR=#555555]•[/COLOR] [COLOR=#f1c40f] Living Economy[/COLOR] [COLOR=#555555]•[/COLOR] [COLOR=#e74c3c] Optimized Performance[/COLOR][/B][/SIZE]
+
+[URL='https://discord.gg/Y2NpuR7UZE'][IMG]https://img.shields.io/badge/Discord-Get_Support-5865F2?style=for-the-badge&logo=discord&logoColor=white[/IMG][/URL]
+[URL='https://github.com/snazzyatoms/AegisGuard/wiki'][IMG]https://img.shields.io/badge/Wiki-Read_Docs-orange?style=for-the-badge&logo=bookstack&logoColor=white[/IMG][/URL]
+[URL='https://github.com/snazzyatoms/AegisGuard'][IMG]https://img.shields.io/badge/GitHub-Source_Code-black?style=for-the-badge&logo=github&logoColor=white[/IMG][/URL]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=5][B][COLOR=#e74c3c]⚠ Project Status Notice[/COLOR][/B][/SIZE]
+[SIZE=3]
+This project is currently on the back burner due to unforeseen circumstances related to family matters.
+I apologize for any inconvenience. [B]Version 1.2.5 will remain active and will not be removed from any platform.[/B]
+However, any updates regarding AegisGuard will be postponed until further notice.
+Thank you for your understanding and patience.
+[/SIZE]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=6][B][COLOR=#3498db]THE TERRITORY ENGINE REINVENTED[/COLOR][/B][/SIZE]
+[SIZE=4]
+Forget clunky golden shovels.
+[B]AegisGuard[/B] transforms boring claims into a [COLOR=#f1c40f][B]living, progression-driven system[/B][/COLOR] with real economy, safety nets, and migration tools.
+Built for modern servers that demand speed, clarity, and depth.
+[/SIZE]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=6][B][COLOR=#00d2ff]UNLEASH v1.2.5[/COLOR][/B][/SIZE]
+[SIZE=3][I]Economy. Safety Nets. Migration. This update makes AegisGuard easier to run and harder to exploit.[/I][/SIZE]
+
+[SIZE=4][B][COLOR=#f39c12] ClaimBlocks Exchange (Vault Economy)[/COLOR][/B][/SIZE]
+[SIZE=3]
+Buy & sell ClaimBlocks using server currency with built-in protections:
+[B]• Fees[/B], [B]cooldowns[/B], [B]hourly limits[/B], [B]daily caps[/B]
+[B]• Optional sell permission gating[/B] (server-controlled)
+[B]• Optional sell-lock[/B] (anti-flip protection)
+[/SIZE]
+
+[SIZE=4][B][COLOR=#00b894]⏱️ Playtime Rewards (Anti-AFK)[/COLOR][/B][/SIZE]
+[SIZE=3]
+Players can earn ClaimBlocks via [B]active playtime[/B], with anti-AFK safeguards to prevent farming.
+[/SIZE]
+
+[SIZE=4][B][COLOR=#3498db] Safety Nets (Snapshots & Rollbacks)[/COLOR][/B][/SIZE]
+[SIZE=3]
+Automatic snapshots are taken before risky claim operations (like [B]merges[/B] and [B]expansions[/B]).
+Rollback support helps recover cleanly from mistakes and edge cases.
+[/SIZE]
+
+[SIZE=4][B][COLOR=#2ecc71]✅ Expansion Approval Modes[/COLOR][/B][/SIZE]
+[SIZE=3]
+Server owners can choose expansion behavior:
+[B]• QUEUE[/B] (approval required)
+[B]• INSTANT[/B] (auto-approve)
+[/SIZE]
+
+[SIZE=4][B][COLOR=#e67e22] Fairer Initial Pricing Model[/COLOR][/B][/SIZE]
+[SIZE=3]
+Base price starts at [B]1 chunk[/B], then scales properly with your configured expansion rate.
+More consistent progression and fewer "cheap mega-claims."
+[/SIZE]
+
+[SIZE=4][B][COLOR=#9b59b6] Migration Tool (Import Claims)[/COLOR][/B][/SIZE]
+[SIZE=3]
+Migrate from supported protection plugins (including [B]GriefPrevention[/B], [B]GriefDefender[/B], and [B]Lands[/B]) using preview/import flows built for real servers.
+[/SIZE]
+
+[SIZE=4][B][COLOR=#e74c3c] Advanced Welcome/Exit + Notify Controls[/COLOR][/B][/SIZE]
+[SIZE=3]
+Server-wide notification behavior can be controlled, and players can toggle their own notify state when PER_PLAYER is enabled.
+Use [B]/ag notify[/B] to toggle (if your server allows it).
+[/SIZE]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=5][B][COLOR=#f1c40f] LANGUAGE NOTE (Spanish / Español)[/COLOR][/B][/SIZE]
+[SIZE=3]
+Most UI text is translated and formatted properly, but [B]some Spanish translations may be incomplete in a few newer GUIs/menus[/B].
+A couple menus may still show English or partially untranslated strings.
+If needed, Spanish server owners/admins can add missing keys manually in their language files.
+A fuller Spanish pass for remaining GUIs will arrive in future updates.
+[/SIZE]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=5][B][COLOR=#333333]COMMANDS & MASTERY[/COLOR][/B][/SIZE]
+[SIZE=3][I]Total control at your fingertips.[/I][/SIZE]
+
+[SPOILER="✅ Player Commands"]
+[CODE]
+/ag wand                - Get the claim tool
+/ag claim               - Create an Estate
+/ag unclaim             - Delete an Estate
+/ag menu                - Open the main GUI
+/ag resize <dir> <amt>  - Expand/shrink land
+/ag merge <dir>         - Merge Estates
+/ag setspawn            - Set Estate spawn
+/ag home                - Teleport to Estate
+/ag spawn               - Teleport to world spawn
+/ag visit               - Open Travel System GUI
+/ag rename <name>       - Rename your plot
+/ag setdesc <text>      - Set Travel Menu description
+/ag welcome <msg>       - Set entry message (blank removes)
+/ag farewell <msg>      - Set exit message (blank removes)
+/ag notify              - Toggle claim entry/exit notifications (if PER_PLAYER enabled)
+/ag stuck               - Escape to nearest safe location outside claims
+/ag zone                - Manage sub-zones
+/ag level               - Plot Ascension menu
+/ag like                - Like/Reputation for a plot
+[/CODE]
+[/SPOILER]
+
+[SPOILER=" ClaimBlocks Exchange Commands (v1.2.5)"]
+[CODE]
+/ag ledger              - View your ClaimBlocks ledger
+/ag blocks              - Ledger shortcut
+/ag blocks rates        - Show buy/sell rates
+/ag blocks buy <amt>    - Buy ClaimBlocks (Vault)
+/ag blocks sell <amt>   - Sell ClaimBlocks (Vault, if enabled)
+/ag blocks help         - Exchange help & examples
+[/CODE]
+[/SPOILER]
+
+[SPOILER=" Admin Commands"]
+[CODE]
+/agadmin wand           - Sentinel's Scepter (Admin Tool / Server Zones)
+/agadmin convert        - Convert current plot into a Server Zone
+/agadmin menu           - Admin GUI
+/agadmin bypass         - Toggle bypass mode
+/agadmin reload         - Reload config + language files
+/ag reload [soft|nogui] - Quick reload (alias: /ag refresh)
+/ag setwarp <name>      - Set server warp
+/ag delwarp <name>      - Delete server warp
+/ag consume             - Destroy Aegis/Scepter item
+[/CODE]
+[/SPOILER]
+
+[SPOILER=" Migration Tool Commands (Admins)"]
+[CODE]
+# Check what plugins have data
+/agadmin migrate list
+
+# Preview import (dry-run)
+/agadmin migrate preview griefprevention
+
+# Import (requires confirm)
+/agadmin migrate import griefprevention --confirm
+
+# Force overlaps (advanced)
+/agadmin migrate import gd --force --confirm
+
+# Import a single world
+/agadmin migrate import lands --world=survival --confirm
+[/CODE]
+
+[SIZE=3]
+[B]Migration Notes:[/B]
+• Preview first is strongly recommended on larger servers.
+• [B]--confirm[/B] prevents accidental imports.
+• [B]--force[/B] allows overlapping imports (use carefully).
+• [B]--world=[/B] lets you migrate gradually, one world at a time.
+[/SIZE]
+[/SPOILER]
+
+[SPOILER=" Permissions (LuckPerms / Any Permission Plugin)"]
+[CODE]
+# Core
+aegis.use
+aegis.wand
+aegis.claim
+aegis.unclaim
+aegis.menu
+aegis.resize
+aegis.merge
+aegis.setspawn
+aegis.home
+aegis.spawn
+aegis.visit
+aegis.rename
+aegis.setdesc
+aegis.stuck
+aegis.zone
+aegis.level
+aegis.biome
+aegis.like
+aegis.welcome
+aegis.farewell
+aegis.notify
+aegis.kick
+aegis.ban
+aegis.unban
+
+# Economy / Market
+aegis.market
+aegis.sell
+aegis.unsell
+aegis.auction
+
+# ClaimBlocks (v1.2.5)
+aegis.ledger
+aegis.claimblocks.exchange
+aegis.claimblocks.buy
+aegis.claimblocks.sell
+aegis.earn.blocks
+
+# Admin
+aegis.admin
+aegis.admin.manage
+aegis.bypass
+aegis.admin.wand
+aegis.convert
+aegis.admin.migrate
+
+# Optional staff bypass permissions
+aegis.notify.bypass
+aegis.claimblocks.exchange.bypass
+aegis.claimblocks.selllock.bypass
+aegis.admin.bypass-limits
+[/CODE]
+[/SPOILER]
+
+[SIZE=5][COLOR=#333333]▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬[/COLOR][/SIZE]
+
+[SIZE=5][B][COLOR=#e74c3c]INSTALLATION[/COLOR][/B][/SIZE]
+[SIZE=3]
+[B]1.[/B] Stop your server.
+[B]2.[/B] Drop [B]AegisGuard.jar[/B] into your [B]/plugins[/B] folder.
+[B]3.[/B] (Optional) Install [B]Vault[/B] + an economy plugin (EssentialsX / CMI / etc.) for exchange features.
+[B]4.[/B] Start the server.
+
+[B]Supported Versions:[/B] 1.16 – 1.21.x
+[B]Platforms:[/B] Spigot, Paper, Purpur, Folia
+[/SIZE]
+
+[SIZE=4][B][COLOR=#3498db]Feedback & Contributions[/COLOR][/B][/SIZE]
+[SIZE=3]
+If you notice any issues or inconsistencies (GUI titles, menu text, lore formatting, missing keys, colors, etc.), please report them:
+[B]• Discord:[/B] post in Suggestions / Support
+[B]• GitHub:[/B] open an Issue in the repository
+
+Interested in adding more languages?
+If you're fluent and would like to contribute a language pack, feel free to reach out. Optional, but always appreciated.
+[/SIZE]
+
+[SIZE=3][I][COLOR=#555555]Forged by Aegis Divine — Simple. Steadfast. Eternal.[/COLOR][/I][/SIZE]
+
+[URL='https://discord.gg/Y2NpuR7UZE'][IMG]https://img.shields.io/badge/Join_Discord-Support_&_Updates-5865F2?style=for-the-badge&logo=discord&logoColor=white[/IMG][/URL]
+[/CENTER]

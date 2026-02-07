@@ -43,7 +43,6 @@ It's not just another claim plugin. AegisGuard transforms land ownership into a 
 - [Plugin Integrations](#plugin-integrations)
 - [Installation](#installation)
 - [Quick Links](#quick-links)
-- [Demo Server](#demo-server)
 - [Support](#support)
 
 ---
@@ -448,18 +447,6 @@ AegisGuard can coexist with other protection plugins:
 | Spigot | [SpigotMC](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/) |
 | Hangar | [PaperMC Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard) |
 | CurseForge | [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy) |
-
----
-
-## Demo Server
-
-Test AegisGuard on the public demo server:
-
-```
-IP:       72.5.47.116:25570
-Version:  1.20.4+ (Daily Reset | Sandbox Mode)
-Start:    /ag menu
-```
 
 ---
 

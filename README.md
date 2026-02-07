@@ -1,3 +1,6 @@
+> **Project Status Notice:**
+> This project is currently on the back burner due to unforeseen circumstances related to family matters. I apologize for any inconvenience. Version 1.2.5 will remain active and will not be removed from any platform. However, any updates regarding AegisGuard will be postponed until further notice. Thank you for your understanding and patience.
+
 <p align="center">
   <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
 </p>

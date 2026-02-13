@@ -452,7 +452,6 @@ AegisGuard can coexist with other protection plugins:
 
 Need help? Have suggestions?
 
-- **Discord**: [Join our community](https://discord.gg/Y2NpuR7UZE)
 - **Wiki**: [Read the documentation](https://github.com/snazzyatoms/AegisGuard/wiki)
 - **Issues**: [Report bugs](https://github.com/snazzyatoms/AegisGuard/issues)
 

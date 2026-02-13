@@ -440,7 +440,6 @@ AegisGuard can coexist with other protection plugins:
 | Resource | Link |
 |----------|------|
 | Documentation | [Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki) |
-| Support | [Discord Community](https://discord.gg/Y2NpuR7UZE) |
 | Bug Reports | [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues) |
 | Releases | [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases) |
 | Spigot | [SpigotMC](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/) |

@@ -21,6 +21,8 @@ public class ClaimBlockManager {
     private FileConfiguration data;
 
     private final Object ioLock = new Object();
+    private volatile boolean dirty = false;
+    private volatile boolean saveQueued = false;
 
     public ClaimBlockManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -100,11 +102,17 @@ public class ClaimBlockManager {
     }
 
     public long getUsedBlocks(UUID uuid) {
+        ClaimBlockData data = getOrCreate(uuid);
+        long now = System.currentTimeMillis();
+        if ((now - data.getLastUsedCacheUpdate()) <= 5000L) {
+            return data.getUsedBlocksCache();
+        }
+
         long used = 0;
         for (Plot plot : plugin.store().getPlots(uuid)) {
             if (plot != null) used += plot.getArea();
         }
-        getOrCreate(uuid).setUsedBlocksCache(used);
+        data.setUsedBlocksCache(used);
         return used;
     }
 
@@ -198,6 +206,16 @@ public class ClaimBlockManager {
     public void setStarterClaimed(UUID uuid, boolean claimed) {
         ClaimBlockData d = getOrCreate(uuid);
         d.setClaimedStarter(claimed);
+        saveAsync();
+    }
+
+    public boolean isPlaytimeEarningEnabled(UUID uuid) {
+        return getOrCreate(uuid).isPlaytimeEarningEnabled();
+    }
+
+    public void setPlaytimeEarningEnabled(UUID uuid, boolean enabled) {
+        ClaimBlockData d = getOrCreate(uuid);
+        d.setPlaytimeEarningEnabled(enabled);
         saveAsync();
     }
 
@@ -359,6 +377,7 @@ public class ClaimBlockManager {
 
     public void load() {
         synchronized (ioLock) {
+            cache.clear();
             if (!file.exists()) {
                 try { file.getParentFile().mkdirs(); file.createNewFile(); }
                 catch (IOException e) { e.printStackTrace(); }
@@ -378,6 +397,7 @@ public class ClaimBlockManager {
                         cbd.setBoughtBlocks(data.getLong(path + ".bought", 0));
                         cbd.setSpentBlocks(data.getLong(path + ".spent", 0)); // ✅ NEW
                         cbd.setClaimedStarter(data.getBoolean(path + ".starter_claimed", false));
+                        cbd.setPlaytimeEarningEnabled(data.getBoolean(path + ".playtime_earning_enabled", true));
 
                         // ✅ NEW (v1.2.5): Sell-Lock lots
                         List<String> lots = data.getStringList(path + ".sell_lock_lots");
@@ -389,11 +409,19 @@ public class ClaimBlockManager {
                     } catch (Exception ignored) {}
                 }
             }
+            dirty = false;
         }
     }
 
     public void save() {
         synchronized (ioLock) {
+            if (!dirty && file.exists()) {
+                saveQueued = false;
+                return;
+            }
+
+            dirty = false;
+
             if (data == null) data = YamlConfiguration.loadConfiguration(file);
 
             Map<UUID, ClaimBlockData> snap = new HashMap<>(cache);
@@ -407,18 +435,33 @@ public class ClaimBlockManager {
                 data.set(path + ".bought", cbd.getBoughtBlocks());
                 data.set(path + ".spent", cbd.getSpentBlocks()); // ✅ NEW
                 data.set(path + ".starter_claimed", cbd.hasClaimedStarter());
+                data.set(path + ".playtime_earning_enabled", cbd.isPlaytimeEarningEnabled());
 
                 // ✅ NEW (v1.2.5): Persist sell-lock lots
                 data.set(path + ".sell_lock_lots", cbd.serializeLots());
             }
 
             try { data.save(file); }
-            catch (IOException e) { e.printStackTrace(); }
+            catch (IOException e) {
+                e.printStackTrace();
+                dirty = true;
+            } finally {
+                saveQueued = false;
+            }
         }
     }
 
     public void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        dirty = true;
+        if (saveQueued) return;
+
+        saveQueued = true;
+        plugin.runGlobalAsync(() -> {
+            save();
+            if (dirty && !saveQueued) {
+                saveAsync();
+            }
+        });
     }
 
     public void shutdown() {

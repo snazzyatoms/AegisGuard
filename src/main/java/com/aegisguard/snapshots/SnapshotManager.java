@@ -3,6 +3,7 @@ package com.aegisguard.snapshots;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.snapshots.ClaimSnapshot.SnapshotType;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -61,31 +62,27 @@ public class SnapshotManager {
             plugin.getLogger().warning("[Snapshots] Cannot rollback: snapshot " + snapshotId + " not found");
             return false;
         }
-        
-        // Get current plot
+
         Plot currentPlot = plugin.store().getPlot(snapshot.getOwner(), snapshot.getPlotId());
         if (currentPlot == null) {
-            plugin.getLogger().warning("[Snapshots] Cannot rollback: plot " + snapshot.getPlotId() + " no longer exists");
-            return false;
+            currentPlot = new Plot(
+                    snapshot.getPlotId(),
+                    snapshot.getOwner(),
+                    snapshot.getOwnerName(),
+                    snapshot.getWorldName(),
+                    snapshot.getX1(),
+                    snapshot.getZ1(),
+                    snapshot.getX2(),
+                    snapshot.getZ2()
+            );
+        } else {
+            plugin.store().removePlot(currentPlot.getOwner(), currentPlot.getPlotId());
         }
-        
-        // Remove from store
-        plugin.store().removePlot(currentPlot.getOwner(), currentPlot.getPlotId());
-        
-        // Restore bounds
-        currentPlot.setX1(snapshot.getX1());
-        currentPlot.setZ1(snapshot.getZ1());
-        currentPlot.setX2(snapshot.getX2());
-        currentPlot.setZ2(snapshot.getZ2());
-        
-        // TODO: Restore flags and members if you stored them
-        // Example:
-        // for (Map.Entry<String, Boolean> flag : snapshot.getFlags().entrySet()) {
-        //     currentPlot.setFlag(flag.getKey(), flag.getValue());
-        // }
-        
-        // Add back to store
+
+        restorePlotState(currentPlot, snapshot);
+
         plugin.store().addPlot(currentPlot);
+        plugin.store().savePlotSync(currentPlot);
         plugin.store().setDirty(true);
         
         plugin.getLogger().info("[Snapshots] Rolled back plot " + currentPlot.getPlotId() + 
@@ -222,15 +219,54 @@ public class SnapshotManager {
                         try { triggeredBy = UUID.fromString(actorStr); } catch (Throwable ignored) {}
                     }
                     
-                    // Load flags and members (optional)
                     Map<String, Boolean> flags = new HashMap<>();
+                    if (data.isConfigurationSection(path + ".flags")) {
+                        ConfigurationSection flagsSec = data.getConfigurationSection(path + ".flags");
+                        if (flagsSec != null) {
+                            for (String flagKey : flagsSec.getKeys(false)) {
+                                flags.put(flagKey, flagsSec.getBoolean(flagKey));
+                            }
+                        }
+                    }
+
                     Map<UUID, String> members = new HashMap<>();
+                    if (data.isConfigurationSection(path + ".members")) {
+                        ConfigurationSection membersSec = data.getConfigurationSection(path + ".members");
+                        if (membersSec != null) {
+                            for (String memberKey : membersSec.getKeys(false)) {
+                                try {
+                                    members.put(UUID.fromString(memberKey), membersSec.getString(memberKey, "visitor"));
+                                } catch (IllegalArgumentException ignored) {}
+                            }
+                        }
+                    }
+
+                    List<UUID> bannedPlayers = new ArrayList<>();
+                    for (String bannedKey : data.getStringList(path + ".banned")) {
+                        try {
+                            bannedPlayers.add(UUID.fromString(bannedKey));
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                     
                     ClaimSnapshot snapshot = new ClaimSnapshot(
                             snapshotId, plotId, owner, worldName,
                             x1, z1, x2, z2, timestamp,
                             type, reason, triggeredBy,
-                            flags, members
+                            data.getString(path + ".ownerName"),
+                            data.getString(path + ".plotName"),
+                            data.getString(path + ".description"),
+                            data.getString(path + ".welcomeMessage"),
+                            data.getString(path + ".farewellMessage"),
+                            data.getString(path + ".entryTitle"),
+                            data.getString(path + ".entrySubtitle"),
+                            data.getString(path + ".customBiome"),
+                            data.getString(path + ".plotStatus"),
+                            data.getBoolean(path + ".serverWarp", false),
+                            data.getBoolean(path + ".groupPlot", false),
+                            data.getDouble(path + ".treasuryBalance", 0.0),
+                            parseUuid(data.getString(path + ".groupId")),
+                            data.getString(path + ".groupName"),
+                            flags, members, bannedPlayers
                     );
                     
                     snapshots.put(snapshotId, snapshot);
@@ -266,8 +302,37 @@ public class SnapshotManager {
             data.set(path + ".type", snapshot.getType().name());
             data.set(path + ".reason", snapshot.getReason());
             data.set(path + ".triggeredBy", snapshot.getTriggeredBy() == null ? "" : snapshot.getTriggeredBy().toString());
-            
-            // TODO: Save flags and members if needed
+            data.set(path + ".ownerName", snapshot.getOwnerName());
+            data.set(path + ".plotName", snapshot.getPlotName());
+            data.set(path + ".description", snapshot.getDescription());
+            data.set(path + ".welcomeMessage", snapshot.getWelcomeMessage());
+            data.set(path + ".farewellMessage", snapshot.getFarewellMessage());
+            data.set(path + ".entryTitle", snapshot.getEntryTitle());
+            data.set(path + ".entrySubtitle", snapshot.getEntrySubtitle());
+            data.set(path + ".customBiome", snapshot.getCustomBiome());
+            data.set(path + ".plotStatus", snapshot.getPlotStatus());
+            data.set(path + ".serverWarp", snapshot.isServerWarp());
+            data.set(path + ".groupPlot", snapshot.isGroupPlot());
+            data.set(path + ".treasuryBalance", snapshot.getTreasuryBalance());
+            data.set(path + ".groupId", snapshot.getGroupId() == null ? null : snapshot.getGroupId().toString());
+            data.set(path + ".groupName", snapshot.getGroupName());
+
+            data.set(path + ".flags", null);
+            for (Map.Entry<String, Boolean> flag : snapshot.getFlags().entrySet()) {
+                data.set(path + ".flags." + flag.getKey(), flag.getValue());
+            }
+
+            data.set(path + ".members", null);
+            for (Map.Entry<UUID, String> member : snapshot.getMembers().entrySet()) {
+                if (member.getKey() == null) continue;
+                data.set(path + ".members." + member.getKey(), member.getValue());
+            }
+
+            List<String> banned = snapshot.getBannedPlayers().stream()
+                    .filter(Objects::nonNull)
+                    .map(UUID::toString)
+                    .toList();
+            data.set(path + ".banned", banned);
         }
         
         try {
@@ -277,8 +342,55 @@ public class SnapshotManager {
             plugin.getLogger().log(Level.SEVERE, "Failed to save claim-snapshots.yml", e);
         }
     }
+
+    public ClaimSnapshot getLatestSnapshotForPlot(UUID plotId) {
+        List<ClaimSnapshot> matches = getSnapshotsForPlot(plotId);
+        return matches.isEmpty() ? null : matches.get(0);
+    }
+
+    private void restorePlotState(Plot plot, ClaimSnapshot snapshot) {
+        plot.setOwner(snapshot.getOwner());
+        plot.setOwnerName(snapshot.getOwnerName());
+        plot.setWorld(snapshot.getWorldName());
+        plot.setBounds(snapshot.getX1(), snapshot.getZ1(), snapshot.getX2(), snapshot.getZ2());
+        plot.setPlotName(snapshot.getPlotName());
+        plot.setDescription(snapshot.getDescription());
+        plot.setWelcomeMessage(snapshot.getWelcomeMessage());
+        plot.setFarewellMessage(snapshot.getFarewellMessage());
+        plot.setEntryTitle(snapshot.getEntryTitle());
+        plot.setEntrySubtitle(snapshot.getEntrySubtitle());
+        plot.setCustomBiome(snapshot.getCustomBiome());
+        plot.setPlotStatus(snapshot.getPlotStatus());
+        plot.setServerWarp(snapshot.isServerWarp());
+        plot.setGroupPlot(snapshot.isGroupPlot());
+        plot.setTreasuryBalance(snapshot.getTreasuryBalance());
+        plot.setGroupId(snapshot.getGroupId());
+        plot.setGroupName(snapshot.getGroupName());
+
+        plot.getFlags().clear();
+        plot.getFlags().putAll(snapshot.getFlags());
+
+        plot.getPlayerRoles().clear();
+        for (Map.Entry<UUID, String> member : snapshot.getMembers().entrySet()) {
+            plot.setRole(member.getKey(), member.getValue());
+        }
+
+        plot.getBannedPlayers().clear();
+        for (UUID banned : snapshot.getBannedPlayers()) {
+            plot.addBan(banned);
+        }
+    }
     
     public boolean isDirty() { return isDirty; }
     public void setDirty(boolean dirty) { this.isDirty = dirty; }
     public void saveSync() { save(); }
+
+    private UUID parseUuid(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
 }

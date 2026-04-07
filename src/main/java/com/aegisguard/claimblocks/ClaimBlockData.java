@@ -20,6 +20,7 @@ public class ClaimBlockData {
 
     // The "Starter" Flag
     private boolean claimedStarter;
+    private boolean playtimeEarningEnabled;
 
     // Transient (not saved to DB, calculated at runtime)
     private transient long usedBlocksCache = 0;
@@ -73,6 +74,7 @@ public class ClaimBlockData {
         this.boughtBlocks = 0;
         this.spentBlocks = 0;
         this.claimedStarter = false;
+        this.playtimeEarningEnabled = true;
     }
 
     public UUID getOwner() { return playerUUID; }
@@ -114,6 +116,9 @@ public class ClaimBlockData {
 
     public boolean hasClaimedStarter() { return claimedStarter; }
     public void setClaimedStarter(boolean claimed) { this.claimedStarter = claimed; }
+
+    public boolean isPlaytimeEarningEnabled() { return playtimeEarningEnabled; }
+    public void setPlaytimeEarningEnabled(boolean enabled) { this.playtimeEarningEnabled = enabled; }
 
     public long getUsedBlocksCache() { return usedBlocksCache; }
     public void setUsedBlocksCache(long used) {

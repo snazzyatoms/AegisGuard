@@ -6,6 +6,7 @@ import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.ClaimPricingCalculator;  // ✅ NEW: Fair Pricing Calculator
 import com.aegisguard.economy.CurrencyType;  // ✅ NEW: Currency Type enum
+import com.aegisguard.groups.PlotGroup;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.util.TeleportUtil;
 
@@ -44,6 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "like",
             "rename", "stuck", "setdesc", "merge",
             "consume", "ledger", "blocks",
+            "group",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -112,6 +114,79 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             out = out.replace("{" + k + "}", v);
         }
         return out;
+    }
+
+    private void notifyGroup(PlotGroup group, UUID excludePlayer,
+                             String titleKey, String titleFallback,
+                             String messageKey, String messageFallback,
+                             Map<String, String> placeholders) {
+        if (plugin.notifications() == null || group == null) return;
+        if (!plugin.getConfig().getBoolean("group_plots.notifications.enabled", true)) return;
+
+        plugin.notifications().notifyGroupMembers(
+                group,
+                excludePlayer,
+                titleKey,
+                titleFallback,
+                messageKey,
+                messageFallback,
+                placeholders
+        );
+    }
+
+    private void notifyPlot(Plot plot, UUID excludePlayer,
+                            String titleKey, String titleFallback,
+                            String messageKey, String messageFallback,
+                            Map<String, String> placeholders) {
+        if (plugin.notifications() == null || plot == null) return;
+        plugin.notifications().notifyPlotMembers(
+                plot,
+                excludePlayer,
+                titleKey,
+                titleFallback,
+                messageKey,
+                messageFallback,
+                placeholders
+        );
+    }
+
+    private void notifyLowTreasuryIfNeeded(PlotGroup group, Plot linkedPlot, UUID excludePlayer) {
+        if (plugin.notifications() == null || group == null) return;
+        if (!plugin.getConfig().getBoolean("group_plots.notifications.enabled", true)) return;
+
+        double threshold = Math.max(0.0D, plugin.getConfig().getDouble("group_plots.notifications.low_treasury_threshold", 250.0D));
+        if (threshold <= 0.0D) return;
+
+        double balance = linkedPlot != null ? linkedPlot.getTreasuryBalance() : group.getTreasuryBalance();
+        if (balance > threshold) return;
+
+        String formattedBalance = plugin.eco() != null && plugin.eco().isVaultReady()
+                ? plugin.eco().format(balance, CurrencyType.VAULT)
+                : String.format(Locale.US, "%.2f", balance);
+
+        notifyGroup(
+                group,
+                excludePlayer,
+                "notify_group_title",
+                "&6Group Update",
+                "notify_group_treasury_low",
+                "&e{GROUP}'s treasury is running low. Remaining balance: &6{BALANCE}&e.",
+                Map.of(
+                        "GROUP", group.getName(),
+                        "BALANCE", formattedBalance
+                )
+        );
+    }
+
+    private String getReadablePlotName(Plot plot) {
+        if (plot == null) return "Claim";
+        String entryTitle = plot.getEntryTitle();
+        if (entryTitle != null && !entryTitle.isBlank()) return entryTitle;
+        String plotName = plot.getPlotName();
+        if (plotName != null && !plotName.isBlank()) return plotName;
+        String ownerName = plot.getOwnerName();
+        if (ownerName != null && !ownerName.isBlank()) return ownerName + "'s Claim";
+        return "Claim";
     }
 
     // --------------------------------------------------
@@ -201,7 +276,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 }
             }
 
-            case "market" -> plugin.gui().market().open(p, 0);
+            case "market" -> openMarketMenu(p, args);
 
             case "sell" -> handleSell(p, args);
 
@@ -220,6 +295,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "ledger" -> showLedger(p);
 
             case "blocks" -> handleBlocks(p, args);
+
+            case "group" -> handleGroup(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -646,6 +723,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 sendMsg(p, "&e/ag blocks rates &7- view buy/sell rates");
                 sendMsg(p, "&e/ag blocks buy <amount> &7- buy claimblocks");
                 sendMsg(p, "&e/ag blocks sell <amount> &7- sell claimblocks");
+                sendMsg(p, "&e/ag blocks earnings [on|off|status] &7- manage passive block earnings");
                 sendMsg(p, "&8&m------------------------");
             }
 
@@ -698,6 +776,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 plugin.effects().playConfirm(p);
             }
 
+            case "earnings", "earning", "passive" -> handleBlockEarnings(p, args);
+
             default -> {
                 // If someone typed something else, show ledger + hint
                 showLedger(p);
@@ -715,6 +795,59 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private void handleBlockEarnings(Player p, String[] args) {
+        boolean serverEnabled = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true);
+        boolean optOutAllowed = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.player_opt_out_allowed", true);
+
+        if (!serverEnabled) {
+            sendMsg(p, ChatColor.translateAlternateColorCodes('&',
+                    tr(p, "claim_blocks_earnings_server_disabled",
+                            "&cPassive Claim Block earnings are disabled by the server.")));
+            plugin.effects().playError(p);
+            return;
+        }
+
+        if (args.length < 3 || args[2].equalsIgnoreCase("status")) {
+            boolean enabled = plugin.getClaimBlockManager().isPlaytimeEarningEnabled(p.getUniqueId());
+            sendMsg(p, "&8&m------------------------");
+            sendMsg(p, "&6&lPassive Claim Block Earnings");
+            sendMsg(p, "&7Server Playtime Rewards: " + (serverEnabled ? "&aEnabled" : "&cDisabled"));
+            sendMsg(p, "&7Player Toggle Allowed: " + (optOutAllowed ? "&aYes" : "&cNo"));
+            sendMsg(p, "&7Your Status: " + (enabled ? "&aEnabled" : "&cDisabled"));
+            sendMsg(p, "&8&m------------------------");
+            return;
+        }
+
+        if (!optOutAllowed) {
+            sendMsg(p, ChatColor.translateAlternateColorCodes('&',
+                    tr(p, "claim_blocks_earnings_toggle_locked",
+                            "&cThis server does not allow players to change passive earnings.")));
+            plugin.effects().playError(p);
+            return;
+        }
+
+        Boolean desired = parseBooleanArg(args[2]);
+        if (desired == null) {
+            sendMsg(p, "&cUsage: /ag blocks earnings <on|off|status>");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        plugin.getClaimBlockManager().setPlaytimeEarningEnabled(p.getUniqueId(), desired);
+
+        if (desired) {
+            sendMsg(p, ChatColor.translateAlternateColorCodes('&',
+                    tr(p, "claim_blocks_earnings_enabled",
+                            "&aPassive Claim Block earnings enabled.")));
+            plugin.effects().playConfirm(p);
+        } else {
+            sendMsg(p, ChatColor.translateAlternateColorCodes('&',
+                    tr(p, "claim_blocks_earnings_disabled",
+                            "&ePassive Claim Block earnings disabled.")));
+            plugin.effects().playError(p);
+        }
+    }
+
     // --------------------------------------------------
     // Rename / Description
     // --------------------------------------------------
@@ -725,7 +858,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
             return;
         }
-        if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
+        if (!plot.canManage(p, plugin)) {
             sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             return;
         }
@@ -743,6 +876,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        String oldName = getReadablePlotName(plot);
         plot.setEntryTitle(name);
 
         plugin.store().savePlot(plot);
@@ -750,6 +884,19 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         sendKey(p, "plot_renamed", "&a✔ Plot renamed to: &r{NAME}",
                 Map.of("NAME", name));
+        notifyPlot(
+                plot,
+                p.getUniqueId(),
+                "notify_claim_title",
+                "&bClaim Update",
+                "notify_plot_renamed",
+                "&e{PLAYER} renamed {OLD_NAME} &eto &b{NEW_NAME}&e.",
+                Map.of(
+                        "PLAYER", p.getName(),
+                        "OLD_NAME", oldName,
+                        "NEW_NAME", name
+                )
+        );
         plugin.effects().playConfirm(p);
     }
 
@@ -759,7 +906,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
             return;
         }
-        if (!plot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
+        if (!plot.canManage(p, plugin)) {
             sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             return;
         }
@@ -859,7 +1006,7 @@ private void handleResize(Player p, String[] args) {
         return;
     }
 
-    boolean canEdit = plot.getOwner().equals(p.getUniqueId()) || plugin.isAdmin(p);
+    boolean canEdit = plot.canManage(p, plugin);
     if (!canEdit) {
         sendKey(p, "no_perm", "&cError: You do not have permission for this.");
         plugin.effects().playError(p);
@@ -1083,7 +1230,7 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
             sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
             return;
         }
-        if (!kPlot.getOwner().equals(p.getUniqueId()) && !plugin.isAdmin(p)) {
+        if (!kPlot.canManage(p, plugin)) {
             sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             return;
         }
@@ -1095,6 +1242,14 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
         }
         if (!kPlot.isInside(kTarget.getLocation())) {
             sendKey(p, "player_not_in_plot", "&cPlayer is not in your plot.");
+            return;
+        }
+        if (kTarget.getUniqueId().equals(p.getUniqueId())) {
+            sendKey(p, "cannot_kick_self", "&cYou cannot kick yourself.");
+            return;
+        }
+        if (kPlot.isOwner(kTarget.getUniqueId()) || Plot.SERVER_OWNER_UUID.equals(kTarget.getUniqueId())) {
+            sendKey(p, "cannot_kick_owner", "&cYou cannot kick the plot owner.");
             return;
         }
         if (kTarget.hasPermission("aegis.admin.bypass") || kTarget.isOp()) {
@@ -1121,14 +1276,23 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
         }
 
         Plot bPlot = plugin.store().getPlotAt(p.getLocation());
-        if (bPlot == null || !bPlot.getOwner().equals(p.getUniqueId())) {
+        if (bPlot == null) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+            return;
+        }
+        if (!bPlot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             return;
         }
 
         OfflinePlayer bTarget = Bukkit.getOfflinePlayer(args[1]);
         if (bTarget.getUniqueId() != null && bTarget.getUniqueId().equals(p.getUniqueId())) {
             sendKey(p, "ban_self_error", "&cCannot ban yourself.");
+            return;
+        }
+        if (bTarget.getUniqueId() != null
+                && (bPlot.isOwner(bTarget.getUniqueId()) || Plot.SERVER_OWNER_UUID.equals(bTarget.getUniqueId()))) {
+            sendKey(p, "ban_owner_error", "&cCannot ban the plot owner.");
             return;
         }
 
@@ -1159,8 +1323,12 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
         }
 
         Plot uPlot = plugin.store().getPlotAt(p.getLocation());
-        if (uPlot == null || !uPlot.getOwner().equals(p.getUniqueId())) {
+        if (uPlot == null) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+            return;
+        }
+        if (!uPlot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             return;
         }
 
@@ -1180,7 +1348,7 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
 
     private void handleSetSpawn(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+        if (plot == null || !plot.canManage(p, plugin)) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
             plugin.effects().playError(p);
             return;
@@ -1207,7 +1375,7 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
         }
 
         Plot homePlot = plugin.store().getPlotAt(p.getLocation());
-        if (homePlot == null || !homePlot.getOwner().equals(p.getUniqueId())) {
+        if (homePlot == null || !homePlot.canManage(p, plugin)) {
             List<Plot> plots = plugin.store().getPlots(p.getUniqueId());
             if (plots != null && !plots.isEmpty()) homePlot = plots.get(0);
             else {
@@ -1229,7 +1397,7 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
 
     private void handleWelcomeFarewell(Player p, String[] args, boolean isWelcome) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+        if (plot == null || !plot.canManage(p, plugin)) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
             return;
         }
@@ -1264,7 +1432,7 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
     
 private void handleSell(Player p, String[] args) {
     Plot plot = plugin.store().getPlotAt(p.getLocation());
-    if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+    if (plot == null || !plot.canManage(p, plugin)) {
         sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
         return;
     }
@@ -1309,9 +1477,8 @@ private void handleSell(Player p, String[] args) {
 }
 
 private void handleUnsell(Player p) {
-(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+        if (plot == null || !plot.canManage(p, plugin)) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
             return;
         }
@@ -1330,7 +1497,7 @@ private void handleUnsell(Player p) {
 
     private void openLevelMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
+        if (plot == null || !plot.canManage(p, plugin)) {
             sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
             return;
         }
@@ -1341,13 +1508,56 @@ private void handleUnsell(Player p) {
 
     private void openZoneMenu(Player p) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        if (plot == null || !plot.getOwner().equals(p.getUniqueId())) {
-            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot to do that.");
             return;
         }
 
-        if (plugin.cfg().isZoningEnabled()) plugin.gui().zoning().open(p, plot);
-        else sendKey(p, "zoning_disabled", "&cZoning is disabled.");
+        if (!plugin.cfg().isZoningEnabled()) {
+            sendKey(p, "zoning_disabled", "&cZoning is disabled.");
+            return;
+        }
+
+        if (plot.canManage(p, plugin)) {
+            plugin.gui().zoning().open(p, plot);
+            return;
+        }
+
+        if (plot.hasBrowsableZonesFor(p)) {
+            plugin.gui().zoneBrowse().open(p, plot);
+            return;
+        }
+
+        sendKey(p, "zone_browse_none", "&cThere are no rentable zones here right now.");
+    }
+
+    private void openMarketMenu(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        boolean canUseLocal = plot != null
+                && plugin.marketBridges() != null
+                && plugin.marketBridges().plotQualifiesForLocalMarket(plot, p);
+
+        if (args.length >= 2) {
+            String mode = args[1].toLowerCase(Locale.ROOT);
+            if (mode.equals("global")) {
+                plugin.gui().market().open(p, 0);
+                return;
+            }
+            if (mode.equals("local")) {
+                if (canUseLocal) {
+                    plugin.gui().localMarket().open(p, plot);
+                } else {
+                    sendKey(p, "local_market_not_available", "&cThere is no local market set up on this plot.");
+                }
+                return;
+            }
+        }
+
+        if (canUseLocal && plugin.marketBridges() != null && plugin.marketBridges().preferLocalWhenInPlot()) {
+            plugin.gui().localMarket().open(p, plot);
+        } else {
+            plugin.gui().market().open(p, 0);
+        }
     }
 
     private void handleLike(Player p) {
@@ -1397,6 +1607,420 @@ private void handleUnsell(Player p) {
         }
     }
 
+    private void handleGroup(Player p, String[] args) {
+        if (plugin.groups() == null) {
+            sendKey(p, "error_generic", "&cThat feature is not available right now.");
+            return;
+        }
+        if (!plugin.getConfig().getBoolean("group_plots.enabled", true)) {
+            sendKey(p, "feature_disabled", "&cThat feature is disabled on this server.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sendKey(p, "group_help_create", "&e/ag group create <name> &7- create a player group");
+            sendKey(p, "group_help_invite", "&e/ag group invite <player> &7- invite a nearby player");
+            sendKey(p, "group_help_accept", "&e/ag group accept <name> &7- accept a pending invite");
+            sendKey(p, "group_help_status", "&e/ag group status &7- view group and treasury status");
+            sendKey(p, "group_help_claim", "&e/ag group claim &7- create the group plot from your selection");
+            sendKey(p, "group_help_deposit", "&e/ag group deposit <amount> &7- add money to the group or plot treasury");
+            sendKey(p, "group_help_leave", "&e/ag group leave &7- leave your current group");
+            sendKey(p, "group_help_disband", "&e/ag group disband &7- disband your group before it owns a plot");
+            return;
+        }
+
+        PlotGroup group = plugin.groups().getGroupForPlayer(p.getUniqueId());
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "create" -> {
+                if (args.length < 3) {
+                    sendKey(p, "group_usage_create", "&cUsage: /ag group create <name>");
+                    return;
+                }
+                if (group != null) {
+                    sendKey(p, "group_already_in_group", "&cYou are already in a group. Leave it before creating another.");
+                    return;
+                }
+                String name = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+                PlotGroup created = plugin.groups().createGroup(p.getUniqueId(), name);
+                if (created == null) {
+                    sendKey(p, "group_create_failed_name_taken", "&cThat group name is unavailable, or you are already grouped.");
+                    return;
+                }
+                sendKey(p, "group_created", "&aCreated group &e{GROUP}&a. Invite players, build a treasury, then use &e/ag group claim&a.",
+                        Map.of("GROUP", created.getName()));
+            }
+            case "status", "info" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                Plot linkedPlot = getLinkedGroupPlot(group);
+                double treasury = linkedPlot != null ? linkedPlot.getTreasuryBalance() : group.getTreasuryBalance();
+                sendKey(p, "group_status_header", "&6Group Status");
+                sendKey(p, "group_status_name", "&7Group: &e{GROUP}", Map.of("GROUP", group.getName()));
+                sendKey(p, "group_status_leader", "&7Leader: &e{PLAYER}",
+                        Map.of("PLAYER", plugin.groups().getMemberName(group.getLeader())));
+                sendKey(p, "group_status_members", "&7Members: &e{COUNT}", Map.of("COUNT", String.valueOf(group.size())));
+                sendKey(p, "group_status_treasury", "&7Treasury: &e{AMOUNT}",
+                        Map.of("AMOUNT", plugin.eco() != null && plugin.eco().isVaultEnabled()
+                                ? plugin.eco().format(treasury, CurrencyType.VAULT)
+                                : String.format(Locale.US, "%.2f", treasury)));
+                sendKey(p, "group_status_linked_plot", "&7Linked Plot: {STATE}",
+                        Map.of("STATE", linkedPlot == null ? "&cNone" : "&aYes"));
+                sendKey(p, "group_status_eligible_members", "&7Starter-eligible members: &e{COUNT}",
+                        Map.of("COUNT", String.valueOf(plugin.groups().getEligibleStarterMemberCount(group))));
+                sendKey(p, "group_status_starter_area", "&7Free starter max area: &e{AREA}",
+                        Map.of("AREA", String.valueOf(plugin.groups().getStarterMaxArea(group))));
+            }
+            case "invite" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (!p.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_only_leader", "&cOnly the group leader can do that.");
+                    return;
+                }
+                if (args.length < 3) {
+                    sendKey(p, "group_usage_invite", "&cUsage: /ag group invite <player>");
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null || !target.isOnline()) {
+                    sendKey(p, "group_player_not_found", "&cThat player is not online.");
+                    return;
+                }
+                if (target.getUniqueId().equals(p.getUniqueId())) {
+                    sendKey(p, "group_cannot_invite_self", "&cYou are already the leader.");
+                    return;
+                }
+                if (group.isMember(target.getUniqueId())) {
+                    sendKey(p, "group_already_member", "&cThat player is already in your group.");
+                    return;
+                }
+                if (plugin.groups().isInGroup(target.getUniqueId())) {
+                    sendKey(p, "group_target_already_grouped", "&cThat player is already in another group.");
+                    return;
+                }
+                double maxDistance = plugin.getConfig().getDouble("group_plots.invite_max_distance", 32.0D);
+                if (!target.getWorld().equals(p.getWorld()) || target.getLocation().distanceSquared(p.getLocation()) > (maxDistance * maxDistance)) {
+                    sendKey(p, "group_invite_too_far", "&cThat player must be nearby to receive a group invite.");
+                    return;
+                }
+                plugin.groups().invitePlayer(group, target.getUniqueId());
+                sendKey(p, "group_invite_sent", "&aInvited &e{PLAYER} &ato join &e{GROUP}&a.",
+                        Map.of("PLAYER", target.getName(), "GROUP", group.getName()));
+                sendKey(target, "group_invite_received",
+                        "&e{PLAYER} &7invited you to join &e{GROUP}&7. Use &e/ag group accept {GROUP}",
+                        Map.of("PLAYER", p.getName(), "GROUP", group.getName()));
+            }
+            case "accept" -> {
+                if (group != null) {
+                    sendKey(p, "group_already_in_group", "&cYou are already in a group. Leave it before joining another.");
+                    return;
+                }
+                if (args.length < 3) {
+                    sendKey(p, "group_usage_accept", "&cUsage: /ag group accept <name>");
+                    return;
+                }
+                PlotGroup invited = plugin.groups().getGroupByName(String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
+                if (invited == null || !invited.hasInvite(p.getUniqueId())) {
+                    sendKey(p, "group_no_invite", "&cYou do not have a pending invite for that group.");
+                    return;
+                }
+                if (!plugin.groups().acceptInvite(invited, p.getUniqueId())) {
+                    sendKey(p, "group_accept_failed", "&cThat invite could not be accepted.");
+                    return;
+                }
+                sendKey(p, "group_joined", "&aYou joined group &e{GROUP}&a.", Map.of("GROUP", invited.getName()));
+                notifyGroup(
+                        invited,
+                        p.getUniqueId(),
+                        "notify_group_title",
+                        "&6Group Update",
+                        "notify_group_member_joined",
+                        "&a{PLAYER} joined the group &e{GROUP}&a.",
+                        Map.of("PLAYER", p.getName(), "GROUP", invited.getName())
+                );
+            }
+            case "leave" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (p.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_leader_cannot_leave", "&cThe leader cannot leave. Disband the group or keep leading it.");
+                    return;
+                }
+                if (!plugin.groups().leaveGroup(group, p.getUniqueId())) {
+                    sendKey(p, "group_leave_failed", "&cYou could not leave the group right now.");
+                    return;
+                }
+                sendKey(p, "group_left", "&eYou left group &6{GROUP}&e.", Map.of("GROUP", group.getName()));
+                notifyGroup(
+                        group,
+                        p.getUniqueId(),
+                        "notify_group_title",
+                        "&6Group Update",
+                        "notify_group_member_left",
+                        "&e{PLAYER} left the group &6{GROUP}&e.",
+                        Map.of("PLAYER", p.getName(), "GROUP", group.getName())
+                );
+            }
+            case "kick" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (!p.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_only_leader", "&cOnly the group leader can do that.");
+                    return;
+                }
+                if (args.length < 3) {
+                    sendKey(p, "group_usage_kick", "&cUsage: /ag group kick <player>");
+                    return;
+                }
+                OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+                if (target.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_cannot_kick_leader", "&cYou cannot kick the group leader.");
+                    return;
+                }
+                if (!group.isMember(target.getUniqueId())) {
+                    sendKey(p, "group_member_not_found", "&cThat player is not in your group.");
+                    return;
+                }
+                if (!plugin.groups().canRemoveMemberNow(group)) {
+                    sendKey(p, "group_kick_locked", "&cStarter protection is active. You can remove members in about &e{MINUTES} &cminutes.",
+                            Map.of("MINUTES", plugin.groups().describeStarterLockRemaining(group)));
+                    return;
+                }
+                if (!plugin.groups().kickMember(group, target.getUniqueId())) {
+                    sendKey(p, "group_kick_failed", "&cThat member could not be removed.");
+                    return;
+                }
+                String targetName = target.getName() == null ? args[2] : target.getName();
+                sendKey(p, "group_member_kicked", "&eRemoved &6{PLAYER} &efrom the group.",
+                        Map.of("PLAYER", targetName));
+                if (plugin.notifications() != null) {
+                    plugin.notifications().notifyPlayer(
+                            target.getUniqueId(),
+                            "notify_group_title",
+                            "&6Group Update",
+                            "notify_group_member_removed",
+                            "&cYou were removed from the group &6{GROUP}&c by &e{PLAYER}&c.",
+                            Map.of("GROUP", group.getName(), "PLAYER", p.getName())
+                    );
+                }
+                notifyGroup(
+                        group,
+                        p.getUniqueId(),
+                        "notify_group_title",
+                        "&6Group Update",
+                        "notify_group_member_kicked",
+                        "&e{TARGET} was removed from the group by &6{PLAYER}&e.",
+                        Map.of("TARGET", targetName, "PLAYER", p.getName(), "GROUP", group.getName())
+                );
+            }
+            case "deposit", "add" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (args.length < 3) {
+                    sendKey(p, "group_usage_deposit", "&cUsage: /ag group deposit <amount>");
+                    return;
+                }
+                if (plugin.eco() == null || !plugin.eco().isVaultReady()) {
+                    sendKey(p, "group_vault_required", "&cVault economy is required for group treasury deposits.");
+                    return;
+                }
+                double amount;
+                try {
+                    amount = Double.parseDouble(args[2]);
+                } catch (NumberFormatException ex) {
+                    sendKey(p, "group_amount_invalid", "&cAmount must be a valid number.");
+                    return;
+                }
+                if (amount <= 0.0D) {
+                    sendKey(p, "group_amount_positive", "&cAmount must be greater than 0.");
+                    return;
+                }
+                if (!plugin.eco().withdraw(p, amount, CurrencyType.VAULT)) {
+                    sendKey(p, "group_insufficient_funds", "&cYou do not have enough money for that deposit.");
+                    return;
+                }
+                Plot linkedPlot = getLinkedGroupPlot(group);
+                if (linkedPlot != null) {
+                    linkedPlot.addTreasuryFunds(amount);
+                    plugin.store().savePlot(linkedPlot);
+                    String newBalance = plugin.eco().format(linkedPlot.getTreasuryBalance(), CurrencyType.VAULT);
+                    sendKey(p, "group_deposit_success",
+                            "&aDeposited &e{AMOUNT} &ainto the group treasury. New balance: &e{BALANCE}",
+                            Map.of("AMOUNT", plugin.eco().format(amount, CurrencyType.VAULT),
+                                    "BALANCE", newBalance));
+                    notifyGroup(
+                            group,
+                            null,
+                            "notify_group_title",
+                            "&6Group Update",
+                            "notify_group_treasury_updated",
+                            "&e{PLAYER} deposited &6{AMOUNT} &einto {GROUP}'s treasury. New balance: &6{BALANCE}&e.",
+                            Map.of(
+                                    "PLAYER", p.getName(),
+                                    "AMOUNT", plugin.eco().format(amount, CurrencyType.VAULT),
+                                    "BALANCE", newBalance,
+                                    "GROUP", group.getName()
+                            )
+                    );
+                    notifyLowTreasuryIfNeeded(group, linkedPlot, null);
+                } else {
+                    group.addTreasuryFunds(amount);
+                    plugin.groups().setDirty(true);
+                    String newBalance = plugin.eco().format(group.getTreasuryBalance(), CurrencyType.VAULT);
+                    sendKey(p, "group_deposit_success",
+                            "&aDeposited &e{AMOUNT} &ainto the group treasury. New balance: &e{BALANCE}",
+                            Map.of("AMOUNT", plugin.eco().format(amount, CurrencyType.VAULT),
+                                    "BALANCE", newBalance));
+                    notifyGroup(
+                            group,
+                            null,
+                            "notify_group_title",
+                            "&6Group Update",
+                            "notify_group_treasury_updated",
+                            "&e{PLAYER} deposited &6{AMOUNT} &einto {GROUP}'s treasury. New balance: &6{BALANCE}&e.",
+                            Map.of(
+                                    "PLAYER", p.getName(),
+                                    "AMOUNT", plugin.eco().format(amount, CurrencyType.VAULT),
+                                    "BALANCE", newBalance,
+                                    "GROUP", group.getName()
+                            )
+                    );
+                    notifyLowTreasuryIfNeeded(group, null, null);
+                }
+            }
+            case "claim" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (!p.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_only_leader", "&cOnly the group leader can do that.");
+                    return;
+                }
+                if (group.hasLinkedPlot()) {
+                    sendKey(p, "group_plot_already_exists", "&cThis group already has a linked plot.");
+                    return;
+                }
+                if (!plugin.selection().hasSelection(p)) {
+                    sendKey(p, "must_select", "&c❌ You must select two corners with the Wand first.");
+                    return;
+                }
+
+                long area = plugin.selection().getSelectionArea(p);
+                int eligible = plugin.groups().getEligibleStarterMemberCount(group);
+                int minMembers = Math.max(1, plugin.getConfig().getInt("group_plots.min_members_to_claim", 2));
+                if (eligible < minMembers) {
+                    sendKey(p, "group_not_enough_members",
+                            "&cYour group needs at least &e{COUNT} &cstarter-eligible members before it can claim a group plot.",
+                            Map.of("COUNT", String.valueOf(minMembers)));
+                    return;
+                }
+
+                boolean freeStarter = plugin.groups().qualifiesForFreeStarterClaim(group, (int) area);
+                double charged = 0.0D;
+                if (!freeStarter) {
+                    if (plugin.eco() == null || !plugin.eco().isVaultReady()) {
+                        sendKey(p, "group_claim_requires_vault", "&cA Vault economy is required for paid group claims.");
+                        return;
+                    }
+                    double cost = plugin.groups().getRequiredClaimCost((int) area);
+                    if (group.getTreasuryBalance() + 0.000001D < cost) {
+                        sendKey(p, "group_claim_not_enough_treasury",
+                                "&cYour group treasury needs &e{AMOUNT} &cmore before this plot can be claimed.",
+                                Map.of("AMOUNT", plugin.eco().format(cost - group.getTreasuryBalance(), CurrencyType.VAULT)));
+                        return;
+                    }
+                    if (!group.withdrawTreasuryFunds(cost)) {
+                        sendKey(p, "group_claim_not_enough_treasury", "&cYour group treasury cannot cover that claim yet.");
+                        return;
+                    }
+                    charged = cost;
+                    plugin.groups().setDirty(true);
+                }
+
+                Plot newPlot = plugin.selection().confirmGroupClaim(p, group);
+                if (newPlot == null) {
+                    if (charged > 0.0D) {
+                        group.addTreasuryFunds(charged);
+                        plugin.groups().setDirty(true);
+                    }
+                    return;
+                }
+
+                if (freeStarter) {
+                    plugin.groups().markStarterClaimUsed(group);
+                    sendKey(p, "group_free_claim_created",
+                            "&aCreated the free starter plot for &e{GROUP}&a. Protected size used: &e{AREA}&a blocks.",
+                            Map.of("GROUP", group.getName(), "AREA", String.valueOf(area)));
+                } else {
+                    sendKey(p, "group_paid_claim_created",
+                            "&aCreated the group plot for &e{GROUP}&a using &6{AMOUNT}&a from the treasury.",
+                            Map.of("GROUP", group.getName(), "AMOUNT", plugin.eco().format(charged, CurrencyType.VAULT)));
+                }
+
+                plugin.groups().attachPlot(group, newPlot);
+                newPlot.setTreasuryBalance(group.getTreasuryBalance());
+                group.setTreasuryBalance(0.0D);
+                plugin.groups().setDirty(true);
+                plugin.store().savePlot(newPlot);
+                notifyGroup(
+                        group,
+                        null,
+                        "notify_group_title",
+                        "&6Group Update",
+                        "notify_group_plot_created",
+                        "&a{PLAYER} created the group plot for &e{GROUP}&a.",
+                        Map.of("PLAYER", p.getName(), "GROUP", group.getName())
+                );
+            }
+            case "disband", "disable", "off" -> {
+                if (group == null) {
+                    sendKey(p, "group_not_in_group", "&cYou are not currently in a group.");
+                    return;
+                }
+                if (!p.getUniqueId().equals(group.getLeader())) {
+                    sendKey(p, "group_only_leader", "&cOnly the group leader can do that.");
+                    return;
+                }
+                if (group.hasLinkedPlot()) {
+                    sendKey(p, "group_disband_plot_exists", "&cThis group already owns a plot. Unclaim or migrate it before disbanding.");
+                    return;
+                }
+                notifyGroup(
+                        group,
+                        p.getUniqueId(),
+                        "notify_group_title",
+                        "&6Group Update",
+                        "notify_group_disbanded",
+                        "&c{PLAYER} disbanded the group &6{GROUP}&c.",
+                        Map.of("PLAYER", p.getName(), "GROUP", group.getName())
+                );
+                plugin.groups().disbandGroup(group);
+                sendKey(p, "group_disbanded", "&eDisbanded group &6{GROUP}&e.", Map.of("GROUP", group.getName()));
+            }
+            default -> sendKey(p, "group_usage", "&cUsage: /ag group <create|invite|accept|status|deposit|claim|leave|kick|disband>");
+        }
+    }
+
+    private Plot getLinkedGroupPlot(PlotGroup group) {
+        if (group == null || group.getLinkedPlotId() == null) return null;
+        return plugin.store().getAllPlots().stream()
+                .filter(plot -> plot != null && group.getLinkedPlotId().equals(plot.getPlotId()))
+                .findFirst()
+                .orElse(null);
+    }
+
     // --------------------------------------------------
     // Tab completion
     // --------------------------------------------------
@@ -1417,6 +2041,14 @@ private void handleUnsell(Player p) {
                 return completions;
             }
 
+            if (args[0].equalsIgnoreCase("notify")) {
+                List<String> completions = new ArrayList<>();
+                List<String> subs = Arrays.asList("greetings", "admin", "all", "mode", "status");
+                StringUtil.copyPartialMatches(args[1], subs, completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
             if (args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("refresh")) {
                 List<String> completions = new ArrayList<>();
                 List<String> modes = Arrays.asList("soft", "nogui");
@@ -1427,7 +2059,23 @@ private void handleUnsell(Player p) {
 
             if (args[0].equalsIgnoreCase("blocks")) {
                 List<String> completions = new ArrayList<>();
-                List<String> subs = Arrays.asList("rates", "buy", "sell", "help");
+                List<String> subs = Arrays.asList("rates", "buy", "sell", "earnings", "help");
+                StringUtil.copyPartialMatches(args[1], subs, completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("group")) {
+                List<String> completions = new ArrayList<>();
+                List<String> subs = Arrays.asList("create", "invite", "accept", "status", "deposit", "claim", "leave", "kick", "disband");
+                StringUtil.copyPartialMatches(args[1], subs, completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("market")) {
+                List<String> completions = new ArrayList<>();
+                List<String> subs = Arrays.asList("local", "global");
                 StringUtil.copyPartialMatches(args[1], subs, completions);
                 Collections.sort(completions);
                 return completions;
@@ -1435,9 +2083,38 @@ private void handleUnsell(Player p) {
         }
 
         if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("notify")) {
+                if (args[1].equalsIgnoreCase("greetings")
+                        || args[1].equalsIgnoreCase("admin")
+                        || args[1].equalsIgnoreCase("all")) {
+                    return Arrays.asList("on", "off");
+                }
+                if (args[1].equalsIgnoreCase("mode")) {
+                    return Arrays.asList("chat", "actionbar", "title");
+                }
+            }
+
             if (args[0].equalsIgnoreCase("blocks")) {
+                if (args[1].equalsIgnoreCase("earnings")) {
+                    return Arrays.asList("on", "off", "status");
+                }
                 if (args[1].equalsIgnoreCase("buy") || args[1].equalsIgnoreCase("sell")) {
                     return Arrays.asList("1", "10", "64", "100", "500", "1000");
+                }
+            }
+
+            if (args[0].equalsIgnoreCase("group")) {
+                if (args[1].equalsIgnoreCase("deposit")) {
+                    return Arrays.asList("100", "500", "1000", "5000", "10000");
+                }
+                if (args[1].equalsIgnoreCase("invite") || args[1].equalsIgnoreCase("kick")) {
+                    List<String> options = Bukkit.getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
+                            .collect(Collectors.toList());
+                    List<String> completions = new ArrayList<>();
+                    StringUtil.copyPartialMatches(args[2], options, completions);
+                    return completions;
                 }
             }
         }
@@ -1515,23 +2192,25 @@ private void handleUnsell(Player p) {
 
         // No args: legacy behavior (toggle greetings)
         if (args.length == 1) {
-            handleNotifyGreetings(p);
+            handleNotifyGreetings(p, args);
             return;
         }
 
         String subcommand = args[1].toLowerCase();
 
         switch (subcommand) {
-            case "greetings", "greeting", "greet" -> handleNotifyGreetings(p);
-            case "admin", "admins", "adminupdates" -> handleNotifyAdmin(p);
+            case "greetings", "greeting", "greet" -> handleNotifyGreetings(p, args);
+            case "admin", "admins", "adminupdates" -> handleNotifyAdmin(p, args);
+            case "all" -> handleNotifyAll(p, args);
             case "mode" -> handleNotifyMode(p, args);
             case "status", "settings", "info" -> handleNotifyStatus(p);
             default -> {
                 sendKey(p, "notify_usage",
                     "&eNotification Commands:\n" +
                     "&7/aegis notify &8- &7Toggle greeting messages\n" +
-                    "&7/aegis notify greetings &8- &7Toggle claim enter/exit messages\n" +
-                    "&7/aegis notify admin &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify greetings [on|off] &8- &7Toggle claim enter/exit messages\n" +
+                    "&7/aegis notify admin [on|off] &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify all [on|off] &8- &7Toggle both notification groups\n" +
                     "&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n" +
                     "&7/aegis notify status &8- &7View current settings"
                 );
@@ -1539,8 +2218,34 @@ private void handleUnsell(Player p) {
         }
     }
 
-    private void handleNotifyGreetings(Player p) {
-        boolean newState = plugin.getNotificationManager().toggleGreetings(p.getUniqueId());
+    private void handleNotifyGreetings(Player p, String[] args) {
+        if (!canManageGreetingNotifications(p, true)) {
+            plugin.effects().playError(p);
+            return;
+        }
+
+        Boolean requested = parseBooleanArg(args.length >= 3 ? args[2] : null);
+        if (args.length >= 3 && requested == null) {
+            sendKey(p, "notify_usage",
+                    "&eNotification Commands:\n" +
+                    "&7/aegis notify greetings [on|off] &8- &7Toggle claim entry/exit messages\n" +
+                    "&7/aegis notify admin [on|off] &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify all [on|off] &8- &7Toggle both notification groups\n" +
+                    "&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n" +
+                    "&7/aegis notify status &8- &7View current settings");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        boolean newState;
+        if (requested == null) {
+            newState = plugin.getNotificationManager().toggleGreetings(p.getUniqueId());
+        } else {
+            var settings = plugin.getNotificationManager().getSettings(p.getUniqueId());
+            settings.setGreetingsEnabled(requested);
+            plugin.getNotificationManager().updateSettings(settings);
+            newState = requested;
+        }
 
         if (newState) {
             sendKey(p, "notify_greetings_enabled", "&aGreetings enabled. You will see claim enter/exit messages.");
@@ -1551,8 +2256,35 @@ private void handleUnsell(Player p) {
         }
     }
 
-    private void handleNotifyAdmin(Player p) {
-        boolean newState = plugin.getNotificationManager().toggleAdminUpdates(p.getUniqueId());
+    private void handleNotifyAdmin(Player p, String[] args) {
+        if (!p.hasPermission("aegis.notify")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        Boolean requested = parseBooleanArg(args.length >= 3 ? args[2] : null);
+        if (args.length >= 3 && requested == null) {
+            sendKey(p, "notify_usage",
+                    "&eNotification Commands:\n" +
+                    "&7/aegis notify greetings [on|off] &8- &7Toggle claim entry/exit messages\n" +
+                    "&7/aegis notify admin [on|off] &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify all [on|off] &8- &7Toggle both notification groups\n" +
+                    "&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n" +
+                    "&7/aegis notify status &8- &7View current settings");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        boolean newState;
+        if (requested == null) {
+            newState = plugin.getNotificationManager().toggleAdminUpdates(p.getUniqueId());
+        } else {
+            var settings = plugin.getNotificationManager().getSettings(p.getUniqueId());
+            settings.setAdminUpdatesEnabled(requested);
+            plugin.getNotificationManager().updateSettings(settings);
+            newState = requested;
+        }
 
         if (newState) {
             sendKey(p, "notify_admin_enabled", "&aAdmin notifications enabled.");
@@ -1563,7 +2295,54 @@ private void handleUnsell(Player p) {
         }
     }
 
+    private void handleNotifyAll(Player p, String[] args) {
+        if (!p.hasPermission("aegis.notify")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        if (!canManageGreetingNotifications(p, true)) {
+            plugin.effects().playError(p);
+            return;
+        }
+
+        Boolean requested = parseBooleanArg(args.length >= 3 ? args[2] : null);
+        if (args.length >= 3 && requested == null) {
+            sendKey(p, "notify_usage",
+                    "&eNotification Commands:\n" +
+                    "&7/aegis notify greetings [on|off] &8- &7Toggle claim entry/exit messages\n" +
+                    "&7/aegis notify admin [on|off] &8- &7Toggle admin notifications\n" +
+                    "&7/aegis notify all [on|off] &8- &7Toggle both notification groups\n" +
+                    "&7/aegis notify mode <chat|actionbar|title> &8- &7Set notification style\n" +
+                    "&7/aegis notify status &8- &7View current settings");
+            plugin.effects().playError(p);
+            return;
+        }
+
+        var settings = plugin.getNotificationManager().getSettings(p.getUniqueId());
+        boolean newState = requested != null ? requested : !(settings.isGreetingsEnabled() && settings.isAdminUpdatesEnabled());
+        settings.setGreetingsEnabled(newState);
+        settings.setAdminUpdatesEnabled(newState);
+        plugin.getNotificationManager().updateSettings(settings);
+
+        if (newState) {
+            sendKey(p, "notify_greetings_enabled", "&aGreetings enabled. You will see claim enter/exit messages.");
+            sendKey(p, "notify_admin_enabled", "&aAdmin notifications enabled.");
+            plugin.effects().playConfirm(p);
+        } else {
+            sendKey(p, "notify_greetings_disabled", "&cGreetings disabled. You will not see claim enter/exit messages.");
+            sendKey(p, "notify_admin_disabled", "&cAdmin notifications disabled.");
+            plugin.effects().playError(p);
+        }
+    }
+
     private void handleNotifyMode(Player p, String[] args) {
+        if (!canManageGreetingNotifications(p, false)) {
+            plugin.effects().playError(p);
+            return;
+        }
+
         if (args.length < 3) {
             sendKey(p, "notify_mode_usage",
                 "&eUsage: &7/aegis notify mode <chat|actionbar|title>\n" +
@@ -1602,16 +2381,111 @@ private void handleUnsell(Player p) {
         com.aegisguard.notify.PlayerNotificationSettings settings =
             plugin.getNotificationManager().getSettings(p.getUniqueId());
 
-        String greetingStatus = settings.isGreetingsEnabled() ? "&aEnabled" : "&cDisabled";
+        boolean effectiveGreetings = areGreetingNotificationsEffectivelyEnabled(p, settings);
+        String greetingStatus = effectiveGreetings ? "&aEnabled" : "&cDisabled";
         String adminStatus = settings.isAdminUpdatesEnabled() ? "&aEnabled" : "&cDisabled";
-        String mode = "&b" + settings.getMode().getDisplayName();
+        String mode = "&b" + resolveEffectiveMode(settings).getDisplayName();
 
         sendKey(p, "notify_status",
             "&e&l━━━━━━━━━ &6Notification Settings &e&l━━━━━━━━━\n" +
-            "&7Greetings: " + greetingStatus + "\n" +
-            "&7Admin Updates: " + adminStatus + "\n" +
-            "&7Mode: " + mode + "\n" +
-            "&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "&7Greetings: {GREETINGS}\n" +
+            "&7Admin Updates: {ADMIN}\n" +
+            "&7Mode: {MODE}\n" +
+            "&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            Map.of(
+                    "GREETINGS", greetingStatus,
+                    "ADMIN", adminStatus,
+                    "MODE", mode
+            )
         );
+    }
+
+    private boolean canManageGreetingNotifications(Player p, boolean togglingState) {
+        if (!p.hasPermission("aegis.notify")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return false;
+        }
+
+        String base = "titles.claim_enter_exit";
+        boolean enabled = plugin.getConfig().getBoolean(base + ".enabled", true);
+        String mode = plugin.getConfig().getString(base + ".mode", "PER_PLAYER").toUpperCase(Locale.ROOT);
+        boolean allowToggle = plugin.getConfig().getBoolean(base + ".allow_player_toggle", true);
+        String requiredPermission = plugin.getConfig().getString(base + ".required_permission", "");
+        String bypassPermission = plugin.getConfig().getString(base + ".bypass_permission", "aegis.notify.bypass");
+
+        if (!enabled) {
+            if (bypassPermission != null && !bypassPermission.isBlank() && p.hasPermission(bypassPermission)) {
+                return true;
+            }
+            sendKey(p, "claim_enter_exit_notify_server_disabled",
+                    "&cClaim enter/exit notifications are disabled server-wide.");
+            return false;
+        }
+
+        if (requiredPermission != null && !requiredPermission.isBlank() && !p.hasPermission(requiredPermission)) {
+            sendKey(p, "claim_enter_exit_notify_server_disabled",
+                    "&cClaim enter/exit notifications are disabled server-wide.");
+            return false;
+        }
+
+        if (togglingState && !"PER_PLAYER".equals(mode)) {
+            sendKey(p, "claim_enter_exit_notify_toggle_not_allowed",
+                    "&cThis server does not allow players to toggle claim notifications.");
+            return false;
+        }
+
+        if (togglingState && !allowToggle) {
+            sendKey(p, "claim_enter_exit_notify_toggle_not_allowed",
+                    "&cThis server does not allow players to toggle claim notifications.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean areGreetingNotificationsEffectivelyEnabled(Player p,
+                                                               com.aegisguard.notify.PlayerNotificationSettings settings) {
+        String base = "titles.claim_enter_exit";
+        boolean enabled = plugin.getConfig().getBoolean(base + ".enabled", true);
+        String mode = plugin.getConfig().getString(base + ".mode", "PER_PLAYER").toUpperCase(Locale.ROOT);
+        String requiredPermission = plugin.getConfig().getString(base + ".required_permission", "");
+        String bypassPermission = plugin.getConfig().getString(base + ".bypass_permission", "aegis.notify.bypass");
+
+        if (!enabled) {
+            return bypassPermission != null && !bypassPermission.isBlank() && p.hasPermission(bypassPermission);
+        }
+
+        if (requiredPermission != null && !requiredPermission.isBlank() && !p.hasPermission(requiredPermission)) {
+            return false;
+        }
+
+        if ("FORCE_ON".equals(mode)) return true;
+        if ("FORCE_OFF".equals(mode)) {
+            return bypassPermission != null && !bypassPermission.isBlank() && p.hasPermission(bypassPermission);
+        }
+
+        return settings == null || settings.isGreetingsEnabled();
+    }
+
+    private com.aegisguard.notify.NotificationMode resolveEffectiveMode(
+            com.aegisguard.notify.PlayerNotificationSettings settings
+    ) {
+        String configured = plugin.getConfig().getString("titles.claim_enter_exit.notification_location",
+                plugin.getConfig().getString("titles.notification_location", "ACTION_BAR"));
+
+        if (settings == null || settings.getMode() == null) {
+            return com.aegisguard.notify.NotificationMode.fromString(configured);
+        }
+
+        return settings.getMode();
+    }
+
+    private Boolean parseBooleanArg(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        return switch (raw.toLowerCase(Locale.ROOT)) {
+            case "on", "true", "enable", "enabled", "yes" -> Boolean.TRUE;
+            case "off", "false", "disable", "disabled", "no" -> Boolean.FALSE;
+            default -> null;
+        };
     }
 }

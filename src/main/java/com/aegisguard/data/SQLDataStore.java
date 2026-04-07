@@ -78,6 +78,49 @@ public class SQLDataStore implements IDataStore {
                     " expires BIGINT" +
                     " )";
 
+    private static final String CREATE_STALLS_TABLE =
+            "CREATE TABLE IF NOT EXISTS aegis_stalls (" +
+                    " stall_id VARCHAR(96) PRIMARY KEY," +
+                    " plot_id VARCHAR(36)," +
+                    " owner_uuid VARCHAR(36)," +
+                    " owner_name VARCHAR(32)," +
+                    " title VARCHAR(64)," +
+                    " zone_name VARCHAR(32)," +
+                    " chest_x INT, chest_y INT, chest_z INT," +
+                    " sign_x INT, sign_y INT, sign_z INT," +
+                    " created_at BIGINT" +
+                    " )";
+
+    private static final String CREATE_STALL_LISTINGS_TABLE =
+            "CREATE TABLE IF NOT EXISTS aegis_stall_listings (" +
+                    " stall_id VARCHAR(96)," +
+                    " chest_slot INT," +
+                    " price DOUBLE," +
+                    " currency VARCHAR(24)," +
+                    " bundle_amount INT," +
+                    " PRIMARY KEY (stall_id, chest_slot)" +
+                    " )";
+
+    private static final String CREATE_ZONE_META_TABLE =
+            "CREATE TABLE IF NOT EXISTS aegis_zone_meta (" +
+                    " zone_key VARCHAR(160) PRIMARY KEY," +
+                    " spawn_x DOUBLE," +
+                    " spawn_y DOUBLE," +
+                    " spawn_z DOUBLE," +
+                    " hotel_mode BOOLEAN," +
+                    " guest_visit BOOLEAN," +
+                    " guest_interact BOOLEAN," +
+                    " guest_containers BOOLEAN," +
+                    " guest_build BOOLEAN" +
+                    " )";
+
+    private static final String CREATE_ZONE_GUESTS_TABLE =
+            "CREATE TABLE IF NOT EXISTS aegis_zone_guests (" +
+                    " zone_key VARCHAR(160)," +
+                    " guest_uuid VARCHAR(36)," +
+                    " PRIMARY KEY (zone_key, guest_uuid)" +
+                    " )";
+
     private static final String UPSERT_PLOT =
             "REPLACE INTO aegis_plots " +
                     "(plot_id, owner_uuid, owner_name, world, x1, z1, x2, z2, level, xp, last_upkeep, flags, roles, settings) " +
@@ -99,6 +142,34 @@ public class SQLDataStore implements IDataStore {
             "INSERT INTO aegis_zones " +
                     "(zone_id, plot_id, name, x1, y1, z1, x2, y2, z2, renter, price, expires) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+
+    private static final String DELETE_STALLS_BY_PLOT =
+            "DELETE FROM aegis_stalls WHERE plot_id = ?";
+
+    private static final String INSERT_STALL =
+            "INSERT INTO aegis_stalls " +
+                    "(stall_id, plot_id, owner_uuid, owner_name, title, zone_name, chest_x, chest_y, chest_z, sign_x, sign_y, sign_z, created_at) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+    private static final String DELETE_STALL_LISTINGS_BY_PLOT =
+            "DELETE FROM aegis_stall_listings WHERE stall_id LIKE ?";
+
+    private static final String INSERT_STALL_LISTING =
+            "INSERT INTO aegis_stall_listings " +
+                    "(stall_id, chest_slot, price, currency, bundle_amount) VALUES (?,?,?,?,?)";
+
+    private static final String DELETE_ZONE_META_BY_PLOT =
+            "DELETE FROM aegis_zone_meta WHERE zone_key LIKE ?";
+
+    private static final String DELETE_ZONE_GUESTS_BY_PLOT =
+            "DELETE FROM aegis_zone_guests WHERE zone_key LIKE ?";
+
+    private static final String INSERT_ZONE_META =
+            "INSERT INTO aegis_zone_meta " +
+                    "(zone_key, spawn_x, spawn_y, spawn_z, hotel_mode, guest_visit, guest_interact, guest_containers, guest_build) VALUES (?,?,?,?,?,?,?,?,?)";
+
+    private static final String INSERT_ZONE_GUEST =
+            "INSERT INTO aegis_zone_guests (zone_key, guest_uuid) VALUES (?,?)";
 
     // Wilderness logging
     private static final String LOG_WILDERNESS =
@@ -208,6 +279,10 @@ public class SQLDataStore implements IDataStore {
 
             s.execute(CREATE_PLOTS_TABLE);
             s.execute(CREATE_ZONES_TABLE);
+            s.execute(CREATE_STALLS_TABLE);
+            s.execute(CREATE_STALL_LISTINGS_TABLE);
+            s.execute(CREATE_ZONE_META_TABLE);
+            s.execute(CREATE_ZONE_GUESTS_TABLE);
 
             if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
                 s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
@@ -291,6 +366,7 @@ public class SQLDataStore implements IDataStore {
         }
 
         int zoneCount = 0;
+        Map<String, Zone> zonesByKey = new HashMap<>();
         try (Connection conn = hikari.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zones");
              ResultSet rs = ps.executeQuery()) {
@@ -324,6 +400,7 @@ public class SQLDataStore implements IDataStore {
                     }
 
                     parent.addZone(zone);
+                    zonesByKey.put(zoneStorageKey(parent, zone), zone);
                     zoneCount++;
                 } catch (Exception ignored) {}
             }
@@ -332,7 +409,111 @@ public class SQLDataStore implements IDataStore {
             e.printStackTrace();
         }
 
-        plugin.getLogger().info("Loaded " + plotCount + " plots and " + zoneCount + " zones from Database.");
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zone_meta");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    Zone zone = zonesByKey.get(rs.getString("zone_key"));
+                    if (zone == null) continue;
+
+                    World world = Bukkit.getWorld(zone.getParent().getWorld());
+                    if (world != null) {
+                        double x = rs.getDouble("spawn_x");
+                        boolean hasSpawn = !rs.wasNull();
+                        double y = rs.getDouble("spawn_y");
+                        double z = rs.getDouble("spawn_z");
+                        if (hasSpawn) {
+                            zone.setSpawnLocation(new Location(world, x, y, z));
+                        }
+                    }
+
+                    zone.setFlag("hotel_mode", rs.getBoolean("hotel_mode"));
+                    zone.setFlag("guest_visit", rs.getBoolean("guest_visit"));
+                    zone.setFlag("guest_interact", rs.getBoolean("guest_interact"));
+                    zone.setFlag("guest_containers", rs.getBoolean("guest_containers"));
+                    zone.setFlag("guest_build", rs.getBoolean("guest_build"));
+                } catch (Exception ignored) {}
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_zone_guests");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    Zone zone = zonesByKey.get(rs.getString("zone_key"));
+                    if (zone == null) continue;
+                    String guest = rs.getString("guest_uuid");
+                    if (guest == null || guest.isBlank()) continue;
+                    zone.addGuest(UUID.fromString(guest));
+                } catch (Exception ignored) {}
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        int stallCount = 0;
+        Map<String, MarketStall> stallsById = new HashMap<>();
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_stalls");
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                try {
+                    UUID plotId = UUID.fromString(rs.getString("plot_id"));
+                    Plot parent = plotsById.get(plotId);
+                    if (parent == null) continue;
+
+                    UUID ownerId = UUID.fromString(rs.getString("owner_uuid"));
+                    MarketStall stall = new MarketStall(
+                            ownerId,
+                            rs.getString("owner_name"),
+                            parent.getWorld(),
+                            rs.getInt("chest_x"),
+                            rs.getInt("chest_y"),
+                            rs.getInt("chest_z"),
+                            rs.getInt("sign_x"),
+                            rs.getInt("sign_y"),
+                            rs.getInt("sign_z"),
+                            rs.getString("title"),
+                            rs.getString("zone_name"),
+                            rs.getLong("created_at")
+                    );
+
+                    parent.addStall(stall);
+                    stallsById.put(plotId + ":" + stall.getStorageKey(), stall);
+                    stallCount++;
+                } catch (Exception ignored) {}
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try (Connection conn = hikari.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM aegis_stall_listings");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    MarketStall stall = stallsById.get(rs.getString("stall_id"));
+                    if (stall == null) continue;
+                    stall.setListing(
+                            rs.getInt("chest_slot"),
+                            new MarketStall.StallListing(
+                                    rs.getDouble("price"),
+                                    parseCurrencyType(rs.getString("currency")),
+                                    rs.getInt("bundle_amount")
+                            )
+                    );
+                } catch (Exception ignored) {}
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        plugin.getLogger().info("Loaded " + plotCount + " plots, " + zoneCount + " zones, and " + stallCount + " stalls from Database.");
         isDirty = false;
     }
 
@@ -395,6 +576,26 @@ public class SQLDataStore implements IDataStore {
                     del.executeUpdate();
                 }
 
+                try (PreparedStatement del = conn.prepareStatement(DELETE_ZONE_META_BY_PLOT)) {
+                    del.setString(1, plot.getPlotId().toString() + ":%");
+                    del.executeUpdate();
+                }
+
+                try (PreparedStatement del = conn.prepareStatement(DELETE_ZONE_GUESTS_BY_PLOT)) {
+                    del.setString(1, plot.getPlotId().toString() + ":%");
+                    del.executeUpdate();
+                }
+
+                try (PreparedStatement del = conn.prepareStatement(DELETE_STALLS_BY_PLOT)) {
+                    del.setString(1, plot.getPlotId().toString());
+                    del.executeUpdate();
+                }
+
+                try (PreparedStatement del = conn.prepareStatement(DELETE_STALL_LISTINGS_BY_PLOT)) {
+                    del.setString(1, plot.getPlotId().toString() + ":%");
+                    del.executeUpdate();
+                }
+
                 if (!plot.getZones().isEmpty()) {
                     try (PreparedStatement ins = conn.prepareStatement(INSERT_ZONE)) {
                         for (Zone zone : plot.getZones()) {
@@ -414,6 +615,84 @@ public class SQLDataStore implements IDataStore {
                             ins.setLong(12, zone.getRentExpiration());
 
                             ins.addBatch();
+                        }
+                        ins.executeBatch();
+                    }
+
+                    try (PreparedStatement ins = conn.prepareStatement(INSERT_ZONE_META)) {
+                        for (Zone zone : plot.getZones()) {
+                            String zoneKey = zoneStorageKey(plot, zone);
+                            Location spawn = zone.getSpawnLocation();
+                            ins.setString(1, zoneKey);
+                            if (spawn != null) {
+                                ins.setDouble(2, spawn.getX());
+                                ins.setDouble(3, spawn.getY());
+                                ins.setDouble(4, spawn.getZ());
+                            } else {
+                                ins.setNull(2, Types.DOUBLE);
+                                ins.setNull(3, Types.DOUBLE);
+                                ins.setNull(4, Types.DOUBLE);
+                            }
+                            ins.setBoolean(5, zone.isHotelMode());
+                            ins.setBoolean(6, zone.getFlag("guest_visit", true));
+                            ins.setBoolean(7, zone.getFlag("guest_interact", true));
+                            ins.setBoolean(8, zone.getFlag("guest_containers", true));
+                            ins.setBoolean(9, zone.getFlag("guest_build", false));
+                            ins.addBatch();
+                        }
+                        ins.executeBatch();
+                    }
+
+                    try (PreparedStatement ins = conn.prepareStatement(INSERT_ZONE_GUEST)) {
+                        for (Zone zone : plot.getZones()) {
+                            String zoneKey = zoneStorageKey(plot, zone);
+                            for (UUID guestId : zone.getGuestAccess().keySet()) {
+                                if (guestId == null) continue;
+                                ins.setString(1, zoneKey);
+                                ins.setString(2, guestId.toString());
+                                ins.addBatch();
+                            }
+                        }
+                        ins.executeBatch();
+                    }
+                }
+
+                if (!plot.getStalls().isEmpty()) {
+                    try (PreparedStatement ins = conn.prepareStatement(INSERT_STALL)) {
+                        for (MarketStall stall : plot.getStalls()) {
+                            if (stall == null || stall.getOwnerId() == null) continue;
+
+                            ins.setString(1, plot.getPlotId() + ":" + stall.getStorageKey());
+                            ins.setString(2, plot.getPlotId().toString());
+                            ins.setString(3, stall.getOwnerId().toString());
+                            ins.setString(4, stall.getOwnerName());
+                            ins.setString(5, stall.getTitle());
+                            ins.setString(6, stall.getZoneName());
+                            ins.setInt(7, stall.getChestX());
+                            ins.setInt(8, stall.getChestY());
+                            ins.setInt(9, stall.getChestZ());
+                            ins.setInt(10, stall.getSignX());
+                            ins.setInt(11, stall.getSignY());
+                            ins.setInt(12, stall.getSignZ());
+                            ins.setLong(13, stall.getCreatedAt());
+                            ins.addBatch();
+                        }
+                        ins.executeBatch();
+                    }
+
+                    try (PreparedStatement ins = conn.prepareStatement(INSERT_STALL_LISTING)) {
+                        for (MarketStall stall : plot.getStalls()) {
+                            if (stall == null || stall.getOwnerId() == null) continue;
+                            String stallId = plot.getPlotId() + ":" + stall.getStorageKey();
+                            for (Map.Entry<Integer, MarketStall.StallListing> entry : stall.getListings().entrySet()) {
+                                if (entry.getKey() == null || entry.getValue() == null || !entry.getValue().isValid()) continue;
+                                ins.setString(1, stallId);
+                                ins.setInt(2, entry.getKey());
+                                ins.setDouble(3, entry.getValue().getPrice());
+                                ins.setString(4, entry.getValue().getCurrency().name());
+                                ins.setInt(5, entry.getValue().getBundleAmount());
+                                ins.addBatch();
+                            }
                         }
                         ins.executeBatch();
                     }
@@ -665,6 +944,22 @@ public class SQLDataStore implements IDataStore {
                     ps.setString(1, plotId.toString());
                     ps.executeUpdate();
                 }
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_ZONE_META_BY_PLOT)) {
+                    ps.setString(1, plotId.toString() + ":%");
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_ZONE_GUESTS_BY_PLOT)) {
+                    ps.setString(1, plotId.toString() + ":%");
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_STALLS_BY_PLOT)) {
+                    ps.setString(1, plotId.toString());
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(DELETE_STALL_LISTINGS_BY_PLOT)) {
+                    ps.setString(1, plotId.toString() + ":%");
+                    ps.executeUpdate();
+                }
             } catch (SQLException ignored) {}
         });
 
@@ -700,6 +995,34 @@ public class SQLDataStore implements IDataStore {
                             delZones.addBatch();
                         }
                         delZones.executeBatch();
+                    }
+                    try (PreparedStatement delZoneMeta = conn.prepareStatement(DELETE_ZONE_META_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delZoneMeta.setString(1, pid + ":%");
+                            delZoneMeta.addBatch();
+                        }
+                        delZoneMeta.executeBatch();
+                    }
+                    try (PreparedStatement delZoneGuests = conn.prepareStatement(DELETE_ZONE_GUESTS_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delZoneGuests.setString(1, pid + ":%");
+                            delZoneGuests.addBatch();
+                        }
+                        delZoneGuests.executeBatch();
+                    }
+                    try (PreparedStatement delStalls = conn.prepareStatement(DELETE_STALLS_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delStalls.setString(1, pid);
+                            delStalls.addBatch();
+                        }
+                        delStalls.executeBatch();
+                    }
+                    try (PreparedStatement delStallListings = conn.prepareStatement(DELETE_STALL_LISTINGS_BY_PLOT)) {
+                        for (String pid : plotIds) {
+                            delStallListings.setString(1, pid + ":%");
+                            delStallListings.addBatch();
+                        }
+                        delStallListings.executeBatch();
                     }
                 }
 
@@ -947,6 +1270,20 @@ public class SQLDataStore implements IDataStore {
             }
         }
         return false;
+    }
+
+    private com.aegisguard.economy.CurrencyType parseCurrencyType(String raw) {
+        if (raw == null || raw.isBlank()) return com.aegisguard.economy.CurrencyType.VAULT;
+        try {
+            return com.aegisguard.economy.CurrencyType.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            return com.aegisguard.economy.CurrencyType.VAULT;
+        }
+    }
+
+    private String zoneStorageKey(Plot plot, Zone zone) {
+        if (plot == null || zone == null || zone.getName() == null) return "";
+        return plot.getPlotId() + ":" + zone.getName().trim().toLowerCase(Locale.ROOT);
     }
 
     // --- shutdown helper (HARDCORE EDITION) ---

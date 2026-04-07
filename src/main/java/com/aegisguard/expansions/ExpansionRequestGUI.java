@@ -2,6 +2,7 @@ package com.aegisguard.expansions;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -61,29 +62,37 @@ public class ExpansionRequestGUI {
         for (int i = 0; i < 36; i++) inv.setItem(i, filler);
 
         ApprovalMode mode = getApprovalMode();
+        ExpansionRequest pending = plugin.getExpansionRequestManager() == null
+                ? null
+                : plugin.getExpansionRequestManager().getRequest(player.getUniqueId());
+        boolean unattendedQueue = plugin.getExpansionRequestManager() != null
+                && plugin.getExpansionRequestManager().isAutoApproveWhenNoReviewersEnabled()
+                && plugin.getExpansionRequestManager().getOnlineReviewerCount() <= 0;
         String modeLabel = (mode == ApprovalMode.INSTANT)
                 ? tr(player, "expansion_mode_instant", "&bInstant Mode")
                 : tr(player, "expansion_mode_queue", "&6Queue Mode");
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        int currentRadius = getRadius(plot);
 
         // Mode info (Slot 22)
         Map<String, String> vars = Map.of("MODE", modeLabel);
         inv.setItem(22, GUIManager.createItem(
                 Material.CLOCK,
                 tr(player, "expansion_mode_item_name", "&fApproval: {MODE}", vars),
-                trList(player, "expansion_mode_item_lore", List.of(
+                appendModeLore(player, trList(player, "expansion_mode_item_lore", List.of(
                         "&7This server is currently using:",
                         "&f{MODE}",
                         " ",
                         "&7Queue Mode: &fAdmins must approve.",
                         "&7Instant Mode: &fAuto-approved when valid."
-                ), vars)
+                ), vars), mode, unattendedQueue)
         ));
 
         // --- TIERS ---
         inv.setItem(11, GUIManager.createItem(
                 Material.WOODEN_PICKAXE,
                 tr(player, "expansion_tier1_name", "&aTier I &7(+5)"),
-                tierLore(player, mode,
+                tierLore(player, plot, currentRadius, currentRadius + 5, pending, mode, unattendedQueue,
                         "expansion_tier1_lore",
                         List.of(
                                 "&7Request a small expansion.",
@@ -97,7 +106,7 @@ public class ExpansionRequestGUI {
         inv.setItem(12, GUIManager.createItem(
                 Material.STONE_PICKAXE,
                 tr(player, "expansion_tier2_name", "&aTier II &7(+10)"),
-                tierLore(player, mode,
+                tierLore(player, plot, currentRadius, currentRadius + 10, pending, mode, unattendedQueue,
                         "expansion_tier2_lore",
                         List.of(
                                 "&7Request a modest expansion.",
@@ -111,7 +120,7 @@ public class ExpansionRequestGUI {
         inv.setItem(13, GUIManager.createItem(
                 Material.IRON_PICKAXE,
                 tr(player, "expansion_tier3_name", "&aTier III &7(+20)"),
-                tierLore(player, mode,
+                tierLore(player, plot, currentRadius, currentRadius + 20, pending, mode, unattendedQueue,
                         "expansion_tier3_lore",
                         List.of(
                                 "&7Request a major expansion.",
@@ -125,7 +134,7 @@ public class ExpansionRequestGUI {
         inv.setItem(14, GUIManager.createItem(
                 Material.GOLDEN_PICKAXE,
                 tr(player, "expansion_tier4_name", "&aTier IV &7(+35)"),
-                tierLore(player, mode,
+                tierLore(player, plot, currentRadius, currentRadius + 35, pending, mode, unattendedQueue,
                         "expansion_tier4_lore",
                         List.of(
                                 "&7Request a large expansion.",
@@ -139,7 +148,7 @@ public class ExpansionRequestGUI {
         inv.setItem(15, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
                 tr(player, "expansion_tier5_name", "&aTier V &7(+50)"),
-                tierLore(player, mode,
+                tierLore(player, plot, currentRadius, currentRadius + 50, pending, mode, unattendedQueue,
                         "expansion_tier5_lore",
                         List.of(
                                 "&7Request a massive expansion.",
@@ -148,6 +157,19 @@ public class ExpansionRequestGUI {
                                 "&eClick to submit request"
                         )
                 )
+        ));
+
+        inv.setItem(23, GUIManager.createItem(
+                pending == null ? Material.LIME_DYE : Material.CLOCK,
+                pending == null
+                        ? tr(player, "expansion_pending_none_name", "&aNo Pending Request")
+                        : tr(player, "expansion_pending_name", "&ePending Expansion Request"),
+                pending == null
+                        ? trList(player, "expansion_pending_none_lore", List.of(
+                                "&7You do not currently have",
+                                "&7an expansion request in queue."
+                        ))
+                        : pendingLore(player, pending)
         ));
 
         // --- ADMIN VIEW (Slot 31) ---
@@ -259,6 +281,62 @@ public class ExpansionRequestGUI {
         }, 1L);
     }
 
+    private List<String> tierLore(Player player,
+                                  Plot plot,
+                                  int currentRadius,
+                                  int targetRadius,
+                                  ExpansionRequest pending,
+                                  ApprovalMode mode,
+                                  boolean unattendedQueue,
+                                  String key,
+                                  List<String> fallback) {
+        List<String> lore = new ArrayList<>(trList(player, key, fallback));
+        if (plot != null) {
+            double cost = plugin.getExpansionRequestManager() == null
+                    ? 0.0
+                    : plugin.getExpansionRequestManager().calculateSmartCost(currentRadius, targetRadius);
+            lore.add(" ");
+            lore.add(color("&7Current Radius: &f" + currentRadius));
+            lore.add(color("&7Target Radius: &a" + targetRadius));
+            lore.add(color("&7Estimated Cost: &6" + formatCurrency(cost)));
+        }
+
+        if (pending != null) {
+            lore.add(" ");
+            lore.add(color("&eYou already have a pending request."));
+        } else if (mode == ApprovalMode.INSTANT) {
+            lore.add(" ");
+            lore.add(color("&bThis server auto-approves valid requests."));
+        } else if (unattendedQueue) {
+            lore.add(" ");
+            lore.add(color(tr(player, "expansion_mode_hint_unattended",
+                    "&bUnattended Queue:&7 No reviewers are online, so valid requests may be auto-approved and logged.")));
+        }
+
+        return lore;
+    }
+
+    private List<String> pendingLore(Player player, ExpansionRequest pending) {
+        List<String> lore = new ArrayList<>();
+        lore.add(color("&7Current Radius: &f" + pending.getCurrentRadius()));
+        lore.add(color("&7Requested Radius: &a" + pending.getRequestedRadius()));
+        lore.add(color("&7Status: &ePending"));
+        lore.add(color("&7Cost: &6" + formatCurrency(pending.getCost())));
+        lore.add(color("&7World: &f" + pending.getWorldName()));
+        return lore;
+    }
+
+    private String formatCurrency(double amount) {
+        if (plugin.eco() != null && plugin.eco().isVaultEnabled()) {
+            return plugin.eco().format(amount, CurrencyType.VAULT);
+        }
+        return String.format(Locale.US, "%.2f", amount);
+    }
+
+    private String color(String input) {
+        return GUIManager.color(input);
+    }
+
     private boolean validatePlot(Player player, Plot plot) {
         if (plot == null || !plot.getOwner().equals(player.getUniqueId())) {
             plugin.msg().send(player, "no_plot_here");
@@ -289,7 +367,10 @@ public class ExpansionRequestGUI {
     private ApprovalMode getApprovalMode() {
         String raw = null;
         try {
-            raw = plugin.getConfig().getString("expansions.approval_mode", "QUEUE");
+            raw = plugin.getConfig().getString(
+                    "expansions.approval.mode",
+                    plugin.getConfig().getString("expansions.approval_mode", "QUEUE")
+            );
         } catch (Throwable ignored) {
             // If config path changes in older forks, stay safe.
         }
@@ -348,6 +429,16 @@ public class ExpansionRequestGUI {
             return tr(p, "expansion_mode_hint_instant", "&bInstant Mode:&7 Auto-approved when valid.");
         }
         return tr(p, "expansion_mode_hint_queue", "&6Queue Mode:&7 Admin approval required.");
+    }
+
+    private List<String> appendModeLore(Player player, List<String> baseLore, ApprovalMode mode, boolean unattendedQueue) {
+        List<String> lore = new ArrayList<>(baseLore == null ? List.of() : baseLore);
+        if (mode == ApprovalMode.QUEUE && unattendedQueue) {
+            lore.add(" ");
+            lore.add(color(tr(player, "expansion_mode_hint_unattended",
+                    "&bUnattended Queue:&7 No reviewers are online, so valid requests may be auto-approved and logged.")));
+        }
+        return lore;
     }
 
     // -----------------------------

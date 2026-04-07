@@ -30,7 +30,7 @@ import java.util.UUID;
  * AdminPlotListGUI (1.2.6 QoL pass)
  * - PDC action routing (aegis_action) for prev/next/back + plot entries.
  * - Safer delete (SHIFT+RIGHT) to prevent accidental nukes.
- * - Removes redundant Close button (Esc closes; Back returns).
+ * - Keeps both back and close controls in the footer for cleaner admin navigation.
  * - Optional robustness: plot entries store plot id/owner in PDC to avoid index desync issues.
  * - Folia/perf: loads/sorts plot list async, builds inventory on main thread.
  */
@@ -206,7 +206,7 @@ public class AdminPlotListGUI {
             inv.setItem(45, prev);
         }
 
-        // 1.2.6: single “Back” control; remove redundant Close button (Esc closes inventory)
+        // 1.2.6: admin footer keeps both return and close controls.
         ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 plugin.gui().tr(player, "button_back_admin", "&fBack to Admin"),
@@ -214,6 +214,14 @@ public class AdminPlotListGUI {
         );
         tagAction(back, "back_admin");
         inv.setItem(49, back);
+
+        ItemStack close = GUIManager.createItem(
+                Material.BARRIER,
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
+        );
+        tagAction(close, "close_menu");
+        inv.setItem(50, close);
 
         if (page < maxPages - 1) {
             ItemStack next = GUIManager.createItem(
@@ -250,6 +258,7 @@ public class AdminPlotListGUI {
                 case "prev_page" -> { open(player, currentPage - 1); return; }
                 case "next_page" -> { open(player, currentPage + 1); return; }
                 case "back_admin" -> { plugin.gui().admin().open(player); return; }
+                case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "plot_entry" -> { /* handled below */ }
                 default -> { /* ignore */ }
             }

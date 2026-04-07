@@ -29,66 +29,77 @@ button_back_admin: '&fBack to Admin'
 # ------------------------------------------------------------
 # Main Menu
 # ------------------------------------------------------------
-menu_title: '&b⚔ AegisGuard Menu'
+menu_title: '&3✦ AegisGuard Menu'
 
 button_claim_land: '&a🛡 Create Claim'
 claim_land_lore:
-  - '&7Start protecting this area.'
+  - '&7Turn your current selection into'
+  - '&7a protected claim.'
 claim_land_ready_lore:
-  - '&7Create a new claim from'
-  - '&7your current selection.'
+  - '&7Your selection is ready to become'
+  - '&7a protected claim.'
   - ' '
-  - '&eClick to Confirm'
+  - '&eClick to confirm the claim.'
 
 button_plot_flags: '&6Settings'
-plot_flags_title: '&9⚙ Claim Settings'
+plot_flags_title: '&3⚙ Claim Settings'
 plot_flags_lore:
-  - '&7Manage protection rules for this claim.'
+  - '&7Control who can enter, use,'
+  - '&7damage, or automate this claim.'
 plot_flags_locked_lore:
-  - '&cYou must stand inside your claim'
-  - '&cto edit its settings.'
+  - '&cStand inside a claim you manage'
+  - '&cto edit these protections.'
 
 button_roles: '&eMembers'
 roles_lore:
-  - '&7Manage trusted players.'
+  - '&7Grant or revoke access for'
+  - '&7friends, helpers, and visitors.'
 roles_locked_lore:
-  - '&cYou must stand inside your claim'
-  - '&cto manage members.'
+  - '&cStand inside a claim you manage'
+  - '&cto edit member access.'
 
 button_player_settings: '&9Preferences'
 player_settings_lore:
-  - '&7Adjust your personal settings and language.'
+  - '&7Adjust language, sounds, and'
+  - '&7notification preferences.'
 
 button_market: '&eMarketplace'
 market_lore:
-  - '&7Buy and sell claims with other players.'
+  - '&7Browse listed claims and public'
+  - '&7market listings.'
+button_market_local: '&6Local Market'
+market_local_lore:
+  - '&7Open this plot''s rentals, shop'
+  - '&7tools, and local market options.'
 
 button_auction: '&cAuctions'
 auction_lore:
-  - '&7Bid on expired or repossessed claims.'
+  - '&7Bid on auctioned claims and'
+  - '&7time-limited listings.'
 
 button_info: '&6📜 Help & Guide'
 info_lore:
-  - '&7View commands, explanations, and usage tips.'
+  - '&7Read the basics, commands,'
+  - '&7and protection tips.'
 
 button_plot_status: '&b📊 Claim Status'
-plot_status_button_title: '&b📊 Claim Status'
+plot_status_button_title: '&b✦ Claim Status'
 plot_status_lore:
-  - '&7View a clean breakdown of claim'
-  - '&7details, bonuses, territory, and growth.'
+  - '&7Review ownership, protections,'
+  - '&7bonuses, and plot health.'
   - ' '
-  - '&8Only your strongest unlocked bonuses'
-  - '&8are displayed to keep this view clean.'
+  - '&8This page focuses on the most'
+  - '&8important current information.'
 
 button_expand: '&dRequest Expansion'
 expand_lore:
-  - '&7Request a larger claim size'
-  - '&7from a server administrator.'
+  - '&7Request more land for this claim'
+  - '&7when you outgrow it.'
 
 # ------------------------------------------------------------
 # Expansion GUI (Player-facing)
 # ------------------------------------------------------------
-expansion_gui_title: '&dLand Expansion Request'
+expansion_gui_title: '&d✦ Land Expansion Request'
 
 # Tier buttons
 expansion_tier1_name: '&aSmall Expansion (+5)'
@@ -129,7 +140,7 @@ expansion_tier5_lore:
 # ------------------------------------------------------------
 # Expansion Admin GUI
 # ------------------------------------------------------------
-expansion_admin_title: '&#5DE0E6&lPetitions &#FFD166&lPending &#C77DFF&l⚖'
+expansion_admin_title: '&5✦ Pending Petitions'
 
 button_view_requests_admin: '&cReview Requests'
 view_requests_admin_lore:
@@ -157,7 +168,7 @@ expansion_button_back: '&e⟵ Back to Previous Menu'
 # ------------------------------------------------------------
 # Claim Snapshots GUI (Player/Admin)
 # ------------------------------------------------------------
-snapshot_gui_title: '&d⧉ Claim Snapshots'
+snapshot_gui_title: '&d✦ Claim Snapshots'
 button_snapshots: '&d⧉ Claim Snapshots'
 snapshots_button_lore:
   - '&7View and rollback claim snapshots.'
@@ -226,10 +237,11 @@ expansion_decided_by_unknown: '&7Unknown'
 # ------------------------------------------------------------
 # ClaimBlocks Exchange GUI
 # ------------------------------------------------------------
-claimblocks_exchange_gui_title: '&7Claim Block Exchange'
-claimblocks_exchange_title: '&bClaim Block Exchange'
+claimblocks_exchange_gui_title: '&8✦ Claim Block Exchange'
+claimblocks_exchange_title: '&b✦ Claim Block Exchange'
 claimblocks_exchange_lore:
-  - '&7Trade Claim Blocks for money.'
+  - '&7Buy or sell Claim Blocks using'
+  - '&7your server economy.'
 claimblocks_exchange_disabled_lore:
   - '&8Currently disabled in config.'
   - '&7Enable: &fclaim_blocks.exchange.enabled: &atrue'
@@ -325,58 +337,73 @@ button_fly_off: '&c🪽 Flight: Disabled'
 button_cosmetics: '&b✨ Cosmetics'
 
 pvp_toggle_lore:
-  - '&7Blocks PvP combat inside your claim.'
+  - '&7Prevent player-vs-player damage'
+  - '&7inside this claim.'
   - '&eClick to toggle.'
 tnt_toggle_lore:
-  - '&7Prevents explosions from damaging your claim.'
+  - '&7Prevent explosion damage from'
+  - '&7TNT and similar blasts.'
   - '&eClick to toggle.'
 fire_toggle_lore:
-  - '&7Stops fire from spreading within your claim.'
+  - '&7Stop fire from spreading into'
+  - '&7or across this claim.'
   - '&eClick to toggle.'
 mob_toggle_lore:
-  - '&7Prevents hostile mobs from harming players in your claim.'
+  - '&7Stop hostile mobs from spawning'
+  - '&7or harming players here.'
   - '&eClick to toggle.'
 entry_toggle_lore:
-  - '&7When enabled, untrusted players cannot enter.'
+  - '&7Keep untrusted players from'
+  - '&7walking into this claim.'
   - '&eClick to toggle.'
 safe_toggle_lore:
-  - '&7Extra safety rules for this claim.'
-  - '&7Admins only.'
+  - '&7Apply stricter server-style safety'
+  - '&7rules to this entire claim.'
+  - '&8Admins only.'
   - '&eClick to toggle.'
 container_toggle_lore:
-  - '&7Locks chests and storage blocks from outsiders.'
+  - '&7Block outsiders from opening'
+  - '&7chests, barrels, and storage.'
   - '&eClick to toggle.'
 piston_toggle_lore:
-  - '&7Prevents pistons from pushing/pulling across borders.'
+  - '&7Stop pistons from moving blocks'
+  - '&7through claim borders.'
   - '&eClick to toggle.'
 farm_toggle_lore:
-  - '&7Protects crops and farmland from outsiders.'
+  - '&7Protect crops and farmland from'
+  - '&7trampling or outsider use.'
   - '&eClick to toggle.'
 animals_toggle_lore:
-  - '&7Protects animals from outsiders.'
+  - '&7Protect animals and tame mobs'
+  - '&7from outsider harm.'
   - '&eClick to toggle.'
 redstone_toggle_lore:
-  - '&7Blocks redstone interaction by outsiders.'
+  - '&7Block outsiders from using'
+  - '&7buttons, levers, and doors.'
   - '&eClick to toggle.'
 vehicles_toggle_lore:
-  - '&7Blocks vehicle use by outsiders.'
+  - '&7Block outsiders from using boats,'
+  - '&7minecarts, and similar vehicles.'
   - '&eClick to toggle.'
 shop_toggle_lore:
-  - '&7Allows shop interactions inside your claim.'
+  - '&7Enable home-shop access and'
+  - '&7linked market tools here.'
   - '&7Cost: &6{COST}'
   - '&eClick to purchase/toggle.'
 fly_toggle_lore:
-  - '&7Allows flying inside your claim.'
+  - '&7Let trusted players fly inside'
+  - '&7this claim.'
   - '&7Cost: &6{COST}'
   - '&eClick to purchase/toggle.'
 cosmetics_lore:
-  - '&7Customize the look and feel of your claim.'
+  - '&7Customize particles and entry'
+  - '&7effects for this claim.'
   - '&eClick to open.'
 
 # ------------------------------------------------------------
 # Leveling GUI
 # ------------------------------------------------------------
-level_gui_title: '&dPlot Ascension'
+level_gui_title: '&d✦ Plot Ascension'
 level_current_status: '&bCurrent Plot Status'
 level_upgrade_button: '&aUpgrade to Level &f{LEVEL}'
 level_max_reached: '&6Maximum level reached for this claim.'
@@ -493,39 +520,256 @@ level_track_next_cost_blocks: '&eBlock Cost: &b{BLOCKS}'
 # ------------------------------------------------------------
 # Other Menus (kept from original)
 # ------------------------------------------------------------
-visit_gui_title: '&9Travel Menu'
-market_gui_title: '&2Real Estate'
-auction_gui_title: '&6Claim Auctions'
-zone_gui_title: '&3Zone Manager'
-biome_gui_title: '&2Biome'
-settings_menu_title: '&9⚙ Preferences'
-codex_gui_title: '&9§lGuardian''s Guide'
-ledger_title: '&6📜 Domain Registry'
-admin_menu_title: '&c&l⚔ High Guardian Tools ⚔'
+visit_gui_title: '&3🧭 Travel Menu'
+visit_title_trusted: '&3Trusted Claims'
+visit_title_owned: '&2My Plots'
+visit_title_warps: '&6Server Waypoints'
+market_gui_title: '&6✦ Real Estate'
+auction_gui_title: '&c✦ Claim Auctions'
+zone_gui_title: '&3✦ Zone Manager'
+biome_gui_title: '&a✦ Biome Studio'
+settings_menu_title: '&3⚙ Preferences'
+codex_gui_title: '&b✦ Guardian''s Guide ✦'
+ledger_title: '&6✦ Domain Registry'
+admin_menu_title: '&c✦ Staff Tools ✦'
 
 # PlayerGUI - Main Menu Additional Tooltips
 visit_gui_button_lore:
-- '&7Visit claims and travel quickly.'
+  - '&7Browse trusted claims and'
+  - '&7server waypoints.'
+visit_button_lore:
+  - '&7Browse trusted plots, your'
+  - '&7plots, and server waypoints.'
 
 visit_lore:
-- '&7Visit claims and travel quickly.'
+  - '&7Browse trusted claims and'
+  - '&7server waypoints.'
 
 travel_lore:
-- '&7Visit claims and travel quickly.'
+  - '&7Teleport to places you can'
+  - '&7safely access.'
 
 admin_button_lore:
-- '&7Operator Access Only'
+  - '&7Open staff tools for diagnostics,'
+  - '&7maintenance, and claim control.'
 
 admin_lore:
-- '&7Operator Access Only'
+  - '&7Open staff tools for diagnostics,'
+  - '&7maintenance, and claim control.'
 
 biome_button_lore:
-- '&7Change the visual biome style'
-- '&7of your claim.'
+  - '&7Change the visual biome mood'
+  - '&7inside your claim.'
 
 zone_button_lore:
-- '&7Create and manage subclaims'
-- '&7that can be rented out.'
+  - '&7Create sub-zones, rentals, and'
+  - '&7special-purpose claim spaces.'
+button_zone_create: '&aCreate Zone'
+zone_none_title: '&cNo Zones Created'
+zone_none_lore:
+  - '&7You have no sub-zones yet.'
+  - '&7Select an area and create one below.'
+zone_create_ready_lore:
+  - '&7Create a zone from your selection.'
+  - ' '
+  - '&eClick to create'
+zone_create_locked_lore:
+  - '&7Select two points first.'
+  - '&7Then come back here.'
+zone_status_listed: '&eListed'
+zone_status_private: '&7Private'
+zone_lore_status: '&7Status: &f{STATUS}'
+zone_item_name: '&b{ZONE}'
+zone_lore_dimensions: '&7Size: &f{WIDTH}x{HEIGHT}x{DEPTH}'
+zone_lore_price: '&7Price: &6{PRICE}'
+zone_lore_area: '&7Footprint: &a{AREA} blocks'
+zone_lore_tenant: '&7Tenant: &f{TENANT}'
+zone_lore_expires: '&7Expires: &f{TIME}'
+zone_evict_action: '&eLeft-Click: &7Evict tenant'
+zone_toggle_rent_action: '&eLeft-Click: &7Toggle rental listing'
+zone_price_increase_action: '&aShift-Left: &7Increase rent price'
+zone_price_decrease_action: '&6Shift-Right: &7Decrease rent price'
+zone_delete_action: '&cRight-Click: &7Delete zone'
+zone_browse_title: '&2✦ Available Zones'
+zone_browse_none_title: '&cNo Zones Available'
+zone_browse_none_lore:
+  - '&7This plot has no rentable zones right now.'
+  - '&7Check back later or ask the owner.'
+zone_browse_status_yours: '&aYour rental'
+zone_browse_status_occupied: '&cOccupied'
+zone_browse_action_preview: '&eLeft-Click: &7Preview this zone'
+zone_browse_action_rent: '&aRight-Click: &7Rent this zone'
+zone_browse_action_manage: '&aRight-Click: &7Manage this room'
+zone_browse_action_extend: '&eShift-Right: &7Extend this rental'
+zone_browse_action_unavailable: '&8Right-Click: &7Currently unavailable'
+zone_tenant_button_name: '&bRoom Controls'
+zone_tenant_button_lore:
+  - '&7Manage your rented room,'
+  - '&7approved guests, and room spawn.'
+zone_tenant_title: '&3✦ Room Controls: {ZONE}'
+zone_tenant_info_name: '&eRoom Details'
+zone_tenant_teleport_name: '&bTeleport to Room'
+zone_tenant_teleport_lore:
+  - '&7Jump straight to this rented room'
+  - '&7or subplot teleport point.'
+zone_tenant_set_spawn_name: '&aSet Room Spawn'
+zone_tenant_set_spawn_lore:
+  - '&7Set your current position as the'
+  - '&7teleport point for this room.'
+zone_tenant_hotel_mode_name: '&6Hotel Mode'
+zone_tenant_hotel_mode_lore:
+  - '&7When enabled, approved guests can'
+  - '&7use the room based on your toggles.'
+zone_tenant_guest_interact_name: '&eGuest Interact'
+zone_tenant_guest_interact_lore:
+  - '&7Allow approved guests to use doors,'
+  - '&7buttons, and general interactions.'
+zone_tenant_guest_containers_name: '&eGuest Containers'
+zone_tenant_guest_containers_lore:
+  - '&7Allow approved guests to open chests'
+  - '&7and other storage in this room.'
+zone_tenant_guest_build_name: '&eGuest Build'
+zone_tenant_guest_build_lore:
+  - '&7Allow approved guests to place and'
+  - '&7break blocks in this rented room.'
+zone_tenant_evict_name: '&cEvict Tenant'
+zone_tenant_evict_lore:
+  - '&7Remove the current renter and'
+  - '&7clear this room''s guest access.'
+zone_tenant_guest_add_lore: '&7Click to allow this nearby player into the room.'
+zone_tenant_guest_remove_lore: '&7Click to remove this guest from the room.'
+zone_tenant_guest_count: '&7Approved guests: &f{COUNT}'
+zone_tenant_mode_line: '&7Hotel mode: &f{STATE}'
+zone_tenant_spawn_line: '&7Room spawn: &f{STATE}'
+zone_tenant_locked_lore:
+  - '&7This room setting is managed by'
+  - '&7the current renter.'
+button_refresh: '&bRefresh'
+refresh_lore:
+  - '&7Reload this menu.'
+local_market_title: '&6✦ Local Market'
+local_market_plot_name: '&e{PLOT}'
+local_market_plot_world: '&7World: &f{WORLD}'
+local_market_plot_mode: '&7Shop access: &f{STATE}'
+local_market_state_enabled: '&aEnabled'
+local_market_state_disabled: '&cDisabled'
+local_market_global_name: '&6Real Estate'
+local_market_global_lore:
+  - '&7Browse plots for sale, public'
+  - '&7rentals, and other listings.'
+local_market_rentals_name: '&aStalls & Rentals'
+local_market_rentals_lore:
+  - '&7Browse rentable subplots, market'
+  - '&7stalls, and managed rooms.'
+local_market_rentals_locked_lore:
+  - '&7This plot has no public stalls or'
+  - '&7rentable sub-zones right now.'
+local_market_manage_name: '&bManage Local Market'
+local_market_manage_lore:
+  - '&7Create rental stalls, update'
+  - '&7prices, and manage market rooms.'
+local_market_manage_locked_lore:
+  - '&7You need management access to'
+  - '&7edit this plot''s local market.'
+local_market_stalls_name: '&6Trade Stalls'
+local_market_stalls_lore:
+  - '&7Browse built-in TradeStalls and'
+  - '&7shopfronts on this plot.'
+local_market_stalls_locked_lore:
+  - '&7No TradeStalls are'
+  - '&7available on this plot right now.'
+local_market_stalls_external_lore:
+  - '&7TradeStalls are turned off here'
+  - '&7because an external market bridge'
+  - '&7is taking priority on this plot.'
+local_market_bridge_default_lore: '&7Open this linked market or shop system.'
+local_market_bridge_click: '&eClick to open.'
+local_market_bridge_requires_shop: '&cEnable Shop Interact on this plot first.'
+market_stall_list_title: '&6✦ Trade Stalls'
+market_stall_preview_title: '&6✦ TradeStall: {STALL}'
+market_stall_manage_title: '&6✦ Manage TradeStall'
+market_stall_manage_info_name: '&eManage: {STALL}'
+market_stall_none_title: '&cNo Trade Stalls'
+market_stall_none_lore:
+  - '&7There are no registered TradeStalls'
+  - '&7available on this plot right now.'
+market_stall_owner_line: '&7Seller: &f{OWNER}'
+market_stall_zone_line: '&7Zone: &f{ZONE}'
+market_stall_item_count_line: '&7Listed slots: &f{COUNT}'
+market_stall_browse_action: '&eClick to browse this TradeStall.'
+market_stall_manage_action: '&eClick to manage this TradeStall.'
+market_stall_preview_info_name: '&e{STALL}'
+market_stall_preview_hint: '&7Chest access stays with the seller and plot staff.'
+market_stall_preview_empty_name: '&cThis stall is empty'
+market_stall_preview_empty_lore:
+  - '&7There are no displayed items in'
+  - '&7this TradeStall right now.'
+market_stall_price_line: '&7Price: &6{PRICE}'
+market_stall_bundle_line: '&7Bundle: &f{COUNT}'
+market_stall_buy_action: '&aClick to buy this bundle.'
+market_stall_not_listed: '&7This slot is not listed yet.'
+market_stall_selected: '&aSelected for editing.'
+market_stall_select_action: '&eClick to edit this slot.'
+market_stall_manage_selected_name: '&bSelected Slot'
+market_stall_selected_slot: '&7Chest slot: &f{SLOT}'
+market_stall_manage_hint: '&7Use the buttons around this panel to edit the listing.'
+market_stall_currency_name: '&eCurrency'
+market_stall_currency_current: '&7Current: &f{CURRENCY}'
+market_stall_currency_toggle: '&eClick to switch currency.'
+market_stall_currency_money: '&6Money'
+market_stall_currency_claim_blocks: '&bClaim Blocks'
+market_stall_price_adjust_lore:
+  - '&7Adjust the listing price.'
+market_stall_bundle_adjust_lore:
+  - '&7Adjust how many items sell at once.'
+market_stall_price_minus_100: '&c-100'
+market_stall_price_minus_10: '&c-10'
+market_stall_price_minus_1: '&c-1'
+market_stall_price_plus_1: '&a+1'
+market_stall_price_plus_10: '&a+10'
+market_stall_price_plus_100: '&a+100'
+market_stall_bundle_minus_8: '&cBundle -8'
+market_stall_bundle_minus_1: '&cBundle -1'
+market_stall_bundle_plus_1: '&aBundle +1'
+market_stall_bundle_plus_8: '&aBundle +8'
+market_stall_clear_name: '&cClear Listing'
+market_stall_clear_lore:
+  - '&7Remove the price and currency from'
+  - '&7the selected slot.'
+
+settings_sounds_global_off_name: '&cSounds Disabled Globally'
+settings_sounds_global_off_lore:
+  - '&7A server admin has disabled'
+  - '&7menu sound effects.'
+settings_sounds_on_name: '&aSounds: ON'
+settings_sounds_off_name: '&cSounds: OFF'
+settings_sounds_lore:
+  - '&7Toggle AegisGuard menu sounds'
+  - '&7for your own client.'
+settings_language_unavailable_name: '&cLanguage Switching Unavailable'
+settings_language_unavailable_lore:
+  - '&7The language engine is not'
+  - '&7available right now.'
+settings_language_name: '&eLanguage: {LANG}'
+settings_language_lore:
+  - '&7Cycle your display language'
+  - '&7for menus and messages.'
+settings_notifications_name: '&bNotifications: {MODE}'
+settings_notifications_lore:
+  - '&7Choose how AegisGuard sends'
+  - '&7its alerts to you.'
+  - ' '
+  - '&eClick to cycle modes.'
+settings_greetings_on_name: '&aPlot Greetings: ON'
+settings_greetings_off_name: '&cPlot Greetings: OFF'
+settings_greetings_lore:
+  - '&7Toggle claim enter and leave'
+  - '&7messages for yourself.'
+settings_admin_updates_on_name: '&aAdmin Updates: ON'
+settings_admin_updates_off_name: '&cAdmin Updates: OFF'
+settings_admin_updates_lore:
+  - '&7Toggle staff notices such as'
+  - '&7reviews, moderation, and alerts.'
 
 market_button_back: '&e⟵ Back to Real Estate'
 auction_button_back: '&e⟵ Back to Auctions'
@@ -537,54 +781,91 @@ biome_button_exit: '&c✖ Close Biome Changer'
 # Admin Menu Translations
 button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
-- '&7Auto-unclaim when owner banned'
+  - '&7Automatically clean up claims'
+  - '&7owned by banned players.'
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:
-- '&7Admins ignore plot limits'
+  - '&7Let staff create or manage'
+  - '&7claims beyond normal limits.'
 
 button_admin_broadcast: '&eBroadcast Actions'
 admin_broadcast_lore:
-- '&7Announce admin actions'
+  - '&7Broadcast major admin actions'
+  - '&7to the configured audience.'
 
 button_admin_unlimited: '&aUnlimited Plots'
 admin_unlimited_lore:
-- '&7No plot limits for admins'
+  - '&7Remove normal plot limits'
+  - '&7for administrators.'
 
 button_admin_sync: '&dProxy Sync'
 admin_sync_lore:
-- '&7Network data sync'
+  - '&7Sync supported data across'
+  - '&7proxy-connected servers.'
 
 button_admin_perf: '&cLow Overhead'
 admin_perf_lore:
-- '&7Reduce resource usage'
+  - '&7Favor lighter background work'
+  - '&7for busy or larger servers.'
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
-- '&7System statistics'
+  - '&7Open health checks, hook status,'
+  - '&7and diagnostic reporting.'
 
+button_admin_reload_all: '&eReload Settings'
 button_reload_all_settings: '&eReload Settings'
 reload_all_settings_lore:
-- '&7Reload config'
-- '&eClick to reload'
+  - '&7Reload config, data views, and'
+  - '&7menu-driven settings.'
+  - ' '
+  - '&eClick to reload.'
 
 button_refresh_language_packs: '&aRefresh Languages'
+button_admin_refresh_lang: '&aRefresh Languages'
 refresh_language_packs_lore:
-- '&7Reload language files'
-- '&eClick to refresh'
+  - '&7Reload menu and message packs'
+  - '&7after editing language files.'
+  - ' '
+  - '&eClick to refresh.'
 
+admin_toggle_default_lore:
+  - '&7Toggle this setting for the'
+  - '&7whole server.'
 button_admin_snapshots: '&d📸 Snapshots'
 admin_snapshots_lore:
-- '&7Manage claim snapshots'
-- '&eClick to open'
+  - '&7Review, restore, or remove'
+  - '&7stored claim recovery points.'
+  - ' '
+  - '&eClick to open.'
 
 button_admin_snapshots_disabled: '&8📸 Disabled'
 admin_snapshots_disabled_lore:
-- '&7Snapshots disabled'
+  - '&7Claim snapshots are disabled'
+  - '&7in the current config.'
 
-admin_plot_list_title: '&bPlot List'
+admin_plot_list_title: '&b✦ Plot List'
 admin_plot_list_lore:
-- '&7View all plots'
+  - '&7Browse, inspect, and teleport'
+  - '&7to tracked plots.'
+
+button_admin_world_controls: '&b🌍 World Controls'
+admin_world_controls_lore:
+  - '&7Manage world-level protection'
+  - '&7defaults and safety rules.'
+  - ' '
+  - '&eClick to open.'
+button_admin_world_controls_missing: '&8🌍 World Controls Unavailable'
+admin_world_controls_missing_lore:
+  - '&7This server build does not'
+  - '&7have the world controls GUI yet.'
+button_admin_migration: '&6Migration Wizard'
+admin_migration_lore:
+  - '&7Preview and import supported'
+  - '&7claims from other plugins.'
+  - ' '
+  - '&eClick to open.'
 
 toggle_on: '&aON'
 toggle_off: '&cOFF'
@@ -596,21 +877,55 @@ visit_trusted_claims_title: '&bTrusted Claims'
 visit_server_waypoints_title: '&eServer Waypoints'
 visit_nothing_to_visit: '&cNothing to visit'
 visit_nothing_description:
-- '&7No destinations were found for this mode.'
-- '&7Try switching tabs.'
+  - '&7No destinations were found'
+  - '&7for this view.'
+visit_empty_title: '&cNothing to visit'
+visit_empty_lore:
+  - '&7No destinations were found'
+  - '&7for this view.'
+  - ' '
+  - '&eTry switching tabs.'
 
 visit_tab_trusted_claims: '&bView: Trusted Claims'
 visit_tab_trusted_claims_lore:
-- '&7View claims where you are a trusted member.'
+  - '&7Show claims where you have'
+  - '&7member access.'
 
 visit_tab_server_waypoints: '&eView: Server Waypoints'
 visit_tab_server_waypoints_lore:
-- '&7View public server locations.'
+  - '&7Show public staff-managed'
+  - '&7travel destinations.'
 
 visit_tab_my_claims: '&aView: My Claims'
 visit_tab_my_claims_lore:
-- '&7View all your claims.'
+  - '&7Show claims that you own'
+  - '&7personally.'
 
 visit_tab_all_claims: '&9View: All Claims'
 visit_tab_all_claims_lore:
-- '&7View all server claims.'
+  - '&7Show every claim that is'
+  - '&7available in this list.'
+visit_switch_trusted: '&9Trusted Claims'
+visit_switch_trusted_lore:
+  - '&7Show claims where you are'
+  - '&7currently trusted.'
+visit_switch_owned: '&aMy Plots'
+visit_switch_owned_lore:
+  - '&7Show your owned plots, homes,'
+  - '&7and personal destinations.'
+visit_switch_warps: '&6Server Waypoints'
+visit_switch_warps_lore:
+  - '&7Show public warps and'
+  - '&7staff-curated destinations.'
+visit_warp_name: '&6{WARP}'
+visit_warp_lore:
+  - '&7A public travel point.'
+  - ' '
+  - '&eClick to teleport.'
+visit_plot_name: '&e{PLOT}'
+visit_plot_lore:
+  - '&7World: &f{WORLD}'
+  - '&7Your Role: &b{ROLE}'
+  - ' '
+  - '&eClick to teleport.'
+visit_role_owner: '&aOwner'

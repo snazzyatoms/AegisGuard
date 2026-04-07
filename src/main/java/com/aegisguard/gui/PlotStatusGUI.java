@@ -136,6 +136,11 @@ public class PlotStatusGUI {
         String backName = tr(player, "button_back", null, "&fBack");
         List<String> backLore = plugin.gui().trList(player, "back_lore", List.of("&7Return to the main menu."));
         inv.setItem(49, GUIManager.createItem(Material.ARROW, backName, colorList(backLore)));
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                tr(player, "button_exit", null, "&cClose"),
+                colorList(plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu.")))
+        ));
 
         player.openInventory(inv);
         GUIManager.playClick(player);
@@ -148,6 +153,12 @@ public class PlotStatusGUI {
         if (e.getSlot() == 49) {
             GUIManager.playClick(player);
             plugin.gui().openMain(player);
+            return;
+        }
+
+        if (e.getSlot() == 50) {
+            try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
+            player.closeInventory();
         }
     }
 

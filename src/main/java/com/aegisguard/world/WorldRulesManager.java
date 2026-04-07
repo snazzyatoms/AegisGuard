@@ -102,9 +102,9 @@ public class WorldRulesManager {
         plot.setFlag("entry", set.entry);
 
         // Hard safety defaults
-        plot.setFlag("tnt-damage", false);
-        plot.setFlag("fire-spread", false);
-        plot.setFlag("piston-use", false);
+        plot.setFlag("tnt-damage", plugin.getConfig().getBoolean("protections.tnt-damage", true));
+        plot.setFlag("fire-spread", plugin.getConfig().getBoolean("protections.fire-spread", true));
+        plot.setFlag("piston-use", plugin.getConfig().getBoolean("protections.piston-use", true));
         plot.setFlag("interact", true);
         plot.setFlag("build", true);
     }

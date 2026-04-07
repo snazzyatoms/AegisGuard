@@ -55,6 +55,7 @@ public class ExpansionRequestManager {
 
     public enum ApprovalMode { QUEUE, INSTANT }
     public enum ActorType { ADMIN, AUTO, SYSTEM, UNKNOWN }
+    private enum ExpansionChargeSource { NONE, TREASURY, PLAYER }
 
     public static final class DecisionRecord {
         private final String key;
@@ -151,6 +152,16 @@ public class ExpansionRequestManager {
         List<DecisionRecord> out = new ArrayList<>(history);
         out.sort(Comparator.comparingLong(DecisionRecord::getDecisionTimestamp).reversed());
         return out;
+    }
+
+    /** Number of online players currently eligible to review queued expansion requests. */
+    public int getOnlineReviewerCount() {
+        return countOnlineReviewers();
+    }
+
+    /** True when queue mode unattended approval is enabled in config. */
+    public boolean isAutoApproveWhenNoReviewersEnabled() {
+        return plugin.cfg().raw().getBoolean("expansions.approval.auto_when_no_reviewers.enabled", false);
     }
 
     /** True only if the stored request is still pending. */
@@ -319,7 +330,7 @@ public class ExpansionRequestManager {
         double cost = calculateSmartCost(currentRadius, newRadius);
         CurrencyType type = CurrencyType.VAULT;
 
-        if (!plugin.eco().has(requester, cost, type)) {
+        if (!canCoverExpansionCost(plot, requester, cost, type)) {
             plugin.msg().send(requester, "expansion_payment_failed");
             return false;
         }
@@ -330,9 +341,29 @@ public class ExpansionRequestManager {
             return false;
         }
 
-        // 5) Branch: QUEUE vs INSTANT
+        // 5) Branch: QUEUE vs INSTANT / unattended queue fallback
         if (getApprovalMode() == ApprovalMode.INSTANT) {
-            return processInstantApproval(requester, plot, currentRadius, newRadius, cost, type);
+            return processInstantApproval(
+                    requester,
+                    plot,
+                    currentRadius,
+                    newRadius,
+                    cost,
+                    type,
+                    "Instant mode auto-approval"
+            );
+        }
+
+        if (shouldAutoApproveWhenNoReviewers(requester, plot, currentRadius, newRadius, cost)) {
+            return processInstantApproval(
+                    requester,
+                    plot,
+                    currentRadius,
+                    newRadius,
+                    cost,
+                    type,
+                    "Auto-approved because no eligible reviewers were online"
+            );
         }
 
         // QUEUE Mode: Submit pending request
@@ -359,15 +390,42 @@ public class ExpansionRequestManager {
         return true;
     }
 
+    public double calculateSmartCost(int currentRadius, int newRadius) {
+        int safeCurrent = Math.max(0, currentRadius);
+        int safeNew = Math.max(safeCurrent, newRadius);
+        long addedArea = addedAreaForExpansion(safeCurrent, safeNew);
+
+        if (plugin.getPricingCalculator() != null && plugin.getPricingCalculator().isEnabled()) {
+            return plugin.getPricingCalculator().calculateExpansionCost(addedArea);
+        }
+
+        double perBlock = plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0);
+        return addedArea * perBlock;
+    }
+
+    private long squareAreaForRadius(int radius) {
+        long size = Math.max(1L, (radius * 2L) + 1L);
+        return size * size;
+    }
+
+    private long addedAreaForExpansion(int currentRadius, int newRadius) {
+        long currentArea = squareAreaForRadius(Math.max(0, currentRadius));
+        long newArea = squareAreaForRadius(Math.max(Math.max(0, currentRadius), newRadius));
+        return Math.max(0L, newArea - currentArea);
+    }
+
     private boolean processInstantApproval(Player requester,
                                           Plot plot,
                                           int currentRadius,
                                           int newRadius,
                                           double cost,
-                                          CurrencyType type) {
+                                          CurrencyType type,
+                                          String auditReason) {
 
         // Charge now (instant mode)
-        if (!plugin.eco().withdraw(requester, cost, type)) {
+        OfflinePlayer requesterAccount = Bukkit.getOfflinePlayer(requester.getUniqueId());
+        ExpansionChargeSource chargeSource = chargeExpansionCost(plot, requesterAccount, requester, cost, type);
+        if (chargeSource == ExpansionChargeSource.NONE) {
             plugin.msg().send(requester, "expansion_payment_failed");
             return false;
         }
@@ -375,7 +433,7 @@ public class ExpansionRequestManager {
         // Apply expansion (re-check overlap one last time)
         Plot oldPlot = plugin.store().getPlot(plot.getOwner(), plot.getPlotId());
         if (oldPlot == null) {
-            refund(Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type);
+            refundExpansionCost(plot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type, chargeSource);
             plugin.msg().send(requester, "transaction_failed"); // falls back if missing
             return false;
         }
@@ -384,7 +442,7 @@ public class ExpansionRequestManager {
         createExpansionSnapshot(oldPlot, currentRadius, newRadius, null);
 
         if (!applyExpansion(oldPlot, newRadius)) {
-            refund(Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type);
+            refundExpansionCost(oldPlot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type, chargeSource);
             plugin.msg().send(requester, "expansion_overlap_fail");
             return false;
         }
@@ -399,7 +457,7 @@ public class ExpansionRequestManager {
                 newRadius,
                 cost
         );
-        req.approve(); // status + decision timestamp
+        req.approveAuto();
 
         // Notify player: approved by AUTO
         String actor = plugin.gui().tr(requester, "expansion_actor_auto", "Auto");
@@ -408,7 +466,7 @@ public class ExpansionRequestManager {
 
         // Audit trail
         if (isAuditEnabled()) {
-            recordDecision(req, ActorType.AUTO, null, "Instant Mode");
+            recordDecision(req, ActorType.AUTO, null, buildDecisionNote(auditReason, chargeSource));
         }
 
         // Optional admin notice
@@ -439,33 +497,20 @@ public class ExpansionRequestManager {
 
         OfflinePlayer requester = Bukkit.getOfflinePlayer(req.getRequester());
         CurrencyType type = CurrencyType.VAULT;
-
-        // 1) Charge Player
-        Player p = requester.getPlayer();
-        if (p != null) {
-            if (!plugin.eco().withdraw(p, req.getCost(), type)) {
-                removeRequest(req);
-                plugin.msg().send(p, "expansion_payment_failed");
-                return false;
-            }
-        } else {
-            // Offline charge via Vault wrapper (if you have one)
-            if (plugin.cfg().useVault()) {
-                if (!plugin.vault().charge(requester, req.getCost())) {
-                    removeRequest(req);
-                    return false;
-                }
-            } else {
-                removeRequest(req);
-                return false;
-            }
-        }
-
-        // 2) Get Plot
         Plot oldPlot = plugin.store().getPlot(req.getPlotOwner(), req.getPlotId());
         if (oldPlot == null) {
-            refund(requester, p, req.getCost(), type);
             removeRequest(req);
+            return false;
+        }
+
+        // 1) Charge Player / Group treasury
+        Player p = requester.getPlayer();
+        ExpansionChargeSource chargeSource = chargeExpansionCost(oldPlot, requester, p, req.getCost(), type);
+        if (chargeSource == ExpansionChargeSource.NONE) {
+            removeRequest(req);
+            if (p != null) {
+                plugin.msg().send(p, "expansion_payment_failed");
+            }
             return false;
         }
 
@@ -474,16 +519,20 @@ public class ExpansionRequestManager {
 
         // 4) Apply Expansion (re-check overlap at approval time)
         if (!applyExpansion(oldPlot, req.getRequestedRadius())) {
-            refund(requester, p, req.getCost(), type);
+            refundExpansionCost(oldPlot, requester, p, req.getCost(), type, chargeSource);
 
             // Keep semantics: denial due to overlap/rules
-            denyRequest(req, adminActor);
+            denyRequest(req, adminActor, "Approval revalidation failed because the new bounds were no longer valid");
             plugin.getLogger().warning("Expansion approval failed (overlap or invalid bounds) for " + req.getRequester());
             return false;
         }
 
         // 5) Mark + remove active
-        req.approve();
+        if (adminActor != null) {
+            req.approveAdmin(adminActor);
+        } else {
+            req.approveAdmin();
+        }
         activeRequests.remove(req.getRequester());
         setDirty(true);
 
@@ -496,7 +545,7 @@ public class ExpansionRequestManager {
 
         // 7) Audit
         if (isAuditEnabled()) {
-            recordDecision(req, ActorType.ADMIN, adminActor, "");
+            recordDecision(req, ActorType.ADMIN, adminActor, buildDecisionNote("", chargeSource));
         }
 
         return true;
@@ -509,9 +558,18 @@ public class ExpansionRequestManager {
 
     /** Preferred: pass the admin UUID for clean audit. */
     public boolean denyRequest(ExpansionRequest req, UUID adminActor) {
+        return denyRequest(req, adminActor, "");
+    }
+
+    /** Preferred: pass the admin UUID and optional audit note for cleaner review history. */
+    public boolean denyRequest(ExpansionRequest req, UUID adminActor, String note) {
         if (req == null) return false;
 
-        req.deny();
+        if (adminActor != null) {
+            req.denyAdmin(adminActor);
+        } else {
+            req.denyAdmin();
+        }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(req.getRequester());
         if (target.isOnline()) {
@@ -528,7 +586,7 @@ public class ExpansionRequestManager {
 
         // Audit
         if (isAuditEnabled()) {
-            recordDecision(req, ActorType.ADMIN, adminActor, "");
+            recordDecision(req, ActorType.ADMIN, adminActor, note == null ? "" : note);
         }
 
         return true;
@@ -552,34 +610,76 @@ public class ExpansionRequestManager {
         }
     }
 
-    // --- LOGIC ---
-
-    /**
-     * Area-based cost:
-     *  - radius r -> square side = (2r + 1)
-     *  - area = side^2
-     *  - cost_per_block applies to added area (delta blocks)
-     */
-    private double calculateSmartCost(int currentRadius, int newRadius) {
-        double perBlock = plugin.cfg().raw().getDouble("expansions.cost_per_block", 10.0);
-        double multiplier = plugin.cfg().raw().getDouble("expansions.cost_multiplier", 1.1);
-
-        long oldSide = (2L * currentRadius) + 1L;
-        long newSide = (2L * newRadius) + 1L;
-
-        long oldArea = oldSide * oldSide;
-        long newArea = newSide * newSide;
-
-        long addedBlocks = Math.max(0L, newArea - oldArea);
-
-        double totalCost = perBlock * addedBlocks;
-
-        // Optional "rapid growth tax" if radius jump is large
-        int radiusJump = Math.max(0, newRadius - currentRadius);
-        if (radiusJump > 10) totalCost *= multiplier;
-
-        return Math.round(totalCost * 100.0) / 100.0;
+    private boolean canCoverExpansionCost(Plot plot, Player requester, double amount, CurrencyType type) {
+        return canCoverExpansionCost(plot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, amount, type);
     }
+
+    private boolean canCoverExpansionCost(Plot plot, OfflinePlayer requester, Player onlinePlayer, double amount, CurrencyType type) {
+        if (plot != null && plot.isGroupPlot() && plot.getTreasuryBalance() + 0.000001D >= amount) {
+            return true;
+        }
+        if (onlinePlayer != null) {
+            return plugin.eco().has(onlinePlayer, amount, type);
+        }
+        return plugin.cfg().useVault() && plugin.vault() != null && plugin.vault().has(requester, amount);
+    }
+
+    private ExpansionChargeSource chargeExpansionCost(Plot plot, Player requester, double amount, CurrencyType type) {
+        return chargeExpansionCost(plot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, amount, type);
+    }
+
+    private ExpansionChargeSource chargeExpansionCost(Plot plot, OfflinePlayer requester, Player onlinePlayer, double amount, CurrencyType type) {
+        if (plot != null && plot.isGroupPlot() && plot.withdrawTreasuryFunds(amount)) {
+            plugin.store().savePlot(plot);
+            warnIfTreasuryLow(plot);
+            return ExpansionChargeSource.TREASURY;
+        }
+        if (onlinePlayer != null) {
+            return plugin.eco().withdraw(onlinePlayer, amount, type) ? ExpansionChargeSource.PLAYER : ExpansionChargeSource.NONE;
+        }
+        if (plugin.cfg().useVault() && plugin.vault() != null && plugin.vault().charge(requester, amount)) {
+            return ExpansionChargeSource.PLAYER;
+        }
+        return ExpansionChargeSource.NONE;
+    }
+
+    private void refundExpansionCost(Plot plot, OfflinePlayer requester, Player onlinePlayer, double amount,
+                                     CurrencyType type, ExpansionChargeSource source) {
+        if (source == ExpansionChargeSource.TREASURY && plot != null) {
+            plot.addTreasuryFunds(amount);
+            plugin.store().savePlot(plot);
+            return;
+        }
+        if (source == ExpansionChargeSource.PLAYER) {
+            refund(requester, onlinePlayer, amount, type);
+        }
+    }
+
+    private void warnIfTreasuryLow(Plot plot) {
+        if (plot == null || !plot.isGroupPlot()) return;
+        if (plugin.notifications() == null) return;
+        if (!plugin.getConfig().getBoolean("group_plots.notifications.enabled", true)) return;
+
+        double threshold = Math.max(0.0D, plugin.getConfig().getDouble("group_plots.notifications.low_treasury_threshold", 250.0D));
+        if (threshold <= 0.0D || plot.getTreasuryBalance() > threshold) return;
+
+        plugin.notifications().notifyPlotMembers(
+                plot,
+                null,
+                "notify_group_title",
+                "&6Group Update",
+                "notify_group_treasury_low",
+                "&e{GROUP}'s treasury is running low. Remaining balance: &6{BALANCE}&e.",
+                Map.of(
+                        "GROUP", plot.getGroupName() == null || plot.getGroupName().isBlank() ? "Group" : plot.getGroupName(),
+                        "BALANCE", plugin.eco() != null && plugin.eco().isVaultReady()
+                                ? plugin.eco().format(plot.getTreasuryBalance(), CurrencyType.VAULT)
+                                : String.format(Locale.US, "%.2f", plot.getTreasuryBalance())
+                )
+        );
+    }
+
+    // --- LOGIC ---
 
     private boolean isOverlapping(Plot oldPlot, int newRadius) {
         int cX = (oldPlot.getX1() + oldPlot.getX2()) / 2;
@@ -690,6 +790,74 @@ public class ExpansionRequestManager {
         return plugin.cfg().raw().getString("expansions.approval.notify_permission", "aegis.admin");
     }
 
+    private boolean shouldAutoApproveWhenNoReviewers(Player requester, Plot plot, int currentRadius, int newRadius, double cost) {
+        if (requester == null || plot == null) return false;
+        if (getApprovalMode() != ApprovalMode.QUEUE) return false;
+        if (!isAutoApproveWhenNoReviewersEnabled()) return false;
+        if (countOnlineReviewers() >= minimumOnlineReviewers()) return false;
+
+        double maxCost = unattendedAutoMaxCost();
+        if (maxCost > 0.0D && cost > maxCost + 0.000001D) {
+            return false;
+        }
+
+        long maxAddedBlocks = unattendedAutoMaxAddedBlocks();
+        if (maxAddedBlocks > 0L && addedAreaForExpansion(currentRadius, newRadius) > maxAddedBlocks) {
+            return false;
+        }
+
+        return canCoverExpansionCost(plot, requester, cost, CurrencyType.VAULT);
+    }
+
+    private int countOnlineReviewers() {
+        int count = 0;
+        String permission = reviewerPermission();
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online == null) continue;
+            if (isEligibleReviewer(online, permission)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private boolean isEligibleReviewer(Player player, String permission) {
+        if (player == null) return false;
+        if (permission != null && !permission.isBlank() && player.hasPermission(permission)) {
+            return true;
+        }
+        return plugin.isAdmin(player);
+    }
+
+    private int minimumOnlineReviewers() {
+        return Math.max(1, plugin.cfg().raw().getInt("expansions.approval.auto_when_no_reviewers.minimum_online_reviewers", 1));
+    }
+
+    private String reviewerPermission() {
+        return plugin.cfg().raw().getString("expansions.approval.auto_when_no_reviewers.reviewer_permission", notifyPermission());
+    }
+
+    private double unattendedAutoMaxCost() {
+        return Math.max(0.0D, plugin.cfg().raw().getDouble("expansions.approval.auto_when_no_reviewers.max_cost", 0.0D));
+    }
+
+    private long unattendedAutoMaxAddedBlocks() {
+        return Math.max(0L, plugin.cfg().raw().getLong("expansions.approval.auto_when_no_reviewers.max_added_blocks", 0L));
+    }
+
+    private String buildDecisionNote(String baseNote, ExpansionChargeSource chargeSource) {
+        String trimmedBase = baseNote == null ? "" : baseNote.trim();
+        String paymentNote = switch (chargeSource) {
+            case TREASURY -> "Charged from group treasury";
+            case PLAYER -> "Charged directly to requester";
+            case NONE -> "";
+        };
+
+        if (trimmedBase.isBlank()) return paymentNote;
+        if (paymentNote.isBlank()) return trimmedBase;
+        return trimmedBase + ". " + paymentNote + ".";
+    }
+
     private void recordDecision(ExpansionRequest req, ActorType actorType, UUID actor, String note) {
         if (req == null) return;
 
@@ -759,23 +927,28 @@ public class ExpansionRequestManager {
     private void notifyAdminsAutoApproved(Player requester, ExpansionRequest req) {
         if (!notifyAdminsOnAuto()) return;
 
-        String perm = notifyPermission();
         String requesterName = requester.getName() == null ? "Unknown" : requester.getName();
+        String message = plugin.gui().tr(
+                requester,
+                "expansion_auto_admin_notice",
+                "&6[Admin] &e{PLAYER}&7 had an expansion auto-approved in &f{WORLD}&7. &8(&7{CUR} -> {REQ}&8)",
+                Map.of(
+                        "PLAYER", requesterName,
+                        "WORLD", req.getWorldName() == null ? "" : req.getWorldName(),
+                        "CUR", String.valueOf(req.getCurrentRadius()),
+                        "REQ", String.valueOf(req.getRequestedRadius())
+                )
+        );
+
+        if (plugin.getNotificationManager() != null) {
+            plugin.getNotificationManager().notifyAdmins(notifyPermission(), message);
+            return;
+        }
 
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online == null) continue;
-            if (!online.hasPermission(perm) && !plugin.isAdmin(online)) continue;
-
-            // Suggested key (add later), fallback included:
-            plugin.msg().send(online,
-                    "expansion_auto_admin_notice",
-                    Map.of(
-                            "PLAYER", requesterName,
-                            "WORLD", req.getWorldName() == null ? "" : req.getWorldName(),
-                            "CUR", String.valueOf(req.getCurrentRadius()),
-                            "REQ", String.valueOf(req.getRequestedRadius())
-                    )
-            );
+            if (!online.hasPermission(notifyPermission()) && !plugin.isAdmin(online)) continue;
+            online.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', message));
         }
     }
 

@@ -58,10 +58,12 @@ public class Plot {
 
     // --- SPAWN ---
     private Location spawnLocation;
+    private int maxMembers = 2;
 
     // --- COSMETICS ---
     private String borderParticle;
     private String ambientParticle;
+    private String entryEffect;
 
     // --- MARKET ---
     private boolean forSale;
@@ -86,6 +88,7 @@ public class Plot {
 
     // --- ZONING ---
     private final List<Zone> zones = new CopyOnWriteArrayList<>();
+    private final List<MarketStall> stalls = new CopyOnWriteArrayList<>();
 
     // --- BIOME ---
     private String customBiome;
@@ -100,6 +103,14 @@ public class Plot {
 
     // --- SERVER WARP ---
     private boolean serverWarp;
+    private String warpName;
+    private Material warpIcon;
+
+    // --- GROUP / SHARED PLOT ---
+    private boolean groupPlot;
+    private double treasuryBalance;
+    private UUID groupId;
+    private String groupName;
 
     public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2) {
         this.plotId = plotId;
@@ -107,6 +118,12 @@ public class Plot {
         this.ownerName = ownerName;
         this.world = world;
         setBounds(x1, z1, x2, z2);
+        this.lastUpkeepPayment = System.currentTimeMillis();
+    }
+
+    public Plot(UUID plotId, UUID owner, String ownerName, String world, int x1, int z1, int x2, int z2, long lastUpkeepPayment) {
+        this(plotId, owner, ownerName, world, x1, z1, x2, z2);
+        this.lastUpkeepPayment = lastUpkeepPayment;
     }
 
     // ---------------------------------------------------------------------
@@ -132,6 +149,12 @@ public class Plot {
 
     public void setOwner(UUID owner) {
         this.owner = owner;
+    }
+
+    public void internalSetOwner(UUID owner, String ownerName) {
+        this.owner = owner;
+        this.ownerName = ownerName;
+        removeRole(owner);
     }
 
     public String getOwnerName() {
@@ -213,6 +236,11 @@ public class Plot {
         return isInPlot(location);
     }
 
+    /** Legacy compatibility alias used by older listeners/GUI code. */
+    public boolean contains(Location location) {
+        return isInPlot(location);
+    }
+
     /** 1.2.6 compatibility: no-arg center. */
     public Location getCenter() {
         World w = getBukkitWorld();
@@ -261,6 +289,7 @@ public class Plot {
 
     public void setRole(UUID playerUUID, String role) {
         if (playerUUID == null) return;
+        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
 
         if (role == null || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none")) {
             playerRoles.remove(playerUUID);
@@ -272,6 +301,7 @@ public class Plot {
 
     public void removeRole(UUID playerUUID) {
         if (playerUUID == null) return;
+        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
         playerRoles.remove(playerUUID);
     }
 
@@ -323,7 +353,7 @@ public class Plot {
 
         // Admin/bypass always allowed
         Player online = Bukkit.getPlayer(playerUUID);
-        if (online != null && (plugin.isAdmin(online) || plugin.isBypassing(online) || online.hasPermission("aegis.bypass"))) {
+        if (hasElevatedManagementAccess(online, plugin)) {
             return true;
         }
 
@@ -381,7 +411,7 @@ public class Plot {
         if (player == null) return false;
         AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
 
-        if (pl.isAdmin(player) || pl.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
+        if (hasElevatedManagementAccess(player, pl)) return true;
         return hasPermission(player.getUniqueId(), "MANAGE", pl);
     }
 
@@ -400,7 +430,10 @@ public class Plot {
         if (editor == null || targetUUID == null) return false;
         AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
 
-        if (pl.isAdmin(editor) || pl.isBypassing(editor) || editor.hasPermission("aegis.bypass")) return true;
+        if (isOwner(targetUUID) || SERVER_OWNER_UUID.equals(targetUUID)) return false;
+        if (editor.getUniqueId().equals(targetUUID)) return false;
+
+        if (hasElevatedManagementAccess(editor, pl)) return true;
 
         // Owners can manage members, but cannot remove themselves.
         if (isOwner(editor)) {
@@ -420,14 +453,14 @@ public class Plot {
      * v1.2.6: Build check using flag + role override + role permission.
      * - Admin/bypass always allow
      * - Role flag override on "build" beats everything
-     * - If plot flag build=true allow
-     * - Else require role permission (BUILD / BLOCK_PLACE / BLOCK_BREAK)
+     * - If plot flag build=false, the plot is explicitly public-build
+     * - Otherwise require role permission (BUILD / BLOCK_PLACE / BLOCK_BREAK)
      */
     public boolean canBuild(@Nullable Player player, @Nullable AegisGuard plugin, @Nullable String permission) {
         if (player == null) return false;
         AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
 
-        if (pl.isAdmin(player) || pl.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
+        if (hasElevatedManagementAccess(player, pl)) return true;
 
         UUID uuid = player.getUniqueId();
         if (isOwner(uuid)) return true;
@@ -438,7 +471,9 @@ public class Plot {
         if (override == TriState.ALLOW) return true;
         if (override == TriState.DENY) return false;
 
-        if (getFlag("build", true)) return true;
+        // "build" acts as a public-build override.
+        // By default claims are protected, so only trusted roles can build unless a plot explicitly opens building up.
+        if (!getFlag("build", true)) return true;
 
         String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
 
@@ -454,6 +489,86 @@ public class Plot {
         return canBuild(player, AegisGuard.getInstance(), permission);
     }
 
+    public boolean isZoneRenter(@Nullable UUID playerUUID, @Nullable Location location) {
+        if (playerUUID == null || location == null) return false;
+        if (isBanned(playerUUID)) return false;
+
+        Zone zone = getZoneAt(location);
+        return zone != null && zone.isRentedBy(playerUUID);
+    }
+
+    public @Nullable Zone getRentedZoneAt(@Nullable Location location) {
+        Zone zone = getZoneAt(location);
+        return zone != null && zone.isRented() ? zone : null;
+    }
+
+    public @Nullable Zone getRentedZoneFor(@Nullable UUID playerUUID) {
+        if (playerUUID == null) return null;
+        for (Zone zone : zones) {
+            if (zone != null && zone.isRentedBy(playerUUID)) {
+                return zone;
+            }
+        }
+        return null;
+    }
+
+    private boolean canUseRentedZone(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+        if (player == null || location == null) return false;
+        Zone zone = getRentedZoneAt(location);
+        if (zone == null) return false;
+
+        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        if (canManage(player, pl)) return true;
+
+        UUID uuid = player.getUniqueId();
+        if (zone.isRentedBy(uuid)) return true;
+        if (isBanned(uuid)) return false;
+
+        String perm = permission == null ? "INTERACT" : permission.toUpperCase(Locale.ROOT);
+        return switch (perm) {
+            case "BLOCK_BREAK", "BLOCK_PLACE", "BUILD" -> zone.canGuestBuild(uuid);
+            case "CONTAINERS" -> zone.canGuestUseContainers(uuid);
+            case "VEHICLES" -> zone.canGuestUseVehicles(uuid);
+            default -> zone.canGuestInteract(uuid);
+        };
+    }
+
+    public boolean canBuildAt(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+        if (player == null) return false;
+        Zone rentedZone = getRentedZoneAt(location);
+        if (rentedZone != null) {
+            return canUseRentedZone(player, location, plugin, permission);
+        }
+        if (canBuild(player, plugin, permission)) return true;
+        return isZoneRenter(player.getUniqueId(), location);
+    }
+
+    public boolean canBuildAt(@Nullable Player player, @Nullable Location location, @Nullable String permission) {
+        return canBuildAt(player, location, AegisGuard.getInstance(), permission);
+    }
+
+    public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+        if (player == null) return false;
+        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+
+        Zone rentedZone = getRentedZoneAt(location);
+        if (rentedZone != null) {
+            return canUseRentedZone(player, location, pl, permission);
+        }
+
+        if (canBuildAt(player, location, pl, permission)) return true;
+
+        UUID uuid = player.getUniqueId();
+        if (hasPermission(uuid, "INTERACT", pl)) return true;
+        if (permission != null && !permission.isBlank() && hasPermission(uuid, permission, pl)) return true;
+
+        return isZoneRenter(uuid, location);
+    }
+
+    public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable String permission) {
+        return canInteractAt(player, location, AegisGuard.getInstance(), permission);
+    }
+
     // ---------------------------------------------------------------------
     // Server zone / warp
     // ---------------------------------------------------------------------
@@ -462,12 +577,97 @@ public class Plot {
         return SERVER_OWNER_UUID.equals(owner);
     }
 
+    private boolean hasElevatedManagementAccess(@Nullable Player player, @Nullable AegisGuard plugin) {
+        if (player == null || plugin == null) return false;
+        if (plugin.isAdmin(player) || plugin.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
+        if (hasAnyPermission(player, plugin, "staff_access.global_manage_permissions", List.of("aegis.admin.manage"))) {
+            return true;
+        }
+        if (isServerZone() && hasAnyPermission(player, plugin, "staff_access.server_zone_manage_permissions",
+                List.of("aegis.serverzone.manage", "aegis.staff.co_owner"))) {
+            return true;
+        }
+        return isMarketManaged() && hasAnyPermission(player, plugin, "staff_access.market_plot_manage_permissions",
+                List.of("aegis.market.manage", "aegis.staff.market_steward"));
+    }
+
+    private boolean isMarketManaged() {
+        return isForSale() || isForRent() || isForAuction() || isServerWarp();
+    }
+
+    private boolean hasAnyPermission(@Nullable Player player, @Nullable AegisGuard plugin, String path, List<String> fallback) {
+        if (player == null || plugin == null) return false;
+
+        List<String> permissions = fallback;
+        try {
+            List<String> configured = plugin.getConfig().getStringList(path);
+            if (configured != null && !configured.isEmpty()) {
+                permissions = configured;
+            }
+        } catch (Throwable ignored) {}
+
+        if (permissions == null || permissions.isEmpty()) return false;
+        for (String permission : permissions) {
+            if (permission != null && !permission.isBlank() && player.hasPermission(permission.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean isServerWarp() {
         return serverWarp;
     }
 
     public void setServerWarp(boolean serverWarp) {
         this.serverWarp = serverWarp;
+    }
+
+    public boolean isGroupPlot() {
+        return groupPlot;
+    }
+
+    public void setGroupPlot(boolean groupPlot) {
+        this.groupPlot = groupPlot;
+        if (!groupPlot && treasuryBalance < 0.0) {
+            treasuryBalance = 0.0;
+        }
+    }
+
+    public double getTreasuryBalance() {
+        return Math.max(0.0, treasuryBalance);
+    }
+
+    public void setTreasuryBalance(double treasuryBalance) {
+        this.treasuryBalance = Math.max(0.0, treasuryBalance);
+    }
+
+    public void addTreasuryFunds(double amount) {
+        if (amount <= 0.0) return;
+        treasuryBalance = Math.max(0.0, treasuryBalance + amount);
+    }
+
+    public boolean withdrawTreasuryFunds(double amount) {
+        if (amount <= 0.0) return true;
+        if (treasuryBalance + 0.000001D < amount) return false;
+        treasuryBalance = Math.max(0.0, treasuryBalance - amount);
+        return true;
+    }
+
+    public UUID getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(UUID groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
     // ---------------------------------------------------------------------
@@ -546,6 +746,39 @@ public class Plot {
         this.spawnLocation = spawnLocation;
     }
 
+    public String getSpawnLocationString() {
+        Location loc = spawnLocation;
+        if (loc == null || loc.getWorld() == null) return null;
+        return loc.getWorld().getName() + "," + loc.getX() + "," + loc.getY() + "," + loc.getZ() + "," + loc.getYaw() + "," + loc.getPitch();
+    }
+
+    public void setSpawnLocationFromString(String serialized) {
+        if (serialized == null || serialized.isBlank()) {
+            this.spawnLocation = null;
+            return;
+        }
+        try {
+            String[] parts = serialized.split(",");
+            if (parts.length < 4) {
+                this.spawnLocation = null;
+                return;
+            }
+            World w = Bukkit.getWorld(parts[0]);
+            if (w == null) {
+                this.spawnLocation = null;
+                return;
+            }
+            double x = Double.parseDouble(parts[1]);
+            double y = Double.parseDouble(parts[2]);
+            double z = Double.parseDouble(parts[3]);
+            float yaw = parts.length > 4 ? Float.parseFloat(parts[4]) : 0F;
+            float pitch = parts.length > 5 ? Float.parseFloat(parts[5]) : 0F;
+            this.spawnLocation = new Location(w, x, y, z, yaw, pitch);
+        } catch (Exception ignored) {
+            this.spawnLocation = null;
+        }
+    }
+
     // ---------------------------------------------------------------------
     // Cosmetics
     // ---------------------------------------------------------------------
@@ -564,6 +797,14 @@ public class Plot {
 
     public void setAmbientParticle(String ambientParticle) {
         this.ambientParticle = ambientParticle;
+    }
+
+    public String getEntryEffect() {
+        return entryEffect;
+    }
+
+    public void setEntryEffect(String entryEffect) {
+        this.entryEffect = entryEffect;
     }
 
     // ---------------------------------------------------------------------
@@ -634,6 +875,15 @@ public class Plot {
         this.rentEndTime = rentEndTime;
     }
 
+    public void setRenter(UUID renter, long rentExpires) {
+        this.currentRenter = renter;
+        this.rentEndTime = Math.max(0L, rentExpires);
+    }
+
+    public long getRentExpires() {
+        return rentEndTime;
+    }
+
     // ---------------------------------------------------------------------
     // Auction
     // ---------------------------------------------------------------------
@@ -701,6 +951,27 @@ public class Plot {
         this.xp = Math.max(0, xp);
     }
 
+    public void setXp(double xp) {
+        this.xp = Math.max(0, (int) Math.round(xp));
+    }
+
+    public int getMaxMembers() {
+        return Math.max(1, maxMembers);
+    }
+
+    public void setMaxMembers(int maxMembers) {
+        this.maxMembers = Math.max(1, maxMembers);
+    }
+
+    public void expand(int amount) {
+        if (amount <= 0) return;
+        this.x1 -= amount;
+        this.z1 -= amount;
+        this.x2 += amount;
+        this.z2 += amount;
+        normalizeBounds();
+    }
+
     // ---------------------------------------------------------------------
     // Zoning
     // ---------------------------------------------------------------------
@@ -711,12 +982,152 @@ public class Plot {
 
     public void addZone(Zone zone) {
         if (zone == null) return;
+        removeZoneByName(zone.getName());
         zones.add(zone);
     }
 
     public void removeZone(Zone zone) {
         if (zone == null) return;
         zones.remove(zone);
+    }
+
+    public void removeZoneByName(String zoneName) {
+        if (zoneName == null || zoneName.isBlank()) return;
+        zones.removeIf(zone -> zone != null && zoneName.equalsIgnoreCase(zone.getName()));
+    }
+
+    public Zone getZone(String zoneName) {
+        if (zoneName == null || zoneName.isBlank()) return null;
+        for (Zone zone : zones) {
+            if (zone != null && zoneName.equalsIgnoreCase(zone.getName())) {
+                return zone;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasZone(String zoneName) {
+        return getZone(zoneName) != null;
+    }
+
+    public boolean isZoneNameAvailable(String zoneName) {
+        return !hasZone(zoneName);
+    }
+
+    public String nextAvailableZoneName(String baseName) {
+        String base = (baseName == null || baseName.isBlank()) ? "Zone" : baseName.trim();
+        if (isZoneNameAvailable(base)) return base;
+
+        int index = 2;
+        while (!isZoneNameAvailable(base + "-" + index)) {
+            index++;
+        }
+        return base + "-" + index;
+    }
+
+    public boolean containsZoneBounds(int x1, int z1, int x2, int z2) {
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
+
+        return minX >= this.x1 && maxX <= this.x2
+                && minZ >= this.z1 && maxZ <= this.z2;
+    }
+
+    public boolean overlapsZone(Zone candidate, @Nullable Zone ignore) {
+        if (candidate == null) return false;
+        for (Zone zone : zones) {
+            if (zone == null || zone == ignore) continue;
+            if (candidate.overlaps(zone)) return true;
+        }
+        return false;
+    }
+
+    public Zone getZoneAt(Location location) {
+        if (location == null) return null;
+        for (Zone zone : zones) {
+            if (zone != null && zone.isInside(location)) {
+                return zone;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasBrowsableZonesFor(@Nullable Player player) {
+        UUID viewer = player == null ? null : player.getUniqueId();
+        for (Zone zone : zones) {
+            if (zone == null) continue;
+            if (zone.isListedForRent() || zone.isRentedBy(viewer) || zone.isRented()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<MarketStall> getStalls() {
+        return stalls;
+    }
+
+    public void addStall(MarketStall stall) {
+        if (stall == null) return;
+        removeStallByChest(stall.getChestLocation());
+        removeStallBySign(stall.getSignLocation());
+        stalls.add(stall);
+    }
+
+    public void removeStall(MarketStall stall) {
+        if (stall == null) return;
+        stalls.remove(stall);
+    }
+
+    public boolean removeStallByChest(@Nullable Location location) {
+        if (location == null) return false;
+        return stalls.removeIf(stall -> stall != null && stall.matchesChest(location));
+    }
+
+    public boolean removeStallBySign(@Nullable Location location) {
+        if (location == null) return false;
+        return stalls.removeIf(stall -> stall != null && stall.matchesSign(location));
+    }
+
+    public MarketStall getStallByKey(@Nullable String storageKey) {
+        if (storageKey == null || storageKey.isBlank()) return null;
+        for (MarketStall stall : stalls) {
+            if (stall != null && storageKey.equalsIgnoreCase(stall.getStorageKey())) {
+                return stall;
+            }
+        }
+        return null;
+    }
+
+    public MarketStall getStallAtChest(@Nullable Location location) {
+        if (location == null) return null;
+        for (MarketStall stall : stalls) {
+            if (stall != null && stall.matchesChest(location)) {
+                return stall;
+            }
+        }
+        return null;
+    }
+
+    public MarketStall getStallAtSign(@Nullable Location location) {
+        if (location == null) return null;
+        for (MarketStall stall : stalls) {
+            if (stall != null && stall.matchesSign(location)) {
+                return stall;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasBrowsableStalls() {
+        for (MarketStall stall : stalls) {
+            if (stall != null && stall.isActive(this)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ---------------------------------------------------------------------
@@ -741,6 +1152,14 @@ public class Plot {
 
     public void setLastUpkeepPayment(long lastUpkeepPayment) {
         this.lastUpkeepPayment = lastUpkeepPayment;
+    }
+
+    public long getLastUpkeep() {
+        return getLastUpkeepPayment();
+    }
+
+    public void setLastUpkeep(long lastUpkeepPayment) {
+        setLastUpkeepPayment(lastUpkeepPayment);
     }
 
     public String getPlotStatus() {
@@ -779,5 +1198,70 @@ public class Plot {
     public void removeLike(UUID uuid) {
         if (uuid == null) return;
         if (likedBy.remove(uuid)) likes = Math.max(0, likes - 1);
+    }
+
+    public void toggleLike(UUID uuid) {
+        if (uuid == null) return;
+        if (hasLiked(uuid)) removeLike(uuid);
+        else addLike(uuid);
+    }
+
+    public void setServerWarp(boolean serverWarp, String warpName, Material warpIcon) {
+        this.serverWarp = serverWarp;
+        this.warpName = warpName;
+        this.warpIcon = warpIcon;
+    }
+
+    public String getWarpName() {
+        return warpName;
+    }
+
+    public Material getWarpIcon() {
+        return warpIcon;
+    }
+
+    public String serializeFlags() {
+        if (flags.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (Map.Entry<String, Boolean> entry : flags.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                entries.add(entry.getKey() + "=" + entry.getValue());
+            }
+        }
+        return String.join(";", entries);
+    }
+
+    public String serializeRoles() {
+        if (playerRoles.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (Map.Entry<UUID, String> entry : playerRoles.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                entries.add(entry.getKey() + "=" + entry.getValue());
+            }
+        }
+        return String.join(";", entries);
+    }
+
+    public void deserializeFlags(String serialized) {
+        flags.clear();
+        if (serialized == null || serialized.isBlank()) return;
+        for (String entry : serialized.split(";")) {
+            String[] parts = entry.split("=", 2);
+            if (parts.length == 2) {
+                flags.put(parts[0].toLowerCase(Locale.ROOT), Boolean.parseBoolean(parts[1]));
+            }
+        }
+    }
+
+    public void deserializeRoles(String serialized) {
+        playerRoles.clear();
+        if (serialized == null || serialized.isBlank()) return;
+        for (String entry : serialized.split(";")) {
+            String[] parts = entry.split("=", 2);
+            if (parts.length != 2) continue;
+            try {
+                setRole(UUID.fromString(parts[0]), parts[1]);
+            } catch (IllegalArgumentException ignored) {}
+        }
     }
 }

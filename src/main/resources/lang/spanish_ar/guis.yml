@@ -37,17 +37,17 @@ label_unnamed: 'Zona sin nombre'
 # ------------------------------------------------------------
 # Menú Principal
 # ------------------------------------------------------------
-menu_title: '&b⚔ Menú AegisGuard'
+menu_title: '&3✦ Menú AegisGuard'
 
 button_info: '&bℹ Información'
 info_lore:
 - '&7Ver información y ayuda del plugin.'
 
-plot_status_button_title: '&d📜 Estado de Parcela'
+plot_status_button_title: '&b✦ Estado de Parcela'
 plot_status_button_lore:
 - '&7Ver estado y detalles de la parcela.'
 
-visit_gui_title: '&a🧭 Menú de Viaje'
+visit_gui_title: '&3🧭 Menú de Viaje'
 visit_button_lore:
 - '&7Visitá parcelas y viajá rápidamente.'
 
@@ -60,7 +60,7 @@ claim_land_ready_lore:
 - '&eClic para confirmar'
 
 button_plot_flags: '&6⚙ Banderas de Parcela'
-plot_flags_title: '&9⚙ Ajustes de Parcela'
+plot_flags_title: '&3⚙ Ajustes de Parcela'
 plot_flags_lore:
 - '&7Administrar banderas de protección de esta parcela.'
 plot_flags_locked_lore:
@@ -72,21 +72,25 @@ roles_lore:
 roles_locked_lore:
 - '&cNo podés administrar roles acá.'
 
-level_gui_title: '&a📈 Niveles'
+level_gui_title: '&d✦ Niveles de Parcela'
 level_button_lore:
 - '&7Subí de nivel tu parcela para beneficios.'
 
-zone_gui_title: '&b🏗 Zonificación'
+zone_gui_title: '&3✦ Gestión de Zonas'
 zone_button_lore:
 - '&7Creá sub-zonas y habitaciones alquilables.'
 
-biome_gui_title: '&d🌿 Biomas'
+biome_gui_title: '&a✦ Biomas'
 biome_button_lore:
 - '&7Cambiá el bioma de tu parcela.'
 
 button_market: '&6💰 Mercado'
 market_lore:
 - '&7Comprá y vendé bienes de parcela.'
+button_market_local: '&6Mercado Local'
+market_local_lore:
+- '&7Abrí los alquileres, tiendas y'
+- '&7opciones comerciales de esta parcela.'
 
 button_claimblocks_exchange: '&a💱 Intercambio de Bloques'
 claimblocks_exchange_lore:
@@ -110,7 +114,7 @@ button_player_settings: '&e⚙ Configuración'
 player_settings_lore:
 - '&7Preferencias personales e idioma.'
 
-admin_menu_title: '&c🛠 Kit del Alto Guardián'
+admin_menu_title: '&c✦ Herramientas del Alto Guardián'
 admin_menu_lore:
 - '&7Acceso exclusivo del operador'
 
@@ -122,8 +126,9 @@ claimblocks_exchange_unavailable: '&cEl intercambio de bloques no está disponib
 # ------------------------------------------------------------
 # Menú de Viaje
 # ------------------------------------------------------------
-visit_title_warps: '&6Puntos de Teletransporte (Warp)'
-visit_title_trusted: '&bParcelas de Confianza'
+visit_title_warps: '&6Puntos del Servidor'
+visit_title_trusted: '&3Parcelas de Confianza'
+visit_title_owned: '&2Mis Parcelas'
 visit_empty_title: '&cNada para visitar'
 visit_empty_lore:
 - '&7No se encontraron destinos para este modo.'
@@ -131,6 +136,10 @@ visit_empty_lore:
 visit_switch_trusted: '&bParcelas de Confianza'
 visit_switch_trusted_lore:
 - '&7Mostrar parcelas donde sos de confianza.'
+visit_switch_owned: '&aMis Parcelas'
+visit_switch_owned_lore:
+- '&7Mostrar tus parcelas, hogares'
+- '&7y destinos personales.'
 visit_switch_warps: '&6Puntos del Servidor'
 visit_switch_warps_lore:
 - '&7Mostrar puntos de teletransporte públicos.'
@@ -145,13 +154,14 @@ visit_plot_lore:
 - '&7Rol: &b{ROLE}'
 - ' '
 - '&eClic para teletransportarte'
+visit_role_owner: '&aPropietario'
 visit_fail_no_spawn: '&cEste destino no tiene un punto de aparición válido.'
 visit_teleport_success: '&aTeletransportado.'
 
 # ------------------------------------------------------------
 # Preferencias
 # ------------------------------------------------------------
-settings_menu_title: '&b⚙ Preferencias'
+settings_menu_title: '&3⚙ Preferencias'
 settings_sounds_on_name: '&aSonidos: ACTIVADO'
 settings_sounds_off_name: '&cSonidos: DESACTIVADO'
 settings_sounds_lore:
@@ -164,7 +174,6 @@ settings_language_lore:
 - '&7Clic para cambiar el estilo de idioma.'
 style_old_english: '&dInglés Antiguo'
 style_modern_english: '&aInglés Moderno'
-style_hybrid_english: '&eInglés Híbrido'
 style_spanish_mx: '&bEspañol (México)'
 style_spanish_ar: '&bEspañol (Argentina)'
 settings_notifications_name: '&bNotificaciones: {MODE}'
@@ -174,6 +183,20 @@ settings_notifications_lore:
 settings_notif_mode_action_bar: '&bBarra de Acción'
 settings_notif_mode_chat: '&aChat'
 settings_notif_mode_title: '&dTítulo'
+settings_language_unavailable_name: '&cCambio de Idioma No Disponible'
+settings_language_unavailable_lore:
+- '&7El motor de idioma no está'
+- '&7disponible en este momento.'
+settings_greetings_on_name: '&aSaludos de Parcela: ACTIVADO'
+settings_greetings_off_name: '&cSaludos de Parcela: DESACTIVADO'
+settings_greetings_lore:
+- '&7Activá o desactivá los mensajes'
+- '&7al entrar o salir de parcelas.'
+settings_admin_updates_on_name: '&aAvisos de Admin: ACTIVADO'
+settings_admin_updates_off_name: '&cAvisos de Admin: DESACTIVADO'
+settings_admin_updates_lore:
+- '&7Activá o desactivá avisos del staff,'
+- '&7revisiones y alertas.'
 
 # ------------------------------------------------------------
 # Gestión de Roles
@@ -404,7 +427,7 @@ biome_the_void: '&8El Vacío'
 # ------------------------------------------------------------
 # Gestión de Zonas
 # ------------------------------------------------------------
-zone_gui_title: '&b🏗 Gestión de Zonas'
+zone_gui_title: '&3✦ Gestión de Zonas'
 zone_create_button: '&a➕ Crear Zona'
 zone_create_lore:
 - '&7Creá una nueva sub-zona.'
@@ -421,11 +444,97 @@ zone_type_shop: '&aComercio'
 zone_type_farm: '&2Granja'
 zone_type_storage: '&7Almacén'
 zone_type_restricted: '&cRestringido'
+button_zone_create: '&aCrear zona'
+zone_none_title: '&cNo hay zonas creadas'
+zone_none_lore:
+- '&7Todavía no tenés sub-zonas.'
+- '&7Seleccioná un área y creá una abajo.'
+zone_create_ready_lore:
+- '&7Creá una zona desde tu selección.'
+- ' '
+- '&eHacé clic para crear'
+zone_create_locked_lore:
+- '&7Primero seleccioná dos puntos.'
+- '&7Después volvé acá.'
+zone_status_listed: '&eEn alquiler'
+zone_status_private: '&7Privada'
+zone_lore_status: '&7Estado: &f{STATUS}'
+button_refresh: '&bActualizar'
+refresh_lore:
+- '&7Recarga este menú.'
+zone_lore_dimensions: '&7Tamaño: &f{WIDTH}x{HEIGHT}x{DEPTH}'
+zone_lore_price: '&7Precio: &6{PRICE}'
+zone_lore_area: '&7Huella: &a{AREA} bloques'
+zone_lore_tenant: '&7Inquilino: &f{TENANT}'
+zone_lore_expires: '&7Vence: &f{TIME}'
+zone_evict_action: '&eClic izquierdo: &7Desalojar inquilino'
+zone_toggle_rent_action: '&eClic izquierdo: &7Alternar alquiler'
+zone_price_increase_action: '&aShift+Clic izq.: &7Subir renta'
+zone_price_decrease_action: '&6Shift+Clic der.: &7Bajar renta'
+zone_delete_action: '&cClic derecho: &7Eliminar zona'
+zone_browse_title: '&2✦ Zonas Disponibles'
+zone_browse_none_title: '&cNo hay zonas disponibles'
+zone_browse_none_lore:
+- '&7Esta parcela no tiene zonas rentables por ahora.'
+- '&7Volvé más tarde o preguntale al dueño.'
+zone_browse_status_yours: '&aTu alquiler'
+zone_browse_status_occupied: '&cOcupada'
+zone_browse_action_preview: '&eClic izquierdo: &7Ver esta zona'
+zone_browse_action_rent: '&aClic derecho: &7Alquilar esta zona'
+zone_browse_action_manage: '&aClic derecho: &7Administrar esta habitación'
+zone_browse_action_extend: '&eShift + clic derecho: &7Extender este alquiler'
+zone_browse_action_unavailable: '&8Clic derecho: &7No disponible'
+zone_tenant_button_name: '&bControles de Habitación'
+zone_tenant_button_lore:
+- '&7Administrá tu habitación alquilada,'
+- '&7los invitados aprobados y su punto de viaje.'
+zone_tenant_title: '&3✦ Controles de Habitación: {ZONE}'
+zone_tenant_info_name: '&eDetalles de la Habitación'
+zone_tenant_teleport_name: '&bIr a la Habitación'
+zone_tenant_teleport_lore:
+- '&7Viajá directo a esta habitación'
+- '&7alquilada o a su punto del subterreno.'
+zone_tenant_set_spawn_name: '&aDefinir Punto de Habitación'
+zone_tenant_set_spawn_lore:
+- '&7Usá tu posición actual como punto'
+- '&7de viaje para esta habitación.'
+zone_tenant_hotel_mode_name: '&6Modo Hotel'
+zone_tenant_hotel_mode_lore:
+- '&7Si está activo, los invitados aprobados'
+- '&7podrán usar la habitación según tus ajustes.'
+zone_tenant_guest_interact_name: '&eInteracción de Invitados'
+zone_tenant_guest_interact_lore:
+- '&7Permití que invitados aprobados usen'
+- '&7puertas, botones y otras interacciones.'
+zone_tenant_guest_containers_name: '&eContenedores de Invitados'
+zone_tenant_guest_containers_lore:
+- '&7Permití que invitados aprobados abran'
+- '&7cofres y almacenamientos en la habitación.'
+zone_tenant_guest_build_name: '&eConstrucción de Invitados'
+zone_tenant_guest_build_lore:
+- '&7Permití que invitados aprobados coloquen'
+- '&7y rompan bloques en esta habitación.'
+zone_tenant_evict_name: '&cDesalojar Inquilino'
+zone_tenant_evict_lore:
+- '&7Quitá al inquilino actual y limpiá'
+- '&7el acceso de invitados de esta habitación.'
+zone_tenant_guest_add_lore: '&7Clic para permitir que este jugador cercano entre a la habitación.'
+zone_tenant_guest_remove_lore: '&7Clic para sacar a este invitado de la habitación.'
+zone_tenant_guest_count: '&7Invitados aprobados: &f{COUNT}'
+zone_tenant_mode_line: '&7Modo hotel: &f{STATE}'
+zone_tenant_spawn_line: '&7Punto de habitación: &f{STATE}'
+zone_tenant_locked_lore:
+- '&7Esta opción de la habitación la'
+- '&7administra el inquilino actual.'
+local_market_title: '&6✦ Mercado Local'
+local_market_global_name: '&6Mercado de Parcelas'
+local_market_rentals_name: '&aPuestos y Alquileres'
+local_market_manage_name: '&bGestionar Mercado Local'
 
 # ------------------------------------------------------------
 # Niveles de Parcela
 # ------------------------------------------------------------
-level_gui_title: '&a📈 Niveles de Parcela'
+level_gui_title: '&d✦ Niveles de Parcela'
 level_header_owner: '&7Dueño: &f{OWNER}'
 level_header_world: '&7Mundo: &f{WORLD}'
 level_header_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
@@ -580,7 +689,7 @@ tier_max_lore:
 # ------------------------------------------------------------
 # Mercado de Parcelas
 # ------------------------------------------------------------
-market_gui_title: '&6💰 Mercado de Parcelas'
+market_gui_title: '&6✦ Mercado de Parcelas'
 market_sell_button: '&a💵 Vender Parcela'
 market_sell_lore:
 - '&7Poné tu parcela en venta.'
@@ -603,7 +712,7 @@ market_your_listing_lore:
 # ------------------------------------------------------------
 # Subastas
 # ------------------------------------------------------------
-auction_gui_title: '&c🔥 Subastas'
+auction_gui_title: '&c✦ Subastas'
 auction_item_name: '&6{PLOT}'
 auction_item_lore:
 - '&7Puja actual: &e{BID}'
@@ -619,7 +728,7 @@ auction_no_auctions: '&7No hay subastas activas.'
 # ------------------------------------------------------------
 # Expansión de Parcela
 # ------------------------------------------------------------
-expansion_gui_title: '&b⛏ Expandir Parcela'
+expansion_gui_title: '&b✦ Expandir Parcela'
 expansion_direction_north: '&bNorte'
 expansion_direction_south: '&6Sur'
 expansion_direction_east: '&aEste'
@@ -650,7 +759,7 @@ pending_request_lore:
 # ------------------------------------------------------------
 # Estado de Parcela
 # ------------------------------------------------------------
-plot_status_title: '&d📜 Estado de Parcela'
+plot_status_title: '&b✦ Estado de Parcela'
 plot_status_name_item: '&b{NAME}'
 plot_status_info_lore:
 - '&7Dueño: &e{OWNER}'
@@ -764,7 +873,7 @@ codex_commands_lore:
 # ------------------------------------------------------------
 # Menú de Administrador
 # ------------------------------------------------------------
-admin_gui_title: '&c🛠 Kit del Alto Guardián'
+admin_gui_title: '&c✦ Herramientas del Alto Guardián'
 
 button_admin_auto_remove: '&cAuto-Remover Baneados'
 admin_auto_remove_lore:
@@ -802,6 +911,7 @@ reload_all_settings_lore:
 - '&eClic para recargar'
 
 button_refresh_language_packs: '&aActualizar Paquetes de Idioma'
+button_admin_refresh_lang: '&aActualizar Idiomas'
 refresh_language_packs_lore:
 - '&7Recarga archivos de idioma.'
 - '&7Usá después de editar archivos.'
@@ -823,6 +933,23 @@ admin_snapshots_disabled_lore:
 admin_plot_list_title: '&bLista de Parcelas'
 admin_plot_list_lore:
 - '&7Mirá y teletransportate a cualquier parcela.'
+button_admin_reload_all: '&eRecargar Ajustes'
+button_admin_world_controls: '&b🌍 Controles del Mundo'
+admin_world_controls_lore:
+- '&7Gestioná protecciones globales'
+- '&7y reglas de seguridad.'
+- ' '
+- '&eClic para abrir'
+button_admin_world_controls_missing: '&8🌍 Controles del Mundo No Disponibles'
+admin_world_controls_missing_lore:
+- '&7Esta versión todavía no tiene'
+- '&7la interfaz de controles del mundo.'
+button_admin_migration: '&6Asistente de Migración'
+admin_migration_lore:
+- '&7Previsualizá e importá parcelas'
+- '&7de otros plugins compatibles.'
+- ' '
+- '&eClic para abrir'
 
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'
@@ -833,7 +960,7 @@ admin_toggle_default_lore:
 # ------------------------------------------------------------
 # Registro de Dominios (Ledger)
 # ------------------------------------------------------------
-ledger_title: '&6📜 Registro de Dominios'
+ledger_title: '&6✦ Registro de Dominios'
 ledger_entry_lore:
 - '&7Fecha: &f{DATE}'
 - '&7Acción: &e{ACTION}'
@@ -883,6 +1010,68 @@ success_player_trusted: '&a{PLAYER} ahora es de confianza.'
 success_player_untrusted: '&a{PLAYER} ya no es de confianza.'
 success_flag_toggled: '&aBandera actualizada.'
 success_settings_saved: '&aConfiguración guardada.'
+local_market_stalls_name: '&6Trade Stalls'
+local_market_stalls_lore:
+- '&7Explorá TradeStalls integrados y'
+- '&7tiendas de esta parcela.'
+local_market_stalls_locked_lore:
+- '&7No hay TradeStalls'
+- '&7disponibles acá por ahora.'
+local_market_stalls_external_lore:
+- '&7Los TradeStalls están desactivados acá'
+- '&7porque una integración de mercado externa'
+- '&7tiene prioridad en esta parcela.'
+market_stall_list_title: '&6✦ Trade Stalls'
+market_stall_preview_title: '&6✦ TradeStall: {STALL}'
+market_stall_manage_title: '&6✦ Gestionar TradeStall'
+market_stall_manage_info_name: '&eGestionar: {STALL}'
+market_stall_none_title: '&cNo hay Trade Stalls'
+market_stall_none_lore:
+- '&7No hay TradeStalls registrados'
+- '&7disponibles en esta parcela.'
+market_stall_owner_line: '&7Vendedor: &f{OWNER}'
+market_stall_zone_line: '&7Zona: &f{ZONE}'
+market_stall_item_count_line: '&7Espacios listados: &f{COUNT}'
+market_stall_browse_action: '&eClic para mirar este TradeStall.'
+market_stall_manage_action: '&eClic para gestionar este TradeStall.'
+market_stall_preview_info_name: '&e{STALL}'
+market_stall_preview_hint: '&7El acceso al cofre queda para el vendedor y el staff de la parcela.'
+market_stall_preview_empty_name: '&cEste puesto está vacío'
+market_stall_preview_empty_lore:
+- '&7No hay artículos mostrados en'
+- '&7este TradeStall por ahora.'
+market_stall_price_line: '&7Precio: &6{PRICE}'
+market_stall_bundle_line: '&7Lote: &f{COUNT}'
+market_stall_buy_action: '&aClic para comprar este lote.'
+market_stall_not_listed: '&7Este espacio todavía no está listado.'
+market_stall_selected: '&aSeleccionado para editar.'
+market_stall_select_action: '&eClic para editar este espacio.'
+market_stall_manage_selected_name: '&bEspacio Seleccionado'
+market_stall_selected_slot: '&7Espacio del cofre: &f{SLOT}'
+market_stall_manage_hint: '&7Usá los botones alrededor para editar la oferta.'
+market_stall_currency_name: '&eMoneda'
+market_stall_currency_current: '&7Actual: &f{CURRENCY}'
+market_stall_currency_toggle: '&eClic para cambiar la moneda.'
+market_stall_currency_money: '&6Dinero'
+market_stall_currency_claim_blocks: '&bClaim Blocks'
+market_stall_price_adjust_lore:
+- '&7Ajustá el precio de la oferta.'
+market_stall_bundle_adjust_lore:
+- '&7Ajustá cuántos artículos se venden a la vez.'
+market_stall_price_minus_100: '&c-100'
+market_stall_price_minus_10: '&c-10'
+market_stall_price_minus_1: '&c-1'
+market_stall_price_plus_1: '&a+1'
+market_stall_price_plus_10: '&a+10'
+market_stall_price_plus_100: '&a+100'
+market_stall_bundle_minus_8: '&cLote -8'
+market_stall_bundle_minus_1: '&cLote -1'
+market_stall_bundle_plus_1: '&aLote +1'
+market_stall_bundle_plus_8: '&aLote +8'
+market_stall_clear_name: '&cLimpiar Oferta'
+market_stall_clear_lore:
+- '&7Quita el precio y la moneda de'
+- '&7el espacio seleccionado.'
 
 # ============================================================
 # FIN DEL ARCHIVO GUI ESPAÑOL AR

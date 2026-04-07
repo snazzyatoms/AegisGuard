@@ -397,6 +397,11 @@ public class LevelingGUI {
                 plugin.gui().tr(player, "button_back", "&fBack"),
                 plugin.gui().trList(player, "back_lore", List.of("&7Return to the previous menu."))
         ));
+        inv.setItem(50, GUIManager.createItem(
+                Material.BARRIER,
+                plugin.gui().tr(player, "button_exit", "&cClose"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         player.openInventory(inv);
         GUIManager.playClick(player);
@@ -416,6 +421,12 @@ public class LevelingGUI {
 
         if (slot == 49) {
             plugin.gui().openMain(player);
+            return;
+        }
+
+        if (slot == 50) {
+            try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
+            player.closeInventory();
             return;
         }
 

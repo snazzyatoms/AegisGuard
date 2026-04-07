@@ -43,6 +43,8 @@ public class ClaimBlockTask implements Runnable, Listener {
         boolean enabled = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.enabled", true);
         if (!enabled) return;
 
+        boolean playerOptOutAllowed = plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.player_opt_out_allowed", true);
+
         long amount = plugin.cfg().raw().getLong("claim_blocks.earn.playtime.blocks_per_interval", 50L);
         if (amount <= 0) return;
 
@@ -57,6 +59,7 @@ public class ClaimBlockTask implements Runnable, Listener {
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!p.hasPermission("aegis.earn.blocks")) continue;
+            if (playerOptOutAllowed && !plugin.getClaimBlockManager().isPlaytimeEarningEnabled(p.getUniqueId())) continue;
 
             // Check if player is active (anti-AFK)
             if (antiAfkEnabled) {
@@ -128,26 +131,45 @@ public class ClaimBlockTask implements Runnable, Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
         if (!plugin.cfg().raw().getBoolean("claim_blocks.earn.playtime.anti_afk.track_movement", true)) return;
-        
+
         Location from = event.getFrom();
         Location to = event.getTo();
-        
-        // Only count as activity if player actually moved (not just head turn)
-        if (to == null || (from.getBlockX() == to.getBlockX() && 
-                           from.getBlockY() == to.getBlockY() && 
-                           from.getBlockZ() == to.getBlockZ())) {
+
+        if (to == null || from.getWorld() == null || to.getWorld() == null) {
             return;
         }
 
         PlayerActivity activity = getOrCreateActivity(event.getPlayer());
         long now = System.currentTimeMillis();
 
+        // World change / teleport-like move: count it once and reset the movement anchor.
+        if (!from.getWorld().equals(to.getWorld())) {
+            activity.recordActivity(now);
+            activity.lastLocation = to.clone();
+            activity.lastLocationUpdate = now;
+            return;
+        }
+
+        // Only count as activity if player actually changed block position.
+        if (from.getBlockX() == to.getBlockX()
+                && from.getBlockY() == to.getBlockY()
+                && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
+
         // Prevent movement spam (only count if moved a reasonable distance or enough time passed)
         if (activity.lastLocation != null) {
-            double distance = activity.lastLocation.distance(to);
+            if (activity.lastLocation.getWorld() == null || !activity.lastLocation.getWorld().equals(to.getWorld())) {
+                activity.recordActivity(now);
+                activity.lastLocation = to.clone();
+                activity.lastLocationUpdate = now;
+                return;
+            }
+
+            double distanceSquared = activity.lastLocation.distanceSquared(to);
             long timeSinceLastUpdate = now - activity.lastLocationUpdate;
 
-            if (distance > 3.0 || timeSinceLastUpdate > 2000L) {
+            if (distanceSquared >= 9.0 || timeSinceLastUpdate > 2000L) {
                 activity.recordActivity(now);
                 activity.lastLocation = to.clone();
                 activity.lastLocationUpdate = now;
@@ -196,9 +218,10 @@ public class ClaimBlockTask implements Runnable, Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         // Initialize activity tracking for new player
         PlayerActivity activity = new PlayerActivity();
-        activity.lastActivity = System.currentTimeMillis();
-        activity.lastLocation = event.getPlayer().getLocation();
-        activity.lastLocationUpdate = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        activity.lastActivity = now;
+        activity.lastLocation = event.getPlayer().getLocation().clone();
+        activity.lastLocationUpdate = now;
         activityMap.put(event.getPlayer().getUniqueId(), activity);
     }
 
@@ -211,9 +234,10 @@ public class ClaimBlockTask implements Runnable, Listener {
     private PlayerActivity getOrCreateActivity(Player player) {
         return activityMap.computeIfAbsent(player.getUniqueId(), k -> {
             PlayerActivity activity = new PlayerActivity();
-            activity.lastActivity = System.currentTimeMillis();
-            activity.lastLocation = player.getLocation();
-            activity.lastLocationUpdate = System.currentTimeMillis();
+            long now = System.currentTimeMillis();
+            activity.lastActivity = now;
+            activity.lastLocation = player.getLocation().clone();
+            activity.lastLocationUpdate = now;
             return activity;
         });
     }

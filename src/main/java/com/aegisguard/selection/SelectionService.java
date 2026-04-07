@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotClaimEvent;
 import com.aegisguard.claimblocks.ClaimBlockData;
 import com.aegisguard.data.Plot;
+import com.aegisguard.groups.PlotGroup;
 import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.protection.ProtectionHookManager;
 import com.aegisguard.listeners.WandSafetyListener;
@@ -222,60 +223,30 @@ public class SelectionService implements Listener {
     }
 
     public void confirmClaim(Player p, boolean isServerClaim) {
-        Selection sel = selections.get(p.getUniqueId());
-        if (sel == null || !sel.isComplete()) {
-            plugin.msg().send(p, "invalid_selection");
-            return;
-        }
-
-        Location l1 = sel.getL1();
-        Location l2 = sel.getL2();
-
-        if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null) {
-            plugin.msg().send(p, "invalid_selection");
-            return;
-        }
-
-        if (!l1.getWorld().equals(l2.getWorld())) {
-            plugin.msg().send(p, "invalid_selection");
-            return;
-        }
-
-        World world = l1.getWorld();
-        String worldName = world.getName();
-
-        int minX = Math.min(l1.getBlockX(), l2.getBlockX());
-        int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
-        int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
-        int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
-
-        int width = (maxX - minX) + 1;
-        int depth = (maxZ - minZ) + 1;
-
-        int radius = Math.max(width, depth);
-        int area = width * depth;
+        SelectionContext ctx = getSelectionContext(p);
+        if (ctx == null) return;
 
         // Limits (supports 1.2.5 + 1.2.6 config styles)
-        int maxRadius = getWorldInt(worldName, "max_radius",
+        int maxRadius = getWorldInt(ctx.worldName, "max_radius",
                 plugin.cfg().raw().getInt("claims.max_radius_global",
                         plugin.cfg().raw().getInt("claims.max_radius", 200)));
 
-        int maxArea = getWorldInt(worldName, "max_area",
+        int maxArea = getWorldInt(ctx.worldName, "max_area",
                 plugin.cfg().raw().getInt("claims.max_area", 50000));
 
         if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
-            if (radius > maxRadius) {
+            if (ctx.radius > maxRadius) {
                 plugin.msg().send(p, "resize-fail-max-area");
                 return;
             }
-            if (area > maxArea) {
+            if (ctx.area > maxArea) {
                 plugin.msg().send(p, "resize-fail-max-area");
                 return;
             }
         }
 
         // Overlap checks against Aegis plots (robust AABB overlap, not only corners)
-        for (Plot other : plugin.store().getPlotsInWorld(worldName)) {
+        for (Plot other : plugin.store().getPlotsInWorld(ctx.worldName)) {
             if (other == null) continue;
 
             // Ignore if selection equals same plot bounds is irrelevant here, since we are creating a new plot.
@@ -284,7 +255,7 @@ public class SelectionService implements Listener {
             int oMinZ = Math.min(other.getZ1(), other.getZ2());
             int oMaxZ = Math.max(other.getZ1(), other.getZ2());
 
-            boolean overlaps = (minX <= oMaxX && maxX >= oMinX) && (minZ <= oMaxZ && maxZ >= oMinZ);
+            boolean overlaps = (ctx.minX <= oMaxX && ctx.maxX >= oMinX) && (ctx.minZ <= oMaxZ && ctx.maxZ >= oMinZ);
             if (overlaps) {
                 plugin.msg().send(p, "resize-fail-overlap");
                 return;
@@ -293,7 +264,7 @@ public class SelectionService implements Listener {
 
         // Compatibility: if other protection plugin present, yield if configured
         ProtectionHookManager hooks = plugin.protectionHooks();
-        if (hooks != null && !hooks.shouldBypass(p, l1, l2)) {
+        if (hooks != null && !hooks.shouldBypass(p, ctx.l1, ctx.l2)) {
             plugin.msg().send(p, "claim_external_protection_conflict");
             return;
         }
@@ -305,16 +276,16 @@ public class SelectionService implements Listener {
             ClaimBlockData blocks = plugin.claimBlocks().getOrCreate(p.getUniqueId());
 
             // First claim limit
-            boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.starter.enabled", true);
-            int firstClaimLimit = plugin.cfg().raw().getInt("claim_blocks.first_claim_limit", 10000);
+            boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.first_claim_limit.enabled", true);
+            int firstClaimLimit = plugin.cfg().raw().getInt("claim_blocks.first_claim_limit.max_area", 10000);
 
-            if (starterEnabled && !blocks.hasClaimedStarter() && area > firstClaimLimit) {
+            if (starterEnabled && !blocks.hasClaimedStarter() && ctx.area > firstClaimLimit) {
                 plugin.msg().send(p, "first_claim_too_large");
                 return;
             }
 
             boolean perBlock = plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true);
-            int required = perBlock ? area : 1;
+            int required = perBlock ? ctx.area : 1;
 
             if (blocks.getAvailable() < required) {
                 plugin.msg().send(p, "claim_blocks_not_enough");
@@ -338,13 +309,13 @@ public class SelectionService implements Listener {
                     UUID.randomUUID(),
                     Plot.SERVER_OWNER_UUID,
                     "Server",
-                    worldName,
-                    minX, minZ, maxX, maxZ, now
+                    ctx.worldName,
+                    ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ, now
             );
 
             // Server plot defaults (safe fallback)
-            plot.setFlag("build", false);
-            plot.setFlag("pvp", false);
+            plot.setFlag("build", true);
+            plot.setFlag("pvp", true);
             plot.setFlag("safe_zone", true);
 
             // 1.2.6 QoL: server plot creators should never be locked out
@@ -354,8 +325,8 @@ public class SelectionService implements Listener {
                     UUID.randomUUID(),
                     p.getUniqueId(),
                     p.getName(),
-                    worldName,
-                    minX, minZ, maxX, maxZ, now
+                    ctx.worldName,
+                    ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ, now
             );
             plugin.worldRules().applyDefaults(plot);
         }
@@ -368,7 +339,7 @@ public class SelectionService implements Listener {
 
         // Mark starter claim as used AFTER successful save
         if (!isServerClaim && claimBlocksEnabled) {
-            boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.starter.enabled", true);
+            boolean starterEnabled = plugin.cfg().raw().getBoolean("claim_blocks.first_claim_limit.enabled", true);
             if (starterEnabled) {
                 ClaimBlockData blocks = plugin.claimBlocks().getOrCreate(p.getUniqueId());
                 if (!blocks.hasClaimedStarter()) {
@@ -400,8 +371,8 @@ public class SelectionService implements Listener {
                 DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
                 embed.setTitle(isServerClaim ? "Admin Zone Created" : "Plot Claimed");
                 embed.setDescription(p.getName() + " claimed a plot.");
-                embed.addField("World", worldName, true);
-                embed.addField("Area", String.valueOf(area), true);
+                embed.addField("World", ctx.worldName, true);
+                embed.addField("Area", String.valueOf(ctx.area), true);
                 embed.addField("Owner", isServerClaim ? "Server" : p.getName(), true);
                 embed.setColor(isServerClaim ? Color.CYAN : Color.GREEN);
 
@@ -410,6 +381,80 @@ public class SelectionService implements Listener {
                 // Keep silent: discord must never break claims.
             }
         }
+    }
+
+    public Plot confirmGroupClaim(Player p, PlotGroup group) {
+        if (p == null || group == null) return null;
+
+        SelectionContext ctx = getSelectionContext(p);
+        if (ctx == null) return null;
+
+        int maxRadius = getWorldInt(ctx.worldName, "max_radius",
+                plugin.cfg().raw().getInt("claims.max_radius_global",
+                        plugin.cfg().raw().getInt("claims.max_radius", 200)));
+        int maxArea = getWorldInt(ctx.worldName, "max_area",
+                plugin.cfg().raw().getInt("claims.max_area", 50000));
+
+        if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
+            if (ctx.radius > maxRadius || ctx.area > maxArea) {
+                plugin.msg().send(p, "resize-fail-max-area");
+                return null;
+            }
+        }
+
+        for (Plot other : plugin.store().getPlotsInWorld(ctx.worldName)) {
+            if (other == null) continue;
+            int oMinX = Math.min(other.getX1(), other.getX2());
+            int oMaxX = Math.max(other.getX1(), other.getX2());
+            int oMinZ = Math.min(other.getZ1(), other.getZ2());
+            int oMaxZ = Math.max(other.getZ1(), other.getZ2());
+            boolean overlaps = (ctx.minX <= oMaxX && ctx.maxX >= oMinX) && (ctx.minZ <= oMaxZ && ctx.maxZ >= oMinZ);
+            if (overlaps) {
+                plugin.msg().send(p, "resize-fail-overlap");
+                return null;
+            }
+        }
+
+        ProtectionHookManager hooks = plugin.protectionHooks();
+        if (hooks != null && !hooks.shouldBypass(p, ctx.l1, ctx.l2)) {
+            plugin.msg().send(p, "claim_external_protection_conflict");
+            return null;
+        }
+
+        Plot plot = new Plot(
+                UUID.randomUUID(),
+                group.getLeader(),
+                plugin.groups().getMemberName(group.getLeader()),
+                ctx.worldName,
+                ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ,
+                System.currentTimeMillis()
+        );
+        plugin.worldRules().applyDefaults(plot);
+        plot.setGroupPlot(true);
+        plot.setTreasuryBalance(group.getTreasuryBalance());
+        plot.setGroupId(group.getId());
+        plot.setGroupName(group.getName());
+        plot.setMaxMembers(Math.max(plot.getMaxMembers(), group.size()));
+        plot.setPlotName(group.getName());
+
+        for (UUID memberId : group.getMemberIds()) {
+            if (memberId != null && !memberId.equals(group.getLeader())) {
+                plot.setRole(memberId, "trusted");
+            }
+        }
+
+        PlotClaimEvent event = new PlotClaimEvent(plot, p);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return null;
+
+        plugin.store().addPlot(plot);
+        selections.remove(p.getUniqueId());
+        setPlayerWand(p, null);
+
+        if (plugin.effects() != null) plugin.effects().playClaimSuccess(p);
+        else p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
+
+        return plot;
     }
 
     // ------------------------------------------------------------
@@ -425,14 +470,7 @@ public class SelectionService implements Listener {
             return;
         }
 
-        // Server zones: admin only
-        if (plot.isServerZone() && !(plugin.isAdmin(p) || p.hasPermission("aegis.admin"))) {
-            plugin.msg().send(p, "no_permission");
-            return;
-        }
-
-        // Normal plots: owner or admin
-        if (!plot.isServerZone() && !plot.isOwner(p) && !(plugin.isAdmin(p) || p.hasPermission("aegis.admin"))) {
+        if (!plot.canManage(p, plugin)) {
             plugin.msg().send(p, "no_permission");
             return;
         }
@@ -478,5 +516,63 @@ public class SelectionService implements Listener {
         if (worldSec == null) return def;
 
         return worldSec.getInt(key, def);
+    }
+
+    private SelectionContext getSelectionContext(Player p) {
+        Selection sel = selections.get(p.getUniqueId());
+        if (sel == null || !sel.isComplete()) {
+            plugin.msg().send(p, "invalid_selection");
+            return null;
+        }
+
+        Location l1 = sel.getL1();
+        Location l2 = sel.getL2();
+        if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null) {
+            plugin.msg().send(p, "invalid_selection");
+            return null;
+        }
+        if (!l1.getWorld().equals(l2.getWorld())) {
+            plugin.msg().send(p, "invalid_selection");
+            return null;
+        }
+
+        int minX = Math.min(l1.getBlockX(), l2.getBlockX());
+        int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
+        int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
+        int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
+        int width = (maxX - minX) + 1;
+        int depth = (maxZ - minZ) + 1;
+        return new SelectionContext(l1, l2, l1.getWorld(), l1.getWorld().getName(), minX, maxX, minZ, maxZ, width, depth);
+    }
+
+    private static final class SelectionContext {
+        private final Location l1;
+        private final Location l2;
+        private final World world;
+        private final String worldName;
+        private final int minX;
+        private final int maxX;
+        private final int minZ;
+        private final int maxZ;
+        private final int width;
+        private final int depth;
+        private final int radius;
+        private final int area;
+
+        private SelectionContext(Location l1, Location l2, World world, String worldName,
+                                 int minX, int maxX, int minZ, int maxZ, int width, int depth) {
+            this.l1 = l1;
+            this.l2 = l2;
+            this.world = world;
+            this.worldName = worldName;
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minZ = minZ;
+            this.maxZ = maxZ;
+            this.width = width;
+            this.depth = depth;
+            this.radius = Math.max(width, depth);
+            this.area = width * depth;
+        }
     }
 }

@@ -27,6 +27,7 @@ expansion_actor_auto: 'Auto'
 expansion_actor_admin: 'Admin'
 expansion_decided_by_auto: '&bAuto'
 expansion_decided_by_admin: '&eAdmin'
+expansion_decided_by_system: '&7Sistema'
 expansion_decided_by_console: '&7Consola'
 expansion_decided_by_none: '&7Esperando revisión'
 expansion_decided_by_unknown: '&7Desconocido'
@@ -54,6 +55,7 @@ expansion_mode_item_lore:
 # Sugerencias de modo (inyectadas en lore de niveles)
 expansion_mode_hint_instant: '&bModo Instantáneo:&7 Auto-aprobado cuando es válido.'
 expansion_mode_hint_queue: '&6Modo Cola:&7 Requiere aprobación admin.'
+expansion_mode_hint_unattended: '&bCola sin supervisión:&7 No hay revisores conectados, así que las solicitudes válidas pueden auto-aprobarse y quedar registradas.'
 
 # ------------------------------------------------------------
 # GUI Admin
@@ -87,9 +89,13 @@ expansion_request_item_lore:
 - '&7Costo Pendiente: &6{COST}'
 - '&7Decidido Por: &f{DECIDER}'
 - '&7Antigüedad Decisión: &f{DECISION_AGE}'
+- '&7Nota de Auditoría: &f{NOTE}'
 - ' '
 - '&eClic izquierdo: &7Aprobar solicitud.'
 - '&cClic derecho: &7Rechazar solicitud.'
+
+expansion_request_note_line: '&7Nota de Auditoría: &f{NOTE}'
+expansion_history_read_only: '&7Entrada de historial solo de lectura. Revisa notas e instantáneas si hace falta.'
 
 # Mensajes admin
 admin_request_approved: '&a✔ Aprobaste la solicitud de expansión de &b{PLAYER}&a.'

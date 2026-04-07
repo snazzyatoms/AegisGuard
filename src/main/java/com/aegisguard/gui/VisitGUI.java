@@ -46,19 +46,34 @@ public class VisitGUI {
         this.keyPlotId = new NamespacedKey(plugin, "aegis_plot_id");
     }
 
+    public enum VisitMode {
+        TRUSTED,
+        OWNED,
+        WARPS;
+
+        public VisitMode next() {
+            return switch (this) {
+                case TRUSTED -> OWNED;
+                case OWNED -> WARPS;
+                case WARPS -> TRUSTED;
+            };
+        }
+    }
+
     public static class VisitHolder implements InventoryHolder {
         private final int page;
-        private final boolean showingWarps;
+        private final VisitMode mode;
         private final List<Plot> plots;
 
-        public VisitHolder(List<Plot> plots, int page, boolean showingWarps) {
+        public VisitHolder(List<Plot> plots, int page, VisitMode mode) {
             this.plots = plots;
             this.page = page;
-            this.showingWarps = showingWarps;
+            this.mode = mode == null ? VisitMode.TRUSTED : mode;
         }
 
         public int getPage() { return page; }
-        public boolean isShowingWarps() { return showingWarps; }
+        public VisitMode getMode() { return mode; }
+        public boolean isShowingWarps() { return mode == VisitMode.WARPS; }
         public List<Plot> getPlots() { return plots; }
         @Override public Inventory getInventory() { return null; }
     }
@@ -111,8 +126,12 @@ public class VisitGUI {
     // --------------------------------------------------
 
     public void open(Player player, int page, boolean showWarps) {
+        open(player, page, showWarps ? VisitMode.WARPS : VisitMode.TRUSTED);
+    }
+
+    public void open(Player player, int page, VisitMode mode) {
         final int requestedPage = page;
-        final boolean requestedWarps = showWarps;
+        final VisitMode requestedMode = mode == null ? VisitMode.TRUSTED : mode;
 
         plugin.runGlobalAsync(() -> {
             List<Plot> displayPlots = new ArrayList<>();
@@ -129,22 +148,34 @@ public class VisitGUI {
             for (Plot plot : all) {
                 if (plot == null) continue;
 
-                if (requestedWarps) {
-                    if (plot.isServerWarp()) displayPlots.add(plot);
-                } else {
-                    if (plot.getPlayerRoles() != null
-                            && plot.getPlayerRoles().containsKey(player.getUniqueId())
-                            && plot.getOwner() != null
-                            && !plot.getOwner().equals(player.getUniqueId())) {
-                        displayPlots.add(plot);
+                switch (requestedMode) {
+                    case WARPS -> {
+                        if (plot.isServerWarp()) displayPlots.add(plot);
+                    }
+                    case OWNED -> {
+                        if (plot.getOwner() != null && plot.getOwner().equals(player.getUniqueId())) {
+                            displayPlots.add(plot);
+                        }
+                    }
+                    case TRUSTED -> {
+                        if (plot.getPlayerRoles() != null
+                                && plot.getPlayerRoles().containsKey(player.getUniqueId())
+                                && plot.getOwner() != null
+                                && !plot.getOwner().equals(player.getUniqueId())) {
+                            displayPlots.add(plot);
+                        }
                     }
                 }
             }
 
             // Sort A-Z
             displayPlots.sort((p1, p2) -> {
-                String n1 = requestedWarps ? p1.getWarpName() : p1.getOwnerName();
-                String n2 = requestedWarps ? p2.getWarpName() : p2.getOwnerName();
+                String n1 = requestedMode == VisitMode.WARPS
+                        ? p1.getWarpName()
+                        : p1.getPlotName() != null && !p1.getPlotName().isBlank() ? p1.getPlotName() : p1.getOwnerName();
+                String n2 = requestedMode == VisitMode.WARPS
+                        ? p2.getWarpName()
+                        : p2.getPlotName() != null && !p2.getPlotName().isBlank() ? p2.getPlotName() : p2.getOwnerName();
                 if (n1 == null || n1.isBlank()) n1 = "Unknown";
                 if (n2 == null || n2.isBlank()) n2 = "Unknown";
                 return n1.compareToIgnoreCase(n2);
@@ -159,21 +190,29 @@ public class VisitGUI {
             final int finalPage = fixedPage;
             final int safePages = Math.max(1, maxPages);
 
-            plugin.runMain(player, () -> buildAndOpen(player, displayPlots, finalPage, safePages, requestedWarps));
+            plugin.runMain(player, () -> buildAndOpen(player, displayPlots, finalPage, safePages, requestedMode));
         });
     }
 
-    private void buildAndOpen(Player player, List<Plot> displayPlots, int page, int safePages, boolean showWarps) {
+    private void buildAndOpen(Player player, List<Plot> displayPlots, int page, int safePages, VisitMode mode) {
         // Title
-        String modeTitleKey = showWarps ? "visit_title_warps" : "visit_title_trusted";
-        String fallbackTitle = showWarps ? "&6Server Waypoints" : "&9Trusted Claims";
+        String modeTitleKey = switch (mode) {
+            case WARPS -> "visit_title_warps";
+            case OWNED -> "visit_title_owned";
+            case TRUSTED -> "visit_title_trusted";
+        };
+        String fallbackTitle = switch (mode) {
+            case WARPS -> "&6Server Waypoints";
+            case OWNED -> "&aMy Plots";
+            case TRUSTED -> "&9Friends & Trusted";
+        };
 
         String baseTitle = plugin.gui().title(player, modeTitleKey, fallbackTitle);
         String suffix = " §8(" + (page + 1) + "/" + safePages + ")";
 
         String fullTitle = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, showWarps), 54, fullTitle);
+        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, mode), 54, fullTitle);
 
         // 1.2.6: fill ALL slots
         ItemStack filler = GUIManager.getFiller();
@@ -204,7 +243,7 @@ public class VisitGUI {
 
             ItemStack icon;
 
-            if (showWarps) {
+            if (mode == VisitMode.WARPS) {
                 Material mat = (plot.getWarpIcon() != null) ? plot.getWarpIcon() : Material.BEACON;
                 String warpName = (plot.getWarpName() != null && !plot.getWarpName().isBlank()) ? plot.getWarpName() : "Server Warp";
 
@@ -220,11 +259,15 @@ public class VisitGUI {
             } else {
                 OfflinePlayer owner = (plot.getOwner() != null) ? Bukkit.getOfflinePlayer(plot.getOwner()) : null;
 
-                String role = safeRole(plot.getRole(player.getUniqueId()));
+                String role = mode == VisitMode.OWNED
+                        ? t(player, "visit_role_owner", "&aOwner")
+                        : safeRole(plot.getRole(player.getUniqueId()));
                 String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank()) ? plot.getOwnerName() : "Unknown";
 
                 String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
                         ? plot.getEntryTitle()
+                        : plot.getPlotName() != null && !plot.getPlotName().isBlank()
+                        ? plot.getPlotName()
                         : ownerName + "'s Plot";
 
                 ItemStack head = new ItemStack(Material.PLAYER_HEAD);
@@ -262,23 +305,31 @@ public class VisitGUI {
         }
 
         // Toggle button (49)
-        if (showWarps) {
-            ItemStack toggle = GUIManager.createItem(
-                    Material.PLAYER_HEAD,
-                    t(player, "visit_switch_trusted", "&9Trusted Claims"),
-                    tl(player, "visit_switch_trusted_lore", List.of("&7Show plots you are trusted on."))
-            );
-            tagAction(toggle, "toggle_mode");
-            inv.setItem(49, toggle);
-        } else {
-            ItemStack toggle = GUIManager.createItem(
-                    Material.BEACON,
-                    t(player, "visit_switch_warps", "&6Server Waypoints"),
-                    tl(player, "visit_switch_warps_lore", List.of("&7Show server public warps."))
-            );
-            tagAction(toggle, "toggle_mode");
-            inv.setItem(49, toggle);
-        }
+        VisitMode nextMode = mode.next();
+        Material toggleIcon = switch (nextMode) {
+            case TRUSTED -> Material.PLAYER_HEAD;
+            case OWNED -> Material.OAK_SIGN;
+            case WARPS -> Material.BEACON;
+        };
+        String toggleKey = switch (nextMode) {
+            case TRUSTED -> "visit_switch_trusted";
+            case OWNED -> "visit_switch_owned";
+            case WARPS -> "visit_switch_warps";
+        };
+        List<String> toggleLore = switch (nextMode) {
+            case TRUSTED -> tl(player, "visit_switch_trusted_lore", List.of("&7Show friend and trusted plots."));
+            case OWNED -> tl(player, "visit_switch_owned_lore", List.of("&7Show your own plots and homes."));
+            case WARPS -> tl(player, "visit_switch_warps_lore", List.of("&7Show server public warps."));
+        };
+        ItemStack toggle = GUIManager.createItem(toggleIcon,
+                t(player, toggleKey, switch (nextMode) {
+                    case TRUSTED -> "&9Friends & Trusted";
+                    case OWNED -> "&aMy Plots";
+                    case WARPS -> "&6Server Waypoints";
+                }),
+                toggleLore);
+        tagAction(toggle, "toggle_mode");
+        inv.setItem(49, toggle);
 
         // Prev / Next (45 / 53)
         if (page > 0) {
@@ -331,15 +382,15 @@ public class VisitGUI {
         // Ignore filler clicks
         if (clicked.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
-        boolean warps = holder.isShowingWarps();
+        VisitMode mode = holder.getMode();
         int page = holder.getPage();
 
         String action = getAction(clicked);
         if (action != null) {
             switch (action) {
-                case "prev_page" -> { open(player, page - 1, warps); plugin.effects().playMenuFlip(player); return; }
-                case "next_page" -> { open(player, page + 1, warps); plugin.effects().playMenuFlip(player); return; }
-                case "toggle_mode" -> { open(player, 0, !warps); plugin.effects().playMenuFlip(player); return; }
+                case "prev_page" -> { open(player, page - 1, mode); plugin.effects().playMenuFlip(player); return; }
+                case "next_page" -> { open(player, page + 1, mode); plugin.effects().playMenuFlip(player); return; }
+                case "toggle_mode" -> { open(player, 0, mode.next()); plugin.effects().playMenuFlip(player); return; }
                 case "back_menu" -> { plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "visit_empty" -> { plugin.effects().playError(player); return; }
@@ -356,20 +407,27 @@ public class VisitGUI {
         if (plot == null) return;
 
         // 1.2.6: re-check access before teleporting
-        if (warps) {
+        if (mode == VisitMode.WARPS) {
             if (!plot.isServerWarp()) {
                 sendSystem(player, "visit_not_available", "&cThat waypoint is no longer available.");
                 plugin.effects().playError(player);
-                open(player, page, true);
+                open(player, page, VisitMode.WARPS);
                 return;
             }
-        } else {
+        } else if (mode == VisitMode.TRUSTED) {
             if (plot.getPlayerRoles() == null
                     || !plot.getPlayerRoles().containsKey(player.getUniqueId())
                     || (plot.getOwner() != null && plot.getOwner().equals(player.getUniqueId()))) {
                 sendSystem(player, "visit_not_trusted", "&cYou are no longer trusted on that plot.");
                 plugin.effects().playError(player);
-                open(player, page, false);
+                open(player, page, VisitMode.TRUSTED);
+                return;
+            }
+        } else {
+            if (plot.getOwner() == null || !plot.getOwner().equals(player.getUniqueId())) {
+                sendSystem(player, "visit_not_owner", "&cYou no longer own that plot.");
+                plugin.effects().playError(player);
+                open(player, page, VisitMode.OWNED);
                 return;
             }
         }

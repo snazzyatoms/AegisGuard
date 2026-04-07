@@ -482,7 +482,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (isProtectionActive(plot, "redstone", false)) {
+        if (isProtectionActive(plot, "redstone", false)
+                && !plot.canInteractAt(p, e.getClickedBlock().getLocation(), plugin, "INTERACT")) {
             e.setCancelled(true);
             plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
         }
@@ -508,7 +509,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (isProtectionActive(plot, "vehicles", false)) {
+        if (isProtectionActive(plot, "vehicles", false)
+                && !plot.canInteractAt(p, e.getVehicle().getLocation(), plugin, "VEHICLES")) {
             e.setCancelled(true);
             plugin.effects().playEffect("vehicles", "deny", p, e.getVehicle().getLocation());
         }

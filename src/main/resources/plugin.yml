@@ -1,23 +1,25 @@
+# AegisGuard plugin metadata
 name: AegisGuard
 main: com.aegisguard.AegisGuard
 version: 1.2.6
 api-version: "1.20"
 prefix: AegisGuard
-description: Lightweight, friendly land protection with roles, safe zones, and polished GUIs.
+description: Player-friendly land protection with roles, group plots, admin recovery, and polished GUIs.
 authors: [snazzyatoms]
 website: https://discord.gg/Y2NpuR7UZE
 folia-supported: true
 
+# Optional integrations. AegisGuard will hook them when present and stay functional when absent.
 softdepend:
-  # Economy / Utilities
+  # Economy and utility hooks
   - Vault
   - PlaceholderAPI
   - CoreProtect
 
-  # Maps / Visualization
+  # Map and visual sync hooks
   - Dynmap
 
-  # Regions / Protection (compatibility layer yields to these when present)
+  # Protection compatibility providers
   - WorldEdit
   - WorldGuard
   - GriefPrevention
@@ -27,64 +29,73 @@ softdepend:
   - Residence
   - Lands
 
-  # Gameplay hooks (non-protection, but safe as optional integrations)
+  # Gameplay integrations
   - mcMMO
   - Jobs
 
+  # Optional market / shop integrations exposed through the local market hub
+  - QuickShop
+  - Shopkeepers
+  - ChestShop
+  - ExcellentShop
+
 commands:
   aegis:
-    description: Main AegisGuard command.
-    usage: /aegis <help|menu|wand|claim|cost|unclaim|resize|merge|setspawn|home|welcome|farewell|notify|market|sell|unsell|auction|visit|zone|level|like|rename|setdesc|stuck|consume|ledger|blocks>
+    description: Player command for claims, plot management, groups, travel, and ClaimBlocks.
+    usage: "/aegis <subcommand>"
     aliases: [ag, guard]
     permission: aegis.use
+
   aegisadmin:
-    description: Admin management tools.
-    usage: /aegisadmin <menu|reload|bypass|blocks|migrate>
+    description: Staff command for administration, migration, diagnostics, recovery, and server zones.
+    usage: "/aegisadmin <subcommand>"
     aliases: [agadmin, aga]
     permission: aegis.admin
 
 permissions:
-  # --- GROUPS ---
+  # ---------------------------------------------------------------------------
+  # Permission bundles
+  # ---------------------------------------------------------------------------
   aegis.*:
-    description: Wildcard for all plugin permissions.
+    description: Grants every AegisGuard permission node.
     default: op
     children:
       aegis.user: true
       aegis.admin: true
 
-      # ClaimBlocks Exchange (all)
+      aegis.market.manage: true
+      aegis.staff.co_owner: true
+      aegis.staff.market_steward: true
+
       aegis.claimblocks.exchange: true
       aegis.claimblocks.buy: true
       aegis.claimblocks.sell: true
       aegis.claimblocks.exchange.bypass: true
       aegis.claimblocks.selllock.bypass: true
-
-      # Backward compat node (older configs/servers)
       aegisguard.claimblocks.selllock.bypass: true
 
-      # ClaimBlocks earning
       aegis.earn.blocks: true
-
-      # Migration (1.2.6+)
       aegis.admin.migrate: true
 
   aegis.user:
-    description: Recommended permissions for default players.
+    description: Recommended base permissions for regular players.
     default: true
     children:
       aegis.use: true
       aegis.menu: true
       aegis.wand: true
       aegis.claim: true
+      aegis.notify: true
 
   aegis.admin:
-    description: Administrative permissions.
+    description: Recommended administrative permissions.
     default: op
     children:
       aegis.admin.manage: true
-      aegis.serverzone.manage: true
-      aegis.admin.bypass-limits: true
       aegis.admin.bypass: true
+      aegis.admin.bypass-limits: true
+      aegis.serverzone.manage: true
+      aegis.market.manage: true
       aegis.reload: true
       aegis.bypass: true
       aegis.consume: true
@@ -92,64 +103,132 @@ permissions:
       aegis.setwarp: true
       aegis.admin.wand: true
       aegis.admin.migrate: true
+      aegis.notify.bypass: true
+      aegis.notify.others: true
 
-  # --- NODES ---
+  # ---------------------------------------------------------------------------
+  # Core player permissions
+  # ---------------------------------------------------------------------------
   aegis.use:
-    description: Allows using /aegis
+    description: Allows use of the main /aegis command.
     default: true
 
   aegis.menu:
-    description: Allows opening the AegisGuard menu.
+    description: Allows opening the main AegisGuard player menu.
     default: true
 
   aegis.wand:
-    description: Allows using the claim wand.
+    description: Allows receiving and using the standard claim wand.
     default: true
 
   aegis.claim:
-    description: Allows claiming land.
+    description: Allows creating and managing personal claims.
     default: true
 
-  aegis.reload:
-    description: Reload config and language packs.
+  aegis.notify:
+    description: Allows changing personal AegisGuard notification preferences.
+    default: true
+
+  aegis.earn.blocks:
+    description: Allows earning ClaimBlocks from supported reward systems.
+    default: true
+
+  # ---------------------------------------------------------------------------
+  # Notification and preference permissions
+  # ---------------------------------------------------------------------------
+  aegis.notify.bypass:
+    description: Receive claim notifications even when the server forces them off.
     default: op
 
-  aegis.bypass:
-    description: Bypass all protection checks (Build/Break anywhere).
+  aegis.notify.others:
+    description: Manage notification preferences for other players.
     default: op
 
+  # ---------------------------------------------------------------------------
+  # Staff and server-plot permissions
+  # ---------------------------------------------------------------------------
   aegis.admin.manage:
-    description: Edit flags/roles of other players' plots.
+    description: Manage plots owned by other players.
     default: op
 
   aegis.admin.bypass:
-    description: Toggle runtime bypass mode (Master Key Mode).
+    description: Toggle runtime bypass mode for protection checks.
+    default: op
+
+  aegis.bypass:
+    description: Bypass build and interaction protection checks entirely.
     default: op
 
   aegis.serverzone.manage:
-    description: Manage server plots without full admin.
+    description: Manage server zones and other staff-owned protected areas.
     default: op
 
+  aegis.market.manage:
+    description: Manage public market or utility plots without full admin access.
+    default: op
+
+  aegis.staff.co_owner:
+    description: Elevated co-owner style access used by configurable staff roles.
+    default: false
+
+  aegis.staff.market_steward:
+    description: Elevated market steward style access used by configurable staff roles.
+    default: false
+
   aegis.admin.bypass-limits:
-    description: Ignore max plot size/count limits.
+    description: Ignore claim count, size, or radius limits where supported.
+    default: op
+
+  # ---------------------------------------------------------------------------
+  # Economy, migration, and admin utility permissions
+  # ---------------------------------------------------------------------------
+  aegis.reload:
+    description: Reload configuration and language packs.
     default: op
 
   aegis.convert:
-    description: Seize a plot and convert to Server Zone.
+    description: Convert or seize a plot into a server-controlled zone.
     default: op
 
   aegis.setwarp:
-    description: Set a warp point.
+    description: Set server-managed warp points through AegisGuard features.
     default: op
 
   aegis.consume:
-    description: Consume claim blocks.
+    description: Use administrative ClaimBlock consume tools.
     default: op
 
   aegis.admin.wand:
-    description: Access the admin wand tools.
+    description: Access the administrative wand tools.
     default: op
 
   aegis.admin.migrate:
-    description: Import claims from other protection plugins.
+    description: Import claims from supported external protection plugins.
+    default: op
+
+  # ---------------------------------------------------------------------------
+  # ClaimBlocks exchange permissions
+  # ---------------------------------------------------------------------------
+  aegis.claimblocks.exchange:
+    description: Access the ClaimBlocks exchange system.
+    default: false
+
+  aegis.claimblocks.buy:
+    description: Buy ClaimBlocks with the configured economy provider.
+    default: false
+
+  aegis.claimblocks.sell:
+    description: Sell ClaimBlocks through the configured exchange system.
+    default: false
+
+  aegis.claimblocks.exchange.bypass:
+    description: Bypass ClaimBlocks exchange cooldowns and daily limits.
+    default: op
+
+  aegis.claimblocks.selllock.bypass:
+    description: Bypass ClaimBlocks sell-lock restrictions.
+    default: op
+
+  aegisguard.claimblocks.selllock.bypass:
+    description: Legacy compatibility node for older sell-lock bypass setups.
     default: op

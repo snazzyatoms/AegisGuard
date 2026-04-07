@@ -184,7 +184,7 @@ public class PlotCosmeticsGUI {
             return;
         }
 
-        if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
+        if (!plot.canManage(player, plugin)) {
             plugin.msg().send(player, "no_perm");
             player.closeInventory();
             return;

@@ -233,6 +233,14 @@ public class SnapshotAdminGUI {
         tagAction(back, "back_admin");
         inv.setItem(49, back);
 
+        ItemStack close = GUIManager.createItem(
+                Material.BARRIER,
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
+        );
+        tagAction(close, "close_menu");
+        inv.setItem(50, close);
+
         if (!ids.isEmpty()) {
             int maxPages = (int) Math.ceil((double) ids.size() / SNAPSHOTS_PER_PAGE);
             if (page < maxPages - 1) {
@@ -275,6 +283,7 @@ public class SnapshotAdminGUI {
                 case "prev_page" -> { open(player, page - 1); plugin.effects().playMenuFlip(player); return; }
                 case "next_page" -> { open(player, page + 1); plugin.effects().playMenuFlip(player); return; }
                 case "back_admin" -> { plugin.gui().admin().open(player); plugin.effects().playMenuFlip(player); return; }
+                case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "snapshots_none" -> { plugin.effects().playError(player); return; }
                 case "snapshot_entry" -> { /* continue */ }
                 default -> { return; }

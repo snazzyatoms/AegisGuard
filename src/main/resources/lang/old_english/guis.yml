@@ -7,7 +7,7 @@
 # -------------------------------------------------
 # Core Nav / Common Buttons
 # -------------------------------------------------
-menu_title: '&bAegisGuard Menu'
+menu_title: '&6✦ AegisGuard Ledger ✦'
 
 button_back: '&eReturn'
 back_lore:
@@ -40,11 +40,11 @@ button_info: '&bTidings'
 info_lore:
   - '&7Read lore, guidance, and counsel.'
 
-plot_status_button_title: '&dPlot Status'
+plot_status_button_title: '&b✦ Estate Status'
 plot_status_button_lore:
   - '&7Behold thy holding and its marks.'
 
-visit_gui_title: '&aTravel'
+visit_gui_title: '&3✦ Wayfaring'
 visit_button_lore:
   - '&7Visit holdings and travel swiftly.'
 
@@ -68,15 +68,15 @@ roles_lore:
 roles_locked_lore:
   - '&cThou may not govern roles here.'
 
-level_gui_title: '&aLeveling'
+level_gui_title: '&d✦ Estate Ascension'
 level_button_lore:
   - '&7Raise thy holding in renown and boon.'
 
-zone_gui_title: '&bZoning'
+zone_gui_title: '&3✦ Chamber Stewardry'
 zone_button_lore:
   - '&7Make sub-zones and rentable chambers.'
 
-biome_gui_title: '&dBiomes'
+biome_gui_title: '&a✦ Biome Craft'
 biome_button_lore:
   - '&7Change the breath of the land.'
 
@@ -96,7 +96,7 @@ button_player_settings: '&eSettings'
 player_settings_lore:
   - '&7Personal preferences and tongue.'
 
-admin_menu_title: '&cAdmin Menu'
+admin_menu_title: '&c✦ High Guardian Tools ✦'
 admin_menu_lore:
   - '&7Operator Access Only'
 
@@ -119,8 +119,8 @@ claimblocks_exchange_disabled_lore:
 # =========================================================
 
 # GUI title - must have color codes
-claimblocks_exchange_gui_title: '&8ClaimBlock Exchange &b✦'
-claimblocks_exchange_title: '&8ClaimBlock Exchange'
+claimblocks_exchange_gui_title: '&8✦ ClaimBlock Exchange'
+claimblocks_exchange_title: '&b✦ ClaimBlock Exchange'
 
 # Filler/background - single space, no tooltip
 claimblocks_exchange_filler_name: ' '
@@ -196,7 +196,7 @@ claimblocks_exchange_close_lore:
 # -------------------------------------------------
 # Expansion GUI (Player-facing)
 # -------------------------------------------------
-expansion_gui_title: '&dLand Expansion Petition'
+expansion_gui_title: '&d✦ Land Expansion Petition'
 
 # Tier buttons (names kept from original)
 expansion_tier1_name: '&aYeoman''s Grant'
@@ -239,7 +239,7 @@ expansion_tier5_lore:
 # -------------------------------------------------
 # Expansion Admin GUI
 # -------------------------------------------------
-expansion_admin_title: '&6&lPending Petitions'
+expansion_admin_title: '&5✦ Pending Petitions'
 
 button_view_requests_admin: '&bBehold Petitions'
 view_requests_admin_lore:
@@ -268,7 +268,7 @@ expansion_locked_lore:
 # -------------------------------------------------
 # Claim Snapshots GUI (Player/Admin)
 # -------------------------------------------------
-snapshot_gui_title: '&dClaim Snapshots'
+snapshot_gui_title: '&d✦ Claim Snapshots'
 button_snapshots: '&dClaim Snapshots'
 snapshots_button_lore:
   - '&7View and restore claim snapshots.'
@@ -348,7 +348,7 @@ expansion_button_back: '&eReturn to Previous Menu'
 # -------------------------------------------------
 # Plot Flags
 # -------------------------------------------------
-plot_flags_title: '&9&lWards of Thy Holding'
+plot_flags_title: '&3✦ Wards of Thy Holding'
 label_free: '&aFree'
 
 button_pvp_on: '&aPvP Ward: Raised'
@@ -430,7 +430,8 @@ vehicles_toggle_lore:
   - '&7from outsider use.'
   - '&eClick to toggle this ward.'
 shop_toggle_lore:
-  - '&7Permit trade interactions upon thy land.'
+  - '&7Permit home-market dealings and'
+  - '&7linked shop tools upon thy land.'
   - '&7Tribute required: &6{COST}'
   - '&eClick to purchase/toggle.'
 fly_toggle_lore:
@@ -516,6 +517,120 @@ biome_button_lore:
 zone_button_lore:
 - '&7Create and manage sub-claims'
 - '&7that can be rented out.'
+button_market_local: '&6Local Market'
+market_local_lore:
+- '&7Open this claim''s rentals, shop'
+- '&7tools, and local market options.'
+button_zone_create: '&aCreate Zone'
+zone_none_title: '&cNo Zones Wrought'
+zone_none_lore:
+- '&7Thou hast no sub-zones yet.'
+- '&7Mark an area and create one below.'
+zone_create_ready_lore:
+- '&7Create a zone from thy selection.'
+- ' '
+- '&eClick to create'
+zone_create_locked_lore:
+- '&7Select two points first.'
+- '&7Then return hither.'
+zone_status_listed: '&eListed'
+zone_status_private: '&7Private'
+zone_lore_status: '&7Status: &f{STATUS}'
+zone_item_name: '&b{ZONE}'
+zone_lore_dimensions: '&7Size: &f{WIDTH}x{HEIGHT}x{DEPTH}'
+zone_lore_price: '&7Price: &6{PRICE}'
+zone_lore_area: '&7Footprint: &a{AREA} blocks'
+zone_lore_tenant: '&7Tenant: &f{TENANT}'
+zone_lore_expires: '&7Expires: &f{TIME}'
+zone_evict_action: '&eLeft-Click: &7Evict tenant'
+zone_toggle_rent_action: '&eLeft-Click: &7Toggle rental listing'
+zone_price_increase_action: '&aShift-Left: &7Raise rent price'
+zone_price_decrease_action: '&6Shift-Right: &7Lower rent price'
+zone_delete_action: '&cRight-Click: &7Delete zone'
+zone_browse_title: '&2✦ Available Chambers'
+zone_browse_none_title: '&cNo Zones Available'
+zone_browse_none_lore:
+- '&7This claim hath no rentable zones right now.'
+- '&7Return later or ask the owner.'
+zone_browse_status_yours: '&aThy rental'
+zone_browse_status_occupied: '&cOccupied'
+zone_browse_action_preview: '&eLeft-Click: &7Preview this zone'
+zone_browse_action_rent: '&aRight-Click: &7Rent this zone'
+zone_browse_action_manage: '&aRight-Click: &7Govern this chamber'
+zone_browse_action_extend: '&eShift-Right: &7Extend this rental'
+zone_browse_action_unavailable: '&8Right-Click: &7Unavailable at present'
+zone_tenant_button_name: '&bChamber Controls'
+zone_tenant_button_lore:
+- '&7Govern thy rented chamber,'
+- '&7approved guests, and room spawn.'
+zone_tenant_title: '&3✦ Chamber Controls: {ZONE}'
+zone_tenant_info_name: '&eChamber Details'
+zone_tenant_teleport_name: '&bTravel to Chamber'
+zone_tenant_teleport_lore:
+- '&7Journey straight unto this rented'
+- '&7chamber or subplot anchor.'
+zone_tenant_set_spawn_name: '&aSet Chamber Spawn'
+zone_tenant_set_spawn_lore:
+- '&7Set thy current footing as the'
+- '&7travel point for this chamber.'
+zone_tenant_hotel_mode_name: '&6Inn Mode'
+zone_tenant_hotel_mode_lore:
+- '&7When enabled, approved guests may'
+- '&7use the chamber by thy toggles.'
+zone_tenant_guest_interact_name: '&eGuest Interact'
+zone_tenant_guest_interact_lore:
+- '&7Allow approved guests to use doors,'
+- '&7buttons, and other interactions.'
+zone_tenant_guest_containers_name: '&eGuest Chests'
+zone_tenant_guest_containers_lore:
+- '&7Allow approved guests to open'
+- '&7chests and stores in this chamber.'
+zone_tenant_guest_build_name: '&eGuest Build'
+zone_tenant_guest_build_lore:
+- '&7Allow approved guests to place and'
+- '&7break blocks in this chamber.'
+zone_tenant_evict_name: '&cCast Out Tenant'
+zone_tenant_evict_lore:
+- '&7Remove the present renter and'
+- '&7clear this chamber''s guest access.'
+zone_tenant_guest_add_lore: '&7Click to permit this nearby soul into the chamber.'
+zone_tenant_guest_remove_lore: '&7Click to remove this guest from the chamber.'
+zone_tenant_guest_count: '&7Approved guests: &f{COUNT}'
+zone_tenant_mode_line: '&7Inn mode: &f{STATE}'
+zone_tenant_spawn_line: '&7Chamber spawn: &f{STATE}'
+zone_tenant_locked_lore:
+- '&7This chamber setting is governed'
+- '&7by the current renter.'
+button_refresh: '&bRefresh'
+refresh_lore:
+- '&7Reload this menu.'
+local_market_title: '&6✦ Market Square'
+local_market_plot_name: '&e{PLOT}'
+local_market_plot_world: '&7World: &f{WORLD}'
+local_market_plot_mode: '&7Shop access: &f{STATE}'
+local_market_state_enabled: '&aEnabled'
+local_market_state_disabled: '&cDisabled'
+local_market_global_name: '&6Real Estate'
+local_market_global_lore:
+- '&7Browse plots for sale, public'
+- '&7rentals, and other listings.'
+local_market_rentals_name: '&aStalls & Rentals'
+local_market_rentals_lore:
+- '&7Browse rentable subplots, market'
+- '&7stalls, and managed rooms.'
+local_market_rentals_locked_lore:
+- '&7This claim has no public stalls or'
+- '&7rentable sub-zones right now.'
+local_market_manage_name: '&bManage Local Market'
+local_market_manage_lore:
+- '&7Create rental stalls, update'
+- '&7prices, and manage market rooms.'
+local_market_manage_locked_lore:
+- '&7You need management access to'
+- '&7edit this claim''s local market.'
+local_market_bridge_default_lore: '&7Open this linked market or shop system.'
+local_market_bridge_click: '&eClick to open.'
+local_market_bridge_requires_shop: '&cEnable Shop Interact on this plot first.'
 
 admin_button_lore:
 - '&7Operator Access Only'
@@ -625,3 +740,155 @@ visit_tab_my_claims_lore:
 visit_tab_all_claims: '&9View: All Claims'
 visit_tab_all_claims_lore:
 - '&7View all server claims.'
+
+# ------------------------------------------------------------
+# Travel, Settings, and Admin Additions (1.2.6)
+# ------------------------------------------------------------
+visit_title_trusted: '&3Ally Dominions'
+visit_title_owned: '&2Mine Own Claims'
+visit_title_warps: '&6Server Waypoints'
+visit_empty_title: '&cNothing to visit'
+visit_empty_lore:
+  - '&7No destination was found'
+  - '&7for this view.'
+  - ' '
+  - '&eTry another tab.'
+visit_switch_trusted: '&9Trusted Claims'
+visit_switch_trusted_lore:
+  - '&7Show claims wherein thou'
+  - '&7art trusted.'
+visit_switch_owned: '&aMine Own Claims'
+visit_switch_owned_lore:
+  - '&7Show the claims and homes'
+  - '&7that belong unto thee.'
+visit_switch_warps: '&6Server Waypoints'
+visit_switch_warps_lore:
+  - '&7Show public waypoints and'
+  - '&7curated destinations.'
+visit_warp_name: '&6{WARP}'
+visit_warp_lore:
+  - '&7A public waypoint.'
+  - ' '
+  - '&eClick to travel.'
+visit_plot_name: '&e{PLOT}'
+visit_plot_lore:
+  - '&7World: &f{WORLD}'
+  - '&7Thy Role: &b{ROLE}'
+  - ' '
+  - '&eClick to travel.'
+visit_role_owner: '&aOwner'
+
+settings_sounds_global_off_name: '&cSounds Disabled Globally'
+settings_sounds_global_off_lore:
+  - '&7A server steward hath'
+  - '&7disabled menu sounds.'
+settings_sounds_on_name: '&aSounds: ON'
+settings_sounds_off_name: '&cSounds: OFF'
+settings_sounds_lore:
+  - '&7Toggle AegisGuard menu sounds'
+  - '&7for thyself.'
+settings_language_unavailable_name: '&cTongue Switching Unavailable'
+settings_language_unavailable_lore:
+  - '&7The language engine is not'
+  - '&7present at this hour.'
+settings_language_name: '&eTongue: {LANG}'
+settings_language_lore:
+  - '&7Cycle thy display tongue'
+  - '&7for menus and missives.'
+settings_notifications_name: '&bNotices: {MODE}'
+settings_notifications_lore:
+  - '&7Choose how AegisGuard sends'
+  - '&7its notices unto thee.'
+  - ' '
+  - '&eClick to cycle.'
+settings_greetings_on_name: '&aClaim Greetings: ON'
+settings_greetings_off_name: '&cClaim Greetings: OFF'
+settings_greetings_lore:
+  - '&7Toggle claim entry and departure'
+  - '&7messages for thyself.'
+settings_admin_updates_on_name: '&aAdmin Tidings: ON'
+settings_admin_updates_off_name: '&cAdmin Tidings: OFF'
+settings_admin_updates_lore:
+  - '&7Toggle steward notices for'
+  - '&7reviews and moderation.'
+
+button_admin_reload_all: '&eReload Settings'
+button_admin_refresh_lang: '&aRefresh Language Packs'
+button_admin_world_controls: '&b🌍 World Controls'
+admin_world_controls_lore:
+  - '&7Govern world-wide protection'
+  - '&7defaults and safety rules.'
+  - ' '
+  - '&eClick to open.'
+button_admin_world_controls_missing: '&8🌍 World Controls Unavailable'
+admin_world_controls_missing_lore:
+  - '&7This build lacketh the'
+  - '&7world controls GUI.'
+button_admin_migration: '&6Migration Wizard'
+admin_migration_lore:
+  - '&7Preview and import supported'
+  - '&7claims from other plugins.'
+  - ' '
+  - '&eClick to open.'
+local_market_stalls_name: '&6Trade Stalls'
+local_market_stalls_lore:
+  - '&7Browse built-in TradeStalls and'
+  - '&7shopfronts upon this claim.'
+local_market_stalls_locked_lore:
+  - '&7No TradeStalls are'
+  - '&7prepared here at present.'
+local_market_stalls_external_lore:
+  - '&7TradeStalls are stilled here'
+  - '&7for an external market bridge'
+  - '&7holdeth sway upon this claim.'
+market_stall_list_title: '&6✦ Trade Stalls'
+market_stall_preview_title: '&6✦ TradeStall: {STALL}'
+market_stall_manage_title: '&6✦ Govern TradeStall'
+market_stall_manage_info_name: '&eGovern: {STALL}'
+market_stall_none_title: '&cNo Trade Stalls'
+market_stall_none_lore:
+  - '&7There are no registered TradeStalls'
+  - '&7available on this claim at present.'
+market_stall_owner_line: '&7Seller: &f{OWNER}'
+market_stall_zone_line: '&7Zone: &f{ZONE}'
+market_stall_item_count_line: '&7Listed slots: &f{COUNT}'
+market_stall_browse_action: '&eClick to browse this TradeStall.'
+market_stall_manage_action: '&eClick to govern this TradeStall.'
+market_stall_preview_info_name: '&e{STALL}'
+market_stall_preview_hint: '&7Chest access stays with the seller and plot stewards.'
+market_stall_preview_empty_name: '&cThis stall is empty'
+market_stall_preview_empty_lore:
+  - '&7There are no wares displayed in'
+  - '&7this TradeStall at present.'
+market_stall_price_line: '&7Price: &6{PRICE}'
+market_stall_bundle_line: '&7Bundle: &f{COUNT}'
+market_stall_buy_action: '&aClick to buy this bundle.'
+market_stall_not_listed: '&7This slot is not yet listed.'
+market_stall_selected: '&aChosen for shaping.'
+market_stall_select_action: '&eClick to shape this slot.'
+market_stall_manage_selected_name: '&bChosen Slot'
+market_stall_selected_slot: '&7Chest slot: &f{SLOT}'
+market_stall_manage_hint: '&7Use the runes round about to shape this listing.'
+market_stall_currency_name: '&eCoin'
+market_stall_currency_current: '&7Current: &f{CURRENCY}'
+market_stall_currency_toggle: '&eClick to change the coin.'
+market_stall_currency_money: '&6Money'
+market_stall_currency_claim_blocks: '&bClaim Blocks'
+market_stall_price_adjust_lore:
+  - '&7Shape the listing price.'
+market_stall_bundle_adjust_lore:
+  - '&7Shape how many wares sell at once.'
+market_stall_price_minus_100: '&c-100'
+market_stall_price_minus_10: '&c-10'
+market_stall_price_minus_1: '&c-1'
+market_stall_price_plus_1: '&a+1'
+market_stall_price_plus_10: '&a+10'
+market_stall_price_plus_100: '&a+100'
+market_stall_bundle_minus_8: '&cBundle -8'
+market_stall_bundle_minus_1: '&cBundle -1'
+market_stall_bundle_plus_1: '&aBundle +1'
+market_stall_bundle_plus_8: '&aBundle +8'
+market_stall_clear_name: '&cClear Listing'
+market_stall_clear_lore:
+  - '&7Take away the price and coin from'
+  - '&7the chosen slot.'

@@ -185,8 +185,7 @@ public class PlotFlagsGUI {
         Plot plot = holder.getPlot();
         if (plot == null) return;
 
-        // Permission gate: only owner or admins may edit flags
-        if (!plot.getOwner().equals(player.getUniqueId()) && !plugin.isAdmin(player)) {
+        if (!plot.canManage(player, plugin)) {
             plugin.msg().send(player, "no_perm");
             return;
         }

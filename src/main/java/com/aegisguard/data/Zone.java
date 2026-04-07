@@ -6,6 +6,8 @@ import org.bukkit.World;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +28,9 @@ public class Zone {
     private double rentPrice;
     private UUID renter;
     private long rentExpiration;
+    private final Map<UUID, String> guestAccess = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
+    private Location spawnLocation;
     
     public Zone(Plot parent, String name, int x1, int y1, int z1, int x2, int y2, int z2) {
         this.parent = parent;
@@ -63,11 +68,15 @@ public class Zone {
     // --- Rent Logic ---
     public double getRentPrice() { return rentPrice; }
     public void setRentPrice(double price) { this.rentPrice = price; }
+
+    public boolean isListedForRent() {
+        return rentPrice > 0.0D;
+    }
     
     public boolean isRented() {
         if (renter == null) return false;
         if (System.currentTimeMillis() > rentExpiration) {
-            // Expired implicitly
+            evict();
             return false;
         }
         return true;
@@ -79,9 +88,21 @@ public class Zone {
     
     public long getRentExpiration() { return rentExpiration; }
 
+    public long getRemainingRentMillis() {
+        if (!isRented()) return 0L;
+        return Math.max(0L, rentExpiration - System.currentTimeMillis());
+    }
+
     public void rentTo(UUID player, long durationMillis) {
         this.renter = player;
         this.rentExpiration = System.currentTimeMillis() + durationMillis;
+    }
+
+    public void extendRent(long durationMillis) {
+        if (durationMillis <= 0L) return;
+
+        long base = isRented() ? rentExpiration : System.currentTimeMillis();
+        this.rentExpiration = base + durationMillis;
     }
 
     /**
@@ -95,8 +116,130 @@ public class Zone {
     public void evict() {
         this.renter = null;
         this.rentExpiration = 0;
+        this.guestAccess.clear();
+        this.spawnLocation = null;
     }
-    
+
+    public boolean isRentedBy(UUID playerId) {
+        return playerId != null && isRented() && playerId.equals(renter);
+    }
+
+    public Map<UUID, String> getGuestAccess() {
+        return guestAccess;
+    }
+
+    public void addGuest(UUID playerId) {
+        if (playerId == null) return;
+        guestAccess.put(playerId, "guest");
+    }
+
+    public void removeGuest(UUID playerId) {
+        if (playerId == null) return;
+        guestAccess.remove(playerId);
+    }
+
+    public boolean hasGuest(UUID playerId) {
+        return playerId != null && guestAccess.containsKey(playerId);
+    }
+
+    public void clearGuests() {
+        guestAccess.clear();
+    }
+
+    public boolean getFlag(String key, boolean defaultValue) {
+        if (key == null || key.isBlank()) return defaultValue;
+        return flags.getOrDefault(key.toLowerCase(), defaultValue);
+    }
+
+    public void setFlag(String key, boolean value) {
+        if (key == null || key.isBlank()) return;
+        flags.put(key.toLowerCase(), value);
+    }
+
+    public Map<String, Boolean> getFlags() {
+        return flags;
+    }
+
+    public boolean isHotelMode() {
+        return getFlag("hotel_mode", false);
+    }
+
+    public boolean canGuestVisit(UUID playerId) {
+        if (playerId == null || !isHotelMode()) return false;
+        if (!hasGuest(playerId)) return false;
+        return getFlag("guest_visit", true);
+    }
+
+    public boolean canGuestInteract(UUID playerId) {
+        if (playerId == null || !isHotelMode()) return false;
+        if (!hasGuest(playerId)) return false;
+        return getFlag("guest_interact", true);
+    }
+
+    public boolean canGuestUseContainers(UUID playerId) {
+        if (playerId == null || !isHotelMode()) return false;
+        if (!hasGuest(playerId)) return false;
+        return getFlag("guest_containers", true);
+    }
+
+    public boolean canGuestBuild(UUID playerId) {
+        if (playerId == null || !isHotelMode()) return false;
+        if (!hasGuest(playerId)) return false;
+        return getFlag("guest_build", false);
+    }
+
+    public boolean canGuestUseVehicles(UUID playerId) {
+        if (canGuestBuild(playerId)) return true;
+        return canGuestInteract(playerId);
+    }
+
+    public Location getSpawnLocation() {
+        return spawnLocation == null ? null : spawnLocation.clone();
+    }
+
+    public void setSpawnLocation(Location spawnLocation) {
+        if (spawnLocation == null || spawnLocation.getWorld() == null) {
+            this.spawnLocation = null;
+            return;
+        }
+        if (!spawnLocation.getWorld().getName().equalsIgnoreCase(parent.getWorld())) {
+            return;
+        }
+        if (!isInside(spawnLocation)) {
+            return;
+        }
+        this.spawnLocation = spawnLocation.clone();
+    }
+
+    public void clearSpawnLocation() {
+        this.spawnLocation = null;
+    }
+
+    public Location getTeleportLocation() {
+        Location spawn = getSpawnLocation();
+        return spawn != null ? spawn : getCenter();
+    }
+
+    public int getWidth() {
+        return (x2 - x1) + 1;
+    }
+
+    public int getHeight() {
+        return (y2 - y1) + 1;
+    }
+
+    public int getDepth() {
+        return (z2 - z1) + 1;
+    }
+
+    public int getFootprintArea() {
+        return getWidth() * getDepth();
+    }
+
+    public int getVolume() {
+        return getWidth() * getHeight() * getDepth();
+    }
+
     // --- Utilities ---
     
     public boolean isInside(Location loc) {
@@ -132,6 +275,23 @@ public class Zone {
         if (days > 0) return days + "d " + hours + "h";
         long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
         return hours + "h " + minutes + "m";
+    }
+
+    public boolean overlaps(Zone other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!Objects.equals(parent, other.parent)) return false;
+
+        return x1 <= other.x2 && x2 >= other.x1
+                && y1 <= other.y2 && y2 >= other.y1
+                && z1 <= other.z2 && z2 >= other.z1;
+    }
+
+    public boolean isWithinParentBounds() {
+        return x1 >= parent.getX1()
+                && x2 <= parent.getX2()
+                && z1 >= parent.getZ1()
+                && z2 <= parent.getZ2();
     }
 
     // --- Equality (Prevents Duplicates in Lists) ---

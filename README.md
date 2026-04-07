@@ -22,7 +22,7 @@
 
 ---
 
-# AegisGuard v1.2.5
+# AegisGuard v1.2.6
 
 AegisGuard is a **modern, Folia-optimized land protection and economy ecosystem** for Minecraft servers running **Spigot**, **Paper**, **Purpur**, or **Folia** (1.20+).
 
@@ -292,9 +292,9 @@ All player permissions are granted by default via the `aegis.user` parent node.
 | `aegis.ban` | Ban from own plot | true |
 | `aegis.unban` | Unban from own plot | true |
 | `aegis.earn.blocks` | Earn ClaimBlocks via playtime | true |
-| `aegis.claimblocks.exchange` | Access ClaimBlocks exchange | true |
-| `aegis.claimblocks.buy` | Buy ClaimBlocks | true |
-| `aegis.claimblocks.sell` | Sell ClaimBlocks | true |
+| `aegis.claimblocks.exchange` | Access ClaimBlocks exchange | false |
+| `aegis.claimblocks.buy` | Buy ClaimBlocks | false |
+| `aegis.claimblocks.sell` | Sell ClaimBlocks | false |
 
 </details>
 
@@ -322,6 +322,8 @@ All player permissions are granted by default via the `aegis.user` parent node.
 ## Configuration
 
 AegisGuard uses a comprehensive `config.yml` with sections for:
+
+- A focused setup guide is available in [CONFIGURATION.md](CONFIGURATION.md) for small, medium, and large server recommendations.
 
 ### Data Storage
 
@@ -471,5 +473,5 @@ Need help? Have suggestions?
 ---
 
 <p align="center">
-  <strong>AegisGuard v1.2.5</strong> | Made with care by <a href="https://github.com/snazzyatoms">snazzyatoms</a>
+  <strong>AegisGuard v1.2.6</strong> | Made with care by <a href="https://github.com/snazzyatoms">snazzyatoms</a>
 </p>

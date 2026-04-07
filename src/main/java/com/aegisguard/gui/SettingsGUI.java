@@ -306,6 +306,11 @@ public class SettingsGUI {
             }
 
             case 16 -> { // Notifications MODE (notifications.yml preferred)
+                if (!canManageGreetingNotifications(player, false)) {
+                    playError(player);
+                    return;
+                }
+
                 try {
                     NotificationMode newMode = null;
 
@@ -338,6 +343,11 @@ public class SettingsGUI {
             }
 
             case 19 -> { // Plot Greetings toggle (enter/leave)
+                if (!canManageGreetingNotifications(player, true)) {
+                    playError(player);
+                    return;
+                }
+
                 try {
                     Boolean newState = null;
 
@@ -516,6 +526,30 @@ public class SettingsGUI {
         return plugin.getConfig().getBoolean(base + ".admin_updates", true);
     }
 
+    private boolean canManageGreetingNotifications(Player player, boolean togglingState) {
+        if (!player.hasPermission("aegis.notify")) return false;
+
+        String base = "titles.claim_enter_exit";
+        if (!plugin.getConfig().getBoolean(base + ".enabled", true)) {
+            String bypassPermission = plugin.getConfig().getString(base + ".bypass_permission", "aegis.notify.bypass");
+            return bypassPermission != null && !bypassPermission.isBlank() && player.hasPermission(bypassPermission);
+        }
+
+        String requiredPermission = plugin.getConfig().getString(base + ".required_permission", "");
+        if (requiredPermission != null && !requiredPermission.isBlank() && !player.hasPermission(requiredPermission)) {
+            return false;
+        }
+
+        if (!togglingState) return true;
+
+        if (!plugin.getConfig().getBoolean(base + ".allow_player_toggle", true)) {
+            return false;
+        }
+
+        String mode = plugin.getConfig().getString(base + ".mode", "PER_PLAYER").toUpperCase(Locale.ROOT);
+        return "PER_PLAYER".equals(mode);
+    }
+
     private void setAdminUpdatesEnabled(Player player, boolean enabled) {
         String base = baseNotifPath(player);
         plugin.getConfig().set(base + ".admin_updates", enabled);
@@ -548,7 +582,6 @@ public class SettingsGUI {
         return switch (style.toLowerCase(Locale.ROOT)) {
             case "old_english" -> t(player, "style_old_english", "&dOld English");
             case "modern_english" -> t(player, "style_modern_english", "&aModern");
-            case "hybrid_english" -> t(player, "style_hybrid_english", "&eHybrid");
             case "spanish_mx" -> t(player, "style_spanish_mx", "&bEspañol (LatAm)");
             case "spanish_ar" -> t(player, "style_spanish_ar", "&bEspañol (AR)");
             default -> "&f" + pretty(style);

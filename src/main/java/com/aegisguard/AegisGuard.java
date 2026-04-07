@@ -15,17 +15,21 @@ import com.aegisguard.economy.VaultHook;
 import com.aegisguard.expansions.ExpansionRequestManager;
 import com.aegisguard.gui.GUIListener;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.groups.GroupManager;
 import com.aegisguard.hooks.AegisPAPIExpansion;
 import com.aegisguard.hooks.DiscordWebhook;
 import com.aegisguard.hooks.MapHookManager;
 import com.aegisguard.hooks.MobBarrierTask;
 import com.aegisguard.hooks.WildernessRevertTask;
+import com.aegisguard.hooks.market.MarketBridgeManager;
 import com.aegisguard.hooks.protection.ProtectionHookManager;
 import com.aegisguard.language.CodexEngine;
 import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
+import com.aegisguard.listeners.MarketStallListener;
 import com.aegisguard.listeners.PlotGreetingListener;
 import com.aegisguard.migration.MigrationManager;
+import com.aegisguard.market.TradeStallService;
 import com.aegisguard.notify.NotificationManager;
 import com.aegisguard.protection.BlockProtectionListener;
 import com.aegisguard.protection.ProtectionManager;
@@ -53,6 +57,8 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,6 +105,9 @@ public class AegisGuard extends JavaPlugin {
 
     // Notification Manager (1.2.6+) - Player notification preferences
     private NotificationManager notificationManager;
+    private GroupManager groupManager;
+    private MarketBridgeManager marketBridgeManager;
+    private TradeStallService tradeStallService;
 
     /**
      * MessagesUtil now acts as:
@@ -172,6 +181,12 @@ public class AegisGuard extends JavaPlugin {
     // Notification Manager getter (1.2.6+)
     public NotificationManager getNotificationManager() { return notificationManager; }
     public NotificationManager notifications() { return notificationManager; }
+    public GroupManager getGroupManager() { return groupManager; }
+    public GroupManager groups() { return groupManager; }
+    public MarketBridgeManager marketBridges() { return marketBridgeManager; }
+    public MarketBridgeManager getMarketBridgeManager() { return marketBridgeManager; }
+    public TradeStallService tradeStalls() { return tradeStallService; }
+    public TradeStallService getTradeStallService() { return tradeStallService; }
 
     /**
      * Legacy access (compat bridge).
@@ -229,6 +244,9 @@ public class AegisGuard extends JavaPlugin {
         snapshotManager = new SnapshotManager(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
+        groupManager = new GroupManager(this);
+        marketBridgeManager = new MarketBridgeManager(this);
+        tradeStallService = new TradeStallService(this);
 
         // Notification Manager (1.2.6+) - per-player notification preferences
         try {
@@ -281,6 +299,10 @@ public class AegisGuard extends JavaPlugin {
                 if (snapshotManager != null) snapshotManager.load();
             } catch (Throwable ignored) {}
 
+            try {
+                if (groupManager != null) groupManager.load();
+            } catch (Throwable ignored) {}
+
             // ✅ NotificationManager loads data inside constructor + reload()
             // ❌ Do NOT call notificationManager.loadData() (it's private).
         });
@@ -294,6 +316,8 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
         Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new MarketStallListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
 
@@ -323,7 +347,10 @@ public class AegisGuard extends JavaPlugin {
 
         // Save plot + player data safely
         try {
-            if (plotStore != null) plotStore.saveSync();
+            if (plotStore != null) {
+                plotStore.saveSync();
+                plotStore.shutdown();
+            }
         } catch (Throwable t) {
             getLogger().warning("Failed to save plot store: " + t.getMessage());
         }
@@ -346,11 +373,17 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("Failed to save expansion requests: " + t.getMessage());
         }
 
+        try {
+            if (groupManager != null && groupManager.isDirty()) groupManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save groups: " + t.getMessage());
+        }
+
         // Save player data
         if (messages != null) messages.savePlayerData();
 
         // Save notification prefs
-        if (notificationManager != null) notificationManager.saveData();
+        if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
 
         getLogger().info("AegisGuard disabled.");
     }
@@ -500,6 +533,10 @@ public class AegisGuard extends JavaPlugin {
         if (configMgr != null) configMgr.reload();
         if (worldRules != null) worldRules.reload();
         if (messages != null) messages.reload();
+        if (groupManager != null) {
+            groupManager.load();
+            groupManager.cleanupMissingPlotLinks();
+        }
 
         // ✅ Reload notification preferences safely (don’t recreate unless missing)
         try {
@@ -535,8 +572,9 @@ public class AegisGuard extends JavaPlugin {
                     if (claimBlockManager != null) claimBlockManager.save();
                     if (snapshotManager != null) snapshotManager.save();
                     if (expansionManager != null) expansionManager.save();
+                    if (groupManager != null && groupManager.isDirty()) groupManager.save();
                     if (messages != null) messages.savePlayerData();
-                    if (notificationManager != null) notificationManager.saveData();
+                    if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 } catch (Throwable t) {
                     getLogger().warning("Auto-save error: " + t.getMessage());
                 }
@@ -545,7 +583,14 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startUpkeepTask() {
-        long intervalSeconds = getConfig().getLong("economy.upkeep.interval_seconds", 3600L);
+        if (!getConfig().getBoolean("upkeep.enabled", false)
+                && !getConfig().getBoolean("economy.upkeep.enabled", false)) {
+            return;
+        }
+
+        long intervalHours = Math.max(1L, getConfig().getLong("upkeep.check_interval_hours",
+                getConfig().getLong("economy.upkeep.interval_hours", 24L)));
+        long intervalSeconds = intervalHours * 3600L;
         long intervalTicks = Math.max(20L, intervalSeconds * 20L);
 
         upkeepTask = new BukkitRunnable() {
@@ -557,15 +602,19 @@ public class AegisGuard extends JavaPlugin {
 
                     plotStore.getAllPlots().forEach(plot -> {
                         try {
-                            double upkeep = getConfig().getDouble("economy.upkeep.cost", 0.0);
+                            double upkeep = getConfig().getDouble("upkeep.cost_per_plot",
+                                    getConfig().getDouble("economy.upkeep.cost", 0.0));
                             if (upkeep <= 0) return;
 
                             if (plot != null && plot.getOwner() != null) {
                                 if (!ecoManager.withdraw(plot.getOwner(), upkeep)) {
+                                    notifyUpkeepDue(plot, upkeep);
+
                                     // If configured, unclaim plots on non-payment (optional)
-                                    boolean unclaim = getConfig().getBoolean("economy.upkeep.unclaim_on_fail", false);
+                                    boolean unclaim = getConfig().getBoolean("upkeep.unclaim_on_fail",
+                                            getConfig().getBoolean("economy.upkeep.unclaim_on_fail", false));
                                     if (unclaim) {
-                                        plotStore.removePlot(plot.getId());
+                                        plotStore.removePlot(plot.getOwner(), plot.getId());
                                     }
                                 }
                             }
@@ -575,7 +624,51 @@ public class AegisGuard extends JavaPlugin {
                     getLogger().warning("Upkeep task error: " + t.getMessage());
                 }
             }
-        }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+        }.runTaskTimer(this, intervalTicks, intervalTicks);
+    }
+
+    private void notifyUpkeepDue(com.aegisguard.data.Plot plot, double upkeepAmount) {
+        if (plot == null || notificationManager == null) return;
+        if (!getConfig().getBoolean("upkeep.notifications.enabled", true)) return;
+
+        String formatted = ecoManager != null && ecoManager.isVaultReady()
+                ? ecoManager.format(upkeepAmount, com.aegisguard.economy.CurrencyType.VAULT)
+                : String.format(Locale.US, "%.2f", upkeepAmount);
+
+        Map<String, String> placeholders = Map.of(
+                "AMOUNT", formatted,
+                "CLAIM", resolveNotifyClaimName(plot)
+        );
+
+        notificationManager.notifyPlayer(
+                plot.getOwner(),
+                "notify_upkeep_title",
+                "&cUpkeep Due",
+                "notify_upkeep_due",
+                "&cUpkeep is due for {CLAIM}. Required amount: &6{AMOUNT}&c.",
+                placeholders
+        );
+
+        if (plot.isGroupPlot()) {
+            notificationManager.notifyPlotMembers(
+                    plot,
+                    plot.getOwner(),
+                    "notify_upkeep_title",
+                    "&cUpkeep Due",
+                    "notify_group_upkeep_due",
+                    "&e{CLAIM} has unpaid upkeep. Required amount: &6{AMOUNT}&e.",
+                    placeholders
+            );
+        }
+    }
+
+    private String resolveNotifyClaimName(com.aegisguard.data.Plot plot) {
+        if (plot == null) return "your claim";
+        if (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank()) return plot.getEntryTitle();
+        if (plot.getPlotName() != null && !plot.getPlotName().isBlank()) return plot.getPlotName();
+        if (plot.getGroupName() != null && !plot.getGroupName().isBlank()) return plot.getGroupName();
+        if (plot.getOwnerName() != null && !plot.getOwnerName().isBlank()) return plot.getOwnerName() + "'s claim";
+        return "your claim";
     }
 
     private void startWildernessRevertTask() {
@@ -638,7 +731,7 @@ public class AegisGuard extends JavaPlugin {
                     getLogger().warning("ClaimBlock task error: " + t.getMessage());
                 }
             }
-        }.runTaskTimerAsynchronously(this, intervalTicks, intervalTicks);
+        }.runTaskTimer(this, intervalTicks, intervalTicks);
     }
 
     private void cancelTaskReflectively(Object task) {

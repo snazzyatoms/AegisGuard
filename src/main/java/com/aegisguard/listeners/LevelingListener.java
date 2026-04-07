@@ -14,15 +14,15 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LevelingListener implements Listener {
 
     private final AegisGuard plugin;
-    private final HashMap<UUID, Plot> activePlotCache = new HashMap<>();
+    private final Map<UUID, UUID> activePlotCache = new ConcurrentHashMap<>();
 
     public LevelingListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -91,10 +91,16 @@ public class LevelingListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
-            e.getFrom().getBlockY() == e.getTo().getBlockY() &&
-            e.getFrom().getBlockZ() == e.getTo().getBlockZ()) return;
-        handleMovement(e.getPlayer(), e.getTo());
+        Location to = e.getTo();
+        if (to == null) return;
+        if (!e.getFrom().getWorld().equals(to.getWorld())) {
+            handleMovement(e.getPlayer(), to);
+            return;
+        }
+        if (e.getFrom().getBlockX() == to.getBlockX() &&
+            e.getFrom().getBlockY() == to.getBlockY() &&
+            e.getFrom().getBlockZ() == to.getBlockZ()) return;
+        handleMovement(e.getPlayer(), to);
     }
 
     @EventHandler
@@ -109,20 +115,23 @@ public class LevelingListener implements Listener {
     }
 
     private void handleMovement(Player player, Location to) {
-        Plot currentPlot = plugin.store().getPlotAt(to); 
-        Plot cachedPlot = activePlotCache.get(player.getUniqueId());
+        if (to == null || to.getWorld() == null) return;
 
-        if (currentPlot != null && cachedPlot == null) {
-            activePlotCache.put(player.getUniqueId(), currentPlot);
+        Plot currentPlot = plugin.store().getPlotAt(to);
+        UUID currentPlotId = currentPlot == null ? null : currentPlot.getPlotId();
+        UUID cachedPlotId = activePlotCache.get(player.getUniqueId());
+
+        if (currentPlotId != null && cachedPlotId == null) {
+            activePlotCache.put(player.getUniqueId(), currentPlotId);
             if (isAllowed(player, currentPlot)) applyBuffs(player, currentPlot);
         }
-        else if (currentPlot == null && cachedPlot != null) {
+        else if (currentPlotId == null && cachedPlotId != null) {
             removeBuffs(player);
             activePlotCache.remove(player.getUniqueId());
         }
-        else if (currentPlot != null && cachedPlot != null && !currentPlot.equals(cachedPlot)) {
+        else if (currentPlotId != null && cachedPlotId != null && !currentPlotId.equals(cachedPlotId)) {
             removeBuffs(player);
-            activePlotCache.put(player.getUniqueId(), currentPlot);
+            activePlotCache.put(player.getUniqueId(), currentPlotId);
             if (isAllowed(player, currentPlot)) applyBuffs(player, currentPlot);
         }
     }

@@ -36,7 +36,7 @@ public class NotifyCommand implements CommandExecutor {
         // --- Legacy behavior: /aegis notify ---
         // Toggles ONLY plot greetings (enter/leave), NOT admin decisions.
         if (args.length == 0) {
-            settings.setGreetings(!settings.greetingsEnabled());
+            settings.setGreetingsEnabled(!settings.greetingsEnabled());
             persist(player, settings);
 
             plugin.msg().send(
@@ -59,15 +59,15 @@ public class NotifyCommand implements CommandExecutor {
                 if (args.length >= 2) {
                     String val = args[1].toLowerCase(Locale.ROOT);
                     if (val.equals("on") || val.equals("true") || val.equals("enable") || val.equals("enabled")) {
-                        settings.setGreetings(true);
+                        settings.setGreetingsEnabled(true);
                     } else if (val.equals("off") || val.equals("false") || val.equals("disable") || val.equals("disabled")) {
-                        settings.setGreetings(false);
+                        settings.setGreetingsEnabled(false);
                     } else {
                         plugin.msg().send(player, "notify_usage");
                         return true;
                     }
                 } else {
-                    settings.setGreetings(!settings.greetingsEnabled());
+                    settings.setGreetingsEnabled(!settings.greetingsEnabled());
                 }
 
                 persist(player, settings);
@@ -87,15 +87,15 @@ public class NotifyCommand implements CommandExecutor {
                 if (args.length >= 2) {
                     String val = args[1].toLowerCase(Locale.ROOT);
                     if (val.equals("on") || val.equals("true") || val.equals("enable") || val.equals("enabled")) {
-                        settings.setAdminUpdates(true);
+                        settings.setAdminUpdatesEnabled(true);
                     } else if (val.equals("off") || val.equals("false") || val.equals("disable") || val.equals("disabled")) {
-                        settings.setAdminUpdates(false);
+                        settings.setAdminUpdatesEnabled(false);
                     } else {
                         plugin.msg().send(player, "notify_usage");
                         return true;
                     }
                 } else {
-                    settings.setAdminUpdates(!settings.adminUpdatesEnabled());
+                    settings.setAdminUpdatesEnabled(!settings.adminUpdatesEnabled());
                 }
 
                 persist(player, settings);
@@ -152,8 +152,8 @@ public class NotifyCommand implements CommandExecutor {
             // ------------------------------------------------------------
             case "all": {
                 boolean newState = !(settings.greetingsEnabled() && settings.adminUpdatesEnabled());
-                settings.setGreetings(newState);
-                settings.setAdminUpdates(newState);
+                settings.setGreetingsEnabled(newState);
+                settings.setAdminUpdatesEnabled(newState);
 
                 persist(player, settings);
 
@@ -170,8 +170,8 @@ public class NotifyCommand implements CommandExecutor {
             case "enable":
             case "enabled":
             case "true": {
-                settings.setGreetings(true);
-                settings.setAdminUpdates(true);
+                settings.setGreetingsEnabled(true);
+                settings.setAdminUpdatesEnabled(true);
                 persist(player, settings);
 
                 plugin.msg().send(player, "notify_greetings_enabled");
@@ -183,8 +183,8 @@ public class NotifyCommand implements CommandExecutor {
             case "disable":
             case "disabled":
             case "false": {
-                settings.setGreetings(false);
-                settings.setAdminUpdates(false);
+                settings.setGreetingsEnabled(false);
+                settings.setAdminUpdatesEnabled(false);
                 persist(player, settings);
 
                 plugin.msg().send(player, "notify_greetings_disabled");

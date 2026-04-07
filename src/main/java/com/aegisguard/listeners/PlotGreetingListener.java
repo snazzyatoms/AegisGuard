@@ -127,7 +127,7 @@ public class PlotGreetingListener implements Listener {
 
     private boolean isEnabled() {
         try {
-            return plugin.cfg() == null || plugin.cfg().raw().getBoolean("greetings.enabled", true);
+            return plugin.cfg() == null || plugin.cfg().raw().getBoolean("titles.claim_enter_exit.enabled", true);
         } catch (Throwable ignored) {
             return true;
         }
@@ -223,9 +223,9 @@ public class PlotGreetingListener implements Listener {
 
     private void sendWelcome(Player player, Plot plot) {
         PlayerNotificationSettings settings = getNotificationSettings(player);
-        if (settings != null && !settings.greetingsEnabled()) return;
+        if (!shouldSendGreeting(player, settings, true)) return;
 
-        NotificationMode mode = (settings == null) ? NotificationMode.ACTION_BAR : settings.getMode();
+        NotificationMode mode = resolveMode(settings);
 
         String msg = plot.getWelcomeMessage();
         if (msg == null || msg.trim().isEmpty()) {
@@ -239,7 +239,7 @@ public class PlotGreetingListener implements Listener {
         String sub = null;
 
         // If TITLE mode, prefer plot-configured title/subtitle.
-        if (mode == NotificationMode.TITLE) {
+        if (shouldSendTitles() && mode == NotificationMode.TITLE) {
             title = plot.getEntryTitle();
             sub = plot.getEntrySubtitle();
 
@@ -247,14 +247,17 @@ public class PlotGreetingListener implements Listener {
             if (sub == null || sub.trim().isEmpty()) sub = msg;
         }
 
-        deliver(player, mode, msg, title, sub);
+        String chatMessage = shouldSendChat() ? msg : null;
+        String titleMessage = shouldSendTitles() ? title : null;
+        String subtitleMessage = shouldSendTitles() ? sub : null;
+        deliver(player, mode, chatMessage, titleMessage, subtitleMessage);
     }
 
     private void sendFarewell(Player player, Plot plot) {
         PlayerNotificationSettings settings = getNotificationSettings(player);
-        if (settings != null && !settings.greetingsEnabled()) return;
+        if (!shouldSendGreeting(player, settings, false)) return;
 
-        NotificationMode mode = (settings == null) ? NotificationMode.ACTION_BAR : settings.getMode();
+        NotificationMode mode = resolveMode(settings);
 
         String msg = plot.getFarewellMessage();
         if (msg == null || msg.trim().isEmpty()) {
@@ -268,12 +271,64 @@ public class PlotGreetingListener implements Listener {
         String sub = null;
 
         // For TITLE mode, show a simple leave title
-        if (mode == NotificationMode.TITLE) {
+        if (shouldSendTitles() && mode == NotificationMode.TITLE) {
             title = "&7Leaving";
             sub = msg;
         }
 
-        deliver(player, mode, msg, title, sub);
+        String chatMessage = shouldSendChat() ? msg : null;
+        String titleMessage = shouldSendTitles() ? title : null;
+        String subtitleMessage = shouldSendTitles() ? sub : null;
+        deliver(player, mode, chatMessage, titleMessage, subtitleMessage);
+    }
+
+    private boolean shouldSendGreeting(Player player, PlayerNotificationSettings settings, boolean entering) {
+        String base = "titles.claim_enter_exit";
+
+        if (!plugin.getConfig().getBoolean(base + ".enabled", true)) {
+            return hasBypassPermission(player);
+        }
+
+        if (entering && !plugin.getConfig().getBoolean(base + ".show_enter", true)) return false;
+        if (!entering && !plugin.getConfig().getBoolean(base + ".show_exit", true)) return false;
+
+        String requiredPermission = plugin.getConfig().getString(base + ".required_permission", "");
+        if (requiredPermission != null && !requiredPermission.isBlank() && !player.hasPermission(requiredPermission)) {
+            return false;
+        }
+
+        String mode = plugin.getConfig().getString(base + ".mode", "PER_PLAYER").toUpperCase();
+        if ("FORCE_ON".equals(mode)) return true;
+        if ("FORCE_OFF".equals(mode)) return hasBypassPermission(player);
+
+        if (!plugin.getConfig().getBoolean(base + ".allow_player_toggle", true)) {
+            return plugin.getConfig().getBoolean(base + ".default_player_setting", true);
+        }
+
+        return settings == null || settings.greetingsEnabled();
+    }
+
+    private NotificationMode resolveMode(PlayerNotificationSettings settings) {
+        if (settings != null && settings.getMode() != null) {
+            return settings.getMode();
+        }
+
+        String configured = plugin.getConfig().getString("titles.claim_enter_exit.notification_location",
+                plugin.getConfig().getString("titles.notification_location", "ACTION_BAR"));
+        return NotificationMode.fromString(configured);
+    }
+
+    private boolean shouldSendChat() {
+        return plugin.getConfig().getBoolean("titles.claim_enter_exit.show_chat", true);
+    }
+
+    private boolean shouldSendTitles() {
+        return plugin.getConfig().getBoolean("titles.claim_enter_exit.show_titles", true);
+    }
+
+    private boolean hasBypassPermission(Player player) {
+        String bypassPermission = plugin.getConfig().getString("titles.claim_enter_exit.bypass_permission", "aegis.notify.bypass");
+        return bypassPermission != null && !bypassPermission.isBlank() && player.hasPermission(bypassPermission);
     }
 
     private String safeOwnerName(Plot plot) {

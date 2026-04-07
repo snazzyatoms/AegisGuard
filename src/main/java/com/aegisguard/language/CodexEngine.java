@@ -147,7 +147,7 @@ public class CodexEngine {
             } else if (fromFallbackIndex != null && !fromFallbackIndex.isEmpty()) {
                 availableStyles.addAll(fromFallbackIndex);
             } else {
-                availableStyles.addAll(Arrays.asList("old_english", "hybrid_english", "modern_english", "spanish_mx", "spanish_ar"));
+                availableStyles.addAll(Arrays.asList("old_english", "modern_english", "spanish_mx", "spanish_ar"));
             }
 
             normalizeAvailableStyles();
@@ -239,7 +239,6 @@ public class CodexEngine {
                     "core.yml",
                     "overrides.yml",
                     "old_english.yml",
-                    "hybrid_english.yml",
                     "modern_english.yml",
                     "spanish_mx.yml",
                     "spanish_ar.yml"

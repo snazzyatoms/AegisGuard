@@ -4,7 +4,9 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.selection.Selection;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -78,9 +80,7 @@ public class ZoningGUI {
             return;
         }
 
-        // Permission gate (owner/admin only)
-        boolean canManage = plot.getOwner() != null
-                && (plot.getOwner().equals(player.getUniqueId()) || plugin.isAdmin(player));
+        boolean canManage = plot.canManage(player, plugin);
 
         if (!canManage) {
             plugin.msg().send(player, "no_perm");
@@ -121,10 +121,13 @@ public class ZoningGUI {
                 if (slot >= 45) break;
 
                 boolean isRented = zone.isRented();
+                boolean isListed = !isRented && zone.isListedForRent();
 
                 String status = isRented
                         ? tr(player, "zone_status_rented", "&cRented")
-                        : tr(player, "zone_status_available", "&aAvailable");
+                        : isListed
+                        ? tr(player, "zone_status_listed", "&eListed")
+                        : tr(player, "zone_status_private", "&7Private");
 
                 String renterName = tr(player, "label_none", "None");
                 String timeRemaining = "";
@@ -140,8 +143,14 @@ public class ZoningGUI {
                 List<String> lore = new ArrayList<>();
                 lore.add(GUIManager.color(tr(player, "zone_lore_status", "&7Status: &f{STATUS}")
                         .replace("{STATUS}", status)));
+                lore.add(GUIManager.color(tr(player, "zone_lore_dimensions", "&7Size: &f{WIDTH}x{HEIGHT}x{DEPTH}")
+                        .replace("{WIDTH}", String.valueOf(zone.getWidth()))
+                        .replace("{HEIGHT}", String.valueOf(zone.getHeight()))
+                        .replace("{DEPTH}", String.valueOf(zone.getDepth()))));
                 lore.add(GUIManager.color(tr(player, "zone_lore_price", "&7Price: &6{PRICE}")
                         .replace("{PRICE}", priceStr)));
+                lore.add(GUIManager.color(tr(player, "zone_lore_area", "&7Footprint: &a{AREA} blocks")
+                        .replace("{AREA}", String.valueOf(zone.getFootprintArea()))));
                 lore.add(" ");
 
                 if (isRented) {
@@ -155,8 +164,15 @@ public class ZoningGUI {
 
                     lore.add(" ");
                     lore.add(GUIManager.color(tr(player, "zone_evict_action", "&eLeft-Click: &7Evict tenant")));
+                } else {
+                    lore.add(GUIManager.color(tr(player, "zone_toggle_rent_action",
+                            zone.isListedForRent()
+                                    ? "&eLeft-Click: &7Disable rental listing"
+                                    : "&eLeft-Click: &7Enable rental listing")));
                 }
 
+                lore.add(GUIManager.color(tr(player, "zone_price_increase_action", "&aShift-Left: &7Increase rent price")));
+                lore.add(GUIManager.color(tr(player, "zone_price_decrease_action", "&6Shift-Right: &7Decrease rent price")));
                 lore.add(GUIManager.color(tr(player, "zone_delete_action", "&cRight-Click: &7Delete zone")));
 
                 String zoneName = (zone.getName() != null && !zone.getName().isBlank())
@@ -166,7 +182,7 @@ public class ZoningGUI {
                 String displayName = tr(player, "zone_item_name", "&b{ZONE}").replace("{ZONE}", zoneName);
 
                 inv.setItem(slot, GUIManager.createItem(
-                        isRented ? Material.IRON_DOOR : Material.OAK_DOOR,
+                        isRented ? Material.IRON_DOOR : isListed ? Material.EMERALD : Material.OAK_DOOR,
                         GUIManager.color(displayName),
                         lore
                 ));
@@ -222,9 +238,7 @@ public class ZoningGUI {
         Plot plot = holder.getPlot();
         if (plot == null) return;
 
-        // Permission gate (owner/admin only)
-        boolean canManage = plot.getOwner() != null
-                && (plot.getOwner().equals(player.getUniqueId()) || plugin.isAdmin(player));
+        boolean canManage = plot.canManage(player, plugin);
 
         if (!canManage) {
             plugin.msg().send(player, "no_perm");
@@ -251,9 +265,8 @@ public class ZoningGUI {
         // --- CREATE ZONE ---
         if (slot == 49 && clicked.getType() == Material.EMERALD_BLOCK) {
             if (plugin.selection().hasSelection(player)) {
-                String name = "Zone-" + (plot.getZones() != null ? (plot.getZones().size() + 1) : 1);
-                player.performCommand("ag zone create " + name + " 100");
-                player.closeInventory();
+                createZoneFromSelection(player, plot);
+                open(player, plot);
             } else {
                 plugin.effects().playError(player);
                 send(player, "must_select", "&cYou must select two points first.");
@@ -281,14 +294,49 @@ public class ZoningGUI {
             }
             if (target == null) return;
 
+            if (e.isShiftClick() && e.getClick().isLeftClick()) {
+                double nextPrice = target.getRentPrice() + rentPriceStep();
+                target.setRentPrice(nextPrice);
+                plugin.store().savePlot(plot);
+                plugin.store().setDirty(true);
+                plugin.effects().playConfirm(player);
+                send(player, "zone_rent_price_set",
+                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
+                                .replace("{ZONE}", target.getName())
+                                .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
+                open(player, plot);
+                return;
+            }
+
+            if (e.isShiftClick() && e.getClick().isRightClick()) {
+                double nextPrice = Math.max(0.0D, target.getRentPrice() - rentPriceStep());
+                target.setRentPrice(nextPrice);
+                plugin.store().savePlot(plot);
+                plugin.store().setDirty(true);
+                plugin.effects().playConfirm(player);
+                send(player, "zone_rent_price_set",
+                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
+                                .replace("{ZONE}", target.getName())
+                                .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
+                open(player, plot);
+                return;
+            }
+
             // Right Click: Delete
             if (e.getClick().isRightClick()) {
+                if (target.isRented() && !allowDeleteWhileRented()) {
+                    plugin.effects().playError(player);
+                    send(player, "zone_delete_blocked_rented", "&cEvict the tenant before deleting this zone.");
+                    return;
+                }
+
                 try {
                     plot.removeZone(target);
                 } catch (Throwable ignored) {
                     // If your Plot uses a different API, at least don't crash the GUI
                 }
 
+                plugin.store().savePlot(plot);
                 plugin.store().setDirty(true);
                 plugin.effects().playUnclaim(player);
 
@@ -300,17 +348,109 @@ public class ZoningGUI {
             // Left Click: Evict (only if rented)
             if (e.getClick().isLeftClick()) {
                 if (target.isRented()) {
-                    try { target.evict(); } catch (Throwable ignored) {}
+                    plugin.gui().zoneTenant().open(player, plot, target);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    if (target.isListedForRent()) {
+                        target.setRentPrice(0.0D);
+                        send(player, "zone_rent_disabled", "&eRental listing disabled for &f{ZONE}".replace("{ZONE}", target.getName()));
+                    } else {
+                        target.setRentPrice(defaultRentPrice());
+                        send(player, "zone_rent_enabled", "&aRental listing enabled for &f{ZONE}".replace("{ZONE}", target.getName()));
+                    }
+                    plugin.store().savePlot(plot);
                     plugin.store().setDirty(true);
                     plugin.effects().playConfirm(player);
-
-                    send(player, "zone_evicted", "&eTenant evicted from: &f{ZONE}".replace("{ZONE}", target.getName()));
                     open(player, plot);
-                } else {
-                    send(player, "zone_not_rented", "&7That zone is not currently rented.");
-                    plugin.effects().playError(player);
                 }
             }
         }
+    }
+
+    private void createZoneFromSelection(Player player, Plot plot) {
+        if (plot == null) return;
+
+        Selection selection = plugin.selection().get(player.getUniqueId());
+        if (selection == null || !selection.isComplete()) {
+            plugin.effects().playError(player);
+            send(player, "must_select", "&cYou must select two points first.");
+            return;
+        }
+
+        Location l1 = selection.getL1();
+        Location l2 = selection.getL2();
+        if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null || !l1.getWorld().equals(l2.getWorld())) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_invalid", "&cYour selection must be complete and in a single world.");
+            return;
+        }
+
+        if (!l1.getWorld().getName().equalsIgnoreCase(plot.getWorld())) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_outside_plot", "&cThat selection must stay inside your current plot.");
+            return;
+        }
+
+        if (plot.getZones().size() >= maxZonesPerPlot()) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_limit_reached", "&cYou have reached the maximum number of zones for this plot.");
+            return;
+        }
+
+        int minX = Math.min(l1.getBlockX(), l2.getBlockX());
+        int minY = Math.min(l1.getBlockY(), l2.getBlockY());
+        int minZ = Math.min(l1.getBlockZ(), l2.getBlockZ());
+        int maxX = Math.max(l1.getBlockX(), l2.getBlockX());
+        int maxY = Math.max(l1.getBlockY(), l2.getBlockY());
+        int maxZ = Math.max(l1.getBlockZ(), l2.getBlockZ());
+
+        int footprint = ((maxX - minX) + 1) * ((maxZ - minZ) + 1);
+        if (footprint < minZoneArea()) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_too_small", "&cThat zone selection is too small.");
+            return;
+        }
+
+        if (!plot.containsZoneBounds(minX, minZ, maxX, maxZ)) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_outside_plot", "&cThat selection must stay inside your current plot.");
+            return;
+        }
+
+        String zoneName = plot.nextAvailableZoneName("Zone");
+        Zone zone = new Zone(plot, zoneName, minX, minY, minZ, maxX, maxY, maxZ);
+        if (plot.overlapsZone(zone, null)) {
+            plugin.effects().playError(player);
+            send(player, "zone_create_overlap", "&cThat selection overlaps an existing zone.");
+            return;
+        }
+
+        zone.setRentPrice(defaultRentPrice());
+        plot.addZone(zone);
+        plugin.store().savePlot(plot);
+        plugin.store().setDirty(true);
+        plugin.selection().clearSelection(player);
+        plugin.effects().playConfirm(player);
+        send(player, "zone_created", "&a✔ Zone ''{ZONE}'' created.".replace("{ZONE}", zoneName));
+    }
+
+    private int maxZonesPerPlot() {
+        return Math.max(1, plugin.getConfig().getInt("zoning.max_zones_per_plot", 10));
+    }
+
+    private int minZoneArea() {
+        return Math.max(1, plugin.getConfig().getInt("zoning.min_zone_area", 9));
+    }
+
+    private double defaultRentPrice() {
+        return Math.max(0.0D, plugin.getConfig().getDouble("zoning.default_rent_price", 100.0D));
+    }
+
+    private double rentPriceStep() {
+        return Math.max(1.0D, plugin.getConfig().getDouble("zoning.rent_price_step", 100.0D));
+    }
+
+    private boolean allowDeleteWhileRented() {
+        return plugin.getConfig().getBoolean("zoning.allow_delete_while_rented", false);
     }
 }

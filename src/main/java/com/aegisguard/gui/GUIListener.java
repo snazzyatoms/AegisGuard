@@ -11,6 +11,9 @@ import com.aegisguard.gui.BiomeGUI.BiomeHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
 import com.aegisguard.gui.InfoGUI.InfoHolder;
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
+import com.aegisguard.gui.LocalMarketGUI.LocalMarketHolder;
+import com.aegisguard.gui.MigrationAdminGUI.MigrationMainHolder;
+import com.aegisguard.gui.MigrationAdminGUI.MigrationPreviewHolder;
 import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
@@ -22,8 +25,13 @@ import com.aegisguard.gui.RolesGUI.RoleAddHolder;
 import com.aegisguard.gui.RolesGUI.RoleManageHolder;
 import com.aegisguard.gui.RolesGUI.RolesMenuHolder;
 import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
+import com.aegisguard.gui.StallBrowseGUI.StallListHolder;
+import com.aegisguard.gui.StallBrowseGUI.StallManageHolder;
+import com.aegisguard.gui.StallBrowseGUI.StallPreviewHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
+import com.aegisguard.gui.ZoneBrowseGUI.ZoneBrowseHolder;
+import com.aegisguard.gui.ZoneTenantGUI.ZoneTenantHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 
 import org.bukkit.ChatColor;
@@ -93,6 +101,14 @@ public class GUIListener implements Listener {
                 || holder instanceof ExpansionAdminHolder
                 || holder instanceof PlotStatusHolder
                 || holder instanceof ExchangeHolder
+                || holder instanceof MigrationMainHolder
+                || holder instanceof MigrationPreviewHolder
+                || holder instanceof ZoneBrowseHolder
+                || holder instanceof ZoneTenantHolder
+                || holder instanceof LocalMarketHolder
+                || holder instanceof StallListHolder
+                || holder instanceof StallManageHolder
+                || holder instanceof StallPreviewHolder
                 || holder instanceof SnapshotHolder;
     }
 
@@ -124,9 +140,7 @@ public class GUIListener implements Listener {
         // 1.2.6: block spammy / inventory-manipulation click types
         ClickType click = e.getClick();
         switch (click) {
-            case SHIFT_LEFT,
-                 SHIFT_RIGHT,
-                 NUMBER_KEY,
+            case NUMBER_KEY,
                  DOUBLE_CLICK,
                  SWAP_OFFHAND,
                  DROP,
@@ -188,11 +202,29 @@ public class GUIListener implements Listener {
         else if (holder instanceof ZoningHolder castHolder) {
             plugin.gui().zoning().handleClick(player, e, castHolder);
         }
+        else if (holder instanceof ZoneBrowseHolder castHolder) {
+            plugin.gui().zoneBrowse().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof ZoneTenantHolder castHolder) {
+            plugin.gui().zoneTenant().handleClick(player, e, castHolder);
+        }
         else if (holder instanceof BiomeHolder castHolder) {
             plugin.gui().biomes().handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotMarketHolder castHolder) {
             plugin.gui().market().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof LocalMarketHolder castHolder) {
+            plugin.gui().localMarket().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof StallListHolder castHolder) {
+            plugin.gui().stallBrowse().handleListClick(player, e, castHolder);
+        }
+        else if (holder instanceof StallManageHolder castHolder) {
+            plugin.gui().stallBrowse().handleManageClick(player, e, castHolder);
+        }
+        else if (holder instanceof StallPreviewHolder castHolder) {
+            plugin.gui().stallBrowse().handlePreviewClick(player, e, castHolder);
         }
         else if (holder instanceof PlotAuctionHolder castHolder) {
             plugin.gui().auction().handleClick(player, e, castHolder);
@@ -209,6 +241,16 @@ public class GUIListener implements Listener {
         else if (holder instanceof ExchangeHolder castHolder) {
             if (plugin.gui().exchange() != null) {
                 plugin.gui().exchange().handleClick(player, e, castHolder);
+            }
+        }
+        else if (holder instanceof MigrationMainHolder castHolder) {
+            if (plugin.gui().migration() != null) {
+                plugin.gui().migration().handleClick(player, e, castHolder);
+            }
+        }
+        else if (holder instanceof MigrationPreviewHolder castHolder) {
+            if (plugin.gui().migration() != null) {
+                plugin.gui().migration().handlePreviewClick(player, e, castHolder);
             }
         }
         else if (holder instanceof SnapshotHolder) {
@@ -430,12 +472,15 @@ public class GUIListener implements Listener {
         Object page = readHolderValue(holder, "getPage", "page", "getCurrentPage", "currentPage");
         Object plot = readHolderValue(holder, "getPlot", "plot", "getSelectedPlot", "selectedPlot");
         Object isAdmin = readHolderValue(holder, "isAdmin", "getAdmin", "admin", "isAdminView");
+        Object mode = readHolderValue(holder, "getMode", "mode");
 
         if (holder instanceof VisitHolder) {
-            if (!safeInvokeOpen(plugin.gui().visit(), player, page, isAdmin)) {
-                if (!safeInvokeOpen(plugin.gui().visit(), player, page, Boolean.FALSE)) {
-                    if (!safeInvokeOpen(plugin.gui().visit(), player, page)) {
-                        safeInvokeOpen(plugin.gui().visit(), player);
+            if (!safeInvokeOpen(plugin.gui().visit(), player, page, mode)) {
+                if (!safeInvokeOpen(plugin.gui().visit(), player, page, isAdmin)) {
+                    if (!safeInvokeOpen(plugin.gui().visit(), player, page, Boolean.FALSE)) {
+                        if (!safeInvokeOpen(plugin.gui().visit(), player, page)) {
+                            safeInvokeOpen(plugin.gui().visit(), player);
+                        }
                     }
                 }
             }
@@ -474,6 +519,24 @@ public class GUIListener implements Listener {
             if (!safeInvokeOpen(plugin.gui().zoning(), player, plot)) safeInvokeOpen(plugin.gui().zoning(), player);
             return;
         }
+        if (holder instanceof ZoneBrowseHolder) {
+            if (!safeInvokeOpen(plugin.gui().zoneBrowse(), player, plot)) safeInvokeOpen(plugin.gui().zoneBrowse(), player);
+            return;
+        }
+        if (holder instanceof ZoneTenantHolder castHolder) {
+            Object zoneName = readHolderValue(castHolder, "getZoneName", "zoneName");
+            Object zone = null;
+            if (plot instanceof com.aegisguard.data.Plot p && zoneName instanceof String zn) {
+                zone = p.getZone(zn);
+            }
+            if (zone != null && safeInvokeOpen(plugin.gui().zoneTenant(), player, plot, zone)) {
+                return;
+            }
+            if (!safeInvokeOpen(plugin.gui().zoneBrowse(), player, plot)) {
+                plugin.gui().openMain(player);
+            }
+            return;
+        }
         if (holder instanceof BiomeHolder) {
             if (!safeInvokeOpen(plugin.gui().biomes(), player, plot)) safeInvokeOpen(plugin.gui().biomes(), player);
             return;
@@ -481,6 +544,32 @@ public class GUIListener implements Listener {
 
         if (holder instanceof PlotMarketHolder) {
             if (!safeInvokeOpen(plugin.gui().market(), player, page)) safeInvokeOpen(plugin.gui().market(), player);
+            return;
+        }
+        if (holder instanceof LocalMarketHolder) {
+            if (!safeInvokeOpen(plugin.gui().localMarket(), player, plot)) safeInvokeOpen(plugin.gui().localMarket(), player);
+            return;
+        }
+        if (holder instanceof StallListHolder) {
+            if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot)) safeInvokeOpen(plugin.gui().localMarket(), player, plot);
+            return;
+        }
+        if (holder instanceof StallManageHolder castHolder) {
+            Object stallKey = readHolderValue(castHolder, "getStallKey", "stallKey");
+            if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot, stallKey)) {
+                if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot)) {
+                    safeInvokeOpen(plugin.gui().localMarket(), player, plot);
+                }
+            }
+            return;
+        }
+        if (holder instanceof StallPreviewHolder castHolder) {
+            Object stallKey = readHolderValue(castHolder, "getStallKey", "stallKey");
+            if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot, stallKey)) {
+                if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot)) {
+                    safeInvokeOpen(plugin.gui().localMarket(), player, plot);
+                }
+            }
             return;
         }
         if (holder instanceof PlotAuctionHolder) {
@@ -529,6 +618,9 @@ public class GUIListener implements Listener {
 
             if (page instanceof Number && third instanceof Boolean) {
                 attempts.add(new Object[]{p, ((Number) page).intValue(), (Boolean) third});
+            }
+            if (page instanceof Number && third != null && !(third instanceof Boolean)) {
+                attempts.add(new Object[]{p, ((Number) page).intValue(), third});
             }
             if (page instanceof Number) {
                 attempts.add(new Object[]{p, ((Number) page).intValue()});

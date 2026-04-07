@@ -1,102 +1,99 @@
 # ==============================================================================
-# 🛡️ AegisGuard v1.2.6 - Main Configuration
+# AegisGuard 1.2.6 - Main Configuration
 # ==============================================================================
-# This file controls how AegisGuard behaves on your server:
-# - Where and how claims are stored (YML vs SQL)
-# - How much things cost (claims, flags, biomes, cosmetics)
-# - Leveling, zoning, auctions, and more
+# This file is organized from core server setup to advanced gameplay systems.
 #
-# After editing, run:  /agadmin reload   or restart the server.
+# Recommended setup order:
+# 1. localization   - choose default and fallback languages
+# 2. hooks          - enable only the integrations your server actually uses
+# 3. storage        - choose YML or database-backed storage
+# 4. economy        - decide whether claims use Vault, ClaimBlocks, or both
+# 5. claims         - set claim limits, costs, and per-world behavior
+# 6. protections    - review default protection behavior inside plots
+# 7. group_plots    - configure shared groups, treasury, and starter claims
+# 8. upkeep         - enable only if you want recurring plot taxes
 #
-# ⚠️ YAML WARNING:
-# - Indentation matters (spaces only, no tabs).
-# - Inline maps like { key: value } are valid, but ONE missing space can break the file.
-# - If the server prints "InvalidConfigurationException", the config did not parse.
+# After editing, run /agadmin reload or restart the server.
+#
+# YAML tips:
+# - Use spaces only. Do not use tab characters.
+# - Keep indentation aligned exactly.
+# - If the server reports InvalidConfigurationException, the file did not parse.
 # ==============================================================================
 
 
 # ------------------------------------------------------------------------------
-# ✅ COMPAT (Older code paths may still read these)
+# Legacy compatibility values
 # ------------------------------------------------------------------------------
+# These are retained for older code paths and existing installations.
 prefix: '&8[&bAegisGuard&8]&r '
 
 language_styles:
-  # ✅ Optional but recommended: keep legacy default matching localization.default_language
+  # Keep this aligned with localization.default_language unless you are preserving
+  # an older installation that still references the legacy style selector.
   default: old_english
 
-  # Styles/languages allowed in older selectors
+  # Languages available to older selectors or compatibility code.
   available:
     - old_english
-    - hybrid_english
     - modern_english
     - spanish_mx
     - spanish_ar
 
 
 # ==============================================================================
-# 🌐 LOCALIZATION (Lang Primary + Codex Fallback)
+# Localization
 # ==============================================================================
-# What this does:
-# - Controls CodexEngine language system (per-player language + fallback behavior).
-# - Reads translations from /plugins/AegisGuard/lang/ first.
-# - Uses /plugins/AegisGuard/codex/ ONLY as fallback (legacy safety net).
+# Controls the primary language system and the legacy fallback bundle loader.
 localization:
   prefix: '&8[&bAegisGuard&8]&r '
 
-  # ✅ Primary language folder (split bundles expected):
-  # plugins/AegisGuard/lang/<style>/guis.yml
-  # plugins/AegisGuard/lang/<style>/system.yml
-  # plugins/AegisGuard/lang/<style>/upgrades.yml
-  # plugins/AegisGuard/lang/<style>/expansions.yml
+  # Main language folder inside plugins/AegisGuard/
   folder: "lang"
 
-  # ✅ Fallback folder (legacy codex.yml + core.yml + old single-file styles supported)
+  # Fallback folder for older codex-style single-file bundles
   fallback_folder: "codex"
 
-  # Default language used if a player has no preference set
+  # Language used when a player has not selected a personal language yet.
   default_language: old_english
 
-  # Fallback language used if the selected language is missing a key
+  # Language used if the selected language pack is missing a key.
   fallback_language: modern_english
 
-  # CodexEngine compatibility keys (some builds read *_style instead)
+  # Compatibility aliases used by older builds or selectors.
   default_style: old_english
   fallback_style: modern_english
 
-  # Language pack bundle files (merged in this order)
+  # Bundle files are loaded in this order and merged together.
   bundles:
     - guis.yml
     - system.yml
     - upgrades.yml
     - expansions.yml
 
-  # Languages that appear in your language selector GUI (if you have one)
+  # Languages available in language selectors.
   available_languages:
     - old_english
-    - hybrid_english
     - modern_english
     - spanish_mx
     - spanish_ar
 
-  # If true, AegisGuard attempts to copy default language files from the jar
-  # into /plugins/AegisGuard/<folder>/ on first run (or if missing).
-  #
-  # NOTE:
-  # Your CodexEngine already fails silently if a resource doesn't exist.
-  # The WARN spam you saw is coming from AegisGuard.java's installer logger,
-  # which we'll patch next to only extract resources that exist in the jar.
+  # If true, bundled language files will be copied into the plugin folder when
+  # they do not already exist on disk.
   extract_defaults: true
 
+  # Log missing translation keys to help pack authors fill gaps.
   debug_missing_keys: false
 
-  # Per-player language preferences stored here (UUID -> style id).
-  # (CodexEngine will auto-create this section if missing, but defining it keeps config tidy.)
+  # Per-player language preferences are stored here automatically.
   player_styles: {}
 
 
 # ==============================================================================
-# 🔌 PLUGIN HOOKS & INTEGRATIONS
+# Hooks and integrations
 # ==============================================================================
+# Disable integrations you do not use. That keeps startup cleaner and avoids
+# unnecessary hook checks on smaller servers.
 hooks:
   dynmap:
     enabled: true
@@ -127,6 +124,8 @@ hooks:
 
   protection_compat:
     enabled: true
+
+    # EXTERNAL_WINS is the safest mode when multiple protection plugins overlap.
     overlap_policy: EXTERNAL_WINS
     debug_logging: false
     plugins:
@@ -148,8 +147,10 @@ hooks:
 
 
 # ==============================================================================
-# 💾 DATA STORAGE
+# Storage
 # ==============================================================================
+# YML is easiest for small and medium servers.
+# Database storage is a better long-term fit for larger networks.
 storage:
   type: "yml"
 
@@ -164,8 +165,10 @@ storage:
 
 
 # ==============================================================================
-# 💱 CURRENCY MAPPING
+# Currency routing
 # ==============================================================================
+# These decide which economy backend each system prefers when multiple payment
+# methods exist.
 currencies:
   claiming: VAULT
   resizing: VAULT
@@ -176,26 +179,26 @@ currencies:
 
 
 # ==============================================================================
-# 💰 ECONOMY & PRICES
+# Economy and pricing
 # ==============================================================================
 economy:
   enabled: true
 
-  # Legacy / existing toggle used throughout the plugin
+  # Legacy master toggle still used in several existing code paths.
   use_vault: true
 
-  # NEW (Vault-aware control):
-  # - If false, AegisGuard behaves as if Vault does not exist (even if installed).
-  # - If true, AegisGuard may use Vault (if present) for any VAULT currency actions.
   vault:
+    # If false, AegisGuard ignores Vault even if it is installed.
     enabled: true
 
-    # If Vault is disabled or missing, and an action supports blocks,
-    # AegisGuard can fall back to claim block progression automatically.
+    # If true, systems that support ClaimBlocks can fall back to them when Vault
+    # is missing or disabled.
     fallback_to_blocks: true
 
+  # Legacy flat claim cost used when fair_pricing.enabled is false.
   claim_cost: 100.0
 
+  # Example item-based price hook if you want some systems to consume items.
   item_cost:
     type: DIAMOND
     amount: 5
@@ -209,82 +212,41 @@ economy:
   refund_on_unclaim: true
   refund_percent: 50.0
 
-  # ----------------------------------------------------------------------------
-  # 💰 FAIR INITIAL PRICING (v1.2.5+)
-  # ----------------------------------------------------------------------------
-  # Revamps pricing so creating a massive initial claim doesn't bypass costs.
-  #
-  # OLD MODEL (flat):
-  #   - Any claim costs $100 regardless of size
-  #   - Players could claim huge areas cheaply, then expansion was expensive
-  #
-  # NEW MODEL (fair):
-  #   - Base cost covers 1 chunk (256 blocks)
-  #   - Extra blocks beyond that chunk = expansion rate per block
-  #
-  # FORMULA:
-  #   totalCost = base_cost + max(0, area - base_area) * expansion_rate_per_block
-  #
-  # EXAMPLES (with defaults below):
-  #   - Claim 256 blocks (1 chunk):   $100 + $0     = $100
-  #   - Claim 512 blocks (2 chunks):  $100 + $2,560 = $2,660
-  #   - Claim 1024 blocks (4 chunks): $100 + $7,680 = $7,780
-  #   - Claim 4096 blocks (1 plot):   $100 + $38,400 = $38,500
-  #
-  # This creates a natural progression where players start small and expand,
-  # rather than grabbing massive territory immediately for cheap.
-  # ----------------------------------------------------------------------------
+  # Fair pricing prevents oversized starter claims from being too cheap.
   fair_pricing:
-    # Master toggle for the fair pricing system
-    # If false, uses legacy flat claim_cost for all claims
     enabled: true
 
-    # Base cost covers up to base_area blocks (default: 1 chunk = 256)
-    # This is the minimum you pay for any claim
+    # Minimum claim cost before extra area charges apply.
     base_cost: 100.0
 
-    # How many blocks the base_cost covers (default: 16x16 = 256 = 1 chunk)
-    # Claims at or under this size pay only base_cost
+    # Area covered by the base cost. 256 = one chunk.
     base_area: 256
 
-    # Cost per additional block BEYOND base_area
-    # Uses resize_cost_per_block as default if not set
+    # Price per block beyond base_area.
     expansion_rate_per_block: 10.0
 
-    # If true: claims smaller than base_area pay proportionally less
-    # If false: any claim pays at least base_cost (recommended)
-    # Example with true: 128 blocks = $50 (half of base_cost)
-    # Example with false: 128 blocks = $100 (full base_cost)
+    # If true, claims smaller than base_area pay proportionally less.
     scale_base_with_area: false
 
-    # Minimum cost floor (prevents $0 claims if scale_base_with_area is true)
+    # Prevents tiny claims from becoming effectively free.
     minimum_cost: 10.0
 
-    # --------------------------------------------------------------------------
-    # CLAIM BLOCK INTEGRATION (if using claim blocks instead of Vault money)
-    # --------------------------------------------------------------------------
-    # Multiplier for claim blocks when area exceeds base_area
-    # 1.0 = no multiplier (1 block = 1 claim block, as usual)
-    # 1.5 = excess blocks cost 50% more claim blocks
-    # 2.0 = excess blocks cost double claim blocks
-    #
-    # Example with 1.5 multiplier, claiming 1000 blocks:
-    #   Base area: 256 claim blocks
-    #   Extra: (1000 - 256) * 1.5 = 1116 claim blocks
-    #   Total: 256 + 1116 = 1372 claim blocks
+    # ClaimBlock multiplier for area beyond base_area.
     claimblock_multiplier: 1.0
 
 
 # ==============================================================================
-# 🧱 CLAIMS & PER-WORLD RULES
+# Claims and per-world rules
 # ==============================================================================
 claims:
+  # Global personal claim limits.
   max_claims_per_player: 2
   min_radius: 5
   max_radius: 64
   max_area: 16000
   preview_seconds: 10
 
+  # Wand behavior.
   consume_wand_on_claim: true
   admin_keep_wand: true
 
@@ -298,6 +260,7 @@ claims:
     allow_home_teleport: true
     allow_visit_teleport: true
 
+  # World-specific overrides. Omit a value to inherit the global default.
   per_world:
     world:
       allow_claims: true
@@ -317,11 +280,12 @@ claims:
 
 
 # ==============================================================================
-# 🧱 CLAIM BLOCK ECONOMY (v1.2.4+) + EXCHANGE (v1.2.5)
+# ClaimBlocks economy
 # ==============================================================================
 claim_blocks:
   enabled: true
 
+  # Starting balance for new players.
   starting_blocks: 500
 
   first_claim_limit:
@@ -335,67 +299,58 @@ claim_blocks:
       blocks_per_interval: 50
       notify: true
 
-      # Anti-AFK system to prevent idle players from earning blocks
       anti_afk:
-        # Master toggle for anti-AFK detection
         enabled: true
 
-        # Minimum active time (in seconds) required during each interval to earn blocks
-        # Example: With 10 min intervals and 300 sec requirement, players must be active
-        # for at least 5 minutes out of every 10 to earn blocks
+        # Players must be active for this many seconds during each payout window.
         required_activity_seconds: 300
 
-        # Consider player AFK after this many minutes of no activity
-        # Players marked AFK will not earn blocks until they become active again
+        # Players become AFK after this many minutes of inactivity.
         afk_timeout_minutes: 5
 
-        # What counts as "activity" for anti-AFK detection
-        track_movement: true       # Walking, running, flying, swimming
-        track_interactions: true   # Block breaking, placing, interactions
-        track_combat: true         # Attacking entities/players
+        # Activity sources used by the anti-AFK tracker.
+        track_movement: true
+        track_interactions: true
+        track_combat: true
 
     level_up:
       enabled: true
       per_level: 600
 
-  # ==============================================================================
-  # 💱 CLAIMBLOCKS EXCHANGE (v1.2.5)
-  # ==============================================================================
-  # Buy / Sell ClaimBlocks using Vault money (with anti-abuse controls).
-  #
+    # Players may opt out of passive playtime ClaimBlock rewards.
+    player_opt_out_allowed: true
+
+  # ---------------------------------------------------------------------------
+  # ClaimBlocks exchange
+  # ---------------------------------------------------------------------------
   # Profiles:
-  # - safe_small     = safest defaults for small/new servers
-  # - balanced_mid   = recommended default for most servers
-  # - fast_large     = higher throughput for large servers
-  # - custom         = use the values in this section directly (ignore profiles)
+  # - safe_small   : cautious defaults for newer or smaller servers
+  # - balanced_mid : recommended default for most servers
+  # - fast_large   : higher throughput for busy servers
+  # - custom       : use the values in this section directly
   #
-  # Requires:
+  # Requirements:
   # - economy.use_vault = true
   # - economy.vault.enabled = true
-  # - Vault installed + an Economy provider (EssentialsX, CMI, etc.)
+  # - Vault plus an economy provider
   exchange:
     enabled: true
 
-    # safe_small | balanced_mid | fast_large | custom
     profile: safe_small
 
-    # Prevent "free exchange" when Vault exists but no economy provider is active.
-    # (Relies on VaultHook being able to detect provider presence.)
+    # Prevent exchange access when Vault is present but no economy provider exists.
     require_vault_provider: true
 
-    # Optional gate: allow buy for everyone but restrict sell to a permission
     sell_requires_permission:
       enabled: false
       permission: "aegis.claimblocks.sell"
 
-    # Optional: restrict exchange to certain worlds only
     worlds_allowed:
       enabled: false
       worlds:
         - world
         - world_nether
 
-    # Permissions used by commands/GUI
     permissions:
       exchange: "aegis.claimblocks.exchange"
       buy: "aegis.claimblocks.buy"
@@ -403,12 +358,10 @@ claim_blocks:
       bypass_limits: "aegis.claimblocks.exchange.bypass"
       bypass_sell_lock: "aegis.claimblocks.selllock.bypass"
 
-    # Live rates (used when profile: custom OR as fallback if a profile omits a key)
     rates:
       buy_price_per_block: 10.0
       sell_price_per_block: 6.0
 
-    # Anti-abuse limits (cooldown + hourly trade limit + daily caps)
     limits:
       cooldown_seconds: 10
       max_trades_per_hour: 30
@@ -417,15 +370,14 @@ claim_blocks:
         min_blocks: 1
         max_blocks_per_trade: 5000
         max_blocks_per_day: 25000
-        max_money_per_day: 0.0   # 0 = disabled
+        max_money_per_day: 0.0
 
       sell:
         min_blocks: 1
         max_blocks_per_trade: 5000
         max_blocks_per_day: 15000
-        max_money_per_day: 0.0   # 0 = disabled
+        max_money_per_day: 0.0
 
-    # Fees (money sink) to discourage arbitrage/abuse
     fees:
       buy:
         percent: 2.5
@@ -434,20 +386,16 @@ claim_blocks:
         percent: 5.0
         flat: 0.0
 
-    # Sell-lock: prevents instant flip (buy -> sell)
     sell_lock:
       enabled: true
       hold_minutes: 30
-      scope: EXCHANGE_PURCHASED_ONLY  # EXCHANGE_PURCHASED_ONLY | ALL
-      max_locked_blocks: 0            # 0 = unlimited
+      scope: EXCHANGE_PURCHASED_ONLY
+      max_locked_blocks: 0
 
     audit:
       enabled: true
       log_to_console: true
 
-    # --------------------------------------------------------------------------
-    # PRESET PROFILES (used when profile != custom)
-    # --------------------------------------------------------------------------
     profiles:
       safe_small:
         rates:
@@ -529,68 +477,85 @@ claim_blocks:
 
 
 # ==============================================================================
-# 📸 CLAIM SNAPSHOTS (ROLLBACK SYSTEM)
+# Group plots
 # ==============================================================================
-# Snapshots capture plot state before risky operations (expansions, merges).
-# Admins can rollback plots to previous states via the Admin GUI.
-#
-# Data stored in: plugins/AegisGuard/claim-snapshots.yml
-snapshots:
-  # Master toggle for the snapshot system
+group_plots:
   enabled: true
 
-  # Maximum number of snapshots to keep in memory/storage
-  # Oldest snapshots are pruned when this limit is exceeded
+  # Invites are intentionally local so players cannot mass-invite random users.
+  invite_max_distance: 32.0
+
+  # Minimum number of starter-eligible members required before a group can claim.
+  min_members_to_claim: 2
+
+  # Groups larger than this do not receive the free starter size bonus.
+  max_members_for_free_bonus: 5
+
+  starter:
+    # 625 = 25 x 25 worth of area.
+    base_area: 625
+
+    # Additional free starter area per eligible member after the first.
+    area_per_member: 225
+
+    # Hard cap for the free starter area.
+    max_area: 2500
+
+    # Members must remain in the group this long before counting for free size.
+    member_age_minutes: 30
+
+    # Prevents leaders from instantly removing members after using starter sizing.
+    removal_lock_minutes: 120
+
+  economy:
+    # Paid group claims use the shared treasury at this per-block rate.
+    cost_per_block: 1.0
+
+  notifications:
+    enabled: true
+
+    # Warn group members when treasury balance reaches or drops below this value.
+    low_treasury_threshold: 250.0
+
+
+# ==============================================================================
+# Claim snapshots and rollback
+# ==============================================================================
+# Snapshot data is stored in plugins/AegisGuard/claim-snapshots.yml
+snapshots:
+  enabled: true
+
+  # Maximum snapshots kept in storage before older entries are pruned.
   max_snapshots: 100
 
-  # How long to keep snapshots (in minutes)
-  # 10080 = 7 days, 1440 = 1 day, 0 = keep forever (only max_snapshots applies)
+  # Retention time in minutes. Set to 0 to keep snapshots until pruned by count.
   keep_minutes: 10080
 
-  # Automatic snapshot triggers
   auto_snapshot:
-    # Create snapshot before plot expansions are applied
     before_expansion: true
-
-    # Create snapshot before plot merges are applied
     before_merge: true
 
-  # Admin GUI settings for snapshot viewer
   admin_gui:
-    # Show snapshot age in human-readable format (e.g., "2d 5h" instead of timestamp)
     human_readable_age: true
-
-    # Items per page in the snapshot browser
     items_per_page: 45
 
-  # Console logging
   logging:
-    # Log snapshot creation to console
     log_create: true
-
-    # Log snapshot rollbacks to console
     log_rollback: true
-
-    # Log snapshot deletions to console
     log_delete: true
 
 
 # ==============================================================================
-# 📐 LAND EXPANSIONS (REQUESTS)
+# Expansion requests
 # ==============================================================================
 expansions:
-  # Approval mode for expansion requests:
-  # - QUEUE: players submit a request, admins approve/deny in the Admin GUI
-  # - INSTANT: requests are auto-approved immediately (still recorded for audit)
+  # QUEUE = admin approval required
+  # INSTANT = auto-approved and recorded for audit
   approval_mode: QUEUE
 
-  # Snapshot integration for expansions
-  # When enabled, a PRE_EXPANSION snapshot is created before applying any expansion
-  # This allows admins to rollback expansions that cause issues
   snapshots:
     enabled: true
 
-  # Optional audit trail controls (used by admin GUI / logs)
   audit:
     enabled: true
     keep_recent_minutes: 60
@@ -599,13 +564,29 @@ expansions:
     log_to_console: true
     max_entries: 250
 
-  # Admin notification settings (for INSTANT mode)
   approval:
-    # Notify admins when an expansion is auto-approved (INSTANT mode only)
     notify_admins: true
-
-    # Permission required to receive auto-approval notifications
     notify_permission: "aegis.admin"
+
+    auto_when_no_reviewers:
+      # If true, QUEUE mode can auto-approve valid requests only when no eligible
+      # reviewers are online. Every unattended approval is still written to audit
+      # history so staff can review it later in the admin GUI.
+      enabled: false
+
+      # Minimum number of eligible reviewers that must be online before requests
+      # stay in the normal queue. If the online reviewer count is lower than this,
+      # AegisGuard may use unattended approval.
+      minimum_online_reviewers: 1
+
+      # Permission used to count a player as an eligible reviewer. Admins detected
+      # by the plugin are still treated as reviewers even if this permission is blank.
+      reviewer_permission: "aegis.admin"
+
+      # Optional safeguards for unattended approvals.
+      # Set either value to 0 to disable that specific limit.
+      max_cost: 0.0
+      max_added_blocks: 0
 
   cost_per_block: 10.0
   cost_multiplier: 1.1
@@ -614,21 +595,111 @@ expansions:
 
 
 # ==============================================================================
-# 🏗️ ZONING (SUB-CLAIMS / RENTABLE ROOMS)
+# Zoning
 # ==============================================================================
 zoning:
   enabled: true
   max_zones_per_plot: 10
+  min_zone_area: 9
+  default_rent_price: 100.0
+  rent_price_step: 50.0
+  default_rental_days: 7
+  allow_delete_while_rented: false
   landlord_gets_full_rent: true
 
 
 # ==============================================================================
-# 📈 PLOT LEVELING (RPG ASCENSION)
+# Local Market Hub
+# ==============================================================================
+market_hub:
+  # When true, the main Market button opens the plot's local market hub first
+  # whenever the player is standing in a plot that has rentals, shop access, or
+  # linked external market integrations. Players can still use /ag market global.
+  prefer_local_when_in_plot: true
+
+  # Allows ordinary player plots to expose local market tools, not just
+  # designated server market zones.
+  allow_home_markets: true
+
+  # If true, external bridge buttons only become usable when the plot has
+  # Shop Interact enabled in the Plot Flags GUI.
+  require_shop_flag_for_external_bridges: true
+
+  external_bridges:
+    enabled: true
+
+    # Optional third-party market/shop integrations.
+    # These do not hard-depend on any one plugin API. Instead, AegisGuard checks
+    # whether the named plugin is installed and then opens the configured command
+    # from the local market hub.
+    #
+    # Supported placeholders inside commands:
+    # {player} {plot_owner} {plot_name} {plot_id} {world} {x} {y} {z}
+    #
+    # Prefix commands with:
+    # - player:  run as the clicking player
+    # - console: run from console
+    #
+    # Example:
+    # entries:
+    #   quickshop:
+    #     plugin: "QuickShop"
+    #     display_name: "&aQuickShop"
+    #     icon: "CHEST"
+    #     requires_shop_flag: true
+    #     lore:
+    #       - "&7Open QuickShop tools for"
+    #       - "&7this plot."
+    #     commands:
+    #       - "player:qs find"
+    entries: {}
+
+
+# ==============================================================================
+# TradeStalls
+# ==============================================================================
+market_stalls:
+  # Enables built-in TradeStalls for local market plots.
+  enabled: true
+
+  integration:
+    # How AegisGuard should behave when external market/shop bridges are active.
+    #
+    # COEXIST:
+    #   TradeStalls and external bridges can both be used together.
+    #
+    # DISABLE_ON_BRIDGED_PLOTS:
+    #   If a plot has an active external market bridge, TradeStalls are hidden
+    #   and blocked on that plot so the external plugin takes priority there.
+    #
+    # DISABLE_GLOBALLY_IF_EXTERNAL_AVAILABLE:
+    #   If any configured external bridge plugin is installed, TradeStalls are
+    #   disabled server-wide until that external integration is removed.
+    mode: COEXIST
+
+  # Require the plot's Shop Interact flag before public stall browsing works.
+  require_shop_flag: true
+
+  # Allow players renting a sub-zone to register a stall inside their rented
+  # space without needing full plot ownership.
+  allow_zone_renters: true
+
+  currencies:
+    vault_enabled: true
+    claim_blocks_enabled: true
+    default: VAULT
+
+  pricing:
+    default_bundle_size: 1
+    max_bundle_size: 64
+
+
+# ==============================================================================
+# Plot leveling
 # ==============================================================================
 leveling:
   enabled: true
 
-  # Money upgrades (Vault or other economy types)
   base_cost: 1000.0
   cost_multiplier: 1.5
   max_level: 30
@@ -636,26 +707,17 @@ leveling:
   expand_plot_on_levelup: false
   expansion_amount: 5
 
-  # ---------------------------------------------------------------------------
-  # ✅ NEW: UPGRADE PAYMENT METHODS (Vault-aware + blocks alternative)
-  # ---------------------------------------------------------------------------
   upgrades:
-    # If true and Vault is available/enabled, the GUI can show a "Pay Money" button.
+    # Show a Vault-money upgrade option when supported.
     allow_vault_payment: true
 
-    # If true, the GUI can show a "Spend Blocks" button using claim_blocks currency.
+    # Show a ClaimBlocks upgrade option when supported.
     allow_block_payment: true
 
-    # If Vault is missing/disabled (or economy.use_vault = false, or economy.vault.enabled = false),
-    # AegisGuard should hide/disable the money option and fall back to blocks.
+    # If Vault is unavailable, use ClaimBlocks where possible.
     fallback_to_blocks_if_vault_unavailable: true
 
-    # OPTION A (best control): explicit per-level block cost.
-    # These values represent the block price to upgrade INTO that level.
-    # Example: blocks_costs.2 is the cost to go from Level 1 -> Level 2.
-    #
-    # Formula used to generate this table (for reference only):
-    # cost = (250 * level^2) - 250
+    # Cost to upgrade into each level using ClaimBlocks.
     blocks_costs:
       2: 750
       3: 2000
@@ -782,7 +844,7 @@ leveling:
 
 
 # ==============================================================================
-# 💸 PLOT UPKEEP (RENT-LIKE TAX)
+# Plot upkeep
 # ==============================================================================
 upkeep:
   enabled: false
@@ -790,9 +852,15 @@ upkeep:
   cost_per_plot: 50.0
   grace_period_days: 7
 
+  # If true, plots can be unclaimed automatically after failed payments and grace.
+  unclaim_on_fail: false
+
+  notifications:
+    enabled: true
+
 
 # ==============================================================================
-# ⚖️ AUCTIONS
+# Auctions
 # ==============================================================================
 auction:
   duration_days: 3
@@ -801,7 +869,7 @@ auction:
 
 
 # ==============================================================================
-# 🌲 WILDERNESS REVERT
+# Wilderness revert
 # ==============================================================================
 wilderness_revert:
   enabled: true
@@ -811,11 +879,12 @@ wilderness_revert:
 
 
 # ==============================================================================
-# ⚙️ PROTECTION DEFAULTS & FLAGS
+# Default claim protections and flags
 # ==============================================================================
+# These are the defaults applied to newly created plots unless changed later.
 protections:
-  pvp_protection: true
-  no_mobs_in_claims: true
+  pvp_protection: true     # Prevent PvP inside plots by default.
+  no_mobs_in_claims: true  # Suppress hostile mob presence in claims where supported.
   container_protection: true
   pets_protection: true
   entities_protection: true
@@ -824,13 +893,14 @@ protections:
   fire-spread: true
   piston-use: true
 
+  # Plot flag defaults.
   fly: false
   entry: true
   shop-interact: false
 
 
 # ==============================================================================
-# 🛡️ ACTIVE MOB BARRIER
+# Active mob barrier
 # ==============================================================================
 mob_barrier:
   enabled: true
@@ -839,7 +909,7 @@ mob_barrier:
 
 
 # ==============================================================================
-# 🎨 COSMETICS (PARTICLES & ENTRY EFFECTS)
+# Cosmetics
 # ==============================================================================
 cosmetics:
   border_particles:
@@ -871,44 +941,40 @@ cosmetics:
 
 
 # ==============================================================================
-# 🔮 VISUAL TITLES & NOTIFICATIONS
+# Entry and exit notifications
 # ==============================================================================
 titles:
-
-
-  # Claim entry/exit notifications (welcome/farewell title/subtitle + optional chat).
-  # Server owners can disable these server-wide, or restrict them to certain groups via permissions.
-
   claim_enter_exit:
     enabled: true
-    # Modes: PER_PLAYER (default), FORCE_ON, FORCE_OFF
+
+    # Modes: PER_PLAYER, FORCE_ON, FORCE_OFF
     mode: PER_PLAYER
 
-    # If set, only players with this permission will receive the enter/exit notifications.
-    # Leave blank to allow everyone (subject to mode + player toggles).
+    # Leave blank to allow everyone, or set a permission to restrict access.
     required_permission: ''
 
-    # Players can toggle their own notifications with /ag notify (if mode is PER_PLAYER).
+    # Players may toggle their own setting only when mode is PER_PLAYER.
     allow_player_toggle: true
     default_player_setting: true
     toggle_permission: 'aegis.notify'
 
-    # Users with this permission will still receive notifications even if mode is FORCE_OFF.
+    # Players with this permission still receive notices when mode is FORCE_OFF.
     bypass_permission: 'aegis.notify.bypass'
 
     show_titles: true
     show_chat: true
-
     show_enter: true
     show_exit: true
 
-    # Title timing (ticks: 20 ticks = 1 second)
+    # Timing values use ticks. 20 ticks = 1 second.
     notification_location: ACTION_BAR
     fade_in: 10
     stay: 40
     fade_out: 10
+
+
 # ==============================================================================
-# 🆘 UNSTUCK COMMAND
+# Unstuck command
 # ==============================================================================
 unstuck:
   enabled: true
@@ -917,7 +983,7 @@ unstuck:
 
 
 # ==============================================================================
-# 🌿 BIOME CHANGING (BIOME GUI)
+# Biome changing
 # ==============================================================================
 biomes:
   enabled: true
@@ -937,7 +1003,7 @@ biomes:
 
 
 # ==============================================================================
-# 👍 SOCIAL (LIKES / RATING)
+# Social features
 # ==============================================================================
 social:
   likes_enabled: true
@@ -945,7 +1011,7 @@ social:
 
 
 # ==============================================================================
-# 🧩 ADMIN OPTIONS & SENTINEL'S SCEPTER
+# Admin tools and staff access
 # ==============================================================================
 admin:
   auto_remove_banned: false
@@ -963,11 +1029,22 @@ admin:
       - "&eRight-Click: &fSelect Pos 1"
       - "&eLeft-Click: &fSelect Pos 2"
       - " "
-      - "&c⚠ Creates SERVER ZONES directly."
+      - "&cCreates server zones directly."
+
+staff_access:
+  # Any permission in one of these lists grants the matching elevated access.
+  global_manage_permissions:
+    - "aegis.admin.manage"
+  server_zone_manage_permissions:
+    - "aegis.serverzone.manage"
+    - "aegis.staff.co_owner"
+  market_plot_manage_permissions:
+    - "aegis.market.manage"
+    - "aegis.staff.market_steward"
 
 
 # ==============================================================================
-# 🔊 SOUND SCHEME
+# Sound scheme
 # ==============================================================================
 sounds:
   global_enabled: true
@@ -1010,7 +1087,7 @@ sounds:
 
 
 # ==============================================================================
-# 💥 PROTECTION FEEDBACK (DENY EFFECTS)
+# Protection deny feedback
 # ==============================================================================
 protection_effects:
   enabled: true
@@ -1042,12 +1119,12 @@ protection_effects:
 
 
 # ==============================================================================
-# 👥 ROLE MANAGEMENT
-# - icon: Material name used in GUIs (RolesGUI / Permissions views)
-# - display: optional friendly display name used by GUIs (color codes supported)
-# - priority: sorting weight (higher = more powerful)
-# - permissions: your existing role permission list (unchanged)
+# Role management
 # ==============================================================================
+# icon       : Material shown in GUIs
+# name       : Display name shown to players
+# priority   : Higher values represent stronger roles
+# permissions: Internal role capabilities used by AegisGuard
 roles:
   owner:
     name: "&cOwner"
@@ -1114,5 +1191,3 @@ roles:
     icon: OAK_DOOR
     priority: 10
     permissions: ["INTERACT"]
-
-

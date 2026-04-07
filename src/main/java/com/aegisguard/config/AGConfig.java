@@ -124,6 +124,24 @@ public class AGConfig {
         config.addDefault("claim_blocks.first_claim_limit.enabled", true);
         config.addDefault("claim_blocks.first_claim_limit.max_area", 2500L); // 50x50 default cap
 
+        // Group plots (1.2.6+)
+        config.addDefault("group_plots.enabled", true);
+        config.addDefault("group_plots.invite_max_distance", 32.0D);
+        config.addDefault("group_plots.min_members_to_claim", 2);
+        config.addDefault("group_plots.max_members_for_free_bonus", 5);
+        config.addDefault("group_plots.starter.base_area", 625);
+        config.addDefault("group_plots.starter.area_per_member", 225);
+        config.addDefault("group_plots.starter.max_area", 2500);
+        config.addDefault("group_plots.starter.member_age_minutes", 30L);
+        config.addDefault("group_plots.starter.removal_lock_minutes", 120L);
+        config.addDefault("group_plots.economy.cost_per_block", 1.0D);
+
+        // Local market hub / external shop bridges
+        config.addDefault("market_hub.prefer_local_when_in_plot", true);
+        config.addDefault("market_hub.allow_home_markets", true);
+        config.addDefault("market_hub.require_shop_flag_for_external_bridges", true);
+        config.addDefault("market_hub.external_bridges.enabled", true);
+
         // -------------------------------
         // Tiny migration helper
         // -------------------------------

@@ -79,6 +79,8 @@ public class MigrationManager {
         public boolean importFlags = true;       // Import flag settings
         public String worldFilter = null;        // Only import from specific world (null = all)
         public UUID ownerFilter = null;          // Only import specific owner's claims (null = all)
+        public Integer focusX = null;            // Optional exact-claim targeting from migration wand
+        public Integer focusZ = null;
     }
 
     // Migration result
@@ -90,6 +92,15 @@ public class MigrationManager {
         public int skippedFiltered = 0;
         public List<String> errors = new ArrayList<>();
         public long durationMs = 0;
+        public String focusedOwnerName;
+        public String focusedWorld;
+        public Integer focusedX1;
+        public Integer focusedZ1;
+        public Integer focusedX2;
+        public Integer focusedZ2;
+        public String focusedName;
+        public int focusedTrustedCount = 0;
+        public int focusedFlagCount = 0;
 
         public String getSummary() {
             StringBuilder sb = new StringBuilder();
@@ -118,12 +129,19 @@ public class MigrationManager {
         UUID sourceId;
         UUID ownerUUID;
         String ownerName;
+        String sourcePlugin;
+        String sourceLabel;
         String world;
         int x1, z1, x2, z2;
         Map<UUID, String> trusted = new HashMap<>();      // UUID -> role
         Map<String, Boolean> flags = new HashMap<>();
         String welcomeMessage;
         String farewellMessage;
+        String entryTitle;
+        String entrySubtitle;
+        String plotName;
+        String description;
+        String plotStatus;
     }
 
     public MigrationManager(AegisGuard plugin) {
@@ -222,6 +240,13 @@ public class MigrationManager {
                         result.skippedFiltered++;
                         continue;
                     }
+
+                    if (!matchesFocusedLocation(claim, options)) {
+                        result.skippedFiltered++;
+                        continue;
+                    }
+
+                    captureFocusedSummary(result, claim, options);
 
                     // Check for overlap
                     boolean overlaps = plugin.store().isAreaOverlapping(
@@ -350,10 +375,14 @@ public class MigrationManager {
                     claim.ownerUUID = UUID.fromString(ownerStr);
                     claim.ownerName = Bukkit.getOfflinePlayer(claim.ownerUUID).getName();
                     if (claim.ownerName == null) claim.ownerName = "Unknown";
+                    claim.sourcePlugin = SourcePlugin.GRIEFPREVENTION.name();
+                    claim.sourceLabel = SourcePlugin.GRIEFPREVENTION.getDisplayName();
                 } catch (IllegalArgumentException e) {
                     // It's a player name, need to look up UUID
                     claim.ownerName = ownerStr;
                     claim.ownerUUID = Bukkit.getOfflinePlayer(ownerStr).getUniqueId();
+                    claim.sourcePlugin = SourcePlugin.GRIEFPREVENTION.name();
+                    claim.sourceLabel = SourcePlugin.GRIEFPREVENTION.getDisplayName();
                 }
 
                 // Parse coordinates
@@ -389,6 +418,12 @@ public class MigrationManager {
                         }
                     }
                 }
+
+                claim.plotName = cfg.getString("Name");
+                claim.description = cfg.getString("Description");
+                claim.welcomeMessage = cfg.getString("Greeting");
+                claim.farewellMessage = cfg.getString("Farewell");
+                claim.plotStatus = "ACTIVE";
 
                 // Generate source ID from filename
                 String fileName = file.getName().replace(".yml", "");
@@ -428,9 +463,13 @@ public class MigrationManager {
                             claim.ownerUUID = UUID.fromString(ownerStr);
                             claim.ownerName = Bukkit.getOfflinePlayer(claim.ownerUUID).getName();
                             if (claim.ownerName == null) claim.ownerName = "Unknown";
+                            claim.sourcePlugin = SourcePlugin.GRIEFPREVENTION.name();
+                            claim.sourceLabel = SourcePlugin.GRIEFPREVENTION.getDisplayName();
                         } catch (IllegalArgumentException e) {
                             claim.ownerName = ownerStr;
                             claim.ownerUUID = Bukkit.getOfflinePlayer(ownerStr).getUniqueId();
+                            claim.sourcePlugin = SourcePlugin.GRIEFPREVENTION.name();
+                            claim.sourceLabel = SourcePlugin.GRIEFPREVENTION.getDisplayName();
                         }
 
                         // Parse corners
@@ -464,6 +503,7 @@ public class MigrationManager {
                         claim.sourceId = UUID.nameUUIDFromBytes(
                                 (claim.world + claim.x1 + claim.z1).getBytes()
                         );
+                        claim.plotStatus = "ACTIVE";
 
                         claims.add(claim);
 
@@ -603,6 +643,8 @@ public class MigrationManager {
             claim.ownerUUID = UUID.fromString(ownerMatch);
             claim.ownerName = Bukkit.getOfflinePlayer(claim.ownerUUID).getName();
             if (claim.ownerName == null) claim.ownerName = "Unknown";
+            claim.sourcePlugin = SourcePlugin.GRIEFDEFENDER.name();
+            claim.sourceLabel = SourcePlugin.GRIEFDEFENDER.getDisplayName();
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -635,6 +677,11 @@ public class MigrationManager {
         parseGDTrusted(content, "builders", claim, "member");
         parseGDTrusted(content, "containers", claim, "member");
         parseGDTrusted(content, "managers", claim, "trusted");
+        claim.plotName = extractHoconValue(content, "name");
+        claim.welcomeMessage = extractHoconValue(content, "greeting");
+        claim.entryTitle = extractHoconValue(content, "greeting-title");
+        claim.entrySubtitle = extractHoconValue(content, "greeting-subtitle");
+        claim.plotStatus = "ACTIVE";
 
         return claim;
     }
@@ -711,6 +758,8 @@ public class MigrationManager {
                             claim.ownerUUID = UUID.fromString(rs.getString("owner_uuid"));
                             claim.ownerName = Bukkit.getOfflinePlayer(claim.ownerUUID).getName();
                             if (claim.ownerName == null) claim.ownerName = "Unknown";
+                            claim.sourcePlugin = SourcePlugin.GRIEFDEFENDER.name();
+                            claim.sourceLabel = SourcePlugin.GRIEFDEFENDER.getDisplayName();
 
                             claim.world = rs.getString("world_uuid");
                             // GD may store world UUID, need to convert
@@ -723,6 +772,7 @@ public class MigrationManager {
                             claim.z2 = rs.getInt("greater_z");
 
                             claim.sourceId = UUID.fromString(rs.getString("uuid"));
+                            claim.plotStatus = "ACTIVE";
 
                             claims.add(claim);
 
@@ -837,6 +887,8 @@ public class MigrationManager {
                     MigrationClaim claim = new MigrationClaim();
                     claim.ownerUUID = ownerUUID;
                     claim.ownerName = ownerName;
+                    claim.sourcePlugin = SourcePlugin.LANDS.name();
+                    claim.sourceLabel = SourcePlugin.LANDS.getDisplayName();
                     claim.world = entry.getKey();
                     claim.x1 = entry.getValue()[0];
                     claim.z1 = entry.getValue()[1];
@@ -874,8 +926,11 @@ public class MigrationManager {
                     }
 
                     // Messages
+                    claim.plotName = cfg.getString("name");
+                    claim.description = cfg.getString("title");
                     claim.welcomeMessage = cfg.getString("enter-message");
                     claim.farewellMessage = cfg.getString("leave-message");
+                    claim.plotStatus = "ACTIVE";
 
                     claims.add(claim);
                 }
@@ -955,6 +1010,23 @@ public class MigrationManager {
         if (claim.farewellMessage != null && !claim.farewellMessage.isEmpty()) {
             plot.setFarewellMessage(claim.farewellMessage);
         }
+        if (claim.entryTitle != null && !claim.entryTitle.isEmpty()) {
+            plot.setEntryTitle(claim.entryTitle);
+        }
+        if (claim.entrySubtitle != null && !claim.entrySubtitle.isEmpty()) {
+            plot.setEntrySubtitle(claim.entrySubtitle);
+        }
+        if (claim.plotName != null && !claim.plotName.isEmpty()) {
+            plot.setPlotName(claim.plotName);
+        }
+        if (claim.description != null && !claim.description.isEmpty()) {
+            plot.setDescription(claim.description);
+        } else if (claim.sourceLabel != null && !claim.sourceLabel.isEmpty()) {
+            plot.setDescription("Imported from " + claim.sourceLabel);
+        }
+        if (claim.plotStatus != null && !claim.plotStatus.isEmpty()) {
+            plot.setPlotStatus(claim.plotStatus);
+        }
 
         // Add to data store
         plugin.store().addPlot(plot);
@@ -997,7 +1069,32 @@ public class MigrationManager {
         previewOpts.importFlags = options.importFlags;
         previewOpts.worldFilter = options.worldFilter;
         previewOpts.ownerFilter = options.ownerFilter;
+        previewOpts.focusX = options.focusX;
+        previewOpts.focusZ = options.focusZ;
 
         return startMigration(sender, source, previewOpts);
+    }
+
+    private boolean matchesFocusedLocation(MigrationClaim claim, MigrationOptions options) {
+        if (claim == null || options == null) return false;
+        if (options.focusX == null || options.focusZ == null) return true;
+        return options.focusX >= claim.x1 && options.focusX <= claim.x2
+                && options.focusZ >= claim.z1 && options.focusZ <= claim.z2;
+    }
+
+    private void captureFocusedSummary(MigrationResult result, MigrationClaim claim, MigrationOptions options) {
+        if (result == null || claim == null || options == null) return;
+        if (options.focusX == null || options.focusZ == null) return;
+        if (result.focusedWorld != null) return;
+
+        result.focusedOwnerName = claim.ownerName;
+        result.focusedWorld = claim.world;
+        result.focusedX1 = claim.x1;
+        result.focusedZ1 = claim.z1;
+        result.focusedX2 = claim.x2;
+        result.focusedZ2 = claim.z2;
+        result.focusedName = claim.plotName;
+        result.focusedTrustedCount = claim.trusted.size();
+        result.focusedFlagCount = claim.flags.size();
     }
 }

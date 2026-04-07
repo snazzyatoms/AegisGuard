@@ -1,6 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.admin.AdminDiagnostics;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
@@ -47,10 +48,14 @@ public class GUIManager {
     // Economy
     private final PlotMarketGUI plotMarketGUI;
     private final PlotAuctionGUI plotAuctionGUI;
+    private final LocalMarketGUI localMarketGUI;
+    private final StallBrowseGUI stallBrowseGUI;
 
     // New v1.1.0+ Features
     private final LevelingGUI levelingGUI;
     private final ZoningGUI zoningGUI;
+    private final ZoneBrowseGUI zoneBrowseGUI;
+    private final ZoneTenantGUI zoneTenantGUI;
     private final BiomeGUI biomeGUI;
 
     // New: Plot Status Codex (replaces sidebar)
@@ -61,6 +66,7 @@ public class GUIManager {
 
     // ✅ Snapshot Admin GUI (Rollback System)
     private final SnapshotAdminGUI snapshotAdminGUI;
+    private final MigrationAdminGUI migrationAdminGUI;
 
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
@@ -90,12 +96,16 @@ public class GUIManager {
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
         this.plotMarketGUI = new PlotMarketGUI(plugin);
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
+        this.localMarketGUI = new LocalMarketGUI(plugin);
+        this.stallBrowseGUI = new StallBrowseGUI(plugin);
         this.infoGUI = new InfoGUI(plugin);
         this.visitGUI = new VisitGUI(plugin);
 
         // New Features
         this.levelingGUI = new LevelingGUI(plugin);
         this.zoningGUI = new ZoningGUI(plugin);
+        this.zoneBrowseGUI = new ZoneBrowseGUI(plugin);
+        this.zoneTenantGUI = new ZoneTenantGUI(plugin);
         this.biomeGUI = new BiomeGUI(plugin);
 
         // Plot Status Codex GUI
@@ -114,6 +124,8 @@ public class GUIManager {
         } else {
             this.snapshotAdminGUI = null;
         }
+
+        this.migrationAdminGUI = new MigrationAdminGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -173,7 +185,16 @@ public class GUIManager {
      * Placeholder method for Diagnostics GUI (Fixes AdminGUI error).
      */
     public void openDiagnostics(Player player) {
-        player.sendMessage("§b[AegisGuard] §7Diagnostics: All systems nominal (Stub).");
+        if (player == null) return;
+        player.sendMessage(color("&b[AegisGuard] &7Generating doctor report..."));
+        plugin.runGlobalAsync(() -> {
+            try {
+                java.nio.file.Path report = AdminDiagnostics.writeReport(plugin);
+                plugin.runMain(player, () -> player.sendMessage(color("&aDoctor report saved: &f" + report.getFileName())));
+            } catch (Throwable t) {
+                plugin.runMain(player, () -> player.sendMessage(color("&cDoctor report failed: " + t.getMessage())));
+            }
+        });
     }
 
     // --- GETTERS (Categorized) ---
@@ -196,6 +217,8 @@ public class GUIManager {
     public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
     public LevelingGUI leveling() { return levelingGUI; }
     public ZoningGUI zoning() { return zoningGUI; }
+    public ZoneBrowseGUI zoneBrowse() { return zoneBrowseGUI; }
+    public ZoneTenantGUI zoneTenant() { return zoneTenantGUI; }
     public BiomeGUI biomes() { return biomeGUI; }
 
     // Plot Status Codex
@@ -204,12 +227,15 @@ public class GUIManager {
     // Economy
     public PlotMarketGUI market() { return plotMarketGUI; }
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
+    public LocalMarketGUI localMarket() { return localMarketGUI; }
+    public StallBrowseGUI stallBrowse() { return stallBrowseGUI; }
 
     // ✅ ClaimBlocks Exchange
     public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
 
     // ✅ Snapshot Admin
     public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
+    public MigrationAdminGUI migration() { return migrationAdminGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

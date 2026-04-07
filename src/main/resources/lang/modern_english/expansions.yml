@@ -27,6 +27,7 @@ expansion_actor_auto: 'Auto'
 expansion_actor_admin: 'Admin'
 expansion_decided_by_auto: '&bAuto'
 expansion_decided_by_admin: '&eAdmin'
+expansion_decided_by_system: '&7System'
 expansion_decided_by_console: '&7Console'
 expansion_decided_by_none: '&7Awaiting review'
 expansion_decided_by_unknown: '&7Unknown'
@@ -54,6 +55,7 @@ expansion_mode_item_lore:
 # Mode hints (injected into tier lore)
 expansion_mode_hint_instant: '&bInstant Mode:&7 Auto-approved when valid.'
 expansion_mode_hint_queue: '&6Queue Mode:&7 Admin approval required.'
+expansion_mode_hint_unattended: '&bUnattended Queue:&7 No reviewers are online, so valid requests may be auto-approved and logged.'
 
 # ------------------------------------------------------------
 # Admin GUI
@@ -87,9 +89,13 @@ expansion_request_item_lore:
 - '&7Cost Due: &6{COST}'
 - '&7Decided By: &f{DECIDER}'
 - '&7Decision Age: &f{DECISION_AGE}'
+- '&7Audit Note: &f{NOTE}'
 - ' '
 - '&eLeft-click: &7Approve request.'
 - '&cRight-click: &7Deny request.'
+
+expansion_request_note_line: '&7Audit Note: &f{NOTE}'
+expansion_history_read_only: '&7Read-only history entry. Review notes and snapshots if needed.'
 
 # Admin messages
 admin_request_approved: '&a✔ Approved expansion request for &b{PLAYER}&a.'

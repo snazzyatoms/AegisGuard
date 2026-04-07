@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -209,6 +210,19 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    if (sec.isConfigurationSection("group")) {
+                        ConfigurationSection group = sec.getConfigurationSection("group");
+                        if (group != null) {
+                            plot.setGroupPlot(group.getBoolean("enabled", false));
+                            plot.setTreasuryBalance(group.getDouble("treasury-balance", 0.0));
+                            String groupId = group.getString("id");
+                            if (groupId != null && !groupId.isBlank()) {
+                                try { plot.setGroupId(UUID.fromString(groupId)); } catch (IllegalArgumentException ignored) {}
+                            }
+                            plot.setGroupName(group.getString("name"));
+                        }
+                    }
+
                     // Zones
                     if (sec.isConfigurationSection("zones")) {
                         ConfigurationSection zonesSec = sec.getConfigurationSection("zones");
@@ -237,7 +251,77 @@ public class YMLDataStore implements IDataStore {
                                     } catch (IllegalArgumentException ignored) {}
                                 }
 
+                                zone.setFlag("hotel_mode", z.getBoolean("flags.hotel-mode", false));
+                                zone.setFlag("guest_visit", z.getBoolean("flags.guest-visit", true));
+                                zone.setFlag("guest_interact", z.getBoolean("flags.guest-interact", true));
+                                zone.setFlag("guest_containers", z.getBoolean("flags.guest-containers", true));
+                                zone.setFlag("guest_build", z.getBoolean("flags.guest-build", false));
+
+                                if (z.isList("guests")) {
+                                    for (String guestStr : z.getStringList("guests")) {
+                                        try { zone.addGuest(UUID.fromString(guestStr)); }
+                                        catch (IllegalArgumentException ignored) {}
+                                    }
+                                }
+
+                                String spawn = z.getString("spawn-location");
+                                if (spawn != null && !spawn.isBlank()) {
+                                    Location parsed = parseLocation(plot.getWorld(), spawn);
+                                    if (parsed != null) {
+                                        zone.setSpawnLocation(parsed);
+                                    }
+                                }
+
                                 plot.addZone(zone);
+                            }
+                        }
+                    }
+
+                    if (sec.isConfigurationSection("stalls")) {
+                        ConfigurationSection stallsSec = sec.getConfigurationSection("stalls");
+                        if (stallsSec != null) {
+                            for (String stallKey : stallsSec.getKeys(false)) {
+                                ConfigurationSection stallSec = stallsSec.getConfigurationSection(stallKey);
+                                if (stallSec == null) continue;
+
+                                String stallOwner = stallSec.getString("owner");
+                                if (stallOwner == null || stallOwner.isBlank()) continue;
+
+                                try {
+                                    MarketStall stall = new MarketStall(
+                                            UUID.fromString(stallOwner),
+                                            stallSec.getString("owner-name", "Unknown"),
+                                            plot.getWorld(),
+                                            stallSec.getInt("chest.x"),
+                                            stallSec.getInt("chest.y"),
+                                            stallSec.getInt("chest.z"),
+                                            stallSec.getInt("sign.x"),
+                                            stallSec.getInt("sign.y"),
+                                            stallSec.getInt("sign.z"),
+                                            stallSec.getString("title"),
+                                            stallSec.getString("zone"),
+                                            stallSec.getLong("created-at", System.currentTimeMillis())
+                                    );
+                                    if (stallSec.isConfigurationSection("listings")) {
+                                        ConfigurationSection listingsSec = stallSec.getConfigurationSection("listings");
+                                        if (listingsSec != null) {
+                                            for (String slotKey : listingsSec.getKeys(false)) {
+                                                try {
+                                                    int slot = Integer.parseInt(slotKey);
+                                                    ConfigurationSection listingSec = listingsSec.getConfigurationSection(slotKey);
+                                                    if (listingSec == null) continue;
+
+                                                    stall.setListing(slot, new MarketStall.StallListing(
+                                                            listingSec.getDouble("price", 0.0D),
+                                                            parseCurrencyType(listingSec.getString("currency")),
+                                                            listingSec.getInt("bundle", 1)
+                                                    ));
+                                                } catch (NumberFormatException ignored) {}
+                                            }
+                                        }
+                                    }
+                                    plot.addStall(stall);
+                                } catch (IllegalArgumentException ignored) {}
                             }
                         }
                     }
@@ -390,6 +474,12 @@ public class YMLDataStore implements IDataStore {
         warp.set("warp-name", plot.getWarpName());
         warp.set("warp-icon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
 
+        ConfigurationSection group = sec.createSection("group");
+        group.set("enabled", plot.isGroupPlot());
+        group.set("treasury-balance", plot.getTreasuryBalance());
+        group.set("id", plot.getGroupId() == null ? null : plot.getGroupId().toString());
+        group.set("name", plot.getGroupName());
+
         ConfigurationSection zonesSec = sec.createSection("zones");
         for (Zone zone : plot.getZones()) {
             ConfigurationSection z = zonesSec.createSection(zone.getName());
@@ -403,7 +493,71 @@ public class YMLDataStore implements IDataStore {
             UUID zr = zone.getRenter();
             z.set("renter", zr != null ? zr.toString() : null);
             z.set("rent-expiration", zone.getRentExpiration());
+            z.set("spawn-location", zone.getSpawnLocation() == null ? null : serializeLocation(zone.getSpawnLocation()));
+            z.set("guests", zone.getGuestAccess().keySet().stream().map(UUID::toString).collect(Collectors.toList()));
+
+            ConfigurationSection zoneFlags = z.createSection("flags");
+            zoneFlags.set("hotel-mode", zone.isHotelMode());
+            zoneFlags.set("guest-visit", zone.getFlag("guest_visit", true));
+            zoneFlags.set("guest-interact", zone.getFlag("guest_interact", true));
+            zoneFlags.set("guest-containers", zone.getFlag("guest_containers", true));
+            zoneFlags.set("guest-build", zone.getFlag("guest_build", false));
         }
+
+        ConfigurationSection stallsSec = sec.createSection("stalls");
+        for (MarketStall stall : plot.getStalls()) {
+            if (stall == null) continue;
+            ConfigurationSection stallSec = stallsSec.createSection(stall.getStorageKey());
+            stallSec.set("owner", stall.getOwnerId() == null ? null : stall.getOwnerId().toString());
+            stallSec.set("owner-name", stall.getOwnerName());
+            stallSec.set("title", stall.getTitle());
+            stallSec.set("zone", stall.getZoneName());
+            stallSec.set("created-at", stall.getCreatedAt());
+            stallSec.set("chest.x", stall.getChestX());
+            stallSec.set("chest.y", stall.getChestY());
+            stallSec.set("chest.z", stall.getChestZ());
+            stallSec.set("sign.x", stall.getSignX());
+            stallSec.set("sign.y", stall.getSignY());
+            stallSec.set("sign.z", stall.getSignZ());
+            ConfigurationSection listingsSec = stallSec.createSection("listings");
+            for (Map.Entry<Integer, MarketStall.StallListing> entry : stall.getListings().entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null || !entry.getValue().isValid()) continue;
+                ConfigurationSection listingSec = listingsSec.createSection(String.valueOf(entry.getKey()));
+                listingSec.set("price", entry.getValue().getPrice());
+                listingSec.set("currency", entry.getValue().getCurrency().name());
+                listingSec.set("bundle", entry.getValue().getBundleAmount());
+            }
+        }
+    }
+
+    private com.aegisguard.economy.CurrencyType parseCurrencyType(String raw) {
+        if (raw == null || raw.isBlank()) return com.aegisguard.economy.CurrencyType.VAULT;
+        try {
+            return com.aegisguard.economy.CurrencyType.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            return com.aegisguard.economy.CurrencyType.VAULT;
+        }
+    }
+
+    private Location parseLocation(String worldName, String raw) {
+        if (worldName == null || worldName.isBlank() || raw == null || raw.isBlank()) return null;
+        String[] split = raw.split(",");
+        if (split.length < 3) return null;
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) return null;
+        try {
+            double x = Double.parseDouble(split[0]);
+            double y = Double.parseDouble(split[1]);
+            double z = Double.parseDouble(split[2]);
+            return new Location(world, x, y, z);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private String serializeLocation(Location location) {
+        if (location == null) return null;
+        return location.getX() + "," + location.getY() + "," + location.getZ();
     }
 
     // ==============================================================

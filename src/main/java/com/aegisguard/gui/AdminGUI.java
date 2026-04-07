@@ -22,7 +22,7 @@ import java.util.Map;
  *
  * Goals:
  * - Keep 1.2.5 structure + layout intact, but make interactions more robust & less confusing.
- * - Remove redundant navigation (keep a single "Return" button; Esc still closes).
+ * - Keep navigation consistent with a clear return path and an explicit close button.
  * - Fix/avoid "back breaks after paging" class of issues by tagging ALL actionable items with PDC (aegis_action)
  *   and routing clicks by action instead of slot number when possible.
  * - Add "World Controls" entry point + a safe "coming soon" stub that doesn't break anything.
@@ -55,9 +55,9 @@ public class AdminGUI {
 
     // 1.2.6: World Controls entry + future stub (new, but still “tools row”)
     private static final int SLOT_TOOL_WORLD_CONTROLS = 34;
-    private static final int SLOT_TOOL_WORLD_FUTURE   = 35;
+    private static final int SLOT_TOOL_MIGRATION      = 35;
 
-    // Navigation: single button (removed redundant Close button)
+    private static final int SLOT_NAV_EXIT = 40;
     private static final int SLOT_NAV_BACK = 44;
 
     public AdminGUI(AegisGuard plugin) {
@@ -243,19 +243,28 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_WORLD_CONTROLS, worldControlsMissing);
         }
 
-        // 1.2.6: Future world controls placeholder (disabled but intentional)
-        ItemStack worldFuture = GUIManager.createItem(
-                Material.LIGHT_GRAY_DYE,
-                plugin.gui().tr(player, "button_admin_world_controls_future", "&8More World Controls"),
-                plugin.gui().trList(player, "admin_world_controls_future_lore", List.of(
-                        "&7Reserved for upcoming world tools.",
-                        "&7(Does nothing yet.)"
+        ItemStack migration = GUIManager.createItem(
+                Material.BLAZE_ROD,
+                plugin.gui().tr(player, "button_admin_migration", "&6Migration Wizard"),
+                plugin.gui().trList(player, "admin_migration_lore", List.of(
+                        "&7Preview and import supported",
+                        "&7external protection plugins.",
+                        " ",
+                        "&eClick to open."
                 ))
         );
-        tagAction(worldFuture, "world_controls_future");
-        inv.setItem(SLOT_TOOL_WORLD_FUTURE, worldFuture);
+        tagAction(migration, "open_migration");
+        inv.setItem(SLOT_TOOL_MIGRATION, migration);
 
-        // --- NAVIGATION (single button) ---
+        ItemStack close = GUIManager.createItem(
+                Material.BARRIER,
+                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
+                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
+        );
+        tagAction(close, "close_menu");
+        inv.setItem(SLOT_NAV_EXIT, close);
+
+        // --- NAVIGATION ---
         ItemStack back = GUIManager.createItem(
                 Material.ARROW,
                 plugin.gui().tr(player, "button_back_menu", "&fReturn to Menu"),
@@ -331,17 +340,22 @@ public class AdminGUI {
                     open(player);
                 }
             }
+            case "open_migration" -> {
+                if (plugin.gui().migration() != null) {
+                    plugin.gui().migration().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    sendKey(player, "migration_unavailable", "&cMigration wizard is unavailable.");
+                    plugin.effects().playError(player);
+                }
+            }
             case "world_controls_missing" -> {
                 sendKey(player, "world_controls_unavailable", "&cWorld Controls menu is not available yet.");
                 plugin.effects().playError(player);
             }
-            case "world_controls_future" -> {
-                // Intentionally disabled stub (QoL: feedback, but no broken routes)
-                sendKey(player, "coming_soon", "&7Coming soon.");
-                plugin.effects().playError(player);
-            }
 
             // --- Navigation ---
+            case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); }
             case "back_main" -> plugin.gui().openMain(player);
 
             default -> {

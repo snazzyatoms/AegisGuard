@@ -27,6 +27,7 @@ expansion_actor_auto: 'Self-wrought Deed'
 expansion_actor_admin: 'Steward'
 expansion_decided_by_auto: '&bSelf-wrought'
 expansion_decided_by_admin: '&eSteward'
+expansion_decided_by_system: '&7The System'
 expansion_decided_by_console: '&7The Codex'
 expansion_decided_by_none: '&7Biding judgment'
 expansion_decided_by_unknown: '&7Unknown hand'
@@ -54,6 +55,7 @@ expansion_mode_item_lore:
 # Mode hints (injected into tier lore)
 expansion_mode_hint_instant: '&bSwift Mode:&7 Granted anon if worthy.'
 expansion_mode_hint_queue: '&6Queue Mode:&7 Steward approval required.'
+expansion_mode_hint_unattended: '&bUnwatched Queue:&7 No stewards are online, so worthy petitions may be granted and chronicled.'
 
 # -------------------------------------------------
 # Admin GUI
@@ -81,9 +83,13 @@ expansion_request_item_lore:
   - '&7Tribute Due: &6{COST}'
   - '&7Decided By: &f{DECIDER}'
   - '&7Decision Age: &f{DECISION_AGE}'
+  - '&7Chronicle Note: &f{NOTE}'
   - ' '
   - '&eLeft-click: &7Grant petition.'
   - '&cRight-click: &7Withhold petition.'
+
+expansion_request_note_line: '&7Chronicle Note: &f{NOTE}'
+expansion_history_read_only: '&7Read-only chronicle entry. Review the notes and snapshots if need be.'
 
 # Admin messages
 admin_request_approved: '&a[OK] Granted expansion petition for &b{PLAYER}&a.'

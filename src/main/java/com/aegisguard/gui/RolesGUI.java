@@ -296,12 +296,10 @@ public class RolesGUI {
     // --------------------------------------------------
 
     public void open(Player player) {
-        if (plugin.isAdmin(player)) {
-            Plot standingPlot = plugin.store().getPlotAt(player.getLocation());
-            if (standingPlot != null) {
-                openRolesMenu(player, standingPlot);
-                return;
-            }
+        Plot standingPlot = plugin.store().getPlotAt(player.getLocation());
+        if (standingPlot != null && standingPlot.canManage(player, plugin)) {
+            openRolesMenu(player, standingPlot);
+            return;
         }
 
         List<Plot> plots = plugin.store().getPlots(player.getUniqueId());
@@ -535,20 +533,14 @@ public class RolesGUI {
         List<UUID> members = new ArrayList<>();
         if (roleMap == null || roleMap.isEmpty()) return members;
 
-        boolean isAdmin = plugin.isAdmin(viewer);
-        UUID owner = plot.getOwner();
-
         for (UUID uuid : roleMap.keySet()) {
             if (uuid == null) continue;
+            if (isProtectedRoleTarget(plot, uuid)) continue;
+            if (viewer != null && uuid.equals(viewer.getUniqueId())) continue;
 
-            boolean isOwnerEntry = owner != null && uuid.equals(owner);
-            boolean isViewerOwner = uuid.equals(viewer.getUniqueId());
-
-            // Preserve your original behavior:
-            // - Hide owner's own entry when owner is viewing
-            // - Hide owner entry for non-admin viewers
-            if (isOwnerEntry && isViewerOwner) continue;
-            if (isOwnerEntry && !isAdmin) continue;
+            String role = roleMap.get(uuid);
+            if (role == null || role.isBlank()) continue;
+            if (role.equalsIgnoreCase("visitor") || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none")) continue;
 
             members.add(uuid);
         }
@@ -581,23 +573,7 @@ public class RolesGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) inv.setItem(i, filler);
 
-        Map<UUID, String> currentRoles = plot.getPlayerRoles();
-        if (currentRoles == null) currentRoles = new LinkedHashMap<>();
-
-        // Build nearby candidates (distanceSquared optimization)
-        List<Player> candidates = new ArrayList<>();
-        double maxDistSq = 50.0 * 50.0;
-
-        for (Player nearby : player.getWorld().getPlayers()) {
-            if (nearby == null) continue;
-            if (nearby.equals(player)) continue;
-            if (currentRoles.containsKey(nearby.getUniqueId())) continue;
-
-            if (nearby.getLocation().distanceSquared(player.getLocation()) > maxDistSq) continue;
-            candidates.add(nearby);
-        }
-
-        candidates.sort(Comparator.comparing(p -> p.getName().toLowerCase(Locale.ROOT)));
+        List<Player> candidates = buildAddCandidates(player, plot);
 
         int maxPage = Math.max(0, (int) Math.ceil(candidates.size() / (double) PLAYERS_PER_PAGE) - 1);
         int safePage = Math.max(0, Math.min(page, maxPage));
@@ -684,6 +660,13 @@ public class RolesGUI {
     }
 
     private void openManageMenu(Player player, Plot plot, OfflinePlayer target, int page) {
+        UUID targetId = (target == null) ? null : target.getUniqueId();
+        if (!canManagePlot(player, plot) || targetId == null || !plot.canModifyMember(player, targetId, plugin)) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
+
         String targetName = (target.getName() != null) ? target.getName() : "Unknown";
 
         String rawTitle = t(player, "roles_manage_title",
@@ -768,7 +751,7 @@ public class RolesGUI {
                 tl(player, "remove_trusted_lore", List.of("&7Revoke all access."))
         ));
 
-        String roleDisplay = (currentRole != null)
+        String roleDisplay = (currentRole != null && !currentRole.equalsIgnoreCase("visitor"))
                 ? getRoleDisplayName(player, currentRole)
                 : t(player, "roles_unassigned", "Unassigned");
 
@@ -800,7 +783,14 @@ public class RolesGUI {
     // --------------------------------------------------
 
     private void openRoleFlagsMenu(Player player, Plot plot, OfflinePlayer target, String roleName) {
-        if (roleName == null || roleName.trim().isEmpty()) {
+        UUID targetId = (target == null) ? null : target.getUniqueId();
+        if (!canManagePlot(player, plot) || targetId == null || !plot.canModifyMember(player, targetId, plugin)) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
+
+        if (roleName == null || roleName.trim().isEmpty() || roleName.equalsIgnoreCase("visitor")) {
             plugin.msg().send(player, "role_self");
             plugin.effects().playError(player);
             openManageMenu(player, plot, target);
@@ -862,9 +852,35 @@ public class RolesGUI {
 
     private boolean canManagePlot(Player actor, Plot plot) {
         if (actor == null || plot == null) return false;
-        if (plugin.isAdmin(actor)) return true;
-        UUID owner = plot.getOwner();
-        return owner != null && owner.equals(actor.getUniqueId());
+        return plot.canManage(actor, plugin);
+    }
+
+    private boolean isProtectedRoleTarget(Plot plot, UUID uuid) {
+        if (plot == null || uuid == null) return true;
+        return plot.isOwner(uuid) || Plot.SERVER_OWNER_UUID.equals(uuid);
+    }
+
+    private List<Player> buildAddCandidates(Player player, Plot plot) {
+        List<Player> candidates = new ArrayList<>();
+        if (player == null || plot == null || player.getWorld() == null) return candidates;
+
+        Map<UUID, String> currentRoles = plot.getPlayerRoles();
+        if (currentRoles == null) currentRoles = new LinkedHashMap<>();
+
+        double radius = 50.0;
+        for (org.bukkit.entity.Entity nearbyEntity : player.getNearbyEntities(radius, radius, radius)) {
+            if (!(nearbyEntity instanceof Player nearby)) continue;
+            if (nearby.equals(player)) continue;
+            if (nearby.getWorld() == null || !nearby.getWorld().equals(player.getWorld())) continue;
+            if (isProtectedRoleTarget(plot, nearby.getUniqueId())) continue;
+            if (currentRoles.containsKey(nearby.getUniqueId())) continue;
+            candidates.add(nearby);
+        }
+
+        candidates.sort(Comparator
+                .comparingDouble((Player nearby) -> nearby.getLocation().distanceSquared(player.getLocation()))
+                .thenComparing(p -> p.getName().toLowerCase(Locale.ROOT)));
+        return candidates;
     }
 
     public void handlePlotSelectorClick(Player player, InventoryClickEvent e, PlotSelectorHolder holder) {
@@ -925,7 +941,14 @@ public class RolesGUI {
             if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
 
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-            if (meta != null && meta.getOwningPlayer() != null) openManageMenu(player, plot, meta.getOwningPlayer(), 0);
+            if (meta != null && meta.getOwningPlayer() != null) {
+                UUID targetId = meta.getOwningPlayer().getUniqueId();
+                if (!plot.canModifyMember(player, targetId, plugin)) {
+                    plugin.effects().playError(player);
+                    return;
+                }
+                openManageMenu(player, plot, meta.getOwningPlayer(), 0);
+            }
         }
     }
 
@@ -944,20 +967,7 @@ public class RolesGUI {
         if (slot == 50) { player.closeInventory(); return; }
 
         // Paging buttons
-        // Rebuild candidate list size for maxPage (same logic as openAddMenu)
-        Map<UUID, String> currentRoles = plot.getPlayerRoles();
-        if (currentRoles == null) currentRoles = new LinkedHashMap<>();
-
-        List<Player> candidates = new ArrayList<>();
-        double maxDistSq = 50.0 * 50.0;
-        for (Player nearby : player.getWorld().getPlayers()) {
-            if (nearby == null) continue;
-            if (nearby.equals(player)) continue;
-            if (currentRoles.containsKey(nearby.getUniqueId())) continue;
-            if (nearby.getLocation().distanceSquared(player.getLocation()) > maxDistSq) continue;
-            candidates.add(nearby);
-        }
-        candidates.sort(Comparator.comparing(p -> p.getName().toLowerCase(Locale.ROOT)));
+        List<Player> candidates = buildAddCandidates(player, plot);
 
         int maxPage = Math.max(0, (int) Math.ceil(candidates.size() / (double) PLAYERS_PER_PAGE) - 1);
         if (slot == 48 && page > 0) { openAddMenu(player, plot, page - 1); return; }
@@ -965,7 +975,15 @@ public class RolesGUI {
 
         if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
-            if (meta != null && meta.getOwningPlayer() != null) openManageMenu(player, plot, meta.getOwningPlayer(), 0);
+            if (meta != null && meta.getOwningPlayer() != null) {
+                UUID targetId = meta.getOwningPlayer().getUniqueId();
+                if (!plot.canModifyMember(player, targetId, plugin)) {
+                    plugin.effects().playError(player);
+                    openAddMenu(player, plot, page);
+                    return;
+                }
+                openManageMenu(player, plot, meta.getOwningPlayer(), 0);
+            }
         }
     }
 
@@ -978,7 +996,16 @@ public class RolesGUI {
         OfflinePlayer target = holder.getTarget();
         int slot = e.getRawSlot();
 
-        if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
+        if (!canManagePlot(player, plot) || target == null || target.getUniqueId() == null) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
+        if (!plot.canModifyMember(player, target.getUniqueId(), plugin)) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
 
         // Back
         if (slot == 18) { openRolesMenu(player, plot, 0); return; }
@@ -990,11 +1017,6 @@ public class RolesGUI {
 
         if (slot == 19 && page > 0) { openManageMenu(player, plot, target, page - 1); return; }
         if (slot == 25 && page < maxPage) { openManageMenu(player, plot, target, page + 1); return; }
-
-        // Protect owner from removal/edits unless admin
-        UUID owner = plot.getOwner();
-        boolean isTargetOwner = owner != null && target != null && owner.equals(target.getUniqueId());
-        boolean isAdmin = plugin.isAdmin(player);
 
         // Remove trusted
         if (slot == 22) {
@@ -1018,8 +1040,8 @@ public class RolesGUI {
 
         // Role flags submenu
         if (slot == 24) {
-            String currentRole = plot.getRole(target.getUniqueId());
-            if (currentRole == null) {
+            String currentRole = plot.getPlayerRoles().get(target.getUniqueId());
+            if (currentRole == null || currentRole.isBlank() || currentRole.equalsIgnoreCase("visitor")) {
                 plugin.msg().send(player, "role_self");
                 plugin.effects().playError(player);
                 return;
@@ -1035,11 +1057,6 @@ public class RolesGUI {
 
             String newRole = roles.get(index);
             if (newRole == null || newRole.isBlank()) return;
-
-            if (isTargetOwner && !isAdmin) {
-                plugin.effects().playError(player);
-                return;
-            }
 
             plugin.store().addPlayerRole(plot, target.getUniqueId(), newRole);
             plugin.msg().send(player, "role_set_to", Map.of("PLAYER", safeName(target), "ROLE", getRoleDisplayName(player, newRole)));
@@ -1058,7 +1075,16 @@ public class RolesGUI {
         String roleName = holder.getRoleName();
         int slot = e.getRawSlot();
 
-        if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
+        if (!canManagePlot(player, plot) || target == null || target.getUniqueId() == null) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
+        if (!plot.canModifyMember(player, target.getUniqueId(), plugin)) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
 
         if (slot == 22) { openManageMenu(player, plot, target, 0); return; }
         if (slot < 0 || slot >= ROLE_FLAG_KEYS.size()) return;

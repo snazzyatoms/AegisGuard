@@ -108,7 +108,7 @@ hooks:
 
   discord:
     enabled: true
-    webhook_url: "https://discord.com/api/webhooks/..."
+    webhook_url: ""
     events:
       claim_create: true
       claim_delete: true

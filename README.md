@@ -11,28 +11,22 @@
   <a href="https://hangar.papermc.io/snazzyatoms/AegisGuard"><img src="https://img.shields.io/badge/Hangar-Download-green?style=for-the-badge"></a>
   <a href="https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy"><img src="https://img.shields.io/badge/CurseForge-Download-purple?style=for-the-badge"></a>
   <a href="https://github.com/snazzyatoms/AegisGuard/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge"></a>
-  <a href="https://discord.gg/Y2NpuR7UZE"><img src="https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord&logoColor=white"></a>
-</p>
-
----
-
-<p align="center">
-  <em>"Forged to shield thy lands from peril and strife. With the Sacred Scepter of Aegis, you claim, shape, and safeguard your realm with precision."</em>
 </p>
 
 ---
 
 # AegisGuard v1.2.6
 
-AegisGuard is a **modern, Folia-optimized land protection and economy ecosystem** for Minecraft servers running **Spigot**, **Paper**, **Purpur**, or **Folia** (1.20+).
+AegisGuard is a land protection, progression, market, rental, and admin recovery plugin for Minecraft servers running **Spigot**, **Paper**, **Purpur**, or **Folia** on **1.20+**.
 
-It's not just another claim plugin. AegisGuard transforms land ownership into a **living system** with progression, governance, safety nets, and a complete economy loop designed for long-running survival and SMP worlds.
+Version 1.2.6 is a major polish and expansion pass. It improves protection coverage, GUI flow, notifications, group ownership, subplot/rental management, migration tools, diagnostics, and player-facing market systems while keeping the plugin approachable for survival and SMP servers.
 
 ---
 
 ## Table of Contents
 
 - [Server Compatibility](#server-compatibility)
+- [What Is New In 1.2.6](#what-is-new-in-126)
 - [Core Features](#core-features)
 - [Commands](#commands)
 - [Permissions](#permissions)
@@ -40,8 +34,6 @@ It's not just another claim plugin. AegisGuard transforms land ownership into a 
 - [Plugin Integrations](#plugin-integrations)
 - [Installation](#installation)
 - [Quick Links](#quick-links)
-- [Demo Server](#demo-server)
-- [Support](#support)
 
 ---
 
@@ -52,157 +44,108 @@ It's not just another claim plugin. AegisGuard transforms land ownership into a 
 | **Spigot** | Yes | 1.20+ |
 | **Paper** | Yes | Recommended |
 | **Purpur** | Yes | Full support |
-| **Folia** | Yes | Native multi-threaded support |
+| **Folia** | Yes | Supported with Folia-aware scheduling |
+
+---
+
+## What Is New In 1.2.6
+
+### Protection, Stability, and Recovery
+
+- Improved protection coverage for claims, zones, decorative entities, vehicles, and interaction paths
+- Better movement-event handling and safer scheduler usage in hot paths
+- Stronger snapshot and recovery flow for expansions, rollbacks, and admin maintenance
+- Cleaner server-zone and elevated staff access without relying on bypass for routine management
+- Better diagnostics with `/agadmin doctor` support and report generation
+
+### Groups, Social Flow, and Notifications
+
+- Separate player greeting notifications from admin notifications
+- Expanded notification system for group events, treasury changes, upkeep warnings, plot rename events, and review activity
+- Group-first ownership flow with treasury support before claiming a shared plot
+- Safer group starter rules with anti-abuse protections around member count and early removal
+
+### Expansions, Migration, and Admin Review
+
+- Stronger expansion request review flow with improved audit history
+- Optional unattended auto-approval when no reviewers are online
+- Migration wand and migration admin GUI for supported protection-plugin imports
+- Focused-claim migration preview and improved metadata preservation during import
+
+### Markets, Rentals, and Subplots
+
+- Improved subplot and rentable-zone protections so renters can use their space more like a real mini-claim
+- Renter room controls, guest access, room spawn management, and hotel-style behavior
+- Local Market flow for plot-level selling and rental experiences
+- Built-in **TradeStalls** system with chest/sign storefront registration and browse GUI
+- Configurable coexistence with external shop plugins such as QuickShop, Shopkeepers, ChestShop, and ExcellentShop
+
+### GUI, Language, and Documentation
+
+- Synchronized GUI listener and menu handling across the plugin
+- Cleaner back/exit behavior across menus
+- Updated titles and lore text for a more readable, less cluttered interface
+- `lang` kept as the main editable language folder, `codex` retained as fallback
+- Hybrid English removed; supported packs are now `modern_english`, `old_english`, `spanish_mx`, and `spanish_ar`
 
 ---
 
 ## Core Features
 
-### Land Protection & Claiming
+### Claiming and Land Protection
 
-- **Wand-based selection system** - Use the Sacred Scepter to select corners and claim land
-- **Flexible claim sizes** - Configurable minimum/maximum radius and area limits
-- **Per-world rules** - Different claiming rules, costs, and limits for each world
-- **Claim merging** - Combine adjacent plots into larger territories
-- **Claim resizing** - Expand or shrink existing claims
-- **Buffer zones** - Automatic spacing between claims to prevent disputes
-- **Visual boundaries** - Particle-based border visualization when holding the wand
+- Wand-based selection and claiming
+- Configurable minimum and maximum claim size rules
+- Per-world rules and limits
+- Claim resize, merge, unclaim, and safe admin recovery
+- Visual claim boundaries and guided management menus
+- Plot flags for PvP, containers, redstone, entry, animals, vehicles, shops, and more
 
 ### ClaimBlocks Economy
 
-AegisGuard features a complete ClaimBlocks currency system:
+- Configurable starting balance for new players
+- Passive ClaimBlock earnings with anti-AFK protections
+- Per-player earnings opt-in or opt-out support
+- ClaimBlocks exchange with Vault integration
+- Costs, fees, sell locks, cooldowns, hourly limits, and server presets
 
-- **Starting blocks** - Configurable initial balance for new players (default: 500)
-- **Playtime rewards** - Earn ClaimBlocks passively while playing
-- **Anti-AFK protection** - Prevents idle players from farming blocks
-- **Level-up bonuses** - Earn blocks when upgrading plot levels
-- **First claim limits** - Optional area cap on first claims to encourage gradual expansion
+### Groups and Shared Ownership
 
-### ClaimBlocks Exchange (Vault Integration)
+- Group creation before shared claiming
+- Group treasury support for expansions and progression
+- Group-aware starter claim sizing rules
+- Member-aware notifications and better shared ownership flow
 
-Trade ClaimBlocks for server currency with built-in anti-abuse protections:
+### Expansions and Progression
 
-| Feature | Description |
-|---------|-------------|
-| **Buy/Sell rates** | Configurable prices per block |
-| **Transaction fees** | Percentage and flat fees to prevent arbitrage |
-| **Cooldowns** | Minimum time between trades |
-| **Hourly limits** | Maximum trades per hour |
-| **Daily caps** | Maximum blocks bought/sold per day |
-| **Sell lock** | Hold timer prevents instant buy-sell flipping |
-| **Preset profiles** | `safe_small`, `balanced_mid`, `fast_large`, or `custom` |
+- Expansion request queue or instant mode
+- Optional unattended approval mode when reviewers are offline
+- Plot leveling with rewards, progression unlocks, and optional territory growth
+- Expansion snapshots and audit history for safer admin review
 
-### Fair Initial Pricing
+### Subplots, Rentals, and Rooms
 
-v1.2.5 introduces a fair pricing model that prevents players from claiming massive areas cheaply:
+- Zone creation inside existing plots
+- Rentable rooms, stalls, and sub-areas
+- Renter self-management with guest access and room spawn support
+- Landlord oversight and eviction flow
+- Market-style or hotel-style setups for shared claims
 
-```
-Total Cost = Base Cost + (Area - Base Area) x Expansion Rate
-```
+### TradeStalls and Local Market
 
-**Example with defaults:**
-- 256 blocks (1 chunk): $100
-- 512 blocks (2 chunks): $2,660
-- 1024 blocks (4 chunks): $7,780
+- Built-in stall system for servers that do not want a third-party market plugin
+- Sign + chest or barrel registration into a TradeStall
+- Local Market GUI for plot-based shopping and rental browsing
+- Supports money or ClaimBlocks as the trade currency
+- Configurable plugin bridge behavior when external shop plugins are installed
 
-### Snapshots & Rollback System
+### Migration, Diagnostics, and Recovery
 
-Safety nets for risky operations:
-
-- **Automatic snapshots** before expansions and merges
-- **Admin rollback GUI** to restore previous claim states
-- **Configurable retention** - Set maximum snapshots and expiration time
-- **Audit logging** - Track all snapshot operations
-
-### Expansion Request System
-
-Two approval modes for claim expansions:
-
-| Mode | Behavior |
-|------|----------|
-| **QUEUE** | Players submit requests, admins approve/deny via GUI |
-| **INSTANT** | Automatic approval with optional admin notifications |
-
-### Plot Leveling (RPG Progression)
-
-Upgrade plots through 30 levels to unlock rewards:
-
-- **Potion effects** - Speed, Haste, Jump Boost, Night Vision, and more
-- **Member slots** - Increase maximum trusted players per level
-- **Special flags** - Unlock flight at level 10, enhanced abilities at level 30
-- **Dual payment** - Pay with Vault currency or ClaimBlocks
-
-### Zoning (Sub-Claims)
-
-Create zones within your plots:
-
-- **Up to 10 zones per plot** (configurable)
-- **Rentable rooms** - Landlords can charge rent for sub-zones
-- **Independent permissions** - Each zone can have different access rules
-
-### Marketplace & Auctions
-
-- **Plot marketplace** - List plots for sale at fixed prices
-- **Auction house** - Timed bidding system with minimum bid increases
-- **Configurable fees** - Owner cut percentage and listing fees
-
-### Protection Flags
-
-Granular control over what happens in your claims:
-
-| Flag | Description |
-|------|-------------|
-| `pvp` | Player vs player combat |
-| `mob-spawning` | Hostile mob spawns |
-| `container-access` | Chest/barrel/hopper access |
-| `entity-protection` | Item frames, armor stands, etc. |
-| `farm-protection` | Crop trampling and harvesting |
-| `tnt-damage` | Explosion damage |
-| `fire-spread` | Fire propagation |
-| `piston-use` | Piston mechanics |
-| `fly` | Creative-style flight in claims |
-| `entry` | Who can enter the claim |
-| `shop-interact` | Villager/shop interactions |
-
-### Role Management
-
-Three-tier permission system:
-
-| Role | Priority | Default Permissions |
-|------|----------|---------------------|
-| **Owner** | 100 | All permissions |
-| **Member** | 50 | Build, break, interact, containers |
-| **Visitor** | 0 | Doors, buttons only |
-
-### Biome Changing
-
-Transform the biome within your claim:
-
-- 11 biomes available (Plains, Forest, Desert, Jungle, Taiga, Swamp, Cherry Grove, Badlands, Mushroom Fields, Meadow, Lush Caves)
-- Configurable cost per change
-
-### Cosmetics
-
-Personalize your claims:
-
-- **Border particles** - Flame, Heart, Soul Fire, Enchantment effects
-- **Entry effects** - Lightning strikes and sounds when entering claims
-
-### Welcome/Exit Messages
-
-- **Title notifications** - Display messages when players enter/exit claims
-- **Three modes**: `PER_PLAYER` (toggle), `FORCE_ON`, `FORCE_OFF`
-- **Chat messages** - Optional chat-based notifications
-- **Permission bypass** - Admins can receive messages even when disabled
-
-### Additional Features
-
-- **Unstuck command** - Escape from claims you're trapped in
-- **Wilderness revert** - Automatically unclaim abandoned plots
-- **Plot upkeep** - Optional rent/tax system for claim maintenance
-- **Social system** - Like/rate other players' plots
-- **Mob barrier** - Active system that removes hostile mobs from claims
-- **Plot teleportation** - Set spawn points and visit other players' claims
+- Migration wizard for supported protection sources
+- Migration wand for claim detection and visual preview
+- Snapshot browser and rollback tools
+- `/agadmin doctor` reporting for support and troubleshooting
+- Better admin recovery workflow after expansion, plot issues, or maintenance mistakes
 
 ---
 
@@ -210,229 +153,166 @@ Personalize your claims:
 
 ### Player Commands
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `/aegis` | `/ag`, `/guard` | Main command |
-| `/aegis menu` | | Open the main GUI |
-| `/aegis wand` | | Receive the claiming wand |
-| `/aegis claim` | | Claim selected area |
-| `/aegis unclaim` | | Remove your claim |
-| `/aegis resize` | | Resize existing claim |
-| `/aegis merge` | | Merge adjacent plots |
-| `/aegis cost` | | Check claim cost |
-| `/aegis home` | | Teleport to plot spawn |
-| `/aegis setspawn` | | Set plot spawn point |
-| `/aegis welcome <msg>` | | Set welcome message |
-| `/aegis farewell <msg>` | | Set farewell message |
-| `/aegis notify` | | Toggle enter/exit notifications |
-| `/aegis visit` | | Open travel menu |
-| `/aegis market` | | View plot marketplace |
-| `/aegis sell <price>` | | List plot for sale |
-| `/aegis unsell` | | Remove plot from market |
-| `/aegis auction` | | View auction house |
-| `/aegis zone` | | Manage sub-zones |
-| `/aegis level` | | Open leveling menu |
-| `/aegis like` | | Give reputation to a plot |
-| `/aegis rename <name>` | | Set plot display name |
-| `/aegis setdesc <desc>` | | Set plot description |
-| `/aegis stuck` | | Unstuck from a claim |
-| `/aegis blocks` | `/aegis ledger` | View ClaimBlock balance |
+| Command | Description |
+|---------|-------------|
+| `/aegis` | Main command |
+| `/aegis menu` | Open the main GUI |
+| `/aegis wand` | Receive the claiming wand |
+| `/aegis claim` | Claim selected land |
+| `/aegis unclaim` | Remove your plot |
+| `/aegis resize` | Resize an existing plot |
+| `/aegis merge` | Merge adjacent plots |
+| `/aegis cost` | Check claim cost |
+| `/aegis home` | Teleport to plot spawn |
+| `/aegis setspawn` | Set plot spawn point |
+| `/aegis welcome <message>` | Set plot welcome text |
+| `/aegis farewell <message>` | Set plot farewell text |
+| `/aegis notify` | Manage greetings/admin notification preferences |
+| `/aegis visit` | Open the travel menu |
+| `/aegis market` | Open the market menu |
+| `/aegis market local` | Open the local market for the current area |
+| `/aegis sell <price>` | List a plot for sale |
+| `/aegis unsell` | Remove a plot from sale |
+| `/aegis auction` | Open the auction browser |
+| `/aegis zone` | Manage zones and rentals |
+| `/aegis level` | Open plot leveling |
+| `/aegis rename <name>` | Set plot display name |
+| `/aegis setdesc <description>` | Set plot description |
+| `/aegis blocks` | View ClaimBlock balance and related options |
+| `/aegis blocks earnings <on|off|status>` | Manage passive ClaimBlock earnings |
+| `/aegis group create <name>` | Create a group |
+| `/aegis group status` | View group status |
+| `/aegis group deposit <amount>` | Deposit into the group treasury |
+| `/aegis group claim` | Claim the first group plot |
+| `/aegis stuck` | Escape being trapped in a claim |
 
 ### Admin Commands
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `/aegisadmin` | `/agadmin`, `/aga` | Admin command |
-| `/aegisadmin menu` | | Open admin GUI |
-| `/aegisadmin reload` | | Reload configuration |
-| `/aegisadmin bypass` | | Toggle protection bypass |
-| `/aegisadmin blocks <player> <add/remove/set> <amount>` | | Manage player ClaimBlocks |
-| `/aegisadmin migrate <plugin>` | | Import from other claim plugins |
+| Command | Description |
+|---------|-------------|
+| `/aegisadmin` | Main admin command |
+| `/aegisadmin menu` | Open the admin GUI |
+| `/aegisadmin reload` | Reload configuration and language data |
+| `/aegisadmin bypass` | Toggle protection bypass |
+| `/aegisadmin doctor` | Generate a diagnostics report |
+| `/aegisadmin migrate <plugin>` | Start migration from a supported plugin |
+| `/aegisadmin snapshot here [reason]` | Create a manual recovery snapshot |
+| `/aegisadmin restore here` | Restore the latest snapshot for the current plot |
+| `/aegisadmin blocks <player> <add|remove|set> <amount>` | Manage player ClaimBlocks |
 
 ---
 
 ## Permissions
 
-### Player Permissions
+Player-facing permissions are normally provided through `aegis.user`, and staff/admin permissions through `aegis.admin`.
 
-All player permissions are granted by default via the `aegis.user` parent node.
+Important nodes in 1.2.6 include:
 
-<details>
-<summary><strong>Click to expand full permission list</strong></summary>
+- `aegis.user`
+- `aegis.admin`
+- `aegis.admin.manage`
+- `aegis.serverzone.manage`
+- `aegis.market.manage`
+- `aegis.staff.co_owner`
+- `aegis.staff.market_steward`
+- `aegis.notify`
+- `aegis.notify.bypass`
+- `aegis.notify.others`
+- `aegis.admin.migrate`
+- `aegis.claimblocks.exchange`
 
-| Permission | Description | Default |
-|------------|-------------|---------|
-| `aegis.use` | Use the /aegis command | true |
-| `aegis.menu` | Open the main GUI | true |
-| `aegis.wand` | Receive and use the claim wand | true |
-| `aegis.claim` | Claim land | true |
-| `aegis.unclaim` | Unclaim land | true |
-| `aegis.resize` | Resize claims | true |
-| `aegis.merge` | Merge adjacent plots | true |
-| `aegis.home` | Teleport to plot spawn | true |
-| `aegis.spawn` | Teleport to world spawn | true |
-| `aegis.setspawn` | Set plot spawn | true |
-| `aegis.visit` | Open travel menu | true |
-| `aegis.stuck` | Use unstuck command | true |
-| `aegis.ledger` | View ClaimBlock ledger | true |
-| `aegis.welcome` | Set welcome message | true |
-| `aegis.farewell` | Set farewell message | true |
-| `aegis.notify` | Toggle notifications | true |
-| `aegis.rename` | Set plot name | true |
-| `aegis.setdesc` | Set plot description | true |
-| `aegis.like` | Give plot reputation | true |
-| `aegis.market` | View marketplace | true |
-| `aegis.sell` | List plot for sale | true |
-| `aegis.unsell` | Remove from sale | true |
-| `aegis.auction` | View auctions | true |
-| `aegis.zone` | Manage sub-zones | true |
-| `aegis.level` | Access leveling | true |
-| `aegis.biome` | Access biome menu | true |
-| `aegis.kick` | Kick from own plot | true |
-| `aegis.ban` | Ban from own plot | true |
-| `aegis.unban` | Unban from own plot | true |
-| `aegis.earn.blocks` | Earn ClaimBlocks via playtime | true |
-| `aegis.claimblocks.exchange` | Access ClaimBlocks exchange | false |
-| `aegis.claimblocks.buy` | Buy ClaimBlocks | false |
-| `aegis.claimblocks.sell` | Sell ClaimBlocks | false |
-
-</details>
-
-### Admin Permissions
-
-| Permission | Description | Default |
-|------------|-------------|---------|
-| `aegis.admin` | All admin permissions | op |
-| `aegis.admin.manage` | Edit other players' plots | op |
-| `aegis.admin.bypass-limits` | Ignore plot limits | op |
-| `aegis.admin.migrate` | Import from other plugins | op |
-| `aegis.admin.wand` | Get Sentinel's Scepter | op |
-| `aegis.reload` | Reload configuration | op |
-| `aegis.bypass` | Bypass all protections | op |
-| `aegis.convert` | Convert plot to Server Zone | op |
-| `aegis.setwarp` | Set server warps | op |
-| `aegis.delwarp` | Delete server warps | op |
-| `aegis.claimblocks.exchange.bypass` | Bypass exchange limits | op |
-| `aegis.claimblocks.selllock.bypass` | Bypass sell lock timer | op |
-| `aegis.notify.others` | Toggle notifications for others | op |
-| `aegis.notify.bypass` | Receive notifications when disabled | op |
+For the full permission list, see:
+- [plugin.yml](src/main/resources/plugin.yml)
 
 ---
 
 ## Configuration
 
-AegisGuard uses a comprehensive `config.yml` with sections for:
+AegisGuard uses a structured `config.yml` with clearer section ordering in 1.2.6.
 
-- A focused setup guide is available in [CONFIGURATION.md](CONFIGURATION.md) for small, medium, and large server recommendations.
+Notable configuration areas include:
 
-### Data Storage
+- storage backend and persistence
+- economy and ClaimBlocks settings
+- group plot and treasury rules
+- expansion approval and unattended review behavior
+- market, TradeStalls, and local market bridge settings
+- upkeep and tax notifications
+- staff/server-zone access rules
+- localization folder and fallback behavior
 
-```yaml
-storage:
-  type: "yml"  # Options: yml, sqlite, mysql
-  database:
-    file: "aegisguard.db"
-    # MySQL options available
-```
+### Language Folders
 
-### Economy Settings
+- `plugins/AegisGuard/lang/` is the primary editable folder for server owners
+- `plugins/AegisGuard/codex/` is the fallback bundle layer
 
-```yaml
-economy:
-  enabled: true
-  use_vault: true
-  claim_cost: 100.0
-  resize_cost_per_block: 10.0
-  refund_on_unclaim: true
-  refund_percent: 50.0
-```
+### Supported Language Packs
 
-### ClaimBlocks Configuration
+- `modern_english`
+- `old_english`
+- `spanish_mx`
+- `spanish_ar`
 
-```yaml
-claim_blocks:
-  enabled: true
-  starting_blocks: 500
-  earn:
-    playtime:
-      enabled: true
-      interval_minutes: 10
-      blocks_per_interval: 50
-      anti_afk:
-        enabled: true
-        required_activity_seconds: 300
-```
-
-### Localization
-
-Multiple language support with split bundle files:
-
-- `old_english` - Medieval/fantasy themed
-- `hybrid_english` - Mix of old and modern
-- `modern_english` - Contemporary language
-- `spanish_mx` - Mexican Spanish
-- `spanish_ar` - Argentine Spanish
+For setup guidance, tuning recommendations, and deployment notes:
+- [CONFIGURATION.md](CONFIGURATION.md)
 
 ---
 
 ## Plugin Integrations
 
-### Economy & Utilities
+### Core Integrations
 
-| Plugin | Integration |
-|--------|-------------|
-| **Vault** | Economy transactions, ClaimBlocks exchange |
-| **PlaceholderAPI** | Custom placeholders for scoreboards/chat |
-| **CoreProtect** | Block logging compatibility |
+| Plugin | Purpose |
+|--------|---------|
+| **Vault** | Money economy support |
+| **PlaceholderAPI** | Placeholder integration |
+| **CoreProtect** | Logging compatibility |
 
-### Map Visualization
+### Map Integrations
 
-| Plugin | Integration |
-|--------|-------------|
-| **Dynmap** | Claim overlay with customizable colors |
+| Plugin | Purpose |
+|--------|---------|
+| **Dynmap** | Claim overlays |
 | **BlueMap** | Claim markers and labels |
 | **Pl3xMap** | Claim visualization |
 
-### Protection Compatibility
+### Migration and Compatibility
 
-AegisGuard can coexist with other protection plugins:
+| Plugin | Purpose |
+|--------|---------|
+| **GriefPrevention** | Claim import and migration |
+| **GriefDefender** | Claim import and migration |
+| **Lands** | Claim import and migration |
+| **WorldGuard** | Region overlap and compatibility handling |
+| **Residence** | Region detection support |
+| **Towny** | Town-area awareness |
 
-| Plugin | Compatibility |
-|--------|---------------|
-| **WorldGuard** | Region overlap policy |
-| **GriefPrevention** | Claim import/migration |
-| **GriefDefender** | Claim import/migration |
-| **Towny** | Town area detection |
-| **Residence** | Region detection |
-| **Lands** | Claim import/migration |
+### Market Bridges
 
-### Other Integrations
-
-| Plugin | Integration |
-|--------|-------------|
-| **Discord** | Webhook notifications for claim events |
-| **mcMMO** | Skill compatibility |
-| **Jobs** | Job integration |
+| Plugin | Purpose |
+|--------|---------|
+| **QuickShop** | Local Market bridge option |
+| **Shopkeepers** | Local Market bridge option |
+| **ChestShop** | Local Market bridge option |
+| **ExcellentShop** | Local Market bridge option |
 
 ---
 
 ## Installation
 
-1. **Download** AegisGuard from [Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/), [Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard), or [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy)
-
-2. **Place** the JAR file in your server's `plugins/` folder
-
-3. **Start** your server to generate configuration files
-
-4. **Configure** `plugins/AegisGuard/config.yml` to your preferences
-
-5. **Reload** with `/agadmin reload` or restart the server
+1. Download AegisGuard from [Spigot](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/), [Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard), or [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy).
+2. Place the JAR in your server's `plugins/` folder.
+3. Start the server once to generate the configuration files.
+4. Review `plugins/AegisGuard/config.yml`.
+5. Adjust language files under `plugins/AegisGuard/lang/` if needed.
+6. Reload with `/agadmin reload` or restart the server.
 
 ### Optional Dependencies
 
-- **Vault** + Economy Provider (EssentialsX, CMI, etc.) - For monetary transactions
-- **PlaceholderAPI** - For placeholder support
-- **Dynmap/BlueMap/Pl3xMap** - For map visualization
+- Vault with a supported economy plugin
+- PlaceholderAPI
+- Dynmap, BlueMap, or Pl3xMap
+- QuickShop, Shopkeepers, ChestShop, or ExcellentShop if you want external market bridges
 
 ---
 
@@ -440,35 +320,13 @@ AegisGuard can coexist with other protection plugins:
 
 | Resource | Link |
 |----------|------|
-| Documentation | [Wiki & Guides](https://github.com/snazzyatoms/AegisGuard/wiki) |
-| Support | [Discord Community](https://discord.gg/Y2NpuR7UZE) |
-| Bug Reports | [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues) |
+| Wiki | [AegisGuard Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) |
+| Configuration Guide | [CONFIGURATION.md](CONFIGURATION.md) |
+| Issues | [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues) |
 | Releases | [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases) |
 | Spigot | [SpigotMC](https://www.spigotmc.org/resources/aegisguard-modern-land-protection-economy.130333/) |
 | Hangar | [PaperMC Hangar](https://hangar.papermc.io/snazzyatoms/AegisGuard) |
 | CurseForge | [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/aegisguard-modern-land-protection-economy) |
-
----
-
-## Demo Server
-
-Test AegisGuard on the public demo server:
-
-```
-IP:       72.5.47.116:25570
-Version:  1.20.4+ (Daily Reset | Sandbox Mode)
-Start:    /ag menu
-```
-
----
-
-## Support
-
-Need help? Have suggestions?
-
-- **Discord**: [Join our community](https://discord.gg/Y2NpuR7UZE)
-- **Wiki**: [Read the documentation](https://github.com/snazzyatoms/AegisGuard/wiki)
-- **Issues**: [Report bugs](https://github.com/snazzyatoms/AegisGuard/issues)
 
 ---
 

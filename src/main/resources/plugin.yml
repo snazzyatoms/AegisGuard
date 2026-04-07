@@ -6,7 +6,7 @@ api-version: "1.20"
 prefix: AegisGuard
 description: Player-friendly land protection with roles, group plots, admin recovery, and polished GUIs.
 authors: [snazzyatoms]
-website: https://discord.gg/Y2NpuR7UZE
+website: https://github.com/snazzyatoms/AegisGuard/wiki
 folia-supported: true
 
 # Optional integrations. AegisGuard will hook them when present and stay functional when absent.

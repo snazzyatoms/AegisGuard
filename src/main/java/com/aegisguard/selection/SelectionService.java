@@ -17,7 +17,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -77,6 +80,59 @@ public class SelectionService implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         clear(e.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onWandUse(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+        if (!isAegisWand(item)) return;
+
+        if (event.getHand() != null && event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (event.getClickedBlock() == null) {
+            event.setCancelled(true);
+            return;
+        }
+
+        event.setCancelled(true);
+        Location selected = event.getClickedBlock().getLocation();
+
+        if (item != null && item.hasItemMeta()) {
+            PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+            if (pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE)) {
+                setPlayerWand(player, "server_claim_wand");
+            } else {
+                setPlayerWand(player, "claim_wand");
+            }
+        }
+
+        if (action == Action.RIGHT_CLICK_BLOCK) {
+            setLoc1(player, selected);
+            player.sendMessage(color("&aFirst corner selected: &f"
+                    + selected.getBlockX() + ", " + selected.getBlockY() + ", " + selected.getBlockZ()));
+            if (plugin.effects() != null) plugin.effects().playConfirm(player);
+            return;
+        }
+
+        setLoc2(player, selected);
+        player.sendMessage(color("&bSecond corner selected: &f"
+                + selected.getBlockX() + ", " + selected.getBlockY() + ", " + selected.getBlockZ()));
+
+        long area = getSelectionArea(player);
+        if (area > 0L) {
+            player.sendMessage(color("&7Selection area: &e" + area + " blocks &7- use &a/ag claim &7to confirm."));
+        }
+
+        if (plugin.effects() != null) plugin.effects().playConfirm(player);
     }
 
     // ------------------------------------------------------------
@@ -209,6 +265,10 @@ public class SelectionService implements Listener {
 
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         return pdc.has(WAND_KEY, PersistentDataType.BYTE) || pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
+    }
+
+    private String color(String text) {
+        return text == null ? "" : org.bukkit.ChatColor.translateAlternateColorCodes('&', text);
     }
 
     // ------------------------------------------------------------

@@ -28,6 +28,7 @@ import com.aegisguard.listeners.BannedPlayerListener;
 import com.aegisguard.listeners.LevelingListener;
 import com.aegisguard.listeners.MarketStallListener;
 import com.aegisguard.listeners.PlotGreetingListener;
+import com.aegisguard.listeners.StarterKitListener;
 import com.aegisguard.migration.MigrationManager;
 import com.aegisguard.market.TradeStallService;
 import com.aegisguard.notify.NotificationManager;
@@ -223,6 +224,16 @@ public class AegisGuard extends JavaPlugin {
 
         // --- CONFIG + MESSAGES ---
         configMgr = new AGConfig(this);
+
+        // --- LANGUAGE ENGINE ---
+        try {
+            codex = new CodexEngine(this);
+            getLogger().info("Codex language engine initialized.");
+        } catch (Throwable t) {
+            codex = null;
+            getLogger().warning("Codex language engine failed to initialize: " + t.getMessage());
+        }
+
         messages = new MessagesUtil(this);
 
         // --- DATA STORE ---
@@ -315,6 +326,7 @@ public class AegisGuard extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
         Bukkit.getPluginManager().registerEvents(new LevelingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
         Bukkit.getPluginManager().registerEvents(new MarketStallListener(this), this);

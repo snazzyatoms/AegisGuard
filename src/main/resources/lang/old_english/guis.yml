@@ -447,6 +447,55 @@ cosmetics_lore:
 # Codex GUI (Guardian's Guide)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guardian''s Guide ✦'
+starter_note_name: '&eSettler''s Quickstart Note'
+starter_note_lore:
+- '&7Welcome unto AegisGuard.'
+- ' '
+- '&eOpen the menu: &b/ag menu'
+- '&eGet the wand: &b/ag wand'
+- '&eRight-click: &7first corner'
+- '&eLeft-click: &7second corner'
+- '&eClaim land: &b/ag claim'
+- ' '
+- '&7For deeper counsel, open the Codex'
+- '&7within the main menu.'
+starter_note_discard_lore: '&8Cast this note away to discard it.'
+codex_claim_page_title: '&e✦ The Claiming Guide'
+codex_travel_page_title: '&b✦ The Travel Guide'
+codex_menus_page_title: '&d✦ The Menu Guide'
+codex_security_page_title: '&c✦ The Security Guide'
+codex_economy_page_title: '&6✦ The Treasury Guide'
+codex_identity_page_title: '&3✦ The Identity Guide'
+codex_advanced_page_title: '&5✦ The Advanced Guide'
+codex_open_section_lore: '&eClick to open this chapter of the guide.'
+codex_claim_header: '&eClaiming & Shared Holds'
+codex_claim_header_lore:
+- '&7All thou needest to know of'
+- '&7claiming land and founding group plots.'
+codex_travel_header: '&bTravel & Visiting'
+codex_travel_header_lore:
+- '&7Journeying, visits, home points, and'
+- '&7server travel ways in AegisGuard.'
+codex_menus_header: '&dMenus & Governance'
+codex_menus_header_lore:
+- '&7A short telling of the chief'
+- '&7menus thou shalt use most often.'
+codex_security_header: '&cSecurity & Wards'
+codex_security_header_lore:
+- '&7How access, banishment, and plot'
+- '&7wards labor together for safety.'
+codex_economy_header: '&6Treasury & Markets'
+codex_economy_header_lore:
+- '&7ClaimBlocks, upkeep, markets,'
+- '&7TradeStalls, and the cost of growth.'
+codex_identity_header: '&3Identity & Bearing'
+codex_identity_header_lore:
+- '&7Ways to make thy holding feel'
+- '&7personal and easier to know.'
+codex_advanced_header: '&5Advanced Arts'
+codex_advanced_header_lore:
+- '&7Deeper systems for growth,'
+- '&7rentals, steward safety, and more.'
 
 codex_claim_title: '&e§lI. Claiming'
 codex_claim_lore:

@@ -28,6 +28,29 @@
 # These are retained for older code paths and existing installations.
 prefix: '&8[&bAegisGuard&8]&r '
 
+
+# ==============================================================================
+# Starter Kit
+# ==============================================================================
+# Optional first-join onboarding items for new players.
+starter_kit:
+  first_join:
+    enabled: true
+
+    # Give a claim wand to brand-new players the first time they ever join.
+    give_wand: true
+
+    # Give a disposable quickstart note with menu and claiming tips.
+    give_quickstart_note: true
+
+    # Preferred hotbar slots (0-8). If occupied, AegisGuard uses the first empty slot.
+    wand_hotbar_slot: 0
+    note_hotbar_slot: 1
+
+    # If true, dropping the quickstart note deletes it immediately instead of
+    # leaving it on the ground.
+    note_disappears_on_drop: true
+
 language_styles:
   # Keep this aligned with localization.default_language unless you are preserving
   # an older installation that still references the legacy style selector.

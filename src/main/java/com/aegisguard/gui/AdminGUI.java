@@ -86,36 +86,60 @@ public class AdminGUI {
                 "admin.auto_remove_banned",
                 "button_admin_auto_remove", "admin_auto_remove_lore",
                 Material.TNT, false,
+                List.of(
+                        "&7Automatically clean up claims",
+                        "&7owned by banned players."
+                ),
                 "toggle_auto_remove_banned"
         );
         addToggle(player, inv, SLOT_TOGGLE_BYPASS_LIMIT,
                 "admin.bypass_claim_limit",
                 "button_admin_bypass_limit", "admin_bypass_limit_lore",
                 Material.NETHER_STAR, false,
+                List.of(
+                        "&7Let staff create or manage",
+                        "&7claims beyond normal limits."
+                ),
                 "toggle_bypass_claim_limit"
         );
         addToggle(player, inv, SLOT_TOGGLE_BROADCAST,
                 "admin.broadcast_admin_actions",
                 "button_admin_broadcast", "admin_broadcast_lore",
                 Material.BEACON, false,
+                List.of(
+                        "&7Broadcast major admin actions",
+                        "&7to the configured audience."
+                ),
                 "toggle_broadcast_admin_actions"
         );
         addToggle(player, inv, SLOT_TOGGLE_UNLIMITED,
                 "admin.unlimited_plots",
                 "button_admin_unlimited", "admin_unlimited_lore",
                 Material.EMERALD_BLOCK, true,
+                List.of(
+                        "&7Remove normal plot limits",
+                        "&7for administrators."
+                ),
                 "toggle_unlimited_plots"
         );
         addToggle(player, inv, SLOT_TOGGLE_PROXY_SYNC,
                 "sync.proxy.enabled",
                 "button_admin_sync", "admin_sync_lore",
                 Material.ENDER_EYE, false,
+                List.of(
+                        "&7Sync supported data across",
+                        "&7proxy-connected servers."
+                ),
                 "toggle_proxy_sync"
         );
         addToggle(player, inv, SLOT_TOGGLE_LOW_OVERHEAD,
                 "performance.low_overhead_mode",
                 "button_admin_perf", "admin_perf_lore",
                 Material.REDSTONE_BLOCK, false,
+                List.of(
+                        "&7Favor lighter background work",
+                        "&7for busy or larger servers."
+                ),
                 "toggle_low_overhead_mode"
         );
 
@@ -466,7 +490,7 @@ public class AdminGUI {
     }
 
     private void addToggle(Player p, Inventory inv, int slot, String path, String nameKey, String loreKey,
-                           Material mat, boolean def, String actionKey) {
+                           Material mat, boolean def, List<String> fallbackLore, String actionKey) {
 
         boolean val = plugin.getConfig().getBoolean(path, def);
 
@@ -485,7 +509,7 @@ public class AdminGUI {
         List<String> lore = plugin.gui().trList(
                 p,
                 loreKey,
-                plugin.gui().trList(p, "admin_toggle_default_lore", List.of("&7Toggle this setting."))
+                fallbackLore
         );
 
         ItemStack it = GUIManager.createItem(icon, display, lore);

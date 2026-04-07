@@ -780,6 +780,42 @@ plot_status_members_lore:
 # Guía del Guardián (Codex)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
+codex_claim_page_title: '&e✦ Guía de Reclamos'
+codex_travel_page_title: '&b✦ Guía de Viaje'
+codex_menus_page_title: '&d✦ Guía de Menús'
+codex_security_page_title: '&c✦ Guía de Seguridad'
+codex_economy_page_title: '&6✦ Guía de Economía'
+codex_identity_page_title: '&3✦ Guía de Identidad'
+codex_advanced_page_title: '&5✦ Guía Avanzada'
+codex_open_section_lore: '&eHacé clic para abrir esta sección de la guía.'
+codex_claim_header: '&eReclamos y Parcelas Grupales'
+codex_claim_header_lore:
+- '&7Todo lo que necesitás saber sobre'
+- '&7reclamar terreno y arrancar parcelas grupales.'
+codex_travel_header: '&bViaje y Visitas'
+codex_travel_header_lore:
+- '&7Teletransportes, visitas, hogares y'
+- '&7viajes del servidor dentro de AegisGuard.'
+codex_menus_header: '&dMenús y Controles'
+codex_menus_header_lore:
+- '&7Una explicación rápida de los'
+- '&7menús que más vas a usar.'
+codex_security_header: '&cSeguridad y Protecciones'
+codex_security_header_lore:
+- '&7Cómo trabajan juntos el acceso,'
+- '&7los bloqueos y las protecciones.'
+codex_economy_header: '&6Economía y Mercados'
+codex_economy_header_lore:
+- '&7ClaimBlocks, mantenimiento, mercados,'
+- '&7TradeStalls y costos de progreso.'
+codex_identity_header: '&3Identidad y Presentación'
+codex_identity_header_lore:
+- '&7Formas de hacer que tu parcela'
+- '&7se sienta personal y fácil de reconocer.'
+codex_advanced_header: '&5Sistemas Avanzados'
+codex_advanced_header_lore:
+- '&7Sistemas más profundos para crecer,'
+- '&7alquileres, seguridad administrativa y más.'
 
 codex_getting_started_title: '&e§lI. Empezando'
 codex_getting_started_lore:
@@ -791,6 +827,19 @@ codex_getting_started_lore:
 - '&f4. &7Usá &a/ag claim &7para reclamar la parcela.'
 - ' '
 - '&eTu primera parcela es gratis!'
+starter_note_name: '&eNota Rápida del Colono'
+starter_note_lore:
+- '&7Bienvenido a AegisGuard.'
+- ' '
+- '&eAbrí el menú: &b/ag menu'
+- '&eConseguí la vara: &b/ag wand'
+- '&eClic derecho: &7primera esquina'
+- '&eClic izquierdo: &7segunda esquina'
+- '&eReclamá terreno: &b/ag claim'
+- ' '
+- '&7Para más ayuda, abrí el Códice'
+- '&7dentro del menú principal.'
+starter_note_discard_lore: '&8Tirá esta nota para descartarla.'
 
 codex_claim_title: '&a§lII. Reclamar'
 codex_claim_lore:

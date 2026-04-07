@@ -774,6 +774,42 @@ plot_status_members_lore:
 # Guía del Guardián (Codex)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
+codex_claim_page_title: '&e✦ Guía de Reclamos'
+codex_travel_page_title: '&b✦ Guía de Viaje'
+codex_menus_page_title: '&d✦ Guía de Menús'
+codex_security_page_title: '&c✦ Guía de Seguridad'
+codex_economy_page_title: '&6✦ Guía de Economía'
+codex_identity_page_title: '&3✦ Guía de Identidad'
+codex_advanced_page_title: '&5✦ Guía Avanzada'
+codex_open_section_lore: '&eHaz clic para abrir esta sección de la guía.'
+codex_claim_header: '&eReclamos y Parcelas de Grupo'
+codex_claim_header_lore:
+- '&7Todo lo que necesitas saber sobre'
+- '&7reclamar terreno y empezar parcelas grupales.'
+codex_travel_header: '&bViaje y Visitas'
+codex_travel_header_lore:
+- '&7Teletransportes, visitas, hogares y'
+- '&7viajes del servidor dentro de AegisGuard.'
+codex_menus_header: '&dMenús y Controles'
+codex_menus_header_lore:
+- '&7Una explicación rápida de los'
+- '&7menús que más vas a usar.'
+codex_security_header: '&cSeguridad y Protecciones'
+codex_security_header_lore:
+- '&7Cómo trabajan juntos el acceso,'
+- '&7los bloqueos y las protecciones.'
+codex_economy_header: '&6Economía y Mercados'
+codex_economy_header_lore:
+- '&7ClaimBlocks, mantenimiento, mercados,'
+- '&7TradeStalls y costos de progreso.'
+codex_identity_header: '&3Identidad y Presentación'
+codex_identity_header_lore:
+- '&7Formas de hacer que tu parcela'
+- '&7se sienta personal y reconocible.'
+codex_advanced_header: '&5Sistemas Avanzados'
+codex_advanced_header_lore:
+- '&7Sistemas más profundos para crecer,'
+- '&7rentas, seguridad administrativa y más.'
 
 codex_getting_started_title: '&e§lI. Empezando'
 codex_getting_started_lore:
@@ -785,6 +821,19 @@ codex_getting_started_lore:
 - '&f4. &7Usa &a/ag claim &7para reclamar la parcela.'
 - ' '
 - '&e¡Tu primera parcela es gratis!'
+starter_note_name: '&eNota Rápida del Colono'
+starter_note_lore:
+- '&7Bienvenido a AegisGuard.'
+- ' '
+- '&eAbre el menú: &b/ag menu'
+- '&eObtén la vara: &b/ag wand'
+- '&eClic derecho: &7primera esquina'
+- '&eClic izquierdo: &7segunda esquina'
+- '&eReclama terreno: &b/ag claim'
+- ' '
+- '&7Para más ayuda, abre el Códice'
+- '&7dentro del menú principal.'
+starter_note_discard_lore: '&8Tira esta nota para desecharla.'
 
 codex_claim_title: '&a§lII. Reclamar'
 codex_claim_lore:
@@ -851,8 +900,69 @@ success_player_untrusted: '&a{PLAYER} ya no es de confianza.'
 success_flag_toggled: '&aBandera actualizada.'
 success_settings_saved: '&aConfiguración guardada.'
 
+button_admin_auto_remove: '&cAuto-Remover Baneados'
+admin_auto_remove_lore:
+- '&7Limpia automáticamente parcelas'
+- '&7de jugadores baneados.'
+button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
+admin_bypass_limit_lore:
+- '&7Permite al staff crear o gestionar'
+- '&7parcelas fuera de los límites normales.'
+button_admin_broadcast: '&eTransmitir Acciones Admin'
+admin_broadcast_lore:
+- '&7Anuncia acciones administrativas'
+- '&7a la audiencia configurada.'
+button_admin_unlimited: '&aParcelas Ilimitadas'
+admin_unlimited_lore:
+- '&7Elimina los límites normales'
+- '&7de parcelas para administradores.'
+button_admin_sync: '&dSincronización Proxy'
+admin_sync_lore:
+- '&7Sincroniza datos compatibles entre'
+- '&7servidores conectados por proxy.'
+button_admin_perf: '&cBajo Consumo'
+admin_perf_lore:
+- '&7Reduce el trabajo de fondo'
+- '&7para servidores más exigidos.'
+button_admin_diagnostics: '&bDiagnósticos'
+admin_diagnostics_lore:
+- '&7Abre revisiones de estado, hooks'
+- '&7y reportes de diagnóstico.'
+button_view_requests_admin: '&cRevisar Solicitudes'
+view_requests_admin_lore:
+- '&7Aprueba o rechaza solicitudes'
+- '&7de expansión de parcelas.'
 button_admin_reload_all: '&eRecargar Ajustes'
+button_reload_all_settings: '&eRecargar Ajustes'
+reload_all_settings_lore:
+- '&7Recarga configuración, vistas de datos'
+- '&7y ajustes del sistema.'
+- ' '
+- '&eClic para recargar.'
+button_refresh_language_packs: '&aActualizar Idiomas'
 button_admin_refresh_lang: '&aActualizar Idiomas'
+refresh_language_packs_lore:
+- '&7Recarga menús y mensajes'
+- '&7después de editar archivos de idioma.'
+- ' '
+- '&eClic para actualizar.'
+admin_toggle_default_lore:
+- '&7Alterna esta opción para'
+- '&7todo el servidor.'
+button_admin_snapshots: '&d📸 Instantáneas'
+admin_snapshots_lore:
+- '&7Revisa, restaura o elimina'
+- '&7puntos de recuperación de parcelas.'
+- ' '
+- '&eClic para abrir.'
+button_admin_snapshots_disabled: '&8📸 Deshabilitadas'
+admin_snapshots_disabled_lore:
+- '&7Las instantáneas de parcelas están'
+- '&7deshabilitadas en la configuración actual.'
+admin_plot_list_title: '&b✦ Lista de Parcelas'
+admin_plot_list_lore:
+- '&7Explora, inspecciona y teletranspórtate'
+- '&7a parcelas registradas.'
 button_admin_world_controls: '&b🌍 Controles del Mundo'
 admin_world_controls_lore:
 - '&7Gestiona protecciones globales'

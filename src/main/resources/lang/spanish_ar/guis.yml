@@ -562,6 +562,7 @@ level_upgrade_cost_money_disabled: '&8Dinero: Deshabilitado/No disponible'
 level_upgrade_cost_blocks: '&7Bloques: &b{COST} &7(Tenés &b{BALANCE}&7)'
 level_upgrade_cost_blocks_disabled: '&8Bloques: Deshabilitado/No disponible'
 level_upgrade_new_buffs_title: '&bNuevas Bendiciones:'
+level_upgrade_active_after_title: '&dActivo Tras la Ascensión:'
 level_upgrade_preview_title: '&eVista Previa de Ascensión (Nivel {LEVEL})'
 level_upgrade_territory_title: '&bGanancia de Territorio:'
 level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
@@ -883,18 +884,6 @@ plot_status_members_lore:
 # Guía del Guardián (Codex)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
-codex_root_tip_name: '&eInicio Rápido'
-codex_root_tip_lore:
-- '&7Abrí una guía corta para empezar con'
-- '&7reclamos, menús, viaje y los'
-- '&7comandos más útiles al principio.'
-- ' '
-- '&eHacé clic para abrir la ayuda rápida.'
-codex_quickstart_page_title: '&e✦ Inicio Rápido'
-codex_quickstart_header: '&eEmpezá Acá'
-codex_quickstart_header_lore:
-- '&7Una ruta simple para jugadores nuevos'
-- '&7que quieren reclamar, proteger y viajar rápido.'
 codex_claim_page_title: '&e✦ Guía de Reclamos'
 codex_travel_page_title: '&b✦ Guía de Viaje'
 codex_menus_page_title: '&d✦ Guía de Menús'

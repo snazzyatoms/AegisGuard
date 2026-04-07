@@ -162,9 +162,7 @@ public class ProtectionManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent e) {
-        if (!(e.getEntity() instanceof Monster
-                || e.getEntity() instanceof Slime
-                || e.getEntity() instanceof Phantom)) {
+        if (!isHostileMob(e.getEntity())) {
             return;
         }
 
@@ -177,6 +175,7 @@ public class ProtectionManager implements Listener {
 
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
+            removeHostileMob(e.getEntity());
         }
     }
 
@@ -195,6 +194,9 @@ public class ProtectionManager implements Listener {
 
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
+            if (isHostileMob(e.getEntity()) && plot.isInside(e.getEntity().getLocation())) {
+                removeHostileMob(e.getEntity());
+            }
         }
     }
 
@@ -211,7 +213,7 @@ public class ProtectionManager implements Listener {
             source = shooter;
         }
 
-        if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
+        if (!isHostileMob(source)) {
             return;
         }
 
@@ -227,6 +229,9 @@ public class ProtectionManager implements Listener {
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
             plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
+            if (plot.isInside(source.getLocation())) {
+                removeHostileMob(source);
+            }
         }
     }
 
@@ -245,7 +250,7 @@ public class ProtectionManager implements Listener {
             source = shooter;
         }
 
-        if (!(source instanceof Monster || source instanceof Slime || source instanceof Phantom)) {
+        if (!isHostileMob(source)) {
             return;
         }
 
@@ -261,6 +266,9 @@ public class ProtectionManager implements Listener {
         if (isProtectionActive(plot, "animals", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", null, target.getLocation());
+            if (plot.isInside(source.getLocation())) {
+                removeHostileMob(source);
+            }
         }
     }
 
@@ -317,6 +325,10 @@ public class ProtectionManager implements Listener {
 
             if (to.getFlag("fly", false) && to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
                 plugin.runMain(p, () -> p.setAllowFlight(true));
+            }
+
+            if (isMobProtectionEnabled(to)) {
+                purgeNearbyHostiles(p, to);
             }
         }
 
@@ -594,5 +606,39 @@ public class ProtectionManager implements Listener {
         if (damager instanceof Player p) return p;
         if (damager instanceof Projectile proj && proj.getShooter() instanceof Player p) return p;
         return null;
+    }
+
+    private boolean isHostileMob(Entity entity) {
+        return entity instanceof Monster || entity instanceof Slime || entity instanceof Phantom;
+    }
+
+    private void removeHostileMob(Entity entity) {
+        if (entity == null || !entity.isValid()) {
+            return;
+        }
+
+        try {
+            entity.remove();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void purgeNearbyHostiles(Player player, Plot plot) {
+        if (player == null || plot == null) {
+            return;
+        }
+
+        double radius = Math.max(6.0D, plugin.cfg().raw().getDouble("mob_barrier.entry_cleanup_radius", 20.0D));
+        double vertical = Math.max(4.0D, plugin.cfg().raw().getDouble("mob_barrier.entry_cleanup_vertical_radius", 8.0D));
+
+        for (Entity entity : player.getNearbyEntities(radius, vertical, radius)) {
+            if (!isHostileMob(entity)) {
+                continue;
+            }
+            if (!plot.isInside(entity.getLocation())) {
+                continue;
+            }
+            removeHostileMob(entity);
+        }
     }
 }

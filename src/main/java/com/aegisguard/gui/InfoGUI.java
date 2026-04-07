@@ -22,7 +22,6 @@ public class InfoGUI {
 
     private enum CodexSection {
         ROOT,
-        QUICKSTART,
         CLAIMING,
         TRAVEL,
         MENUS,
@@ -150,21 +149,10 @@ public class InfoGUI {
                         "&7other advanced systems."
                 )));
 
-        inv.setItem(36, GUIManager.createItem(
-                Material.BOOK,
-                plugin.gui().tr(player, "codex_root_tip_name", "&eQuick Start"),
-                plugin.gui().trList(player, "codex_root_tip_lore", List.of(
-                        "&7Open a short getting-started guide",
-                        "&7for claiming, menus, travel, and",
-                        "&7the most useful early commands.",
-                        " ",
-                        "&eClick to open quick help."
-                ))
-        ));
     }
 
     private ItemStack sectionItem(Player player, Material material, String titleKey, String titleFallback, String loreKey, List<String> fallbackLore) {
-        List<String> lore = new ArrayList<>(plugin.gui().trList(player, loreKey, fallbackLore));
+        List<String> lore = new ArrayList<>(guideLore(player, loreKey, fallbackLore));
         lore.add(" ");
         lore.add(plugin.gui().tr(player, "codex_open_section_lore", "&eClick to open this guide section."));
         return GUIManager.createItem(material, plugin.gui().tr(player, titleKey, titleFallback), lore);
@@ -178,7 +166,6 @@ public class InfoGUI {
         ));
 
         switch (section) {
-            case QUICKSTART -> buildQuickstartSection(player, inv);
             case CLAIMING -> buildClaimingSection(player, inv);
             case TRAVEL -> buildTravelSection(player, inv);
             case MENUS -> buildMenusSection(player, inv);
@@ -833,14 +820,36 @@ public class InfoGUI {
         return GUIManager.createItem(
                 material,
                 plugin.gui().tr(player, nameKey, nameFallback),
-                plugin.gui().trList(player, loreKey, loreFallback)
+                guideLore(player, loreKey, loreFallback)
         );
+    }
+
+    private List<String> guideLore(Player player, String loreKey, List<String> loreFallback) {
+        List<String> translated = plugin.gui().trList(player, loreKey, loreFallback);
+        if (translated == null || translated.isEmpty()) {
+            return loreFallback;
+        }
+
+        int nonBlank = 0;
+        for (String line : translated) {
+            if (line != null && !line.trim().isEmpty()) nonBlank++;
+        }
+
+        // If a language pack only provides a title-like stub or an almost-empty lore,
+        // prefer the richer built-in handbook text so the guide stays genuinely useful.
+        if (loreFallback != null && !loreFallback.isEmpty()) {
+            int minimumExpected = Math.min(3, loreFallback.size());
+            if (nonBlank < minimumExpected) {
+                return loreFallback;
+            }
+        }
+
+        return translated;
     }
 
     private String titleKey(CodexSection section) {
         return switch (section) {
             case ROOT -> "codex_gui_title";
-            case QUICKSTART -> "codex_quickstart_page_title";
             case CLAIMING -> "codex_claim_page_title";
             case TRAVEL -> "codex_travel_page_title";
             case MENUS -> "codex_menus_page_title";
@@ -854,7 +863,6 @@ public class InfoGUI {
     private String fallbackTitle(CodexSection section) {
         return switch (section) {
             case ROOT -> "&b✦ Guardian's Guide ✦";
-            case QUICKSTART -> "&e✦ Quick Start";
             case CLAIMING -> "&e✦ Claiming Guide";
             case TRAVEL -> "&b✦ Travel Guide";
             case MENUS -> "&d✦ Menu Guide";
@@ -867,7 +875,6 @@ public class InfoGUI {
 
     private String headerKey(CodexSection section) {
         return switch (section) {
-            case QUICKSTART -> "codex_quickstart_header";
             case CLAIMING -> "codex_claim_header";
             case TRAVEL -> "codex_travel_header";
             case MENUS -> "codex_menus_header";
@@ -881,7 +888,6 @@ public class InfoGUI {
 
     private String headerFallback(CodexSection section) {
         return switch (section) {
-            case QUICKSTART -> "&eStart Here";
             case CLAIMING -> "&eClaiming & Group Plots";
             case TRAVEL -> "&bTravel & Visiting";
             case MENUS -> "&dMenus & Controls";
@@ -895,7 +901,6 @@ public class InfoGUI {
 
     private String headerLoreKey(CodexSection section) {
         return switch (section) {
-            case QUICKSTART -> "codex_quickstart_header_lore";
             case CLAIMING -> "codex_claim_header_lore";
             case TRAVEL -> "codex_travel_header_lore";
             case MENUS -> "codex_menus_header_lore";
@@ -909,7 +914,6 @@ public class InfoGUI {
 
     private List<String> headerLoreFallback(CodexSection section) {
         return switch (section) {
-            case QUICKSTART -> List.of("&7A simple starting path for new players", "&7who want to claim, secure, and travel quickly.");
             case CLAIMING -> List.of("&7Everything you need to know about", "&7claiming land and starting group plots.");
             case TRAVEL -> List.of("&7Teleportation, visits, homes, and", "&7server travel options in AegisGuard.");
             case MENUS -> List.of("&7A quick explanation of the main", "&7menus you will use most often.");
@@ -923,7 +927,6 @@ public class InfoGUI {
 
     private Material headerMaterial(CodexSection section) {
         return switch (section) {
-            case QUICKSTART -> Material.BOOK;
             case CLAIMING -> Material.GOLDEN_HOE;
             case TRAVEL -> Material.ENDER_PEARL;
             case MENUS -> Material.WRITABLE_BOOK;
@@ -968,7 +971,6 @@ public class InfoGUI {
         }
 
         CodexSection target = switch (slot) {
-            case 36 -> CodexSection.QUICKSTART;
             case 10 -> CodexSection.CLAIMING;
             case 12 -> CodexSection.TRAVEL;
             case 14 -> CodexSection.MENUS;

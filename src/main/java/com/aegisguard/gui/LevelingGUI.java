@@ -138,7 +138,7 @@ public class LevelingGUI {
                 vars("level", String.valueOf(currentLvl)),
                 "&bBlessings at Level &f{LEVEL}"
         ));
-        currentBuffLore.addAll(formatBuffs(player, currentLvl,
+        currentBuffLore.addAll(formatActiveBuffs(player, currentLvl,
                 "level_current_blessings_none",
                 "&8No special bonuses are active at this level yet."
         ));
@@ -234,6 +234,12 @@ public class LevelingGUI {
                 previewLore.addAll(formatBuffs(player, nextLvl,
                         "level_upgrade_blessings_none",
                         "&8This upgrade focuses on growth or access rather than a new bonus."
+                ));
+                previewLore.add("");
+                previewLore.add(t(player, "level_upgrade_active_after_title", "&dActive After Ascension:"));
+                previewLore.addAll(formatActiveBuffs(player, nextLvl,
+                        "level_current_blessings_none",
+                        "&8No special bonuses will be active at that level yet."
                 ));
 
                 if (plugin.cfg().isLevelingExpansionEnabled()) {
@@ -336,6 +342,12 @@ public class LevelingGUI {
                     upgradeLore.addAll(formatBuffs(player, nextLvl,
                             "level_upgrade_blessings_none",
                             "&8This upgrade focuses on growth or access rather than a new bonus."
+                    ));
+                    upgradeLore.add("");
+                    upgradeLore.add(t(player, "level_upgrade_active_after_title", "&dActive After Ascension:"));
+                    upgradeLore.addAll(formatActiveBuffs(player, nextLvl,
+                            "level_current_blessings_none",
+                            "&8No special bonuses will be active at that level yet."
                     ));
 
                     if (plugin.cfg().isLevelingExpansionEnabled()) {
@@ -753,6 +765,109 @@ public class LevelingGUI {
         return formatted;
     }
 
+    private List<String> formatActiveBuffs(Player player, int level, String emptyKey, String emptyFallback) {
+        Map<String, Integer> strongestEffects = new HashMap<>();
+        Map<String, Integer> effectOrder = new HashMap<>();
+        List<String> effectKeys = new ArrayList<>();
+
+        int totalMemberSlots = 0;
+        List<String> unlockedFlags = new ArrayList<>();
+        List<String> unlockedMisc = new ArrayList<>();
+
+        for (int i = 1; i <= level; i++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(i);
+            if (rewards == null || rewards.isEmpty()) {
+                continue;
+            }
+
+            for (String rawReward : rewards) {
+                if (rawReward == null) {
+                    continue;
+                }
+
+                String reward = rawReward.trim();
+                if (reward.isEmpty()) {
+                    continue;
+                }
+
+                if (reward.startsWith("EFFECT:")) {
+                    String[] parts = reward.split(":");
+                    if (parts.length < 3) {
+                        continue;
+                    }
+
+                    String effectKey = parts[1].trim().toUpperCase();
+                    int tier;
+                    try {
+                        tier = Integer.parseInt(parts[2].trim());
+                    } catch (NumberFormatException ignored) {
+                        continue;
+                    }
+
+                    if (!effectOrder.containsKey(effectKey)) {
+                        effectOrder.put(effectKey, effectOrder.size());
+                        effectKeys.add(effectKey);
+                    }
+                    strongestEffects.merge(effectKey, tier, Math::max);
+                    continue;
+                }
+
+                if (reward.startsWith("MEMBERS:")) {
+                    try {
+                        totalMemberSlots += Integer.parseInt(reward.substring("MEMBERS:".length()).trim());
+                    } catch (NumberFormatException ignored) {
+                    }
+                    continue;
+                }
+
+                if (reward.startsWith("FLAG:")) {
+                    String flag = reward.substring("FLAG:".length()).trim().toLowerCase();
+                    if (!flag.isEmpty() && !unlockedFlags.contains(flag)) {
+                        unlockedFlags.add(flag);
+                    }
+                    continue;
+                }
+
+                if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")) {
+                    if (!unlockedFlags.contains("fly")) {
+                        unlockedFlags.add("fly");
+                    }
+                    continue;
+                }
+
+                if (!unlockedMisc.contains(reward)) {
+                    unlockedMisc.add(reward);
+                }
+            }
+        }
+
+        List<String> formatted = new ArrayList<>();
+        for (String effectKey : effectKeys) {
+            Integer tier = strongestEffects.get(effectKey);
+            if (tier == null) {
+                continue;
+            }
+            formatted.add(formatReward(player, "EFFECT:" + effectKey + ":" + tier));
+        }
+
+        if (totalMemberSlots > 0) {
+            formatted.add(formatReward(player, "MEMBERS:" + totalMemberSlots));
+        }
+
+        for (String flag : unlockedFlags) {
+            formatted.add(formatReward(player, "FLAG:" + flag));
+        }
+
+        for (String misc : unlockedMisc) {
+            formatted.add(formatReward(player, misc));
+        }
+
+        if (formatted.isEmpty()) {
+            formatted.add(t(player, emptyKey, vars("level", String.valueOf(level)), emptyFallback));
+        }
+        return formatted;
+    }
+
     private String formatReward(Player player, String reward) {
         if (reward == null || reward.isBlank()) {
             return "&8- Unknown bonus";
@@ -786,6 +901,12 @@ public class LevelingGUI {
             String flag = prettyFlagName(reward.substring("FLAG:".length()));
             return t(player, "level_reward_flag_line",
                     vars("flag", flag),
+                    "&d✦ Unlocks {FLAG}");
+        }
+
+        if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")) {
+            return t(player, "level_reward_flag_line",
+                    vars("flag", prettyFlagName("fly")),
                     "&d✦ Unlocks {FLAG}");
         }
 

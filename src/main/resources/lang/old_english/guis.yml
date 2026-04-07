@@ -517,18 +517,6 @@ cosmetics_lore:
 # Codex GUI (Guardian's Guide)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guardian''s Guide ✦'
-codex_root_tip_name: '&eQuick Start'
-codex_root_tip_lore:
-- '&7Open a short starting guide for'
-- '&7claiming, menus, travel, and'
-- '&7the most useful early commands.'
-- ' '
-- '&eClick to open quick help.'
-codex_quickstart_page_title: '&e✦ First Steps'
-codex_quickstart_header: '&eBegin Here'
-codex_quickstart_header_lore:
-- '&7A simple first path for new folk'
-- '&7who would claim, secure, and travel well.'
 starter_note_name: '&eSettler''s Quickstart Note'
 starter_note_lore:
 - '&7Welcome unto AegisGuard.'

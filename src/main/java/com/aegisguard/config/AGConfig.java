@@ -115,6 +115,7 @@ public class AGConfig {
         config.addDefault("claim_blocks.earn.playtime.enabled", true);
         config.addDefault("claim_blocks.earn.playtime.interval_minutes", 10L);
         config.addDefault("claim_blocks.earn.playtime.amount", 1L);
+        config.addDefault("claim_blocks.earn.playtime.blocks_per_interval", 50L);
 
         // Level-up earn (optional; language packs include messages)
         config.addDefault("claim_blocks.earn.level_up.enabled", false);
@@ -190,7 +191,9 @@ public class AGConfig {
 
         this.claimBlocksPlaytimeEnabled = config.getBoolean("claim_blocks.earn.playtime.enabled", true);
         this.claimBlocksPlaytimeIntervalMinutes = Math.max(1L, config.getLong("claim_blocks.earn.playtime.interval_minutes", 10L));
-        this.claimBlocksPlaytimeAmount = Math.max(0L, config.getLong("claim_blocks.earn.playtime.amount", 1L));
+        this.claimBlocksPlaytimeAmount = Math.max(0L,
+                config.getLong("claim_blocks.earn.playtime.blocks_per_interval",
+                        config.getLong("claim_blocks.earn.playtime.amount", 1L)));
 
         this.claimBlocksLevelUpEnabled = config.getBoolean("claim_blocks.earn.level_up.enabled", false);
         this.claimBlocksLevelUpAmount = Math.max(0L, config.getLong("claim_blocks.earn.level_up.amount", 0L));

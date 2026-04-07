@@ -96,10 +96,11 @@ public class AdminPlotListGUI {
             if (fixedPage >= maxPages && maxPages > 0) fixedPage = maxPages - 1;
             else if (maxPages == 0) fixedPage = 0;
 
+            final List<Plot> finalPlots = allPlots;
             final int finalPage = fixedPage;
             final int finalMaxPages = maxPages;
 
-            plugin.runMain(player, () -> buildAndOpen(player, allPlots, finalPage, finalMaxPages));
+            plugin.runMain(player, () -> buildAndOpen(player, finalPlots, finalPage, finalMaxPages));
         });
     }
 

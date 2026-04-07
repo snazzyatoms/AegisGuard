@@ -917,6 +917,7 @@ protections:
   piston-use: true
 
   # Plot flag defaults.
+  safe_zone: true
   fly: false
   entry: true
   shop-interact: false

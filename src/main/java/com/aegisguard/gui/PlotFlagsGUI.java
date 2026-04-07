@@ -132,22 +132,24 @@ public class PlotFlagsGUI {
                 "button_shop", "shop_toggle_lore", shopCostStr,
                 "Shop Interact");
 
-        // --- 5. PREMIUM: FLY & COSMETICS ---
-        boolean canFly = plot.getFlag("fly", false);
-        double flyCost = plugin.cfg().getFlightCost();
-        String flyCostStr = (flyCost > 0 && !plugin.isAdmin(player))
-                ? plugin.eco().format(flyCost, CurrencyType.VAULT)
-                : free;
+        // --- 5. ADMIN: FLY / PREMIUM + COSMETICS ---
+        if (plugin.isAdmin(player)) {
+            boolean canFly = plot.getFlag("fly", false);
+            double flyCost = plugin.cfg().getFlightCost();
+            String flyCostStr = (flyCost > 0 && !plugin.isAdmin(player))
+                    ? plugin.eco().format(flyCost, CurrencyType.VAULT)
+                    : free;
 
-        List<String> flyLore = tl(player, "fly_toggle_lore", List.of());
-        flyLore = replace(flyLore, "{COST}", flyCostStr);
+            List<String> flyLore = tl(player, "fly_toggle_lore", List.of());
+            flyLore = replace(flyLore, "{COST}", flyCostStr);
 
-        String flyKey = canFly ? "button_fly_on" : "button_fly_off";
-        String flyName = t(player, flyKey, onOffFallback(player, canFly, "Flight"));
+            String flyKey = canFly ? "button_fly_on" : "button_fly_off";
+            String flyName = t(player, flyKey, onOffFallback(player, canFly, "Flight"));
 
-        ItemStack flyIcon = GUIManager.createItem(Material.FEATHER, flyName, flyLore);
-        if (canFly) glow(flyIcon);
-        inv.setItem(30, flyIcon);
+            ItemStack flyIcon = GUIManager.createItem(Material.FEATHER, flyName, flyLore);
+            if (canFly) glow(flyIcon);
+            inv.setItem(30, flyIcon);
+        }
 
         // Cosmetics
         String cosName = t(player, "button_cosmetics", "&bCosmetics");
@@ -218,7 +220,14 @@ public class PlotFlagsGUI {
             case 24 -> { toggleFlag(player, plot, "vehicles"); refresh = true; }
 
             case 25 -> { togglePaid(player, plot, "shop-interact", plugin.cfg().getShopInteractCost()); refresh = true; }
-            case 30 -> { togglePaid(player, plot, "fly", plugin.cfg().getFlightCost()); refresh = true; }
+            case 30 -> {
+                if (plugin.isAdmin(player)) {
+                    togglePaid(player, plot, "fly", plugin.cfg().getFlightCost());
+                    refresh = true;
+                } else {
+                    plugin.effects().playError(player);
+                }
+            }
 
             case 31 -> {
                 plugin.effects().playMenuFlip(player);

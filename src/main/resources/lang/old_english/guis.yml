@@ -196,45 +196,109 @@ claimblocks_exchange_close_lore:
 # -------------------------------------------------
 # Expansion GUI (Player-facing)
 # -------------------------------------------------
-expansion_gui_title: '&d✦ Land Expansion Petition'
+expansion_gui_title: '&d✦ Frontier Petition ✦'
+
+expansion_header_name: '&dFrontier Petition Console'
+expansion_header_lore:
+  - '&7Shape more room for halls, roads, farms,'
+  - '&7market stalls, and future domains.'
+  - ' '
+  - '&8Each petition is weighed for limits,'
+  - '&8encroachment safety, and due tribute.'
+expansion_header_state_outside: '&cStand within thine own claim to submit a petition.'
+expansion_header_state_pending: '&eA petition is already biding for this frontier.'
+expansion_header_state_ready_instant: '&bWorthy petitions may be granted anon on this realm.'
+expansion_header_state_ready_unattended: '&bNo stewards are abroad, so worthy queued petitions may be granted and chronicled.'
+expansion_header_state_ready_queue: '&6Choose a tier below and send it for stewardly judgment.'
+
+expansion_plot_overview_name: '&bPresent Frontier'
+expansion_plot_overview_missing_lore:
+  - '&7No claim was found beneath thy feet.'
+  - '&7Step within one of thine own plots to'
+  - '&7open a living expansion petition.'
+expansion_plot_type_line: '&7Plot Kind: &f{TYPE}'
+expansion_plot_owner_line: '&7Holder: &f{OWNER}'
+expansion_plot_world_line: '&7Realm: &f{WORLD}'
+expansion_plot_radius_line: '&7Current Reach: &e{RADIUS}'
+expansion_plot_footprint_line: '&7Guarded Ground: &b{AREA} blocks'
+expansion_plot_limit_line: '&7Realm Limit: &f{LIMIT} reach'
+expansion_plot_control_ready: '&aThou mayest petition from this place.'
+expansion_plot_control_blocked: '&cThou art not the holder of this plot, and mayest not enlarge it.'
+expansion_plot_type_server: '&dSteward Zone'
+expansion_plot_type_group_named: '&bGuild Plot &8({GROUP})'
+expansion_plot_type_group: '&bGuild Plot'
+expansion_plot_type_personal: '&aPersonal Plot'
+
+expansion_pending_none_name: '&aNo Petition Biding'
+expansion_pending_name: '&eBiding Expansion Petition'
+expansion_pending_none_lore:
+  - '&7No active petition is presently'
+  - '&7waiting within the queue.'
+expansion_pending_none_hint_outside: '&8Step into one of thine own plots to begin.'
+expansion_pending_none_hint_ready: '&aChoose a tier below to prepare thy next frontier step.'
+expansion_pending_radius_line: '&7Current Reach: &f{CURRENT}'
+expansion_pending_target_line: '&7Petitioned Reach: &a{TARGET}'
+expansion_pending_cost_line: '&7Tribute Due: &6{COST}'
+expansion_pending_world_line: '&7Realm Anchor: &f{WORLD}'
+expansion_pending_status_line: '&7Standing: &eBiding judgment'
+expansion_pending_mode_line: '&bThis realm granteth worthy petitions anon.'
+expansion_pending_mode_queue_line: '&6Steward review is required ere this frontier may widen.'
+
+expansion_projection_name: '&dFrontier Horizons'
+expansion_projection_lore:
+  - '&7Each tier wideneth thy frontier by a'
+  - '&7clean and reviewable measure.'
+  - ' '
+  - '&8Greater petitions cost more tribute,'
+  - '&8claim more ground, and face sterner bounds.'
+expansion_projection_hint_outside: '&8Enter one of thine own plots to behold living numbers.'
+expansion_projection_smallest_line: '&7Least Step: &f{TARGET} reach'
+expansion_projection_largest_line: '&7Greatest Step: &f{TARGET} reach'
+expansion_projection_limit_line: '&7Realm Ceiling: &f{LIMIT} reach'
+expansion_projection_audit_line: '&7Every judged petition is written to the chronicle.'
 
 # Tier buttons (names kept from original)
-expansion_tier1_name: '&aYeoman''s Grant'
-expansion_tier2_name: '&eKnight''s Fee'
-expansion_tier3_name: '&fBaron''s Estate'
-expansion_tier4_name: '&6Duke''s Domain'
-expansion_tier5_name: '&bRoyal Charter'
+expansion_tier1_name: '&aYeoman''s Pulse &8(+5)'
+expansion_tier2_name: '&eKnight''s Pulse &8(+10)'
+expansion_tier3_name: '&fBaron''s Surge &8(+20)'
+expansion_tier4_name: '&6Duke''s Rise &8(+35)'
+expansion_tier5_name: '&bRoyal Zenith &8(+50)'
 
 # Tier lore
 expansion_tier1_lore:
-  - '&7Petition for a modest grant.'
+  - '&7Open a cautious first lane of growth.'
   - '&7Increase reach by &a+5&7 blocks.'
   - ' '
-  - '&eClick to submit petition'
+  - '&eClick to submit petition.'
 
 expansion_tier2_lore:
-  - '&7Petition for a knight''s fee.'
+  - '&7Press thy bounds a little farther.'
   - '&7Increase reach by &a+10&7 blocks.'
   - ' '
-  - '&eClick to submit petition'
+  - '&eClick to submit petition.'
 
 expansion_tier3_lore:
-  - '&7Petition for a baron''s estate.'
+  - '&7Make room for greater halls and roads.'
   - '&7Increase reach by &a+20&7 blocks.'
   - ' '
-  - '&eClick to submit petition'
+  - '&eClick to submit petition.'
 
 expansion_tier4_lore:
-  - '&7Petition for a ducal domain.'
+  - '&7Shape a broad district about thy claim.'
   - '&7Increase reach by &a+35&7 blocks.'
   - ' '
-  - '&eClick to submit petition'
+  - '&eClick to submit petition.'
 
 expansion_tier5_lore:
-  - '&7Petition for a royal charter.'
+  - '&7Reach for a grand and landmark frontier.'
   - '&7Increase reach by &a+50&7 blocks.'
   - ' '
-  - '&eClick to submit petition'
+  - '&eClick to submit petition.'
+
+expansion_tier_radius_line: '&7Reach: &f{CURRENT} &8→ &a{TARGET}'
+expansion_tier_area_line: '&7Projected Ground: &b{AREA} blocks'
+expansion_tier_cost_line: '&7Estimated Tribute: &6{COST}'
+expansion_tier_pending_block: '&eA petition is already biding in review.'
 
 # -------------------------------------------------
 # Expansion Admin GUI
@@ -447,6 +511,18 @@ cosmetics_lore:
 # Codex GUI (Guardian's Guide)
 # ------------------------------------------------------------
 codex_gui_title: '&b✦ Guardian''s Guide ✦'
+codex_root_tip_name: '&eQuick Start'
+codex_root_tip_lore:
+- '&7Open a short starting guide for'
+- '&7claiming, menus, travel, and'
+- '&7the most useful early commands.'
+- ' '
+- '&eClick to open quick help.'
+codex_quickstart_page_title: '&e✦ First Steps'
+codex_quickstart_header: '&eBegin Here'
+codex_quickstart_header_lore:
+- '&7A simple first path for new folk'
+- '&7who would claim, secure, and travel well.'
 starter_note_name: '&eSettler''s Quickstart Note'
 starter_note_lore:
 - '&7Welcome unto AegisGuard.'

@@ -228,6 +228,7 @@ plot_welcome_show: '&a✦ {OWNER}&a bids thee welcome: &f{MESSAGE}'
 plot_farewell_show: '&e✦ {OWNER}&e bids thee farewell: &f{MESSAGE}'
 
 plot_created: '&a✔ Verily, thy land is now shielded under Aegis Guard.'
+plot_claimed: '&a✔ Verily, thy land is now shielded under Aegis Guard.'
 plot_unclaimed: '&e⚠ Thy claim hath been released unto the wilds.'
 no_plot_here: '&c❌ Thou standest upon no claim of thine.'
 

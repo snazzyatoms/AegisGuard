@@ -91,7 +91,7 @@ public class PlayerGUI {
                 18,26,
                 27,35,
                 36,44,
-                45,46,47,51,52,53
+                46,47,48,50,51
         };
         for (int i : borderSlots) inv.setItem(i, filler);
 
@@ -131,25 +131,9 @@ public class PlayerGUI {
         com.aegisguard.data.Zone currentRentedZone = currentPlot == null ? null : currentPlot.getRentedZoneAt(player.getLocation());
         boolean rentingCurrentZone = currentRentedZone != null && currentRentedZone.isRentedBy(player.getUniqueId());
 
-        // Claim Land (Slot 20)
-        boolean hasSelection = plugin.selection() != null && plugin.selection().hasSelection(player);
-        if (hasSelection) {
-            inv.setItem(20, GUIManager.createItem(
-                    Material.LIGHTNING_ROD,
-                    t(player, "button_claim_land", "&a🛡 Claim Land"),
-                    tl(player, "claim_land_ready_lore", List.of("&7Your selection is ready to become", "&7a protected claim.", " ", "&eClick to confirm the claim."))
-            ));
-        } else {
-            inv.setItem(20, GUIManager.createItem(
-                    Material.BARRIER,
-                    "&c" + t(player, "button_claim_land", "🛡 Claim Land"),
-                    tl(player, "claim_land_lore", List.of("&7Select two corners with your wand", "&7before claiming this land."))
-            ));
-        }
-
         // Flags (Slot 22)
         Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
-        inv.setItem(22, GUIManager.createItem(
+        inv.setItem(20, GUIManager.createItem(
                 flagIcon,
                 t(player, "button_plot_flags", "&6⚙ Plot Flags"),
                 tl(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore",
@@ -160,13 +144,20 @@ public class PlayerGUI {
 
         // Roles (Slot 24)
         Material roleIcon = canManage ? Material.PLAYER_HEAD : Material.SKELETON_SKULL;
-        inv.setItem(24, GUIManager.createItem(
+        inv.setItem(22, GUIManager.createItem(
                 roleIcon,
                 t(player, "button_roles", "&e👥 Roles"),
                 tl(player, canManage ? "roles_lore" : "roles_locked_lore",
                         canManage
                                 ? List.of("&7Grant or revoke access for", "&7friends, helpers, and visitors.")
                                 : List.of("&cStand inside a claim you manage", "&cto edit member access."))
+        ));
+
+        // Expansion (Slot 24)
+        inv.setItem(24, GUIManager.createItem(
+                Material.DIAMOND_PICKAXE,
+                t(player, "button_expand", "&b⛏ Expand"),
+                tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
         ));
 
         // --- 4. ADVANCED FEATURES ---
@@ -205,7 +196,7 @@ public class PlayerGUI {
             ));
         }
 
-        // --- 5. ECONOMY & EXPANSION ---
+        // --- 5. ECONOMY ---
 
         // Market (Slot 38)
         boolean localMarketAvailable = currentPlot != null
@@ -245,13 +236,6 @@ public class PlayerGUI {
             ));
         }
 
-        // Expansion (Slot 40)
-        inv.setItem(40, GUIManager.createItem(
-                Material.DIAMOND_PICKAXE,
-                t(player, "button_expand", "&b⛏ Expand"),
-                tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
-        ));
-
         // Auctions (Slot 42)
         boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
         if (upkeepEnabled) {
@@ -262,10 +246,10 @@ public class PlayerGUI {
             ));
         }
 
-        // --- 6. FOOTER ---
+        // --- 6. FOOTER / NAVIGATION ---
 
-        // Settings (Slot 48)
-        inv.setItem(48, GUIManager.createItem(
+        // Settings (Slot 45)
+        inv.setItem(45, GUIManager.createItem(
                 Material.COMPARATOR,
                 t(player, "button_player_settings", "&e⚙ Settings"),
                 tl(player, "player_settings_lore", List.of("&7Adjust language, sounds,", "&7and notification settings."))
@@ -280,8 +264,7 @@ public class PlayerGUI {
             );
             inv.setItem(49, adminItem);
 
-            // ✅ 1.2.6 QoL: small “reload hub” button in the border (slot 47 is border)
-            // This gives admins a consistent reload trigger anywhere without hunting.
+            // Small admin reload hub.
             ItemStack reloadHub = GUIManager.createItem(
                     Material.REDSTONE,
                     t(player, "button_reload_all_settings",
@@ -291,11 +274,11 @@ public class PlayerGUI {
             );
             // PDC tag so GUIListener detects it reliably
             try { plugin.gui().tagAction(reloadHub, "reload_all"); } catch (Throwable ignored) {}
-            inv.setItem(47, reloadHub);
+            inv.setItem(53, reloadHub);
         }
 
-        // Exit (Slot 50)
-        inv.setItem(50, GUIManager.createItem(
+        // Exit (far-right footer)
+        inv.setItem(52, GUIManager.createItem(
                 Material.BARRIER,
                 t(player, "button_exit", "&c✖ Exit"),
                 tl(player, "exit_lore", List.of("&7Close this menu."))
@@ -358,16 +341,6 @@ public class PlayerGUI {
             }
 
             case 20 -> {
-                if (plugin.selection() != null && plugin.selection().hasSelection(player)) {
-                    player.closeInventory();
-                    plugin.selection().confirmClaim(player);
-                } else {
-                    send(player, "no_selection", "&cYou need to select two points first.");
-                    if (plugin.effects() != null) plugin.effects().playError(player);
-                }
-            }
-
-            case 22 -> {
                 if (plot != null && canManage) plugin.gui().flags().open(player, plot);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -378,7 +351,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 24 -> {
+            case 22 -> {
                 if (plot != null && canManage) plugin.gui().roles().openRolesMenu(player, plot);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -388,6 +361,8 @@ public class PlayerGUI {
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }
+
+            case 24 -> plugin.gui().expansionRequest().open(player);
 
             // Advanced Features
             case 29 -> {
@@ -463,24 +438,29 @@ public class PlayerGUI {
                 }
             }
 
-            case 40 -> plugin.gui().expansionRequest().open(player);
-
             case 42 -> {
                 boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
                 if (upkeepEnabled) plugin.gui().auction().open(player, 0);
             }
 
             // System
-            case 48 -> plugin.gui().settings().open(player);
+            case 45 -> plugin.gui().settings().open(player);
 
             case 49 -> {
                 if (isAdmin) plugin.gui().admin().open(player);
             }
 
-            case 50 -> player.closeInventory();
+            case 52 -> player.closeInventory();
+
+            case 53 -> {
+                if (isAdmin) {
+                    // Reload hub is handled centrally by GUIListener via PDC tag.
+                    return;
+                }
+            }
         }
 
-        if (slot != 20 && slot != 50) {
+        if (slot != 49 && slot != 52 && slot != 53) {
             GUIManager.playClick(player);
         }
     }

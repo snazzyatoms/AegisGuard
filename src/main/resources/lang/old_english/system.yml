@@ -59,6 +59,7 @@ corners_diff_world: '&c❌ Both corners must be in the same world.'
 # Claim Create / Remove / Limits
 # -------------------------------------------------
 plot_created: '&a✔ Claim created successfully.'
+plot_claimed: '&a✔ Claim created successfully.'
 plot_unclaimed: '&e⚠ Claim removed.'
 no_plot_here: '&c❌ Thou art not standing inside thy claim.'
 max_claims_reached: '&c❌ Claim limit reached: Thou may only own {AMOUNT} claim(s).'

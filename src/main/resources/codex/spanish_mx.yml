@@ -289,6 +289,7 @@ plot_welcome_show: '&a✦ {OWNER}&a: &f{MESSAGE}'
 plot_farewell_show: '&e✦ {OWNER}&e: &f{MESSAGE}'
 
 plot_created: '&a✔ ¡Éxito! Tu terreno está protegido por AegisGuard.'
+plot_claimed: '&a✔ ¡Éxito! Tu terreno está protegido por AegisGuard.'
 plot_unclaimed: '&e✔ Tu terreno ha sido liberado.'
 
 # Alias por si el código usa uno u otro

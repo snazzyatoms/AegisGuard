@@ -62,7 +62,7 @@ public class GUIManager {
     private final PlotStatusGUI plotStatusGUI;
 
     // ✅ ClaimBlocks Exchange GUI
-    private final ClaimBlockExchangeGUI claimBlockExchangeGUI;
+    private ClaimBlockExchangeGUI claimBlockExchangeGUI;
 
     // ✅ Snapshot Admin GUI (Rollback System)
     private final SnapshotAdminGUI snapshotAdminGUI;
@@ -111,12 +111,8 @@ public class GUIManager {
         // Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
 
-        // Exchange (only if service exists)
-        if (plugin.exchange() != null) {
-            this.claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, plugin.exchange());
-        } else {
-            this.claimBlockExchangeGUI = null;
-        }
+        // Exchange may initialize slightly later during plugin startup, so this is lazy.
+        this.claimBlockExchangeGUI = null;
 
         // Snapshot Admin GUI (only if SnapshotManager exists)
         if (plugin.getSnapshotManager() != null) {
@@ -143,7 +139,8 @@ public class GUIManager {
     public void openClaimBlockExchange(Player player) {
         if (player == null) return;
 
-        if (claimBlockExchangeGUI == null || plugin.exchange() == null) {
+        ClaimBlockExchangeGUI exchangeGUI = exchange();
+        if (exchangeGUI == null || plugin.exchange() == null) {
             try { player.sendMessage(color("&cClaimBlocks Exchange is unavailable.")); } catch (Throwable ignored) {}
             return;
         }
@@ -156,7 +153,7 @@ public class GUIManager {
             return;
         }
 
-        claimBlockExchangeGUI.open(player);
+        exchangeGUI.open(player);
     }
 
     /**
@@ -231,7 +228,12 @@ public class GUIManager {
     public StallBrowseGUI stallBrowse() { return stallBrowseGUI; }
 
     // ✅ ClaimBlocks Exchange
-    public ClaimBlockExchangeGUI exchange() { return claimBlockExchangeGUI; }
+    public ClaimBlockExchangeGUI exchange() {
+        if (claimBlockExchangeGUI == null && plugin.exchange() != null) {
+            claimBlockExchangeGUI = new ClaimBlockExchangeGUI(plugin, plugin.exchange());
+        }
+        return claimBlockExchangeGUI;
+    }
 
     // ✅ Snapshot Admin
     public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }

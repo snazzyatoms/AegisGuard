@@ -100,6 +100,8 @@ public class WorldRulesManager {
 
         plot.setFlag("fly", set.fly);
         plot.setFlag("entry", set.entry);
+        plot.setFlag("safe_zone", plugin.getConfig().getBoolean("protections.safe_zone", true));
+        plot.setFlag("shop-interact", plugin.getConfig().getBoolean("protections.shop-interact", false));
 
         // Hard safety defaults
         plot.setFlag("tnt-damage", plugin.getConfig().getBoolean("protections.tnt-damage", true));

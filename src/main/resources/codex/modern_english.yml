@@ -228,6 +228,7 @@ plot_welcome_show: '&a✦ {OWNER}&a: &f{MESSAGE}'
 plot_farewell_show: '&e✦ {OWNER}&e: &f{MESSAGE}'
 
 plot_created: '&a✔ Claim created successfully.'
+plot_claimed: '&a✔ Claim created successfully.'
 plot_unclaimed: '&e⚠ Claim removed.'
 plot_too_small: '&c❌ The selected area is too small.'
 no_plot_here: '&c❌ You are not standing inside your claim.'

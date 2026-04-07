@@ -65,6 +65,7 @@ corners_diff_world: '&c❌ Ambas esquinas tienen que estar en el mismo mundo.'
 # Claim Create / Remove / Limits
 # -------------------------------------------------
 plot_created: '&a✔ Parcela creada con éxito.'
+plot_claimed: '&a✔ Parcela creada con éxito.'
 plot_unclaimed: '&e⚠ Parcela eliminada.'
 no_plot_here: '&c❌ No estás dentro de una parcela.'
 max_claims_reached: '&c❌ Límite de parcelas alcanzado: solo puedes tener {AMOUNT} parcela(s).'

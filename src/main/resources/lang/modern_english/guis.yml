@@ -112,43 +112,107 @@ expand_lore:
 # ------------------------------------------------------------
 # Expansion GUI (Player-facing)
 # ------------------------------------------------------------
-expansion_gui_title: '&d✦ Land Expansion Request'
+expansion_gui_title: '&d✦ Frontier Expansion ✦'
+
+expansion_header_name: '&dFrontier Expansion Console'
+expansion_header_lore:
+  - '&7Shape more room for homes, roads, farms,'
+  - '&7markets, and future district plans.'
+  - ' '
+  - '&8Every request is checked for limits,'
+  - '&8overlap safety, and payment readiness.'
+expansion_header_state_outside: '&cStand inside one of your own plots to submit a request.'
+expansion_header_state_pending: '&eA request is already in review for this frontier.'
+expansion_header_state_ready_instant: '&bValid requests can resolve immediately on this server.'
+expansion_header_state_ready_unattended: '&bNo reviewers are online, so valid queued requests may auto-approve and be logged.'
+expansion_header_state_ready_queue: '&6Choose a tier below and send it to staff review.'
+
+expansion_plot_overview_name: '&bCurrent Frontier'
+expansion_plot_overview_missing_lore:
+  - '&7No claim was detected at your feet.'
+  - '&7Move into one of your own plots to'
+  - '&7open a live expansion request.'
+expansion_plot_type_line: '&7Plot Type: &f{TYPE}'
+expansion_plot_owner_line: '&7Owner: &f{OWNER}'
+expansion_plot_world_line: '&7World: &f{WORLD}'
+expansion_plot_radius_line: '&7Current Radius: &e{RADIUS}'
+expansion_plot_footprint_line: '&7Protected Footprint: &b{AREA} blocks'
+expansion_plot_limit_line: '&7Server Limit: &f{LIMIT} radius'
+expansion_plot_control_ready: '&aYou can request expansion from this position.'
+expansion_plot_control_blocked: '&cYou are not the owner of this plot, so you cannot expand it.'
+expansion_plot_type_server: '&dServer Zone'
+expansion_plot_type_group_named: '&bGroup Plot &8({GROUP})'
+expansion_plot_type_group: '&bGroup Plot'
+expansion_plot_type_personal: '&aPersonal Plot'
+
+expansion_pending_none_name: '&aNo Pending Request'
+expansion_pending_name: '&ePending Expansion Request'
+expansion_pending_none_lore:
+  - '&7There is no active expansion request'
+  - '&7waiting in the queue right now.'
+expansion_pending_none_hint_outside: '&8Move into one of your own plots to begin.'
+expansion_pending_none_hint_ready: '&aPick a tier below to prepare your next frontier step.'
+expansion_pending_radius_line: '&7Current Radius: &f{CURRENT}'
+expansion_pending_target_line: '&7Requested Radius: &a{TARGET}'
+expansion_pending_cost_line: '&7Reserved Cost: &6{COST}'
+expansion_pending_world_line: '&7World Anchor: &f{WORLD}'
+expansion_pending_status_line: '&7Status: &eAwaiting review'
+expansion_pending_mode_line: '&bThis realm uses instant approval for valid expansions.'
+expansion_pending_mode_queue_line: '&6Staff review is required before this frontier expands.'
+
+expansion_projection_name: '&dExpansion Horizons'
+expansion_projection_lore:
+  - '&7Each tier widens your frontier in a'
+  - '&7clean, reviewable step.'
+  - ' '
+  - '&8Larger requests cost more, claim more'
+  - '&8space, and are checked against limits.'
+expansion_projection_hint_outside: '&8Enter one of your own plots to view live numbers.'
+expansion_projection_smallest_line: '&7Smallest Step: &f{TARGET} radius'
+expansion_projection_largest_line: '&7Largest Step: &f{TARGET} radius'
+expansion_projection_limit_line: '&7World Ceiling: &f{LIMIT} radius'
+expansion_projection_audit_line: '&7Every handled request is written to the audit trail.'
 
 # Tier buttons
-expansion_tier1_name: '&aSmall Expansion (+5)'
+expansion_tier1_name: '&aFrontier Pulse I &8(+5)'
 expansion_tier1_lore:
-- '&7Request a small expansion.'
-- '&7Increase radius by &a+5&7.'
+- '&7Open a careful first expansion lane.'
+- '&7Increase radius by &a+5&7 blocks.'
 - ' '
-- '&eClick to submit request'
+- '&eClick to submit request.'
 
-expansion_tier2_name: '&eMedium Expansion (+10)'
+expansion_tier2_name: '&eFrontier Pulse II &8(+10)'
 expansion_tier2_lore:
-- '&7Request a modest expansion.'
-- '&7Increase radius by &a+10&7.'
+- '&7Push your borders a little farther.'
+- '&7Increase radius by &a+10&7 blocks.'
 - ' '
-- '&eClick to submit request'
+- '&eClick to submit request.'
 
-expansion_tier3_name: '&fLarge Expansion (+20)'
+expansion_tier3_name: '&fFrontier Surge III &8(+20)'
 expansion_tier3_lore:
-- '&7Request a major expansion.'
-- '&7Increase radius by &a+20&7.'
+- '&7Open room for larger builds and paths.'
+- '&7Increase radius by &a+20&7 blocks.'
 - ' '
-- '&eClick to submit request'
+- '&eClick to submit request.'
 
-expansion_tier4_name: '&6Huge Expansion (+35)'
+expansion_tier4_name: '&6Frontier Rise IV &8(+35)'
 expansion_tier4_lore:
-- '&7Request a large expansion.'
-- '&7Increase radius by &a+35&7.'
+- '&7Shape a major district around your claim.'
+- '&7Increase radius by &a+35&7 blocks.'
 - ' '
-- '&eClick to submit request'
+- '&eClick to submit request.'
 
-expansion_tier5_name: '&bMassive Expansion (+50)'
+expansion_tier5_name: '&bFrontier Zenith V &8(+50)'
 expansion_tier5_lore:
-- '&7Request a massive expansion.'
-- '&7Increase radius by &a+50&7.'
+- '&7Reach for a full landmark-scale frontier.'
+- '&7Increase radius by &a+50&7 blocks.'
 - ' '
-- '&eClick to submit request'
+- '&eClick to submit request.'
+
+expansion_tier_radius_line: '&7Radius: &f{CURRENT} &8→ &a{TARGET}'
+expansion_tier_area_line: '&7Projected Footprint: &b{AREA} blocks'
+expansion_tier_cost_line: '&7Estimated Cost: &6{COST}'
+expansion_tier_pending_block: '&eYou already have a pending request in review.'
 
 # ------------------------------------------------------------
 # Expansion Admin GUI
@@ -435,6 +499,12 @@ level_current_blessings_name: '&dCurrent Bonuses'
 level_current_blessings_title: '&dBonuses Currently Active'
 level_current_blessings_footer_1: '&8Higher levels unlock stronger'
 level_current_blessings_footer_2: '&8bonuses and extra benefits.'
+level_upgrade_unavailable: '&cCannot Upgrade'
+level_upgrade_unavailable_lore:
+  - '&7No upgrade payment method is available.'
+  - '&8Enable Claim Blocks progression or Vault.'
+  - ' '
+  - '&cAscension is currently locked.'
 
 level_track_title_completed: '&aTrack Completed'
 level_track_completed_1: '&7All milestones in this track'
@@ -456,9 +526,12 @@ level_track_footer_next: '&6Upgrade to unlock these bonuses.'
 level_track_footer_progress: '&7Progress toward the next upgrade.'
 
 level_upgrade_tier: '&dNext Tier'
-level_upgrade_next_tier: '&dNext Tier'
+level_upgrade_next_tier: '&eNext Tier: &fLevel {LEVEL}'
 level_upgrade_cost: '&eUpgrade Cost: &6{COST}'
+level_upgrade_cost_money_disabled: '&8Money: Disabled or unavailable'
+level_upgrade_cost_blocks_disabled: '&8Blocks: Disabled or unavailable'
 level_upgrade_new_buffs_title: '&dNew Bonuses'
+level_upgrade_preview_title: '&eAscension Preview (Level {LEVEL})'
 level_upgrade_click_hint: '&eClick to upgrade if you can afford it.'
 
 level_track_completed_title: '&aTrack Completed'
@@ -502,22 +575,27 @@ level_max_reached_lore:
   - ' '
   - '&aEnjoy your full power.'
 
-level_track_completed_name: '&aCompleted Tier'
+level_track_completed_name: '&aLevel {LEVEL} Completed'
 level_track_completed_lore:
-  - '&7This tier is unlocked.'
-level_track_current_name: '&eCurrent Tier'
+  - '&7You already mastered this tier.'
+level_track_current_name: '&eCurrent Level {LEVEL}'
 level_track_current_lore:
-  - '&7Your claim is at this tier.'
-level_track_locked_name: '&cLocked Tier'
+  - '&7Your claim is currently at this tier.'
+level_track_locked_name: '&cLevel {LEVEL} Locked'
 level_track_locked_lore:
-  - '&7Advance to unlock this tier.'
-level_track_next_name: '&dNext Tier'
+  - '&7Reach the previous tier first.'
+level_track_next_name: '&bNext: Level {LEVEL}'
 level_track_next_lore:
-  - '&7Next upgrade available.'
-  - '&7Cost: &6{COST}'
+  - '&7This is the next ascension step.'
+  - '&7Review the preview panel for rewards.'
 
 level_upgrade_payment_title: '&bPayment Options:'
 level_upgrade_cost_money: '&7Cost: &6{COST} &8({TYPE})'
+level_upgrade_button_money_lore:
+  - '&7Pay using the server economy.'
+  - '&7Cost: &6{COST} &8({TYPE})'
+  - ''
+  - '&eClick to upgrade'
 level_upgrade_button_money: '&aUpgrade with Money'
 level_upgrade_hint_money: '&eClick to pay with money'
 level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
@@ -529,6 +607,8 @@ level_upgrade_blocks_unavailable: '&8Block upgrade unavailable.'
 level_upgrade_choose_payment: '&7Choose a payment method below.'
 level_track_next_cost_money: '&eMoney Cost: &6{COST}'
 level_track_next_cost_blocks: '&eBlock Cost: &b{BLOCKS}'
+level_up_fail_overlap: '&cCannot upgrade: the new land would overlap another claim.'
+level_up_fail_world_limit: '&cCannot upgrade: you reached this world''s radius limit ({LIMIT}).'
 
 # ------------------------------------------------------------
 # Other Menus (kept from original)
@@ -543,6 +623,18 @@ zone_gui_title: '&3✦ Zone Manager'
 biome_gui_title: '&a✦ Biome Studio'
 settings_menu_title: '&3⚙ Preferences'
 codex_gui_title: '&b✦ Guardian''s Guide ✦'
+codex_root_tip_name: '&eQuick Start'
+codex_root_tip_lore:
+  - '&7Open a short getting-started guide'
+  - '&7for claiming, menus, travel, and'
+  - '&7the most useful early commands.'
+  - ' '
+  - '&eClick to open quick help.'
+codex_quickstart_page_title: '&e✦ Quick Start'
+codex_quickstart_header: '&eStart Here'
+codex_quickstart_header_lore:
+  - '&7A simple starting path for new players'
+  - '&7who want to claim, secure, and travel quickly.'
 codex_claim_page_title: '&e✦ Claiming Guide'
 codex_travel_page_title: '&b✦ Travel Guide'
 codex_menus_page_title: '&d✦ Menu Guide'

@@ -851,6 +851,17 @@ public class Plot {
         }
     }
 
+    public void setForRent(boolean forRent, double rentPrice) {
+        this.forRent = forRent;
+        if (forRent) {
+            this.rentPrice = Math.max(0.0, rentPrice);
+        } else {
+            this.rentPrice = 0.0;
+            this.currentRenter = null;
+            this.rentEndTime = 0;
+        }
+    }
+
     public double getRentPrice() {
         return rentPrice;
     }
@@ -1261,6 +1272,46 @@ public class Plot {
             if (parts.length != 2) continue;
             try {
                 setRole(UUID.fromString(parts[0]), parts[1]);
+            } catch (IllegalArgumentException ignored) {}
+        }
+    }
+
+    public String serializeRoleFlags() {
+        if (roleFlagStates.isEmpty()) return "";
+
+        List<String> entries = new ArrayList<>();
+        for (Map.Entry<String, Map<String, TriState>> roleEntry : roleFlagStates.entrySet()) {
+            String role = roleEntry.getKey();
+            Map<String, TriState> flagsForRole = roleEntry.getValue();
+            if (role == null || flagsForRole == null || flagsForRole.isEmpty()) continue;
+
+            for (Map.Entry<String, TriState> flagEntry : flagsForRole.entrySet()) {
+                String flag = flagEntry.getKey();
+                TriState state = flagEntry.getValue();
+                if (flag == null || state == null || state == TriState.INHERIT) continue;
+                entries.add(role + "|" + flag + "|" + state.name());
+            }
+        }
+        return String.join(";", entries);
+    }
+
+    public void deserializeRoleFlags(String serialized) {
+        roleFlagStates.clear();
+        if (serialized == null || serialized.isBlank()) return;
+
+        for (String entry : serialized.split(";")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 3);
+            if (parts.length != 3) continue;
+
+            String role = parts[0].trim().toLowerCase(Locale.ROOT);
+            String flag = parts[1].trim().toLowerCase(Locale.ROOT);
+            if (role.isEmpty() || flag.isEmpty()) continue;
+
+            try {
+                TriState state = TriState.valueOf(parts[2].trim().toUpperCase(Locale.ROOT));
+                if (state == TriState.INHERIT) continue;
+                roleFlagStates.computeIfAbsent(role, k -> new ConcurrentHashMap<>()).put(flag, state);
             } catch (IllegalArgumentException ignored) {}
         }
     }

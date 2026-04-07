@@ -125,6 +125,14 @@ public class ClaimBlockManager {
         return Math.max(0, available);
     }
 
+    public void invalidateOwnerCache(UUID uuid) {
+        if (uuid == null) return;
+        ClaimBlockData data = getOrCreate(uuid);
+        data.setUsedBlocksCache(0L);
+        data.setLastUsedCacheUpdate(0L);
+        saveAsync();
+    }
+
     public boolean canAfford(UUID uuid, long amount) {
         Player p = plugin.getServer().getPlayer(uuid);
         if (p != null && p.hasPermission("aegis.admin.bypass-limits")) return true;

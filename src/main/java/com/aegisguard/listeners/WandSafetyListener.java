@@ -1,6 +1,7 @@
-package com.aegisguard.selection;
+package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.selection.SelectionService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

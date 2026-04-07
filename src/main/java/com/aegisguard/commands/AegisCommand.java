@@ -1188,10 +1188,10 @@ private record Bounds(int minX, int minZ, int maxX, int maxZ) {
         return Math.max(w, d);
     }
 
-    int minX() { return minX; }
-    int minZ() { return minZ; }
-    int maxX() { return maxX; }
-    int maxZ() { return maxZ; }
+    public int minX() { return minX; }
+    public int minZ() { return minZ; }
+    public int maxX() { return maxX; }
+    public int maxZ() { return maxZ; }
 }
 
 private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds) {

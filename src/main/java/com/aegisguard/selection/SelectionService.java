@@ -264,7 +264,7 @@ public class SelectionService implements Listener {
 
         // Compatibility: if other protection plugin present, yield if configured
         ProtectionHookManager hooks = plugin.protectionHooks();
-        if (hooks != null && !hooks.shouldBypass(p, ctx.l1, ctx.l2)) {
+        if (hooks != null && hooks.isAreaProtectedElsewhere(ctx.worldName, ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ)) {
             plugin.msg().send(p, "claim_external_protection_conflict");
             return;
         }
@@ -416,7 +416,7 @@ public class SelectionService implements Listener {
         }
 
         ProtectionHookManager hooks = plugin.protectionHooks();
-        if (hooks != null && !hooks.shouldBypass(p, ctx.l1, ctx.l2)) {
+        if (hooks != null && hooks.isAreaProtectedElsewhere(ctx.worldName, ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ)) {
             plugin.msg().send(p, "claim_external_protection_conflict");
             return null;
         }
@@ -479,7 +479,7 @@ public class SelectionService implements Listener {
 
         // Recalc claim blocks for owner if enabled
         if (!plot.isServerZone() && plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) {
-            plugin.claimBlocks().recalcForOwner(plot.getOwner());
+            plugin.claimBlocks().invalidateOwnerCache(plot.getOwner());
         }
 
         plugin.msg().send(p, "plot_unclaimed");

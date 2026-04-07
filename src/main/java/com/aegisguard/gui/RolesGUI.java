@@ -388,7 +388,7 @@ public class RolesGUI {
         }
         inv.setItem(52, GUIManager.createItem(
                 Material.PAPER,
-                t(player, "button_page", "&7Page: &f{PAGE}",
+                t(player, "button_page",
                         Map.of("PAGE", (safePage + 1) + "/" + (maxPage + 1)),
                         "&7Page: &f" + (safePage + 1) + "/" + (maxPage + 1)
                 ),
@@ -500,7 +500,7 @@ public class RolesGUI {
         }
         inv.setItem(53, GUIManager.createItem(
                 Material.PAPER,
-                t(player, "button_page", "&7Page: &f{PAGE}",
+                t(player, "button_page",
                         Map.of("PAGE", (safePage + 1) + "/" + (maxPage + 1)),
                         "&7Page: &f" + (safePage + 1) + "/" + (maxPage + 1)
                 ),
@@ -628,7 +628,7 @@ public class RolesGUI {
         }
         inv.setItem(52, GUIManager.createItem(
                 Material.PAPER,
-                t(player, "button_page", "&7Page: &f{PAGE}",
+                t(player, "button_page",
                         Map.of("PAGE", (safePage + 1) + "/" + (maxPage + 1)),
                         "&7Page: &f" + (safePage + 1) + "/" + (maxPage + 1)
                 ),
@@ -737,7 +737,7 @@ public class RolesGUI {
         }
         inv.setItem(26, GUIManager.createItem(
                 Material.PAPER,
-                t(player, "button_page", "&7Page: &f{PAGE}",
+                t(player, "button_page",
                         Map.of("PAGE", (safePage + 1) + "/" + (maxPage + 1)),
                         "&7Page: &f" + (safePage + 1) + "/" + (maxPage + 1)
                 ),

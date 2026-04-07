@@ -162,6 +162,10 @@ public class ClaimBlockData {
         return lastUsedCacheUpdate;
     }
 
+    public void setLastUsedCacheUpdate(long lastUsedCacheUpdate) {
+        this.lastUsedCacheUpdate = Math.max(0L, lastUsedCacheUpdate);
+    }
+
     // =========================================================================
     // Sell-Lock Lot API
     // =========================================================================

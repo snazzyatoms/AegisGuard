@@ -34,7 +34,7 @@ import com.aegisguard.notify.NotificationManager;
 import com.aegisguard.protection.BlockProtectionListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
-import com.aegisguard.selection.WandSafetyListener;
+import com.aegisguard.listeners.WandSafetyListener;
 import com.aegisguard.snapshots.SnapshotManager;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
@@ -607,7 +607,10 @@ public class AegisGuard extends JavaPlugin {
                             if (upkeep <= 0) return;
 
                             if (plot != null && plot.getOwner() != null) {
-                                if (!ecoManager.withdraw(plot.getOwner(), upkeep)) {
+                                boolean paid = vault() != null
+                                        && vault().charge(Bukkit.getOfflinePlayer(plot.getOwner()), upkeep);
+
+                                if (!paid) {
                                     notifyUpkeepDue(plot, upkeep);
 
                                     // If configured, unclaim plots on non-payment (optional)
@@ -678,7 +681,7 @@ public class AegisGuard extends JavaPlugin {
         long intervalSeconds = getConfig().getLong("wilderness_revert.interval_seconds", 300L);
         long intervalTicks = Math.max(20L, intervalSeconds * 20L);
 
-        WildernessRevertTask logic = new WildernessRevertTask(this);
+        WildernessRevertTask logic = new WildernessRevertTask(this, plotStore);
 
         wildernessRevertTask = new BukkitRunnable() {
             @Override

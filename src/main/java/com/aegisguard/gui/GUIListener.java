@@ -7,7 +7,6 @@ import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
-import com.aegisguard.gui.BiomeGUI.BiomeHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
 import com.aegisguard.gui.InfoGUI.InfoHolder;
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
@@ -94,7 +93,6 @@ public class GUIListener implements Listener {
                 || holder instanceof CosmeticsHolder
                 || holder instanceof LevelingHolder
                 || holder instanceof ZoningHolder
-                || holder instanceof BiomeHolder
                 || holder instanceof PlotMarketHolder
                 || holder instanceof PlotAuctionHolder
                 || holder instanceof ExpansionHolder
@@ -207,9 +205,6 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof ZoneTenantHolder castHolder) {
             plugin.gui().zoneTenant().handleClick(player, e, castHolder);
-        }
-        else if (holder instanceof BiomeHolder castHolder) {
-            plugin.gui().biomes().handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotMarketHolder castHolder) {
             plugin.gui().market().handleClick(player, e, castHolder);
@@ -537,11 +532,6 @@ public class GUIListener implements Listener {
             }
             return;
         }
-        if (holder instanceof BiomeHolder) {
-            if (!safeInvokeOpen(plugin.gui().biomes(), player, plot)) safeInvokeOpen(plugin.gui().biomes(), player);
-            return;
-        }
-
         if (holder instanceof PlotMarketHolder) {
             if (!safeInvokeOpen(plugin.gui().market(), player, page)) safeInvokeOpen(plugin.gui().market(), player);
             return;

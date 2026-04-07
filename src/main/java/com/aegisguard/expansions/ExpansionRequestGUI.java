@@ -114,7 +114,7 @@ public class ExpansionRequestGUI {
 
         inv.setItem(31, GUIManager.createItem(
                 Material.AMETHYST_SHARD,
-                tr(player, "expansion_projection_name", "&dExpansion Horizons"),
+                tr(player, "expansion_projection_name", "&dExpansion Horizons &8• &5Future Update"),
                 buildProjectionLore(player, plot, ownsPlotHere)
         ));
 
@@ -427,6 +427,16 @@ public class ExpansionRequestGUI {
             return lore;
         }
 
+        int currentRadius = getRadius(plot);
+        int baseRadius = plugin.cfg().getWorldMinRadius(player.getWorld());
+        int growth = Math.max(0, currentRadius - baseRadius);
+        String stage = currentRadius <= baseRadius
+                ? tr(player, "expansion_plot_stage_base", "&fBase Frontier")
+                : tr(player, "expansion_plot_stage_expanded", "&aExpanded Frontier");
+
+        lore.add(color(tr(player, "expansion_plot_stage_line",
+                "&7Current Tier: {STAGE}",
+                vars("STAGE", stage))));
         lore.add(color(tr(player, "expansion_plot_type_line",
                 "&7Plot Type: &f{TYPE}",
                 vars("TYPE", describePlotType(player, plot)))));
@@ -438,7 +448,15 @@ public class ExpansionRequestGUI {
                 vars("WORLD", plot.getWorld()))));
         lore.add(color(tr(player, "expansion_plot_radius_line",
                 "&7Current Radius: &e{RADIUS}",
-                vars("RADIUS", String.valueOf(getRadius(plot))))));
+                vars("RADIUS", String.valueOf(currentRadius)))));
+        lore.add(color(tr(player, "expansion_plot_base_line",
+                "&7Base Frontier Radius: &f{BASE}",
+                vars("BASE", String.valueOf(baseRadius)))));
+        lore.add(color(tr(player, "expansion_plot_growth_line",
+                growth > 0
+                        ? "&7Growth Beyond Base: &a+{GROWTH}"
+                        : "&7Growth Beyond Base: &8None yet",
+                vars("GROWTH", String.valueOf(growth)))));
         lore.add(color(tr(player, "expansion_plot_footprint_line",
                 "&7Protected Footprint: &b{AREA} blocks",
                 vars("AREA", String.valueOf(getArea(plot))))));
@@ -481,11 +499,11 @@ public class ExpansionRequestGUI {
 
     private List<String> buildProjectionLore(Player player, Plot plot, boolean ownsPlotHere) {
         List<String> lore = new ArrayList<>(trList(player, "expansion_projection_lore", List.of(
-                "&7Each tier widens your frontier in a",
-                "&7clean, reviewable step.",
+                "&7A future expansion path that aims to push",
+                "&7your frontier to heights never seen before.",
                 " ",
-                "&8Larger requests cost more, claim more",
-                "&8space, and are checked against limits."
+                "&8For now, this panel previews where your",
+                "&8current frontier can still grow today."
         )));
         lore.add(" ");
         if (plot == null || !ownsPlotHere) {
@@ -504,6 +522,8 @@ public class ExpansionRequestGUI {
         lore.add(color(tr(player, "expansion_projection_limit_line",
                 "&7World Ceiling: &f{LIMIT} radius",
                 vars("LIMIT", String.valueOf(getMaxExpansionRadius(player))))));
+        lore.add(color(tr(player, "expansion_projection_role_line",
+                "&7This panel previews the next legal frontier steps from your current claim.")));
         lore.add(color(tr(player, "expansion_projection_audit_line",
                 "&7Every handled request is written to the audit trail.")));
         return lore;

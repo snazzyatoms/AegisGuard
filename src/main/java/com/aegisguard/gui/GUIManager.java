@@ -56,7 +56,6 @@ public class GUIManager {
     private final ZoningGUI zoningGUI;
     private final ZoneBrowseGUI zoneBrowseGUI;
     private final ZoneTenantGUI zoneTenantGUI;
-    private final BiomeGUI biomeGUI;
 
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
@@ -106,7 +105,6 @@ public class GUIManager {
         this.zoningGUI = new ZoningGUI(plugin);
         this.zoneBrowseGUI = new ZoneBrowseGUI(plugin);
         this.zoneTenantGUI = new ZoneTenantGUI(plugin);
-        this.biomeGUI = new BiomeGUI(plugin);
 
         // Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
@@ -216,7 +214,6 @@ public class GUIManager {
     public ZoningGUI zoning() { return zoningGUI; }
     public ZoneBrowseGUI zoneBrowse() { return zoneBrowseGUI; }
     public ZoneTenantGUI zoneTenant() { return zoneTenantGUI; }
-    public BiomeGUI biomes() { return biomeGUI; }
 
     // Plot Status Codex
     public PlotStatusGUI plotStatus() { return plotStatusGUI; }

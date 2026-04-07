@@ -52,13 +52,6 @@ public class PlotStatusGUI {
         String owner = plot.getOwnerName();
         String world = plot.getWorld();
 
-        // Biome formatting
-        String biomeRaw = plot.getCustomBiome();
-        String natural = tr(player, "plot_status_biome_natural", null, "Natural");
-        String biomeName = (biomeRaw == null || biomeRaw.isEmpty()) ? natural : biomeRaw;
-        biomeName = biomeName.toLowerCase().replace("_", " ");
-        if (!biomeName.isEmpty()) biomeName = Character.toUpperCase(biomeName.charAt(0)) + biomeName.substring(1);
-
         // --- Header Info ---
         List<String> headerLore = new ArrayList<>();
         headerLore.add(tr(player,
@@ -70,11 +63,6 @@ public class PlotStatusGUI {
                 "plot_status_world_line", "plot_status_header_world",
                 "&7World: &f{WORLD}",
                 Map.of("WORLD", world)
-        ));
-        headerLore.add(tr(player,
-                "plot_status_biome_line", "plot_status_header_biome",
-                "&7Biome: &a{BIOME}",
-                Map.of("BIOME", biomeName)
         ));
         headerLore.add("");
         headerLore.add(tr(player,

@@ -138,7 +138,10 @@ public class LevelingGUI {
                 vars("level", String.valueOf(currentLvl)),
                 "&bBlessings at Level &f{LEVEL}"
         ));
-        currentBuffLore.addAll(formatBuffs(currentLvl));
+        currentBuffLore.addAll(formatBuffs(player, currentLvl,
+                "level_current_blessings_none",
+                "&8No special bonuses are active at this level yet."
+        ));
         currentBuffLore.add("");
 
         currentBuffLore.add(t(player,
@@ -228,7 +231,10 @@ public class LevelingGUI {
 
                 previewLore.add("");
                 previewLore.add(t(player, "level_upgrade_new_buffs_title", "&bNew Blessings:"));
-                previewLore.addAll(formatBuffs(nextLvl));
+                previewLore.addAll(formatBuffs(player, nextLvl,
+                        "level_upgrade_blessings_none",
+                        "&8This upgrade focuses on growth or access rather than a new bonus."
+                ));
 
                 if (plugin.cfg().isLevelingExpansionEnabled()) {
                     previewLore.add("");
@@ -327,7 +333,10 @@ public class LevelingGUI {
 
                     upgradeLore.add("");
                     upgradeLore.add(t(player, "level_upgrade_new_buffs_title", "&bNew Blessings:"));
-                    upgradeLore.addAll(formatBuffs(nextLvl));
+                    upgradeLore.addAll(formatBuffs(player, nextLvl,
+                            "level_upgrade_blessings_none",
+                            "&8This upgrade focuses on growth or access rather than a new bonus."
+                    ));
 
                     if (plugin.cfg().isLevelingExpansionEnabled()) {
                         upgradeLore.add("");
@@ -600,7 +609,10 @@ public class LevelingGUI {
 
         lore.add("");
         lore.add(t(player, "level_track_buffs_title", "&bBlessings:"));
-        lore.addAll(formatBuffs(level));
+        lore.addAll(formatBuffs(player, level,
+                "level_track_blessings_none",
+                "&8No extra bonuses are tied to this tier."
+        ));
 
         lore.add("");
         if (level == currentLvl + 1 && level <= maxLvl) {
@@ -728,28 +740,95 @@ public class LevelingGUI {
         return formatBlocks(bal);
     }
 
-    private List<String> formatBuffs(int level) {
+    private List<String> formatBuffs(Player player, int level, String emptyKey, String emptyFallback) {
         List<String> rewards = plugin.cfg().getLevelRewards(level);
         List<String> formatted = new ArrayList<>();
         if (rewards == null || rewards.isEmpty()) {
-            formatted.add("§8- (None)");
+            formatted.add(t(player, emptyKey, vars("level", String.valueOf(level)), emptyFallback));
         } else {
             for (String s : rewards) {
-                if (s.startsWith("EFFECT:")) {
-                    try {
-                        String[] parts = s.split(":");
-                        String type = parts[1].toLowerCase().replace("_", " ");
-                        type = type.substring(0, 1).toUpperCase() + type.substring(1);
-                        formatted.add("§b✦ " + type + " " + toRoman(Integer.parseInt(parts[2])));
-                    } catch (Exception e) {
-                        formatted.add("§b✦ " + s);
-                    }
-                } else {
-                    formatted.add("§a✦ " + s);
-                }
+                formatted.add(formatReward(player, s));
             }
         }
         return formatted;
+    }
+
+    private String formatReward(Player player, String reward) {
+        if (reward == null || reward.isBlank()) {
+            return "&8- Unknown bonus";
+        }
+
+        if (reward.startsWith("EFFECT:")) {
+            try {
+                String[] parts = reward.split(":");
+                String effect = prettyEffectName(parts[1]);
+                String tier = parts.length > 2 ? toRoman(Integer.parseInt(parts[2])) : "I";
+                return t(player, "level_reward_effect_line",
+                        vars("effect", effect, "tier", tier),
+                        "&b✦ {EFFECT} {TIER}");
+            } catch (Throwable ignored) {
+                return "&b✦ " + reward;
+            }
+        }
+
+        if (reward.startsWith("MEMBERS:")) {
+            try {
+                int amount = Integer.parseInt(reward.substring("MEMBERS:".length()));
+                return t(player, "level_reward_members_line",
+                        vars("amount", String.valueOf(amount), "suffix", amount == 1 ? "" : "s"),
+                        "&a✦ +{AMOUNT} member slot{SUFFIX}");
+            } catch (Throwable ignored) {
+                return "&a✦ " + reward;
+            }
+        }
+
+        if (reward.startsWith("FLAG:")) {
+            String flag = prettyFlagName(reward.substring("FLAG:".length()));
+            return t(player, "level_reward_flag_line",
+                    vars("flag", flag),
+                    "&d✦ Unlocks {FLAG}");
+        }
+
+        return "&a✦ " + humanizeToken(reward);
+    }
+
+    private String prettyEffectName(String raw) {
+        String key = raw == null ? "" : raw.trim().toUpperCase();
+        return switch (key) {
+            case "FAST_DIGGING" -> "Haste";
+            case "INCREASE_DAMAGE" -> "Strength";
+            case "DAMAGE_RESISTANCE" -> "Resistance";
+            case "JUMP" -> "Jump Boost";
+            case "SLOW_FALLING" -> "Slow Falling";
+            case "NIGHT_VISION" -> "Night Vision";
+            case "WATER_BREATHING" -> "Water Breathing";
+            case "DOLPHINS_GRACE" -> "Dolphin's Grace";
+            case "CONDUIT_POWER" -> "Conduit Power";
+            default -> humanizeToken(key);
+        };
+    }
+
+    private String prettyFlagName(String raw) {
+        String key = raw == null ? "" : raw.trim().toLowerCase();
+        return switch (key) {
+            case "fly" -> "Claim Flight";
+            case "safe-zone" -> "Safe Zone";
+            case "shop-interact" -> "Trade Stall Access";
+            default -> humanizeToken(key);
+        };
+    }
+
+    private String humanizeToken(String raw) {
+        if (raw == null || raw.isBlank()) return "Unknown";
+        String[] parts = raw.replace('-', ' ').replace('_', ' ').toLowerCase().split("\\s+");
+        StringBuilder out = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            if (!out.isEmpty()) out.append(' ');
+            out.append(Character.toUpperCase(part.charAt(0)));
+            if (part.length() > 1) out.append(part.substring(1));
+        }
+        return out.toString();
     }
 
     private String toRoman(int n) {

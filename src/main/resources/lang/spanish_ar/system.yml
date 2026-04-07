@@ -426,3 +426,5 @@ market_stall_insufficient_funds: '&cNo tenés fondos suficientes para esa compra
 market_stall_currency_unavailable: '&cLa moneda de esa oferta no está disponible ahora.'
 market_stall_disabled: '&cTradeStalls está desactivado en este servidor.'
 market_stall_generic_error: '&cNo se pudo completar esa acción de TradeStall.'
+charged_amount: '&7Monto cobrado: &6{AMOUNT}'
+refunded_amount: '&7Monto reembolsado: &a{AMOUNT}'

@@ -81,7 +81,6 @@ public final class AdminDiagnostics {
         out.append("Snapshots Enabled: ").append(bool(plugin, "snapshots.enabled", true)).append('\n');
         out.append("Zoning Enabled: ").append(bool(plugin, "zoning.enabled", true)).append('\n');
         out.append("Leveling Enabled: ").append(bool(plugin, "leveling.enabled", true)).append('\n');
-        out.append("Biomes Enabled: ").append(bool(plugin, "biomes.enabled", true)).append('\n');
         out.append('\n');
 
         out.append("Staff Access\n");

@@ -186,24 +186,37 @@ public class PlayerGUI {
             ));
         }
 
-        // Biomes (Slot 33)
-        boolean biomesEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isBiomesEnabled(), false);
-        if (biomesEnabled) {
+        // ClaimBlocks Exchange (Slot 33)
+        boolean exchangeService = plugin.exchange() != null;
+        boolean exchangeEnabled = false;
+        try {
+            exchangeEnabled = plugin.cfg() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
+        } catch (Throwable ignored) {}
+
+        if (exchangeService && exchangeEnabled) {
             inv.setItem(33, GUIManager.createItem(
-                    Material.SPORE_BLOSSOM,
-                    t(player, "biome_gui_title", "&d🌿 Biomes"),
-                    tl(player, "biome_button_lore", List.of("&7Change the biome style", "&7inside your plot."))
+                    Material.EMERALD,
+                    t(player, "button_claimblocks_exchange", "&a💱 ClaimBlocks Exchange"),
+                    tl(player, "claimblocks_exchange_lore",
+                            List.of("&7Buy or sell Claim Blocks with", "&7your server economy.", " ", "&eClick to open."))
+            ));
+        } else {
+            inv.setItem(33, GUIManager.createItem(
+                    Material.GRAY_DYE,
+                    t(player, "button_claimblocks_exchange_disabled", "&7💱 ClaimBlocks Exchange"),
+                    tl(player, "claimblocks_exchange_disabled_lore",
+                            List.of("&7This feature is currently unavailable.", "&8Enable: claim_blocks.exchange.enabled: true"))
             ));
         }
 
         // --- 5. ECONOMY ---
 
-        // Market (Slot 38)
+        // Local / Global Market (Slot 40)
         boolean localMarketAvailable = currentPlot != null
                 && plugin.marketBridges() != null
                 && plugin.marketBridges().preferLocalWhenInPlot()
                 && plugin.marketBridges().plotQualifiesForLocalMarket(currentPlot, player);
-        inv.setItem(38, GUIManager.createItem(
+        inv.setItem(40, GUIManager.createItem(
                 localMarketAvailable ? Material.CHEST : Material.GOLD_INGOT,
                 t(player, localMarketAvailable ? "button_market_local" : "button_market",
                         localMarketAvailable ? "&6Local Market" : "&6💰 Market"),
@@ -212,29 +225,6 @@ public class PlayerGUI {
                                 ? List.of("&7Open this plot's rentals, shop", "&7tools, and market options.")
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
-
-        // ✅ ClaimBlocks Exchange (Slot 39)
-        boolean exchangeService = plugin.exchange() != null;
-        boolean exchangeEnabled = false;
-        try {
-            exchangeEnabled = plugin.cfg() != null && plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false);
-        } catch (Throwable ignored) {}
-
-        if (exchangeService && exchangeEnabled) {
-            inv.setItem(39, GUIManager.createItem(
-                    Material.EMERALD,
-                    t(player, "button_claimblocks_exchange", "&a💱 ClaimBlocks Exchange"),
-                    tl(player, "claimblocks_exchange_lore",
-                            List.of("&7Buy or sell Claim Blocks with", "&7your server economy.", " ", "&eClick to open."))
-            ));
-        } else {
-            inv.setItem(39, GUIManager.createItem(
-                    Material.GRAY_DYE,
-                    t(player, "button_claimblocks_exchange_disabled", "&7💱 ClaimBlocks Exchange"),
-                    tl(player, "claimblocks_exchange_disabled_lore",
-                            List.of("&7This feature is currently unavailable.", "&8Enable: claim_blocks.exchange.enabled: true"))
-            ));
-        }
 
         // Auctions (Slot 42)
         boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
@@ -399,31 +389,6 @@ public class PlayerGUI {
             }
 
             case 33 -> {
-                boolean biomesEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isBiomesEnabled(), false);
-                if (biomesEnabled) {
-                    if (plot != null && canManage) plugin.gui().biomes().open(player, plot);
-                    else {
-                        send(player, plot == null ? "no_plot_here" : "not_plot_owner",
-                                plot == null
-                                        ? "&cYou must be standing inside a plot to do that."
-                                        : "&cYou cannot manage this plot.");
-                        if (plugin.effects() != null) plugin.effects().playError(player);
-                    }
-                }
-            }
-
-            // Economy
-            case 38 -> {
-                boolean preferLocal = plot != null
-                        && plugin.marketBridges() != null
-                        && plugin.marketBridges().preferLocalWhenInPlot()
-                        && plugin.marketBridges().plotQualifiesForLocalMarket(plot, player);
-                if (preferLocal) plugin.gui().localMarket().open(player, plot);
-                else plugin.gui().market().open(player, 0);
-            }
-
-            // ✅ Exchange
-            case 39 -> {
                 boolean exchangeOk = plugin.exchange() != null;
                 boolean exchangeEnabled = false;
                 try {
@@ -436,6 +401,16 @@ public class PlayerGUI {
                     send(player, "claimblocks_exchange_unavailable", "&cClaimBlocks Exchange is unavailable right now.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
+            }
+
+            // Economy
+            case 40 -> {
+                boolean preferLocal = plot != null
+                        && plugin.marketBridges() != null
+                        && plugin.marketBridges().preferLocalWhenInPlot()
+                        && plugin.marketBridges().plotQualifiesForLocalMarket(plot, player);
+                if (preferLocal) plugin.gui().localMarket().open(player, plot);
+                else plugin.gui().market().open(player, 0);
             }
 
             case 42 -> {

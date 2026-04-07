@@ -266,48 +266,62 @@ public class InfoGUI {
     private void buildClaimingSection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.LIGHTNING_ROD, "codex_claim_step1_name", "&eGet Your Scepter",
                 "codex_claim_step1_lore", List.of(
-                        "&7Use &b/ag wand &7to receive",
+                        "&7Run &b/ag wand &7to receive",
                         "&7the Aegis Scepter.",
                         " ",
-                        "&7Right-click selects the first corner,",
-                        "&7left-click selects the second corner.",
+                        "&eStep 1:&7 Hold the wand in your hand.",
+                        "&eStep 2:&7 Right-click the first corner block.",
+                        "&eStep 3:&7 Left-click the opposite corner block.",
                         "&8The wand should mark land, not place itself."
                 )));
         inv.setItem(12, infoCard(player, Material.GRASS_BLOCK, "codex_claim_step2_name", "&aSelect Land",
                 "codex_claim_step2_lore", List.of(
-                        "&7Choose two corners in the same world.",
-                        "&7Your selection becomes the outline",
-                        "&7for the claim you are about to create.",
+                        "&7Choose two corners in the same world",
+                        "&7to outline the area you want.",
                         " ",
-                        "&7Pick enough room for your base, paths,",
-                        "&7and any early storage or farms."
+                        "&eRight-click:&7 first corner",
+                        "&eLeft-click:&7 second corner",
+                        "&eTip:&7 Keep enough room for paths,",
+                        "&7storage, farms, and future growth.",
+                        " ",
+                        "&8AegisGuard will show the selected size",
+                        "&8in chat before you confirm the claim."
                 )));
         inv.setItem(14, infoCard(player, Material.EMERALD, "codex_claim_step3_name", "&bConfirm The Claim",
                 "codex_claim_step3_lore", List.of(
-                        "&7Use &a/ag claim &7after selecting",
-                        "&7both corners.",
+                        "&7After both corners are marked, use",
+                        "&a/ag claim &7to create the plot.",
                         " ",
-                        "&7AegisGuard checks overlap, limits,",
+                        "&eCommand:&7 /ag claim",
+                        "&7The plugin checks overlap, limits,",
                         "&7and cost before creating the plot.",
-                        "&8If the claim fails, read the error line in chat."
+                        "&8If it fails, read the red chat error",
+                        "&8line to see what blocked the claim."
                 )));
         inv.setItem(16, infoCard(player, Material.PLAYER_HEAD, "codex_claim_group_name", "&6Group Claims",
                 "codex_claim_group_lore", List.of(
-                        "&7Create a group first with",
-                        "&e/ag group create <name>&7.",
+                        "&7Shared plots start with a real group,",
+                        "&7not a normal personal claim.",
                         " ",
-                        "&7Invite nearby players, build your treasury,",
-                        "&7then use &e/ag group claim&7.",
-                        "&8Group plots are ideal for shared towns or guild bases."
+                        "&eCreate:&7 /ag group create <name>",
+                        "&eInvite:&7 /ag group invite <player>",
+                        "&eDeposit:&7 /ag group deposit <amount>",
+                        "&eClaim:&7 /ag group claim",
+                        " ",
+                        "&8Best for towns, guild halls, markets,",
+                        "&8and shared long-term projects."
                 )));
         inv.setItem(22, infoCard(player, Material.SHIELD, "codex_claim_limits_name", "&cClaim Safety",
                 "codex_claim_limits_lore", List.of(
-                        "&7Claims cannot overlap existing plots",
-                        "&7or external protected areas when",
-                        "&7compatibility checks are enabled.",
+                        "&7A claim must fit safely in the world",
+                        "&7before AegisGuard will allow it.",
                         " ",
-                        "&7This helps stop accidental griefing",
-                        "&7and messy border conflicts."
+                        "&7It cannot overlap other plots,",
+                        "&7break world radius limits, or enter",
+                        "&7protected land from supported plugins.",
+                        " ",
+                        "&8This protects both you and nearby",
+                        "&8players from messy border conflicts."
                 )));
         inv.setItem(24, infoCard(player, Material.CHEST, "codex_claim_starter_name", "&aStarter Claims",
                 "codex_claim_starter_lore", List.of(
@@ -315,17 +329,20 @@ public class InfoGUI {
                         "&7or starter group land based on",
                         "&7the configured first-claim rules.",
                         " ",
-                        "&7Check whether your server uses free",
-                        "&7starter land or a treasury requirement."
+                        "&7Some servers give free land first.",
+                        "&7Others require ClaimBlocks, money,",
+                        "&7or group treasury funding first."
                 )));
         inv.setItem(28, infoCard(player, Material.GOLD_INGOT, "codex_claim_group_money_name", "&6Group Treasury",
                 "codex_claim_group_money_lore", List.of(
-                        "&7Use &e/ag group deposit <amount> &7to",
-                        "&7fund the group treasury before",
-                        "&7claiming or expanding shared land.",
+                        "&7Group treasury is shared funding for",
+                        "&7group claims and expansions.",
                         " ",
-                        "&7The treasury can help cover growth",
-                        "&7instead of charging one member alone."
+                        "&eDeposit:&7 /ag group deposit <amount>",
+                        "&eStatus:&7 /ag group status",
+                        " ",
+                        "&8This helps the whole group pay for",
+                        "&8growth instead of one player alone."
                 )));
         inv.setItem(30, infoCard(player, Material.PAPER, "codex_claim_fail_name", "&cIf Claiming Fails",
                 "codex_claim_fail_lore", List.of(
@@ -333,8 +350,9 @@ public class InfoGUI {
                         "&7claim size rules, required funds,",
                         "&7or external protection conflicts.",
                         " ",
-                        "&7If needed, try a smaller area or",
-                        "&7move farther from nearby claims."
+                        "&7Try a smaller area, move farther from",
+                        "&7nearby claims, or earn more resources",
+                        "&7before trying again."
                 )));
         inv.setItem(32, infoCard(player, Material.WRITABLE_BOOK, "codex_claim_commands_name", "&bClaim Commands",
                 "codex_claim_commands_lore", List.of(
@@ -348,17 +366,23 @@ public class InfoGUI {
     private void buildTravelSection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.ENDER_PEARL, "codex_travel_home_name", "&bPlot Home",
                 "codex_travel_home_lore", List.of(
-                        "&e/ag home &7teleports you to your plot.",
+                        "&7Your plot home is the main return point",
+                        "&7for your personal land.",
                         " ",
-                        "&e/ag setspawn &7sets a custom plot spawn",
-                        "&7for yourself and your visitors.",
+                        "&eGo Home:&7 /ag home",
+                        "&eSet Spawn:&7 /ag setspawn",
+                        " ",
+                        "&7Set your spawn after building an",
+                        "&7entrance, path, or welcome area.",
                         "&8Set this after building an entrance or foyer."
                 )));
         inv.setItem(12, infoCard(player, Material.COMPASS, "codex_travel_visit_name", "&eVisit Menu",
                 "codex_travel_visit_lore", List.of(
-                        "&e/ag visit &7opens travel options for",
-                        "&7trusted plots, your own plots,",
-                        "&7and server travel locations.",
+                        "&7The Visit menu is your travel hub for",
+                        "&7trusted plots, your own plots, and",
+                        "&7server travel locations.",
+                        " ",
+                        "&eOpen:&7 /ag visit",
                         " ",
                         "&7This is the easiest way to jump between",
                         "&7friendly claims without running across the map."
@@ -369,8 +393,9 @@ public class InfoGUI {
                         "&7warp-style plot destinations for",
                         "&7spawn, market, or showcase areas.",
                         " ",
-                        "&7If your server uses public hubs,",
-                        "&7they may appear here."
+                        "&7If your server has spawn, market,",
+                        "&7showcase, or event plots, they may",
+                        "&7appear here as travel points."
                 )));
         inv.setItem(16, infoCard(player, Material.FEATHER, "codex_travel_tip_name", "&fTravel Tips",
                 "codex_travel_tip_lore", List.of(
@@ -383,8 +408,8 @@ public class InfoGUI {
         inv.setItem(22, infoCard(player, Material.PLAYER_HEAD, "codex_travel_trusted_name", "&aTrusted Plot Travel",
                 "codex_travel_trusted_lore", List.of(
                         "&7If another player trusts you, their",
-                        "&7plot can appear in the visit menu",
-                        "&7for quicker travel.",
+                        "&7plot can appear in Visit for fast",
+                        "&7travel to shared or friendly land.",
                         " ",
                         "&7This is useful for shared builds,",
                         "&7town projects, and allied groups."
@@ -396,13 +421,16 @@ public class InfoGUI {
                         "&7and markets easier to navigate.",
                         " ",
                         "&7If you rent a room, open its controls",
-                        "&7to manage room teleport behavior."
+                        "&7to manage room teleport behavior,",
+                        "&7guest access, and room spawn."
                 )));
         inv.setItem(28, infoCard(player, Material.LADDER, "codex_travel_unstuck_name", "&eUnstuck & Recovery",
                 "codex_travel_unstuck_lore", List.of(
-                        "&e/ag stuck &7can help if you become",
-                        "&7trapped inside a build, room,",
-                        "&7or awkward corner of a claim.",
+                        "&7Use the unstuck command if you end up",
+                        "&7trapped in walls, rooms, builds, or",
+                        "&7awkward corners of a claim.",
+                        " ",
+                        "&eCommand:&7 /ag stuck",
                         " ",
                         "&7Use it before asking staff for help",
                         "&7if you are simply wedged in terrain."
@@ -420,9 +448,11 @@ public class InfoGUI {
                 )));
         inv.setItem(12, infoCard(player, Material.REDSTONE_TORCH, "codex_menus_settings_name", "&6Plot Settings",
                 "codex_menus_settings_lore", List.of(
-                        "&7Use the Settings menu to control",
-                        "&7PvP, entry, containers, mobs,",
-                        "&7redstone, and related protections.",
+                        "&7Plot Settings control how your land",
+                        "&7behaves for you, friends, and visitors.",
+                        " ",
+                        "&7This includes entry, containers,",
+                        "&7mobs, PvP, redstone, and more.",
                         " ",
                         "&7Review these after claiming so your",
                         "&7plot behaves the way you want."
@@ -438,9 +468,12 @@ public class InfoGUI {
                 )));
         inv.setItem(16, infoCard(player, Material.SPYGLASS, "codex_menus_status_name", "&bClaim Status",
                 "codex_menus_status_lore", List.of(
-                        "&7Claim Status shows key plot info,",
-                        "&7protections, bonuses, and current",
-                        "&7state in one place.",
+                        "&7Claim Status is your quick overview",
+                        "&7for what your current plot looks like",
+                        "&7from a system point of view.",
+                        " ",
+                        "&7Use it to review protections, bonuses,",
+                        "&7plot health, ownership, and active state.",
                         " ",
                         "&7Use it when you want a quick check",
                         "&7without opening several menus."
@@ -460,8 +493,9 @@ public class InfoGUI {
                         "&7Local Market button for stalls,",
                         "&7rentals, and linked shop systems.",
                         " ",
-                        "&7Use it to browse rentable zones or",
-                        "&7manage your own trade space."
+                        "&7Use it to browse rentable zones,",
+                        "&7open TradeStalls, or manage your",
+                        "&7own trade space inside that plot."
                 )));
         inv.setItem(28, infoCard(player, Material.KNOWLEDGE_BOOK, "codex_menus_info_name", "&bGuide & Info",
                 "codex_menus_info_lore", List.of(
@@ -477,25 +511,33 @@ public class InfoGUI {
     private void buildSecuritySection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.IRON_DOOR, "codex_security_access_name", "&cTrusted Access",
                 "codex_security_access_lore", List.of(
-                        "&7Trusted players can be added from",
-                        "&7the Members menu.",
+                        "&7Trusted Access means giving another",
+                        "&7player permission to use your plot.",
+                        " ",
+                        "&7Open &eMembers & Roles &7from the main",
+                        "&7menu to add or update player access.",
                         " ",
                         "&7Roles decide what each member can do,",
                         "&7from simple access to full management."
                 )));
         inv.setItem(12, infoCard(player, Material.BARRIER, "codex_security_ban_name", "&4Kick & Ban",
                 "codex_security_ban_lore", List.of(
-                        "&e/ag kick <player> &7removes someone",
-                        "&7from the plot temporarily.",
+                        "&7Kick removes someone from your plot",
+                        "&7right now. Ban keeps them from coming",
+                        "&7back until you lift it.",
                         " ",
-                        "&e/ag ban <player> &7blocks entry until",
-                        "&7you decide to lift the restriction."
+                        "&eKick:&7 /ag kick <player>",
+                        " ",
+                        "&eBan:&7 /ag ban <player>",
+                        "&eUnban:&7 /ag unban <player>"
                 )));
         inv.setItem(14, infoCard(player, Material.SHIELD, "codex_security_flags_name", "&6Protection Flags",
                 "codex_security_flags_lore", List.of(
-                        "&7Flags control things like PvP,",
-                        "&7entry, containers, redstone,",
-                        "&7vehicles, and animals.",
+                        "&7Protection Flags are the main toggle",
+                        "&7rules for your plot.",
+                        " ",
+                        "&7They control entry, containers,",
+                        "&7vehicles, redstone, mobs, PvP, and more.",
                         " ",
                         "&7These are the main rules that shape",
                         "&7how safe or open your plot feels."
@@ -511,9 +553,11 @@ public class InfoGUI {
                 )));
         inv.setItem(22, infoCard(player, Material.CHEST, "codex_security_room_name", "&6Rooms & Subplots",
                 "codex_security_room_lore", List.of(
-                        "&7Rented subplots protect the renter's",
-                        "&7space like a managed mini-claim,",
-                        "&7while the landlord keeps oversight.",
+                        "&7Rooms and subplots let one main claim",
+                        "&7hold smaller protected spaces inside it.",
+                        " ",
+                        "&7Renters can manage their room while",
+                        "&7the main owner still keeps oversight.",
                         " ",
                         "&7This is useful for hotels, apartments,",
                         "&7market stalls, and guild compounds."
@@ -529,9 +573,12 @@ public class InfoGUI {
                 )));
         inv.setItem(28, infoCard(player, Material.NETHER_STAR, "codex_security_staff_name", "&bServer Staff Access",
                 "codex_security_staff_lore", List.of(
-                        "&7Server owners can allow trusted",
-                        "&7staff groups to manage server zones,",
-                        "&7market plots, and special areas.",
+                        "&7Server Staff Access means admins or",
+                        "&7staff groups can manage special plots",
+                        "&7without relying on manual bypass.",
+                        " ",
+                        "&7This is meant for server zones,",
+                        "&7market plots, and other managed areas.",
                         " ",
                         "&7This reduces the need to rely on",
                         "&7manual bypass for routine staff work."
@@ -541,19 +588,23 @@ public class InfoGUI {
     private void buildEconomySection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.GOLD_INGOT, "codex_economy_blocks_name", "&6ClaimBlocks",
                 "codex_economy_blocks_lore", List.of(
-                        "&7ClaimBlocks are used for progression",
-                        "&7and expansion-related systems.",
+                        "&7ClaimBlocks are one of the main",
+                        "&7progression currencies in AegisGuard.",
                         " ",
                         "&e/ag blocks &7shows your balance and",
-                        "&7related claim-block commands."
+                        "&7related claim-block commands.",
+                        "&7You may earn them from playtime,",
+                        "&7leveling, exchange, or other server rules."
                 )));
         inv.setItem(12, infoCard(player, Material.CLOCK, "codex_economy_upkeep_name", "&eUpkeep",
                 "codex_economy_upkeep_lore", List.of(
-                        "&7Servers can require upkeep or taxes",
-                        "&7to keep land active.",
+                        "&7Upkeep means your server charges",
+                        "&7regular maintenance or taxes for land.",
                         " ",
                         "&7Warnings can be sent through",
-                        "&7AegisGuard notifications."
+                        "&7AegisGuard notifications.",
+                        "&8If upkeep is enabled, do not ignore",
+                        "&8warnings about upcoming costs."
                 )));
         inv.setItem(14, infoCard(player, Material.CHEST, "codex_economy_market_name", "&aMarkets",
                 "codex_economy_market_lore", List.of(
@@ -566,9 +617,12 @@ public class InfoGUI {
                 )));
         inv.setItem(16, infoCard(player, Material.EMERALD_BLOCK, "codex_economy_expand_name", "&bExpansions",
                 "codex_economy_expand_lore", List.of(
-                        "&7Expansion requests may be queued",
-                        "&7for admin review or approved instantly,",
-                        "&7depending on server configuration.",
+                        "&7Expansions let you grow an existing",
+                        "&7plot when your current borders are",
+                        "&7too small for your plans.",
+                        " ",
+                        "&7Some servers use approval queues.",
+                        "&7Others allow instant valid requests.",
                         " ",
                         "&7If your frontier feels cramped, this is",
                         "&7how you grow it safely."
@@ -584,9 +638,12 @@ public class InfoGUI {
                 )));
         inv.setItem(24, infoCard(player, Material.HOPPER, "codex_economy_stall_setup_name", "&eTradeStall Setup",
                 "codex_economy_stall_setup_lore", List.of(
-                        "&7Place a supported chest or barrel,",
-                        "&7add a stall sign, then manage item",
-                        "&7prices and currency from the stall UI.",
+                        "&7To build a TradeStall, place a",
+                        "&7supported chest or barrel first.",
+                        " ",
+                        "&7Then add a valid stall sign and use",
+                        "&7the stall menu to set prices, amount,",
+                        "&7and which currency the stall accepts.",
                         " ",
                         "&7Servers can allow money, ClaimBlocks,",
                         "&7or both for stall pricing."
@@ -614,51 +671,67 @@ public class InfoGUI {
     private void buildIdentitySection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.NAME_TAG, "codex_identity_name_name", "&3Plot Identity",
                 "codex_identity_name_lore", List.of(
-                        "&e/ag rename <name> &7sets a display name",
-                        "&7for your plot.",
+                        "&7Plot Identity means how your plot is",
+                        "&7presented to visitors and to menus.",
                         " ",
-                        "&e/ag setdesc <text> &7adds a description",
-                        "&7that helps visitors understand the plot."
+                        "&eRename:&7 /ag rename <name>",
+                        " ",
+                        "&eDescription:&7 /ag setdesc <text>",
+                        "&7A good name and description help people",
+                        "&7understand what your plot is for."
                 )));
         inv.setItem(12, infoCard(player, Material.PAINTING, "codex_identity_cosmetics_name", "&dCosmetics",
                 "codex_identity_cosmetics_lore", List.of(
-                        "&7Cosmetics let you adjust borders,",
-                        "&7particles, and other plot visuals.",
+                        "&7Cosmetics are visual touches for your",
+                        "&7plot, like particles or entry effects.",
+                        " ",
+                        "&7These do not usually change ownership",
+                        "&7or security. They change presentation.",
                         " ",
                         "&7Use them to make your plot feel more",
                         "&7distinct without changing its purpose."
                 )));
-        inv.setItem(14, infoCard(player, Material.GRASS_BLOCK, "codex_identity_biome_name", "&aBiome Style",
-                "codex_identity_biome_lore", List.of(
-                        "&7The biome menu can change how",
-                        "&7your plot feels visually, depending",
-                        "&7on server configuration.",
+        inv.setItem(14, infoCard(player, Material.GLOW_ITEM_FRAME, "codex_identity_presentation_name", "&aPresentation",
+                "codex_identity_presentation_lore", List.of(
+                        "&7Presentation covers the visible style",
+                        "&7of a plot, from naming to cosmetics",
+                        "&7and how it feels to visit.",
                         " ",
-                        "&7This can help match a build theme",
-                        "&7or improve the mood of a district."
+                        "&7Use this to make a district feel",
+                        "&7clear, welcoming, and memorable",
+                        "&7without changing ownership rules."
                 )));
         inv.setItem(16, infoCard(player, Material.LADDER, "codex_identity_stuck_name", "&eUnstuck",
                 "codex_identity_stuck_lore", List.of(
-                        "&e/ag stuck &7is available if you get",
-                        "&7trapped in a claim or awkward build area.",
+                        "&7Unstuck is a recovery tool for when",
+                        "&7you get trapped in walls, builds,",
+                        "&7claims, or bad room spawns.",
+                        " ",
+                        "&eCommand:&7 /ag stuck",
                         " ",
                         "&7It is a practical safety command, even",
                         "&7though it also affects player flow."
                 )));
         inv.setItem(22, infoCard(player, Material.OAK_SIGN, "codex_identity_greeting_name", "&bGreetings & Titles",
                 "codex_identity_greeting_lore", List.of(
-                        "&7Plots can greet visitors with chat",
-                        "&7messages or titles when entry and",
-                        "&7notification settings allow it.",
+                        "&7Greetings and Titles are welcome",
+                        "&7messages shown when someone enters",
+                        "&7or leaves a plot.",
+                        " ",
+                        "&7Use these to welcome guests, label",
+                        "&7shops, or give themed flavor to a plot.",
                         " ",
                         "&7This is a good place to welcome guests",
                         "&7or label shops and special areas."
                 )));
         inv.setItem(24, infoCard(player, Material.GLOW_ITEM_FRAME, "codex_identity_showcase_name", "&ePresentation",
                 "codex_identity_showcase_lore", List.of(
-                        "&7A clear name, good description,",
-                        "&7and a tidy spawn point help visitors",
-                        "&7remember your plot more easily.",
+                        "&7Presentation is how polished and easy",
+                        "&7to understand your plot feels to others.",
+                        " ",
+                        "&7A clear name, a good description, a",
+                        "&7safe spawn, and matching visuals all",
+                        "&7help visitors remember the plot.",
                         " ",
                         "&7Small presentation details make your",
                         "&7plot feel much more complete."
@@ -668,34 +741,45 @@ public class InfoGUI {
     private void buildAdvancedSection(Player player, Inventory inv) {
         inv.setItem(10, infoCard(player, Material.EXPERIENCE_BOTTLE, "codex_advanced_level_name", "&5Plot Leveling",
                 "codex_advanced_level_lore", List.of(
-                        "&7Leveling can unlock perks, bonuses,",
-                        "&7and progression benefits for your plot.",
+                        "&7Plot Leveling, or Ascension, upgrades",
+                        "&7your plot into stronger tiers over time.",
+                        " ",
+                        "&7Each level can unlock new perks,",
+                        "&7bonuses, or progression benefits.",
                         " ",
                         "&7Open Plot Ascension to preview what",
                         "&7the next tier will actually give you."
                 )));
         inv.setItem(12, infoCard(player, Material.OAK_DOOR, "codex_advanced_zones_name", "&6Zones & Rentals",
                 "codex_advanced_zones_lore", List.of(
-                        "&7Zones let you divide your plot into",
-                        "&7rooms, rental areas, or market sections.",
+                        "&7Zones divide one main claim into",
+                        "&7smaller spaces with their own purpose.",
+                        " ",
+                        "&7Use them for rooms, rentals, stalls,",
+                        "&7offices, apartments, or guild wings.",
                         " ",
                         "&7This is one of the best tools for inns,",
                         "&7hotels, malls, and apartment builds."
                 )));
         inv.setItem(14, infoCard(player, Material.CHEST, "codex_advanced_local_market_name", "&eLocal Market",
                 "codex_advanced_local_market_lore", List.of(
-                        "&7Local Market helps server owners and",
-                        "&7players build shop districts, stalls,",
-                        "&7and rentable business spaces.",
+                        "&7Local Market is a plot-based market hub",
+                        "&7for stalls, rentals, and linked shop tools.",
                         " ",
                         "&7If a plot supports market features,",
-                        "&7this becomes the local business hub."
+                        "&7this is where players browse what that",
+                        "&7specific plot has to offer.",
+                        " ",
+                        "&7That makes shops feel local instead of",
+                        "&7dumping everything into one global menu."
                 )));
         inv.setItem(16, infoCard(player, Material.RECOVERY_COMPASS, "codex_advanced_recovery_name", "&bRecovery & Safety",
                 "codex_advanced_recovery_lore", List.of(
-                        "&7Admins can use diagnostics, migration,",
-                        "&7snapshots, and restore tools to recover",
-                        "&7from mistakes or server issues.",
+                        "&7Recovery tools help staff repair damage,",
+                        "&7restore claims, and investigate issues.",
+                        " ",
+                        "&7This includes diagnostics, migration,",
+                        "&7snapshots, and restore actions.",
                         " ",
                         "&7These tools are especially important",
                         "&7on long-running or public servers."
@@ -711,27 +795,34 @@ public class InfoGUI {
                 )));
         inv.setItem(24, infoCard(player, Material.MAP, "codex_advanced_migration_name", "&6Migration",
                 "codex_advanced_migration_lore", List.of(
-                        "&7Admins can preview and import land",
-                        "&7from supported protection plugins",
-                        "&7through the migration tools.",
+                        "&7Migration tools help admins move land",
+                        "&7from supported protection plugins into",
+                        "&7AegisGuard with less manual rework.",
                         " ",
-                        "&7Use the migration wand and admin UI",
-                        "&7to review before converting land."
+                        "&7Use the migration wand and preview UI",
+                        "&7before confirming imported claims.",
+                        " ",
+                        "&8This is meant for server setup or",
+                        "&8switching protection plugins."
                 )));
         inv.setItem(28, infoCard(player, Material.WRITABLE_BOOK, "codex_advanced_snapshot_name", "&bSnapshots",
                 "codex_advanced_snapshot_lore", List.of(
-                        "&7Snapshots and restore tools help",
-                        "&7staff recover claims after mistakes,",
-                        "&7damage, or rollback situations.",
+                        "&7Snapshots record plot state so staff",
+                        "&7can roll back or restore later if needed.",
+                        " ",
+                        "&7They are useful after accidents, grief,",
+                        "&7bad expansions, or rollback situations.",
                         " ",
                         "&7They are especially useful after bad",
                         "&7expansions, grief, or server issues."
                 )));
         inv.setItem(30, infoCard(player, Material.BEACON, "codex_advanced_diagnostics_name", "&eDiagnostics",
                 "codex_advanced_diagnostics_lore", List.of(
-                        "&7Server owners can use doctor reports",
-                        "&7and admin tools to inspect setup",
-                        "&7issues more easily.",
+                        "&7Diagnostics help server owners inspect",
+                        "&7setup problems and plugin health.",
+                        " ",
+                        "&7Use doctor reports and admin tools to",
+                        "&7spot config mistakes or broken systems.",
                         " ",
                         "&7If something feels wrong, diagnostics",
                         "&7are the first place staff should look."

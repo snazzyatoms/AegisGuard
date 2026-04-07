@@ -732,8 +732,12 @@ public class AegisGuard extends JavaPlugin {
         boolean enabled = getConfig().getBoolean("claim_blocks.enabled", true);
         if (!enabled) return;
 
+        // Prefer the modern playtime interval path and keep the legacy seconds path as fallback.
+        long intervalMinutes = getConfig().getLong("claim_blocks.earn.playtime.interval_minutes", -1L);
         long intervalSeconds = getConfig().getLong("claim_blocks.task.interval_seconds", 60L);
-        long intervalTicks = Math.max(20L, intervalSeconds * 20L);
+        long intervalTicks = intervalMinutes > 0
+                ? Math.max(20L, intervalMinutes * 60L * 20L)
+                : Math.max(20L, intervalSeconds * 20L);
 
         ClaimBlockTask logic = new ClaimBlockTask(this);
 

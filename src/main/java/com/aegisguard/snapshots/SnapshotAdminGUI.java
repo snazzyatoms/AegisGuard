@@ -317,6 +317,9 @@ public class SnapshotAdminGUI {
 
         // 1.2.6: safety gate destructive actions with shift
         boolean shift = e.getClick().isShiftClick();
+        final UUID finalSnapshotId = snapshotId;
+        final ClaimSnapshot finalSnapshot = snapshot;
+        final int finalPage = page;
 
         if (e.getClick().isLeftClick()) {
             if (!shift) {
@@ -330,7 +333,7 @@ public class SnapshotAdminGUI {
             plugin.runGlobalAsync(() -> {
                 boolean ok;
                 try {
-                    ok = plugin.getSnapshotManager().rollback(snapshotId);
+                    ok = plugin.getSnapshotManager().rollback(finalSnapshotId);
                 } catch (Throwable t) {
                     ok = false;
                     plugin.getLogger().warning("[SnapshotAdminGUI] rollback failed: " + t.getMessage());
@@ -340,13 +343,13 @@ public class SnapshotAdminGUI {
                 plugin.runMain(player, () -> {
                     if (finalOk) {
                         plugin.msg().send(player, "snapshot_rollback_success",
-                                Map.of("ID", snapshot.getPlotId().toString()));
+                                Map.of("ID", finalSnapshot.getPlotId().toString()));
                         plugin.effects().playConfirm(player);
                     } else {
                         plugin.msg().send(player, "snapshot_rollback_failed", Map.of());
                         plugin.effects().playError(player);
                     }
-                    open(player, page);
+                    open(player, finalPage);
                 });
             });
             return;
@@ -364,7 +367,7 @@ public class SnapshotAdminGUI {
             plugin.runGlobalAsync(() -> {
                 boolean ok;
                 try {
-                    ok = plugin.getSnapshotManager().deleteSnapshot(snapshotId);
+                    ok = plugin.getSnapshotManager().deleteSnapshot(finalSnapshotId);
                 } catch (Throwable t) {
                     ok = false;
                     plugin.getLogger().warning("[SnapshotAdminGUI] deleteSnapshot failed: " + t.getMessage());
@@ -379,7 +382,7 @@ public class SnapshotAdminGUI {
                         plugin.msg().send(player, "snapshot_delete_failed", Map.of());
                         plugin.effects().playError(player);
                     }
-                    open(player, page);
+                    open(player, finalPage);
                 });
             });
         }

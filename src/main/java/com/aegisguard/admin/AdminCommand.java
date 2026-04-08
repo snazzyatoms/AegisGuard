@@ -5,13 +5,19 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.migration.MigrationManager;
 import com.aegisguard.migration.MigrationManager.MigrationOptions;
 import com.aegisguard.migration.MigrationManager.SourcePlugin;
+import com.aegisguard.selection.SelectionService;
 import com.aegisguard.snapshots.ClaimSnapshot;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.StringUtil;
 
 import java.nio.file.Path;
@@ -20,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class AdminCommand implements CommandExecutor, TabCompleter {
 
@@ -27,7 +34,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private final MigrationManager migrationManager;
 
     private static final String[] SUB_COMMANDS = {
-            "reload", "bypass", "menu", "convert", "wand", "blocks", "migrate", "doctor", "snapshot", "restore"
+            "reload", "bypass", "menu", "convert", "wand", "claim", "blocks", "migrate", "doctor", "snapshot", "restore"
     };
 
     private static final String[] MIGRATE_ACTIONS = {
@@ -70,6 +77,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "bypass" -> handleBypass(player);
             case "menu" -> plugin.gui().admin().open(player);
             case "wand" -> handleWand(player, args);
+            case "claim" -> handleServerClaim(player);
             case "migrate" -> handleMigrate(player, args);
             case "doctor" -> runDoctor(player);
             case "snapshot" -> handleSnapshot(player, args);
@@ -90,7 +98,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("wand") && args.length == 2) {
-            return StringUtil.copyPartialMatches(args[1], List.of("migration"), new ArrayList<>());
+            return StringUtil.copyPartialMatches(args[1], List.of("server", "migration"), new ArrayList<>());
         }
 
         if (args[0].equalsIgnoreCase("migrate")) {
@@ -148,6 +156,19 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        if (args.length == 1 || (args.length >= 2 && args[1].equalsIgnoreCase("server"))) {
+            if (playerHasClaimWand(player)) {
+                player.sendMessage(ChatColor.YELLOW + "You already have an Aegis claim wand or Sentinel's Scepter.");
+                return;
+            }
+
+            player.getInventory().addItem(createServerWand());
+            plugin.selection().setPlayerWand(player, "server_claim_wand");
+            player.sendMessage(ChatColor.GREEN + "You received the Sentinel's Scepter.");
+            player.sendMessage(ChatColor.GRAY + "Select two corners, then use " + ChatColor.AQUA + "/agadmin claim" + ChatColor.GRAY + ".");
+            return;
+        }
+
         if (args.length >= 2 && args[1].equalsIgnoreCase("migration")) {
             if (plugin.gui().migration() != null) {
                 plugin.gui().migration().giveMigrationWand(player);
@@ -157,7 +178,72 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Usage: /aegisadmin wand migration");
+        player.sendMessage(ChatColor.YELLOW + "Usage: /aegisadmin wand <server|migration>");
+    }
+
+    private void handleServerClaim(Player player) {
+        if (!player.hasPermission("aegis.serverzone.manage") && !player.hasPermission("aegis.admin.manage")) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+
+        if (!plugin.selection().hasSelection(player)) {
+            player.sendMessage(ChatColor.RED + "You need to select two corners first with the Sentinel's Scepter.");
+            player.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/agadmin wand server" + ChatColor.GRAY + " to get it.");
+            return;
+        }
+
+        plugin.selection().setPlayerWand(player, "server_claim_wand");
+        plugin.selection().confirmClaim(player, true);
+    }
+
+    private ItemStack createServerWand() {
+        ItemStack rod = new ItemStack(plugin.cfg().getAdminWandMaterial());
+        ItemMeta meta = rod.getItemMeta();
+        if (meta == null) return rod;
+
+        meta.setDisplayName(plugin.cfg().getAdminWandName());
+
+        List<String> lore = plugin.cfg().getAdminWandLore();
+        if (lore == null || lore.isEmpty()) {
+            lore = List.of(
+                    ChatColor.GRAY + "A tool of absolute authority.",
+                    " ",
+                    ChatColor.YELLOW + "Right-Click: " + ChatColor.WHITE + "Select Pos 1",
+                    ChatColor.YELLOW + "Left-Click: " + ChatColor.WHITE + "Select Pos 2",
+                    " ",
+                    ChatColor.RED + "Creates server zones directly."
+            );
+        }
+        meta.setLore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+
+        meta.getPersistentDataContainer().set(
+                SelectionService.SERVER_WAND_KEY,
+                PersistentDataType.BYTE,
+                (byte) 1
+        );
+
+        NamespacedKey idKey = new NamespacedKey(plugin, "wand_id");
+        meta.getPersistentDataContainer().set(
+                idKey,
+                PersistentDataType.STRING,
+                UUID.randomUUID().toString()
+        );
+
+        rod.setItemMeta(meta);
+        return rod;
+    }
+
+    private boolean playerHasClaimWand(Player player) {
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null || !item.hasItemMeta()) continue;
+            if (item.getItemMeta().getPersistentDataContainer().has(SelectionService.WAND_KEY, PersistentDataType.BYTE)
+                    || item.getItemMeta().getPersistentDataContainer().has(SelectionService.SERVER_WAND_KEY, PersistentDataType.BYTE)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void handleMigrate(Player player, String[] args) {

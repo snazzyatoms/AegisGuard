@@ -41,7 +41,7 @@ claim_land_ready_lore:
   - ' '
   - '&eClick to confirm the claim.'
 
-button_plot_flags: '&6Settings'
+button_plot_flags: '&6Claim Settings'
 plot_flags_title: '&3⚙ Claim Settings'
 plot_flags_lore:
   - '&7Control who can enter, use,'
@@ -925,6 +925,16 @@ button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
   - '&7Automatically clean up claims'
   - '&7owned by banned players.'
+
+codex_menus_ascension_name: '&5Plot Ascension'
+codex_menus_ascension_lore:
+  - '&7Plot Ascension is where you preview'
+  - '&7your current tier, active bonuses,'
+  - '&7and the next upgrade path.'
+  - ' '
+  - '&7Open it when you want to grow your'
+  - '&7plot through levels, perks, and'
+  - '&7long-term progression.'
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:

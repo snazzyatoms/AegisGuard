@@ -56,7 +56,7 @@ claim_land_ready_lore:
   - ' '
   - '&eClick to confirm.'
 
-button_plot_flags: '&6Wards'
+button_plot_flags: '&6Claim Wards'
 plot_flags_lore:
   - '&7Govern the wards of this holding.'
 plot_flags_locked_lore:
@@ -591,7 +591,7 @@ codex_menus_lore:
 - '&6🚩 Settings: &7PvP, mobs, fire and more.'
 - '&b👥 Members: &7Trusted players and roles.'
 - '&d✨ Cosmetics: &7Border particles and visuals.'
-- '&a🌿 Biomes: &7Claim biome appearance.'
+- '&5✨ Ascension: &7Claim levels and boons.'
 
 codex_security_title: '&c§lIV. Security'
 codex_security_lore:
@@ -618,6 +618,15 @@ codex_advanced_title: '&5§lVII. Advanced'
 codex_advanced_lore:
 - '&dLeveling: &7Upgrade thy claim to unlock perks.'
 - '&eZones: &7Create rental zones inside thy claim.'
+codex_menus_ascension_name: '&5Plot Ascension'
+codex_menus_ascension_lore:
+- '&7Plot Ascension showeth thee'
+- '&7thy present rank, living boons,'
+- '&7and the next rise ahead.'
+- ' '
+- '&7Open it when thou wouldst grow'
+- '&7thy holding through levels, gifts,'
+- '&7and enduring progression.'
 
 # Additional tooltips
 visit_gui_button_lore:

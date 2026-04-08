@@ -367,14 +367,22 @@ public class ZoningGUI {
         }
     }
 
-    private void createZoneFromSelection(Player player, Plot plot) {
-        if (plot == null) return;
+    public boolean createZoneFromSelection(Player player, Plot plot) {
+        return createZoneFromSelection(player, plot, null, true);
+    }
+
+    public boolean createZoneFromSelection(Player player, Plot plot, String requestedName) {
+        return createZoneFromSelection(player, plot, requestedName, true);
+    }
+
+    private boolean createZoneFromSelection(Player player, Plot plot, String requestedName, boolean clearSelection) {
+        if (plot == null) return false;
 
         Selection selection = plugin.selection().get(player.getUniqueId());
         if (selection == null || !selection.isComplete()) {
             plugin.effects().playError(player);
             send(player, "must_select", "&cYou must select two points first.");
-            return;
+            return false;
         }
 
         Location l1 = selection.getL1();
@@ -382,19 +390,19 @@ public class ZoningGUI {
         if (l1 == null || l2 == null || l1.getWorld() == null || l2.getWorld() == null || !l1.getWorld().equals(l2.getWorld())) {
             plugin.effects().playError(player);
             send(player, "zone_create_invalid", "&cYour selection must be complete and in a single world.");
-            return;
+            return false;
         }
 
         if (!l1.getWorld().getName().equalsIgnoreCase(plot.getWorld())) {
             plugin.effects().playError(player);
             send(player, "zone_create_outside_plot", "&cThat selection must stay inside your current plot.");
-            return;
+            return false;
         }
 
         if (plot.getZones().size() >= maxZonesPerPlot()) {
             plugin.effects().playError(player);
             send(player, "zone_create_limit_reached", "&cYou have reached the maximum number of zones for this plot.");
-            return;
+            return false;
         }
 
         int minX = Math.min(l1.getBlockX(), l2.getBlockX());
@@ -408,30 +416,34 @@ public class ZoningGUI {
         if (footprint < minZoneArea()) {
             plugin.effects().playError(player);
             send(player, "zone_create_too_small", "&cThat zone selection is too small.");
-            return;
+            return false;
         }
 
         if (!plot.containsZoneBounds(minX, minZ, maxX, maxZ)) {
             plugin.effects().playError(player);
             send(player, "zone_create_outside_plot", "&cThat selection must stay inside your current plot.");
-            return;
+            return false;
         }
 
-        String zoneName = plot.nextAvailableZoneName("Zone");
+        String baseName = (requestedName == null || requestedName.isBlank()) ? "Zone" : requestedName.trim();
+        String zoneName = plot.nextAvailableZoneName(baseName);
         Zone zone = new Zone(plot, zoneName, minX, minY, minZ, maxX, maxY, maxZ);
         if (plot.overlapsZone(zone, null)) {
             plugin.effects().playError(player);
             send(player, "zone_create_overlap", "&cThat selection overlaps an existing zone.");
-            return;
+            return false;
         }
 
         zone.setRentPrice(defaultRentPrice());
         plot.addZone(zone);
         plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
-        plugin.selection().clearSelection(player);
+        if (clearSelection) {
+            plugin.selection().clearSelection(player);
+        }
         plugin.effects().playConfirm(player);
         send(player, "zone_created", "&a✔ Zone ''{ZONE}'' created.".replace("{ZONE}", zoneName));
+        return true;
     }
 
     private int maxZonesPerPlot() {

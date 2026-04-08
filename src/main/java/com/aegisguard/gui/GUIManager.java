@@ -380,7 +380,9 @@ public class GUIManager {
         if (meta != null) {
             if (name != null) meta.setDisplayName(color(name));
             if (lore != null) meta.setLore(colorizeList(lore));
-            meta.addItemFlags(ItemFlag.values());
+            // Do not blanket-apply every ItemFlag here. On newer server versions,
+            // that can hide the entire tooltip/lore from GUI items.
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
             item.setItemMeta(meta);
         }
         return item;

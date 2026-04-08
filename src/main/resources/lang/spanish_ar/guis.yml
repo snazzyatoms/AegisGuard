@@ -59,7 +59,7 @@ claim_land_ready_lore:
 - ' '
 - '&eClic para confirmar'
 
-button_plot_flags: '&6⚙ Banderas de Parcela'
+button_plot_flags: '&6⚙ Ajustes de Parcela'
 plot_flags_title: '&3⚙ Ajustes de Parcela'
 plot_flags_lore:
 - '&7Administrar banderas de protección de esta parcela.'
@@ -969,7 +969,16 @@ codex_menus_lore:
 - '&6🚩 Ajustes: &7PvP, mobs, fuego y más.'
 - '&b👥 Miembros: &7Jugadores de confianza y roles.'
 - '&d✨ Cosméticos: &7Partículas de borde y visuales.'
-- '&a🌿 Biomas: &7Apariencia del bioma de la parcela.'
+- '&5✨ Ascensión: &7Niveles y bonificaciones de la parcela.'
+codex_menus_ascension_name: '&5Ascensión de Parcela'
+codex_menus_ascension_lore:
+- '&7La Ascensión de Parcela te muestra'
+- '&7tu rango actual, bonificaciones activas'
+- '&7y la próxima mejora.'
+- ' '
+- '&7Abrila cuando quieras hacer crecer'
+- '&7tu parcela mediante niveles, ventajas'
+- '&7y progresión a largo plazo.'
 
 codex_security_title: '&c§lV. Seguridad'
 codex_security_lore:

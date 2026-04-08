@@ -67,6 +67,8 @@ zone_create_outside_plot: '&cEsa selección debe quedarse dentro de tu parcela a
 zone_create_limit_reached: '&cAlcanzaste el máximo de zonas para esta parcela.'
 zone_create_too_small: '&cEsa selección de zona es demasiado chica.'
 zone_create_overlap: '&cEsa selección se superpone con una zona existente.'
+subplot_usage: '&eUsá &b/ag wand &e, marcá dos esquinas dentro de tu parcela y luego ejecutá &b/ag subplot [nombre]&e.'
+subplot_created_hint: '&7Esta subparcela ahora aparece en el &bGestor de Zonas&7 para alquiler, habitación o mercado.'
 zone_rent_enabled: '&aAlquiler habilitado para &f{ZONE}&a.'
 zone_rent_disabled: '&eAlquiler deshabilitado para &f{ZONE}&e.'
 zone_rent_price_set: '&aRenta actualizada para &f{ZONE}&a: &6{PRICE}'

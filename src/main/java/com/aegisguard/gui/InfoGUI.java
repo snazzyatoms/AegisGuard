@@ -453,17 +453,15 @@ public class InfoGUI {
                         "&7This is safer than sharing everything",
                         "&7with every visitor."
                 )));
-        inv.setItem(16, infoCard(player, Material.SPYGLASS, "codex_menus_status_name", "&bClaim Status",
-                "codex_menus_status_lore", List.of(
-                        "&7Claim Status is your quick overview",
-                        "&7for what your current plot looks like",
-                        "&7from a system point of view.",
+        inv.setItem(16, infoCard(player, Material.EXPERIENCE_BOTTLE, "codex_menus_ascension_name", "&5Plot Ascension",
+                "codex_menus_ascension_lore", List.of(
+                        "&7Plot Ascension is where you preview",
+                        "&7your current tier, active bonuses,",
+                        "&7and the next upgrade path.",
                         " ",
-                        "&7Use it to review protections, bonuses,",
-                        "&7plot health, ownership, and active state.",
-                        " ",
-                        "&7Use it when you want a quick check",
-                        "&7without opening several menus."
+                        "&7Open it from the main menu when you",
+                        "&7want to grow your plot through levels",
+                        "&7instead of only expanding its border."
                 )));
         inv.setItem(22, infoCard(player, Material.COMPARATOR, "codex_menus_preferences_name", "&3Preferences",
                 "codex_menus_preferences_lore", List.of(

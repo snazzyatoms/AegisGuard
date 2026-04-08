@@ -42,7 +42,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "market", "auction",
             "kick", "ban", "unban", "visit",
-            "level", "zone", "like",
+            "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "merge",
             "consume", "ledger", "blocks",
             "group",
@@ -287,6 +287,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "level" -> openLevelMenu(p);
 
             case "zone" -> openZoneMenu(p);
+
+            case "subplot", "subzone" -> handleCreateSubplot(p, args);
 
             case "like" -> handleLike(p);
 
@@ -1531,6 +1533,45 @@ private void handleUnsell(Player p) {
         sendKey(p, "zone_browse_none", "&cThere are no rentable zones here right now.");
     }
 
+    private void handleCreateSubplot(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot to do that.");
+            return;
+        }
+
+        if (!plugin.cfg().isZoningEnabled()) {
+            sendKey(p, "zoning_disabled", "&cZoning is disabled.");
+            return;
+        }
+
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "not_plot_owner", "&cYou cannot manage this plot.");
+            return;
+        }
+
+        if (!plugin.selection().hasSelection(p)) {
+            sendKey(p, "must_select", "&c❌ You must select two corners with the Wand first.");
+            sendKey(p, "subplot_usage",
+                    "&eUse &b/ag wand &e, mark two corners inside your claim, then run &b/ag subplot [name]&e.");
+            return;
+        }
+
+        String customName = null;
+        if (args.length >= 2) {
+            customName = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            if (customName.isBlank()) {
+                customName = null;
+            }
+        }
+
+        boolean created = plugin.gui().zoning().createZoneFromSelection(p, plot, customName);
+        if (created) {
+            sendKey(p, "subplot_created_hint",
+                    "&7This subplot now appears in the &bZone Manager&7 for rent, room, or market setup.");
+        }
+    }
+
     private void openMarketMenu(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         boolean canUseLocal = plot != null
@@ -2039,6 +2080,10 @@ private void handleUnsell(Player p) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
                 return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("subplot") || args[0].equalsIgnoreCase("subzone")) {
+                return Arrays.asList("Market Stall", "Room", "Hotel Suite", "Storage", "Booth");
             }
 
             if (args[0].equalsIgnoreCase("notify")) {

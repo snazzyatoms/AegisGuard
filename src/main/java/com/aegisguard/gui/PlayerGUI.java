@@ -104,17 +104,10 @@ public class PlayerGUI {
                 tl(player, "info_lore", List.of("&7Read the basics, commands,", "&7and protection tips."))
         ));
 
-        // Plot Status Codex (Slot 11)
-        inv.setItem(11, GUIManager.createItem(
-                Material.ENCHANTED_BOOK,
-                t(player, "plot_status_button_title", "&d📜 Plot Status"),
-                tl(player, "plot_status_button_lore", List.of("&7Review ownership, protections,", "&7bonuses, and plot health."))
-        ));
-
-        // Travel (Slot 13)
+        // Travel (Slot 11)
         boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
         if (travelEnabled) {
-            inv.setItem(13, GUIManager.createItem(
+            inv.setItem(11, GUIManager.createItem(
                     Material.COMPASS,
                     t(player, "visit_gui_title", "&a🧭 Travel"),
                     tl(player, "visit_button_lore", List.of("&7Visit plots, warps, and", "&7trusted destinations."))
@@ -135,7 +128,7 @@ public class PlayerGUI {
         Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
         inv.setItem(20, GUIManager.createItem(
                 flagIcon,
-                t(player, "button_plot_flags", "&6⚙ Plot Flags"),
+                t(player, "button_plot_flags", "&6⚙ Claim Settings"),
                 tl(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore",
                         canManage
                                 ? List.of("&7Control who can enter, use,", "&7damage, or automate this claim.")
@@ -312,15 +305,6 @@ public class PlayerGUI {
             case 4 -> plugin.gui().info().open(player);
 
             case 11 -> {
-                if (plot != null) {
-                    plugin.gui().plotStatus().open(player, plot);
-                } else {
-                    send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
-                    if (plugin.effects() != null) plugin.effects().playError(player);
-                }
-            }
-
-            case 13 -> {
                 boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
                 if (travelEnabled) {
                     plugin.gui().visit().open(player, 0, false);

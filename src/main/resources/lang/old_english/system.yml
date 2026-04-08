@@ -197,6 +197,8 @@ zone_create_outside_plot: '&cThat selection must remain within thy current claim
 zone_create_limit_reached: '&cThou hast reached the maximum number of zones for this claim.'
 zone_create_too_small: '&cThat zone selection is too small.'
 zone_create_overlap: '&cThat selection overlapeth an existing zone.'
+subplot_usage: '&eUse &b/ag wand &e, mark two corners within thy claim, then run &b/ag subplot [name]&e.'
+subplot_created_hint: '&7This subplot now appeareth within the &bZone Manager&7 for rent, chamber, or market ordering.'
 zone_rent_enabled: '&aRental listing enabled for &f{ZONE}&a.'
 zone_rent_disabled: '&eRental listing disabled for &f{ZONE}&e.'
 zone_rent_price_set: '&aZone rent updated for &f{ZONE}&a: &6{PRICE}'

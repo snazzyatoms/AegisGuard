@@ -52,7 +52,7 @@ public class ClaimBlockExchangeStateStore {
     }
 
     public void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        plugin.runGlobalAsync(this::save);
     }
 
     // -------------------------

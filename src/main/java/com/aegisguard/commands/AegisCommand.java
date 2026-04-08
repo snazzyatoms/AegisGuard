@@ -58,7 +58,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
-        this.exchange = new ClaimBlockExchangeService(plugin);
+        this.exchange = plugin.exchange();
     }
 
     // --------------------------------------------------

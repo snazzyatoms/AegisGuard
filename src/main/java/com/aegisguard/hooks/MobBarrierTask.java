@@ -150,7 +150,7 @@ public class MobBarrierTask implements Runnable {
             }, null);
         } else {
             // Non-Folia: always go to main thread
-            plugin.runMain(null, () -> {
+            plugin.runMainGlobal(() -> {
                 if (entity.isValid()) {
                     entity.remove();
                     spawnRemovalParticle(entity);

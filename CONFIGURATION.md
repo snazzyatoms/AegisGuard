@@ -1,4 +1,4 @@
-# AegisGuard 1.2.6 Configuration Guide
+# AegisGuard 1.2.6.1 Configuration Guide
 
 This guide is meant to help server owners set up AegisGuard quickly without having to guess which settings matter first.
 

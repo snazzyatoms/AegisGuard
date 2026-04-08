@@ -15,18 +15,18 @@
 
 ---
 
-# AegisGuard v1.2.6
+# AegisGuard v1.2.6.1
 
 AegisGuard is a modern land protection and claim-management plugin for **Spigot**, **Paper**, **Purpur**, and **Folia** servers on **Minecraft 1.20+**.
 
-Version **1.2.6** is a major return update. It expands AegisGuard beyond basic claiming with stronger protections, cleaner GUIs, better admin recovery, group and rental systems, built-in TradeStalls, migration tooling, richer notifications, and a much more polished language and configuration surface.
+Version **1.2.6.1** is the bugfix follow-up to the 1.2.6 return update. It focuses on storage stability, safer reload behavior, single-owner ClaimBlocks exchange state, better startup declarations, and tighter cross-platform scheduling for Bukkit, Paper, Purpur, and Folia servers.
 
 ---
 
 ## Table of Contents
 
 - [Server Compatibility](#server-compatibility)
-- [What Is New In 1.2.6](#what-is-new-in-126)
+- [What Is New In 1.2.6.1](#what-is-new-in-1261)
 - [Feature Overview](#feature-overview)
 - [Commands](#commands)
 - [Permissions](#permissions)
@@ -48,7 +48,18 @@ Version **1.2.6** is a major return update. It expands AegisGuard beyond basic c
 
 ---
 
-## What Is New In 1.2.6
+## What Is New In 1.2.6.1
+
+### Bugfix and Stability Highlights
+
+- Fixed storage backend resolution so `storage.type` and legacy storage keys behave predictably
+- Improved SQL startup support for SQLite, MySQL, and MariaDB-backed servers
+- Fixed ClaimBlocks exchange state ownership so commands and GUIs share one service and one cooldown history
+- Tightened `/agadmin reload` so more runtime systems actually refresh instead of keeping stale state
+- Fixed the non-Folia mob barrier path so protected plots clean hostile mobs correctly again
+- Improved repeating task scheduling and startup declarations for broader Paper/Folia compatibility
+
+### 1.2.6 Feature Recap
 
 ### Major Highlights
 
@@ -130,7 +141,7 @@ Version **1.2.6** is a major return update. It expands AegisGuard beyond basic c
 - `lang/` remains the public editable folder
 - `codex/` remains the internal fallback layer
 - Hybrid English removed entirely
-- README, config layout, and plugin metadata refreshed for 1.2.6
+- README, config layout, and plugin metadata refreshed for 1.2.6.1
 
 ---
 
@@ -263,7 +274,7 @@ Version **1.2.6** is a major return update. It expands AegisGuard beyond basic c
 
 Player-facing permissions are normally bundled through `aegis.user`, and staff/admin access is normally bundled through `aegis.admin`.
 
-Important 1.2.6 nodes include:
+Important 1.2.6.1 nodes include:
 
 - `aegis.user`
 - `aegis.admin`
@@ -286,7 +297,7 @@ For the full permission list, see:
 
 ## Configuration
 
-AegisGuard 1.2.6 ships with a cleaner `config.yml` layout intended to be easier for server owners to understand and tune.
+AegisGuard 1.2.6.1 ships with a cleaner `config.yml` layout intended to be easier for server owners to understand and tune.
 
 Key configuration areas include:
 
@@ -390,5 +401,5 @@ For setup guidance and tuning recommendations:
 ---
 
 <p align="center">
-  <strong>AegisGuard v1.2.6</strong> | Made with care by <a href="https://github.com/snazzyatoms">snazzyatoms</a>
+  <strong>AegisGuard v1.2.6.1</strong> | Made with care by <a href="https://github.com/snazzyatoms">snazzyatoms</a>
 </p>

@@ -83,6 +83,11 @@ public class ClaimBlockExchangeService {
         cache.clear();
     }
 
+    public synchronized void reload() {
+        shuttingDown = false;
+        load();
+    }
+
     /**
      * Returns true if the service is currently shutting down or has shut down.
      */
@@ -876,7 +881,7 @@ public class ClaimBlockExchangeService {
             save();
             return;
         }
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        plugin.runGlobalAsync(this::save);
     }
 
     private PlayerState getState(UUID uuid) {

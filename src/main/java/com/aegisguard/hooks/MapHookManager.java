@@ -17,7 +17,7 @@ public class MapHookManager {
 
     private void initialize() {
         // 1. Check for Dynmap
-        if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
+        if (dynmap == null && isPluginEnabled("Dynmap", "dynmap")) {
             if (plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", true)) {
                 // Initialize DynmapHook
                 this.dynmap = new DynmapHook(plugin);
@@ -25,7 +25,7 @@ public class MapHookManager {
         }
 
         // 2. Check for BlueMap (Wrapped in try-catch for NoClassDefFoundError)
-        if (Bukkit.getPluginManager().isPluginEnabled("BlueMap")) {
+        if (blueMap == null && isPluginEnabled("BlueMap")) {
             if (plugin.cfg().raw().getBoolean("hooks.bluemap.enabled", true)) {
                 try {
                     this.blueMap = new BlueMapHook(plugin);
@@ -37,7 +37,7 @@ public class MapHookManager {
         }
 
         // 3. Check for Pl3xMap / Squaremap (Wrapped in try-catch for NoClassDefFoundError)
-        if (Bukkit.getPluginManager().isPluginEnabled("Pl3xMap") || Bukkit.getPluginManager().isPluginEnabled("Squaremap")) {
+        if (pl3xMap == null && isPluginEnabled("Pl3xMap", "Squaremap", "squaremap")) {
             if (plugin.cfg().raw().getBoolean("hooks.pl3xmap.enabled", true)) {
                 try {
                     this.pl3xMap = new Pl3xMapHook(plugin);
@@ -54,7 +54,10 @@ public class MapHookManager {
      * This method is called from /agadmin reload.
      */
     public void reload() {
-        // Reload all maps if active. We catch errors on the reload as well.
+        reloadDynmapHook();
+        reloadBlueMapHook();
+        reloadPl3xMapHook();
+
         if (dynmap != null) {
             try { dynmap.update(); } catch (Exception e) { plugin.getLogger().severe("Dynmap update failed!"); }
         }
@@ -64,5 +67,81 @@ public class MapHookManager {
         if (pl3xMap != null) {
             try { pl3xMap.update(); } catch (Exception e) { plugin.getLogger().severe("Pl3xMap update failed!"); }
         }
+    }
+
+    private void reloadDynmapHook() {
+        boolean enabled = isPluginEnabled("Dynmap", "dynmap")
+                && plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", true);
+        if (!enabled) {
+            if (dynmap != null) {
+                dynmap.shutdown();
+                dynmap = null;
+            }
+            return;
+        }
+
+        if (dynmap != null) {
+            dynmap.shutdown();
+            dynmap = null;
+        }
+        dynmap = new DynmapHook(plugin);
+    }
+
+    private void reloadBlueMapHook() {
+        boolean enabled = isPluginEnabled("BlueMap")
+                && plugin.cfg().raw().getBoolean("hooks.bluemap.enabled", true);
+        if (!enabled) {
+            if (blueMap != null) {
+                blueMap.shutdown();
+                blueMap = null;
+            }
+            return;
+        }
+
+        if (blueMap != null) {
+            blueMap.shutdown();
+            blueMap = null;
+        }
+        try {
+            blueMap = new BlueMapHook(plugin);
+            plugin.getLogger().info("Hooked into BlueMap!");
+        } catch (NoClassDefFoundError | Exception e) {
+            blueMap = null;
+            plugin.getLogger().warning("BlueMap detected but API failed to initialize.");
+        }
+    }
+
+    private void reloadPl3xMapHook() {
+        boolean enabled = isPluginEnabled("Pl3xMap", "Squaremap", "squaremap")
+                && plugin.cfg().raw().getBoolean("hooks.pl3xmap.enabled", true);
+        if (!enabled) {
+            if (pl3xMap != null) {
+                pl3xMap.shutdown();
+                pl3xMap = null;
+            }
+            return;
+        }
+
+        if (pl3xMap != null) {
+            pl3xMap.shutdown();
+            pl3xMap = null;
+        }
+        try {
+            pl3xMap = new Pl3xMapHook(plugin);
+            plugin.getLogger().info("Hooked into Pl3xMap!");
+        } catch (NoClassDefFoundError | Exception e) {
+            pl3xMap = null;
+            plugin.getLogger().warning("Pl3xMap detected but API failed to initialize.");
+        }
+    }
+
+    private boolean isPluginEnabled(String... names) {
+        if (names == null) return false;
+        for (String name : names) {
+            if (name != null && !name.isBlank() && Bukkit.getPluginManager().isPluginEnabled(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

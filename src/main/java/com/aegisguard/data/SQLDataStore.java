@@ -239,7 +239,11 @@ public class SQLDataStore implements IDataStore {
 
     private void connect() {
         ConfigurationSection db = plugin.cfg().raw().getConfigurationSection("storage.database");
-        storageType = plugin.cfg().raw().getString("storage.type", "sqlite");
+        storageType = plugin.cfg().raw().getString("storage.type",
+                plugin.cfg().raw().getString("storage.backend", "sqlite"));
+        storageType = storageType == null ? "sqlite" : storageType.trim().toLowerCase(Locale.ROOT);
+        if (storageType.equals("sql")) storageType = "sqlite";
+        if (storageType.equals("yaml")) storageType = "yml";
 
         HikariConfig cfg = new HikariConfig();
         cfg.setPoolName("AegisGuard-Pool");
@@ -252,7 +256,13 @@ public class SQLDataStore implements IDataStore {
             String database = db != null ? db.getString("database", "aegisguard") : "aegisguard";
             boolean useSSL = db != null && db.getBoolean("useSSL", false);
 
-            cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&autoReconnect=true");
+            if (storageType.equalsIgnoreCase("mariadb")) {
+                cfg.setJdbcUrl("jdbc:mariadb://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL);
+                cfg.setDriverClassName("org.mariadb.jdbc.Driver");
+            } else {
+                cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&autoReconnect=true");
+                cfg.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            }
             cfg.setUsername(db != null ? db.getString("username", "root") : "root");
             cfg.setPassword(db != null ? db.getString("password", "") : "");
 
@@ -262,8 +272,14 @@ public class SQLDataStore implements IDataStore {
 
             plugin.getLogger().info("Connecting to MySQL/MariaDB (" + host + ":" + port + ", DB=" + database + ")...");
         } else {
-            File file = new File(plugin.getDataFolder(), "aegisguard.db");
-            if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
+            String configuredFile = db != null ? db.getString("file", "aegisguard.db") : "aegisguard.db";
+            String resolvedFile = (configuredFile == null || configuredFile.isBlank()) ? "aegisguard.db" : configuredFile;
+            File file = new File(resolvedFile);
+            if (!file.isAbsolute()) {
+                file = new File(plugin.getDataFolder(), resolvedFile);
+            }
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
 
             cfg.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
             cfg.setDriverClassName("org.sqlite.JDBC");

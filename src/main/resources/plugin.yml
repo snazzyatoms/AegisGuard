@@ -1,7 +1,7 @@
 # AegisGuard plugin metadata
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.2.6
+version: 1.2.6.1
 api-version: "1.20"
 prefix: AegisGuard
 description: Player-friendly land protection with roles, group plots, admin recovery, and polished GUIs.
@@ -18,6 +18,9 @@ softdepend:
 
   # Map and visual sync hooks
   - Dynmap
+  - BlueMap
+  - Pl3xMap
+  - Squaremap
 
   # Protection compatibility providers
   - WorldEdit

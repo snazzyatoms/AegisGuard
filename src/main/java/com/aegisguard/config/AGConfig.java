@@ -159,11 +159,13 @@ public class AGConfig {
         // -------------------------------
         this.zoningEnabled = config.getBoolean("zoning.enabled", true);
         this.levelingEnabled = config.getBoolean("leveling.enabled", true);
-        this.titlesEnabled = config.getBoolean("titles.enabled", true);
+        this.titlesEnabled = config.getBoolean("titles.claim_enter_exit.enabled",
+                config.getBoolean("titles.enabled", true));
         this.biomesEnabled = config.getBoolean("biomes.enabled", true);
         this.likesEnabled = config.getBoolean("social.likes_enabled", true);
         this.unstuckEnabled = config.getBoolean("unstuck.enabled", true);
-        this.travelEnabled = config.getBoolean("travel_system.enabled", true);
+        this.travelEnabled = config.getBoolean("claims.travel_system.enabled",
+                config.getBoolean("travel_system.enabled", true));
         this.upkeepEnabled = config.getBoolean("upkeep.enabled", false);
 
         this.discordEnabled = config.getBoolean("hooks.discord.enabled", false);
@@ -352,8 +354,14 @@ public class AGConfig {
     public double getShopInteractCost() { return config.getDouble("economy.flag_costs.shop-interact", 0.0); }
 
     public boolean isTravelSystemEnabled() { return travelEnabled; }
-    public boolean allowHomeTeleport() { return config.getBoolean("travel_system.allow_home_teleport", true); }
-    public boolean allowVisitTeleport() { return config.getBoolean("travel_system.allow_visit_teleport", true); }
+    public boolean allowHomeTeleport() {
+        return config.getBoolean("claims.travel_system.allow_home_teleport",
+                config.getBoolean("travel_system.allow_home_teleport", true));
+    }
+    public boolean allowVisitTeleport() {
+        return config.getBoolean("claims.travel_system.allow_visit_teleport",
+                config.getBoolean("travel_system.allow_visit_teleport", true));
+    }
 
     public boolean isUpkeepEnabled() { return upkeepEnabled; }
     public long getUpkeepCheckHours() { return config.getLong("upkeep.check_interval_hours", 24); }
@@ -427,9 +435,9 @@ public class AGConfig {
     public boolean landlordGetsFullRent() { return config.getBoolean("zoning.landlord_gets_full_rent", true); }
 
     public boolean isTitleEnabled() { return titlesEnabled; }
-    public int getTitleFadeIn() { return config.getInt("titles.fade_in", 10); }
-    public int getTitleStay() { return config.getInt("titles.stay", 40); }
-    public int getTitleFadeOut() { return config.getInt("titles.fade_out", 10); }
+    public int getTitleFadeIn() { return config.getInt("titles.claim_enter_exit.fade_in", config.getInt("titles.fade_in", 10)); }
+    public int getTitleStay() { return config.getInt("titles.claim_enter_exit.stay", config.getInt("titles.stay", 40)); }
+    public int getTitleFadeOut() { return config.getInt("titles.claim_enter_exit.fade_out", config.getInt("titles.fade_out", 10)); }
 
     public boolean isBiomesEnabled() { return biomesEnabled; }
     public double getBiomeChangeCost() { return config.getDouble("biomes.cost_per_change", 2000.0); }
@@ -438,7 +446,10 @@ public class AGConfig {
     public boolean isLikesEnabled() { return likesEnabled; }
     public boolean oneLikePerPlayer() { return config.getBoolean("social.one_like_per_player", true); }
 
-    public String getNotificationLocation() { return config.getString("titles.notification_location", "ACTION_BAR"); }
+    public String getNotificationLocation() {
+        return config.getString("titles.claim_enter_exit.notification_location",
+                config.getString("titles.notification_location", "ACTION_BAR"));
+    }
     public boolean isUnstuckEnabled() { return unstuckEnabled; }
     public int getUnstuckWarmup() { return config.getInt("unstuck.warmup_seconds", 5); }
 

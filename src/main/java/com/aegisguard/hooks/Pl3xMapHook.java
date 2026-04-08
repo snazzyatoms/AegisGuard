@@ -11,8 +11,8 @@ import net.pl3x.map.core.markers.option.Options;
 import net.pl3x.map.core.markers.option.Stroke;
 import net.pl3x.map.core.world.World;
 import org.bukkit.Bukkit;
-
 import java.util.Collection;
+import java.lang.reflect.Method;
 
 public class Pl3xMapHook {
 
@@ -20,14 +20,15 @@ public class Pl3xMapHook {
     private static final String LAYER_KEY = "aegisguard_plots";
 
     private final AegisGuard plugin;
+    private final Object updateTask;
+    private volatile boolean active = true;
 
     public Pl3xMapHook(AegisGuard plugin) {
         this.plugin = plugin;
 
         // Register periodic update task (async)
         // 5 minute refresh (6000 ticks), 100 tick initial delay
-        Bukkit.getScheduler().runTaskTimerAsynchronously(
-                plugin,
+        this.updateTask = plugin.scheduleRepeatingGlobalAsyncTask(
                 this::update,
                 100L,
                 6000L
@@ -35,6 +36,8 @@ public class Pl3xMapHook {
     }
 
     public void update() {
+        if (!active) return;
+
         // Loop through Bukkit worlds to find matching Pl3xMap worlds
         for (org.bukkit.World bukkitWorld : Bukkit.getWorlds()) {
             World mapWorld = Pl3xMap.api().getWorldRegistry().get(bukkitWorld.getName());
@@ -91,6 +94,33 @@ public class Pl3xMapHook {
 
                 rect.setOptions(options);
                 layer.addMarker(rect);
+            }
+        }
+    }
+
+    public void shutdown() {
+        active = false;
+        plugin.cancelScheduledTask(updateTask);
+
+        for (org.bukkit.World bukkitWorld : Bukkit.getWorlds()) {
+            World mapWorld = Pl3xMap.api().getWorldRegistry().get(bukkitWorld.getName());
+            if (mapWorld == null) continue;
+
+            try {
+                Object registry = mapWorld.getLayerRegistry();
+                Method has = registry.getClass().getMethod("has", String.class);
+                boolean present = Boolean.TRUE.equals(has.invoke(registry, LAYER_KEY));
+                if (!present) continue;
+
+                try {
+                    Method unregister = registry.getClass().getMethod("unregister", String.class);
+                    unregister.invoke(registry, LAYER_KEY);
+                } catch (NoSuchMethodException missingUnregister) {
+                    Method remove = registry.getClass().getMethod("remove", String.class);
+                    remove.invoke(registry, LAYER_KEY);
+                }
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to clean up Pl3xMap layer: " + t.getMessage());
             }
         }
     }

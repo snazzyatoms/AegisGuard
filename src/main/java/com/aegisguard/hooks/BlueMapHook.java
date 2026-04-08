@@ -16,17 +16,18 @@ import java.util.Optional;
 
 public class BlueMapHook {
 
-    private final AegisGuard plugin;
-    private BlueMapAPI api;
-
-    // Marker-set id used on each map
     private static final String MARKER_SET_ID = "aegisguard_plots";
+
+    private final AegisGuard plugin;
+    private volatile boolean active = true;
+    private BlueMapAPI api;
 
     public BlueMapHook(AegisGuard plugin) {
         this.plugin = plugin;
 
         // Wait for BlueMap to be enabled
         BlueMapAPI.onEnable(api -> {
+            if (!active) return;
             this.api = api;
             update(); // initial update when BlueMap is ready
         });
@@ -36,9 +37,10 @@ public class BlueMapHook {
      * Rebuild all markers on all maps based on current plots.
      */
     public void update() {
-        if (api == null) return;
+        if (!active || api == null) return;
 
         plugin.runGlobalAsync(() -> {
+            if (!active || api == null) return;
             Collection<Plot> plots = plugin.store().getAllPlots();
 
             // 1) Clear our marker-set on every map
@@ -103,6 +105,21 @@ public class BlueMapHook {
                 markerSet.put(id, marker);
             }
         });
+    }
+
+    public void shutdown() {
+        active = false;
+        if (api == null) return;
+
+        try {
+            for (BlueMapMap map : api.getMaps()) {
+                try {
+                    map.getMarkerSets().remove(MARKER_SET_ID);
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable t) {
+            plugin.getLogger().warning("Failed to clean up BlueMap markers: " + t.getMessage());
+        }
     }
 
     /**

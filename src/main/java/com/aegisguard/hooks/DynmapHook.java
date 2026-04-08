@@ -80,6 +80,23 @@ public class DynmapHook {
         plugin.runGlobalAsync(this::render);
     }
 
+    public void shutdown() {
+        if (markerSet == null) return;
+
+        try {
+            for (AreaMarker marker : markerSet.getAreaMarkers()) {
+                try {
+                    marker.deleteMarker();
+                } catch (Throwable ignored) {}
+            }
+            markerSet.deleteMarkerSet();
+        } catch (Throwable t) {
+            plugin.getLogger().warning("Failed to clean up Dynmap markers: " + t.getMessage());
+        } finally {
+            markerSet = null;
+        }
+    }
+
     private void render() {
         Collection<Plot> plots = plugin.store().getAllPlots();
         Map<String, AreaMarker> existingMarkers = new HashMap<>();

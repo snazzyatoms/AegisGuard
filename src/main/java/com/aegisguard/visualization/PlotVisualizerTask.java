@@ -8,14 +8,13 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  * This task runs for a single player, showing them the borders
  * of the plot they are currently standing in while they hold
  * an Aegis wand / scepter.
  */
-public class PlotVisualizerTask extends BukkitRunnable {
+public class PlotVisualizerTask implements Runnable {
 
     private final AegisGuard plugin;
     private final Player player;
@@ -50,9 +49,7 @@ public class PlotVisualizerTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        // Player gone? Stop this task.
         if (!player.isOnline()) {
-            this.cancel();
             return;
         }
 

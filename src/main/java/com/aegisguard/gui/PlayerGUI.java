@@ -146,6 +146,21 @@ public class PlayerGUI {
                                 : List.of("&cStand inside a claim you manage", "&cto edit member access."))
         ));
 
+        // Local / Global Market (Slot 15)
+        boolean localMarketAvailable = currentPlot != null
+                && plugin.marketBridges() != null
+                && plugin.marketBridges().preferLocalWhenInPlot()
+                && plugin.marketBridges().plotQualifiesForLocalMarket(currentPlot, player);
+        inv.setItem(15, GUIManager.createItem(
+                localMarketAvailable ? Material.CHEST : Material.GOLD_INGOT,
+                t(player, localMarketAvailable ? "button_market_local" : "button_market",
+                        localMarketAvailable ? "&6Local Market" : "&6💰 Market"),
+                tl(player, localMarketAvailable ? "market_local_lore" : "market_lore",
+                        localMarketAvailable
+                                ? List.of("&7Open this plot's rentals, shop", "&7tools, and market options.")
+                                : List.of("&7Browse listed claims and", "&7market activity."))
+        ));
+
         // Expansion (Slot 24)
         inv.setItem(24, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
@@ -203,21 +218,6 @@ public class PlayerGUI {
         }
 
         // --- 5. ECONOMY ---
-
-        // Local / Global Market (Slot 40)
-        boolean localMarketAvailable = currentPlot != null
-                && plugin.marketBridges() != null
-                && plugin.marketBridges().preferLocalWhenInPlot()
-                && plugin.marketBridges().plotQualifiesForLocalMarket(currentPlot, player);
-        inv.setItem(40, GUIManager.createItem(
-                localMarketAvailable ? Material.CHEST : Material.GOLD_INGOT,
-                t(player, localMarketAvailable ? "button_market_local" : "button_market",
-                        localMarketAvailable ? "&6Local Market" : "&6💰 Market"),
-                tl(player, localMarketAvailable ? "market_local_lore" : "market_lore",
-                        localMarketAvailable
-                                ? List.of("&7Open this plot's rentals, shop", "&7tools, and market options.")
-                                : List.of("&7Browse listed claims and", "&7market activity."))
-        ));
 
         // Auctions (Slot 42)
         boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
@@ -314,6 +314,15 @@ public class PlayerGUI {
                 }
             }
 
+            case 15 -> {
+                boolean preferLocal = plot != null
+                        && plugin.marketBridges() != null
+                        && plugin.marketBridges().preferLocalWhenInPlot()
+                        && plugin.marketBridges().plotQualifiesForLocalMarket(plot, player);
+                if (preferLocal) plugin.gui().localMarket().open(player, plot);
+                else plugin.gui().market().open(player, 0);
+            }
+
             case 20 -> {
                 if (plot != null && canManage) plugin.gui().flags().open(player, plot);
                 else {
@@ -388,15 +397,6 @@ public class PlayerGUI {
             }
 
             // Economy
-            case 40 -> {
-                boolean preferLocal = plot != null
-                        && plugin.marketBridges() != null
-                        && plugin.marketBridges().preferLocalWhenInPlot()
-                        && plugin.marketBridges().plotQualifiesForLocalMarket(plot, player);
-                if (preferLocal) plugin.gui().localMarket().open(player, plot);
-                else plugin.gui().market().open(player, 0);
-            }
-
             case 42 -> {
                 boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
                 if (upkeepEnabled) plugin.gui().auction().open(player, 0);

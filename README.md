@@ -17,9 +17,9 @@
 
 # AegisGuard v1.2.6
 
-AegisGuard is a land protection, progression, market, rental, and admin recovery plugin for Minecraft servers running **Spigot**, **Paper**, **Purpur**, or **Folia** on **1.20+**.
+AegisGuard is a modern land protection and claim-management plugin for **Spigot**, **Paper**, **Purpur**, and **Folia** servers on **Minecraft 1.20+**.
 
-Version 1.2.6 is a major polish and expansion pass. It improves protection coverage, GUI flow, notifications, group ownership, subplot/rental management, migration tools, diagnostics, and player-facing market systems while keeping the plugin approachable for survival and SMP servers.
+Version **1.2.6** is a major return update. It expands AegisGuard beyond basic claiming with stronger protections, cleaner GUIs, better admin recovery, group and rental systems, built-in TradeStalls, migration tooling, richer notifications, and a much more polished language and configuration surface.
 
 ---
 
@@ -27,7 +27,7 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 
 - [Server Compatibility](#server-compatibility)
 - [What Is New In 1.2.6](#what-is-new-in-126)
-- [Core Features](#core-features)
+- [Feature Overview](#feature-overview)
 - [Commands](#commands)
 - [Permissions](#permissions)
 - [Configuration](#configuration)
@@ -50,102 +50,154 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 
 ## What Is New In 1.2.6
 
+### Major Highlights
+
+- Improved protection coverage for claims, rooms, rentals, server zones, and interaction-heavy edge cases
+- Reworked GUI flow with better titles, lore, handbook guidance, back/exit behavior, and cleaner player/admin navigation
+- Added a stronger **group plot** flow with treasury-backed progression and safer anti-abuse starter rules
+- Expanded the **Frontier Expansion** system with better request review, unattended approval options, and clearer audit history
+- Added a visual **migration wand** and migration admin GUI for supported external protection plugins
+- Strengthened **snapshots**, rollback, recovery, and `/agadmin doctor` diagnostics
+- Added the built-in **TradeStalls** system and improved **Local Market** support
+- Improved rentable zones, subplots, rooms, and hotel-style management
+- Restored **Sentinel's Scepter** server-zone claiming for staff through `/agadmin wand server` and `/agadmin claim`
+- Cleaned up and synchronized **Old English**, **Spanish (MX)**, and **Spanish (AR)** with the active language and fallback layers
+
 ### Protection, Stability, and Recovery
 
-- Improved protection coverage for claims, zones, decorative entities, vehicles, and interaction paths
-- Better movement-event handling and safer scheduler usage in hot paths
-- Stronger snapshot and recovery flow for expansions, rollbacks, and admin maintenance
-- Cleaner server-zone and elevated staff access without relying on bypass for routine management
-- Better diagnostics with `/agadmin doctor` support and report generation
+- Safer movement-sensitive logic and better hot-path handling
+- Improved hostile-mob cleanup inside protected claims
+- Better protection handling for decorative entities, vehicles, containers, and interactions
+- Cleaner staff and server-zone access without relying on bypass for normal management
+- Snapshot-based recovery for plot restoration and administrative maintenance
+- Better diagnostics and support reporting for live servers
 
 ### Groups, Social Flow, and Notifications
 
-- Separate player greeting notifications from admin notifications
-- Expanded notification system for group events, treasury changes, upkeep warnings, plot rename events, and review activity
-- Group-first ownership flow with treasury support before claiming a shared plot
-- Safer group starter rules with anti-abuse protections around member count and early removal
+- Separate greeting notifications from admin notifications
+- More event-aware notifications for:
+  - group joins and leaves
+  - treasury changes and low-balance warnings
+  - upkeep and tax-related alerts
+  - plot rename events
+  - admin and review actions
+- Group-first claiming flow with treasury support before the shared plot is created
+- Safer starter sizing and anti-abuse timing around early member removal
 
-### Expansions, Migration, and Admin Review
+### Frontier Expansion and Progression
 
-- Stronger expansion request review flow with improved audit history
-- Optional unattended auto-approval when no reviewers are online
-- Migration wand and migration admin GUI for supported protection-plugin imports
-- Focused-claim migration preview and improved metadata preservation during import
+- Improved expansion request GUI with clearer tier presentation and request context
+- Better admin review flow with audit history and handled-request visibility
+- Optional unattended auto-approval when no eligible reviewers are online
+- Improved plot ascension presentation, active bonuses, and preview messaging
+- `Expansion Horizons` is now teased as a future direction for frontier growth and larger progression paths
 
-### Markets, Rentals, and Subplots
+### Migration, Recovery, and Admin Tools
 
-- Improved subplot and rentable-zone protections so renters can use their space more like a real mini-claim
-- Renter room controls, guest access, room spawn management, and hotel-style behavior
-- Local Market flow for plot-level selling and rental experiences
-- Built-in **TradeStalls** system with chest/sign storefront registration and browse GUI
-- Configurable coexistence with external shop plugins such as QuickShop, Shopkeepers, ChestShop, and ExcellentShop
+- Migration wand and visual migration workflow
+- Focused-claim preview and import flow for supported sources
+- Better metadata preservation during migration
+- Manual snapshots and restoration tools
+- `/agadmin doctor` report generation for troubleshooting and support intake
 
-### GUI, Language, and Documentation
+### Subplots, Rentals, and Shared Spaces
 
-- Synchronized GUI listener and menu handling across the plugin
-- Cleaner back/exit behavior across menus
-- Updated titles and lore text for a more readable, less cluttered interface
-- `lang` kept as the main editable language folder, `codex` retained as fallback
-- Hybrid English removed; supported packs are now `modern_english`, `old_english`, `spanish_mx`, and `spanish_ar`
+- Better subplot and rentable-zone protections
+- Renter room controls with guest permissions and room spawn support
+- Better landlord oversight and eviction flow
+- Direct subplot creation support through `/ag subplot` and `/ag subzone`
+- Better support for market stalls, rooms, hotels, and managed server spaces
+
+### TradeStalls and Local Market
+
+- Built-in **TradeStalls** for servers that do not want a separate market plugin
+- Sign + chest or barrel storefront flow
+- Buy and sell support using:
+  - money
+  - ClaimBlocks
+- Better Local Market flow for plot-based browsing
+- Configurable coexistence or priority handling with:
+  - QuickShop
+  - Shopkeepers
+  - ChestShop
+  - ExcellentShop
+
+### UX, Language, and Documentation
+
+- Better Guardian's Guide / Codex coverage for players learning the plugin
+- Better starter experience with first-join wand + quickstart note
+- More consistent GUI labels and lower lore text
+- `lang/` remains the public editable folder
+- `codex/` remains the internal fallback layer
+- Hybrid English removed entirely
+- README, config layout, and plugin metadata refreshed for 1.2.6
 
 ---
 
-## Core Features
+## Feature Overview
 
 ### Claiming and Land Protection
 
-- Wand-based selection and claiming
-- Configurable minimum and maximum claim size rules
-- Per-world rules and limits
-- Claim resize, merge, unclaim, and safe admin recovery
-- Visual claim boundaries and guided management menus
-- Plot flags for PvP, containers, redstone, entry, animals, vehicles, shops, and more
+- Wand-based claim selection using the **Aegis Scepter**
+- Restored admin server-zone selection using the **Sentinel's Scepter**
+- Claim resize, unclaim, and recovery flow
+- Plot flags for PvP, containers, entry, shops, vehicles, fire, redstone, safe-zone behavior, and more
+- Better protection handling for rooms, rentals, and subzones inside larger plots
 
 ### ClaimBlocks Economy
 
-- Configurable starting balance for new players
-- Passive ClaimBlock earnings with anti-AFK protections
-- Per-player earnings opt-in or opt-out support
-- ClaimBlocks exchange with Vault integration
-- Costs, fees, sell locks, cooldowns, hourly limits, and server presets
+- Starting ClaimBlock support for new players
+- Passive ClaimBlock earning with anti-AFK checks
+- Player opt-in or opt-out support for passive earnings
+- ClaimBlocks exchange with Vault support
+- Buy, sell, cooldown, lock, and exchange controls
 
 ### Groups and Shared Ownership
 
 - Group creation before shared claiming
-- Group treasury support for expansions and progression
-- Group-aware starter claim sizing rules
-- Member-aware notifications and better shared ownership flow
+- Shared treasury for growth and progression
+- Group-claim creation rules based on member count
+- Safer anti-abuse logic for early-member padding
+- Group-aware notifications and ownership flow
 
-### Expansions and Progression
+### Frontier Expansion and Plot Ascension
 
-- Expansion request queue or instant mode
-- Optional unattended approval mode when reviewers are offline
-- Plot leveling with rewards, progression unlocks, and optional territory growth
-- Expansion snapshots and audit history for safer admin review
+- Expansion request submission and review flow
+- Queue or instant-style behavior depending on configuration
+- Unattended review mode for quieter admin periods
+- Plot Ascension with progression rewards and better bonus previews
+- `Expansion Horizons` teased as a future progression branch
 
 ### Subplots, Rentals, and Rooms
 
-- Zone creation inside existing plots
-- Rentable rooms, stalls, and sub-areas
-- Renter self-management with guest access and room spawn support
-- Landlord oversight and eviction flow
-- Market-style or hotel-style setups for shared claims
+- Subzones inside larger claims
+- Rentable market stalls, rooms, hotel suites, and managed spaces
+- Renter controls for guests, room access, and room spawn
+- Zone browser and room control GUIs
+- Direct subplot creation via command after wand selection
 
 ### TradeStalls and Local Market
 
-- Built-in stall system for servers that do not want a third-party market plugin
-- Sign + chest or barrel registration into a TradeStall
-- Local Market GUI for plot-based shopping and rental browsing
-- Supports money or ClaimBlocks as the trade currency
-- Configurable plugin bridge behavior when external shop plugins are installed
+- Native stall system for servers without a third-party shop plugin
+- GUI browsing for stall buyers
+- Listing management for sellers
+- Support for money or ClaimBlocks as sale currency
+- Local Market hub for rentals, stalls, and linked market integrations
 
 ### Migration, Diagnostics, and Recovery
 
-- Migration wizard for supported protection sources
-- Migration wand for claim detection and visual preview
-- Snapshot browser and rollback tools
-- `/agadmin doctor` reporting for support and troubleshooting
-- Better admin recovery workflow after expansion, plot issues, or maintenance mistakes
+- Visual migration tools for supported protection sources
+- Snapshot creation and restoration
+- Recovery tooling for crashes, mistakes, or moderation follow-up
+- Diagnostics reporting for admins and support workflows
+
+### Language and Accessibility
+
+- Modern English
+- Old English
+- Spanish (MX)
+- Spanish (AR)
+- Synced active packs and fallback packs for cleaner language switching
 
 ---
 
@@ -157,7 +209,7 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 |---------|-------------|
 | `/aegis` | Main command |
 | `/aegis menu` | Open the main GUI |
-| `/aegis wand` | Receive the claiming wand |
+| `/aegis wand` | Receive the Aegis Scepter |
 | `/aegis claim` | Claim selected land |
 | `/aegis unclaim` | Remove your plot |
 | `/aegis resize` | Resize an existing plot |
@@ -167,18 +219,20 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 | `/aegis setspawn` | Set plot spawn point |
 | `/aegis welcome <message>` | Set plot welcome text |
 | `/aegis farewell <message>` | Set plot farewell text |
-| `/aegis notify` | Manage greetings/admin notification preferences |
+| `/aegis notify` | Manage greeting/admin notification preferences |
 | `/aegis visit` | Open the travel menu |
 | `/aegis market` | Open the market menu |
-| `/aegis market local` | Open the local market for the current area |
+| `/aegis market local` | Open the Local Market for the current area |
 | `/aegis sell <price>` | List a plot for sale |
 | `/aegis unsell` | Remove a plot from sale |
 | `/aegis auction` | Open the auction browser |
-| `/aegis zone` | Manage zones and rentals |
-| `/aegis level` | Open plot leveling |
+| `/aegis zone` | Open zone and rental management |
+| `/aegis subplot [name]` | Create a subplot from your current selection |
+| `/aegis subzone [name]` | Alias for subplot creation |
+| `/aegis level` | Open plot ascension |
 | `/aegis rename <name>` | Set plot display name |
 | `/aegis setdesc <description>` | Set plot description |
-| `/aegis blocks` | View ClaimBlock balance and related options |
+| `/aegis blocks` | View ClaimBlock balance and options |
 | `/aegis blocks earnings <on|off|status>` | Manage passive ClaimBlock earnings |
 | `/aegis group create <name>` | Create a group |
 | `/aegis group status` | View group status |
@@ -194,8 +248,11 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 | `/aegisadmin menu` | Open the admin GUI |
 | `/aegisadmin reload` | Reload configuration and language data |
 | `/aegisadmin bypass` | Toggle protection bypass |
+| `/aegisadmin wand server` | Receive the Sentinel's Scepter for server-zone claims |
+| `/aegisadmin claim` | Confirm the current selection as a server zone |
+| `/aegisadmin wand migration` | Receive the migration wand |
 | `/aegisadmin doctor` | Generate a diagnostics report |
-| `/aegisadmin migrate <plugin>` | Start migration from a supported plugin |
+| `/aegisadmin migrate` | Open the migration flow |
 | `/aegisadmin snapshot here [reason]` | Create a manual recovery snapshot |
 | `/aegisadmin restore here` | Restore the latest snapshot for the current plot |
 | `/aegisadmin blocks <player> <add|remove|set> <amount>` | Manage player ClaimBlocks |
@@ -204,14 +261,15 @@ Version 1.2.6 is a major polish and expansion pass. It improves protection cover
 
 ## Permissions
 
-Player-facing permissions are normally provided through `aegis.user`, and staff/admin permissions through `aegis.admin`.
+Player-facing permissions are normally bundled through `aegis.user`, and staff/admin access is normally bundled through `aegis.admin`.
 
-Important nodes in 1.2.6 include:
+Important 1.2.6 nodes include:
 
 - `aegis.user`
 - `aegis.admin`
 - `aegis.admin.manage`
 - `aegis.serverzone.manage`
+- `aegis.admin.wand`
 - `aegis.market.manage`
 - `aegis.staff.co_owner`
 - `aegis.staff.market_steward`
@@ -228,23 +286,24 @@ For the full permission list, see:
 
 ## Configuration
 
-AegisGuard uses a structured `config.yml` with clearer section ordering in 1.2.6.
+AegisGuard 1.2.6 ships with a cleaner `config.yml` layout intended to be easier for server owners to understand and tune.
 
-Notable configuration areas include:
+Key configuration areas include:
 
 - storage backend and persistence
-- economy and ClaimBlocks settings
-- group plot and treasury rules
-- expansion approval and unattended review behavior
-- market, TradeStalls, and local market bridge settings
-- upkeep and tax notifications
-- staff/server-zone access rules
-- localization folder and fallback behavior
+- economy and ClaimBlocks
+- first-join starter kit
+- group plots and treasury rules
+- frontier expansion review and unattended approval behavior
+- TradeStalls and Local Market bridge settings
+- staff and server-zone access rules
+- upkeep and tax notification behavior
+- language folder and fallback behavior
 
 ### Language Folders
 
-- `plugins/AegisGuard/lang/` is the primary editable folder for server owners
-- `plugins/AegisGuard/codex/` is the fallback bundle layer
+- `plugins/AegisGuard/lang/` is the main editable language folder
+- `plugins/AegisGuard/codex/` is the fallback language layer
 
 ### Supported Language Packs
 
@@ -253,7 +312,7 @@ Notable configuration areas include:
 - `spanish_mx`
 - `spanish_ar`
 
-For setup guidance, tuning recommendations, and deployment notes:
+For setup guidance and tuning recommendations:
 - [CONFIGURATION.md](CONFIGURATION.md)
 
 ---

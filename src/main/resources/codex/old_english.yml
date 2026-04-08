@@ -1084,3 +1084,11 @@ zone_tenant_guest_added: '&aA chamber guest hath been added.'
 zone_tenant_guest_removed: '&eA chamber guest hath been removed.'
 zone_tenant_renter_only: '&cOnly the active renter may alter this chamber''s guest settings.'
 visit_not_owner: '&cThou no longer ownest that claim.'
+
+plot_status_button_title: "&b✦ Estate Status"
+level_button_lore_static:
+- "&7Upgrade your plot to unlock"
+- "&7additional perks and bonuses."
+plot_too_small: '&c❌ Þæt gecorene land is tō lȳtel.'
+title_entering_wilds: '&aThe Wilds'
+subtitle_entering_wilds: '&7Untamed Lands'

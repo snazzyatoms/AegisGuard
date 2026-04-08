@@ -107,3 +107,8 @@ expansion_request_denied_player: '&c[X] Thy expansion petition was withheld.'
 expansion_request_approved_admin: '&a[OK] Granted expansion petition for &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c[X] Withheld expansion petition for &f{PLAYER}&c.'
 request_expired: '&c[X] That petition hath expired or been judged already.'
+
+expansion_admin_title: "&8Pending Petitions"
+expansion_none_title: "&cNo Petitions"
+expansion_none_lore:
+- "&7The subjects are content."

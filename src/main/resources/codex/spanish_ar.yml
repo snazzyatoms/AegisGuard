@@ -469,3 +469,250 @@ zone_tenant_guest_added: '&aSe agregó un invitado de la habitación.'
 zone_tenant_guest_removed: '&eSe sacó un invitado de la habitación.'
 zone_tenant_renter_only: '&cSolo el inquilino activo puede cambiar la configuración de invitados de esta habitación.'
 visit_not_owner: '&cYa no sos dueño de esa parcela.'
+
+expansion_gui_title: "&d✦ Frontera en Expansión ✦"
+button_expand: "&b⛏ Expandir"
+expand_lore:
+- "&7Solicitar expansiones de terreno."
+button_view_requests_admin: "&cRevisar Solicitudes"
+view_requests_admin_lore:
+- "&7Aprobá o rechazá solicitudes de expansión."
+expansion_submitted: "&a✔ ¡Solicitud enviada! &7Costo: &6{AMOUNT}"
+expansion_exists: "&c❌ Ya tenés una solicitud pendiente."
+expansion_approved: "&a✔ ¡Tu solicitud fue aprobada por {PLAYER}!"
+expansion_denied: "&c✖ Tu solicitud fue rechazada por {PLAYER}."
+admin_request_approved: "&a✔ Aprobaste la solicitud de expansión de &b{PLAYER}&a."
+admin_request_denied: "&c✖ Rechazaste la solicitud de expansión de &b{PLAYER}&c."
+expansion_payment_failed: "&c❌ Fondos insuficientes para esta expansión."
+expansion_limit_reached: "&c❌ El radio máximo es {LIMIT} bloques."
+expansion_overlap_fail: "&c❌ La expansión se superpondría con otra parcela."
+expansion_invalid_size: "&c❌ El tamaño pedido tiene que ser mayor que el actual."
+request_expired: "&c❌ Esa solicitud expiró o ya fue procesada."
+expansion_tier1_name: "&aPulso Fronterizo I &8(+5)"
+expansion_tier1_lore:
+- "&7Abrí una primera expansión con cuidado."
+- "&7Aumenta el radio en &a+5&7 bloques."
+- " "
+- "&eClic para enviar solicitud."
+expansion_tier2_name: "&ePulso Fronterizo II &8(+10)"
+expansion_tier2_lore:
+- "&7Empujá tus límites un poco más."
+- "&7Aumenta el radio en &a+10&7 bloques."
+- " "
+- "&eClic para enviar solicitud."
+expansion_tier3_name: "&fOleada Fronteriza III &8(+20)"
+expansion_tier3_lore:
+- "&7Abrí espacio para caminos y construcciones mayores."
+- "&7Aumenta el radio en &a+20&7 bloques."
+- " "
+- "&eClic para enviar solicitud."
+expansion_tier4_name: "&6Ascenso Fronterizo IV &8(+35)"
+expansion_tier4_lore:
+- "&7Formá un distrito amplio alrededor de tu parcela."
+- "&7Aumenta el radio en &a+35&7 bloques."
+- " "
+- "&eClic para enviar solicitud."
+expansion_tier5_name: "&bCenit Fronterizo V &8(+50)"
+expansion_tier5_lore:
+- "&7Llegá a una frontera digna de un gran proyecto."
+- "&7Aumenta el radio en &a+50&7 bloques."
+- " "
+- "&eClic para enviar solicitud."
+expansion_locked_lore:
+- "&cDebés estar dentro de"
+- "&ctu propia parcela para hacer esto."
+expansion_admin_title: "&5✦ Solicitudes Pendientes"
+expansion_none_title: "&cSin Solicitudes"
+expansion_none_lore:
+- "&7No hay solicitudes pendientes."
+visit_gui_title: "&3\U0001F9ED Menú de Viaje"
+visit_title_warps: "&6Puntos del Servidor"
+visit_title_trusted: "&3Parcelas de Confianza"
+visit_switch_trusted: "&bParcelas de Confianza"
+visit_switch_trusted_lore:
+- "&7Mostrar parcelas donde sos de confianza."
+visit_switch_warps: "&6Puntos del Servidor"
+visit_switch_warps_lore:
+- "&7Mostrar puntos de teletransporte públicos."
+visit_warp_lore:
+- "&7Un punto de teletransporte público."
+- " "
+- "&eClic para teletransportarte"
+visit_plot_name: "&e{PLOT}"
+visit_plot_lore:
+- "&7Mundo: &f{WORLD}"
+- "&7Rol: &b{ROLE}"
+- " "
+- "&eClic para teletransportarte"
+home-set-success: "&a✔ Hogar de la parcela establecido en tu ubicación actual."
+home-fail-outside: "&c❌ Tenés que estar dentro de tu parcela para establecer su hogar."
+home-fail-no-spawn: "&c❌ ¡No hay hogar establecido! Usá /ag setspawn."
+welcome-set: "&a✔ Mensaje de bienvenida actualizado."
+welcome-cleared: "&e✔ Mensaje de bienvenida borrado."
+farewell-set: "&a✔ Mensaje de despedida actualizado."
+farewell-cleared: "&e✔ Mensaje de despedida borrado."
+no_plot_here: "&c❌ No estás dentro de tu parcela."
+cannot_break: "&c❌ No podés romper bloques acá; esta área está protegida."
+cannot_place: "&c❌ No podés colocar bloques acá; esta área está protegida."
+cannot_interact: "&c❌ No tenés permitido interactuar con eso acá."
+cannot_attack: "&c❌ El PvP está deshabilitado en esta parcela."
+plot_entry_denied: "&c⛔ Acceso denegado. Esta parcela es privada."
+plot_banned_entry: "&c⛔ Tenés prohibida la entrada a esta parcela."
+title_entering: "&aEntrando: &f{PLOT}"
+subtitle_entering: "&7Dueño: &f{OWNER}"
+codex_gui_title: "&b✦ Guía del Guardián ✦"
+codex_claim_title: "&a§lII. Reclamar"
+codex_claim_lore:
+- "&7Cómo proteger terreno:"
+- " "
+- "&f1. &7Usá &b/ag wand &7para obtener la herramienta."
+- "&f2. &7Clic derecho en la primera esquina."
+- "&f3. &7Clic izquierdo en la esquina opuesta."
+- "&f4. &7Usá &a/ag claim &7para comprar la parcela."
+codex_travel_title: "&b§lIII. Viaje"
+codex_travel_lore:
+- "&7Comandos de viaje rápido:"
+- " "
+- "&e/ag home &7- Teletransportate a tu parcela."
+- "&e/ag setspawn &7- Establecé el spawn de tu parcela."
+- "&e/ag visit &7- Visitá parcelas de otros jugadores."
+codex_menus_title: "&d§lIV. Menús"
+codex_menus_lore:
+- "&7Usá &b/ag menu &7para gestionar:"
+- " "
+- "&6\U0001F6A9 Ajustes: &7PvP, mobs, fuego y más."
+- "&b\U0001F465 Miembros: &7Jugadores de confianza y roles."
+- "&d✨ Cosméticos: &7Partículas de borde y visuales."
+- "&5✨ Ascensión: &7Niveles y bonificaciones de la parcela."
+codex_security_title: "&c§lV. Seguridad"
+codex_security_lore:
+- "&7Gestioná visitantes y problemáticos:"
+- " "
+- "&c/ag kick &7- Expulsá un jugador de tu parcela."
+- "&4/ag ban &7- Prohibí la entrada a un jugador."
+codex_economy_title: "&6§lVI. Economía"
+codex_economy_lore:
+- "&7Conceptos básicos de economía:"
+- " "
+- "&eMantenimiento: &7Pagá mantenimiento para conservar tu parcela."
+- "&aMercado: &7Comprá y vendé parcelas con otros."
+codex_identity_title: "&3§lVII. Identidad"
+codex_identity_lore:
+- "&7Personalizá tu parcela:"
+- " "
+- "&b/ag rename &7- Establecé un nombre personalizado."
+- "&e/ag stuck &7- Escapá si quedás atrapado en bloques."
+codex_advanced_title: "&5§lVIII. Avanzado"
+codex_advanced_lore:
+- "&dNivelación: &7Mejorá tu parcela para desbloquear ventajas."
+- "&eZonas: &7Creá zonas de alquiler dentro de tu parcela."
+level_gui_title: "&d✦ Niveles de Parcela"
+level_current_status: "&eEstado del Dominio"
+level_header_owner: "&7Dueño: &f{OWNER}"
+level_header_world: "&7Mundo: &f{WORLD}"
+level_header_level: "&7Nivel: &e{LEVEL}&7/&f{MAX}"
+level_header_multiplier: "&7Multiplicador de Costo: &f{MULTIPLIER}"
+level_current_blessing_name: "&dBonos Actuales"
+level_current_blessing_title: "&dBonos Activos"
+level_current_blessing_footer_1: "&8Los niveles más altos desbloquean"
+level_current_blessing_footer_2: "&8bonos y ventajas más fuertes."
+level_current_blessings_name: "&bBendiciones Actuales"
+level_current_blessings_title: "&bBendiciones al Nivel &f{LEVEL}"
+level_current_blessings_footer_1: "&7Solo se muestran tus mejoras más fuertes."
+level_current_blessings_footer_2: "&8(Mantené esta vista limpia y legible.)"
+level_track_title_completed: "&aRuta Completada"
+level_track_completed_[1]: "&7Todos los hitos de esta ruta"
+level_track_completed_[2]: "&7han sido desbloqueados."
+level_track_completed_1: "&7Todos los hitos de esta ruta"
+level_track_completed_2: "&7han sido desbloqueados."
+level_track_buffs_title: "&bBendiciones:"
+level_track_footer_mastered: "&aDominado."
+level_track_title_current: "&dRuta Actual"
+level_track_current_[1]: "&7Estos bonos están actualmente"
+level_track_current_[2]: "&7activos en tu parcela."
+level_track_title_locked: "&cRuta Bloqueada"
+level_track_locked_[1]: "&7Las mejoras siguientes de esta ruta"
+level_track_locked_[2]: "&7se desbloquean al progresar."
+level_track_next_[1]: "&7Siguiente mejora de esta ruta"
+level_track_next_cost: "&eCosto de Mejora: &6{COST}"
+level_track_footer_next: "&eEl siguiente rango te espera."
+level_track_footer_progress: "&7Avanzá para desbloquear este rango."
+level_track_completed_name: "&aNivel {LEVEL} Completado"
+level_track_completed_lore:
+- "&7Ya dominaste este nivel."
+level_track_current_name: "&eNivel {LEVEL} Actual"
+level_track_current_lore:
+- "&7Tu parcela está en este nivel."
+level_track_locked_name: "&cNivel {LEVEL} Bloqueado"
+level_track_locked_lore:
+- "&7Alcanzá el nivel anterior primero."
+level_track_next_name: "&bSiguiente: Nivel {LEVEL}"
+level_track_next_lore:
+- "&7El siguiente paso en tu ascensión."
+level_upgrade_button: "&aMejorar al Nivel &f{LEVEL}"
+level_max_reached: "&6★ Nivel Máximo"
+level_up_success: "&d⚡ ¡Tu parcela ha subido a Nivel &f{LEVEL}&d!"
+level_up_fail_cost: "&c❌ No tienes suficiente moneda para mejorar."
+level_upgrade_tier: "&dSiguiente Nivel"
+level_upgrade_next_tier: "&eSiguiente Rango: &fNivel {LEVEL}"
+level_upgrade_cost: "&eCosto de Mejora: &6{COST}"
+level_upgrade_new_buffs_title: "&bNuevas Bendiciones:"
+level_upgrade_click_hint: "&eClic para ascender al Nivel {LEVEL}"
+level_button_lore:
+- "&7Subí de nivel tu parcela para beneficios."
+level_button_lore_static:
+- "&7Mejorá tu parcela para desbloquear"
+- "&7beneficios y bonos adicionales."
+zone_button_lore:
+- "&7Creá sub-zonas y habitaciones alquilables."
+biome_gui_title: "&d\U0001F33F Selección de Bioma"
+biome_changed: "&a✔ Bioma establecido a {BIOME}."
+biome_cost_paid: "&e\U0001F4B0 Pagado &6{AMOUNT}&e para cambiar el bioma."
+biome_button_lore:
+- "&7Cambiá el bioma de tu parcela."
+like_success: "&a✔ Te gustó esta parcela. Me gusta totales: &e{AMOUNT}"
+like_removed: "&eTu me gusta fue eliminado."
+like_own_plot: "&cError: No podés dar me gusta a tu propia parcela."
+like_disabled: "&cLos me gusta están deshabilitados en este servidor/mundo."
+help_header: "&bAyuda de AegisGuard"
+help_lines:
+- "&e/aegis wand &7- Obtené la Varita Aegis (herramienta de selección)."
+- "&e/aegis menu &7- Abrí el menú principal de AegisGuard."
+- "&e/aegis claim &7- Creá una parcela desde tu selección actual."
+- "&e/aegis unclaim &7- Eliminá tu parcela actual."
+- "&e/aegis resize <dir> <amt> &7- Redimensioná tu parcela en una dirección."
+- "&e/aegis home &7- Teletransportate al hogar de tu parcela."
+- "&e/aegis setspawn &7- Establecé el punto de inicio de tu parcela."
+- "&e/aegis welcome [msg] &7- Establecé o borrá un mensaje de bienvenida."
+- "&e/aegis farewell [msg] &7- Establecé o borrá un mensaje de despedida."
+- "&e/aegis market &7- Abrí el mercado de parcelas."
+- "&e/aegis auction &7- Ver subastas de parcelas activas."
+- "&e/aegis rename <n> &7- Renombrá tu parcela."
+- "&e/aegis setdesc <text> &7- Establecé una descripción para tu parcela."
+- "&e/aegis stuck &7- Teletransportate a un lugar seguro si estás atorado."
+- "&e/aegis help &7- Ver este menú de ayuda."
+button_submit_request: '&aEnviar Solicitud'
+submit_request_lore:
+- '&7Elegí cuánto querés'
+- '&7que se expanda tu parcela.'
+expansion_admin_actions:
+- '&aClic izquierdo: &7Aprobar'
+- '&cClic derecho: &7Denegar'
+expansion_admin_granted_broadcast: '&6⚖ {PLAYER} aprobó una expansión para {TARGET}.'
+expansion_admin_denied_broadcast: '&c⚖ {PLAYER} denegó una solicitud de expansión de {TARGET}.'
+plot_too_small: '&c❌ El área seleccionada es demasiado chica.'
+title_entering_wilderness: '&aTerrenos Salvajes'
+subtitle_entering_wilderness: '&7Sin claim'
+button_utility_chapter: '&3§lIX. Utilidad'
+utility_chapter_lore:
+- '&7Herramientas útiles del día a día:'
+- ' '
+- '&b/ag stuck &7- Salí de trampas o rincones.'
+- '&e/ag blocks &7- Gestioná tus Claim Blocks.'
+zone_status_available: '&aDisponible'
+biome_select_lore:
+- '&7Cambiá el estilo visual de tu parcela a {BIOME}.'
+- '&7Costo: &e{COST}'
+- ' '
+- '&8[&c!&8] &7Cambio solo visual'
+- '&7Los bloques no se reemplazan.'

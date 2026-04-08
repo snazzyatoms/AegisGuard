@@ -620,3 +620,158 @@ zone_tenant_guest_added: '&aSe agregó un invitado de la habitación.'
 zone_tenant_guest_removed: '&eSe removió un invitado de la habitación.'
 zone_tenant_renter_only: '&cSolo el inquilino activo puede cambiar la configuración de invitados de esta habitación.'
 visit_not_owner: '&cYa no eres dueño de esa parcela.'
+
+codex_gui_title: "&b✦ Guía del Guardián ✦"
+codex_claim_title: "&a§lII. Reclamar"
+codex_claim_lore:
+- "&7Cómo proteger terreno:"
+- " "
+- "&f1. &7Usa &b/ag wand &7para obtener la herramienta."
+- "&f2. &7Clic derecho en la primera esquina."
+- "&f3. &7Clic izquierdo en la esquina opuesta."
+- "&f4. &7Usa &a/ag claim &7para comprar la parcela."
+settings_menu_title: "&3⚙ Preferencias"
+level_gui_title: "&d✦ Niveles de Parcela"
+level_current_status: "&eEstado del Dominio"
+level_header_owner: "&7Dueño: &f{OWNER}"
+level_header_world: "&7Mundo: &f{WORLD}"
+level_header_level: "&7Nivel: &e{LEVEL}&7/&f{MAX}"
+level_header_multiplier: "&7Multiplicador de Costo: &f{MULTIPLIER}"
+level_current_blessing_name: "&dBonos Actuales"
+level_current_blessing_title: "&dBonos Activos"
+level_current_blessing_footer_1: "&8Los niveles más altos desbloquean"
+level_current_blessing_footer_2: "&8bonos y ventajas más fuertes."
+level_current_blessings_name: "&bBendiciones Actuales"
+level_current_blessings_title: "&bBendiciones al Nivel &f{LEVEL}"
+level_current_blessings_footer_1: "&7Solo se muestran tus mejoras más fuertes."
+level_current_blessings_footer_2: "&8(Mantén esta vista limpia y legible.)"
+level_track_title_completed: "&aRuta Completada"
+level_track_completed_[1]: "&7Todos los hitos de esta ruta"
+level_track_completed_[2]: "&7han sido desbloqueados."
+level_track_completed_1: "&7Todos los hitos de esta ruta"
+level_track_completed_2: "&7han sido desbloqueados."
+level_track_buffs_title: "&bBendiciones:"
+level_track_footer_mastered: "&aDominado."
+level_track_title_current: "&dRuta Actual"
+level_track_current_[1]: "&7Estos bonos están actualmente"
+level_track_current_[2]: "&7activos en tu parcela."
+level_track_title_locked: "&cRuta Bloqueada"
+level_track_locked_[1]: "&7Las mejoras siguientes de esta ruta"
+level_track_locked_[2]: "&7se desbloquean al progresar."
+level_track_next_[1]: "&7Siguiente mejora de esta ruta"
+level_track_next_cost: "&eCosto de Mejora: &6{COST}"
+level_track_footer_next: "&eEl siguiente rango te espera."
+level_track_footer_progress: "&7Avanza para desbloquear este rango."
+level_track_completed_name: "&aNivel {LEVEL} Completado"
+level_track_completed_lore:
+- "&7Ya dominaste este nivel."
+level_track_current_name: "&eNivel {LEVEL} Actual"
+level_track_current_lore:
+- "&7Tu parcela está en este nivel."
+level_track_locked_name: "&cNivel {LEVEL} Bloqueado"
+level_track_locked_lore:
+- "&7Alcanza el nivel anterior primero."
+level_track_next_name: "&bSiguiente: Nivel {LEVEL}"
+level_track_next_lore:
+- "&7El siguiente paso en tu ascensión."
+level_upgrade_button: "&aMejorar al Nivel &f{LEVEL}"
+level_max_reached: "&6★ Nivel Máximo"
+level_up_success: "&d⚡ ¡Tu parcela ha subido a Nivel &f{LEVEL}&d!"
+level_up_fail_cost: "&c❌ No tienes suficiente moneda para mejorar."
+level_upgrade_tier: "&dSiguiente Nivel"
+level_upgrade_next_tier: "&eSiguiente Rango: &fNivel {LEVEL}"
+level_upgrade_cost: "&eCosto de Mejora: &6{COST}"
+level_upgrade_new_buffs_title: "&bNuevas Bendiciones:"
+level_upgrade_click_hint: "&eClic para ascender al Nivel {LEVEL}"
+level_button_lore:
+- "&7Sube de nivel tu parcela para beneficios."
+level_button_lore_static:
+- "&7Mejora tu parcela para desbloquear"
+- "&7beneficios y bonos adicionales."
+zone_button_lore:
+- "&7Crea sub-zones y habitaciones rentables."
+biome_gui_title: "&d\U0001F33F Selección de Bioma"
+biome_changed: "&a✔ Bioma establecido a {BIOME}."
+biome_cost_paid: "&e\U0001F4B0 Pagado &6{AMOUNT}&e para cambiar el bioma."
+biome_button_lore:
+- "&7Cambia el bioma de tu parcela."
+like_success: "&a✔ Te gustó esta parcela. Me gusta totales: &e{AMOUNT}"
+like_removed: "&eTu me gusta fue eliminado."
+like_own_plot: "&cError: No puedes dar me gusta a tu propia parcela."
+like_disabled: "&cLos me gusta están desactivados en este servidor/mundo."
+help_header: "&bAyuda de AegisGuard"
+help_lines:
+- "&e/aegis wand &7- Obtén la Varita Aegis (herramienta de selección)."
+- "&e/aegis menu &7- Abre el menú principal de AegisGuard."
+- "&e/aegis claim &7- Crea una parcela desde tu selección actual."
+- "&e/aegis unclaim &7- Elimina tu parcela actual."
+- "&e/aegis resize <dir> <amt> &7- Redimensiona tu parcela en una dirección."
+- "&e/aegis home &7- Teletranspórtate al hogar de tu parcela."
+- "&e/aegis setspawn &7- Establece el punto de inicio de tu parcela."
+- "&e/aegis welcome [msg] &7- Establece o borra un mensaje de bienvenida."
+- "&e/aegis farewell [msg] &7- Establece o borra un mensaje de despedida."
+- "&e/aegis notify &7- Activa/desactiva las notificaciones de entrada/salida."
+- "&e/aegis market &7- Abre el mercado de parcelas."
+- "&e/aegis auction &7- Ver subastas de parcelas activas."
+- "&e/aegis rename <n> &7- Renombra tu parcela."
+- "&e/aegis setdesc <text> &7- Establece una descripción para tu parcela."
+- "&e/aegis stuck &7- Teletranspórtate a un lugar seguro si estás atorado."
+- "&e/aegis help &7- Ver este menú de ayuda."
+codex_travel_title: '&b§lIII. Viaje'
+codex_travel_lore:
+- '&7Comandos de viaje rápido:'
+- ' '
+- '&e/ag home &7- Teletranspórtate a tu parcela.'
+- '&e/ag setspawn &7- Establece el punto de viaje de tu parcela.'
+- '&e/ag visit &7- Visita parcelas de otros jugadores.'
+codex_menus_title: '&d§lIV. Menús'
+codex_menus_lore:
+- '&7Usa &b/ag menu &7para gestionar:'
+- ' '
+- '&6🚩 Ajustes: &7PvP, mobs, fuego y más.'
+- '&b👥 Miembros: &7Jugadores de confianza y roles.'
+- '&d✨ Cosméticos: &7Partículas de borde y visuales.'
+- '&5✨ Ascensión: &7Niveles y bonificaciones de la parcela.'
+codex_security_title: '&c§lV. Seguridad'
+codex_security_lore:
+- '&7Gestiona visitantes y jugadores problemáticos:'
+- ' '
+- '&c/ag kick &7- Expulsa a un jugador de tu parcela.'
+- '&4/ag ban &7- Prohíbe la entrada a un jugador.'
+codex_economy_title: '&6§lVI. Economía'
+codex_economy_lore:
+- '&7Conceptos básicos de economía:'
+- ' '
+- '&eMantenimiento: &7Paga mantenimiento para conservar tu parcela.'
+- '&aMercado: &7Compra y vende parcelas con otros.'
+codex_identity_title: '&3§lVII. Identidad'
+codex_identity_lore:
+- '&7Personaliza tu parcela:'
+- ' '
+- '&b/ag rename &7- Establece un nombre personalizado.'
+- '&e/ag stuck &7- Escapa si quedas atrapado en bloques.'
+codex_advanced_title: '&5§lVIII. Avanzado'
+codex_advanced_lore:
+- '&dNivelación: &7Mejora tu parcela para desbloquear ventajas.'
+- '&eZonas: &7Crea zonas de alquiler dentro de tu parcela.'
+button_utility_chapter: '&3§lIX. Utilidad'
+utility_chapter_lore:
+- '&7Herramientas útiles para el día a día:'
+- ' '
+- '&b/ag stuck &7- Sal de trampas o rincones.'
+- '&e/ag blocks &7- Gestiona tus Claim Blocks.'
+button_sounds_on: '&a🔊 Sonidos: ACTIVADOS'
+button_sounds_off: '&c🔇 Sonidos: DESACTIVADOS'
+button_sounds_disabled_global: '&7🔇 Sonidos: Desactivados por el servidor'
+sounds_toggle_lore:
+- '&7Activa o desactiva los sonidos del menú.'
+sounds_toggle_global_disabled_lore:
+- '&7Los sonidos están desactivados globalmente.'
+settings_gui_not_toggle: '&cEstos ejemplos no se cambian aquí. Usa Ajustes de Parcela.'
+zone_status_available: '&aDisponible'
+biome_select_lore:
+- '&7Cambia el estilo visual de tu parcela a {BIOME}.'
+- '&7Costo: &e{COST}'
+- ' '
+- '&8[&c!&8] &7Cambio solo visual'
+- '&7Los bloques no se reemplazan.'

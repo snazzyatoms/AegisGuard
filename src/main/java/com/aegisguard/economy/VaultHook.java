@@ -11,7 +11,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServiceRegisterEvent;
+import org.bukkit.event.server.ServiceUnregisterEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
+
+import java.util.Collection;
+import java.util.Locale;
 
 /**
  * VaultHook
@@ -19,6 +23,9 @@ import org.bukkit.plugin.RegisteredServiceProvider;
  * - Auto-detects Economy providers (Essentials, CMI, etc.) dynamically.
  */
 public class VaultHook implements Listener {
+
+    private static final String COFFERS_PROVIDER = "coffers";
+    private static final String COFFERS_LEGACY_PROVIDER = "cofferslegacy";
 
     private final AegisGuard plugin;
     private Economy economy;
@@ -40,16 +47,98 @@ public class VaultHook implements Listener {
     }
 
     private void setupEconomy() {
+        Economy previous = this.economy;
+
         if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
             this.economy = null;
+            if (previous != null) {
+                plugin.getLogger().warning("Vault is no longer available. Economy features are in Free Mode.");
+            }
             return;
         }
 
-        RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
-        if (rsp != null) {
-            this.economy = rsp.getProvider();
-            plugin.getLogger().info("Vault hooked successfully! Provider: " + economy.getName());
+        RegisteredServiceProvider<Economy> selected = selectEconomyProvider(
+                Bukkit.getServicesManager().getRegistrations(Economy.class)
+        );
+        if (selected == null) {
+            this.economy = null;
+            if (previous != null) {
+                plugin.getLogger().warning("Vault is loaded, but no economy provider is currently registered.");
+            }
+            return;
         }
+
+        this.economy = selected.getProvider();
+        if (previous == this.economy) {
+            return;
+        }
+
+        String providerName = safeProviderName(selected.getProvider());
+        String sourcePlugin = selected.getPlugin() != null ? selected.getPlugin().getName() : "unknown";
+        if (isPreferredCoffersProvider(selected)) {
+            plugin.getLogger().info("Vault hooked successfully! Preferring Coffers economy provider: "
+                    + providerName + " (plugin " + sourcePlugin + ").");
+        } else {
+            plugin.getLogger().info("Vault hooked successfully! Provider: " + providerName
+                    + " (plugin " + sourcePlugin + ")");
+        }
+    }
+
+    private RegisteredServiceProvider<Economy> selectEconomyProvider(Collection<RegisteredServiceProvider<Economy>> registrations) {
+        RegisteredServiceProvider<Economy> best = null;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (RegisteredServiceProvider<Economy> registration : registrations) {
+            if (registration == null || registration.getProvider() == null) {
+                continue;
+            }
+
+            int score = providerPreferenceScore(registration);
+            if (best == null || score > bestScore) {
+                best = registration;
+                bestScore = score;
+            }
+        }
+
+        return best;
+    }
+
+    private int providerPreferenceScore(RegisteredServiceProvider<Economy> registration) {
+        String providerName = normalize(registration.getProvider().getName());
+        String pluginName = registration.getPlugin() != null ? normalize(registration.getPlugin().getName()) : "";
+        String className = normalize(registration.getProvider().getClass().getName());
+
+        if (providerName.equals(COFFERS_PROVIDER) || pluginName.equals(COFFERS_PROVIDER) || className.contains(".coffers.paper.")) {
+            return 300;
+        }
+        if (providerName.equals(COFFERS_LEGACY_PROVIDER)
+                || pluginName.equals(COFFERS_LEGACY_PROVIDER)
+                || className.contains(".coffers.legacy.")) {
+            return 250;
+        }
+        if (providerName.contains("coffers") || pluginName.contains("coffers") || className.contains(".coffers.")) {
+            return 200;
+        }
+        return 0;
+    }
+
+    private boolean isPreferredCoffersProvider(RegisteredServiceProvider<Economy> registration) {
+        return providerPreferenceScore(registration) >= 250;
+    }
+
+    private String safeProviderName(Economy provider) {
+        try {
+            return provider.getName();
+        } catch (Exception ignored) {
+            return provider.getClass().getSimpleName();
+        }
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -63,17 +152,36 @@ public class VaultHook implements Listener {
     }
 
     @EventHandler
+    public void onServiceUnregister(ServiceUnregisterEvent e) {
+        if (e.getProvider().getService() == Economy.class) {
+            setupEconomy();
+        }
+    }
+
+    @EventHandler
     public void onPluginEnable(PluginEnableEvent e) {
-        if (economy == null && "Vault".equalsIgnoreCase(e.getPlugin().getName())) {
+        String pluginName = e.getPlugin().getName();
+        if (economy == null
+                && ("Vault".equalsIgnoreCase(pluginName)
+                || "Coffers".equalsIgnoreCase(pluginName)
+                || "CoffersLegacy".equalsIgnoreCase(pluginName))) {
             setupEconomy();
         }
     }
 
     @EventHandler
     public void onPluginDisable(PluginDisableEvent e) {
-        if (economy != null && "Vault".equalsIgnoreCase(e.getPlugin().getName())) {
-            plugin.getLogger().warning("Vault disabled. Switching to Free Mode.");
+        String pluginName = e.getPlugin().getName();
+        if ("Vault".equalsIgnoreCase(pluginName)) {
+            if (economy != null) {
+                plugin.getLogger().warning("Vault disabled. Switching to Free Mode.");
+            }
             economy = null;
+            return;
+        }
+
+        if ("Coffers".equalsIgnoreCase(pluginName) || "CoffersLegacy".equalsIgnoreCase(pluginName)) {
+            setupEconomy();
         }
     }
 

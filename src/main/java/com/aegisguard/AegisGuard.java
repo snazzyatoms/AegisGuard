@@ -1,5 +1,7 @@
 package com.aegisguard;
 
+import com.aegisguard.api.AegisGuardAPI;
+import com.aegisguard.api.internal.DefaultAegisGuardAPI;
 import com.aegisguard.admin.AdminCommand;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
@@ -82,6 +84,7 @@ public class AegisGuard extends JavaPlugin {
     private SelectionService selection;
     private VaultHook vault;
     private EconomyManager ecoManager;
+    private AegisGuardAPI api;
 
     // Compatibility layer for other protection plugins (WorldGuard, etc.)
     private ProtectionHookManager protectionHooks;
@@ -152,6 +155,8 @@ public class AegisGuard extends JavaPlugin {
     public VaultHook vault() { return vault; }
     public EconomyManager eco() { return ecoManager; }
     public EconomyManager getEconomy() { return ecoManager; }
+    public AegisGuardAPI api() { return api; }
+    public AegisGuardAPI getApi() { return api; }
 
     public ProtectionHookManager protectionHooks() { return protectionHooks; }
     public CodexEngine codex() { return codex; }
@@ -280,6 +285,7 @@ public class AegisGuard extends JavaPlugin {
         // Vault (optional)
         vault = new VaultHook(this);
         ecoManager = new EconomyManager(this);
+        api = new DefaultAegisGuardAPI(this);
 
         // --- COMMANDS ---
         PluginCommand cmd = getCommand("aegis");

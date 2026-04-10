@@ -1,7 +1,7 @@
 # AegisGuard plugin metadata
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.2.6
+version: 1.2.7
 api-version: "1.20"
 prefix: AegisGuard
 description: Player-friendly land protection with roles, group plots, admin recovery, and polished GUIs.
@@ -12,6 +12,8 @@ folia-supported: true
 # Optional integrations. AegisGuard will hook them when present and stay functional when absent.
 softdepend:
   # Economy and utility hooks
+  - Coffers
+  - CoffersLegacy
   - Vault
   - PlaceholderAPI
   - CoreProtect

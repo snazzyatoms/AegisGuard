@@ -607,9 +607,6 @@ unstuck_on_cooldown: '&c❌ Unstuck cooldown: wait &6{SECONDS}&c seconds.'
 unstuck_success: '&a✔ You have been moved to a safe location.'
 unstuck_failed: '&c❌ No safe location found.'
 
-# --- Plot Status GUI (alt title parity) ---
-plot_status_button_title: '&b📊 Claim Status'
-
 # --- Help ---
 help_header: '&bAegisGuard Help'
 help_lines:

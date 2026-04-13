@@ -20,6 +20,9 @@ softdepend:
 
   # Map and visual sync hooks
   - Dynmap
+  - BlueMap
+  - Pl3xMap
+  - Squaremap
 
   # Protection compatibility providers
   - WorldEdit

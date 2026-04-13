@@ -192,8 +192,8 @@ public class EconomyManager {
     // =========================================================================
 
     /**
-     * Returns true if Vault is allowed by config and the vault wrapper exists.
-     * (Does not guarantee an economy provider is installed, but your VaultHug should handle that.)
+     * Returns true if the configured external money backend is actually available.
+     * This now includes direct Coffers hookups in addition to Vault-backed providers.
      */
     public boolean isVaultReady() {
         if (plugin.cfg() != null) {
@@ -201,7 +201,7 @@ public class EconomyManager {
             boolean vaultEnabled = plugin.cfg().raw().getBoolean("economy.vault.enabled", true);
             if (!useVault || !vaultEnabled) return false;
         }
-        return plugin.vault() != null;
+        return plugin.vault() != null && plugin.vault().isEnabled();
     }
 
     /**

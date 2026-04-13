@@ -80,12 +80,16 @@ public class ClaimBlockTask implements Runnable, Listener {
                 if (timeSinceActivity > afkTimeoutMillis) {
                     // Player is AFK, skip reward
                     if (notify) {
-                        String afkMsg = plugin.codex().tr(p, "claim_blocks_afk_warning",
-                                Map.of("MINUTES", String.valueOf(afkTimeoutMillis / 60000))
-                        );
-                        if (afkMsg != null && !afkMsg.isEmpty()) {
-                            afkMsg = ChatColor.translateAlternateColorCodes('&', afkMsg);
-                            p.spigot().sendMessage(TextComponent.fromLegacyText(afkMsg));
+                        long afkMinutes = Math.max(1L, timeSinceActivity / 60_000L);
+                        if (afkMinutes > activity.lastAfkWarningMinute) {
+                            activity.lastAfkWarningMinute = afkMinutes;
+                            String afkMsg = plugin.codex().tr(p, "claim_blocks_afk_warning",
+                                    Map.of("MINUTES", String.valueOf(afkMinutes))
+                            );
+                            if (afkMsg != null && !afkMsg.isEmpty()) {
+                                afkMsg = ChatColor.translateAlternateColorCodes('&', afkMsg);
+                                p.spigot().sendMessage(TextComponent.fromLegacyText(afkMsg));
+                            }
                         }
                     }
                     continue;
@@ -252,12 +256,14 @@ public class ClaimBlockTask implements Runnable, Listener {
         long activeTimeInInterval;      // Accumulated active time in current interval
         Location lastLocation;          // Last known location (for movement tracking)
         long lastLocationUpdate;        // Last time location was updated
+        long lastAfkWarningMinute;      // Last AFK minute value warned to the player
 
         PlayerActivity() {
             this.intervalStart = System.currentTimeMillis();
             this.activeTimeInInterval = 0;
             this.lastActivity = System.currentTimeMillis();
             this.lastLocationUpdate = System.currentTimeMillis();
+            this.lastAfkWarningMinute = -1L;
         }
 
         /**
@@ -272,6 +278,7 @@ public class ClaimBlockTask implements Runnable, Listener {
                 }
             }
             lastActivity = now;
+            lastAfkWarningMinute = -1L;
         }
 
         /**

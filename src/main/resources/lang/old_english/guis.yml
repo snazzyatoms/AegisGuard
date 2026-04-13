@@ -73,12 +73,8 @@ level_button_lore:
   - '&7Raise thy holding in renown and boon.'
 
 zone_gui_title: '&3✦ Chamber Stewardry'
-zone_button_lore:
-  - '&7Make sub-zones and rentable chambers.'
 
 biome_gui_title: '&a✦ Biome Craft'
-biome_button_lore:
-  - '&7Change the breath of the land.'
 
 button_market: '&6Market'
 market_lore:

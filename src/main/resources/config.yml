@@ -1,5 +1,5 @@
 # ==============================================================================
-# AegisGuard 1.2.6 - Main Configuration
+# AegisGuard 1.2.7 - Main Configuration
 # ==============================================================================
 # This file is organized from core server setup to advanced gameplay systems.
 #
@@ -895,9 +895,13 @@ auction:
 # Wilderness revert
 # ==============================================================================
 wilderness_revert:
-  enabled: true
+  # Disabled by default. This feature is intended for SQL-backed setups and
+  # should be turned on only when a server owner explicitly wants it.
+  enabled: false
   revert_after_hours: 2
-  check_interval_minutes: 10
+  # Primary scheduler key for 1.2.7+. Older installs may still use
+  # check_interval_minutes and will continue to work.
+  interval_seconds: 600
   revert_batch_size: 500
 
 
@@ -928,7 +932,9 @@ protections:
 # ==============================================================================
 mob_barrier:
   enabled: true
-  check_interval_ticks: 60
+  # Primary scheduler key for 1.2.7+. Older installs may still use
+  # check_interval_ticks and will continue to work.
+  interval_seconds: 3
   remove_particles: true
 
 

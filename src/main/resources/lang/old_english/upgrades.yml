@@ -108,7 +108,6 @@ level_upgrade_button_money_lore:
   - '&eClick to ascend'
 level_upgrade_button_money: '&aUpgrade with Money'
 level_upgrade_hint_money: '&eClick to pay with money'
-level_upgrade_cost_blocks: '&7Cost: &b{BLOCKS} &7Blocks'
 level_upgrade_you_have_blocks: '&7You Have: &b{BALANCE} &7Blocks'
 level_upgrade_button_blocks: '&bUpgrade with Blocks'
 level_upgrade_hint_blocks: '&eClick to spend blocks'

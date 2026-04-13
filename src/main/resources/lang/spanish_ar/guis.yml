@@ -72,15 +72,12 @@ roles_lore:
 roles_locked_lore:
 - '&cNo podés administrar roles acá.'
 
-level_gui_title: '&d✦ Niveles de Parcela'
 level_button_lore:
 - '&7Subí de nivel tu parcela para beneficios.'
 
-zone_gui_title: '&3✦ Gestión de Zonas'
 zone_button_lore:
 - '&7Creá sub-zonas y habitaciones alquilables.'
 
-biome_gui_title: '&a✦ Biomas'
 biome_button_lore:
 - '&7Cambiá el bioma de tu parcela.'
 

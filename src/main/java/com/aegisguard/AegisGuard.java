@@ -242,8 +242,8 @@ public class AegisGuard extends JavaPlugin {
         messages = new MessagesUtil(this);
 
         // --- DATA STORE ---
-        String backend = getConfig().getString("storage.backend", "yml").toLowerCase();
-        if (backend.equals("sql")) {
+        String backend = resolveConfiguredStorageBackend();
+        if (isSqlStorageBackend(backend)) {
             plotStore = new SQLDataStore(this);
         } else {
             plotStore = new YMLDataStore(this);
@@ -696,7 +696,12 @@ public class AegisGuard extends JavaPlugin {
         boolean enabled = getConfig().getBoolean("wilderness_revert.enabled", false);
         if (!enabled) return;
 
-        long intervalSeconds = getConfig().getLong("wilderness_revert.interval_seconds", 300L);
+        if (!(plotStore instanceof SQLDataStore)) {
+            getLogger().warning("Wilderness Revert is enabled, but the active storage backend is not SQL. Skipping wilderness revert startup.");
+            return;
+        }
+
+        long intervalSeconds = getConfiguredWildernessRevertIntervalSeconds();
         long intervalTicks = Math.max(20L, intervalSeconds * 20L);
 
         WildernessRevertTask logic = new WildernessRevertTask(this, plotStore);
@@ -717,7 +722,7 @@ public class AegisGuard extends JavaPlugin {
         boolean enabled = getConfig().getBoolean("mob_barrier.enabled", false);
         if (!enabled) return;
 
-        long intervalSeconds = getConfig().getLong("mob_barrier.interval_seconds", 5L);
+        long intervalSeconds = getConfiguredMobBarrierIntervalSeconds();
         long intervalTicks = Math.max(20L, intervalSeconds * 20L);
 
         MobBarrierTask logic = new MobBarrierTask(this);
@@ -789,28 +794,101 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void ensureLocalizationFiles() {
-        // Keep these synced with your /resources packs.
-        List<String> packs = Arrays.asList(
-                "language/system.yml",
-                "language/gui.yml",
-                "language/tasks.yml",
-                "language/roles.yml"
-        );
+        if (!getConfig().getBoolean("localization.extract_defaults", true)) {
+            return;
+        }
 
-        for (String rel : packs) {
-            try {
-                File out = new File(getDataFolder(), rel);
-                if (out.exists()) continue;
+        String primaryFolder = getConfig().getString("localization.folder", "lang");
+        String fallbackFolder = getConfig().getString("localization.fallback_folder", "codex");
 
-                out.getParentFile().mkdirs();
+        List<String> bundles = getConfig().getStringList("localization.bundles");
+        if (bundles == null || bundles.isEmpty()) {
+            bundles = Arrays.asList("guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
+        }
 
-                try (InputStream in = getResource(rel)) {
-                    if (in == null) continue;
-                    Files.copy(in, out.toPath());
-                }
-            } catch (Throwable t) {
-                getLogger().warning("Failed to write language file: " + rel + " (" + t.getMessage() + ")");
+        List<String> languages = getConfig().getStringList("localization.available_languages");
+        if (languages == null || languages.isEmpty()) {
+            languages = Arrays.asList("old_english", "modern_english", "spanish_mx", "spanish_ar");
+        }
+
+        List<String> fallbackRootFiles = getConfig().getStringList("localization.fallback_root_files");
+        if (fallbackRootFiles == null || fallbackRootFiles.isEmpty()) {
+            fallbackRootFiles = Arrays.asList(
+                    "codex.yml",
+                    "core.yml",
+                    "overrides.yml",
+                    "old_english.yml",
+                    "modern_english.yml",
+                    "spanish_mx.yml",
+                    "spanish_ar.yml"
+            );
+        }
+
+        for (String style : languages) {
+            if (style == null || style.isBlank()) continue;
+            for (String bundle : bundles) {
+                if (bundle == null || bundle.isBlank()) continue;
+                ensureResource(primaryFolder + "/" + style.trim() + "/" + bundle.trim());
             }
+        }
+
+        for (String rootFile : fallbackRootFiles) {
+            if (rootFile == null || rootFile.isBlank()) continue;
+            ensureResource(fallbackFolder + "/" + rootFile.trim());
+        }
+    }
+
+    private String resolveConfiguredStorageBackend() {
+        String backend = getConfig().getString("storage.backend");
+        if (backend == null || backend.isBlank()) {
+            backend = getConfig().getString("storage.type", "yml");
+        }
+        return backend == null ? "yml" : backend.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private boolean isSqlStorageBackend(String backend) {
+        if (backend == null || backend.isBlank()) return false;
+        return backend.equals("sql")
+                || backend.equals("sqlite")
+                || backend.equals("mysql")
+                || backend.equals("mariadb");
+    }
+
+    private long getConfiguredWildernessRevertIntervalSeconds() {
+        if (getConfig().isSet("wilderness_revert.interval_seconds")) {
+            return Math.max(1L, getConfig().getLong("wilderness_revert.interval_seconds", 300L));
+        }
+        long legacyMinutes = getConfig().getLong("wilderness_revert.check_interval_minutes", 5L);
+        return Math.max(1L, legacyMinutes * 60L);
+    }
+
+    private long getConfiguredMobBarrierIntervalSeconds() {
+        if (getConfig().isSet("mob_barrier.interval_seconds")) {
+            return Math.max(1L, getConfig().getLong("mob_barrier.interval_seconds", 5L));
+        }
+        long legacyTicks = getConfig().getLong("mob_barrier.check_interval_ticks", 100L);
+        long convertedSeconds = Math.max(1L, legacyTicks / 20L);
+        return convertedSeconds;
+    }
+
+    private void ensureResource(String rel) {
+        if (rel == null || rel.isBlank()) return;
+
+        try {
+            File out = new File(getDataFolder(), rel.replace("/", File.separator));
+            if (out.exists()) return;
+
+            File parent = out.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+
+            try (InputStream in = getResource(rel)) {
+                if (in == null) return;
+                Files.copy(in, out.toPath());
+            }
+        } catch (Throwable t) {
+            getLogger().warning("Failed to write language file: " + rel + " (" + t.getMessage() + ")");
         }
     }
 }

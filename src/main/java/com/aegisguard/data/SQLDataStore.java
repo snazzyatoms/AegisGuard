@@ -239,7 +239,7 @@ public class SQLDataStore implements IDataStore {
 
     private void connect() {
         ConfigurationSection db = plugin.cfg().raw().getConfigurationSection("storage.database");
-        storageType = plugin.cfg().raw().getString("storage.type", "sqlite");
+        storageType = resolveStorageType(plugin.cfg().raw());
 
         HikariConfig cfg = new HikariConfig();
         cfg.setPoolName("AegisGuard-Pool");
@@ -301,6 +301,19 @@ public class SQLDataStore implements IDataStore {
         } catch (SQLException e) {
             plugin.getLogger().severe("Database Error: " + e.getMessage());
         }
+    }
+
+    private String resolveStorageType(org.bukkit.configuration.file.FileConfiguration config) {
+        String configured = config.getString("storage.type");
+        if (configured == null || configured.isBlank()) {
+            configured = config.getString("storage.backend", "sqlite");
+        }
+
+        String normalized = configured == null ? "sqlite" : configured.trim().toLowerCase(Locale.ROOT);
+        if (normalized.equals("sql") || normalized.equals("yml")) {
+            return "sqlite";
+        }
+        return normalized;
     }
 
     @Override

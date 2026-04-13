@@ -17,6 +17,7 @@ public class WildernessRevertTask extends BukkitRunnable {
 
     private final AegisGuard plugin;
     private final IDataStore dataStore; // Should always reference the interface
+    private final boolean supported;
     private final long revertBeforeTimestamp;
     private final int revertBatchSize;
 
@@ -26,13 +27,14 @@ public class WildernessRevertTask extends BukkitRunnable {
         
         // This feature ONLY works with SQLDataStore (for logging purposes)
         if (!(dataStore instanceof SQLDataStore)) {
-            plugin.getLogger().warning("Wilderness Revert is enabled in config, but storage.type is not 'sql'. This feature will be disabled.");
+            plugin.getLogger().warning("Wilderness Revert is enabled, but SQL-backed storage is not active. This feature will remain disabled.");
+            this.supported = false;
             this.revertBeforeTimestamp = 0;
             this.revertBatchSize = 0;
-            this.cancel();
             return;
         }
 
+        this.supported = true;
         long hours = plugin.cfg().raw().getLong("wilderness_revert.revert_after_hours", 2);
         this.revertBeforeTimestamp = TimeUnit.HOURS.toMillis(hours);
         this.revertBatchSize = plugin.cfg().raw().getInt("wilderness_revert.revert_batch_size", 500);
@@ -42,10 +44,13 @@ public class WildernessRevertTask extends BukkitRunnable {
 
     @Override
     public void run() {
+        if (!supported) {
+            return;
+        }
+
         // Since this class only proceeds if dataStore is an instance of SQLDataStore, 
         // we can safely call the IDataStore method.
         if (revertBatchSize <= 0) {
-            this.cancel();
             return;
         }
 

@@ -271,8 +271,8 @@ claimblocks_exchange_vault_unavailable: '&cEconomy is unavailable (Vault missing
 claimblocks_exchange_world_blocked: '&cThe exchange is not allowed in this world.'
 claimblocks_exchange_cooldown: '&eCooldown: wait &6{SECONDS}s&e.'
 claimblocks_exchange_daily_cap: '&eDaily cap reached. Remaining today: &6{REMAINING}&e.'
-claimblocks_exchange_insufficient_funds: '&cNot enough money. Need: &e{AMOUNT}'
-claimblocks_exchange_insufficient_blocks: '&cNot enough sellable Claim Blocks.'
+claimblocks_exchange_insufficient_funds: '&cNot enough money to buy Claim Blocks. Need: &e{AMOUNT}'
+claimblocks_exchange_insufficient_blocks: '&cYou do not have enough sellable Claim Blocks.'
 claimblocks_exchange_sell_locked: '&eSome purchased blocks are locked. Try again later.'
 claimblocks_exchange_trade_failed: '&cTrade failed: &7{REASON}'
 

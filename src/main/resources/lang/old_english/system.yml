@@ -412,14 +412,14 @@ first_claim_limit_exceeded: '&c❌ Þīn forma clǣm is tō micel. &7Mæst allow
 # -------------------------------------------------
 claimblocks_exchange_disabled: '&cÞes chaffer is disabled in config.yml.'
 claimblocks_exchange_success: '&a✔ Býting gelǣsted: &f{MESSAGE}'
-claimblocks_exchange_no_permission: '&cÞū nǣfst lēafe to use þisne chaffer.'
+claimblocks_exchange_no_permission: '&cThou hast not leave to use this exchange.'
 claimblocks_exchange_vault_unavailable: '&cVault and coin are wanting on this realm.'
 claimblocks_exchange_world_blocked: '&cChaffer is not allowed in þissum weorolde.'
 claimblocks_exchange_cooldown: '&eHwīl: bid &6{SECONDS}s&e.'
 claimblocks_exchange_daily_cap: '&eDæges mǣt is full. &7Belāf todæg: &6{REMAINING}&e.'
-claimblocks_exchange_insufficient_funds: '&cNǣnig gield genōh. Behōf: &e{AMOUNT}'
-claimblocks_exchange_insufficient_blocks: '&cNǣnige sellaþ ClaimBlocks genōh.'
-claimblocks_exchange_sell_locked: '&eSume gebohte blocks sind locode. Fandige æfter.'
+claimblocks_exchange_insufficient_funds: '&cThou hast not enough coin to buy Claim Blocks. Need: &e{AMOUNT}'
+claimblocks_exchange_insufficient_blocks: '&cThou hast not enough sellable Claim Blocks.'
+claimblocks_exchange_sell_locked: '&eSome purchased Claim Blocks are locked. Try again later.'
 claimblocks_exchange_trade_failed: '&cBýting aswac: &7{REASON}'
 
 # -------------------------------------------------

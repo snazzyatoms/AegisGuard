@@ -237,8 +237,8 @@ claimblocks_exchange_vault_unavailable: '&cLa economía de Vault no está dispon
 claimblocks_exchange_world_blocked: '&cEl intercambio no está permitido en este mundo.'
 claimblocks_exchange_cooldown: '&eEn enfriamiento: esperá &6{SECONDS}s&e.'
 claimblocks_exchange_daily_cap: '&eLímite diario alcanzado. Te queda hoy: &6{REMAINING}&e.'
-claimblocks_exchange_insufficient_funds: '&cNo tenés suficiente dinero. Necesitás: &e{AMOUNT}'
-claimblocks_exchange_insufficient_blocks: '&cNo tenés suficientes ClaimBlocks para vender.'
+claimblocks_exchange_insufficient_funds: '&cNo tenés suficiente dinero para comprar Claim Blocks. Necesitás: &e{AMOUNT}'
+claimblocks_exchange_insufficient_blocks: '&cNo tenés suficientes Claim Blocks vendibles.'
 claimblocks_exchange_sell_locked: '&eAlgunos ClaimBlocks comprados están bloqueados. Probá más tarde.'
 claimblocks_exchange_trade_failed: '&cEl intercambio falló: &7{REASON}'
 

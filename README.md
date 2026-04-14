@@ -6,116 +6,138 @@
   <strong>Simple. Steadfast. Eternal.</strong>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Version-1.2.7-gold?style=for-the-badge" alt="Version 1.2.7" />
+  <img src="https://img.shields.io/badge/Layout-Multi--Module-2d7ff9?style=for-the-badge" alt="Multi-module layout" />
+  <img src="https://img.shields.io/badge/Legacy-Supported-8f5cff?style=for-the-badge" alt="Legacy supported" />
+  <img src="https://img.shields.io/badge/Bundled-Available-15a86b?style=for-the-badge" alt="Bundled editions available" />
+</p>
+
 ---
 
 # AegisGuard 1.2.7
 
-This repository now uses a clean multi-module layout for the full `1.2.7` line.
+**AegisGuard** is a protection and claim-management platform built for both modern and legacy Minecraft server lines.
 
-Instead of treating the modern plugin as the repo root and placing the other variants in awkward nested folders, AegisGuard now mirrors the clearer split used for Coffers:
+Version `1.2.7` gives the project a cleaner identity, a cleaner repository, and a cleaner release family:
 
-- `aegisguard-paper`
-- `aegisguard-legacy`
-- `aegisguard-paper-bundled`
-- `aegisguard-legacy-bundled`
-
-This makes GitHub browsing, direct uploads, releases, and developer integrations much cleaner.
+- modern and legacy lines are separated properly
+- bundled and lean editions are clearly defined
+- developer API jars are part of the release flow
+- the repository is organized to feel more like a real platform and less like a single loose plugin drop
 
 ---
 
-## What Changed In 1.2.7
+## ✨ A Better Release Family
 
-- introduced a clean root module structure for all AegisGuard variants
-- added a proper legacy line for older Java and server environments
-- added bundled variants for larger servers that want drivers included out of the box
-- added direct API jars for plugin developers
-- moved away from JitPack as the primary release path
-- standardized direct release outputs across modern, legacy, bundled, and legacy bundled lines
+`1.2.7` is not just another jar update.
+
+This line reshapes AegisGuard into a more polished ecosystem:
+
+- **Modern servers** get a focused Paper-oriented line
+- **Legacy servers** get their own dedicated build path
+- **Bundled editions** exist for convenience-focused and larger installs
+- **API releases** are available directly for developers who want to integrate with AegisGuard
+
+The result is a cleaner experience for server owners, plugin developers, and anyone browsing the project on GitHub.
 
 ---
 
-## Module Layout
+## 🧭 Repository Layout
 
-| Folder | Purpose |
+The repository now uses a clean top-level module structure:
+
+| Module | Purpose |
 |--------|---------|
-| `aegisguard-paper` | Main modern plugin line |
-| `aegisguard-legacy` | Legacy plugin line for older server and JVM targets |
-| `aegisguard-paper-bundled` | Modern plugin with bundled database and runtime dependencies |
-| `aegisguard-legacy-bundled` | Legacy plugin with bundled database and runtime dependencies |
+| `aegisguard-paper` | Main modern AegisGuard line |
+| `aegisguard-legacy` | Legacy AegisGuard line |
+| `aegisguard-paper-bundled` | Modern bundled edition |
+| `aegisguard-legacy-bundled` | Legacy bundled edition |
+
+This keeps the repo much cleaner than the older mixed root layout and makes each line easier to understand at a glance.
 
 ---
 
-## Which Jar To Use
+## 🚀 Editions At A Glance
 
-### Server Owners
+### Server Editions
 
-| Jar | Use This For |
-|-----|--------------|
-| `AegisGuard-1.2.7.jar` | Modern Paper, Spigot, Purpur, and similar modern server setups |
-| `AegisGuard-1.2.7-legacy.jar` | Older legacy-compatible server setups |
-| `AegisGuard-1.2.7-bundled.jar` | Modern servers that want bundled database and runtime support |
-| `AegisGuard-1.2.7-legacy-bundled.jar` | Legacy servers that want bundled database and runtime support |
+| Jar | Best For |
+|-----|----------|
+| `AegisGuard-1.2.7.jar` | Modern server setups |
+| `AegisGuard-1.2.7-legacy.jar` | Legacy-compatible server setups |
+| `AegisGuard-1.2.7-bundled.jar` | Modern servers that want bundled runtime and database support |
+| `AegisGuard-1.2.7-legacy-bundled.jar` | Legacy servers that want bundled runtime and database support |
 
-### Plugin Developers
+### Developer Editions
 
-| Jar | Purpose |
-|-----|---------|
-| `AegisGuard-1.2.7-api.jar` | Modern integration API |
-| `AegisGuard-1.2.7-legacy-api.jar` | Legacy integration API |
-| `AegisGuard-1.2.7-bundled-api.jar` | Bundled modern API distribution |
-| `AegisGuard-1.2.7-legacy-bundled-api.jar` | Bundled legacy API distribution |
+| Jar | Role |
+|-----|------|
+| `AegisGuard-1.2.7-api.jar` | Modern public API |
+| `AegisGuard-1.2.7-legacy-api.jar` | Legacy public API |
+| `AegisGuard-1.2.7-bundled-api.jar` | Modern bundled API |
+| `AegisGuard-1.2.7-legacy-bundled-api.jar` | Legacy bundled API |
 
-Compatibility `-dev-api.jar` files are also produced for direct-release workflows.
-
----
-
-## Release Folders
-
-Each module publishes its artifacts into its own `releases` folder:
-
-- [paper releases](./aegisguard-paper/releases)
-- [legacy releases](./aegisguard-legacy/releases)
-- [paper bundled releases](./aegisguard-paper-bundled/releases)
-- [legacy bundled releases](./aegisguard-legacy-bundled/releases)
+Compatibility `-dev-api.jar` files are also produced for direct distribution workflows.
 
 ---
 
-## Direct Releases
+## 🏰 What AegisGuard Brings
 
-AegisGuard `1.2.7` no longer depends on JitPack as its main delivery path.
+AegisGuard is built around a broad protection and progression experience, including:
 
-Instead, the line is intended to be distributed directly through release jars:
-
-- plugin jars for server owners
-- API jars for developers
-- bundled plugin jars for convenience-focused or larger installs
-
-That means developers integrating with AegisGuard can reference the released API jars directly instead of relying on JitPack repo resolution.
-
-See [DIRECT_RELEASES.md](./DIRECT_RELEASES.md) for the release matrix.
-
----
-
-## Build From Root
-
-From the repo root:
-
-```powershell
-mvn clean package
-```
-
-This builds all four variants from one place.
+- land claiming and plot ownership
+- claim block earning and exchange systems
+- movement-aware plot protections
+- group ownership and progression systems
+- market, stall, and economy-oriented claim workflows
+- snapshots, restoration, and admin recovery tools
+- migration tooling for moving from other systems
+- multilingual presentation including modern English, old English, and Spanish variants
 
 ---
 
-## Notes
+## 🧩 Developer-Friendly Direction
 
-- modern and legacy lines are both maintained in the same repository
-- bundled variants exist so small servers do not need to download large all-in-one jars unless they want that convenience
-- the API jars are intended to support plugin developers who want to integrate with AegisGuard events, plots, claim blocks, economy hooks, and related services
+The `1.2.7` line is much friendlier to plugin developers than the older layout.
+
+Instead of centering the project around JitPack-style dependency flow, AegisGuard is now structured around direct release artifacts and cleaner module separation.
+
+That gives developers a clearer path for:
+
+- integrating with AegisGuard APIs
+- targeting the correct modern or legacy line
+- working with a cleaner repository structure
+- avoiding the messier dependency flow that build-service-first releases often create
+
+---
+
+## 📦 Lean Or Bundled
+
+The project now supports two very different server-owner preferences without forcing one compromise on everyone:
+
+- **Lean editions** for servers that want smaller plugin jars and tighter control
+- **Bundled editions** for servers that prefer convenience and fewer setup steps
+
+That means small servers are not forced into oversized all-in-one jars, while large servers still have a ready-to-go bundled option.
+
+---
+
+## 🔥 Why This Matters
+
+AegisGuard `1.2.7` is meant to feel cleaner, stronger, and more intentional:
+
+- cleaner source layout
+- cleaner GitHub presentation
+- cleaner release handling
+- cleaner variant separation
+- cleaner developer entry point
+
+This is the beginning of AegisGuard behaving more like a proper platform family instead of a single plugin project that kept growing in place.
 
 ---
 
 <p align="center">
-  <strong>AegisGuard 1.2.7</strong> | Organized for direct releases and cleaner multi-line maintenance
+  <strong>AegisGuard 1.2.7</strong><br />
+  Modern. Legacy. Bundled. Developer-ready.
 </p>

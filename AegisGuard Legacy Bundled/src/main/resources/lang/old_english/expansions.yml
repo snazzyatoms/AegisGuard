@@ -1,0 +1,114 @@
+# AegisGuard Codex Language Pack (split files)
+# Language: old_english
+# Section: expansions.yml
+# Updated: 2026-01-15
+# Tip: Keep keys stable for cross-language sync. Values may be edited freely.
+
+# -------------------------------------------------
+# Core Expansion Messages
+# -------------------------------------------------
+expansion_submitted: '&a[OK] Petition submitted! &7Cost: &6{AMOUNT}'
+expansion_exists: '&c[X] Thou already hast a petition pending.'
+expansion_approved: '&a[OK] Thy petition was granted by {PLAYER}!'
+expansion_denied: '&c[X] Thy petition was withheld by {PLAYER}.'
+expansion_invalid_size: '&c[X] The petitioned size must exceed thy current bounds.'
+expansion_limit_reached: '&c[X] Maximum reach is {LIMIT} blocks.'
+expansion_payment_failed: '&c[X] Insufficient tribute for this expansion.'
+expansion_overlap_fail: '&c[X] Expansion would encroach upon another holding.'
+expansion_not_in_plot: '&c[X] Thou must stand within thine own claim to petition.'
+
+# Admin notifications (auto-approval)
+expansion_auto_admin_notice: '&7[Self-wrought] &b{PLAYER} &7hath expanded in &f{WORLD} &7from &e{CUR} &7to &a{REQ}'
+
+# -------------------------------------------------
+# Actor/Decision Labels
+# -------------------------------------------------
+expansion_actor_auto: 'Self-wrought Deed'
+expansion_actor_admin: 'Steward'
+expansion_decided_by_auto: '&bSelf-wrought'
+expansion_decided_by_admin: '&eSteward'
+expansion_decided_by_system: '&7The System'
+expansion_decided_by_console: '&7The Codex'
+expansion_decided_by_none: '&7Biding judgment'
+expansion_decided_by_unknown: '&7Unknown hand'
+
+# -------------------------------------------------
+# Status Labels
+# -------------------------------------------------
+expansion_status_pending: '&eBiding'
+expansion_status_approved: '&aGranted'
+expansion_status_denied: '&cWithheld'
+
+# -------------------------------------------------
+# Mode Labels
+# -------------------------------------------------
+expansion_mode_instant: '&bSwift Judgment Mode'
+expansion_mode_queue: '&6Biding Queue Mode'
+expansion_mode_item_name: '&fJudgment Method: {MODE}'
+expansion_mode_item_lore:
+  - '&7This realm currently useth:'
+  - '&f{MODE}'
+  - ' '
+  - '&7Biding Queue: &fStewards must approve.'
+  - '&7Swift Judgment: &fGranted anon when worthy.'
+
+# Mode hints (injected into tier lore)
+expansion_mode_hint_instant: '&bSwift Mode:&7 Granted anon if worthy.'
+expansion_mode_hint_queue: '&6Queue Mode:&7 Steward approval required.'
+expansion_mode_hint_unattended: '&bUnwatched Queue:&7 No stewards are online, so worthy petitions may be granted and chronicled.'
+
+# -------------------------------------------------
+# Admin GUI
+# -------------------------------------------------
+expansion_admin_title_paged: '&6&lBiding Petitions &7({PAGE}/{PAGES})'
+expansion_admin_title_paged_mode: '&6&lBiding Petitions &7({PAGE}/{PAGES}) &8- {MODE}'
+
+# View mode labels
+expansion_admin_view_pending: '&eQueue'
+expansion_admin_view_all: '&bChronicle'
+
+# Empty states
+expansion_none_history_title: '&7No Recent Petitions'
+expansion_none_history_lore:
+  - '&7There be no recent expansion'
+  - '&7petitions to behold.'
+
+# Request item in admin GUI
+expansion_request_item_name: '&bPetition: &f{PLAYER}'
+expansion_request_item_lore:
+  - '&7Realm: &f{WORLD}'
+  - '&7Standing: {STATUS}'
+  - '&7Age: &f{AGE}'
+  - '&7Reach: &e{CUR} &7-> &a{REQ}'
+  - '&7Tribute Due: &6{COST}'
+  - '&7Decided By: &f{DECIDER}'
+  - '&7Decision Age: &f{DECISION_AGE}'
+  - '&7Chronicle Note: &f{NOTE}'
+  - ' '
+  - '&eLeft-click: &7Grant petition.'
+  - '&cRight-click: &7Withhold petition.'
+
+expansion_request_note_line: '&7Chronicle Note: &f{NOTE}'
+expansion_history_read_only: '&7Read-only chronicle entry. Review the notes and snapshots if need be.'
+
+# Admin messages
+admin_request_approved: '&a[OK] Granted expansion petition for &b{PLAYER}&a.'
+admin_request_denied: '&c[X] Withheld expansion petition for &b{PLAYER}&c.'
+expansion_admin_already_handled: '&eThat petition hath been judged already. &7(By: {DECIDER}&7)'
+expansion_admin_approve_failed: '&c[X] Failed to grant petition (encroachment or tribute error).'
+
+# Legacy keys (compatibility)
+expansion_request_submitted: '&a[OK] Expansion petition submitted. &7Petitioned: &e+{AMOUNT}&7 blocks.'
+expansion_request_already_pending: '&e[!] Thou already hast a petition biding.'
+expansion_request_cancelled: '&e[OK] Expansion petition withdrawn.'
+expansion_request_none_pending: '&cNo expansion petitions are biding.'
+expansion_request_approved_player: '&a[OK] Thy expansion petition was granted! &7Bestowed: &e+{AMOUNT}&7 blocks.'
+expansion_request_denied_player: '&c[X] Thy expansion petition was withheld.'
+expansion_request_approved_admin: '&a[OK] Granted expansion petition for &f{PLAYER}&a.'
+expansion_request_denied_admin: '&c[X] Withheld expansion petition for &f{PLAYER}&c.'
+request_expired: '&c[X] That petition hath expired or been judged already.'
+
+expansion_admin_title: "&8Pending Petitions"
+expansion_none_title: "&cNo Petitions"
+expansion_none_lore:
+- "&7The subjects are content."

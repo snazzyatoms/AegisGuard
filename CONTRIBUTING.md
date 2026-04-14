@@ -1,7 +1,7 @@
 # Contributing to AegisGuard 🛡️
 
 Thank you for your interest in contributing to AegisGuard!  
-This document explains how to work with the project using our **Maven + JitPack/JitCI build pipeline** and how to submit high-quality contributions.
+This document explains how to work with the project using our **Maven direct-release pipeline** and how to submit high-quality contributions.
 
 ---
 
@@ -9,7 +9,7 @@ This document explains how to work with the project using our **Maven + JitPack/
 - [Development Requirements](#development-requirements)  
 - [How the Build System Works](#how-the-build-system-works)  
 - [Forking & Cloning](#forking--cloning)  
-- [Local Building (Maven + JitPack-Compatible)](#local-building-maven--jitpack-compatible)  
+- [Local Building (Maven Direct Releases)](#local-building-maven-direct-releases)  
 - [Running the Plugin for Testing](#running-the-plugin-for-testing)  
 - [Submitting Pull Requests](#submitting-pull-requests)  
 - [Reporting Issues](#reporting-issues)  
@@ -24,7 +24,7 @@ This document explains how to work with the project using our **Maven + JitPack/
 
 Before contributing, make sure you have:
 
-- **Java 21 (required)**  
+- **Java 17+ (required for the modern line)**  
 - **Maven 3.8+**  
 - A GitHub account  
 - Basic understanding of Bukkit/Paper plugin development  
@@ -38,19 +38,12 @@ AegisGuard does **not** use Gradle or local shading scripts.
 It uses:
 
 - **Maven** for building & dependency management  
-- **JitPack / JitCI** for automated builds and release artifacts  
+- **direct release artifacts** for plugin and API jars  
 - **GitHub Releases + Hangar + Spigot** to publish builds  
 
 ### Why this matters  
-When you submit a PR, **JitPack** automatically tries to compile the plugin using your changes.  
-If Maven builds correctly, the PR will pass.  
-If not, you’ll see errors in JitPack like:
-
-- Missing dependencies  
-- Incorrect imports  
-- API incompatibilities  
-
-Your local build must match the CI pipeline.
+When you build locally, Maven now produces the plugin jar plus direct API jars in the `releases` folder.  
+That makes it easier to hand server owners and plugin developers the exact files they need directly from released jars.
 
 ---
 

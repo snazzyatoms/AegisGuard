@@ -18,56 +18,50 @@
     </properties>
 
     <repositories>
-        <!-- 1. JitPack (Vault, misc libs) -->
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-
-        <!-- 2. PaperMC -->
+        <!-- 1. PaperMC -->
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
 
-        <!-- 3. Spigot -->
+        <!-- 2. Spigot -->
         <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         
-        <!-- 4. PlaceholderAPI -->
+        <!-- 3. PlaceholderAPI -->
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
 
-        <!-- 5. Dynmap -->
+        <!-- 4. Dynmap -->
         <repository>
             <id>mikeprimm-repo</id>
             <url>https://repo.mikeprimm.com/</url>
         </repository>
 
-        <!-- 6. BlueMap -->
+        <!-- 5. BlueMap -->
         <repository>
             <id>bluecolored-releases</id>
             <name>BlueColored Repository</name>
             <url>https://repo.bluecolored.de/releases</url>
         </repository>
 
-        <!-- 7. Modrinth (Pl3xMap) -->
+        <!-- 6. Modrinth (Pl3xMap) -->
         <repository>
             <id>modrinth-repo</id>
             <url>https://api.modrinth.com/maven/</url>
         </repository>
 
-        <!-- 8. CoreProtect -->
+        <!-- 7. CoreProtect -->
         <repository>
             <id>playpro-repo</id>
             <url>https://maven.playpro.com</url>
         </repository>
         
-        <!-- 9. WorldGuard/WorldEdit -->
+        <!-- 8. WorldGuard/WorldEdit -->
         <repository>
             <id>sk89q-repo</id>
             <url>https://maven.enginehub.org/repo/</url>
@@ -80,14 +74,6 @@
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.20.4-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Economy -->
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
 
@@ -248,6 +234,9 @@
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}.jar"
                                         tofile="${release.output.dir}/${project.build.finalName}.jar"/>
+                                <copy
+                                        file="${project.build.directory}/${project.build.finalName}-dev-api.jar"
+                                        tofile="${release.output.dir}/${project.build.finalName}-api.jar"/>
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}-dev-api.jar"
                                         tofile="${release.output.dir}/${project.build.finalName}-dev-api.jar"/>

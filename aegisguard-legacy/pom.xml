@@ -14,7 +14,7 @@
     <properties>
         <java.version>16</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <release.output.dir>${project.basedir}/releases</release.output.dir>
+        <release.output.dir>D:/AegisGuard-1.2.7/releases</release.output.dir>
         <server.api.groupId>com.destroystokyo.paper</server.api.groupId>
         <server.api.artifactId>paper-api</server.api.artifactId>
         <server.api.version>1.16.5-R0.1-SNAPSHOT</server.api.version>

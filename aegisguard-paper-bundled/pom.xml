@@ -181,9 +181,17 @@
                         <configuration>
                             <classifier>dev-api</classifier>
                             <includes>
-                                <include>com/**</include>
+                                <include>com/aegisguard/api/**</include>
+                                <include>com/aegisguard/data/Plot.class</include>
+                                <include>com/aegisguard/data/Zone.class</include>
+                                <include>com/aegisguard/data/MarketStall.class</include>
+                                <include>com/aegisguard/data/MarketStall$*.class</include>
+                                <include>com/aegisguard/economy/CurrencyType.class</include>
+                                <include>com/aegisguard/selection/Selection.class</include>
+                                <include>com/aegisguard/flags/TriState.class</include>
                             </includes>
                             <excludes>
+                                <exclude>com/aegisguard/api/internal/**</exclude>
                                 <exclude>plugin.yml</exclude>
                                 <exclude>config.yml</exclude>
                                 <exclude>codex/**</exclude>

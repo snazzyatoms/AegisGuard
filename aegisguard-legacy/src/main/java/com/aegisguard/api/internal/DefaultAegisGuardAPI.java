@@ -12,6 +12,7 @@ import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.selection.Selection;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ public final class DefaultAegisGuardAPI implements AegisGuardAPI {
     }
 
     @Override
-    public AegisGuard plugin() {
+    public Plugin plugin() {
         return plugin;
     }
 

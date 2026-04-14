@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -155,7 +156,7 @@ public class MarketStall {
         return zone != null && zone.isRentedBy(ownerId);
     }
 
-    public boolean canStock(@Nullable Player player, @Nullable Plot plot, @Nullable AegisGuard plugin) {
+    public boolean canStock(@Nullable Player player, @Nullable Plot plot, @Nullable Plugin plugin) {
         if (player == null || plot == null) return false;
         if (plot.canManage(player, plugin)) return true;
         if (ownerId == null || !ownerId.equals(player.getUniqueId())) return false;

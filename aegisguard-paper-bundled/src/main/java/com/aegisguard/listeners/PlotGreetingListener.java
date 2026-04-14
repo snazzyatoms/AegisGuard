@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -84,33 +85,13 @@ public class PlotGreetingListener implements Listener {
         } else {
             if (hadLast && Objects.equals(toId, last)) return; // same plot as last recorded
         }
-
-        // --- IMPORTANT FIX ---
-        // If moving from one plot to another, validate ENTER first.
-        // If ENTER is denied, do NOT fire LEAVE or farewell.
-        if (toPlot != null && !Objects.equals(toId, fromId)) {
-            PlotEnterEvent enter = new PlotEnterEvent(toPlot, player);
-
-            // Optional hard rule: respect plot entry flag for non-trusted players
-            if (!canEnter(player, toPlot)) {
-                enter.setCancelled(true);
-            }
-
-            plugin.getServer().getPluginManager().callEvent(enter);
-
-            if (enter.isCancelled()) {
-                TeleportUtil.safeTeleport(plugin, player, from);
-                return; // Do not update lastPlotId; they did not enter.
-            }
-        }
-
-        // --- Leave (only after enter succeeded, if there was a plot change) ---
+        // Presentation only. ProtectionManager owns authoritative enter/leave events
+        // and entry denial, while this listener handles titles/chat/action bar delivery
+        // after movement has already been accepted.
         if (fromPlot != null && !Objects.equals(fromId, toId)) {
-            plugin.getServer().getPluginManager().callEvent(new PlotLeaveEvent(fromPlot, player));
             sendFarewell(player, fromPlot);
         }
 
-        // --- Enter (only if actually changed plot) ---
         if (toPlot != null && !Objects.equals(toId, fromId)) {
             sendWelcome(player, toPlot);
         }

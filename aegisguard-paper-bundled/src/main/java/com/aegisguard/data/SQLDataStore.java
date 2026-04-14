@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotDeleteEvent;
 import com.aegisguard.flags.TriState;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -944,8 +945,17 @@ public class SQLDataStore implements IDataStore {
     public void removePlot(UUID owner, UUID plotId) {
         if (owner == null || plotId == null) return;
 
+        Plot removedPlot = getAllPlots().stream()
+                .filter(plot -> plot != null && plotId.equals(plot.getPlotId()))
+                .findFirst()
+                .orElse(null);
+
         // Hard dedupe kill-switch: removes plotId from any cached owner set + chunk index
         removePlotByIdEverywhere(plotId);
+
+        if (removedPlot != null) {
+            Bukkit.getPluginManager().callEvent(new PlotDeleteEvent(removedPlot));
+        }
 
         queueDb(() -> {
             try (Connection conn = hikari.getConnection()) {
@@ -985,7 +995,12 @@ public class SQLDataStore implements IDataStore {
 
         Set<Plot> owned = plotsByOwner.remove(owner);
         if (owned != null) {
-            for (Plot plot : owned) if (plot != null) deIndexPlot(plot);
+            for (Plot plot : owned) {
+                if (plot != null) {
+                    deIndexPlot(plot);
+                    Bukkit.getPluginManager().callEvent(new PlotDeleteEvent(plot));
+                }
+            }
         }
 
         queueDb(() -> {

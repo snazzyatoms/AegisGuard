@@ -1,11 +1,11 @@
 package com.aegisguard.api;
 
-import com.aegisguard.AegisGuard;
 import com.aegisguard.api.service.ClaimBlockAccess;
 import com.aegisguard.api.service.EconomyAccess;
 import com.aegisguard.api.service.PlotAccess;
 import com.aegisguard.api.service.ProtectionAccess;
 import com.aegisguard.api.service.SelectionAccess;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Public integration facade for AegisGuard.
@@ -16,7 +16,7 @@ import com.aegisguard.api.service.SelectionAccess;
  */
 public interface AegisGuardAPI {
 
-    AegisGuard plugin();
+    Plugin plugin();
 
     String version();
 

@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -252,7 +253,7 @@ public class Plot {
     }
 
     /** Original 1.2.5 signature used by older GUIs */
-    public Location getCenter(AegisGuard plugin) {
+    public Location getCenter(Plugin plugin) {
         return getCenter();
     }
 
@@ -342,8 +343,9 @@ public class Plot {
         return role != null && !role.equalsIgnoreCase("visitor");
     }
 
-    public boolean hasPermission(UUID playerUUID, String permission, AegisGuard plugin) {
-        if (playerUUID == null || permission == null || plugin == null) return false;
+    public boolean hasPermission(UUID playerUUID, String permission, Plugin plugin) {
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (playerUUID == null || permission == null || pl == null) return false;
 
         // Owner always allowed
         if (owner.equals(playerUUID)) return true;
@@ -353,7 +355,7 @@ public class Plot {
 
         // Admin/bypass always allowed
         Player online = Bukkit.getPlayer(playerUUID);
-        if (hasElevatedManagementAccess(online, plugin)) {
+        if (hasElevatedManagementAccess(online, pl)) {
             return true;
         }
 
@@ -361,7 +363,7 @@ public class Plot {
         if (role == null) role = "visitor";
 
         // Role permissions from config: roles.<role>.permissions
-        List<String> perms = plugin.cfg().raw().getStringList("roles." + role.toLowerCase(Locale.ROOT) + ".permissions");
+        List<String> perms = pl.cfg().raw().getStringList("roles." + role.toLowerCase(Locale.ROOT) + ".permissions");
         if (perms == null || perms.isEmpty()) return false;
 
         String needle = permission.toUpperCase(Locale.ROOT);
@@ -407,9 +409,9 @@ public class Plot {
     // ---------------------------------------------------------------------
 
     /** v1.2.6: Prefer this over raw owner checks for GUIs. */
-    public boolean canManage(@Nullable Player player, @Nullable AegisGuard plugin) {
+    public boolean canManage(@Nullable Player player, @Nullable Plugin plugin) {
         if (player == null) return false;
-        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
 
         if (hasElevatedManagementAccess(player, pl)) return true;
         return hasPermission(player.getUniqueId(), "MANAGE", pl);
@@ -426,9 +428,9 @@ public class Plot {
      * - Otherwise requires MANAGE_MEMBERS on the plot role.
      * - Prevent owner from removing themselves (plot orphan protection).
      */
-    public boolean canModifyMember(@Nullable Player editor, @Nullable UUID targetUUID, @Nullable AegisGuard plugin) {
+    public boolean canModifyMember(@Nullable Player editor, @Nullable UUID targetUUID, @Nullable Plugin plugin) {
         if (editor == null || targetUUID == null) return false;
-        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
 
         if (isOwner(targetUUID) || SERVER_OWNER_UUID.equals(targetUUID)) return false;
         if (editor.getUniqueId().equals(targetUUID)) return false;
@@ -456,9 +458,9 @@ public class Plot {
      * - If plot flag build=false, the plot is explicitly public-build
      * - Otherwise require role permission (BUILD / BLOCK_PLACE / BLOCK_BREAK)
      */
-    public boolean canBuild(@Nullable Player player, @Nullable AegisGuard plugin, @Nullable String permission) {
+    public boolean canBuild(@Nullable Player player, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
-        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
 
         if (hasElevatedManagementAccess(player, pl)) return true;
 
@@ -512,12 +514,12 @@ public class Plot {
         return null;
     }
 
-    private boolean canUseRentedZone(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+    private boolean canUseRentedZone(@Nullable Player player, @Nullable Location location, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null || location == null) return false;
         Zone zone = getRentedZoneAt(location);
         if (zone == null) return false;
 
-        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
         if (canManage(player, pl)) return true;
 
         UUID uuid = player.getUniqueId();
@@ -533,7 +535,7 @@ public class Plot {
         };
     }
 
-    public boolean canBuildAt(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+    public boolean canBuildAt(@Nullable Player player, @Nullable Location location, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
         Zone rentedZone = getRentedZoneAt(location);
         if (rentedZone != null) {
@@ -547,9 +549,9 @@ public class Plot {
         return canBuildAt(player, location, AegisGuard.getInstance(), permission);
     }
 
-    public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable AegisGuard plugin, @Nullable String permission) {
+    public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
-        AegisGuard pl = (plugin != null) ? plugin : AegisGuard.getInstance();
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
 
         Zone rentedZone = getRentedZoneAt(location);
         if (rentedZone != null) {
@@ -577,17 +579,18 @@ public class Plot {
         return SERVER_OWNER_UUID.equals(owner);
     }
 
-    private boolean hasElevatedManagementAccess(@Nullable Player player, @Nullable AegisGuard plugin) {
-        if (player == null || plugin == null) return false;
-        if (plugin.isAdmin(player) || plugin.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
-        if (hasAnyPermission(player, plugin, "staff_access.global_manage_permissions", List.of("aegis.admin.manage"))) {
+    private boolean hasElevatedManagementAccess(@Nullable Player player, @Nullable Plugin plugin) {
+        AegisGuard aegis = (plugin instanceof AegisGuard ag) ? ag : AegisGuard.getInstance();
+        if (player == null || aegis == null) return false;
+        if (aegis.isAdmin(player) || aegis.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
+        if (hasAnyPermission(player, aegis, "staff_access.global_manage_permissions", List.of("aegis.admin.manage"))) {
             return true;
         }
-        if (isServerZone() && hasAnyPermission(player, plugin, "staff_access.server_zone_manage_permissions",
+        if (isServerZone() && hasAnyPermission(player, aegis, "staff_access.server_zone_manage_permissions",
                 List.of("aegis.serverzone.manage", "aegis.staff.co_owner"))) {
             return true;
         }
-        return isMarketManaged() && hasAnyPermission(player, plugin, "staff_access.market_plot_manage_permissions",
+        return isMarketManaged() && hasAnyPermission(player, aegis, "staff_access.market_plot_manage_permissions",
                 List.of("aegis.market.manage", "aegis.staff.market_steward"));
     }
 
@@ -595,12 +598,13 @@ public class Plot {
         return isForSale() || isForRent() || isForAuction() || isServerWarp();
     }
 
-    private boolean hasAnyPermission(@Nullable Player player, @Nullable AegisGuard plugin, String path, List<String> fallback) {
-        if (player == null || plugin == null) return false;
+    private boolean hasAnyPermission(@Nullable Player player, @Nullable Plugin plugin, String path, List<String> fallback) {
+        AegisGuard aegis = (plugin instanceof AegisGuard ag) ? ag : AegisGuard.getInstance();
+        if (player == null || aegis == null) return false;
 
         List<String> permissions = fallback;
         try {
-            List<String> configured = plugin.getConfig().getStringList(path);
+            List<String> configured = aegis.getConfig().getStringList(path);
             if (configured != null && !configured.isEmpty()) {
                 permissions = configured;
             }

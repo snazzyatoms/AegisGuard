@@ -292,10 +292,6 @@ public class ProtectionManager implements Listener {
         if (from != null && !from.equals(to)) {
             Bukkit.getPluginManager().callEvent(new PlotLeaveEvent(from, p));
 
-            if (!from.getOwner().equals(p.getUniqueId())) {
-                sendPlotMessage(p, from.getFarewellMessage());
-            }
-
             if (from.getFlag("fly", false) && !plugin.isAdmin(p)) {
                 plugin.runMain(p, () -> {
                     p.setFlying(false);
@@ -313,10 +309,6 @@ public class ProtectionManager implements Listener {
             if (enter.isCancelled()) {
                 e.setCancelled(true);
                 return;
-            }
-
-            if (!to.getOwner().equals(p.getUniqueId())) {
-                sendPlotMessage(p, to.getWelcomeMessage());
             }
 
             if (to.getEntryEffect() != null) {

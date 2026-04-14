@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.api.events.PlotDeleteEvent;
 import com.aegisguard.flags.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -691,8 +692,17 @@ public class YMLDataStore implements IDataStore {
         if (plotId == null) return;
         isDirty = true;
 
+        Plot removedPlot = getAllPlots().stream()
+                .filter(plot -> plot != null && plotId.equals(plot.getPlotId()))
+                .findFirst()
+                .orElse(null);
+
         // Ghost-killer: remove plotId from ANY cached owner set + chunk index
         removePlotByIdEverywhere(plotId);
+
+        if (removedPlot != null) {
+            Bukkit.getPluginManager().callEvent(new PlotDeleteEvent(removedPlot));
+        }
 
         synchronized (ioLock) {
             if (config == null) config = YamlConfiguration.loadConfiguration(file);
@@ -715,6 +725,7 @@ public class YMLDataStore implements IDataStore {
                 for (Plot p : set) {
                     if (p == null) continue;
                     deIndexPlot(p);
+                    Bukkit.getPluginManager().callEvent(new PlotDeleteEvent(p));
                     config.set(p.getPlotId().toString(), null);
                 }
 

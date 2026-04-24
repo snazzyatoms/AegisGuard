@@ -10,13 +10,10 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Slime;
-import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * MobBarrierTask
@@ -143,9 +140,9 @@ public class MobBarrierTask implements Runnable {
                 if (plugin.isFolia()) {
                     if (!world.isChunkLoaded(cx, cz)) continue;
 
-                    if (!runRegionTask(world, finalCx, finalCz, () -> checkChunkForMobs(world, plot, finalCx, finalCz))) {
-                        plugin.runMainGlobal(() -> checkChunkForMobs(world, plot, finalCx, finalCz));
-                    }
+                    Bukkit.getRegionScheduler().run(plugin, world, finalCx, finalCz, scheduledTask -> {
+                        checkChunkForMobs(world, plot, finalCx, finalCz);
+                    });
                 } else {
                     // Non-Folia: schedule chunk work on main thread
                     plugin.runMainGlobal(() -> checkChunkForMobs(world, plot, finalCx, finalCz));
@@ -189,14 +186,12 @@ public class MobBarrierTask implements Runnable {
     private void removeMob(Entity entity) {
         if (plugin.isFolia()) {
             // On Folia, use entity scheduler (region-thread safe)
-            if (runEntityTask(entity, () -> {
+            entity.getScheduler().run(plugin, scheduledTask -> {
                 if (entity.isValid()) {
                     entity.remove();
                     spawnRemovalParticle(entity);
                 }
-            })) {
-                return;
-            }
+            }, null);
         } else {
             // Non-Folia: always go to main thread
             plugin.runMain(null, () -> {
@@ -229,38 +224,5 @@ public class MobBarrierTask implements Runnable {
                 || entity instanceof Slime
                 || entity instanceof Phantom
                 || EXPLICIT_HOSTILE_TYPES.contains(entity.getType().name());
-    }
-
-    private boolean runRegionTask(World world, int chunkX, int chunkZ, Runnable task) {
-        try {
-            Method getRegionScheduler = Bukkit.getServer().getClass().getMethod("getRegionScheduler");
-            Object scheduler = getRegionScheduler.invoke(Bukkit.getServer());
-
-            Method run = scheduler.getClass().getMethod(
-                    "run",
-                    Plugin.class,
-                    World.class,
-                    int.class,
-                    int.class,
-                    Consumer.class
-            );
-            run.invoke(scheduler, plugin, world, chunkX, chunkZ, (Consumer<Object>) scheduledTask -> task.run());
-            return true;
-        } catch (Throwable ignored) {
-            return false;
-        }
-    }
-
-    private boolean runEntityTask(Entity entity, Runnable task) {
-        try {
-            Method getScheduler = entity.getClass().getMethod("getScheduler");
-            Object scheduler = getScheduler.invoke(entity);
-
-            Method run = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
-            run.invoke(scheduler, plugin, (Consumer<Object>) scheduledTask -> task.run(), null);
-            return true;
-        } catch (Throwable ignored) {
-            return false;
-        }
     }
 }

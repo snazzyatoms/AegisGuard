@@ -253,7 +253,7 @@ public class SQLDataStore implements IDataStore {
             String database = db != null ? db.getString("database", "aegisguard") : "aegisguard";
             boolean useSSL = db != null && db.getBoolean("useSSL", false);
 
-            cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&autoReconnect=true");
+            cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=" + useSSL + "&allowPublicKeyRetrieval=true&autoReconnect=true");
             cfg.setUsername(db != null ? db.getString("username", "root") : "root");
             cfg.setPassword(db != null ? db.getString("password", "") : "");
 
@@ -1340,3 +1340,4 @@ public class SQLDataStore implements IDataStore {
         }
     }
 }
+

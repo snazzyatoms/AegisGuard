@@ -1,0 +1,21 @@
+# Build output
+target/
+
+# Local release artifacts
+releases/
+*.jar
+
+# Local Maven caches / verification folders
+.m2-home/
+.m2-local/
+.m2-temp/
+.m2-verify/
+m2r/
+m2tmp/
+m2verify-clean/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

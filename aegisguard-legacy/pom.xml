@@ -211,8 +211,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             
@@ -260,19 +259,18 @@
                         <configuration>
                             <target>
                                 <mkdir dir="${release.output.dir}"/>
-                                <delete file="${release.output.dir}/${project.build.finalName}.jar"/>
-                                <delete file="${release.output.dir}/${project.build.finalName}-api.jar"/>
-                                <delete file="${release.output.dir}/${project.build.finalName}-dev-api.jar"/>
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}.jar"
-                                        tofile="${release.output.dir}/${project.build.finalName}.jar"/>
+                                        tofile="${release.output.dir}/${project.build.finalName}.jar"
+                                        overwrite="true"/>
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}-dev-api.jar"
-                                        tofile="${release.output.dir}/${project.build.finalName}-api.jar"/>
+                                        tofile="${release.output.dir}/${project.build.finalName}-api.jar"
+                                        overwrite="true"/>
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}-dev-api.jar"
-                                        tofile="${release.output.dir}/${project.build.finalName}-dev-api.jar"/>
-                                <delete dir="${project.build.directory}"/>
+                                        tofile="${release.output.dir}/${project.build.finalName}-dev-api.jar"
+                                        overwrite="true"/>
                             </target>
                         </configuration>
                         <goals>
@@ -284,5 +282,3 @@
         </plugins>
     </build>
 </project>
-
-

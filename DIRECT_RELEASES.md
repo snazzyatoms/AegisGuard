@@ -1,11 +1,10 @@
 # Direct Releases
 
-Each module keeps its own release artifacts:
+This repository is source-only.
 
-- `aegisguard-paper/releases`
-- `aegisguard-legacy/releases`
-- `aegisguard-paper-bundled/releases`
-- `aegisguard-legacy-bundled/releases`
+Release jars are not stored inside the GitHub source tree. Build outputs are kept in the local release staging folder:
+
+- `D:\AegisGuard-1.2.7\releases`
 
 Expected outputs:
 

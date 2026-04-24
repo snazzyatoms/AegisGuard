@@ -49,12 +49,14 @@ The repository now uses a clean top-level module structure:
 
 | Module | Purpose |
 |--------|---------|
-| `aegisguard-paper` | Main modern AegisGuard line |
+| `aegisguard-modern` | Main modern AegisGuard line |
 | `aegisguard-legacy` | Legacy AegisGuard line |
-| `aegisguard-paper-bundled` | Modern bundled edition |
+| `aegisguard-modern-bundled` | Modern bundled edition |
 | `aegisguard-legacy-bundled` | Legacy bundled edition |
 
 This keeps the repo much cleaner than the older mixed root layout and makes each line easier to understand at a glance.
+
+Release jars are intentionally not stored inside this repository tree. Source stays in this repo; built jars are published separately from the local `D:\AegisGuard-1.2.7\releases` folder.
 
 ---
 

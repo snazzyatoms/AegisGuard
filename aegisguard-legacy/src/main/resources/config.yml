@@ -175,16 +175,17 @@ hooks:
 # YML is easiest for small and medium servers.
 # Database storage is a better long-term fit for larger networks.
 storage:
+  backend: "yml"
   type: "yml"
 
   database:
     file: "aegisguard.db"
-    # host: "localhost"
-    # port: 3306
-    # database: "aegisguard"
-    # username: "root"
-    # password: "password"
-    # useSSL: false
+    host: "localhost"
+    port: 3306
+    database: "aegisguard"
+    username: "root"
+    password: "password"
+    useSSL: false
 
 
 # ==============================================================================
@@ -931,11 +932,13 @@ protections:
 # Active mob barrier
 # ==============================================================================
 mob_barrier:
-  enabled: true
-  # Primary scheduler key for 1.2.7+. Older installs may still use
-  # check_interval_ticks and will continue to work.
-  interval_seconds: 3
-  remove_particles: true
+    enabled: true
+    # Primary scheduler key for 1.2.7+. Older installs may still use
+    # check_interval_ticks and will continue to work.
+    interval_seconds: 3
+    # Extra cleanup pass while a player is standing inside a mob-protected plot.
+    player_cleanup_interval_seconds: 2
+    remove_particles: true
 
 
 # ==============================================================================
@@ -1221,3 +1224,5 @@ roles:
     icon: OAK_DOOR
     priority: 10
     permissions: ["INTERACT"]
+
+

@@ -33,17 +33,61 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class ProtectionManager implements Listener {
+    private static final Set<String> EXPLICIT_HOSTILE_TYPES = Set.of(
+            "BLAZE",
+            "BOGGED",
+            "BREEZE",
+            "CAVE_SPIDER",
+            "CREAKING",
+            "CREEPER",
+            "DROWNED",
+            "ELDER_GUARDIAN",
+            "ENDERMAN",
+            "ENDERMITE",
+            "ENDER_DRAGON",
+            "EVOKER",
+            "GHAST",
+            "GIANT",
+            "GUARDIAN",
+            "HOGLIN",
+            "HUSK",
+            "ILLUSIONER",
+            "MAGMA_CUBE",
+            "PHANTOM",
+            "PIGLIN",
+            "PIGLIN_BRUTE",
+            "PILLAGER",
+            "RAVAGER",
+            "SHULKER",
+            "SILVERFISH",
+            "SKELETON",
+            "SLIME",
+            "SPIDER",
+            "STRAY",
+            "VEX",
+            "VINDICATOR",
+            "WARDEN",
+            "WITCH",
+            "WITHER",
+            "WITHER_SKELETON",
+            "ZOGLIN",
+            "ZOMBIE",
+            "ZOMBIE_VILLAGER",
+            "ZOMBIFIED_PIGLIN"
+    );
 
     private final AegisGuard plugin;
     private final boolean wildernessRevertEnabled; // kept for future use
 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> mobCleanupCooldowns = new ConcurrentHashMap<>();
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -319,9 +363,6 @@ public class ProtectionManager implements Listener {
                 plugin.runMain(p, () -> p.setAllowFlight(true));
             }
 
-            if (isMobProtectionEnabled(to)) {
-                purgeNearbyHostiles(p, to);
-            }
         }
 
         if (to != null) {
@@ -348,6 +389,10 @@ public class ProtectionManager implements Listener {
             }
 
             applyPlotBuffs(p, to);
+
+            if (isMobProtectionEnabled(to)) {
+                purgePlotHostilesForPlayer(p, to);
+            }
         }
     }
 
@@ -358,6 +403,7 @@ public class ProtectionManager implements Listener {
         clearPlotBuffs(p, plot);
         buffCooldowns.remove(p.getUniqueId());
         messageCooldowns.remove(p.getUniqueId());
+        mobCleanupCooldowns.remove(p.getUniqueId());
     }
 
     // --------------------------------------------------
@@ -601,7 +647,14 @@ public class ProtectionManager implements Listener {
     }
 
     private boolean isHostileMob(Entity entity) {
-        return entity instanceof Monster || entity instanceof Slime || entity instanceof Phantom;
+        if (entity == null) {
+            return false;
+        }
+
+        return entity instanceof Monster
+                || entity instanceof Slime
+                || entity instanceof Phantom
+                || EXPLICIT_HOSTILE_TYPES.contains(entity.getType().name());
     }
 
     private void removeHostileMob(Entity entity) {
@@ -615,22 +668,52 @@ public class ProtectionManager implements Listener {
         }
     }
 
-    private void purgeNearbyHostiles(Player player, Plot plot) {
+    private void purgePlotHostilesForPlayer(Player player, Plot plot) {
         if (player == null || plot == null) {
             return;
         }
 
-        double radius = Math.max(6.0D, plugin.cfg().raw().getDouble("mob_barrier.entry_cleanup_radius", 20.0D));
-        double vertical = Math.max(4.0D, plugin.cfg().raw().getDouble("mob_barrier.entry_cleanup_vertical_radius", 8.0D));
+        long now = System.currentTimeMillis();
+        long intervalSeconds = Math.max(1L, plugin.cfg().raw().getLong("mob_barrier.player_cleanup_interval_seconds", 2L));
+        if (mobCleanupCooldowns.getOrDefault(player.getUniqueId(), 0L) > now) {
+            return;
+        }
 
-        for (Entity entity : player.getNearbyEntities(radius, vertical, radius)) {
-            if (!isHostileMob(entity)) {
-                continue;
+        mobCleanupCooldowns.put(player.getUniqueId(), now + TimeUnit.SECONDS.toMillis(intervalSeconds));
+        purgePlotHostiles(plot);
+    }
+
+    private void purgePlotHostiles(Plot plot) {
+        if (plot == null) {
+            return;
+        }
+
+        org.bukkit.World world = Bukkit.getWorld(plot.getWorld());
+        if (world == null) {
+            return;
+        }
+
+        int minChunkX = plot.getX1() >> 4;
+        int minChunkZ = plot.getZ1() >> 4;
+        int maxChunkX = plot.getX2() >> 4;
+        int maxChunkZ = plot.getZ2() >> 4;
+
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                if (!world.isChunkLoaded(cx, cz)) {
+                    continue;
+                }
+
+                for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
+                    if (!isHostileMob(entity)) {
+                        continue;
+                    }
+                    if (!plot.isInside(entity.getLocation())) {
+                        continue;
+                    }
+                    removeHostileMob(entity);
+                }
             }
-            if (!plot.isInside(entity.getLocation())) {
-                continue;
-            }
-            removeHostileMob(entity);
         }
     }
 }

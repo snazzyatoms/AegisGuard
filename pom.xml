@@ -12,9 +12,9 @@
     <description>Clean multi-module AegisGuard 1.2.7 repository layout</description>
 
     <modules>
-        <module>aegisguard-paper</module>
+        <module>aegisguard-modern</module>
         <module>aegisguard-legacy</module>
-        <module>aegisguard-paper-bundled</module>
+        <module>aegisguard-modern-bundled</module>
         <module>aegisguard-legacy-bundled</module>
     </modules>
 </project>

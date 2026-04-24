@@ -15,6 +15,7 @@ import org.bukkit.plugin.Plugin;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -38,6 +39,48 @@ import java.util.function.Consumer;
  *    config toggle later (e.g. mob_barrier.safe_zone_forces_mobs: true).
  */
 public class MobBarrierTask implements Runnable {
+    private static final Set<String> EXPLICIT_HOSTILE_TYPES = Set.of(
+            "BLAZE",
+            "BOGGED",
+            "BREEZE",
+            "CAVE_SPIDER",
+            "CREAKING",
+            "CREEPER",
+            "DROWNED",
+            "ELDER_GUARDIAN",
+            "ENDERMAN",
+            "ENDERMITE",
+            "ENDER_DRAGON",
+            "EVOKER",
+            "GHAST",
+            "GIANT",
+            "GUARDIAN",
+            "HOGLIN",
+            "HUSK",
+            "ILLUSIONER",
+            "MAGMA_CUBE",
+            "PHANTOM",
+            "PIGLIN",
+            "PIGLIN_BRUTE",
+            "PILLAGER",
+            "RAVAGER",
+            "SHULKER",
+            "SILVERFISH",
+            "SKELETON",
+            "SLIME",
+            "SPIDER",
+            "STRAY",
+            "VEX",
+            "VINDICATOR",
+            "WARDEN",
+            "WITCH",
+            "WITHER",
+            "WITHER_SKELETON",
+            "ZOGLIN",
+            "ZOMBIE",
+            "ZOMBIE_VILLAGER",
+            "ZOMBIFIED_PIGLIN"
+    );
 
     private final AegisGuard plugin;
 
@@ -127,10 +170,11 @@ public class MobBarrierTask implements Runnable {
         try {
             Chunk chunk = world.getChunkAt(cx, cz);
             for (Entity entity : chunk.getEntities()) {
-                if (entity instanceof Monster || entity instanceof Slime || entity instanceof Phantom) {
-                    if (plot.isInside(entity.getLocation())) {
-                        removeMob(entity);
-                    }
+                if (!isHostileMob(entity)) {
+                    continue;
+                }
+                if (plot.isInside(entity.getLocation())) {
+                    removeMob(entity);
                 }
             }
         } catch (Exception e) {
@@ -174,6 +218,17 @@ public class MobBarrierTask implements Runnable {
                     0.05
             );
         }
+    }
+
+    private boolean isHostileMob(Entity entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        return entity instanceof Monster
+                || entity instanceof Slime
+                || entity instanceof Phantom
+                || EXPLICIT_HOSTILE_TYPES.contains(entity.getType().name());
     }
 
     private boolean runRegionTask(World world, int chunkX, int chunkZ, Runnable task) {

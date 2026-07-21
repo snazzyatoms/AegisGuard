@@ -137,18 +137,6 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 
 See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed commands, permissions, configuration, economy, migration, and player guides.
 
-## Building From Source
-
-Requirements:
-
-- JDK 17 or newer
-- Maven 3.9 or newer
-
-From the repository root:
-
-```text
-mvn clean package
-```
 
 The server plugin and developer API artifacts are copied into the local `releases/` directory. Install only `AegisGuard-1.2.7.jar` on a Minecraft server; API artifacts are intended for developers.
 

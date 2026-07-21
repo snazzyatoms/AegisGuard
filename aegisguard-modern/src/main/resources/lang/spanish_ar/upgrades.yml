@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.2.5 - Codex: Español (AR)
+# AegisGuard v1.2.7 - Codex: Español (AR)
 # File: upgrades.yml
 # Organized split: GUIs / System / Upgrades / Expansions
 # Generated: 2025-12-22 07:14:14Z
@@ -15,9 +15,8 @@ claim_blocks_earned_levelup: '&d✦ Recompensa de Ascensión: &b+{AMOUNT}&d Bloq
 claim_blocks_received_starter: '&b✦ Registro inicial: &a+{AMOUNT}&b Bloques de Parcela. &7Total: &e{TOTAL}&7.'
 claim_blocks_received_bonus: '&d✦ Bono otorgado: &b+{AMOUNT}&d Bloques de Parcela. &7Total: &e{TOTAL}&7.'
 claim_blocks_purchased: '&6✦ Compra completada: &b+{AMOUNT}&6 Bloques de Parcela. &7Total: &e{TOTAL}&7.'
-claim_blocks_spent: '&e✦ Gastaste: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
+claim_blocks_spent: '&e⛏ Gastaste &6{AMOUNT}&e Bloques de Parcela. &7(Restantes: &f{BALANCE}&7)'
 claim_blocks_spent_claim: '&e✦ Costo del reclamo: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
-claim_blocks_spent_resize: '&e✦ Costo del redimensionado: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
 claim_blocks_spent_levelup: '&e✦ Costo de Ascensión: &c-{AMOUNT}&e Bloques de Parcela. &7Te quedan: &a{TOTAL}&7.'
 claim_blocks_refunded: '&e✦ Reembolsado: &a+{AMOUNT}&e Bloques de Parcela. &7Total: &e{TOTAL}&7.'
 claim_blocks_insufficient: '&c❌ No te alcanzan los Bloques de Parcela. &7Necesitás: &e{NEEDED}&7 | Tenés: &a{AVAILABLE}&7.'

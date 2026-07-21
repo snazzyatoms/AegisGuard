@@ -49,6 +49,9 @@ public class SQLDataStore implements IDataStore {
     private final AtomicInteger pendingTasks = new AtomicInteger(0);
     private final Object pendingLock = new Object();
     private final AtomicBoolean stopping = new AtomicBoolean(false);
+    private final Set<Long> wildernessRevertsInFlight = ConcurrentHashMap.newKeySet();
+
+    private record WildernessRevertRow(long id, String worldName, int x, int y, int z, String materialName) { }
 
     // --- TABLES ---
     private static final String CREATE_PLOTS_TABLE =
@@ -176,7 +179,8 @@ public class SQLDataStore implements IDataStore {
     private static final String LOG_WILDERNESS =
             "INSERT INTO aegis_wilderness_log (world, x, y, z, old_material, new_material, timestamp, player_uuid) VALUES (?,?,?,?,?,?,?,?)";
     private static final String GET_REVERTABLE_BLOCKS =
-            "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log WHERE timestamp < ? LIMIT ?";
+            "SELECT id, world, x, y, z, old_material FROM aegis_wilderness_log "
+                    + "WHERE timestamp < ? ORDER BY timestamp DESC, id DESC LIMIT ?";
     private static final String DELETE_WILDERNESS_BY_ID =
             "DELETE FROM aegis_wilderness_log WHERE id = ?";
 
@@ -734,6 +738,12 @@ public class SQLDataStore implements IDataStore {
         };
 
         add.accept("maxMembers", String.valueOf(plot.getMaxMembers()));
+        add.accept("horizonRank", String.valueOf(plot.getHorizonRank()));
+        add.accept("horizonExpansionRank", String.valueOf(plot.getHorizonExpansionRank()));
+        add.accept("horizonRenown", String.valueOf(plot.getHorizonRenown()));
+        add.accept("horizonClimate", plot.getHorizonClimate());
+        add.accept("ascensionFocus", plot.getAscensionFocus());
+        add.accept("ascensionFocusChangedAt", String.valueOf(plot.getAscensionFocusChangedAt()));
         add.accept("spawn", plot.getSpawnLocationString());
         add.accept("welcome", plot.getWelcomeMessage());
         add.accept("farewell", plot.getFarewellMessage());
@@ -790,6 +800,12 @@ public class SQLDataStore implements IDataStore {
             try {
                 switch (key) {
                     case "maxMembers" -> plot.setMaxMembers(Integer.parseInt(value));
+                    case "horizonRank" -> plot.setHorizonRank(Integer.parseInt(value));
+                    case "horizonExpansionRank" -> plot.setHorizonExpansionRank(Integer.parseInt(value));
+                    case "horizonRenown" -> plot.setHorizonRenown(Long.parseLong(value));
+                    case "horizonClimate" -> plot.setHorizonClimate(value);
+                    case "ascensionFocus" -> plot.setAscensionFocus(value);
+                    case "ascensionFocusChangedAt" -> plot.setAscensionFocusChangedAt(Long.parseLong(value));
                     case "spawn" -> plot.setSpawnLocationFromString(value);
                     case "welcome" -> plot.setWelcomeMessage(value);
                     case "farewell" -> plot.setFarewellMessage(value);
@@ -983,7 +999,10 @@ public class SQLDataStore implements IDataStore {
                     ps.setString(1, plotId.toString() + ":%");
                     ps.executeUpdate();
                 }
-            } catch (SQLException ignored) {}
+            } catch (SQLException error) {
+                plugin.getLogger().warning("Failed to remove plot " + plotId + " from SQL storage: "
+                        + error.getMessage());
+            }
         });
 
         isDirty = true;
@@ -1106,6 +1125,16 @@ public class SQLDataStore implements IDataStore {
     }
 
     @Override
+    public void updatePlotBounds(Plot plot, int x1, int z1, int x2, int z2) {
+        if (plot == null) return;
+        removePlotByIdEverywhere(plot.getPlotId());
+        plot.setBounds(x1, z1, x2, z2);
+        cachePlot(plot);
+        savePlotSync(plot);
+        isDirty = true;
+    }
+
+    @Override
     public void removeBannedPlots() {
         for (org.bukkit.OfflinePlayer p : Bukkit.getBannedPlayers()) {
             removeAllPlots(p.getUniqueId());
@@ -1134,19 +1163,27 @@ public class SQLDataStore implements IDataStore {
     public void logWildernessBlock(Location loc, String oldMat, String newMat, UUID playerUUID) {
         if (loc == null || loc.getWorld() == null || playerUUID == null) return;
 
+        String worldName = loc.getWorld().getName();
+        int x = loc.getBlockX();
+        int y = loc.getBlockY();
+        int z = loc.getBlockZ();
+
         queueDb(() -> {
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(LOG_WILDERNESS)) {
-                ps.setString(1, loc.getWorld().getName());
-                ps.setInt(2, loc.getBlockX());
-                ps.setInt(3, loc.getBlockY());
-                ps.setInt(4, loc.getBlockZ());
+                ps.setString(1, worldName);
+                ps.setInt(2, x);
+                ps.setInt(3, y);
+                ps.setInt(4, z);
                 ps.setString(5, oldMat);
                 ps.setString(6, newMat);
                 ps.setLong(7, System.currentTimeMillis());
                 ps.setString(8, playerUUID.toString());
                 ps.executeUpdate();
-            } catch (SQLException ignored) {}
+            } catch (SQLException error) {
+                plugin.getLogger().warning("Failed to persist wilderness restoration record at "
+                        + worldName + " " + x + "," + y + "," + z + ": " + error.getMessage());
+            }
         });
     }
 
@@ -1155,52 +1192,79 @@ public class SQLDataStore implements IDataStore {
         if (limit <= 0) return;
 
         queueDb(() -> {
+            List<WildernessRevertRow> rows = new ArrayList<>();
             try (Connection conn = hikari.getConnection();
                  PreparedStatement ps = conn.prepareStatement(GET_REVERTABLE_BLOCKS)) {
 
                 ps.setLong(1, timestamp);
                 ps.setInt(2, limit);
 
-                List<Long> ids = new ArrayList<>();
-
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         long id = rs.getLong("id");
+                        if (!wildernessRevertsInFlight.add(id)) continue;
+
                         String worldName = rs.getString("world");
                         int x = rs.getInt("x");
                         int y = rs.getInt("y");
                         int z = rs.getInt("z");
                         String oldMat = rs.getString("old_material");
 
-                        if (worldName == null || oldMat == null) continue;
-
-                        World w = Bukkit.getWorld(worldName);
-                        if (w == null) continue;
-
-                        Material mat;
-                        try { mat = Material.valueOf(oldMat); }
-                        catch (IllegalArgumentException ignored) { continue; }
-
-                        Location l = new Location(w, x, y, z);
-                        plugin.runMainGlobal(() -> {
-                            try { l.getBlock().setType(mat, false); } catch (Throwable ignored2) {}
-                        });
-
-                        ids.add(id);
-                    }
-                }
-
-                if (!ids.isEmpty()) {
-                    try (PreparedStatement del = conn.prepareStatement(DELETE_WILDERNESS_BY_ID)) {
-                        for (Long id : ids) {
-                            del.setLong(1, id);
-                            del.addBatch();
+                        if (worldName == null || oldMat == null) {
+                            wildernessRevertsInFlight.remove(id);
+                            continue;
                         }
-                        del.executeBatch();
+
+                        rows.add(new WildernessRevertRow(id, worldName, x, y, z, oldMat));
                     }
                 }
 
-            } catch (SQLException ignored) {}
+            } catch (SQLException error) {
+                for (WildernessRevertRow row : rows) wildernessRevertsInFlight.remove(row.id());
+                plugin.getLogger().warning("Failed to read wilderness restoration records: " + error.getMessage());
+                return;
+            }
+
+            if (!rows.isEmpty()) {
+                plugin.runSync(() -> rows.forEach(this::scheduleWildernessRevert));
+            }
+        });
+    }
+
+    private void scheduleWildernessRevert(WildernessRevertRow row) {
+        World world = Bukkit.getWorld(row.worldName());
+        Material material = Material.matchMaterial(row.materialName());
+        if (world == null || material == null) {
+            wildernessRevertsInFlight.remove(row.id());
+            return;
+        }
+
+        Location location = new Location(world, row.x(), row.y(), row.z());
+        plugin.runAt(location, () -> {
+            try {
+                location.getBlock().setType(material, false);
+                acknowledgeWildernessRevert(row.id());
+            } catch (Throwable error) {
+                wildernessRevertsInFlight.remove(row.id());
+                plugin.getLogger().warning("Wilderness restoration failed at "
+                        + row.worldName() + " " + row.x() + "," + row.y() + "," + row.z()
+                        + ": " + error.getMessage());
+            }
+        });
+    }
+
+    private void acknowledgeWildernessRevert(long id) {
+        queueDb(() -> {
+            try (Connection conn = hikari.getConnection();
+                 PreparedStatement delete = conn.prepareStatement(DELETE_WILDERNESS_BY_ID)) {
+                delete.setLong(1, id);
+                delete.executeUpdate();
+            } catch (SQLException error) {
+                plugin.getLogger().warning("Restored wilderness block but could not acknowledge record "
+                        + id + ": " + error.getMessage());
+            } finally {
+                wildernessRevertsInFlight.remove(id);
+            }
         });
     }
 
@@ -1340,4 +1404,3 @@ public class SQLDataStore implements IDataStore {
         }
     }
 }
-

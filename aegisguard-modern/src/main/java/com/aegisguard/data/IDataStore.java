@@ -60,6 +60,9 @@ public interface IDataStore {
      */
     void changePlotOwner(Plot plot, UUID newOwner, String newOwnerName);
 
+    /** Update plot geometry while rebuilding spatial indexes atomically in memory. */
+    void updatePlotBounds(Plot plot, int x1, int z1, int x2, int z2);
+
     void removeBannedPlots();
 
     // --------------------------------------------------

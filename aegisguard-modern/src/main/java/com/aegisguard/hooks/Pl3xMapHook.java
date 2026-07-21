@@ -26,12 +26,7 @@ public class Pl3xMapHook {
 
         // Register periodic update task (async)
         // 5 minute refresh (6000 ticks), 100 tick initial delay
-        Bukkit.getScheduler().runTaskTimerAsynchronously(
-                plugin,
-                this::update,
-                100L,
-                6000L
-        );
+        plugin.runGlobalRepeating(this::update, 100L, 6000L);
     }
 
     public void update() {

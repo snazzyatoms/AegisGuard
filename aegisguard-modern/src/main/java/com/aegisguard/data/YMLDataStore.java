@@ -94,6 +94,12 @@ public class YMLDataStore implements IDataStore {
 
                     plot.setLevel(sec.getInt("level", 1));
                     plot.setXp(sec.getDouble("xp", 0.0));
+                    plot.setHorizonRank(sec.getInt("horizons.rank", 0));
+                    plot.setHorizonExpansionRank(sec.getInt("horizons.expansion-rank", 0));
+                    plot.setHorizonRenown(sec.getLong("horizons.renown", 0L));
+                    plot.setHorizonClimate(sec.getString("horizons.climate", "NATURAL"));
+                    plot.setAscensionFocus(sec.getString("ascension.focus", "UNCHOSEN"));
+                    plot.setAscensionFocusChangedAt(sec.getLong("ascension.focus-changed-at", 0L));
                     plot.setLastUpkeep(sec.getLong("last-upkeep", System.currentTimeMillis()));
                     plot.setMaxMembers(sec.getInt("max-members", 2));
 
@@ -415,6 +421,12 @@ public class YMLDataStore implements IDataStore {
 
         sec.set("level", plot.getLevel());
         sec.set("xp", plot.getXp());
+        sec.set("horizons.rank", plot.getHorizonRank());
+        sec.set("horizons.expansion-rank", plot.getHorizonExpansionRank());
+        sec.set("horizons.renown", plot.getHorizonRenown());
+        sec.set("horizons.climate", plot.getHorizonClimate());
+        sec.set("ascension.focus", plot.getAscensionFocus());
+        sec.set("ascension.focus-changed-at", plot.getAscensionFocusChangedAt());
         sec.set("last-upkeep", plot.getLastUpkeep());
         sec.set("max-members", plot.getMaxMembers());
 
@@ -779,6 +791,15 @@ public class YMLDataStore implements IDataStore {
         // Re-cache under new owner + re-index
         cachePlot(plot);
 
+        savePlotSync(plot);
+    }
+
+    @Override
+    public void updatePlotBounds(Plot plot, int x1, int z1, int x2, int z2) {
+        if (plot == null) return;
+        removePlotByIdEverywhere(plot.getPlotId());
+        plot.setBounds(x1, z1, x2, z2);
+        cachePlot(plot);
         savePlotSync(plot);
     }
 

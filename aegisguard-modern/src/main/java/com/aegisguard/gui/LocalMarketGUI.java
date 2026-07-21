@@ -73,7 +73,11 @@ public class LocalMarketGUI {
         );
 
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
+        ItemStack marketGlass = GUIManager.createItem(Material.ORANGE_STAINED_GLASS_PANE, " ", List.of());
+        for (int slot : new int[]{9, 11, 12, 14, 15, 17, 18, 19, 21, 23, 25, 26, 27, 28, 36, 37, 38, 39, 41, 42, 43, 44}) {
+            inv.setItem(slot, marketGlass);
+        }
 
         String plotName = plot.getPlotName() == null || plot.getPlotName().isBlank()
                 ? plot.getOwnerName() + "'s Plot"
@@ -92,6 +96,18 @@ public class LocalMarketGUI {
                 )
         ));
 
+        inv.setItem(10, GUIManager.createItem(
+                Material.WRITTEN_BOOK,
+                tr(player, "local_market_guide_name", "&eMarket District Guide"),
+                trList(player, "local_market_guide_lore", List.of(
+                        "&7Real Estate lists complete plots.",
+                        "&7Rentals lists rooms and sub-zones.",
+                        "&7TradeStalls lists local shopfronts.",
+                        " ",
+                        "&8Only available services can be opened."
+                ))
+        ));
+
         inv.setItem(20, GUIManager.createItem(
                 Material.GOLD_INGOT,
                 tr(player, "local_market_global_name", "&6Real Estate"),
@@ -105,6 +121,21 @@ public class LocalMarketGUI {
         boolean tradeStallsEnabled = plugin.tradeStalls() != null && plugin.tradeStalls().isEnabledFor(plot);
         boolean hasStalls = tradeStallsEnabled && plot.hasBrowsableStalls();
         boolean canManage = plot.canManage(player, plugin);
+        int zoneCount = plot.getZones() == null ? 0 : plot.getZones().size();
+        inv.setItem(13, GUIManager.createItem(
+                Material.BELL,
+                tr(player, "local_market_pulse_name", "&6District Pulse"),
+                trList(player, "local_market_pulse_lore", List.of(
+                        "&7Managed zones: &f{ZONES}",
+                        "&7Linked markets: &f{BRIDGES}",
+                        "&7TradeStalls: {STALLS}"
+                )).stream().map(line -> line
+                        .replace("{ZONES}", String.valueOf(zoneCount))
+                        .replace("{BRIDGES}", String.valueOf(bridges.size()))
+                        .replace("{STALLS}", hasStalls
+                                ? tr(player, "status_enabled", "&aAvailable")
+                                : tr(player, "status_disabled", "&cUnavailable"))).toList()
+        ));
         inv.setItem(22, GUIManager.createItem(
                 hasZones ? Material.EMERALD_BLOCK : Material.GRAY_DYE,
                 tr(player, "local_market_rentals_name", "&aStalls & Rentals"),

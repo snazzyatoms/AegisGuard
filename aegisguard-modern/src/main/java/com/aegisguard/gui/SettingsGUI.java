@@ -70,11 +70,13 @@ public class SettingsGUI {
         plugin.runMain(player, () -> open(player, plot));
     }
 
-    private void saveConfigSafe() {
+    private boolean saveConfigSafe() {
         try {
             plugin.saveConfig();
+            return true;
         } catch (Throwable t) {
             try { plugin.getLogger().warning("[SettingsGUI] saveConfig failed: " + t.getMessage()); } catch (Throwable ignored) {}
+            return false;
         }
     }
 
@@ -283,7 +285,10 @@ public class SettingsGUI {
                 try { current = plugin.isSoundEnabled(player); } catch (Throwable ignored) {}
 
                 plugin.getConfig().set("sounds.players." + uuid, !current);
-                saveConfigSafe();
+                if (!saveConfigSafe()) {
+                    playError(player);
+                    return;
+                }
 
                 playFlip(player);
                 reopenNextTick(player, plot);
@@ -306,7 +311,7 @@ public class SettingsGUI {
             }
 
             case 16 -> { // Notifications MODE (notifications.yml preferred)
-                if (!canManageGreetingNotifications(player, false)) {
+                if (!canManageNotifications(player)) {
                     playError(player);
                     return;
                 }
@@ -336,7 +341,10 @@ public class SettingsGUI {
                         mirrorToConfig(uuid, newMode, null, null);
                     }
 
-                } catch (Throwable ignored) {}
+                } catch (Throwable error) {
+                    preferenceFailure(player, error);
+                    return;
+                }
 
                 playFlip(player);
                 reopenNextTick(player, plot);
@@ -375,13 +383,21 @@ public class SettingsGUI {
                         mirrorToConfig(uuid, NotificationMode.fromString(modeStr), newState, admin);
                     }
 
-                } catch (Throwable ignored) {}
+                } catch (Throwable error) {
+                    preferenceFailure(player, error);
+                    return;
+                }
 
                 playFlip(player);
                 reopenNextTick(player, plot);
             }
 
             case 22 -> { // Admin Updates toggle
+                if (!canManageNotifications(player)) {
+                    playError(player);
+                    return;
+                }
+
                 try {
                     Boolean newState = null;
 
@@ -400,7 +416,10 @@ public class SettingsGUI {
                         mirrorToConfig(uuid, NotificationMode.fromString(modeStr), greet, newState);
                     }
 
-                } catch (Throwable ignored) {}
+                } catch (Throwable error) {
+                    preferenceFailure(player, error);
+                    return;
+                }
 
                 playFlip(player);
                 reopenNextTick(player, plot);
@@ -416,6 +435,21 @@ public class SettingsGUI {
                 plugin.runMain(player, player::closeInventory);
             }
         }
+    }
+
+    private boolean canManageNotifications(Player player) {
+        return player != null && player.hasPermission("aegis.notify");
+    }
+
+    private void preferenceFailure(Player player, Throwable error) {
+        plugin.getLogger().warning("Could not update notification preferences for "
+                + player.getName() + ": " + error.getMessage());
+        player.sendMessage(plugin.gui().tr(
+                player,
+                "notify_preference_save_failed",
+                "&cYour notification preference could not be saved. Please try again."
+        ));
+        playError(player);
     }
 
     // --------------------------------------------------

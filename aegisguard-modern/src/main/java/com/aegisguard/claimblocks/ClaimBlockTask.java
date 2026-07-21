@@ -58,74 +58,76 @@ public class ClaimBlockTask implements Runnable, Listener {
         long now = System.currentTimeMillis();
 
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!p.hasPermission("aegis.earn.blocks")) continue;
-            if (playerOptOutAllowed && !plugin.getClaimBlockManager().isPlaytimeEarningEnabled(p.getUniqueId())) continue;
+            plugin.runMain(p, () -> processPlayer(p, playerOptOutAllowed, amount, notify,
+                    antiAfkEnabled, requiredActivitySeconds, afkTimeoutMillis, now));
+        }
 
-            // Check if player is active (anti-AFK)
-            if (antiAfkEnabled) {
-                PlayerActivity activity = activityMap.get(p.getUniqueId());
+        // Entries are also removed by PlayerQuitEvent; this is a safety net for unusual disconnects.
+        activityMap.keySet().removeIf(uuid -> plugin.getServer().getPlayer(uuid) == null);
+    }
+
+    private void processPlayer(Player p, boolean playerOptOutAllowed, long amount, boolean notify,
+                               boolean antiAfkEnabled, long requiredActivitySeconds,
+                               long afkTimeoutMillis, long now) {
+        if (!p.isOnline() || !p.hasPermission("aegis.earn.blocks")) return;
+        if (playerOptOutAllowed && !plugin.getClaimBlockManager().isPlaytimeEarningEnabled(p.getUniqueId())) return;
+
+        // Check if player is active (anti-AFK)
+        if (antiAfkEnabled) {
+            PlayerActivity activity = activityMap.get(p.getUniqueId());
                 
-                if (activity == null) {
-                    // First time seeing this player, initialize
-                    activity = new PlayerActivity();
-                    activity.lastActivity = now;
-                    activity.lastLocationUpdate = now;
-                    activity.lastLocation = p.getLocation();
-                    activityMap.put(p.getUniqueId(), activity);
-                    continue; // Skip reward on first interval
-                }
-
-                // Check if player has been AFK too long
-                long timeSinceActivity = now - activity.lastActivity;
-                if (timeSinceActivity > afkTimeoutMillis) {
-                    // Player is AFK, skip reward
-                    if (notify) {
-                        long afkMinutes = Math.max(1L, timeSinceActivity / 60_000L);
-                        if (afkMinutes > activity.lastAfkWarningMinute) {
-                            activity.lastAfkWarningMinute = afkMinutes;
-                            String afkMsg = plugin.codex().tr(p, "claim_blocks_afk_warning",
-                                    Map.of("MINUTES", String.valueOf(afkMinutes))
-                            );
-                            if (afkMsg != null && !afkMsg.isEmpty()) {
-                                afkMsg = ChatColor.translateAlternateColorCodes('&', afkMsg);
-                                p.spigot().sendMessage(TextComponent.fromLegacyText(afkMsg));
-                            }
-                        }
-                    }
-                    continue;
-                }
-
-                // Check if player has enough activity time
-                long activityDuration = activity.getActivityDuration(now);
-                if (activityDuration < requiredActivitySeconds * 1000L) {
-                    // Not enough activity, skip reward
-                    continue;
-                }
-
-                // Reset activity duration for next interval
-                activity.resetInterval();
+            if (activity == null) {
+                // First time seeing this player, initialize and skip the first interval.
+                activity = new PlayerActivity();
+                activity.lastActivity = now;
+                activity.lastLocationUpdate = now;
+                activity.lastLocation = p.getLocation();
+                activityMap.put(p.getUniqueId(), activity);
+                return;
             }
 
-            // Award blocks
-            plugin.getClaimBlockManager().addEarned(p.getUniqueId(), amount);
+            // Check if player has been AFK too long
+            long timeSinceActivity = now - activity.lastActivity;
+            if (timeSinceActivity > afkTimeoutMillis) {
+                if (notify) {
+                    long afkMinutes = Math.max(1L, timeSinceActivity / 60_000L);
+                    if (afkMinutes > activity.lastAfkWarningMinute) {
+                        activity.lastAfkWarningMinute = afkMinutes;
+                        String afkMsg = plugin.codex().tr(p, "claim_blocks_afk_warning",
+                                Map.of("MINUTES", String.valueOf(afkMinutes))
+                        );
+                        if (afkMsg != null && !afkMsg.isEmpty()) {
+                            afkMsg = ChatColor.translateAlternateColorCodes('&', afkMsg);
+                            p.spigot().sendMessage(TextComponent.fromLegacyText(afkMsg));
+                        }
+                    }
+                }
+                return;
+            }
 
-            if (notify) {
-                long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());
+            long activityDuration = activity.getActivityDuration(now);
+            if (activityDuration < requiredActivitySeconds * 1000L) return;
 
-                String msg = plugin.codex().tr(p, "claim_blocks_earned_playtime",
-                        Map.of(
-                                "AMOUNT", String.valueOf(amount),
-                                "TOTAL", String.valueOf(total)
-                        )
-                );
+            activity.resetInterval();
+        }
 
+        plugin.getClaimBlockManager().addEarned(p.getUniqueId(), amount);
+
+        if (notify) {
+            long total = plugin.getClaimBlockManager().getTotalBlocks(p.getUniqueId());
+
+            String msg = plugin.codex().tr(p, "claim_blocks_earned_playtime",
+                    Map.of(
+                            "AMOUNT", String.valueOf(amount),
+                            "TOTAL", String.valueOf(total)
+                    )
+            );
+
+            if (msg != null && !msg.isEmpty()) {
                 msg = ChatColor.translateAlternateColorCodes('&', msg);
                 p.spigot().sendMessage(TextComponent.fromLegacyText(msg));
             }
         }
-
-        // Cleanup disconnected players
-        activityMap.keySet().removeIf(uuid -> plugin.getServer().getPlayer(uuid) == null);
     }
 
     // =========================================================================

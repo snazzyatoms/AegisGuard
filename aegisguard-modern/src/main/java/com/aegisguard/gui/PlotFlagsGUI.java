@@ -103,6 +103,16 @@ public class PlotFlagsGUI {
         addProtectionFlagButton(player, inv, plot, 14, "mobs",        Material.ZOMBIE_HEAD,     "button_mobs",  "mob_toggle_lore",   "Mob Damage");
         addProtectionFlagButton(player, inv, plot, 15, "entry",       Material.OAK_FENCE_GATE,  "button_entry", "entry_toggle_lore", "Entry");
 
+        inv.setItem(13, GUIManager.createItem(
+                Material.KNOWLEDGE_BOOK,
+                t(player, "claim_settings_guide_name", "&eProtection Doctrine"),
+                tl(player, "claim_settings_guide_lore", List.of(
+                        "&7Glowing controls are protected.",
+                        "&7Disabled controls follow normal world behavior.",
+                        "&7Changes save immediately to this plot."
+                ))
+        ));
+
         // Safe Zone: structural / environment umbrella, admin-only toggle
         boolean safeOn = plugin.protection().isSafeZoneEnabled(plot);
         String safeLabelKey = "button_safe" + (safeOn ? "_on" : "_off");
@@ -132,24 +142,16 @@ public class PlotFlagsGUI {
                 "button_shop", "shop_toggle_lore", shopCostStr,
                 "Shop Interact");
 
-        // --- 5. ADMIN: FLY / PREMIUM + COSMETICS ---
-        if (plugin.isAdmin(player)) {
-            boolean canFly = plot.getFlag("fly", false);
-            double flyCost = plugin.cfg().getFlightCost();
-            String flyCostStr = (flyCost > 0 && !plugin.isAdmin(player))
-                    ? plugin.eco().format(flyCost, CurrencyType.VAULT)
-                    : free;
-
-            List<String> flyLore = tl(player, "fly_toggle_lore", List.of());
-            flyLore = replace(flyLore, "{COST}", flyCostStr);
-
-            String flyKey = canFly ? "button_fly_on" : "button_fly_off";
-            String flyName = t(player, flyKey, onOffFallback(player, canFly, "Flight"));
-
-            ItemStack flyIcon = GUIManager.createItem(Material.FEATHER, flyName, flyLore);
-            if (canFly) glow(flyIcon);
-            inv.setItem(30, flyIcon);
-        }
+        // Flight is earned through Plot Ascension and is intentionally not a manual claim toggle.
+        inv.setItem(30, GUIManager.createItem(
+                Material.FEATHER,
+                t(player, "claim_settings_flight_ascension_name", "&fFlight: Ascension Reward"),
+                tl(player, "claim_settings_flight_ascension_lore", List.of(
+                        "&7Flight is no longer configured here.",
+                        "&7Reach Plot Ascension Level 30 to earn",
+                        "&7safe flight inside the eligible plot."
+                ))
+        ));
 
         // Cosmetics
         String cosName = t(player, "button_cosmetics", "&bCosmetics");
@@ -220,15 +222,6 @@ public class PlotFlagsGUI {
             case 24 -> { toggleFlag(player, plot, "vehicles"); refresh = true; }
 
             case 25 -> { togglePaid(player, plot, "shop-interact", plugin.cfg().getShopInteractCost()); refresh = true; }
-            case 30 -> {
-                if (plugin.isAdmin(player)) {
-                    togglePaid(player, plot, "fly", plugin.cfg().getFlightCost());
-                    refresh = true;
-                } else {
-                    plugin.effects().playError(player);
-                }
-            }
-
             case 31 -> {
                 plugin.effects().playMenuFlip(player);
                 plugin.gui().cosmetics().open(player, plot);

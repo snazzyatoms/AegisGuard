@@ -541,7 +541,7 @@ level_header_growth_line: '&7+&f{AMOUNT} &7bloques de radio por nivel.'
 level_current_status: '&eEstado del Dominio'
 
 level_current_blessings_name: '&bBendiciones Actuales'
-level_current_blessings_title: '&bBendiciones al Nivel &f{LEVEL}'
+level_current_blessings_title: '&bBendiciones Activas'
 level_current_blessings_footer_1: '&7Solo se muestran tus mejoras más fuertes.'
 level_current_blessings_footer_2: '&8(Mantené esta vista limpia y legible.)'
 level_current_blessings_none: '&8Todavía no hay bonificaciones especiales activas en este nivel.'
@@ -563,7 +563,7 @@ level_upgrade_active_after_title: '&dActivo Tras la Ascensión:'
 level_upgrade_preview_title: '&eVista Previa de Ascensión (Nivel {LEVEL})'
 level_upgrade_territory_title: '&bGanancia de Territorio:'
 level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
-level_upgrade_click_hint: '&eClic para ascender al Nivel {LEVEL}'
+level_upgrade_click_hint: '&eHacé clic para ascender al Nivel {LEVEL} si podés pagarlo.'
 level_upgrade_blessings_none: '&8Esta mejora se enfoca en crecimiento o acceso, no en una bonificación nueva.'
 
 level_upgrade_button_money: '&6Mejorar con Dinero (Nivel {LEVEL})'
@@ -775,19 +775,19 @@ expansion_pending_none_hint_outside: '&8Movete a una de tus propias parcelas par
 expansion_pending_none_hint_ready: '&aElegí un nivel abajo para preparar tu siguiente expansión.'
 expansion_pending_radius_line: '&7Radio Actual: &f{CURRENT}'
 expansion_pending_target_line: '&7Radio Solicitado: &a{TARGET}'
-expansion_pending_cost_line: '&7Costo Reservado: &6{COST}'
+expansion_pending_cost_line: '&7Costo Cotizado: &6{COST}'
 expansion_pending_world_line: '&7Ancla de Mundo: &f{WORLD}'
 expansion_pending_status_line: '&7Estado: &eEsperando revisión'
 expansion_pending_mode_line: '&bEste reino usa aprobación instantánea para expansiones válidas.'
 expansion_pending_mode_queue_line: '&6Se requiere revisión del staff antes de expandir esta frontera.'
 
-expansion_projection_name: '&dHorizonte de Expansión &8• &5Actualización Futura'
+expansion_projection_name: '&d&lHorizontes de Expansión'
 expansion_projection_lore:
-  - '&7Una futura ruta de expansión pensada para'
-  - '&7llevar tu frontera a alturas nunca vistas.'
+  - '&7Desbloqueá territorio a escala monumental'
+  - '&7mediante el nivel de Ascensión de tu parcela.'
   - ' '
-  - '&8Por ahora, este panel te muestra hasta dónde'
-  - '&8puede crecer tu frontera actual hoy.'
+  - '&8Cinco Horizontes amplían el crecimiento'
+  - '&8más allá de los niveles de Frontera.'
 expansion_projection_hint_outside: '&8Entrá a una de tus propias parcelas para ver números reales.'
 expansion_projection_smallest_line: '&7Paso Más Chico: &f{TARGET} de radio'
 expansion_projection_largest_line: '&7Paso Más Grande: &f{TARGET} de radio'
@@ -1565,3 +1565,455 @@ visit_tab_all_claims_lore:
 # ============================================================
 # FIN DEL ARCHIVO GUI ESPAÑOL AR
 # ============================================================
+visit_title_discover: '&6Descubrir Parcelas'
+visit_title_favorites: '&eParcelas Favoritas'
+visit_switch_discover: '&6Descubrir Parcelas'
+visit_switch_favorites: '&eParcelas Favoritas'
+favorite_added: '&aParcela agregada a favoritos.'
+favorite_removed: '&eParcela eliminada de favoritos.'
+
+# 1.2.7 Doctor de Territorios
+admin_wand_doctor_hint: '&bAgachate + Clic derecho: &fAbrir Doctor'
+back_admin_lore:
+  - '&7Volvé a las herramientas de administración.'
+doctor_menu_title: '&4Doctor de Territorios'
+doctor_confirm_title: '&4Confirmar Reparación'
+doctor_summary_name: '&bSalud de Territorios'
+doctor_summary_lore:
+  - '&7Parcelas revisadas: &f{PLOTS}'
+  - '&7Problemas: &e{ISSUES}'
+  - '&7Críticos: &c{CRITICAL}'
+  - '&7Reparables automáticamente: &a{REPAIRABLE}'
+doctor_scan_name: '&aAnalizar de Nuevo'
+doctor_scan_lore:
+  - '&7Revisá parcelas, contratos, mercado,'
+  - '&7mundos, superposiciones y pagos.'
+  - ' '
+  - '&eClic para analizar'
+doctor_report_name: '&eCrear Informe Completo'
+doctor_report_lore:
+  - '&7Guardá el diagnóstico completo en'
+  - '&7plugins/AegisGuard/reports/.'
+  - ' '
+  - '&eClic para crear el informe'
+doctor_repair_name: '&cReparar Problemas Deterministas'
+doctor_repair_lore:
+  - '&7Corregí solo estados con una solución segura.'
+  - '&7Requiere una segunda confirmación.'
+  - ' '
+  - '&eClic para revisar la reparación'
+doctor_repair_confirm_name: '&cConfirmar Reparaciones Seguras'
+doctor_repair_confirm_lore:
+  - '&7Se crean respaldos antes de los cambios.'
+  - '&7Los casos ambiguos nunca se adivinan.'
+  - ' '
+  - '&cClic para confirmar'
+doctor_loading_lore:
+  - '&7Esperá un momento. Podés usar Atrás'
+  - '&7o Salir con seguridad mientras termina.'
+doctor_issue_name: '&e{CODE}'
+doctor_no_issues: '&aSin Problemas de Consistencia'
+doctor_no_issues_lore:
+  - '&7Los territorios aprobaron este análisis.'
+doctor_issue_missing_owner:
+  - '&cFalta la identidad del propietario.'
+  - '&8Se requiere recuperación manual.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_missing_world:
+  - '&eEl mundo indicado no está disponible.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_market_conflict:
+  - '&eHay varios estados de mercado activos.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_invalid_sale:
+  - '&eEl precio de venta no es válido.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_invalid_rent:
+  - '&eEl precio de alquiler no es válido.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_stale_renter:
+  - '&eQuedaron datos de un inquilino vencido.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_contract_mismatch:
+  - '&cLa parcela y el contrato no coinciden.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_plot_rental_missing:
+  - '&cHay contrato sin datos de alquiler.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_duplicate_id:
+  - '&cMás de una parcela comparte este ID.'
+  - '&8Se requiere recuperación manual.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_orphan_contract:
+  - '&cUn contrato apunta a una parcela eliminada.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_overlap:
+  - '&cLos límites de dos parcelas se superponen.'
+  - '&8Se requiere revisión manual.'
+  - '&8Parcela: {PLOT}'
+doctor_issue_pending_settlement:
+  - '&eHay un pago pendiente de entrega.'
+  - '&8Revisá el informe para más detalles.'
+
+# Controles administrativos del mundo
+world_controls_title: '&bControles del Mundo'
+world_controls_detail_title: '&bMundo: {WORLD}'
+world_controls_world_name: '&b{WORLD}'
+world_controls_world_lore:
+- '&7Reclamos: {STATE}'
+- '&7Entorno: &f{ENVIRONMENT}'
+- ' '
+- '&eHacé clic para administrar este mundo.'
+world_controls_allow_claims_name: '&ePermitir Nuevos Reclamos'
+world_controls_allow_claims_lore:
+- '&7Estado actual: {STATE}'
+- '&7Controla inmediatamente si los jugadores'
+- '&7pueden crear reclamos en este mundo.'
+- ' '
+- '&eHacé clic para cambiar.'
+world_controls_rule_lore:
+- '&7Estado actual: {STATE}'
+- '&7Valor inicial para parcelas nuevas.'
+- '&8No modifica las parcelas existentes.'
+- ' '
+- '&eHacé clic para cambiar.'
+world_controls_pvp_name: '&cProtección PvP'
+world_controls_mobs_name: '&aProtección contra Mobs Hostiles'
+world_controls_containers_name: '&6Protección de Contenedores'
+world_controls_pets_name: '&dProtección de Mascotas'
+world_controls_farms_name: '&eProtección de Cultivos'
+world_controls_animals_name: '&aProtección de Animales'
+world_controls_redstone_name: '&cProtección de Redstone'
+world_controls_vehicles_name: '&bProtección de Vehículos'
+world_controls_fly_name: '&fVuelo Predeterminado'
+world_controls_entry_name: '&bEntrada Predeterminada'
+world_controls_back_worlds: '&eVolver a los Mundos'
+notify_preference_save_failed: '&cNo se pudo guardar tu preferencia de notificaciones. Intentá de nuevo.'
+world_controls_environment_normal: 'Mundo principal'
+world_controls_environment_nether: 'Nether'
+world_controls_environment_end: 'El End'
+world_controls_save_failed: '&cNo se pudo guardar esa regla del mundo. Revisá la consola.'
+
+# Horizontes de Expansión
+expansion_projection_level_line: '&7Nivel de Parcela: &f{CURRENT} &8/ &d{REQUIRED}'
+expansion_projection_unlocked: '&aHorizontes desbloqueados; hacé clic para explorar.'
+expansion_projection_locked: '&eAlcanzá el Nivel de Parcela {LEVEL} para desbloquear.'
+expansion_projection_open: '&dHacé clic para abrir Horizontes de Expansión.'
+expansion_horizons_title: '&5✦ Horizontes de Expansión ✦'
+expansion_horizons_header: '&d&lMás Allá de la Frontera'
+expansion_horizons_header_lore:
+  - '&7Convertí una parcela avanzada en territorio'
+  - '&7monumental mediante la Ascensión.'
+  - ' '
+  - '&8Cada Horizonte respeta costos, límites,'
+  - '&8aprobación, capturas y superposición.'
+expansion_horizons_plot: '&bProyección Territorial'
+expansion_horizons_level: '&eRequisito de Ascensión'
+expansion_horizons_safety: '&aCrecimiento Protegido'
+expansion_horizons_safety_lore:
+  - '&7Captura de recuperación antes de expandir'
+  - '&7Validación de límites y superposición'
+  - '&7Aprobación por cola o instantánea'
+  - '&7Reembolso si la expansión falla'
+expansion_horizons_back: '&eVolver a Expansión de Frontera'
+expansion_horizons_back_lore:
+  - '&7Volvé a los niveles estándar.'
+expansion_horizons_disabled: '&cLos Horizontes están desactivados en este servidor.'
+expansion_horizons_locked_message: '&cEste Horizonte requiere Nivel de Parcela {LEVEL}.'
+expansion_horizons_no_plot_lore:
+  - '&cNo se detectó ninguna parcela.'
+  - '&7Parate dentro de tu parcela para continuar.'
+expansion_horizons_plot_name_line: '&7Parcela: &f{PLOT}'
+expansion_horizons_current_radius: '&7Radio Actual: &b{RADIUS}'
+expansion_horizons_current_area: '&7Superficie Actual: &b{AREA} bloques'
+expansion_horizons_world_limit: '&7Límite del Mundo: &f{LIMIT} de radio'
+expansion_horizons_plot_ready: '&aEste territorio está listo para proyectarse.'
+expansion_horizons_plot_denied: '&cNo sos dueño de este territorio.'
+expansion_horizons_level_line: '&7Nivel Actual de Parcela: &f{LEVEL}'
+expansion_horizons_unlock_line: '&7Desbloqueo: &dNivel {LEVEL}'
+expansion_horizons_level_no_plot: '&8Entrá a tu parcela para revisar su progreso.'
+expansion_horizons_level_ready: '&aHorizontes de Expansión está desbloqueado.'
+expansion_horizons_level_locked: '&eAscendé {LEVELS} nivel(es) más para desbloquear.'
+expansion_horizon_tier_1_name: '&6Horizonte Amanecer &8(+{GAIN})'
+expansion_horizon_tier_1_lore:
+  - '&7Establecé el primer distrito monumental.'
+expansion_horizon_tier_2_name: '&9Horizonte Celeste &8(+{GAIN})'
+expansion_horizon_tier_2_lore:
+  - '&7Abrí una frontera a escala del horizonte.'
+expansion_horizon_tier_3_name: '&dHorizonte del Reino &8(+{GAIN})'
+expansion_horizon_tier_3_lore:
+  - '&7Dale forma a un territorio para un gran reino.'
+expansion_horizon_tier_4_name: '&bHorizonte Astral &8(+{GAIN})'
+expansion_horizon_tier_4_lore:
+  - '&7Superá los límites territoriales ordinarios.'
+expansion_horizon_tier_5_name: '&e&lHorizonte Eterno &8(+{GAIN})'
+expansion_horizon_tier_5_lore:
+  - '&7Completá la frontera máxima de Ascensión.'
+expansion_horizon_requirement_line: '&7Nivel Requerido: &e{LEVEL}'
+expansion_horizon_radius_line: '&7Radio: &f{CURRENT} &8→ &d{TARGET}'
+expansion_horizon_area_line: '&7Superficie Proyectada: &b{AREA} bloques'
+expansion_horizon_cost_line: '&7Costo Estimado: &6{COST}'
+expansion_horizon_state_disabled: '&cDesactivado por el servidor.'
+expansion_horizon_state_no_plot: '&cParate dentro de tu parcela.'
+expansion_horizon_state_level_locked: '&eBloqueado hasta el Nivel {LEVEL}.'
+expansion_horizon_state_world_locked: '&cLa proyección supera el límite del mundo.'
+expansion_horizon_state_pending: '&eResolvé primero tu solicitud pendiente.'
+expansion_horizon_state_ready: '&dHacé clic para solicitar este Horizonte.'
+
+# Guía del Intercambio de ClaimBlocks
+claimblocks_exchange_guide_button: '&b&lCómo Funciona el Intercambio'
+claimblocks_exchange_guide_button_lore:
+  - '&7Conocé tarifas, comisiones, límites,'
+  - '&7bloqueos de venta y comercio seguro.'
+  - ' '
+  - '&eHacé clic para abrir la guía.'
+claimblocks_exchange_guide_title: '&b&lGuía del Intercambio de ClaimBlocks'
+claimblocks_exchange_guide_intro:
+  - '&7Convertí dinero en crecimiento territorial'
+  - '&7o vendé ClaimBlocks elegibles por dinero.'
+  - ' '
+  - '&8La cotización aparece antes de confirmar.'
+claimblocks_exchange_guide_buy: '&aComprar ClaimBlocks'
+claimblocks_exchange_guide_buy_lore:
+  - '&7Elegí COMPRAR, ajustá la cantidad y revisá'
+  - '&7el precio, la comisión y el costo final.'
+  - '&7Los bloques aparecen de inmediato.'
+claimblocks_exchange_guide_quote: '&fCómo Leer la Cotización'
+claimblocks_exchange_guide_quote_lore:
+  - '&7Subtotal = cantidad × precio unitario.'
+  - '&7Las comisiones se suman o descuentan.'
+  - '&7El total verde es el valor final.'
+claimblocks_exchange_guide_sell: '&6Vender ClaimBlocks'
+claimblocks_exchange_guide_sell_lore:
+  - '&7Solo se venden bloques elegibles no iniciales.'
+  - '&7Los bloques se descuentan únicamente si'
+  - '&7el pago de economía tiene éxito.'
+claimblocks_exchange_guide_protection: '&dProtecciones de Comercio'
+claimblocks_exchange_guide_protection_lore:
+  - '&7El bloqueo evita reventas abusivas.'
+  - '&7Los tiempos y límites estabilizan la economía.'
+  - '&7Un pago fallido restaura tus ClaimBlocks.'
+claimblocks_exchange_guide_limits: '&eTus Tarifas y Límites Actuales'
+claimblocks_exchange_guide_steps: '&bPasos Rápidos'
+claimblocks_exchange_guide_steps_lore:
+  - '&f1. &7Elegí COMPRAR o VENDER.'
+  - '&f2. &7Ajustá la cantidad.'
+  - '&f3. &7Leé toda la cotización.'
+  - '&f4. &7Presioná CONFIRMAR una vez.'
+claimblocks_exchange_guide_back: '&eVolver al Intercambio'
+claimblocks_exchange_guide_back_lore:
+  - '&7Volvé a la consola de intercambio.'
+claimblocks_exchange_guide_unlimited: 'Ilimitado'
+claimblocks_exchange_guide_buy_rate: '&aCompra: &f{PRICE} &7por bloque'
+claimblocks_exchange_guide_sell_rate: '&6Venta: &f{PRICE} &7por bloque'
+claimblocks_exchange_guide_buy_fee: '&7Comisión de Compra: &f{PERCENT}% + {FLAT}'
+claimblocks_exchange_guide_sell_fee: '&7Comisión de Venta: &f{PERCENT}% + {FLAT}'
+claimblocks_exchange_guide_trade_range: '&7Por Operación: Compra &f{BUY_MIN}-{BUY_MAX} &8| &7Venta &f{SELL_MIN}-{SELL_MAX}'
+claimblocks_exchange_guide_daily_remaining: '&7Restante Hoy: Compra &a{BUY} &8| &7Venta &6{SELL}'
+claimblocks_exchange_guide_hourly_remaining: '&7Operaciones Esta Hora: &f{TRADES}'
+claimblocks_exchange_guide_cooldown_live: '&7Espera Restante: &e{SECONDS}s'
+claimblocks_exchange_guide_sell_lock_live: '&dBloqueo de Venta: &f{MINUTES} minutos'
+
+# Ascensión de Horizontes
+horizon_rank_unawakened: 'Sin despertar'
+horizon_rank_dawnreach: 'Alcance del Alba'
+horizon_rank_skybound: 'Vínculo Celeste'
+horizon_rank_realmforge: 'Forja del Reino'
+horizon_rank_starward: 'Dominio Astral'
+horizon_rank_eternal_aegis: 'Égida Eterna'
+horizon_rank_dawnreach_perks: ['&bAterrizaje Seguro: protección contra caídas fuera de combate.']
+horizon_rank_skybound_perks: ['&bLente Climática: clima y cielo personales.']
+horizon_rank_realmforge_perks: ['&bGuardianes: controles de Proyectiles, Ender y Phantoms.']
+horizon_rank_starward_perks: ['&bPulso Astral: invocá un despertar territorial inofensivo.']
+horizon_rank_eternal_aegis_perks: ['&bCorazón de la Égida: bendición protectora al volver a casa.']
+horizon_rank_renown_line: '&7Renombre: &d{CURRENT} &8/ &f{REQUIRED}'
+horizon_rank_state_mastered: '&aDespertado y expandido.'
+horizon_rank_state_expansion_ready: '&bHacé clic para solicitar la expansión de este rango.'
+horizon_rank_state_sigil_ready: '&dHacé clic para recibir tu Sigilo de Horizonte vinculado.'
+horizon_rank_state_renown_locked: '&eConseguí {REMAINING} puntos más de Renombre.'
+horizon_rank_state_previous_locked: '&8Primero despertá el rango de Horizonte anterior.'
+horizon_sigil_name: '&d&lSigilo de Horizonte: &f{RANK}'
+horizon_sigil_lore_1: '&7Vinculado a: &f{PLOT}'
+horizon_sigil_lore_2: '&7Portador: &f{PLAYER}'
+horizon_sigil_lore_3: '&dHacé clic derecho dentro de la parcela vinculada'
+horizon_sigil_lore_4: '&dpara despertar su siguiente rango de Horizonte.'
+horizon_sigil_lore_bound: '&8Vinculado - No se puede comerciar'
+horizon_sigil_already_held: '&eYa llevás el siguiente Sigilo de Horizonte de esta parcela.'
+horizon_sigil_inventory_full: '&cLiberá un espacio del inventario antes de reclamar este Sigilo.'
+horizon_sigil_granted: '&dUn Sigilo {RANK} respondió al llamado de tu territorio. Activalo dentro de tu parcela.'
+horizon_sigil_wrong_bearer: '&cEste Sigilo no responde ante vos.'
+horizon_sigil_wrong_plot: '&cEste Sigilo debe despertar dentro de su parcela vinculada.'
+horizon_sigil_not_ready: '&cEste territorio todavía no puede despertar ese rango de Horizonte.'
+horizon_sigil_soulbound: '&cUn Sigilo de Horizonte vinculado no puede tirarse ni comerciarse.'
+horizon_awakened_title: '&d&lHORIZONTE DESPERTADO'
+horizon_awakened_subtitle: '&f{RANK}'
+horizon_awakened_message: '&dTu territorio despertó &f{RANK}&d. Sus nuevos poderes ahora te responden.'
+horizon_ender_seal_denied: '&cUn Sello de Ender rechaza la entrada a este territorio.'
+horizon_heart_blessing: '&dLa Égida Eterna te recibe en casa con una bendición protectora.'
+horizon_climate_name: '&bLente Climática'
+horizon_climate_locked_lore: ['&8Se desbloquea en Vínculo Celeste.']
+horizon_climate_lore: ['&7Ambiente actual: &f{CLIMATE}', ' ', '&eHacé clic para cambiar el ambiente personal.']
+horizon_wards_name: '&9Guardianes del Horizonte'
+horizon_wards_locked_lore: ['&8Se desbloquean en Forja del Reino.']
+horizon_wards_lore: ['&7Velo de Proyectiles: &f{PROJECTILE}', '&7Sello de Ender: &f{ENDER}', '&7Guardián de Phantoms: &f{PHANTOM}', ' ', '&eIzquierdo: Proyectiles | Derecho: Ender', '&eMayús + clic: Phantoms']
+horizon_pulse_name: '&dPulso Astral'
+horizon_pulse_locked_lore: ['&8Se desbloquea en Dominio Astral.']
+horizon_pulse_lore: ['&7Liberá un pulso visual inofensivo', '&7por tu territorio despertado.', ' ', '&eHacé clic para invocarlo.']
+horizon_pulse_cooldown: '&eEl Pulso Astral va a responder otra vez en {SECONDS} segundos.'
+horizon_heart_name: '&dCorazón de la Égida Eterna'
+horizon_heart_locked_lore: ['&8Se desbloquea en Égida Eterna.']
+horizon_heart_lore: ['&7Los residentes de confianza reciben protección', '&7al volver a casa fuera de combate.', '&8Enfriamiento personal de treinta minutos.']
+
+# Salón de Ascensión
+ascension_hall_title: '&6✦ Salón de Ascensión ✦'
+ascension_hall_status_name: '&6&lAscensión de {PLOT}'
+ascension_hall_status_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
+ascension_hall_status_chapter: '&7Capítulo: &f{CHAPTER}'
+ascension_hall_status_progress: '&7Progreso: {BAR}'
+ascension_hall_status_footer: '&8Construí un territorio duradero con progreso medido.'
+ascension_guide_name: '&eGuía de Ascensión del Guardián'
+ascension_guide_open_lore: ['&7Aprendé sobre niveles, bendiciones, disciplinas,', '&7pagos y Horizontes.', ' ', '&eHacé clic para leer.']
+ascension_blessings_name: '&dBendiciones Activas'
+ascension_blessings_none: '&8Todavía no hay bendiciones activas.'
+ascension_blessings_scope: '&8Solo para residentes de confianza dentro de esta parcela.'
+ascension_discipline_name: '&bDisciplina de Ascensión'
+ascension_discipline_current: '&7Actual: &f{FOCUS}'
+ascension_discipline_summary: '&7Elegí una especialidad útil y moderada para esta parcela.'
+ascension_discipline_open: '&eHacé clic para elegir o revisar.'
+ascension_horizon_gateway_name: '&5Portal de Horizontes'
+ascension_horizon_ready_lore: ['&dLa Ascensión de Parcela está completa.', '&7Los Horizontes de Expansión te esperan.', ' ', '&eHacé clic para continuar.']
+ascension_horizon_locked_lore: ['&7Completá el Nivel 30 para desbloquear', '&7el viaje prolongado de los Horizontes.', ' ', '&8Aún sellado.']
+ascension_chapter_foundation: 'Cimientos'
+ascension_chapter_pathfinder: 'Explorador'
+ascension_chapter_bastion: 'Bastión'
+ascension_chapter_sovereign: 'Soberanía'
+ascension_chapter_mythic: 'Dominio Mítico'
+ascension_chapter_zenith: 'Ascensión Cénit'
+ascension_track_mastered: '&aDominado'
+ascension_track_current: '&eActual'
+ascension_track_next: '&bSiguiente'
+ascension_track_locked: '&8Bloqueado'
+ascension_track_chapter: '&7{CHAPTER}'
+ascension_track_state: '&7Estado: {STATE}'
+ascension_track_prerequisite: '&8Primero dominá los niveles anteriores.'
+ascension_track_level_name: '&fNivel {LEVEL}'
+ascension_altar_name: '&6&lAltar de Ascensión'
+ascension_altar_next: '&7Siguiente: &fNivel {LEVEL} &8- &e{CHAPTER}'
+ascension_altar_rewards: '&dNuevas Recompensas:'
+ascension_altar_hint: '&8Elegí una ofrenda a cada lado.'
+ascension_offer_money_name: '&6Ofrenda del Tesoro'
+ascension_offer_blocks_name: '&bOfrenda de ClaimBlocks'
+ascension_offer_cost: '&7Costo: &f{COST}'
+ascension_offer_balance: '&7Saldo: &f{BALANCE}'
+ascension_offer_click: '&eHacé clic para revisar y confirmar.'
+ascension_offer_unavailable_lore: ['&8No disponible en este servidor.']
+ascension_currency_claimblocks: 'ClaimBlocks'
+ascension_reward_claimblocks: '&eBono de progreso de ClaimBlocks'
+ascension_reward_foundation: '&7Territorio fundador establecido'
+ascension_reward_flight: 'Vuelo en la Parcela'
+ascension_zenith_name: '&6&lAscensión Cénit Completa'
+ascension_zenith_lore: ['&7Dominaste los treinta niveles.', '&dEl Portal de Horizontes ya está disponible.']
+ascension_guide_title: '&eGuía de Ascensión del Guardián'
+ascension_guide_header: '&6&lCódice de Ascensión'
+ascension_guide_header_lore: ['&7Una guía breve para fortalecer tu parcela', '&7sin saltarte la progresión del servidor.']
+ascension_guide_purpose_name: '&d¿Qué es la Ascensión?'
+ascension_guide_purpose_lore: ['&7Treinta niveles forman seis capítulos.', '&7Cada paso entrega utilidad, capacidad', '&7o progreso seguro dentro de tu parcela.']
+ascension_guide_payment_name: '&6Pagar un Nivel'
+ascension_guide_payment_lore: ['&7El servidor puede aceptar dinero, ClaimBlocks', '&7o ambos. La confirmación muestra el costo', '&7exacto antes de cobrar.']
+ascension_guide_blessings_name: '&bBendiciones de Parcela'
+ascension_guide_blessings_lore: ['&7Afectan al dueño y residentes de confianza', '&7solo mientras permanezcan dentro.', '&7Los efectos externos se conservan y restauran.']
+ascension_guide_disciplines_name: '&aDisciplinas'
+ascension_guide_disciplines_lore: ['&7Elegí Cantero, Guardián Verde', '&7o Caminante para una especialidad moderada.', '&7Los cambios tienen enfriamiento.']
+ascension_guide_members_name: '&eCapacidad Territorial'
+ascension_guide_members_lore: ['&7Ciertos hitos permiten confiar en más jugadores', '&7sin otorgar control administrativo peligroso.']
+ascension_guide_flight_name: '&fVuelo Cénit'
+ascension_guide_flight_lore: ['&7El vuelo es la recompensa final del Nivel 30.', '&7Solo funciona dentro de la parcela elegible', '&7y conserva el vuelo otorgado por otros medios.']
+ascension_guide_horizons_name: '&5Más Allá del Nivel 30'
+ascension_guide_horizons_lore: ['&7El Nivel 30 abre la Ascensión de Horizontes:', '&7un viaje lento de Renombre con Sigilos', '&7vinculados y poderes territoriales.']
+ascension_disciplines_title: '&bDisciplinas de Ascensión'
+ascension_disciplines_header: '&b&lElegí una Vocación'
+ascension_disciplines_header_lore: '&7Una especialidad útil puede guiar esta parcela a la vez.'
+ascension_focus_unchosen_name: 'Sin elegir'
+ascension_focus_stonewright_name: '&fCantero'
+ascension_focus_stonewright_lore: ['&7Prisa I desde Nivel 5; Prisa II en 20.', '&8Útil para construir sin ventaja de combate.']
+ascension_focus_verdant_keeper_name: '&aGuardián Verde'
+ascension_focus_verdant_keeper_lore: ['&7Suerte I desde Nivel 5; Suerte II en 20.', '&7Los residentes no pisotean la tierra cultivada.']
+ascension_focus_wayfinder_name: '&bCaminante'
+ascension_focus_wayfinder_lore: ['&7Velocidad I desde Nivel 5; Velocidad II en 20.', '&8Una especialidad moderada para viajar.']
+ascension_focus_active: '&aActualmente guía esta parcela.'
+ascension_focus_select: '&eHacé clic para elegir esta disciplina.'
+ascension_focus_change_ready: '&aYa podés elegir una disciplina.'
+ascension_focus_change_wait: '&eCambio disponible en {DAYS} día(s).'
+ascension_focus_cooldown: '&eEsta parcela podrá cambiar de disciplina en {DAYS} día(s).'
+ascension_focus_selected: '&a{FOCUS} ahora guía la Ascensión de esta parcela.'
+ascension_confirm_title: '&6Confirmar Ascensión'
+ascension_confirm_header: '&6Juramento de Ascensión'
+ascension_confirm_header_lore: ['&7Revisá esta mejora permanente.', '&7No se cobra nada hasta que confirmes.']
+ascension_confirm_transition: '&eNivel {CURRENT} &8→ &aNivel {NEXT}'
+ascension_confirm_cost_name: '&6Ofrenda'
+ascension_confirm_cost: '&7Costo: &f{COST}'
+ascension_confirm_balance: '&7Saldo: &f{BALANCE}'
+ascension_confirm_charge_note: '&8Solo se cobra después de aprobar todas las revisiones.'
+ascension_confirm_after_name: '&dDespués de Ascender'
+ascension_confirm_cancel: '&eCancelar'
+ascension_confirm_cancel_lore: ['&7Volvé sin gastar nada.']
+ascension_confirm_accept: '&a&lConfirmar Ascensión'
+ascension_confirm_accept_lore: ['&7Validá, pagá y despertá este nivel.', ' ', '&aHacé clic para confirmar.']
+ascension_transaction_rollback: '&cLa Ascensión no se completó. Se devolvió tu pago.'
+ascension_ceremony_title: '&6&lPARCELA ASCENDIDA'
+ascension_ceremony_subtitle: '&fNivel {LEVEL} &8- &e{CHAPTER}'
+ascension_member_reward: '&aTu parcela ahora puede confiar en {AMOUNT} jugador(es) adicional(es).'
+ascension_effect_speed: 'Velocidad'
+ascension_effect_fast_digging: 'Prisa'
+ascension_effect_night_vision: 'Visión Nocturna'
+ascension_effect_water_breathing: 'Respiración Acuática'
+ascension_effect_slow_falling: 'Caída Lenta'
+ascension_effect_dolphins_grace: 'Gracia del Delfín'
+ascension_effect_jump: 'Salto Mejorado'
+ascension_effect_fire_resistance: 'Resistencia al Fuego'
+ascension_effect_conduit_power: 'Poder del Canalizador'
+ascension_effect_luck: 'Suerte'
+
+# Mejora de interfaces 1.2.7
+expansion_frontier_guide_name: '&eGuía de Campo Fronteriza'
+expansion_frontier_guide_lore: ['&7Elegí un aumento de radio medido.', '&7Cada solicitud revisa superposición,', '&7límites, costo y modo de aprobación.', ' ', '&8Horizontes continúa después del Nivel 30.']
+local_market_guide_name: '&eGuía del Distrito Comercial'
+local_market_guide_lore: ['&7Bienes Raíces muestra parcelas completas.', '&7Alquileres muestra cuartos y subzonas.', '&7TradeStalls muestra tiendas locales.', ' ', '&8Solo se abren servicios disponibles.']
+local_market_pulse_name: '&6Pulso del Distrito'
+local_market_pulse_lore: ['&7Zonas gestionadas: &f{ZONES}', '&7Mercados vinculados: &f{BRIDGES}', '&7TradeStalls: {STALLS}']
+zone_manager_guide_name: '&eGuía de Planificación de Zonas'
+zone_manager_guide_lore: ['&7Las zonas privadas dividen espacios confiables.', '&7Poné un precio para publicar un alquiler.', '&7Las zonas alquiladas abren herramientas de inquilino.', ' ', '&eIzquierdo: &7listado o inquilino', '&eShift: &7ajustar precio', '&cDerecho: &7eliminar con seguridad']
+zone_selection_status_name: '&bEstado de Selección'
+zone_selection_ready_lore: ['&aLas dos esquinas están listas.', '&7Usá Crear Zona para reservar el espacio.']
+zone_selection_missing_lore: ['&cNo hay selección completa.', '&7Usá el Cetro de Aegis para elegir', '&7dos esquinas dentro de la parcela.']
+zone_public_preview_name: '&aVista Pública de Alquileres'
+zone_public_preview_lore: ['&7Abrí el mismo catálogo de alquileres', '&7que ven los visitantes de la parcela.', ' ', '&eHacé clic para previsualizar.']
+zone_public_preview_empty_lore: ['&8Todavía no hay zonas publicadas.']
+travel_tab_selected: '&aEstás viendo este atlas.'
+travel_tab_open: '&eHacé clic para abrir este atlas.'
+claim_settings_guide_name: '&eDoctrina de Protección'
+claim_settings_guide_lore: ['&7Los controles brillantes están protegidos.', '&7Los desactivados siguen las reglas del mundo.', '&7Los cambios se guardan inmediatamente.']
+claim_settings_flight_ascension_name: '&fVuelo: Recompensa de Ascensión'
+claim_settings_flight_ascension_lore: ['&7El vuelo ya no se configura acá.', '&7Alcanzá el Nivel 30 de Ascensión para obtener', '&7vuelo seguro dentro de la parcela elegible.']
+roles_guide_name: '&eGuía de Roles y Acceso'
+roles_guide_lore: ['&7Agregá jugadores cercanos, asigná un rol', '&7y ajustá sus permisos.', ' ', '&8El dueño y roles protegidos de staff', '&8no pueden eliminarse desde acá.']
+roles_capacity_name: '&bCapacidad Territorial'
+roles_capacity_lore: ['&7Miembros asignados: &f{USED}', '&7Capacidad actual: &f{MAX}', '&8La Ascensión desbloquea más capacidad.']
+roles_permission_model_name: '&dModelo de Permisos'
+roles_permission_model_lore: ['&aPermitir &7supera una restricción.', '&cDenegar &7siempre bloquea la acción.', '&fHeredar &7usa el comportamiento normal.']
+world_controls_protection_section_name: '&bProtecciones Predeterminadas'
+world_controls_protection_section_lore: ['&7Se aplican a parcelas recién creadas.', '&8Las parcelas existentes no cambian.']
+world_controls_runtime_section_name: '&6Reglas Activas del Mundo'
+world_controls_runtime_section_lore: ['&7Son reglas reales de Minecraft.', '&7Los cambios afectan al mundo inmediatamente.']
+world_controls_gamerule_lore: ['&7Actual: {STATE}', '&7Se aplica inmediatamente en este mundo.', ' ', '&eHacé clic para alternar.']
+world_controls_spawn_mobs_name: '&aAparición Natural de Mobs'
+world_controls_daylight_name: '&eCiclo de Día'
+world_controls_weather_name: '&bCiclo del Clima'
+world_controls_keep_inventory_name: '&6Conservar Inventario'
+world_controls_mob_griefing_name: '&cDaño de Mobs al Mundo'
+staff_command_center_name: '&c&lCentro de Mando Guardián'
+staff_command_center_lore: ['&7Política del servidor, operaciones territoriales,', '&7recuperación, migración y diagnóstico.', ' ', '&8Cada control verifica sus permisos.']
+staff_policy_section_name: '&ePolítica Operativa'
+staff_policy_section_lore: ['&7La fila superior controla la política', '&7general de AegisGuard.']
+staff_toolbelt_section_name: '&bHerramientas del Guardián'
+staff_toolbelt_section_lore: ['&7La fila inferior abre revisión, recuperación,', '&7mundos, migración y mantenimiento.']

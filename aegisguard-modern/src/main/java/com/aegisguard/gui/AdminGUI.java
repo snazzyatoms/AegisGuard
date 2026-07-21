@@ -25,7 +25,7 @@ import java.util.Map;
  * - Keep navigation consistent with a clear return path and an explicit close button.
  * - Fix/avoid "back breaks after paging" class of issues by tagging ALL actionable items with PDC (aegis_action)
  *   and routing clicks by action instead of slot number when possible.
- * - Add "World Controls" entry point + a safe "coming soon" stub that doesn't break anything.
+ * - Provide direct access to localized per-world claim and protection controls.
  * - Folia-safe click handling: only respond to top-inventory clicks, cancel all interactions, async file IO.
  *
  * Notes:
@@ -80,6 +80,34 @@ public class AdminGUI {
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < SIZE; i++) inv.setItem(i, filler);
+
+        inv.setItem(4, GUIManager.createItem(
+                Material.ENCHANTED_GOLDEN_APPLE,
+                plugin.gui().tr(player, "staff_command_center_name", "&c&lGuardian Command Center"),
+                plugin.gui().trList(player, "staff_command_center_lore", List.of(
+                        "&7Server policy, territory operations,",
+                        "&7recovery, migration, and diagnostics.",
+                        " ",
+                        "&8Every control below is permission-checked."
+                ))
+        ));
+
+        inv.setItem(20, GUIManager.createItem(
+                Material.REPEATER,
+                plugin.gui().tr(player, "staff_policy_section_name", "&eOperational Policy"),
+                plugin.gui().trList(player, "staff_policy_section_lore", List.of(
+                        "&7The upper row controls server-wide",
+                        "&7AegisGuard operating policy."
+                ))
+        ));
+        inv.setItem(24, GUIManager.createItem(
+                Material.ENDER_CHEST,
+                plugin.gui().tr(player, "staff_toolbelt_section_name", "&bGuardian Toolbelt"),
+                plugin.gui().trList(player, "staff_toolbelt_section_lore", List.of(
+                        "&7The lower row opens review, recovery,",
+                        "&7world, migration, and maintenance tools."
+                ))
+        ));
 
         // --- SETTINGS TOGGLES ---
         addToggle(player, inv, SLOT_TOGGLE_AUTO_REMOVE,
@@ -235,37 +263,18 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_SNAPSHOTS, snapshotsDisabled);
         }
 
-        // 1.2.6: World Controls (real entrypoint if your GUI exposes it)
-        boolean hasWorldControls = hasAnyPlayerOpenMethod(
-                plugin.gui(),
-                "openWorldControls", "openWorldControl", "openWorldSettings", "openWorldMenu", "openWorldAdmin", "worldControls"
+        ItemStack worldControls = GUIManager.createItem(
+                Material.LECTERN,
+                plugin.gui().tr(player, "button_admin_world_controls", "&b🌍 World Controls"),
+                plugin.gui().trList(player, "admin_world_controls_lore", List.of(
+                        "&7Manage claiming and default plot",
+                        "&7protection rules for every world.",
+                        " ",
+                        "&eClick to open."
+                ))
         );
-
-        if (hasWorldControls) {
-            ItemStack worldControls = GUIManager.createItem(
-                    Material.LECTERN,
-                    plugin.gui().tr(player, "button_admin_world_controls", "&b🌍 World Controls"),
-                    plugin.gui().trList(player, "admin_world_controls_lore", List.of(
-                            "&7Manage world rules and protections.",
-                            "&7Explosions, fire spread, block break, mobs, etc.",
-                            " ",
-                            "&eClick to open."
-                    ))
-            );
-            tagAction(worldControls, "open_world_controls");
-            inv.setItem(SLOT_TOOL_WORLD_CONTROLS, worldControls);
-        } else {
-            ItemStack worldControlsMissing = GUIManager.createItem(
-                    Material.GRAY_DYE,
-                    plugin.gui().tr(player, "button_admin_world_controls_missing", "&8🌍 World Controls Unavailable"),
-                    plugin.gui().trList(player, "admin_world_controls_missing_lore", List.of(
-                            "&7World Controls menu is not registered yet.",
-                            "&7(Internal: missing GUI hook/method.)"
-                    ))
-            );
-            tagAction(worldControlsMissing, "world_controls_missing");
-            inv.setItem(SLOT_TOOL_WORLD_CONTROLS, worldControlsMissing);
-        }
+        tagAction(worldControls, "open_world_controls");
+        inv.setItem(SLOT_TOOL_WORLD_CONTROLS, worldControls);
 
         ItemStack migration = GUIManager.createItem(
                 Material.BLAZE_ROD,
@@ -337,7 +346,7 @@ public class AdminGUI {
             // --- Tools ---
             case "open_requests" -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
             case "open_plot_list" -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
-            case "open_diagnostics" -> { plugin.gui().openDiagnostics(player); plugin.effects().playMenuFlip(player); }
+            case "open_diagnostics" -> { plugin.gui().doctor().open(player); plugin.effects().playMenuFlip(player); }
 
             case "reload_all" -> handleReloadAll(player);
             case "refresh_lang" -> handleRefreshLang(player);
@@ -358,11 +367,7 @@ public class AdminGUI {
 
             case "open_world_controls" -> {
                 plugin.effects().playMenuFlip(player);
-                if (!tryOpenWorldControls(player)) {
-                    sendKey(player, "world_controls_unavailable", "&cWorld Controls menu is not available yet.");
-                    plugin.effects().playError(player);
-                    open(player);
-                }
+                plugin.gui().worldControls().open(player);
             }
             case "open_migration" -> {
                 if (plugin.gui().migration() != null) {
@@ -372,10 +377,6 @@ public class AdminGUI {
                     sendKey(player, "migration_unavailable", "&cMigration wizard is unavailable.");
                     plugin.effects().playError(player);
                 }
-            }
-            case "world_controls_missing" -> {
-                sendKey(player, "world_controls_unavailable", "&cWorld Controls menu is not available yet.");
-                plugin.effects().playError(player);
             }
 
             // --- Navigation ---
@@ -588,62 +589,4 @@ public class AdminGUI {
         }
     }
 
-    private boolean tryOpenWorldControls(Player p) {
-        Object gui = plugin.gui();
-        if (gui == null) return false;
-
-        // Strategy:
-        // 1) Try direct open methods on gui() that accept Player.
-        // 2) Try a getter that returns a menu object, then call open(Player) on it.
-        return tryInvokePlayer(gui, p, "openWorldControls", "openWorldControl", "openWorldSettings", "openWorldMenu", "openWorldAdmin")
-                || tryOpenViaGetter(gui, p, "worldControls", "worldControl", "worldSettings", "worldMenu", "worldAdmin");
-    }
-
-    private static boolean hasAnyPlayerOpenMethod(Object target, String... names) {
-        if (target == null || names == null) return false;
-        for (String name : names) {
-            if (name == null || name.isBlank()) continue;
-            try {
-                // either openWorldControls(Player) OR a getter like worldControls()
-                target.getClass().getMethod(name, Player.class);
-                return true;
-            } catch (Throwable ignored) {}
-            try {
-                target.getClass().getMethod(name);
-                return true;
-            } catch (Throwable ignored) {}
-        }
-        return false;
-    }
-
-    private static boolean tryInvokePlayer(Object target, Player p, String... methodNames) {
-        for (String name : methodNames) {
-            try {
-                Method m = target.getClass().getMethod(name, Player.class);
-                m.setAccessible(true);
-                m.invoke(target, p);
-                return true;
-            } catch (Throwable ignored) {}
-        }
-        return false;
-    }
-
-    private static boolean tryOpenViaGetter(Object target, Player p, String... getterNames) {
-        for (String getter : getterNames) {
-            try {
-                Method g = target.getClass().getMethod(getter);
-                g.setAccessible(true);
-                Object menu = g.invoke(target);
-                if (menu == null) continue;
-
-                try {
-                    Method open = menu.getClass().getMethod("open", Player.class);
-                    open.setAccessible(true);
-                    open.invoke(menu, p);
-                    return true;
-                } catch (Throwable ignored) {}
-            } catch (Throwable ignored) {}
-        }
-        return false;
-    }
 }

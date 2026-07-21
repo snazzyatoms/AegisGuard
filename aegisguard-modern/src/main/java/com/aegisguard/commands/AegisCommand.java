@@ -8,6 +8,7 @@ import com.aegisguard.economy.ClaimPricingCalculator;  // ✅ NEW: Fair Pricing 
 import com.aegisguard.economy.CurrencyType;  // ✅ NEW: Currency Type enum
 import com.aegisguard.groups.PlotGroup;
 import com.aegisguard.selection.SelectionService;
+import com.aegisguard.territory.TerritoryLifeService;
 import com.aegisguard.util.TeleportUtil;
 
 import org.bukkit.Bukkit;
@@ -38,14 +39,14 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private final ClaimBlockExchangeService exchange;
 
     private static final String[] SUB_COMMANDS = {
-            "wand", "menu", "claim", "unclaim", "resize", "help",
+            "wand", "menu", "claim", "unclaim", "help",
             "setspawn", "home", "welcome", "farewell",
-            "sell", "unsell", "market", "auction",
+            "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
-            "rename", "stuck", "setdesc", "merge",
+            "rename", "stuck", "setdesc",
             "consume", "ledger", "blocks",
-            "group",
+            "group", "discover", "favorite", "activity",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -54,11 +55,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "notify"
     };
 
-    private static final String[] RESIZE_DIRECTIONS = {"north", "south", "east", "west"};
-
     public AegisCommand(AegisGuard plugin) {
         this.plugin = plugin;
-        this.exchange = new ClaimBlockExchangeService(plugin);
+        this.exchange = plugin.exchange();
     }
 
     // --------------------------------------------------
@@ -238,8 +237,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "unclaim" -> plugin.selection().unclaimHere(p);
 
-            case "resize" -> handleResize(p, args);
-
             case "kick" -> handleKick(p, args);
 
             case "ban" -> handleBan(p, args);
@@ -268,19 +265,23 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "setdesc" -> handleSetDesc(p, args);
 
-            case "merge" -> {
-                if (args.length < 2) {
-                    sendKey(p, "usage_merge", "&cUsage: /ag merge <N/S/E/W>");
-                } else {
-                    plugin.selection().attemptMerge(p, args[1]);
-                }
-            }
-
             case "market" -> openMarketMenu(p, args);
 
             case "sell" -> handleSell(p, args);
 
             case "unsell" -> handleUnsell(p);
+
+            case "rent" -> handleRentListing(p, args);
+
+            case "unrent" -> handleUnrent(p);
+
+            case "rental" -> handleRentalContract(p, args);
+
+            case "discover" -> handleDiscover(p, args);
+
+            case "favorite" -> handleFavorite(p);
+
+            case "activity" -> handleActivity(p);
 
             case "auction" -> plugin.gui().auction().open(p, 0);
 
@@ -967,254 +968,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         plugin.effects().playTeleport(p);
     }
 
-    // --------------------------------------------------
-    // Resize
-    // --------------------------------------------------
-
-    
-private void handleResize(Player p, String[] args) {
-    if (args.length < 3) {
-        sendKey(p, "resize_usage", "&cUsage: /aegis resize <direction> <amount>");
-        sendKey(p, "resize_directions", "&eDirections: &f{DIRS}",
-                Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
-        return;
-    }
-
-    String direction = args[1].toLowerCase(Locale.ROOT);
-
-    int amount;
-    try {
-        amount = Integer.parseInt(args[2]);
-    } catch (NumberFormatException e) {
-        sendKey(p, "amount_must_number", "&cAmount must be a number.");
-        return;
-    }
-
-    if (amount <= 0) {
-        sendKey(p, "amount_must_positive", "&cAmount must be positive.");
-        return;
-    }
-
-    if (!Arrays.asList(RESIZE_DIRECTIONS).contains(direction)) {
-        sendKey(p, "invalid_direction", "&cInvalid direction. Use: &f{DIRS}",
-                Map.of("DIRS", String.join(", ", RESIZE_DIRECTIONS)));
-        return;
-    }
-
-    Plot plot = plugin.store().getPlotAt(p.getLocation());
-    if (plot == null) {
-        sendKey(p, "no_plot_here", "&c❌ You are not standing inside a claim.");
-        plugin.effects().playError(p);
-        return;
-    }
-
-    boolean canEdit = plot.canManage(p, plugin);
-    if (!canEdit) {
-        sendKey(p, "no_perm", "&cError: You do not have permission for this.");
-        plugin.effects().playError(p);
-        return;
-    }
-
-    // Compute expanded bounds
-    Bounds oldB = Bounds.fromPlot(plot);
-    Bounds newB = oldB.expand(direction, amount);
-
-    // No change guard (shouldn't happen with positive amount, but safe)
-    if (newB.equals(oldB)) {
-        sendKey(p, "resize_no_change", "&eNothing changed.");
-        return;
-    }
-
-    // Limit guard (uses same max radius as claiming)
-    boolean bypassLimits = plugin.isAdmin(p)
-            || p.hasPermission("aegis.admin.bypass")
-            || p.hasPermission("aegis.admin.bypass-limits")
-            || plugin.isBypassing(p);
-
-    int limitRadius = plugin.cfg().raw().getInt("claims.max_radius", 200);
-    if (newB.radius() > limitRadius && !bypassLimits) {
-        sendKey(p, "resize-fail-max-area", "&c❌ Resize failed: exceeds maximum claim size.");
-        plugin.effects().playError(p);
-        return;
-    }
-
-    // Internal overlap checks (other Aegis plots)
-    String worldName = plot.getWorld();
-    if (intersectsOtherPlot(worldName, plot.getId(), newB) && !bypassLimits) {
-        sendKey(p, "claim_overlap", "&c❌ Resize failed: overlaps another claim.");
-        plugin.effects().playError(p);
-        return;
-    }
-
-    // External protection checks (WorldGuard, etc.)
-    if (!bypassLimits && plugin.protectionHooks() != null) {
-        try {
-            Object pol = plugin.protectionHooks().getOverlapPolicy();
-            boolean aegisWins = (pol != null && "AEGIS_WINS".equalsIgnoreCase(String.valueOf(pol)));
-
-            if (!aegisWins && plugin.protectionHooks().isAreaProtectedElsewhere(
-                    worldName, newB.minX(), newB.minZ(), newB.maxX(), newB.maxZ())) {
-                sendKey(p, "claim_denied_external_generic",
-                        "&c⛔ Resize denied: protected by another plugin.");
-                plugin.effects().playError(p);
-                return;
-            }
-        } catch (Throwable ignored) {
-            // If the protection hook errors, fail open for stability (but only for admins/bypass).
-            if (!bypassLimits) {
-                sendKey(p, "claim_denied_external_generic",
-                        "&c⛔ Resize denied: protected by another plugin.");
-                plugin.effects().playError(p);
-                return;
-            }
-        }
-    }
-
-    long oldArea = oldB.area();
-    long newArea = newB.area();
-    long added = newArea - oldArea;
-
-    if (added <= 0) {
-        sendKey(p, "resize_no_gain", "&eThat resize would not add any land.");
-        return;
-    }
-
-    // Economy checks (matches claim precedence: ClaimBlocks first, then Vault)
-    boolean useClaimBlocks = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)
-            && plugin.getClaimBlockManager() != null;
-
-    boolean useVault = plugin.cfg().raw().getBoolean("economy.enabled", true)
-            && plugin.cfg().raw().getBoolean("economy.use_vault", true)
-            && plugin.cfg().raw().getBoolean("economy.vault.enabled", true)
-            && plugin.eco() != null
-            && plugin.eco().isVaultEnabled();
-
-    ClaimPricingCalculator pricing = plugin.getPricingCalculator();
-
-    // Preview / charge
-    if (!bypassLimits) {
-        if (useClaimBlocks) {
-            ClaimBlockManager mgr = plugin.getClaimBlockManager();
-
-            long blockCost = (pricing != null && pricing.isEnabled())
-                    ? pricing.calculateClaimBlockCost(added)
-                    : added;
-
-            if (!mgr.canAfford(p.getUniqueId(), blockCost)) {
-                long missing = blockCost - mgr.getAvailableBlocks(p.getUniqueId());
-                sendKey(p, "claim_blocks_not_enough",
-                        "&c❌ You need {AMOUNT} more Claim Blocks.",
-                        Map.of("AMOUNT", String.valueOf(missing)));
-                plugin.effects().playError(p);
-                return;
-            }
-
-            // Optional hint line (QoL)
-            if (blockCost > added) {
-                sendMsg(p, "&7Resize cost (with multiplier): &c" + blockCost + " &7claim blocks");
-            } else {
-                sendMsg(p, "&7Resize cost: &b" + blockCost + " &7claim blocks");
-            }
-
-        } else if (useVault) {
-            double cost = (pricing != null && pricing.isEnabled())
-                    ? pricing.calculateExpansionCost(added)
-                    : (added * plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0));
-
-            if (cost > 0.0D) {
-                if (!plugin.eco().canAfford(p, cost, CurrencyType.VAULT)) {
-                    String formatted = plugin.eco().format(cost, CurrencyType.VAULT);
-                    sendKey(p, "claim_cannot_afford",
-                            "&c❌ You need {COST} to claim this area.",
-                            Map.of("COST", formatted));
-                    plugin.effects().playError(p);
-                    return;
-                }
-
-                // Show preview line
-                sendMsg(p, "&7Resize cost: &e" + plugin.eco().format(cost, CurrencyType.VAULT)
-                        + " &7for &e" + added + " &7blocks");
-
-                // Withdraw now to avoid free resize if save fails later
-                plugin.eco().withdraw(p, cost, CurrencyType.VAULT);
-            }
-        }
-    }
-
-    // Apply + save
-    plot.setBounds(newB.minX(), newB.minZ(), newB.maxX(), newB.maxZ());
-    plugin.store().savePlot(plot);
-    plugin.store().setDirty(true);
-
-    sendKey(p, "resize_success",
-            "&a✔ Claim resized. &7(Added: &e{ADDED}&7 blocks)",
-            Map.of("ADDED", String.valueOf(added)));
-    plugin.effects().playConfirm(p);
-}
-
-/**
- * Lightweight rectangle helper for resize math (kept local for stability).
- */
-private record Bounds(int minX, int minZ, int maxX, int maxZ) {
-
-    static Bounds fromPlot(Plot p) {
-        int mnX = Math.min(p.getX1(), p.getX2());
-        int mxX = Math.max(p.getX1(), p.getX2());
-        int mnZ = Math.min(p.getZ1(), p.getZ2());
-        int mxZ = Math.max(p.getZ1(), p.getZ2());
-        return new Bounds(mnX, mnZ, mxX, mxZ);
-    }
-
-    Bounds expand(String dir, int amt) {
-        int mnX = minX, mxX = maxX, mnZ = minZ, mxZ = maxZ;
-
-        switch (dir.toLowerCase(Locale.ROOT)) {
-            case "north" -> mnZ -= amt; // -Z
-            case "south" -> mxZ += amt; // +Z
-            case "west" -> mnX -= amt;  // -X
-            case "east" -> mxX += amt;  // +X
-        }
-
-        return new Bounds(mnX, mnZ, mxX, mxZ);
-    }
-
-    long area() {
-        long w = (long) (maxX - minX) + 1L;
-        long d = (long) (maxZ - minZ) + 1L;
-        return w * d;
-    }
-
-    int radius() {
-        int w = (maxX - minX) + 1;
-        int d = (maxZ - minZ) + 1;
-        return Math.max(w, d);
-    }
-
-    public int minX() { return minX; }
-    public int minZ() { return minZ; }
-    public int maxX() { return maxX; }
-    public int maxZ() { return maxZ; }
-}
-
-private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds) {
-    try {
-        for (Plot other : plugin.store().getPlotsInWorld(worldName)) {
-            if (other == null) continue;
-            if (selfId != null && selfId.equals(other.getId())) continue;
-
-            Bounds ob = Bounds.fromPlot(other);
-
-            boolean overlap = bounds.minX() <= ob.maxX()
-                    && bounds.maxX() >= ob.minX()
-                    && bounds.minZ() <= ob.maxZ()
-                    && bounds.maxZ() >= ob.minZ();
-
-            if (overlap) return true;
-        }
-    } catch (Throwable ignored) {}
-    return false;
-}
-
 // --------------------------------------------------
 // Kick / Ban / Unban
 // --------------------------------------------------
@@ -1434,8 +1187,13 @@ private boolean intersectsOtherPlot(String worldName, UUID selfId, Bounds bounds
     
 private void handleSell(Player p, String[] args) {
     Plot plot = plugin.store().getPlotAt(p.getLocation());
-    if (plot == null || !plot.canManage(p, plugin)) {
+    if (plot == null || !plot.isOwner(p)) {
         sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+        return;
+    }
+    if (plot.isServerZone() || plot.isGroupPlot() || plot.isForAuction() || plot.isForRent() || plot.hasActiveRental()
+            || plot.getZones().stream().anyMatch(zone -> zone.isRented() || zone.isListedForRent())) {
+        sendKey(p, "market-listing-conflict", "&cThis plot cannot be listed while another ownership or market state is active.");
         return;
     }
     if (args.length < 2) {
@@ -1443,15 +1201,13 @@ private void handleSell(Player p, String[] args) {
         return;
     }
 
-    // Plot sale price is stored as an integer for stability across storage backends.
-    int price;
+    double price;
     try {
-        double parsed = Double.parseDouble(args[1]);
-        if (parsed <= 0) {
+        price = Double.parseDouble(args[1]);
+        if (!Double.isFinite(price) || price <= 0) {
             sendKey(p, "price_must_positive", "&cPrice must be positive.");
             return;
         }
-        price = (int) Math.round(parsed);
     } catch (NumberFormatException e) {
         sendKey(p, "invalid_number", "&cInvalid number.");
         return;
@@ -1469,7 +1225,7 @@ private void handleSell(Player p, String[] args) {
 
     String formatted;
     if (plugin.eco() != null && plugin.eco().isVaultEnabled()) {
-        formatted = plugin.eco().format((double) price, CurrencyType.VAULT);
+        formatted = plugin.eco().format(price, CurrencyType.VAULT);
     } else {
         formatted = String.valueOf(price);
     }
@@ -1491,6 +1247,288 @@ private void handleUnsell(Player p) {
         plugin.store().setDirty(true);
 
         sendKey(p, "market-not-for-sale", "&e✔ Claim listing removed.");
+    }
+
+    private void handleRentListing(Player p, String[] args) {
+        if (!plugin.cfg().raw().getBoolean("full_plot_renting.enabled", true)) {
+            sendKey(p, "market-renting-disabled", "&cFull-plot renting is disabled on this server.");
+            return;
+        }
+        if (!p.hasPermission("aegis.rent")) {
+            sendKey(p, "no_permission", "&cYou do not have permission to list plots for rent.");
+            return;
+        }
+
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.isOwner(p)) {
+            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+            return;
+        }
+        if (plot.isServerZone() || plot.isGroupPlot() || plot.isForAuction() || plot.isForSale() || plot.hasActiveRental()
+                || plot.getZones().stream().anyMatch(zone -> zone.isRented() || zone.isListedForRent())) {
+            sendKey(p, "market-listing-conflict", "&cThis plot cannot be listed while another ownership or market state is active.");
+            return;
+        }
+        if (args.length < 2) {
+            sendKey(p, "rent_usage", "&cUsage: /ag rent <price> [days] [deposit]");
+            return;
+        }
+
+        double price;
+        try {
+            price = Double.parseDouble(args[1]);
+        } catch (NumberFormatException exception) {
+            sendKey(p, "invalid_number", "&cInvalid number.");
+            return;
+        }
+        double minimum = Math.max(0.01, plugin.cfg().raw().getDouble("full_plot_renting.minimum_price", 1.0));
+        double maximum = Math.max(minimum, plugin.cfg().raw().getDouble("full_plot_renting.maximum_price", 1_000_000_000.0));
+        if (!Double.isFinite(price) || price < minimum || price > maximum) {
+            sendKey(p, "rent_price_range", "&cRent must be between {MIN} and {MAX}.", Map.of(
+                    "MIN", String.valueOf(minimum), "MAX", String.valueOf(maximum)));
+            return;
+        }
+
+        int defaultDays = Math.max(1, plugin.cfg().raw().getInt("full_plot_renting.duration_days", 7));
+        int maximumDays = Math.max(defaultDays, plugin.cfg().raw().getInt("full_plot_renting.maximum_duration_days", 90));
+        int days = defaultDays;
+        double deposit = 0.0D;
+        try {
+            if (args.length >= 3) days = Integer.parseInt(args[2]);
+            if (args.length >= 4) deposit = Double.parseDouble(args[3]);
+        } catch (NumberFormatException exception) {
+            sendKey(p, "invalid_number", "&cDays and deposit must be valid numbers.");
+            return;
+        }
+        double maximumDeposit = Math.max(0.0D,
+                plugin.cfg().raw().getDouble("full_plot_renting.maximum_deposit", 1_000_000.0D));
+        if (days < 1 || days > maximumDays || !Double.isFinite(deposit) || deposit < 0.0D || deposit > maximumDeposit) {
+            sendMsg(p, "&cDays must be 1-" + maximumDays + " and deposit must be 0-" + maximumDeposit + ".");
+            return;
+        }
+
+        plot.setForRent(true, price);
+        plugin.territoryLife().setOffer(plot.getPlotId(), price, deposit, days);
+        plugin.store().savePlotSync(plot);
+        sendKey(p, "market-for-rent", "&a✔ Claim listed for rent at &6{PRICE}&a per term.", Map.of(
+                "PRICE", plugin.eco().format(price, CurrencyType.VAULT)));
+        sendMsg(p, "&7Term: &b" + days + " day(s) &8| &7Deposit: &6"
+                + plugin.eco().format(deposit, CurrencyType.VAULT));
+        plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_LISTED",
+                "Listed for " + price + ", deposit=" + deposit + ", term=" + days + " day(s).");
+    }
+
+    private void handleUnrent(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.isOwner(p)) {
+            sendKey(p, "no_plot_here", "&c❌ You must be standing inside a plot you own to do that.");
+            return;
+        }
+        if (plot.hasActiveRental()) {
+            sendKey(p, "market-rental-active", "&cYou cannot remove this listing until the active rental expires.");
+            return;
+        }
+        plot.setForRent(false, 0);
+        plugin.territoryLife().clearOffer(plot.getPlotId());
+        plugin.store().savePlotSync(plot);
+        sendKey(p, "market-not-for-rent", "&e✔ Rental listing removed.");
+        plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_UNLISTED", "Rental listing removed.");
+    }
+
+    private void handleRentalContract(Player p, String[] args) {
+        TerritoryLifeService.RentalContract contract = findRentalContract(p);
+        if (contract == null) {
+            sendKey(p, "rental_contract_none", "&eYou do not have an active full-plot rental contract.");
+            return;
+        }
+        Plot plot = plugin.store().getAllPlots().stream()
+                .filter(candidate -> candidate != null && contract.plotId().equals(candidate.getPlotId()))
+                .findFirst().orElse(null);
+        if (plot == null) {
+            sendKey(p, "rental_contract_plot_missing", "&cThis contract's plot is missing. Ask an admin to run /agadmin doctor scan.");
+            return;
+        }
+
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "status";
+        if (action.equals("status") || action.equals("info")) {
+            long remaining = Math.max(0L, contract.expiresAt() - System.currentTimeMillis());
+            sendKey(p, "rental_contract_title", "&6Rental Contract &8- &f{PLOT}", Map.of(
+                    "PLOT", getReadablePlotName(plot)));
+            sendKey(p, "rental_contract_terms", "&7Rent: &6{RENT} &8| &7Deposit: &6{DEPOSIT}", Map.of(
+                    "RENT", plugin.eco().format(contract.rent(), CurrencyType.VAULT),
+                    "DEPOSIT", plugin.eco().format(contract.deposit(), CurrencyType.VAULT)));
+            sendKey(p, "rental_contract_remaining", "&7Remaining: &b{DAYS} day(s), {HOURS} hour(s)", Map.of(
+                    "DAYS", Long.toString(Math.max(0L, remaining / 86_400_000L)),
+                    "HOURS", Long.toString((remaining / 3_600_000L) % 24L)));
+            sendKey(p, "rental_contract_actions", "&e/ag rental renew &7or &e/ag rental cancel confirm");
+            return;
+        }
+
+        if (action.equals("renew")) {
+            if (!contract.renterId().equals(p.getUniqueId())) {
+                sendKey(p, "rental_contract_only_renter", "&cOnly the renter can renew this contract.");
+                return;
+            }
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(contract.ownerId());
+            if (!plugin.eco().withdraw(p, contract.rent(), CurrencyType.VAULT)) {
+                sendKey(p, "rental_contract_need_funds", "&cYou need {AMOUNT} to renew.", Map.of(
+                        "AMOUNT", plugin.eco().format(contract.rent(), CurrencyType.VAULT)));
+                return;
+            }
+            if (plugin.vault() == null || !plugin.vault().deposit(owner, contract.rent())) {
+                if (plugin.vault() == null || !plugin.vault().deposit(p, contract.rent())) {
+                    plugin.territoryLife().addSettlement(p.getUniqueId(), contract.rent(), "Failed rental renewal refund");
+                }
+                sendKey(p, "rental_contract_payment_failed", "&cRenewal payment failed. No contract time was added.");
+                return;
+            }
+            plugin.territoryLife().renew(plot.getPlotId());
+            plot.setRentEndTime(contract.expiresAt());
+            plugin.store().savePlotSync(plot);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_RENEWED",
+                    "Contract renewed for " + contract.termDays() + " day(s).");
+            plugin.territoryLife().queueNotice(contract.ownerId(), "&aA rental contract was renewed for &e"
+                    + contract.termDays() + " day(s)&a.");
+            sendKey(p, "rental_contract_renewed", "&aRental renewed for &e{DAYS} day(s)&a.", Map.of(
+                    "DAYS", Integer.toString(contract.termDays())));
+            return;
+        }
+
+        if (action.equals("cancel")) {
+            if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+                sendKey(p, "rental_contract_cancel_prompt", "&eRun &b/ag rental cancel confirm &eto end this contract and return its deposit.");
+                return;
+            }
+            boolean renter = contract.renterId().equals(p.getUniqueId());
+            boolean owner = contract.ownerId().equals(p.getUniqueId());
+            if (!renter && !owner) {
+                sendKey(p, "rental_contract_not_party", "&cYou are not part of this rental contract.");
+                return;
+            }
+            if (owner && !plugin.getConfig().getBoolean("full_plot_renting.allow_owner_early_cancel", false)) {
+                sendKey(p, "rental_contract_owner_cancel_disabled", "&cOwners cannot end active contracts early on this server.");
+                return;
+            }
+            plugin.territoryLife().removeContract(plot.getPlotId());
+            plugin.territoryLife().refundDeposit(contract, "Deposit after early rental cancellation");
+            plot.clearRenter();
+            plugin.store().savePlotSync(plot);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_CANCELLED",
+                    "Contract ended early by " + (owner ? "owner" : "renter") + ".");
+            plugin.territoryLife().queueNotice(owner ? contract.renterId() : contract.ownerId(),
+                    "&eThe rental contract for plot &f" + plot.getPlotId() + " &ewas ended early.");
+            sendKey(p, "rental_contract_cancelled", "&aRental contract ended. The deposit was refunded or queued for delivery.");
+            return;
+        }
+        sendKey(p, "rental_contract_usage", "&cUsage: /ag rental <status|renew|cancel confirm>");
+    }
+
+    private TerritoryLifeService.RentalContract findRentalContract(Player player) {
+        Plot here = plugin.store().getPlotAt(player.getLocation());
+        if (here != null) {
+            TerritoryLifeService.RentalContract local = plugin.territoryLife().contract(here.getPlotId());
+            if (local != null && (local.ownerId().equals(player.getUniqueId()) || local.renterId().equals(player.getUniqueId()))) {
+                return local;
+            }
+        }
+        return plugin.territoryLife().contracts().stream()
+                .filter(contract -> contract.ownerId().equals(player.getUniqueId()) || contract.renterId().equals(player.getUniqueId()))
+                .findFirst().orElse(null);
+    }
+
+    private void handleDiscover(Player player, String[] args) {
+        if (!player.hasPermission("aegis.discovery")) {
+            sendKey(player, "no_permission", "&cYou do not have permission to use plot discovery.");
+            return;
+        }
+        if (!plugin.getConfig().getBoolean("plot_discovery.enabled", true)) {
+            sendKey(player, "discovery_disabled", "&cPlot discovery is disabled on this server.");
+            return;
+        }
+        if (args.length == 1) {
+            plugin.gui().visit().open(player, 0, com.aegisguard.gui.VisitGUI.VisitMode.DISCOVER);
+            return;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        if (action.equals("favorites")) {
+            plugin.gui().visit().open(player, 0, com.aegisguard.gui.VisitGUI.VisitMode.FAVORITES);
+            return;
+        }
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.isOwner(player)) {
+            sendKey(player, "discovery_owner_required", "&cStand inside a plot you own to change its discovery settings.");
+            return;
+        }
+        if (action.equals("category") && args.length >= 3) {
+            String category = args[2].toLowerCase(Locale.ROOT);
+            List<String> allowed = plugin.getConfig().getStringList("plot_discovery.categories");
+            if (!allowed.stream().anyMatch(value -> value.equalsIgnoreCase(category))) {
+                sendKey(player, "discovery_invalid_category", "&cCategory must be one of: &f{CATEGORIES}", Map.of(
+                        "CATEGORIES", String.join(", ", allowed)));
+                return;
+            }
+            plugin.territoryLife().setCategory(plot.getPlotId(), category);
+            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_CATEGORY",
+                    "Discovery category changed to " + category + ".");
+            sendKey(player, "discovery_category_set", "&aDiscovery category set to &e{CATEGORY}&a.", Map.of(
+                    "CATEGORY", category));
+            return;
+        }
+        if (action.equals("visibility") && args.length >= 3) {
+            if (!args[2].equalsIgnoreCase("on") && !args[2].equalsIgnoreCase("off")
+                    && !args[2].equalsIgnoreCase("public") && !args[2].equalsIgnoreCase("private")) {
+                sendKey(player, "discovery_visibility_invalid", "&cVisibility must be on or off.");
+                return;
+            }
+            boolean visible = args[2].equalsIgnoreCase("on") || args[2].equalsIgnoreCase("public");
+            plugin.territoryLife().setVisible(plot.getPlotId(), visible);
+            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_VISIBILITY",
+                    "Discovery visibility changed to " + (visible ? "public" : "private") + ".");
+            sendKey(player, visible ? "discovery_visible" : "discovery_hidden",
+                    visible ? "&aThis plot is visible in discovery." : "&eThis plot is hidden from discovery.");
+            return;
+        }
+        sendMsg(player, "&e/ag discover &7| &e/ag discover favorites &7| &e/ag discover category <name> &7| &e/ag discover visibility <on|off>");
+    }
+
+    private void handleFavorite(Player player) {
+        if (!player.hasPermission("aegis.discovery")) {
+            sendKey(player, "no_permission", "&cYou do not have permission to use plot discovery.");
+            return;
+        }
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) {
+            sendKey(player, "favorite_plot_required", "&cStand inside a plot to favorite it.");
+            return;
+        }
+        boolean added = plugin.territoryLife().toggleFavorite(player.getUniqueId(), plot.getPlotId());
+        sendKey(player, added ? "favorite_added" : "favorite_removed",
+                added ? "&aPlot added to your favorites." : "&ePlot removed from your favorites.");
+    }
+
+    private void handleActivity(Player player) {
+        if (!player.hasPermission("aegis.activity")) {
+            sendKey(player, "no_permission", "&cYou do not have permission to view territory activity.");
+            return;
+        }
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.canManage(player, plugin)) {
+            sendKey(player, "activity_plot_required", "&cStand inside a plot you can manage to view its activity.");
+            return;
+        }
+        List<TerritoryLifeService.ActivityEntry> entries = plugin.territoryLife().activity(plot.getPlotId(), 10);
+        sendKey(player, "activity_title", "&6Recent Territory Activity &8(&f{PLOT}&8)", Map.of(
+                "PLOT", getReadablePlotName(plot)));
+        if (entries.isEmpty()) {
+            sendKey(player, "activity_empty", "&7No activity has been recorded yet.");
+            return;
+        }
+        long now = System.currentTimeMillis();
+        for (TerritoryLifeService.ActivityEntry entry : entries) {
+            long minutes = Math.max(0L, (now - entry.timestamp()) / 60_000L);
+            sendKey(player, "activity_entry", "&8- &e{TYPE} &7{DETAILS} &8({MINUTES}m ago)", Map.of(
+                    "TYPE", entry.type(), "DETAILS", entry.details(), "MINUTES", Long.toString(minutes)));
+        }
     }
 
     // --------------------------------------------------
@@ -1624,6 +1662,7 @@ private void handleUnsell(Player p) {
             plot.toggleLike(p.getUniqueId());
             sendKey(p, "like_success", "&a✔ You liked this claim. Total likes: &e{AMOUNT}",
                     Map.of("AMOUNT", String.valueOf(plot.getLikes())));
+            if (plugin.horizons() != null) plugin.horizons().recordLike(plot, p.getUniqueId());
             plugin.effects().playConfirm(p);
         }
 
@@ -2076,12 +2115,6 @@ private void handleUnsell(Player p) {
         }
 
         if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("resize") || args[0].equalsIgnoreCase("merge")) {
-                List<String> completions = new ArrayList<>();
-                StringUtil.copyPartialMatches(args[1], Arrays.asList(RESIZE_DIRECTIONS), completions);
-                return completions;
-            }
-
             if (args[0].equalsIgnoreCase("subplot") || args[0].equalsIgnoreCase("subzone")) {
                 return Arrays.asList("Market Stall", "Room", "Hotel Suite", "Storage", "Booth");
             }
@@ -2125,9 +2158,26 @@ private void handleUnsell(Player p) {
                 Collections.sort(completions);
                 return completions;
             }
+
+            if (args[0].equalsIgnoreCase("rental")) {
+                return StringUtil.copyPartialMatches(args[1], List.of("status", "renew", "cancel"), new ArrayList<>());
+            }
+
+            if (args[0].equalsIgnoreCase("discover")) {
+                return StringUtil.copyPartialMatches(args[1], List.of("favorites", "category", "visibility"), new ArrayList<>());
+            }
         }
 
         if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("rental") && args[1].equalsIgnoreCase("cancel")) {
+                return StringUtil.copyPartialMatches(args[2], List.of("confirm"), new ArrayList<>());
+            }
+            if (args[0].equalsIgnoreCase("discover") && args[1].equalsIgnoreCase("category")) {
+                return StringUtil.copyPartialMatches(args[2], plugin.getConfig().getStringList("plot_discovery.categories"), new ArrayList<>());
+            }
+            if (args[0].equalsIgnoreCase("discover") && args[1].equalsIgnoreCase("visibility")) {
+                return StringUtil.copyPartialMatches(args[2], List.of("on", "off"), new ArrayList<>());
+            }
             if (args[0].equalsIgnoreCase("notify")) {
                 if (args[1].equalsIgnoreCase("greetings")
                         || args[1].equalsIgnoreCase("admin")
@@ -2383,7 +2433,8 @@ private void handleUnsell(Player p) {
     }
 
     private void handleNotifyMode(Player p, String[] args) {
-        if (!canManageGreetingNotifications(p, false)) {
+        if (!p.hasPermission("aegis.notify")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
             plugin.effects().playError(p);
             return;
         }
@@ -2399,22 +2450,23 @@ private void handleUnsell(Player p) {
             return;
         }
 
-        String modeStr = args[2].toUpperCase();
-        com.aegisguard.notify.NotificationMode mode;
+        String modeStr = args[2].trim().toUpperCase(Locale.ROOT).replace('-', '_');
+        if ("ACTIONBAR".equals(modeStr)) modeStr = "ACTION_BAR";
 
-        try {
-            mode = com.aegisguard.notify.NotificationMode.valueOf(modeStr);
-        } catch (IllegalArgumentException e) {
-            // Try alternate names
-            mode = com.aegisguard.notify.NotificationMode.fromString(modeStr);
-            if (mode == null) {
-                sendKey(p, "notify_mode_invalid",
-                    "&cInvalid mode: &7" + args[2] + "\n" +
-                    "&eValid modes: &7chat, actionbar, title"
-                );
-                plugin.effects().playError(p);
-                return;
+        com.aegisguard.notify.NotificationMode mode = null;
+        for (com.aegisguard.notify.NotificationMode candidate : com.aegisguard.notify.NotificationMode.values()) {
+            if (candidate.name().equals(modeStr)) {
+                mode = candidate;
+                break;
             }
+        }
+        if (mode == null) {
+            sendKey(p, "notify_mode_invalid",
+                "&cInvalid mode: &7" + args[2] + "\n" +
+                "&eValid modes: &7chat, actionbar, title"
+            );
+            plugin.effects().playError(p);
+            return;
         }
 
         plugin.getNotificationManager().setMode(p.getUniqueId(), mode);

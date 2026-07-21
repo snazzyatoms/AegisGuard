@@ -187,6 +187,8 @@ ledger_total: '&7Total Capacity: &e'
 
 claim_blocks_not_enough: '&c❌ You need &e{NEEDED}&c more claim blocks to claim this area.'
 first_claim_limit_reached: '&c❌ First claim limit exceeded! Max size: &e{LIMIT}&c blocks. (You selected &e{AREA}&c)'
+claim_too_large: '&c❌ Claim failed: the selected area exceeds the maximum claim size.'
+claim_overlap: '&c❌ Claim failed: the selected area overlaps another claim.'
 claim_blocks_earned_playtime: '&a✔ You earned &e{AMOUNT}&a claim blocks for playing. Total: &e{TOTAL}&a.'
 claim_blocks_earned_level: '&d⚡ Ascension Bonus: &e+{AMOUNT} Claim Blocks!'
 
@@ -198,7 +200,3 @@ discord_claim_description: '{PLAYER} has established a new territory!'
 discord_claim_world_label: 'World'
 discord_claim_size_label: 'Size'
 discord_claim_footer: 'AegisGuard'
-
-discord_merge_title: '🔄 Plot Merge Completed'
-discord_merge_description: '{PLAYER} merged two claims.'
-discord_merge_size_label: 'New Size'

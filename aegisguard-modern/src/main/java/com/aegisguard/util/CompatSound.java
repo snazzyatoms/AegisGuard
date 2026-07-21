@@ -36,7 +36,7 @@ public final class CompatSound {
             return;
         }
         try {
-            player.playSound(location, sound, volume, pitch);
+            EffectUtil.playIfEnabled(player, location, sound, volume, pitch);
         } catch (Throwable ignored) {
         }
     }

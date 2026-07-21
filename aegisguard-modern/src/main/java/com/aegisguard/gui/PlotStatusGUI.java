@@ -206,7 +206,7 @@ public class PlotStatusGUI {
         boolean safeZone            = plugin.protection().isSafeZoneEnabled(plot);
 
         boolean shopEnabled         = plot.getFlag("shop-interact", false);
-        boolean flyEnabled          = plot.getFlag("fly", false);
+        boolean flyEnabled          = hasAscensionFlight(plot);
         boolean entryOpen           = plot.getFlag("entry", true);
 
         lore.add(tr(player, "plot_status_section_combat", null, "&7Combat & Hostiles:"));
@@ -266,6 +266,16 @@ public class PlotStatusGUI {
         ));
 
         return colorList(lore);
+    }
+
+    private boolean hasAscensionFlight(Plot plot) {
+        for (int level = 1; level <= plot.getLevel(); level++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(level);
+            if (rewards != null && rewards.stream().anyMatch(reward -> reward != null
+                    && (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")
+                    || reward.equalsIgnoreCase("FLAG:fly")))) return true;
+        }
+        return false;
     }
 
     private String stateProtected(Player p, boolean isProtected) {

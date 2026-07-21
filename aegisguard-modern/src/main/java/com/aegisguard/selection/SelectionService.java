@@ -11,7 +11,6 @@ import com.aegisguard.listeners.WandSafetyListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -93,6 +92,12 @@ public class SelectionService implements Listener {
         }
 
         Action action = event.getAction();
+        if (isServerWand(item) && player.isSneaking()
+                && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
+            event.setCancelled(true);
+            plugin.runMain(player, () -> plugin.gui().doctor().open(player));
+            return;
+        }
         if (action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK) {
             event.setCancelled(true);
             return;
@@ -129,7 +134,8 @@ public class SelectionService implements Listener {
 
         long area = getSelectionArea(player);
         if (area > 0L) {
-            player.sendMessage(color("&7Selection area: &e" + area + " blocks &7- use &a/ag claim &7to confirm."));
+            String confirmCommand = isServerWand(item) ? "/agadmin claim" : "/ag claim";
+            player.sendMessage(color("&7Selection area: &e" + area + " blocks &7- use &a" + confirmCommand + " &7to confirm."));
         }
 
         if (plugin.effects() != null) plugin.effects().playConfirm(player);
@@ -267,6 +273,11 @@ public class SelectionService implements Listener {
         return pdc.has(WAND_KEY, PersistentDataType.BYTE) || pdc.has(SERVER_WAND_KEY, PersistentDataType.BYTE);
     }
 
+    private boolean isServerWand(ItemStack item) {
+        return item != null && item.hasItemMeta()
+                && item.getItemMeta().getPersistentDataContainer().has(SERVER_WAND_KEY, PersistentDataType.BYTE);
+    }
+
     private String color(String text) {
         return text == null ? "" : org.bukkit.ChatColor.translateAlternateColorCodes('&', text);
     }
@@ -286,6 +297,14 @@ public class SelectionService implements Listener {
         SelectionContext ctx = getSelectionContext(p);
         if (ctx == null) return;
 
+        World selectedWorld = Bukkit.getWorld(ctx.worldName);
+        if (!isServerClaim && !p.hasPermission("aegis.admin.bypass")
+                && !plugin.worldRules().allowClaims(selectedWorld)) {
+            plugin.msg().send(p, "claims_disabled_in_world");
+            plugin.effects().playError(p);
+            return;
+        }
+
         // Limits (supports 1.2.5 + 1.2.6 config styles)
         int maxRadius = getWorldInt(ctx.worldName, "max_radius",
                 plugin.cfg().raw().getInt("claims.max_radius_global",
@@ -296,11 +315,11 @@ public class SelectionService implements Listener {
 
         if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
             if (ctx.radius > maxRadius) {
-                plugin.msg().send(p, "resize-fail-max-area");
+                plugin.msg().send(p, "claim_too_large");
                 return;
             }
             if (ctx.area > maxArea) {
-                plugin.msg().send(p, "resize-fail-max-area");
+                plugin.msg().send(p, "claim_too_large");
                 return;
             }
         }
@@ -317,7 +336,7 @@ public class SelectionService implements Listener {
 
             boolean overlaps = (ctx.minX <= oMaxX && ctx.maxX >= oMinX) && (ctx.minZ <= oMaxZ && ctx.maxZ >= oMinZ);
             if (overlaps) {
-                plugin.msg().send(p, "resize-fail-overlap");
+                plugin.msg().send(p, "claim_overlap");
                 return;
             }
         }
@@ -421,9 +440,16 @@ public class SelectionService implements Listener {
 
         // Effects + feedback
         if (plugin.effects() != null) plugin.effects().playClaimSuccess(p);
-        else p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
 
         plugin.msg().send(p, isServerClaim ? "admin-zone-created" : "plot_claimed");
+
+        if (isServerClaim && plugin.cfg().raw().getBoolean("admin.wand.open_settings_after_claim", true)) {
+            plugin.runMain(p, () -> {
+                if (p.isOnline() && plot.canManage(p, plugin)) {
+                    plugin.gui().flags().open(p, plot);
+                }
+            });
+        }
 
         // Discord webhook (if configured)
         if (plugin.getDiscord() != null) {
@@ -449,6 +475,13 @@ public class SelectionService implements Listener {
         SelectionContext ctx = getSelectionContext(p);
         if (ctx == null) return null;
 
+        World selectedWorld = Bukkit.getWorld(ctx.worldName);
+        if (!p.hasPermission("aegis.admin.bypass") && !plugin.worldRules().allowClaims(selectedWorld)) {
+            plugin.msg().send(p, "claims_disabled_in_world");
+            plugin.effects().playError(p);
+            return null;
+        }
+
         int maxRadius = getWorldInt(ctx.worldName, "max_radius",
                 plugin.cfg().raw().getInt("claims.max_radius_global",
                         plugin.cfg().raw().getInt("claims.max_radius", 200)));
@@ -457,7 +490,7 @@ public class SelectionService implements Listener {
 
         if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
             if (ctx.radius > maxRadius || ctx.area > maxArea) {
-                plugin.msg().send(p, "resize-fail-max-area");
+                plugin.msg().send(p, "claim_too_large");
                 return null;
             }
         }
@@ -470,7 +503,7 @@ public class SelectionService implements Listener {
             int oMaxZ = Math.max(other.getZ1(), other.getZ2());
             boolean overlaps = (ctx.minX <= oMaxX && ctx.maxX >= oMinX) && (ctx.minZ <= oMaxZ && ctx.maxZ >= oMinZ);
             if (overlaps) {
-                plugin.msg().send(p, "resize-fail-overlap");
+                plugin.msg().send(p, "claim_overlap");
                 return null;
             }
         }
@@ -512,7 +545,6 @@ public class SelectionService implements Listener {
         setPlayerWand(p, null);
 
         if (plugin.effects() != null) plugin.effects().playClaimSuccess(p);
-        else p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
 
         return plot;
     }
@@ -546,17 +578,9 @@ public class SelectionService implements Listener {
     }
 
     /**
-     * 1.2.5 behavior: merge is intentionally not implemented yet,
-     * but the command paths expect the method to exist.
+     * Retained as a disabled no-op for binary compatibility with older API consumers.
      */
-    public void attemptMerge(Player p, String mode) {
-        if (p == null) return;
-        plugin.msg().send(p, "error_generic");
-    }
-
-    /**
-     * 1.2.5 behavior: resizing is a planned feature. Keep signature for command compatibility.
-     */
+    @Deprecated(forRemoval = false)
     public void resizePlot(Player p, String mode, int amount) {
         if (p == null) return;
         plugin.msg().send(p, "error_generic");

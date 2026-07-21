@@ -62,7 +62,8 @@ public class ClaimPricingCalculator {
 
         // Cost per additional block beyond base area
         this.expansionRatePerBlock = cfg.getDouble("economy.fair_pricing.expansion_rate_per_block",
-                cfg.getDouble("economy.resize_cost_per_block", 10.0));
+                cfg.getDouble("economy.expansion_cost_per_block",
+                        cfg.getDouble("economy.resize_cost_per_block", 10.0)));
 
         // If true, claims smaller than base_area still pay proportional base cost
         // If false, any claim pays at least baseCost (default: false = always pay base)

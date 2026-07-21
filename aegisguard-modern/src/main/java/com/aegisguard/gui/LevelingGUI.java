@@ -4,34 +4,32 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotLevelUpEvent;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.progression.AscensionFocus;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-/**
- * LevelingGUI
- *
- * Fix:
- * - Resolves unreplaced placeholders like "(COST)" and "(BALANCE)" showing in lore.
- *   Some language packs historically used parentheses placeholders. We now replace:
- *     {KEY}, (KEY), %KEY%, <KEY>
- *   for any provided vars map.
- *
- * - Also improves block balance display by safely reading EconomyManager balance methods when available.
- */
-public class LevelingGUI {
+public final class LevelingGUI {
+    private enum Page { HALL, GUIDE, DISCIPLINES, CONFIRM }
+    private enum Payment { MONEY, BLOCKS }
 
     private final AegisGuard plugin;
 
@@ -39,1022 +37,742 @@ public class LevelingGUI {
         this.plugin = plugin;
     }
 
-    public static class LevelingHolder implements InventoryHolder {
+    public static final class LevelingHolder implements InventoryHolder {
         private final Plot plot;
-        public LevelingHolder(Plot plot) { this.plot = plot; }
+        private final Page page;
+        private final Payment payment;
+
+        private LevelingHolder(Plot plot, Page page, Payment payment) {
+            this.plot = plot;
+            this.page = page;
+            this.payment = payment;
+        }
+
         public Plot getPlot() { return plot; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, Plot plot) {
-        if (plot == null) {
-            plugin.msg().send(player, "no_plot_here");
-            return;
-        }
-
-        String title = plugin.gui().title(player, "level_gui_title", "&6✦ Dominion Ascension ✦");
-        Inventory inv = Bukkit.createInventory(new LevelingHolder(plot), 54, title);
-
-        // --- Filler border ---
-        ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
-
-        int currentLvl = plot.getLevel();
-        int maxLvl = plugin.cfg().getMaxLevel();
-
-        // ----------------------------------------------------------------
-        // 1) HEADER: Plot & current level summary
-        // ----------------------------------------------------------------
-        List<String> headerLore = new ArrayList<>();
-
-        headerLore.add(t(player,
-                "level_header_owner",
-                vars("owner", plot.getOwnerName()),
-                "&7Owner: &f{OWNER}"
-        ));
-
-        headerLore.add(t(player,
-                "level_header_world",
-                vars("world", plot.getWorld()),
-                "&7World: &f{WORLD}"
-        ));
-
-        headerLore.add("");
-
-        headerLore.add(t(player,
-                "level_header_level",
-                vars("level", String.valueOf(currentLvl), "max", String.valueOf(maxLvl)),
-                "&7Level: &e{LEVEL}&7/&f{MAX}"
-        ));
-
-        headerLore.add(t(player,
-                "level_header_multiplier",
-                vars("multiplier", String.valueOf(plugin.cfg().getLevelCostMultiplier())),
-                "&7Cost Multiplier: &f{MULTIPLIER}"
-        ));
-
-        if (plugin.cfg().isLevelingExpansionEnabled()) {
-            int amount = plugin.cfg().getLevelingExpansionAmount();
-            headerLore.add("");
-
-            headerLore.add(t(player, "level_header_growth_title", "&bTerritory Growth:"));
-
-            headerLore.add(t(player,
-                    "level_header_growth_line",
-                    vars("amount", String.valueOf(amount)),
-                    "&7+&f{AMOUNT} &7block radius per level."
-            ));
-        }
-
-        inv.setItem(4, GUIManager.createItem(
-                Material.NETHER_STAR,
-                plugin.gui().tr(player, "level_current_status", "&eDominion Status"),
-                headerLore
-        ));
-
-        // ----------------------------------------------------------------
-        // 2) LEVEL TRACK (window around current level)
-        // ----------------------------------------------------------------
-        int windowSize = 7;
-        int half = windowSize / 2;
-        int start = Math.max(1, currentLvl - half);
-        int end = Math.min(maxLvl, start + windowSize - 1);
-
-        if (end - start + 1 < windowSize && start > 1) {
-            start = Math.max(1, end - windowSize + 1);
-        }
-
-        int slot = 19;
-        for (int level = start; level <= end; level++) {
-            inv.setItem(slot++, buildLevelTrackItem(player, plot, level, currentLvl, maxLvl));
-        }
-
-        // ----------------------------------------------------------------
-        // 3) CURRENT BUFFS PANEL (left)
-        // ----------------------------------------------------------------
-        List<String> currentBuffLore = new ArrayList<>();
-        currentBuffLore.add(t(player,
-                "level_current_blessings_title",
-                vars("level", String.valueOf(currentLvl)),
-                "&bBlessings at Level &f{LEVEL}"
-        ));
-        currentBuffLore.addAll(formatActiveBuffs(player, currentLvl,
-                "level_current_blessings_none",
-                "&8No special bonuses are active at this level yet."
-        ));
-        currentBuffLore.add("");
-
-        currentBuffLore.add(t(player,
-                "level_current_blessings_footer_1",
-                "&7Only your strongest unlocked boons are shown."
-        ));
-        currentBuffLore.add(t(player,
-                "level_current_blessings_footer_2",
-                "&8(Keep this view clean and readable.)"
-        ));
-
-        inv.setItem(29, GUIManager.createItem(
-                Material.BOOK,
-                plugin.gui().tr(player, "level_current_blessings_name", "&bCurrent Blessings"),
-                currentBuffLore
-        ));
-
-        // ----------------------------------------------------------------
-        // 4) NEXT LEVEL PREVIEW + UPGRADE OPTIONS (center)
-        // ----------------------------------------------------------------
-        int nextLvl = currentLvl + 1;
-        if (nextLvl <= maxLvl) {
-
-            // Money option (Vault/type selected in config)
-            CurrencyType moneyType = plugin.cfg().getLevelCostType();
-            double moneyCost = calculateCost(nextLvl);
-            boolean moneyAllowed = isMoneyUpgradeAvailable(moneyType);
-
-            // Blocks option (fallback/progression currency)
-            CurrencyType blocksType = getBlocksTypeOrNull();
-            double blocksCost = (blocksType == null || !isBlocksUpgradeEnabled())
-                    ? -1
-                    : calculateBlocksCost(nextLvl);
-            boolean blocksAllowed = (blocksType != null && blocksCost > 0);
-
-            if (!moneyAllowed && !blocksAllowed) {
-                List<String> noLore = tl(player, "level_upgrade_unavailable_lore", Map.of(), List.of(
-                        "&7No upgrade payment method is available.",
-                        "&8Enable blocks progression or install/enable Vault.",
-                        "",
-                        "&cUpgrade locked."
-                ));
-
-                inv.setItem(31, GUIManager.createItem(
-                        Material.BARRIER,
-                        plugin.gui().tr(player, "level_upgrade_unavailable", "&cCannot Upgrade"),
-                        noLore
-                ));
-
-            } else {
-                // --- Preview item ---
-                List<String> previewLore = new ArrayList<>();
-                previewLore.add(t(player,
-                        "level_upgrade_next_tier",
-                        vars("level", String.valueOf(nextLvl)),
-                        "&eNext Tier: &fLevel {LEVEL}"
-                ));
-                previewLore.add("");
-
-                if (moneyAllowed) {
-                    String moneyStr = plugin.eco().format(moneyCost, moneyType);
-                    previewLore.add(t(player,
-                            "level_upgrade_cost_money",
-                            vars("cost", moneyStr, "type", moneyType.name()),
-                            "&7Money: &6{COST} &8({TYPE})"
-                    ));
-                } else {
-                    previewLore.add(t(player,
-                            "level_upgrade_cost_money_disabled",
-                            "&8Money: Disabled/Unavailable"
-                    ));
-                }
-
-                if (blocksAllowed) {
-                    String balStr = formatBalance(player, blocksType);
-                    previewLore.add(t(player,
-                            "level_upgrade_cost_blocks",
-                            vars("cost", formatBlocks(blocksCost), "balance", balStr),
-                            "&7Blocks: &b{COST} &7(You have &b{BALANCE}&7)"
-                    ));
-                } else {
-                    previewLore.add(t(player,
-                            "level_upgrade_cost_blocks_disabled",
-                            "&8Blocks: Disabled/Unavailable"
-                    ));
-                }
-
-                previewLore.add("");
-                previewLore.add(t(player, "level_upgrade_new_buffs_title", "&bNew Blessings:"));
-                previewLore.addAll(formatBuffs(player, nextLvl,
-                        "level_upgrade_blessings_none",
-                        "&8This upgrade focuses on growth or access rather than a new bonus."
-                ));
-                previewLore.add("");
-                previewLore.add(t(player, "level_upgrade_active_after_title", "&dActive After Ascension:"));
-                previewLore.addAll(formatActiveBuffs(player, nextLvl,
-                        "level_current_blessings_none",
-                        "&8No special bonuses will be active at that level yet."
-                ));
-
-                if (plugin.cfg().isLevelingExpansionEnabled()) {
-                    previewLore.add("");
-                    previewLore.add(t(player, "level_upgrade_territory_title", "&bTerritory Gain:"));
-                    previewLore.add(t(player,
-                            "level_upgrade_territory_line",
-                            vars("amount", String.valueOf(plugin.cfg().getLevelingExpansionAmount())),
-                            "&7+&f{AMOUNT} &7radius on this upgrade."
-                    ));
-                }
-
-                inv.setItem(31, GUIManager.createItem(
-                        Material.ENCHANTED_BOOK,
-                        t(player,
-                                "level_upgrade_preview_title",
-                                vars("level", String.valueOf(nextLvl)),
-                                "&eAscension Preview (Level {LEVEL})"
-                        ),
-                        previewLore
-                ));
-
-                // --- Buttons ---
-                if (moneyAllowed && blocksAllowed) {
-
-                    // Slot 30: money button
-                    List<String> moneyLore = tl(player, "level_upgrade_button_money_lore",
-                            vars("cost", plugin.eco().format(moneyCost, moneyType), "type", moneyType.name()),
-                            List.of(
-                                    "&7Pay using server economy.",
-                                    "&7Cost: &6{COST} &8({TYPE})",
-                                    "",
-                                    "&eClick to upgrade"
-                            )
-                    );
-
-                    inv.setItem(30, GUIManager.createItem(
-                            Material.EXPERIENCE_BOTTLE,
-                            t(player,
-                                    "level_upgrade_button_money",
-                                    vars("level", String.valueOf(nextLvl)),
-                                    "&6Upgrade with Money (Level {LEVEL})"
-                            ),
-                            moneyLore
-                    ));
-
-                    // Slot 32: blocks button
-                    List<String> blocksLore = tl(player, "level_upgrade_button_blocks_lore",
-                            vars("cost", formatBlocks(blocksCost), "balance", formatBalance(player, blocksType)),
-                            List.of(
-                                    "&7Spend your earned blocks.",
-                                    "&7Cost: &b{COST} Blocks",
-                                    "&7Balance: &b{BALANCE}",
-                                    "",
-                                    "&eClick to upgrade"
-                            )
-                    );
-
-                    inv.setItem(32, GUIManager.createItem(
-                            Material.EXPERIENCE_BOTTLE,
-                            t(player,
-                                    "level_upgrade_button_blocks",
-                                    vars("level", String.valueOf(nextLvl)),
-                                    "&bUpgrade with Blocks (Level {LEVEL})"
-                            ),
-                            blocksLore
-                    ));
-
-                } else {
-                    // Single method mode: put the one available upgrade button in the center (slot 31)
-                    boolean useMoney = moneyAllowed;
-
-                    CurrencyType payType = useMoney ? moneyType : blocksType;
-                    double payCost = useMoney ? moneyCost : blocksCost;
-
-                    List<String> upgradeLore = new ArrayList<>();
-
-                    upgradeLore.add(t(player,
-                            "level_upgrade_next_tier",
-                            vars("level", String.valueOf(nextLvl)),
-                            "&eNext Tier: &fLevel {LEVEL}"
-                    ));
-
-                    if (useMoney) {
-                        upgradeLore.add(t(player,
-                                "level_upgrade_cost",
-                                vars("cost", plugin.eco().format(payCost, payType), "type", payType.name()),
-                                "&7Cost: &6{COST} &8({TYPE})"
-                        ));
-                    } else {
-                        upgradeLore.add(t(player,
-                                "level_upgrade_cost_blocks_single",
-                                vars("cost", formatBlocks(payCost), "balance", formatBalance(player, payType)),
-                                "&7Cost: &b{COST} Blocks &7(You have &b{BALANCE}&7)"
-                        ));
-                    }
-
-                    upgradeLore.add("");
-                    upgradeLore.add(t(player, "level_upgrade_new_buffs_title", "&bNew Blessings:"));
-                    upgradeLore.addAll(formatBuffs(player, nextLvl,
-                            "level_upgrade_blessings_none",
-                            "&8This upgrade focuses on growth or access rather than a new bonus."
-                    ));
-                    upgradeLore.add("");
-                    upgradeLore.add(t(player, "level_upgrade_active_after_title", "&dActive After Ascension:"));
-                    upgradeLore.addAll(formatActiveBuffs(player, nextLvl,
-                            "level_current_blessings_none",
-                            "&8No special bonuses will be active at that level yet."
-                    ));
-
-                    if (plugin.cfg().isLevelingExpansionEnabled()) {
-                        upgradeLore.add("");
-                        upgradeLore.add(t(player, "level_upgrade_territory_title", "&bTerritory Gain:"));
-                        upgradeLore.add(t(player,
-                                "level_upgrade_territory_line",
-                                vars("amount", String.valueOf(plugin.cfg().getLevelingExpansionAmount())),
-                                "&7+&f{AMOUNT} &7radius on this upgrade."
-                        ));
-                    }
-
-                    upgradeLore.add("");
-                    upgradeLore.add(t(player,
-                            "level_upgrade_click_hint",
-                            vars("level", String.valueOf(nextLvl)),
-                            "&eClick to ascend to Level {LEVEL}"
-                    ));
-
-                    inv.setItem(31, GUIManager.createItem(
-                            Material.EXPERIENCE_BOTTLE,
-                            t(player,
-                                    useMoney ? "level_upgrade_button_money" : "level_upgrade_button_blocks",
-                                    vars("level", String.valueOf(nextLvl)),
-                                    useMoney
-                                            ? "&6Upgrade with Money (Level {LEVEL})"
-                                            : "&bUpgrade with Blocks (Level {LEVEL})"
-                            ),
-                            upgradeLore
-                    ));
-                }
-            }
-
-        } else {
-            List<String> maxLore = tl(player, "level_max_reached_lore", Map.of(),
-                    List.of("&7Your dominion has reached", "&7its highest tier.", "", "&aEnjoy your full power.")
-            );
-
-            inv.setItem(31, GUIManager.createItem(
-                    Material.BEACON,
-                    plugin.gui().tr(player, "level_max_reached", "&aMax Level Reached"),
-                    maxLore
-            ));
-        }
-
-        // ----------------------------------------------------------------
-        // 5) EXPANSION INFO PANEL (right)
-        // ----------------------------------------------------------------
-        if (plugin.cfg().isLevelingExpansionEnabled()) {
-            List<String> expansionLore = tl(player, "level_expansion_lore", Map.of(),
-                    List.of("&bTerritory Growth Rules:", "&7Each upgrade expands your", "&7claim radius outward evenly.")
-            );
-
-            String exTitle = plugin.gui().tr(player, "level_expansion_title", "&aTerritory Expansion");
-
-            inv.setItem(33, GUIManager.createItem(
-                    Material.GRASS_BLOCK,
-                    exTitle,
-                    expansionLore
-            ));
-        }
-
-        // ----------------------------------------------------------------
-        // 6) NAVIGATION
-        // ----------------------------------------------------------------
-        inv.setItem(49, GUIManager.createItem(
-                Material.ARROW,
-                plugin.gui().tr(player, "button_back", "&fBack"),
-                plugin.gui().trList(player, "back_lore", List.of("&7Return to the previous menu."))
-        ));
-        inv.setItem(50, GUIManager.createItem(
-                Material.BARRIER,
-                plugin.gui().tr(player, "button_exit", "&cClose"),
-                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))
-        ));
-
-        player.openInventory(inv);
-        GUIManager.playClick(player);
+        openHall(player, plot);
     }
 
-    public void handleClick(Player player, InventoryClickEvent e, LevelingHolder holder) {
-        e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+    private void openHall(Player player, Plot plot) {
+        if (!canOpen(player, plot)) return;
+        Inventory inventory = Bukkit.createInventory(new LevelingHolder(plot, Page.HALL, null), 54,
+                plugin.gui().title(player, "ascension_hall_title", "&6✦ Ascension Hall ✦"));
+        paintHall(inventory);
 
+        int level = plot.getLevel();
+        int maxLevel = plugin.cfg().getMaxLevel();
+        String chapter = chapterName(player, level);
+        inventory.setItem(4, item(Material.BEACON,
+                tr(player, "ascension_hall_status_name", "&6&l{PLOT} Ascension").replace("{PLOT}", plotName(plot)),
+                List.of(
+                        tr(player, "ascension_hall_status_level", "&7Level: &e{LEVEL}&7/&f{MAX}")
+                                .replace("{LEVEL}", String.valueOf(level)).replace("{MAX}", String.valueOf(maxLevel)),
+                        tr(player, "ascension_hall_status_chapter", "&7Chapter: &f{CHAPTER}").replace("{CHAPTER}", chapter),
+                        tr(player, "ascension_hall_status_progress", "&7Progress: {BAR}")
+                                .replace("{BAR}", progressBar(level, maxLevel)),
+                        " ",
+                        tr(player, "ascension_hall_status_footer", "&8Build a lasting territory through measured growth."))));
+
+        inventory.setItem(10, item(Material.WRITTEN_BOOK,
+                tr(player, "ascension_guide_name", "&eGuardian's Ascension Guide"),
+                trList(player, "ascension_guide_open_lore", List.of(
+                        "&7Learn how levels, blessings, disciplines,",
+                        "&7payments, and Horizons work.", " ", "&eClick to read."))));
+
+        AscensionFocus focus = AscensionFocus.parse(plot.getAscensionFocus());
+        inventory.setItem(12, item(focus.icon(),
+                tr(player, "ascension_discipline_name", "&bAscension Discipline"),
+                List.of(
+                        tr(player, "ascension_discipline_current", "&7Current: &f{FOCUS}")
+                                .replace("{FOCUS}", focusName(player, focus)),
+                        tr(player, "ascension_discipline_summary", "&7Choose one modest utility specialty for this plot."),
+                        " ", tr(player, "ascension_discipline_open", "&eClick to choose or review."))));
+
+        inventory.setItem(14, item(Material.ENCHANTED_BOOK,
+                tr(player, "ascension_blessings_name", "&dActive Blessings"),
+                activeBlessingLore(player, plot)));
+
+        boolean horizonsReady = level >= plugin.horizons().unlockLevel();
+        inventory.setItem(16, item(horizonsReady ? Material.END_CRYSTAL : Material.ENDER_EYE,
+                tr(player, "ascension_horizon_gateway_name", "&5Horizon Gateway"),
+                horizonsReady
+                        ? trList(player, "ascension_horizon_ready_lore", List.of(
+                                "&dPlot Ascension is complete.", "&7Expansion Horizons now await.", " ", "&eClick to continue."))
+                        : trList(player, "ascension_horizon_locked_lore", List.of(
+                                "&7Complete Plot Level 30 to unlock", "&7the long-term Horizon journey.", " ", "&8Still sealed."))));
+
+        int start = trackStart(level, maxLevel);
+        for (int index = 0; index < 7; index++) {
+            int trackLevel = start + index;
+            if (trackLevel <= maxLevel) inventory.setItem(19 + index, levelTrackItem(player, plot, trackLevel));
+        }
+
+        renderUpgradeAltar(player, plot, inventory);
+        inventory.setItem(48, item(Material.ARROW, tr(player, "button_back", "&fBack"),
+                trList(player, "back_lore", List.of("&7Return to the main menu."))));
+        inventory.setItem(50, item(Material.BARRIER, tr(player, "button_exit", "&cClose"),
+                trList(player, "exit_lore", List.of("&7Close this menu."))));
+        player.openInventory(inventory);
+        plugin.effects().playMenuOpen(player);
+    }
+
+    private void openGuide(Player player, Plot plot) {
+        Inventory inventory = Bukkit.createInventory(new LevelingHolder(plot, Page.GUIDE, null), 54,
+                plugin.gui().title(player, "ascension_guide_title", "&eGuardian's Ascension Guide"));
+        paintGuide(inventory);
+        inventory.setItem(4, item(Material.WRITTEN_BOOK, tr(player, "ascension_guide_header", "&6&lThe Ascension Codex"),
+                trList(player, "ascension_guide_header_lore", List.of(
+                        "&7A concise guide to building a stronger", "&7plot without skipping server progression."))));
+        guideCard(inventory, 10, Material.AMETHYST_SHARD, player, "purpose", "&dWhat Is Ascension?",
+                List.of("&7Thirty plot levels form six chapters.", "&7Each step grants safe utility, capacity,", "&7or progression rewards within this plot."));
+        guideCard(inventory, 12, Material.GOLD_INGOT, player, "payment", "&6Paying for a Level",
+                List.of("&7Servers may allow money, ClaimBlocks,", "&7or both. The confirmation altar shows", "&7the exact cost before anything is charged."));
+        guideCard(inventory, 14, Material.POTION, player, "blessings", "&bPlot Blessings",
+                List.of("&7Utility blessings affect owners and trusted", "&7members only while they remain inside.", "&7Outside effects are preserved and restored."));
+        guideCard(inventory, 16, Material.SMITHING_TABLE, player, "disciplines", "&aDisciplines",
+                List.of("&7Choose Stonewright, Verdant Keeper,", "&7or Wayfinder for one restrained specialty.", "&7Changing focus has a server cooldown."));
+        guideCard(inventory, 28, Material.PLAYER_HEAD, player, "members", "&eTerritory Capacity",
+                List.of("&7Selected milestones increase how many", "&7players can be trusted without granting", "&7unsafe administrative control."));
+        guideCard(inventory, 30, Material.FEATHER, player, "flight", "&fZenith Flight",
+                List.of("&7Flight is the final Level 30 reward.", "&7It applies only inside the eligible plot", "&7and never removes pre-existing flight."));
+        guideCard(inventory, 32, Material.END_CRYSTAL, player, "horizons", "&5Beyond Level 30",
+                List.of("&7Level 30 opens Horizon Ascension:", "&7a slower Renown journey with bound", "&7Sigils and advanced territory abilities."));
+        inventory.setItem(48, item(Material.ARROW, tr(player, "button_back", "&fBack"),
+                trList(player, "back_lore", List.of("&7Return to the Ascension Hall."))));
+        inventory.setItem(50, item(Material.BARRIER, tr(player, "button_exit", "&cClose"),
+                trList(player, "exit_lore", List.of("&7Close this guide."))));
+        player.openInventory(inventory);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    private void openDisciplines(Player player, Plot plot) {
+        Inventory inventory = Bukkit.createInventory(new LevelingHolder(plot, Page.DISCIPLINES, null), 45,
+                plugin.gui().title(player, "ascension_disciplines_title", "&bAscension Disciplines"));
+        paintDiscipline(inventory);
+        AscensionFocus current = AscensionFocus.parse(plot.getAscensionFocus());
+        inventory.setItem(4, item(Material.ENCHANTED_BOOK,
+                tr(player, "ascension_disciplines_header", "&b&lChoose a Calling"),
+                List.of(
+                        tr(player, "ascension_discipline_current", "&7Current: &f{FOCUS}")
+                                .replace("{FOCUS}", focusName(player, current)),
+                        tr(player, "ascension_disciplines_header_lore", "&7One utility focus may serve this plot at a time."),
+                        " ", focusCooldownLine(player, plot))));
+        inventory.setItem(20, focusItem(player, plot, AscensionFocus.STONEWRIGHT));
+        inventory.setItem(22, focusItem(player, plot, AscensionFocus.VERDANT_KEEPER));
+        inventory.setItem(24, focusItem(player, plot, AscensionFocus.WAYFINDER));
+        inventory.setItem(39, item(Material.ARROW, tr(player, "button_back", "&fBack"),
+                trList(player, "back_lore", List.of("&7Return to the Ascension Hall."))));
+        inventory.setItem(40, item(Material.BARRIER, tr(player, "button_exit", "&cClose"),
+                trList(player, "exit_lore", List.of("&7Close this menu."))));
+        player.openInventory(inventory);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    private void openConfirmation(Player player, Plot plot, Payment payment) {
+        if (!paymentAvailable(payment)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        int nextLevel = plot.getLevel() + 1;
+        if (nextLevel > plugin.cfg().getMaxLevel()) return;
+        double cost = payment == Payment.MONEY ? moneyCost(nextLevel) : blockCost(nextLevel);
+        CurrencyType type = payment == Payment.MONEY ? plugin.cfg().getLevelCostType() : blocksType();
+        Inventory inventory = Bukkit.createInventory(new LevelingHolder(plot, Page.CONFIRM, payment), 27,
+                plugin.gui().title(player, "ascension_confirm_title", "&6Confirm Ascension"));
+        fill(inventory, Material.BLACK_STAINED_GLASS_PANE);
+        inventory.setItem(4, item(Material.BEACON, tr(player, "ascension_confirm_header", "&6Ascension Oath"),
+                trList(player, "ascension_confirm_header_lore", List.of(
+                        "&7Review this permanent plot upgrade.", "&7Nothing is charged until confirmation."))));
+        inventory.setItem(10, item(Material.EXPERIENCE_BOTTLE,
+                tr(player, "ascension_confirm_transition", "&eLevel {CURRENT} &8→ &aLevel {NEXT}")
+                        .replace("{CURRENT}", String.valueOf(plot.getLevel())).replace("{NEXT}", String.valueOf(nextLevel)),
+                rewardsForLevel(player, nextLevel)));
+        inventory.setItem(13, item(payment == Payment.MONEY ? Material.GOLD_INGOT : Material.AMETHYST_SHARD,
+                tr(player, "ascension_confirm_cost_name", "&6Offering"),
+                List.of(
+                        tr(player, "ascension_confirm_cost", "&7Cost: &f{COST}").replace("{COST}", formatCost(player, cost, type)),
+                        tr(player, "ascension_confirm_balance", "&7Balance: &f{BALANCE}")
+                                .replace("{BALANCE}", formatBalance(player, type)),
+                        " ", tr(player, "ascension_confirm_charge_note", "&8Charged only after all safety checks pass."))));
+        inventory.setItem(16, item(Material.ENCHANTED_BOOK,
+                tr(player, "ascension_confirm_after_name", "&dAfter Ascension"), activeBlessingLore(player, plot, nextLevel)));
+        inventory.setItem(21, item(Material.ARROW, tr(player, "ascension_confirm_cancel", "&eCancel"),
+                trList(player, "ascension_confirm_cancel_lore", List.of("&7Return without spending anything."))));
+        inventory.setItem(23, glow(item(Material.LIME_DYE, tr(player, "ascension_confirm_accept", "&a&lConfirm Ascension"),
+                trList(player, "ascension_confirm_accept_lore", List.of(
+                        "&7Validate, pay, and awaken this level.", " ", "&aClick to confirm.")))));
+        inventory.setItem(26, item(Material.BARRIER, tr(player, "button_exit", "&cClose"),
+                trList(player, "exit_lore", List.of("&7Close without purchasing."))));
+        player.openInventory(inventory);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    public void handleClick(Player player, InventoryClickEvent event, LevelingHolder holder) {
+        event.setCancelled(true);
+        if (event.getCurrentItem() == null || event.getRawSlot() < 0
+                || event.getRawSlot() >= event.getInventory().getSize()) return;
         Plot plot = holder.getPlot();
-        if (plot == null) {
-            plugin.msg().send(player, "no_plot_here");
-            return;
-        }
-
-        int slot = e.getSlot();
-
-        if (slot == 49) {
-            plugin.gui().openMain(player);
-            return;
-        }
-
-        if (slot == 50) {
-            try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
+        if (!ownsPlot(player, plot)) {
+            plugin.effects().playError(player);
             player.closeInventory();
             return;
         }
-
-        // Track clicks (cosmetic)
-        if (slot >= 19 && slot <= 25) {
-            GUIManager.playClick(player);
-            return;
-        }
-
-        if (e.getCurrentItem().getType() != Material.EXPERIENCE_BOTTLE) return;
-
-        Plot plotNow = holder.getPlot();
-        int nextLvl = plotNow.getLevel() + 1;
-        int maxLvl = plugin.cfg().getMaxLevel();
-        if (nextLvl > maxLvl) {
-            GUIManager.playClick(player);
-            return;
-        }
-
-        CurrencyType moneyType = plugin.cfg().getLevelCostType();
-        double moneyCost = calculateCost(nextLvl);
-        boolean moneyAllowed = isMoneyUpgradeAvailable(moneyType);
-
-        CurrencyType blocksType = getBlocksTypeOrNull();
-        double blocksCost = (blocksType == null || !isBlocksUpgradeEnabled())
-                ? -1
-                : calculateBlocksCost(nextLvl);
-        boolean blocksAllowed = (blocksType != null && blocksCost > 0);
-
-        boolean clickedMoney = (slot == 30);
-        boolean clickedBlocks = (slot == 32);
-
-        // Single-button mode uses slot 31:
-        if (slot == 31) {
-            if (moneyAllowed) {
-                clickedMoney = true;
-            } else if (blocksAllowed) {
-                clickedBlocks = true;
-            } else {
-                plugin.effects().playError(player);
-                return;
+        int slot = event.getSlot();
+        switch (holder.page) {
+            case HALL -> handleHall(player, plot, slot);
+            case GUIDE -> {
+                if (slot == 48) openHall(player, plot);
+                else if (slot == 50) close(player);
+            }
+            case DISCIPLINES -> handleDiscipline(player, plot, slot);
+            case CONFIRM -> {
+                if (slot == 21) openHall(player, plot);
+                else if (slot == 23) performUpgrade(player, plot, holder.payment);
+                else if (slot == 26) close(player);
             }
         }
+    }
 
-        if (clickedMoney && !moneyAllowed) {
-            plugin.effects().playError(player);
-            plugin.msg().send(player, "level_up_fail_cost");
-            open(player, plotNow);
-            return;
-        }
-        if (clickedBlocks && !blocksAllowed) {
-            plugin.effects().playError(player);
-            plugin.msg().send(player, "level_up_fail_cost");
-            open(player, plotNow);
-            return;
-        }
+    private void handleHall(Player player, Plot plot, int slot) {
+        if (slot == 10) openGuide(player, plot);
+        else if (slot == 12) openDisciplines(player, plot);
+        else if (slot == 16) {
+            if (plot.getLevel() >= plugin.horizons().unlockLevel()) plugin.gui().expansionRequest().open(player);
+            else plugin.effects().playError(player);
+        } else if (slot == 30 && moneyAvailable()) openConfirmation(player, plot, Payment.MONEY);
+        else if (slot == 32 && blocksAvailable()) openConfirmation(player, plot, Payment.BLOCKS);
+        else if (slot == 48) plugin.gui().openMain(player);
+        else if (slot == 50) close(player);
+        else if (slot >= 19 && slot <= 25) plugin.effects().playMenuFlip(player);
+    }
 
-        CurrencyType payType = clickedMoney ? moneyType : blocksType;
-        double payCost = clickedMoney ? moneyCost : blocksCost;
+    private void handleDiscipline(Player player, Plot plot, int slot) {
+        AscensionFocus focus = switch (slot) {
+            case 20 -> AscensionFocus.STONEWRIGHT;
+            case 22 -> AscensionFocus.VERDANT_KEEPER;
+            case 24 -> AscensionFocus.WAYFINDER;
+            default -> null;
+        };
+        if (focus != null) selectFocus(player, plot, focus);
+        else if (slot == 39) openHall(player, plot);
+        else if (slot == 40) close(player);
+    }
 
-        if (!plugin.eco().withdraw(player, payCost, payType)) {
-            plugin.msg().send(player, "level_up_fail_cost");
+    private void selectFocus(Player player, Plot plot, AscensionFocus focus) {
+        AscensionFocus current = AscensionFocus.parse(plot.getAscensionFocus());
+        if (current == focus) {
             plugin.effects().playError(player);
             return;
         }
-
-        // Expansion validation (overlap/world limit)
-        if (plugin.cfg().isLevelingExpansionEnabled()) {
-            int expandAmount = plugin.cfg().getLevelingExpansionAmount();
-            int newX1 = plotNow.getX1() - expandAmount;
-            int newZ1 = plotNow.getZ1() - expandAmount;
-            int newX2 = plotNow.getX2() + expandAmount;
-            int newZ2 = plotNow.getZ2() + expandAmount;
-
-            if (plugin.store().isAreaOverlapping(plotNow, plotNow.getWorld(), newX1, newZ1, newX2, newZ2)) {
-                plugin.eco().deposit(player, payCost, payType);
-                plugin.msg().send(player, "level_up_fail_overlap");
-                plugin.effects().playError(player);
-                return;
-            }
-
-            int newRadius = (newX2 - newX1) / 2;
-            int maxRadiusWorld = plugin.cfg().getWorldMaxRadius(player.getWorld());
-            if (newRadius > maxRadiusWorld && !player.hasPermission("aegis.admin.bypass")) {
-                plugin.eco().deposit(player, payCost, payType);
-                plugin.msg().send(player, "level_up_fail_world_limit", Map.of("LIMIT", String.valueOf(maxRadiusWorld)));
-                plugin.effects().playError(player);
-                return;
-            }
-
-            plugin.store().removePlot(plotNow.getOwner(), plotNow.getPlotId());
-            plotNow.setX1(newX1);
-            plotNow.setX2(newX2);
-            plotNow.setZ1(newZ1);
-            plotNow.setZ2(newZ2);
-            plugin.store().addPlot(plotNow);
+        long remaining = focusCooldownRemaining(plot);
+        if (current != AscensionFocus.UNCHOSEN && remaining > 0L) {
+            send(player, "ascension_focus_cooldown", "&eThis plot may change discipline again in {DAYS} day(s).",
+                    Map.of("DAYS", String.valueOf((remaining + 86_399_999L) / 86_400_000L)));
+            plugin.effects().playError(player);
+            return;
         }
-
-        PlotLevelUpEvent event = new PlotLevelUpEvent(plotNow, player, nextLvl);
-        Bukkit.getPluginManager().callEvent(event);
-
-        plotNow.setLevel(nextLvl);
-        plugin.store().setDirty(true);
-
-        plugin.msg().send(player, "level_up_success", Map.of("LEVEL", String.valueOf(nextLvl)));
-
-        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
+        plot.setAscensionFocus(focus.name());
+        plot.setAscensionFocusChangedAt(System.currentTimeMillis());
+        plugin.store().savePlotSync(plot);
+        if (plugin.ascensionEffects() != null) plugin.ascensionEffects().refresh(player, plot);
+        send(player, "ascension_focus_selected", "&a{FOCUS} now guides this plot's Ascension.",
+                Map.of("FOCUS", focusName(player, focus)));
         plugin.effects().playConfirm(player);
-
-        open(player, plotNow);
+        openDisciplines(player, plot);
     }
 
-    // --------------------------------------------------
-    // HELPERS
-    // --------------------------------------------------
+    private void performUpgrade(Player player, Plot plot, Payment payment) {
+        if (payment == null || !ownsPlot(player, plot) || !paymentAvailable(payment)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        int nextLevel = plot.getLevel() + 1;
+        if (nextLevel > plugin.cfg().getMaxLevel()) return;
+        CurrencyType type = payment == Payment.MONEY ? plugin.cfg().getLevelCostType() : blocksType();
+        double cost = payment == Payment.MONEY ? moneyCost(nextLevel) : blockCost(nextLevel);
+        Bounds expanded = validateExpansion(player, plot);
+        if (expanded == Bounds.INVALID) return;
+        if (!plugin.eco().withdraw(player, cost, type)) {
+            send(player, "level_up_fail_cost", "&cYou do not have enough currency to ascend.", Map.of());
+            plugin.effects().playError(player);
+            return;
+        }
 
-    private ItemStack buildLevelTrackItem(Player player, Plot plot, int level, int currentLvl, int maxLvl) {
-        Material mat;
-        String titleKey;
-        String loreKey;
+        int oldLevel = plot.getLevel();
+        int oldX1 = plot.getX1();
+        int oldZ1 = plot.getZ1();
+        int oldX2 = plot.getX2();
+        int oldZ2 = plot.getZ2();
+        try {
+            if (expanded != null) {
+                plugin.store().updatePlotBounds(plot, expanded.x1, expanded.z1, expanded.x2, expanded.z2);
+            }
+            plot.setLevel(nextLevel);
+            plugin.store().savePlotSync(plot);
+            Bukkit.getPluginManager().callEvent(new PlotLevelUpEvent(plot, player, nextLevel));
+            plugin.store().setDirty(true);
+        } catch (Throwable error) {
+            plot.setLevel(oldLevel);
+            if (expanded != null) {
+                try {
+                    plugin.store().updatePlotBounds(plot, oldX1, oldZ1, oldX2, oldZ2);
+                } catch (Throwable rollbackError) {
+                    error.addSuppressed(rollbackError);
+                }
+            }
+            plugin.store().savePlotSync(plot);
+            plugin.eco().deposit(player, cost, type);
+            plugin.getLogger().severe("Ascension transaction rolled back for " + player.getName() + ": " + error.getMessage());
+            send(player, "ascension_transaction_rollback", "&cAscension could not complete. Your payment was returned.", Map.of());
+            plugin.effects().playError(player);
+            openHall(player, plot);
+            return;
+        }
 
-        if (level < currentLvl) {
-            mat = Material.EMERALD_BLOCK;
-            titleKey = "level_track_completed_name";
-            loreKey = "level_track_completed_lore";
-        } else if (level == currentLvl) {
-            mat = Material.GOLD_BLOCK;
-            titleKey = "level_track_current_name";
-            loreKey = "level_track_current_lore";
-        } else {
-            mat = Material.REDSTONE_BLOCK;
-            titleKey = "level_track_locked_name";
-            loreKey = "level_track_locked_lore";
+        send(player, "level_up_success", "&dYour plot has ascended to Level &f{LEVEL}&d!",
+                Map.of("LEVEL", String.valueOf(nextLevel)));
+        ceremony(player, plot, nextLevel);
+    }
 
-            if (level == currentLvl + 1) {
-                titleKey = "level_track_next_name";
-                loreKey = "level_track_next_lore";
+    private Bounds validateExpansion(Player player, Plot plot) {
+        if (!plugin.cfg().isLevelingExpansionEnabled()) return null;
+        int amount = Math.max(1, plugin.cfg().getLevelingExpansionAmount());
+        Bounds bounds = new Bounds(plot.getX1() - amount, plot.getZ1() - amount,
+                plot.getX2() + amount, plot.getZ2() + amount);
+        if (plugin.store().isAreaOverlapping(plot, plot.getWorld(), bounds.x1, bounds.z1, bounds.x2, bounds.z2)) {
+            send(player, "level_up_fail_overlap", "&cThe new boundary would overlap another plot.", Map.of());
+            plugin.effects().playError(player);
+            return Bounds.INVALID;
+        }
+        int radius = Math.max(bounds.x2 - bounds.x1, bounds.z2 - bounds.z1) / 2;
+        int limit = plugin.cfg().getWorldMaxRadius(player.getWorld());
+        if (radius > limit && !player.hasPermission("aegis.admin.bypass-limits")) {
+            send(player, "level_up_fail_world_limit", "&cThis world permits a maximum radius of {LIMIT}.",
+                    Map.of("LIMIT", String.valueOf(limit)));
+            plugin.effects().playError(player);
+            return Bounds.INVALID;
+        }
+        return bounds;
+    }
+
+    private void ceremony(Player player, Plot plot, int level) {
+        player.closeInventory();
+        player.spawnParticle(Particle.PORTAL, player.getLocation().add(0, 1, 0), 75, 1.1, 1.0, 1.1, 0.15);
+        player.spawnParticle(Particle.END_ROD, player.getLocation().add(0, 1, 0), 35, 0.8, 1.0, 0.8, 0.06);
+        player.playEffect(org.bukkit.EntityEffect.TOTEM_RESURRECT);
+        plugin.effects().playSound(player, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 0.9F + Math.min(0.5F, level / 100F));
+        plugin.effects().playConfirm(player);
+        player.sendTitle(color(tr(player, "ascension_ceremony_title", "&6&lPLOT ASCENDED")),
+                color(tr(player, "ascension_ceremony_subtitle", "&fLevel {LEVEL} &8- &e{CHAPTER}")
+                        .replace("{LEVEL}", String.valueOf(level)).replace("{CHAPTER}", chapterName(player, level))), 10, 60, 20);
+        plugin.runEntityLater(player, () -> openHall(player, plot), 35L);
+    }
+
+    private void renderUpgradeAltar(Player player, Plot plot, Inventory inventory) {
+        int nextLevel = plot.getLevel() + 1;
+        if (nextLevel > plugin.cfg().getMaxLevel()) {
+            inventory.setItem(31, glow(item(Material.NETHER_STAR,
+                    tr(player, "ascension_zenith_name", "&6&lZenith Ascension Complete"),
+                    trList(player, "ascension_zenith_lore", List.of(
+                            "&7All thirty plot levels are mastered.", "&dThe Horizon Gateway is now available.")))));
+            return;
+        }
+        List<String> preview = new ArrayList<>();
+        preview.add(tr(player, "ascension_altar_next", "&7Next: &fLevel {LEVEL} &8- &e{CHAPTER}")
+                .replace("{LEVEL}", String.valueOf(nextLevel)).replace("{CHAPTER}", chapterName(player, nextLevel)));
+        preview.add(" ");
+        preview.add(tr(player, "ascension_altar_rewards", "&dNew Rewards:"));
+        preview.addAll(rewardsForLevel(player, nextLevel));
+        preview.add(" ");
+        preview.add(tr(player, "ascension_altar_hint", "&8Choose an offering on either side."));
+        inventory.setItem(31, item(Material.SMITHING_TABLE,
+                tr(player, "ascension_altar_name", "&6&lAscension Altar"), preview));
+
+        inventory.setItem(30, paymentItem(player, Payment.MONEY, nextLevel));
+        inventory.setItem(32, paymentItem(player, Payment.BLOCKS, nextLevel));
+    }
+
+    private ItemStack paymentItem(Player player, Payment payment, int nextLevel) {
+        boolean available = paymentAvailable(payment);
+        CurrencyType type = payment == Payment.MONEY ? plugin.cfg().getLevelCostType() : blocksType();
+        double cost = payment == Payment.MONEY ? moneyCost(nextLevel) : blockCost(nextLevel);
+        Material material = available ? (payment == Payment.MONEY ? Material.GOLD_INGOT : Material.AMETHYST_SHARD) : Material.GRAY_DYE;
+        String name = payment == Payment.MONEY
+                ? tr(player, "ascension_offer_money_name", "&6Treasury Offering")
+                : tr(player, "ascension_offer_blocks_name", "&bClaimBlock Offering");
+        if (!available) return item(material, name, trList(player, "ascension_offer_unavailable_lore", List.of("&8Unavailable on this server.")));
+        return item(material, name, List.of(
+                tr(player, "ascension_offer_cost", "&7Cost: &f{COST}").replace("{COST}", formatCost(player, cost, type)),
+                tr(player, "ascension_offer_balance", "&7Balance: &f{BALANCE}").replace("{BALANCE}", formatBalance(player, type)),
+                " ", tr(player, "ascension_offer_click", "&eClick to review and confirm.")));
+    }
+
+    private ItemStack levelTrackItem(Player player, Plot plot, int level) {
+        int current = plot.getLevel();
+        String state;
+        if (level < current) state = tr(player, "ascension_track_mastered", "&aMastered");
+        else if (level == current) state = tr(player, "ascension_track_current", "&eCurrent");
+        else if (level == current + 1) state = tr(player, "ascension_track_next", "&bNext");
+        else state = tr(player, "ascension_track_locked", "&8Locked");
+        List<String> lore = new ArrayList<>();
+        lore.add(tr(player, "ascension_track_chapter", "&7{CHAPTER}").replace("{CHAPTER}", chapterName(player, level)));
+        lore.add(tr(player, "ascension_track_state", "&7Status: {STATE}").replace("{STATE}", state));
+        lore.add(" ");
+        lore.addAll(rewardsForLevel(player, level));
+        if (level > current + 1) {
+            lore.add(" ");
+            lore.add(tr(player, "ascension_track_prerequisite", "&8Master earlier levels first."));
+        }
+        ItemStack item = item(rewardMaterial(level),
+                tr(player, "ascension_track_level_name", "&fLevel {LEVEL}").replace("{LEVEL}", String.valueOf(level)), lore);
+        return level <= current ? glow(item) : item;
+    }
+
+    private ItemStack focusItem(Player player, Plot plot, AscensionFocus focus) {
+        boolean selected = AscensionFocus.parse(plot.getAscensionFocus()) == focus;
+        String base = "ascension_focus_" + focus.key();
+        List<String> lore = new ArrayList<>(trList(player, base + "_lore", focusFallback(focus)));
+        lore.add(" ");
+        lore.add(selected ? tr(player, "ascension_focus_active", "&aCurrently guiding this plot.")
+                : tr(player, "ascension_focus_select", "&eClick to choose this discipline."));
+        ItemStack item = item(focus.icon(), tr(player, base + "_name", focusName(player, focus)), lore);
+        return selected ? glow(item) : item;
+    }
+
+    private List<String> focusFallback(AscensionFocus focus) {
+        return switch (focus) {
+            case STONEWRIGHT -> List.of("&7Haste I from Level 5; Haste II at 20.", "&8Useful for building without combat bonuses.");
+            case VERDANT_KEEPER -> List.of("&7Luck I from Level 5; Luck II at 20.", "&7Trusted residents cannot trample farmland.");
+            case WAYFINDER -> List.of("&7Speed I from Level 5; Speed II at 20.", "&8A restrained travel and exploration focus.");
+            default -> List.of("&7No discipline selected.");
+        };
+    }
+
+    private List<String> activeBlessingLore(Player player, Plot plot) {
+        return activeBlessingLore(player, plot, plot.getLevel());
+    }
+
+    private List<String> activeBlessingLore(Player player, Plot plot, int level) {
+        Map<String, Integer> strongest = new LinkedHashMap<>();
+        int memberSlots = 0;
+        boolean flight = false;
+        for (int tier = 1; tier <= level; tier++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(tier);
+            if (rewards == null) continue;
+            for (String reward : rewards) {
+                if (reward == null) continue;
+                if (reward.startsWith("EFFECT:")) {
+                    String[] parts = reward.split(":");
+                    if (parts.length >= 3) try { strongest.merge(parts[1], Integer.parseInt(parts[2]), Math::max); }
+                    catch (NumberFormatException ignored) {}
+                } else if (reward.startsWith("MEMBERS:")) {
+                    try { memberSlots += Integer.parseInt(reward.substring(8)); } catch (NumberFormatException ignored) {}
+                } else if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLAG:fly")) flight = true;
             }
         }
+        AscensionFocus focus = AscensionFocus.parse(plot.getAscensionFocus());
+        int focusAmp = focus.amplifierForLevel(level);
+        if (focus.effectType() != null && focusAmp >= 0) strongest.merge(focus.effectType().getName(), focusAmp + 1, Math::max);
 
-        String title = t(player, titleKey, vars("level", String.valueOf(level)), "&7Level " + level);
-
-        CurrencyType moneyType = plugin.cfg().getLevelCostType();
-        boolean moneyAllowed = isMoneyUpgradeAvailable(moneyType);
-
-        CurrencyType blocksType = getBlocksTypeOrNull();
-        boolean blocksAllowed = (blocksType != null && isBlocksUpgradeEnabled() && calculateBlocksCost(level) > 0);
-
-        String costDisplay;
-        if (moneyAllowed) {
-            costDisplay = plugin.eco().format(calculateCost(level), moneyType);
-        } else if (blocksAllowed) {
-            costDisplay = formatBlocks(calculateBlocksCost(level)) + " Blocks";
+        List<String> lore = new ArrayList<>();
+        if (strongest.isEmpty() && memberSlots == 0 && !flight) {
+            lore.add(tr(player, "ascension_blessings_none", "&8No blessings are active yet."));
         } else {
-            costDisplay = plugin.eco().format(calculateCost(level), moneyType);
+            strongest.forEach((effect, tier) -> lore.add(formatEffect(player, effect, tier)));
+            if (memberSlots > 0) lore.add(tr(player, "level_reward_members_line", "&a+{AMOUNT} member slots")
+                    .replace("{AMOUNT}", String.valueOf(memberSlots)).replace("{SUFFIX}", memberSlots == 1 ? "" : "s"));
+            if (flight) lore.add(tr(player, "level_reward_flag_line", "&dUnlocks {FLAG}").replace("{FLAG}", tr(player, "ascension_reward_flight", "Plot Flight")));
         }
+        lore.add(" ");
+        lore.add(tr(player, "ascension_blessings_scope", "&8Active only for trusted residents inside this plot."));
+        return lore;
+    }
 
-        Map<String, String> vars = vars(
-                "level", String.valueOf(level),
-                "cost", costDisplay
-        );
+    private List<String> rewardsForLevel(Player player, int level) {
+        List<String> rewards = plugin.cfg().getLevelRewards(level);
+        List<String> lore = new ArrayList<>();
+        if (rewards != null) for (String reward : rewards) lore.add(formatReward(player, reward));
+        if (lore.isEmpty()) lore.add(level == 1
+                ? tr(player, "ascension_reward_foundation", "&7Founding territory established")
+                : tr(player, "ascension_reward_claimblocks", "&eClaimBlock progression bonus"));
+        return lore;
+    }
 
-        List<String> lore = tl(player, loreKey, vars, List.of());
-        if (lore.isEmpty()) {
-            lore = new ArrayList<>();
-            lore.add("&7Tier &f{LEVEL}".replace("{LEVEL}", String.valueOf(level)));
-            lore.add("&7Cost: &6{COST}".replace("{COST}", costDisplay));
-        } else {
-            lore = new ArrayList<>(lore);
+    private String formatReward(Player player, String reward) {
+        if (reward == null) return "";
+        if (reward.startsWith("EFFECT:")) {
+            String[] parts = reward.split(":");
+            try { return formatEffect(player, parts[1], Integer.parseInt(parts[2])); }
+            catch (Exception ignored) { return color("&b" + humanize(reward)); }
         }
-
-        lore.add("");
-        lore.add(t(player, "level_track_buffs_title", "&bBlessings:"));
-        lore.addAll(formatBuffs(player, level,
-                "level_track_blessings_none",
-                "&8No extra bonuses are tied to this tier."
-        ));
-
-        lore.add("");
-        if (level == currentLvl + 1 && level <= maxLvl) {
-            lore.add(t(player, "level_track_footer_next", "&eNext tier awaits."));
-        } else if (level > currentLvl + 1) {
-            lore.add(t(player, "level_track_footer_progress", "&7Advance to unlock this tier."));
-        } else if (level <= currentLvl) {
-            lore.add(t(player, "level_track_footer_mastered", "&aMastered."));
+        if (reward.startsWith("MEMBERS:")) {
+            String amount = reward.substring("MEMBERS:".length()).trim();
+            return tr(player, "level_reward_members_line", "&a+{AMOUNT} member slot{SUFFIX}")
+                    .replace("{AMOUNT}", amount).replace("{SUFFIX}", "1".equals(amount) ? "" : "s");
         }
-
-        return GUIManager.createItem(mat, title, lore);
-    }
-
-    private double calculateCost(int level) {
-        double base = plugin.cfg().getLevelBaseCost();
-        double mult = plugin.cfg().getLevelCostMultiplier();
-        return base * (level * mult);
-    }
-
-    /**
-     * Blocks upgrade cost:
-     * Priority:
-     * 1) leveling.blocks_costs.<level>
-     * 2) ascension.costs.blocks.<level>
-     * 3) formula fallback (leveling.blocks_base_cost * (level * leveling.blocks_cost_multiplier))
-     */
-    private double calculateBlocksCost(int level) {
-        double fromMap1 = plugin.getConfig().getDouble("leveling.blocks_costs." + level, -1);
-        if (fromMap1 > 0) return fromMap1;
-
-        double fromMap2 = plugin.getConfig().getDouble("ascension.costs.blocks." + level, -1);
-        if (fromMap2 > 0) return fromMap2;
-
-        double base = plugin.getConfig().getDouble("leveling.blocks_base_cost", 250.0);
-        double mult = plugin.getConfig().getDouble("leveling.blocks_cost_multiplier", 1.0);
-        return base * (level * mult);
-    }
-
-    private boolean isBlocksUpgradeEnabled() {
-        if (!plugin.getConfig().getBoolean("leveling.blocks_upgrades_enabled", true)) return false;
-        if (!plugin.getConfig().getBoolean("economy.blocks.enabled", true)) return false;
-        return true;
-    }
-
-    private boolean isMoneyUpgradeAvailable(CurrencyType configuredType) {
-        boolean vaultEnabled = plugin.getConfig().getBoolean("economy.vault.enabled",
-                plugin.getConfig().getBoolean("vault.enabled", true));
-
-        if (configuredType == null) return false;
-
-        if (isVaultLike(configuredType)) {
-            if (!vaultEnabled) return false;
-            return isVaultPresent();
+        if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLAG:fly")) {
+            return tr(player, "level_reward_flag_line", "&dUnlocks {FLAG}")
+                    .replace("{FLAG}", tr(player, "ascension_reward_flight", "Plot Flight"));
         }
-
-        return true;
+        if (reward.startsWith("FLAG:")) {
+            return tr(player, "level_reward_flag_line", "&dUnlocks {FLAG}")
+                    .replace("{FLAG}", humanize(reward.substring(5)));
+        }
+        return color("&a" + humanize(reward));
     }
 
-    private boolean isVaultPresent() {
+    private String formatEffect(Player player, String effect, int tier) {
+        String normalized = effect == null ? "" : effect.toUpperCase(Locale.ROOT);
+        String name = tr(player, "ascension_effect_" + normalized.toLowerCase(Locale.ROOT), humanize(normalized));
+        return tr(player, "level_reward_effect_line", "&b{EFFECT} {TIER}")
+                .replace("{EFFECT}", name).replace("{TIER}", roman(tier));
+    }
+
+    private String chapterName(Player player, int level) {
+        String key;
+        String fallback;
+        if (level <= 5) { key = "foundation"; fallback = "Foundation"; }
+        else if (level <= 10) { key = "pathfinder"; fallback = "Pathfinder"; }
+        else if (level <= 15) { key = "bastion"; fallback = "Bastion"; }
+        else if (level <= 20) { key = "sovereign"; fallback = "Sovereign"; }
+        else if (level <= 25) { key = "mythic"; fallback = "Mythic Dominion"; }
+        else { key = "zenith"; fallback = "Zenith Ascension"; }
+        return tr(player, "ascension_chapter_" + key, fallback);
+    }
+
+    private Material rewardMaterial(int level) {
+        List<String> rewards = plugin.cfg().getLevelRewards(level);
+        if (rewards != null) {
+            if (rewards.stream().anyMatch(value -> value != null && value.toUpperCase(Locale.ROOT).contains("FLIGHT"))) return Material.FEATHER;
+            if (rewards.stream().anyMatch(value -> value != null && value.startsWith("MEMBERS:"))) return Material.PLAYER_HEAD;
+            if (rewards.stream().anyMatch(value -> value != null && value.contains("FAST_DIGGING"))) return Material.IRON_PICKAXE;
+            if (rewards.stream().anyMatch(value -> value != null && value.contains("WATER"))) return Material.HEART_OF_THE_SEA;
+            if (rewards.stream().anyMatch(value -> value != null && value.contains("FIRE"))) return Material.BLAZE_POWDER;
+            if (rewards.stream().anyMatch(value -> value != null && value.contains("SLOW_FALLING"))) return Material.PHANTOM_MEMBRANE;
+        }
+        return switch ((level - 1) / 5) {
+            case 0 -> Material.OAK_SAPLING;
+            case 1 -> Material.COMPASS;
+            case 2 -> Material.SHIELD;
+            case 3 -> Material.GOLDEN_HELMET;
+            case 4 -> Material.AMETHYST_CLUSTER;
+            default -> Material.NETHER_STAR;
+        };
+    }
+
+    private String focusName(Player player, AscensionFocus focus) {
+        return tr(player, "ascension_focus_" + focus.key() + "_name", switch (focus) {
+            case STONEWRIGHT -> "Stonewright";
+            case VERDANT_KEEPER -> "Verdant Keeper";
+            case WAYFINDER -> "Wayfinder";
+            default -> "Unchosen";
+        });
+    }
+
+    private long focusCooldownRemaining(Plot plot) {
+        if (AscensionFocus.parse(plot.getAscensionFocus()) == AscensionFocus.UNCHOSEN) return 0L;
+        long days = Math.max(0L, plugin.getConfig().getLong("leveling.disciplines.change_cooldown_days", 7L));
+        return Math.max(0L, plot.getAscensionFocusChangedAt() + days * 86_400_000L - System.currentTimeMillis());
+    }
+
+    private String focusCooldownLine(Player player, Plot plot) {
+        long remaining = focusCooldownRemaining(plot);
+        if (remaining <= 0L) return tr(player, "ascension_focus_change_ready", "&aA discipline may be selected now.");
+        return tr(player, "ascension_focus_change_wait", "&eChange available in {DAYS} day(s).")
+                .replace("{DAYS}", String.valueOf((remaining + 86_399_999L) / 86_400_000L));
+    }
+
+    private int trackStart(int level, int maxLevel) {
+        int start = Math.max(1, level - 3);
+        return Math.min(start, Math.max(1, maxLevel - 6));
+    }
+
+    private String progressBar(int level, int maxLevel) {
+        int filled = Math.max(0, Math.min(10, (int) Math.round(level * 10.0D / Math.max(1, maxLevel))));
+        return "&a" + "|".repeat(filled) + "&8" + "|".repeat(10 - filled);
+    }
+
+    private double moneyCost(int level) {
+        return Math.max(0.0D, plugin.cfg().getLevelBaseCost() * (level * plugin.cfg().getLevelCostMultiplier()));
+    }
+
+    private double blockCost(int level) {
+        double configured = plugin.getConfig().getDouble("leveling.upgrades.blocks_costs." + level, -1.0D);
+        if (configured > 0.0D) return configured;
+        double legacy = plugin.getConfig().getDouble("leveling.blocks_costs." + level, -1.0D);
+        if (legacy > 0.0D) return legacy;
+        return 250.0D * level;
+    }
+
+    private boolean moneyAvailable() {
+        if (!plugin.getConfig().getBoolean("leveling.upgrades.allow_vault_payment", true)) return false;
+        CurrencyType type = plugin.cfg().getLevelCostType();
+        if (type == null) return false;
+        String name = type.name().toUpperCase(Locale.ROOT);
+        if (!name.contains("VAULT") && !name.contains("MONEY")) return true;
         try {
             Plugin vault = Bukkit.getPluginManager().getPlugin("Vault");
-            return vault != null && vault.isEnabled();
+            return vault != null && vault.isEnabled() && plugin.eco().isVaultReady();
         } catch (Throwable ignored) {
             return false;
         }
     }
 
-    private boolean isVaultLike(CurrencyType type) {
-        String n = type.name().toUpperCase();
-        return n.contains("VAULT") || n.contains("MONEY") || n.contains("CASH") || n.contains("DOLLAR");
+    private boolean blocksAvailable() {
+        return plugin.getConfig().getBoolean("leveling.upgrades.allow_block_payment", true)
+                && plugin.getConfig().getBoolean("economy.blocks.enabled", true) && blocksType() != null;
     }
 
-    private CurrencyType getBlocksTypeOrNull() {
-        try {
-            return CurrencyType.valueOf("CLAIM_BLOCKS");
-        } catch (Throwable ignored) { }
+    private boolean paymentAvailable(Payment payment) {
+        return payment == Payment.MONEY ? moneyAvailable() : blocksAvailable();
+    }
 
-        try {
-            return CurrencyType.valueOf("BLOCKS");
-        } catch (Throwable ignored) { }
-
+    private CurrencyType blocksType() {
+        for (String name : List.of("CLAIM_BLOCKS", "BLOCKS")) {
+            try { return CurrencyType.valueOf(name); } catch (IllegalArgumentException ignored) {}
+        }
         return null;
     }
 
-    private String formatBlocks(double d) {
-        long v = Math.round(d);
-        return String.valueOf(Math.max(0, v));
+    private String formatCost(Player player, double cost, CurrencyType type) {
+        if (type == null) return String.valueOf(Math.round(cost));
+        if (type == blocksType()) return Math.round(cost) + " " + tr(player, "ascension_currency_claimblocks", "ClaimBlocks");
+        return plugin.eco().format(cost, type);
     }
 
-    /**
-     * Balance display:
-     * - Tries EconomyManager#getBalance(Player, CurrencyType) or #balance(Player, CurrencyType) via reflection
-     * - Falls back to ClaimBlockManager for CLAIM_BLOCKS/BLOCKS
-     * - Returns "?" if unknown
-     */
-    private String formatBalance(Player p, CurrencyType type) {
-        double bal = -1;
-
-        // 1) Try eco balance methods via reflection (keeps this GUI compatible across builds)
+    private String formatBalance(Player player, CurrencyType type) {
+        if (type == null) return "?";
+        if (type == blocksType() && plugin.getClaimBlockManager() != null) {
+            return String.valueOf(plugin.getClaimBlockManager().getAvailableBlocks(player.getUniqueId()));
+        }
         try {
-            Object eco = plugin.eco();
-            if (eco != null && p != null && type != null) {
-                for (String mName : new String[]{"getBalance", "balance"}) {
-                    try {
-                        Method m = eco.getClass().getMethod(mName, Player.class, CurrencyType.class);
-                        Object out = m.invoke(eco, p, type);
-                        if (out instanceof Number n) {
-                            bal = n.doubleValue();
-                            break;
-                        }
-                    } catch (Throwable ignored) { }
-                }
+            Object economy = plugin.eco();
+            for (String methodName : List.of("getBalance", "balance")) {
+                try {
+                    Method method = economy.getClass().getMethod(methodName, Player.class, CurrencyType.class);
+                    Object result = method.invoke(economy, player, type);
+                    if (result instanceof Number number) return plugin.eco().format(number.doubleValue(), type);
+                } catch (ReflectiveOperationException ignored) {}
             }
-        } catch (Throwable ignored) { }
-
-        // 2) Hard fallback for claim-block currencies
-        if (bal < 0 && p != null && type != null) {
-            String n = type.name().toUpperCase();
-            if ((n.equals("CLAIM_BLOCKS") || n.equals("BLOCKS")) && plugin.getClaimBlockManager() != null) {
-                bal = plugin.getClaimBlockManager().getAvailableBlocks(p.getUniqueId());
-            }
-        }
-
-        if (bal < 0) return "?";
-        return formatBlocks(bal);
+        } catch (Throwable ignored) {}
+        return "?";
     }
 
-    private List<String> formatBuffs(Player player, int level, String emptyKey, String emptyFallback) {
-        List<String> rewards = plugin.cfg().getLevelRewards(level);
-        List<String> formatted = new ArrayList<>();
-        if (rewards == null || rewards.isEmpty()) {
-            formatted.add(t(player, emptyKey, vars("level", String.valueOf(level)), emptyFallback));
-        } else {
-            for (String s : rewards) {
-                formatted.add(formatReward(player, s));
-            }
-        }
-        return formatted;
+    private void guideCard(Inventory inventory, int slot, Material material, Player player, String id,
+                           String fallbackName, List<String> fallbackLore) {
+        inventory.setItem(slot, item(material, tr(player, "ascension_guide_" + id + "_name", fallbackName),
+                trList(player, "ascension_guide_" + id + "_lore", fallbackLore)));
     }
 
-    private List<String> formatActiveBuffs(Player player, int level, String emptyKey, String emptyFallback) {
-        Map<String, Integer> strongestEffects = new HashMap<>();
-        Map<String, Integer> effectOrder = new HashMap<>();
-        List<String> effectKeys = new ArrayList<>();
-
-        int totalMemberSlots = 0;
-        List<String> unlockedFlags = new ArrayList<>();
-        List<String> unlockedMisc = new ArrayList<>();
-
-        for (int i = 1; i <= level; i++) {
-            List<String> rewards = plugin.cfg().getLevelRewards(i);
-            if (rewards == null || rewards.isEmpty()) {
-                continue;
-            }
-
-            for (String rawReward : rewards) {
-                if (rawReward == null) {
-                    continue;
-                }
-
-                String reward = rawReward.trim();
-                if (reward.isEmpty()) {
-                    continue;
-                }
-
-                if (reward.startsWith("EFFECT:")) {
-                    String[] parts = reward.split(":");
-                    if (parts.length < 3) {
-                        continue;
-                    }
-
-                    String effectKey = parts[1].trim().toUpperCase();
-                    int tier;
-                    try {
-                        tier = Integer.parseInt(parts[2].trim());
-                    } catch (NumberFormatException ignored) {
-                        continue;
-                    }
-
-                    if (!effectOrder.containsKey(effectKey)) {
-                        effectOrder.put(effectKey, effectOrder.size());
-                        effectKeys.add(effectKey);
-                    }
-                    strongestEffects.merge(effectKey, tier, Math::max);
-                    continue;
-                }
-
-                if (reward.startsWith("MEMBERS:")) {
-                    try {
-                        totalMemberSlots += Integer.parseInt(reward.substring("MEMBERS:".length()).trim());
-                    } catch (NumberFormatException ignored) {
-                    }
-                    continue;
-                }
-
-                if (reward.startsWith("FLAG:")) {
-                    String flag = reward.substring("FLAG:".length()).trim().toLowerCase();
-                    if (!flag.isEmpty() && !unlockedFlags.contains(flag)) {
-                        unlockedFlags.add(flag);
-                    }
-                    continue;
-                }
-
-                if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")) {
-                    if (!unlockedFlags.contains("fly")) {
-                        unlockedFlags.add("fly");
-                    }
-                    continue;
-                }
-
-                if (!unlockedMisc.contains(reward)) {
-                    unlockedMisc.add(reward);
-                }
-            }
+    private boolean canOpen(Player player, Plot plot) {
+        if (plot == null) {
+            plugin.msg().send(player, "no_plot_here");
+            return false;
         }
-
-        List<String> formatted = new ArrayList<>();
-        for (String effectKey : effectKeys) {
-            Integer tier = strongestEffects.get(effectKey);
-            if (tier == null) {
-                continue;
-            }
-            formatted.add(formatReward(player, "EFFECT:" + effectKey + ":" + tier));
+        if (!ownsPlot(player, plot)) {
+            plugin.msg().send(player, "no_perm");
+            return false;
         }
-
-        if (totalMemberSlots > 0) {
-            formatted.add(formatReward(player, "MEMBERS:" + totalMemberSlots));
-        }
-
-        for (String flag : unlockedFlags) {
-            formatted.add(formatReward(player, "FLAG:" + flag));
-        }
-
-        for (String misc : unlockedMisc) {
-            formatted.add(formatReward(player, misc));
-        }
-
-        if (formatted.isEmpty()) {
-            formatted.add(t(player, emptyKey, vars("level", String.valueOf(level)), emptyFallback));
-        }
-        return formatted;
+        return true;
     }
 
-    private String formatReward(Player player, String reward) {
-        if (reward == null || reward.isBlank()) {
-            return "&8- Unknown bonus";
-        }
-
-        if (reward.startsWith("EFFECT:")) {
-            try {
-                String[] parts = reward.split(":");
-                String effect = prettyEffectName(parts[1]);
-                String tier = parts.length > 2 ? toRoman(Integer.parseInt(parts[2])) : "I";
-                return t(player, "level_reward_effect_line",
-                        vars("effect", effect, "tier", tier),
-                        "&b✦ {EFFECT} {TIER}");
-            } catch (Throwable ignored) {
-                return "&b✦ " + reward;
-            }
-        }
-
-        if (reward.startsWith("MEMBERS:")) {
-            try {
-                int amount = Integer.parseInt(reward.substring("MEMBERS:".length()));
-                return t(player, "level_reward_members_line",
-                        vars("amount", String.valueOf(amount), "suffix", amount == 1 ? "" : "s"),
-                        "&a✦ +{AMOUNT} member slot{SUFFIX}");
-            } catch (Throwable ignored) {
-                return "&a✦ " + reward;
-            }
-        }
-
-        if (reward.startsWith("FLAG:")) {
-            String flag = prettyFlagName(reward.substring("FLAG:".length()));
-            return t(player, "level_reward_flag_line",
-                    vars("flag", flag),
-                    "&d✦ Unlocks {FLAG}");
-        }
-
-        if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")) {
-            return t(player, "level_reward_flag_line",
-                    vars("flag", prettyFlagName("fly")),
-                    "&d✦ Unlocks {FLAG}");
-        }
-
-        return "&a✦ " + humanizeToken(reward);
+    private boolean ownsPlot(Player player, Plot plot) {
+        return player != null && plot != null && player.getUniqueId().equals(plot.getOwner());
     }
 
-    private String prettyEffectName(String raw) {
-        String key = raw == null ? "" : raw.trim().toUpperCase();
-        return switch (key) {
-            case "FAST_DIGGING" -> "Haste";
-            case "INCREASE_DAMAGE" -> "Strength";
-            case "DAMAGE_RESISTANCE" -> "Resistance";
-            case "JUMP" -> "Jump Boost";
-            case "SLOW_FALLING" -> "Slow Falling";
-            case "NIGHT_VISION" -> "Night Vision";
-            case "WATER_BREATHING" -> "Water Breathing";
-            case "DOLPHINS_GRACE" -> "Dolphin's Grace";
-            case "CONDUIT_POWER" -> "Conduit Power";
-            default -> humanizeToken(key);
-        };
+    private void close(Player player) {
+        plugin.effects().playMenuClose(player);
+        player.closeInventory();
     }
 
-    private String prettyFlagName(String raw) {
-        String key = raw == null ? "" : raw.trim().toLowerCase();
-        return switch (key) {
-            case "fly" -> "Claim Flight";
-            case "safe-zone" -> "Safe Zone";
-            case "shop-interact" -> "Trade Stall Access";
-            default -> humanizeToken(key);
-        };
-    }
-
-    private String humanizeToken(String raw) {
-        if (raw == null || raw.isBlank()) return "Unknown";
-        String[] parts = raw.replace('-', ' ').replace('_', ' ').toLowerCase().split("\\s+");
-        StringBuilder out = new StringBuilder();
-        for (String part : parts) {
-            if (part.isEmpty()) continue;
-            if (!out.isEmpty()) out.append(' ');
-            out.append(Character.toUpperCase(part.charAt(0)));
-            if (part.length() > 1) out.append(part.substring(1));
+    private void paintHall(Inventory inventory) {
+        fill(inventory, Material.BLACK_STAINED_GLASS_PANE);
+        for (int slot : new int[]{0, 1, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 45, 46, 52, 53}) {
+            inventory.setItem(slot, GUIManager.createItem(Material.ORANGE_STAINED_GLASS_PANE, " ", List.of()));
         }
-        return out.toString();
     }
 
-    private String toRoman(int n) {
-        return switch (n) {
+    private void paintGuide(Inventory inventory) {
+        fill(inventory, Material.BROWN_STAINED_GLASS_PANE);
+        for (int slot : new int[]{0, 1, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 45, 46, 52, 53}) {
+            inventory.setItem(slot, GUIManager.createItem(Material.LIGHT_GRAY_STAINED_GLASS_PANE, " ", List.of()));
+        }
+    }
+
+    private void paintDiscipline(Inventory inventory) {
+        fill(inventory, Material.CYAN_STAINED_GLASS_PANE);
+        for (int slot : new int[]{0, 1, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 43, 44}) {
+            inventory.setItem(slot, GUIManager.createItem(Material.BLUE_STAINED_GLASS_PANE, " ", List.of()));
+        }
+    }
+
+    private void fill(Inventory inventory, Material material) {
+        ItemStack filler = GUIManager.createItem(material, " ", List.of());
+        for (int slot = 0; slot < inventory.getSize(); slot++) inventory.setItem(slot, filler);
+    }
+
+    private ItemStack item(Material material, String name, List<String> lore) {
+        return GUIManager.createItem(material, color(name), lore.stream().map(this::color).toList());
+    }
+
+    private ItemStack glow(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private String plotName(Plot plot) {
+        return plot.getPlotName() == null || plot.getPlotName().isBlank() ? plot.getOwnerName() + "'s Plot" : plot.getPlotName();
+    }
+
+    private String tr(Player player, String key, String fallback) {
+        return plugin.gui().tr(player, key, fallback);
+    }
+
+    private List<String> trList(Player player, String key, List<String> fallback) {
+        return plugin.gui().trList(player, key, fallback);
+    }
+
+    private void send(Player player, String key, String fallback, Map<String, String> replacements) {
+        String message = tr(player, key, fallback);
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        player.sendMessage(color(message));
+    }
+
+    private String color(String value) { return GUIManager.color(value == null ? "" : value); }
+
+    private String humanize(String value) {
+        if (value == null || value.isBlank()) return "Unknown";
+        StringBuilder output = new StringBuilder();
+        for (String part : value.replace('-', ' ').replace('_', ' ').toLowerCase(Locale.ROOT).split("\\s+")) {
+            if (part.isBlank()) continue;
+            if (!output.isEmpty()) output.append(' ');
+            output.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return output.toString();
+    }
+
+    private String roman(int number) {
+        return switch (number) {
             case 1 -> "I";
             case 2 -> "II";
             case 3 -> "III";
             case 4 -> "IV";
             case 5 -> "V";
-            default -> String.valueOf(n);
+            default -> String.valueOf(number);
         };
     }
 
-    // --------------------------------------------------
-    // SAFE LANGUAGE WRAPPERS (prevents raw keys / [Missing])
-    // + Legacy placeholder patching
-    // --------------------------------------------------
-
-    private String t(Player p, String key, String fallback) {
-        String raw = null;
-        try {
-            if (plugin.codex() != null) raw = plugin.codex().tr(p, key);
-        } catch (Throwable ignored) { }
-        return GUIManager.safeText(key, raw, fallback);
-    }
-
-    private String t(Player p, String key, Map<String, String> vars, String fallback) {
-        String raw = null;
-        try {
-            if (plugin.codex() != null) raw = plugin.codex().tr(p, key, (vars == null ? Map.of() : vars));
-        } catch (Throwable ignored) { }
-        String safe = GUIManager.safeText(key, raw, fallback);
-        return applyVarsCompat(safe, vars);
-    }
-
-    private List<String> tl(Player p, String key, Map<String, String> vars, List<String> fallback) {
-        List<String> out = null;
-        try {
-            if (plugin.codex() != null) out = plugin.codex().trList(p, key, (vars == null ? Map.of() : vars));
-        } catch (Throwable ignored) { }
-
-        if (out == null || out.isEmpty()) return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
-
-        if (out.size() == 1) {
-            String one = out.get(0);
-            if (one == null) return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
-            String s = one.trim();
-            if (s.isEmpty() || s.contains("[Missing") || s.equalsIgnoreCase(key)) {
-                return (fallback == null ? List.of() : applyVarsCompat(fallback, vars));
-            }
-        }
-
-        return applyVarsCompat(out, vars);
-    }
-
-    /**
-     * Supports multiple placeholder styles:
-     *  - {KEY}
-     *  - (KEY)
-     *  - %KEY%
-     *  - <KEY>
-     */
-    private String applyVarsCompat(String s, Map<String, String> vars) {
-        if (s == null || s.isEmpty() || vars == null || vars.isEmpty()) return s;
-        String out = s;
-        for (Map.Entry<String, String> e : vars.entrySet()) {
-            String k = e.getKey();
-            String v = String.valueOf(e.getValue());
-            out = out
-                    .replace("{" + k + "}", v)
-                    .replace("(" + k + ")", v)
-                    .replace("%" + k + "%", v)
-                    .replace("<" + k + ">", v);
-        }
-        return out;
-    }
-
-    private List<String> applyVarsCompat(List<String> lines, Map<String, String> vars) {
-        if (lines == null || lines.isEmpty() || vars == null || vars.isEmpty()) {
-            return (lines == null ? List.of() : lines);
-        }
-        List<String> out = new ArrayList<>(lines.size());
-        for (String line : lines) {
-            out.add(applyVarsCompat(line, vars));
-        }
-        return out;
-    }
-
-    /**
-     * Build a vars map that supports BOTH lowercase and uppercase keys.
-     */
-    private Map<String, String> vars(Object... kv) {
-        Map<String, String> m = new HashMap<>();
-        if (kv == null) return m;
-
-        for (int i = 0; i + 1 < kv.length; i += 2) {
-            String k = String.valueOf(kv[i]);
-            String v = String.valueOf(kv[i + 1]);
-            m.put(k, v);
-            m.put(k.toLowerCase(), v);
-            if (!k.isEmpty()) {
-                m.put(Character.toUpperCase(k.charAt(0)) + k.substring(1).toLowerCase(), v);
-            }
-            m.put(k.toUpperCase(), v);
-        }
-        return m;
+    private record Bounds(int x1, int z1, int x2, int z2) {
+        private static final Bounds INVALID = new Bounds(0, 0, 0, 0);
     }
 }

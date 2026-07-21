@@ -42,6 +42,7 @@ public class ClaimBlockExchangeGUI {
 
     private static final int SLOT_CONFIRM = 31;
     private static final int SLOT_BACK = 40;     // Arrow - back to menu
+    private static final int SLOT_GUIDE = 49;
     
     // Exit button slot (bottom right)
     private static final int SLOT_EXIT = 44;     // Barrier - close GUI
@@ -60,8 +61,10 @@ public class ClaimBlockExchangeGUI {
         if (p == null) return;
 
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
+        s.guide = false;
         if (s.amount <= 0) s.amount = 100;
         if (s.mode == null) s.mode = Mode.BUY;
+        clampAmount(p, s);
 
         // Get title from language pack with color
         String title = plugin.gui().title(p, "claimblocks_exchange_gui_title", "&8ClaimBlock Exchange");
@@ -86,6 +89,7 @@ public class ClaimBlockExchangeGUI {
 
         int slot = e.getRawSlot();
         if (slot < 0 || slot >= SIZE) return;
+        if (e.isShiftClick()) return;
 
         Session s = sessions.computeIfAbsent(p.getUniqueId(), k -> new Session());
 
@@ -94,6 +98,22 @@ public class ClaimBlockExchangeGUI {
             sessions.remove(p.getUniqueId());
             p.closeInventory();
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.0f);
+            return;
+        }
+
+        if (s.guide) {
+            if (slot == SLOT_GUIDE) {
+                s.guide = false;
+                render(p, e.getInventory(), s);
+                trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.1f);
+            }
+            return;
+        }
+
+        if (slot == SLOT_GUIDE) {
+            s.guide = true;
+            renderGuide(p, e.getInventory());
+            trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
             return;
         }
 
@@ -111,6 +131,7 @@ public class ClaimBlockExchangeGUI {
 
         if (slot == SLOT_MODE_BUY) {
             s.mode = Mode.BUY;
+            clampAmount(p, s);
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
             render(p, e.getInventory(), s);
             return;
@@ -118,6 +139,7 @@ public class ClaimBlockExchangeGUI {
 
         if (slot == SLOT_MODE_SELL) {
             s.mode = Mode.SELL;
+            clampAmount(p, s);
             trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.2f);
             render(p, e.getInventory(), s);
             return;
@@ -134,7 +156,12 @@ public class ClaimBlockExchangeGUI {
         };
 
         if (delta != 0) {
-            s.amount = Math.max(1, s.amount + delta);
+            try {
+                s.amount = Math.addExact(s.amount, delta);
+            } catch (ArithmeticException ignored) {
+                s.amount = delta > 0 ? Long.MAX_VALUE : 1L;
+            }
+            clampAmount(p, s);
             trySound(p, Sound.UI_BUTTON_CLICK, 0.6f, delta > 0 ? 1.25f : 0.85f);
             render(p, e.getInventory(), s);
             return;
@@ -320,6 +347,146 @@ public class ClaimBlockExchangeGUI {
                 tr(p, "button_exit", "&c✖ Close"),
                 trList(p, "exit_lore", List.of("&7Close this menu."))
         ));
+
+        inv.setItem(SLOT_GUIDE, item(
+                Material.KNOWLEDGE_BOOK,
+                tr(p, "claimblocks_exchange_guide_button", "&b&lHow Exchange Works"),
+                trList(p, "claimblocks_exchange_guide_button_lore", List.of(
+                        "&7Learn about rates, fees, limits,",
+                        "&7sell locks, and safe trading.",
+                        " ",
+                        "&eClick to open the guide."
+                ))
+        ));
+    }
+
+    private void renderGuide(Player p, Inventory inv) {
+        inv.clear();
+        ItemStack glass = filler(Material.CYAN_STAINED_GLASS_PANE);
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, glass);
+
+        inv.setItem(4, item(
+                Material.KNOWLEDGE_BOOK,
+                tr(p, "claimblocks_exchange_guide_title", "&b&lClaimBlock Exchange Guide"),
+                trList(p, "claimblocks_exchange_guide_intro", List.of(
+                        "&7Turn server money into claim growth,",
+                        "&7or sell eligible ClaimBlocks for money.",
+                        " ",
+                        "&8The quote is always shown before you confirm."
+                ))
+        ));
+
+        inv.setItem(11, item(Material.EMERALD,
+                tr(p, "claimblocks_exchange_guide_buy", "&aBuying ClaimBlocks"),
+                trList(p, "claimblocks_exchange_guide_buy_lore", List.of(
+                        "&7Choose BUY, select an amount, and review",
+                        "&7the unit price, fee, and final cost.",
+                        "&7Confirmed blocks become available immediately."
+                ))));
+
+        inv.setItem(13, item(Material.PAPER,
+                tr(p, "claimblocks_exchange_guide_quote", "&fReading Your Quote"),
+                trList(p, "claimblocks_exchange_guide_quote_lore", List.of(
+                        "&7Subtotal = amount × unit price.",
+                        "&7Fees are added to buys and removed from sales.",
+                        "&7The green total is the final transaction value."
+                ))));
+
+        inv.setItem(15, item(Material.GOLD_INGOT,
+                tr(p, "claimblocks_exchange_guide_sell", "&6Selling ClaimBlocks"),
+                trList(p, "claimblocks_exchange_guide_sell_lore", List.of(
+                        "&7Only eligible non-starter blocks can be sold.",
+                        "&7A successful sale removes blocks only when",
+                        "&7the economy payout succeeds."
+                ))));
+
+        inv.setItem(29, item(Material.SHIELD,
+                tr(p, "claimblocks_exchange_guide_protection", "&dTrading Protections"),
+                trList(p, "claimblocks_exchange_guide_protection_lore", List.of(
+                        "&7Sell locks prevent immediate buy-back abuse.",
+                        "&7Cooldowns and caps keep the economy stable.",
+                        "&7Failed payouts restore deducted ClaimBlocks."
+                ))));
+
+        inv.setItem(31, item(Material.CLOCK,
+                tr(p, "claimblocks_exchange_guide_limits", "&eYour Live Rates & Limits"),
+                buildLiveRatesLore(p)));
+
+        inv.setItem(33, item(Material.COMPASS,
+                tr(p, "claimblocks_exchange_guide_steps", "&bQuick Steps"),
+                trList(p, "claimblocks_exchange_guide_steps_lore", List.of(
+                        "&f1. &7Choose BUY or SELL.",
+                        "&f2. &7Adjust the amount.",
+                        "&f3. &7Read the complete quote.",
+                        "&f4. &7Press CONFIRM once."
+                ))));
+
+        inv.setItem(SLOT_GUIDE, item(Material.ARROW,
+                tr(p, "claimblocks_exchange_guide_back", "&eBack to Exchange"),
+                trList(p, "claimblocks_exchange_guide_back_lore", List.of("&7Return to the trading console."))));
+        inv.setItem(SLOT_EXIT, item(Material.BARRIER,
+                tr(p, "button_exit", "&c✖ Close"),
+                trList(p, "exit_lore", List.of("&7Close this menu."))));
+    }
+
+    private List<String> buildLiveRatesLore(Player player) {
+        ClaimBlockExchangeService.ExchangeOverview overview = exchange.getOverview(player);
+        String unlimited = tr(player, "claimblocks_exchange_guide_unlimited", "Unlimited");
+        List<String> lore = new ArrayList<>();
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_buy_rate", "&aBuy: &f{PRICE} &7per block"),
+                Map.of("PRICE", money(overview.buyPrice()))));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_sell_rate", "&6Sell: &f{PRICE} &7per block"),
+                Map.of("PRICE", money(overview.sellPrice()))));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_buy_fee", "&7Buy Fee: &f{PERCENT}% + {FLAT}"),
+                Map.of("PERCENT", compactNumber(overview.buyFeePercent()), "FLAT", money(overview.buyFeeFlat()))));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_sell_fee", "&7Sell Fee: &f{PERCENT}% + {FLAT}"),
+                Map.of("PERCENT", compactNumber(overview.sellFeePercent()), "FLAT", money(overview.sellFeeFlat()))));
+        lore.add(" ");
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_trade_range",
+                        "&7Per Trade: Buy &f{BUY_MIN}-{BUY_MAX} &8| &7Sell &f{SELL_MIN}-{SELL_MAX}"),
+                Map.of(
+                        "BUY_MIN", String.valueOf(overview.buyMinimum()),
+                        "BUY_MAX", overview.buyMaximum() <= 0 ? unlimited : String.valueOf(overview.buyMaximum()),
+                        "SELL_MIN", String.valueOf(overview.sellMinimum()),
+                        "SELL_MAX", overview.sellMaximum() <= 0 ? unlimited : String.valueOf(overview.sellMaximum())
+                )));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_daily_remaining",
+                        "&7Today Remaining: Buy &a{BUY} &8| &7Sell &6{SELL}"),
+                Map.of(
+                        "BUY", overview.buyRemainingToday() < 0 ? unlimited : String.valueOf(overview.buyRemainingToday()),
+                        "SELL", overview.sellRemainingToday() < 0 ? unlimited : String.valueOf(overview.sellRemainingToday())
+                )));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_hourly_remaining",
+                        "&7Trades This Hour: &f{TRADES}"),
+                Map.of("TRADES", overview.tradesRemainingThisHour() < 0
+                        ? unlimited : String.valueOf(overview.tradesRemainingThisHour()))));
+        lore.add(apply(tr(player, "claimblocks_exchange_guide_cooldown_live",
+                        "&7Cooldown Remaining: &e{SECONDS}s"),
+                Map.of("SECONDS", String.valueOf(overview.cooldownRemainingSeconds()))));
+        if (overview.sellLockEnabled()) {
+            lore.add(apply(tr(player, "claimblocks_exchange_guide_sell_lock_live",
+                            "&dSell Lock: &f{MINUTES} minutes"),
+                    Map.of("MINUTES", String.valueOf(overview.sellLockMinutes()))));
+        }
+        return lore;
+    }
+
+    private String compactNumber(double value) {
+        if (Math.rint(value) == value) return String.valueOf((long) value);
+        return String.format(Locale.US, "%.2f", value);
+    }
+
+    private void clampAmount(Player player, Session session) {
+        ClaimBlockExchangeService.ExchangeOverview overview = exchange.getOverview(player);
+        long minimum = session.mode == Mode.SELL ? overview.sellMinimum() : overview.buyMinimum();
+        long maximum = session.mode == Mode.SELL ? overview.sellMaximum() : overview.buyMaximum();
+        long safeMinimum = Math.max(1L, minimum);
+        session.amount = Math.max(safeMinimum, session.amount);
+        if (maximum > 0L) session.amount = Math.min(session.amount, Math.max(safeMinimum, maximum));
+    }
+
+    public void closeSession(UUID playerId) {
+        if (playerId != null) sessions.remove(playerId);
     }
 
     /**
@@ -502,7 +669,7 @@ public class ClaimBlockExchangeGUI {
     }
 
     private void trySound(Player p, Sound s, float v, float pitch) {
-        try { p.playSound(p.getLocation(), s, v, pitch); } catch (Throwable ignored) {}
+        if (plugin.effects() != null) plugin.effects().playSound(p, s, v, pitch);
     }
 
     /**
@@ -542,6 +709,7 @@ public class ClaimBlockExchangeGUI {
     private static final class Session {
         Mode mode = Mode.BUY;
         long amount = 100;
+        boolean guide;
     }
 
     // IMPORTANT: public so GUIListener can instanceof it

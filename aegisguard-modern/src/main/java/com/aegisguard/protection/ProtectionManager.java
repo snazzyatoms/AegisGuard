@@ -5,9 +5,11 @@ import com.aegisguard.api.events.PlotEnterEvent;
 import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
 import com.aegisguard.hooks.protection.HookAction;
+import com.aegisguard.util.CompatParticle;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
@@ -22,14 +24,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProtectionManager implements Listener {
     private static final Set<String> EXPLICIT_HOSTILE_TYPES = Set.of(
@@ -86,8 +88,8 @@ public class ProtectionManager implements Listener {
     private final boolean wildernessRevertEnabled; // kept for future use
 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> buffCooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> mobCleanupCooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> pendingMobRemovals = new ConcurrentHashMap<>();
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -185,7 +187,7 @@ public class ProtectionManager implements Listener {
     }
 
     public boolean isMobProtectionEnabled(Plot plot) {
-        return isProtectionActive(plot, "mobs", false);
+        return plot != null && (plot.isServerZone() || isProtectionActive(plot, "mobs", false));
     }
 
     public boolean isSafeZoneEnabled(Plot plot) {
@@ -239,7 +241,7 @@ public class ProtectionManager implements Listener {
         if (isMobProtectionEnabled(plot)) {
             e.setCancelled(true);
             if (isHostileMob(e.getEntity()) && plot.isInside(e.getEntity().getLocation())) {
-                removeHostileMob(e.getEntity());
+                queueProtectedHostileRemoval(e.getEntity());
             }
         }
     }
@@ -274,7 +276,7 @@ public class ProtectionManager implements Listener {
             e.setCancelled(true);
             plugin.effects().playEffect("mobs", "deny", victim, victim.getLocation());
             if (plot.isInside(source.getLocation())) {
-                removeHostileMob(source);
+                queueProtectedHostileRemoval(source);
             }
         }
     }
@@ -311,8 +313,28 @@ public class ProtectionManager implements Listener {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", null, target.getLocation());
             if (plot.isInside(source.getLocation())) {
-                removeHostileMob(source);
+                queueProtectedHostileRemoval(source);
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onHostileTeleport(EntityTeleportEvent e) {
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)
+                || !plugin.cfg().raw().getBoolean("mob_barrier.block_boundary_entry", true)
+                || !isHostileMob(e.getEntity())
+                || e.getTo() == null) {
+            return;
+        }
+
+        Plot destination = plugin.store().getPlotAt(e.getTo());
+        if (!isMobProtectionEnabled(destination)) {
+            return;
+        }
+
+        Plot origin = plugin.store().getPlotAt(e.getFrom());
+        if (!isSamePlot(origin, destination)) {
+            e.setCancelled(true);
         }
     }
 
@@ -335,16 +357,6 @@ public class ProtectionManager implements Listener {
 
         if (from != null && !from.equals(to)) {
             Bukkit.getPluginManager().callEvent(new PlotLeaveEvent(from, p));
-
-            if (from.getFlag("fly", false) && !plugin.isAdmin(p)) {
-                plugin.runMain(p, () -> {
-                    p.setFlying(false);
-                    p.setAllowFlight(false);
-                    p.setFallDistance(0);
-                });
-            }
-
-            clearPlotBuffs(p, from);
         }
 
         if (to != null && !to.equals(from)) {
@@ -357,10 +369,6 @@ public class ProtectionManager implements Listener {
 
             if (to.getEntryEffect() != null) {
                 plugin.effects().playCustomEffect(p, to.getEntryEffect(), to.getCenter(plugin));
-            }
-
-            if (to.getFlag("fly", false) && to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
-                plugin.runMain(p, () -> p.setAllowFlight(true));
             }
 
         }
@@ -388,7 +396,6 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
-            applyPlotBuffs(p, to);
 
             if (isMobProtectionEnabled(to)) {
                 purgePlotHostilesForPlayer(p, to);
@@ -400,8 +407,6 @@ public class ProtectionManager implements Listener {
     public void onPlayerQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
         Plot plot = plugin.store().getPlotAt(p.getLocation());
-        clearPlotBuffs(p, plot);
-        buffCooldowns.remove(p.getUniqueId());
         messageCooldowns.remove(p.getUniqueId());
         mobCleanupCooldowns.remove(p.getUniqueId());
     }
@@ -567,67 +572,6 @@ public class ProtectionManager implements Listener {
     }
 
     // --------------------------------------------------
-    // BUFFS
-    // --------------------------------------------------
-
-    private void applyPlotBuffs(Player p, Plot plot) {
-        if (!plugin.cfg().isLevelingEnabled()) return;
-
-        long now = System.currentTimeMillis();
-        if (buffCooldowns.getOrDefault(p.getUniqueId(), 0L) > now) return;
-        if (!plot.hasPermission(p.getUniqueId(), "INTERACT", plugin)) return;
-
-        for (int i = 1; i <= plot.getLevel(); i++) {
-            List<String> rewards = plugin.cfg().getLevelRewards(i);
-            if (rewards == null) continue;
-
-            for (String reward : rewards) {
-                if (!reward.startsWith("EFFECT:")) continue;
-                try {
-                    String[] parts = reward.split(":");
-                    if (parts.length < 3) continue;
-                    PotionEffectType type = PotionEffectType.getByName(parts[1]);
-                    int amp = Integer.parseInt(parts[2]) - 1;
-                    if (type != null) {
-                        p.addPotionEffect(new PotionEffect(
-                                type,
-                                100,
-                                amp,
-                                true,
-                                false,
-                                false
-                        ));
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        }
-        buffCooldowns.put(p.getUniqueId(), now + 2000);
-    }
-
-    private void clearPlotBuffs(Player p, Plot plot) {
-        if (!plugin.cfg().isLevelingEnabled() || plot == null) return;
-
-        for (int i = 1; i <= plot.getLevel(); i++) {
-            List<String> rewards = plugin.cfg().getLevelRewards(i);
-            if (rewards == null) continue;
-
-            for (String reward : rewards) {
-                if (!reward.startsWith("EFFECT:")) continue;
-                try {
-                    String[] parts = reward.split(":");
-                    if (parts.length < 2) continue;
-                    PotionEffectType type = PotionEffectType.getByName(parts[1]);
-                    if (type != null) {
-                        p.removePotionEffect(type);
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        }
-    }
-
-    // --------------------------------------------------
     // UTIL
     // --------------------------------------------------
 
@@ -646,7 +590,7 @@ public class ProtectionManager implements Listener {
         return null;
     }
 
-    private boolean isHostileMob(Entity entity) {
+    public boolean isHostileMob(Entity entity) {
         if (entity == null) {
             return false;
         }
@@ -663,9 +607,76 @@ public class ProtectionManager implements Listener {
         }
 
         try {
+            if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
+                Particle particle = CompatParticle.match("SMOKE_NORMAL");
+                if (particle != null) {
+                    entity.getWorld().spawnParticle(
+                            particle,
+                            entity.getLocation().add(0, 1, 0),
+                            5,
+                            0.1, 0.1, 0.1,
+                            0.05
+                    );
+                }
+            }
             entity.remove();
         } catch (Throwable ignored) {
         }
+    }
+
+    public void queueProtectedHostileRemoval(Entity entity) {
+        if (entity == null || !entity.isValid() || !isHostileMob(entity)) {
+            return;
+        }
+
+        UUID entityId = entity.getUniqueId();
+        long now = System.currentTimeMillis();
+        long graceSeconds = Math.max(0L,
+                plugin.cfg().raw().getLong("mob_barrier.despawn_grace_seconds", 5L));
+        long removalAt = now + TimeUnit.SECONDS.toMillis(graceSeconds);
+        AtomicBoolean scheduled = new AtomicBoolean(false);
+        pendingMobRemovals.compute(entityId, (ignored, existingRemoval) -> {
+            if (existingRemoval != null && existingRemoval > now) {
+                return existingRemoval;
+            }
+            scheduled.set(true);
+            return removalAt;
+        });
+        if (!scheduled.get()) {
+            return;
+        }
+
+        if (graceSeconds == 0L) {
+            pendingMobRemovals.remove(entityId, removalAt);
+            removeHostileMob(entity);
+            return;
+        }
+
+        plugin.runEntityLater(entity, () -> {
+            if (!pendingMobRemovals.remove(entityId, removalAt)) {
+                return;
+            }
+            if (!entity.isValid() || !isHostileMob(entity)) {
+                return;
+            }
+
+            Plot current = plugin.store().getPlotAt(entity.getLocation());
+            if (isMobProtectionEnabled(current)) {
+                removeHostileMob(entity);
+            }
+        }, graceSeconds * 20L);
+    }
+
+    public void pruneExpiredMobRemovalTickets() {
+        long cutoff = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1L);
+        pendingMobRemovals.entrySet().removeIf(entry -> entry.getValue() < cutoff);
+    }
+
+    public boolean isSamePlot(Plot first, Plot second) {
+        return first != null
+                && second != null
+                && first.getPlotId() != null
+                && first.getPlotId().equals(second.getPlotId());
     }
 
     private void purgePlotHostilesForPlayer(Player player, Plot plot) {
@@ -711,7 +722,7 @@ public class ProtectionManager implements Listener {
                     if (!plot.isInside(entity.getLocation())) {
                         continue;
                     }
-                    removeHostileMob(entity);
+                    queueProtectedHostileRemoval(entity);
                 }
             }
         }

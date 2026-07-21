@@ -827,21 +827,6 @@ public class InfoGUI {
         if (translated == null || translated.isEmpty()) {
             return loreFallback;
         }
-
-        int nonBlank = 0;
-        for (String line : translated) {
-            if (line != null && !line.trim().isEmpty()) nonBlank++;
-        }
-
-        // If a language pack only provides a title-like stub or an almost-empty lore,
-        // prefer the richer built-in handbook text so the guide stays genuinely useful.
-        if (loreFallback != null && !loreFallback.isEmpty()) {
-            int minimumExpected = Math.min(3, loreFallback.size());
-            if (nonBlank < minimumExpected) {
-                return loreFallback;
-            }
-        }
-
         return translated;
     }
 

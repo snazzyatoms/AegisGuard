@@ -73,6 +73,19 @@ public final class AdminDiagnostics {
         out.append("Market/Rent/Auction Plots: ").append(marketPlots).append('\n');
         out.append('\n');
 
+        DoctorRepairService.ScanResult scan = DoctorRepairService.scan(plugin);
+        out.append("Consistency Scan\n");
+        out.append("----------------\n");
+        out.append("Issues: ").append(scan.issues().size()).append('\n');
+        out.append("Critical: ").append(scan.criticalCount()).append('\n');
+        out.append("Repairable: ").append(scan.repairableCount()).append('\n');
+        for (DoctorRepairService.Issue issue : scan.issues()) {
+            out.append("- [").append(issue.severity()).append("] ").append(issue.code());
+            if (issue.plotId() != null) out.append(" plot=").append(issue.plotId());
+            out.append(" repairable=").append(issue.repairable()).append(" :: ").append(issue.message()).append('\n');
+        }
+        out.append('\n');
+
         out.append("Config Summary\n");
         out.append("--------------\n");
         out.append("Low Overhead Mode: ").append(bool(plugin, "performance.low_overhead_mode", false)).append('\n');

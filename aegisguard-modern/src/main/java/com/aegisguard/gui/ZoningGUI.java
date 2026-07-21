@@ -206,9 +206,53 @@ public class ZoningGUI {
         ));
 
         inv.setItem(49, GUIManager.createItem(
-                Material.EMERALD_BLOCK,
+                hasSelection ? Material.LIME_CONCRETE : Material.RED_CONCRETE,
                 GUIManager.color(createName),
                 hasSelection ? readyLore : lockedLore
+        ));
+
+        inv.setItem(46, GUIManager.createItem(
+                Material.WRITABLE_BOOK,
+                tr(player, "zone_manager_guide_name", "&eZone Planning Guide"),
+                trList(player, "zone_manager_guide_lore", List.of(
+                        "&7Private zones divide trusted build space.",
+                        "&7Set a price to publish a rental room.",
+                        "&7Rented zones open tenant and hotel tools.",
+                        " ",
+                        "&eLeft: &7listing or tenant tools",
+                        "&eShift: &7adjust rent price",
+                        "&cRight: &7delete safely"
+                ))
+        ));
+
+        inv.setItem(47, GUIManager.createItem(
+                hasSelection ? Material.RECOVERY_COMPASS : Material.COMPASS,
+                tr(player, "zone_selection_status_name", "&bSelection Status"),
+                hasSelection
+                        ? trList(player, "zone_selection_ready_lore", List.of(
+                                "&aTwo corners are ready.",
+                                "&7Use Create Zone to reserve this space."
+                        ))
+                        : trList(player, "zone_selection_missing_lore", List.of(
+                                "&cNo complete selection.",
+                                "&7Use the Aegis Scepter to select",
+                                "&7two corners inside this plot."
+                        ))
+        ));
+
+        inv.setItem(51, GUIManager.createItem(
+                plot.hasBrowsableZonesFor(player) ? Material.EMERALD : Material.GRAY_DYE,
+                tr(player, "zone_public_preview_name", "&aPublic Rental Preview"),
+                plot.hasBrowsableZonesFor(player)
+                        ? trList(player, "zone_public_preview_lore", List.of(
+                                "&7Open the same rental catalog",
+                                "&7visitors see on this plot.",
+                                " ",
+                                "&eClick to preview."
+                        ))
+                        : trList(player, "zone_public_preview_empty_lore", List.of(
+                                "&8No zones are publicly listed yet."
+                        ))
         ));
 
         String backName = tr(player, "button_back", "&fBack");
@@ -262,8 +306,18 @@ public class ZoningGUI {
             return;
         }
 
+        if (slot == 51) {
+            if (plot.hasBrowsableZonesFor(player)) {
+                plugin.gui().zoneBrowse().open(player, plot);
+                plugin.effects().playMenuFlip(player);
+            } else {
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+
         // --- CREATE ZONE ---
-        if (slot == 49 && clicked.getType() == Material.EMERALD_BLOCK) {
+        if (slot == 49) {
             if (plugin.selection().hasSelection(player)) {
                 createZoneFromSelection(player, plot);
                 open(player, plot);

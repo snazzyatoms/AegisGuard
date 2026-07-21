@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
@@ -24,7 +23,8 @@ import java.util.Set;
  *  - Uses ProtectionManager + Plot flags as the single source of truth.
  *  - Server Zones: always mob-protected (barrier always active).
  *  - Normal Plots:
- *      - mobs flag ON  (green) => hostiles inside the plot are removed.
+ *      - mobs flag ON  (green) => hostiles inside the plot are queued for
+ *                                 removal after the configured grace period.
  *      - mobs flag OFF (red)   => vanilla behavior; barrier does nothing,
  *                                mobs may walk in / stay in the plot.
  *
@@ -91,6 +91,8 @@ public class MobBarrierTask implements Runnable {
             return;
         }
 
+        plugin.protection().pruneExpiredMobRemovalTickets();
+
         List<Plot> plotsToCheck = new ArrayList<>();
 
         // Collect all plots that should be "mob-cleaned"
@@ -126,10 +128,10 @@ public class MobBarrierTask implements Runnable {
         World world = Bukkit.getWorld(plot.getWorld());
         if (world == null) return;
 
-        int minChunkX = plot.getX1() >> 4;
-        int minChunkZ = plot.getZ1() >> 4;
-        int maxChunkX = plot.getX2() >> 4;
-        int maxChunkZ = plot.getZ2() >> 4;
+        int minChunkX = Math.min(plot.getX1(), plot.getX2()) >> 4;
+        int minChunkZ = Math.min(plot.getZ1(), plot.getZ2()) >> 4;
+        int maxChunkX = Math.max(plot.getX1(), plot.getX2()) >> 4;
+        int maxChunkZ = Math.max(plot.getZ1(), plot.getZ2()) >> 4;
 
         for (int cx = minChunkX; cx <= maxChunkX; cx++) {
             for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
@@ -138,14 +140,11 @@ public class MobBarrierTask implements Runnable {
 
                 // Folia-safe scheduling per chunk region
                 if (plugin.isFolia()) {
-                    if (!world.isChunkLoaded(cx, cz)) continue;
-
                     Bukkit.getRegionScheduler().run(plugin, world, finalCx, finalCz, scheduledTask -> {
                         checkChunkForMobs(world, plot, finalCx, finalCz);
                     });
                 } else {
-                    // Non-Folia: schedule chunk work on main thread
-                    plugin.runMainGlobal(() -> checkChunkForMobs(world, plot, finalCx, finalCz));
+                    checkChunkForMobs(world, plot, finalCx, finalCz);
                 }
             }
         }
@@ -171,7 +170,7 @@ public class MobBarrierTask implements Runnable {
                     continue;
                 }
                 if (plot.isInside(entity.getLocation())) {
-                    removeMob(entity);
+                    plugin.protection().queueProtectedHostileRemoval(entity);
                 }
             }
         } catch (Exception e) {
@@ -179,38 +178,6 @@ public class MobBarrierTask implements Runnable {
             plugin.getLogger().warning(
                     "Error checking chunk at " + cx + ", " + cz +
                     " in world " + world.getName() + ": " + e.getMessage()
-            );
-        }
-    }
-
-    private void removeMob(Entity entity) {
-        if (plugin.isFolia()) {
-            // On Folia, use entity scheduler (region-thread safe)
-            entity.getScheduler().run(plugin, scheduledTask -> {
-                if (entity.isValid()) {
-                    entity.remove();
-                    spawnRemovalParticle(entity);
-                }
-            }, null);
-        } else {
-            // Non-Folia: always go to main thread
-            plugin.runMain(null, () -> {
-                if (entity.isValid()) {
-                    entity.remove();
-                    spawnRemovalParticle(entity);
-                }
-            });
-        }
-    }
-
-    private void spawnRemovalParticle(Entity entity) {
-        if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
-            entity.getWorld().spawnParticle(
-                    Particle.SMOKE_NORMAL,
-                    entity.getLocation().add(0, 1, 0),
-                    5,
-                    0.1, 0.1, 0.1,
-                    0.05
             );
         }
     }

@@ -8,13 +8,10 @@
     <version>1.2.7</version>
     <packaging>pom</packaging>
 
-    <name>AegisGuard Parent</name>
-    <description>Clean multi-module AegisGuard 1.2.7 repository layout</description>
+    <name>AegisGuard Build</name>
+    <description>Living territory protection, progression, economy, and administration for modern Minecraft servers</description>
 
     <modules>
         <module>aegisguard-modern</module>
-        <module>aegisguard-legacy</module>
-        <module>aegisguard-modern-bundled</module>
-        <module>aegisguard-legacy-bundled</module>
     </modules>
 </project>

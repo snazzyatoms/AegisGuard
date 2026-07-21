@@ -520,6 +520,15 @@ public class CodexEngine {
             if (styleCfg != null && styleCfg.contains(k)) return styleCfg.getString(k, k);
         }
 
+        // Keep regional Spanish packs in Spanish when one variant has not yet
+        // overridden a newly introduced key. The requested style still wins.
+        for (String relatedStyle : relatedLanguageStyles(style)) {
+            for (String k : keyCandidates(key)) {
+                YamlConfiguration relatedCfg = primaryStyleBundles.get(relatedStyle);
+                if (relatedCfg != null && relatedCfg.contains(k)) return relatedCfg.getString(k, k);
+            }
+        }
+
         // 3) primary core
         for (String k : keyCandidates(key)) {
             if (primaryCoreBundle != null && primaryCoreBundle.contains(k)) {
@@ -591,6 +600,19 @@ public class CodexEngine {
 
                 String single = styleCfg.getString(k);
                 if (single != null) return Collections.singletonList(single);
+            }
+        }
+
+        for (String relatedStyle : relatedLanguageStyles(style)) {
+            for (String k : keyCandidates(key)) {
+                YamlConfiguration relatedCfg = primaryStyleBundles.get(relatedStyle);
+                if (relatedCfg != null && relatedCfg.contains(k)) {
+                    result = relatedCfg.getStringList(k);
+                    if (!result.isEmpty()) return result;
+
+                    String single = relatedCfg.getString(k);
+                    if (single != null) return Collections.singletonList(single);
+                }
             }
         }
 
@@ -667,6 +689,13 @@ public class CodexEngine {
             }
         }
 
+        return Collections.emptyList();
+    }
+
+    private List<String> relatedLanguageStyles(String style) {
+        if ("spanish_ar".equalsIgnoreCase(style)) {
+            return Collections.singletonList("spanish_mx");
+        }
         return Collections.emptyList();
     }
 

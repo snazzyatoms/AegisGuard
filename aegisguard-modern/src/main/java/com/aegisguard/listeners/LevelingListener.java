@@ -3,136 +3,225 @@ package com.aegisguard.listeners;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotLevelUpEvent;
 import com.aegisguard.data.Plot;
+import com.aegisguard.progression.AscensionFocus;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LevelingListener implements Listener {
-
+public final class LevelingListener implements Listener {
     private final AegisGuard plugin;
     private final Map<UUID, UUID> activePlotCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<PotionEffectType, PotionEffect>> displacedEffects = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> previousFlight = new ConcurrentHashMap<>();
 
     public LevelingListener(AegisGuard plugin) {
         this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onLevelUp(PlotLevelUpEvent e) {
-        Plot plot = e.getPlot();
-        int newLevel = e.getNewLevel();
-        Player p = e.getPlayer();
-        List<String> rewards = plugin.cfg().getLevelRewards(newLevel);
-
-        // 1. Give Global Claim Block Reward (Configured in config.yml)
-        if (plugin.cfg().raw().getBoolean("claim_blocks.earn.level_up.enabled", true)) {
-            int globalReward = plugin.cfg().raw().getInt("claim_blocks.earn.level_up.per_level", 500);
-            if (globalReward > 0) {
-                plugin.getClaimBlockManager().getOrCreate(p.getUniqueId()).addEarnedBlocks(globalReward);
-                // Send feedback via Codex
-                String msg = plugin.codex().tr(p, "claim_blocks_earned_level", 
-                        Map.of("AMOUNT", String.valueOf(globalReward), "LEVEL", String.valueOf(newLevel)));
-                // Fallback if key missing
-                if (msg.equals("claim_blocks_earned_level")) msg = "§dAscension Bonus: §e+" + globalReward + " Claim Blocks!";
-                p.sendMessage(msg);
-            }
-        }
-
-        if (rewards == null) return;
-
-        for (String reward : rewards) {
-            // 2. Existing Rewards
-            if (reward.startsWith("RADIUS:")) {
-                try {
-                    int amount = Integer.parseInt(reward.split(":")[1]);
-                    plot.expand(amount);
-                    p.sendMessage("§a⚡ Your land boundaries have expanded by " + amount + " blocks!");
-                } catch (Exception ex) {}
-            }
-            else if (reward.startsWith("MEMBERS:")) {
-                try {
-                    int amount = Integer.parseInt(reward.split(":")[1]);
-                    int currentMax = plot.getMaxMembers();
-                    plot.setMaxMembers(currentMax + amount);
-                    p.sendMessage("§a⚡ You can now trust " + amount + " more players!");
-                } catch (Exception ex) {}
-            }
-            // 3. Specific Level Reward (Optional override: CLAIM_BLOCKS:1000)
-            else if (reward.startsWith("CLAIM_BLOCKS:")) {
-                try {
-                    int amount = Integer.parseInt(reward.split(":")[1]);
-                    plugin.getClaimBlockManager().getOrCreate(p.getUniqueId()).addEarnedBlocks(amount);
-                    p.sendMessage("§e⚡ Extra Bonus: +" + amount + " Claim Blocks!");
-                } catch (Exception ex) {}
-            }
-        }
-        
-        plugin.store().savePlot(plot);
-        
-        // Re-apply buffs instantly if they are standing in it
-        if (plot.contains(p.getLocation())) {
-            applyBuffs(p, plot);
-        }
-        
-        // Save block data immediately
-        plugin.getClaimBlockManager().saveAsync();
-    }
-
-    @EventHandler
-    public void onMove(PlayerMoveEvent e) {
-        Location to = e.getTo();
-        if (to == null) return;
-        if (!e.getFrom().getWorld().equals(to.getWorld())) {
-            handleMovement(e.getPlayer(), to);
+    public void refresh(Player player, Plot plot) {
+        if (player == null || plot == null || !plot.contains(player.getLocation()) || !isAllowed(player, plot)) {
             return;
         }
-        if (e.getFrom().getBlockX() == to.getBlockX() &&
-            e.getFrom().getBlockY() == to.getBlockY() &&
-            e.getFrom().getBlockZ() == to.getBlockZ()) return;
-        handleMovement(e.getPlayer(), to);
+        activePlotCache.put(player.getUniqueId(), plot.getPlotId());
+        applyBuffs(player, plot);
     }
 
     @EventHandler
-    public void onTeleport(PlayerTeleportEvent e) {
-        handleMovement(e.getPlayer(), e.getTo());
+    public void onLevelUp(PlotLevelUpEvent event) {
+        Plot plot = event.getPlot();
+        Player player = event.getPlayer();
+        int newLevel = event.getNewLevel();
+
+        if (plugin.cfg().raw().getBoolean("claim_blocks.earn.level_up.enabled", true)) {
+            int amount = Math.max(0, plugin.cfg().raw().getInt("claim_blocks.earn.level_up.per_level", 500));
+            if (amount > 0 && plugin.getClaimBlockManager() != null) {
+                plugin.getClaimBlockManager().getOrCreate(player.getUniqueId()).addEarnedBlocks(amount);
+                send(player, "claim_blocks_earned_level", "&dAscension Bonus: &e+{AMOUNT} ClaimBlocks", Map.of(
+                        "AMOUNT", String.valueOf(amount), "LEVEL", String.valueOf(newLevel)));
+            }
+        }
+
+        List<String> rewards = plugin.cfg().getLevelRewards(newLevel);
+        if (rewards != null) {
+            for (String raw : rewards) applyPermanentReward(player, plot, raw);
+        }
+
+        plugin.store().savePlot(plot);
+        if (plot.contains(player.getLocation())) applyBuffs(player, plot);
+        if (plugin.getClaimBlockManager() != null) plugin.getClaimBlockManager().saveAsync();
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent e) {
-        removeBuffs(e.getPlayer());
-        activePlotCache.remove(e.getPlayer().getUniqueId());
+    public void onMove(PlayerMoveEvent event) {
+        Location to = event.getTo();
+        if (to == null) return;
+        if (event.getFrom().getWorld().equals(to.getWorld())
+                && event.getFrom().getBlockX() == to.getBlockX()
+                && event.getFrom().getBlockY() == to.getBlockY()
+                && event.getFrom().getBlockZ() == to.getBlockZ()) return;
+        handleMovement(event.getPlayer(), to);
+    }
+
+    @EventHandler
+    public void onTeleport(PlayerTeleportEvent event) {
+        handleMovement(event.getPlayer(), event.getTo());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        removeBuffs(event.getPlayer());
+        activePlotCache.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
+    public void onFarmlandTrample(PlayerInteractEvent event) {
+        if (event.getAction() != Action.PHYSICAL || event.getClickedBlock() == null
+                || event.getClickedBlock().getType() != Material.FARMLAND) return;
+        Plot plot = plugin.store().getPlotAt(event.getClickedBlock().getLocation());
+        if (plot == null || plot.getLevel() < 5
+                || AscensionFocus.parse(plot.getAscensionFocus()) != AscensionFocus.VERDANT_KEEPER) return;
+        if (isAllowed(event.getPlayer(), plot)) event.setCancelled(true);
     }
 
     private void handleMovement(Player player, Location to) {
         if (to == null || to.getWorld() == null) return;
+        Plot plot = plugin.store().getPlotAt(to);
+        UUID nextId = plot == null ? null : plot.getPlotId();
+        UUID previousId = activePlotCache.get(player.getUniqueId());
+        if (java.util.Objects.equals(nextId, previousId)) return;
 
-        Plot currentPlot = plugin.store().getPlotAt(to);
-        UUID currentPlotId = currentPlot == null ? null : currentPlot.getPlotId();
-        UUID cachedPlotId = activePlotCache.get(player.getUniqueId());
-
-        if (currentPlotId != null && cachedPlotId == null) {
-            activePlotCache.put(player.getUniqueId(), currentPlotId);
-            if (isAllowed(player, currentPlot)) applyBuffs(player, currentPlot);
-        }
-        else if (currentPlotId == null && cachedPlotId != null) {
-            removeBuffs(player);
+        removeBuffs(player);
+        if (plot != null && isAllowed(player, plot)) {
+            activePlotCache.put(player.getUniqueId(), nextId);
+            applyBuffs(player, plot);
+        } else {
             activePlotCache.remove(player.getUniqueId());
         }
-        else if (currentPlotId != null && cachedPlotId != null && !currentPlotId.equals(cachedPlotId)) {
-            removeBuffs(player);
-            activePlotCache.put(player.getUniqueId(), currentPlotId);
-            if (isAllowed(player, currentPlot)) applyBuffs(player, currentPlot);
+    }
+
+    private void applyPermanentReward(Player player, Plot plot, String raw) {
+        if (raw == null || raw.isBlank()) return;
+        String reward = raw.trim();
+        if (reward.startsWith("MEMBERS:")) {
+            try {
+                int amount = Math.max(0, Integer.parseInt(reward.substring("MEMBERS:".length()).trim()));
+                if (amount > 0) {
+                    plot.setMaxMembers(plot.getMaxMembers() + amount);
+                    send(player, "ascension_member_reward", "&aYour plot can now trust {AMOUNT} additional player(s).",
+                            Map.of("AMOUNT", String.valueOf(amount)));
+                }
+            } catch (NumberFormatException ignored) {}
+            return;
+        }
+        if (reward.startsWith("CLAIM_BLOCKS:")) {
+            try {
+                int amount = Math.max(0, Integer.parseInt(reward.substring("CLAIM_BLOCKS:".length()).trim()));
+                if (amount > 0 && plugin.getClaimBlockManager() != null) {
+                    plugin.getClaimBlockManager().getOrCreate(player.getUniqueId()).addEarnedBlocks(amount);
+                }
+            } catch (NumberFormatException ignored) {}
+            return;
+        }
+        if (reward.startsWith("FLAG:")) {
+            String flag = reward.substring("FLAG:".length()).trim().toLowerCase();
+            if (!flag.isBlank()) plot.setFlag(flag, true);
+            return;
+        }
+        if (reward.startsWith("RADIUS:")) {
+            plugin.getLogger().warning("Ignored unsafe RADIUS ascension reward at level " + plot.getLevel()
+                    + "; use Frontier Expansion so overlap, pricing, and snapshots remain protected.");
+        }
+    }
+
+    private void applyBuffs(Player player, Plot plot) {
+        removeBuffs(player);
+        Map<PotionEffectType, Integer> desired = collectEffects(plot);
+        Map<PotionEffectType, PotionEffect> displaced = new HashMap<>();
+        Set<PotionEffectType> applied = new HashSet<>();
+
+        for (Map.Entry<PotionEffectType, Integer> entry : desired.entrySet()) {
+            PotionEffect previous = player.getPotionEffect(entry.getKey());
+            if (previous != null) displaced.put(entry.getKey(), previous);
+            player.addPotionEffect(new PotionEffect(entry.getKey(), Integer.MAX_VALUE,
+                    entry.getValue(), true, false, false), true);
+            applied.add(entry.getKey());
+        }
+        if (!applied.isEmpty()) managedEffects.put(player.getUniqueId(), applied);
+        if (!displaced.isEmpty()) displacedEffects.put(player.getUniqueId(), displaced);
+
+        if (hasFlight(plot) && isSurvivalLike(player)) {
+            previousFlight.putIfAbsent(player.getUniqueId(), player.getAllowFlight());
+            player.setAllowFlight(true);
+        }
+    }
+
+    private Map<PotionEffectType, Integer> collectEffects(Plot plot) {
+        Map<PotionEffectType, Integer> effects = new HashMap<>();
+        for (int level = 1; level <= plot.getLevel(); level++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(level);
+            if (rewards == null) continue;
+            for (String reward : rewards) {
+                if (reward == null || !reward.startsWith("EFFECT:")) continue;
+                String[] parts = reward.split(":");
+                if (parts.length < 3) continue;
+                PotionEffectType type = PotionEffectType.getByName(parts[1].trim());
+                try {
+                    int amplifier = Math.max(0, Integer.parseInt(parts[2].trim()) - 1);
+                    if (type != null) effects.merge(type, amplifier, Math::max);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        AscensionFocus focus = AscensionFocus.parse(plot.getAscensionFocus());
+        PotionEffectType focusType = focus.effectType();
+        int focusAmplifier = focus.amplifierForLevel(plot.getLevel());
+        if (focusType != null && focusAmplifier >= 0) effects.merge(focusType, focusAmplifier, Math::max);
+        return effects;
+    }
+
+    private boolean hasFlight(Plot plot) {
+        for (int level = 1; level <= plot.getLevel(); level++) {
+            List<String> rewards = plugin.cfg().getLevelRewards(level);
+            if (rewards == null) continue;
+            if (rewards.stream().anyMatch(value -> value != null
+                    && (value.equalsIgnoreCase("FLIGHT") || value.equalsIgnoreCase("FLY")
+                    || value.equalsIgnoreCase("FLAG:fly")))) return true;
+        }
+        return false;
+    }
+
+    private void removeBuffs(Player player) {
+        UUID playerId = player.getUniqueId();
+        Set<PotionEffectType> applied = managedEffects.remove(playerId);
+        if (applied != null) applied.forEach(player::removePotionEffect);
+
+        Map<PotionEffectType, PotionEffect> displaced = displacedEffects.remove(playerId);
+        if (displaced != null) displaced.values().forEach(effect -> player.addPotionEffect(effect, true));
+
+        Boolean priorFlight = previousFlight.remove(playerId);
+        if (priorFlight != null && isSurvivalLike(player)) {
+            player.setAllowFlight(priorFlight);
+            if (!priorFlight && player.isFlying()) player.setFlying(false);
         }
     }
 
@@ -140,45 +229,15 @@ public class LevelingListener implements Listener {
         return plot.isOwner(player) || plot.isTrusted(player);
     }
 
-    private void applyBuffs(Player player, Plot plot) {
-        int level = plot.getLevel();
-        for (int i = 1; i <= level; i++) {
-            List<String> rewards = plugin.cfg().getLevelRewards(i);
-            if (rewards == null) continue;
-
-            for (String reward : rewards) {
-                if (reward.equalsIgnoreCase("FLIGHT") || reward.equalsIgnoreCase("FLY")) {
-                    if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
-                        player.setAllowFlight(true);
-                        player.sendMessage("§b☁ Flight Enabled (Zone Bonus)");
-                    }
-                }
-                else if (reward.startsWith("EFFECT:")) {
-                    try {
-                        String[] parts = reward.split(":");
-                        PotionEffectType type = PotionEffectType.getByName(parts[1]);
-                        int amplifier = Integer.parseInt(parts[2]) - 1;
-                        if (type != null) {
-                            player.addPotionEffect(new PotionEffect(type, Integer.MAX_VALUE, amplifier, true, false));
-                        }
-                    } catch (Exception ignored) {}
-                }
-            }
-        }
+    private boolean isSurvivalLike(Player player) {
+        return player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE;
     }
 
-    private void removeBuffs(Player player) {
-        if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
-            if (player.getAllowFlight()) {
-                player.setAllowFlight(false);
-                player.setFlying(false);
-                player.sendMessage("§c☁ Flight Disabled (Leaving Zone)");
-            }
+    private void send(Player player, String key, String fallback, Map<String, String> replacements) {
+        String message = plugin.gui().tr(player, key, fallback);
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue());
         }
-        for (PotionEffect effect : player.getActivePotionEffects()) {
-            if (effect.getDuration() > 100000) {
-                player.removePotionEffect(effect.getType());
-            }
-        }
+        player.sendMessage(com.aegisguard.gui.GUIManager.color(message));
     }
 }

@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import com.aegisguard.AegisGuard;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -81,7 +82,7 @@ public final class TeleportUtil {
         }
 
         // Fallback: schedule a classic sync teleport on the main thread
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Runnable fallback = () -> {
             try {
                 boolean success = entity.teleport(loc);
                 result.complete(success);
@@ -91,7 +92,12 @@ public final class TeleportUtil {
                                 " to " + formatLoc(loc) + ": " + ex.getMessage(), ex);
                 result.completeExceptionally(ex);
             }
-        });
+        };
+        if (plugin instanceof AegisGuard aegis) {
+            aegis.runEntity(entity, fallback);
+        } else {
+            Bukkit.getScheduler().runTask(plugin, fallback);
+        }
 
         return result;
     }

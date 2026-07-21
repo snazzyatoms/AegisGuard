@@ -4,8 +4,10 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.horizons.HorizonRank;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -47,7 +49,20 @@ public class ExpansionRequestGUI {
         INSTANT
     }
 
+    private enum Page {
+        FRONTIER,
+        HORIZONS
+    }
+
+    private record HorizonTier(int index, String id, long requiredRenown, int radiusGain, Material material) {}
+
     public static class ExpansionHolder implements InventoryHolder {
+        private final Page page;
+
+        private ExpansionHolder(Page page) {
+            this.page = page;
+        }
+
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -56,11 +71,16 @@ public class ExpansionRequestGUI {
         String title = plugin.gui().title(player, "expansion_gui_title", "&d✦ Frontier Expansion ✦");
         title = clampTitle(title);
 
-        Inventory inv = Bukkit.createInventory(new ExpansionHolder(), 45, title);
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(Page.FRONTIER), 54, title);
 
         // Background filler
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 45; i++) inv.setItem(i, filler);
+        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
+
+        ItemStack frontierGlass = GUIManager.createItem(Material.BROWN_STAINED_GLASS_PANE, " ", List.of());
+        for (int slot : new int[]{9, 10, 12, 14, 16, 17, 18, 19, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35}) {
+            inv.setItem(slot, frontierGlass);
+        }
 
         ApprovalMode mode = getApprovalMode();
         ExpansionRequest pending = plugin.getExpansionRequestManager() == null
@@ -80,6 +100,18 @@ public class ExpansionRequestGUI {
                 Material.NETHER_STAR,
                 tr(player, "expansion_header_name", "&dFrontier Expansion Console"),
                 buildHeaderLore(player, plot, ownsPlotHere, pending, mode, unattendedQueue)
+        ));
+
+        inv.setItem(1, GUIManager.createItem(
+                Material.WRITABLE_BOOK,
+                tr(player, "expansion_frontier_guide_name", "&eFrontier Field Guide"),
+                trList(player, "expansion_frontier_guide_lore", List.of(
+                        "&7Choose one measured radius increase.",
+                        "&7Every request is checked for overlap,",
+                        "&7world limits, cost, and approval mode.",
+                        " ",
+                        "&8Horizons remain the journey beyond Level 30."
+                ))
         ));
 
         inv.setItem(11, GUIManager.createItem(
@@ -112,9 +144,9 @@ public class ExpansionRequestGUI {
                         : pendingLore(player, pending, mode, unattendedQueue)
         ));
 
-        inv.setItem(31, GUIManager.createItem(
-                Material.AMETHYST_SHARD,
-                tr(player, "expansion_projection_name", "&dExpansion Horizons &8• &5Future Update"),
+        inv.setItem(37, GUIManager.createItem(
+                isHorizonsUnlocked(plot) ? Material.ECHO_SHARD : Material.AMETHYST_SHARD,
+                tr(player, "expansion_projection_name", "&d&lExpansion Horizons"),
                 buildProjectionLore(player, plot, ownsPlotHere)
         ));
 
@@ -191,7 +223,7 @@ public class ExpansionRequestGUI {
 
         // --- ADMIN VIEW ---
         if (plugin.isAdmin(player)) {
-            inv.setItem(42, GUIManager.createItem(
+            inv.setItem(53, GUIManager.createItem(
                     Material.COMPASS,
                     tr(player, "button_view_requests_admin", "&bView Pending Requests"),
                     trList(player, "view_requests_admin_lore", List.of(
@@ -203,14 +235,14 @@ public class ExpansionRequestGUI {
         }
 
         // --- BACK BUTTON ---
-        inv.setItem(40, GUIManager.createItem(
-                Material.NETHER_STAR,
+        inv.setItem(48, GUIManager.createItem(
+                Material.ARROW,
                 tr(player, "button_back_menu", "&fReturn to Menu"),
                 trList(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
         ));
 
         // --- EXIT BUTTON ---
-        inv.setItem(44, GUIManager.createItem(
+        inv.setItem(50, GUIManager.createItem(
                 Material.BARRIER,
                 tr(player, "button_exit", "&c✖ Close"),
                 trList(player, "exit_lore", List.of("&7Close this menu."))
@@ -221,7 +253,7 @@ public class ExpansionRequestGUI {
     }
 
     public void handleClick(Player player, InventoryClickEvent e) {
-        if (!(e.getInventory().getHolder() instanceof ExpansionHolder)) return;
+        if (!(e.getInventory().getHolder() instanceof ExpansionHolder holder)) return;
 
         e.setCancelled(true);
         ItemStack clicked = e.getCurrentItem();
@@ -234,14 +266,23 @@ public class ExpansionRequestGUI {
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         int currentRadius = getRadius(plot);
 
+        if (holder.page == Page.HORIZONS) {
+            handleHorizonsClick(player, e, plot, currentRadius);
+            return;
+        }
+
         switch (e.getSlot()) {
             case 20 -> { if (validatePlot(player, plot)) submit(player, plot, currentRadius + 5); }
             case 21 -> { if (validatePlot(player, plot)) submit(player, plot, currentRadius + 10); }
             case 22 -> { if (validatePlot(player, plot)) submit(player, plot, currentRadius + 20); }
             case 23 -> { if (validatePlot(player, plot)) submit(player, plot, currentRadius + 35); }
             case 24 -> { if (validatePlot(player, plot)) submit(player, plot, currentRadius + 50); }
+            case 37 -> {
+                openHorizons(player);
+                plugin.effects().playMenuFlip(player);
+            }
 
-            case 42 -> {
+            case 53 -> {
                 if (plugin.isAdmin(player)) {
                     plugin.gui().expansionAdmin().open(player);
                     plugin.effects().playMenuFlip(player);
@@ -250,16 +291,161 @@ public class ExpansionRequestGUI {
                 }
             }
 
-            case 40 -> {
+            case 48 -> {
                 plugin.gui().openMain(player);
                 plugin.effects().playMenuFlip(player);
             }
 
-            case 44 -> {
+            case 50 -> {
                 player.closeInventory();
                 plugin.effects().playMenuClose(player);
             }
         }
+    }
+
+    private void openHorizons(Player player) {
+        String title = clampTitle(plugin.gui().title(player,
+                "expansion_horizons_title", "&5✦ Expansion Horizons ✦"));
+        Inventory inv = Bukkit.createInventory(new ExpansionHolder(Page.HORIZONS), 54, title);
+        ItemStack filler = GUIManager.createItem(Material.PURPLE_STAINED_GLASS_PANE, " ", List.of());
+        for (int slot = 0; slot < inv.getSize(); slot++) inv.setItem(slot, filler);
+
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        boolean ownsPlot = plot != null && player.getUniqueId().equals(plot.getOwner());
+        int level = plot == null ? 0 : plot.getLevel();
+        int unlockLevel = getHorizonsUnlockLevel();
+        int currentRadius = getRadius(plot);
+        ExpansionRequest pending = plugin.getExpansionRequestManager() == null
+                ? null : plugin.getExpansionRequestManager().getRequest(player.getUniqueId());
+
+        inv.setItem(4, GUIManager.createItem(Material.BEACON,
+                tr(player, "expansion_horizons_header", "&d&lBeyond the Frontier"),
+                trList(player, "expansion_horizons_header_lore", List.of(
+                        "&7Transform an established plot into a",
+                        "&7landmark-scale territory through Ascension.",
+                        " ",
+                        "&8Every Horizon still obeys pricing, overlap,",
+                        "&8approval, snapshots, and world limits."
+                ))));
+
+        inv.setItem(10, GUIManager.createItem(Material.FILLED_MAP,
+                tr(player, "expansion_horizons_plot", "&bTerritory Projection"),
+                buildHorizonPlotLore(player, plot, ownsPlot, currentRadius)));
+
+        inv.setItem(13, GUIManager.createItem(
+                level >= unlockLevel ? Material.EXPERIENCE_BOTTLE : Material.GLASS_BOTTLE,
+                tr(player, "expansion_horizons_level", "&eAscension Requirement"),
+                buildHorizonLevelLore(player, level, unlockLevel, ownsPlot)));
+
+        inv.setItem(16, GUIManager.createItem(Material.SHIELD,
+                tr(player, "expansion_horizons_safety", "&aProtected Growth"),
+                trList(player, "expansion_horizons_safety_lore", List.of(
+                        "&7Pre-expansion recovery snapshot",
+                        "&7Live overlap and world-limit validation",
+                        "&7Queue or instant approval support",
+                        "&7Payment rollback if expansion fails"
+                ))));
+
+        List<HorizonTier> tiers = getHorizonTiers();
+        int[] slots = {28, 29, 30, 31, 32};
+        for (int i = 0; i < tiers.size() && i < slots.length; i++) {
+            HorizonTier tier = tiers.get(i);
+            inv.setItem(slots[i], buildHorizonTierItem(
+                    player, plot, ownsPlot, currentRadius, level, pending, tier));
+        }
+
+        inv.setItem(37, GUIManager.createItem(plot != null && plot.getHorizonRank() >= 2 ? Material.CLOCK : Material.GRAY_DYE,
+                tr(player, "horizon_climate_name", "&bClimate Lens"),
+                buildClimateLore(player, plot)));
+        inv.setItem(38, GUIManager.createItem(plot != null && plot.getHorizonRank() >= 3 ? Material.ENDER_EYE : Material.GRAY_DYE,
+                tr(player, "horizon_wards_name", "&9Guardian Wards"),
+                buildWardLore(player, plot)));
+        inv.setItem(39, GUIManager.createItem(plot != null && plot.getHorizonRank() >= 4 ? Material.RECOVERY_COMPASS : Material.GRAY_DYE,
+                tr(player, "horizon_pulse_name", "&dStarward Pulse"),
+                buildPulseLore(player, plot)));
+        inv.setItem(40, GUIManager.createItem(plot != null && plot.getHorizonRank() >= 5 ? Material.HEART_OF_THE_SEA : Material.GRAY_DYE,
+                tr(player, "horizon_heart_name", "&dEternal Aegis Heart"),
+                buildHeartLore(player, plot)));
+
+        inv.setItem(48, GUIManager.createItem(Material.ARROW,
+                tr(player, "expansion_horizons_back", "&eBack to Frontier Expansion"),
+                trList(player, "expansion_horizons_back_lore", List.of("&7Return to standard expansion tiers."))));
+        inv.setItem(50, GUIManager.createItem(Material.BARRIER,
+                tr(player, "button_exit", "&c✖ Close"),
+                trList(player, "exit_lore", List.of("&7Close this menu."))));
+
+        player.openInventory(inv);
+    }
+
+    private void handleHorizonsClick(Player player, InventoryClickEvent event, Plot plot, int currentRadius) {
+        if (event.getSlot() == 48) {
+            open(player);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (event.getSlot() == 50) {
+            player.closeInventory();
+            plugin.effects().playMenuClose(player);
+            return;
+        }
+
+        if (event.getSlot() == 37 && validateOwnedPlot(player, plot) && plot.getHorizonRank() >= 2) {
+            plugin.horizons().cycleClimate(player, plot);
+            plugin.effects().playConfirm(player);
+            openHorizons(player);
+            return;
+        }
+        if (event.getSlot() == 38 && validateOwnedPlot(player, plot) && plot.getHorizonRank() >= 3) {
+            String flag = event.isShiftClick() ? "horizon-phantom-ward"
+                    : event.isRightClick() ? "horizon-ender-seal" : "horizon-projectile-veil";
+            plot.setFlag(flag, !plot.getFlag(flag, true));
+            plugin.store().savePlot(plot);
+            plugin.effects().playConfirm(player);
+            openHorizons(player);
+            return;
+        }
+        if (event.getSlot() == 39 && validateOwnedPlot(player, plot) && plot.getHorizonRank() >= 4) {
+            plugin.horizons().territoryPulse(player, plot);
+            return;
+        }
+
+        int tierIndex = switch (event.getSlot()) {
+            case 28 -> 0;
+            case 29 -> 1;
+            case 30 -> 2;
+            case 31 -> 3;
+            case 32 -> 4;
+            default -> -1;
+        };
+        List<HorizonTier> tiers = getHorizonTiers();
+        if (tierIndex < 0 || tierIndex >= tiers.size()) return;
+
+        HorizonTier tier = tiers.get(tierIndex);
+        if (!isHorizonsEnabled()) {
+            player.sendMessage(color(tr(player, "expansion_horizons_disabled", "&cExpansion Horizons is disabled on this server.")));
+            plugin.effects().playError(player);
+            return;
+        }
+        if (!validatePlot(player, plot)) return;
+        if (plot.getLevel() < getHorizonsUnlockLevel()) {
+            player.sendMessage(color(tr(player, "expansion_horizons_locked_message",
+                    "&cThis Horizon requires Plot Level {LEVEL}.",
+                    vars("LEVEL", String.valueOf(getHorizonsUnlockLevel())))));
+            plugin.effects().playError(player);
+            return;
+        }
+        HorizonRank rank = HorizonRank.byIndex(tier.index());
+        if (tier.index() == plot.getHorizonRank() + 1) {
+            plugin.horizons().issueSigil(player, plot, rank);
+            openHorizons(player);
+            return;
+        }
+        if (tier.index() == plot.getHorizonExpansionRank() + 1 && tier.index() <= plot.getHorizonRank()) {
+            if (plugin.horizons().requestNextExpansion(player, plot)) plugin.effects().playConfirm(player);
+            else plugin.effects().playError(player);
+            return;
+        }
+        plugin.effects().playError(player);
     }
 
     private void submit(Player player, Plot plot, int newRadius) {
@@ -277,7 +463,7 @@ public class ExpansionRequestGUI {
 
         // Manager sends localized success/failure messages.
         // We just provide correct feedback and navigation.
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        plugin.runEntityLater(player, () -> {
             boolean pending = false;
             try {
                 pending = plugin.getExpansionRequestManager().hasPendingRequest(player.getUniqueId());
@@ -312,7 +498,7 @@ public class ExpansionRequestGUI {
         if (plot != null) {
             double cost = plugin.getExpansionRequestManager() == null
                     ? 0.0
-                    : plugin.getExpansionRequestManager().calculateSmartCost(currentRadius, targetRadius);
+                    : plugin.getExpansionRequestManager().calculateSmartCost(plot, targetRadius);
             int targetArea = estimateArea(targetRadius);
             lore.add(" ");
             lore.add(color(tr(player, "expansion_tier_radius_line",
@@ -362,7 +548,7 @@ public class ExpansionRequestGUI {
                 "&7Requested Radius: &a{TARGET}",
                 vars("TARGET", String.valueOf(pending.getRequestedRadius())))));
         lore.add(color(tr(player, "expansion_pending_cost_line",
-                "&7Reserved Cost: &6{COST}",
+                "&7Quoted Cost: &6{COST}",
                 vars("COST", formatCurrency(pending.getCost())))));
         lore.add(color(tr(player, "expansion_pending_world_line",
                 "&7World Anchor: &f{WORLD}",
@@ -499,11 +685,11 @@ public class ExpansionRequestGUI {
 
     private List<String> buildProjectionLore(Player player, Plot plot, boolean ownsPlotHere) {
         List<String> lore = new ArrayList<>(trList(player, "expansion_projection_lore", List.of(
-                "&7A future expansion path that aims to push",
-                "&7your frontier to heights never seen before.",
+                "&7Unlock landmark-scale territory growth",
+                "&7through your plot's Ascension level.",
                 " ",
-                "&8For now, this panel previews where your",
-                "&8current frontier can still grow today."
+                "&8Five Horizon milestones extend beyond",
+                "&8the standard Frontier expansion tiers."
         )));
         lore.add(" ");
         if (plot == null || !ownsPlotHere) {
@@ -512,21 +698,199 @@ public class ExpansionRequestGUI {
             return lore;
         }
 
-        int currentRadius = getRadius(plot);
-        lore.add(color(tr(player, "expansion_projection_smallest_line",
-                "&7Smallest Step: &f{TARGET} radius",
-                vars("TARGET", String.valueOf(currentRadius + 5)))));
-        lore.add(color(tr(player, "expansion_projection_largest_line",
-                "&7Largest Step: &f{TARGET} radius",
-                vars("TARGET", String.valueOf(currentRadius + 50)))));
+        int unlockLevel = getHorizonsUnlockLevel();
+        lore.add(color(tr(player, "expansion_projection_level_line",
+                "&7Plot Level: &f{CURRENT} &8/ &d{REQUIRED}",
+                vars("CURRENT", String.valueOf(plot.getLevel()), "REQUIRED", String.valueOf(unlockLevel)))));
+        lore.add(color(tr(player,
+                isHorizonsUnlocked(plot) ? "expansion_projection_unlocked" : "expansion_projection_locked",
+                isHorizonsUnlocked(plot)
+                        ? "&aHorizons unlocked — click to explore."
+                        : "&eReach Plot Level {LEVEL} to unlock.",
+                vars("LEVEL", String.valueOf(unlockLevel)))));
         lore.add(color(tr(player, "expansion_projection_limit_line",
                 "&7World Ceiling: &f{LIMIT} radius",
-                vars("LIMIT", String.valueOf(getMaxExpansionRadius(player))))));
-        lore.add(color(tr(player, "expansion_projection_role_line",
-                "&7This panel previews the next legal frontier steps from your current claim.")));
-        lore.add(color(tr(player, "expansion_projection_audit_line",
-                "&7Every handled request is written to the audit trail.")));
+                vars("LIMIT", String.valueOf(plugin.horizons().maximumRadius())))));
+        lore.add(" ");
+        lore.add(color(tr(player, "expansion_projection_open",
+                "&dClick to open Expansion Horizons.")));
         return lore;
+    }
+
+    private List<String> buildHorizonPlotLore(Player player, Plot plot, boolean ownsPlot, int currentRadius) {
+        if (plot == null) {
+            return trList(player, "expansion_horizons_no_plot_lore", List.of(
+                    "&cNo plot detected.",
+                    "&7Stand inside your own plot to continue."
+            ));
+        }
+        List<String> lore = new ArrayList<>();
+        lore.add(color(tr(player, "expansion_horizons_plot_name_line", "&7Plot: &f{PLOT}",
+                vars("PLOT", plot.getPlotName() == null || plot.getPlotName().isBlank()
+                        ? plot.getOwnerName() + "'s Plot" : plot.getPlotName()))));
+        lore.add(color(tr(player, "expansion_horizons_current_radius", "&7Current Radius: &b{RADIUS}",
+                vars("RADIUS", String.valueOf(currentRadius)))));
+        lore.add(color(tr(player, "expansion_horizons_current_area", "&7Current Footprint: &b{AREA} blocks",
+                vars("AREA", String.valueOf(getArea(plot))))));
+        lore.add(color(tr(player, "expansion_horizons_world_limit", "&7World Ceiling: &f{LIMIT} radius",
+                vars("LIMIT", String.valueOf(plugin.horizons().maximumRadius())))));
+        lore.add(" ");
+        lore.add(color(tr(player, ownsPlot ? "expansion_horizons_plot_ready" : "expansion_horizons_plot_denied",
+                ownsPlot ? "&aThis territory is ready for projection." : "&cYou do not own this territory.")));
+        return lore;
+    }
+
+    private List<String> buildHorizonLevelLore(Player player, int level, int unlockLevel, boolean ownsPlot) {
+        List<String> lore = new ArrayList<>();
+        lore.add(color(tr(player, "expansion_horizons_level_line", "&7Current Plot Level: &f{LEVEL}",
+                vars("LEVEL", String.valueOf(level)))));
+        lore.add(color(tr(player, "expansion_horizons_unlock_line", "&7Horizons Unlock: &dLevel {LEVEL}",
+                vars("LEVEL", String.valueOf(unlockLevel)))));
+        lore.add(" ");
+        if (!ownsPlot) {
+            lore.add(color(tr(player, "expansion_horizons_level_no_plot", "&8Enter your own plot to inspect its progression.")));
+        } else if (level >= unlockLevel) {
+            lore.add(color(tr(player, "expansion_horizons_level_ready", "&aExpansion Horizons is unlocked.")));
+        } else {
+            lore.add(color(tr(player, "expansion_horizons_level_locked", "&eAscend {LEVELS} more level(s) to unlock.",
+                    vars("LEVELS", String.valueOf(unlockLevel - level)))));
+        }
+        return lore;
+    }
+
+    private ItemStack buildHorizonTierItem(Player player,
+                                           Plot plot,
+                                           boolean ownsPlot,
+                                           int currentRadius,
+                                           int currentLevel,
+                                           ExpansionRequest pending,
+                                           HorizonTier tier) {
+        int targetRadius = currentRadius + tier.radiusGain();
+        int maxRadius = plugin.horizons().maximumRadius();
+        boolean levelReady = currentLevel >= getHorizonsUnlockLevel();
+        boolean renownReady = plot != null && plot.getHorizonRenown() >= tier.requiredRenown();
+        boolean withinLimit = targetRadius <= maxRadius || player.hasPermission("aegis.admin.bypass-limits");
+        boolean nextRank = plot != null && tier.index() == plot.getHorizonRank() + 1;
+        boolean expansionReady = plot != null && tier.index() == plot.getHorizonExpansionRank() + 1
+                && tier.index() <= plot.getHorizonRank();
+        boolean mastered = plot != null && tier.index() <= plot.getHorizonExpansionRank();
+        boolean available = isHorizonsEnabled() && ownsPlot && levelReady && withinLimit && pending == null
+                && ((nextRank && renownReady) || expansionReady);
+
+        String keyBase = "expansion_horizon_tier_" + tier.index();
+        String name = tr(player, keyBase + "_name", "&dHorizon " + tier.index() + " &8(+" + tier.radiusGain() + ")",
+                vars("GAIN", String.valueOf(tier.radiusGain()), "LEVEL", String.valueOf(getHorizonsUnlockLevel())));
+        List<String> lore = new ArrayList<>(trList(player, keyBase + "_lore", List.of(
+                "&7A landmark-scale territory milestone."
+        )));
+        lore.addAll(trList(player, "horizon_rank_" + tier.id() + "_perks", switch (tier.index()) {
+            case 1 -> List.of("&bUnlocks safe landings outside combat.");
+            case 2 -> List.of("&bUnlocks the personal Climate Lens.");
+            case 3 -> List.of("&bUnlocks three selectable Guardian Wards.");
+            case 4 -> List.of("&bUnlocks the Starward territory pulse.");
+            default -> List.of("&bUnlocks the Eternal Aegis Heart blessing.");
+        }));
+        lore.add(" ");
+        lore.add(color(tr(player, "expansion_horizon_requirement_line", "&7Gateway: &ePlot Level {LEVEL}",
+                vars("LEVEL", String.valueOf(getHorizonsUnlockLevel())))));
+        lore.add(color(tr(player, "horizon_rank_renown_line", "&7Renown: &d{CURRENT} &8/ &f{REQUIRED}",
+                vars("CURRENT", plot == null ? "0" : String.valueOf(plot.getHorizonRenown()),
+                        "REQUIRED", String.valueOf(tier.requiredRenown())))));
+        lore.add(color(tr(player, "expansion_horizon_radius_line", "&7Radius: &f{CURRENT} &8→ &d{TARGET}",
+                vars("CURRENT", String.valueOf(currentRadius), "TARGET", String.valueOf(targetRadius)))));
+        lore.add(color(tr(player, "expansion_horizon_area_line", "&7Projected Footprint: &b{AREA} blocks",
+                vars("AREA", String.valueOf(estimateArea(targetRadius))))));
+        double cost = plugin.getExpansionRequestManager() == null || plot == null
+                ? 0.0 : plugin.getExpansionRequestManager().calculateSmartCost(plot, targetRadius);
+        lore.add(color(tr(player, "expansion_horizon_cost_line", "&7Estimated Cost: &6{COST}",
+                vars("COST", formatCurrency(cost)))));
+        lore.add(" ");
+
+        if (!isHorizonsEnabled()) {
+            lore.add(color(tr(player, "expansion_horizon_state_disabled", "&cDisabled by this server.")));
+        } else if (!ownsPlot) {
+            lore.add(color(tr(player, "expansion_horizon_state_no_plot", "&cStand inside your own plot.")));
+        } else if (mastered) {
+            lore.add(color(tr(player, "horizon_rank_state_mastered", "&aAwakened and expanded.")));
+        } else if (!levelReady) {
+            lore.add(color(tr(player, "expansion_horizon_state_level_locked", "&eLocked until Plot Level {LEVEL}.",
+                    vars("LEVEL", String.valueOf(getHorizonsUnlockLevel())))));
+        } else if (!withinLimit) {
+            lore.add(color(tr(player, "expansion_horizon_state_world_locked", "&cThis projection exceeds the world ceiling.")));
+        } else if (pending != null) {
+            lore.add(color(tr(player, "expansion_horizon_state_pending", "&eResolve your pending request first.")));
+        } else if (expansionReady) {
+            lore.add(color(tr(player, "horizon_rank_state_expansion_ready", "&bClick to request this awakened rank's expansion.")));
+        } else if (nextRank && renownReady) {
+            lore.add(color(tr(player, "horizon_rank_state_sigil_ready", "&dClick to receive your bound Horizon Sigil.")));
+        } else if (nextRank) {
+            lore.add(color(tr(player, "horizon_rank_state_renown_locked", "&eEarn {REMAINING} more Renown.",
+                    vars("REMAINING", String.valueOf(Math.max(0L, tier.requiredRenown() - (plot == null ? 0L : plot.getHorizonRenown())))))));
+        } else {
+            lore.add(color(tr(player, "horizon_rank_state_previous_locked", "&8Awaken the previous Horizon Rank first.")));
+        }
+
+        Material material = available ? tier.material() : Material.GRAY_DYE;
+        return GUIManager.createItem(material, name, lore);
+    }
+
+    private boolean isHorizonsEnabled() {
+        return plugin.cfg().raw().getBoolean("expansions.horizons.enabled", true);
+    }
+
+    private int getHorizonsUnlockLevel() {
+        return plugin.horizons() == null ? 30 : plugin.horizons().unlockLevel();
+    }
+
+    private boolean isHorizonsUnlocked(Plot plot) {
+        return isHorizonsEnabled() && plot != null && plot.getLevel() >= getHorizonsUnlockLevel();
+    }
+
+    private List<HorizonTier> getHorizonTiers() {
+        List<HorizonTier> tiers = new ArrayList<>();
+        for (HorizonRank rank : HorizonRank.values()) {
+            tiers.add(new HorizonTier(rank.index(), rank.key(),
+                    plugin.horizons().requiredRenown(rank), plugin.horizons().radiusGain(rank), plugin.horizons().material(rank)));
+        }
+        return tiers;
+    }
+
+    private boolean validateOwnedPlot(Player player, Plot plot) {
+        if (plot != null && plot.getOwner().equals(player.getUniqueId())) return true;
+        plugin.effects().playError(player);
+        return false;
+    }
+
+    private List<String> buildClimateLore(Player player, Plot plot) {
+        if (plot == null || plot.getHorizonRank() < 2) return trList(player, "horizon_climate_locked_lore", List.of("&8Unlocks at Skybound."));
+        return trList(player, "horizon_climate_lore", List.of("&7Current: &f{CLIMATE}", " ", "&eClick to cycle personal plot ambience."))
+                .stream().map(line -> line.replace("{CLIMATE}", plot.getHorizonClimate())).toList();
+    }
+
+    private List<String> buildWardLore(Player player, Plot plot) {
+        if (plot == null || plot.getHorizonRank() < 3) return trList(player, "horizon_wards_locked_lore", List.of("&8Unlocks at Realmforge."));
+        String on = tr(player, "label_on", "ON");
+        String off = tr(player, "label_off", "OFF");
+        return trList(player, "horizon_wards_lore", List.of(
+                        "&7Projectile Veil: &f{PROJECTILE}", "&7Ender Seal: &f{ENDER}",
+                        "&7Phantom Ward: &f{PHANTOM}", " ", "&eLeft: Projectile &8| &eRight: Ender", "&eShift-click: Phantom"))
+                .stream()
+                .map(line -> line.replace("{PROJECTILE}", plot.getFlag("horizon-projectile-veil", true) ? on : off)
+                        .replace("{ENDER}", plot.getFlag("horizon-ender-seal", true) ? on : off)
+                        .replace("{PHANTOM}", plot.getFlag("horizon-phantom-ward", true) ? on : off))
+                .toList();
+    }
+
+    private List<String> buildPulseLore(Player player, Plot plot) {
+        return plot == null || plot.getHorizonRank() < 4
+                ? trList(player, "horizon_pulse_locked_lore", List.of("&8Unlocks at Starward Dominion."))
+                : trList(player, "horizon_pulse_lore", List.of("&7Release a harmless visual pulse", "&7through your awakened territory.", " ", "&eClick to invoke."));
+    }
+
+    private List<String> buildHeartLore(Player player, Plot plot) {
+        return plot == null || plot.getHorizonRank() < 5
+                ? trList(player, "horizon_heart_locked_lore", List.of("&8Unlocks at Eternal Aegis."))
+                : trList(player, "horizon_heart_lore", List.of("&7Trusted residents receive a protective", "&7welcome when returning outside combat.", "&8Thirty-minute personal cooldown."));
     }
 
     private String formatCurrency(double amount) {
@@ -604,10 +968,12 @@ public class ExpansionRequestGUI {
 
     private int getRadius(Plot plot) {
         if (plot == null) return 0;
-
-        // Current code style used in your original GUI.
-        // If you ever change Plot to store radius directly, update this helper.
-        return (plot.getX2() - plot.getX1()) / 2;
+        if (plugin.getExpansionRequestManager() != null) {
+            return plugin.getExpansionRequestManager().getRequiredRadius(plot);
+        }
+        int width = Math.abs(plot.getX2() - plot.getX1()) + 1;
+        int depth = Math.abs(plot.getZ2() - plot.getZ1()) + 1;
+        return Math.max(width, depth) / 2;
     }
 
     private int getArea(Plot plot) {

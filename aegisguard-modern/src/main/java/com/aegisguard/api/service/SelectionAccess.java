@@ -25,5 +25,9 @@ public interface SelectionAccess {
 
     void confirmClaim(Player player, boolean serverClaim);
 
+    /**
+     * @deprecated Plot resizing is disabled and no longer exposed as a player feature.
+     */
+    @Deprecated(forRemoval = false)
     void resizePlot(Player player, String mode, int amount);
 }

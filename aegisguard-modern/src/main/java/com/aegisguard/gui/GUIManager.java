@@ -1,15 +1,14 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.admin.AdminDiagnostics;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
+import com.aegisguard.util.EffectUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -38,6 +37,8 @@ public class GUIManager {
     // Admin
     private final AdminGUI adminGUI;
     private final AdminPlotListGUI adminPlotListGUI;
+    private final DoctorRepairGUI doctorRepairGUI;
+    private final WorldControlsGUI worldControlsGUI;
     private final ExpansionRequestGUI expansionRequestGUI;
     private final ExpansionRequestAdminGUI expansionAdminGUI;
 
@@ -92,6 +93,8 @@ public class GUIManager {
         this.rolesGUI = new RolesGUI(plugin);
         this.plotFlagsGUI = new PlotFlagsGUI(plugin);
         this.adminPlotListGUI = new AdminPlotListGUI(plugin);
+        this.doctorRepairGUI = new DoctorRepairGUI(plugin);
+        this.worldControlsGUI = new WorldControlsGUI(plugin);
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
         this.plotMarketGUI = new PlotMarketGUI(plugin);
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
@@ -181,15 +184,7 @@ public class GUIManager {
      */
     public void openDiagnostics(Player player) {
         if (player == null) return;
-        player.sendMessage(color("&b[AegisGuard] &7Generating doctor report..."));
-        plugin.runGlobalAsync(() -> {
-            try {
-                java.nio.file.Path report = AdminDiagnostics.writeReport(plugin);
-                plugin.runMain(player, () -> player.sendMessage(color("&aDoctor report saved: &f" + report.getFileName())));
-            } catch (Throwable t) {
-                plugin.runMain(player, () -> player.sendMessage(color("&cDoctor report failed: " + t.getMessage())));
-            }
-        });
+        doctorRepairGUI.open(player);
     }
 
     // --- GETTERS (Categorized) ---
@@ -203,6 +198,8 @@ public class GUIManager {
     // Admin & Staff
     public AdminGUI admin() { return adminGUI; }
     public AdminPlotListGUI plotList() { return adminPlotListGUI; }
+    public DoctorRepairGUI doctor() { return doctorRepairGUI; }
+    public WorldControlsGUI worldControls() { return worldControlsGUI; }
     public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }
     public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
 
@@ -406,13 +403,11 @@ public class GUIManager {
     }
 
     public static void playClick(Player p) {
-        try { p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f); }
-        catch (Exception ignored) {}
+        EffectUtil.playToggle(p);
     }
 
     public static void playSuccess(Player p) {
-        try { p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 2.0f); }
-        catch (Exception ignored) {}
+        EffectUtil.playSuccess(p);
     }
 
     public static String color(String text) {

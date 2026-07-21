@@ -2,144 +2,163 @@
   <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
 </p>
 
+<h1 align="center">AegisGuard 1.2.7</h1>
+
 <p align="center">
-  <strong>Simple. Steadfast. Eternal.</strong>
+  <strong>Protect your world. Empower your players. Ascend.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.2.7-gold?style=for-the-badge" alt="Version 1.2.7" />
-  <img src="https://img.shields.io/badge/Layout-Multi--Module-2d7ff9?style=for-the-badge" alt="Multi-module layout" />
-  <img src="https://img.shields.io/badge/Legacy-Supported-8f5cff?style=for-the-badge" alt="Legacy supported" />
-  <img src="https://img.shields.io/badge/Bundled-Available-15a86b?style=for-the-badge" alt="Bundled editions available" />
+  <img src="https://img.shields.io/badge/Version-1.2.7-d9a441?style=for-the-badge" alt="Version 1.2.7" />
+  <img src="https://img.shields.io/badge/Minecraft-1.20%2B-56a64b?style=for-the-badge" alt="Minecraft 1.20 or newer" />
+  <img src="https://img.shields.io/badge/Java-17%2B-e76f00?style=for-the-badge" alt="Java 17 or newer" />
+  <img src="https://img.shields.io/badge/Folia-Supported-2d7ff9?style=for-the-badge" alt="Folia supported" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/snazzyatoms/AegisGuard/wiki">Wiki</a> &bull;
+  <a href="https://github.com/snazzyatoms/AegisGuard/issues">Issues</a> &bull;
+  <a href="https://github.com/snazzyatoms/AegisGuard/releases">Releases</a>
 </p>
 
 ---
 
-# AegisGuard 1.2.7
+## A Living Territory System
 
-**AegisGuard** is a protection and claim-management platform built for both modern and legacy Minecraft server lines.
+**AegisGuard** turns land protection into a complete territory experience. Players can secure land, develop their plots, welcome communities, operate local markets, rent spaces, discover destinations, and pursue meaningful long-term progression. Staff receive the recovery, migration, diagnostics, and world-management tools needed to run the system confidently on public servers.
 
-Version `1.2.7` gives the project a cleaner identity, a cleaner repository, and a cleaner release family:
+Version `1.2.7` brings the plugin's progression, economy, administration, and interface together into its most cohesive release yet.
 
-- modern and legacy lines are separated properly
-- bundled and lean editions are clearly defined
-- developer API jars are part of the release flow
-- the repository is organized to feel more like a real platform and less like a single loose plugin drop
+## What Is New In 1.2.7
 
----
+### Ascension Hall
 
-## ✨ A Better Release Family
+Plot progression now has a complete identity. Thirty levels are presented through six visual chapters, a Guardian's Ascension Guide, clear reward previews, exact payment confirmation, and a safe level-up ceremony.
 
-`1.2.7` is not just another jar update.
+Plots may specialize in one balanced utility discipline:
 
-This line reshapes AegisGuard into a more polished ecosystem:
+- **Stonewright** supports builders and large construction projects.
+- **Verdant Keeper** supports cultivated land and protected farmland.
+- **Wayfinder** supports movement and exploration inside developed territory.
 
-- **Modern servers** get a focused Paper-oriented line
-- **Legacy servers** get their own dedicated build path
-- **Bundled editions** exist for convenience-focused and larger installs
-- **API releases** are available directly for developers who want to integrate with AegisGuard
+External potion effects and existing flight permissions are preserved safely. Plot flight is earned through the final Ascension milestone rather than exposed as a manual claim toggle.
 
-The result is a cleaner experience for server owners, plugin developers, and anyone browsing the project on GitHub.
+### Expansion Horizons
 
----
+Level 30 opens a slower, long-term territory journey built around Renown, five named ranks, bound Sigils, guarded radius growth, and advanced plot abilities. Every expansion continues to use overlap checks, world limits, snapshots, and ownership validation.
 
-## 🧭 Repository Layout
+### Rental Contracts 2.0
 
-The repository now uses a clean top-level module structure:
+Plots and sub-zones can support structured rental activity with fixed terms, deposits, renewals, reminders, tenant controls, hotel-style guest access, and durable offline settlement handling.
 
-| Module | Purpose |
-|--------|---------|
-| `aegisguard-modern` | Main modern AegisGuard line |
-| `aegisguard-legacy` | Legacy AegisGuard line |
-| `aegisguard-modern-bundled` | Modern bundled edition |
-| `aegisguard-legacy-bundled` | Legacy bundled edition |
+### Discovery And Territory Life
 
-This keeps the repo much cleaner than the older mixed root layout and makes each line easier to understand at a glance.
+Public territories can be discovered through categories, favorites, featured listings, visit tracking, likes, and activity history. The redesigned Travel Atlas provides direct access to server waypoints, owned plots, trusted destinations, discovery, and favorites.
 
-Release jars are intentionally not stored inside this repository tree. Source stays in this repo; built jars are published separately from the local `D:\AegisGuard-1.2.7\releases` folder.
+### Professional Territory Interfaces
 
----
+The major management screens now share clearer navigation, stronger visual hierarchy, and complete guidance:
 
-## 🚀 Editions At A Glance
+- Frontier Expansion Hall
+- Local Market district hub
+- Zone planning and rental management
+- Roles, capacity, and permission controls
+- Claim protection settings
+- ClaimBlock Exchange guidance
+- Ascension Hall and Guardian guide
+- Staff Command Center and World Controls
 
-### Server Editions
+Back and exit controls remain consistent, actions are routed safely, and all supported language packs share matching keys and placeholders.
 
-| Jar | Best For |
-|-----|----------|
-| `AegisGuard-1.2.7.jar` | Modern server setups |
-| `AegisGuard-1.2.7-legacy.jar` | Legacy-compatible server setups |
-| `AegisGuard-1.2.7-bundled.jar` | Modern servers that want bundled runtime and database support |
-| `AegisGuard-1.2.7-legacy-bundled.jar` | Legacy servers that want bundled runtime and database support |
+### Administration And Recovery
 
-### Developer Editions
+Server owners receive a stronger operational toolkit:
 
-| Jar | Role |
-|-----|------|
-| `AegisGuard-1.2.7-api.jar` | Modern public API |
-| `AegisGuard-1.2.7-legacy-api.jar` | Legacy public API |
-| `AegisGuard-1.2.7-bundled-api.jar` | Modern bundled API |
-| `AegisGuard-1.2.7-legacy-bundled-api.jar` | Legacy bundled API |
+- `/agadmin doctor` diagnostics and confirmation-gated repairs
+- snapshot creation and restoration
+- automatic configuration migration with safety backups
+- migration previews for supported protection plugins
+- territory activity records and admin inspection
+- per-world claim and protection defaults
+- live controls for mob spawning, daylight, weather, keep-inventory, and mob griefing
 
-Compatibility `-dev-api.jar` files are also produced for direct distribution workflows.
+## Core Systems
 
----
+| System | Capabilities |
+|---|---|
+| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mobs, and boundary enforcement |
+| Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
+| Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, and rentals |
+| Community | Roles, trusted members, group plots, shared treasury, greetings, discovery, likes, favorites, and travel |
+| Administration | Doctor tools, snapshots, restoration, migration, diagnostics, world controls, bypass tools, and activity history |
+| Presentation | Modern English, Old English, Mexican Spanish, and Argentinian Spanish |
 
-## 🏰 What AegisGuard Brings
+## Compatibility
 
-AegisGuard is built around a broad protection and progression experience, including:
+| Requirement | Support |
+|---|---|
+| Minecraft | `1.20+` |
+| Java | `17+` plugin bytecode; newer server-required Java runtimes are supported |
+| Platforms | Spigot, Paper, Purpur, Folia, and compatible Bukkit server forks |
+| Economy | Vault with a supported economy provider |
+| Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
+| Extensions | PlaceholderAPI and the public AegisGuard API |
 
-- land claiming and plot ownership
-- claim block earning and exchange systems
-- movement-aware plot protections
-- group ownership and progression systems
-- market, stall, and economy-oriented claim workflows
-- snapshots, restoration, and admin recovery tools
-- migration tooling for moving from other systems
-- multilingual presentation including modern English, old English, and Spanish variants
+Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
----
+## Installation
 
-## 🧩 Developer-Friendly Direction
+1. Stop the Minecraft server.
+2. Place `AegisGuard-1.2.7.jar` in the server's `plugins` directory.
+3. Install Vault and an economy provider if money-based features are required.
+4. Start the server and allow AegisGuard to generate its editable files.
+5. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
+6. Run `/agadmin doctor` before opening the server to players.
 
-The `1.2.7` line is much friendlier to plugin developers than the older layout.
+Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supported AegisGuard configuration and language reloads, and perform a full restart after changing integrations or storage settings.
 
-Instead of centering the project around JitPack-style dependency flow, AegisGuard is now structured around direct release artifacts and cleaner module separation.
+## Quick Start
 
-That gives developers a clearer path for:
+```text
+/ag wand                     Get the Aegis Scepter
+/ag claim                    Create a claim from the current selection
+/ag menu                     Open the territory dashboard
+/ag level                    Open the Ascension Hall
+/ag market local             Open the Local Market
+/ag visit                    Open the Travel Atlas
+/ag zone                     Manage sub-zones and rentals
 
-- integrating with AegisGuard APIs
-- targeting the correct modern or legacy line
-- working with a cleaner repository structure
-- avoiding the messier dependency flow that build-service-first releases often create
+/agadmin menu                Open the Staff Command Center
+/agadmin wand server         Get the server-zone wand
+/agadmin claim               Create a server-owned protected zone
+/agadmin doctor              Run diagnostics and repair tools
+/agadmin reload              Reload editable settings and languages
+```
 
----
+See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed commands, permissions, configuration, economy, migration, and player guides.
 
-## 📦 Lean Or Bundled
+## Building From Source
 
-The project now supports two very different server-owner preferences without forcing one compromise on everyone:
+Requirements:
 
-- **Lean editions** for servers that want smaller plugin jars and tighter control
-- **Bundled editions** for servers that prefer convenience and fewer setup steps
+- JDK 17 or newer
+- Maven 3.9 or newer
 
-That means small servers are not forced into oversized all-in-one jars, while large servers still have a ready-to-go bundled option.
+From the repository root:
 
----
+```text
+mvn clean package
+```
 
-## 🔥 Why This Matters
+The server plugin and developer API artifacts are copied into the local `releases/` directory. Install only `AegisGuard-1.2.7.jar` on a Minecraft server; API artifacts are intended for developers.
 
-AegisGuard `1.2.7` is meant to feel cleaner, stronger, and more intentional:
+## Release Confidence
 
-- cleaner source layout
-- cleaner GitHub presentation
-- cleaner release handling
-- cleaner variant separation
-- cleaner developer entry point
-
-This is the beginning of AegisGuard behaving more like a proper platform family instead of a single plugin project that kept growing in place.
+The release workflow performs clean Java compilation, automated tests, language parity checks, YAML validation, permission metadata checks, navigation contracts, storage contracts, Folia safety checks, and artifact verification. A local smoke-test script is also provided for startup, admin reload, shutdown, and exception scanning against server fixtures.
 
 ---
 
 <p align="center">
-  <strong>AegisGuard 1.2.7</strong><br />
-  Modern. Legacy. Bundled. Developer-ready.
+  <strong>Simple. Steadfast. Eternal.</strong><br />
+  Forged by Aegis Divine.
 </p>

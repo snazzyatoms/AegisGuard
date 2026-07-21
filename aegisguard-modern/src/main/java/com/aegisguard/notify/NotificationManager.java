@@ -303,6 +303,7 @@ public class NotificationManager {
      * Reload notification data from disk
      */
     public synchronized void reload() {
+        if (dirty) saveData();
         loadData();
         migrateLegacyData();
     }
@@ -408,6 +409,11 @@ public class NotificationManager {
                 ? null
                 : (alreadyColored ? title : ChatColor.translateAlternateColorCodes('&', title));
 
+        plugin.runMain(player, () -> dispatchNow(player, coloredTitle, coloredMessage));
+    }
+
+    private void dispatchNow(Player player, String coloredTitle, String coloredMessage) {
+        if (player == null || !player.isOnline()) return;
         NotificationMode mode = getMode(player.getUniqueId());
         switch (mode) {
             case CHAT -> player.sendMessage(plugin.msg().prefix() + coloredMessage);

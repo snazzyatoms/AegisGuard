@@ -70,16 +70,21 @@ public class EffectUtil {
     public static void playToggle(Player p) {
         if (p == null) return;
 
-        // Prefer the configured instance (respects config + sound toggles)
         if (INSTANCE != null) {
             INSTANCE.playMenuFlip(p);
-            return;
         }
+    }
 
-        // Fallback: generic UI click
-        try {
-            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.5f);
-        } catch (Exception ignored) {}
+    public static void playSuccess(Player p) {
+        if (p != null && INSTANCE != null) {
+            INSTANCE.playConfirm(p);
+        }
+    }
+
+    public static void playIfEnabled(Player player, Location location, Sound sound, float volume, float pitch) {
+        if (INSTANCE != null) {
+            INSTANCE.playSound(player, location, sound, volume, pitch);
+        }
     }
 
     // --- GAMEPLAY EFFECTS ---
@@ -88,21 +93,21 @@ public class EffectUtil {
         play(p, claimSuccessSound, 1.0f, 1.2f);
         try {
             // "Happy" Explosion
-            p.spawnParticle(Particle.VILLAGER_HAPPY, p.getLocation().add(0, 2, 0), 15, 0.5, 0.5, 0.5, 0);
-            p.spawnParticle(Particle.FIREWORKS_SPARK, p.getLocation().add(0, 2, 0), 10, 0.5, 0.5, 0.5, 0.1);
+            spawnParticle(p, "VILLAGER_HAPPY", p.getLocation().add(0, 2, 0), 15, 0.5, 0.5, 0.5, 0);
+            spawnParticle(p, "FIREWORKS_SPARK", p.getLocation().add(0, 2, 0), 10, 0.5, 0.5, 0.5, 0.1);
         } catch (Exception ignored) {}
     }
 
     public void playUnclaim(Player p) {
         play(p, unclaimSound, 1.0f, 0.8f);
         try {
-            p.spawnParticle(Particle.SMOKE_LARGE, p.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.05);
+            spawnParticle(p, "SMOKE_LARGE", p.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.05);
         } catch (Exception ignored) {}
     }
 
     public void playTeleport(Player p) {
         // "Enderman" Style Teleport
-        p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        playSound(p, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
         try {
             p.spawnParticle(Particle.PORTAL, p.getLocation().add(0, 1, 0), 40, 0.5, 1.0, 0.5, 0.5);
             p.spawnParticle(Particle.DRAGON_BREATH, p.getLocation(), 10, 0.2, 0.1, 0.2, 0.05);
@@ -123,10 +128,10 @@ public class EffectUtil {
 
         try {
             if (soundName != null) {
-                p.playSound(loc, Sound.valueOf(soundName.toUpperCase()), 1.0f, 1.0f);
+                playSound(p, loc, Sound.valueOf(soundName.toUpperCase()), 1.0f, 1.0f);
             }
             if (particleName != null) {
-                p.spawnParticle(Particle.valueOf(particleName.toUpperCase()), loc.add(0.5, 1.2, 0.5), 5, 0.2, 0.2, 0.2, 0.05);
+                spawnParticle(p, particleName, loc.add(0.5, 1.2, 0.5), 5, 0.2, 0.2, 0.2, 0.05);
             }
         } catch (Exception ignored) {
             // Silently fail if config has invalid enum names
@@ -138,7 +143,7 @@ public class EffectUtil {
 
         // "Lightning" preset
         if (effectName.equalsIgnoreCase("lightning")) {
-            p.playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.5f, 2.0f);
+            playSound(p, loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.5f, 2.0f);
             return;
         }
 
@@ -148,10 +153,10 @@ public class EffectUtil {
 
         try {
             if (soundKey != null) {
-                p.playSound(loc, Sound.valueOf(soundKey.toUpperCase()), 1.0f, 1.0f);
+                playSound(p, loc, Sound.valueOf(soundKey.toUpperCase()), 1.0f, 1.0f);
             }
             if (particleKey != null) {
-                p.spawnParticle(Particle.valueOf(particleKey.toUpperCase()), loc.add(0.5, 1, 0.5), 20, 0.5, 0.5, 0.5, 0.1);
+                spawnParticle(p, particleKey, loc.add(0.5, 1, 0.5), 20, 0.5, 0.5, 0.5, 0.1);
             }
         } catch (Exception ignored) {}
     }
@@ -159,12 +164,32 @@ public class EffectUtil {
     // --- INTERNAL HELPER ---
 
     private void play(Player p, String soundName, float vol, float pitch) {
-        // FIX: Access globalSoundsEnabled() through cfg()
-        if (!plugin.cfg().globalSoundsEnabled() || !plugin.isSoundEnabled(p)) return; 
+        if (p == null || soundName == null || soundName.isBlank()) return;
         try {
-            p.playSound(p.getLocation(), Sound.valueOf(soundName.toUpperCase()), vol, pitch);
+            playSound(p, Sound.valueOf(soundName.toUpperCase()), vol, pitch);
         } catch (Exception e) {
             // Prevent console spam on invalid sound
+        }
+    }
+
+    public void playSound(Player player, Sound sound, float volume, float soundPitch) {
+        if (player == null) return;
+        playSound(player, player.getLocation(), sound, volume, soundPitch);
+    }
+
+    public void playSound(Player player, Location location, Sound sound, float volume, float soundPitch) {
+        if (player == null || location == null || sound == null || !plugin.isSoundEnabled(player)) return;
+        try {
+            player.playSound(location, sound, volume, soundPitch);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void spawnParticle(Player player, String name, Location location, int count,
+                               double offsetX, double offsetY, double offsetZ, double extra) {
+        Particle particle = CompatParticle.match(name);
+        if (particle != null) {
+            player.spawnParticle(particle, location, count, offsetX, offsetY, offsetZ, extra);
         }
     }
 }

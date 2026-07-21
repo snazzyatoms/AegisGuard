@@ -183,6 +183,49 @@ public class ClaimBlockManager {
         saveAsync();
     }
 
+    /** Set the usable ClaimBlock balance while preserving blocks already committed to plots/upgrades. */
+    public long setAvailableBlocks(UUID uuid, long targetAvailable) {
+        if (uuid == null) return 0L;
+        long safeTarget = Math.max(0L, targetAvailable);
+        ClaimBlockData d = getOrCreate(uuid);
+        synchronized (d) {
+            long current = getAvailableBlocks(uuid);
+            if (safeTarget > current) {
+                long add = safeTarget - current;
+                d.addBonusBlocks(add);
+                d.recordLot(ClaimBlockData.LotType.BONUS, add);
+            } else if (safeTarget < current) {
+                long remove = current - safeTarget;
+                long fromBonus = Math.min(remove, d.getBonusBlocks());
+                d.setBonusBlocks(d.getBonusBlocks() - fromBonus);
+                d.consumeLotsFIFO(EnumSet.of(ClaimBlockData.LotType.BONUS), fromBonus);
+                remove -= fromBonus;
+
+                long fromEarned = Math.min(remove, d.getEarnedBlocks());
+                d.setEarnedBlocks(d.getEarnedBlocks() - fromEarned);
+                d.consumeLotsFIFO(EnumSet.of(ClaimBlockData.LotType.EARNED), fromEarned);
+                remove -= fromEarned;
+
+                long fromBought = Math.min(remove, d.getBoughtBlocks());
+                d.setBoughtBlocks(d.getBoughtBlocks() - fromBought);
+                d.consumeLotsFIFO(EnumSet.of(ClaimBlockData.LotType.BOUGHT, ClaimBlockData.LotType.EXCHANGE), fromBought);
+            }
+        }
+        saveAsync();
+        return getAvailableBlocks(uuid);
+    }
+
+    public long adjustAvailableBlocks(UUID uuid, long delta) {
+        long current = getAvailableBlocks(uuid);
+        long target;
+        try {
+            target = Math.addExact(current, delta);
+        } catch (ArithmeticException ignored) {
+            target = delta > 0 ? Long.MAX_VALUE : 0L;
+        }
+        return setAvailableBlocks(uuid, Math.max(0L, target));
+    }
+
     /**
      * Generic bought blocks (NOT exchange-tracked).
      * If you want sell-lock scope EXCHANGE_PURCHASED_ONLY to apply, use addBoughtFromExchange().

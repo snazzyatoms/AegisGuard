@@ -101,7 +101,7 @@ button_back_admin: '&fVolver a Administrador'
 role_edit_self_error: '&c❌ ¡No permitido! No puedes editar tu propio rol. ¡Esto podría bloquearte!'
 no_perm: '&cNo tienes permiso para ejecutar esta acción.'
 players_only: '&cEste comando solo puede ser usado por jugadores.'
-usage_main: '&eUso: /aegis <wand|menu|claim|unclaim|resize|help>'
+usage_main: '&eUso: /aegis <wand|menu|claim|unclaim|help>'
 
 sound_global_enabled: '&a✔ El sonido de Aegis ha sido habilitado globalmente.'
 sound_global_disabled: '&c✖ El sonido de Aegis ha sido deshabilitado globalmente.'
@@ -113,20 +113,14 @@ corner1_set: '&a⚡ Primer punto establecido en &e{X}, {Z}.'
 corner2_set: '&b⚡ Segundo punto establecido en &e{X}, {Z}.'
 must_select: '&c❌ Debes seleccionar dos puntos con la Varita.'
 corners_diff_world: '&c❌ Los puntos seleccionados deben estar en el mismo mundo.'
+claim_too_large: '&c❌ Reclamo fallido: el área seleccionada excede el tamaño máximo.'
+claim_overlap: '&c❌ Reclamo fallido: el área seleccionada se superpone con otra parcela.'
 wand_consumed: '&a⚡ La Varita fue consumida. El terreno ha sido reclamado.'
 wand_not_found: '&c❌ No se pudo encontrar la Varita de Aegis.'
 wand_already_owned: '&eYa tienes la Varita de Aegis. Úsala en lugar de solicitar otra.'
 
-resize-success: '&a✔ Tu parcela se ha expandido {DIRECTION} por {AMOUNT} bloques.'
-resize-fail-overlap: '&c❌ ¡No se puede expandir! Se superpone con otra parcela.'
-resize-fail-max-area: '&c❌ ¡No se puede expandir! Excedes el límite de &e{AMOUNT}&c bloques.'
 
 # --- Fusión ---
-merge_invalid_dir: '&c❌ Debes especificar una dirección válida: NORTE, SUR, ESTE u OESTE.'
-merge_no_plot: '&c❌ No hay una parcela adyacente para fusionar.'
-merge_not_owner: '&c❌ No eres el dueño de la parcela adyacente.'
-merge_not_aligned: '&c❌ Las parcelas no están correctamente alineadas.'
-merge_success: '&a⚡ ¡Fusión exitosa! Las parcelas se han unido.'
 
 # --- Economía y Límites ---
 max_claims_reached: '&c❌ Has alcanzado el límite de {AMOUNT} parcela(s).'
@@ -176,7 +170,22 @@ market-buy-success: '&a✔ ¡Has comprado la parcela de {PLAYER} por &6{PRICE}&a
 market-sold: '&a✔ ¡{PLAYER} ha comprado tu parcela por &6{PRICE}&a!'
 market-for-sale: '&a✔ Tu parcela está ahora a la venta por &6{PRICE}&a.'
 market-not-for-sale: '&e✔ Tu parcela ya no está a la venta.'
-market-rent-soon: '&eLa función de alquiler de parcelas estará disponible pronto.'
+market-listing-unavailable: '&cThat market listing is no longer available.'
+market-transaction-busy: '&eAnother player is already processing that listing. Please try again.'
+market-payment-failed: '&cThe market transaction could not be completed. Any withdrawn funds were returned.'
+market-renting-disabled: '&cFull-plot renting is disabled on this server.'
+market-rent-own: '&cYou cannot rent your own plot.'
+market-rent-limit: '&cPuedes tener como máximo {AMOUNT} rentas de parcela activas.'
+market-rent-success: '&aYou rented this plot for {PRICE} for {DAYS} days.'
+market-rented: '&a{PLAYER} rented your plot for {PRICE} for {DAYS} days.'
+market-rental-expired: '&eLa renta de tu parcela completa terminó.'
+market-owner-rental-expired: '&eTerminó una renta de tu parcela y ya está disponible de nuevo.'
+market-listing-conflict: '&cThis plot cannot be listed while another ownership or market state is active.'
+market-for-rent: '&aClaim listed for rent at {PRICE} per term.'
+market-not-for-rent: '&eRental listing removed.'
+market-rental-active: '&cNo puedes quitar esta oferta hasta que termine la renta activa.'
+rent_usage: '&cUsage: /ag rent <price>'
+rent_price_range: '&cRent must be between {MIN} and {MAX}.'
 market_type_rent: '&bEn Alquiler'
 market_type_sale: '&aEn Venta'
 market_item_lore:
@@ -701,11 +710,16 @@ like_own_plot: "&cError: No puedes dar me gusta a tu propia parcela."
 like_disabled: "&cLos me gusta están desactivados en este servidor/mundo."
 help_header: "&bAyuda de AegisGuard"
 help_lines:
+- '&e/aegis rent <precio> [días] [depósito] &7- Crea una oferta de renta.'
+- '&e/aegis unrent &7- Retira una publicación de renta inactiva.'
+- '&e/aegis rental <status|renew|cancel> &7- Administra un contrato activo.'
+- '&e/aegis discover &7- Explora territorios públicos y destacados.'
+- '&e/aegis favorite &7- Guarda el territorio actual en favoritos.'
+- '&e/aegis activity &7- Consulta la actividad reciente del territorio.'
 - "&e/aegis wand &7- Obtén la Varita Aegis (herramienta de selección)."
 - "&e/aegis menu &7- Abre el menú principal de AegisGuard."
 - "&e/aegis claim &7- Crea una parcela desde tu selección actual."
 - "&e/aegis unclaim &7- Elimina tu parcela actual."
-- "&e/aegis resize <dir> <amt> &7- Redimensiona tu parcela en una dirección."
 - "&e/aegis home &7- Teletranspórtate al hogar de tu parcela."
 - "&e/aegis setspawn &7- Establece el punto de inicio de tu parcela."
 - "&e/aegis welcome [msg] &7- Establece o borra un mensaje de bienvenida."

@@ -67,13 +67,13 @@ public class EconomyManager {
 
             case EXP -> {
                 setTotalExperience(p, getTotalExperience(p) - intCost);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
+                plugin.effects().playSound(p, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
                 yield true;
             }
 
             case LEVEL -> {
                 p.setLevel(Math.max(0, p.getLevel() - intCost));
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
+                plugin.effects().playSound(p, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.5f);
                 yield true;
             }
 
@@ -81,14 +81,14 @@ public class EconomyManager {
                 Material mat = (plugin.cfg() != null) ? plugin.cfg().getWorldItemCostType(p.getWorld()) : Material.DIAMOND;
                 p.getInventory().removeItem(new ItemStack(mat, intCost));
                 p.updateInventory();
-                p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+                plugin.effects().playSound(p, Sound.ENTITY_ITEM_BREAK, 1f, 1f);
                 yield true;
             }
 
             case CLAIM_BLOCKS -> {
                 if (plugin.getClaimBlockManager() == null) yield false;
                 boolean ok = plugin.getClaimBlockManager().spend(p.getUniqueId(), longCost);
-                if (ok) p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.15f);
+                if (ok) plugin.effects().playSound(p, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.15f);
                 yield ok;
             }
 

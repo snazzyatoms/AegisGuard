@@ -87,6 +87,14 @@ public class Plot {
     private int level = 1;
     private int xp = 0;
 
+    // --- HORIZON ASCENSION (endgame progression after Plot Level 30) ---
+    private int horizonRank;
+    private int horizonExpansionRank;
+    private long horizonRenown;
+    private String horizonClimate = "NATURAL";
+    private String ascensionFocus = "UNCHOSEN";
+    private long ascensionFocusChangedAt;
+
     // --- ZONING ---
     private final List<Zone> zones = new CopyOnWriteArrayList<>();
     private final List<MarketStall> stalls = new CopyOnWriteArrayList<>();
@@ -339,6 +347,7 @@ public class Plot {
         if (isOwner(player)) return true;
         UUID uuid = player.getUniqueId();
         if (isBanned(uuid)) return false;
+        if (isRentedBy(uuid)) return true;
         String role = getRole(uuid);
         return role != null && !role.equalsIgnoreCase("visitor");
     }
@@ -357,6 +366,26 @@ public class Plot {
         Player online = Bukkit.getPlayer(playerUUID);
         if (hasElevatedManagementAccess(online, pl)) {
             return true;
+        }
+
+        // A full-plot renter receives only the explicitly configured tenant permissions.
+        // Management permissions are never implied by renting a plot.
+        if (isRentedBy(playerUUID)) {
+            String needle = permission.toUpperCase(Locale.ROOT);
+            List<String> renterPerms = pl.cfg().raw().getStringList("full_plot_renting.renter_permissions");
+            if (renterPerms == null || renterPerms.isEmpty()) {
+                renterPerms = List.of("BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "INTERACT",
+                        "CONTAINERS", "REDSTONE", "ANIMALS", "VEHICLES");
+            }
+            for (String renterPerm : renterPerms) {
+                if (renterPerm == null) continue;
+                String normalized = renterPerm.toUpperCase(Locale.ROOT);
+                if ("ALL".equals(normalized) || normalized.equals(needle)
+                        || ("BUILD".equals(normalized)
+                        && ("BLOCK_BREAK".equals(needle) || "BLOCK_PLACE".equals(needle)))) {
+                    return true;
+                }
+            }
         }
 
         String role = getRole(playerUUID);
@@ -899,6 +928,25 @@ public class Plot {
         return rentEndTime;
     }
 
+    public boolean hasActiveRental() {
+        return currentRenter != null && rentEndTime > System.currentTimeMillis();
+    }
+
+    public boolean isRentedBy(@Nullable UUID playerUUID) {
+        return playerUUID != null && playerUUID.equals(currentRenter) && hasActiveRental();
+    }
+
+    public void clearRenter() {
+        currentRenter = null;
+        rentEndTime = 0L;
+    }
+
+    public void clearPlayerAccess() {
+        playerRoles.clear();
+        bannedPlayers.clear();
+        roleFlagStates.clear();
+    }
+
     // ---------------------------------------------------------------------
     // Auction
     // ---------------------------------------------------------------------
@@ -968,6 +1016,62 @@ public class Plot {
 
     public void setXp(double xp) {
         this.xp = Math.max(0, (int) Math.round(xp));
+    }
+
+    public int getHorizonRank() {
+        return Math.max(0, Math.min(5, horizonRank));
+    }
+
+    public void setHorizonRank(int horizonRank) {
+        this.horizonRank = Math.max(0, Math.min(5, horizonRank));
+    }
+
+    public int getHorizonExpansionRank() {
+        return Math.max(0, Math.min(getHorizonRank(), horizonExpansionRank));
+    }
+
+    public void setHorizonExpansionRank(int horizonExpansionRank) {
+        this.horizonExpansionRank = Math.max(0, Math.min(5, horizonExpansionRank));
+    }
+
+    public long getHorizonRenown() {
+        return Math.max(0L, horizonRenown);
+    }
+
+    public void setHorizonRenown(long horizonRenown) {
+        this.horizonRenown = Math.max(0L, horizonRenown);
+    }
+
+    public void addHorizonRenown(long amount) {
+        if (amount <= 0L) return;
+        horizonRenown = horizonRenown > Long.MAX_VALUE - amount ? Long.MAX_VALUE : horizonRenown + amount;
+    }
+
+    public String getHorizonClimate() {
+        return horizonClimate == null || horizonClimate.isBlank() ? "NATURAL" : horizonClimate;
+    }
+
+    public void setHorizonClimate(String horizonClimate) {
+        String normalized = horizonClimate == null ? "NATURAL" : horizonClimate.trim().toUpperCase(Locale.ROOT);
+        this.horizonClimate = Set.of("NATURAL", "CLEAR", "RAIN", "SUNRISE", "SUNSET", "NIGHT")
+                .contains(normalized) ? normalized : "NATURAL";
+    }
+
+    public String getAscensionFocus() {
+        return ascensionFocus == null || ascensionFocus.isBlank() ? "UNCHOSEN" : ascensionFocus;
+    }
+
+    public void setAscensionFocus(String ascensionFocus) {
+        this.ascensionFocus = ascensionFocus == null || ascensionFocus.isBlank()
+                ? "UNCHOSEN" : ascensionFocus.trim().toUpperCase(Locale.ROOT);
+    }
+
+    public long getAscensionFocusChangedAt() {
+        return Math.max(0L, ascensionFocusChangedAt);
+    }
+
+    public void setAscensionFocusChangedAt(long ascensionFocusChangedAt) {
+        this.ascensionFocusChangedAt = Math.max(0L, ascensionFocusChangedAt);
     }
 
     public int getMaxMembers() {

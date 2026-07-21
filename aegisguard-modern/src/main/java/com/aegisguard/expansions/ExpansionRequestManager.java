@@ -313,7 +313,7 @@ public class ExpansionRequestManager {
         }
 
         // 1) Size Check
-        int currentRadius = Math.max(0, (plot.getX2() - plot.getX1()) / 2);
+        int currentRadius = getRequiredRadius(plot);
         if (newRadius <= currentRadius) {
             plugin.msg().send(requester, "expansion_invalid_size");
             return false;
@@ -321,13 +321,16 @@ public class ExpansionRequestManager {
 
         // 2) Limit Check
         int maxRadius = plugin.cfg().raw().getInt("expansions.max_radius_global", 100);
+        if (plugin.horizons() != null && plugin.horizons().isNextHorizonExpansion(plot, currentRadius, newRadius)) {
+            maxRadius = plugin.horizons().maximumRadius();
+        }
         if (newRadius > maxRadius && !requester.hasPermission("aegis.admin.bypass-limits")) {
             plugin.msg().send(requester, "expansion_limit_reached", Map.of("LIMIT", String.valueOf(maxRadius)));
             return false;
         }
 
         // 3) Cost Check (area-based)
-        double cost = calculateSmartCost(currentRadius, newRadius);
+        double cost = calculateSmartCost(plot, newRadius);
         CurrencyType type = CurrencyType.VAULT;
 
         if (!canCoverExpansionCost(plot, requester, cost, type)) {
@@ -399,7 +402,26 @@ public class ExpansionRequestManager {
             return plugin.getPricingCalculator().calculateExpansionCost(addedArea);
         }
 
-        double perBlock = plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0);
+        double perBlock = plugin.cfg().raw().getDouble("economy.expansion_cost_per_block",
+                plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0));
+        return addedArea * perBlock;
+    }
+
+    public double calculateSmartCost(Plot plot, int newRadius) {
+        if (plot == null) return calculateSmartCost(0, newRadius);
+
+        long width = Math.abs((long) plot.getX2() - plot.getX1()) + 1L;
+        long depth = Math.abs((long) plot.getZ2() - plot.getZ1()) + 1L;
+        long currentArea = Math.max(1L, width * depth);
+        long targetArea = squareAreaForRadius(Math.max(0, newRadius));
+        long addedArea = Math.max(0L, targetArea - currentArea);
+
+        if (plugin.getPricingCalculator() != null && plugin.getPricingCalculator().isEnabled()) {
+            return plugin.getPricingCalculator().calculateExpansionCost(addedArea);
+        }
+
+        double perBlock = plugin.cfg().raw().getDouble("economy.expansion_cost_per_block",
+                plugin.cfg().raw().getDouble("economy.resize_cost_per_block", 10.0));
         return addedArea * perBlock;
     }
 
@@ -412,6 +434,13 @@ public class ExpansionRequestManager {
         long currentArea = squareAreaForRadius(Math.max(0, currentRadius));
         long newArea = squareAreaForRadius(Math.max(Math.max(0, currentRadius), newRadius));
         return Math.max(0L, newArea - currentArea);
+    }
+
+    public int getRequiredRadius(Plot plot) {
+        if (plot == null) return 0;
+        int width = Math.abs(plot.getX2() - plot.getX1()) + 1;
+        int depth = Math.abs(plot.getZ2() - plot.getZ1()) + 1;
+        return Math.max(width, depth) / 2;
     }
 
     private boolean processInstantApproval(Player requester,
@@ -445,6 +474,10 @@ public class ExpansionRequestManager {
             refundExpansionCost(oldPlot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, cost, type, chargeSource);
             plugin.msg().send(requester, "expansion_overlap_fail");
             return false;
+        }
+        if (plugin.horizons() != null) {
+            plugin.horizons().recordExpansion(oldPlot, addedAreaForExpansion(currentRadius, newRadius));
+            plugin.horizons().completeMatchingExpansion(oldPlot, currentRadius, newRadius);
         }
 
         // Build a request object for audit (not stored as pending)
@@ -525,6 +558,12 @@ public class ExpansionRequestManager {
             denyRequest(req, adminActor, "Approval revalidation failed because the new bounds were no longer valid");
             plugin.getLogger().warning("Expansion approval failed (overlap or invalid bounds) for " + req.getRequester());
             return false;
+        }
+        if (plugin.horizons() != null) {
+            plugin.horizons().recordExpansion(oldPlot,
+                    addedAreaForExpansion(req.getCurrentRadius(), req.getRequestedRadius()));
+            plugin.horizons().completeMatchingExpansion(oldPlot,
+                    req.getCurrentRadius(), req.getRequestedRadius());
         }
 
         // 5) Mark + remove active

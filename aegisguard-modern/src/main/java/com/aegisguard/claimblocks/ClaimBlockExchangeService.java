@@ -43,6 +43,25 @@ public class ClaimBlockExchangeService {
 
     public record Quote(long blocks, double unitPrice, double subtotal, double fee, double totalOrPayout) {}
 
+    public record ExchangeOverview(
+            double buyPrice,
+            double sellPrice,
+            double buyFeePercent,
+            double buyFeeFlat,
+            double sellFeePercent,
+            double sellFeeFlat,
+            long buyMinimum,
+            long buyMaximum,
+            long sellMinimum,
+            long sellMaximum,
+            long buyRemainingToday,
+            long sellRemainingToday,
+            int tradesRemainingThisHour,
+            long cooldownRemainingSeconds,
+            boolean sellLockEnabled,
+            int sellLockMinutes
+    ) {}
+
     private final AegisGuard plugin;
 
     private final File file;
@@ -90,6 +109,14 @@ public class ClaimBlockExchangeService {
         return shuttingDown;
     }
 
+    /** Flush in-memory limits before re-reading the persisted exchange state. */
+    public void reload() {
+        if (shuttingDown) return;
+        save();
+        cache.clear();
+        load();
+    }
+
     // -------------------------------------------------------------------------
     // Quotes (used by GUI)
     // -------------------------------------------------------------------------
@@ -114,6 +141,39 @@ public class ClaimBlockExchangeService {
         double payout = Math.max(0.0, subtotal - fee);
 
         return new Quote(blocks, s.sellPricePerBlock, subtotal, fee, payout);
+    }
+
+    public ExchangeOverview getOverview(Player player) {
+        ExchangeSettings s = resolveSettings(player);
+        PlayerState state = player == null ? new PlayerState() : getState(player.getUniqueId());
+        normalizeWindows(state);
+
+        long buyRemaining = s.buyDailyCapBlocks <= 0
+                ? -1L : Math.max(0L, s.buyDailyCapBlocks - state.boughtTodayBlocks);
+        long sellRemaining = s.sellDailyCapBlocks <= 0
+                ? -1L : Math.max(0L, s.sellDailyCapBlocks - state.soldTodayBlocks);
+        int tradesRemaining = s.maxTradesPerHour <= 0
+                ? -1 : Math.max(0, s.maxTradesPerHour - state.tradesThisHour);
+        long cooldown = cooldownRemainingSeconds(state, System.currentTimeMillis(), s.cooldownSeconds);
+
+        return new ExchangeOverview(
+                s.buyPricePerBlock,
+                s.sellPricePerBlock,
+                s.buyFeePercent,
+                s.buyFeeFlat,
+                s.sellFeePercent,
+                s.sellFeeFlat,
+                s.buyMin,
+                s.buyMaxPerTrade,
+                s.sellMin,
+                s.sellMaxPerTrade,
+                buyRemaining,
+                sellRemaining,
+                tradesRemaining,
+                cooldown,
+                s.sellLockEnabled,
+                s.sellLockHoldMinutes
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -271,6 +331,10 @@ public class ClaimBlockExchangeService {
 
         ClaimBlockManager mgr = plugin.getClaimBlockManager();
         if (mgr == null) return Result.err(ResultType.ERROR, "&cClaimBlocks system is not available.");
+        ClaimBlockData blockData = mgr.getOrCreate(p.getUniqueId());
+        if (blocks > Long.MAX_VALUE - blockData.getBoughtBlocks()) {
+            return Result.err(ResultType.ERROR, "&cThis purchase would exceed the ClaimBlock storage limit.");
+        }
 
         boolean bypass = p != null && p.hasPermission(s.bypassPerm);
 
@@ -315,7 +379,7 @@ public class ClaimBlockExchangeService {
             return Result.err(ResultType.ERROR, "&cPayment failed. Please try again.");
         }
 
-        mgr.addBought(p.getUniqueId(), blocks);
+        mgr.addBoughtFromExchange(p.getUniqueId(), blocks);
 
         st.lastTradeMillis = now;
         st.tradesThisHour++;
@@ -432,13 +496,23 @@ public class ClaimBlockExchangeService {
             return Result.withLong(ResultType.DAILY_CAP, "&cDaily sell money cap reached.", (long) Math.floor(left));
         }
 
+        long earnedBefore = cbd.getEarnedBlocks();
+        long bonusBefore = cbd.getBonusBlocks();
+        long boughtBefore = cbd.getBoughtBlocks();
         if (!deductForSell(cbd, blocks, starter, used, spent, s, st)) {
             return Result.err(ResultType.SELL_LOCKED, "&cUnable to process sell due to sell-lock/balance rules.");
         }
 
-        mgr.saveAsync();
+        if (!plugin.vault().deposit(p, payout)) {
+            cbd.setEarnedBlocks(earnedBefore);
+            cbd.setBonusBlocks(bonusBefore);
+            cbd.setBoughtBlocks(boughtBefore);
+            mgr.saveAsync();
+            return Result.err(ResultType.ERROR,
+                    "&cEconomy payout failed. Your ClaimBlocks were restored; please try again.");
+        }
 
-        plugin.vault().give(p, payout);
+        mgr.saveAsync();
 
         st.lastTradeMillis = now;
         st.tradesThisHour++;
@@ -829,7 +903,7 @@ public class ClaimBlockExchangeService {
         }
     }
 
-    private void save() {
+    public void save() {
         synchronized (ioLock) {
             if (data == null) data = YamlConfiguration.loadConfiguration(file);
 
@@ -876,7 +950,7 @@ public class ClaimBlockExchangeService {
             save();
             return;
         }
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        plugin.runGlobalAsync(this::save);
     }
 
     private PlayerState getState(UUID uuid) {

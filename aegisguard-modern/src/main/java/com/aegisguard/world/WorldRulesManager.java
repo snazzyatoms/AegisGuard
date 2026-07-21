@@ -13,8 +13,8 @@ import java.util.Map;
 public class WorldRulesManager {
 
     private final AegisGuard plugin;
-    private final Map<String, WorldRuleSet> rules = new HashMap<>();
-    private WorldRuleSet defaultRuleSet;
+    private volatile Map<String, WorldRuleSet> rules = Map.of();
+    private volatile WorldRuleSet defaultRuleSet;
 
     public WorldRulesManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -26,7 +26,7 @@ public class WorldRulesManager {
     }
 
     public void load() {
-        rules.clear();
+        Map<String, WorldRuleSet> loadedRules = new HashMap<>();
         AGConfig cfg = plugin.cfg();
 
         // 1. Global Defaults
@@ -47,6 +47,7 @@ public class WorldRulesManager {
         // 2. Per-world Overrides
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("claims.per_world");
         if (section == null) {
+            rules = Map.of();
             plugin.getLogger().info("[AegisGuard] No per-world configuration found. Using defaults.");
             return;
         }
@@ -72,9 +73,10 @@ public class WorldRulesManager {
                 prot.getBoolean("entry", defaultRuleSet.entry)
             );
 
-            rules.put(worldName, set);
+            loadedRules.put(worldName, set);
         }
 
+        rules = Map.copyOf(loadedRules);
         plugin.getLogger().info("[AegisGuard] Loaded rules for " + rules.size() + " worlds.");
     }
 
@@ -98,7 +100,6 @@ public class WorldRulesManager {
         plot.setFlag("redstone", set.redstone);
         plot.setFlag("vehicles", set.vehicles);
 
-        plot.setFlag("fly", set.fly);
         plot.setFlag("entry", set.entry);
         plot.setFlag("safe_zone", plugin.getConfig().getBoolean("protections.safe_zone", true));
         plot.setFlag("shop-interact", plugin.getConfig().getBoolean("protections.shop-interact", false));

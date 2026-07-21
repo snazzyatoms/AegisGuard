@@ -52,7 +52,6 @@ public class PlotVisualizerTask extends BukkitRunnable {
     public void run() {
         // Player gone? Stop this task.
         if (!player.isOnline()) {
-            this.cancel();
             return;
         }
 

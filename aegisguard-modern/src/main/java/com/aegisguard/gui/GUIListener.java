@@ -8,6 +8,7 @@ import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
+import com.aegisguard.gui.DoctorRepairGUI.DoctorHolder;
 import com.aegisguard.gui.InfoGUI.InfoHolder;
 import com.aegisguard.gui.LevelingGUI.LevelingHolder;
 import com.aegisguard.gui.LocalMarketGUI.LocalMarketHolder;
@@ -22,12 +23,14 @@ import com.aegisguard.gui.PlotStatusGUI.PlotStatusHolder;
 import com.aegisguard.gui.RolesGUI.PlotSelectorHolder;
 import com.aegisguard.gui.RolesGUI.RoleAddHolder;
 import com.aegisguard.gui.RolesGUI.RoleManageHolder;
+import com.aegisguard.gui.RolesGUI.RoleFlagsHolder;
 import com.aegisguard.gui.RolesGUI.RolesMenuHolder;
 import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallListHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallManageHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallPreviewHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
+import com.aegisguard.gui.WorldControlsGUI.WorldControlsHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
 import com.aegisguard.gui.ZoneBrowseGUI.ZoneBrowseHolder;
 import com.aegisguard.gui.ZoneTenantGUI.ZoneTenantHolder;
@@ -42,7 +45,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -54,6 +59,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * GUIListener (1.2.6 QoL pass)
@@ -72,6 +80,8 @@ public class GUIListener implements Listener {
 
     private final AegisGuard plugin;
     private final NamespacedKey actionKey;
+    private final Map<UUID, Long> lastMenuClick = new ConcurrentHashMap<>();
+    private static final long CLICK_GUARD_NANOS = 150_000_000L;
 
     public GUIListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -84,11 +94,14 @@ public class GUIListener implements Listener {
                 || holder instanceof InfoHolder
                 || holder instanceof SettingsGUIHolder
                 || holder instanceof AdminHolder
+                || holder instanceof DoctorHolder
+                || holder instanceof WorldControlsHolder
                 || holder instanceof PlotListHolder
                 || holder instanceof PlotSelectorHolder
                 || holder instanceof RolesMenuHolder
                 || holder instanceof RoleAddHolder
                 || holder instanceof RoleManageHolder
+                || holder instanceof RoleFlagsHolder
                 || holder instanceof PlotFlagsHolder
                 || holder instanceof CosmeticsHolder
                 || holder instanceof LevelingHolder
@@ -149,6 +162,10 @@ public class GUIListener implements Listener {
             default -> { /* continue */ }
         }
 
+        long now = System.nanoTime();
+        Long previous = lastMenuClick.put(player.getUniqueId(), now);
+        if (previous != null && now - previous < CLICK_GUARD_NANOS) return;
+
         // 1.2.6: PDC-first reload detection (with legacy fallback)
         ReloadIntent intent = detectReloadIntent(clicked);
         if (intent != null) {
@@ -173,6 +190,12 @@ public class GUIListener implements Listener {
         else if (holder instanceof AdminHolder) {
             plugin.gui().admin().handleClick(player, e);
         }
+        else if (holder instanceof DoctorHolder castHolder) {
+            plugin.gui().doctor().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof WorldControlsHolder castHolder) {
+            plugin.gui().worldControls().handleClick(player, e, castHolder);
+        }
         else if (holder instanceof PlotListHolder castHolder) {
             plugin.gui().plotList().handleClick(player, e, castHolder);
         }
@@ -187,6 +210,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof RoleManageHolder castHolder) {
             plugin.gui().roles().handleManageRoleClick(player, e, castHolder);
+        }
+        else if (holder instanceof RoleFlagsHolder castHolder) {
+            plugin.gui().roles().handleRoleFlagsClick(player, e, castHolder);
         }
         else if (holder instanceof PlotFlagsHolder castHolder) {
             plugin.gui().flags().handleClick(player, e, castHolder);
@@ -267,6 +293,22 @@ public class GUIListener implements Listener {
 
         // Strict: block ALL dragging while a menu is open
         e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory().getHolder() instanceof ExchangeHolder
+                && plugin.gui().exchange() != null) {
+            plugin.gui().exchange().closeSession(event.getPlayer().getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastMenuClick.remove(event.getPlayer().getUniqueId());
+        if (plugin.gui().exchange() != null) {
+            plugin.gui().exchange().closeSession(event.getPlayer().getUniqueId());
+        }
     }
 
     // --------------------------
@@ -447,6 +489,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof AdminHolder) {
             safeInvokeOpen(plugin.gui().admin(), player);
+            return;
+        }
+        if (holder instanceof DoctorHolder) {
+            plugin.gui().doctor().open(player);
             return;
         }
         if (holder instanceof ExchangeHolder) {

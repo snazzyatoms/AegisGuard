@@ -239,19 +239,19 @@ expansion_pending_none_hint_outside: '&8Step into one of thine own plots to begi
 expansion_pending_none_hint_ready: '&aChoose a tier below to prepare thy next frontier step.'
 expansion_pending_radius_line: '&7Current Reach: &f{CURRENT}'
 expansion_pending_target_line: '&7Petitioned Reach: &a{TARGET}'
-expansion_pending_cost_line: '&7Tribute Due: &6{COST}'
+expansion_pending_cost_line: '&7Quoted Tribute: &6{COST}'
 expansion_pending_world_line: '&7Realm Anchor: &f{WORLD}'
 expansion_pending_status_line: '&7Standing: &eBiding judgment'
 expansion_pending_mode_line: '&bThis realm granteth worthy petitions anon.'
 expansion_pending_mode_queue_line: '&6Steward review is required ere this frontier may widen.'
 
-expansion_projection_name: '&dFrontier Horizons &8• &5Future Update'
+expansion_projection_name: '&d&lFrontier Horizons'
 expansion_projection_lore:
-  - '&7A future path of enlargement meant to lift'
-  - '&7thy frontier to heights yet unseen.'
+  - '&7Unlock realm-sized growth through'
+  - '&7the Ascension of thy plot.'
   - ' '
-  - '&8For now, this panel showeth how thy'
-  - '&8present frontier may still grow today.'
+  - '&8Five Horizon milestones lie beyond'
+  - '&8the common tiers of Frontier growth.'
 expansion_projection_hint_outside: '&8Enter one of thine own plots to behold living numbers.'
 expansion_projection_smallest_line: '&7Least Step: &f{TARGET} reach'
 expansion_projection_largest_line: '&7Greatest Step: &f{TARGET} reach'
@@ -1068,7 +1068,7 @@ level_upgrade_cost_blocks_disabled: "&8Blocks: Disabled or unavailable"
 level_upgrade_new_buffs_title: "&dNew Blessings Await"
 level_upgrade_active_after_title: "&dBoons After Ascension:"
 level_upgrade_preview_title: "&eAscension Preview (Level {LEVEL})"
-level_upgrade_click_hint: "&eClick to ascend, if thy coffers suffice."
+level_upgrade_click_hint: "&eClick to ascend unto Level {LEVEL}, if thy coffers suffice."
 level_upgrade_blessings_none: "&8This ascension chiefly grants growth or access, rather
   than a new boon."
 level_track_completed_title: "&aTrack Completed"
@@ -1132,10 +1132,10 @@ level_upgrade_button_money_lore:
 - "&7Cost: &6{COST} &8({TYPE})"
 - ''
 - "&eClick to ascend"
-level_upgrade_button_money: "&aUpgrade with Money"
+level_upgrade_button_money: "&aAscend with Coin &8(Level &f{LEVEL}&8)"
 level_upgrade_hint_money: "&eClick to pay with money"
 level_upgrade_you_have_blocks: "&7You Have: &b{BALANCE} &7Blocks"
-level_upgrade_button_blocks: "&bUpgrade with Blocks"
+level_upgrade_button_blocks: "&bAscend with Blocks &8(Level &f{LEVEL}&8)"
 level_upgrade_hint_blocks: "&eClick to spend blocks"
 level_upgrade_money_unavailable: "&8Money upgrade unavailable."
 level_upgrade_blocks_unavailable: "&8Block upgrade unavailable."
@@ -1153,3 +1153,455 @@ auction_gui_title: "&c✦ Dominion Auctions"
 settings_menu_title: "&3⚙ Thine Preferences"
 ledger_title: "&6\U0001F4DC Domain Registry"
 claimblocks_exchange_filler_lore: []
+visit_title_discover: '&6Discover Lands'
+visit_title_favorites: '&eFavoured Lands'
+visit_switch_discover: '&6Discover Lands'
+visit_switch_favorites: '&eFavoured Lands'
+favorite_added: '&aLand added to thy favourites.'
+favorite_removed: '&eLand removed from thy favourites.'
+
+# 1.2.7 Territory Physician
+admin_wand_doctor_hint: '&bCrouch + Right-Click: &fOpen Realm Physician'
+back_admin_lore:
+  - '&7Return unto the high tools.'
+doctor_menu_title: '&4Physician of the Realm'
+doctor_confirm_title: '&4Confirm the Realm''s Mending'
+doctor_summary_name: '&bHealth of the Realm'
+doctor_summary_lore:
+  - '&7Lands examined: &f{PLOTS}'
+  - '&7Faults: &e{ISSUES}'
+  - '&7Grave faults: &c{CRITICAL}'
+  - '&7Safely mendable: &a{REPAIRABLE}'
+doctor_scan_name: '&aExamine Once More'
+doctor_scan_lore:
+  - '&7Inspect lands, covenants, markets,'
+  - '&7worlds, overlaps, and payments.'
+  - ' '
+  - '&eClick to examine'
+doctor_report_name: '&eWrite the Full Chronicle'
+doctor_report_lore:
+  - '&7Write full findings within'
+  - '&7plugins/AegisGuard/reports/.'
+  - ' '
+  - '&eClick to write'
+doctor_repair_name: '&cMend Certain Faults'
+doctor_repair_lore:
+  - '&7Mend only faults with one safe answer.'
+  - '&7A second oath is required.'
+  - ' '
+  - '&eClick to review the mending'
+doctor_repair_confirm_name: '&cConfirm Safe Mending'
+doctor_repair_confirm_lore:
+  - '&7Snapshots precede every change.'
+  - '&7Uncertain harm shall never be guessed.'
+  - ' '
+  - '&cClick to confirm'
+doctor_loading_lore:
+  - '&7Pray wait. Thou may safely use'
+  - '&7Return or Depart whilst this runs.'
+doctor_issue_name: '&e{CODE}'
+doctor_no_issues: '&aNo Faults Found'
+doctor_no_issues_lore:
+  - '&7The realm passed this examination.'
+doctor_issue_missing_owner:
+  - '&cThe lord of this land is unknown.'
+  - '&8A steward must restore it by hand.'
+  - '&8Land: {PLOT}'
+doctor_issue_missing_world:
+  - '&eThe named world cannot be found.'
+  - '&8Land: {PLOT}'
+doctor_issue_market_conflict:
+  - '&eSeveral market states stand together.'
+  - '&8Land: {PLOT}'
+doctor_issue_invalid_sale:
+  - '&eThe sale price is unfit.'
+  - '&8Land: {PLOT}'
+doctor_issue_invalid_rent:
+  - '&eThe rental price is unfit.'
+  - '&8Land: {PLOT}'
+doctor_issue_stale_renter:
+  - '&eAn expired tenant remains recorded.'
+  - '&8Land: {PLOT}'
+doctor_issue_contract_mismatch:
+  - '&cThe land and covenant name different tenants.'
+  - '&8Land: {PLOT}'
+doctor_issue_plot_rental_missing:
+  - '&cA covenant lives without tenant data.'
+  - '&8Land: {PLOT}'
+doctor_issue_duplicate_id:
+  - '&cSeveral lands bear this same mark.'
+  - '&8A steward must mend this by hand.'
+  - '&8Land: {PLOT}'
+doctor_issue_orphan_contract:
+  - '&cA covenant names a vanished land.'
+  - '&8Land: {PLOT}'
+doctor_issue_overlap:
+  - '&cTwo borders cross one another.'
+  - '&8A steward must inspect them.'
+  - '&8Land: {PLOT}'
+doctor_issue_pending_settlement:
+  - '&eA payment awaits delivery.'
+  - '&8Read the full chronicle for detail.'
+
+# Governance of worlds
+world_controls_title: '&bGovernance of Worlds'
+world_controls_detail_title: '&bWorld: {WORLD}'
+world_controls_world_name: '&b{WORLD}'
+world_controls_world_lore:
+- '&7Claims: {STATE}'
+- '&7Realm: &f{ENVIRONMENT}'
+- ' '
+- '&eClick to govern this world.'
+world_controls_allow_claims_name: '&ePermit New Claims'
+world_controls_allow_claims_lore:
+- '&7Present state: {STATE}'
+- '&7This decree governeth whether players'
+- '&7may establish claims in this world.'
+- ' '
+- '&eClick to alter this decree.'
+world_controls_rule_lore:
+- '&7Present state: {STATE}'
+- '&7Default for plots newly founded.'
+- '&8Existing plot laws remain untouched.'
+- ' '
+- '&eClick to alter this rule.'
+world_controls_pvp_name: '&cProtection from PvP'
+world_controls_mobs_name: '&aProtection from Hostile Beasts'
+world_controls_containers_name: '&6Protection of Containers'
+world_controls_pets_name: '&dProtection of Companions'
+world_controls_farms_name: '&eProtection of Crops'
+world_controls_animals_name: '&aProtection of Animals'
+world_controls_redstone_name: '&cProtection of Redstone'
+world_controls_vehicles_name: '&bProtection of Vehicles'
+world_controls_fly_name: '&fFlight by Default'
+world_controls_entry_name: '&bEntry by Default'
+world_controls_back_worlds: '&eReturn to Worlds'
+notify_preference_save_failed: '&cThy notification preference could not be saved. Pray, try once more.'
+world_controls_environment_normal: 'Overworld'
+world_controls_environment_nether: 'Nether'
+world_controls_environment_end: 'The End'
+world_controls_save_failed: '&cThat world decree could not be written. Pray, inspect the console.'
+
+# Expansion Horizons
+expansion_projection_level_line: '&7Plot Level: &f{CURRENT} &8/ &d{REQUIRED}'
+expansion_projection_unlocked: '&aThe Horizons stand open - click to behold them.'
+expansion_projection_locked: '&eReach Plot Level {LEVEL} to unlock them.'
+expansion_projection_open: '&dClick to open the Expansion Horizons.'
+expansion_horizons_title: '&5✦ Expansion Horizons ✦'
+expansion_horizons_header: '&d&lBeyond the Frontier'
+expansion_horizons_header_lore:
+  - '&7Raise an established plot into a realm-sized'
+  - '&7territory through noble Ascension.'
+  - ' '
+  - '&8Each Horizon obeyeth price, overlap,'
+  - '&8approval, snapshots, and world bounds.'
+expansion_horizons_plot: '&bTerritory Foretelling'
+expansion_horizons_level: '&eAscension Required'
+expansion_horizons_safety: '&aSafeguarded Growth'
+expansion_horizons_safety_lore:
+  - '&7A recovery snapshot is forged beforehand'
+  - '&7Overlap and world bounds are judged anew'
+  - '&7Queue and instant approvals are honored'
+  - '&7Payment returneth should growth fail'
+expansion_horizons_back: '&eReturn to Frontier Expansion'
+expansion_horizons_back_lore:
+  - '&7Return to the common expansion tiers.'
+expansion_horizons_disabled: '&cExpansion Horizons are forbidden in this realm.'
+expansion_horizons_locked_message: '&cThis Horizon requireth Plot Level {LEVEL}.'
+expansion_horizons_no_plot_lore:
+  - '&cNo plot is found beneath thee.'
+  - '&7Stand within thine own plot to proceed.'
+expansion_horizons_plot_name_line: '&7Plot: &f{PLOT}'
+expansion_horizons_current_radius: '&7Present Reach: &b{RADIUS}'
+expansion_horizons_current_area: '&7Present Footprint: &b{AREA} blocks'
+expansion_horizons_world_limit: '&7World Ceiling: &f{LIMIT} reach'
+expansion_horizons_plot_ready: '&aThis territory awaiteth projection.'
+expansion_horizons_plot_denied: '&cThou ownest not this territory.'
+expansion_horizons_level_line: '&7Present Plot Level: &f{LEVEL}'
+expansion_horizons_unlock_line: '&7Horizons Unlock: &dLevel {LEVEL}'
+expansion_horizons_level_no_plot: '&8Enter thine own plot to inspect its growth.'
+expansion_horizons_level_ready: '&aExpansion Horizons are unlocked.'
+expansion_horizons_level_locked: '&eAscend {LEVELS} more level(s) to unlock.'
+expansion_horizon_tier_1_name: '&6Dawnreach Horizon &8(+{GAIN})'
+expansion_horizon_tier_1_lore:
+  - '&7Found the first great district of thy realm.'
+expansion_horizon_tier_2_name: '&9Skyline Horizon &8(+{GAIN})'
+expansion_horizon_tier_2_lore:
+  - '&7Open a frontier broad as the skyline.'
+expansion_horizon_tier_3_name: '&dRealmspan Horizon &8(+{GAIN})'
+expansion_horizon_tier_3_lore:
+  - '&7Shape a territory fit for a thriving realm.'
+expansion_horizon_tier_4_name: '&bAstral Horizon &8(+{GAIN})'
+expansion_horizon_tier_4_lore:
+  - '&7Reach beyond the bounds of common lands.'
+expansion_horizon_tier_5_name: '&e&lEternal Horizon &8(+{GAIN})'
+expansion_horizon_tier_5_lore:
+  - '&7Complete the highest frontier of Ascension.'
+expansion_horizon_requirement_line: '&7Required Level: &e{LEVEL}'
+expansion_horizon_radius_line: '&7Reach: &f{CURRENT} &8→ &d{TARGET}'
+expansion_horizon_area_line: '&7Foretold Footprint: &b{AREA} blocks'
+expansion_horizon_cost_line: '&7Foretold Cost: &6{COST}'
+expansion_horizon_state_disabled: '&cForbidden by this realm.'
+expansion_horizon_state_no_plot: '&cStand within thine own plot.'
+expansion_horizon_state_level_locked: '&eSealed until Plot Level {LEVEL}.'
+expansion_horizon_state_world_locked: '&cThis reach exceedeth the world ceiling.'
+expansion_horizon_state_pending: '&eResolve thy waiting petition first.'
+expansion_horizon_state_ready: '&dClick to petition for this Horizon.'
+
+# ClaimBlock Exchange Guide
+claimblocks_exchange_guide_button: '&b&lHow the Exchange Worketh'
+claimblocks_exchange_guide_button_lore:
+  - '&7Learn of rates, fees, bounds,'
+  - '&7sell locks, and safe trade.'
+  - ' '
+  - '&eClick to open the guide.'
+claimblocks_exchange_guide_title: '&b&lClaimBlock Exchange Guide'
+claimblocks_exchange_guide_intro:
+  - '&7Turn realm coin into claim growth,'
+  - '&7or sell worthy ClaimBlocks for coin.'
+  - ' '
+  - '&8The full quote appeareth before confirmation.'
+claimblocks_exchange_guide_buy: '&aBuying ClaimBlocks'
+claimblocks_exchange_guide_buy_lore:
+  - '&7Choose BUY, name the amount, and inspect'
+  - '&7the unit price, fee, and final cost.'
+  - '&7Confirmed blocks become ready at once.'
+claimblocks_exchange_guide_quote: '&fReading Thy Quote'
+claimblocks_exchange_guide_quote_lore:
+  - '&7Subtotal = amount × unit price.'
+  - '&7Fees join buys and are taken from sales.'
+  - '&7The green total is the final value.'
+claimblocks_exchange_guide_sell: '&6Selling ClaimBlocks'
+claimblocks_exchange_guide_sell_lore:
+  - '&7Only worthy non-starter blocks may be sold.'
+  - '&7Blocks depart only when the treasury'
+  - '&7payout hath succeeded.'
+claimblocks_exchange_guide_protection: '&dSafeguards of Trade'
+claimblocks_exchange_guide_protection_lore:
+  - '&7Sell locks thwart swift buy-back abuse.'
+  - '&7Cooldowns and caps steady the economy.'
+  - '&7Failed payouts restore taken ClaimBlocks.'
+claimblocks_exchange_guide_limits: '&eThy Living Rates & Bounds'
+claimblocks_exchange_guide_steps: '&bSwift Steps'
+claimblocks_exchange_guide_steps_lore:
+  - '&f1. &7Choose BUY or SELL.'
+  - '&f2. &7Set the amount.'
+  - '&f3. &7Read the whole quote.'
+  - '&f4. &7Press CONFIRM once.'
+claimblocks_exchange_guide_back: '&eReturn to Exchange'
+claimblocks_exchange_guide_back_lore:
+  - '&7Return to the trading console.'
+claimblocks_exchange_guide_unlimited: 'Without bound'
+claimblocks_exchange_guide_buy_rate: '&aBuy: &f{PRICE} &7for each block'
+claimblocks_exchange_guide_sell_rate: '&6Sell: &f{PRICE} &7for each block'
+claimblocks_exchange_guide_buy_fee: '&7Buying Levy: &f{PERCENT}% + {FLAT}'
+claimblocks_exchange_guide_sell_fee: '&7Selling Levy: &f{PERCENT}% + {FLAT}'
+claimblocks_exchange_guide_trade_range: '&7Each Trade: Buy &f{BUY_MIN}-{BUY_MAX} &8| &7Sell &f{SELL_MIN}-{SELL_MAX}'
+claimblocks_exchange_guide_daily_remaining: '&7Today Remaineth: Buy &a{BUY} &8| &7Sell &6{SELL}'
+claimblocks_exchange_guide_hourly_remaining: '&7Trades This Hour: &f{TRADES}'
+claimblocks_exchange_guide_cooldown_live: '&7Waiting Time: &e{SECONDS}s'
+claimblocks_exchange_guide_sell_lock_live: '&dSell Lock: &f{MINUTES} minutes'
+
+# Horizon Ascension
+horizon_rank_unawakened: 'Unawakened'
+horizon_rank_dawnreach: 'Dawnreach'
+horizon_rank_skybound: 'Skybound'
+horizon_rank_realmforge: 'Realmforge'
+horizon_rank_starward: 'Starward Dominion'
+horizon_rank_eternal_aegis: 'Eternal Aegis'
+horizon_rank_dawnreach_perks: ['&bSafe Landing: warding from falls beyond battle.']
+horizon_rank_skybound_perks: ['&bLens of Clime: weather and sky ambience for thy folk.']
+horizon_rank_realmforge_perks: ['&bGuardian Wards: Projectile, Ender, and Phantom laws.']
+horizon_rank_starward_perks: ['&bStarward Pulse: send forth a harmless awakening.']
+horizon_rank_eternal_aegis_perks: ['&bAegis Heart: a guarding blessing upon homecoming.']
+horizon_rank_renown_line: '&7Renown: &d{CURRENT} &8/ &f{REQUIRED}'
+horizon_rank_state_mastered: '&aAwakened and widened.'
+horizon_rank_state_expansion_ready: '&bPress to seek this awakened rank''s widening.'
+horizon_rank_state_sigil_ready: '&dPress to receive thy bound Horizon Sigil.'
+horizon_rank_state_renown_locked: '&eGain {REMAINING} more Renown.'
+horizon_rank_state_previous_locked: '&8Awaken the former Horizon Rank first.'
+horizon_sigil_name: '&d&lHorizon Sigil: &f{RANK}'
+horizon_sigil_lore_1: '&7Bound unto: &f{PLOT}'
+horizon_sigil_lore_2: '&7Bearer: &f{PLAYER}'
+horizon_sigil_lore_3: '&dRight-click within the bound holding'
+horizon_sigil_lore_4: '&dto awaken its next Horizon Rank.'
+horizon_sigil_lore_bound: '&8Soulbound - May not be traded'
+horizon_sigil_already_held: '&eThou already bearest this holding''s next Horizon Sigil.'
+horizon_sigil_inventory_full: '&cMake one empty place in thy pack ere claiming this Sigil.'
+horizon_sigil_granted: '&dA {RANK} Sigil hath answered thy territory''s call. Awaken it within thy holding.'
+horizon_sigil_wrong_bearer: '&cThis Sigil answereth not unto thee.'
+horizon_sigil_wrong_plot: '&cThis Sigil must awaken within its bound holding.'
+horizon_sigil_not_ready: '&cThis territory is not yet ready for that Horizon Rank.'
+horizon_sigil_soulbound: '&cA bound Horizon Sigil may neither be dropped nor traded.'
+horizon_awakened_title: '&d&lHORIZON AWAKENED'
+horizon_awakened_subtitle: '&f{RANK}'
+horizon_awakened_message: '&dThy territory hath awakened &f{RANK}&d. Its newfound powers answer unto thee.'
+horizon_ender_seal_denied: '&cAn Ender Seal denieth passage into this territory.'
+horizon_heart_blessing: '&dThe Eternal Aegis welcometh thee home beneath its ward.'
+horizon_climate_name: '&bLens of Clime'
+horizon_climate_locked_lore: ['&8Unlocked at Skybound.']
+horizon_climate_lore: ['&7Present clime: &f{CLIMATE}', ' ', '&ePress to turn the holding''s ambience.']
+horizon_wards_name: '&9Guardian Wards'
+horizon_wards_locked_lore: ['&8Unlocked at Realmforge.']
+horizon_wards_lore: ['&7Projectile Veil: &f{PROJECTILE}', '&7Ender Seal: &f{ENDER}', '&7Phantom Ward: &f{PHANTOM}', ' ', '&eLeft: Projectile | Right: Ender', '&eShift-click: Phantom']
+horizon_pulse_name: '&dStarward Pulse'
+horizon_pulse_locked_lore: ['&8Unlocked at Starward Dominion.']
+horizon_pulse_lore: ['&7Send forth a harmless shining pulse', '&7through thy awakened territory.', ' ', '&ePress to invoke.']
+horizon_pulse_cooldown: '&eThe Starward Pulse shall answer anew in {SECONDS} seconds.'
+horizon_heart_name: '&dHeart of the Eternal Aegis'
+horizon_heart_locked_lore: ['&8Unlocked at Eternal Aegis.']
+horizon_heart_lore: ['&7Trusted folk receive a guarding welcome', '&7when returning beyond battle.', '&8Thirty-minute personal respite.']
+
+# Plot Ascension Hall
+ascension_hall_title: '&6✦ Hall of Ascension ✦'
+ascension_hall_status_name: '&6&lAscension of {PLOT}'
+ascension_hall_status_level: '&7Level: &e{LEVEL}&7/&f{MAX}'
+ascension_hall_status_chapter: '&7Chapter: &f{CHAPTER}'
+ascension_hall_status_progress: '&7Progress: {BAR}'
+ascension_hall_status_footer: '&8Raise a lasting holding through measured growth.'
+ascension_guide_name: '&eGuardian''s Guide to Ascension'
+ascension_guide_open_lore: ['&7Learn of levels, blessings, callings,', '&7offerings, and the Horizons beyond.', ' ', '&ePress to read.']
+ascension_blessings_name: '&dBlessings Now Active'
+ascension_blessings_none: '&8No blessings be active yet.'
+ascension_blessings_scope: '&8Active only for trusted folk within this holding.'
+ascension_discipline_name: '&bAscension Calling'
+ascension_discipline_current: '&7Present: &f{FOCUS}'
+ascension_discipline_summary: '&7Choose one modest craft for this holding.'
+ascension_discipline_open: '&ePress to choose or review.'
+ascension_horizon_gateway_name: '&5Gateway of Horizons'
+ascension_horizon_ready_lore: ['&dPlot Ascension is fulfilled.', '&7Expansion Horizons now await thee.', ' ', '&ePress to continue.']
+ascension_horizon_locked_lore: ['&7Master Plot Level 30 to unseal', '&7the lasting journey of Horizons.', ' ', '&8Yet sealed.']
+ascension_chapter_foundation: 'Foundation'
+ascension_chapter_pathfinder: 'Pathfinder'
+ascension_chapter_bastion: 'Bastion'
+ascension_chapter_sovereign: 'Sovereign'
+ascension_chapter_mythic: 'Mythic Dominion'
+ascension_chapter_zenith: 'Zenith Ascension'
+ascension_track_mastered: '&aMastered'
+ascension_track_current: '&ePresent'
+ascension_track_next: '&bNext'
+ascension_track_locked: '&8Sealed'
+ascension_track_chapter: '&7{CHAPTER}'
+ascension_track_state: '&7State: {STATE}'
+ascension_track_prerequisite: '&8Master the former levels first.'
+ascension_track_level_name: '&fLevel {LEVEL}'
+ascension_altar_name: '&6&lAltar of Ascension'
+ascension_altar_next: '&7Next: &fLevel {LEVEL} &8- &e{CHAPTER}'
+ascension_altar_rewards: '&dNew Blessings:'
+ascension_altar_hint: '&8Choose an offering upon either side.'
+ascension_offer_money_name: '&6Treasury Offering'
+ascension_offer_blocks_name: '&bClaimBlock Offering'
+ascension_offer_cost: '&7Cost: &f{COST}'
+ascension_offer_balance: '&7Balance: &f{BALANCE}'
+ascension_offer_click: '&ePress to review and affirm.'
+ascension_offer_unavailable_lore: ['&8Unavailable in this realm.']
+ascension_currency_claimblocks: 'ClaimBlocks'
+ascension_reward_claimblocks: '&eClaimBlock progression boon'
+ascension_reward_foundation: '&7Founding dominion established'
+ascension_reward_flight: 'Flight within the Holding'
+ascension_zenith_name: '&6&lZenith Ascension Fulfilled'
+ascension_zenith_lore: ['&7All thirty plot levels be mastered.', '&dThe Gateway of Horizons now standeth open.']
+ascension_guide_title: '&eGuardian''s Guide to Ascension'
+ascension_guide_header: '&6&lThe Codex of Ascension'
+ascension_guide_header_lore: ['&7A brief guide to strengthening thy holding', '&7without forsaking the realm''s progression.']
+ascension_guide_purpose_name: '&dWhat Be Ascension?'
+ascension_guide_purpose_lore: ['&7Thirty levels form six chapters.', '&7Each grants safe utility, capacity,', '&7or progression within thy holding.']
+ascension_guide_payment_name: '&6Offering for a Level'
+ascension_guide_payment_lore: ['&7Realms may permit coin, ClaimBlocks,', '&7or both. Confirmation showeth the exact', '&7cost ere aught is taken.']
+ascension_guide_blessings_name: '&bBlessings of the Holding'
+ascension_guide_blessings_lore: ['&7Blessings serve owners and trusted folk', '&7only whilst they remain within.', '&7Outside effects be preserved and restored.']
+ascension_guide_disciplines_name: '&aCallings'
+ascension_guide_disciplines_lore: ['&7Choose Stonewright, Verdant Keeper,', '&7or Wayfinder for one modest craft.', '&7Changing hath a realm cooldown.']
+ascension_guide_members_name: '&eCapacity of the Holding'
+ascension_guide_members_lore: ['&7Chosen milestones permit more trusted folk', '&7without granting unsafe mastery.']
+ascension_guide_flight_name: '&fFlight of the Zenith'
+ascension_guide_flight_lore: ['&7Flight is the final Level 30 blessing.', '&7It serveth only within the holding', '&7and preserveth flight granted elsewhere.']
+ascension_guide_horizons_name: '&5Beyond Level 30'
+ascension_guide_horizons_lore: ['&7Level 30 openeth Horizon Ascension:', '&7a slower Renown path with bound Sigils', '&7and greater powers of territory.']
+ascension_disciplines_title: '&bCallings of Ascension'
+ascension_disciplines_header: '&b&lChoose Thy Calling'
+ascension_disciplines_header_lore: '&7One useful calling may guide this holding at once.'
+ascension_focus_unchosen_name: 'Unchosen'
+ascension_focus_stonewright_name: '&fStonewright'
+ascension_focus_stonewright_lore: ['&7Haste I from Level 5; Haste II at 20.', '&8For building, without battle advantage.']
+ascension_focus_verdant_keeper_name: '&aVerdant Keeper'
+ascension_focus_verdant_keeper_lore: ['&7Luck I from Level 5; Luck II at 20.', '&7Trusted folk shall not trample tilled earth.']
+ascension_focus_wayfinder_name: '&bWayfinder'
+ascension_focus_wayfinder_lore: ['&7Speed I from Level 5; Speed II at 20.', '&8A measured calling for travel.']
+ascension_focus_active: '&aNow guiding this holding.'
+ascension_focus_select: '&ePress to choose this calling.'
+ascension_focus_change_ready: '&aA calling may now be chosen.'
+ascension_focus_change_wait: '&eA change cometh in {DAYS} day(s).'
+ascension_focus_cooldown: '&eThis holding may change calling in {DAYS} day(s).'
+ascension_focus_selected: '&a{FOCUS} now guideth this holding''s Ascension.'
+ascension_confirm_title: '&6Affirm Ascension'
+ascension_confirm_header: '&6Oath of Ascension'
+ascension_confirm_header_lore: ['&7Review this lasting plot advancement.', '&7Naught is taken until thou affirmest.']
+ascension_confirm_transition: '&eLevel {CURRENT} &8→ &aLevel {NEXT}'
+ascension_confirm_cost_name: '&6Offering'
+ascension_confirm_cost: '&7Cost: &f{COST}'
+ascension_confirm_balance: '&7Balance: &f{BALANCE}'
+ascension_confirm_charge_note: '&8Taken only after every safeguard passeth.'
+ascension_confirm_after_name: '&dAfter Ascension'
+ascension_confirm_cancel: '&eWithdraw'
+ascension_confirm_cancel_lore: ['&7Return without spending aught.']
+ascension_confirm_accept: '&a&lAffirm Ascension'
+ascension_confirm_accept_lore: ['&7Validate, offer, and awaken this level.', ' ', '&aPress to affirm.']
+ascension_transaction_rollback: '&cAscension failed. Thy offering hath been returned.'
+ascension_ceremony_title: '&6&lPLOT ASCENDED'
+ascension_ceremony_subtitle: '&fLevel {LEVEL} &8- &e{CHAPTER}'
+ascension_member_reward: '&aThy holding may now trust {AMOUNT} more player(s).'
+ascension_effect_speed: 'Speed'
+ascension_effect_fast_digging: 'Haste'
+ascension_effect_night_vision: 'Night Vision'
+ascension_effect_water_breathing: 'Water Breathing'
+ascension_effect_slow_falling: 'Slow Falling'
+ascension_effect_dolphins_grace: 'Dolphin''s Grace'
+ascension_effect_jump: 'Leaping'
+ascension_effect_fire_resistance: 'Fire Resistance'
+ascension_effect_conduit_power: 'Conduit Power'
+ascension_effect_luck: 'Fortune'
+
+# 1.2.7 interface quality pass
+expansion_frontier_guide_name: '&eFrontier Field Codex'
+expansion_frontier_guide_lore: ['&7Choose one measured widening of thy border.', '&7Each petition is tried for overlap,', '&7world bounds, tribute, and approval.', ' ', '&8Horizons remain the road beyond Level 30.']
+local_market_guide_name: '&eMarket Ward Codex'
+local_market_guide_lore: ['&7Real Estate showeth whole dominions.', '&7Rentals show chambers and lesser wards.', '&7TradeStalls show local shopfronts.', ' ', '&8Only available services may be opened.']
+local_market_pulse_name: '&6Pulse of the Ward'
+local_market_pulse_lore: ['&7Governed zones: &f{ZONES}', '&7Linked markets: &f{BRIDGES}', '&7TradeStalls: {STALLS}']
+zone_manager_guide_name: '&eCodex of Lesser Wards'
+zone_manager_guide_lore: ['&7Private wards divide trusted building space.', '&7Set tribute to publish a rented chamber.', '&7Rented wards open tenant and inn tools.', ' ', '&eLeft: &7listing or tenant tools', '&eShift: &7adjust tribute', '&cRight: &7remove safely']
+zone_selection_status_name: '&bSelection Standing'
+zone_selection_ready_lore: ['&aTwo corners stand ready.', '&7Use Create Zone to reserve this space.']
+zone_selection_missing_lore: ['&cNo complete selection.', '&7Use the Aegis Scepter to mark', '&7two corners within this dominion.']
+zone_public_preview_name: '&aPublic Rental Preview'
+zone_public_preview_lore: ['&7Open the same rental ledger', '&7that visitors behold here.', ' ', '&eClick to preview.']
+zone_public_preview_empty_lore: ['&8No wards are publicly offered yet.']
+travel_tab_selected: '&aThou art viewing this atlas.'
+travel_tab_open: '&eClick to open this atlas.'
+claim_settings_guide_name: '&eDoctrine of Protection'
+claim_settings_guide_lore: ['&7Glowing laws stand protected.', '&7Dormant laws follow the world''s nature.', '&7Changes are written at once.']
+claim_settings_flight_ascension_name: '&fFlight: Ascension Boon'
+claim_settings_flight_ascension_lore: ['&7Flight is no longer governed here.', '&7Reach Plot Ascension Level 30 to earn', '&7safe flight within the worthy dominion.']
+roles_guide_name: '&eCodex of Roles & Access'
+roles_guide_lore: ['&7Add nearby folk, appoint a role,', '&7then govern that role''s leave.', ' ', '&8Owner and guarded staff roles cannot', '&8be removed by member controls.']
+roles_capacity_name: '&bDominion Capacity'
+roles_capacity_lore: ['&7Appointed members: &f{USED}', '&7Present capacity: &f{MAX}', '&8Plot Ascension granteth more capacity.']
+roles_permission_model_name: '&dLaw of Permission'
+roles_permission_model_lore: ['&aAllow &7overrideth a plot restriction.', '&cDeny &7always forbiddeth the deed.', '&fInherit &7followeth common plot law.']
+world_controls_protection_section_name: '&bProtection Defaults'
+world_controls_protection_section_lore: ['&7These laws greet newly founded dominions.', '&8Existing plot laws remain untouched.']
+world_controls_runtime_section_name: '&6Living World Laws'
+world_controls_runtime_section_lore: ['&7These are true Minecraft world laws.', '&7Changes take hold in this world at once.']
+world_controls_gamerule_lore: ['&7Present: {STATE}', '&7Taketh hold in this world at once.', ' ', '&eClick to toggle.']
+world_controls_spawn_mobs_name: '&aNatural Mob Spawning'
+world_controls_daylight_name: '&ePassage of Daylight'
+world_controls_weather_name: '&bPassage of Weather'
+world_controls_keep_inventory_name: '&6Keep Inventory'
+world_controls_mob_griefing_name: '&cMob Griefing'
+staff_command_center_name: '&c&lGuardian Command Hall'
+staff_command_center_lore: ['&7Server law, dominion works,', '&7recovery, migration, and diagnosis.', ' ', '&8Every control below is permission-tried.']
+staff_policy_section_name: '&eLaw of Operation'
+staff_policy_section_lore: ['&7The upper row governeth server-wide', '&7AegisGuard policy.']
+staff_toolbelt_section_name: '&bGuardian Toolbelt'
+staff_toolbelt_section_lore: ['&7The lower row openeth review, recovery,', '&7world, migration, and upkeep tools.']

@@ -81,6 +81,14 @@ permissions:
 
       aegis.earn.blocks: true
       aegis.admin.migrate: true
+      aegis.admin.blocks.view: true
+      aegis.admin.blocks.manage: true
+      aegis.admin.merge: true
+      aegis.admin.doctor.repair: true
+      aegis.admin.rentals: true
+      aegis.admin.discovery: true
+      aegis.admin.activity: true
+      aegis.admin.world: true
 
   aegis.user:
     description: Recommended base permissions for regular players.
@@ -91,6 +99,9 @@ permissions:
       aegis.wand: true
       aegis.claim: true
       aegis.notify: true
+      aegis.rent: true
+      aegis.discovery: true
+      aegis.activity: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -108,6 +119,14 @@ permissions:
       aegis.setwarp: true
       aegis.admin.wand: true
       aegis.admin.migrate: true
+      aegis.admin.blocks.view: true
+      aegis.admin.blocks.manage: true
+      aegis.admin.merge: true
+      aegis.admin.doctor.repair: true
+      aegis.admin.rentals: true
+      aegis.admin.discovery: true
+      aegis.admin.activity: true
+      aegis.admin.world: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -138,6 +157,22 @@ permissions:
     description: Allows earning ClaimBlocks from supported reward systems.
     default: true
 
+  aegis.rent:
+    description: List owned plots for full-plot rental.
+    default: true
+
+  aegis.rent.bypass-limit:
+    description: Ignore the configured active full-plot rental limit.
+    default: op
+
+  aegis.discovery:
+    description: Browse public territories and manage plot discovery settings.
+    default: true
+
+  aegis.activity:
+    description: View activity history for territories the player can manage.
+    default: true
+
   # ---------------------------------------------------------------------------
   # Notification and preference permissions
   # ---------------------------------------------------------------------------
@@ -154,6 +189,10 @@ permissions:
   # ---------------------------------------------------------------------------
   aegis.admin.manage:
     description: Manage plots owned by other players.
+    default: op
+
+  aegis.admin.world:
+    description: Manage per-world claiming and default plot protection rules.
     default: op
 
   aegis.admin.bypass:
@@ -209,6 +248,34 @@ permissions:
 
   aegis.admin.migrate:
     description: Import claims from supported external protection plugins.
+    default: op
+
+  aegis.admin.blocks.view:
+    description: View another player's ClaimBlock balance.
+    default: op
+
+  aegis.admin.blocks.manage:
+    description: Add, remove, or set another player's available ClaimBlocks.
+    default: op
+
+  aegis.admin.merge:
+    description: Merge perfectly aligned adjacent server zones.
+    default: op
+
+  aegis.admin.doctor.repair:
+    description: Apply confirmation-gated deterministic Doctor repairs.
+    default: op
+
+  aegis.admin.rentals:
+    description: Cancel rental contracts and retry pending settlements.
+    default: op
+
+  aegis.admin.discovery:
+    description: Feature or hide plots in public discovery.
+    default: op
+
+  aegis.admin.activity:
+    description: View activity history for any territory.
     default: op
 
   # ---------------------------------------------------------------------------

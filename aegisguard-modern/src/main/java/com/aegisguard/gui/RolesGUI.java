@@ -483,6 +483,38 @@ public class RolesGUI {
             inv.setItem(slot++, head);
         }
 
+        inv.setItem(45, GUIManager.createItem(
+                Material.WRITABLE_BOOK,
+                t(player, "roles_guide_name", "&eRoles & Access Guide"),
+                tl(player, "roles_guide_lore", List.of(
+                        "&7Add nearby players, assign a role,",
+                        "&7then tune that role's permissions.",
+                        " ",
+                        "&8Owner and protected staff roles cannot",
+                        "&8be removed through member controls."
+                ))
+        ));
+        inv.setItem(47, GUIManager.createItem(
+                Material.ARMOR_STAND,
+                t(player, "roles_capacity_name", "&bTerritory Capacity"),
+                tl(player, "roles_capacity_lore", List.of(
+                        "&7Assigned members: &f{USED}",
+                        "&7Current capacity: &f{MAX}",
+                        "&8Plot Ascension unlocks more capacity."
+                )).stream().map(line -> line
+                        .replace("{USED}", String.valueOf(members.size()))
+                        .replace("{MAX}", String.valueOf(plot.getMaxMembers()))).toList()
+        ));
+        inv.setItem(51, GUIManager.createItem(
+                Material.BOOKSHELF,
+                t(player, "roles_permission_model_name", "&dPermission Model"),
+                tl(player, "roles_permission_model_lore", List.of(
+                        "&aAllow &7overrides a plot restriction.",
+                        "&cDeny &7always blocks the action.",
+                        "&fInherit &7uses normal plot behavior."
+                ))
+        ));
+
         // Page controls in bottom row (46 prev, 52 next, 53 page)
         if (safePage > 0) {
             inv.setItem(46, GUIManager.createItem(
@@ -719,6 +751,11 @@ public class RolesGUI {
                 t(player, "button_back", "&fBack"),
                 tl(player, "back_lore", List.of("&7Return to the roles list."))
         ));
+        inv.setItem(20, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
+        ));
 
         // Paging for role list (19 prev, 25 next, 26 page)
         if (safePage > 0) {
@@ -826,6 +863,11 @@ public class RolesGUI {
                 Material.ARROW,
                 t(player, "button_back", "&fBack"),
                 tl(player, "back_lore", List.of("&7Return to the previous menu."))
+        ));
+        inv.setItem(20, GUIManager.createItem(
+                Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))
         ));
 
         inv.setItem(26, GUIManager.createItem(
@@ -1009,6 +1051,11 @@ public class RolesGUI {
 
         // Back
         if (slot == 18) { openRolesMenu(player, plot, 0); return; }
+        if (slot == 20) {
+            player.closeInventory();
+            plugin.effects().playMenuClose(player);
+            return;
+        }
 
         // Paging
         List<String> roles = getRoleNamesSortedByPriority();
@@ -1087,6 +1134,11 @@ public class RolesGUI {
         }
 
         if (slot == 22) { openManageMenu(player, plot, target, 0); return; }
+        if (slot == 20) {
+            player.closeInventory();
+            plugin.effects().playMenuClose(player);
+            return;
+        }
         if (slot < 0 || slot >= ROLE_FLAG_KEYS.size()) return;
 
         String flagKey = ROLE_FLAG_KEYS.get(slot);

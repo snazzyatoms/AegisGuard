@@ -14,7 +14,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -46,8 +45,6 @@ public class PlotGreetingListener implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
-        if (!isEnabled()) return;
-
         Player p = e.getPlayer();
         Plot plot = plugin.store().getPlotAt(p.getLocation());
         UUID pid = (plot == null) ? null : plot.getPlotId();
@@ -58,8 +55,6 @@ public class PlotGreetingListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent e) {
-        if (!isEnabled()) return;
-
         Location from = e.getFrom();
         Location to = e.getTo();
         if (to == null) return;
@@ -104,14 +99,6 @@ public class PlotGreetingListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         lastPlotId.remove(e.getPlayer().getUniqueId());
-    }
-
-    private boolean isEnabled() {
-        try {
-            return plugin.cfg() == null || plugin.cfg().raw().getBoolean("titles.claim_enter_exit.enabled", true);
-        } catch (Throwable ignored) {
-            return true;
-        }
     }
 
     private boolean sameXZBlock(Location a, Location b) {
@@ -203,18 +190,13 @@ public class PlotGreetingListener implements Listener {
     }
 
     private void sendWelcome(Player player, Plot plot) {
+        String msg = plot.getWelcomeMessage();
+        if (!isConfiguredGreeting(msg, "greetings.enter")) return;
+
         PlayerNotificationSettings settings = getNotificationSettings(player);
         if (!shouldSendGreeting(player, settings, true)) return;
 
         NotificationMode mode = resolveMode(settings);
-
-        String msg = plot.getWelcomeMessage();
-        if (msg == null || msg.trim().isEmpty()) {
-            msg = tr(player,
-                    "greetings.enter",
-                    "&bEntering: &f{OWNER}&b's claim",
-                    Map.of("OWNER", safeOwnerName(plot)));
-        }
 
         String title = null;
         String sub = null;
@@ -228,25 +210,17 @@ public class PlotGreetingListener implements Listener {
             if (sub == null || sub.trim().isEmpty()) sub = msg;
         }
 
-        String chatMessage = shouldSendChat() ? msg : null;
-        String titleMessage = shouldSendTitles() ? title : null;
-        String subtitleMessage = shouldSendTitles() ? sub : null;
-        deliver(player, mode, chatMessage, titleMessage, subtitleMessage);
+        deliverGreeting(player, mode, msg, title, sub);
     }
 
     private void sendFarewell(Player player, Plot plot) {
+        String msg = plot.getFarewellMessage();
+        if (!isConfiguredGreeting(msg, "greetings.leave")) return;
+
         PlayerNotificationSettings settings = getNotificationSettings(player);
         if (!shouldSendGreeting(player, settings, false)) return;
 
         NotificationMode mode = resolveMode(settings);
-
-        String msg = plot.getFarewellMessage();
-        if (msg == null || msg.trim().isEmpty()) {
-            msg = tr(player,
-                    "greetings.leave",
-                    "&7Leaving: &f{OWNER}&7's claim",
-                    Map.of("OWNER", safeOwnerName(plot)));
-        }
 
         String title = null;
         String sub = null;
@@ -257,10 +231,13 @@ public class PlotGreetingListener implements Listener {
             sub = msg;
         }
 
-        String chatMessage = shouldSendChat() ? msg : null;
-        String titleMessage = shouldSendTitles() ? title : null;
-        String subtitleMessage = shouldSendTitles() ? sub : null;
-        deliver(player, mode, chatMessage, titleMessage, subtitleMessage);
+        deliverGreeting(player, mode, msg, title, sub);
+    }
+
+    private void deliverGreeting(Player player, NotificationMode mode, String message, String title, String subtitle) {
+        if (mode == NotificationMode.CHAT && !shouldSendChat()) return;
+        if (mode == NotificationMode.TITLE && !shouldSendTitles()) return;
+        deliver(player, mode, message, title, subtitle);
     }
 
     private boolean shouldSendGreeting(Player player, PlayerNotificationSettings settings, boolean entering) {
@@ -312,33 +289,10 @@ public class PlotGreetingListener implements Listener {
         return bypassPermission != null && !bypassPermission.isBlank() && player.hasPermission(bypassPermission);
     }
 
-    private String safeOwnerName(Plot plot) {
-        try {
-            String n = (plot == null) ? null : plot.getOwnerName();
-            if (n == null || n.isBlank()) return "Unknown";
-            return n;
-        } catch (Throwable ignored) {
-            return "Unknown";
-        }
-    }
-
-    private String tr(Player player, String key, String fallback, Map<String, String> placeholders) {
-        try {
-            if (plugin.codex() != null) {
-                String v = plugin.codex().tr(player, key, placeholders);
-                if (v != null && !v.trim().isEmpty()) return v;
-            }
-        } catch (Throwable ignored) {}
-
-        String out = fallback;
-        if (placeholders != null) {
-            for (Map.Entry<String, String> e : placeholders.entrySet()) {
-                String k = e.getKey();
-                String v = e.getValue() == null ? "" : e.getValue();
-                out = out.replace("{" + k + "}", v);
-            }
-        }
-        return out;
+    private boolean isConfiguredGreeting(String message, String legacyKey) {
+        return message != null
+                && !message.isBlank()
+                && !message.trim().equalsIgnoreCase(legacyKey);
     }
 
     private String color(String s) {

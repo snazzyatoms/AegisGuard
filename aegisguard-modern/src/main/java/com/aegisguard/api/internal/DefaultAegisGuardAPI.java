@@ -311,6 +311,7 @@ public final class DefaultAegisGuardAPI implements AegisGuardAPI {
         }
 
         @Override
+        @Deprecated(forRemoval = false)
         public void resizePlot(Player player, String mode, int amount) {
             plugin.selection().resizePlot(player, mode, amount);
         }

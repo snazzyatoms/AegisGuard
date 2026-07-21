@@ -1,4 +1,4 @@
-# AegisGuard 1.2.6 Configuration Guide
+# AegisGuard 1.2.7 Configuration Guide
 
 This guide is meant to help server owners set up AegisGuard quickly without having to guess which settings matter first.
 
@@ -22,6 +22,12 @@ Review these sections in order:
    Configure shared plots, treasury behavior, and starter group claim sizing.
 8. `upkeep`
    Enable this only if you want recurring claim taxes.
+9. `full_plot_renting`
+   Set contract terms, deposits, reminders, and cancellation policy.
+10. `plot_discovery`
+   Choose whether public plot browsing is enabled and which categories owners can use.
+11. `territory_activity`
+   Set the durable history limit and decide whether ordinary visits should be logged.
 
 ## Recommended Profiles
 
@@ -63,6 +69,8 @@ Use these ideas when claims, trading, and staff activity are heavy:
 - Disable any unused map hooks to reduce noise
 - Keep `snapshots.enabled: true`
 - Keep `expansions.audit.enabled: true`
+- Keep `territory_activity.enabled: true`
+- Run `/agadmin doctor scan` after migrations or large administrative changes
 - Review `wilderness_revert` carefully before enabling aggressive cleanup
 
 Why:
@@ -131,6 +139,45 @@ This is where you define elevated server-plot management permissions.
 
 Use this if you want admins or delegated staff to manage server plots without relying on bypass mode.
 
+### `full_plot_renting`
+
+This controls Rental Contracts 2.0.
+
+- `duration_days`: default term used when an owner omits a term
+- `maximum_duration_days`: longest owner-selectable contract term
+- `reminder_hours`: when the renter receives an expiry reminder
+- `maximum_deposit`: hard safety cap for refundable deposits
+- `allow_owner_early_cancel`: whether owners may end active contracts before expiry
+- `max_active_rentals_per_player`: renter-side anti-abuse limit
+
+Owners list a plot with `/ag rent <price> [days] [deposit]`. Contract participants use `/ag rental status`, `/ag rental renew`, or `/ag rental cancel confirm`.
+
+### `plot_discovery`
+
+- `enabled`: enables `/ag discover` and the public discovery menu
+- `max_results`: caps the candidate set used to build the menu
+- `categories`: owner-selectable discovery categories
+
+Owners can use `/ag discover category <name>` and `/ag discover visibility <on|off>`. Players can use `/ag favorite` or `/ag discover favorites`. Staff may feature or hide the current plot with `/agadmin discover <feature|unfeature|show|hide>`.
+
+### `territory_activity`
+
+- `enabled`: records durable territory lifecycle and marketplace events
+- `max_entries`: global retention cap; the oldest entries are removed first
+- `log_visits`: includes ordinary discovery/travel visits when enabled
+
+Owners and authorized members use `/ag activity`. Staff use `/agadmin activity` while standing in a plot.
+
+### Configuration migration
+
+`config_schema` is maintained by AegisGuard. When an older config is detected, version 1.2.7 creates a timestamped file under `plugins/AegisGuard/backups/`, merges missing defaults without replacing existing custom values, validates critical bounds, and writes a report under `plugins/AegisGuard/reports/`. Migration is refused if the safety backup cannot be created.
+
+### Doctor repair tools
+
+Open the visual Doctor tools from the Admin menu or sneak-right-click with the Sentinel's Scepter. Commands remain available: use `/agadmin doctor scan` to inspect plot, marketplace, rental-contract, overlap, and pending-settlement consistency. `/agadmin doctor repair confirm` repairs only deterministic state and creates a plot snapshot before each automatic plot repair. The GUI and command both require a second confirmation before repair. Overlaps, duplicate IDs, missing owners, and unavailable worlds are reported for manual review rather than guessed.
+
+During startup and `/agadmin reload`, AegisGuard adds newly packaged language keys to existing language files without replacing custom values. Before the first merge, the previous file is preserved under `plugins/AegisGuard/backups/language-sync-1.2.7/`.
+
 ## Good Default Choices
 
 If you want a clean, approachable setup for most servers:
@@ -186,6 +233,8 @@ If players should use the ClaimBlocks exchange, remember to grant the relevant p
 - Use `QUEUE` expansion approval if you want staff oversight.
 - Keep player notification toggles available unless you want a stricter server style.
 - Review your `group_plots` anti-abuse values before advertising shared plots to players.
+- Run `/agadmin doctor scan` before and after bulk imports or manual data maintenance.
+- Keep the generated config backup and migration report until the upgraded server has been verified.
 
 ## Files To Keep Together
 

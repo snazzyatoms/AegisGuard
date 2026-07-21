@@ -10,11 +10,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
-
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.aegisguard.selection.SelectionService.WAND_KEY;
 import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
@@ -22,7 +20,7 @@ import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 public class WandEquipListener implements Listener {
 
     private final AegisGuard plugin;
-    private final Map<UUID, BukkitTask> activeTasks = new HashMap<>();
+    private final Map<UUID, Object> activeTasks = new ConcurrentHashMap<>();
 
     public WandEquipListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -72,16 +70,15 @@ public class WandEquipListener implements Listener {
 
         PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
 
-        // Paper / “Folia-ish” friendly: use BukkitRunnable#runTaskTimer
-        BukkitTask task = runnable.runTaskTimer(plugin, 0L, 20L); // every 1 second
+        Object task = plugin.runEntityRepeating(p, runnable, 1L, 20L);
         activeTasks.put(id, task);
     }
 
     private void stopVisualizer(Player p) {
         UUID id = p.getUniqueId();
-        BukkitTask task = activeTasks.remove(id);
+        Object task = activeTasks.remove(id);
         if (task != null) {
-            task.cancel();
+            plugin.cancelScheduledTask(task);
         }
     }
 }

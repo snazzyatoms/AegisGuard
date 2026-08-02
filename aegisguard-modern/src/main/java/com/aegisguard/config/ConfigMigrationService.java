@@ -7,6 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,10 +17,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1271;
+    public static final int CURRENT_SCHEMA = 1272;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -31,20 +33,43 @@ public final class ConfigMigrationService {
     }
 
     public void migrate() {
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        boolean migrated = migrate(configFile, plugin.getDataFolder(), () -> plugin.getResource("config.yml"));
+
+        if (migrated) {
+            plugin.reloadConfig();
+            plugin.getLogger().info("Configuration migrated to schema " + CURRENT_SCHEMA
+                    + (backup == null ? "." : "; backup: " + backup.getName()));
+            return;
+        }
+
+        for (String warning : warnings) plugin.getLogger().warning("[Config] " + warning);
+    }
+
+    /**
+     * Core migration routine, deliberately independent of a live {@code AegisGuard}/{@code JavaPlugin}
+     * instance so it can be exercised directly by unit tests without a running server.
+     *
+     * @param configFile       the server's {@code config.yml} to validate/migrate in place
+     * @param dataFolder       the plugin data folder (used for {@code backups/} and {@code reports/})
+     * @param defaultsSupplier supplies the shipped default {@code config.yml} contents (closed by this method)
+     * @return {@code true} if a schema migration was performed and {@code configFile} was rewritten,
+     *         {@code false} if the file was already current and only validated
+     */
+    boolean migrate(File configFile, File dataFolder, Supplier<InputStream> defaultsSupplier) {
         changes.clear();
         warnings.clear();
         backup = null;
-        File configFile = new File(plugin.getDataFolder(), "config.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         int previous = config.getInt("config_schema", config.getInt("config-version", 0));
 
         if (previous < CURRENT_SCHEMA) {
-            backup = backup(configFile);
+            backup = backup(configFile, dataFolder);
             if (configFile.exists() && backup == null) {
                 throw new IllegalStateException("Refusing to migrate config.yml because a safety backup could not be created.");
             }
             migrateAliases(config);
-            mergeMissingDefaults(config);
+            mergeMissingDefaults(config, defaultsSupplier);
             validateAndRepair(config);
             config.set("config_schema", CURRENT_SCHEMA);
             config.set("config-version", null);
@@ -54,15 +79,12 @@ public final class ConfigMigrationService {
             } catch (IOException error) {
                 throw new IllegalStateException("Could not save migrated config.yml", error);
             }
-            writeReport(previous);
-            plugin.reloadConfig();
-            plugin.getLogger().info("Configuration migrated to schema " + CURRENT_SCHEMA
-                    + (backup == null ? "." : "; backup: " + backup.getName()));
-            return;
+            writeReport(previous, dataFolder);
+            return true;
         }
 
         validateOnly(config);
-        for (String warning : warnings) plugin.getLogger().warning("[Config] " + warning);
+        return false;
     }
 
     public List<String> changes() { return List.copyOf(changes); }
@@ -84,8 +106,8 @@ public final class ConfigMigrationService {
         }
     }
 
-    private void mergeMissingDefaults(YamlConfiguration config) {
-        try (var input = plugin.getResource("config.yml")) {
+    private void mergeMissingDefaults(YamlConfiguration config, Supplier<InputStream> defaultsSupplier) {
+        try (InputStream input = defaultsSupplier.get()) {
             if (input == null) return;
             YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
                     new InputStreamReader(input, StandardCharsets.UTF_8));
@@ -191,9 +213,9 @@ public final class ConfigMigrationService {
         warnings.add(path + " was invalid and was reset to " + fallback + ".");
     }
 
-    private File backup(File configFile) {
+    private File backup(File configFile, File dataFolder) {
         if (!configFile.exists()) return null;
-        File backups = new File(plugin.getDataFolder(), "backups");
+        File backups = new File(dataFolder, "backups");
         if (!backups.exists() && !backups.mkdirs()) {
             warnings.add("Could not create the backups directory.");
             return null;
@@ -208,9 +230,9 @@ public final class ConfigMigrationService {
         }
     }
 
-    private void writeReport(int previous) {
+    private void writeReport(int previous, File dataFolder) {
         try {
-            File reports = new File(plugin.getDataFolder(), "reports");
+            File reports = new File(dataFolder, "reports");
             Files.createDirectories(reports.toPath());
             StringBuilder report = new StringBuilder("AegisGuard Configuration Migration\n")
                     .append("From schema: ").append(previous).append('\n')

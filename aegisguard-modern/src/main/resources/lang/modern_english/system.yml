@@ -484,3 +484,13 @@ guest_pass_received: '&aYou received a {PRESET} Guest Pass for &e{PLOT}&a.'
 guest_pass_revoked: '&eRevoked the Guest Pass for &6{PLAYER}&e.'
 guest_pass_expired_notice: '&eYour Guest Pass for &6{PLOT} &ehas expired.'
 guest_pass_expired_owner_notice: '&e{PLAYER}''s Guest Pass to your plot has expired.'
+
+# ------------------------------------------------------------
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ------------------------------------------------------------
+lockdown_action_blocked: '&cThis plot is under Emergency Lockdown. Try again once it is lifted.'
+lockdown_activated: '&c&lEmergency Lockdown activated. &7Sensitive actions are now restricted.'
+lockdown_deactivated: '&a&lEmergency Lockdown deactivated. &7Normal access has been restored.'
+lockdown_disabled: '&cEmergency Lockdown is disabled on this server.'
+lockdown_invalid: '&cThat Lockdown request is invalid.'
+lockdown_already_active: '&cThis plot is already under Emergency Lockdown.'

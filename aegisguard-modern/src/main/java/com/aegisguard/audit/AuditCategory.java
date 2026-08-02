@@ -13,6 +13,9 @@ public enum AuditCategory {
     ADMIN_BYPASS,
     CLAIM_BLOCK_ADJUST,
 
-    /** Reserved for Milestone 2 (Temporary Guest Passes): creation, revocation, and expiry. */
-    GUEST_PASS
+    /** Milestone 2 (Temporary Guest Passes): creation, revocation, and expiry. */
+    GUEST_PASS,
+
+    /** Milestone 3 (Emergency Plot Lockdown): activation and deactivation. */
+    LOCKDOWN
 }

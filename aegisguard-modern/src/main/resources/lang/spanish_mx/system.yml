@@ -608,3 +608,13 @@ guest_pass_received: '&aRecibiste un Pase de Invitado de {PRESET} para &e{PLOT}&
 guest_pass_revoked: '&eSe revocó el Pase de Invitado de &6{PLAYER}&e.'
 guest_pass_expired_notice: '&eTu Pase de Invitado para &6{PLOT} &eha expirado.'
 guest_pass_expired_owner_notice: '&eEl Pase de Invitado de {PLAYER} para tu parcela ha expirado.'
+
+# ------------------------------------------------------------
+# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
+# ------------------------------------------------------------
+lockdown_action_blocked: '&cEsta parcela está en Bloqueo de Emergencia. Intenta de nuevo cuando se desactive.'
+lockdown_activated: '&c&lBloqueo de Emergencia activado. &7Las acciones sensibles están restringidas.'
+lockdown_deactivated: '&a&lBloqueo de Emergencia desactivado. &7Se restauró el acceso normal.'
+lockdown_disabled: '&cEl Bloqueo de Emergencia está deshabilitado en este servidor.'
+lockdown_invalid: '&cEsa solicitud de Bloqueo no es válida.'
+lockdown_already_active: '&cEsta parcela ya está en Bloqueo de Emergencia.'

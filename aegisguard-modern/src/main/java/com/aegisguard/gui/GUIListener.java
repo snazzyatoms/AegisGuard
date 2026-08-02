@@ -12,6 +12,8 @@ import com.aegisguard.guestpass.GuestPassGUI.GuestPassPresetHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDurationHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
+import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
+import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -134,7 +136,9 @@ public class GUIListener implements Listener {
                 || holder instanceof GuestPassPresetHolder
                 || holder instanceof GuestPassDurationHolder
                 || holder instanceof GuestPassConfirmHolder
-                || holder instanceof GuestPassDetailHolder;
+                || holder instanceof GuestPassDetailHolder
+                || holder instanceof LockdownMenuHolder
+                || holder instanceof LockdownConfirmHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -315,6 +319,12 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof GuestPassDetailHolder castHolder) {
             plugin.gui().guestPasses().handleDetailClick(player, e, castHolder);
+        }
+        else if (holder instanceof LockdownMenuHolder castHolder) {
+            plugin.gui().lockdownGui().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof LockdownConfirmHolder castHolder) {
+            plugin.gui().lockdownGui().handleConfirmClick(player, e, castHolder);
         }
     }
 
@@ -567,6 +577,15 @@ public class GUIListener implements Listener {
             } else {
                 plugin.gui().openMain(player);
             }
+            return;
+        }
+
+        if (holder instanceof LockdownMenuHolder castHolder) {
+            plugin.gui().lockdownGui().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof LockdownConfirmHolder castHolder) {
+            plugin.gui().lockdownGui().openMenu(player, castHolder.getPlot());
             return;
         }
 

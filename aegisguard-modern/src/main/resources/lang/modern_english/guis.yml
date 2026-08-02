@@ -1177,6 +1177,7 @@ audit_category_migration: 'Migration'
 audit_category_admin_bypass: 'Admin Bypass'
 audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
 audit_category_guest_pass: 'Guest Pass'
+audit_category_lockdown: 'Emergency Lockdown'
 
 toggle_on: '&aON'
 toggle_off: '&cOFF'
@@ -1578,28 +1579,6 @@ staff_toolbelt_section_name: '&bGuardian Toolbelt'
 staff_toolbelt_section_lore: ['&7The lower row opens review, recovery,', '&7world, migration, and maintenance tools.']
 
 # ------------------------------------------------------------
-# Staff Audit Ledger (1.3.0+, Milestone 1)
-# ------------------------------------------------------------
-button_admin_audit: '&eStaff Audit Ledger'
-admin_audit_lore: ['&7Review high-impact actions:', '&7restores, repairs, migrations,', '&7bypasses, and block adjustments.']
-audit_admin_title: '&e&lStaff Audit Ledger'
-audit_disabled: '&cThe audit ledger is disabled.'
-audit_none_title: '&cNo Audit Entries'
-audit_none_lore: ['&7No recorded actions match this filter yet.']
-audit_filter_button: '&bFilter: &f{FILTER}'
-audit_filter_lore: ['&7Click to cycle through categories.']
-audit_filter_all: 'All Categories'
-audit_entry_name: '&e{CATEGORY}'
-audit_entry_lore: ['&7Actor: &f{ACTOR}', '&7Target: &f{TARGET}', '&7When: &f{AGE} ago', ' ', '&f{SUMMARY}']
-audit_entry_detail: '&e[Audit] &7{SUMMARY}'
-audit_category_snapshot_restore: 'Snapshot Restore'
-audit_category_doctor_repair: 'Doctor Repair'
-audit_category_migration: 'Migration'
-audit_category_admin_bypass: 'Admin Bypass'
-audit_category_claim_block_adjust: 'Claim-Block Adjustment'
-audit_category_guest_pass: 'Guest Pass'
-
-# ------------------------------------------------------------
 # Temporary Guest Passes (1.3.0+, Milestone 2)
 # ------------------------------------------------------------
 button_guest_passes: '&d🎫 Guest Passes'
@@ -1653,3 +1632,31 @@ guest_pass_confirm_click_lore: '&aClick to confirm and issue'
 guest_pass_detail_title: '&8Pass: {PLAYER}'
 button_revoke_guest_pass: '&cRevoke Pass'
 revoke_guest_pass_lore: ['&7Immediately end this guest''s access.']
+
+# ------------------------------------------------------------
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ------------------------------------------------------------
+button_lockdown: '&cEmergency Lockdown'
+button_lockdown_active: '&c&lEmergency Lockdown (ACTIVE)'
+lockdown_button_lore: ['&7Instantly restrict sensitive actions', '&7if this plot is being griefed.']
+lockdown_button_active_lore: ['&c&lLOCKDOWN IS ACTIVE', '&7Click to review or deactivate.']
+lockdown_button_locked_lore: ['&cStand inside a claim you manage', '&cto use Emergency Lockdown.']
+lockdown_menu_title: '&cEmergency Lockdown'
+lockdown_status_active_name: '&c&lLOCKDOWN ACTIVE'
+lockdown_status_inactive_name: '&a&lNormal Operation'
+lockdown_status_active_lore: ['&7This plot is currently locked down.']
+lockdown_status_activated_by: '&7Activated by: &f{PLAYER}'
+lockdown_status_activated_ago: '&7Active for: &f{MINUTES}m'
+lockdown_status_inactive_lore: ['&7This plot is operating normally.', '&7Activate lockdown to instantly restrict', '&7building, breaking, and containers for', '&7everyone except you and staff.']
+lockdown_guide_name: '&eLockdown Guide'
+lockdown_guide_lore: ['&7Lockdown instantly overrides roles and', '&7Guest Passes for sensitive actions.', ' ', '&8Doors and buttons always keep working,', '&8so nobody is ever trapped inside.', '&8Ownership and roles are never changed.']
+button_activate_lockdown: '&cActivate Lockdown'
+activate_lockdown_lore: ['&7Immediately restrict sensitive actions.']
+button_deactivate_lockdown: '&aDeactivate Lockdown'
+deactivate_lockdown_lore: ['&7Immediately restore normal access.']
+lockdown_confirm_activate_title: '&cConfirm Lockdown'
+lockdown_confirm_deactivate_title: '&aConfirm Unlock'
+lockdown_confirm_activate_name: '&cConfirm Activation'
+lockdown_confirm_deactivate_name: '&aConfirm Deactivation'
+lockdown_confirm_activate_lore: ['&7Everyone except you and staff will', '&7instantly lose build, break, and', '&7container access on this plot.', ' ', '&7Doors and buttons keep working, so', '&7nobody gets trapped inside.', ' ', '&aClick to activate lockdown.']
+lockdown_confirm_deactivate_lore: ['&7This plot will immediately return to', '&7its normal roles and permissions.', ' ', '&aClick to deactivate lockdown.']

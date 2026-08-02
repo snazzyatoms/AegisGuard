@@ -161,6 +161,23 @@ public class PlayerGUI {
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
 
+        // Emergency Lockdown (Slot 21)
+        boolean lockdownActive = currentPlot != null && currentPlot.isLockdownActive();
+        Material lockdownIcon = lockdownActive ? Material.RED_STAINED_GLASS_PANE
+                : (canManage ? Material.IRON_BARS : Material.GRAY_STAINED_GLASS_PANE);
+        inv.setItem(21, GUIManager.createItem(
+                lockdownIcon,
+                t(player, lockdownActive ? "button_lockdown_active" : "button_lockdown", "&cEmergency Lockdown"),
+                tl(player, canManage
+                                ? (lockdownActive ? "lockdown_button_active_lore" : "lockdown_button_lore")
+                                : "lockdown_button_locked_lore",
+                        lockdownActive
+                                ? List.of("&cThis plot is locked down.", "&7Click to view status or unlock.")
+                                : canManage
+                                ? List.of("&7A fast, reversible safety switch", "&7for griefing, disputes, or maintenance.")
+                                : List.of("&cStand inside a claim you manage", "&cto use Emergency Lockdown."))
+        ));
+
         // Guest Passes (Slot 23)
         Material guestPassIcon = canManage ? Material.NAME_TAG : Material.PAPER;
         inv.setItem(23, GUIManager.createItem(
@@ -347,6 +364,17 @@ public class PlayerGUI {
 
             case 22 -> {
                 if (plot != null && canManage) plugin.gui().roles().openRolesMenu(player, plot);
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 21 -> {
+                if (plot != null && canManage) plugin.gui().lockdownGui().open(player);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
                             plot == null

@@ -1149,6 +1149,7 @@ audit_category_migration: 'Migración'
 audit_category_admin_bypass: 'Bypass de Administrador'
 audit_category_claim_block_adjust: 'Ajuste de ClaimBlocks'
 audit_category_guest_pass: 'Pase de Invitado'
+audit_category_lockdown: 'Bloqueo de Emergencia'
 
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'
@@ -2059,28 +2060,6 @@ staff_toolbelt_section_name: '&bHerramientas del Guardián'
 staff_toolbelt_section_lore: ['&7La fila inferior abre revisión, recuperación,', '&7mundos, migración y mantenimiento.']
 
 # ------------------------------------------------------------
-# Registro de Auditoría del Staff (1.3.0+, Hito 1)
-# ------------------------------------------------------------
-button_admin_audit: '&eRegistro de Auditoría'
-admin_audit_lore: ['&7Revisá acciones de alto impacto:', '&7restauraciones, reparaciones, migraciones,', '&7bypasses y ajustes de bloques.']
-audit_admin_title: '&e&lRegistro de Auditoría'
-audit_disabled: '&cEl registro de auditoría está deshabilitado.'
-audit_none_title: '&cSin Entradas de Auditoría'
-audit_none_lore: ['&7Ninguna acción registrada coincide con este filtro.']
-audit_filter_button: '&bFiltro: &f{FILTER}'
-audit_filter_lore: ['&7Hacé clic para cambiar de categoría.']
-audit_filter_all: 'Todas las Categorías'
-audit_entry_name: '&e{CATEGORY}'
-audit_entry_lore: ['&7Autor: &f{ACTOR}', '&7Objetivo: &f{TARGET}', '&7Hace: &f{AGE}', ' ', '&f{SUMMARY}']
-audit_entry_detail: '&e[Auditoría] &7{SUMMARY}'
-audit_category_snapshot_restore: 'Restauración de Instantánea'
-audit_category_doctor_repair: 'Reparación del Doctor'
-audit_category_migration: 'Migración'
-audit_category_admin_bypass: 'Bypass de Administrador'
-audit_category_claim_block_adjust: 'Ajuste de Bloques de Parcela'
-audit_category_guest_pass: 'Pase de Invitado'
-
-# ------------------------------------------------------------
 # Pases de Invitado Temporales (1.3.0+, Hito 2)
 # ------------------------------------------------------------
 button_guest_passes: '&d🎫 Pases de Invitado'
@@ -2134,3 +2113,31 @@ guest_pass_confirm_click_lore: '&aHacé clic para confirmar y emitir'
 guest_pass_detail_title: '&8Pase: {PLAYER}'
 button_revoke_guest_pass: '&cRevocar Pase'
 revoke_guest_pass_lore: ['&7Terminá de inmediato el acceso de este invitado.']
+
+# ------------------------------------------------------------
+# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
+# ------------------------------------------------------------
+button_lockdown: '&cBloqueo de Emergencia'
+button_lockdown_active: '&c&lBloqueo de Emergencia (ACTIVO)'
+lockdown_button_lore: ['&7Restringí al instante acciones sensibles', '&7si esta parcela está siendo griefeada.']
+lockdown_button_active_lore: ['&c&lBLOQUEO ACTIVO', '&7Hacé clic para revisar o desactivarlo.']
+lockdown_button_locked_lore: ['&cEntrá a una parcela que administrés', '&cpara usar el Bloqueo de Emergencia.']
+lockdown_menu_title: '&cBloqueo de Emergencia'
+lockdown_status_active_name: '&c&lBLOQUEO ACTIVO'
+lockdown_status_inactive_name: '&a&lOperación Normal'
+lockdown_status_active_lore: ['&7Esta parcela está actualmente bloqueada.']
+lockdown_status_activated_by: '&7Activado por: &f{PLAYER}'
+lockdown_status_activated_ago: '&7Activo hace: &f{MINUTES}m'
+lockdown_status_inactive_lore: ['&7Esta parcela opera con normalidad.', '&7Activá el bloqueo para restringir al instante', '&7construcción, destrucción y contenedores para', '&7todos excepto vos y el staff.']
+lockdown_guide_name: '&eGuía de Bloqueo'
+lockdown_guide_lore: ['&7El bloqueo anula al instante roles y', '&7Pases de Invitado para acciones sensibles.', ' ', '&8Las puertas y botones siempre funcionan,', '&8así que nadie queda nunca atrapado.', '&8La propiedad y los roles nunca cambian.']
+button_activate_lockdown: '&cActivar Bloqueo'
+activate_lockdown_lore: ['&7Restringí de inmediato acciones sensibles.']
+button_deactivate_lockdown: '&aDesactivar Bloqueo'
+deactivate_lockdown_lore: ['&7Restaurá de inmediato el acceso normal.']
+lockdown_confirm_activate_title: '&cConfirmar Bloqueo'
+lockdown_confirm_deactivate_title: '&aConfirmar Desbloqueo'
+lockdown_confirm_activate_name: '&cConfirmar Activación'
+lockdown_confirm_deactivate_name: '&aConfirmar Desactivación'
+lockdown_confirm_activate_lore: ['&7Todos excepto vos y el staff perderán', '&7al instante acceso a construir, romper', '&7y usar contenedores en esta parcela.', ' ', '&7Las puertas y botones seguirán funcionando,', '&7así que nadie quedará atrapado.', ' ', '&aHacé clic para activar el bloqueo.']
+lockdown_confirm_deactivate_lore: ['&7Esta parcela volverá de inmediato a', '&7sus roles y permisos normales.', ' ', '&aHacé clic para desactivar el bloqueo.']

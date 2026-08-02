@@ -6,6 +6,7 @@ import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.guestpass.GuestPassGUI;
+import com.aegisguard.lockdown.LockdownGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
 import com.aegisguard.util.EffectUtil;
 import org.bukkit.ChatColor;
@@ -76,6 +77,9 @@ public class GUIManager {
     // Temporary Guest Passes (1.3.0+ Milestone 2)
     private final GuestPassGUI guestPassGUI;
 
+    // Emergency Plot Lockdown (1.3.0+ Milestone 3)
+    private final LockdownGUI lockdownGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -133,6 +137,7 @@ public class GUIManager {
         this.migrationAdminGUI = new MigrationAdminGUI(plugin);
         this.auditAdminGUI = new AuditAdminGUI(plugin);
         this.guestPassGUI = new GuestPassGUI(plugin);
+        this.lockdownGUI = new LockdownGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -248,6 +253,9 @@ public class GUIManager {
 
     // Temporary Guest Passes (1.3.0+ Milestone 2)
     public GuestPassGUI guestPasses() { return guestPassGUI; }
+
+    // Emergency Plot Lockdown (1.3.0+ Milestone 3)
+    public LockdownGUI lockdownGui() { return lockdownGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

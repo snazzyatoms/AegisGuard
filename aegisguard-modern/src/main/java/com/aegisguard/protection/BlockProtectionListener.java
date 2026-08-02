@@ -62,7 +62,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(e.getPlayer(), e.getBlock().getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), "cannot_break");
+            plugin.msg().send(e.getPlayer(), plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_break");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -80,7 +80,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(e.getPlayer(), e.getBlock().getLocation(), plugin, "BLOCK_PLACE")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), "cannot_place");
+            plugin.msg().send(e.getPlayer(), plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_place");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -116,7 +116,7 @@ public class BlockProtectionListener implements Listener {
         if (isContainer(clicked) && plugin.protection().isFlagEnabled(plot, "containers")
                 && !plot.canInteractAt(player, clicked.getLocation(), plugin, "CONTAINERS")) {
             e.setCancelled(true);
-            plugin.msg().send(player, "cannot_interact");
+            plugin.msg().send(player, plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_interact");
             plugin.effects().playError(player);
         }
     }

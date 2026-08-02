@@ -187,6 +187,15 @@ public class YMLDataStore implements IDataStore {
                         plot.deserializeGuestPasses(guestPassesBlob);
                     }
 
+                    if (sec.getBoolean("lockdown-active", false)) {
+                        String actorStr = sec.getString("lockdown-activated-by", null);
+                        UUID actorId = null;
+                        try { if (actorStr != null && !actorStr.isBlank()) actorId = UUID.fromString(actorStr); }
+                        catch (IllegalArgumentException ignored) { }
+                        plot.restoreLockdown(true, actorId, sec.getString("lockdown-activated-by-name", "Unknown"),
+                                sec.getLong("lockdown-activated-at", System.currentTimeMillis()));
+                    }
+
                     for (String uuidStr : sec.getStringList("liked-by")) {
                         try { plot.toggleLike(UUID.fromString(uuidStr)); }
                         catch (IllegalArgumentException ignored) {}
@@ -478,6 +487,18 @@ public class YMLDataStore implements IDataStore {
 
         String guestPassesBlob = plot.serializeGuestPasses();
         sec.set("guest-passes", guestPassesBlob.isEmpty() ? null : guestPassesBlob);
+
+        if (plot.isLockdownActive()) {
+            sec.set("lockdown-active", true);
+            sec.set("lockdown-activated-at", plot.getLockdownActivatedAt());
+            sec.set("lockdown-activated-by", plot.getLockdownActivatedBy() == null ? null : plot.getLockdownActivatedBy().toString());
+            sec.set("lockdown-activated-by-name", plot.getLockdownActivatedByName());
+        } else {
+            sec.set("lockdown-active", null);
+            sec.set("lockdown-activated-at", null);
+            sec.set("lockdown-activated-by", null);
+            sec.set("lockdown-activated-by-name", null);
+        }
 
         List<String> liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.toList());
         sec.set("liked-by", liked.isEmpty() ? null : liked);

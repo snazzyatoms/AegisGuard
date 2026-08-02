@@ -661,3 +661,13 @@ guest_pass_received: '&aThou hast received a {PRESET} Guest Pass for &e{PLOT}&a.
 guest_pass_revoked: '&eRevoked the Guest Pass held by &6{PLAYER}&e.'
 guest_pass_expired_notice: '&eThy Guest Pass for &6{PLOT} &ehath expired.'
 guest_pass_expired_owner_notice: '&e{PLAYER}''s Guest Pass unto thy holding hath expired.'
+
+# ------------------------------------------------------------
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ------------------------------------------------------------
+lockdown_action_blocked: '&cThis holding lieth under Emergency Lockdown. Try again once it be lifted.'
+lockdown_activated: '&c&lEmergency Lockdown set. &7Weighty deeds are now restrained.'
+lockdown_deactivated: '&a&lEmergency Lockdown lifted. &7Normal access hath been restored.'
+lockdown_disabled: '&cEmergency Lockdown is forbidden upon this server.'
+lockdown_invalid: '&cThat Lockdown decree is invalid.'
+lockdown_already_active: '&cThis holding already lieth under Emergency Lockdown.'

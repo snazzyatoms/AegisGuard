@@ -270,6 +270,7 @@ public class AuditAdminGUI {
             case ADMIN_BYPASS -> Material.NETHER_STAR;
             case CLAIM_BLOCK_ADJUST -> Material.EMERALD;
             case GUEST_PASS -> Material.PAPER;
+            case LOCKDOWN -> Material.IRON_BARS;
         };
     }
 

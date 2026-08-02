@@ -786,11 +786,24 @@ public class SQLDataStore implements IDataStore {
         String guestPasses = plot.serializeGuestPasses();
         if (!guestPasses.isEmpty()) add.accept("guestPasses", guestPasses);
 
+        if (plot.isLockdownActive()) {
+            add.accept("lockdownActive", "true");
+            add.accept("lockdownActivatedAt", String.valueOf(plot.getLockdownActivatedAt()));
+            UUID lockedBy = plot.getLockdownActivatedBy();
+            add.accept("lockdownActivatedBy", lockedBy != null ? lockedBy.toString() : null);
+            add.accept("lockdownActivatedByName", plot.getLockdownActivatedByName());
+        }
+
         return sb.toString();
     }
 
     private void applySettings(Plot plot, String settings) {
         if (settings == null || settings.isEmpty()) return;
+
+        boolean[] lockdownActive = {false};
+        long[] lockdownActivatedAt = {0L};
+        String[] lockdownActivatedBy = {null};
+        String[] lockdownActivatedByName = {"Unknown"};
 
         for (String part : settings.split(";")) {
             if (part.isEmpty()) continue;
@@ -865,8 +878,23 @@ public class SQLDataStore implements IDataStore {
 
                     case "roleFlags" -> plot.deserializeRoleFlags(value);
                     case "guestPasses" -> plot.deserializeGuestPasses(value);
+
+                    case "lockdownActive" -> lockdownActive[0] = Boolean.parseBoolean(value);
+                    case "lockdownActivatedAt" -> lockdownActivatedAt[0] = Long.parseLong(value);
+                    case "lockdownActivatedBy" -> lockdownActivatedBy[0] = value;
+                    case "lockdownActivatedByName" -> lockdownActivatedByName[0] = value;
                 }
             } catch (Exception ignored) {}
+        }
+
+        if (lockdownActive[0]) {
+            UUID actorId = null;
+            try {
+                if (lockdownActivatedBy[0] != null && !lockdownActivatedBy[0].isBlank()) {
+                    actorId = UUID.fromString(lockdownActivatedBy[0]);
+                }
+            } catch (IllegalArgumentException ignored) { }
+            plot.restoreLockdown(true, actorId, lockdownActivatedByName[0], lockdownActivatedAt[0]);
         }
     }
 

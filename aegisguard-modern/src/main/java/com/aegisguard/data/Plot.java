@@ -52,6 +52,16 @@ public class Plot {
     // grants management rights and never overwrites/removes permanent trust on expiry or revoke.
     private final Map<UUID, GuestPass> guestPasses = new ConcurrentHashMap<>();
 
+    // --- EMERGENCY LOCKDOWN (Milestone 3) ---
+    // Disabled by default. While active, hasElevatedManagementAccess/owner keep full access, but
+    // every other player loses the configured "restricted" build/interact actions - even if their
+    // permanent role or an active Guest Pass would otherwise allow them. Ownership, roles, and
+    // Guest Passes themselves are never modified by a lockdown; it is purely a temporary gate.
+    private volatile boolean lockdownActive = false;
+    private volatile long lockdownActivatedAt = 0L;
+    private volatile UUID lockdownActivatedBy;
+    private volatile String lockdownActivatedByName = "Unknown";
+
     // --- PLOT META ---
     private String plotName;
     private String description;
@@ -515,6 +525,14 @@ public class Plot {
         if (isOwner(uuid)) return true;
         if (isBanned(uuid)) return false;
 
+        String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
+
+        // Emergency Lockdown (Milestone 3): a hard, temporary override for everyone except the
+        // owner and elevated staff (both already handled above). It beats role-flag overrides and
+        // the "public build" plot flag - the whole point is a fast, reversible safety response -
+        // but never restricts plain INTERACT, so leaving through a door is always possible.
+        if (lockdownActive && isLockdownRestrictable(perm, pl)) return false;
+
         String role = getRole(uuid);
         TriState override = getRoleFlagState(role, "build");
         if (override == TriState.ALLOW) return true;
@@ -523,8 +541,6 @@ public class Plot {
         // "build" acts as a public-build override.
         // By default claims are protected, so only trusted roles can build unless a plot explicitly opens building up.
         if (!getFlag("build", true)) return true;
-
-        String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
 
         if ("BLOCK_BREAK".equals(perm) || "BLOCK_PLACE".equals(perm)) {
             return hasPermission(uuid, perm, pl) || hasPermission(uuid, "BUILD", pl);
@@ -608,8 +624,18 @@ public class Plot {
         if (canBuildAt(player, location, pl, permission)) return true;
 
         UUID uuid = player.getUniqueId();
-        if (hasPermission(uuid, "INTERACT", pl)) return true;
-        if (permission != null && !permission.isBlank() && hasPermission(uuid, permission, pl)) return true;
+        String needle = (permission == null || permission.isBlank()) ? "INTERACT" : permission.toUpperCase(Locale.ROOT);
+
+        // A plain interaction (doors, buttons, levers - no specific gated action requested) only
+        // needs the broad INTERACT token. Gated actions (CONTAINERS, FARM, VEHICLES, ...) must hold
+        // that exact token themselves; holding INTERACT alone must never unlock them. Bug fix
+        // (1.3.0): previously any INTERACT holder bypassed every gated check below, silently
+        // granting container/farm/vehicle access to roles and Guest Passes that only had INTERACT.
+        if ("INTERACT".equals(needle)) {
+            if (hasPermission(uuid, "INTERACT", pl)) return true;
+        } else if (hasPermission(uuid, needle, pl)) {
+            return true;
+        }
 
         return isZoneRenter(uuid, location);
     }
@@ -1080,6 +1106,81 @@ public class Plot {
                         issuerId, issuerName, issuedAt, expiresAt));
             } catch (Exception ignored) {}
         }
+    }
+
+    // ---------------------------------------------------------------------
+    // Emergency Lockdown (Milestone 3)
+    // ---------------------------------------------------------------------
+
+    public boolean isLockdownActive() {
+        return lockdownActive;
+    }
+
+    public long getLockdownActivatedAt() {
+        return lockdownActivatedAt;
+    }
+
+    public @Nullable UUID getLockdownActivatedBy() {
+        return lockdownActivatedBy;
+    }
+
+    public String getLockdownActivatedByName() {
+        return lockdownActivatedByName;
+    }
+
+    /**
+     * Flips the lockdown switch. Never touches {@code owner}, {@code playerRoles}, or
+     * {@code guestPasses} - it is a purely temporary access gate, fully reversible by calling this
+     * again with {@code active=false}.
+     */
+    public void setLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName) {
+        this.lockdownActive = active;
+        if (active) {
+            this.lockdownActivatedAt = System.currentTimeMillis();
+            this.lockdownActivatedBy = actorId;
+            this.lockdownActivatedByName = (actorName == null || actorName.isBlank()) ? "Unknown" : actorName;
+        } else {
+            this.lockdownActivatedAt = 0L;
+            this.lockdownActivatedBy = null;
+            this.lockdownActivatedByName = "Unknown";
+        }
+    }
+
+    /**
+     * Restores a persisted lockdown state with its original activation timestamp, so "active for"
+     * displays survive a server restart instead of resetting to "just now". Data-store loaders only.
+     */
+    public void restoreLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName, long activatedAt) {
+        this.lockdownActive = active;
+        this.lockdownActivatedAt = active ? activatedAt : 0L;
+        this.lockdownActivatedBy = active ? actorId : null;
+        this.lockdownActivatedByName = active
+                ? ((actorName == null || actorName.isBlank()) ? "Unknown" : actorName)
+                : "Unknown";
+    }
+
+    /**
+     * Whether {@code permission} is one of the configured "sensitive" tokens that Emergency
+     * Lockdown restricts. {@code INTERACT} is a hard-coded exception and is never restrictable,
+     * regardless of config - lockdown must never trap a player behind a door they could otherwise
+     * open, only gate build/break/container style actions. Movement itself is never touched by
+     * AegisGuard, so leaving is always possible.
+     */
+    public static boolean isLockdownRestrictable(@Nullable String permission, @Nullable AegisGuard pl) {
+        if (permission == null || permission.isBlank()) return false;
+        String needle = permission.trim().toUpperCase(Locale.ROOT);
+        if ("INTERACT".equals(needle)) return false;
+
+        List<String> configured = pl == null ? null
+                : pl.getConfig().getStringList("lockdown.restricted_permissions");
+        if (configured == null || configured.isEmpty()) {
+            configured = List.of("BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "REDSTONE",
+                    "ANIMALS", "VEHICLES", "FARM", "SHOP");
+        }
+        for (String token : configured) {
+            if (token != null && needle.equals(token.trim().toUpperCase(Locale.ROOT))) return true;
+        }
+        return false;
     }
 
     // ---------------------------------------------------------------------

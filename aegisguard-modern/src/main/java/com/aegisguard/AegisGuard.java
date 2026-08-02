@@ -140,6 +140,7 @@ public class AegisGuard extends JavaPlugin {
     // Staff Audit Ledger (1.3.0+)
     private AuditService auditService;
     private com.aegisguard.guestpass.GuestPassService guestPassService;
+    private com.aegisguard.lockdown.LockdownService lockdownService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -228,6 +229,7 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager expansions() { return expansionManager; }
     public AuditService audit() { return auditService; }
     public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
+    public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -287,6 +289,7 @@ public class AegisGuard extends JavaPlugin {
         snapshotManager = new SnapshotManager(this);
         auditService = new AuditService(this);
         guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
+        lockdownService = new com.aegisguard.lockdown.LockdownService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);

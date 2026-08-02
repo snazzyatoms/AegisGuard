@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1273
+config_schema: 1274
 
 
 # ------------------------------------------------------------------------------
@@ -612,6 +612,35 @@ guest_passes:
   # Duration options offered in the GUI, in minutes. Values above max_duration_minutes
   # are clamped automatically.
   duration_presets_minutes: [15, 30, 60, 120, 360, 720, 1440, 4320, 10080]
+
+
+# ==============================================================================
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ==============================================================================
+# A fast, fully reversible safety switch for the plot owner (or elevated staff) during griefing,
+# disputes, or maintenance. While active it overrides roles, Guest Passes, and the "public build"
+# flag for every restricted action - but INTERACT (doors, buttons, levers) is never restrictable,
+# so a player already inside a locked-down plot can always leave. Disabled by default is not an
+# option here in the safety sense - it simply never activates on its own; an owner/staff member
+# must explicitly flip it, and it never survives ownership transfer or role/pass deletion.
+lockdown:
+  enabled: true
+
+  # Permission tokens this feature is allowed to restrict while a plot is locked down.
+  # INTERACT is hard-coded as always-allowed in code and cannot be added here.
+  restricted_permissions:
+    - BUILD
+    - BLOCK_BREAK
+    - BLOCK_PLACE
+    - CONTAINERS
+    - REDSTONE
+    - ANIMALS
+    - VEHICLES
+    - FARM
+    - SHOP
+
+  # Require an extra confirmation click before activating or deactivating from the GUI.
+  require_confirmation: true
 
 
 # ==============================================================================

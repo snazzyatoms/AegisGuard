@@ -994,6 +994,7 @@ audit_category_migration: 'Migration'
 audit_category_admin_bypass: 'Admin Bypass'
 audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
 audit_category_guest_pass: 'Guest Pass'
+audit_category_lockdown: 'Emergency Lockdown'
 
 local_market_stalls_name: '&6Trade Stalls'
 local_market_stalls_lore:
@@ -1648,28 +1649,6 @@ staff_toolbelt_section_name: '&bGuardian Toolbelt'
 staff_toolbelt_section_lore: ['&7The lower row openeth review, recovery,', '&7world, migration, and upkeep tools.']
 
 # ------------------------------------------------------------
-# Staff Audit Ledger (1.3.0+, Milestone 1)
-# ------------------------------------------------------------
-button_admin_audit: '&eStaff Audit Ledger'
-admin_audit_lore: ['&7Review deeds of great import:', '&7restorations, repairs, migrations,', '&7bypasses, and boundary changes.']
-audit_admin_title: '&e&lStaff Audit Ledger'
-audit_disabled: '&cThe audit ledger lieth dormant.'
-audit_none_title: '&cNo Deeds Recorded'
-audit_none_lore: ['&7No recorded deeds match this filter yet.']
-audit_filter_button: '&bFilter: &f{FILTER}'
-audit_filter_lore: ['&7Click to cycle through categories.']
-audit_filter_all: 'All Categories'
-audit_entry_name: '&e{CATEGORY}'
-audit_entry_lore: ['&7Actor: &f{ACTOR}', '&7Target: &f{TARGET}', '&7When: &f{AGE} hence', ' ', '&f{SUMMARY}']
-audit_entry_detail: '&e[Audit] &7{SUMMARY}'
-audit_category_snapshot_restore: 'Snapshot Restore'
-audit_category_doctor_repair: 'Doctor Repair'
-audit_category_migration: 'Migration'
-audit_category_admin_bypass: 'Admin Bypass'
-audit_category_claim_block_adjust: 'Claim-Block Adjustment'
-audit_category_guest_pass: 'Guest Pass'
-
-# ------------------------------------------------------------
 # Temporary Guest Passes (1.3.0+, Milestone 2)
 # ------------------------------------------------------------
 button_guest_passes: '&d🎫 Guest Passes'
@@ -1723,3 +1702,31 @@ guest_pass_confirm_click_lore: '&aClick to confirm and issue'
 guest_pass_detail_title: '&8Pass: {PLAYER}'
 button_revoke_guest_pass: '&cRevoke Pass'
 revoke_guest_pass_lore: ['&7Immediately end this guest''s access.']
+
+# ------------------------------------------------------------
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ------------------------------------------------------------
+button_lockdown: '&cEmergency Lockdown'
+button_lockdown_active: '&c&lEmergency Lockdown (ACTIVE)'
+lockdown_button_lore: ['&7Instantly restrict ill deeds', '&7if this holding is beset by grief.']
+lockdown_button_active_lore: ['&c&lLOCKDOWN IS ACTIVE', '&7Click to review or lift it.']
+lockdown_button_locked_lore: ['&cStand within a holding thou dost govern', '&cto use Emergency Lockdown.']
+lockdown_menu_title: '&cEmergency Lockdown'
+lockdown_status_active_name: '&c&lLOCKDOWN ACTIVE'
+lockdown_status_inactive_name: '&a&lNormal Operation'
+lockdown_status_active_lore: ['&7This holding lieth locked down.']
+lockdown_status_activated_by: '&7Set by: &f{PLAYER}'
+lockdown_status_activated_ago: '&7Active for: &f{MINUTES}m'
+lockdown_status_inactive_lore: ['&7This holding operateth as usual.', '&7Set lockdown to instantly restrain', '&7building, breaking, and vessels for', '&7all save thee and staff.']
+lockdown_guide_name: '&eLockdown Guide'
+lockdown_guide_lore: ['&7Lockdown instantly overrideth roles and', '&7Guest Passes for weighty deeds.', ' ', '&8Doors and buttons ever keep working,', '&8so none be ever trapped within.', '&8Ownership and roles are never changed.']
+button_activate_lockdown: '&cSet Lockdown'
+activate_lockdown_lore: ['&7Immediately restrain weighty deeds.']
+button_deactivate_lockdown: '&aLift Lockdown'
+deactivate_lockdown_lore: ['&7Immediately restore normal access.']
+lockdown_confirm_activate_title: '&cConfirm Lockdown'
+lockdown_confirm_deactivate_title: '&aConfirm Unlock'
+lockdown_confirm_activate_name: '&cConfirm Setting'
+lockdown_confirm_deactivate_name: '&aConfirm Lifting'
+lockdown_confirm_activate_lore: ['&7All save thee and staff shall', '&7instantly lose build, break, and', '&7vessel access upon this holding.', ' ', '&7Doors and buttons keep working, so', '&7none shall be trapped within.', ' ', '&aClick to set lockdown.']
+lockdown_confirm_deactivate_lore: ['&7This holding shall immediately return to', '&7its usual roles and permissions.', ' ', '&aClick to lift lockdown.']

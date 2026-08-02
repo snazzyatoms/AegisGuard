@@ -6,6 +6,12 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.audit.AuditAdminGUI.AuditHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassMenuHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassAddHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassPresetHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassDurationHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -122,7 +128,13 @@ public class GUIListener implements Listener {
                 || holder instanceof StallManageHolder
                 || holder instanceof StallPreviewHolder
                 || holder instanceof SnapshotHolder
-                || holder instanceof AuditHolder;
+                || holder instanceof AuditHolder
+                || holder instanceof GuestPassMenuHolder
+                || holder instanceof GuestPassAddHolder
+                || holder instanceof GuestPassPresetHolder
+                || holder instanceof GuestPassDurationHolder
+                || holder instanceof GuestPassConfirmHolder
+                || holder instanceof GuestPassDetailHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -285,6 +297,24 @@ public class GUIListener implements Listener {
             if (plugin.gui().audit() != null) {
                 plugin.gui().audit().handleClick(player, e);
             }
+        }
+        else if (holder instanceof GuestPassMenuHolder castHolder) {
+            plugin.gui().guestPasses().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassAddHolder castHolder) {
+            plugin.gui().guestPasses().handleAddClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassPresetHolder castHolder) {
+            plugin.gui().guestPasses().handlePresetClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassDurationHolder castHolder) {
+            plugin.gui().guestPasses().handleDurationClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassConfirmHolder castHolder) {
+            plugin.gui().guestPasses().handleConfirmClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassDetailHolder castHolder) {
+            plugin.gui().guestPasses().handleDetailClick(player, e, castHolder);
         }
     }
 
@@ -520,6 +550,22 @@ public class GUIListener implements Listener {
         if (holder instanceof AuditHolder castHolder) {
             if (plugin.gui().audit() != null) {
                 plugin.gui().audit().open(player, castHolder.getFilter(), castHolder.getPage());
+            }
+            return;
+        }
+
+        if (holder instanceof GuestPassMenuHolder castHolder) {
+            plugin.gui().guestPasses().openMenu(player, castHolder.getPlot(), castHolder.getPage());
+            return;
+        }
+        if (holder instanceof GuestPassAddHolder || holder instanceof GuestPassPresetHolder
+                || holder instanceof GuestPassDurationHolder || holder instanceof GuestPassConfirmHolder
+                || holder instanceof GuestPassDetailHolder) {
+            Object plot = readHolderValue(holder, "getPlot");
+            if (plot instanceof com.aegisguard.data.Plot p) {
+                plugin.gui().guestPasses().openMenu(player, p, 0);
+            } else {
+                plugin.gui().openMain(player);
             }
             return;
         }

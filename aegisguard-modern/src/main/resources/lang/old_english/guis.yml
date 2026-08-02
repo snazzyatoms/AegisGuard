@@ -30,6 +30,13 @@ prev_page_lore:
 button_next_page: '&fNext Page'
 next_page_lore:
   - '&7Proceed to the next page.'
+button_prev: '&fPrevious Page'
+button_prev_lore:
+  - '&7Return to the prior page.'
+button_next: '&fNext Page'
+button_next_lore:
+  - '&7Proceed to the next page.'
+button_page: '&7Page: &f{PAGE}'
 
 button_back_admin: '&fReturn (Admin)'
 
@@ -1639,3 +1646,80 @@ staff_policy_section_name: '&eLaw of Operation'
 staff_policy_section_lore: ['&7The upper row governeth server-wide', '&7AegisGuard policy.']
 staff_toolbelt_section_name: '&bGuardian Toolbelt'
 staff_toolbelt_section_lore: ['&7The lower row openeth review, recovery,', '&7world, migration, and upkeep tools.']
+
+# ------------------------------------------------------------
+# Staff Audit Ledger (1.3.0+, Milestone 1)
+# ------------------------------------------------------------
+button_admin_audit: '&eStaff Audit Ledger'
+admin_audit_lore: ['&7Review deeds of great import:', '&7restorations, repairs, migrations,', '&7bypasses, and boundary changes.']
+audit_admin_title: '&e&lStaff Audit Ledger'
+audit_disabled: '&cThe audit ledger lieth dormant.'
+audit_none_title: '&cNo Deeds Recorded'
+audit_none_lore: ['&7No recorded deeds match this filter yet.']
+audit_filter_button: '&bFilter: &f{FILTER}'
+audit_filter_lore: ['&7Click to cycle through categories.']
+audit_filter_all: 'All Categories'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore: ['&7Actor: &f{ACTOR}', '&7Target: &f{TARGET}', '&7When: &f{AGE} hence', ' ', '&f{SUMMARY}']
+audit_entry_detail: '&e[Audit] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Snapshot Restore'
+audit_category_doctor_repair: 'Doctor Repair'
+audit_category_migration: 'Migration'
+audit_category_admin_bypass: 'Admin Bypass'
+audit_category_claim_block_adjust: 'Claim-Block Adjustment'
+audit_category_guest_pass: 'Guest Pass'
+
+# ------------------------------------------------------------
+# Temporary Guest Passes (1.3.0+, Milestone 2)
+# ------------------------------------------------------------
+button_guest_passes: '&d🎫 Guest Passes'
+guest_passes_lore: ['&7Grant fleeting, self-expiring', '&7access without lasting trust.']
+guest_passes_locked_lore: ['&cStand within a holding thou dost govern', '&cto issue Guest Passes.']
+guest_pass_menu_title: '&eGuest Passes'
+guest_pass_entry_name: '&e{PLAYER}'
+guest_pass_entry_preset_line: '&7Preset: &f{PRESET}'
+guest_pass_entry_remaining_line: '&7Expires in: &f{TIME}'
+guest_pass_entry_issuer_line: '&7Granted by: &f{PLAYER}'
+guest_pass_entry_click_lore: '&eClick to view or revoke'
+guest_pass_none_title: '&7No Active Guest Passes'
+guest_pass_none_lore: ['&7Grant a fleeting pass so a friend,', '&7event guest, or hired builder may', '&7aid thee without lasting trust.']
+guest_pass_guide_name: '&eGuest Pass Guide'
+guest_pass_guide_lore: ['&7Guest Passes grant fleeting access', '&7that expireth on its own - even', '&7after the realm doth restart.', ' ', '&8Expiry or revocation never', '&8toucheth this holding''s lasting roles.']
+button_add_guest_pass: '&aIssue Guest Pass'
+add_guest_pass_lore: ['&7Grant a nearby soul fleeting access.']
+guest_pass_add_title: '&8Issue Guest Pass'
+guest_pass_add_click_lore: '&7Click thus to choose a preset.'
+add_trusted_player_name: '&a{PLAYER}'
+add_trusted_none_title: '&cNo Souls Nearby'
+add_trusted_none_lore: ['&7Bid thy friend to stand closer!']
+guest_pass_preset_title: '&8Preset: {PLAYER}'
+guest_pass_preset_name_VISITOR: '&eVisitor'
+guest_pass_preset_name_EVENT_GUEST: '&eEvent Guest'
+guest_pass_preset_name_TEMPORARY_BUILDER: '&eTemporary Builder'
+guest_pass_preset_name_TEMPORARY_TRUSTED_GUEST: '&eTemporary Trusted Guest'
+guest_pass_preset_desc_VISITOR: ['&7Entry and ordinary doors/buttons only.']
+guest_pass_preset_desc_EVENT_GUEST: ['&7Entry plus safe event interaction.', '&7No building or containers.']
+guest_pass_preset_desc_TEMPORARY_BUILDER: ['&7Build and break access.', '&7Containers remain closed.']
+guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST: ['&7Build, break, and container access.']
+guest_pass_preset_container_warning: '&c⚠ Grants container access!'
+guest_pass_preset_click_lore: '&eClick thus to choose a duration'
+guest_pass_duration_title: '&8Duration: {PLAYER}'
+guest_pass_duration_label: '&e{TIME}'
+guest_pass_duration_click_lore: ['&7Click thus to review and confirm.']
+guest_pass_duration_unknown: '?'
+guest_pass_duration_days: '{DAYS}d'
+guest_pass_duration_hours: '{HOURS}h'
+guest_pass_duration_minutes: '{MINUTES}m'
+guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
+guest_pass_expiring_now: '<1m'
+guest_pass_confirm_title: '&8Confirm Guest Pass'
+guest_pass_confirm_name: '&aConfirm Guest Pass'
+guest_pass_confirm_player_line: '&7Player: &f{PLAYER}'
+guest_pass_confirm_preset_line: '&7Preset: &f{PRESET}'
+guest_pass_confirm_duration_line: '&7Duration: &f{TIME}'
+guest_pass_confirm_container_warning: '&c⚠ This guest shall open chests,'
+guest_pass_confirm_container_warning_2: '&cbarrels, and other vessels upon this holding.'
+guest_pass_confirm_click_lore: '&aClick to confirm and issue'
+guest_pass_detail_title: '&8Pass: {PLAYER}'
+button_revoke_guest_pass: '&cRevoke Pass'
+revoke_guest_pass_lore: ['&7Immediately end this guest''s access.']

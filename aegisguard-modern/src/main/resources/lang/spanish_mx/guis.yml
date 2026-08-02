@@ -21,6 +21,13 @@ prev_page_lore:
 button_next_page: '&fPágina Siguiente'
 next_page_lore:
 - '&7Ir a la página siguiente.'
+button_prev: '&fPágina Anterior'
+button_prev_lore:
+- '&7Ir a la página anterior.'
+button_next: '&fPágina Siguiente'
+button_next_lore:
+- '&7Ir a la página siguiente.'
+button_page: '&7Página: &f{PAGE}'
 button_exit: '&c✖ Cerrar'
 button_exit_lore:
 - '&7Cierra este menú.'
@@ -2314,3 +2321,80 @@ staff_policy_section_name: '&ePolítica Operativa'
 staff_policy_section_lore: ['&7La fila superior controla la política', '&7general de AegisGuard.']
 staff_toolbelt_section_name: '&bHerramientas del Guardián'
 staff_toolbelt_section_lore: ['&7La fila inferior abre revisión, recuperación,', '&7mundos, migración y mantenimiento.']
+
+# ------------------------------------------------------------
+# Registro de Auditoría del Staff (1.3.0+, Hito 1)
+# ------------------------------------------------------------
+button_admin_audit: '&eRegistro de Auditoría'
+admin_audit_lore: ['&7Revisa acciones de alto impacto:', '&7restauraciones, reparaciones, migraciones,', '&7bypasses y ajustes de bloques.']
+audit_admin_title: '&e&lRegistro de Auditoría'
+audit_disabled: '&cEl registro de auditoría está deshabilitado.'
+audit_none_title: '&cSin Entradas de Auditoría'
+audit_none_lore: ['&7Ninguna acción registrada coincide con este filtro.']
+audit_filter_button: '&bFiltro: &f{FILTER}'
+audit_filter_lore: ['&7Haz clic para cambiar de categoría.']
+audit_filter_all: 'Todas las Categorías'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore: ['&7Autor: &f{ACTOR}', '&7Objetivo: &f{TARGET}', '&7Hace: &f{AGE}', ' ', '&f{SUMMARY}']
+audit_entry_detail: '&e[Auditoría] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Restauración de Instantánea'
+audit_category_doctor_repair: 'Reparación del Doctor'
+audit_category_migration: 'Migración'
+audit_category_admin_bypass: 'Bypass de Administrador'
+audit_category_claim_block_adjust: 'Ajuste de Bloques de Parcela'
+audit_category_guest_pass: 'Pase de Invitado'
+
+# ------------------------------------------------------------
+# Pases de Invitado Temporales (1.3.0+, Hito 2)
+# ------------------------------------------------------------
+button_guest_passes: '&d🎫 Pases de Invitado'
+guest_passes_lore: ['&7Otorga acceso temporal y autoexpirable', '&7sin confianza permanente.']
+guest_passes_locked_lore: ['&cEntra a una parcela que administres', '&cpara emitir Pases de Invitado.']
+guest_pass_menu_title: '&ePases de Invitado'
+guest_pass_entry_name: '&e{PLAYER}'
+guest_pass_entry_preset_line: '&7Preajuste: &f{PRESET}'
+guest_pass_entry_remaining_line: '&7Expira en: &f{TIME}'
+guest_pass_entry_issuer_line: '&7Emitido por: &f{PLAYER}'
+guest_pass_entry_click_lore: '&eHaz clic para ver o revocar'
+guest_pass_none_title: '&7Sin Pases de Invitado Activos'
+guest_pass_none_lore: ['&7Emite un pase temporal para que un amigo,', '&7invitado de evento o constructor contratado', '&7ayude sin confianza permanente.']
+guest_pass_guide_name: '&eGuía de Pases de Invitado'
+guest_pass_guide_lore: ['&7Los Pases de Invitado otorgan acceso temporal', '&7que expira automáticamente - incluso', '&7después de reiniciar el servidor.', ' ', '&8Expirar o revocar un pase nunca', '&8afecta los roles permanentes de esta parcela.']
+button_add_guest_pass: '&aEmitir Pase de Invitado'
+add_guest_pass_lore: ['&7Otorga acceso temporal a un jugador cercano.']
+guest_pass_add_title: '&8Emitir Pase de Invitado'
+guest_pass_add_click_lore: '&7Haz clic para elegir un preajuste.'
+add_trusted_player_name: '&a{PLAYER}'
+add_trusted_none_title: '&cNo Hay Jugadores Cerca'
+add_trusted_none_lore: ['&7¡Pídele a tu amigo que se acerque!']
+guest_pass_preset_title: '&8Preajuste: {PLAYER}'
+guest_pass_preset_name_VISITOR: '&eVisitante'
+guest_pass_preset_name_EVENT_GUEST: '&eInvitado de Evento'
+guest_pass_preset_name_TEMPORARY_BUILDER: '&eConstructor Temporal'
+guest_pass_preset_name_TEMPORARY_TRUSTED_GUEST: '&eInvitado de Confianza Temporal'
+guest_pass_preset_desc_VISITOR: ['&7Solo entrada y puertas/botones ordinarios.']
+guest_pass_preset_desc_EVENT_GUEST: ['&7Entrada más interacción segura de eventos.', '&7Sin construcción ni contenedores.']
+guest_pass_preset_desc_TEMPORARY_BUILDER: ['&7Acceso para construir y romper.', '&7Los contenedores permanecen cerrados.']
+guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST: ['&7Acceso a construir, romper y contenedores.']
+guest_pass_preset_container_warning: '&c⚠ ¡Otorga acceso a contenedores!'
+guest_pass_preset_click_lore: '&eHaz clic para elegir una duración'
+guest_pass_duration_title: '&8Duración: {PLAYER}'
+guest_pass_duration_label: '&e{TIME}'
+guest_pass_duration_click_lore: ['&7Haz clic para revisar y confirmar.']
+guest_pass_duration_unknown: '?'
+guest_pass_duration_days: '{DAYS}d'
+guest_pass_duration_hours: '{HOURS}h'
+guest_pass_duration_minutes: '{MINUTES}m'
+guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
+guest_pass_expiring_now: '<1m'
+guest_pass_confirm_title: '&8Confirmar Pase de Invitado'
+guest_pass_confirm_name: '&aConfirmar Pase de Invitado'
+guest_pass_confirm_player_line: '&7Jugador: &f{PLAYER}'
+guest_pass_confirm_preset_line: '&7Preajuste: &f{PRESET}'
+guest_pass_confirm_duration_line: '&7Duración: &f{TIME}'
+guest_pass_confirm_container_warning: '&c⚠ Este invitado podrá abrir cofres,'
+guest_pass_confirm_container_warning_2: '&cbarriles y otros contenedores de esta parcela.'
+guest_pass_confirm_click_lore: '&aHaz clic para confirmar y emitir'
+guest_pass_detail_title: '&8Pase: {PLAYER}'
+button_revoke_guest_pass: '&cRevocar Pase'
+revoke_guest_pass_lore: ['&7Termina de inmediato el acceso de este invitado.']

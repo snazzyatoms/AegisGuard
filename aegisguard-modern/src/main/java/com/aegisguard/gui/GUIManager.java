@@ -5,6 +5,7 @@ import com.aegisguard.audit.AuditAdminGUI;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
+import com.aegisguard.guestpass.GuestPassGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
 import com.aegisguard.util.EffectUtil;
 import org.bukkit.ChatColor;
@@ -72,6 +73,9 @@ public class GUIManager {
     // Staff Audit Ledger (1.3.0+)
     private final AuditAdminGUI auditAdminGUI;
 
+    // Temporary Guest Passes (1.3.0+ Milestone 2)
+    private final GuestPassGUI guestPassGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -128,6 +132,7 @@ public class GUIManager {
 
         this.migrationAdminGUI = new MigrationAdminGUI(plugin);
         this.auditAdminGUI = new AuditAdminGUI(plugin);
+        this.guestPassGUI = new GuestPassGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -240,6 +245,9 @@ public class GUIManager {
 
     // Staff Audit Ledger (1.3.0+)
     public AuditAdminGUI audit() { return auditAdminGUI; }
+
+    // Temporary Guest Passes (1.3.0+ Milestone 2)
+    public GuestPassGUI guestPasses() { return guestPassGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

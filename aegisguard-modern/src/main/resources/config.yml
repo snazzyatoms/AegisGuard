@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1272
+config_schema: 1273
 
 
 # ------------------------------------------------------------------------------
@@ -591,6 +591,27 @@ audit:
   retention_days: 90
 
   log_to_console: true
+
+
+# ==============================================================================
+# Temporary Guest Passes (1.3.0+, Milestone 2)
+# ==============================================================================
+# Owners can hand out short-lived access from the plot menu's "Guest Passes" button
+# without granting a permanent role. Passes always expire automatically - even across
+# a server restart - and revoking/expiring one never touches permanent roles/trust.
+guest_passes:
+  enabled: true
+
+  # Safety cap on how many passes can be active on a single plot at once.
+  max_active_per_plot: 10
+
+  # Longest duration (in minutes) an owner may choose, regardless of preset.
+  # 10080 minutes = 7 days.
+  max_duration_minutes: 10080
+
+  # Duration options offered in the GUI, in minutes. Values above max_duration_minutes
+  # are clamped automatically.
+  duration_presets_minutes: [15, 30, 60, 120, 360, 720, 1440, 4320, 10080]
 
 
 # ==============================================================================

@@ -182,6 +182,11 @@ public class YMLDataStore implements IDataStore {
                         plot.deserializeRoleFlags(roleFlagsBlob);
                     }
 
+                    String guestPassesBlob = sec.getString("guest-passes");
+                    if (guestPassesBlob != null && !guestPassesBlob.isEmpty()) {
+                        plot.deserializeGuestPasses(guestPassesBlob);
+                    }
+
                     for (String uuidStr : sec.getStringList("liked-by")) {
                         try { plot.toggleLike(UUID.fromString(uuidStr)); }
                         catch (IllegalArgumentException ignored) {}
@@ -470,6 +475,9 @@ public class YMLDataStore implements IDataStore {
 
         String roleFlagsBlob = plot.serializeRoleFlags();
         sec.set("role-flags", roleFlagsBlob.isEmpty() ? null : roleFlagsBlob);
+
+        String guestPassesBlob = plot.serializeGuestPasses();
+        sec.set("guest-passes", guestPassesBlob.isEmpty() ? null : guestPassesBlob);
 
         List<String> liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.toList());
         sec.set("liked-by", liked.isEmpty() ? null : liked);

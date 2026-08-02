@@ -2,6 +2,8 @@ package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
+import com.aegisguard.guestpass.GuestPass;
+import com.aegisguard.guestpass.GuestPassPreset;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,6 +46,11 @@ public class Plot {
 
     // Role flag overrides (role -> flag -> TriState)
     private final Map<String, Map<String, TriState>> roleFlagStates = new ConcurrentHashMap<>();
+
+    // --- GUEST PASSES (Milestone 2) ---
+    // Additive, time-limited access. Kept entirely separate from playerRoles so a pass never
+    // grants management rights and never overwrites/removes permanent trust on expiry or revoke.
+    private final Map<UUID, GuestPass> guestPasses = new ConcurrentHashMap<>();
 
     // --- PLOT META ---
     private String plotName;
@@ -334,6 +341,7 @@ public class Plot {
         if (playerUUID == null) return;
         if (!bannedPlayers.contains(playerUUID)) bannedPlayers.add(playerUUID);
         playerRoles.remove(playerUUID);
+        guestPasses.remove(playerUUID);
     }
 
     public void removeBan(UUID playerUUID) {
@@ -348,6 +356,7 @@ public class Plot {
         UUID uuid = player.getUniqueId();
         if (isBanned(uuid)) return false;
         if (isRentedBy(uuid)) return true;
+        if (getActiveGuestPass(uuid) != null) return true;
         String role = getRole(uuid);
         return role != null && !role.equalsIgnoreCase("visitor");
     }
@@ -386,6 +395,15 @@ public class Plot {
                     return true;
                 }
             }
+        }
+
+        // Temporary Guest Passes (Milestone 2) grant additive, time-limited access on top of
+        // whatever permanent role (if any) the player already has. A pass never overwrites or
+        // removes permanent trust: if its tokens don't cover this permission, we simply fall
+        // through to the normal role-based check below.
+        GuestPass guestPass = getActiveGuestPass(playerUUID);
+        if (guestPass != null && guestPass.hasPermission(permission)) {
+            return true;
         }
 
         String role = getRole(playerUUID);
@@ -945,6 +963,123 @@ public class Plot {
         playerRoles.clear();
         bannedPlayers.clear();
         roleFlagStates.clear();
+        guestPasses.clear();
+    }
+
+    // ---------------------------------------------------------------------
+    // Guest Passes (Milestone 2 - Temporary Guest Passes)
+    // ---------------------------------------------------------------------
+
+    /** Live view of every stored pass (expired or not). Prefer {@link #getActiveGuestPasses()} for display. */
+    public Map<UUID, GuestPass> getGuestPasses() {
+        return guestPasses;
+    }
+
+    public GuestPass getGuestPass(UUID playerUUID) {
+        return playerUUID == null ? null : guestPasses.get(playerUUID);
+    }
+
+    /** Returns the pass only if it exists and has not expired as of {@code now}. */
+    public GuestPass getActiveGuestPass(UUID playerUUID, long now) {
+        GuestPass pass = getGuestPass(playerUUID);
+        if (pass == null || pass.isExpired(now)) return null;
+        return pass;
+    }
+
+    public GuestPass getActiveGuestPass(UUID playerUUID) {
+        return getActiveGuestPass(playerUUID, System.currentTimeMillis());
+    }
+
+    /** Issuing a new pass for a player replaces any previous pass they held on this plot. */
+    public void addGuestPass(GuestPass pass) {
+        if (pass == null) return;
+        guestPasses.put(pass.getPlayerId(), pass);
+    }
+
+    public boolean revokeGuestPass(UUID playerUUID) {
+        if (playerUUID == null) return false;
+        return guestPasses.remove(playerUUID) != null;
+    }
+
+    /** Every currently active (non-expired) pass, for GUI listing. */
+    public List<GuestPass> getActiveGuestPasses() {
+        long now = System.currentTimeMillis();
+        List<GuestPass> active = new ArrayList<>();
+        for (GuestPass pass : guestPasses.values()) {
+            if (pass != null && !pass.isExpired(now)) active.add(pass);
+        }
+        return active;
+    }
+
+    /**
+     * Removes every expired pass and returns the ones that were removed, so a caller (the expiry
+     * sweep task) can notify players and write audit entries. Never touches {@code playerRoles}.
+     */
+    public List<GuestPass> pruneExpiredGuestPasses(long now) {
+        List<GuestPass> expired = new ArrayList<>();
+        Iterator<Map.Entry<UUID, GuestPass>> it = guestPasses.entrySet().iterator();
+        while (it.hasNext()) {
+            GuestPass pass = it.next().getValue();
+            if (pass == null || pass.isExpired(now)) {
+                if (pass != null) expired.add(pass);
+                it.remove();
+            }
+        }
+        return expired;
+    }
+
+    /**
+     * Entries are joined with {@code ~} (not {@code ;}) because this blob is itself embedded as
+     * one {@code key=value} pair inside a {@code ;}-delimited settings blob by
+     * {@code SQLDataStore.serializeSettings}; using {@code ;} here would corrupt that outer split
+     * as soon as a plot had more than one active pass.
+     */
+    public String serializeGuestPasses() {
+        if (guestPasses.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (GuestPass pass : guestPasses.values()) {
+            if (pass == null) continue;
+            String perms = String.join(",", pass.getPermissions());
+            String issuer = pass.getIssuerId() == null ? "" : pass.getIssuerId().toString();
+            entries.add(String.join("|",
+                    pass.getPlayerId().toString(),
+                    pass.getPlayerName(),
+                    pass.getPreset().name(),
+                    perms,
+                    issuer,
+                    pass.getIssuerName(),
+                    String.valueOf(pass.getIssuedAt()),
+                    String.valueOf(pass.getExpiresAt())
+            ));
+        }
+        return String.join("~", entries);
+    }
+
+    public void deserializeGuestPasses(String serialized) {
+        guestPasses.clear();
+        if (serialized == null || serialized.isBlank()) return;
+
+        for (String entry : serialized.split("~")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 8);
+            if (parts.length != 8) continue;
+
+            try {
+                UUID playerId = UUID.fromString(parts[0]);
+                String playerName = parts[1];
+                GuestPassPreset preset = GuestPassPreset.valueOf(parts[2].toUpperCase(Locale.ROOT));
+                Set<String> perms = parts[3].isBlank()
+                        ? Set.of()
+                        : new HashSet<>(Arrays.asList(parts[3].split(",")));
+                UUID issuerId = parts[4].isBlank() ? null : UUID.fromString(parts[4]);
+                String issuerName = parts[5];
+                long issuedAt = Long.parseLong(parts[6]);
+                long expiresAt = Long.parseLong(parts[7]);
+
+                guestPasses.put(playerId, new GuestPass(playerId, playerName, preset, perms,
+                        issuerId, issuerName, issuedAt, expiresAt));
+            } catch (Exception ignored) {}
+        }
     }
 
     // ---------------------------------------------------------------------

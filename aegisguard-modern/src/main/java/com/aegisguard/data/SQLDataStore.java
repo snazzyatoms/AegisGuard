@@ -783,6 +783,9 @@ public class SQLDataStore implements IDataStore {
         String roleFlags = plot.serializeRoleFlags();
         if (!roleFlags.isEmpty()) add.accept("roleFlags", roleFlags);
 
+        String guestPasses = plot.serializeGuestPasses();
+        if (!guestPasses.isEmpty()) add.accept("guestPasses", guestPasses);
+
         return sb.toString();
     }
 
@@ -861,6 +864,7 @@ public class SQLDataStore implements IDataStore {
                     }
 
                     case "roleFlags" -> plot.deserializeRoleFlags(value);
+                    case "guestPasses" -> plot.deserializeGuestPasses(value);
                 }
             } catch (Exception ignored) {}
         }

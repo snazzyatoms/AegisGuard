@@ -139,6 +139,7 @@ public class AegisGuard extends JavaPlugin {
 
     // Staff Audit Ledger (1.3.0+)
     private AuditService auditService;
+    private com.aegisguard.guestpass.GuestPassService guestPassService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -153,6 +154,7 @@ public class AegisGuard extends JavaPlugin {
     private Object mobBarrierTask;
     private Object claimBlockTask;
     private Object rentalExpiryTask;
+    private Object guestPassExpiryTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
@@ -225,6 +227,7 @@ public class AegisGuard extends JavaPlugin {
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public ExpansionRequestManager expansions() { return expansionManager; }
     public AuditService audit() { return auditService; }
+    public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -283,6 +286,7 @@ public class AegisGuard extends JavaPlugin {
         expansionManager = new ExpansionRequestManager(this);
         snapshotManager = new SnapshotManager(this);
         auditService = new AuditService(this);
+        guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -380,6 +384,7 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         startClaimBlockTask();
         startRentalExpiryTask();
+        startGuestPassExpiryTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -417,6 +422,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
+        cancelTaskReflectively(guestPassExpiryTask);
 
         // Save plot + player data safely
         try {
@@ -905,6 +911,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
+        cancelTaskReflectively(guestPassExpiryTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -912,6 +919,7 @@ public class AegisGuard extends JavaPlugin {
         mobBarrierTask = null;
         claimBlockTask = null;
         rentalExpiryTask = null;
+        guestPassExpiryTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -919,6 +927,7 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         startClaimBlockTask();
         startRentalExpiryTask();
+        startGuestPassExpiryTask();
     }
 
     private void startRentalExpiryTask() {
@@ -961,6 +970,18 @@ public class AegisGuard extends JavaPlugin {
                 if (owner != null) {
                     runMain(owner, () -> messages.send(owner, "market-owner-rental-expired"));
                 }
+            }
+        }, 20L, 1_200L);
+    }
+
+    private void startGuestPassExpiryTask() {
+        if (guestPassService == null || !guestPassService.isEnabled()) return;
+
+        guestPassExpiryTask = runGlobalRepeating(() -> {
+            try {
+                guestPassService.runExpirySweep();
+            } catch (Throwable t) {
+                getLogger().warning("Guest Pass expiry sweep error: " + t.getMessage());
             }
         }, 20L, 1_200L);
     }

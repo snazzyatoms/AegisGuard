@@ -161,6 +161,17 @@ public class PlayerGUI {
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
 
+        // Guest Passes (Slot 23)
+        Material guestPassIcon = canManage ? Material.NAME_TAG : Material.PAPER;
+        inv.setItem(23, GUIManager.createItem(
+                guestPassIcon,
+                t(player, "button_guest_passes", "&d🎫 Guest Passes"),
+                tl(player, canManage ? "guest_passes_lore" : "guest_passes_locked_lore",
+                        canManage
+                                ? List.of("&7Grant temporary, self-expiring", "&7access without permanent trust.")
+                                : List.of("&cStand inside a claim you manage", "&cto issue Guest Passes."))
+        ));
+
         // Expansion (Slot 24)
         inv.setItem(24, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
@@ -336,6 +347,17 @@ public class PlayerGUI {
 
             case 22 -> {
                 if (plot != null && canManage) plugin.gui().roles().openRolesMenu(player, plot);
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 23 -> {
+                if (plot != null && canManage) plugin.gui().guestPasses().open(player);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
                             plot == null

@@ -13,7 +13,13 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          # Build with a JDK 21 toolchain (the shaded output still targets release 17 via
+          # maven-compiler-plugin's <release> setting, so the shipped jar's bytecode and
+          # supported server runtimes are unchanged). A real JDK 17 javac cannot read the
+          # bluemap-api dependency jar, which the BlueMap maven repo currently publishes
+          # compiled with Java 21 (class file version 65) under the 2.x coordinates this
+          # project depends on; JDK 21 can read both old and new class file versions.
+          java-version: "21"
           cache: maven
       - name: Compile and test
         run: mvn --batch-mode clean verify

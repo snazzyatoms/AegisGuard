@@ -1110,6 +1110,39 @@ admin_migration_lore:
 - ' '
 - '&eClic para abrir'
 
+button_admin_audit: '&eRegistro de Auditoría'
+admin_audit_lore:
+- '&7Revisá restauraciones, reparaciones,'
+- '&7migraciones, cambios de bypass y'
+- '&7ajustes de ClaimBlocks del staff.'
+- ' '
+- '&eClic para abrir'
+
+audit_admin_title: '&e&lRegistro de Auditoría'
+audit_disabled: '&cEl registro de auditoría está deshabilitado.'
+audit_none_title: '&cSin Registros'
+audit_none_lore:
+- '&7Ningún registro coincide'
+- '&7con este filtro todavía.'
+audit_filter_button: '&bFiltro: &f{FILTER}'
+audit_filter_lore:
+- '&7Clic para cambiar entre categorías.'
+audit_filter_all: 'Todas las Categorías'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore:
+- '&7Responsable: &f{ACTOR}'
+- '&7Objetivo: &f{TARGET}'
+- '&7Cuándo: &f{AGE} atrás'
+- ' '
+- '&f{SUMMARY}'
+audit_entry_detail: '&e[Auditoría] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Restauración de Instantánea'
+audit_category_doctor_repair: 'Reparación del Doctor'
+audit_category_migration: 'Migración'
+audit_category_admin_bypass: 'Bypass de Administrador'
+audit_category_claim_block_adjust: 'Ajuste de ClaimBlocks'
+audit_category_guest_pass: 'Pase de Invitado'
+
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'
 admin_toggle_format: '{NAME}: {STATE}'

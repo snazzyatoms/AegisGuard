@@ -954,6 +954,40 @@ admin_migration_lore:
   - '&7claims from other plugins.'
   - ' '
   - '&eClick to open.'
+
+button_admin_audit: '&eStaff Audit Ledger'
+admin_audit_lore:
+  - '&7Behold restorations, repairs,'
+  - '&7migrations, bypass toggles, and'
+  - '&7ClaimBlock decrees wrought by staff.'
+  - ' '
+  - '&eClick to open.'
+
+audit_admin_title: '&e&lStaff Audit Ledger'
+audit_disabled: '&cThe audit ledger lieth dormant.'
+audit_none_title: '&cNo Deeds Recorded'
+audit_none_lore:
+  - '&7No deeds match this filter'
+  - '&7as of yet.'
+audit_filter_button: '&bFilter: &f{FILTER}'
+audit_filter_lore:
+  - '&7Click to cycle through the categories.'
+audit_filter_all: 'All Categories'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore:
+  - '&7Actor: &f{ACTOR}'
+  - '&7Target: &f{TARGET}'
+  - '&7When: &f{AGE} hence'
+  - ' '
+  - '&f{SUMMARY}'
+audit_entry_detail: '&e[Audit] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Snapshot Restore'
+audit_category_doctor_repair: 'Doctor Repair'
+audit_category_migration: 'Migration'
+audit_category_admin_bypass: 'Admin Bypass'
+audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
+audit_category_guest_pass: 'Guest Pass'
+
 local_market_stalls_name: '&6Trade Stalls'
 local_market_stalls_lore:
   - '&7Browse built-in TradeStalls and'

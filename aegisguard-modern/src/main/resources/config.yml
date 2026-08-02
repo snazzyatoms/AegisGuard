@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1271
+config_schema: 1272
 
 
 # ------------------------------------------------------------------------------
@@ -569,6 +569,28 @@ snapshots:
     log_create: true
     log_rollback: true
     log_delete: true
+
+
+# ==============================================================================
+# Staff Audit Ledger (1.3.0+)
+# ==============================================================================
+# A single, central, staff-only record of high-impact administrative actions:
+# snapshot restores, Doctor repairs, migrations, admin bypass toggles, and
+# ClaimBlock adjustments. Stored in plugins/AegisGuard/audit-log.yml.
+#
+# This intentionally does NOT log ordinary player actions (claiming, trusting,
+# chatting, etc.) or export to Discord. View it in-game with /agadmin audit.
+audit:
+  enabled: true
+
+  # Maximum entries kept (in memory and on disk) for the /agadmin audit viewer.
+  max_entries: 500
+
+  # Entries older than this are pruned automatically. Set to 0 to disable
+  # age-based pruning (max_entries still applies).
+  retention_days: 90
+
+  log_to_console: true
 
 
 # ==============================================================================

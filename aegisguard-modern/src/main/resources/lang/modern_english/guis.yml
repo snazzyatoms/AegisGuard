@@ -1138,6 +1138,39 @@ admin_migration_lore:
   - ' '
   - '&eClick to open.'
 
+button_admin_audit: '&eStaff Audit Ledger'
+admin_audit_lore:
+  - '&7Review snapshot restores, Doctor'
+  - '&7repairs, migrations, bypass toggles,'
+  - '&7and ClaimBlock adjustments.'
+  - ' '
+  - '&eClick to open.'
+
+audit_admin_title: '&e&lStaff Audit Ledger'
+audit_disabled: '&cThe audit ledger is disabled.'
+audit_none_title: '&cNo Audit Entries'
+audit_none_lore:
+  - '&7No recorded actions match'
+  - '&7this filter yet.'
+audit_filter_button: '&bFilter: &f{FILTER}'
+audit_filter_lore:
+  - '&7Click to cycle through categories.'
+audit_filter_all: 'All Categories'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore:
+  - '&7Actor: &f{ACTOR}'
+  - '&7Target: &f{TARGET}'
+  - '&7When: &f{AGE} ago'
+  - ' '
+  - '&f{SUMMARY}'
+audit_entry_detail: '&e[Audit] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Snapshot Restore'
+audit_category_doctor_repair: 'Doctor Repair'
+audit_category_migration: 'Migration'
+audit_category_admin_bypass: 'Admin Bypass'
+audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
+audit_category_guest_pass: 'Guest Pass'
+
 toggle_on: '&aON'
 toggle_off: '&cOFF'
 admin_toggle_format: '{NAME}: {STATE}'

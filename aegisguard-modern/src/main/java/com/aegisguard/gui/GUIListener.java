@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 
 // --- IMPORTS (Holders) ---
+import com.aegisguard.audit.AuditAdminGUI.AuditHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
@@ -120,7 +121,8 @@ public class GUIListener implements Listener {
                 || holder instanceof StallListHolder
                 || holder instanceof StallManageHolder
                 || holder instanceof StallPreviewHolder
-                || holder instanceof SnapshotHolder;
+                || holder instanceof SnapshotHolder
+                || holder instanceof AuditHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -277,6 +279,11 @@ public class GUIListener implements Listener {
         else if (holder instanceof SnapshotHolder) {
             if (plugin.gui().snapshotAdmin() != null) {
                 plugin.gui().snapshotAdmin().handleClick(player, e);
+            }
+        }
+        else if (holder instanceof AuditHolder) {
+            if (plugin.gui().audit() != null) {
+                plugin.gui().audit().handleClick(player, e);
             }
         }
     }
@@ -506,6 +513,13 @@ public class GUIListener implements Listener {
                 if (!safeInvokeOpen(plugin.gui().snapshotAdmin(), player, page)) {
                     safeInvokeOpen(plugin.gui().snapshotAdmin(), player);
                 }
+            }
+            return;
+        }
+
+        if (holder instanceof AuditHolder castHolder) {
+            if (plugin.gui().audit() != null) {
+                plugin.gui().audit().open(player, castHolder.getFilter(), castHolder.getPage());
             }
             return;
         }

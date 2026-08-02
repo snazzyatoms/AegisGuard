@@ -1,6 +1,7 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.audit.AuditAdminGUI;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
@@ -68,6 +69,9 @@ public class GUIManager {
     private final SnapshotAdminGUI snapshotAdminGUI;
     private final MigrationAdminGUI migrationAdminGUI;
 
+    // Staff Audit Ledger (1.3.0+)
+    private final AuditAdminGUI auditAdminGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -123,6 +127,7 @@ public class GUIManager {
         }
 
         this.migrationAdminGUI = new MigrationAdminGUI(plugin);
+        this.auditAdminGUI = new AuditAdminGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -232,6 +237,9 @@ public class GUIManager {
     // ✅ Snapshot Admin
     public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
     public MigrationAdminGUI migration() { return migrationAdminGUI; }
+
+    // Staff Audit Ledger (1.3.0+)
+    public AuditAdminGUI audit() { return auditAdminGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

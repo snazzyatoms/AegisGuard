@@ -53,6 +53,7 @@ class ReleaseResourcesTest {
         assertTrue(permissions.containsKey("aegis.admin.doctor.repair"));
         assertTrue(permissions.containsKey("aegis.admin.rentals"));
         assertTrue(permissions.containsKey("aegis.discovery"));
+        assertTrue(permissions.containsKey("aegis.admin.audit"));
     }
 
     @Test
@@ -65,10 +66,11 @@ class ReleaseResourcesTest {
         }
         assertTrue(loaded instanceof Map<?, ?>, "config.yml must contain a YAML map");
         Map<String, Object> config = (Map<String, Object>) loaded;
-        assertEquals(1271, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1272, ((Number) config.get("config_schema")).intValue());
         assertTrue(config.containsKey("full_plot_renting"));
         assertTrue(config.containsKey("plot_discovery"));
         assertTrue(config.containsKey("territory_activity"));
+        assertTrue(config.containsKey("audit"));
     }
 
     private static boolean isYamlPrintable(int codePoint) {

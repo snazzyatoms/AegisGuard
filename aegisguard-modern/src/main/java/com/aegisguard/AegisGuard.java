@@ -3,6 +3,7 @@ package com.aegisguard;
 import com.aegisguard.api.AegisGuardAPI;
 import com.aegisguard.api.internal.DefaultAegisGuardAPI;
 import com.aegisguard.admin.AdminCommand;
+import com.aegisguard.audit.AuditService;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.claimblocks.ClaimBlockTask;
@@ -136,6 +137,9 @@ public class AegisGuard extends JavaPlugin {
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
 
+    // Staff Audit Ledger (1.3.0+)
+    private AuditService auditService;
+
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
@@ -220,6 +224,7 @@ public class AegisGuard extends JavaPlugin {
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public ExpansionRequestManager expansions() { return expansionManager; }
+    public AuditService audit() { return auditService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -277,6 +282,7 @@ public class AegisGuard extends JavaPlugin {
         effectUtil = new EffectUtil(this);
         expansionManager = new ExpansionRequestManager(this);
         snapshotManager = new SnapshotManager(this);
+        auditService = new AuditService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -335,6 +341,10 @@ public class AegisGuard extends JavaPlugin {
 
             try {
                 if (snapshotManager != null) snapshotManager.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (auditService != null) auditService.load();
             } catch (Throwable ignored) {}
 
             try {
@@ -440,6 +450,12 @@ public class AegisGuard extends JavaPlugin {
             if (expansionManager != null) expansionManager.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save expansion requests: " + t.getMessage());
+        }
+
+        try {
+            if (auditService != null) auditService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save the audit ledger: " + t.getMessage());
         }
 
         try {
@@ -718,6 +734,7 @@ public class AegisGuard extends JavaPlugin {
                 if (claimBlockExchange != null) claimBlockExchange.save();
                 if (snapshotManager != null) snapshotManager.save();
                 if (expansionManager != null) expansionManager.save();
+                if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
                 if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();

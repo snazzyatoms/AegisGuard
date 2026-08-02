@@ -89,6 +89,7 @@ permissions:
       aegis.admin.discovery: true
       aegis.admin.activity: true
       aegis.admin.world: true
+      aegis.admin.audit: true
 
   aegis.user:
     description: Recommended base permissions for regular players.
@@ -127,6 +128,7 @@ permissions:
       aegis.admin.discovery: true
       aegis.admin.activity: true
       aegis.admin.world: true
+      aegis.admin.audit: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -276,6 +278,10 @@ permissions:
 
   aegis.admin.activity:
     description: View activity history for any territory.
+    default: op
+
+  aegis.admin.audit:
+    description: View the staff Audit Ledger (snapshot restores, Doctor repairs, migrations, admin bypass toggles, and ClaimBlock adjustments).
     default: op
 
   # ---------------------------------------------------------------------------

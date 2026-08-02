@@ -196,6 +196,16 @@ public class PlayerGUI {
                 tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
         ));
 
+        // Realm Profile (Slot 13)
+        inv.setItem(13, GUIManager.createItem(
+                Material.NAME_TAG,
+                t(player, "button_realm_profile", "&3📜 Realm Profile"),
+                tl(player, canManage ? "realm_profile_button_lore" : "realm_profile_button_view_lore",
+                        canManage
+                                ? List.of("&7Manage this plot's name, category,", "&7greeting, and noticeboard.")
+                                : List.of("&7View this plot's public identity", "&7and noticeboard."))
+        ));
+
         // --- 4. ADVANCED FEATURES ---
 
         // Leveling (Slot 29)
@@ -391,6 +401,14 @@ public class PlayerGUI {
                             plot == null
                                     ? "&cYou must be standing inside a plot to do that."
                                     : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 13 -> {
+                if (plot != null) plugin.gui().realmProfile().open(player);
+                else {
+                    send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }

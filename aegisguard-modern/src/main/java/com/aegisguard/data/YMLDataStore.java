@@ -187,6 +187,11 @@ public class YMLDataStore implements IDataStore {
                         plot.deserializeGuestPasses(guestPassesBlob);
                     }
 
+                    String noticeboardBlob = sec.getString("noticeboard");
+                    if (noticeboardBlob != null && !noticeboardBlob.isEmpty()) {
+                        plot.deserializeNoticeboard(noticeboardBlob);
+                    }
+
                     if (sec.getBoolean("lockdown-active", false)) {
                         String actorStr = sec.getString("lockdown-activated-by", null);
                         UUID actorId = null;
@@ -487,6 +492,9 @@ public class YMLDataStore implements IDataStore {
 
         String guestPassesBlob = plot.serializeGuestPasses();
         sec.set("guest-passes", guestPassesBlob.isEmpty() ? null : guestPassesBlob);
+
+        String noticeboardBlob = plot.serializeNoticeboard();
+        sec.set("noticeboard", noticeboardBlob.isEmpty() ? null : noticeboardBlob);
 
         if (plot.isLockdownActive()) {
             sec.set("lockdown-active", true);

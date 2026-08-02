@@ -671,3 +671,14 @@ lockdown_deactivated: '&a&lEmergency Lockdown lifted. &7Normal access hath been 
 lockdown_disabled: '&cEmergency Lockdown is forbidden upon this server.'
 lockdown_invalid: '&cThat Lockdown decree is invalid.'
 lockdown_already_active: '&cThis holding already lieth under Emergency Lockdown.'
+
+# ------------------------------------------------------------
+# Realm Profiles and Noticeboards (1.3.0+, Milestone 4)
+# ------------------------------------------------------------
+noticeboard_disabled: '&cThe noticeboard is forbidden upon this server.'
+usage_notice_add: '&cUsage: /ag notice add <text>'
+notice_too_long: '&cThat notice is too lengthy (Max {MAX} chars).'
+notice_posted: '&a✔ Notice posted unto this holding''s noticeboard.'
+usage_notice_remove: '&cUsage: /ag notice remove <#>'
+notice_invalid_index: '&cThat is not a valid notice number. Use /ag notice list to behold them.'
+notice_removed: '&e✔ Notice removed.'

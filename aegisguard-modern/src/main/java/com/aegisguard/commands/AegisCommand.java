@@ -44,7 +44,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
-            "rename", "stuck", "setdesc",
+            "rename", "stuck", "setdesc", "notice", "profile",
             "consume", "ledger", "blocks",
             "group", "discover", "favorite", "activity",
             // ✅ Added: reload support (Codex + config)
@@ -264,6 +264,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "rename" -> handleRename(p, args);
 
             case "setdesc" -> handleSetDesc(p, args);
+
+            case "notice" -> handleNotice(p, args);
+
+            case "profile" -> plugin.gui().realmProfile().open(p);
 
             case "market" -> openMarketMenu(p, args);
 
@@ -928,6 +932,97 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         sendKey(p, "plot_desc_updated", "&a✔ Plot description updated.");
         plugin.effects().playConfirm(p);
+    }
+
+    // --------------------------------------------------
+    // Realm Profile Noticeboard (Milestone 4)
+    // --------------------------------------------------
+
+    private void handleNotice(Player p, String[] args) {
+        if (!plugin.getConfig().getBoolean("realm_profiles.enabled", true)
+                || !plugin.getConfig().getBoolean("realm_profiles.noticeboard.enabled", true)) {
+            sendKey(p, "noticeboard_disabled", "&cThe noticeboard is disabled on this server.");
+            return;
+        }
+
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sendMsg(p, "&e/ag notice add <text> &7| &e/ag notice remove <#> &7| &e/ag notice list");
+            return;
+        }
+
+        String action = args[1].toLowerCase(Locale.ROOT);
+
+        if (action.equals("list")) {
+            plugin.gui().realmProfile().openNoticeboard(p, plot);
+            return;
+        }
+
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+
+        if (action.equals("add")) {
+            if (args.length < 3) {
+                sendKey(p, "usage_notice_add", "&cUsage: /ag notice add <text>");
+                return;
+            }
+            String text = Arrays.stream(args).skip(2).collect(Collectors.joining(" "));
+            text = ChatColor.translateAlternateColorCodes('&', text);
+
+            int maxLength = Math.max(1, plugin.getConfig().getInt("realm_profiles.noticeboard.max_length", 200));
+            if (text.length() > maxLength) {
+                sendKey(p, "notice_too_long", "&cThat notice is too long (Max {MAX} chars).",
+                        Map.of("MAX", String.valueOf(maxLength)));
+                return;
+            }
+
+            int maxEntries = Math.max(1, plugin.getConfig().getInt("realm_profiles.noticeboard.max_entries", 8));
+            plot.postNotice(com.aegisguard.profile.PlotNotice.post(p.getUniqueId(), p.getName(), text), maxEntries);
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_POSTED", "Posted a noticeboard notice.");
+
+            sendKey(p, "notice_posted", "&a✔ Notice posted to this plot's noticeboard.");
+            plugin.effects().playConfirm(p);
+            return;
+        }
+
+        if (action.equals("remove")) {
+            if (args.length < 3) {
+                sendKey(p, "usage_notice_remove", "&cUsage: /ag notice remove <#>");
+                return;
+            }
+            List<com.aegisguard.profile.PlotNotice> notices = plot.getNoticeboard();
+            int index;
+            try {
+                index = Integer.parseInt(args[2]) - 1;
+            } catch (NumberFormatException ex) {
+                sendKey(p, "usage_notice_remove", "&cUsage: /ag notice remove <#>");
+                return;
+            }
+            if (index < 0 || index >= notices.size()) {
+                sendKey(p, "notice_invalid_index", "&cThat is not a valid notice number. Use /ag notice list to see them.");
+                return;
+            }
+
+            plot.removeNotice(notices.get(index).getId());
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_REMOVED", "Removed a noticeboard notice.");
+
+            sendKey(p, "notice_removed", "&e✔ Notice removed.");
+            plugin.effects().playConfirm(p);
+            return;
+        }
+
+        sendMsg(p, "&e/ag notice add <text> &7| &e/ag notice remove <#> &7| &e/ag notice list");
     }
 
     // --------------------------------------------------
@@ -2165,6 +2260,9 @@ private void handleUnsell(Player p) {
 
             if (args[0].equalsIgnoreCase("discover")) {
                 return StringUtil.copyPartialMatches(args[1], List.of("favorites", "category", "visibility"), new ArrayList<>());
+            }
+            if (args[0].equalsIgnoreCase("notice")) {
+                return StringUtil.copyPartialMatches(args[1], List.of("add", "remove", "list"), new ArrayList<>());
             }
         }
 

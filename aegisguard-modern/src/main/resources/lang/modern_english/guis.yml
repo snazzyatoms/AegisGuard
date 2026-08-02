@@ -1660,3 +1660,51 @@ lockdown_confirm_activate_name: '&cConfirm Activation'
 lockdown_confirm_deactivate_name: '&aConfirm Deactivation'
 lockdown_confirm_activate_lore: ['&7Everyone except you and staff will', '&7instantly lose build, break, and', '&7container access on this plot.', ' ', '&7Doors and buttons keep working, so', '&7nobody gets trapped inside.', ' ', '&aClick to activate lockdown.']
 lockdown_confirm_deactivate_lore: ['&7This plot will immediately return to', '&7its normal roles and permissions.', ' ', '&aClick to deactivate lockdown.']
+
+# ------------------------------------------------------------
+# Realm Profiles and Noticeboards (1.3.0+, Milestone 4)
+# ------------------------------------------------------------
+button_realm_profile: '&3📜 Realm Profile'
+realm_profile_button_lore: ['&7Manage this plot''s name, category,', '&7greeting, and noticeboard.']
+realm_profile_button_view_lore: ['&7View this plot''s public identity', '&7and noticeboard.']
+realm_profile_menu_title: '&3Realm Profile'
+realm_profile_header_name: '&3&lRealm Profile'
+realm_profile_name_line: '&7Name: &f{NAME}'
+realm_profile_desc_line: '&7"{DESC}"'
+realm_profile_no_desc: '&8No description set yet.'
+realm_profile_rename_hint: '&8Use /ag rename <name> to change this.'
+realm_profile_desc_hint: '&8Use /ag setdesc <text> to change this.'
+realm_profile_category_name: '&6Category: &f{CATEGORY}'
+realm_profile_category_lore: ['&7How this plot is grouped in', '&7the Discover browser.']
+realm_profile_category_click: '&eClick to cycle to the next category.'
+realm_profile_category_locked: '&8Only the owner can change this.'
+realm_profile_category_build: 'Build'
+realm_profile_category_shop: 'Shop'
+realm_profile_category_town: 'Town'
+realm_profile_category_farm: 'Farm'
+realm_profile_category_event: 'Event'
+realm_profile_category_other: 'Other'
+realm_profile_visible_name: '&a&lPublicly Discoverable'
+realm_profile_hidden_name: '&7&lHidden From Discovery'
+realm_profile_visible_lore: ['&7This plot can appear in the', '&7public Discover browser.']
+realm_profile_hidden_lore: ['&7This plot is hidden from the', '&7public Discover browser.']
+realm_profile_visibility_click: '&eClick to toggle visibility.'
+realm_profile_greeting_name: '&bEntry Greeting'
+realm_profile_no_greeting: '&8No entry greeting set yet.'
+realm_profile_entry_title_line: '&7Title: &f{TITLE}'
+realm_profile_welcome_line: '&7Chat: &f{MESSAGE}'
+realm_profile_greeting_hint: '&8Use /ag rename and /ag welcome to change this.'
+realm_profile_noticeboard_name: '&dNoticeboard'
+realm_profile_noticeboard_lore: ['&7Rules, event details, shop info,', '&7or announcements for visitors.']
+realm_profile_noticeboard_count: '&7Notices: &f{COUNT}/{MAX}'
+realm_profile_noticeboard_click: '&eClick to open the noticeboard.'
+noticeboard_menu_title: '&dNoticeboard'
+noticeboard_header_name: '&d&lNoticeboard'
+noticeboard_add_hint_lore: ['&7Use /ag notice add <text> to post,', '&7and /ag notice remove <#> to remove.']
+noticeboard_none_title: '&7No Notices Yet'
+noticeboard_none_lore: ['&7This plot has not posted any', '&7rules, events, or announcements.']
+noticeboard_entry_name: '&e📌 Notice'
+noticeboard_entry_author_line: '&7Posted by: &f{PLAYER}'
+noticeboard_entry_age_line: '&7When: &f{AGE} ago'
+noticeboard_entry_remove_hint: '&cClick to remove this notice.'
+visit_plot_notice_count: '&7📌 {COUNT} noticeboard notice(s)'

@@ -14,6 +14,8 @@ import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
+import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
+import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -138,7 +140,9 @@ public class GUIListener implements Listener {
                 || holder instanceof GuestPassConfirmHolder
                 || holder instanceof GuestPassDetailHolder
                 || holder instanceof LockdownMenuHolder
-                || holder instanceof LockdownConfirmHolder;
+                || holder instanceof LockdownConfirmHolder
+                || holder instanceof RealmProfileMenuHolder
+                || holder instanceof NoticeboardHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -325,6 +329,12 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof LockdownConfirmHolder castHolder) {
             plugin.gui().lockdownGui().handleConfirmClick(player, e, castHolder);
+        }
+        else if (holder instanceof RealmProfileMenuHolder castHolder) {
+            plugin.gui().realmProfile().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof NoticeboardHolder castHolder) {
+            plugin.gui().realmProfile().handleNoticeboardClick(player, e, castHolder);
         }
     }
 
@@ -586,6 +596,15 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof LockdownConfirmHolder castHolder) {
             plugin.gui().lockdownGui().openMenu(player, castHolder.getPlot());
+            return;
+        }
+
+        if (holder instanceof RealmProfileMenuHolder castHolder) {
+            plugin.gui().realmProfile().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof NoticeboardHolder castHolder) {
+            plugin.gui().realmProfile().openNoticeboard(player, castHolder.getPlot());
             return;
         }
 

@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
 import com.aegisguard.guestpass.GuestPass;
 import com.aegisguard.guestpass.GuestPassPreset;
+import com.aegisguard.profile.PlotNotice;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -61,6 +63,11 @@ public class Plot {
     private volatile long lockdownActivatedAt = 0L;
     private volatile UUID lockdownActivatedBy;
     private volatile String lockdownActivatedByName = "Unknown";
+
+    // --- REALM PROFILE NOTICEBOARD (Milestone 4) ---
+    // Short, owner-moderated public notices (rules, event details, shop info, announcements).
+    // Purely presentational - never affects permissions, ownership, or protection behavior.
+    private final List<PlotNotice> noticeboard = new CopyOnWriteArrayList<>();
 
     // --- PLOT META ---
     private String plotName;
@@ -1181,6 +1188,91 @@ public class Plot {
             if (token != null && needle.equals(token.trim().toUpperCase(Locale.ROOT))) return true;
         }
         return false;
+    }
+
+    // ---------------------------------------------------------------------
+    // Realm Profile Noticeboard (Milestone 4 - Realm Profiles and Noticeboards)
+    // ---------------------------------------------------------------------
+
+    /** Chronological (oldest first) view of every posted notice. */
+    public List<PlotNotice> getNoticeboard() {
+        return List.copyOf(noticeboard);
+    }
+
+    public PlotNotice getNotice(UUID noticeId) {
+        if (noticeId == null) return null;
+        for (PlotNotice notice : noticeboard) {
+            if (notice != null && noticeId.equals(notice.getId())) return notice;
+        }
+        return null;
+    }
+
+    /**
+     * Posts a new notice, dropping the oldest entry first once the plot is already at
+     * {@code maxEntries}. Moderation (explicit removal) is always a separate, deliberate call -
+     * posting never silently edits an existing notice.
+     */
+    public void postNotice(PlotNotice notice, int maxEntries) {
+        if (notice == null || maxEntries <= 0) return;
+        while (noticeboard.size() >= maxEntries) {
+            PlotNotice oldest = noticeboard.isEmpty() ? null : noticeboard.get(0);
+            if (oldest == null || !noticeboard.remove(oldest)) break;
+        }
+        noticeboard.add(notice);
+    }
+
+    /** Removes a single notice by id. Returns {@code true} if a notice was actually removed. */
+    public boolean removeNotice(UUID noticeId) {
+        if (noticeId == null) return false;
+        return noticeboard.removeIf(notice -> notice != null && noticeId.equals(notice.getId()));
+    }
+
+    public void clearNoticeboard() {
+        noticeboard.clear();
+    }
+
+    /**
+     * Entries are joined with {@code ~} for the same reason as
+     * {@link #serializeGuestPasses()}. Each notice's free-form text is Base64-encoded so
+     * owner-authored content can never break this delimiter scheme, even if it contains
+     * {@code |}, {@code ~}, {@code ;}, or newlines.
+     */
+    public String serializeNoticeboard() {
+        if (noticeboard.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (PlotNotice notice : noticeboard) {
+            if (notice == null) continue;
+            String authorId = notice.getAuthorId() == null ? "" : notice.getAuthorId().toString();
+            String encodedText = Base64.getEncoder().encodeToString(notice.getText().getBytes(StandardCharsets.UTF_8));
+            entries.add(String.join("|",
+                    notice.getId().toString(),
+                    authorId,
+                    notice.getAuthorName(),
+                    String.valueOf(notice.getCreatedAt()),
+                    encodedText
+            ));
+        }
+        return String.join("~", entries);
+    }
+
+    public void deserializeNoticeboard(String serialized) {
+        noticeboard.clear();
+        if (serialized == null || serialized.isBlank()) return;
+
+        for (String entry : serialized.split("~")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 5);
+            if (parts.length != 5) continue;
+
+            try {
+                UUID id = UUID.fromString(parts[0]);
+                UUID authorId = parts[1].isBlank() ? null : UUID.fromString(parts[1]);
+                String authorName = parts[2];
+                long createdAt = Long.parseLong(parts[3]);
+                String text = new String(Base64.getDecoder().decode(parts[4]), StandardCharsets.UTF_8);
+                noticeboard.add(new PlotNotice(id, authorId, authorName, createdAt, text));
+            } catch (Exception ignored) {}
+        }
     }
 
     // ---------------------------------------------------------------------

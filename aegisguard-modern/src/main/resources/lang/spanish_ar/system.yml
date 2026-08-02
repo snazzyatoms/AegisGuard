@@ -506,3 +506,14 @@ lockdown_deactivated: '&a&lBloqueo de Emergencia desactivado. &7Se restauró el 
 lockdown_disabled: '&cEl Bloqueo de Emergencia está deshabilitado en este servidor.'
 lockdown_invalid: '&cEsa solicitud de Bloqueo no es válida.'
 lockdown_already_active: '&cEsta parcela ya está en Bloqueo de Emergencia.'
+
+# ------------------------------------------------------------
+# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
+# ------------------------------------------------------------
+noticeboard_disabled: '&cEl tablón de anuncios está deshabilitado en este servidor.'
+usage_notice_add: '&cUso: /ag notice add <texto>'
+notice_too_long: '&cEse anuncio es demasiado largo (Máx {MAX} caracteres).'
+notice_posted: '&a✔ Anuncio publicado en el tablón de esta parcela.'
+usage_notice_remove: '&cUso: /ag notice remove <#>'
+notice_invalid_index: '&cEse no es un número de anuncio válido. Usá /ag notice list para verlos.'
+notice_removed: '&e✔ Anuncio eliminado.'

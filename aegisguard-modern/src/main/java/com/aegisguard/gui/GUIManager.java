@@ -7,6 +7,7 @@ import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.guestpass.GuestPassGUI;
 import com.aegisguard.lockdown.LockdownGUI;
+import com.aegisguard.profile.RealmProfileGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
 import com.aegisguard.util.EffectUtil;
 import org.bukkit.ChatColor;
@@ -80,6 +81,9 @@ public class GUIManager {
     // Emergency Plot Lockdown (1.3.0+ Milestone 3)
     private final LockdownGUI lockdownGUI;
 
+    // Realm Profiles & Noticeboards (1.3.0+ Milestone 4)
+    private final RealmProfileGUI realmProfileGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -138,6 +142,7 @@ public class GUIManager {
         this.auditAdminGUI = new AuditAdminGUI(plugin);
         this.guestPassGUI = new GuestPassGUI(plugin);
         this.lockdownGUI = new LockdownGUI(plugin);
+        this.realmProfileGUI = new RealmProfileGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -256,6 +261,7 @@ public class GUIManager {
 
     // Emergency Plot Lockdown (1.3.0+ Milestone 3)
     public LockdownGUI lockdownGui() { return lockdownGUI; }
+    public RealmProfileGUI realmProfile() { return realmProfileGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

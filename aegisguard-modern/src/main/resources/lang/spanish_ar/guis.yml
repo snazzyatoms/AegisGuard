@@ -2141,3 +2141,51 @@ lockdown_confirm_activate_name: '&cConfirmar Activación'
 lockdown_confirm_deactivate_name: '&aConfirmar Desactivación'
 lockdown_confirm_activate_lore: ['&7Todos excepto vos y el staff perderán', '&7al instante acceso a construir, romper', '&7y usar contenedores en esta parcela.', ' ', '&7Las puertas y botones seguirán funcionando,', '&7así que nadie quedará atrapado.', ' ', '&aHacé clic para activar el bloqueo.']
 lockdown_confirm_deactivate_lore: ['&7Esta parcela volverá de inmediato a', '&7sus roles y permisos normales.', ' ', '&aHacé clic para desactivar el bloqueo.']
+
+# ------------------------------------------------------------
+# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
+# ------------------------------------------------------------
+button_realm_profile: '&3📜 Perfil de Parcela'
+realm_profile_button_lore: ['&7Gestioná el nombre, categoría,', '&7saludo y tablón de esta parcela.']
+realm_profile_button_view_lore: ['&7Mirá la identidad pública', '&7y el tablón de esta parcela.']
+realm_profile_menu_title: '&3Perfil de Parcela'
+realm_profile_header_name: '&3&lPerfil de Parcela'
+realm_profile_name_line: '&7Nombre: &f{NAME}'
+realm_profile_desc_line: '&7"{DESC}"'
+realm_profile_no_desc: '&8Todavía no hay descripción.'
+realm_profile_rename_hint: '&8Usá /ag rename <nombre> para cambiar esto.'
+realm_profile_desc_hint: '&8Usá /ag setdesc <texto> para cambiar esto.'
+realm_profile_category_name: '&6Categoría: &f{CATEGORY}'
+realm_profile_category_lore: ['&7Cómo se agrupa esta parcela en', '&7el navegador de Descubrimiento.']
+realm_profile_category_click: '&eHacé clic para pasar a la siguiente categoría.'
+realm_profile_category_locked: '&8Solo el dueño puede cambiar esto.'
+realm_profile_category_build: 'Construcción'
+realm_profile_category_shop: 'Tienda'
+realm_profile_category_town: 'Pueblo'
+realm_profile_category_farm: 'Granja'
+realm_profile_category_event: 'Evento'
+realm_profile_category_other: 'Otro'
+realm_profile_visible_name: '&a&lVisible en Descubrimiento'
+realm_profile_hidden_name: '&7&lOculta del Descubrimiento'
+realm_profile_visible_lore: ['&7Esta parcela puede aparecer en', '&7el navegador público de Descubrimiento.']
+realm_profile_hidden_lore: ['&7Esta parcela está oculta del', '&7navegador público de Descubrimiento.']
+realm_profile_visibility_click: '&eHacé clic para alternar la visibilidad.'
+realm_profile_greeting_name: '&bSaludo de Entrada'
+realm_profile_no_greeting: '&8Todavía no hay saludo de entrada.'
+realm_profile_entry_title_line: '&7Título: &f{TITLE}'
+realm_profile_welcome_line: '&7Chat: &f{MESSAGE}'
+realm_profile_greeting_hint: '&8Usá /ag rename y /ag welcome para cambiar esto.'
+realm_profile_noticeboard_name: '&dTablón de Anuncios'
+realm_profile_noticeboard_lore: ['&7Reglas, detalles de eventos, info de', '&7tienda, o anuncios para visitantes.']
+realm_profile_noticeboard_count: '&7Anuncios: &f{COUNT}/{MAX}'
+realm_profile_noticeboard_click: '&eHacé clic para abrir el tablón de anuncios.'
+noticeboard_menu_title: '&dTablón de Anuncios'
+noticeboard_header_name: '&d&lTablón de Anuncios'
+noticeboard_add_hint_lore: ['&7Usá /ag notice add <texto> para publicar,', '&7y /ag notice remove <#> para quitar.']
+noticeboard_none_title: '&7Sin Anuncios Todavía'
+noticeboard_none_lore: ['&7Esta parcela no publicó reglas,', '&7eventos, ni anuncios.']
+noticeboard_entry_name: '&e📌 Anuncio'
+noticeboard_entry_author_line: '&7Publicado por: &f{PLAYER}'
+noticeboard_entry_age_line: '&7Hace: &f{AGE}'
+noticeboard_entry_remove_hint: '&cHacé clic para quitar este anuncio.'
+visit_plot_notice_count: '&7📌 {COUNT} anuncio(s) en el tablón'

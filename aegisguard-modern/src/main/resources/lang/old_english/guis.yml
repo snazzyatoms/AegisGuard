@@ -1778,3 +1778,33 @@ noticeboard_entry_author_line: '&7Posted by: &f{PLAYER}'
 noticeboard_entry_age_line: '&7When: &f{AGE} hence'
 noticeboard_entry_remove_hint: '&cClick to remove this notice.'
 visit_plot_notice_count: '&7📌 {COUNT} noticeboard notice(s)'
+
+# ------------------------------------------------------------
+# Clearer Player Guidance (1.3.0+, Milestone 5)
+# ------------------------------------------------------------
+settings_repeat_notifications_on_name: '&aRepeat Notifications: ON'
+settings_repeat_notifications_off_name: '&cRepeat Notifications: OFF'
+settings_repeat_notifications_lore: ['&7When OFF, repeated blocked-deed', '&7messages are limited to once every', '&7few seconds instead of spamming.']
+settings_replay_walkthrough_name: '&eReplay First-Claim Walkthrough'
+settings_replay_walkthrough_lore: ['&7Revisit the optional guide covering', '&7roles, Guest Passes, and Lockdown.']
+walkthrough_menu_title_page1: '&bWelcome to AegisGuard (1/2)'
+walkthrough_menu_title_page2: '&bWelcome to AegisGuard (2/2)'
+walkthrough_claim_name: '&aThy Holding is Protected'
+walkthrough_claim_lore: ['&7None else may build, break, or open', '&7chests here unless thou allowest it.', '&7Use /ag info to behold thy holding''s details.']
+walkthrough_roles_name: '&bTrust Friends with Roles'
+walkthrough_roles_lore: ['&7Open the Roles menu to grant friends and', '&7allies lasting build/container access.', '&7Lasting trust never expireth on its own.']
+walkthrough_guestpass_name: '&eTemporary Guest Passes'
+walkthrough_guestpass_lore: ['&7Hosting a feast or hiring a builder?', '&7Issue a time-limited Guest Pass instead -', '&7it expireth automatically and never', '&7toucheth anyone''s lasting role.']
+walkthrough_lockdown_name: '&cEmergency Lockdown'
+walkthrough_lockdown_lore: ['&7Should aught go amiss, thou canst', '&7instantly restrict building/chests', '&7for all but thee - reversible', '&7at any time, and never trappeth players.']
+walkthrough_profile_name: '&3Realm Profile'
+walkthrough_profile_lore: ['&7Give thy holding a public name,', '&7description, kind, and greeting', '&7so visitors know what it is.']
+walkthrough_notice_name: '&dNoticeboard'
+walkthrough_notice_lore: ['&7Post short rules, event details, or', '&7shop tidings for visitors with', '&7/ag notice add <text>.']
+walkthrough_guide_name: '&6Guardian''s Guide'
+walkthrough_guide_lore: ['&7Forgot summat? Open the full guide', '&7at any time from the main menu, or', '&7replay this walkthrough from Settings.']
+walkthrough_back_lore: ['&7Go to the previous page.']
+walkthrough_next_name: '&aNext Page'
+walkthrough_done_name: '&aFinish'
+walkthrough_next_lore: ['&7Continue the walkthrough.']
+walkthrough_skip_lore: ['&7Close - thou mayest replay this', '&7at any time from Settings.']

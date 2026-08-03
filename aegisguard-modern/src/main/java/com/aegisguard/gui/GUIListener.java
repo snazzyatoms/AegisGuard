@@ -16,6 +16,7 @@ import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
 import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
+import com.aegisguard.guidance.FirstClaimWalkthroughGUI.WalkthroughHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -142,7 +143,8 @@ public class GUIListener implements Listener {
                 || holder instanceof LockdownMenuHolder
                 || holder instanceof LockdownConfirmHolder
                 || holder instanceof RealmProfileMenuHolder
-                || holder instanceof NoticeboardHolder;
+                || holder instanceof NoticeboardHolder
+                || holder instanceof WalkthroughHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -335,6 +337,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof NoticeboardHolder castHolder) {
             plugin.gui().realmProfile().handleNoticeboardClick(player, e, castHolder);
+        }
+        else if (holder instanceof WalkthroughHolder castHolder) {
+            plugin.gui().walkthrough().handleClick(player, e, castHolder);
         }
     }
 
@@ -605,6 +610,11 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof NoticeboardHolder castHolder) {
             plugin.gui().realmProfile().openNoticeboard(player, castHolder.getPlot());
+            return;
+        }
+
+        if (holder instanceof WalkthroughHolder castHolder) {
+            plugin.gui().walkthrough().open(player, castHolder.getPage());
             return;
         }
 

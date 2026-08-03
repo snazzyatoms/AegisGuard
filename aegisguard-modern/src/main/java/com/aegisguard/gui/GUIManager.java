@@ -6,6 +6,7 @@ import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.guestpass.GuestPassGUI;
+import com.aegisguard.guidance.FirstClaimWalkthroughGUI;
 import com.aegisguard.lockdown.LockdownGUI;
 import com.aegisguard.profile.RealmProfileGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
@@ -84,6 +85,9 @@ public class GUIManager {
     // Realm Profiles & Noticeboards (1.3.0+ Milestone 4)
     private final RealmProfileGUI realmProfileGUI;
 
+    // Clearer Player Guidance (1.3.0+ Milestone 5)
+    private final FirstClaimWalkthroughGUI walkthroughGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -143,6 +147,7 @@ public class GUIManager {
         this.guestPassGUI = new GuestPassGUI(plugin);
         this.lockdownGUI = new LockdownGUI(plugin);
         this.realmProfileGUI = new RealmProfileGUI(plugin);
+        this.walkthroughGUI = new FirstClaimWalkthroughGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -262,6 +267,8 @@ public class GUIManager {
     // Emergency Plot Lockdown (1.3.0+ Milestone 3)
     public LockdownGUI lockdownGui() { return lockdownGUI; }
     public RealmProfileGUI realmProfile() { return realmProfileGUI; }
+
+    public FirstClaimWalkthroughGUI walkthrough() { return walkthroughGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

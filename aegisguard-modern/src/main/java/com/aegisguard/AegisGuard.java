@@ -372,6 +372,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
         Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
         levelingListener = new LevelingListener(this);
         Bukkit.getPluginManager().registerEvents(levelingListener, this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);

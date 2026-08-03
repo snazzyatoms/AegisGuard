@@ -2,6 +2,7 @@ package com.aegisguard.protection;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
+import com.aegisguard.guidance.DenialGuidance;
 import com.aegisguard.hooks.protection.HookAction;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -62,7 +63,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(e.getPlayer(), e.getBlock().getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_break");
+            DenialGuidance.send(plugin, e.getPlayer(), plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -80,7 +81,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(e.getPlayer(), e.getBlock().getLocation(), plugin, "BLOCK_PLACE")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_place");
+            DenialGuidance.send(plugin, e.getPlayer(), plot, "BLOCK_PLACE", "cannot_place");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -100,7 +101,7 @@ public class BlockProtectionListener implements Listener {
             if (plugin.protection().isFlagEnabled(plot, "farm")
                     && !plot.canInteractAt(player, clicked.getLocation(), plugin, "FARM")) {
                 e.setCancelled(true);
-                plugin.msg().send(player, "cannot_interact");
+                DenialGuidance.send(plugin, player, plot, "FARM", "cannot_interact");
                 plugin.effects().playError(player);
             }
             return;
@@ -116,7 +117,7 @@ public class BlockProtectionListener implements Listener {
         if (isContainer(clicked) && plugin.protection().isFlagEnabled(plot, "containers")
                 && !plot.canInteractAt(player, clicked.getLocation(), plugin, "CONTAINERS")) {
             e.setCancelled(true);
-            plugin.msg().send(player, plot.isLockdownActive() ? "lockdown_action_blocked" : "cannot_interact");
+            DenialGuidance.send(plugin, player, plot, "CONTAINERS", "cannot_interact");
             plugin.effects().playError(player);
         }
     }
@@ -137,7 +138,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!canUseDecorativeEntity(plot, player, clicked.getLocation())) {
             e.setCancelled(true);
-            denyInteract(player);
+            denyInteract(player, plot);
         }
     }
 
@@ -156,7 +157,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!canUseDecorativeEntity(plot, player, stand.getLocation())) {
             e.setCancelled(true);
-            denyInteract(player);
+            denyInteract(player, plot);
         }
     }
 
@@ -166,7 +167,7 @@ public class BlockProtectionListener implements Listener {
         if (plot == null || plugin.isBypassing(e.getPlayer())) return;
         if (!plot.canBuildAt(e.getPlayer(), e.getBlockClicked().getRelative(e.getBlockFace()).getLocation(), plugin, "BLOCK_PLACE")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), "cannot_place");
+            DenialGuidance.send(plugin, e.getPlayer(), plot, "BLOCK_PLACE", "cannot_place");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -177,7 +178,7 @@ public class BlockProtectionListener implements Listener {
         if (plot == null || plugin.isBypassing(e.getPlayer())) return;
         if (!plot.canBuildAt(e.getPlayer(), e.getBlockClicked().getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
-            plugin.msg().send(e.getPlayer(), "cannot_break");
+            DenialGuidance.send(plugin, e.getPlayer(), plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(e.getPlayer());
         }
     }
@@ -250,7 +251,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(player, hanging.getLocation(), plugin, "BLOCK_PLACE")) {
             e.setCancelled(true);
-            plugin.msg().send(player, "cannot_place");
+            DenialGuidance.send(plugin, player, plot, "BLOCK_PLACE", "cannot_place");
             plugin.effects().playError(player);
         }
     }
@@ -275,7 +276,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(player, hanging.getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
-            plugin.msg().send(player, "cannot_break");
+            DenialGuidance.send(plugin, player, plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(player);
         }
     }
@@ -311,7 +312,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canBuildAt(player, stand.getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
-            plugin.msg().send(player, "cannot_break");
+            DenialGuidance.send(plugin, player, plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(player);
         }
     }
@@ -336,7 +337,7 @@ public class BlockProtectionListener implements Listener {
 
         if (!plot.canInteractAt(player, e.getVehicle().getLocation(), plugin, "VEHICLES")) {
             e.setCancelled(true);
-            denyInteract(player);
+            denyInteract(player, plot, "VEHICLES");
         }
     }
 
@@ -400,8 +401,12 @@ public class BlockProtectionListener implements Listener {
         return plot.canInteractAt(player, location, plugin, "INTERACT");
     }
 
-    private void denyInteract(Player player) {
-        plugin.msg().send(player, "cannot_interact");
+    private void denyInteract(Player player, Plot plot) {
+        denyInteract(player, plot, "INTERACT");
+    }
+
+    private void denyInteract(Player player, Plot plot, String permission) {
+        DenialGuidance.send(plugin, player, plot, permission, "cannot_interact");
         plugin.effects().playError(player);
     }
 

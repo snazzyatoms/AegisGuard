@@ -230,6 +230,36 @@ public class NotificationManager {
     }
 
     /**
+     * Milestone 5 (Clearer Player Guidance) - toggle whether repeated protection denials keep
+     * repeating for a player, or get throttled to at most one every few seconds.
+     */
+    public boolean toggleRepeatNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean newState = settings.toggleRepeatNotifications();
+        updateSettings(settings);
+        return newState;
+    }
+
+    public boolean hasRepeatNotificationsEnabled(UUID playerUUID) {
+        return getSettings(playerUUID).isRepeatNotificationsEnabled();
+    }
+
+    /**
+     * Milestone 5 (Clearer Player Guidance) - has this player already seen the optional
+     * first-claim walkthrough? Used so it is shown once, but always remains replayable on demand.
+     */
+    public boolean hasSeenWalkthrough(UUID playerUUID) {
+        return getSettings(playerUUID).isWalkthroughSeen();
+    }
+
+    public void markWalkthroughSeen(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        if (settings.isWalkthroughSeen()) return;
+        settings.setWalkthroughSeen(true);
+        updateSettings(settings);
+    }
+
+    /**
      * Cycle notification mode for a player
      */
     public NotificationMode cycleMode(UUID playerUUID) {

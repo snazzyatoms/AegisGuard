@@ -159,8 +159,16 @@ cannot_attack: '&c❌ El PvP está desactivado en esta parcela.'
 # -------------------------------------------------
 # Entry / Ban Gates
 # -------------------------------------------------
-plot_entry_denied: '&c⛔ Acceso denegado. Esta parcela es privada.'
+plot_entry_denied: '&c⛔ Acceso denegado. Esta parcela es privada; pide al propietario un Pase de Invitado.'
 plot_banned_entry: '&c⛔ Tienes prohibida la entrada a esta parcela.'
+plot_action_needs_pass: '&c❌ Esta parcela es privada; pide al propietario un Pase de Invitado.'
+guest_pass_missing_permission: '&c❌ {PERMISSION} no está incluido en tu Pase de Invitado actual.'
+permission_label_containers: 'El acceso a cofres'
+permission_label_build: 'Construir'
+permission_label_break: 'Romper bloques'
+permission_label_farm: 'La agricultura'
+permission_label_vehicles: 'El uso de vehículos'
+permission_label_other: 'Esa acción'
 
 # -------------------------------------------------
 # Economy / Vault / Payments

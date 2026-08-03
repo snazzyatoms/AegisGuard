@@ -96,6 +96,11 @@ class RealmProfileContractTest {
     @Test
     void configSchemaWasBumpedForRealmProfiles() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1275"));
+        // Schema continues to advance with later milestones; Realm Profiles landed at 1275.
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1275")
+                        || migration.contains("CURRENT_SCHEMA = 1276")
+                        || migration.contains("CURRENT_SCHEMA = 1277")
+                        || migration.contains("CURRENT_SCHEMA = 1278"),
+                "Config schema must be at least 1275 after Realm Profiles");
     }
 }

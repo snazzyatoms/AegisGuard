@@ -155,8 +155,16 @@ cannot_attack: '&c❌ PvP is disabled in this claim.'
 # -------------------------------------------------
 # Entry / Ban Gates
 # -------------------------------------------------
-plot_entry_denied: '&c⛔ Entry denied. This claim is private.'
+plot_entry_denied: '&c⛔ Entry denied. This holding is private; beseech the lord for a Guest Pass.'
 plot_banned_entry: '&c⛔ Thou art banned from entering this claim.'
+plot_action_needs_pass: '&c❌ This holding is private; beseech the lord for a Guest Pass.'
+guest_pass_missing_permission: '&c❌ {PERMISSION} is not included in thy current Guest Pass.'
+permission_label_containers: 'Container access'
+permission_label_build: 'Building'
+permission_label_break: 'Breaking blocks'
+permission_label_farm: 'Farming'
+permission_label_vehicles: 'Vehicle use'
+permission_label_other: 'That deed'
 
 # -------------------------------------------------
 # Economy / Vault / Payments

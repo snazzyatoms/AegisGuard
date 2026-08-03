@@ -2453,3 +2453,33 @@ noticeboard_entry_author_line: '&7Publicado por: &f{PLAYER}'
 noticeboard_entry_age_line: '&7Hace: &f{AGE}'
 noticeboard_entry_remove_hint: '&cHaz clic para quitar este anuncio.'
 visit_plot_notice_count: '&7📌 {COUNT} anuncio(s) en el tablón'
+
+# ------------------------------------------------------------
+# Guía Más Clara para Jugadores (1.3.0+, Hito 5)
+# ------------------------------------------------------------
+settings_repeat_notifications_on_name: '&aRepetir Notificaciones: SÍ'
+settings_repeat_notifications_off_name: '&cRepetir Notificaciones: NO'
+settings_repeat_notifications_lore: ['&7Si está en NO, los mensajes de acción', '&7bloqueada repetidos se limitan a uno', '&7cada pocos segundos.']
+settings_replay_walkthrough_name: '&eRepetir Guía de Primera Parcela'
+settings_replay_walkthrough_lore: ['&7Vuelve a ver la guía opcional sobre', '&7roles, Pases de Invitado y Bloqueo.']
+walkthrough_menu_title_page1: '&b¡Bienvenido a AegisGuard! (1/2)'
+walkthrough_menu_title_page2: '&b¡Bienvenido a AegisGuard! (2/2)'
+walkthrough_claim_name: '&aTu Parcela Está Protegida'
+walkthrough_claim_lore: ['&7Nadie más puede construir, romper o abrir', '&7cofres aquí a menos que lo permitas.', '&7Usa /ag info para ver los detalles de tu parcela.']
+walkthrough_roles_name: '&bConfía en Amigos con Roles'
+walkthrough_roles_lore: ['&7Abre el menú de Roles para darle a amigos', '&7y aliados acceso permanente de construcción/cofres.', '&7La confianza permanente nunca vence sola.']
+walkthrough_guestpass_name: '&ePases de Invitado Temporales'
+walkthrough_guestpass_lore: ['&7¿Organizas un evento o contratas un', '&7constructor? Emite un Pase de Invitado -', '&7vence automáticamente y nunca toca', '&7el rol permanente de nadie.']
+walkthrough_lockdown_name: '&cBloqueo de Emergencia'
+walkthrough_lockdown_lore: ['&7Si algo sale mal, puedes restringir', '&7al instante construcción/cofres para', '&7todos menos tú - reversible en', '&7cualquier momento, y nunca atrapa jugadores.']
+walkthrough_profile_name: '&3Perfil de Parcela'
+walkthrough_profile_lore: ['&7Dale a tu parcela un nombre público,', '&7descripción, categoría y saludo', '&7para que los visitantes sepan qué es.']
+walkthrough_notice_name: '&dTablón de Anuncios'
+walkthrough_notice_lore: ['&7Publica reglas cortas, detalles de eventos', '&7o info de tienda para visitantes con', '&7/ag notice add <texto>.']
+walkthrough_guide_name: '&6Guía del Guardián'
+walkthrough_guide_lore: ['&7¿Olvidaste algo? Abre la guía completa', '&7cuando quieras desde el menú principal,', '&7o repite esta guía en Ajustes.']
+walkthrough_back_lore: ['&7Ir a la página anterior.']
+walkthrough_next_name: '&aSiguiente Página'
+walkthrough_done_name: '&aTerminar'
+walkthrough_next_lore: ['&7Continuar la guía.']
+walkthrough_skip_lore: ['&7Cerrar - puedes repetir esto', '&7cuando quieras desde Ajustes.']

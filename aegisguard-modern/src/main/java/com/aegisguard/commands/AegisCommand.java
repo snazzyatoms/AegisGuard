@@ -44,7 +44,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
-            "rename", "stuck", "setdesc", "notice", "profile",
+            "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks",
             "group", "discover", "favorite", "activity",
             // ✅ Added: reload support (Codex + config)
@@ -268,6 +268,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "notice" -> handleNotice(p, args);
 
             case "profile" -> plugin.gui().realmProfile().open(p);
+
+            case "guide" -> plugin.gui().walkthrough().open(p, 0);
 
             case "market" -> openMarketMenu(p, args);
 

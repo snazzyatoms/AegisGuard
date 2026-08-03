@@ -10,6 +10,7 @@ import com.aegisguard.guestpass.GuestPassGUI.GuestPassMenuHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassAddHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassPresetHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDurationHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassModeHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
@@ -144,6 +145,7 @@ public class GUIListener implements Listener {
                 || holder instanceof GuestPassAddHolder
                 || holder instanceof GuestPassPresetHolder
                 || holder instanceof GuestPassDurationHolder
+                || holder instanceof GuestPassModeHolder
                 || holder instanceof GuestPassConfirmHolder
                 || holder instanceof GuestPassDetailHolder
                 || holder instanceof LockdownMenuHolder
@@ -331,6 +333,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof GuestPassDurationHolder castHolder) {
             plugin.gui().guestPasses().handleDurationClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassModeHolder castHolder) {
+            plugin.gui().guestPasses().handleModeClick(player, e, castHolder);
         }
         else if (holder instanceof GuestPassConfirmHolder castHolder) {
             plugin.gui().guestPasses().handleConfirmClick(player, e, castHolder);
@@ -614,8 +619,8 @@ public class GUIListener implements Listener {
             return;
         }
         if (holder instanceof GuestPassAddHolder || holder instanceof GuestPassPresetHolder
-                || holder instanceof GuestPassDurationHolder || holder instanceof GuestPassConfirmHolder
-                || holder instanceof GuestPassDetailHolder) {
+                || holder instanceof GuestPassDurationHolder || holder instanceof GuestPassModeHolder
+                || holder instanceof GuestPassConfirmHolder || holder instanceof GuestPassDetailHolder) {
             Object plot = readHolderValue(holder, "getPlot");
             if (plot instanceof com.aegisguard.data.Plot p) {
                 plugin.gui().guestPasses().openMenu(player, p, 0);

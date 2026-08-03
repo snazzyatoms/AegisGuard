@@ -5,6 +5,11 @@ import com.aegisguard.audit.AuditCategory;
 import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -14,11 +19,12 @@ import java.util.UUID;
  * Milestone 2 (Temporary Guest Passes) - plugin-integration layer around the plugin-independent
  * {@code GuestPass}/{@code Plot} guest-pass storage.
  *
- * Handles config-driven limits, issuing/revoking passes (with audit entries), and the periodic
- * expiry sweep. All state lives on {@link Plot} itself and is persisted through the existing
- * {@code IDataStore} plot save path, so this service holds no file of its own.
+ * Handles config-driven limits, issuing/revoking passes (with audit entries), the periodic
+ * expiry sweep, and active-playtime pause/resume on join/quit/shutdown. All state lives on
+ * {@link Plot} itself and is persisted through the existing {@code IDataStore} plot save path,
+ * so this service holds no file of its own.
  */
-public class GuestPassService {
+public class GuestPassService implements Listener {
 
     private final AegisGuard plugin;
 
@@ -48,12 +54,23 @@ public class GuestPassService {
     }
 
     /**
-     * Issues (or replaces) a Guest Pass on {@code plot} for {@code targetId}.
+     * Issues (or replaces) a Guest Pass on {@code plot} for {@code targetId} using real-time expiry
+     * (the compatible default).
      *
      * @return {@code null} on success, or a translation-key style failure reason otherwise.
      */
     public String issue(Player issuer, Plot plot, UUID targetId, String targetName,
                          GuestPassPreset preset, long durationMinutes) {
+        return issue(issuer, plot, targetId, targetName, preset, durationMinutes, GuestPassMode.REAL_TIME);
+    }
+
+    /**
+     * Issues (or replaces) a Guest Pass on {@code plot} for {@code targetId}.
+     *
+     * @return {@code null} on success, or a translation-key style failure reason otherwise.
+     */
+    public String issue(Player issuer, Plot plot, UUID targetId, String targetName,
+                         GuestPassPreset preset, long durationMinutes, GuestPassMode mode) {
         if (!isEnabled()) return "guest_pass_disabled";
         if (plot == null || targetId == null || preset == null) return "guest_pass_invalid";
         if (plot.isOwner(targetId) || Plot.SERVER_OWNER_UUID.equals(targetId)) return "guest_pass_target_owner";
@@ -67,18 +84,30 @@ public class GuestPassService {
 
         long clampedMinutes = Math.max(1L, Math.min(durationMinutes, maxDurationMinutes()));
         long durationMillis = clampedMinutes * 60_000L;
+        GuestPassMode resolvedMode = (mode == null) ? GuestPassMode.REAL_TIME : mode;
 
         UUID issuerId = issuer == null ? null : issuer.getUniqueId();
         String issuerName = issuer == null ? "System" : issuer.getName();
 
-        GuestPass pass = GuestPass.issue(targetId, targetName, preset, issuerId, issuerName, durationMillis);
+        GuestPass pass = GuestPass.issue(targetId, targetName, preset, issuerId, issuerName,
+                durationMillis, resolvedMode);
+
+        // Active-playtime starts counting immediately when the recipient is already online.
+        if (pass.isActivePlaytime()) {
+            Player online = Bukkit.getPlayer(targetId);
+            if (online != null && online.isOnline()) {
+                pass.resumeSession(System.currentTimeMillis());
+            }
+        }
+
         plot.addGuestPass(pass);
         plugin.store().savePlot(plot);
 
         if (plugin.audit() != null) {
+            String modeLabel = resolvedMode == GuestPassMode.ACTIVE_PLAYTIME ? "active-playtime" : "real-time";
             plugin.audit().record(AuditCategory.GUEST_PASS, issuer, plotLabel(plot),
                     "Issued a " + preset.fallbackLabel() + " pass to " + pass.getPlayerName()
-                            + " for " + clampedMinutes + " minute(s).");
+                            + " for " + clampedMinutes + " minute(s) (" + modeLabel + ").");
         }
         return null;
     }
@@ -102,9 +131,10 @@ public class GuestPassService {
     }
 
     /**
-     * Sweeps every plot for expired passes, notifies the (online) player and owner, and writes an
-     * audit entry per expiry. Intended to be driven by a Folia-safe repeating task from
-     * {@code AegisGuard}. Survives restarts because expiry timestamps are persisted with the plot.
+     * Sweeps every plot for expired passes, checkpoints online active-playtime sessions, notifies
+     * the (online) player and owner, and writes an audit entry per expiry. Intended to be driven
+     * by a Folia-safe repeating task from {@code AegisGuard}. Survives restarts because expiry /
+     * remaining timestamps are persisted with the plot.
      */
     public void runExpirySweep() {
         if (!isEnabled()) return;
@@ -113,8 +143,13 @@ public class GuestPassService {
         for (Plot plot : plugin.store().getAllPlots()) {
             if (plot == null) continue;
 
+            boolean dirty = checkpointOnlineActivePlaytime(plot, now);
+
             List<GuestPass> expired = plot.pruneExpiredGuestPasses(now);
-            if (expired.isEmpty()) continue;
+            if (!expired.isEmpty()) {
+                dirty = true;
+            }
+            if (!dirty) continue;
 
             plugin.store().savePlot(plot);
 
@@ -137,6 +172,80 @@ public class GuestPassService {
                 }
             }
         }
+    }
+
+    /**
+     * Freezes every active-playtime session across all plots. Call before shutdown save so offline
+     * / server-down time never consumes remaining playtime.
+     */
+    public void freezeAllActiveSessions() {
+        if (plugin.store() == null) return;
+        long now = System.currentTimeMillis();
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+            boolean dirty = false;
+            for (GuestPass pass : plot.getGuestPasses().values()) {
+                if (pass != null && pass.freezeSession(now)) dirty = true;
+            }
+            if (dirty) {
+                try {
+                    plugin.store().savePlot(plot);
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (!isEnabled() || event.getPlayer() == null || plugin.store() == null) return;
+        resumeActivePlaytimeFor(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!isEnabled() || event.getPlayer() == null || plugin.store() == null) return;
+        freezeActivePlaytimeFor(event.getPlayer().getUniqueId());
+    }
+
+    private void resumeActivePlaytimeFor(UUID playerId) {
+        if (playerId == null) return;
+        long now = System.currentTimeMillis();
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+            GuestPass pass = plot.getGuestPass(playerId);
+            if (pass == null || !pass.isActivePlaytime() || pass.isExpired(now)) continue;
+            if (pass.resumeSession(now)) {
+                plugin.store().savePlot(plot);
+            }
+        }
+    }
+
+    private void freezeActivePlaytimeFor(UUID playerId) {
+        if (playerId == null) return;
+        long now = System.currentTimeMillis();
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+            GuestPass pass = plot.getGuestPass(playerId);
+            if (pass == null || !pass.isActivePlaytime()) continue;
+            if (pass.freezeSession(now)) {
+                plugin.store().savePlot(plot);
+            }
+        }
+    }
+
+    private boolean checkpointOnlineActivePlaytime(Plot plot, long now) {
+        boolean dirty = false;
+        for (GuestPass pass : plot.getGuestPasses().values()) {
+            if (pass == null || !pass.isActivePlaytime() || !pass.isSessionActive()) continue;
+            Player online = Bukkit.getPlayer(pass.getPlayerId());
+            if (online == null || !online.isOnline()) {
+                // Defensive: treat as offline if Bukkit no longer lists them.
+                if (pass.freezeSession(now)) dirty = true;
+                continue;
+            }
+            if (pass.checkpointSession(now)) dirty = true;
+        }
+        return dirty;
     }
 
     private String plotLabel(Plot plot) {

@@ -38,6 +38,8 @@ class GuestPassContractTest {
     void guestPassServiceIsWiredIntoThePluginLifecycle() throws Exception {
         String plugin = Files.readString(JAVA_ROOT.resolve("AegisGuard.java"));
         assertTrue(plugin.contains("guestPassService = new com.aegisguard.guestpass.GuestPassService(this)"));
+        assertTrue(plugin.contains("registerEvents(guestPassService"));
+        assertTrue(plugin.contains("freezeAllActiveSessions"));
         assertTrue(plugin.contains("startGuestPassExpiryTask"));
         assertTrue(plugin.contains("guestPassService.runExpirySweep()"));
     }
@@ -46,12 +48,18 @@ class GuestPassContractTest {
     void guestPassGuiIsRoutedThroughTheCentralListenerAndPlayerMenu() throws Exception {
         String listener = Files.readString(JAVA_ROOT.resolve("gui/GUIListener.java"));
         for (String holder : java.util.List.of("GuestPassMenuHolder", "GuestPassAddHolder",
-                "GuestPassPresetHolder", "GuestPassDurationHolder", "GuestPassConfirmHolder", "GuestPassDetailHolder")) {
+                "GuestPassPresetHolder", "GuestPassDurationHolder", "GuestPassModeHolder",
+                "GuestPassConfirmHolder", "GuestPassDetailHolder")) {
             assertTrue(listener.contains("holder instanceof " + holder), holder + " must be protected and routed");
         }
 
         String playerGui = Files.readString(JAVA_ROOT.resolve("gui/PlayerGUI.java"));
         assertTrue(playerGui.contains("guestPasses().open(player)"), "The main menu must offer a Guest Passes entry point");
+
+        String guestGui = Files.readString(JAVA_ROOT.resolve("guestpass/GuestPassGUI.java"));
+        assertTrue(guestGui.contains("GuestPassMode.REAL_TIME"));
+        assertTrue(guestGui.contains("GuestPassMode.ACTIVE_PLAYTIME"));
+        assertTrue(guestGui.contains("guest_pass_entry_mode_line"));
     }
 
     @Test

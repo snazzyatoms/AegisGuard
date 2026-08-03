@@ -381,6 +381,7 @@ public class AegisGuard extends JavaPlugin {
 
         // Register Events
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
+        Bukkit.getPluginManager().registerEvents(guestPassService, this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         registerPaperMobBoundaryListener();
         Bukkit.getPluginManager().registerEvents(selection, this);
@@ -445,6 +446,15 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
+
+        // Freeze active-playtime sessions before the final save so downtime never consumes them.
+        try {
+            if (guestPassService != null) {
+                guestPassService.freezeAllActiveSessions();
+            }
+        } catch (Throwable t) {
+            getLogger().warning("Failed to freeze Guest Pass sessions: " + t.getMessage());
+        }
 
         // Save plot + player data safely
         try {

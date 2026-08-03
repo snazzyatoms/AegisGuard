@@ -1658,13 +1658,15 @@ guest_passes_locked_lore: ['&cStand within a holding thou dost govern', '&cto is
 guest_pass_menu_title: '&eGuest Passes'
 guest_pass_entry_name: '&e{PLAYER}'
 guest_pass_entry_preset_line: '&7Preset: &f{PRESET}'
+guest_pass_entry_mode_line: '&7Mode: &f{MODE}'
 guest_pass_entry_remaining_line: '&7Expires in: &f{TIME}'
+guest_pass_entry_playtime_remaining_line: '&7Playtime left: &f{TIME}'
 guest_pass_entry_issuer_line: '&7Granted by: &f{PLAYER}'
 guest_pass_entry_click_lore: '&eClick to view or revoke'
 guest_pass_none_title: '&7No Active Guest Passes'
 guest_pass_none_lore: ['&7Grant a fleeting pass so a friend,', '&7event guest, or hired builder may', '&7aid thee without lasting trust.']
 guest_pass_guide_name: '&eGuest Pass Guide'
-guest_pass_guide_lore: ['&7Guest Passes grant fleeting access', '&7that expireth on its own - even', '&7after the realm doth restart.', ' ', '&8Expiry or revocation never', '&8toucheth this holding''s lasting roles.']
+guest_pass_guide_lore: ['&7Guest Passes grant fleeting access', '&7that expireth on its own - even', '&7after the realm doth restart.', ' ', '&7Choose real-time (always ticking) or', '&7active playtime (only whilst online).', ' ', '&8Expiry or revocation never', '&8toucheth this holding''s lasting roles.']
 button_add_guest_pass: '&aIssue Guest Pass'
 add_guest_pass_lore: ['&7Grant a nearby soul fleeting access.']
 guest_pass_add_title: '&8Issue Guest Pass'
@@ -1685,18 +1687,24 @@ guest_pass_preset_container_warning: '&c⚠ Grants container access!'
 guest_pass_preset_click_lore: '&eClick thus to choose a duration'
 guest_pass_duration_title: '&8Duration: {PLAYER}'
 guest_pass_duration_label: '&e{TIME}'
-guest_pass_duration_click_lore: ['&7Click thus to review and confirm.']
+guest_pass_duration_click_lore: ['&7Click thus to choose how time is counted.']
 guest_pass_duration_unknown: '?'
 guest_pass_duration_days: '{DAYS}d'
 guest_pass_duration_hours: '{HOURS}h'
 guest_pass_duration_minutes: '{MINUTES}m'
 guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
 guest_pass_expiring_now: '<1m'
+guest_pass_mode_title: '&8Timing: {PLAYER}'
+guest_pass_mode_name_REAL_TIME: '&eReal-time'
+guest_pass_mode_name_ACTIVE_PLAYTIME: '&aActive Playtime'
+guest_pass_mode_desc_REAL_TIME: ['&7Duration always counteth down,', '&7even whilst offline or the', '&7realm is stopped.', ' ', '&8Default / classic Guest Pass timing.', ' ', '&eClick to continue']
+guest_pass_mode_desc_ACTIVE_PLAYTIME: ['&7Duration only counteth down whilst', '&7this player is online.', '&7Pauseth whilst offline or when the', '&7realm is stopped.', ' ', '&eClick to continue']
 guest_pass_confirm_title: '&8Confirm Guest Pass'
 guest_pass_confirm_name: '&aConfirm Guest Pass'
 guest_pass_confirm_player_line: '&7Player: &f{PLAYER}'
 guest_pass_confirm_preset_line: '&7Preset: &f{PRESET}'
 guest_pass_confirm_duration_line: '&7Duration: &f{TIME}'
+guest_pass_confirm_mode_line: '&7Mode: &f{MODE}'
 guest_pass_confirm_container_warning: '&c⚠ This guest shall open chests,'
 guest_pass_confirm_container_warning_2: '&cbarrels, and other vessels upon this holding.'
 guest_pass_confirm_click_lore: '&aClick to confirm and issue'

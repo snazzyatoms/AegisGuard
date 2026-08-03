@@ -5,6 +5,7 @@ import com.aegisguard.flags.TriState;
 import com.aegisguard.alliance.Alliance;
 import com.aegisguard.alliance.AllianceAccess;
 import com.aegisguard.guestpass.GuestPass;
+import com.aegisguard.guestpass.GuestPassMode;
 import com.aegisguard.guestpass.GuestPassPreset;
 import com.aegisguard.profile.PlotNotice;
 import org.bukkit.Bukkit;
@@ -1088,6 +1089,8 @@ public class Plot {
             if (pass == null) continue;
             String perms = String.join(",", pass.getPermissions());
             String issuer = pass.getIssuerId() == null ? "" : pass.getIssuerId().toString();
+            // Legacy fields (8) remain first for readability; mode/remaining/session append for
+            // active-playtime support. Missing trailing fields deserialize as REAL_TIME.
             entries.add(String.join("|",
                     pass.getPlayerId().toString(),
                     pass.getPlayerName(),
@@ -1096,7 +1099,10 @@ public class Plot {
                     issuer,
                     pass.getIssuerName(),
                     String.valueOf(pass.getIssuedAt()),
-                    String.valueOf(pass.getExpiresAt())
+                    String.valueOf(pass.getExpiresAt()),
+                    pass.getMode().name(),
+                    String.valueOf(pass.getStoredRemainingMillis()),
+                    String.valueOf(pass.getSessionStartedAt())
             ));
         }
         return String.join("~", entries);
@@ -1108,8 +1114,8 @@ public class Plot {
 
         for (String entry : serialized.split("~")) {
             if (entry == null || entry.isBlank()) continue;
-            String[] parts = entry.split("\\|", 8);
-            if (parts.length != 8) continue;
+            String[] parts = entry.split("\\|", -1);
+            if (parts.length < 8) continue;
 
             try {
                 UUID playerId = UUID.fromString(parts[0]);
@@ -1122,9 +1128,17 @@ public class Plot {
                 String issuerName = parts[5];
                 long issuedAt = Long.parseLong(parts[6]);
                 long expiresAt = Long.parseLong(parts[7]);
+                GuestPassMode mode = parts.length >= 9
+                        ? GuestPassMode.fromSerialized(parts[8])
+                        : GuestPassMode.REAL_TIME;
+                long remainingMillis = parts.length >= 10 ? Long.parseLong(parts[9]) : 0L;
+                long sessionStartedAt = parts.length >= 11 ? Long.parseLong(parts[10]) : 0L;
 
-                guestPasses.put(playerId, new GuestPass(playerId, playerName, preset, perms,
-                        issuerId, issuerName, issuedAt, expiresAt));
+                GuestPass pass = new GuestPass(playerId, playerName, preset, perms,
+                        issuerId, issuerName, issuedAt, expiresAt, mode, remainingMillis, sessionStartedAt);
+                // Never count server-down / crash gaps as active playtime.
+                pass.pauseAfterLoad();
+                guestPasses.put(playerId, pass);
             } catch (Exception ignored) {}
         }
     }

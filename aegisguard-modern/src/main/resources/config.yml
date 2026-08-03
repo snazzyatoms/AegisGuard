@@ -599,6 +599,9 @@ audit:
 # Owners can hand out short-lived access from the plot menu's "Guest Passes" button
 # without granting a permanent role. Passes always expire automatically - even across
 # a server restart - and revoking/expiring one never touches permanent roles/trust.
+#
+# Each pass can use real-time expiry (default: wall-clock, keeps ticking offline) or
+# active playtime (remaining duration only decreases while the recipient is online).
 guest_passes:
   enabled: true
 

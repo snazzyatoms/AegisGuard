@@ -2333,13 +2333,15 @@ guest_passes_locked_lore: ['&cEntra a una parcela que administres', '&cpara emit
 guest_pass_menu_title: '&ePases de Invitado'
 guest_pass_entry_name: '&e{PLAYER}'
 guest_pass_entry_preset_line: '&7Preajuste: &f{PRESET}'
+guest_pass_entry_mode_line: '&7Modo: &f{MODE}'
 guest_pass_entry_remaining_line: '&7Expira en: &f{TIME}'
+guest_pass_entry_playtime_remaining_line: '&7Tiempo de juego restante: &f{TIME}'
 guest_pass_entry_issuer_line: '&7Emitido por: &f{PLAYER}'
 guest_pass_entry_click_lore: '&eHaz clic para ver o revocar'
 guest_pass_none_title: '&7Sin Pases de Invitado Activos'
 guest_pass_none_lore: ['&7Emite un pase temporal para que un amigo,', '&7invitado de evento o constructor contratado', '&7ayude sin confianza permanente.']
 guest_pass_guide_name: '&eGuía de Pases de Invitado'
-guest_pass_guide_lore: ['&7Los Pases de Invitado otorgan acceso temporal', '&7que expira automáticamente - incluso', '&7después de reiniciar el servidor.', ' ', '&8Expirar o revocar un pase nunca', '&8afecta los roles permanentes de esta parcela.']
+guest_pass_guide_lore: ['&7Los Pases de Invitado otorgan acceso temporal', '&7que expira automáticamente - incluso', '&7después de reiniciar el servidor.', ' ', '&7Elige tiempo real (siempre corre) o', '&7tiempo de juego activo (solo en línea).', ' ', '&8Expirar o revocar un pase nunca', '&8afecta los roles permanentes de esta parcela.']
 button_add_guest_pass: '&aEmitir Pase de Invitado'
 add_guest_pass_lore: ['&7Otorga acceso temporal a un jugador cercano.']
 guest_pass_add_title: '&8Emitir Pase de Invitado'
@@ -2360,18 +2362,24 @@ guest_pass_preset_container_warning: '&c⚠ ¡Otorga acceso a contenedores!'
 guest_pass_preset_click_lore: '&eHaz clic para elegir una duración'
 guest_pass_duration_title: '&8Duración: {PLAYER}'
 guest_pass_duration_label: '&e{TIME}'
-guest_pass_duration_click_lore: ['&7Haz clic para revisar y confirmar.']
+guest_pass_duration_click_lore: ['&7Haz clic para elegir cómo se cuenta el tiempo.']
 guest_pass_duration_unknown: '?'
 guest_pass_duration_days: '{DAYS}d'
 guest_pass_duration_hours: '{HOURS}h'
 guest_pass_duration_minutes: '{MINUTES}m'
 guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
 guest_pass_expiring_now: '<1m'
+guest_pass_mode_title: '&8Temporización: {PLAYER}'
+guest_pass_mode_name_REAL_TIME: '&eTiempo real'
+guest_pass_mode_name_ACTIVE_PLAYTIME: '&aTiempo de juego activo'
+guest_pass_mode_desc_REAL_TIME: ['&7La duración siempre cuenta,', '&7incluso sin conexión o con el', '&7servidor detenido.', ' ', '&8Temporización clásica por defecto.', ' ', '&eHaz clic para continuar']
+guest_pass_mode_desc_ACTIVE_PLAYTIME: ['&7La duración solo cuenta mientras', '&7este jugador está en línea.', '&7Se pausa sin conexión o cuando el', '&7servidor está detenido.', ' ', '&eHaz clic para continuar']
 guest_pass_confirm_title: '&8Confirmar Pase de Invitado'
 guest_pass_confirm_name: '&aConfirmar Pase de Invitado'
 guest_pass_confirm_player_line: '&7Jugador: &f{PLAYER}'
 guest_pass_confirm_preset_line: '&7Preajuste: &f{PRESET}'
 guest_pass_confirm_duration_line: '&7Duración: &f{TIME}'
+guest_pass_confirm_mode_line: '&7Modo: &f{MODE}'
 guest_pass_confirm_container_warning: '&c⚠ Este invitado podrá abrir cofres,'
 guest_pass_confirm_container_warning_2: '&cbarriles y otros contenedores de esta parcela.'
 guest_pass_confirm_click_lore: '&aHaz clic para confirmar y emitir'

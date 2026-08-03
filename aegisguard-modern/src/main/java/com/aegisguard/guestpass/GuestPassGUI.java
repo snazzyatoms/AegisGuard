@@ -24,7 +24,8 @@ import java.util.UUID;
  * Milestone 2 (Temporary Guest Passes) player-facing GUI.
  *
  * Flow: active-pass list -&gt; add (pick nearby player) -&gt; pick preset -&gt; pick duration -&gt;
- * confirm (with an explicit container-access warning for Temporary Trusted Guest) -&gt; issued.
+ * pick expiry mode (real-time vs active playtime) -&gt; confirm (with an explicit container-access
+ * warning for Temporary Trusted Guest) -&gt; issued.
  * Clicking an existing pass opens a detail screen with a Revoke control.
  *
  * Passes are entirely separate from {@code RolesGUI}'s permanent trust list: issuing, revoking, or
@@ -85,18 +86,37 @@ public class GuestPassGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    public static class GuestPassConfirmHolder implements InventoryHolder {
+    public static class GuestPassModeHolder implements InventoryHolder {
         private final Plot plot;
         private final OfflinePlayer target;
         private final GuestPassPreset preset;
         private final long minutes;
-        public GuestPassConfirmHolder(Plot plot, OfflinePlayer target, GuestPassPreset preset, long minutes) {
+        public GuestPassModeHolder(Plot plot, OfflinePlayer target, GuestPassPreset preset, long minutes) {
             this.plot = plot; this.target = target; this.preset = preset; this.minutes = minutes;
         }
         public Plot getPlot() { return plot; }
         public OfflinePlayer getTarget() { return target; }
         public GuestPassPreset getPreset() { return preset; }
         public long getMinutes() { return minutes; }
+        @Override public Inventory getInventory() { return null; }
+    }
+
+    public static class GuestPassConfirmHolder implements InventoryHolder {
+        private final Plot plot;
+        private final OfflinePlayer target;
+        private final GuestPassPreset preset;
+        private final long minutes;
+        private final GuestPassMode mode;
+        public GuestPassConfirmHolder(Plot plot, OfflinePlayer target, GuestPassPreset preset,
+                                       long minutes, GuestPassMode mode) {
+            this.plot = plot; this.target = target; this.preset = preset;
+            this.minutes = minutes; this.mode = mode == null ? GuestPassMode.REAL_TIME : mode;
+        }
+        public Plot getPlot() { return plot; }
+        public OfflinePlayer getTarget() { return target; }
+        public GuestPassPreset getPreset() { return preset; }
+        public long getMinutes() { return minutes; }
+        public GuestPassMode getMode() { return mode; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -247,8 +267,11 @@ public class GuestPassGUI {
                 List<String> lore = new ArrayList<>();
                 lore.add(GUIManager.color(t(player, "guest_pass_entry_preset_line",
                         Map.of("PRESET", presetLabel(player, pass.getPreset())), "&7Preset: &f{PRESET}")));
-                lore.add(GUIManager.color(t(player, "guest_pass_entry_remaining_line",
-                        Map.of("TIME", formatRemaining(player, pass.getRemainingMillis(now))), "&7Expires in: &f{TIME}")));
+                lore.add(GUIManager.color(t(player, "guest_pass_entry_mode_line",
+                        Map.of("MODE", modeLabel(player, pass.getMode())), "&7Mode: &f{MODE}")));
+                lore.add(GUIManager.color(t(player, remainingLineKey(pass),
+                        Map.of("TIME", formatRemaining(player, pass.getRemainingMillis(now))),
+                        remainingLineFallback(pass))));
                 lore.add(GUIManager.color(t(player, "guest_pass_entry_issuer_line",
                         Map.of("PLAYER", pass.getIssuerName()), "&7Issued by: &f{PLAYER}")));
                 lore.add(" ");
@@ -275,6 +298,9 @@ public class GuestPassGUI {
                         "&7Guest Passes grant temporary access",
                         "&7that expires automatically - even",
                         "&7after a server restart.",
+                        " ",
+                        "&7Choose real-time (always ticking) or",
+                        "&7active playtime (only while online).",
                         " ",
                         "&8Expiring or revoking a pass never",
                         "&8touches this plot's permanent roles."))));
@@ -462,6 +488,23 @@ public class GuestPassGUI {
         return t(player, "guest_pass_preset_name_" + preset.name(), "&e" + preset.fallbackLabel());
     }
 
+    private String modeLabel(Player player, GuestPassMode mode) {
+        GuestPassMode resolved = mode == null ? GuestPassMode.REAL_TIME : mode;
+        return t(player, "guest_pass_mode_name_" + resolved.name(), "&f" + resolved.fallbackLabel());
+    }
+
+    private String remainingLineKey(GuestPass pass) {
+        return pass != null && pass.isActivePlaytime()
+                ? "guest_pass_entry_playtime_remaining_line"
+                : "guest_pass_entry_remaining_line";
+    }
+
+    private String remainingLineFallback(GuestPass pass) {
+        return pass != null && pass.isActivePlaytime()
+                ? "&7Playtime left: &f{TIME}"
+                : "&7Expires in: &f{TIME}";
+    }
+
     // --------------------------------------------------
     // GUI 4: DURATION SELECTION
     // --------------------------------------------------
@@ -480,7 +523,7 @@ public class GuestPassGUI {
             if (slot >= 18) break;
             inv.setItem(slot++, GUIManager.createItem(Material.CLOCK,
                     t(player, "guest_pass_duration_label", Map.of("TIME", formatMinutes(player, minutes)), "&e{TIME}"),
-                    tl(player, "guest_pass_duration_click_lore", List.of("&7Click to review and confirm."))));
+                    tl(player, "guest_pass_duration_click_lore", List.of("&7Click to choose how time is counted."))));
         }
 
         inv.setItem(18, GUIManager.createItem(Material.ARROW,
@@ -495,12 +538,57 @@ public class GuestPassGUI {
     }
 
     // --------------------------------------------------
-    // GUI 5: CONFIRMATION
+    // GUI 5: EXPIRY MODE SELECTION
     // --------------------------------------------------
 
-    private void openConfirmMenu(Player player, Plot plot, OfflinePlayer target, GuestPassPreset preset, long minutes) {
+    private void openModeMenu(Player player, Plot plot, OfflinePlayer target, GuestPassPreset preset, long minutes) {
+        String rawTitle = t(player, "guest_pass_mode_title", Map.of("PLAYER", safeName(target)), "&8Timing: {PLAYER}");
+        String title = clampTitle(rawTitle, "&8Timing: " + safeName(target));
+        Inventory inv = Bukkit.createInventory(new GuestPassModeHolder(plot, target, preset, minutes), 27, title);
+
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 27; i++) inv.setItem(i, filler);
+
+        inv.setItem(11, GUIManager.createItem(Material.CLOCK,
+                t(player, "guest_pass_mode_name_REAL_TIME", "&eReal-time"),
+                tl(player, "guest_pass_mode_desc_REAL_TIME", List.of(
+                        "&7Duration always counts down,",
+                        "&7including while offline or the",
+                        "&7server is stopped.",
+                        " ",
+                        "&8Default / classic Guest Pass timing.",
+                        " ",
+                        "&eClick to continue"))));
+
+        inv.setItem(15, GUIManager.createItem(Material.COMPASS,
+                t(player, "guest_pass_mode_name_ACTIVE_PLAYTIME", "&aActive Playtime"),
+                tl(player, "guest_pass_mode_desc_ACTIVE_PLAYTIME", List.of(
+                        "&7Duration only counts down while",
+                        "&7this player is online.",
+                        "&7Pauses while offline or when the",
+                        "&7server is stopped.",
+                        " ",
+                        "&eClick to continue"))));
+
+        inv.setItem(18, GUIManager.createItem(Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to the previous menu."))));
+        inv.setItem(20, GUIManager.createItem(Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))));
+
+        player.openInventory(inv);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    // --------------------------------------------------
+    // GUI 6: CONFIRMATION
+    // --------------------------------------------------
+
+    private void openConfirmMenu(Player player, Plot plot, OfflinePlayer target, GuestPassPreset preset,
+                                  long minutes, GuestPassMode mode) {
         String title = clampTitle(t(player, "guest_pass_confirm_title", "&8Confirm Guest Pass"), "&8Confirm Guest Pass");
-        Inventory inv = Bukkit.createInventory(new GuestPassConfirmHolder(plot, target, preset, minutes), 27, title);
+        Inventory inv = Bukkit.createInventory(new GuestPassConfirmHolder(plot, target, preset, minutes, mode), 27, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
@@ -512,6 +600,8 @@ public class GuestPassGUI {
                 Map.of("PRESET", presetLabel(player, preset)), "&7Preset: &f{PRESET}")));
         lore.add(GUIManager.color(t(player, "guest_pass_confirm_duration_line",
                 Map.of("TIME", formatMinutes(player, (int) minutes)), "&7Duration: &f{TIME}")));
+        lore.add(GUIManager.color(t(player, "guest_pass_confirm_mode_line",
+                Map.of("MODE", modeLabel(player, mode)), "&7Mode: &f{MODE}")));
         if (preset.requiresContainerWarning()) {
             lore.add(" ");
             lore.add(GUIManager.color(t(player, "guest_pass_confirm_container_warning",
@@ -537,7 +627,7 @@ public class GuestPassGUI {
     }
 
     // --------------------------------------------------
-    // GUI 6: PASS DETAIL / REVOKE
+    // GUI 7: PASS DETAIL / REVOKE
     // --------------------------------------------------
 
     private void openDetailMenu(Player player, Plot plot, OfflinePlayer target) {
@@ -559,8 +649,11 @@ public class GuestPassGUI {
         List<String> lore = new ArrayList<>();
         lore.add(GUIManager.color(t(player, "guest_pass_entry_preset_line",
                 Map.of("PRESET", presetLabel(player, pass.getPreset())), "&7Preset: &f{PRESET}")));
-        lore.add(GUIManager.color(t(player, "guest_pass_entry_remaining_line",
-                Map.of("TIME", formatRemaining(player, pass.getRemainingMillis(now))), "&7Expires in: &f{TIME}")));
+        lore.add(GUIManager.color(t(player, "guest_pass_entry_mode_line",
+                Map.of("MODE", modeLabel(player, pass.getMode())), "&7Mode: &f{MODE}")));
+        lore.add(GUIManager.color(t(player, remainingLineKey(pass),
+                Map.of("TIME", formatRemaining(player, pass.getRemainingMillis(now))),
+                remainingLineFallback(pass))));
         lore.add(GUIManager.color(t(player, "guest_pass_entry_issuer_line",
                 Map.of("PLAYER", pass.getIssuerName()), "&7Issued by: &f{PLAYER}")));
 
@@ -727,7 +820,31 @@ public class GuestPassGUI {
         List<Integer> durations = plugin.guestPasses().durationPresetsMinutes();
         if (slot >= 0 && slot < durations.size() && slot < 18) {
             int minutes = durations.get(slot);
-            openConfirmMenu(player, plot, target, preset, minutes);
+            openModeMenu(player, plot, target, preset, minutes);
+        }
+    }
+
+    public void handleModeClick(Player player, InventoryClickEvent e, GuestPassModeHolder holder) {
+        if (!isTopClick(e)) return;
+        e.setCancelled(true);
+        if (e.getCurrentItem() == null) return;
+
+        Plot plot = holder.getPlot();
+        OfflinePlayer target = holder.getTarget();
+        GuestPassPreset preset = holder.getPreset();
+        long minutes = holder.getMinutes();
+        if (!canManagePlot(player, plot)) { plugin.effects().playError(player); openMenu(player, plot, 0); return; }
+
+        int slot = e.getRawSlot();
+        if (slot == 18) { openDurationMenu(player, plot, target, preset); return; }
+        if (slot == 20) { player.closeInventory(); return; }
+
+        if (slot == 11) {
+            openConfirmMenu(player, plot, target, preset, minutes, GuestPassMode.REAL_TIME);
+            return;
+        }
+        if (slot == 15) {
+            openConfirmMenu(player, plot, target, preset, minutes, GuestPassMode.ACTIVE_PLAYTIME);
         }
     }
 
@@ -740,16 +857,17 @@ public class GuestPassGUI {
         OfflinePlayer target = holder.getTarget();
         GuestPassPreset preset = holder.getPreset();
         long minutes = holder.getMinutes();
+        GuestPassMode mode = holder.getMode();
 
         if (!canManagePlot(player, plot)) { plugin.effects().playError(player); openMenu(player, plot, 0); return; }
 
         int slot = e.getRawSlot();
-        if (slot == 18) { openDurationMenu(player, plot, target, preset); return; }
+        if (slot == 18) { openModeMenu(player, plot, target, preset, minutes); return; }
         if (slot == 20) { player.closeInventory(); return; }
 
         if (slot == 13) {
             String failureKey = plugin.guestPasses().issue(player, plot, target.getUniqueId(),
-                    safeName(target), preset, minutes);
+                    safeName(target), preset, minutes, mode);
             if (failureKey != null) {
                 plugin.msg().send(player, failureKey);
                 plugin.effects().playError(player);

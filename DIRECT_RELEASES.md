@@ -1,4 +1,4 @@
-# AegisGuard 1.2.7 Release Artifacts
+# AegisGuard 1.3.0 Release Artifacts
 
 Run the release build from the repository root:
 
@@ -10,11 +10,11 @@ Maven copies these artifacts into the local `releases/` directory:
 
 | Artifact | Purpose |
 |---|---|
-| `AegisGuard-1.2.7.jar` | Minecraft server plugin |
-| `AegisGuard-1.2.7-api.jar` | Public API for plugin developers |
-| `AegisGuard-1.2.7-dev-api.jar` | Compatibility copy of the public API |
+| `AegisGuard-1.3.0.jar` | Minecraft server plugin |
+| `AegisGuard-1.3.0-api.jar` | Public API for plugin developers |
+| `AegisGuard-1.3.0-dev-api.jar` | Compatibility copy of the public API |
 
-Only `AegisGuard-1.2.7.jar` belongs in a Minecraft server's `plugins` directory. The API artifacts are compile-time resources for add-on developers.
+Only `AegisGuard-1.3.0.jar` belongs in a Minecraft server's `plugins` directory. The API artifacts are compile-time resources for add-on developers.
 
 ## Release Verification
 

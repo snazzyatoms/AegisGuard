@@ -1,7 +1,7 @@
 # AegisGuard plugin metadata
 name: AegisGuard
 main: com.aegisguard.AegisGuard
-version: 1.2.7
+version: 1.3.0
 api-version: "1.20"
 prefix: AegisGuard
 description: Player-friendly land protection with roles, group plots, admin recovery, and polished GUIs.

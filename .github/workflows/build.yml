@@ -13,12 +13,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          # Build with a JDK 21 toolchain (the shaded output still targets release 17 via
-          # maven-compiler-plugin's <release> setting, so the shipped jar's bytecode and
-          # supported server runtimes are unchanged). A real JDK 17 javac cannot read the
-          # bluemap-api dependency jar, which the BlueMap maven repo currently publishes
-          # compiled with Java 21 (class file version 65) under the 2.x coordinates this
-          # project depends on; JDK 21 can read both old and new class file versions.
+          # AegisGuard 1.3.0 uses Java 21 as its supported server and build baseline.
           java-version: "21"
           cache: maven
       - name: Compile and test
@@ -26,6 +21,6 @@ jobs:
       - name: Upload standard server JAR
         uses: actions/upload-artifact@v4
         with:
-          name: AegisGuard-1.2.7
-          path: aegisguard-modern/target/AegisGuard-1.2.7.jar
+          name: AegisGuard-1.3.0
+          path: aegisguard-modern/target/AegisGuard-1.3.0.jar
           if-no-files-found: error

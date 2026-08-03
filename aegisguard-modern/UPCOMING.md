@@ -1,13 +1,11 @@
 # 🔮 The Oracle: Roadmap to AegisGuard 2.0
 
+## AegisGuard 1.3.0 status
 
+AegisGuard 1.3.0 is the current release line. It strengthens release safety and staff recovery while adding the Audit Ledger, Guest Passes, Emergency Lockdown, Realm Profiles and Noticeboards, player guidance, Routes and Checkpoints, and opt-in Alliance Access.
 
-[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
-[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
-[](https://www.google.com/search?q=https://github.com/snazzyatoms/AegisGuard)
+The 2.0 concepts below are future work. They are not part of 1.3.0 and must not alter existing claim ownership, rental, market, progression, or protection behaviour without a dedicated migration and release plan.
 
-
------
 
 > *"The Aegis has secured the present, but the future calls for expansion. We gaze now toward the horizon, where realms unite and cities rise from the dust."*
 
@@ -109,4 +107,3 @@ For servers that desire conflict. Completely optional.
 
 
 Have a vision for the Aegis? Submit a Feature Request in our Issues tab.
-

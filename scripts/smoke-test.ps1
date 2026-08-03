@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$FixturesRoot,
 
-    [string]$Artifact = "$PSScriptRoot\..\aegisguard-modern\target\AegisGuard-1.2.7.jar",
+    [string]$Artifact = "$PSScriptRoot\..\aegisguard-modern\target\AegisGuard-1.3.0.jar",
 
     [string]$Java = "java",
 
@@ -32,7 +32,7 @@ foreach ($server in $servers) {
 
     $plugins = Join-Path $server.FullName "plugins"
     New-Item -ItemType Directory -Path $plugins -Force | Out-Null
-    Copy-Item -LiteralPath $artifactPath -Destination (Join-Path $plugins "AegisGuard-1.2.7.jar") -Force
+    Copy-Item -LiteralPath $artifactPath -Destination (Join-Path $plugins "AegisGuard-1.3.0.jar") -Force
 
     $log = Join-Path $server.FullName "logs\latest.log"
     $startedAt = Get-Date

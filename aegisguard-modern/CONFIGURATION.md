@@ -1,4 +1,4 @@
-# AegisGuard 1.2.7 Configuration Guide
+# AegisGuard 1.3.0 Configuration Guide
 
 This guide is meant to help server owners set up AegisGuard quickly without having to guess which settings matter first.
 
@@ -28,6 +28,20 @@ Review these sections in order:
    Choose whether public plot browsing is enabled and which categories owners can use.
 11. `territory_activity`
    Set the durable history limit and decide whether ordinary visits should be logged.
+12. `audit`
+   Configure staff-only Audit Ledger retention and console logging.
+13. `guest_passes`
+   Set the Guest Pass duration limits and per-plot safety cap.
+14. `lockdown`
+   Choose which sensitive actions Emergency Lockdown may temporarily restrict.
+15. `realm_profiles`
+   Configure plot profiles and noticeboard limits.
+16. `first_claim_walkthrough`
+   Enable or disable the optional, replayable first-claim guide.
+17. `routes`
+   Configure staff-authored routes, checkpoints, rewards, and optional teleporting.
+18. `alliance_access`
+   Configure player alliance capacity; per-plot alliance permissions remain off until an owner enables them.
 
 ## Recommended Profiles
 
@@ -170,13 +184,58 @@ Owners and authorized members use `/ag activity`. Staff use `/agadmin activity` 
 
 ### Configuration migration
 
-`config_schema` is maintained by AegisGuard. When an older config is detected, version 1.2.7 creates a timestamped file under `plugins/AegisGuard/backups/`, merges missing defaults without replacing existing custom values, validates critical bounds, and writes a report under `plugins/AegisGuard/reports/`. Migration is refused if the safety backup cannot be created.
+`config_schema` is maintained by AegisGuard. When an older config is detected, version 1.3.0 creates a timestamped file under `plugins/AegisGuard/backups/`, merges missing defaults without replacing existing custom values, validates critical bounds, and writes a report under `plugins/AegisGuard/reports/`. Migration is refused if the safety backup cannot be created.
 
 ### Doctor repair tools
 
 Open the visual Doctor tools from the Admin menu or sneak-right-click with the Sentinel's Scepter. Commands remain available: use `/agadmin doctor scan` to inspect plot, marketplace, rental-contract, overlap, and pending-settlement consistency. `/agadmin doctor repair confirm` repairs only deterministic state and creates a plot snapshot before each automatic plot repair. The GUI and command both require a second confirmation before repair. Overlaps, duplicate IDs, missing owners, and unavailable worlds are reported for manual review rather than guessed.
 
-During startup and `/agadmin reload`, AegisGuard adds newly packaged language keys to existing language files without replacing custom values. Before the first merge, the previous file is preserved under `plugins/AegisGuard/backups/language-sync-1.2.7/`.
+During startup and `/agadmin reload`, AegisGuard adds newly packaged language keys to existing language files without replacing custom values. Before the first merge, the previous file is preserved under `plugins/AegisGuard/backups/language-sync-1.3.0/`.
+
+### 1.3.0 access and operations settings
+
+### `audit`
+
+- `enabled`: enables the staff-only Audit Ledger and `/agadmin audit`
+- `max_entries`: caps the retained audit records
+- `retention_days`: removes records older than the chosen number of days; set `0` to rely only on the entry cap
+
+### `guest_passes`
+
+- `enabled`: enables temporary, plot-specific Guest Passes
+- `max_active_per_plot`: limits the number of active passes on one plot
+- `max_duration_minutes`: prevents excessively long temporary access
+- `duration_presets_minutes`: controls the choices shown in the Guest Pass GUI
+
+Guest Passes do not replace permanent trust. On expiry or revocation, the player returns to their existing role or normal visitor access.
+
+### `lockdown`
+
+- `enabled`: allows owners or authorized staff to use Emergency Lockdown
+- `restricted_permissions`: lists the sensitive actions a lockdown can restrict
+- `require_confirmation`: requires an extra GUI confirmation before changing the state
+
+Lockdown never changes ownership, permanent roles, or Guest Pass records. Movement and normal door interaction remain available so players can leave safely.
+
+### `realm_profiles`
+
+- `enabled`: enables Realm Profile editing
+- `noticeboard.enabled`: enables owner-moderated plot notices
+- `noticeboard.max_entries` and `noticeboard.max_length`: bound noticeboard storage and message size
+
+### `routes`
+
+- `enabled`: enables staff-authored routes and checkpoints
+- `default_checkpoint_radius`: sets how close a player must be to reach a checkpoint
+- `allow_optional_teleport`: offers an optional next-checkpoint teleport without forcing travel
+- `rewards.enabled`: controls optional route-completion rewards
+
+### `alliance_access`
+
+- `enabled`: enables player alliances and per-plot Alliance Access controls
+- `max_members`: caps alliance membership
+
+Alliance membership alone grants no plot access. Plot owners opt in separately for entry, interaction, containers, building, animals/farms, and friendly PvP; all risky access begins disabled.
 
 ## Good Default Choices
 

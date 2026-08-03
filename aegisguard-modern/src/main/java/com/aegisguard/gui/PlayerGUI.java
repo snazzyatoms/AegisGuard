@@ -207,6 +207,22 @@ public class PlayerGUI {
                 tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
         ));
 
+        // Alliance Access (Slot 25) — grayed until this plot joins an alliance
+        boolean allianceJoined = currentPlot != null && currentPlot.getAllianceId() != null;
+        boolean allianceEnabled = plugin.getConfig().getBoolean("alliance_access.enabled", true);
+        Material allianceIcon = !allianceEnabled ? Material.GRAY_DYE
+                : (allianceJoined ? Material.SHIELD : Material.GRAY_DYE);
+        inv.setItem(25, GUIManager.createItem(
+                allianceIcon,
+                t(player, "button_alliance_access", "&6🛡 Alliance Access"),
+                tl(player, allianceJoined ? "alliance_button_lore" : "alliance_button_grayed_lore",
+                        allianceJoined
+                                ? List.of("&7Manage this plot's alliance", "&7access toggles.")
+                                : List.of("&7This plot has not joined an alliance.",
+                                "&7Create or join one, then opt this",
+                                "&7plot in. Risky toggles stay OFF."))
+        ));
+
         // Realm Profile (Slot 13)
         inv.setItem(13, GUIManager.createItem(
                 Material.NAME_TAG,
@@ -421,6 +437,15 @@ public class PlayerGUI {
                             plot == null
                                     ? "&cYou must be standing inside a plot to do that."
                                     : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 25 -> {
+                if (plugin.getConfig().getBoolean("alliance_access.enabled", true)) {
+                    plugin.gui().allianceAccess().openMenu(player, plot);
+                } else {
+                    send(player, "alliance_disabled", "&cAlliance Access is disabled on this server.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }

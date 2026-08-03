@@ -271,6 +271,7 @@ public class AuditAdminGUI {
             case CLAIM_BLOCK_ADJUST -> Material.EMERALD;
             case GUEST_PASS -> Material.PAPER;
             case LOCKDOWN -> Material.IRON_BARS;
+            case ALLIANCE -> Material.SHIELD;
         };
     }
 

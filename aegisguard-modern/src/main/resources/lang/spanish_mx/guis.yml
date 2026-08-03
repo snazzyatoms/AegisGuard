@@ -1473,6 +1473,7 @@ audit_category_admin_bypass: 'Bypass de Administrador'
 audit_category_claim_block_adjust: 'Ajuste de ClaimBlocks'
 audit_category_guest_pass: 'Pase de Invitado'
 audit_category_lockdown: 'Bloqueo de Emergencia'
+audit_category_alliance: 'Alianza'
 
 local_market_stalls_name: '&6Trade Stalls'
 local_market_stalls_lore:
@@ -2525,3 +2526,50 @@ routes_admin_reward_blocks_name: '&bBloques de claim: {AMOUNT}'
 routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
 routes_admin_delete_name: '&cEliminar Ruta'
 routes_admin_delete_lore: ['&cElimina esta ruta y todo', '&cel progreso de jugadores.']
+
+# ------------------------------------------------------------
+# Alliance Access (1.3.0+, Milestone 7)
+# ------------------------------------------------------------
+button_alliance_access: '&6🛡 Acceso de Alianza'
+alliance_button_lore: ['&7Administra los permisos de alianza', '&7de esta parcela.']
+alliance_button_grayed_lore: ['&7Esta parcela no se unió a una alianza.', '&7Crea o únete a una, luego activa', '&7esta parcela. Los riesgos quedan OFF.']
+alliance_menu_title: '&6Acceso de Alianza'
+alliance_none_personal: '&8No estás en una alianza.'
+alliance_create_hint: '&8Usa /ag alliance create <name>'
+alliance_personal_line: '&7Tu alianza: &f{NAME}'
+alliance_members_line: '&7Miembros: &f{COUNT}'
+alliance_header_name: '&6&lAcceso de Alianza'
+alliance_create_name: '&aCrear Alianza'
+alliance_create_lore: ['&7Usa &f/ag alliance create <name>', '&7para formar una nueva alianza.']
+alliance_accept_name: '&eAceptar Invitación'
+alliance_accept_lore: ['&7Usa &f/ag alliance accept', '&7si tienes una invitación pendiente.']
+alliance_invite_name: '&bInvitar Jugador'
+alliance_invite_lore: ['&7Usa &f/ag alliance invite <player>', '&7para invitar a alguien (solo líder).']
+alliance_leave_name: '&eSalir de la Alianza'
+alliance_leave_lore: ['&7Los líderes deben disolverla.', '&eClick para confirmar.']
+alliance_disband_name: '&cDisolver Alianza'
+alliance_disband_lore: ['&cElimina la alianza para todos.', '&cLas parcelas unidas pierden acceso.', '&eClick para confirmar.']
+alliance_no_plot_name: '&7Párate en una Parcela'
+alliance_no_plot_lore: ['&7Los interruptores de Acceso de Alianza', '&7aplican a la parcela donde estás.']
+alliance_plot_not_joined_lore: ['&7Esta parcela no se unió a una alianza.', '&7Los aliados no ganan nada aquí', '&7hasta que actives la unión.']
+alliance_join_click: '&eClick para unir tu alianza.'
+alliance_manage_locked: '&8Solo el dueño puede cambiar esto.'
+alliance_need_membership: '&8Únete o crea una alianza primero.'
+alliance_plot_not_joined_name: '&7Sin Alianza en Esta Parcela'
+alliance_plot_joined_name: '&aUnida: &f{NAME}'
+alliance_leave_plot_lore: ['&eClick para quitar esta parcela', '&ede la alianza.']
+alliance_manage_locked_lore: ['&8Solo el dueño puede cambiar esto.']
+alliance_toggle_on: '&aON'
+alliance_toggle_off: '&cOFF'
+alliance_toggle_click: '&eClick para alternar.'
+alliance_toggle_enter: 'Los aliados pueden entrar'
+alliance_toggle_interact: 'Los aliados pueden usar puertas/controles'
+alliance_toggle_containers: 'Los aliados pueden usar contenedores'
+alliance_toggle_build: 'Los aliados pueden construir y romper'
+alliance_toggle_animals: 'Los aliados pueden usar animales/granjas'
+alliance_toggle_friendly_pvp: 'Los aliados son amistosos en PvP'
+alliance_confirm_title: '&cConfirmar'
+alliance_confirm_yes: '&aConfirmar'
+alliance_confirm_yes_lore: ['&eClick para confirmar.']
+alliance_confirm_no: '&cCancelar'
+alliance_confirm_no_lore: ['&7Volver.']

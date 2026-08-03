@@ -2,6 +2,7 @@ package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
+import com.aegisguard.alliance.AllianceAccess;
 import com.aegisguard.guestpass.GuestPass;
 import com.aegisguard.guestpass.GuestPassPreset;
 import com.aegisguard.profile.PlotNotice;
@@ -68,6 +69,12 @@ public class Plot {
     // Short, owner-moderated public notices (rules, event details, shop info, announcements).
     // Purely presentational - never affects permissions, ownership, or protection behavior.
     private final List<PlotNotice> noticeboard = new CopyOnWriteArrayList<>();
+
+    // --- ALLIANCE ACCESS (Milestone 7) ---
+    // Optional join to a player alliance plus six opt-in toggles (all risky defaults OFF).
+    // Alliance membership alone never grants manage/ownership/money/rental rights.
+    private volatile UUID allianceId;
+    private final AllianceAccess allianceAccess = new AllianceAccess();
 
     // --- PLOT META ---
     private String plotName;
@@ -420,6 +427,12 @@ public class Plot {
         // through to the normal role-based check below.
         GuestPass guestPass = getActiveGuestPass(playerUUID);
         if (guestPass != null && guestPass.hasPermission(permission)) {
+            return true;
+        }
+
+        // Alliance Access (Milestone 7): only the opted-in toggles on THIS plot grant tokens,
+        // and never MANAGE / MANAGE_MEMBERS.
+        if (grantsAlliancePermission(playerUUID, permission, pl)) {
             return true;
         }
 
@@ -1188,6 +1201,74 @@ public class Plot {
             if (token != null && needle.equals(token.trim().toUpperCase(Locale.ROOT))) return true;
         }
         return false;
+    }
+
+    // ---------------------------------------------------------------------
+    // Alliance Access (Milestone 7)
+    // ---------------------------------------------------------------------
+
+    public UUID getAllianceId() {
+        return allianceId;
+    }
+
+    public void setAllianceId(UUID allianceId) {
+        this.allianceId = allianceId;
+    }
+
+    public AllianceAccess getAllianceAccess() {
+        return allianceAccess;
+    }
+
+    public void clearAllianceAccess() {
+        this.allianceId = null;
+        this.allianceAccess.clear();
+    }
+
+    public boolean allowsAllianceEntry(UUID playerUUID, Plugin plugin) {
+        if (allianceId == null || playerUUID == null || !allianceAccess.isEnter()) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (pl == null || pl.allianceService() == null) return false;
+        return pl.allianceService().isAllianceMember(this, playerUUID);
+    }
+
+    public boolean areAllianceAllies(UUID a, UUID b, Plugin plugin) {
+        if (allianceId == null || !allianceAccess.isFriendlyPvp()) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (pl == null || pl.allianceService() == null) return false;
+        return pl.allianceService().areAlliesOnPlot(this, a, b);
+    }
+
+    private boolean grantsAlliancePermission(UUID playerUUID, String permission, AegisGuard pl) {
+        if (allianceId == null || playerUUID == null || permission == null || pl == null) return false;
+        String needle = permission.trim().toUpperCase(Locale.ROOT);
+        if ("MANAGE".equals(needle) || "MANAGE_MEMBERS".equals(needle)) return false;
+        if (!allianceAccess.grantsPermission(needle)) return false;
+        return pl.allianceService() != null && pl.allianceService().isAllianceMember(this, playerUUID);
+    }
+
+    public String serializeAllianceAccess() {
+        if (allianceId == null) return "";
+        return allianceId + "|" + allianceAccess.serialize();
+    }
+
+    public void deserializeAllianceAccess(String serialized) {
+        clearAllianceAccess();
+        if (serialized == null || serialized.isBlank()) return;
+        String[] parts = serialized.split("\\|", 2);
+        try {
+            allianceId = UUID.fromString(parts[0]);
+            if (parts.length > 1) {
+                AllianceAccess loaded = AllianceAccess.deserialize(parts[1]);
+                allianceAccess.setEnter(loaded.isEnter());
+                allianceAccess.setInteract(loaded.isInteract());
+                allianceAccess.setContainers(loaded.isContainers());
+                allianceAccess.setBuild(loaded.isBuild());
+                allianceAccess.setAnimals(loaded.isAnimals());
+                allianceAccess.setFriendlyPvp(loaded.isFriendlyPvp());
+            }
+        } catch (Exception ignored) {
+            clearAllianceAccess();
+        }
     }
 
     // ---------------------------------------------------------------------

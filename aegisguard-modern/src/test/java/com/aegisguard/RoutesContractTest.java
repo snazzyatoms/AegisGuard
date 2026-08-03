@@ -60,7 +60,9 @@ class RoutesContractTest {
     @Test
     void configSchemaWasBumpedForRoutes() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1277"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1277")
+                        || migration.contains("CURRENT_SCHEMA = 1278"),
+                "Routes schema bump (1277) must remain current or superseded");
     }
 
     @Test

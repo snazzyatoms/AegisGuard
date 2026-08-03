@@ -385,7 +385,9 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
-            if (!to.getFlag("entry", true) && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)) {
+            if (!to.getFlag("entry", true)
+                    && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)
+                    && !to.allowsAllianceEntry(p.getUniqueId(), plugin)) {
                 e.setCancelled(true);
                 String deniedMsg = tr(
                         p,
@@ -439,6 +441,14 @@ public class ProtectionManager implements Listener {
         }
 
         if (isProtectionActive(plot, "pvp", true)) {
+            e.setCancelled(true);
+            plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
+            return;
+        }
+
+        // Milestone 7: when plot PvP is open but allies opted into friendly treatment,
+        // alliance members on this plot cannot hurt each other.
+        if (plot.areAllianceAllies(attacker.getUniqueId(), victim.getUniqueId(), plugin)) {
             e.setCancelled(true);
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
         }

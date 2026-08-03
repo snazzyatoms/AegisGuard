@@ -17,5 +17,8 @@ public enum AuditCategory {
     GUEST_PASS,
 
     /** Milestone 3 (Emergency Plot Lockdown): activation and deactivation. */
-    LOCKDOWN
+    LOCKDOWN,
+
+    /** Milestone 7 (Alliance Access): join/leave/disband and per-plot access toggles. */
+    ALLIANCE
 }

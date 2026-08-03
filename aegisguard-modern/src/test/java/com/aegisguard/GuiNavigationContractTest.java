@@ -25,7 +25,8 @@ class GuiNavigationContractTest {
                 "expansions/ExpansionRequestAdminGUI.java", "snapshots/SnapshotAdminGUI.java",
                 "audit/AuditAdminGUI.java", "guestpass/GuestPassGUI.java", "lockdown/LockdownGUI.java",
                 "profile/RealmProfileGUI.java", "guidance/FirstClaimWalkthroughGUI.java",
-                "routes/RoutesGUI.java", "routes/RouteAdminGUI.java");
+                "routes/RoutesGUI.java", "routes/RouteAdminGUI.java",
+                "alliance/AllianceAccessGUI.java");
 
         for (String relative : submenus) {
             String source = Files.readString(JAVA_ROOT.resolve(relative));

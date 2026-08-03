@@ -1178,6 +1178,7 @@ audit_category_admin_bypass: 'Admin Bypass'
 audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
 audit_category_guest_pass: 'Guest Pass'
 audit_category_lockdown: 'Emergency Lockdown'
+audit_category_alliance: 'Alliance'
 
 toggle_on: '&aON'
 toggle_off: '&cOFF'
@@ -1780,3 +1781,49 @@ routes_admin_reward_blocks_name: '&bClaim Blocks: {AMOUNT}'
 routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
 routes_admin_delete_name: '&cDelete Route'
 routes_admin_delete_lore: ['&cRemoves this route and all', '&cplayer progress for it.']
+# ------------------------------------------------------------
+# Alliance Access (1.3.0+, Milestone 7)
+# ------------------------------------------------------------
+button_alliance_access: '&6🛡 Alliance Access'
+alliance_button_lore: ['&7Manage this plot''s alliance', '&7access toggles.']
+alliance_button_grayed_lore: ['&7This plot has not joined an alliance.', '&7Create or join one, then opt this', '&7plot in. Risky toggles stay OFF.']
+alliance_menu_title: '&6Alliance Access'
+alliance_none_personal: '&8You are not in an alliance.'
+alliance_create_hint: '&8Use /ag alliance create <name>'
+alliance_personal_line: '&7Your alliance: &f{NAME}'
+alliance_members_line: '&7Members: &f{COUNT}'
+alliance_header_name: '&6&lAlliance Access'
+alliance_create_name: '&aCreate Alliance'
+alliance_create_lore: ['&7Use &f/ag alliance create <name>', '&7to form a new alliance.']
+alliance_accept_name: '&eAccept Invite'
+alliance_accept_lore: ['&7Use &f/ag alliance accept', '&7if you have a pending invite.']
+alliance_invite_name: '&bInvite Player'
+alliance_invite_lore: ['&7Use &f/ag alliance invite <player>', '&7to invite someone (leader only).']
+alliance_leave_name: '&eLeave Alliance'
+alliance_leave_lore: ['&7Leaders must disband instead.', '&eClick for confirmation.']
+alliance_disband_name: '&cDisband Alliance'
+alliance_disband_lore: ['&cRemoves the alliance for everyone.', '&cJoined plots lose alliance access.', '&eClick for confirmation.']
+alliance_no_plot_name: '&7Stand in a Plot'
+alliance_no_plot_lore: ['&7Alliance Access toggles apply to', '&7the plot you are standing in.']
+alliance_plot_not_joined_lore: ['&7This plot has not joined an alliance.', '&7Alliance members gain nothing here', '&7until you opt in.']
+alliance_join_click: '&eClick to join your alliance.'
+alliance_manage_locked: '&8Only the owner can change this.'
+alliance_need_membership: '&8Join or create an alliance first.'
+alliance_plot_not_joined_name: '&7No Alliance on This Plot'
+alliance_plot_joined_name: '&aJoined: &f{NAME}'
+alliance_leave_plot_lore: ['&eClick to remove this plot', '&efrom the alliance.']
+alliance_manage_locked_lore: ['&8Only the owner can change this.']
+alliance_toggle_on: '&aON'
+alliance_toggle_off: '&cOFF'
+alliance_toggle_click: '&eClick to toggle.'
+alliance_toggle_enter: 'Allies may enter'
+alliance_toggle_interact: 'Allies may use doors/controls'
+alliance_toggle_containers: 'Allies may use containers'
+alliance_toggle_build: 'Allies may build and break'
+alliance_toggle_animals: 'Allies may use animals/farms'
+alliance_toggle_friendly_pvp: 'Allies are friendly for PvP'
+alliance_confirm_title: '&cConfirm'
+alliance_confirm_yes: '&aConfirm'
+alliance_confirm_yes_lore: ['&eClick to confirm.']
+alliance_confirm_no: '&cCancel'
+alliance_confirm_no_lore: ['&7Go back.']

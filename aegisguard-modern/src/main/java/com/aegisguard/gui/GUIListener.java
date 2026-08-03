@@ -21,6 +21,8 @@ import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
 import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
+import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
+import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -152,7 +154,9 @@ public class GUIListener implements Listener {
                 || holder instanceof RoutesMenuHolder
                 || holder instanceof RouteDetailHolder
                 || holder instanceof RouteAdminHolder
-                || holder instanceof RouteEditHolder;
+                || holder instanceof RouteEditHolder
+                || holder instanceof AllianceMenuHolder
+                || holder instanceof AllianceConfirmHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -360,6 +364,12 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof RouteEditHolder castHolder) {
             plugin.gui().routeAdmin().handleEditClick(player, e, castHolder);
+        }
+        else if (holder instanceof AllianceMenuHolder castHolder) {
+            plugin.gui().allianceAccess().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof AllianceConfirmHolder castHolder) {
+            plugin.gui().allianceAccess().handleConfirmClick(player, e, castHolder);
         }
     }
 
@@ -652,6 +662,15 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof RouteEditHolder castHolder) {
             plugin.gui().routeAdmin().openEdit(player, castHolder.getRoute());
+            return;
+        }
+
+        if (holder instanceof AllianceMenuHolder castHolder) {
+            plugin.gui().allianceAccess().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof AllianceConfirmHolder castHolder) {
+            plugin.gui().allianceAccess().openMenu(player, castHolder.getPlot());
             return;
         }
 

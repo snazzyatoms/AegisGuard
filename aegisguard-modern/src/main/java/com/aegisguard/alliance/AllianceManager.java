@@ -1,0 +1,214 @@
+package com.aegisguard.alliance;
+
+import com.aegisguard.AegisGuard;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+
+/**
+ * Milestone 7 - persistence and membership for alliances ({@code alliances.yml}).
+ * Completely separate from {@link com.aegisguard.groups.GroupManager} (co-ownership).
+ */
+public class AllianceManager {
+
+    private final AegisGuard plugin;
+    private final File file;
+    private final Map<UUID, Alliance> alliancesById = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> playerToAlliance = new ConcurrentHashMap<>();
+    private final Object ioLock = new Object();
+    private volatile boolean dirty;
+
+    public AllianceManager(AegisGuard plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "alliances.yml");
+    }
+
+    public boolean isEnabled() {
+        return plugin.getConfig().getBoolean("alliance_access.enabled", true);
+    }
+
+    public int maxMembers() {
+        return Math.max(2, plugin.getConfig().getInt("alliance_access.max_members", 20));
+    }
+
+    public Collection<Alliance> all() {
+        return List.copyOf(alliancesById.values());
+    }
+
+    public Alliance get(UUID id) {
+        return id == null ? null : alliancesById.get(id);
+    }
+
+    public Alliance getByPlayer(UUID playerId) {
+        if (playerId == null) return null;
+        UUID allianceId = playerToAlliance.get(playerId);
+        return allianceId == null ? null : alliancesById.get(allianceId);
+    }
+
+    public Alliance create(String name, UUID leaderId) {
+        if (leaderId == null) return null;
+        if (playerToAlliance.containsKey(leaderId)) return null;
+        Alliance alliance = Alliance.create(name, leaderId);
+        alliancesById.put(alliance.getId(), alliance);
+        playerToAlliance.put(leaderId, alliance.getId());
+        dirty = true;
+        save();
+        return alliance;
+    }
+
+    public String invite(Alliance alliance, UUID targetId) {
+        if (alliance == null || targetId == null) return "alliance_invalid";
+        if (alliance.isMember(targetId)) return "alliance_already_member";
+        if (playerToAlliance.containsKey(targetId)) return "alliance_target_in_other";
+        if (alliance.size() >= maxMembers()) return "alliance_full";
+        alliance.addInvite(targetId, System.currentTimeMillis());
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    public String accept(UUID playerId) {
+        if (playerId == null) return "alliance_invalid";
+        if (playerToAlliance.containsKey(playerId)) return "alliance_already_member";
+
+        Alliance invited = null;
+        for (Alliance alliance : alliancesById.values()) {
+            if (alliance.isInvited(playerId)) {
+                invited = alliance;
+                break;
+            }
+        }
+        if (invited == null) return "alliance_no_invite";
+        if (invited.size() >= maxMembers()) return "alliance_full";
+
+        invited.addMember(playerId, System.currentTimeMillis());
+        playerToAlliance.put(playerId, invited.getId());
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    public String leave(UUID playerId) {
+        if (playerId == null) return "alliance_invalid";
+        Alliance alliance = getByPlayer(playerId);
+        if (alliance == null) return "alliance_not_member";
+        if (alliance.isLeader(playerId)) return "alliance_leader_must_disband";
+
+        alliance.removeMember(playerId);
+        playerToAlliance.remove(playerId);
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    public String disband(UUID leaderId) {
+        Alliance alliance = getByPlayer(leaderId);
+        if (alliance == null) return "alliance_not_member";
+        if (!alliance.isLeader(leaderId)) return "alliance_not_leader";
+
+        for (UUID member : new ArrayList<>(alliance.getMemberIds())) {
+            playerToAlliance.remove(member);
+        }
+        alliancesById.remove(alliance.getId());
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    public boolean isDirty() { return dirty; }
+
+    public void load() {
+        synchronized (ioLock) {
+            alliancesById.clear();
+            playerToAlliance.clear();
+            try {
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists()) parent.mkdirs();
+                if (!file.exists()) file.createNewFile();
+            } catch (IOException ignored) {}
+
+            FileConfiguration data = YamlConfiguration.loadConfiguration(file);
+            ConfigurationSection root = data.getConfigurationSection("alliances");
+            if (root == null) {
+                dirty = false;
+                return;
+            }
+
+            for (String key : root.getKeys(false)) {
+                try {
+                    UUID id = UUID.fromString(key);
+                    ConfigurationSection sec = root.getConfigurationSection(key);
+                    if (sec == null) continue;
+                    UUID leader = UUID.fromString(sec.getString("leader"));
+                    Alliance alliance = new Alliance(id, sec.getString("name", "Alliance"),
+                            leader, sec.getLong("created-at", System.currentTimeMillis()));
+
+                    ConfigurationSection members = sec.getConfigurationSection("members");
+                    if (members != null) {
+                        for (String memberKey : members.getKeys(false)) {
+                            UUID memberId = UUID.fromString(memberKey);
+                            alliance.addMember(memberId, members.getLong(memberKey, alliance.getCreatedAt()));
+                            playerToAlliance.put(memberId, id);
+                        }
+                    }
+                    if (!alliance.isMember(leader)) {
+                        alliance.addMember(leader, alliance.getCreatedAt());
+                        playerToAlliance.put(leader, id);
+                    }
+
+                    ConfigurationSection invites = sec.getConfigurationSection("invites");
+                    if (invites != null) {
+                        for (String inviteKey : invites.getKeys(false)) {
+                            alliance.addInvite(UUID.fromString(inviteKey), invites.getLong(inviteKey));
+                        }
+                    }
+                    alliancesById.put(id, alliance);
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Failed to load alliance " + key + ": " + ex.getMessage());
+                }
+            }
+            dirty = false;
+            plugin.getLogger().info("Loaded " + alliancesById.size() + " alliance(s).");
+        }
+    }
+
+    public void save() {
+        synchronized (ioLock) {
+            if (!dirty && file.exists()) return;
+            YamlConfiguration out = new YamlConfiguration();
+            for (Alliance alliance : alliancesById.values()) {
+                String base = "alliances." + alliance.getId();
+                out.set(base + ".name", alliance.getName());
+                out.set(base + ".leader", alliance.getLeaderId().toString());
+                out.set(base + ".created-at", alliance.getCreatedAt());
+                for (Map.Entry<UUID, Long> entry : alliance.getMembers().entrySet()) {
+                    out.set(base + ".members." + entry.getKey(), entry.getValue());
+                }
+                for (Map.Entry<UUID, Long> entry : alliance.getInvites().entrySet()) {
+                    out.set(base + ".invites." + entry.getKey(), entry.getValue());
+                }
+            }
+            try {
+                out.save(file);
+                dirty = false;
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not save alliances.yml", e);
+            }
+        }
+    }
+
+    public void saveAsync() {
+        dirty = true;
+        plugin.runGlobalAsync(this::save);
+    }
+}

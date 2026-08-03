@@ -142,6 +142,8 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.guestpass.GuestPassService guestPassService;
     private com.aegisguard.lockdown.LockdownService lockdownService;
     private com.aegisguard.routes.RouteService routeService;
+    private com.aegisguard.alliance.AllianceManager allianceManager;
+    private com.aegisguard.alliance.AllianceService allianceService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -232,6 +234,8 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
     public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
     public com.aegisguard.routes.RouteService routes() { return routeService; }
+    public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
+    public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -293,6 +297,8 @@ public class AegisGuard extends JavaPlugin {
         guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
         lockdownService = new com.aegisguard.lockdown.LockdownService(this);
         routeService = new com.aegisguard.routes.RouteService(this);
+        allianceManager = new com.aegisguard.alliance.AllianceManager(this);
+        allianceService = new com.aegisguard.alliance.AllianceService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -363,6 +369,10 @@ public class AegisGuard extends JavaPlugin {
 
             try {
                 if (routeService != null) routeService.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (allianceManager != null) allianceManager.load();
             } catch (Throwable ignored) {}
 
             // ✅ NotificationManager loads data inside constructor + reload()
@@ -486,6 +496,12 @@ public class AegisGuard extends JavaPlugin {
             if (routeService != null) routeService.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save routes: " + t.getMessage());
+        }
+
+        try {
+            if (allianceManager != null) allianceManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save alliances: " + t.getMessage());
         }
 
         try {
@@ -761,6 +777,7 @@ public class AegisGuard extends JavaPlugin {
                 if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
                 if (routeService != null && routeService.isDirty()) routeService.save();
+                if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 if (territoryLifeService != null && territoryLifeService.isDirty()) territoryLifeService.save();

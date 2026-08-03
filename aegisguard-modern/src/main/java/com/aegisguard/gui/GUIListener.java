@@ -14,6 +14,7 @@ import com.aegisguard.guestpass.GuestPassGUI.GuestPassModeHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
+import com.aegisguard.lockdown.LockdownGUI.LockdownOptionsHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
 import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
@@ -38,6 +39,7 @@ import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
 import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsHolder;
+import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsPresetConfirmHolder;
 import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
 import com.aegisguard.gui.PlotStatusGUI.PlotStatusHolder;
 import com.aegisguard.gui.RolesGUI.PlotSelectorHolder;
@@ -133,6 +135,7 @@ public class GUIListener implements Listener {
                 || holder instanceof RoleManageHolder
                 || holder instanceof RoleFlagsHolder
                 || holder instanceof PlotFlagsHolder
+                || holder instanceof PlotFlagsPresetConfirmHolder
                 || holder instanceof CosmeticsHolder
                 || holder instanceof LevelingHolder
                 || holder instanceof ZoningHolder
@@ -170,6 +173,7 @@ public class GUIListener implements Listener {
                 || holder instanceof GuestPassConfirmHolder
                 || holder instanceof GuestPassDetailHolder
                 || holder instanceof LockdownMenuHolder
+                || holder instanceof LockdownOptionsHolder
                 || holder instanceof LockdownConfirmHolder
                 || holder instanceof RealmProfileMenuHolder
                 || holder instanceof NoticeboardHolder
@@ -276,6 +280,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof PlotFlagsHolder castHolder) {
             plugin.gui().flags().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof PlotFlagsPresetConfirmHolder castHolder) {
+            plugin.gui().flags().handlePresetConfirmClick(player, e, castHolder);
         }
         else if (holder instanceof CosmeticsHolder castHolder) {
             plugin.gui().cosmetics().handleClick(player, e, castHolder);
@@ -397,6 +404,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof LockdownMenuHolder castHolder) {
             plugin.gui().lockdownGui().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof LockdownOptionsHolder castHolder) {
+            plugin.gui().lockdownGui().handleOptionsClick(player, e, castHolder);
         }
         else if (holder instanceof LockdownConfirmHolder castHolder) {
             plugin.gui().lockdownGui().handleConfirmClick(player, e, castHolder);

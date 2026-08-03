@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1282
+config_schema: 1283
 
 
 # ------------------------------------------------------------------------------
@@ -706,6 +706,13 @@ lockdown:
   # Require an extra confirmation click before activating or deactivating from the GUI.
   require_confirmation: true
 
+  # Soft lockdown restricts only these tokens (Full mode uses restricted_permissions above).
+  soft_restricted_permissions:
+    - BUILD
+    - BLOCK_BREAK
+    - BLOCK_PLACE
+    - CONTAINERS
+
 
 # ==============================================================================
 # Expansion requests
@@ -982,6 +989,7 @@ alliance_access:
     containers: false
     build: false
     animals: false
+    vehicles: false
     friendly_pvp: false
 
 
@@ -1258,7 +1266,16 @@ protections:
   fire-spread: true
   piston-use: true
   # Block water/lava/dragon-egg flow across claim borders (BlockFromTo).
+  # Also seeds the player-facing liquid-flow plot flag on new claims.
   liquid_flow: true
+
+  # 1.3.0 hero-pack ward defaults (GREEN=protected). Missing keys on existing
+  # plots still default protected in ProtectionManager.isFlagEnabled.
+  doors: true
+  hopper_pipe: true
+  teleport_ward: true
+  storm_ward: true
+  decor: true
 
   # Plot flag defaults.
   safe_zone: true

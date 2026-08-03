@@ -5,24 +5,22 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Milestone 3 (Emergency Plot Lockdown) player-facing GUI.
  *
- * Flow: status screen (shows current state, who/when it was activated) -> an explicit
- * confirmation screen for either activating or deactivating -> back to the status screen.
- *
- * Never touches ownership or roles; it is purely a temporary, fully reversible access gate
- * enforced in {@link Plot#canBuild}.
+ * Flow: status -> choose mode/duration (when activating) -> optional confirm -> status.
+ * Never touches ownership or roles; it is purely a temporary, fully reversible access gate.
  */
 public class LockdownGUI {
 
@@ -39,12 +37,37 @@ public class LockdownGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
+    public static class LockdownOptionsHolder implements InventoryHolder {
+        private final Plot plot;
+        private String mode = "FULL";
+        private long minutes = 0L;
+        public LockdownOptionsHolder(Plot plot) { this.plot = plot; }
+        public Plot getPlot() { return plot; }
+        public String getMode() { return mode; }
+        public void setMode(String mode) { this.mode = mode; }
+        public long getMinutes() { return minutes; }
+        public void setMinutes(long minutes) { this.minutes = minutes; }
+        @Override public Inventory getInventory() { return null; }
+    }
+
     public static class LockdownConfirmHolder implements InventoryHolder {
         private final Plot plot;
         private final boolean activating;
-        public LockdownConfirmHolder(Plot plot, boolean activating) { this.plot = plot; this.activating = activating; }
+        private final String mode;
+        private final long minutes;
+        public LockdownConfirmHolder(Plot plot, boolean activating) {
+            this(plot, activating, "FULL", 0L);
+        }
+        public LockdownConfirmHolder(Plot plot, boolean activating, String mode, long minutes) {
+            this.plot = plot;
+            this.activating = activating;
+            this.mode = mode == null ? "FULL" : mode;
+            this.minutes = Math.max(0L, minutes);
+        }
         public Plot getPlot() { return plot; }
         public boolean isActivating() { return activating; }
+        public String getMode() { return mode; }
+        public long getMinutes() { return minutes; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -110,7 +133,7 @@ public class LockdownGUI {
 
         boolean active = plot.isLockdownActive();
 
-        List<String> lore = new java.util.ArrayList<>();
+        List<String> lore = new ArrayList<>();
         if (active) {
             long minutesAgo = Math.max(0L, (System.currentTimeMillis() - plot.getLockdownActivatedAt()) / 60_000L);
             lore.addAll(tl(player, "lockdown_status_active_lore", List.of("&7This plot is currently locked down.")));
@@ -118,6 +141,21 @@ public class LockdownGUI {
                     Map.of("PLAYER", plot.getLockdownActivatedByName()), "&7Activated by: &f{PLAYER}")));
             lore.add(GUIManager.color(t(player, "lockdown_status_activated_ago",
                     Map.of("MINUTES", String.valueOf(minutesAgo)), "&7Active for: &f{MINUTES}m")));
+            lore.add(GUIManager.color(t(player, "lockdown_status_mode_line",
+                    Map.of("MODE", plot.isSoftLockdown()
+                            ? t(player, "lockdown_mode_soft_label", "Soft (containers + build)")
+                            : t(player, "lockdown_mode_full_label", "Full")),
+                    "&7Mode: &f{MODE}")));
+            if (plot.getLockdownExpiresAt() > 0L) {
+                long remain = Math.max(0L, plot.getLockdownExpiresAt() - System.currentTimeMillis());
+                long remainMin = TimeUnit.MILLISECONDS.toMinutes(remain);
+                lore.add(GUIManager.color(t(player, "lockdown_status_expires_line",
+                        Map.of("MINUTES", String.valueOf(remainMin)),
+                        "&7Auto-lifts in: &f{MINUTES}m")));
+            } else {
+                lore.add(GUIManager.color(t(player, "lockdown_status_manual_line",
+                        "&7Duration: &fUntil manually lifted")));
+            }
         } else {
             lore.addAll(tl(player, "lockdown_status_inactive_lore", List.of(
                     "&7This plot is operating normally.",
@@ -150,7 +188,9 @@ public class LockdownGUI {
         } else {
             inv.setItem(15, GUIManager.createItem(Material.RED_DYE,
                     t(player, "button_activate_lockdown", "&cActivate Lockdown"),
-                    tl(player, "activate_lockdown_lore", List.of("&7Immediately restrict sensitive actions."))));
+                    tl(player, "activate_lockdown_lore", List.of(
+                            "&7Choose soft/full mode and an optional",
+                            "&7auto-expire duration next."))));
         }
 
         inv.setItem(18, GUIManager.createItem(Material.ARROW,
@@ -164,30 +204,107 @@ public class LockdownGUI {
         plugin.effects().playMenuOpen(player);
     }
 
-    private void openConfirm(Player player, Plot plot, boolean activating) {
+    private void openOptions(Player player, Plot plot) {
+        openOptions(player, new LockdownOptionsHolder(plot));
+    }
+
+    private void openOptions(Player player, LockdownOptionsHolder holder) {
+        Plot plot = holder.getPlot();
+        String title = plugin.gui().title(player, "lockdown_options_title", "&cLockdown Options");
+        Inventory inv = Bukkit.createInventory(holder, 36, title);
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 0; i < 36; i++) inv.setItem(i, filler);
+
+        boolean soft = "SOFT".equalsIgnoreCase(holder.getMode());
+        inv.setItem(11, GUIManager.createItem(soft ? Material.CHEST : Material.GRAY_DYE,
+                t(player, "lockdown_mode_soft_name", "&eSoft Lockdown"),
+                tl(player, "lockdown_mode_soft_lore", List.of(
+                        "&7Restricts containers + build/break only.",
+                        "&7Roles and guest passes stay intact.",
+                        soft ? "&aSelected." : "&eClick to select."))));
+        inv.setItem(15, GUIManager.createItem(!soft ? Material.REDSTONE_BLOCK : Material.GRAY_DYE,
+                t(player, "lockdown_mode_full_name", "&cFull Lockdown"),
+                tl(player, "lockdown_mode_full_lore", List.of(
+                        "&7Uses the server restricted-permission list.",
+                        "&7Doors/interact still always work.",
+                        !soft ? "&aSelected." : "&eClick to select."))));
+
+        placeDuration(inv, 19, player, holder, 0L, "lockdown_duration_manual", "&fUntil Manual Lift");
+        placeDuration(inv, 20, player, holder, 15L, "lockdown_duration_15m", "&f15 Minutes");
+        placeDuration(inv, 21, player, holder, 60L, "lockdown_duration_1h", "&f1 Hour");
+        placeDuration(inv, 22, player, holder, 360L, "lockdown_duration_6h", "&f6 Hours");
+        placeDuration(inv, 23, player, holder, 1440L, "lockdown_duration_24h", "&f24 Hours");
+
+        inv.setItem(31, GUIManager.createItem(Material.EMERALD_BLOCK,
+                t(player, "lockdown_options_continue", "&aContinue"),
+                tl(player, "lockdown_options_continue_lore", List.of(
+                        "&7Mode: &f" + (soft ? "Soft" : "Full"),
+                        "&7Duration: &f" + durationLabel(player, holder.getMinutes()),
+                        "&eClick to confirm."))));
+
+        inv.setItem(27, GUIManager.createItem(Material.ARROW,
+                t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to lockdown status."))));
+        inv.setItem(29, GUIManager.createItem(Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))));
+
+        player.openInventory(inv);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    private void placeDuration(Inventory inv, int slot, Player player, LockdownOptionsHolder holder,
+                               long minutes, String nameKey, String fallback) {
+        boolean selected = holder.getMinutes() == minutes;
+        List<String> lore = new ArrayList<>();
+        lore.add(GUIManager.color(selected
+                ? t(player, "lockdown_duration_selected", "&aSelected.")
+                : t(player, "lockdown_duration_click", "&eClick to select.")));
+        inv.setItem(slot, GUIManager.createItem(selected ? Material.CLOCK : Material.GRAY_DYE,
+                t(player, nameKey, fallback), lore));
+    }
+
+    private String durationLabel(Player player, long minutes) {
+        if (minutes <= 0) return t(player, "lockdown_duration_manual_label", "Until manually lifted");
+        if (minutes == 60) return t(player, "lockdown_duration_1h_label", "1 hour");
+        if (minutes == 360) return t(player, "lockdown_duration_6h_label", "6 hours");
+        if (minutes == 1440) return t(player, "lockdown_duration_24h_label", "24 hours");
+        return minutes + "m";
+    }
+
+    private void openConfirm(Player player, Plot plot, boolean activating, String mode, long minutes) {
         String titleKey = activating ? "lockdown_confirm_activate_title" : "lockdown_confirm_deactivate_title";
         String title = plugin.gui().title(player, titleKey,
                 activating ? "&cConfirm Lockdown" : "&aConfirm Unlock");
-        Inventory inv = Bukkit.createInventory(new LockdownConfirmHolder(plot, activating), 27, title);
+        Inventory inv = Bukkit.createInventory(new LockdownConfirmHolder(plot, activating, mode, minutes), 27, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
-        List<String> lore = activating
-                ? tl(player, "lockdown_confirm_activate_lore", List.of(
-                        "&7Everyone except you and staff will",
-                        "&7instantly lose build, break, and",
-                        "&7container access on this plot.",
-                        " ",
-                        "&7Doors and buttons keep working, so",
-                        "&7nobody gets trapped inside.",
-                        " ",
-                        "&aClick to activate lockdown."))
-                : tl(player, "lockdown_confirm_deactivate_lore", List.of(
-                        "&7This plot will immediately return to",
-                        "&7its normal roles and permissions.",
-                        " ",
-                        "&aClick to deactivate lockdown."));
+        List<String> lore;
+        if (activating) {
+            lore = new ArrayList<>(tl(player, "lockdown_confirm_activate_lore", List.of(
+                    "&7Everyone except you and staff will",
+                    "&7instantly lose selected access on this plot.",
+                    " ",
+                    "&7Doors keep working, so nobody gets trapped.",
+                    " ",
+                    "&aClick to activate lockdown.")));
+            lore.add(GUIManager.color(t(player, "lockdown_confirm_mode_line",
+                    Map.of("MODE", "SOFT".equalsIgnoreCase(mode)
+                            ? t(player, "lockdown_mode_soft_label", "Soft (containers + build)")
+                            : t(player, "lockdown_mode_full_label", "Full")),
+                    "&7Mode: &f{MODE}")));
+            lore.add(GUIManager.color(t(player, "lockdown_confirm_duration_line",
+                    Map.of("DURATION", durationLabel(player, minutes)),
+                    "&7Duration: &f{DURATION}")));
+        } else {
+            lore = tl(player, "lockdown_confirm_deactivate_lore", List.of(
+                    "&7This plot will immediately return to",
+                    "&7its normal roles and permissions.",
+                    " ",
+                    "&aClick to deactivate lockdown."));
+        }
 
         inv.setItem(13, GUIManager.createItem(
                 activating ? Material.REDSTONE_BLOCK : Material.EMERALD_BLOCK,
@@ -219,11 +336,43 @@ public class LockdownGUI {
         if (slot == 20) { player.closeInventory(); return; }
 
         if (slot == 15) {
-            boolean activating = !plot.isLockdownActive();
-            if (plugin.lockdown() != null && plugin.lockdown().requiresConfirmation()) {
-                openConfirm(player, plot, activating);
+            if (plot.isLockdownActive()) {
+                if (plugin.lockdown() != null && plugin.lockdown().requiresConfirmation()) {
+                    openConfirm(player, plot, false, "FULL", 0L);
+                } else {
+                    applyToggle(player, plot, false, "FULL", 0L);
+                }
             } else {
-                applyToggle(player, plot, activating);
+                openOptions(player, plot);
+            }
+        }
+    }
+
+    public void handleOptionsClick(Player player, InventoryClickEvent e, LockdownOptionsHolder holder) {
+        if (!isTopClick(e)) return;
+        e.setCancelled(true);
+        if (e.getCurrentItem() == null) return;
+
+        Plot plot = holder.getPlot();
+        if (!canManagePlot(player, plot)) { plugin.effects().playError(player); openMenu(player, plot); return; }
+
+        int slot = e.getRawSlot();
+        if (slot == 27) { openMenu(player, plot); return; }
+        if (slot == 29) { player.closeInventory(); return; }
+
+        if (slot == 11) { holder.setMode("SOFT"); openOptions(player, holder); return; }
+        if (slot == 15) { holder.setMode("FULL"); openOptions(player, holder); return; }
+        if (slot == 19) { holder.setMinutes(0L); openOptions(player, holder); return; }
+        if (slot == 20) { holder.setMinutes(15L); openOptions(player, holder); return; }
+        if (slot == 21) { holder.setMinutes(60L); openOptions(player, holder); return; }
+        if (slot == 22) { holder.setMinutes(360L); openOptions(player, holder); return; }
+        if (slot == 23) { holder.setMinutes(1440L); openOptions(player, holder); return; }
+
+        if (slot == 31) {
+            if (plugin.lockdown() != null && plugin.lockdown().requiresConfirmation()) {
+                openConfirm(player, plot, true, holder.getMode(), holder.getMinutes());
+            } else {
+                applyToggle(player, plot, true, holder.getMode(), holder.getMinutes());
             }
         }
     }
@@ -237,17 +386,21 @@ public class LockdownGUI {
         if (!canManagePlot(player, plot)) { plugin.effects().playError(player); openMenu(player, plot); return; }
 
         int slot = e.getRawSlot();
-        if (slot == 18) { openMenu(player, plot); return; }
+        if (slot == 18) {
+            if (holder.isActivating()) openOptions(player, plot);
+            else openMenu(player, plot);
+            return;
+        }
         if (slot == 20) { player.closeInventory(); return; }
 
         if (slot == 13) {
-            applyToggle(player, plot, holder.isActivating());
+            applyToggle(player, plot, holder.isActivating(), holder.getMode(), holder.getMinutes());
         }
     }
 
-    private void applyToggle(Player player, Plot plot, boolean activating) {
+    private void applyToggle(Player player, Plot plot, boolean activating, String mode, long minutes) {
         String failureKey = activating
-                ? plugin.lockdown().activate(player, plot)
+                ? plugin.lockdown().activate(player, plot, minutes, mode)
                 : plugin.lockdown().deactivate(player, plot);
 
         if (failureKey != null) {

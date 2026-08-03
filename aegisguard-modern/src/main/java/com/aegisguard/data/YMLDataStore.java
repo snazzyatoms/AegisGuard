@@ -216,7 +216,9 @@ public class YMLDataStore implements IDataStore {
                         try { if (actorStr != null && !actorStr.isBlank()) actorId = UUID.fromString(actorStr); }
                         catch (IllegalArgumentException ignored) { }
                         plot.restoreLockdown(true, actorId, sec.getString("lockdown-activated-by-name", "Unknown"),
-                                sec.getLong("lockdown-activated-at", System.currentTimeMillis()));
+                                sec.getLong("lockdown-activated-at", System.currentTimeMillis()),
+                                sec.getLong("lockdown-expires-at", 0L),
+                                sec.getString("lockdown-mode", "FULL"));
                     }
 
                     for (String uuidStr : sec.getStringList("liked-by")) {
@@ -535,11 +537,15 @@ public class YMLDataStore implements IDataStore {
         if (plot.isLockdownActive()) {
             sec.set("lockdown-active", true);
             sec.set("lockdown-activated-at", plot.getLockdownActivatedAt());
+            sec.set("lockdown-expires-at", plot.getLockdownExpiresAt() > 0L ? plot.getLockdownExpiresAt() : null);
+            sec.set("lockdown-mode", plot.getLockdownMode());
             sec.set("lockdown-activated-by", plot.getLockdownActivatedBy() == null ? null : plot.getLockdownActivatedBy().toString());
             sec.set("lockdown-activated-by-name", plot.getLockdownActivatedByName());
         } else {
             sec.set("lockdown-active", null);
             sec.set("lockdown-activated-at", null);
+            sec.set("lockdown-expires-at", null);
+            sec.set("lockdown-mode", null);
             sec.set("lockdown-activated-by", null);
             sec.set("lockdown-activated-by-name", null);
         }

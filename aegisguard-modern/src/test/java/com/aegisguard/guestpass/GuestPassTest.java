@@ -51,6 +51,9 @@ class GuestPassTest {
                 GuestPassPreset.TEMPORARY_BUILDER.getPermissions());
         assertEquals(java.util.Set.of("INTERACT", "BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS"),
                 GuestPassPreset.TEMPORARY_TRUSTED_GUEST.getPermissions());
+        assertEquals(java.util.Set.of("INTERACT", "ANIMALS"), GuestPassPreset.ANIMAL_SITTER.getPermissions());
+        assertEquals(java.util.Set.of("INTERACT", "REDSTONE"), GuestPassPreset.REDSTONE_HELPER.getPermissions());
+        assertEquals(java.util.Set.of("INTERACT", "VEHICLES"), GuestPassPreset.VEHICLE_GUEST.getPermissions());
 
         assertFalse(GuestPassPreset.VISITOR.requiresContainerWarning());
         assertFalse(GuestPassPreset.TEMPORARY_BUILDER.requiresContainerWarning());
@@ -59,6 +62,7 @@ class GuestPassTest {
         assertFalse(GuestPassPreset.VISITOR.grantsBuildAccess());
         assertTrue(GuestPassPreset.TEMPORARY_BUILDER.grantsBuildAccess());
         assertTrue(GuestPassPreset.TEMPORARY_TRUSTED_GUEST.grantsBuildAccess());
+        assertEquals(7, GuestPassPreset.ordered().size());
     }
 
     @Test

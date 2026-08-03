@@ -648,3 +648,5 @@ admin_restore_confirm_hint: '&cThis overwrites the live claim. Run &e/agadmin re
 admin_restore_running: '&b[AegisGuard] &7Restoring latest snapshot...'
 admin_restore_success: '&aPlot restored from snapshot &f{ID}'
 admin_restore_failed: '&cPlot restore failed. Check the logs or doctor report.'
+protection_preset_applied: '&aApplied protection preset: &f{PRESET}&a.'
+plot_teleport_ward_denied: '&c⛔ Teleport Ward blocks entry into this claim.'

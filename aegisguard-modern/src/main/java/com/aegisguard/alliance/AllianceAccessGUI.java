@@ -200,16 +200,18 @@ public class AllianceAccessGUI {
                                     : List.of("&8Only the owner can change this."))));
 
             AllianceAccess access = plot.getAllianceAccess();
-            placeToggle(inv, 29, player, "enter", access.isEnter(), Material.OAK_DOOR,
+            placeToggle(inv, 28, player, "enter", access.isEnter(), Material.OAK_DOOR,
                     "Allies may enter", canManage);
-            placeToggle(inv, 30, player, "interact", access.isInteract(), Material.LEVER,
+            placeToggle(inv, 29, player, "interact", access.isInteract(), Material.LEVER,
                     "Allies may use doors/controls", canManage);
-            placeToggle(inv, 31, player, "containers", access.isContainers(), Material.CHEST,
+            placeToggle(inv, 30, player, "containers", access.isContainers(), Material.CHEST,
                     "Allies may use containers", canManage);
-            placeToggle(inv, 32, player, "build", access.isBuild(), Material.BRICKS,
+            placeToggle(inv, 31, player, "build", access.isBuild(), Material.BRICKS,
                     "Allies may build and break", canManage);
-            placeToggle(inv, 33, player, "animals", access.isAnimals(), Material.WHEAT,
+            placeToggle(inv, 32, player, "animals", access.isAnimals(), Material.WHEAT,
                     "Allies may use animals/farms", canManage);
+            placeToggle(inv, 33, player, "vehicles", access.isVehicles(), Material.MINECART,
+                    "Allies may use boats/carts", canManage);
             placeToggle(inv, 34, player, "friendly_pvp", access.isFriendlyPvp(), Material.IRON_SWORD,
                     "Allies are friendly for PvP", canManage);
         }
@@ -315,11 +317,12 @@ public class AllianceAccessGUI {
         }
 
         String toggleKey = switch (slot) {
-            case 29 -> "enter";
-            case 30 -> "interact";
-            case 31 -> "containers";
-            case 32 -> "build";
-            case 33 -> "animals";
+            case 28 -> "enter";
+            case 29 -> "interact";
+            case 30 -> "containers";
+            case 31 -> "build";
+            case 32 -> "animals";
+            case 33 -> "vehicles";
             case 34 -> "friendly_pvp";
             default -> null;
         };

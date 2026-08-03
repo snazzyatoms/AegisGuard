@@ -80,6 +80,7 @@ class AllianceContractTest {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
         assertTrue(migration.contains("CURRENT_SCHEMA = 1281")
                 || migration.contains("CURRENT_SCHEMA = 1282")
+                || migration.contains("CURRENT_SCHEMA = 1283")
                 || migration.contains("CURRENT_SCHEMA = 1280")
                 || migration.contains("CURRENT_SCHEMA = 1278"));
     }

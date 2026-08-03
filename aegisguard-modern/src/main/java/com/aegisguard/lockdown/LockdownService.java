@@ -7,6 +7,7 @@ import com.aegisguard.snapshots.ClaimSnapshot.SnapshotType;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Milestone 3 (Emergency Plot Lockdown) - plugin-integration layer around the plugin-independent
@@ -40,12 +41,24 @@ public class LockdownService {
      * @return {@code null} on success, or a translation-key style failure reason otherwise.
      */
     public String activate(Player actor, Plot plot) {
+        return activate(actor, plot, 0L, "FULL");
+    }
+
+    /**
+     * @param durationMinutes 0 = until manually lifted
+     * @param mode FULL (configured restricted list) or SOFT (containers + build/break only)
+     */
+    public String activate(Player actor, Plot plot, long durationMinutes, String mode) {
         if (!isEnabled()) return "lockdown_disabled";
         if (plot == null) return "lockdown_invalid";
         if (plot.isLockdownActive()) return "lockdown_already_active";
 
         UUID actorId = actor == null ? null : actor.getUniqueId();
         String actorName = actor == null ? "System" : actor.getName();
+        String resolvedMode = (mode == null || mode.isBlank()) ? "FULL" : mode.trim().toUpperCase();
+        long expiresAt = durationMinutes > 0
+                ? System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(durationMinutes)
+                : 0L;
 
         if (plugin.getSnapshotManager() != null
                 && plugin.getConfig().getBoolean("snapshots.auto_snapshot.before_lockdown", true)) {
@@ -55,7 +68,7 @@ public class LockdownService {
             } catch (Throwable ignored) {}
         }
 
-        plot.setLockdown(true, actorId, actorName);
+        plot.setLockdown(true, actorId, actorName, expiresAt, resolvedMode);
         plugin.store().savePlot(plot);
         if (plugin.getDiscord() != null) {
             plugin.getDiscord().sendEvent("lockdown", "Emergency lockdown activated",
@@ -64,9 +77,9 @@ public class LockdownService {
 
         if (plugin.audit() != null) {
             plugin.audit().record(AuditCategory.LOCKDOWN, actor, plotLabel(plot),
-                    "Activated Emergency Lockdown.");
+                    "Activated Emergency Lockdown (" + resolvedMode
+                            + (durationMinutes > 0 ? ", " + durationMinutes + "m" : ", manual") + ").");
         }
-        // Notify plot members who opted into lockdown alerts.
         try {
             if (plugin.getNotificationManager() != null) {
                 java.util.LinkedHashSet<java.util.UUID> targets = new java.util.LinkedHashSet<>();
@@ -97,6 +110,23 @@ public class LockdownService {
                     "Deactivated Emergency Lockdown.");
         }
         return null;
+    }
+
+    /** Sweep expired timed lockdowns across loaded plots (called from a light scheduler). */
+    public int sweepExpired() {
+        if (plugin.store() == null) return 0;
+        int lifted = 0;
+        long now = System.currentTimeMillis();
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+            long expires = plot.getLockdownExpiresAt();
+            if (expires <= 0L || now < expires) continue;
+            if (!plot.refreshLockdownExpiry()) {
+                plugin.store().savePlot(plot);
+                lifted++;
+            }
+        }
+        return lifted;
     }
 
     private String plotLabel(Plot plot) {

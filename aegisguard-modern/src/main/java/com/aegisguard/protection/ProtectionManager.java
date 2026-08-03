@@ -21,16 +21,23 @@ import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.block.BlockState;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.inventory.Inventory;
 
 import java.util.List;
 import java.util.Map;
@@ -153,10 +160,16 @@ public class ProtectionManager implements Listener {
                 case "piston-use":
                 case "farm":
                 case "redstone":
+                case "doors":
                 case "vehicles":
                 case "tnt-damage":
                 case "fire-spread":
                 case "explosions":
+                case "hopper-pipe":
+                case "liquid-flow":
+                case "teleport-ward":
+                case "storm-ward":
+                case "decor":
                     effectiveDefault = true;
                     break;
             }
@@ -176,14 +189,49 @@ public class ProtectionManager implements Listener {
         switch (key) {
             case "pvp":
             case "animals":
+            case "containers":
+            case "doors":
+            case "redstone":
+            case "vehicles":
+            case "farm":
+            case "mobs":
+            case "tnt-damage":
+            case "fire-spread":
+            case "piston-use":
+            case "hopper-pipe":
+            case "liquid-flow":
+            case "teleport-ward":
+            case "storm-ward":
+            case "decor":
+                // Safe / protected ON for missing keys on existing installs (GREEN=protected).
                 defaultValue = true;
                 break;
             default:
+                // Includes entry (true=open) and shop-interact (opt-in) — leave unset as false.
                 defaultValue = false;
                 break;
         }
 
         return isProtectionActive(plot, key, defaultValue);
+    }
+
+    /**
+     * Whether {@code player} may enter {@code plot} under the same rules as walk-in entry.
+     * Plot flag {@code entry=true} means open/public; {@code false} means closed/private.
+     * Closed plots still admit INTERACT trust / Guest Pass INTERACT / Alliance Enter.
+     */
+    public boolean canEnterPlot(Player player, Plot plot) {
+        if (player == null || plot == null) return true;
+        if (plugin.isAdmin(player) || plugin.isBypassing(player)) return true;
+        if (plot.isBanned(player.getUniqueId())) return false;
+
+        Boolean entryOverride = plot.resolveRoleFlagOverride(player.getUniqueId(), "entry");
+        if (entryOverride != null) return entryOverride;
+
+        // Mirror onPlayerMove: deny only when closed AND no INTERACT AND no alliance entry.
+        return plot.getFlag("entry", true)
+                || plot.hasPermission(player.getUniqueId(), "INTERACT", plugin)
+                || plot.allowsAllianceEntry(player.getUniqueId(), plugin);
     }
 
     public boolean isMobProtectionEnabled(Plot plot) {
@@ -592,8 +640,52 @@ public class ProtectionManager implements Listener {
     }
 
     // --------------------------------------------------
-    // REDSTONE INTERACTION
+    // DOORS vs REDSTONE INTERACTION
     // --------------------------------------------------
+
+    private static boolean isDoorLike(Material type) {
+        if (type == null) return false;
+        String name = type.name();
+        return name.contains("DOOR") || name.contains("TRAPDOOR") || name.contains("FENCE_GATE")
+                || name.contains("GATE");
+    }
+
+    private static boolean isRedstoneControl(Material type) {
+        if (type == null) return false;
+        String name = type.name();
+        // Doors/gates use the doors flag — keep redstone to buttons, levers, plates, etc.
+        if (isDoorLike(type)) return false;
+        return name.contains("BUTTON")
+                || name.contains("LEVER")
+                || name.contains("PRESSURE_PLATE")
+                || name.contains("DAYLIGHT_DETECTOR")
+                || name.equals("REPEATER")
+                || name.equals("COMPARATOR")
+                || name.equals("REDSTONE_WIRE");
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onDoorInteract(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null) return;
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK && e.getAction() != Action.PHYSICAL) return;
+        if (!isDoorLike(e.getClickedBlock().getType())) return;
+
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(e.getClickedBlock().getLocation(), p, HookAction.REDSTONE_INTERACT)) {
+            return;
+        }
+
+        if (isProtectionActive(plot, "doors", true)
+                && !plot.canInteractAt(p, e.getClickedBlock().getLocation(), plugin, "INTERACT")) {
+            e.setCancelled(true);
+            plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onRedstoneInteract(PlayerInteractEvent e) {
@@ -605,14 +697,7 @@ public class ProtectionManager implements Listener {
         }
 
         Material type = e.getClickedBlock().getType();
-        boolean redstone =
-                type.name().contains("BUTTON") ||
-                        type.name().contains("LEVER") ||
-                        type.name().contains("PRESSURE_PLATE") ||
-                        type.name().contains("DOOR") ||
-                        type.name().contains("TRAPDOOR");
-
-        if (!redstone) {
+        if (!isRedstoneControl(type)) {
             return;
         }
 
@@ -628,11 +713,119 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (isProtectionActive(plot, "redstone", false)
+        if (isProtectionActive(plot, "redstone", true)
+                && !plot.canInteractAt(p, e.getClickedBlock().getLocation(), plugin, "REDSTONE")
                 && !plot.canInteractAt(p, e.getClickedBlock().getLocation(), plugin, "INTERACT")) {
             e.setCancelled(true);
             plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
         }
+    }
+
+    // --------------------------------------------------
+    // TELEPORT WARD (pearl / chorus / portals)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onTeleportWard(PlayerTeleportEvent e) {
+        if (e.getTo() == null) return;
+        PlayerTeleportEvent.TeleportCause cause = e.getCause();
+        if (cause != PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+                && cause != PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT
+                && cause != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
+                && cause != PlayerTeleportEvent.TeleportCause.END_PORTAL
+                && cause != PlayerTeleportEvent.TeleportCause.END_GATEWAY) {
+            return;
+        }
+
+        Player p = e.getPlayer();
+        Plot from = plugin.store().getPlotAt(e.getFrom());
+        Plot to = plugin.store().getPlotAt(e.getTo());
+        if (to == null || to.equals(from)) return;
+        if (!isProtectionActive(to, "teleport-ward", true)) return;
+
+        if (!canEnterPlot(p, to)) {
+            e.setCancelled(true);
+            String deniedMsg = tr(p, "plot_teleport_ward_denied",
+                    "&c⛔ Teleport Ward blocks entry into this claim.");
+            sendPlotMessage(p, deniedMsg);
+            plugin.effects().playEffect("entry", "deny", p, e.getTo());
+        }
+    }
+
+    // --------------------------------------------------
+    // STORM WARD (lightning)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onLightningStrike(LightningStrikeEvent e) {
+        Plot plot = plugin.store().getPlotAt(e.getLightning().getLocation());
+        if (plot != null && isProtectionActive(plot, "storm-ward", true)) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onLightningDamage(EntityDamageEvent e) {
+        String causeName = e.getCause() == null ? "" : e.getCause().name();
+        if (!causeName.contains("LIGHTNING")) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getEntity().getLocation());
+        if (plot != null && isProtectionActive(plot, "storm-ward", true)) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onLightningIgnite(BlockIgniteEvent e) {
+        if (e.getCause() != BlockIgniteEvent.IgniteCause.LIGHTNING) return;
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot != null && isProtectionActive(plot, "storm-ward", true)) {
+            e.setCancelled(true);
+        }
+    }
+
+    // --------------------------------------------------
+    // HOPPER PIPE WARD (cross-border InventoryMoveItem)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onHopperPipe(InventoryMoveItemEvent e) {
+        Location fromLoc = inventoryLocation(e.getSource());
+        Location toLoc = inventoryLocation(e.getDestination());
+        if (fromLoc == null || toLoc == null) return;
+
+        Plot fromPlot = plugin.store().getPlotAt(fromLoc);
+        Plot toPlot = plugin.store().getPlotAt(toLoc);
+        if (fromPlot == null && toPlot == null) return;
+        if (fromPlot != null && toPlot != null && fromPlot.getPlotId().equals(toPlot.getPlotId())) return;
+
+        boolean protectFrom = fromPlot != null && isProtectionActive(fromPlot, "hopper-pipe", true);
+        boolean protectTo = toPlot != null && isProtectionActive(toPlot, "hopper-pipe", true);
+        if (protectFrom || protectTo) {
+            e.setCancelled(true);
+        }
+    }
+
+    private static Location inventoryLocation(Inventory inventory) {
+        if (inventory == null) return null;
+        try {
+            Location loc = inventory.getLocation();
+            if (loc != null) return loc;
+        } catch (Throwable ignored) {}
+        org.bukkit.inventory.InventoryHolder holder = inventory.getHolder();
+        if (holder instanceof org.bukkit.block.Container container) {
+            return container.getLocation();
+        }
+        if (holder instanceof org.bukkit.block.DoubleChest chest) {
+            return chest.getLocation();
+        }
+        if (holder instanceof org.bukkit.entity.Entity entity) {
+            return entity.getLocation();
+        }
+        if (holder instanceof BlockState state) {
+            return state.getLocation();
+        }
+        return null;
     }
 
     // --------------------------------------------------

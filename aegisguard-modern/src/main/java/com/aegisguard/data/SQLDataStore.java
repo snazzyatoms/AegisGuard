@@ -807,6 +807,10 @@ public class SQLDataStore implements IDataStore {
         if (plot.isLockdownActive()) {
             add.accept("lockdownActive", "true");
             add.accept("lockdownActivatedAt", String.valueOf(plot.getLockdownActivatedAt()));
+            if (plot.getLockdownExpiresAt() > 0L) {
+                add.accept("lockdownExpiresAt", String.valueOf(plot.getLockdownExpiresAt()));
+            }
+            add.accept("lockdownMode", plot.getLockdownMode());
             UUID lockedBy = plot.getLockdownActivatedBy();
             add.accept("lockdownActivatedBy", lockedBy != null ? lockedBy.toString() : null);
             add.accept("lockdownActivatedByName", plot.getLockdownActivatedByName());
@@ -820,6 +824,8 @@ public class SQLDataStore implements IDataStore {
 
         boolean[] lockdownActive = {false};
         long[] lockdownActivatedAt = {0L};
+        long[] lockdownExpiresAt = {0L};
+        String[] lockdownMode = {"FULL"};
         String[] lockdownActivatedBy = {null};
         String[] lockdownActivatedByName = {"Unknown"};
 
@@ -902,6 +908,8 @@ public class SQLDataStore implements IDataStore {
 
                     case "lockdownActive" -> lockdownActive[0] = Boolean.parseBoolean(value);
                     case "lockdownActivatedAt" -> lockdownActivatedAt[0] = Long.parseLong(value);
+                    case "lockdownExpiresAt" -> lockdownExpiresAt[0] = Long.parseLong(value);
+                    case "lockdownMode" -> lockdownMode[0] = value;
                     case "lockdownActivatedBy" -> lockdownActivatedBy[0] = value;
                     case "lockdownActivatedByName" -> lockdownActivatedByName[0] = value;
                 }
@@ -915,7 +923,8 @@ public class SQLDataStore implements IDataStore {
                     actorId = UUID.fromString(lockdownActivatedBy[0]);
                 }
             } catch (IllegalArgumentException ignored) { }
-            plot.restoreLockdown(true, actorId, lockdownActivatedByName[0], lockdownActivatedAt[0]);
+            plot.restoreLockdown(true, actorId, lockdownActivatedByName[0], lockdownActivatedAt[0],
+                    lockdownExpiresAt[0], lockdownMode[0]);
         }
     }
 

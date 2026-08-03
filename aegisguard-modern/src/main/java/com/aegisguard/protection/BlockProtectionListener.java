@@ -88,8 +88,9 @@ public class BlockProtectionListener implements Listener {
     }
 
     /**
-     * Block liquid/dragon-egg flow across claim borders. Flow from wilderness into a claim,
-     * from a claim into wilderness, or between two different claims is cancelled.
+     * Block liquid/dragon-egg flow across claim borders when the player-facing liquid-flow ward
+     * is protected on either side (defaults ON). Server config {@code protections.liquid_flow}
+     * remains a master kill-switch.
      */
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockFromTo(BlockFromToEvent e) {
@@ -103,7 +104,13 @@ public class BlockProtectionListener implements Listener {
         Plot toPlot = plugin.store().getPlotAt(to.getLocation());
         if (fromPlot == null && toPlot == null) return;
         if (fromPlot != null && toPlot != null && fromPlot.getPlotId().equals(toPlot.getPlotId())) return;
-        e.setCancelled(true);
+
+        boolean protectFrom = fromPlot != null && plugin.protection().isFlagEnabled(fromPlot, "liquid-flow");
+        boolean protectTo = toPlot != null && plugin.protection().isFlagEnabled(toPlot, "liquid-flow");
+        // Existing installs without the plot key still default protected via isFlagEnabled.
+        if (protectFrom || protectTo) {
+            e.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -156,7 +163,8 @@ public class BlockProtectionListener implements Listener {
             return;
         }
 
-        if (!canUseDecorativeEntity(plot, player, clicked.getLocation())) {
+        if (plugin.protection().isFlagEnabled(plot, "decor")
+                && !canUseDecorativeEntity(plot, player, clicked.getLocation())) {
             e.setCancelled(true);
             denyInteract(player, plot);
         }
@@ -175,7 +183,8 @@ public class BlockProtectionListener implements Listener {
             return;
         }
 
-        if (!canUseDecorativeEntity(plot, player, stand.getLocation())) {
+        if (plugin.protection().isFlagEnabled(plot, "decor")
+                && !canUseDecorativeEntity(plot, player, stand.getLocation())) {
             e.setCancelled(true);
             denyInteract(player, plot);
         }
@@ -294,7 +303,13 @@ public class BlockProtectionListener implements Listener {
             return;
         }
 
-        if (!plot.canBuildAt(player, hanging.getLocation(), plugin, "BLOCK_BREAK")) {
+        boolean decorProtected = plugin.protection().isFlagEnabled(plot, "decor");
+        if (decorProtected && !canUseDecorativeEntity(plot, player, hanging.getLocation())
+                && !plot.canBuildAt(player, hanging.getLocation(), plugin, "BLOCK_BREAK")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, player, plot, "INTERACT", "cannot_interact");
+            plugin.effects().playError(player);
+        } else if (!decorProtected && !plot.canBuildAt(player, hanging.getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
             DenialGuidance.send(plugin, player, plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(player);
@@ -330,7 +345,15 @@ public class BlockProtectionListener implements Listener {
             return;
         }
 
-        if (!plot.canBuildAt(player, stand.getLocation(), plugin, "BLOCK_BREAK")) {
+        boolean decorProtected = plugin.protection().isFlagEnabled(plot, "decor");
+        if (decorProtected) {
+            if (!canUseDecorativeEntity(plot, player, stand.getLocation())
+                    && !plot.canBuildAt(player, stand.getLocation(), plugin, "BLOCK_BREAK")) {
+                e.setCancelled(true);
+                DenialGuidance.send(plugin, player, plot, "INTERACT", "cannot_interact");
+                plugin.effects().playError(player);
+            }
+        } else if (!plot.canBuildAt(player, stand.getLocation(), plugin, "BLOCK_BREAK")) {
             e.setCancelled(true);
             DenialGuidance.send(plugin, player, plot, "BLOCK_BREAK", "cannot_break");
             plugin.effects().playError(player);

@@ -3,7 +3,7 @@ package com.aegisguard.alliance;
 import java.util.Locale;
 
 /**
- * Milestone 7 - the six per-plot, opt-in alliance access toggles.
+ * Milestone 7 - the per-plot, opt-in alliance access toggles.
  * Risky toggles default OFF. Membership alone never grants manage/ownership/money/rental rights.
  */
 public final class AllianceAccess {
@@ -13,6 +13,7 @@ public final class AllianceAccess {
     private boolean containers;
     private boolean build;
     private boolean animals;
+    private boolean vehicles;
     private boolean friendlyPvp;
 
     public AllianceAccess() {
@@ -24,6 +25,7 @@ public final class AllianceAccess {
     public boolean isContainers() { return containers; }
     public boolean isBuild() { return build; }
     public boolean isAnimals() { return animals; }
+    public boolean isVehicles() { return vehicles; }
     public boolean isFriendlyPvp() { return friendlyPvp; }
 
     public void setEnter(boolean enter) { this.enter = enter; }
@@ -31,6 +33,7 @@ public final class AllianceAccess {
     public void setContainers(boolean containers) { this.containers = containers; }
     public void setBuild(boolean build) { this.build = build; }
     public void setAnimals(boolean animals) { this.animals = animals; }
+    public void setVehicles(boolean vehicles) { this.vehicles = vehicles; }
     public void setFriendlyPvp(boolean friendlyPvp) { this.friendlyPvp = friendlyPvp; }
 
     public boolean toggle(String key) {
@@ -41,6 +44,7 @@ public final class AllianceAccess {
             case "containers" -> { containers = !containers; yield containers; }
             case "build" -> { build = !build; yield build; }
             case "animals" -> { animals = !animals; yield animals; }
+            case "vehicles" -> { vehicles = !vehicles; yield vehicles; }
             case "friendly_pvp", "pvp" -> { friendlyPvp = !friendlyPvp; yield friendlyPvp; }
             default -> false;
         };
@@ -54,6 +58,7 @@ public final class AllianceAccess {
             case "containers" -> containers;
             case "build" -> build;
             case "animals" -> animals;
+            case "vehicles" -> vehicles;
             case "friendly_pvp", "pvp" -> friendlyPvp;
             default -> false;
         };
@@ -68,6 +73,7 @@ public final class AllianceAccess {
             case "CONTAINERS" -> containers;
             case "BUILD", "BLOCK_BREAK", "BLOCK_PLACE" -> build;
             case "ANIMALS", "FARM" -> animals;
+            case "VEHICLES" -> vehicles;
             default -> false;
         };
     }
@@ -78,6 +84,7 @@ public final class AllianceAccess {
         containers = false;
         build = false;
         animals = false;
+        vehicles = false;
         friendlyPvp = false;
     }
 
@@ -87,6 +94,7 @@ public final class AllianceAccess {
                 + ",containers:" + (containers ? 1 : 0)
                 + ",build:" + (build ? 1 : 0)
                 + ",animals:" + (animals ? 1 : 0)
+                + ",vehicles:" + (vehicles ? 1 : 0)
                 + ",friendlyPvp:" + (friendlyPvp ? 1 : 0);
     }
 
@@ -103,6 +111,7 @@ public final class AllianceAccess {
                 case "containers" -> access.containers = on;
                 case "build" -> access.build = on;
                 case "animals" -> access.animals = on;
+                case "vehicles" -> access.vehicles = on;
                 case "friendlyPvp" -> access.friendlyPvp = on;
                 default -> {}
             }

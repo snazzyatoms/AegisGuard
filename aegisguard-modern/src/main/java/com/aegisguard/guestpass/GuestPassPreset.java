@@ -3,7 +3,7 @@ package com.aegisguard.guestpass;
 import java.util.Set;
 
 /**
- * Milestone 2 (Temporary Guest Passes) - the four fixed access presets an owner can hand out.
+ * Milestone 2 (Temporary Guest Passes) - fixed access presets an owner can hand out.
  *
  * Each preset maps onto the same permission tokens already used by {@code roles.<role>.permissions}
  * in config.yml (see {@code com.aegisguard.data.Plot#hasPermission}), so a Guest Pass is enforced
@@ -21,7 +21,16 @@ public enum GuestPassPreset {
     TEMPORARY_BUILDER(Set.of("INTERACT", "BUILD", "BLOCK_BREAK", "BLOCK_PLACE")),
 
     /** Build/break plus container access. The GUI must show a clear warning before this is issued. */
-    TEMPORARY_TRUSTED_GUEST(Set.of("INTERACT", "BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS"));
+    TEMPORARY_TRUSTED_GUEST(Set.of("INTERACT", "BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS")),
+
+    /** Care for animals and open doors — no build or containers. */
+    ANIMAL_SITTER(Set.of("INTERACT", "ANIMALS")),
+
+    /** Redstone controls and doors — no build or containers. */
+    REDSTONE_HELPER(Set.of("INTERACT", "REDSTONE")),
+
+    /** Boats/minecarts plus doors — no build or containers. */
+    VEHICLE_GUEST(Set.of("INTERACT", "VEHICLES"));
 
     private final Set<String> permissions;
 
@@ -51,11 +60,22 @@ public enum GuestPassPreset {
             case EVENT_GUEST -> "Event Guest";
             case TEMPORARY_BUILDER -> "Temporary Builder";
             case TEMPORARY_TRUSTED_GUEST -> "Temporary Trusted Guest";
+            case ANIMAL_SITTER -> "Animal Sitter";
+            case REDSTONE_HELPER -> "Redstone Helper";
+            case VEHICLE_GUEST -> "Vehicle Guest";
         };
     }
 
     /** Ordered presets, safest first, for consistent GUI listing. */
     public static java.util.List<GuestPassPreset> ordered() {
-        return java.util.List.of(VISITOR, EVENT_GUEST, TEMPORARY_BUILDER, TEMPORARY_TRUSTED_GUEST);
+        return java.util.List.of(
+                VISITOR,
+                EVENT_GUEST,
+                ANIMAL_SITTER,
+                REDSTONE_HELPER,
+                VEHICLE_GUEST,
+                TEMPORARY_BUILDER,
+                TEMPORARY_TRUSTED_GUEST
+        );
     }
 }

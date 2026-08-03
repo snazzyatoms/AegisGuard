@@ -56,7 +56,9 @@ public class RolesGUI implements Listener {
             "SHOP",
             "FLY",
             "ANIMALS",
+            "DOORS",
             "REDSTONE",
+            "DECOR",
             "VEHICLES"
     );
 
@@ -1401,7 +1403,9 @@ public class RolesGUI implements Listener {
             case "SHOP":       return Material.EMERALD;
             case "FLY":        return Material.FEATHER;
             case "ANIMALS":    return Material.COW_SPAWN_EGG;
+            case "DOORS":      return Material.OAK_DOOR;
             case "REDSTONE":   return Material.REDSTONE;
+            case "DECOR":      return Material.ARMOR_STAND;
             case "VEHICLES":   return Material.MINECART;
             default:           return Material.PAPER;
         }

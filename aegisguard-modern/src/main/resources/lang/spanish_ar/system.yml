@@ -666,3 +666,5 @@ admin_restore_confirm_hint: '&cEsto sobrescribe la parcela activa. Ejecutá &e/a
 admin_restore_running: '&b[AegisGuard] &7Restaurando la última instantánea...'
 admin_restore_success: '&aParcela restaurada desde la instantánea &f{ID}'
 admin_restore_failed: '&cFalló la restauración. Revisá los logs o el reporte del Doctor.'
+protection_preset_applied: '&aPreset de protección aplicado: &f{PRESET}&a.'
+plot_teleport_ward_denied: '&c⛔ La custodia de teletransporte bloquea la entrada.'

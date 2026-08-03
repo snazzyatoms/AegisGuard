@@ -160,6 +160,7 @@ public class AegisGuard extends JavaPlugin {
     private Object claimBlockTask;
     private Object rentalExpiryTask;
     private Object guestPassExpiryTask;
+    private Object lockdownSweepTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
@@ -418,6 +419,7 @@ public class AegisGuard extends JavaPlugin {
         startClaimBlockTask();
         startRentalExpiryTask();
         startGuestPassExpiryTask();
+        startLockdownSweepTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -456,6 +458,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
+        cancelTaskReflectively(lockdownSweepTask);
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
         try {
@@ -969,6 +972,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
+        cancelTaskReflectively(lockdownSweepTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -977,6 +981,7 @@ public class AegisGuard extends JavaPlugin {
         claimBlockTask = null;
         rentalExpiryTask = null;
         guestPassExpiryTask = null;
+        lockdownSweepTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -985,6 +990,7 @@ public class AegisGuard extends JavaPlugin {
         startClaimBlockTask();
         startRentalExpiryTask();
         startGuestPassExpiryTask();
+        startLockdownSweepTask();
     }
 
     private void startRentalExpiryTask() {
@@ -1040,6 +1046,18 @@ public class AegisGuard extends JavaPlugin {
                 guestPassService.runExpirySweep();
             } catch (Throwable t) {
                 getLogger().warning("Guest Pass expiry sweep error: " + t.getMessage());
+            }
+        }, 20L, 1_200L);
+    }
+
+    private void startLockdownSweepTask() {
+        if (lockdownService == null || !lockdownService.isEnabled()) return;
+
+        lockdownSweepTask = runGlobalRepeating(() -> {
+            try {
+                lockdownService.sweepExpired();
+            } catch (Throwable t) {
+                getLogger().warning("Lockdown expiry sweep error: " + t.getMessage());
             }
         }, 20L, 1_200L);
     }

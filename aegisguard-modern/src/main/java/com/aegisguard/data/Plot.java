@@ -66,6 +66,8 @@ public class Plot {
     // Guest Passes themselves are never modified by a lockdown; it is purely a temporary gate.
     private volatile boolean lockdownActive = false;
     private volatile long lockdownActivatedAt = 0L;
+    private volatile long lockdownExpiresAt = 0L; // 0 = until manually lifted
+    private volatile String lockdownMode = "FULL"; // FULL or SOFT
     private volatile UUID lockdownActivatedBy;
     private volatile String lockdownActivatedByName = "Unknown";
 
@@ -75,7 +77,7 @@ public class Plot {
     private final List<PlotNotice> noticeboard = new CopyOnWriteArrayList<>();
 
     // --- ALLIANCE ACCESS (Milestone 7) ---
-    // Optional join to a player alliance plus six opt-in toggles (all risky defaults OFF).
+    // Optional join to a player alliance plus opt-in toggles (all risky defaults OFF).
     // Alliance membership alone never grants manage/ownership/money/rental rights.
     private volatile UUID allianceId;
     private final AllianceAccess allianceAccess = new AllianceAccess();
@@ -581,6 +583,8 @@ public class Plot {
             case "VEHICLES" -> "vehicles";
             case "FARM" -> "farm";
             case "REDSTONE" -> "redstone";
+            case "DOORS" -> "doors";
+            case "DECOR" -> "decor";
             case "INTERACT", "ENTRY" -> "entry";
             case "PVP" -> "pvp";
             case "MOBS" -> "mobs";
@@ -694,7 +698,7 @@ public class Plot {
         // owner and elevated staff (both already handled above). It beats role-flag overrides and
         // the "public build" plot flag - the whole point is a fast, reversible safety response -
         // but never restricts plain INTERACT, so leaving through a door is always possible.
-        if (lockdownActive && isLockdownRestrictable(perm, pl)) return false;
+        if (refreshLockdownExpiry() && isPermissionRestrictedByLockdown(perm, pl)) return false;
 
         String role = getRole(uuid);
         TriState override = getRoleFlagState(role, "build");
@@ -1300,11 +1304,24 @@ public class Plot {
     // ---------------------------------------------------------------------
 
     public boolean isLockdownActive() {
+        refreshLockdownExpiry();
         return lockdownActive;
     }
 
     public long getLockdownActivatedAt() {
         return lockdownActivatedAt;
+    }
+
+    public long getLockdownExpiresAt() {
+        return lockdownExpiresAt;
+    }
+
+    public String getLockdownMode() {
+        return lockdownMode == null || lockdownMode.isBlank() ? "FULL" : lockdownMode;
+    }
+
+    public boolean isSoftLockdown() {
+        return "SOFT".equalsIgnoreCase(getLockdownMode());
     }
 
     public @Nullable UUID getLockdownActivatedBy() {
@@ -1321,13 +1338,22 @@ public class Plot {
      * again with {@code active=false}.
      */
     public void setLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName) {
+        setLockdown(active, actorId, actorName, 0L, "FULL");
+    }
+
+    public void setLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName,
+                            long expiresAt, @Nullable String mode) {
         this.lockdownActive = active;
         if (active) {
             this.lockdownActivatedAt = System.currentTimeMillis();
+            this.lockdownExpiresAt = Math.max(0L, expiresAt);
+            this.lockdownMode = (mode == null || mode.isBlank()) ? "FULL" : mode.trim().toUpperCase(Locale.ROOT);
             this.lockdownActivatedBy = actorId;
             this.lockdownActivatedByName = (actorName == null || actorName.isBlank()) ? "Unknown" : actorName;
         } else {
             this.lockdownActivatedAt = 0L;
+            this.lockdownExpiresAt = 0L;
+            this.lockdownMode = "FULL";
             this.lockdownActivatedBy = null;
             this.lockdownActivatedByName = "Unknown";
         }
@@ -1338,12 +1364,31 @@ public class Plot {
      * displays survive a server restart instead of resetting to "just now". Data-store loaders only.
      */
     public void restoreLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName, long activatedAt) {
+        restoreLockdown(active, actorId, actorName, activatedAt, 0L, "FULL");
+    }
+
+    public void restoreLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName,
+                                long activatedAt, long expiresAt, @Nullable String mode) {
         this.lockdownActive = active;
         this.lockdownActivatedAt = active ? activatedAt : 0L;
+        this.lockdownExpiresAt = active ? Math.max(0L, expiresAt) : 0L;
+        this.lockdownMode = active
+                ? ((mode == null || mode.isBlank()) ? "FULL" : mode.trim().toUpperCase(Locale.ROOT))
+                : "FULL";
         this.lockdownActivatedBy = active ? actorId : null;
         this.lockdownActivatedByName = active
                 ? ((actorName == null || actorName.isBlank()) ? "Unknown" : actorName)
                 : "Unknown";
+    }
+
+    /** Auto-lifts expired timed lockdowns. Returns whether lockdown is still active afterward. */
+    public boolean refreshLockdownExpiry() {
+        if (!lockdownActive) return false;
+        if (lockdownExpiresAt > 0L && System.currentTimeMillis() >= lockdownExpiresAt) {
+            setLockdown(false, null, null);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -1368,6 +1413,19 @@ public class Plot {
             if (token != null && needle.equals(token.trim().toUpperCase(Locale.ROOT))) return true;
         }
         return false;
+    }
+
+    /** Soft lockdown only gates build/break/containers; full uses the configured list. */
+    public boolean isPermissionRestrictedByLockdown(@Nullable String permission, @Nullable AegisGuard pl) {
+        if (!refreshLockdownExpiry()) return false;
+        if (permission == null || permission.isBlank()) return false;
+        String needle = permission.trim().toUpperCase(Locale.ROOT);
+        if ("INTERACT".equals(needle)) return false;
+        if (isSoftLockdown()) {
+            return "BUILD".equals(needle) || "BLOCK_BREAK".equals(needle)
+                    || "BLOCK_PLACE".equals(needle) || "CONTAINERS".equals(needle);
+        }
+        return isLockdownRestrictable(permission, pl);
     }
 
     // ---------------------------------------------------------------------
@@ -1467,6 +1525,7 @@ public class Plot {
                 allianceAccess.setContainers(loaded.isContainers());
                 allianceAccess.setBuild(loaded.isBuild());
                 allianceAccess.setAnimals(loaded.isAnimals());
+                allianceAccess.setVehicles(loaded.isVehicles());
                 allianceAccess.setFriendlyPvp(loaded.isFriendlyPvp());
             }
         } catch (Exception ignored) {

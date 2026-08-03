@@ -452,7 +452,8 @@ public class GuestPassGUI implements Listener {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
-        int[] slots = {10, 12, 14, 16};
+        // 27-slot menu: top row + mid row for 7 presets, footer reserved for nav.
+        int[] slots = {10, 11, 12, 13, 14, 15, 16};
         List<GuestPassPreset> presets = GuestPassPreset.ordered();
         for (int i = 0; i < presets.size() && i < slots.length; i++) {
             GuestPassPreset preset = presets.get(i);
@@ -462,7 +463,7 @@ public class GuestPassGUI implements Listener {
         inv.setItem(18, GUIManager.createItem(Material.ARROW,
                 t(player, "button_back", "&fBack"),
                 tl(player, "back_lore", List.of("&7Return to the previous menu."))));
-        inv.setItem(20, GUIManager.createItem(Material.BARRIER,
+        inv.setItem(22, GUIManager.createItem(Material.BARRIER,
                 t(player, "button_exit", "&cClose"),
                 tl(player, "exit_lore", List.of("&7Close this menu."))));
 
@@ -476,6 +477,9 @@ public class GuestPassGUI implements Listener {
             case EVENT_GUEST -> Material.FIREWORK_ROCKET;
             case TEMPORARY_BUILDER -> Material.DIAMOND_PICKAXE;
             case TEMPORARY_TRUSTED_GUEST -> Material.CHEST;
+            case ANIMAL_SITTER -> Material.WHEAT;
+            case REDSTONE_HELPER -> Material.REDSTONE;
+            case VEHICLE_GUEST -> Material.MINECART;
         };
 
         List<String> lore = new ArrayList<>(tl(player, "guest_pass_preset_desc_" + preset.name(),
@@ -498,6 +502,9 @@ public class GuestPassGUI implements Listener {
             case EVENT_GUEST -> List.of("&7Entry plus safe event interaction.", "&7No building or containers.");
             case TEMPORARY_BUILDER -> List.of("&7Build and break access.", "&7Containers stay closed.");
             case TEMPORARY_TRUSTED_GUEST -> List.of("&7Build, break, and container access.");
+            case ANIMAL_SITTER -> List.of("&7Animals plus doors/interact.", "&7No building or containers.");
+            case REDSTONE_HELPER -> List.of("&7Redstone controls plus doors.", "&7No building or containers.");
+            case VEHICLE_GUEST -> List.of("&7Vehicles plus doors/interact.", "&7No building or containers.");
         };
     }
 
@@ -815,9 +822,9 @@ public class GuestPassGUI implements Listener {
 
         int slot = e.getRawSlot();
         if (slot == 18) { openAddMenu(player, plot, 0); return; }
-        if (slot == 20) { player.closeInventory(); return; }
+        if (slot == 22) { player.closeInventory(); return; }
 
-        int[] slots = {10, 12, 14, 16};
+        int[] slots = {10, 11, 12, 13, 14, 15, 16};
         List<GuestPassPreset> presets = GuestPassPreset.ordered();
         for (int i = 0; i < slots.length && i < presets.size(); i++) {
             if (slot == slots[i]) {

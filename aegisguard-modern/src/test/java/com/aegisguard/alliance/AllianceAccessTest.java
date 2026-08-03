@@ -22,6 +22,7 @@ class AllianceAccessTest {
         assertFalse(access.isContainers());
         assertFalse(access.isBuild());
         assertFalse(access.isAnimals());
+        assertFalse(access.isVehicles());
         assertFalse(access.isFriendlyPvp());
     }
 
@@ -38,6 +39,7 @@ class AllianceAccessTest {
         assertFalse(loaded.isContainers());
         assertTrue(loaded.isBuild());
         assertFalse(loaded.isAnimals());
+        assertFalse(loaded.isVehicles());
         assertTrue(loaded.isFriendlyPvp());
     }
 
@@ -49,6 +51,7 @@ class AllianceAccessTest {
         access.setContainers(true);
         access.setBuild(true);
         access.setAnimals(true);
+        access.setVehicles(true);
         access.setFriendlyPvp(true);
 
         assertTrue(access.grantsPermission("INTERACT"));
@@ -56,6 +59,7 @@ class AllianceAccessTest {
         assertTrue(access.grantsPermission("BUILD"));
         assertTrue(access.grantsPermission("BLOCK_BREAK"));
         assertTrue(access.grantsPermission("ANIMALS"));
+        assertTrue(access.grantsPermission("VEHICLES"));
         assertFalse(access.grantsPermission("MANAGE"));
         assertFalse(access.grantsPermission("MANAGE_MEMBERS"));
         assertFalse(access.grantsPermission("ENTER"), "Enter is handled separately from permission tokens");

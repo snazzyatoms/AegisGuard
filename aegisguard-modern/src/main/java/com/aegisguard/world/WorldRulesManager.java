@@ -110,6 +110,14 @@ public class WorldRulesManager {
         plot.setFlag("piston-use", plugin.getConfig().getBoolean("protections.piston-use", true));
         plot.setFlag("interact", true);
         plot.setFlag("build", true);
+
+        // 1.3.0 hero pack wards (GREEN=protected). Safe defaults for new plots.
+        plot.setFlag("doors", plugin.getConfig().getBoolean("protections.doors", true));
+        plot.setFlag("hopper-pipe", plugin.getConfig().getBoolean("protections.hopper_pipe", true));
+        plot.setFlag("liquid-flow", plugin.getConfig().getBoolean("protections.liquid_flow", true));
+        plot.setFlag("teleport-ward", plugin.getConfig().getBoolean("protections.teleport_ward", true));
+        plot.setFlag("storm-ward", plugin.getConfig().getBoolean("protections.storm_ward", true));
+        plot.setFlag("decor", plugin.getConfig().getBoolean("protections.decor", true));
     }
 
     private WorldRuleSet getRules(World world) {

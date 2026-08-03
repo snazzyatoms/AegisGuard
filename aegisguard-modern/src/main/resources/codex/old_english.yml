@@ -840,6 +840,20 @@ admin_sync_lore:
 button_admin_perf: '&cFast Mode'
 admin_perf_lore:
   - '&7Reduce magical effects.'
+button_admin_expansion_mode: '&eExpansion Judgment: {MODE}'
+admin_expansion_mode_queue: '&6Queue'
+admin_expansion_mode_instant: '&bInstant'
+admin_expansion_mode_lore_queue:
+  - '&7Current: &6Queue'
+  - '&7Stewards must judge each expansion petition.'
+  - '&eClick to switch to Instant.'
+admin_expansion_mode_lore_instant:
+  - '&7Current: &bInstant'
+  - '&7Worthy petitions are granted anon and chronicled.'
+  - '&cCaution: borders swell without steward review.'
+  - '&eClick to switch to Queue.'
+admin_expansion_mode_set_queue: '&6Expansion judgment set to Queue (steward review).'
+admin_expansion_mode_set_instant: '&bExpansion judgment set to Instant (granted anon).'
 button_admin_diagnostics: '&bDivination'
 button_admin_reload: '&eRefresh Scrolls'
 

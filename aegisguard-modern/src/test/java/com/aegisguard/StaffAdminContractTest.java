@@ -71,7 +71,10 @@ class StaffAdminContractTest {
                 "migration_gui_title:",
                 "migration_confirm_import_lore:",
                 "storage_migrate_confirm_lore:",
-                "admin_set_spawn_lore:"
+                "admin_set_spawn_lore:",
+                "button_admin_expansion_mode:",
+                "admin_expansion_mode_lore_queue:",
+                "admin_expansion_mode_lore_instant:"
         );
         for (String lang : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar")) {
             String guis = Files.readString(LANG.resolve(lang + "/guis.yml"));
@@ -84,7 +87,28 @@ class StaffAdminContractTest {
             String system = Files.readString(LANG.resolve(lang + "/system.yml"));
             assertTrue(system.contains("admin_help_header:"), lang + " missing admin help");
             assertTrue(system.contains("admin_restore_confirm_hint:"), lang + " missing restore confirm hint");
+            assertTrue(system.contains("admin_expansion_mode_set_queue:"), lang + " missing expansion mode queue feedback");
+            assertTrue(system.contains("admin_expansion_mode_set_instant:"), lang + " missing expansion mode instant feedback");
         }
+    }
+
+    @Test
+    void staffMenuExpansionApprovalModeToggleIsUniqueAndPersisted() throws Exception {
+        String admin = Files.readString(JAVA_ROOT.resolve("gui/AdminGUI.java"));
+        assertTrue(admin.contains("SLOT_TOGGLE_EXPANSION_MODE = 16"));
+        assertTrue(admin.contains("toggle_expansion_approval_mode"));
+        assertTrue(admin.contains("cycleExpansionApprovalMode"));
+        assertTrue(admin.contains("expansions.approval_mode"));
+        assertTrue(admin.contains("expansions.approval.mode"));
+        assertTrue(admin.contains("\"INSTANT\"") || admin.contains("'INSTANT'"));
+        assertTrue(admin.contains("\"QUEUE\"") || admin.contains("'QUEUE'"));
+        // Must not collide with existing policy/tool slots.
+        assertFalse(admin.contains("SLOT_TOGGLE_LOW_OVERHEAD= 16"));
+        assertFalse(admin.contains("SLOT_TOOL_REQUESTS      = 16"));
+
+        String manager = Files.readString(JAVA_ROOT.resolve("expansions/ExpansionRequestManager.java"));
+        assertTrue(manager.contains("public ApprovalMode getApprovalMode()"));
+        assertTrue(manager.contains("expansions.approval_mode"));
     }
 
     @Test

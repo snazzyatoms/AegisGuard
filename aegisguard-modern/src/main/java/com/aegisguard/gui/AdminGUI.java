@@ -47,6 +47,8 @@ public class AdminGUI {
     private static final int SLOT_TOGGLE_UNLIMITED   = 13;
     private static final int SLOT_TOGGLE_PROXY_SYNC  = 14;
     private static final int SLOT_TOGGLE_LOW_OVERHEAD= 15;
+    /** Policy row: expansion QUEUE ↔ INSTANT (must not collide with tools/nav). */
+    private static final int SLOT_TOGGLE_EXPANSION_MODE = 16;
 
     private static final int SLOT_TOOL_REQUESTS      = 28;
     private static final int SLOT_TOOL_PLOT_LIST     = 29;
@@ -197,6 +199,7 @@ public class AdminGUI {
                 ),
                 "toggle_low_overhead_mode"
         );
+        addExpansionModeToggle(player, inv);
 
         // --- TOOLS ---
         ItemStack requests = GUIManager.createItem(
@@ -445,6 +448,7 @@ public class AdminGUI {
             case "toggle_unlimited_plots" -> { GUIManager.playClick(player); toggleAndReopen(player, "admin.unlimited_plots", true); }
             case "toggle_proxy_sync" -> { GUIManager.playClick(player); toggleAndReopen(player, "sync.proxy.enabled", false); }
             case "toggle_low_overhead_mode" -> { GUIManager.playClick(player); toggleAndReopen(player, "performance.low_overhead_mode", false); }
+            case "toggle_expansion_approval_mode" -> { GUIManager.playClick(player); cycleExpansionApprovalMode(player); }
 
             // --- Tools ---
             case "open_requests" -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
@@ -678,6 +682,112 @@ public class AdminGUI {
         ItemStack it = GUIManager.createItem(icon, display, lore);
         tagAction(it, actionKey);
         inv.setItem(slot, it);
+    }
+
+    private void addExpansionModeToggle(Player p, Inventory inv) {
+        boolean instant = isExpansionInstantMode();
+        String modeLabel = plugin.gui().tr(
+                p,
+                instant ? "admin_expansion_mode_instant" : "admin_expansion_mode_queue",
+                instant ? "&bInstant" : "&6Queue"
+        );
+        String display = plugin.gui().tr(
+                p,
+                "button_admin_expansion_mode",
+                "&eExpansion Approval: {MODE}",
+                Map.of("MODE", modeLabel)
+        );
+        List<String> lore = plugin.gui().trList(
+                p,
+                instant ? "admin_expansion_mode_lore_instant" : "admin_expansion_mode_lore_queue",
+                instant
+                        ? List.of(
+                        "&7Current: &bInstant",
+                        "&7Valid expansion requests auto-approve",
+                        "&7and are written to audit history.",
+                        " ",
+                        "&7Use Instant when staff is away or on",
+                        "&7small trusted servers that want self-serve growth.",
+                        " ",
+                        "&cCaution: borders grow without staff review.",
+                        "&eClick to switch to Queue."
+                )
+                        : List.of(
+                        "&7Current: &6Queue",
+                        "&7Players submit expansion requests;",
+                        "&7staff must approve or deny each one.",
+                        " ",
+                        "&7Default for most servers — keeps growth reviewed.",
+                        " ",
+                        "&7Click to switch to Instant (auto-approve).",
+                        "&eClick to cycle mode."
+                )
+        );
+        Material icon = instant ? Material.LIGHTNING_ROD : Material.HOPPER;
+        ItemStack it = GUIManager.createItem(icon, display, lore);
+        tagAction(it, "toggle_expansion_approval_mode");
+        inv.setItem(SLOT_TOGGLE_EXPANSION_MODE, it);
+    }
+
+    private boolean isExpansionInstantMode() {
+        if (plugin.getExpansionRequestManager() != null) {
+            return plugin.getExpansionRequestManager().getApprovalMode()
+                    == com.aegisguard.expansions.ExpansionRequestManager.ApprovalMode.INSTANT;
+        }
+        String nested = plugin.getConfig().getString("expansions.approval.mode", "");
+        String raw = (nested != null && !nested.isBlank())
+                ? nested
+                : plugin.getConfig().getString("expansions.approval_mode", "QUEUE");
+        if (raw == null) return false;
+        String s = raw.trim().toUpperCase();
+        return s.equals("INSTANT") || s.equals("AUTO") || s.equals("AUTO_APPROVE") || s.equals("AUTOAPPROVE");
+    }
+
+    /**
+     * Cycle expansions.approval_mode between QUEUE and INSTANT, persist to config.yml,
+     * and keep the preferred nested key in sync so runtime reads update immediately.
+     */
+    private void cycleExpansionApprovalMode(Player p) {
+        boolean nextInstant = !isExpansionInstantMode();
+        String next = nextInstant ? "INSTANT" : "QUEUE";
+
+        // Documented key + preferred nested key (ExpansionRequestManager reads either live).
+        plugin.getConfig().set("expansions.approval_mode", next);
+        plugin.getConfig().set("expansions.approval.mode", next);
+        if (plugin.cfg() != null && plugin.cfg().raw() != null && plugin.cfg().raw() != plugin.getConfig()) {
+            plugin.cfg().raw().set("expansions.approval_mode", next);
+            plugin.cfg().raw().set("expansions.approval.mode", next);
+        }
+
+        plugin.runGlobalAsync(() -> {
+            try {
+                plugin.saveConfig();
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[AdminGUI] Failed to save expansion approval mode: " + t.getMessage());
+            }
+
+            plugin.runMain(p, () -> {
+                try {
+                    if (plugin.cfg() != null) {
+                        tryInvokeNoArg(plugin.cfg(), "reload", "load", "refresh", "reloadAll", "reloadConfig");
+                    }
+                } catch (Throwable ignored) {}
+
+                // Ensure both keys survive reload (preferred path must not lag the documented key).
+                plugin.getConfig().set("expansions.approval_mode", next);
+                plugin.getConfig().set("expansions.approval.mode", next);
+
+                sendKey(
+                        p,
+                        nextInstant ? "admin_expansion_mode_set_instant" : "admin_expansion_mode_set_queue",
+                        nextInstant
+                                ? "&bExpansion approval set to Instant (auto-approve)."
+                                : "&6Expansion approval set to Queue (staff review)."
+                );
+                plugin.effects().playConfirm(p);
+                open(p);
+            });
+        });
     }
 
     /**

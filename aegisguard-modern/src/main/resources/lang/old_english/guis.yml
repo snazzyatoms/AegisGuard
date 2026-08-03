@@ -818,6 +818,29 @@ button_admin_perf: '&cLow Overhead Mode'
 admin_perf_lore:
 - '&7Reduce system resource usage.'
 
+button_admin_expansion_mode: '&eExpansion Judgment: {MODE}'
+admin_expansion_mode_queue: '&6Queue'
+admin_expansion_mode_instant: '&bInstant'
+admin_expansion_mode_lore_queue:
+  - '&7Current: &6Queue'
+  - '&7What: petitioners send expansion requests;'
+  - '&7stewards must approve or deny each one.'
+  - ' '
+  - '&7The customary law — growth stayeth reviewed.'
+  - ' '
+  - '&7Instant granteth worthy petitions when stewards are away.'
+  - '&eClick to switch to Instant.'
+admin_expansion_mode_lore_instant:
+  - '&7Current: &bInstant'
+  - '&7What: worthy expansion petitions are granted anon'
+  - '&7and chronicled in the audit ledger.'
+  - ' '
+  - '&7When: stewards are abroad, or a small trusted realm'
+  - '&7desires self-serve growth.'
+  - ' '
+  - '&cCaution: borders swell without steward review.'
+  - '&eClick to switch to Queue.'
+
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
   - '&7What: Territory Doctor — scan, repair,'

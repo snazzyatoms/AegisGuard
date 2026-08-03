@@ -84,8 +84,9 @@ class InterfaceQualityContractTest {
         assertTrue(admin.contains("staff_policy_section_name"));
         assertTrue(admin.contains("staff_toolbelt_section_name"));
         for (String action : List.of("open_requests", "open_diagnostics", "open_snapshots",
-                "open_world_controls", "open_migration")) {
+                "open_world_controls", "open_migration", "toggle_expansion_approval_mode")) {
             assertTrue(admin.contains("tagAction") && admin.contains(action));
         }
+        assertTrue(admin.contains("SLOT_TOGGLE_EXPANSION_MODE"));
     }
 }

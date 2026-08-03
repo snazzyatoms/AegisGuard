@@ -262,6 +262,8 @@ role_removed: '&e✔ {PLAYER} fue eliminado de tu parcela.'
 # -------------------------------------------------
 admin_reloading: '&7Recargando configuración y datos...'
 admin_reload_complete: '&a✔ Recarga completa.'
+admin_expansion_mode_set_queue: '&6Aprobación de expansión: Cola (revisión del staff).'
+admin_expansion_mode_set_instant: '&bAprobación de expansión: Instantánea (auto-aprobación).'
 admin_auto_remove_enabled: '&a✔ Auto-Limpieza habilitada.'
 admin_auto_remove_disabled: '&c✖ Auto-Limpieza deshabilitada.'
 admin_bypass_enabled: '&a✔ Bypass del límite de parcelas activado.'

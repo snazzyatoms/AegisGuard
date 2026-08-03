@@ -1074,6 +1074,29 @@ button_admin_perf: '&cModo Bajo Consumo'
 admin_perf_lore:
 - '&7Reduce uso de recursos del sistema.'
 
+button_admin_expansion_mode: '&eAprobación de Expansión: {MODE}'
+admin_expansion_mode_queue: '&6Cola'
+admin_expansion_mode_instant: '&bInstantánea'
+admin_expansion_mode_lore_queue:
+  - '&7Actual: &6Cola'
+  - '&7Qué: los jugadores mandan pedidos de expansión;'
+  - '&7el staff tiene que aprobar o rechazar cada uno.'
+  - ' '
+  - '&7Modo por defecto: el crecimiento queda revisado.'
+  - ' '
+  - '&7Instantánea auto-aprueba pedidos válidos si no hay staff.'
+  - '&eClic para pasar a Instantánea.'
+admin_expansion_mode_lore_instant:
+  - '&7Actual: &bInstantánea'
+  - '&7Qué: los pedidos válidos se auto-aprueban'
+  - '&7y quedan en el historial de auditoría.'
+  - ' '
+  - '&7Cuándo: staff afuera / poca cobertura, o servidores'
+  - '&7chicos de confianza con crecimiento automático.'
+  - ' '
+  - '&cCuidado: las fronteras crecen sin revisión del staff.'
+  - '&eClic para pasar a Cola.'
+
 button_admin_diagnostics: '&bDiagnósticos'
 admin_diagnostics_lore:
   - '&7Qué: Doctor de Territorio — escaneo, reparación,'

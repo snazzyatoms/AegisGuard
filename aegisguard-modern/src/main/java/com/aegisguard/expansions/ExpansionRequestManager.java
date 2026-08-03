@@ -768,23 +768,23 @@ public class ExpansionRequestManager {
 
     // --- MODE + AUDIT CONFIG ---
 
-    private ApprovalMode getApprovalMode() {
-        FileConfiguration c = plugin.cfg().raw();
+    /** Live read of expansions.approval_mode / expansions.approval.mode (not startup-cached). */
+    public ApprovalMode getApprovalMode() {
+        FileConfiguration c = plugin.cfg() != null ? plugin.cfg().raw() : plugin.getConfig();
+        if (c == null) return ApprovalMode.QUEUE;
 
         // Preferred: expansions.approval.mode
         String mode = c.getString("expansions.approval.mode", "").trim();
         if (!mode.isEmpty()) {
-            try {
-                return ApprovalMode.valueOf(mode.toUpperCase(Locale.ROOT));
-            } catch (Throwable ignored) { }
+            ApprovalMode parsed = parseApprovalMode(mode);
+            if (parsed != null) return parsed;
         }
 
-        // Legacy fallbacks (in case you used older naming)
+        // Documented config.yml key
         String mode2 = c.getString("expansions.approval_mode", "").trim();
         if (!mode2.isEmpty()) {
-            try {
-                return ApprovalMode.valueOf(mode2.toUpperCase(Locale.ROOT));
-            } catch (Throwable ignored) { }
+            ApprovalMode parsed = parseApprovalMode(mode2);
+            if (parsed != null) return parsed;
         }
 
         boolean legacyInstant =
@@ -794,6 +794,22 @@ public class ExpansionRequestManager {
                         || c.getBoolean("expansions.auto_approve.enabled", false);
 
         return legacyInstant ? ApprovalMode.INSTANT : ApprovalMode.QUEUE;
+    }
+
+    private static ApprovalMode parseApprovalMode(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String s = raw.trim().toUpperCase(Locale.ROOT);
+        if (s.equals("INSTANT") || s.equals("AUTO") || s.equals("AUTO_APPROVE") || s.equals("AUTOAPPROVE")) {
+            return ApprovalMode.INSTANT;
+        }
+        if (s.equals("QUEUE") || s.equals("ADMIN") || s.equals("MANUAL")) {
+            return ApprovalMode.QUEUE;
+        }
+        try {
+            return ApprovalMode.valueOf(s);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private boolean isAuditEnabled() {

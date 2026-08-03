@@ -1108,6 +1108,29 @@ admin_perf_lore:
   - '&8Some cosmetics/background polish may reduce.'
   - '&eClick to toggle.'
 
+button_admin_expansion_mode: '&eExpansion Approval: {MODE}'
+admin_expansion_mode_queue: '&6Queue'
+admin_expansion_mode_instant: '&bInstant'
+admin_expansion_mode_lore_queue:
+  - '&7Current: &6Queue'
+  - '&7What: players submit expansion requests;'
+  - '&7staff must approve or deny each one.'
+  - ' '
+  - '&7Default for most servers — keeps growth reviewed.'
+  - ' '
+  - '&7Instant auto-approves valid requests when staff is away.'
+  - '&eClick to switch to Instant.'
+admin_expansion_mode_lore_instant:
+  - '&7Current: &bInstant'
+  - '&7What: valid expansion requests auto-approve'
+  - '&7and are written to audit history.'
+  - ' '
+  - '&7When: staff away / low coverage, or small'
+  - '&7trusted servers that want self-serve growth.'
+  - ' '
+  - '&cCaution: borders grow without staff review.'
+  - '&eClick to switch to Queue.'
+
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
   - '&7What: Territory Doctor — scan, repair,'

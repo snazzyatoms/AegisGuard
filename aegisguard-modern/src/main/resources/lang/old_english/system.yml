@@ -259,6 +259,8 @@ role_removed: '&e✔ {PLAYER} hath been removed from thy claim.'
 # -------------------------------------------------
 admin_reloading: '&7Reloading configuration and data...'
 admin_reload_complete: '&a✔ Reload complete.'
+admin_expansion_mode_set_queue: '&6Expansion judgment set to Queue (steward review).'
+admin_expansion_mode_set_instant: '&bExpansion judgment set to Instant (granted anon).'
 admin_auto_remove_enabled: '&a✔ Auto-Wipe enabled.'
 admin_auto_remove_disabled: '&c✖ Auto-Wipe disabled.'
 admin_bypass_enabled: '&a✔ Claim limit bypass enabled.'

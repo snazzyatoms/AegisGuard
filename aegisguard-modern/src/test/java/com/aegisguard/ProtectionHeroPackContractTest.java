@@ -157,4 +157,13 @@ class ProtectionHeroPackContractTest {
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
         assertTrue(migration.contains("CURRENT_SCHEMA = 1283"));
     }
+
+    @Test
+    void timedLockdownSweepUsesFoliaSafeGlobalRepeatingTask() throws Exception {
+        String plugin = Files.readString(JAVA.resolve("AegisGuard.java"));
+        assertTrue(plugin.contains("startLockdownSweepTask()"));
+        assertTrue(plugin.contains("lockdownSweepTask = runGlobalRepeating"),
+                "Timed lockdown expiry must use Folia-safe runGlobalRepeating like guest-pass/rental sweeps");
+        assertTrue(plugin.contains("lockdownService.sweepExpired()"));
+    }
 }

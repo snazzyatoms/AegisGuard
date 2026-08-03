@@ -52,7 +52,8 @@ public class ClaimBlockExchangeStateStore {
     }
 
     public void saveAsync() {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, this::save);
+        // Folia-safe: never call BukkitScheduler async APIs directly.
+        plugin.runGlobalAsync(this::save);
     }
 
     // -------------------------

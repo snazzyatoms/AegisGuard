@@ -1076,18 +1076,21 @@ public class AegisGuard extends JavaPlugin {
 
     private void closeAllAegisGUIs() {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            try {
-                Inventory top = p.getOpenInventory().getTopInventory();
-                if (top == null) continue;
+            // Folia: inventory/entity ops must run on that player's region thread.
+            runMain(p, () -> {
+                try {
+                    Inventory top = p.getOpenInventory().getTopInventory();
+                    if (top == null) return;
 
-                InventoryHolder holder = top.getHolder();
-                if (holder == null) continue;
+                    InventoryHolder holder = top.getHolder();
+                    if (holder == null) return;
 
-                String hn = holder.getClass().getName();
-                if (hn.startsWith("com.aegisguard.gui")) {
-                    p.closeInventory();
-                }
-            } catch (Throwable ignored) {}
+                    String hn = holder.getClass().getName();
+                    if (hn.startsWith("com.aegisguard.gui")) {
+                        p.closeInventory();
+                    }
+                } catch (Throwable ignored) {}
+            });
         }
     }
 

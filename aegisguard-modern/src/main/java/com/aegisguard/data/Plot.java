@@ -2,6 +2,7 @@ package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
+import com.aegisguard.alliance.Alliance;
 import com.aegisguard.alliance.AllianceAccess;
 import com.aegisguard.guestpass.GuestPass;
 import com.aegisguard.guestpass.GuestPassPreset;
@@ -1224,18 +1225,54 @@ public class Plot {
         this.allianceAccess.clear();
     }
 
+    /**
+     * Whether this plot's Alliance Entry toggle is opted in.
+     * Membership alone is never enough — the toggle must be ON.
+     */
+    public boolean isAllianceEntryEnabled() {
+        return allianceId != null && allianceAccess.isEnter();
+    }
+
+    /**
+     * Whether this plot's Alliance Friendly PvP toggle is opted in.
+     * Membership alone is never enough — the toggle must be ON.
+     */
+    public boolean isAllianceFriendlyPvpEnabled() {
+        return allianceId != null && allianceAccess.isFriendlyPvp();
+    }
+
+    /**
+     * Pure membership-aware entry grant used by plot-entry protection.
+     * Defaults to denied: requires a joined alliance, Enter toggle ON, and membership.
+     */
+    public boolean allowsAllianceEntry(UUID playerUUID, Alliance alliance) {
+        if (!isAllianceEntryEnabled() || playerUUID == null || alliance == null) return false;
+        if (!alliance.getId().equals(allianceId)) return false;
+        return alliance.isMember(playerUUID);
+    }
+
     public boolean allowsAllianceEntry(UUID playerUUID, Plugin plugin) {
-        if (allianceId == null || playerUUID == null || !allianceAccess.isEnter()) return false;
+        if (!isAllianceEntryEnabled() || playerUUID == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
-        if (pl == null || pl.allianceService() == null) return false;
-        return pl.allianceService().isAllianceMember(this, playerUUID);
+        if (pl == null || pl.alliances() == null) return false;
+        return allowsAllianceEntry(playerUUID, pl.alliances().get(allianceId));
+    }
+
+    /**
+     * Pure membership-aware friendly-PvP grant used by plot-PvP damage protection.
+     * Defaults to denied: requires a joined alliance, Friendly PvP toggle ON, and both players as members.
+     */
+    public boolean areAllianceAllies(UUID a, UUID b, Alliance alliance) {
+        if (!isAllianceFriendlyPvpEnabled() || a == null || b == null || alliance == null) return false;
+        if (!alliance.getId().equals(allianceId)) return false;
+        return alliance.isMember(a) && alliance.isMember(b);
     }
 
     public boolean areAllianceAllies(UUID a, UUID b, Plugin plugin) {
-        if (allianceId == null || !allianceAccess.isFriendlyPvp()) return false;
+        if (!isAllianceFriendlyPvpEnabled() || a == null || b == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
-        if (pl == null || pl.allianceService() == null) return false;
-        return pl.allianceService().areAlliesOnPlot(this, a, b);
+        if (pl == null || pl.alliances() == null) return false;
+        return areAllianceAllies(a, b, pl.alliances().get(allianceId));
     }
 
     private boolean grantsAlliancePermission(UUID playerUUID, String permission, AegisGuard pl) {

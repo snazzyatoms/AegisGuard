@@ -87,4 +87,17 @@ class AllianceContractTest {
         assertTrue(command.contains("\"alliance\""));
         assertTrue(command.contains("handleAlliance"));
     }
+
+    @Test
+    void protectionManagerWiresAllianceEntryAndFriendlyPvp() throws Exception {
+        String protection = Files.readString(JAVA_ROOT.resolve("protection/ProtectionManager.java"));
+        assertTrue(protection.contains("allowsAllianceEntry("),
+                "Plot-entry protection must consult Alliance Entry");
+        assertTrue(protection.contains("areAllianceAllies("),
+                "Plot-PvP damage protection must consult Alliance Friendly PvP");
+        assertTrue(protection.contains("onPlayerMove"),
+                "Alliance Entry must live in the player-move / plot-entry path");
+        assertTrue(protection.contains("onEntityDamage"),
+                "Alliance Friendly PvP must live in the entity-damage / PvP path");
+    }
 }

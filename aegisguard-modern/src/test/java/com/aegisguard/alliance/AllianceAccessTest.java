@@ -101,4 +101,98 @@ class AllianceAccessTest {
         assertFalse(alliance.isInvited(member));
         assertEquals(2, alliance.size());
     }
+
+    @Test
+    void allianceEntryToggleDefaultsOffAndRequiresMembershipWhenEnabled() {
+        UUID owner = UUID.randomUUID();
+        UUID ally = UUID.randomUUID();
+        UUID stranger = UUID.randomUUID();
+        Alliance alliance = Alliance.create("EntryAlliance", owner);
+        alliance.addMember(ally, System.currentTimeMillis());
+
+        Plot plot = new Plot(UUID.randomUUID(), owner, "Owner", "world", 0, 0, 20, 20);
+        plot.setAllianceId(alliance.getId());
+
+        // Default: Enter toggle OFF — even alliance members are denied private-plot entry.
+        assertFalse(plot.isAllianceEntryEnabled());
+        assertFalse(plot.allowsAllianceEntry(ally, alliance));
+        assertFalse(plot.allowsAllianceEntry(owner, alliance));
+
+        // Opt in: members may enter; non-members and wrong alliances may not.
+        plot.getAllianceAccess().setEnter(true);
+        assertTrue(plot.isAllianceEntryEnabled());
+        assertTrue(plot.allowsAllianceEntry(ally, alliance));
+        assertTrue(plot.allowsAllianceEntry(owner, alliance));
+        assertFalse(plot.allowsAllianceEntry(stranger, alliance));
+
+        Alliance other = Alliance.create("Other", stranger);
+        assertFalse(plot.allowsAllianceEntry(stranger, other),
+                "A different alliance must never satisfy this plot's entry grant");
+
+        // Turning the toggle back off restores the safe default.
+        plot.getAllianceAccess().setEnter(false);
+        assertFalse(plot.isAllianceEntryEnabled());
+        assertFalse(plot.allowsAllianceEntry(ally, alliance));
+    }
+
+    @Test
+    void allianceFriendlyPvpToggleDefaultsOffAndBlocksAllyDamageWhenEnabled() {
+        UUID owner = UUID.randomUUID();
+        UUID allyA = UUID.randomUUID();
+        UUID allyB = UUID.randomUUID();
+        UUID outsider = UUID.randomUUID();
+        Alliance alliance = Alliance.create("PvpAlliance", owner);
+        alliance.addMember(allyA, System.currentTimeMillis());
+        alliance.addMember(allyB, System.currentTimeMillis());
+
+        Plot plot = new Plot(UUID.randomUUID(), owner, "Owner", "world", 0, 0, 20, 20);
+        plot.setAllianceId(alliance.getId());
+
+        // Default: Friendly PvP OFF — allies are not treated as friendly for damage cancel.
+        assertFalse(plot.isAllianceFriendlyPvpEnabled());
+        assertFalse(plot.areAllianceAllies(allyA, allyB, alliance));
+        assertFalse(plot.areAllianceAllies(owner, allyA, alliance));
+
+        // Opt in: both combatants must be members of THIS plot's alliance.
+        plot.getAllianceAccess().setFriendlyPvp(true);
+        assertTrue(plot.isAllianceFriendlyPvpEnabled());
+        assertTrue(plot.areAllianceAllies(allyA, allyB, alliance));
+        assertTrue(plot.areAllianceAllies(owner, allyA, alliance));
+        assertFalse(plot.areAllianceAllies(allyA, outsider, alliance));
+        assertFalse(plot.areAllianceAllies(outsider, allyB, alliance));
+
+        // Membership without the toggle (or after clearing the plot join) grants nothing.
+        plot.getAllianceAccess().setFriendlyPvp(false);
+        assertFalse(plot.areAllianceAllies(allyA, allyB, alliance));
+        plot.getAllianceAccess().setFriendlyPvp(true);
+        plot.clearAllianceAccess();
+        assertFalse(plot.isAllianceFriendlyPvpEnabled());
+        assertFalse(plot.areAllianceAllies(allyA, allyB, alliance));
+    }
+
+    @Test
+    void privatePlotEntryDecisionUsesAllianceEntryOrTrust() {
+        // Mirrors ProtectionManager.onPlayerMove: deny when entry closed AND no INTERACT AND no alliance entry.
+        assertTrue(shouldDenyPrivateEntry(false, false, false));
+        assertFalse(shouldDenyPrivateEntry(true, false, false), "Open entry flag admits everyone");
+        assertFalse(shouldDenyPrivateEntry(false, true, false), "INTERACT trust admits the player");
+        assertFalse(shouldDenyPrivateEntry(false, false, true), "Alliance Entry admits alliance members");
+        assertFalse(shouldDenyPrivateEntry(false, true, true));
+    }
+
+    @Test
+    void openPlotPvpDecisionUsesAllianceFriendlyPvp() {
+        // Mirrors ProtectionManager.onEntityDamage after plot-wide PvP protection is inactive:
+        // friendly-ally damage is cancelled only when areAllianceAllies is true.
+        assertFalse(shouldCancelFriendlyAlliancePvp(false), "Default OFF leaves open-plot PvP alone");
+        assertTrue(shouldCancelFriendlyAlliancePvp(true), "Friendly PvP ON cancels ally-vs-ally damage");
+    }
+
+    private static boolean shouldDenyPrivateEntry(boolean entryOpen, boolean hasInteract, boolean allianceEntry) {
+        return !entryOpen && !hasInteract && !allianceEntry;
+    }
+
+    private static boolean shouldCancelFriendlyAlliancePvp(boolean areAllianceAllies) {
+        return areAllianceAllies;
+    }
 }

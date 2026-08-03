@@ -385,6 +385,9 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
+            // Private plots deny entry unless the player has INTERACT trust OR this plot's
+            // Alliance Entry toggle is ON and the player is a member of the joined alliance.
+            // Alliance Entry defaults OFF — membership alone never opens a private plot.
             if (!to.getFlag("entry", true)
                     && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)
                     && !to.allowsAllianceEntry(p.getUniqueId(), plugin)) {
@@ -446,8 +449,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        // Milestone 7: when plot PvP is open but allies opted into friendly treatment,
-        // alliance members on this plot cannot hurt each other.
+        // Milestone 7: when plot PvP is open, Alliance Friendly PvP (default OFF) can still
+        // cancel damage between members of the alliance this plot has joined.
         if (plot.areAllianceAllies(attacker.getUniqueId(), victim.getUniqueId(), plugin)) {
             e.setCancelled(true);
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());

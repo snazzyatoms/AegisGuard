@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.territory.TerritoryLifeService;
-import com.aegisguard.util.TeleportUtil; // Folia-safe teleports
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -239,8 +238,9 @@ public class PlotMarketGUI {
             if (e.getClick().isLeftClick()) {
                 Location center = plot.getCenter(plugin);
                 if (center != null) {
-                    // Folia/Paper-safe teleport
-                    TeleportUtil.safeTeleport(plugin, player, center);
+                    var result = plugin.safeTravel().travel(player, center,
+                            com.aegisguard.travel.SafeTravelService.Kind.MARKET);
+                    if (!result.isSuccess()) return;
                     player.closeInventory();
                     plugin.msg().send(player, "market-teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);

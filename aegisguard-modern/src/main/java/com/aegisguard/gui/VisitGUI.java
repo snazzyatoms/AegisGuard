@@ -2,7 +2,8 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.util.TeleportUtil;
+import com.aegisguard.travel.SafeTravelResult;
+import com.aegisguard.travel.SafeTravelService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -36,7 +37,8 @@ import java.util.UUID;
 public class VisitGUI {
 
     private final AegisGuard plugin;
-    private static final int PLOTS_PER_PAGE = 45;
+    /** Four content rows; row 5 holds Help / Recent tools so footer can keep Back/Exit. */
+    private static final int PLOTS_PER_PAGE = 36;
 
     private final NamespacedKey keyAction;
     private final NamespacedKey keyPlotId;
@@ -52,7 +54,8 @@ public class VisitGUI {
         OWNED,
         WARPS,
         DISCOVER,
-        FAVORITES;
+        FAVORITES,
+        RECENT;
 
         public VisitMode next() {
             return switch (this) {
@@ -60,7 +63,8 @@ public class VisitGUI {
                 case OWNED -> WARPS;
                 case WARPS -> DISCOVER;
                 case DISCOVER -> FAVORITES;
-                case FAVORITES -> TRUSTED;
+                case FAVORITES -> RECENT;
+                case RECENT -> TRUSTED;
             };
         }
     }
@@ -182,6 +186,21 @@ public class VisitGUI {
                             displayPlots.add(plot);
                         }
                     }
+                    case RECENT -> {
+                        // Filled after the loop from SafeTravel recent history.
+                    }
+                }
+            }
+
+            if (requestedMode == VisitMode.RECENT && plugin.safeTravel() != null) {
+                displayPlots.clear();
+                Map<UUID, Plot> byId = new java.util.HashMap<>();
+                for (Plot plot : all) {
+                    if (plot != null && plot.getPlotId() != null) byId.put(plot.getPlotId(), plot);
+                }
+                for (UUID plotId : plugin.safeTravel().recentDestinations(player.getUniqueId())) {
+                    Plot recent = byId.get(plotId);
+                    if (recent != null) displayPlots.add(recent);
                 }
             }
 
@@ -227,6 +246,7 @@ public class VisitGUI {
             case TRUSTED -> "visit_title_trusted";
             case DISCOVER -> "visit_title_discover";
             case FAVORITES -> "visit_title_favorites";
+            case RECENT -> "visit_title_recent";
         };
         String fallbackTitle = switch (mode) {
             case WARPS -> "&6Server Destinations";
@@ -234,6 +254,7 @@ public class VisitGUI {
             case TRUSTED -> "&9Friends & Trusted";
             case DISCOVER -> "&6Discover Plots";
             case FAVORITES -> "&eFavorite Plots";
+            case RECENT -> "&bRecent Destinations";
         };
 
         String baseTitle = plugin.gui().title(player, modeTitleKey, fallbackTitle);
@@ -278,11 +299,14 @@ public class VisitGUI {
 
                 String dn = t(player, "visit_warp_name", "&6{WARP}", Map.of("WARP", warpName));
 
+                String category = plot.getWarpCategory() == null || plot.getWarpCategory().isBlank()
+                        ? "HUB" : plot.getWarpCategory();
                 List<String> lore = tl(player, "visit_warp_lore", List.of(
-                            "&7A staff-managed server destination.",
+                        "&7A staff-managed server destination.",
+                        "&7Category: &f{CATEGORY}",
                         " ",
                         "&eClick to teleport"
-                ), Map.of("WARP", warpName));
+                ), Map.of("WARP", warpName, "CATEGORY", category));
 
                 icon = GUIManager.createItem(mat, dn, lore);
             } else {
@@ -354,6 +378,22 @@ public class VisitGUI {
             inv.setItem(slot, icon);
         }
 
+        ItemStack help = GUIManager.createItem(
+                Material.BOOK,
+                t(player, "visit_help_name", "&eTravel Help"),
+                tl(player, "visit_help_lore", List.of(
+                        "&7Browse Spawn, hubs, towns, and trusted plots.",
+                        "&7Favorites and Recent keep useful destinations close.",
+                        "&7Unavailable destinations show a clear empty state."
+                ))
+        );
+        tagAction(help, "visit_help");
+        inv.setItem(36, help);
+
+        ItemStack recentTab = travelTab(player, VisitMode.RECENT, mode == VisitMode.RECENT);
+        tagAction(recentTab, "mode_RECENT");
+        inv.setItem(40, recentTab);
+
         int tabSlot = 46;
         for (VisitMode tabMode : List.of(VisitMode.WARPS, VisitMode.OWNED, VisitMode.TRUSTED,
                 VisitMode.DISCOVER, VisitMode.FAVORITES)) {
@@ -369,7 +409,6 @@ public class VisitGUI {
             inv.setItem(45, prev);
         }
 
-        // Back (51)
         ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 t(player, "button_back_menu", "&fReturn to Menu"),
@@ -378,7 +417,6 @@ public class VisitGUI {
         tagAction(back, "back_menu");
         inv.setItem(51, back);
 
-        // Close (52)
         ItemStack close = GUIManager.createItem(
                 Material.BARRIER,
                 t(player, "button_exit", "&cClose"),
@@ -404,6 +442,7 @@ public class VisitGUI {
             case TRUSTED -> Material.PLAYER_HEAD;
             case DISCOVER -> Material.SPYGLASS;
             case FAVORITES -> Material.NETHER_STAR;
+            case RECENT -> Material.CLOCK;
         };
         String key = switch (mode) {
             case WARPS -> "visit_switch_warps";
@@ -411,6 +450,7 @@ public class VisitGUI {
             case TRUSTED -> "visit_switch_trusted";
             case DISCOVER -> "visit_switch_discover";
             case FAVORITES -> "visit_switch_favorites";
+            case RECENT -> "visit_switch_recent";
         };
         String fallback = switch (mode) {
             case WARPS -> "&6Server Places";
@@ -418,6 +458,7 @@ public class VisitGUI {
             case TRUSTED -> "&9Trusted";
             case DISCOVER -> "&6Discover";
             case FAVORITES -> "&eFavorites";
+            case RECENT -> "&bRecent";
         };
         List<String> lore = new ArrayList<>();
         lore.add(selected
@@ -455,9 +496,16 @@ public class VisitGUI {
                 case "mode_TRUSTED" -> { open(player, 0, VisitMode.TRUSTED); plugin.effects().playMenuFlip(player); return; }
                 case "mode_DISCOVER" -> { open(player, 0, VisitMode.DISCOVER); plugin.effects().playMenuFlip(player); return; }
                 case "mode_FAVORITES" -> { open(player, 0, VisitMode.FAVORITES); plugin.effects().playMenuFlip(player); return; }
+                case "mode_RECENT" -> { open(player, 0, VisitMode.RECENT); plugin.effects().playMenuFlip(player); return; }
                 case "back_menu" -> { plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "visit_empty" -> { plugin.effects().playError(player); return; }
+                case "visit_help" -> {
+                    sendSystem(player, "visit_help_chat",
+                            "&eTravel: use the tabs for Destinations, Owned, Trusted, Discover, Favorites, or Recent.");
+                    plugin.effects().playMenuFlip(player);
+                    return;
+                }
                 case "visit_entry" -> { /* continue */ }
                 default -> { return; }
             }
@@ -525,16 +573,17 @@ public class VisitGUI {
             return;
         }
 
-        Location safeTarget = TeleportUtil.findSafeDestination(target);
-        if (safeTarget == null) {
-            sendSystem(player, "visit_fail_unsafe_spawn", "&cThis destination does not have a safe teleport point.");
-            plugin.effects().playError(player);
+        SafeTravelResult result = plugin.safeTravel().travel(player, target, SafeTravelService.Kind.VISIT);
+        if (!result.isSuccess()) {
+            if (result.status() == SafeTravelResult.Status.UNSAFE_DESTINATION) {
+                sendSystem(player, "visit_fail_unsafe_spawn", "&cThis destination does not have a safe teleport point.");
+            }
             return;
         }
 
         player.closeInventory();
-        TeleportUtil.safeTeleport(plugin, player, safeTarget);
         plugin.territoryLife().recordVisit(plot.getPlotId(), player.getUniqueId());
+        plugin.safeTravel().recordRecentDestination(player.getUniqueId(), plot.getPlotId());
         sendSystem(player, "visit_teleport_success", "&aTeleported.");
         plugin.effects().playTeleport(player);
     }

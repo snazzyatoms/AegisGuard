@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SnapshotAdminGUI (1.2.6 QoL pass)
@@ -36,14 +37,32 @@ public class SnapshotAdminGUI {
     private final AegisGuard plugin;
 
     private static final int SNAPSHOTS_PER_PAGE = 45; // Slots 0-44
+    private static final long RESTORE_CONFIRM_MS = 15_000L;
 
     private final NamespacedKey keyAction;
     private final NamespacedKey keySnapshotId;
+    private final Map<UUID, AbstractMap.SimpleEntry<UUID, Long>> pendingRestoreConfirm = new ConcurrentHashMap<>();
 
     public SnapshotAdminGUI(AegisGuard plugin) {
         this.plugin = plugin;
         this.keyAction = new NamespacedKey(plugin, "aegis_action");
         this.keySnapshotId = new NamespacedKey(plugin, "aegis_snapshot_id");
+    }
+
+    private boolean isRestoreConfirmed(UUID playerId, UUID snapshotId) {
+        AbstractMap.SimpleEntry<UUID, Long> pending = pendingRestoreConfirm.get(playerId);
+        if (pending == null) return false;
+        if (!Objects.equals(pending.getKey(), snapshotId)) return false;
+        return pending.getValue() != null && pending.getValue() >= System.currentTimeMillis();
+    }
+
+    private void markRestoreConfirm(UUID playerId, UUID snapshotId) {
+        pendingRestoreConfirm.put(playerId,
+                new AbstractMap.SimpleEntry<>(snapshotId, System.currentTimeMillis() + RESTORE_CONFIRM_MS));
+    }
+
+    private void clearRestoreConfirm(UUID playerId) {
+        pendingRestoreConfirm.remove(playerId);
     }
 
     public static class SnapshotHolder implements InventoryHolder {
@@ -329,7 +348,24 @@ public class SnapshotAdminGUI {
                 return;
             }
 
+            if (plugin.getConfig().getBoolean("snapshots.require_restore_confirmation", true)
+                    && !isRestoreConfirmed(player.getUniqueId(), finalSnapshotId)) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        plugin.gui().tr(player, "snapshot_restore_summary",
+                                "&eRestore summary: &f{TYPE} &7| &f{REASON} &7| age &f{AGE}&7. Shift-Left again to confirm.",
+                                Map.of(
+                                        "TYPE", finalSnapshot.getType().name(),
+                                        "REASON", finalSnapshot.getReason() == null || finalSnapshot.getReason().isBlank()
+                                                ? "No reason recorded" : finalSnapshot.getReason(),
+                                        "AGE", formatAge(finalSnapshot.getAgeMillis())
+                                ))));
+                markRestoreConfirm(player.getUniqueId(), finalSnapshotId);
+                plugin.effects().playMenuFlip(player);
+                return;
+            }
+
             plugin.effects().playMenuFlip(player);
+            clearRestoreConfirm(player.getUniqueId());
             plugin.runGlobalAsync(() -> {
                 boolean ok;
                 try {

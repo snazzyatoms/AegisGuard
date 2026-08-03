@@ -3,7 +3,6 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
-import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -218,8 +217,10 @@ public class ZoneTenantGUI {
         if (slot == 29) {
             Location target = zone.getTeleportLocation();
             if (target != null) {
+                var result = plugin.safeTravel().travel(player, target,
+                        com.aegisguard.travel.SafeTravelService.Kind.ZONE);
+                if (!result.isSuccess()) return;
                 player.closeInventory();
-                TeleportUtil.safeTeleport(plugin, player, target);
                 plugin.effects().playTeleport(player);
             } else {
                 plugin.effects().playError(player);

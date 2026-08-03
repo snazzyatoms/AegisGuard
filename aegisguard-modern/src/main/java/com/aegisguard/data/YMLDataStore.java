@@ -238,6 +238,7 @@ public class YMLDataStore implements IDataStore {
                                 try { icon = Material.valueOf(iconName); } catch (IllegalArgumentException ignored) {}
                             }
                             plot.setServerWarp(isWarp, warpName, icon);
+                            plot.setWarpCategory(warp.getString("warp-category"));
                         }
                     }
 
@@ -531,6 +532,7 @@ public class YMLDataStore implements IDataStore {
         warp.set("is-server-warp", plot.isServerWarp());
         warp.set("warp-name", plot.getWarpName());
         warp.set("warp-icon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
+        warp.set("warp-category", plot.getWarpCategory());
 
         ConfigurationSection group = sec.createSection("group");
         group.set("enabled", plot.isGroupPlot());

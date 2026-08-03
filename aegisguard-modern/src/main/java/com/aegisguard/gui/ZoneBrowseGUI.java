@@ -5,7 +5,6 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
 import com.aegisguard.economy.CurrencyType;
 import com.aegisguard.groups.PlotGroup;
-import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -200,7 +199,9 @@ public class ZoneBrowseGUI {
 
         if (e.getClick().isLeftClick()) {
             if (zone.getTeleportLocation() != null) {
-                TeleportUtil.safeTeleport(plugin, player, zone.getTeleportLocation());
+                var result = plugin.safeTravel().travel(player, zone.getTeleportLocation(),
+                        com.aegisguard.travel.SafeTravelService.Kind.ZONE);
+                if (!result.isSuccess()) return;
                 plugin.effects().playMenuFlip(player);
             }
             return;

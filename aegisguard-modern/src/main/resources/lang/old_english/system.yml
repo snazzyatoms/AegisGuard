@@ -383,6 +383,16 @@ subtitle_leaving: '&7Returning to Wilderness'
 # Travel
 # -------------------------------------------------
 travel_system_disabled: '&cTravel system is disabled.'
+travel_fail_cooldown: '&cThy travel cools. Wait &e{SECONDS}&c second(s).'
+travel_fail_combat: '&cThou mayest not travel whilst in combat (&e{SECONDS}&cs remain).'
+travel_confirm_prompt: '&eConfirm thy travel within &f{SECONDS}&e seconds.'
+travel_fail_unsafe: '&cNo safe landing was found near that destination.'
+travel_fail_invalid: '&cThat destination is unavailable.'
+travel_fail_disabled: '&cSafe Travel is disabled on this server.'
+travel_fail_cancelled: '&cTravel cancelled.'
+alliance_toggle_disallowed: '&cThat Alliance Access option is forbidden by the realm''s decree.'
+lockdown_activated_notify: '&cEmergency Lockdown hath been raised upon &f{PLOT}&c.'
+snapshot_restore_summary: '&eRestore summary: &f{TYPE} &7| &f{REASON} &7| age &f{AGE}&7. Shift-Left again to confirm.'
 visit_not_owner: '&cThou no longer ownest that claim.'
 
 # -------------------------------------------------

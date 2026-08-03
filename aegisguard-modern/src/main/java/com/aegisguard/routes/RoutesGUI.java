@@ -2,7 +2,6 @@ package com.aegisguard.routes;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -235,8 +234,9 @@ public class RoutesGUI {
                 plugin.effects().playError(player);
                 return;
             }
+            var result = plugin.safeTravel().travel(player, loc, com.aegisguard.travel.SafeTravelService.Kind.ROUTE);
+            if (!result.isSuccess()) return;
             player.closeInventory();
-            TeleportUtil.safeTeleport(plugin, player, loc);
             plugin.msg().send(player, "routes_teleported", Map.of("NAME", next.getName()));
         }
     }

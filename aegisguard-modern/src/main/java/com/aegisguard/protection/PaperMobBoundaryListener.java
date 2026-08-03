@@ -35,7 +35,7 @@ public final class PaperMobBoundaryListener implements Listener {
         }
 
         Entity entity = event.getEntity();
-        if (!plugin.protection().isHostileMob(entity)) {
+        if (!plugin.protection().isProtectedMobCategory(entity)) {
             return;
         }
 

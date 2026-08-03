@@ -144,6 +144,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.routes.RouteService routeService;
     private com.aegisguard.alliance.AllianceManager allianceManager;
     private com.aegisguard.alliance.AllianceService allianceService;
+    private com.aegisguard.travel.SafeTravelService safeTravelService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -236,6 +237,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.routes.RouteService routes() { return routeService; }
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
+    public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -299,6 +301,7 @@ public class AegisGuard extends JavaPlugin {
         routeService = new com.aegisguard.routes.RouteService(this);
         allianceManager = new com.aegisguard.alliance.AllianceManager(this);
         allianceService = new com.aegisguard.alliance.AllianceService(this);
+        safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -382,6 +385,7 @@ public class AegisGuard extends JavaPlugin {
         // Register Events
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
         Bukkit.getPluginManager().registerEvents(guestPassService, this);
+        Bukkit.getPluginManager().registerEvents(safeTravelService, this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         registerPaperMobBoundaryListener();
         Bukkit.getPluginManager().registerEvents(selection, this);
@@ -744,6 +748,7 @@ public class AegisGuard extends JavaPlugin {
         if (messages != null) messages.reload();
         if (pricingCalculator != null) pricingCalculator.reload();
         if (claimBlockExchange != null) claimBlockExchange.reload();
+        if (safeTravelService != null) safeTravelService.reload();
         if (groupManager != null) {
             groupManager.load();
             groupManager.cleanupMissingPlotLinks();

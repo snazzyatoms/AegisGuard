@@ -205,15 +205,25 @@ public class AllianceAccessGUI {
 
     private void placeToggle(Inventory inv, int slot, Player player, String key, boolean on,
                              Material icon, String fallbackLabel, boolean canManage) {
+        boolean disallowed = plugin.alliances() != null && plugin.alliances().isToggleDisallowed(key);
         List<String> lore = new ArrayList<>();
         lore.add(GUIManager.color(on
                 ? t(player, "alliance_toggle_on", "&aON")
                 : t(player, "alliance_toggle_off", "&cOFF")));
         lore.add(" ");
-        lore.add(GUIManager.color(canManage
-                ? t(player, "alliance_toggle_click", "&eClick to toggle.")
-                : t(player, "alliance_manage_locked", "&8Only the owner can change this.")));
-        inv.setItem(slot, GUIManager.createItem(on ? icon : Material.GRAY_DYE,
+        if (disallowed && !on) {
+            lore.add(GUIManager.color(t(player, "alliance_toggle_disallowed_lore",
+                    "&cDisabled by server policy.")));
+            lore.add(GUIManager.color(t(player, "alliance_toggle_disallowed_hint",
+                    "&8Ask staff if this option should be allowed.")));
+        } else if (canManage) {
+            lore.add(GUIManager.color(t(player, "alliance_toggle_click", "&eClick to toggle.")));
+        } else {
+            lore.add(GUIManager.color(t(player, "alliance_manage_locked",
+                    "&8Only the owner can change this.")));
+        }
+        Material display = (disallowed && !on) ? Material.BARRIER : (on ? icon : Material.GRAY_DYE);
+        inv.setItem(slot, GUIManager.createItem(display,
                 (on ? "&a" : "&7") + t(player, "alliance_toggle_" + key, fallbackLabel), lore));
     }
 

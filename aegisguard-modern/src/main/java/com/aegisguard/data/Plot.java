@@ -147,6 +147,8 @@ public class Plot {
     private boolean serverWarp;
     private String warpName;
     private Material warpIcon;
+    /** Optional travel category: SPAWN, HUB, TOWN, EVENT, SHOP (null = uncategorized). */
+    private String warpCategory;
 
     // --- GROUP / SHARED PLOT ---
     private boolean groupPlot;
@@ -1797,6 +1799,18 @@ public class Plot {
 
     public Material getWarpIcon() {
         return warpIcon;
+    }
+
+    public String getWarpCategory() {
+        return warpCategory;
+    }
+
+    public void setWarpCategory(String warpCategory) {
+        if (warpCategory == null || warpCategory.isBlank()) {
+            this.warpCategory = null;
+            return;
+        }
+        this.warpCategory = warpCategory.trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     public String serializeFlags() {

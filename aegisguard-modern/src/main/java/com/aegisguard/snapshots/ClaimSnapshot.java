@@ -12,6 +12,10 @@ public class ClaimSnapshot {
     public enum SnapshotType {
         PRE_EXPANSION,
         PRE_MERGE,
+        PRE_LOCKDOWN,
+        PRE_ALLIANCE_ACCESS,
+        PRE_STAFF_DESTINATION,
+        PRE_DESTRUCTIVE,
         MANUAL
     }
     

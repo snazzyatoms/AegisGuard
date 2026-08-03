@@ -3,7 +3,7 @@ package com.aegisguard.alliance;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.audit.AuditCategory;
 import com.aegisguard.data.Plot;
-import org.bukkit.Bukkit;
+import com.aegisguard.snapshots.ClaimSnapshot.SnapshotType;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -36,6 +36,7 @@ public class AllianceService {
         Alliance alliance = manager().getByPlayer(actor.getUniqueId());
         if (alliance == null) return "alliance_not_member";
 
+        snapshotBeforeAlliance(plot, actor, "Before joining alliance " + alliance.getName());
         plot.setAllianceId(alliance.getId());
         // Keep existing toggles as-is (defaults remain off for new plots).
         plugin.store().savePlot(plot);
@@ -54,6 +55,7 @@ public class AllianceService {
         if (!plot.canManage(actor, plugin)) return "no_perm";
 
         UUID previous = plot.getAllianceId();
+        snapshotBeforeAlliance(plot, actor, "Before leaving alliance access");
         plot.clearAllianceAccess();
         plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
@@ -72,7 +74,11 @@ public class AllianceService {
         if (actor == null || plot == null || key == null) return "alliance_invalid";
         if (!plot.canManage(actor, plugin)) return "no_perm";
         if (plot.getAllianceId() == null) return "alliance_plot_not_joined";
+        if (manager().isToggleDisallowed(key) && !plot.getAllianceAccess().isEnabled(key)) {
+            return "alliance_toggle_disallowed";
+        }
 
+        snapshotBeforeAlliance(plot, actor, "Before alliance access toggle '" + key + "'");
         boolean now = plot.getAllianceAccess().toggle(key);
         plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
@@ -82,6 +88,15 @@ public class AllianceService {
                     "Alliance access '" + key + "' set to " + (now ? "ON" : "OFF"));
         }
         return null;
+    }
+
+    private void snapshotBeforeAlliance(Plot plot, Player actor, String reason) {
+        if (plot == null || plugin.getSnapshotManager() == null) return;
+        if (!plugin.getConfig().getBoolean("snapshots.auto_snapshot.before_alliance_access", true)) return;
+        try {
+            plugin.getSnapshotManager().createSnapshot(plot, SnapshotType.PRE_ALLIANCE_ACCESS, reason,
+                    actor == null ? null : actor.getUniqueId());
+        } catch (Throwable ignored) {}
     }
 
     /**

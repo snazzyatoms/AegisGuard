@@ -41,6 +41,24 @@ public class AllianceManager {
         return Math.max(2, plugin.getConfig().getInt("alliance_access.max_members", 20));
     }
 
+    /** Minutes before invites expire. {@code 0} keeps legacy never-expire behavior. */
+    public long inviteExpireMinutes() {
+        return Math.max(0L, plugin.getConfig().getLong("alliance_access.invite_expire_minutes", 0L));
+    }
+
+    public boolean isInviteExpired(long invitedAtMillis) {
+        long minutes = inviteExpireMinutes();
+        if (minutes <= 0L || invitedAtMillis <= 0L) return false;
+        return System.currentTimeMillis() - invitedAtMillis > minutes * 60_000L;
+    }
+
+    public boolean isToggleDisallowed(String key) {
+        if (key == null || key.isBlank()) return false;
+        String normalized = key.equalsIgnoreCase("friendly_pvp") || key.equalsIgnoreCase("pvp")
+                ? "friendly_pvp" : key.toLowerCase(java.util.Locale.ROOT);
+        return plugin.getConfig().getBoolean("alliance_access.disallow." + normalized, false);
+    }
+
     public Collection<Alliance> all() {
         return List.copyOf(alliancesById.values());
     }
@@ -81,12 +99,19 @@ public class AllianceManager {
         if (playerId == null) return "alliance_invalid";
         if (playerToAlliance.containsKey(playerId)) return "alliance_already_member";
 
+        pruneExpiredInvites();
+
         Alliance invited = null;
         for (Alliance alliance : alliancesById.values()) {
-            if (alliance.isInvited(playerId)) {
-                invited = alliance;
-                break;
+            if (!alliance.isInvited(playerId)) continue;
+            Long invitedAt = alliance.getInvites().get(playerId);
+            if (invitedAt != null && isInviteExpired(invitedAt)) {
+                alliance.removeInvite(playerId);
+                dirty = true;
+                continue;
             }
+            invited = alliance;
+            break;
         }
         if (invited == null) return "alliance_no_invite";
         if (invited.size() >= maxMembers()) return "alliance_full";
@@ -96,6 +121,23 @@ public class AllianceManager {
         dirty = true;
         saveAsync();
         return null;
+    }
+
+    public int pruneExpiredInvites() {
+        if (inviteExpireMinutes() <= 0L) return 0;
+        int removed = 0;
+        for (Alliance alliance : alliancesById.values()) {
+            for (Map.Entry<UUID, Long> entry : List.copyOf(alliance.getInvites().entrySet())) {
+                if (isInviteExpired(entry.getValue())) {
+                    if (alliance.removeInvite(entry.getKey())) {
+                        removed++;
+                        dirty = true;
+                    }
+                }
+            }
+        }
+        if (removed > 0) saveAsync();
+        return removed;
     }
 
     public String leave(UUID playerId) {

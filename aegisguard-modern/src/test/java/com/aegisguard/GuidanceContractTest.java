@@ -107,7 +107,8 @@ class GuidanceContractTest {
         // Schema continues to advance with later milestones; Player Guidance landed at 1276.
         assertTrue(migration.contains("CURRENT_SCHEMA = 1276")
                         || migration.contains("CURRENT_SCHEMA = 1277")
-                        || migration.contains("CURRENT_SCHEMA = 1278"),
+                        || migration.contains("CURRENT_SCHEMA = 1278")
+                        || migration.contains("CURRENT_SCHEMA = 1279"),
                 "Config schema must be at least 1276 after Player Guidance");
     }
 

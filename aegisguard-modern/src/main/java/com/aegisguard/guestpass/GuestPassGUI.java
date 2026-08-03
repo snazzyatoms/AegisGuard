@@ -879,7 +879,9 @@ public class GuestPassGUI {
             plugin.effects().playConfirm(player);
 
             Player online = target instanceof Player ? (Player) target : Bukkit.getPlayer(target.getUniqueId());
-            if (online != null && online.isOnline()) {
+            if (online != null && online.isOnline()
+                    && (plugin.getNotificationManager() == null
+                    || plugin.getNotificationManager().allowsCategory(online.getUniqueId(), "guest_pass"))) {
                 plugin.msg().send(online, "guest_pass_received", Map.of(
                         "PRESET", presetLabel(player, preset), "PLOT", plotDisplayName(plot)));
             }

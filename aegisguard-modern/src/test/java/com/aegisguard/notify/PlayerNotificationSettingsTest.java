@@ -24,6 +24,11 @@ class PlayerNotificationSettingsTest {
         assertTrue(settings.isRepeatNotificationsEnabled());
         assertFalse(settings.isWalkthroughSeen());
         assertEquals(NotificationMode.ACTION_BAR, settings.getMode());
+        assertTrue(settings.isGuestPassNotificationsEnabled());
+        assertTrue(settings.isAllianceNotificationsEnabled());
+        assertTrue(settings.isLockdownNotificationsEnabled());
+        assertTrue(settings.isTravelNotificationsEnabled());
+        assertTrue(settings.isPlotNoticeNotificationsEnabled());
     }
 
     @Test
@@ -42,6 +47,8 @@ class PlayerNotificationSettingsTest {
         PlayerNotificationSettings source = new PlayerNotificationSettings(id);
         source.setRepeatNotifications(false);
         source.setWalkthroughSeen(true);
+        source.setTravelNotifications(false);
+        source.setGuestPassNotifications(false);
 
         YamlConfiguration yaml = new YamlConfiguration();
         source.serialize(yaml.createSection("player"));
@@ -50,6 +57,9 @@ class PlayerNotificationSettingsTest {
         assertFalse(restored.isRepeatNotificationsEnabled());
         assertTrue(restored.isWalkthroughSeen());
         assertTrue(restored.isGreetingsEnabled());
+        assertFalse(restored.isTravelNotificationsEnabled());
+        assertFalse(restored.isGuestPassNotificationsEnabled());
+        assertTrue(restored.isAllianceNotificationsEnabled());
         assertEquals(NotificationMode.ACTION_BAR, restored.getMode());
     }
 

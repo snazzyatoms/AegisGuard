@@ -2,7 +2,6 @@ package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
-import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -281,7 +280,9 @@ public class AdminPlotListGUI {
                 int y = loc.getWorld().getHighestBlockYAt(loc);
                 loc.setY(y + 1);
 
-                TeleportUtil.safeTeleport(plugin, player, loc);
+                var result = plugin.safeTravel().travel(player, loc,
+                        com.aegisguard.travel.SafeTravelService.Kind.STAFF);
+                if (!result.isSuccess()) return;
 
                 plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
                 plugin.effects().playConfirm(player);

@@ -471,15 +471,29 @@ public class AdminGUI {
             return;
         }
 
-        var safeLocation = TeleportUtil.findSafeDestination(player.getLocation());
+        var safeLocation = plugin.safeTravel() != null
+                ? plugin.safeTravel().findSafeDestination(player.getLocation())
+                : TeleportUtil.findSafeDestination(player.getLocation());
         if (safeLocation == null) {
             sendKey(player, "spawn_unsafe_location", "&cThis location is not safe for player travel.");
             plugin.effects().playError(player);
             return;
         }
 
+        if (plugin.getSnapshotManager() != null
+                && plugin.getConfig().getBoolean("snapshots.auto_snapshot.before_staff_destination", true)) {
+            try {
+                plugin.getSnapshotManager().createSnapshot(plot,
+                        com.aegisguard.snapshots.ClaimSnapshot.SnapshotType.PRE_STAFF_DESTINATION,
+                        "Before setting public Spawn destination", player.getUniqueId());
+            } catch (Throwable ignored) {}
+        }
+
         plot.setSpawnLocation(safeLocation);
         plot.setServerWarp(true, "Spawn", Material.BEACON);
+        if (plot.getWarpCategory() == null || plot.getWarpCategory().isBlank()) {
+            plot.setWarpCategory("SPAWN");
+        }
         plugin.store().savePlot(plot);
         sendKey(player, "spawn_destination_set", "&aThis staff plot is now the public Spawn destination.");
         plugin.effects().playConfirm(player);

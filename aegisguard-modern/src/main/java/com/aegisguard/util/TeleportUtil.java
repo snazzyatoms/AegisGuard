@@ -156,24 +156,36 @@ public final class TeleportUtil {
     }
 
     /**
-     * Finds a standable location near a requested destination.  A configured plot
-     * spawn may be moved by a build, removed by world generation, or accidentally
-     * set inside a block; travel callers should resolve it before teleporting.
+     * Finds a standable location near a requested destination using the historical
+     * 4-block search radius. Prefer {@link #findSafeDestination(Location, int)} or
+     * {@code SafeTravelService#findSafeDestination} when config-driven radius matters.
      */
     public static Location findSafeDestination(Location requested) {
+        return findSafeDestination(requested, 4);
+    }
+
+    /**
+     * Finds a standable location near a requested destination. A configured plot
+     * spawn may be moved by a build, removed by world generation, or accidentally
+     * set inside a block; travel callers should resolve it before teleporting.
+     *
+     * @param maxRadius inclusive Chebyshev radius for the surface search (0 = exact + same column only)
+     */
+    public static Location findSafeDestination(Location requested, int maxRadius) {
         if (requested == null || requested.getWorld() == null) return null;
 
         World world = requested.getWorld();
         int baseX = requested.getBlockX();
         int baseZ = requested.getBlockZ();
         int baseY = requested.getBlockY();
+        int radiusLimit = Math.max(0, maxRadius);
 
         Location exact = standableLocation(world, baseX, baseY, baseZ, requested.getYaw(), requested.getPitch());
         if (exact != null) return exact;
 
-        // Prefer a nearby safe surface over an unsafe configured point.  The
+        // Prefer a nearby safe surface over an unsafe configured point. The
         // bounded search prevents a teleport from unexpectedly moving far away.
-        for (int radius = 0; radius <= 4; radius++) {
+        for (int radius = 0; radius <= radiusLimit; radius++) {
             for (int dx = -radius; dx <= radius; dx++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;

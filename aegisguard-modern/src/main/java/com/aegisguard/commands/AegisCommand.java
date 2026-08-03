@@ -9,7 +9,6 @@ import com.aegisguard.economy.CurrencyType;  // ✅ NEW: Currency Type enum
 import com.aegisguard.groups.PlotGroup;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.territory.TerritoryLifeService;
-import com.aegisguard.util.TeleportUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -1061,7 +1060,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         int safeY = world.getHighestBlockYAt(target);
         target.setY(safeY + 1);
 
-        TeleportUtil.safeTeleport(plugin, p, target);
+        var unstuck = plugin.safeTravel().travel(p, target, com.aegisguard.travel.SafeTravelService.Kind.UNSTUCK);
+        if (!unstuck.isSuccess()) return;
 
         sendKey(p, "unstuck_success", "&a✔ Teleported to safety.");
         plugin.effects().playTeleport(p);
@@ -1112,7 +1112,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         Location spawn = kTarget.getWorld().getSpawnLocation();
-        TeleportUtil.safeTeleport(plugin, kTarget, spawn);
+        plugin.safeTravel().travel(kTarget, spawn, com.aegisguard.travel.SafeTravelService.Kind.SPAWN, false);
 
         // Target gets message in THEIR language.
         sendKey(kTarget, "kicked_target", "§cYou were kicked from {OWNER}'s plot.",
@@ -1162,7 +1162,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             Player online = bTarget.getPlayer();
             if (online != null && bPlot.isInside(online.getLocation())) {
                 Location spawn = online.getWorld().getSpawnLocation();
-                TeleportUtil.safeTeleport(plugin, online, spawn);
+                plugin.safeTravel().travel(online, spawn, com.aegisguard.travel.SafeTravelService.Kind.SPAWN, false);
 
                 // Target gets message in THEIR language.
                 sendKey(online, "ban_target", "§4You have been BANNED from this plot.");
@@ -1245,7 +1245,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        TeleportUtil.safeTeleport(plugin, p, homePlot.getSpawnLocation());
+        var homeTravel = plugin.safeTravel().travel(p, homePlot.getSpawnLocation(),
+                com.aegisguard.travel.SafeTravelService.Kind.HOME);
+        if (!homeTravel.isSuccess()) return;
         plugin.effects().playConfirm(p);
     }
 
@@ -2267,9 +2269,12 @@ private void handleUnsell(Player p) {
                 }
                 sendKey(p, "alliance_invite_sent", "&aInvited &e{PLAYER}&a to &e{NAME}&a.",
                         Map.of("PLAYER", target.getName(), "NAME", current.getName()));
-                sendKey(target, "alliance_invite_received",
-                        "&e{PLAYER} &7invited you to alliance &e{NAME}&7. Use &e/ag alliance accept",
-                        Map.of("PLAYER", p.getName(), "NAME", current.getName()));
+                if (plugin.getNotificationManager() == null
+                        || plugin.getNotificationManager().allowsCategory(target.getUniqueId(), "alliance")) {
+                    sendKey(target, "alliance_invite_received",
+                            "&e{PLAYER} &7invited you to alliance &e{NAME}&7. Use &e/ag alliance accept",
+                            Map.of("PLAYER", p.getName(), "NAME", current.getName()));
+                }
             }
             case "accept" -> {
                 String err = plugin.alliances().accept(p.getUniqueId());

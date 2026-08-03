@@ -3,6 +3,7 @@ package com.aegisguard.lockdown;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.audit.AuditCategory;
 import com.aegisguard.data.Plot;
+import com.aegisguard.snapshots.ClaimSnapshot.SnapshotType;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -46,6 +47,14 @@ public class LockdownService {
         UUID actorId = actor == null ? null : actor.getUniqueId();
         String actorName = actor == null ? "System" : actor.getName();
 
+        if (plugin.getSnapshotManager() != null
+                && plugin.getConfig().getBoolean("snapshots.auto_snapshot.before_lockdown", true)) {
+            try {
+                plugin.getSnapshotManager().createSnapshot(plot, SnapshotType.PRE_LOCKDOWN,
+                        "Before Emergency Lockdown by " + actorName, actorId);
+            } catch (Throwable ignored) {}
+        }
+
         plot.setLockdown(true, actorId, actorName);
         plugin.store().savePlot(plot);
 
@@ -53,6 +62,21 @@ public class LockdownService {
             plugin.audit().record(AuditCategory.LOCKDOWN, actor, plotLabel(plot),
                     "Activated Emergency Lockdown.");
         }
+        // Notify plot members who opted into lockdown alerts.
+        try {
+            if (plugin.getNotificationManager() != null) {
+                java.util.LinkedHashSet<java.util.UUID> targets = new java.util.LinkedHashSet<>();
+                if (plot.getOwner() != null) targets.add(plot.getOwner());
+                if (plot.getPlayerRoles() != null) targets.addAll(plot.getPlayerRoles().keySet());
+                for (java.util.UUID id : targets) {
+                    if (actorId != null && actorId.equals(id)) continue;
+                    plugin.getNotificationManager().notifyCategory(id, "lockdown",
+                            "lockdown_activated_notify",
+                            "&cEmergency Lockdown activated on &f{PLOT}&c.",
+                            java.util.Map.of("PLOT", plotLabel(plot)));
+                }
+            }
+        } catch (Throwable ignored) {}
         return null;
     }
 

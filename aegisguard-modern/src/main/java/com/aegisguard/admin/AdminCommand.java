@@ -41,7 +41,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "rentals", "discover", "activity", "snapshot", "restore", "audit"
+            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit"
     };
 
     private static final String[] MIGRATE_ACTIONS = {
@@ -70,6 +70,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 plugin.getLogger().info("AegisGuard was reloaded from the server console.");
                 return true;
             }
+            if (args.length > 0 && args[0].equalsIgnoreCase("health")) {
+                StaffHealthCheck.report(plugin, sender);
+                return true;
+            }
             sender.sendMessage(ChatColor.RED + "Players only.");
             return true;
         }
@@ -94,6 +98,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "claim" -> handleServerClaim(player);
             case "migrate" -> handleMigrate(player, args);
             case "doctor" -> runDoctor(player, args);
+            case "health" -> StaffHealthCheck.report(plugin, player);
             case "snapshot" -> handleSnapshot(player, args);
             case "restore" -> handleRestore(player, args);
             case "convert" -> handleConvert(player, args);

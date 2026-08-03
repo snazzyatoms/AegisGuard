@@ -187,7 +187,53 @@ public class ProtectionManager implements Listener {
     }
 
     public boolean isMobProtectionEnabled(Plot plot) {
-        return plot != null && (plot.isServerZone() || isProtectionActive(plot, "mobs", false));
+        if (plot == null) return false;
+        if (!isMobBarrierEnabledForWorld(plot.getWorld())) return false;
+        return plot.isServerZone() || isProtectionActive(plot, "mobs", false);
+    }
+
+    public boolean isMobBarrierEnabledForWorld(String worldName) {
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", true)) return false;
+        if (worldName == null || worldName.isBlank()) return true;
+        String path = "mob_barrier.per_world." + worldName + ".enabled";
+        if (plugin.cfg().raw().isSet(path)) {
+            return plugin.cfg().raw().getBoolean(path);
+        }
+        return true;
+    }
+
+    /**
+     * Whether this entity should be affected by mob-barrier protection based on
+     * hostile/passive/boss category toggles (defaults preserve hostile-only).
+     */
+    public boolean isProtectedMobCategory(Entity entity) {
+        if (entity == null) return false;
+        boolean protectHostile = plugin.cfg().raw().getBoolean("mob_barrier.protect_hostile", true);
+        boolean protectPassive = plugin.cfg().raw().getBoolean("mob_barrier.protect_passive", false);
+        boolean protectBoss = plugin.cfg().raw().getBoolean("mob_barrier.protect_boss", false);
+
+        if (entity instanceof org.bukkit.entity.Boss || entity instanceof org.bukkit.entity.EnderDragon
+                || entity instanceof org.bukkit.entity.Wither) {
+            return protectBoss;
+        }
+        if (isHostileMob(entity)) {
+            return protectHostile;
+        }
+        if (entity instanceof org.bukkit.entity.Animals || entity instanceof org.bukkit.entity.Ambient
+                || entity instanceof org.bukkit.entity.WaterMob) {
+            return protectPassive;
+        }
+        return false;
+    }
+
+    public String diagnoseMobProtection(Plot plot, Entity entity) {
+        if (plot == null) return "no_plot";
+        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", true)) return "barrier_disabled";
+        if (!isMobBarrierEnabledForWorld(plot.getWorld())) return "world_disabled:" + plot.getWorld();
+        if (!isMobProtectionEnabled(plot)) return "plot_flag_off";
+        if (entity != null && !isProtectedMobCategory(entity)) return "category_excluded:" + entity.getType();
+        if (plot.isServerZone()) return "server_zone";
+        return "plot_mobs_flag";
     }
 
     public boolean isSafeZoneEnabled(Plot plot) {
@@ -623,10 +669,11 @@ public class ProtectionManager implements Listener {
             if (plugin.cfg().raw().getBoolean("mob_barrier.remove_particles", true)) {
                 Particle particle = CompatParticle.match("SMOKE_NORMAL");
                 if (particle != null) {
+                    int count = plugin.cfg().raw().getBoolean("mob_barrier.low_particle_mode", true) ? 2 : 5;
                     entity.getWorld().spawnParticle(
                             particle,
                             entity.getLocation().add(0, 1, 0),
-                            5,
+                            count,
                             0.1, 0.1, 0.1,
                             0.05
                     );

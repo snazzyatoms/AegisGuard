@@ -260,6 +260,35 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
+        // 3F) CATEGORY PREFERENCES (1.3.0+) — defaults ON
+        // --------------------------------------------------
+        placeCategoryToggle(inv, 28, player, "guest_pass",
+                getCategoryEnabled(player, "guest_pass"), Material.NAME_TAG,
+                "settings_guest_pass_notify_on_name", "&aGuest Pass Alerts: ON",
+                "settings_guest_pass_notify_off_name", "&cGuest Pass Alerts: OFF",
+                "settings_guest_pass_notify_lore", List.of("&7Issue, revoke, and expiry notices."));
+        placeCategoryToggle(inv, 29, player, "alliance",
+                getCategoryEnabled(player, "alliance"), Material.SHIELD,
+                "settings_alliance_notify_on_name", "&aAlliance Alerts: ON",
+                "settings_alliance_notify_off_name", "&cAlliance Alerts: OFF",
+                "settings_alliance_notify_lore", List.of("&7Invites and alliance membership events."));
+        placeCategoryToggle(inv, 30, player, "lockdown",
+                getCategoryEnabled(player, "lockdown"), Material.IRON_BARS,
+                "settings_lockdown_notify_on_name", "&aLockdown Alerts: ON",
+                "settings_lockdown_notify_off_name", "&cLockdown Alerts: OFF",
+                "settings_lockdown_notify_lore", List.of("&7Emergency Lockdown activate/deactivate."));
+        placeCategoryToggle(inv, 32, player, "travel",
+                getCategoryEnabled(player, "travel"), Material.ENDER_PEARL,
+                "settings_travel_notify_on_name", "&aTravel Alerts: ON",
+                "settings_travel_notify_off_name", "&cTravel Alerts: OFF",
+                "settings_travel_notify_lore", List.of("&7Travel failures and cooldown notices."));
+        placeCategoryToggle(inv, 33, player, "plot_notices",
+                getCategoryEnabled(player, "plot_notices"), Material.OAK_SIGN,
+                "settings_plot_notice_notify_on_name", "&aPlot Notice Alerts: ON",
+                "settings_plot_notice_notify_off_name", "&cPlot Notice Alerts: OFF",
+                "settings_plot_notice_notify_lore", List.of("&7Plot noticeboard updates."));
+
+        // --------------------------------------------------
         // NAVIGATION (48/49)
         // --------------------------------------------------
         inv.setItem(48, GUIManager.createItem(
@@ -477,6 +506,12 @@ public class SettingsGUI {
                 plugin.runMain(player, () -> plugin.gui().walkthrough().open(player, 0));
             }
 
+            case 28 -> toggleCategory(player, plot, "guest_pass");
+            case 29 -> toggleCategory(player, plot, "alliance");
+            case 30 -> toggleCategory(player, plot, "lockdown");
+            case 32 -> toggleCategory(player, plot, "travel");
+            case 33 -> toggleCategory(player, plot, "plot_notices");
+
             case 48 -> {
                 playFlip(player);
                 plugin.runMain(player, () -> plugin.gui().openMain(player));
@@ -491,6 +526,57 @@ public class SettingsGUI {
 
     private boolean canManageNotifications(Player player) {
         return player != null && player.hasPermission("aegis.notify");
+    }
+
+    private void placeCategoryToggle(Inventory inv, int slot, Player player, String category,
+                                     boolean enabled, Material icon,
+                                     String onKey, String onFallback,
+                                     String offKey, String offFallback,
+                                     String loreKey, List<String> loreFallback) {
+        inv.setItem(slot, GUIManager.createItem(
+                enabled ? icon : Material.GRAY_DYE,
+                enabled ? t(player, onKey, onFallback) : t(player, offKey, offFallback),
+                tl(player, loreKey, loreFallback)
+        ));
+    }
+
+    private boolean getCategoryEnabled(Player player, String category) {
+        try {
+            if (plugin.getNotificationManager() != null) {
+                return plugin.getNotificationManager().allowsCategory(player.getUniqueId(), category);
+            }
+        } catch (Throwable ignored) {}
+        return true;
+    }
+
+    private void toggleCategory(Player player, Plot plot, String category) {
+        if (!canManageNotifications(player)) {
+            playError(player);
+            return;
+        }
+        try {
+            if (plugin.getNotificationManager() == null) {
+                playError(player);
+                return;
+            }
+            UUID uuid = player.getUniqueId();
+            switch (category) {
+                case "guest_pass" -> plugin.getNotificationManager().toggleGuestPassNotifications(uuid);
+                case "alliance" -> plugin.getNotificationManager().toggleAllianceNotifications(uuid);
+                case "lockdown" -> plugin.getNotificationManager().toggleLockdownNotifications(uuid);
+                case "travel" -> plugin.getNotificationManager().toggleTravelNotifications(uuid);
+                case "plot_notices" -> plugin.getNotificationManager().togglePlotNoticeNotifications(uuid);
+                default -> {
+                    playError(player);
+                    return;
+                }
+            }
+        } catch (Throwable error) {
+            preferenceFailure(player, error);
+            return;
+        }
+        playFlip(player);
+        reopenNextTick(player, plot);
     }
 
     private void preferenceFailure(Player player, Throwable error) {

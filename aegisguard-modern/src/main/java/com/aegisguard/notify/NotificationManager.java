@@ -240,6 +240,45 @@ public class NotificationManager {
         return newState;
     }
 
+    public boolean toggleGuestPassNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean state = settings.toggleGuestPassNotifications();
+        updateSettings(settings);
+        return state;
+    }
+
+    public boolean toggleAllianceNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean state = settings.toggleAllianceNotifications();
+        updateSettings(settings);
+        return state;
+    }
+
+    public boolean toggleLockdownNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean state = settings.toggleLockdownNotifications();
+        updateSettings(settings);
+        return state;
+    }
+
+    public boolean toggleTravelNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean state = settings.toggleTravelNotifications();
+        updateSettings(settings);
+        return state;
+    }
+
+    public boolean togglePlotNoticeNotifications(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        boolean state = settings.togglePlotNoticeNotifications();
+        updateSettings(settings);
+        return state;
+    }
+
+    public boolean allowsCategory(UUID playerUUID, String category) {
+        return getSettings(playerUUID).allowsCategory(category);
+    }
+
     public boolean hasRepeatNotificationsEnabled(UUID playerUUID) {
         return getSettings(playerUUID).isRepeatNotificationsEnabled();
     }
@@ -339,6 +378,12 @@ public class NotificationManager {
     }
 
     public void notifyPlayer(UUID playerUUID, String messageKey, String fallback, Map<String, String> placeholders) {
+        notifyPlayer(playerUUID, null, null, messageKey, fallback, placeholders);
+    }
+
+    public void notifyCategory(UUID playerUUID, String category, String messageKey, String fallback,
+                               Map<String, String> placeholders) {
+        if (!allowsCategory(playerUUID, category)) return;
         notifyPlayer(playerUUID, null, null, messageKey, fallback, placeholders);
     }
 

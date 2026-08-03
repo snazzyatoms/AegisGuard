@@ -104,6 +104,17 @@ public class PlayerGUI {
                 tl(player, "info_lore", List.of("&7Read the basics, commands,", "&7and protection tips."))
         ));
 
+        // Routes (Slot 10) — Milestone 6
+        if (plugin.getConfig().getBoolean("routes.enabled", true)) {
+            inv.setItem(10, GUIManager.createItem(
+                    Material.FILLED_MAP,
+                    t(player, "button_routes", "&a🗺 Routes"),
+                    tl(player, "routes_button_lore", List.of(
+                            "&7Browse staff-made exploration routes",
+                            "&7and see your next checkpoint."))
+            ));
+        }
+
         // Travel (Slot 11)
         boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
         if (travelEnabled) {
@@ -341,6 +352,15 @@ public class PlayerGUI {
 
         switch (slot) {
             case 4 -> plugin.gui().info().open(player);
+
+            case 10 -> {
+                if (plugin.getConfig().getBoolean("routes.enabled", true)) {
+                    plugin.gui().routes().open(player);
+                } else {
+                    send(player, "routes_disabled", "&cRoutes are disabled on this server.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
 
             case 11 -> {
                 boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);

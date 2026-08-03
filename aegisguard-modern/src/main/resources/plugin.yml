@@ -90,6 +90,7 @@ permissions:
       aegis.admin.activity: true
       aegis.admin.world: true
       aegis.admin.audit: true
+      aegis.admin.routes: true
 
   aegis.user:
     description: Recommended base permissions for regular players.
@@ -129,6 +130,7 @@ permissions:
       aegis.admin.activity: true
       aegis.admin.world: true
       aegis.admin.audit: true
+      aegis.admin.routes: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -282,6 +284,10 @@ permissions:
 
   aegis.admin.audit:
     description: View the staff Audit Ledger (snapshot restores, Doctor repairs, migrations, admin bypass toggles, and ClaimBlock adjustments).
+    default: op
+
+  aegis.admin.routes:
+    description: Create and edit exploration routes with ordered checkpoints.
     default: op
 
   # ---------------------------------------------------------------------------

@@ -104,7 +104,11 @@ class GuidanceContractTest {
     @Test
     void configSchemaWasBumpedForPlayerGuidance() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1276"));
+        // Schema continues to advance with later milestones; Player Guidance landed at 1276.
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1276")
+                        || migration.contains("CURRENT_SCHEMA = 1277")
+                        || migration.contains("CURRENT_SCHEMA = 1278"),
+                "Config schema must be at least 1276 after Player Guidance");
     }
 
     @Test

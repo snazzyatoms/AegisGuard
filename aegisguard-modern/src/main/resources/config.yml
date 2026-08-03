@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1276
+config_schema: 1277
 
 
 # ------------------------------------------------------------------------------
@@ -812,6 +812,22 @@ realm_profiles:
 # Walkthrough" button in Settings.
 first_claim_walkthrough:
   enabled: true
+
+
+# ==============================================================================
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ==============================================================================
+# Staff-authored named routes with ordered checkpoints. Players browse routes,
+# see the next destination, and optionally earn small completion rewards by
+# walking near checkpoints. Never forces teleports or alters claim boundaries.
+routes:
+  enabled: true
+  default_checkpoint_radius: 4.0
+  # When true, the route detail screen offers an optional teleport to the next
+  # checkpoint. Discovery itself never requires teleporting.
+  allow_optional_teleport: false
+  rewards:
+    enabled: true
 
 
 # ==============================================================================

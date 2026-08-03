@@ -2219,3 +2219,45 @@ walkthrough_next_name: '&aSiguiente Página'
 walkthrough_done_name: '&aTerminar'
 walkthrough_next_lore: ['&7Continuar la guía.']
 walkthrough_skip_lore: ['&7Cerrar - podés repetir esto', '&7cuando quieras desde Ajustes.']
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+button_routes: '&a🗺 Routes'
+routes_button_lore: ['&7Mirá rutas de exploración hechas por staff', '&7y mirá tu próximo punto.']
+routes_menu_title: '&aRutas'
+routes_none_title: '&7Sin Rutas Todavía'
+routes_none_lore: ['&7El staff no publicó ninguna', '&7ruta de exploración todavía.']
+routes_prev_lore: ['&7Página anterior.']
+routes_next_lore: ['&7Página siguiente.']
+routes_progress_line: '&7Progreso: &f{COUNT}/{TOTAL}'
+routes_next_checkpoint_line: '&7Siguiente: &e{NAME}'
+routes_complete_line: '&a✔ Ruta completa'
+routes_click_detail: '&eHacé clic para ver detalles.'
+routes_entry_name: '&a🗺 {NAME}'
+routes_detail_title: '&aDetalles de Ruta'
+routes_reward_line: '&7Recompensa: &6{MONEY} &7+ &b{BLOCKS} blocks'
+routes_walk_hint: '&7Acercate a este punto para descubrirlo.'
+routes_teleport_hint: '&eHacé clic para teletransportarte cerca (opcional).'
+routes_next_name: '&eSiguiente: {NAME}'
+routes_complete_title: '&aRuta completa'
+routes_complete_lore: ['&7Descubriste todos los', '&7puntos de esta ruta.']
+button_admin_routes: '&aEditor de Rutas'
+admin_routes_lore: ['&7Creá rutas de exploración con', '&7puntos ordenados para que los jugadores exploren.', ' ', '&eHacé clic para abrir.']
+routes_admin_title: '&cEditor de Rutas'
+routes_admin_edit_title: '&cEditar Ruta'
+routes_admin_enabled: '&aActiva'
+routes_admin_disabled: '&cDesactivada'
+routes_admin_checkpoints_line: '&7Puntos: &f{COUNT}'
+routes_admin_click_edit: '&eHacé clic para editar.'
+routes_admin_create_name: '&a＋ Crear Ruta Acá'
+routes_admin_create_lore: ['&7Creates a new Activa route named', '&7como tu mundo actual, empezando', '&7con un punto a tus pies.']
+routes_admin_toggle_lore: ['&eHacé clic para alternar visibilidad.']
+routes_admin_add_checkpoint_name: '&b＋ Agregar Punto Acá'
+routes_admin_add_checkpoint_lore: ['&7Agrega tu ubicación actual como', '&7el próximo punto ordenado.']
+routes_admin_reward_money_name: '&6Money Recompensa: {AMOUNT}'
+routes_admin_reward_money_lore: ['&7Click to cycle: 0 → 10 → 25 → 50 → 100.']
+routes_admin_reward_blocks_name: '&bBloques de claim: {AMOUNT}'
+routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
+routes_admin_delete_name: '&cEliminar Ruta'
+routes_admin_delete_lore: ['&cElimina esta ruta y todo', '&cel progreso de jugadores.']

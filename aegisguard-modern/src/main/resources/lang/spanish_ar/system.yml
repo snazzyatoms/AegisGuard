@@ -525,3 +525,16 @@ notice_posted: '&a✔ Anuncio publicado en el tablón de esta parcela.'
 usage_notice_remove: '&cUso: /ag notice remove <#>'
 notice_invalid_index: '&cEse no es un número de anuncio válido. Usá /ag notice list para verlos.'
 notice_removed: '&e✔ Anuncio eliminado.'
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+routes_disabled: '&cLas rutas están deshabilitadas en este servidor.'
+route_checkpoint_discovered: '&a✔ Descubriste &f{CHECKPOINT}&a en &f{ROUTE}&a ({COUNT}/{TOTAL}).'
+route_completed: '&a✔ Completaste la ruta &f{ROUTE}&a!'
+route_completed_rewarded: '&a✔ Ruta &f{ROUTE}&a completa! Recompensa: &6{MONEY}&a + &b{BLOCKS} bloques de claim&a.'
+routes_world_missing: '&cEl mundo de ese punto no está cargado.'
+routes_teleported: '&aTe teletransportaste cerca de &f{NAME}&a.'
+routes_admin_created: '&a✔ Ruta creada &f{NAME}&a.'
+routes_admin_checkpoint_added: '&a✔ Punto agregado (ahora &f{COUNT}&a en total).'
+routes_admin_deleted: '&e✔ Ruta eliminada &f{NAME}&e.'

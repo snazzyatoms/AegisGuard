@@ -1808,3 +1808,45 @@ walkthrough_next_name: '&aNext Page'
 walkthrough_done_name: '&aFinish'
 walkthrough_next_lore: ['&7Continue the walkthrough.']
 walkthrough_skip_lore: ['&7Close - thou mayest replay this', '&7at any time from Settings.']
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+button_routes: '&a🗺 Routes'
+routes_button_lore: ['&7Browse staff-made exploration routes', '&7and see your next checkpoint.']
+routes_menu_title: '&aRoutes'
+routes_none_title: '&7No Routes Yet'
+routes_none_lore: ['&7Staff have not published any', '&7exploration routes yet.']
+routes_prev_lore: ['&7Previous page.']
+routes_next_lore: ['&7Next page.']
+routes_progress_line: '&7Progress: &f{COUNT}/{TOTAL}'
+routes_next_checkpoint_line: '&7Next: &e{NAME}'
+routes_complete_line: '&a✔ Route complete'
+routes_click_detail: '&eClick for details.'
+routes_entry_name: '&a🗺 {NAME}'
+routes_detail_title: '&aRoute Details'
+routes_reward_line: '&7Reward: &6{MONEY} &7+ &b{BLOCKS} blocks'
+routes_walk_hint: '&7Walk near this checkpoint to discover it.'
+routes_teleport_hint: '&eClick to teleport nearby (optional).'
+routes_next_name: '&eNext: {NAME}'
+routes_complete_title: '&aRoute Complete'
+routes_complete_lore: ['&7You have discovered every', '&7checkpoint on this route.']
+button_admin_routes: '&aRoute Editor'
+admin_routes_lore: ['&7Create named exploration routes with', '&7ordered checkpoints for players to browse.', ' ', '&eClick to open.']
+routes_admin_title: '&cRoute Editor'
+routes_admin_edit_title: '&cEdit Route'
+routes_admin_enabled: '&aEnabled'
+routes_admin_disabled: '&cDisabled'
+routes_admin_checkpoints_line: '&7Checkpoints: &f{COUNT}'
+routes_admin_click_edit: '&eClick to edit.'
+routes_admin_create_name: '&a＋ Create Route Here'
+routes_admin_create_lore: ['&7Creates a new enabled route named', '&7after your current world, starting', '&7with a checkpoint at your feet.']
+routes_admin_toggle_lore: ['&eClick to toggle visibility.']
+routes_admin_add_checkpoint_name: '&b＋ Add Checkpoint Here'
+routes_admin_add_checkpoint_lore: ['&7Appends your current location as', '&7the next ordered checkpoint.']
+routes_admin_reward_money_name: '&6Money Reward: {AMOUNT}'
+routes_admin_reward_money_lore: ['&7Click to cycle: 0 → 10 → 25 → 50 → 100.']
+routes_admin_reward_blocks_name: '&bClaim Blocks: {AMOUNT}'
+routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
+routes_admin_delete_name: '&cDelete Route'
+routes_admin_delete_lore: ['&cRemoves this route and all', '&cplayer progress for it.']

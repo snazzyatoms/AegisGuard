@@ -17,6 +17,10 @@ import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
 import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
 import com.aegisguard.guidance.FirstClaimWalkthroughGUI.WalkthroughHolder;
+import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
+import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
+import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
+import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -144,7 +148,11 @@ public class GUIListener implements Listener {
                 || holder instanceof LockdownConfirmHolder
                 || holder instanceof RealmProfileMenuHolder
                 || holder instanceof NoticeboardHolder
-                || holder instanceof WalkthroughHolder;
+                || holder instanceof WalkthroughHolder
+                || holder instanceof RoutesMenuHolder
+                || holder instanceof RouteDetailHolder
+                || holder instanceof RouteAdminHolder
+                || holder instanceof RouteEditHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -340,6 +348,18 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof WalkthroughHolder castHolder) {
             plugin.gui().walkthrough().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof RoutesMenuHolder castHolder) {
+            plugin.gui().routes().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteDetailHolder castHolder) {
+            plugin.gui().routes().handleDetailClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteAdminHolder castHolder) {
+            plugin.gui().routeAdmin().handleListClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteEditHolder castHolder) {
+            plugin.gui().routeAdmin().handleEditClick(player, e, castHolder);
         }
     }
 
@@ -615,6 +635,23 @@ public class GUIListener implements Listener {
 
         if (holder instanceof WalkthroughHolder castHolder) {
             plugin.gui().walkthrough().open(player, castHolder.getPage());
+            return;
+        }
+
+        if (holder instanceof RoutesMenuHolder castHolder) {
+            plugin.gui().routes().open(player, castHolder.getPage());
+            return;
+        }
+        if (holder instanceof RouteDetailHolder castHolder) {
+            plugin.gui().routes().openDetail(player, castHolder.getRoute());
+            return;
+        }
+        if (holder instanceof RouteAdminHolder castHolder) {
+            plugin.gui().routeAdmin().open(player, castHolder.getPage());
+            return;
+        }
+        if (holder instanceof RouteEditHolder castHolder) {
+            plugin.gui().routeAdmin().openEdit(player, castHolder.getRoute());
             return;
         }
 

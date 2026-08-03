@@ -141,6 +141,7 @@ public class AegisGuard extends JavaPlugin {
     private AuditService auditService;
     private com.aegisguard.guestpass.GuestPassService guestPassService;
     private com.aegisguard.lockdown.LockdownService lockdownService;
+    private com.aegisguard.routes.RouteService routeService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -230,6 +231,7 @@ public class AegisGuard extends JavaPlugin {
     public AuditService audit() { return auditService; }
     public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
     public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
+    public com.aegisguard.routes.RouteService routes() { return routeService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -290,6 +292,7 @@ public class AegisGuard extends JavaPlugin {
         auditService = new AuditService(this);
         guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
         lockdownService = new com.aegisguard.lockdown.LockdownService(this);
+        routeService = new com.aegisguard.routes.RouteService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -358,6 +361,10 @@ public class AegisGuard extends JavaPlugin {
                 if (groupManager != null) groupManager.load();
             } catch (Throwable ignored) {}
 
+            try {
+                if (routeService != null) routeService.load();
+            } catch (Throwable ignored) {}
+
             // ✅ NotificationManager loads data inside constructor + reload()
             // ❌ Do NOT call notificationManager.loadData() (it's private).
         });
@@ -373,6 +380,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
         Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
         levelingListener = new LevelingListener(this);
         Bukkit.getPluginManager().registerEvents(levelingListener, this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
@@ -472,6 +480,12 @@ public class AegisGuard extends JavaPlugin {
             if (groupManager != null && groupManager.isDirty()) groupManager.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save groups: " + t.getMessage());
+        }
+
+        try {
+            if (routeService != null) routeService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save routes: " + t.getMessage());
         }
 
         try {
@@ -746,6 +760,7 @@ public class AegisGuard extends JavaPlugin {
                 if (expansionManager != null) expansionManager.save();
                 if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
+                if (routeService != null && routeService.isDirty()) routeService.save();
                 if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 if (territoryLifeService != null && territoryLifeService.isDirty()) territoryLifeService.save();

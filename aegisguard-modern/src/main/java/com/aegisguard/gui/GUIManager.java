@@ -7,6 +7,8 @@ import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.guestpass.GuestPassGUI;
 import com.aegisguard.guidance.FirstClaimWalkthroughGUI;
+import com.aegisguard.routes.RoutesGUI;
+import com.aegisguard.routes.RouteAdminGUI;
 import com.aegisguard.lockdown.LockdownGUI;
 import com.aegisguard.profile.RealmProfileGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
@@ -88,6 +90,10 @@ public class GUIManager {
     // Clearer Player Guidance (1.3.0+ Milestone 5)
     private final FirstClaimWalkthroughGUI walkthroughGUI;
 
+    // Routes and Checkpoints (1.3.0+ Milestone 6)
+    private final RoutesGUI routesGUI;
+    private final RouteAdminGUI routeAdminGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -148,6 +154,8 @@ public class GUIManager {
         this.lockdownGUI = new LockdownGUI(plugin);
         this.realmProfileGUI = new RealmProfileGUI(plugin);
         this.walkthroughGUI = new FirstClaimWalkthroughGUI(plugin);
+        this.routesGUI = new RoutesGUI(plugin);
+        this.routeAdminGUI = new RouteAdminGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -269,6 +277,10 @@ public class GUIManager {
     public RealmProfileGUI realmProfile() { return realmProfileGUI; }
 
     public FirstClaimWalkthroughGUI walkthrough() { return walkthroughGUI; }
+
+    public RoutesGUI routes() { return routesGUI; }
+
+    public RouteAdminGUI routeAdmin() { return routeAdminGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

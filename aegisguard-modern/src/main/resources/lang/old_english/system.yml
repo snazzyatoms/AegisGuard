@@ -690,3 +690,16 @@ notice_posted: '&a✔ Notice posted unto this holding''s noticeboard.'
 usage_notice_remove: '&cUsage: /ag notice remove <#>'
 notice_invalid_index: '&cThat is not a valid notice number. Use /ag notice list to behold them.'
 notice_removed: '&e✔ Notice removed.'
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+routes_disabled: '&cRoutes are disabled on this server.'
+route_checkpoint_discovered: '&a✔ Discovered &f{CHECKPOINT}&a on &f{ROUTE}&a ({COUNT}/{TOTAL}).'
+route_completed: '&a✔ You completed the route &f{ROUTE}&a!'
+route_completed_rewarded: '&a✔ Route &f{ROUTE}&a complete! Reward: &6{MONEY}&a + &b{BLOCKS} claim blocks&a.'
+routes_world_missing: '&cThat checkpoint''s world is not loaded.'
+routes_teleported: '&aTeleported near &f{NAME}&a.'
+routes_admin_created: '&a✔ Created route &f{NAME}&a.'
+routes_admin_checkpoint_added: '&a✔ Checkpoint added (now &f{COUNT}&a total).'
+routes_admin_deleted: '&e✔ Deleted route &f{NAME}&e.'

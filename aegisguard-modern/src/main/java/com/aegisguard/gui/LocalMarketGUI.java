@@ -166,6 +166,23 @@ public class LocalMarketGUI {
                         "&7on plots you manage."
                 ))
         ));
+        boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
+        inv.setItem(29, GUIManager.createItem(
+                mergeEnabled && canManage ? Material.SLIME_BALL : Material.GRAY_DYE,
+                tr(player, "button_claim_merge", "&aMerge Claims"),
+                trList(player, mergeEnabled ? "claim_merge_button_lore" : "claim_merge_button_disabled_lore",
+                        mergeEnabled
+                                ? List.of("&7Combine adjacent owned claims.")
+                                : List.of("&7Claim merging is disabled."))
+        ));
+        inv.setItem(35, GUIManager.createItem(
+                Material.GOLD_INGOT,
+                tr(player, "button_giftblocks", "&aGift ClaimBlocks"),
+                trList(player, "giftblocks_button_lore", List.of(
+                        "&7Gift available ClaimBlocks",
+                        "&7to a nearby player."
+                ))
+        ));
 
         inv.setItem(40, GUIManager.createItem(
                 hasStalls ? Material.CHEST : Material.GRAY_DYE,
@@ -305,6 +322,19 @@ public class LocalMarketGUI {
         if (slot == 33) {
             plugin.gui().myTenants().open(player);
             plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (slot == 29) {
+            if (plugin.getConfig().getBoolean("claims.merging.enabled", false) && plot.canManage(player, plugin)) {
+                plugin.gui().claimMerge().open(player);
+            } else {
+                plugin.effects().playError(player);
+                send(player, "claim_merge_disabled", "&cClaim merging is unavailable.");
+            }
+            return;
+        }
+        if (slot == 35) {
+            plugin.gui().giftBlocks().open(player);
             return;
         }
 

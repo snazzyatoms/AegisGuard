@@ -6,12 +6,11 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract coverage for the 1.3.0 further-polish pass (schema 1281).
+ * Contract coverage for the 1.3.0 further-polish pass (schema advanced to 1282+).
  */
 class FurtherPolishContractTest {
 
@@ -19,8 +18,8 @@ class FurtherPolishContractTest {
     private static final Path RESOURCES = Path.of("src/main/resources");
 
     @Test
-    void schemaIs1281() {
-        assertEquals(1281, ConfigMigrationService.CURRENT_SCHEMA);
+    void schemaIsAtLeast1281() {
+        assertTrue(ConfigMigrationService.CURRENT_SCHEMA >= 1281);
     }
 
     @Test

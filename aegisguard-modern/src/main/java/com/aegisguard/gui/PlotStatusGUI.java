@@ -146,6 +146,33 @@ public class PlotStatusGUI {
                     ))));
         }
 
+        boolean canOwn = plot.isOwner(player.getUniqueId());
+        boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
+        inv.setItem(38, GUIManager.createItem(
+                canOwn && mergeEnabled ? Material.SLIME_BALL : Material.GRAY_DYE,
+                tr(player, "button_claim_merge", null, "&aMerge Claims"),
+                colorList(plugin.gui().trList(player, canOwn && mergeEnabled
+                                ? "claim_merge_button_lore" : "claim_merge_button_locked_lore",
+                        canOwn && mergeEnabled
+                                ? List.of("&7Combine adjacent owned claims.")
+                                : List.of("&7Owners can merge aligned claims", "&7when merging is enabled.")))
+        ));
+        inv.setItem(40, GUIManager.createItem(
+                canOwn ? Material.WRITABLE_BOOK : Material.GRAY_DYE,
+                tr(player, "button_transfer", null, "&eTransfer Ownership"),
+                colorList(plugin.gui().trList(player, canOwn ? "transfer_button_lore" : "transfer_button_locked_lore",
+                        canOwn
+                                ? List.of("&7Transfer this plot with /ag transfer <player>",
+                                "&7or confirm from chat after targeting.")
+                                : List.of("&cOnly the owner can transfer this plot.")))
+        ));
+        inv.setItem(42, GUIManager.createItem(
+                Material.GOLD_INGOT,
+                tr(player, "button_giftblocks", null, "&aGift ClaimBlocks"),
+                colorList(plugin.gui().trList(player, "giftblocks_button_lore",
+                        List.of("&7Open the ClaimBlocks gift menu.")))
+        ));
+
         // --- Back ---
         String backName = tr(player, "button_back", null, "&fBack");
         List<String> backLore = plugin.gui().trList(player, "back_lore", List.of("&7Return to the main menu."));
@@ -177,6 +204,31 @@ public class PlotStatusGUI {
         if (e.getSlot() == 50) {
             try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
             player.closeInventory();
+            return;
+        }
+        if (e.getSlot() == 38) {
+            if (holder.getPlot().isOwner(player.getUniqueId())
+                    && plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
+                plugin.gui().claimMerge().open(player);
+            } else {
+                sendSystem(player, "claim_merge_disabled", null, "&cClaim merging is unavailable.");
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+        if (e.getSlot() == 40) {
+            if (holder.getPlot().isOwner(player.getUniqueId())) {
+                sendSystem(player, "transfer_usage", null, "&eUsage: /ag transfer <player>");
+                player.closeInventory();
+            } else {
+                sendSystem(player, "transfer_not_owner", null, "&cOnly the owner can transfer this plot.");
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+        if (e.getSlot() == 42) {
+            plugin.gui().giftBlocks().open(player);
+            return;
         }
         if (e.getSlot() == 30) {
             if (!plotCanManage(player, holder.getPlot())) {

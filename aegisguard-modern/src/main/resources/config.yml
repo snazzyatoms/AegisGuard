@@ -22,13 +22,15 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1281
+config_schema: 1282
 
 
 # ------------------------------------------------------------------------------
 # Legacy compatibility values
 # ------------------------------------------------------------------------------
 # These are retained for older code paths and existing installations.
+# Dual key: top-level `prefix` is a legacy chat prefix. Prefer
+# localization.prefix for new installs; both may exist during upgrades.
 prefix: '&8[&bAegisGuard&8]&r '
 
 
@@ -203,8 +205,9 @@ hooks:
 # SQL backends use a connection pool; savePlot is async and savePlotSync waits.
 # There is no separate storage.autosave interval toggle.
 #
-# Switching backends does NOT migrate existing plot data automatically. Plan a
-# manual export/import or keep the previous data folder until verified.
+# Switching backends: use Doctor → Storage Migrate (or /agadmin migrate) for
+# guided YML ↔ SQL plot conversion with timestamped backups. Do not swap
+# storage.backend/type and expect plots to appear without a migrate step.
 storage:
   # Keep these two keys equal (yml | sqlite | mysql | mariadb).
   backend: "yml"
@@ -243,7 +246,9 @@ currencies:
 economy:
   enabled: true
 
-  # Legacy master toggle still used in several existing code paths.
+  # Dual key: economy.use_vault (legacy flat toggle) is still read by several
+  # code paths. Prefer economy.vault.enabled for new configs; keep both true
+  # unless you intentionally disable Vault payments.
   use_vault: true
 
   vault:
@@ -310,11 +315,15 @@ claims:
   consume_wand_on_claim: true
   admin_keep_wand: true
 
+  # Player claim merge stays OFF until operators opt in after reviewing
+  # alignment / access-data safety. require_alignment prevents L-shape bbox theft.
   merging:
-    enabled: true
+    enabled: false
     cost: 500.0
     require_alignment: true
 
+  # Legacy Travel/Visit teleport toggles under claims.* (menu + /ag home/visit).
+  # Separate from top-level `travel:` Safe Travel cooldowns/combat gates below.
   travel_system:
     enabled: true
     allow_home_teleport: true
@@ -346,6 +355,8 @@ claim_blocks:
   enabled: true
 
   gift:
+    # Player-to-player ClaimBlocks gifts (/ag giftblocks or Gift GUI).
+    # Requires permission aegis.claimblocks.gift (included in aegis.user).
     # Gifts transfer only currently available blocks; they never reduce claimed land.
     enabled: true
     permission: "aegis.claimblocks.gift"
@@ -805,6 +816,10 @@ zoning:
   rent_price_step: 50.0
   # Length of a new or extended zone rental term.
   default_rental_days: 7
+  # Refundable security deposit charged with new zone rentals (0 = none).
+  # Held via Territory Life and refunded on leave/transfer (or queued).
+  default_deposit: 0.0
+  maximum_deposit: 1000000.0
   # When false, owners cannot delete a zone that still has a tenant.
   allow_delete_while_rented: false
   # When true, the full rent payment goes to the owner (or group treasury).
@@ -916,6 +931,11 @@ routes:
 # zones, Spawn, and staff destinations. Defaults preserve existing behavior:
 # no cooldown, no confirmation click, and no combat block. Safe-search radius
 # matches the historical 4-block TeleportUtil search.
+#
+# This is NOT the same as claims.travel_system (legacy enable flags for the
+# Travel/Visit menus and home/visit teleports). Keep both aligned when you
+# want Travel fully off: set claims.travel_system.enabled false and optionally
+# travel.enabled false.
 travel:
   enabled: true
 
@@ -1197,6 +1217,11 @@ upkeep:
 # ==============================================================================
 # Auctions
 # ==============================================================================
+# Canonical key: auction.enabled
+# Accepted aliases when reading the main menu button:
+#   auctions.enabled
+#   market.auctions.enabled
+# (Independent of upkeep.enabled.)
 auction:
   enabled: true
   duration_days: 3
@@ -1232,6 +1257,8 @@ protections:
   tnt-damage: true
   fire-spread: true
   piston-use: true
+  # Block water/lava/dragon-egg flow across claim borders (BlockFromTo).
+  liquid_flow: true
 
   # Plot flag defaults.
   safe_zone: true

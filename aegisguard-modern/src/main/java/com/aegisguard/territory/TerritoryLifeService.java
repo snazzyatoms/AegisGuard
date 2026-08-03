@@ -37,6 +37,9 @@ public final class TerritoryLifeService implements Listener {
 
     public record RentalOffer(double price, double deposit, int termDays) {}
 
+    /** Zone rental deposit snapshot keyed by plotId + zone name (cross-backend). */
+    public record ZoneDepositState(double listingDeposit, double heldDeposit) {}
+
     public static final class RentalContract {
         private final UUID plotId;
         private final UUID ownerId;
@@ -112,6 +115,7 @@ public final class TerritoryLifeService implements Listener {
     private final Map<UUID, Set<UUID>> favorites = new ConcurrentHashMap<>();
     private final Map<UUID, DiscoveryMeta> discovery = new ConcurrentHashMap<>();
     private final List<PendingSettlement> settlements = new ArrayList<>();
+    private final Map<String, ZoneDepositState> zoneDeposits = new ConcurrentHashMap<>();
     private volatile boolean dirty;
 
     public TerritoryLifeService(AegisGuard plugin) {
@@ -130,6 +134,7 @@ public final class TerritoryLifeService implements Listener {
             favorites.clear();
             discovery.clear();
             settlements.clear();
+            zoneDeposits.clear();
             if (!file.exists()) return;
 
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
@@ -217,6 +222,19 @@ public final class TerritoryLifeService implements Listener {
                 if (playerId == null || !Double.isFinite(amount) || amount <= 0.0D) continue;
                 settlements.add(new PendingSettlement(playerId, amount, string(raw.get("reason")), number(raw.get("time"))));
             }
+
+            ConfigurationSection zoneDepositSection = yaml.getConfigurationSection("zone-deposits");
+            if (zoneDepositSection != null) {
+                for (String key : zoneDepositSection.getKeys(false)) {
+                    if (key == null || key.isBlank()) continue;
+                    double listing = zoneDepositSection.getDouble(key + ".listing", 0.0D);
+                    double held = zoneDepositSection.getDouble(key + ".held", 0.0D);
+                    if ((!Double.isFinite(listing) || listing < 0.0D) && (!Double.isFinite(held) || held < 0.0D)) continue;
+                    zoneDeposits.put(key, new ZoneDepositState(
+                            Double.isFinite(listing) ? Math.max(0.0D, listing) : 0.0D,
+                            Double.isFinite(held) ? Math.max(0.0D, held) : 0.0D));
+                }
+            }
             trimActivity();
             dirty = false;
         }
@@ -276,8 +294,45 @@ public final class TerritoryLifeService implements Listener {
                 settlementRows.add(row);
             }
             yaml.set("pending-settlements", settlementRows);
+            for (Map.Entry<String, ZoneDepositState> entry : zoneDeposits.entrySet()) {
+                String base = "zone-deposits." + entry.getKey();
+                yaml.set(base + ".listing", entry.getValue().listingDeposit());
+                yaml.set(base + ".held", entry.getValue().heldDeposit());
+            }
             if (atomicSave(yaml.saveToString())) dirty = false;
         }
+    }
+
+    private static String zoneDepositKey(UUID plotId, String zoneName) {
+        if (plotId == null || zoneName == null || zoneName.isBlank()) return null;
+        return plotId + ":" + zoneName;
+    }
+
+    public void rememberZoneDeposit(UUID plotId, String zoneName, double listingDeposit, double heldDeposit) {
+        String key = zoneDepositKey(plotId, zoneName);
+        if (key == null) return;
+        zoneDeposits.put(key, new ZoneDepositState(Math.max(0.0D, listingDeposit), Math.max(0.0D, heldDeposit)));
+        dirty = true;
+    }
+
+    public void clearZoneDeposit(UUID plotId, String zoneName) {
+        String key = zoneDepositKey(plotId, zoneName);
+        if (key == null) return;
+        if (zoneDeposits.remove(key) != null) dirty = true;
+    }
+
+    public ZoneDepositState zoneDeposit(UUID plotId, String zoneName) {
+        String key = zoneDepositKey(plotId, zoneName);
+        return key == null ? null : zoneDeposits.get(key);
+    }
+
+    /** Apply remembered deposits onto an in-memory zone (SQL backends). */
+    public void applyZoneDeposit(UUID plotId, com.aegisguard.data.Zone zone) {
+        if (zone == null) return;
+        ZoneDepositState state = zoneDeposit(plotId, zone.getName());
+        if (state == null) return;
+        if (state.listingDeposit() > 0.0D) zone.setDeposit(state.listingDeposit());
+        if (state.heldDeposit() > 0.0D) zone.setHeldDeposit(state.heldDeposit());
     }
 
     public RentalOffer getOffer(UUID plotId, double fallbackPrice, int fallbackDays) {
@@ -385,17 +440,31 @@ public final class TerritoryLifeService implements Listener {
         plugin.getLogger().warning("Queued pending economy settlement of " + amount + " for " + playerId + ": " + reason);
     }
 
+    /** Admin / scheduled retry of every pending settlement. */
     public int retrySettlements() {
+        return retrySettlements(null);
+    }
+
+    /**
+     * Retry pending Vault settlements.
+     * @param playerId when non-null, only that player's settlements are retried
+     */
+    public int retrySettlementsFor(UUID playerId) {
+        return retrySettlements(playerId);
+    }
+
+    private int retrySettlements(UUID playerId) {
         if (plugin.vault() == null) return 0;
         int settled = 0;
         synchronized (ioLock) {
             var iterator = settlements.iterator();
             while (iterator.hasNext()) {
                 PendingSettlement settlement = iterator.next();
+                if (playerId != null && !playerId.equals(settlement.playerId())) continue;
                 if (plugin.vault().deposit(Bukkit.getOfflinePlayer(settlement.playerId()), settlement.amount())) {
                     iterator.remove();
                     settled++;
-                    queueNotice(settlement.playerId(), "&aA pending payment of &6" + settlement.amount() + " &ahas been delivered.");
+                    queueNotice(settlement.playerId(), settlementDeliveredNotice(settlement));
                     dirty = true;
                 }
             }
@@ -405,6 +474,16 @@ public final class TerritoryLifeService implements Listener {
 
     public List<PendingSettlement> settlements() {
         synchronized (ioLock) { return List.copyOf(settlements); }
+    }
+
+    private String settlementDeliveredNotice(PendingSettlement settlement) {
+        String fallback = "&aA pending payment of &6" + settlement.amount() + " &ahas been delivered.";
+        Player online = Bukkit.getPlayer(settlement.playerId());
+        if (online == null || plugin.codex() == null) return fallback;
+        String localized = plugin.codex().tr(online, "settlement_delivered",
+                Map.of("AMOUNT", String.valueOf(settlement.amount())));
+        if (localized == null || localized.isBlank() || localized.equals("settlement_delivered")) return fallback;
+        return localized;
     }
 
     public void log(UUID plotId, UUID actorId, String type, String details) {

@@ -1958,3 +1958,99 @@ doctor_storage_migrate_lore:
 plot_status_upkeep_name: '&6Upkeep'
 plot_status_upkeep_cost: '&7Cost: &6{COST}'
 plot_status_upkeep_paid: '&7Last paid: &f{TIME}'
+
+# --- 1.3.0 polish GUI keys ---
+settlements_inbox_title: '&6Pending Payments'
+settlements_empty_name: '&7No Pending Payments'
+settlements_empty_lore:
+  - '&7All payments have been delivered.'
+settlements_entry_lore:
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE} minutes'
+settlements_entry_player: '&7Player: &f{PLAYER}'
+settlements_retry_name: '&aRetry My Delivery'
+settlements_retry_lore:
+  - '&7Retry your pending Vault deliveries.'
+settlements_retry_all_name: '&aRetry All Deliveries'
+settlements_retry_all_lore:
+  - '&7Retry every pending Vault delivery.'
+  - '&cStaff only.'
+settlements_retry_result: '&aRetried delivery. Delivered: &f{COUNT}'
+claim_merge_title: '&6Merge Claims'
+claim_merge_confirm_title: '&cConfirm Merge'
+claim_merge_confirm_details: '&eMerge Summary'
+claim_merge_confirm_lore:
+  - '&7Base: &f{BASE}'
+  - '&7Merge in: &f{OTHER}'
+  - '&7Cost: &e{COST} ClaimBlocks'
+  - ' '
+  - '&eMembers, nicknames, and Guest Passes'
+  - '&efrom the second plot carry into the base.'
+claim_merge_confirm_accept: '&aConfirm Merge'
+claim_merge_confirm_accept_lore:
+  - '&7Merge these claims now.'
+claim_merge_plot_lore:
+  - '&7Bounds: &f{BOUNDS}'
+  - '&eClick to select.'
+button_claim_merge: '&aMerge Claims'
+claim_merge_button_lore:
+  - '&7Combine adjacent owned claims'
+  - '&7into one larger plot.'
+claim_merge_button_disabled_lore:
+  - '&7Claim merging is disabled.'
+  - '&8claims.merging.enabled: true'
+claim_merge_button_locked_lore:
+  - '&7Owners can merge aligned claims'
+  - '&7when merging is enabled.'
+button_transfer: '&eTransfer Ownership'
+transfer_button_lore:
+  - '&7Transfer this plot with /ag transfer <player>'
+transfer_button_locked_lore:
+  - '&cOnly the owner can transfer this plot.'
+transfer_confirm_title: '&cConfirm Transfer'
+transfer_confirm_details_name: '&eTransfer Ownership'
+transfer_confirm_details_lore:
+  - '&7Plot: &f{PLOT}'
+  - '&7Recipient: &f{PLAYER}'
+  - ' '
+  - '&cListings clear. Active deposits are'
+  - '&crefunded or queued before transfer.'
+transfer_confirm_accept: '&aConfirm Transfer'
+transfer_confirm_accept_lore:
+  - '&7Transfer this plot now.'
+transfer_confirm_success: '&aTransferred plot to &f{PLAYER}&a.'
+button_giftblocks: '&aGift ClaimBlocks'
+giftblocks_button_lore:
+  - '&7Gift available ClaimBlocks'
+  - '&7to a nearby player.'
+giftblocks_button_disabled_lore:
+  - '&7ClaimBlocks gifting is disabled.'
+giftblocks_title: '&aGift ClaimBlocks'
+giftblocks_amount_title: '&aChoose Amount'
+giftblocks_confirm_title: '&aConfirm Gift'
+giftblocks_balance_name: '&aYour available blocks'
+giftblocks_no_players_name: '&7No nearby players'
+giftblocks_no_players_lore:
+  - '&7Stand near another player,'
+  - '&7or use &e/ag giftblocks <player> <amount>&7.'
+giftblocks_player_lore:
+  - '&7Click to choose an amount.'
+giftblocks_amount_header_lore:
+  - '&7Select how many blocks to gift.'
+giftblocks_amount_lore:
+  - '&7Click to continue.'
+giftblocks_confirm_name: '&aGift &e{AMOUNT} &ato &f{PLAYER}'
+giftblocks_confirm_lore:
+  - '&7Click to send the gift.'
+button_plot_status: '&bPlot Status'
+plot_status_button_lore:
+  - '&7View plot info, merge claims,'
+  - '&7transfer ownership, or gift blocks.'
+plot_status_button_locked_lore:
+  - '&cStand inside a plot to view status.'
+papi_wilderness: 'Wilderness'
+papi_none: 'None'
+papi_na: 'N/A'
+papi_enabled: 'Enabled'
+papi_disabled: 'Disabled'
+papi_not_for_sale: 'Not for Sale'

@@ -422,6 +422,9 @@ public class SQLDataStore implements IDataStore {
                             zone.rentTo(renter, expires - now);
                         } catch (IllegalArgumentException ignored) {}
                     }
+                    if (plugin.territoryLife() != null) {
+                        plugin.territoryLife().applyZoneDeposit(parent.getPlotId(), zone);
+                    }
 
                     parent.addZone(zone);
                     zonesByKey.put(zoneStorageKey(parent, zone), zone);

@@ -409,7 +409,19 @@ public class MyRentalsGUI {
             return;
         }
         UUID landlord = plot.getOwner();
+        double held = zone.takeHeldDeposit();
         zone.evict();
+        if (held > 0.0D) {
+            if (plugin.vault() == null
+                    || !plugin.vault().deposit(org.bukkit.Bukkit.getOfflinePlayer(player.getUniqueId()), held)) {
+                plugin.territoryLife().addSettlement(player.getUniqueId(), held, "Zone deposit refund on leave");
+            } else {
+                send(player, "zone_deposit_refunded",
+                        "&aZone deposit refunded: &6{DEPOSIT}"
+                                .replace("{DEPOSIT}", plugin.eco().format(held, CurrencyType.VAULT)));
+            }
+        }
+        plugin.territoryLife().clearZoneDeposit(plot.getPlotId(), zone.getName());
         plugin.store().savePlotSync(plot);
         plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "ZONE_RENT_LEFT",
                 "Zone " + safeZoneName(zone) + " left early by renter.");

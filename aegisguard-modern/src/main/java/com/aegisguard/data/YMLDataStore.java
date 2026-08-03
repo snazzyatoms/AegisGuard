@@ -285,6 +285,7 @@ public class YMLDataStore implements IDataStore {
 
                                 Zone zone = new Zone(plot, zoneName, zx1, zy1, zz1, zx2, zy2, zz2);
                                 zone.setRentPrice(z.getDouble("rent-price", 0.0));
+                                zone.setDeposit(z.getDouble("deposit", 0.0));
 
                                 String renterStr = z.getString("renter");
                                 long exp = z.getLong("rent-expiration", 0L);
@@ -292,8 +293,13 @@ public class YMLDataStore implements IDataStore {
                                     try {
                                         UUID renter = UUID.fromString(renterStr);
                                         long now = System.currentTimeMillis();
-                                        if (exp > now) zone.rentTo(renter, exp - now);
+                                        if (exp > now) {
+                                            zone.rentTo(renter, exp - now, z.getDouble("held-deposit", zone.getDeposit()));
+                                        }
                                     } catch (IllegalArgumentException ignored) {}
+                                }
+                                if (zone.getRenter() == null) {
+                                    zone.setHeldDeposit(z.getDouble("held-deposit", 0.0));
                                 }
 
                                 zone.setFlag("hotel_mode", z.getBoolean("flags.hotel-mode", false));
@@ -571,6 +577,8 @@ public class YMLDataStore implements IDataStore {
             z.set("y2", zone.getY2());
             z.set("z2", zone.getZ2());
             z.set("rent-price", zone.getRentPrice());
+            z.set("deposit", zone.getDeposit());
+            z.set("held-deposit", zone.getHeldDeposit());
             UUID zr = zone.getRenter();
             z.set("renter", zr != null ? zr.toString() : null);
             z.set("rent-expiration", zone.getRentExpiration());

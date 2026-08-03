@@ -307,7 +307,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "giftblocks" -> handleGiftBlocks(p, args);
 
-            case "merge" -> plugin.gui().claimMerge().open(p);
+            case "merge" -> {
+                if (!plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
+                    sendKey(p, "claim_merge_disabled", "&cClaim merging is disabled on this server.");
+                } else {
+                    plugin.gui().claimMerge().open(p);
+                }
+            }
 
             case "group" -> handleGroup(p, args);
             case "transfer" -> handleTransfer(p, args);
@@ -334,7 +340,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
     private void handleGiftBlocks(Player sender, String[] args) {
         if (args.length < 3) {
-            sendMsg(sender, "&eUsage: /ag giftblocks <player> <amount>");
+            if (args.length == 1) {
+                plugin.gui().giftBlocks().open(sender);
+                return;
+            }
+            sendKey(sender, "giftblocks_usage", "&eUsage: /ag giftblocks <player> <amount>");
             return;
         }
         long amount;
@@ -356,13 +366,20 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         ClaimBlockManager.GiftResult result = manager.gift(sender, target.getUniqueId(), amount);
         if (!result.success()) {
-            sendMsg(sender, "&cUnable to gift blocks: " + result.reason().replace('_', ' ') + ".");
+            sendKey(sender, "giftblocks_failed_" + result.reason(),
+                    "&cUnable to gift blocks: &7" + result.reason().replace('_', ' ') + "&c.");
             return;
         }
         String targetName = target.getName() == null ? args[1] : target.getName();
-        sendMsg(sender, "&aGifted &e" + amount + " &aclaim blocks to &f" + targetName + "&a.");
+        sendKey(sender, "giftblocks_success_sender",
+                "&aGifted &e{AMOUNT} &aclaim blocks to &f{PLAYER}&a.",
+                Map.of("AMOUNT", String.valueOf(amount), "PLAYER", targetName));
         Player online = target.getPlayer();
-        if (online != null) sendMsg(online, "&aYou received &e" + amount + " &aclaim blocks from &f" + sender.getName() + "&a.");
+        if (online != null) {
+            sendKey(online, "giftblocks_success_receiver",
+                    "&aYou received &e{AMOUNT} &aclaim blocks from &f{PLAYER}&a.",
+                    Map.of("AMOUNT", String.valueOf(amount), "PLAYER", sender.getName()));
+        }
     }
 
     // --------------------------------------------------

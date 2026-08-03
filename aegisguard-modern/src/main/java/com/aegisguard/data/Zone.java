@@ -26,6 +26,10 @@ public class Zone {
     
     // Rent Data
     private double rentPrice;
+    /** Listing deposit required when a new renter starts (refundable). */
+    private double deposit;
+    /** Deposit currently held for the active renter. */
+    private double heldDeposit;
     private UUID renter;
     private long rentExpiration;
     private final Map<UUID, String> guestAccess = new ConcurrentHashMap<>();
@@ -69,6 +73,24 @@ public class Zone {
     public double getRentPrice() { return rentPrice; }
     public void setRentPrice(double price) { this.rentPrice = price; }
 
+    public double getDeposit() { return deposit; }
+    public void setDeposit(double deposit) {
+        this.deposit = Double.isFinite(deposit) ? Math.max(0.0D, deposit) : 0.0D;
+    }
+
+    public double getHeldDeposit() { return heldDeposit; }
+    public void setHeldDeposit(double heldDeposit) {
+        this.heldDeposit = Double.isFinite(heldDeposit) ? Math.max(0.0D, heldDeposit) : 0.0D;
+    }
+    public void clearHeldDeposit() { this.heldDeposit = 0.0D; }
+
+    /** Returns and clears the held deposit so callers can refund or queue settlement. */
+    public double takeHeldDeposit() {
+        double held = heldDeposit;
+        heldDeposit = 0.0D;
+        return held;
+    }
+
     public boolean isListedForRent() {
         return rentPrice > 0.0D;
     }
@@ -94,8 +116,13 @@ public class Zone {
     }
 
     public void rentTo(UUID player, long durationMillis) {
+        rentTo(player, durationMillis, this.deposit);
+    }
+
+    public void rentTo(UUID player, long durationMillis, double depositToHold) {
         this.renter = player;
         this.rentExpiration = System.currentTimeMillis() + durationMillis;
+        setHeldDeposit(depositToHold);
     }
 
     public void extendRent(long durationMillis) {
@@ -116,6 +143,7 @@ public class Zone {
     public void evict() {
         this.renter = null;
         this.rentExpiration = 0;
+        // heldDeposit is left for takeHeldDeposit() refund paths; do not silently drop it
         this.guestAccess.clear();
         this.spawnLocation = null;
     }

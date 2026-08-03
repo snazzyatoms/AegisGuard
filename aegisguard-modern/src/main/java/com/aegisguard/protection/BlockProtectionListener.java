@@ -20,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
@@ -84,6 +85,25 @@ public class BlockProtectionListener implements Listener {
             DenialGuidance.send(plugin, e.getPlayer(), plot, "BLOCK_PLACE", "cannot_place");
             plugin.effects().playError(e.getPlayer());
         }
+    }
+
+    /**
+     * Block liquid/dragon-egg flow across claim borders. Flow from wilderness into a claim,
+     * from a claim into wilderness, or between two different claims is cancelled.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockFromTo(BlockFromToEvent e) {
+        boolean liquidProtection = plugin.getConfig().getBoolean("protections.liquid_flow",
+                plugin.getConfig().getBoolean("protections.block_liquid_flow", true));
+        if (!liquidProtection) return;
+        Block from = e.getBlock();
+        Block to = e.getToBlock();
+        if (from == null || to == null) return;
+        Plot fromPlot = plugin.store().getPlotAt(from.getLocation());
+        Plot toPlot = plugin.store().getPlotAt(to.getLocation());
+        if (fromPlot == null && toPlot == null) return;
+        if (fromPlot != null && toPlot != null && fromPlot.getPlotId().equals(toPlot.getPlotId())) return;
+        e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)

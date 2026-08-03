@@ -69,7 +69,12 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
 
         // --- Location-Based Placeholders ---
         Plot plot = plugin.store().getPlotAt(player.getLocation());
-        String wilderness = "Wilderness"; // Default if not in a plot
+        String wilderness = text(player, "papi_wilderness", "Wilderness");
+        String none = text(player, "papi_none", "None");
+        String na = text(player, "papi_na", "N/A");
+        String enabled = text(player, "papi_enabled", "Enabled");
+        String disabled = text(player, "papi_disabled", "Disabled");
+        String notForSale = text(player, "papi_not_for_sale", "Not for Sale");
 
         // %aegis_plot_owner%
         if (identifier.equals("plot_owner")) {
@@ -78,16 +83,16 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
 
         // %aegis_plot_role%
         if (identifier.equals("plot_role")) {
-            if (plot == null) return "N/A";
+            if (plot == null) return na;
             return plot.getRole(player.getUniqueId());
         }
 
         // %aegis_plot_flag_<flagname>%
         if (identifier.startsWith("plot_flag_")) {
-            if (plot == null) return "N/A";
+            if (plot == null) return na;
             String flag = identifier.substring(10); // Get the part after "plot_flag_"
-            boolean enabled = plugin.protection().isFlagEnabled(plot, flag);
-            return enabled ? "Enabled" : "Disabled";
+            boolean on = plugin.protection().isFlagEnabled(plot, flag);
+            return on ? enabled : disabled;
         }
         
         // %aegis_plot_status%
@@ -104,9 +109,9 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
         }
 
         if (identifier.equals("alliance")) {
-            if (plot == null || plot.getAllianceId() == null || plugin.alliances() == null) return "None";
+            if (plot == null || plot.getAllianceId() == null || plugin.alliances() == null) return none;
             var alliance = plugin.alliances().get(plot.getAllianceId());
-            return alliance == null ? "None" : alliance.getName();
+            return alliance == null ? none : alliance.getName();
         }
 
         if (identifier.equals("rental_remaining")) {
@@ -120,10 +125,22 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
         
         // %aegis_plot_sale_price%
         if (identifier.equals("plot_sale_price")) {
-            if (plot == null || !plot.isForSale()) return "Not for Sale";
+            if (plot == null || !plot.isForSale()) return notForSale;
             return plugin.vault().format(plot.getSalePrice());
         }
 
         return null; // Invalid placeholder
+    }
+
+    private String text(Player player, String key, String fallback) {
+        if (plugin.gui() != null) {
+            String value = plugin.gui().tr(player, key, fallback);
+            if (value != null && !value.isBlank()) return value;
+        }
+        if (plugin.codex() != null) {
+            String value = plugin.codex().tr(player, key);
+            if (value != null && !value.isBlank() && !value.equals(key)) return value;
+        }
+        return fallback;
     }
 }

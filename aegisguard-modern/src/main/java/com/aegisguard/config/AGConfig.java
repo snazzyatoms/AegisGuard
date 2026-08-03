@@ -96,7 +96,10 @@ public class AGConfig {
         config.addDefault("hooks.pl3xmap.enabled", false);
         config.addDefault("hooks.discord.enabled", false);
         config.addDefault("hooks.protection_compat.enabled", false);
-        config.addDefault("claims.merging.enabled", true);
+        config.addDefault("claims.merging.enabled", false);
+        config.addDefault("claims.merging.require_alignment", true);
+        config.addDefault("protections.liquid_flow", true);
+        config.addDefault("zoning.default_deposit", 0.0D);
 
         // ✅ Leveling upgrade payment options (Vault vs Claim Blocks)
         config.addDefault("leveling.upgrades.allow_vault_payment", true);
@@ -171,7 +174,7 @@ public class AGConfig {
         this.upkeepEnabled = config.getBoolean("upkeep.enabled", false);
 
         this.discordEnabled = config.getBoolean("hooks.discord.enabled", false);
-        this.mergeEnabled = config.getBoolean("claims.merging.enabled", true);
+        this.mergeEnabled = config.getBoolean("claims.merging.enabled", false);
         this.bluemapEnabled = config.getBoolean("hooks.bluemap.enabled", false);
         this.pl3xmapEnabled = config.getBoolean("hooks.pl3xmap.enabled", false);
 

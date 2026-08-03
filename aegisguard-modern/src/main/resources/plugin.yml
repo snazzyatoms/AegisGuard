@@ -72,6 +72,7 @@ permissions:
       aegis.staff.co_owner: true
       aegis.staff.market_steward: true
 
+      aegis.claimblocks.gift: true
       aegis.claimblocks.exchange: true
       aegis.claimblocks.buy: true
       aegis.claimblocks.sell: true
@@ -104,6 +105,7 @@ permissions:
       aegis.rent: true
       aegis.discovery: true
       aegis.activity: true
+      aegis.claimblocks.gift: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -291,8 +293,12 @@ permissions:
     default: op
 
   # ---------------------------------------------------------------------------
-  # ClaimBlocks exchange permissions
+  # ClaimBlocks gift and exchange permissions
   # ---------------------------------------------------------------------------
+  aegis.claimblocks.gift:
+    description: Gift available ClaimBlocks to another player (/ag giftblocks or Gift GUI).
+    default: true
+
   aegis.claimblocks.exchange:
     description: Access the ClaimBlocks exchange system.
     default: false

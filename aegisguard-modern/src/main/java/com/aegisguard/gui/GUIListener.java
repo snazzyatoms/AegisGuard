@@ -62,6 +62,7 @@ import com.aegisguard.gui.SettlementsInboxGUI.SettlementsHolder;
 import com.aegisguard.gui.GroupPlotsGUI.GroupPlotsHolder;
 import com.aegisguard.gui.TransferConfirmGUI.TransferConfirmHolder;
 import com.aegisguard.gui.ClaimMergeGUI.ClaimMergeHolder;
+import com.aegisguard.gui.GiftBlocksGUI.GiftBlocksHolder;
 import com.aegisguard.gui.StorageMigrateGUI.StorageMigrateHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 
@@ -153,6 +154,7 @@ public class GUIListener implements Listener {
                 || holder instanceof GroupPlotsHolder
                 || holder instanceof TransferConfirmHolder
                 || holder instanceof ClaimMergeHolder
+                || holder instanceof GiftBlocksHolder
                 || holder instanceof StorageMigrateHolder
                 || holder instanceof LocalMarketHolder
                 || holder instanceof StallListHolder
@@ -313,6 +315,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof ClaimMergeHolder castHolder) {
             plugin.gui().claimMerge().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof GiftBlocksHolder castHolder) {
+            plugin.gui().giftBlocks().handleClick(player, e, castHolder);
         }
         else if (holder instanceof StorageMigrateHolder castHolder) {
             plugin.gui().storageMigrate().handleClick(player, e, castHolder);

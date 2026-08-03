@@ -119,7 +119,7 @@ This section controls progression and exchange.
 - `earn.playtime`: passive rewards
 - `earn.player_opt_out_allowed`: lets players disable passive earnings
 - `exchange.profile`: best place to tune the buy and sell system quickly
-- `gift.enabled` / `gift.permission` / `gift.daily_limit` / `gift.max_amount`: player-to-player ClaimBlocks gifts via `/ag giftblocks`
+- `gift.enabled` / `gift.permission` (`aegis.claimblocks.gift`) / `gift.daily_limit` / `gift.max_amount`: player-to-player ClaimBlocks gifts via `/ag giftblocks` or the Gift GUI
 
 ### `group_plots`
 
@@ -237,9 +237,14 @@ Lockdown never changes ownership, permanent roles, or Guest Pass records. Moveme
 
 ### `claims.merging`
 
-- `enabled`: allows adjacent same-owner claim merge (`/ag merge`)
+- `enabled`: allows adjacent same-owner claim merge (`/ag merge`). Default **false** until operators opt in.
 - `cost`: ClaimBlocks charged for a successful merge (`0` = free)
-- `require_alignment`: when true, plots must share a full edge (not only a corner)
+- `require_alignment`: when true (default), plots must share a full edge so the merged bounding box never claims unowned land (L-shapes blocked)
+
+### `claims.travel_system` vs `travel`
+
+- `claims.travel_system.*`: legacy Travel/Visit menu and home/visit teleport enable flags
+- `travel.*`: Safe Travel cooldowns, confirmation, combat tag, and safe-search radius for voluntary teleports
 
 ### `auction`
 

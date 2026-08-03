@@ -262,12 +262,16 @@ public class ZoneBrowseGUI {
             send(player, "zone_already_rented", "&cThat zone is already rented by another player.");
             return;
         }
-        if (!tryCharge(player, zone.getRentPrice())) {
+        double deposit = resolveDeposit(zone);
+        double total = zone.getRentPrice() + deposit;
+        if (!tryCharge(player, total)) {
             return;
         }
 
-        zone.rentTo(player.getUniqueId(), rentalDurationMillis());
+        zone.setDeposit(deposit);
+        zone.rentTo(player.getUniqueId(), rentalDurationMillis(), deposit);
         payOwner(plot, zone.getRentPrice());
+        plugin.territoryLife().rememberZoneDeposit(plot.getPlotId(), zone.getName(), deposit, deposit);
         save(plot);
         plugin.effects().playConfirm(player);
 
@@ -275,6 +279,11 @@ public class ZoneBrowseGUI {
                 "&aYou are now renting &f{ZONE}&a for &6{PRICE}&a."
                         .replace("{ZONE}", safeZoneName(zone))
                         .replace("{PRICE}", plugin.eco().format(zone.getRentPrice(), CurrencyType.VAULT)));
+        if (deposit > 0.0D) {
+            send(player, "zone_deposit_held",
+                    "&7Security deposit held: &6{DEPOSIT}"
+                            .replace("{DEPOSIT}", plugin.eco().format(deposit, CurrencyType.VAULT)));
+        }
 
         Player ownerOnline = Bukkit.getPlayer(plot.getOwner());
         if (ownerOnline != null && !ownerOnline.getUniqueId().equals(player.getUniqueId())) {
@@ -347,6 +356,16 @@ public class ZoneBrowseGUI {
     private long rentalDurationMillis() {
         long days = Math.max(1L, plugin.getConfig().getLong("zoning.default_rental_days", 7L));
         return days * 24L * 60L * 60L * 1000L;
+    }
+
+    private double resolveDeposit(Zone zone) {
+        double listing = zone.getDeposit() > 0.0D
+                ? zone.getDeposit()
+                : plugin.getConfig().getDouble("zoning.default_deposit", 0.0D);
+        double max = plugin.getConfig().getDouble("zoning.maximum_deposit", 1_000_000.0D);
+        if (!Double.isFinite(listing) || listing < 0.0D) listing = 0.0D;
+        if (Double.isFinite(max) && max >= 0.0D) listing = Math.min(listing, max);
+        return listing;
     }
 
     private String safeZoneName(Zone zone) {

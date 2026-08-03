@@ -120,11 +120,11 @@ public class PlayerGUI {
 
         // Colored frames make the four groups readable before a player even hovers an icon.
         addSectionFrame(inv, Material.CYAN_STAINED_GLASS_PANE,
-                "&bTerritory", "&7Your claim, profile, and land controls.", 9, 10, 15, 16, 17);
+                "&bTerritory", "&7Your claim, profile, and land controls.", 9, 10, 16, 17);
         addSectionFrame(inv, Material.PURPLE_STAINED_GLASS_PANE,
                 "&dAccess & Safety", "&7Members, temporary access, and protection.", 18, 19, 24, 25, 26);
         addSectionFrame(inv, Material.ORANGE_STAINED_GLASS_PANE,
-                "&6Economy & Progress", "&7Market, ClaimBlocks, upgrades, and auctions.", 27, 28, 33, 34, 35);
+                "&6Economy & Progress", "&7Market, ClaimBlocks, upgrades, and auctions.", 27, 35);
         addSectionFrame(inv, Material.LIME_STAINED_GLASS_PANE,
                 "&aExplore", "&7Routes and server travel.", 36, 37, 38, 41, 42, 43, 44);
 
@@ -174,6 +174,16 @@ public class PlayerGUI {
                                     : List.of("&7Create sub-zones, rentals,", "&7and managed rooms."))
             ));
         }
+
+        // Plot Status (Slot 15) — near territory controls; also hosts merge/transfer entry points
+        inv.setItem(15, GUIManager.createItem(
+                currentPlot != null ? Material.BOOK : Material.GRAY_DYE,
+                t(player, "button_plot_status", "&bPlot Status"),
+                tl(player, currentPlot != null ? "plot_status_button_lore" : "plot_status_button_locked_lore",
+                        currentPlot != null
+                                ? List.of("&7View plot info, merge claims,", "&7transfer ownership, or gift blocks.")
+                                : List.of("&cStand inside a plot to view status."))
+        ));
 
         // --- 4. ACCESS & SAFETY ---
 
@@ -247,6 +257,28 @@ public class PlayerGUI {
                         localMarketAvailable
                                 ? List.of("&7Open this plot's rentals, shop", "&7tools, and market options.")
                                 : List.of("&7Browse listed claims and", "&7market activity."))
+        ));
+
+        // Merge Claims (Slot 28) — next to Local Market
+        boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
+        inv.setItem(28, GUIManager.createItem(
+                mergeEnabled ? Material.SLIME_BALL : Material.GRAY_DYE,
+                t(player, "button_claim_merge", "&aMerge Claims"),
+                tl(player, mergeEnabled ? "claim_merge_button_lore" : "claim_merge_button_disabled_lore",
+                        mergeEnabled
+                                ? List.of("&7Combine adjacent owned claims", "&7into one larger plot.")
+                                : List.of("&7Claim merging is disabled.", "&8claims.merging.enabled: true"))
+        ));
+
+        // Gift ClaimBlocks (Slot 34)
+        boolean giftEnabled = plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true);
+        inv.setItem(34, GUIManager.createItem(
+                giftEnabled ? Material.GOLD_INGOT : Material.GRAY_DYE,
+                t(player, "button_giftblocks", "&aGift ClaimBlocks"),
+                tl(player, giftEnabled ? "giftblocks_button_lore" : "giftblocks_button_disabled_lore",
+                        giftEnabled
+                                ? List.of("&7Gift available ClaimBlocks", "&7to a nearby player.")
+                                : List.of("&7ClaimBlocks gifting is disabled."))
         ));
 
         // My Rentals (Slot 33)
@@ -497,6 +529,25 @@ public class PlayerGUI {
             }
 
             case 13 -> plugin.gui().expansionRequest().open(player);
+
+            case 15 -> {
+                if (plot != null) plugin.gui().plotStatus().open(player, plot);
+                else {
+                    send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 28 -> {
+                if (plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
+                    plugin.gui().claimMerge().open(player);
+                } else {
+                    send(player, "claim_merge_disabled", "&cClaim merging is disabled on this server.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 34 -> plugin.gui().giftBlocks().open(player);
 
             // Advanced Features
             case 31 -> {

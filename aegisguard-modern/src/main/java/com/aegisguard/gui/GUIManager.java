@@ -73,6 +73,7 @@ public class GUIManager {
     private final GroupPlotsGUI groupPlotsGUI;
     private final TransferConfirmGUI transferConfirmGUI;
     private final ClaimMergeGUI claimMergeGUI;
+    private final GiftBlocksGUI giftBlocksGUI;
     private final StorageMigrateGUI storageMigrateGUI;
 
     // New: Plot Status Codex (replaces sidebar)
@@ -155,6 +156,7 @@ public class GUIManager {
         this.groupPlotsGUI = new GroupPlotsGUI(plugin);
         this.transferConfirmGUI = new TransferConfirmGUI(plugin);
         this.claimMergeGUI = new ClaimMergeGUI(plugin);
+        this.giftBlocksGUI = new GiftBlocksGUI(plugin);
         this.storageMigrateGUI = new StorageMigrateGUI(plugin);
 
         // Plot Status Codex GUI
@@ -281,6 +283,7 @@ public class GUIManager {
     public GroupPlotsGUI groupPlots() { return groupPlotsGUI; }
     public TransferConfirmGUI transferConfirm() { return transferConfirmGUI; }
     public ClaimMergeGUI claimMerge() { return claimMergeGUI; }
+    public GiftBlocksGUI giftBlocks() { return giftBlocksGUI; }
     public StorageMigrateGUI storageMigrate() { return storageMigrateGUI; }
 
     // Plot Status Codex

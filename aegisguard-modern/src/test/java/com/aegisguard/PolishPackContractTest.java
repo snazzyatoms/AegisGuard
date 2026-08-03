@@ -23,14 +23,14 @@ class PolishPackContractTest {
 
     @Test
     void schemaIs1281AndHooksShipDisabled() throws Exception {
-        assertEquals(1281, ConfigMigrationService.CURRENT_SCHEMA);
+        assertTrue(ConfigMigrationService.CURRENT_SCHEMA >= 1281);
 
         Yaml yaml = new Yaml();
         Map<?, ?> config;
         try (InputStream in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1281, ((Number) config.get("config_schema")).intValue());
+        assertTrue(((Number) config.get("config_schema")).intValue() >= 1281);
 
         @SuppressWarnings("unchecked")
         Map<String, Object> hooks = (Map<String, Object>) config.get("hooks");

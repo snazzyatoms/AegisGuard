@@ -63,7 +63,8 @@ class RoutesContractTest {
         assertTrue(migration.contains("CURRENT_SCHEMA = 1277")
                         || migration.contains("CURRENT_SCHEMA = 1278")
                         || migration.contains("CURRENT_SCHEMA = 1280")
-                        || migration.contains("CURRENT_SCHEMA = 1281"),
+                        || migration.contains("CURRENT_SCHEMA = 1281")
+                || migration.contains("CURRENT_SCHEMA = 1282"),
                 "Routes schema bump (1277) must remain current or superseded");
     }
 

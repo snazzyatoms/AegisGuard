@@ -90,15 +90,22 @@ public class RentConfirmGUI {
     public void openZoneRent(Player player, Plot plot, Zone zone, boolean extend, String returnTo) {
         if (player == null || plot == null || zone == null) return;
         int days = Math.max(1, plugin.getConfig().getInt("zoning.default_rental_days", 7));
+        double deposit = extend ? 0.0D : resolveZoneDeposit(zone);
         open(player, new RentConfirmHolder(
                         extend ? Action.ZONE_EXTEND : Action.ZONE_RENT,
                         plot.getPlotId(),
                         zone.getName(),
                         zone.getRentPrice(),
-                        0.0D,
+                        deposit,
                         days,
                         returnTo),
                 safeZoneName(zone));
+    }
+
+    private double resolveZoneDeposit(Zone zone) {
+        if (zone == null) return 0.0D;
+        if (zone.getDeposit() > 0.0D) return zone.getDeposit();
+        return Math.max(0.0D, plugin.getConfig().getDouble("zoning.default_deposit", 0.0D));
     }
 
     public void openZoneLeave(Player player, Plot plot, Zone zone, String returnTo) {
@@ -108,7 +115,7 @@ public class RentConfirmGUI {
                         plot.getPlotId(),
                         zone.getName(),
                         0.0D,
-                        0.0D,
+                        zone.getHeldDeposit(),
                         0,
                         returnTo),
                 safeZoneName(zone));
@@ -153,8 +160,10 @@ public class RentConfirmGUI {
             if (holder.getAction() == Action.ZONE_LEAVE) {
                 lore.add(GUIManager.color(tr(player, "rent_confirm_zone_leave_line",
                         "&7You will leave this rented zone early.")));
-                lore.add(GUIManager.color(tr(player, "rent_confirm_zone_no_deposit_line",
-                        "&8Zone rentals do not hold a separate deposit.")));
+                if (holder.getDeposit() <= 0.0D) {
+                    lore.add(GUIManager.color(tr(player, "rent_confirm_zone_no_deposit_line",
+                            "&8No refundable deposit is held for this zone.")));
+                }
             }
             lore.add(" ");
             lore.add(GUIManager.color(tr(player, "rent_confirm_cancel_click_lore",

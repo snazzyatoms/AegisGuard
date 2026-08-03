@@ -410,6 +410,14 @@ public class ZoningGUI {
                         send(player, "zone_rent_disabled", "&eRental listing disabled for &f{ZONE}".replace("{ZONE}", target.getName()));
                     } else {
                         target.setRentPrice(defaultRentPrice());
+                        if (target.getDeposit() <= 0.0D) {
+                            target.setDeposit(Math.max(0.0D,
+                                    plugin.getConfig().getDouble("zoning.default_deposit", 0.0D)));
+                        }
+                        if (plugin.territoryLife() != null) {
+                            plugin.territoryLife().rememberZoneDeposit(plot.getPlotId(), target.getName(),
+                                    target.getDeposit(), target.getHeldDeposit());
+                        }
                         send(player, "zone_rent_enabled", "&aRental listing enabled for &f{ZONE}".replace("{ZONE}", target.getName()));
                     }
                     plugin.store().savePlot(plot);

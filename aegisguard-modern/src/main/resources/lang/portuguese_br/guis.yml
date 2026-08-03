@@ -2702,3 +2702,11 @@ style_french_fr: '&bFrancês'
 style_italian_it: '&bItaliano'
 style_german_de: '&bAlemão'
 style_polish_pl: '&bPolês'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bAprovações Instantâneas'
+view_instant_approvals_lore:
+- '&7O quê: navegar no histórico de expansões autoaprovadas.'
+- '&7Quando: auditar Modo Instantâneo ou fila sem revisores.'
+- ' '
+- '&eClique para abrir.'

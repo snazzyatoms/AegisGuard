@@ -3367,3 +3367,43 @@ expansion_request_denied_player: '&c✖ Twoja prośba o rozszerzenie została od
 expansion_request_approved_admin: '&a✔ Zatwierdzony wniosek o rozszerzenie dla &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Odrzucono żądanie rozszerzenia dla &f{PLAYER}&c.'
 request_expired: '&c❌ To żądanie wygasło lub zostało już rozpatrzone.'
+
+# Instant Approvals (synced from lang packs)
+expansion_instant_title: '&b&lNatychmiastowe Zatwierdzenia'
+expansion_instant_title_paged: '&b&lNatychmiastowe Zatwierdzenia &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7Brak Natychmiastowych Zatwierdzeń'
+expansion_instant_none_lore:
+- '&7Nie zarejestrowano jeszcze żadnych'
+- '&7automatycznie zatwierdzonych ekspansji.'
+expansion_instant_item_name: '&bAuto-zatwierdzono: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7Świat: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Złożono: &f{AGE} temu'
+- '&7Promień: &e{CUR} &7→ &a{REQ}'
+- '&7Koszt: &6{COST}'
+- '&7Zatwierdził: &f{DECIDER}'
+- '&7Wiek decyzji: &f{DECISION_AGE}'
+- '&7Uwaga: &f{NOTE}'
+- ' '
+- '&7Historia tylko do odczytu automatycznych zatwierdzeń.'
+expansion_instant_read_only: '&7To zostało zatwierdzone automatycznie. Nie oczekuje na przegląd personelu.'
+expansion_instant_default_note: 'Automatycznie zatwierdzono przez Tryb Natychmiastowy / kolejkę bez recenzentów'
+button_open_instant_approvals: '&bNatychmiastowe Zatwierdzenia'
+open_instant_approvals_lore:
+- '&7Zobacz ekspansje zatwierdzone automatycznie.'
+- '&7To wpisy historii, nie kolejka oczekujących.'
+- ' '
+- '&eKliknij, aby otworzyć.'
+button_open_pending_requests: '&eOczekujące Prośby'
+open_pending_requests_lore:
+- '&7Wróć do kolejki próśb'
+- '&7oczekujących na zatwierdzenie lub odrzucenie.'
+- ' '
+- '&eKliknij, aby otworzyć.'
+button_view_instant_approvals: '&bNatychmiastowe Zatwierdzenia'
+view_instant_approvals_lore:
+- '&7Co: przeglądaj historię automatycznie zatwierdzonych ekspansji.'
+- '&7Kiedy: audyt Trybu Natychmiastowego lub kolejki bez recenzentów.'
+- ' '
+- '&eKliknij, aby otworzyć.'

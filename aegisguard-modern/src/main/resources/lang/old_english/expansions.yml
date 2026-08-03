@@ -112,3 +112,37 @@ expansion_admin_title: "&8Pending Petitions"
 expansion_none_title: "&cNo Petitions"
 expansion_none_lore:
 - "&7The subjects are content."
+
+# Instant Approvals (auto-approved history)
+expansion_instant_title: '&b&lSwift Approvals'
+expansion_instant_title_paged: '&b&lSwift Approvals &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7No Swift Approvals'
+expansion_instant_none_lore:
+- '&7No auto-granted expansions have been'
+- '&7recorded yet.'
+expansion_instant_item_name: '&bAuto-Granted: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7World: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Requested: &f{AGE} ago'
+- '&7Radius: &e{CUR} &7→ &a{REQ}'
+- '&7Cost: &6{COST}'
+- '&7Approved By: &f{DECIDER}'
+- '&7Decision Age: &f{DECISION_AGE}'
+- '&7Note: &f{NOTE}'
+- ' '
+- '&7Read-only automatic approval chronicle.'
+expansion_instant_read_only: '&7This was approved automatically. It awaits no staff review.'
+expansion_instant_default_note: 'Automatically approved by Instant Mode / unattended queue'
+button_open_instant_approvals: '&bSwift Approvals'
+open_instant_approvals_lore:
+- '&7View expansions approved automatically.'
+- '&7These are chronicle entries, not the pending queue.'
+- ' '
+- '&eClick to open.'
+button_open_pending_requests: '&ePending Petitions'
+open_pending_requests_lore:
+- '&7Return to the queue of petitions'
+- '&7awaiting approve or deny.'
+- ' '
+- '&eClick to open.'

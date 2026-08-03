@@ -2704,3 +2704,11 @@ style_french_fr: '&bEnglish'
 style_italian_it: '&bItalien'
 style_german_de: '&bAllemand'
 style_polish_pl: '&bPolski'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bApprobations Instantanées'
+view_instant_approvals_lore:
+- '&7Quoi : parcourir l’historique des expansions auto-approuvées.'
+- '&7Quand : auditer le mode Instantané ou la file sans examinateurs.'
+- ' '
+- '&eCliquez pour ouvrir.'

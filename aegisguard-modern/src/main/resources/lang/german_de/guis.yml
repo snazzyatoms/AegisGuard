@@ -2704,3 +2704,11 @@ style_french_fr: '&bFrançais'
 style_italian_it: '&bItalienisch'
 style_german_de: '&bDeutsch'
 style_polish_pl: '&bPolski'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bSofortige Genehmigungen'
+view_instant_approvals_lore:
+- '&7Was: Verlauf automatisch genehmigter Erweiterungen durchsuchen.'
+- '&7Wann: Sofortmodus oder unbeaufsichtigte Warteschlange prüfen.'
+- ' '
+- '&eKlicken zum Öffnen.'

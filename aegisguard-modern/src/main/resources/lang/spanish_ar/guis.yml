@@ -3046,3 +3046,11 @@ admin_plot_actions:
   - '&eClic izquierdo: &7Teleport'
   - '&bClic derecho: &7Convertir → Parcela del servidor'
   - '&cShift-Clic derecho: &7Borrar parcela'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bAprobaciones Instantáneas'
+view_instant_approvals_lore:
+- '&7Qué: ver el historial de expansiones autoaprobadas.'
+- '&7Cuándo: auditar Modo Instantáneo o cola sin revisores.'
+- ' '
+- '&eClic para abrir.'

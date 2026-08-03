@@ -51,6 +51,8 @@ public class AdminGUI {
     private static final int SLOT_TOGGLE_EXPANSION_MODE = 16;
 
     private static final int SLOT_TOOL_REQUESTS      = 28;
+    /** Instant / auto-approved history — directly under Review Requests. */
+    private static final int SLOT_TOOL_INSTANT_APPROVALS = 37;
     private static final int SLOT_TOOL_PLOT_LIST     = 29;
     private static final int SLOT_TOOL_DIAGNOSTICS   = 30;
     private static final int SLOT_TOOL_RELOAD_ALL    = 31;
@@ -216,6 +218,19 @@ public class AdminGUI {
         );
         tagAction(requests, "open_requests");
         inv.setItem(SLOT_TOOL_REQUESTS, requests);
+
+        ItemStack instantApprovals = GUIManager.createItem(
+                Material.LIGHT_BLUE_STAINED_GLASS_PANE,
+                plugin.gui().tr(player, "button_view_instant_approvals", "&bInstant Approvals"),
+                plugin.gui().trList(player, "view_instant_approvals_lore", List.of(
+                        "&7What: browse auto-approved expansion history.",
+                        "&7When: auditing Instant Mode or unattended queue approvals.",
+                        " ",
+                        "&eClick to open."
+                ))
+        );
+        tagAction(instantApprovals, "open_instant_approvals");
+        inv.setItem(SLOT_TOOL_INSTANT_APPROVALS, instantApprovals);
 
         ItemStack plotList = GUIManager.createItem(
                 Material.WRITABLE_BOOK,
@@ -473,6 +488,10 @@ public class AdminGUI {
 
             // --- Tools ---
             case "open_requests" -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
+            case "open_instant_approvals" -> {
+                plugin.gui().expansionInstantApprovals().open(player);
+                plugin.effects().playMenuFlip(player);
+            }
             case "open_plot_list" -> { plugin.gui().plotList().open(player, 0); plugin.effects().playMenuFlip(player); }
             case "open_diagnostics" -> { plugin.gui().doctor().open(player); plugin.effects().playMenuFlip(player); }
 

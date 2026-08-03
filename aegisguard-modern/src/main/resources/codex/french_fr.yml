@@ -3378,3 +3378,43 @@ expansion_request_denied_player: '&c✖ Votre demande d''extension a été refus
 expansion_request_approved_admin: '&a✔ Demande d''extension approuvée pour &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Demande d''extension refusée pour &f{PLAYER}&c.'
 request_expired: '&c❌ Cette demande a expiré ou a déjà été traitée.'
+
+# Instant Approvals (synced from lang packs)
+expansion_instant_title: '&b&lApprobations Instantanées'
+expansion_instant_title_paged: '&b&lApprobations Instantanées &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7Aucune Approbation Instantanée'
+expansion_instant_none_lore:
+- '&7Aucune expansion auto-approuvée n’a encore'
+- '&7été enregistrée.'
+expansion_instant_item_name: '&bAuto-approuvé : &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7Monde : &f{WORLD}'
+- '&7Statut : {STATUS}'
+- '&7Demandé : il y a &f{AGE}'
+- '&7Rayon : &e{CUR} &7→ &a{REQ}'
+- '&7Coût : &6{COST}'
+- '&7Approuvé par : &f{DECIDER}'
+- '&7Âge de la décision : &f{DECISION_AGE}'
+- '&7Note : &f{NOTE}'
+- ' '
+- '&7Historique en lecture seule des approbations automatiques.'
+expansion_instant_read_only: '&7Ceci a été approuvé automatiquement. Ce n’est pas en attente d’examen.'
+expansion_instant_default_note: 'Approuvé automatiquement par le mode Instantané / file sans examinateurs'
+button_open_instant_approvals: '&bApprobations Instantanées'
+open_instant_approvals_lore:
+- '&7Voir les expansions approuvées automatiquement.'
+- '&7Ce sont des entrées d’historique, pas la file d’attente.'
+- ' '
+- '&eCliquez pour ouvrir.'
+button_open_pending_requests: '&eDemandes en Attente'
+open_pending_requests_lore:
+- '&7Retourner à la file des demandes'
+- '&7en attente d’approbation ou de refus.'
+- ' '
+- '&eCliquez pour ouvrir.'
+button_view_instant_approvals: '&bApprobations Instantanées'
+view_instant_approvals_lore:
+- '&7Quoi : parcourir l’historique des expansions auto-approuvées.'
+- '&7Quand : auditer le mode Instantané ou la file sans examinateurs.'
+- ' '
+- '&eCliquez pour ouvrir.'

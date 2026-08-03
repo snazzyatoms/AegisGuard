@@ -104,6 +104,42 @@ expansion_admin_already_handled: '&eThat request has already been handled. &7(De
 expansion_admin_approve_failed: '&c❌ Failed to approve request (overlap or economy error).'
 
 # ------------------------------------------------------------
+# Instant Approvals History GUI (separate from Pending queue)
+# ------------------------------------------------------------
+expansion_instant_title: '&b&lInstant Approvals'
+expansion_instant_title_paged: '&b&lInstant Approvals &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7No Instant Approvals'
+expansion_instant_none_lore:
+- '&7No auto-approved expansions have been'
+- '&7recorded yet.'
+expansion_instant_item_name: '&bAuto-Approved: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7World: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Requested: &f{AGE} ago'
+- '&7Radius: &e{CUR} &7→ &a{REQ}'
+- '&7Cost: &6{COST}'
+- '&7Approved By: &f{DECIDER}'
+- '&7Decision Age: &f{DECISION_AGE}'
+- '&7Note: &f{NOTE}'
+- ' '
+- '&7Read-only automatic approval history.'
+expansion_instant_read_only: '&7This was approved automatically. It is not awaiting staff review.'
+expansion_instant_default_note: 'Automatically approved by Instant Mode / unattended queue'
+button_open_instant_approvals: '&bInstant Approvals'
+open_instant_approvals_lore:
+- '&7View expansions approved automatically.'
+- '&7These are history entries, not the pending queue.'
+- ' '
+- '&eClick to open.'
+button_open_pending_requests: '&ePending Requests'
+open_pending_requests_lore:
+- '&7Return to the queue of requests'
+- '&7awaiting approve or deny.'
+- ' '
+- '&eClick to open.'
+
+# ------------------------------------------------------------
 # Legacy Keys (compatibility with older code)
 # ------------------------------------------------------------
 expansion_request_submitted: '&a✔ Expansion request submitted. &7Requested: &e+{AMOUNT}&7 blocks.'

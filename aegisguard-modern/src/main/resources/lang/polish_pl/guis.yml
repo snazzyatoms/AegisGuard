@@ -2701,3 +2701,11 @@ style_french_fr: '&bFrancais'
 style_italian_it: '&bWłoski'
 style_german_de: '&bDeutsch'
 style_polish_pl: '&bPolski'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bNatychmiastowe Zatwierdzenia'
+view_instant_approvals_lore:
+- '&7Co: przeglądaj historię automatycznie zatwierdzonych ekspansji.'
+- '&7Kiedy: audyt Trybu Natychmiastowego lub kolejki bez recenzentów.'
+- ' '
+- '&eKliknij, aby otworzyć.'

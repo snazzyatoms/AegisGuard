@@ -80,3 +80,37 @@ expansion_request_denied_player: '&c✖ Sua solicitação de expansão foi negad
 expansion_request_approved_admin: '&a✔ Solicitação de expansão aprovada para &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Solicitação de expansão negada para &f{PLAYER}&c.'
 request_expired: '&c❌ Essa solicitação expirou ou já foi processada.'
+
+# Instant Approvals (auto-approved history)
+expansion_instant_title: '&b&lAprovações Instantâneas'
+expansion_instant_title_paged: '&b&lAprovações Instantâneas &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7Nenhuma Aprovação Instantânea'
+expansion_instant_none_lore:
+- '&7Nenhuma expansão autoaprovada foi'
+- '&7registrada ainda.'
+expansion_instant_item_name: '&bAutoaprovado: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7Mundo: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Solicitado: há &f{AGE}'
+- '&7Raio: &e{CUR} &7→ &a{REQ}'
+- '&7Custo: &6{COST}'
+- '&7Aprovado por: &f{DECIDER}'
+- '&7Idade da decisão: &f{DECISION_AGE}'
+- '&7Nota: &f{NOTE}'
+- ' '
+- '&7Histórico somente leitura de aprovações automáticas.'
+expansion_instant_read_only: '&7Isso foi aprovado automaticamente. Não aguarda revisão da equipe.'
+expansion_instant_default_note: 'Aprovado automaticamente pelo Modo Instantâneo / fila sem revisores'
+button_open_instant_approvals: '&bAprovações Instantâneas'
+open_instant_approvals_lore:
+- '&7Ver expansões aprovadas automaticamente.'
+- '&7São entradas de histórico, não a fila pendente.'
+- ' '
+- '&eClique para abrir.'
+button_open_pending_requests: '&eSolicitações Pendentes'
+open_pending_requests_lore:
+- '&7Voltar à fila de solicitações'
+- '&7aguardando aprovar ou negar.'
+- ' '
+- '&eClique para abrir.'

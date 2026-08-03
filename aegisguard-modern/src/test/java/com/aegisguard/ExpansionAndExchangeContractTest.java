@@ -96,6 +96,38 @@ class ExpansionAndExchangeContractTest {
     }
 
     @Test
+    void pendingAdminQueueExcludesInstantApprovalsAndRoutesHistoryGui() throws Exception {
+        String adminGui = Files.readString(JAVA_ROOT.resolve("expansions/ExpansionRequestAdminGUI.java"));
+        String instantGui = Files.readString(JAVA_ROOT.resolve("expansions/ExpansionInstantApprovalsGUI.java"));
+        String manager = Files.readString(JAVA_ROOT.resolve("expansions/ExpansionRequestManager.java"));
+        String listener = Files.readString(JAVA_ROOT.resolve("gui/GUIListener.java"));
+        String adminMenu = Files.readString(JAVA_ROOT.resolve("gui/AdminGUI.java"));
+
+        assertTrue(manager.contains("getPendingQueueRequests()"));
+        assertTrue(manager.contains("isPendingQueueEntry("));
+        assertTrue(manager.contains("getRecentInstantApprovals()"));
+        assertTrue(manager.contains("record.getActorType() != ActorType.AUTO"));
+        assertTrue(manager.contains("ExpansionRequest.Status.APPROVED"));
+
+        assertTrue(adminGui.contains("getPendingQueueRequests()"));
+        assertTrue(adminGui.contains("isPendingQueueEntry(req)"));
+        assertFalse(adminGui.contains("isInstantOrAutoMode"));
+        assertFalse(adminGui.contains("defaultShowAll"));
+        assertTrue(adminGui.contains("open_instant"));
+        assertTrue(adminGui.contains("expansionInstantApprovals()"));
+
+        assertTrue(instantGui.contains("class InstantApprovalsHolder"));
+        assertTrue(instantGui.contains("getRecentInstantApprovals()"));
+        assertTrue(instantGui.contains("expansion_instant_read_only"));
+
+        assertTrue(listener.contains("InstantApprovalsHolder"));
+        assertTrue(listener.contains("expansionInstantApprovals().handleClick"));
+
+        assertTrue(adminMenu.contains("open_instant_approvals"));
+        assertTrue(adminMenu.contains("SLOT_TOOL_INSTANT_APPROVALS"));
+    }
+
+    @Test
     void everyLanguageShipsTheNewExperienceWithoutPlaceholderCopy() throws Exception {
         for (String language : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
                 "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {

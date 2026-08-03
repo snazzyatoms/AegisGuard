@@ -80,3 +80,37 @@ expansion_request_denied_player: '&c✖ La tua richiesta di espansione è stata 
 expansion_request_approved_admin: '&a ✔ Richiesta di espansione approvata per &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Richiesta di espansione negata per &f{PLAYER}&c.'
 request_expired: '&c❌ La richiesta è scaduta o è già stata gestita.'
+
+# Instant Approvals (auto-approved history)
+expansion_instant_title: '&b&lApprovazioni Istantanee'
+expansion_instant_title_paged: '&b&lApprovazioni Istantanee &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7Nessuna Approvazione Istantanea'
+expansion_instant_none_lore:
+- '&7Nessuna espansione auto-approvata è stata'
+- '&7ancora registrata.'
+expansion_instant_item_name: '&bAuto-approvato: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7Mondo: &f{WORLD}'
+- '&7Stato: {STATUS}'
+- '&7Richiesto: &f{AGE} fa'
+- '&7Raggio: &e{CUR} &7→ &a{REQ}'
+- '&7Costo: &6{COST}'
+- '&7Approvato da: &f{DECIDER}'
+- '&7Età della decisione: &f{DECISION_AGE}'
+- '&7Nota: &f{NOTE}'
+- ' '
+- '&7Cronologia in sola lettura delle approvazioni automatiche.'
+expansion_instant_read_only: '&7Questo è stato approvato automaticamente. Non è in attesa di revisione.'
+expansion_instant_default_note: 'Approvato automaticamente dalla Modalità Istantanea / coda senza revisori'
+button_open_instant_approvals: '&bApprovazioni Istantanee'
+open_instant_approvals_lore:
+- '&7Vedi le espansioni approvate automaticamente.'
+- '&7Sono voci di cronologia, non la coda in attesa.'
+- ' '
+- '&eClicca per aprire.'
+button_open_pending_requests: '&eRichieste in Attesa'
+open_pending_requests_lore:
+- '&7Torna alla coda delle richieste'
+- '&7in attesa di approvazione o diniego.'
+- ' '
+- '&eClicca per aprire.'

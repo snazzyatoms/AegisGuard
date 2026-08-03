@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.audit.AuditAdminGUI;
 import com.aegisguard.claimblocks.ClaimBlockManager;
+import com.aegisguard.expansions.ExpansionInstantApprovalsGUI;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
 import com.aegisguard.guestpass.GuestPassGUI;
@@ -49,6 +50,7 @@ public class GUIManager {
     private final WorldControlsGUI worldControlsGUI;
     private final ExpansionRequestGUI expansionRequestGUI;
     private final ExpansionRequestAdminGUI expansionAdminGUI;
+    private final ExpansionInstantApprovalsGUI expansionInstantApprovalsGUI;
 
     // Plot Management
     private final PlotFlagsGUI plotFlagsGUI;
@@ -131,6 +133,7 @@ public class GUIManager {
         this.adminGUI = new AdminGUI(plugin);
         this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
         this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
+        this.expansionInstantApprovalsGUI = new ExpansionInstantApprovalsGUI(plugin);
         this.rolesGUI = new RolesGUI(plugin);
         this.plotFlagsGUI = new PlotFlagsGUI(plugin);
         this.adminPlotListGUI = new AdminPlotListGUI(plugin);
@@ -268,6 +271,7 @@ public class GUIManager {
     public WorldControlsGUI worldControls() { return worldControlsGUI; }
     public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }
     public ExpansionRequestAdminGUI expansionAdmin() { return expansionAdminGUI; }
+    public ExpansionInstantApprovalsGUI expansionInstantApprovals() { return expansionInstantApprovalsGUI; }
 
     // Plot Management
     public RolesGUI roles() { return rolesGUI; }

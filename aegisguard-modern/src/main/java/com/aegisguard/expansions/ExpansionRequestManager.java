@@ -142,6 +142,31 @@ public class ExpansionRequestManager {
         return Collections.unmodifiableCollection(activeRequests.values());
     }
 
+    /**
+     * True pending-queue entries only (awaiting staff approve/deny).
+     * Instant / AUTO-decided requests are never included.
+     */
+    public List<ExpansionRequest> getPendingQueueRequests() {
+        List<ExpansionRequest> out = new ArrayList<>();
+        for (ExpansionRequest req : activeRequests.values()) {
+            if (isPendingQueueEntry(req)) out.add(req);
+        }
+        return out;
+    }
+
+    /**
+     * A request belongs in the staff Pending/Review queue only when it is still PENDING
+     * and has not been auto-decided.
+     */
+    public static boolean isPendingQueueEntry(ExpansionRequest req) {
+        if (req == null) return false;
+        if (!req.isPending()) return false;
+        if (req.isAutoDecision()) return false;
+        ExpansionRequest.DecisionActorType actor = req.getDecisionActorType();
+        return actor == null
+                || actor == ExpansionRequest.DecisionActorType.NONE;
+    }
+
     /** Pending request only (if present). */
     public ExpansionRequest getRequest(UUID requesterId) {
         return activeRequests.get(requesterId);
@@ -150,6 +175,22 @@ public class ExpansionRequestManager {
     /** Recent decisions (newest first). Useful for admin GUIs / audit views. */
     public List<DecisionRecord> getRecentDecisions() {
         List<DecisionRecord> out = new ArrayList<>(history);
+        out.sort(Comparator.comparingLong(DecisionRecord::getDecisionTimestamp).reversed());
+        return out;
+    }
+
+    /**
+     * Instant / auto-approved history only (newest first).
+     * Used by {@link ExpansionInstantApprovalsGUI}; never mixed into the pending queue.
+     */
+    public List<DecisionRecord> getRecentInstantApprovals() {
+        List<DecisionRecord> out = new ArrayList<>();
+        for (DecisionRecord record : history) {
+            if (record == null) continue;
+            if (record.getStatus() != ExpansionRequest.Status.APPROVED) continue;
+            if (record.getActorType() != ActorType.AUTO) continue;
+            out.add(record);
+        }
         out.sort(Comparator.comparingLong(DecisionRecord::getDecisionTimestamp).reversed());
         return out;
     }

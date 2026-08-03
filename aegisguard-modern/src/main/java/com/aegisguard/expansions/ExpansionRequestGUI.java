@@ -223,11 +223,21 @@ public class ExpansionRequestGUI {
 
         // --- ADMIN VIEW ---
         if (plugin.isAdmin(player)) {
+            inv.setItem(52, GUIManager.createItem(
+                    Material.LIGHT_BLUE_STAINED_GLASS_PANE,
+                    tr(player, "button_view_instant_approvals", "&bInstant Approvals"),
+                    trList(player, "view_instant_approvals_lore", List.of(
+                            "&7What: browse auto-approved expansion history.",
+                            "&7When: auditing Instant Mode or unattended queue approvals.",
+                            " ",
+                            "&eClick to open."
+                    ))
+            ));
             inv.setItem(53, GUIManager.createItem(
                     Material.COMPASS,
                     tr(player, "button_view_requests_admin", "&bView Pending Requests"),
                     trList(player, "view_requests_admin_lore", List.of(
-                            "&7Review all pending expansion requests.",
+                            "&7Review pending expansion requests awaiting approve/deny.",
                             " ",
                             "&eClick to open admin queue"
                     ))
@@ -280,6 +290,15 @@ public class ExpansionRequestGUI {
             case 37 -> {
                 openHorizons(player);
                 plugin.effects().playMenuFlip(player);
+            }
+
+            case 52 -> {
+                if (plugin.isAdmin(player)) {
+                    plugin.gui().expansionInstantApprovals().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.effects().playError(player);
+                }
             }
 
             case 53 -> {

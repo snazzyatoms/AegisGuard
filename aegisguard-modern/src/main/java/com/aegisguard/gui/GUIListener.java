@@ -4,6 +4,7 @@ import com.aegisguard.AegisGuard;
 
 // --- IMPORTS (Holders) ---
 import com.aegisguard.audit.AuditAdminGUI.AuditHolder;
+import com.aegisguard.expansions.ExpansionInstantApprovalsGUI.InstantApprovalsHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
 import com.aegisguard.guestpass.GuestPassGUI.GuestPassMenuHolder;
@@ -146,6 +147,7 @@ public class GUIListener implements Listener {
                 || holder instanceof PlotAuctionHolder
                 || holder instanceof ExpansionHolder
                 || holder instanceof ExpansionAdminHolder
+                || holder instanceof InstantApprovalsHolder
                 || holder instanceof PlotStatusHolder
                 || holder instanceof ExchangeHolder
                 || holder instanceof MigrationMainHolder
@@ -367,6 +369,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof ExpansionAdminHolder) {
             plugin.gui().expansionAdmin().handleClick(player, e);
+        }
+        else if (holder instanceof InstantApprovalsHolder) {
+            plugin.gui().expansionInstantApprovals().handleClick(player, e);
         }
         else if (holder instanceof PlotStatusHolder castHolder) {
             plugin.gui().plotStatus().handleClick(player, e, castHolder);
@@ -872,6 +877,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof ExpansionAdminHolder) {
             safeInvokeOpen(plugin.gui().expansionAdmin(), player);
+            return;
+        }
+        if (holder instanceof InstantApprovalsHolder) {
+            safeInvokeOpen(plugin.gui().expansionInstantApprovals(), player);
             return;
         }
 

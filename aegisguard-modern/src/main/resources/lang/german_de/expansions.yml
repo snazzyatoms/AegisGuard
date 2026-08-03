@@ -80,3 +80,37 @@ expansion_request_denied_player: '&c✖ Ihre Erweiterungsanfrage wurde abgelehnt
 expansion_request_approved_admin: '&a ✔ Genehmigter Erweiterungsantrag für &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Erweiterungsanfrage für &f{PLAYER}&c abgelehnt.'
 request_expired: '&c❌ Diese Anfrage ist abgelaufen oder wurde bereits bearbeitet.'
+
+# Instant Approvals (auto-approved history)
+expansion_instant_title: '&b&lSofortige Genehmigungen'
+expansion_instant_title_paged: '&b&lSofortige Genehmigungen &7({PAGE}/{PAGES})'
+expansion_instant_none_title: '&7Keine Sofortigen Genehmigungen'
+expansion_instant_none_lore:
+- '&7Es wurden noch keine automatisch'
+- '&7genehmigten Erweiterungen erfasst.'
+expansion_instant_item_name: '&bAutomatisch genehmigt: &f{PLAYER}'
+expansion_instant_item_lore:
+- '&7Welt: &f{WORLD}'
+- '&7Status: {STATUS}'
+- '&7Angefragt: vor &f{AGE}'
+- '&7Radius: &e{CUR} &7→ &a{REQ}'
+- '&7Kosten: &6{COST}'
+- '&7Genehmigt von: &f{DECIDER}'
+- '&7Entscheidungsalter: &f{DECISION_AGE}'
+- '&7Hinweis: &f{NOTE}'
+- ' '
+- '&7Schreibgeschützter Verlauf automatischer Genehmigungen.'
+expansion_instant_read_only: '&7Dies wurde automatisch genehmigt. Es wartet nicht auf eine Teamprüfung.'
+expansion_instant_default_note: 'Automatisch genehmigt durch Sofortmodus / unbeaufsichtigte Warteschlange'
+button_open_instant_approvals: '&bSofortige Genehmigungen'
+open_instant_approvals_lore:
+- '&7Automatisch genehmigte Erweiterungen anzeigen.'
+- '&7Dies sind Verlaufseinträge, nicht die Warteschlange.'
+- ' '
+- '&eKlicken zum Öffnen.'
+button_open_pending_requests: '&eAusstehende Anfragen'
+open_pending_requests_lore:
+- '&7Zurück zur Warteschlange der Anfragen,'
+- '&7die genehmigt oder abgelehnt werden müssen.'
+- ' '
+- '&eKlicken zum Öffnen.'

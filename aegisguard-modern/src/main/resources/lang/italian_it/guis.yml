@@ -2703,3 +2703,11 @@ style_french_fr: '&bFrançais'
 style_italian_it: '&bItaliano'
 style_german_de: '&bDeutsch'
 style_polish_pl: '&bPolski'
+
+# Instant Approvals (auto-approved history)
+button_view_instant_approvals: '&bApprovazioni Istantanee'
+view_instant_approvals_lore:
+- '&7Cosa: sfoglia la cronologia delle espansioni auto-approvate.'
+- '&7Quando: controllare la Modalità Istantanea o la coda senza revisori.'
+- ' '
+- '&eClicca per aprire.'

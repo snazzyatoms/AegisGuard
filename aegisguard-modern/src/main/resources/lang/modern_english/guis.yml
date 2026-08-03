@@ -247,7 +247,14 @@ view_requests_admin_lore:
   - ' '
   - '&eClick to open.'
 
-# View toggle button
+button_view_instant_approvals: '&bInstant Approvals'
+view_instant_approvals_lore:
+  - '&7What: browse auto-approved expansion history.'
+  - '&7When: auditing Instant Mode or unattended queue approvals.'
+  - ' '
+  - '&eClick to open.'
+
+# View toggle button (legacy; Instant Approvals is a separate menu)
 expansion_admin_view_toggle: '&bView: &fAll'
 expansion_admin_view_toggle_lore:
 - '&7Toggle between queue and history.'

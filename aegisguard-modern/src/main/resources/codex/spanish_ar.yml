@@ -779,4 +779,104 @@ papi_na: 'N/D'
 papi_enabled: 'Activado'
 papi_disabled: 'Desactivado'
 papi_not_for_sale: 'No está en venta'
-
+# ------------------------------------------------------------
+# Convertir parcela personal → zona del servidor (1.3.0+)
+# ------------------------------------------------------------
+button_admin_convert_server: '&cConvertir parcela → Zona del servidor'
+admin_convert_server_lore:
+  - '&7Qué: convierte la parcela personal donde estás'
+  - '&7en una zona del servidor (Spawn, Hub, Pueblo,'
+  - '&7Evento, Tienda, Arena o zona simple).'
+  - '&7Cuándo: un build personal terminado debe ser'
+  - '&7territorio staff público sin reconstruir.'
+  - ' '
+  - '&cLa propiedad pasa al servidor.'
+  - '&cSe borran roles y Pases de Invitado.'
+  - '&7Pide confirmación antes de cambiar nada.'
+  - '&eClic para abrir.'
+convert_select_title: '&cConvertir → Parcela del servidor'
+convert_select_info_name: '&eDetalles de conversión'
+convert_select_info_lore:
+  - '&7Parcela: &f{PLOT}'
+  - '&7Dueño: &f{OWNER}'
+  - ' '
+  - '&cTransfiere la propiedad personal al servidor.'
+  - '&cSe borran roles de confianza y Pases de Invitado.'
+  - '&7Se limpian listados inactivos de venta/alquiler.'
+  - '&7Primero se toma una instantánea de recuperación.'
+convert_select_blocked_hint:
+  - '&eResuelve el problema de arriba antes de convertir.'
+convert_type_unavailable: '&cNo disponible hasta limpiar bloqueos.'
+convert_type_click: '&eClic para revisar y confirmar.'
+convert_type_plain_name: '&bZona del servidor'
+convert_type_plain_lore:
+  - '&7Qué: transferir la propiedad al servidor.'
+  - '&7Sin categoría de viaje ni preset de flags.'
+  - '&7Úsalo para terreno staff genérico.'
+convert_type_spawn_name: '&aSpawn público'
+convert_type_spawn_lore:
+  - '&7Qué: zona del servidor + punto de viaje Spawn.'
+  - '&7Define la categoría SPAWN en tus pies.'
+  - '&7Mismo resultado que Fijar Spawn tras convertir.'
+convert_type_hub_name: '&dHub'
+convert_type_hub_lore:
+  - '&7Qué: zona del servidor marcada como viaje HUB.'
+convert_type_town_name: '&ePueblo'
+convert_type_town_lore:
+  - '&7Qué: zona del servidor marcada como viaje TOWN.'
+convert_type_event_name: '&6Evento'
+convert_type_event_lore:
+  - '&7Qué: zona del servidor marcada como viaje EVENT.'
+convert_type_shop_name: '&aTienda'
+convert_type_shop_lore:
+  - '&7Qué: zona del servidor marcada como viaje SHOP.'
+convert_type_arena_name: '&cArena'
+convert_type_arena_lore:
+  - '&7Qué: zona del servidor + preset de protección Arena.'
+  - '&7Aplica el paquete de flags ARENA existente'
+  - '&7(entrada pública, PvP permitido, build bloqueado).'
+convert_confirm_title: '&cConfirmar conversión a servidor'
+convert_confirm_details_name: '&eConfirmar conversión'
+convert_confirm_details_lore:
+  - '&7Parcela: &f{PLOT}'
+  - '&7Dueño actual: &f{OWNER}'
+  - '&7Se convierte en: &f{TARGET}'
+  - ' '
+  - '&cLa propiedad pasa al servidor.'
+  - '&cEste claim personal se vuelve zona del servidor.'
+  - '&cSe limpia el acceso de jugadores (roles / pases).'
+  - '&7Se limpian listados de venta, alquiler y subasta.'
+  - '&7Primero se crea una instantánea de recuperación.'
+  - ' '
+  - '&8No se puede deshacer salvo restaurar.'
+convert_confirm_accept: '&aConfirmar conversión'
+convert_confirm_accept_lore:
+  - '&7Convierte esta parcela en zona del servidor ahora.'
+convert_confirm_back_lore:
+  - '&7Volver a la selección de tipo.'
+staff_wand_menu_title: '&cOpciones del Cetro de Staff'
+staff_wand_doctor_name: '&bDoctor de Territorio'
+staff_wand_doctor_lore:
+  - '&7Qué: escanear, reparar y herramientas de almacenamiento.'
+  - '&eClic para abrir Doctor Tools.'
+staff_wand_convert_name: '&cConvertir → Parcela del servidor'
+staff_wand_convert_lore:
+  - '&7Qué: convertir una parcela personal en zona del servidor.'
+  - '&7Elige Spawn, Hub, Pueblo, Evento, Tienda, Arena'
+  - '&7o una zona simple tras confirmar.'
+staff_wand_convert_ready: '&eClic para elegir un tipo de parcela del servidor.'
+staff_wand_admin_name: '&cHerramientas de Staff'
+staff_wand_admin_lore:
+  - '&7Abrir el Centro de Comandos de Staff.'
+admin_plot_actions:
+  - '&eClic izquierdo: &7Teleport'
+  - '&bClic derecho: &7Convertir → Parcela del servidor'
+  - '&cShift-Clic derecho: &7Borrar parcela'
+convert_blocker_no_plot: '&cPárate dentro de la parcela de jugador que quieres convertir.'
+convert_blocker_already_server: '&eEsta parcela ya es una zona del servidor.'
+convert_blocker_group: '&cLas parcelas de grupo deben disolverse antes de convertir.'
+convert_blocker_rental: '&cLos alquileres activos de parcela completa deben terminar antes de convertir.'
+convert_blocker_auction: '&cLas subastas deben cancelarse antes de convertir.'
+convert_blocker_zone_rent: '&cPrimero resuelve zonas hijas alquiladas o listadas.'
+convert_blocker_no_manage: '&cNo puedes gestionar esta parcela como staff.'
+convert_success: '&aParcela convertida en zona del servidor (&f{TARGET}&a). Instantánea de recuperación creada.'

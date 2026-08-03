@@ -72,6 +72,13 @@ class StaffAdminContractTest {
                 "migration_confirm_import_lore:",
                 "storage_migrate_confirm_lore:",
                 "admin_set_spawn_lore:",
+                "button_admin_convert_server:",
+                "admin_convert_server_lore:",
+                "convert_select_title:",
+                "convert_confirm_title:",
+                "convert_confirm_details_lore:",
+                "staff_wand_menu_title:",
+                "staff_wand_convert_name:",
                 "button_admin_expansion_mode:",
                 "admin_expansion_mode_lore_queue:",
                 "admin_expansion_mode_lore_instant:"
@@ -89,6 +96,9 @@ class StaffAdminContractTest {
             assertTrue(system.contains("admin_restore_confirm_hint:"), lang + " missing restore confirm hint");
             assertTrue(system.contains("admin_expansion_mode_set_queue:"), lang + " missing expansion mode queue feedback");
             assertTrue(system.contains("admin_expansion_mode_set_instant:"), lang + " missing expansion mode instant feedback");
+            assertTrue(system.contains("convert_blocker_no_plot:"), lang + " missing convert blocker");
+            assertTrue(system.contains("convert_success:"), lang + " missing convert success");
+            assertTrue(system.contains("{TARGET}"), lang + " convert success needs {TARGET}");
         }
     }
 

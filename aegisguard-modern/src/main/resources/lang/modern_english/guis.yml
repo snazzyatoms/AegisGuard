@@ -2490,3 +2490,96 @@ lockdown_confirm_mode_line: '&7Mode: &f{MODE}'
 lockdown_confirm_duration_line: '&7Duration: &f{DURATION}'
 role_flag_name_DOORS: '&bDoors'
 role_flag_name_DECOR: '&bDecor Ward'
+# ------------------------------------------------------------
+# Convert personal plot → server zone (1.3.0+)
+# ------------------------------------------------------------
+button_admin_convert_server: '&cConvert Plot → Server Plot'
+admin_convert_server_lore:
+  - '&7What: convert the personal plot you are standing in'
+  - '&7into a server zone (Spawn, Hub, Town, Event,'
+  - '&7Shop, Arena, or plain server land).'
+  - '&7When: a finished personal build should become'
+  - '&7public staff territory without rebuilding.'
+  - ' '
+  - '&cOwnership moves to the server.'
+  - '&cRoles and Guest Passes are cleared.'
+  - '&7Confirms before changing anything.'
+  - '&eClick to open.'
+convert_select_title: '&cConvert → Server Plot'
+convert_select_info_name: '&eConversion Details'
+convert_select_info_lore:
+  - '&7Plot: &f{PLOT}'
+  - '&7Owner: &f{OWNER}'
+  - ' '
+  - '&cConverts personal ownership to the server.'
+  - '&cTrusted roles and Guest Passes are cleared.'
+  - '&7Inactive sale/rent listings are cleared.'
+  - '&7A recovery snapshot is taken first.'
+convert_select_blocked_hint:
+  - '&eResolve the issue above before converting.'
+convert_type_unavailable: '&cUnavailable until blockers are cleared.'
+convert_type_click: '&eClick to review and confirm.'
+convert_type_plain_name: '&bServer Zone'
+convert_type_plain_lore:
+  - '&7What: transfer ownership to the server.'
+  - '&7No travel category or flag preset.'
+  - '&7Use this for generic staff land.'
+convert_type_spawn_name: '&aPublic Spawn'
+convert_type_spawn_lore:
+  - '&7What: server zone + public Spawn travel point.'
+  - '&7Sets warp category SPAWN at your feet.'
+  - '&7Same outcome as Set Spawn after convert.'
+convert_type_hub_name: '&dHub'
+convert_type_hub_lore:
+  - '&7What: server zone tagged as travel HUB.'
+convert_type_town_name: '&eTown'
+convert_type_town_lore:
+  - '&7What: server zone tagged as travel TOWN.'
+convert_type_event_name: '&6Event'
+convert_type_event_lore:
+  - '&7What: server zone tagged as travel EVENT.'
+convert_type_shop_name: '&aShop'
+convert_type_shop_lore:
+  - '&7What: server zone tagged as travel SHOP.'
+convert_type_arena_name: '&cArena'
+convert_type_arena_lore:
+  - '&7What: server zone + Arena protection preset.'
+  - '&7Applies the existing ARENA flag bundle'
+  - '&7(public entry, PvP allowed, build locked).'
+convert_confirm_title: '&cConfirm Server Convert'
+convert_confirm_details_name: '&eConfirm Conversion'
+convert_confirm_details_lore:
+  - '&7Plot: &f{PLOT}'
+  - '&7Current owner: &f{OWNER}'
+  - '&7Becomes: &f{TARGET}'
+  - ' '
+  - '&cOwnership moves to the server.'
+  - '&cThis personal claim becomes a server zone.'
+  - '&cPlayer access (roles / Guest Passes) clears.'
+  - '&7Sale, rent, and auction listings clear.'
+  - '&7A recovery snapshot is created first.'
+  - ' '
+  - '&8This cannot be undone except by restore.'
+convert_confirm_accept: '&aConfirm Convert'
+convert_confirm_accept_lore:
+  - '&7Convert this plot into a server zone now.'
+convert_confirm_back_lore:
+  - '&7Return to type selection.'
+staff_wand_menu_title: '&cStaff Scepter Options'
+staff_wand_doctor_name: '&bTerritory Doctor'
+staff_wand_doctor_lore:
+  - '&7What: scan, repair, and storage tools.'
+  - '&eClick to open Doctor Tools.'
+staff_wand_convert_name: '&cConvert → Server Plot'
+staff_wand_convert_lore:
+  - '&7What: turn a personal plot into a server zone.'
+  - '&7Pick Spawn, Hub, Town, Event, Shop, Arena,'
+  - '&7or a plain server zone after a confirm step.'
+staff_wand_convert_ready: '&eClick to choose a server plot type.'
+staff_wand_admin_name: '&cStaff Tools'
+staff_wand_admin_lore:
+  - '&7Open the full Staff Command Center.'
+admin_plot_actions:
+  - '&eLeft-Click: &7Teleport'
+  - '&bRight-Click: &7Convert → Server Plot'
+  - '&cShift-Right-Click: &7Delete Plot'

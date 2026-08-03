@@ -179,6 +179,7 @@ public class AdminPlotListGUI {
                 // 1.2.6: safer delete action
                 List<String> actions = plugin.gui().trList(player, "admin_plot_actions", List.of(
                         "&eLeft-Click: &7Teleport",
+                        "&bRight-Click: &7Convert → Server Plot",
                         "&cShift-Right-Click: &7Delete Plot"
                 ));
                 for (String line : actions) lore.add(GUIManager.color(line));
@@ -294,11 +295,19 @@ public class AdminPlotListGUI {
             return;
         }
 
-        // 1.2.6: prevent accidental deletes
+        // Right-click: convert personal plot → server zone. Shift-right-click: delete.
         if (e.getClick().isRightClick()) {
             if (!e.getClick().isShiftClick()) {
-                player.sendMessage(plugin.gui().tr(player, "admin_plot_delete_hint", "&cShift-Right-Click to delete this plot."));
-                plugin.effects().playError(player);
+                if (plot.isServerZone()) {
+                    player.sendMessage(plugin.gui().tr(player, "convert_blocker_already_server",
+                            "&eThis plot is already a server zone."));
+                    player.sendMessage(plugin.gui().tr(player, "admin_plot_delete_hint",
+                            "&cShift-Right-Click to delete this plot."));
+                    plugin.effects().playError(player);
+                    return;
+                }
+                plugin.effects().playMenuFlip(player);
+                plugin.gui().convertToServer().openSelect(player, plot);
                 return;
             }
 

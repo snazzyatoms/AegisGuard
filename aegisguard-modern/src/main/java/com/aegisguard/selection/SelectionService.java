@@ -92,10 +92,12 @@ public class SelectionService implements Listener {
         }
 
         Action action = event.getAction();
+        // Sneak + right-click: staff context menu (Doctor + Convert → Server Plot + Staff Tools).
+        // Preserves Doctor access while adding convert without changing corner-selection clicks.
         if (isServerWand(item) && player.isSneaking()
                 && (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
             event.setCancelled(true);
-            plugin.runMain(player, () -> plugin.gui().doctor().open(player));
+            plugin.runMain(player, () -> plugin.gui().convertToServer().openStaffWandMenu(player));
             return;
         }
         if (action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK) {

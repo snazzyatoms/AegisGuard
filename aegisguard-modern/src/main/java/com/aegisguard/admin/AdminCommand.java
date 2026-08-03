@@ -643,49 +643,27 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleConvert(Player player, String[] args) {
-        if (!player.hasPermission("aegis.convert") && !player.hasPermission("aegis.admin.manage")) {
+        var convertGui = plugin.gui().convertToServer();
+        if (!convertGui.hasConvertPermission(player)) {
             plugin.msg().send(player, "no_perm");
             return;
         }
-        Plot plot = plugin.store().getPlotAt(player.getLocation());
-        if (plot == null) {
-            player.sendMessage(ChatColor.RED + "Stand inside the player plot you want to convert.");
-            return;
-        }
-        if (plot.isServerZone()) {
-            player.sendMessage(ChatColor.YELLOW + "This plot is already a server zone.");
-            return;
-        }
-        if (plot.isGroupPlot() || plot.hasActiveRental() || plot.isForAuction()
-                || plot.getZones().stream().anyMatch(zone -> zone.isRented() || zone.isListedForRent())) {
-            player.sendMessage(ChatColor.RED + "Group, rented, or auction plots must be resolved before conversion.");
-            return;
-        }
+        // Default path: open Staff convert GUI (type picker + confirm).
         if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
-            player.sendMessage(ChatColor.GOLD + "This permanently transfers the plot to the server and clears player access.");
-            player.sendMessage(ChatColor.YELLOW + "Run /agadmin convert confirm to continue. A recovery snapshot will be created.");
+            convertGui.openFromStanding(player);
             return;
         }
 
-        UUID previousOwner = plot.getOwner();
-        if (plugin.snapshots() != null) {
-            plugin.snapshots().createSnapshot(plot, ClaimSnapshot.SnapshotType.MANUAL,
-                    "Before server-zone conversion by " + player.getName(), player.getUniqueId());
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) {
+            sendLocalized(player, "convert_blocker_no_plot",
+                    "&cStand inside the player plot you want to convert.");
+            return;
         }
-        plot.setForSale(false, 0);
-        plot.setForRent(false, 0);
-        plot.setForAuction(false);
-        plot.clearPlayerAccess();
-        plot.getZones().forEach(Zone::clearGuests);
-        plugin.store().changePlotOwner(plot, Plot.SERVER_OWNER_UUID, "Server");
-        plugin.store().savePlotSync(plot);
-        plugin.claimBlocks().invalidateOwnerCache(previousOwner);
-        if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
-        plugin.territoryLife().clearOffer(plot.getPlotId());
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "SERVER_ZONE_CONVERT",
-                "Player territory converted into a server zone.");
-        audit(player, "converted plot " + plot.getPlotId() + " from owner " + previousOwner + " into a server zone");
-        player.sendMessage(ChatColor.GREEN + "Plot converted into a server zone. Recovery snapshot created.");
+        if (!convertGui.executeConvert(player, plot, com.aegisguard.gui.ConvertToServerGUI.ConvertTarget.PLAIN)) {
+            return;
+        }
+        audit(player, "converted plot " + plot.getPlotId() + " into a server zone via /agadmin convert confirm");
     }
 
     private void handleBlocks(Player player, String[] args) {

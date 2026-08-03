@@ -63,6 +63,9 @@ import com.aegisguard.gui.MyTenantsGUI.MyTenantsHolder;
 import com.aegisguard.gui.SettlementsInboxGUI.SettlementsHolder;
 import com.aegisguard.gui.GroupPlotsGUI.GroupPlotsHolder;
 import com.aegisguard.gui.TransferConfirmGUI.TransferConfirmHolder;
+import com.aegisguard.gui.ConvertToServerGUI.StaffWandHolder;
+import com.aegisguard.gui.ConvertToServerGUI.ConvertSelectHolder;
+import com.aegisguard.gui.ConvertToServerGUI.ConvertConfirmHolder;
 import com.aegisguard.gui.ClaimMergeGUI.ClaimMergeHolder;
 import com.aegisguard.gui.GiftBlocksGUI.GiftBlocksHolder;
 import com.aegisguard.gui.StorageMigrateGUI.StorageMigrateHolder;
@@ -156,6 +159,9 @@ public class GUIListener implements Listener {
                 || holder instanceof SettlementsHolder
                 || holder instanceof GroupPlotsHolder
                 || holder instanceof TransferConfirmHolder
+                || holder instanceof StaffWandHolder
+                || holder instanceof ConvertSelectHolder
+                || holder instanceof ConvertConfirmHolder
                 || holder instanceof ClaimMergeHolder
                 || holder instanceof GiftBlocksHolder
                 || holder instanceof StorageMigrateHolder
@@ -319,6 +325,15 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof TransferConfirmHolder castHolder) {
             plugin.gui().transferConfirm().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof StaffWandHolder) {
+            plugin.gui().convertToServer().handleStaffWandClick(player, e);
+        }
+        else if (holder instanceof ConvertSelectHolder castHolder) {
+            plugin.gui().convertToServer().handleSelectClick(player, e, castHolder);
+        }
+        else if (holder instanceof ConvertConfirmHolder castHolder) {
+            plugin.gui().convertToServer().handleConfirmClick(player, e, castHolder);
         }
         else if (holder instanceof ClaimMergeHolder castHolder) {
             plugin.gui().claimMerge().handleClick(player, e, castHolder);

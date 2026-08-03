@@ -65,6 +65,8 @@ public class AdminGUI {
     private static final int SLOT_TOOL_ROUTES         = 25;
     private static final int SLOT_TOOL_AUDIT_LEDGER   = 26;
     private static final int SLOT_TOOL_SET_SPAWN      = 27;
+    /** Convert standing personal plot → server zone (type picker + confirm). */
+    private static final int SLOT_TOOL_CONVERT        = 19;
 
     private static final int SLOT_NAV_EXIT = 40;
     private static final int SLOT_NAV_BACK = 44;
@@ -395,6 +397,25 @@ public class AdminGUI {
         tagAction(setSpawn, "set_current_plot_spawn");
         inv.setItem(SLOT_TOOL_SET_SPAWN, setSpawn);
 
+        ItemStack convert = GUIManager.createItem(
+                Material.STRUCTURE_BLOCK,
+                plugin.gui().tr(player, "button_admin_convert_server", "&cConvert Plot → Server Plot"),
+                plugin.gui().trList(player, "admin_convert_server_lore", List.of(
+                        "&7What: convert the personal plot you are standing in",
+                        "&7into a server zone (Spawn, Hub, Town, Event,",
+                        "&7Shop, Arena, or plain server land).",
+                        "&7When: a finished personal build should become",
+                        "&7public staff territory without rebuilding.",
+                        " ",
+                        "&cOwnership moves to the server.",
+                        "&cRoles and Guest Passes are cleared.",
+                        "&7Confirms before changing anything.",
+                        "&eClick to open."
+                ))
+        );
+        tagAction(convert, "open_convert_server");
+        inv.setItem(SLOT_TOOL_CONVERT, convert);
+
         ItemStack close = GUIManager.createItem(
                 Material.BARRIER,
                 plugin.gui().tr(player, "button_exit", "&c✖ Close"),
@@ -507,6 +528,10 @@ public class AdminGUI {
             }
 
             case "set_current_plot_spawn" -> setCurrentPlotAsSpawn(player);
+            case "open_convert_server" -> {
+                plugin.effects().playMenuFlip(player);
+                plugin.gui().convertToServer().openFromStanding(player);
+            }
 
             // --- Navigation ---
             case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); }

@@ -251,10 +251,29 @@ public class PlotMarketGUI {
                 if (plot.isForSale()) {
                     handleBuy(player, plot);
                 } else if (plot.isForRent()) {
-                    handleRent(player, plot);
+                    openRentConfirm(player, plot);
                 }
             }
         }
+    }
+
+    private void openRentConfirm(Player player, Plot plot) {
+        if (!plugin.cfg().raw().getBoolean("full_plot_renting.enabled", true)) {
+            plugin.msg().send(player, "market-renting-disabled");
+            return;
+        }
+        if (plot.getOwner().equals(player.getUniqueId())) {
+            plugin.msg().send(player, "market-rent-own");
+            return;
+        }
+        double price = plot.getRentPrice();
+        if (!plot.isForRent() || plot.hasActiveRental() || !Double.isFinite(price) || price <= 0.0) {
+            plugin.msg().send(player, "market-listing-unavailable");
+            return;
+        }
+        int defaultDays = Math.max(1, plugin.cfg().raw().getInt("full_plot_renting.duration_days", 7));
+        TerritoryLifeService.RentalOffer offer = plugin.territoryLife().getOffer(plot.getPlotId(), price, defaultDays);
+        plugin.gui().rentConfirm().openPlotRent(player, plot, price, offer.deposit(), offer.termDays(), "market");
     }
 
     private void handleBuy(Player buyer, Plot plot) {
@@ -351,6 +370,10 @@ public class PlotMarketGUI {
         } finally {
             activeTransactions.remove(transactionId);
         }
+    }
+
+    public void executeRent(Player renter, Plot plot) {
+        handleRent(renter, plot);
     }
 
     private void handleRent(Player renter, Plot plot) {

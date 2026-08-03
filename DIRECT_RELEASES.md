@@ -24,6 +24,6 @@ Use the full confidence build before publishing:
 mvn clean verify
 ```
 
-The GitHub Actions workflow performs the same Java 17 verification and uploads the server JAR as a workflow artifact. For runtime checks, `scripts/smoke-test.ps1` validates plugin startup, `/agadmin reload`, clean shutdown, and exception-free logs against a supplied Folia, Paper, Purpur, or Spigot server fixture.
+The GitHub Actions workflow performs the same Java 21 verification and uploads the server JAR as a workflow artifact. For runtime checks, `scripts/smoke-test.ps1` validates plugin startup, `/agadmin reload`, clean shutdown, and exception-free logs against a supplied Folia, Paper, Purpur, or Spigot server fixture.
 
 Publish the verified server JAR through the GitHub Releases page. Keep checksums and release notes alongside the uploaded artifact so server owners can confirm exactly what they installed.

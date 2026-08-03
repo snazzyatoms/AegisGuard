@@ -150,6 +150,15 @@ public class LocalMarketGUI {
                 ))
         ));
 
+        inv.setItem(31, GUIManager.createItem(
+                Material.GOLDEN_HOE,
+                tr(player, "local_market_my_rentals_name", "&6My Rentals"),
+                trList(player, "local_market_my_rentals_lore", List.of(
+                        "&7Manage your active full-plot and",
+                        "&7zone rentals from one place."
+                ))
+        ));
+
         inv.setItem(40, GUIManager.createItem(
                 hasStalls ? Material.CHEST : Material.GRAY_DYE,
                 tr(player, "local_market_stalls_name", "&6Trade Stalls"),
@@ -277,6 +286,12 @@ public class LocalMarketGUI {
                 plugin.effects().playError(player);
                 send(player, "zone_browse_none", "&cThere are no rentable zones here right now.");
             }
+            return;
+        }
+
+        if (slot == 31) {
+            plugin.gui().myRentals().open(player);
+            plugin.effects().playMenuFlip(player);
             return;
         }
 

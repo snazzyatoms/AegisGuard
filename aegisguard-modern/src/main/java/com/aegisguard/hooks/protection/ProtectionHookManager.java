@@ -44,7 +44,7 @@ public class ProtectionHookManager {
     }
 
     public boolean isEnabled() {
-        return plugin.getConfig().getBoolean("hooks.protection_compat.enabled", true);
+        return plugin.getConfig().getBoolean("hooks.protection_compat.enabled", false);
     }
 
     public boolean isDebug() {
@@ -62,7 +62,7 @@ public class ProtectionHookManager {
 
     public boolean isPluginHookEnabled(String id) {
         String path = "hooks.protection_compat.plugins." + id.toLowerCase() + ".enabled";
-        return plugin.getConfig().getBoolean(path, true);
+        return plugin.getConfig().getBoolean(path, false);
     }
 
     public int getPluginPriority(String id, int def) {

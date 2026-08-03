@@ -384,6 +384,9 @@ public class AegisGuard extends JavaPlugin {
 
         // Register Events
         Bukkit.getPluginManager().registerEvents(new GUIListener(this), this);
+        if (gui != null && gui.roles() != null) {
+            Bukkit.getPluginManager().registerEvents(gui.roles(), this);
+        }
         Bukkit.getPluginManager().registerEvents(guestPassService, this);
         Bukkit.getPluginManager().registerEvents(safeTravelService, this);
         Bukkit.getPluginManager().registerEvents(protection, this);

@@ -220,19 +220,7 @@ public class ZoneBrowseGUI {
                 plugin.effects().playMenuFlip(player);
                 return;
             }
-            if (!tryCharge(player, zone.getRentPrice())) {
-                return;
-            }
-
-            zone.extendRent(rentalDurationMillis());
-            payOwner(plot, zone.getRentPrice());
-            save(plot);
-            plugin.effects().playConfirm(player);
-            send(player, "zone_extend_success",
-                    "&aRental extended for &f{ZONE}&a. New expiry: &f{TIME}"
-                            .replace("{ZONE}", safeZoneName(zone))
-                            .replace("{TIME}", zone.getRemainingTimeFormatted()));
-            open(player, plot);
+            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "zone_browse");
             return;
         }
 
@@ -242,6 +230,38 @@ public class ZoneBrowseGUI {
             return;
         }
 
+        plugin.gui().rentConfirm().openZoneRent(player, plot, zone, false, "zone_browse");
+    }
+
+    public void executeRentOrExtend(Player player, Plot plot, Zone zone, boolean extend) {
+        if (player == null || plot == null || zone == null) return;
+
+        if (extend) {
+            if (!zone.isRentedBy(player.getUniqueId())) {
+                plugin.effects().playError(player);
+                send(player, "zone_already_rented", "&cThat zone is already rented by another player.");
+                return;
+            }
+            if (!tryCharge(player, zone.getRentPrice())) {
+                return;
+            }
+            zone.extendRent(rentalDurationMillis());
+            payOwner(plot, zone.getRentPrice());
+            save(plot);
+            plugin.effects().playConfirm(player);
+            send(player, "zone_extend_success",
+                    "&aRental extended for &f{ZONE}&a. New expiry: &f{TIME}"
+                            .replace("{ZONE}", safeZoneName(zone))
+                            .replace("{TIME}", zone.getRemainingTimeFormatted()));
+            plugin.gui().myRentals().open(player);
+            return;
+        }
+
+        if (zone.isRented() || !zone.isListedForRent() || zone.getRentPrice() <= 0.0D) {
+            plugin.effects().playError(player);
+            send(player, "zone_already_rented", "&cThat zone is already rented by another player.");
+            return;
+        }
         if (!tryCharge(player, zone.getRentPrice())) {
             return;
         }
@@ -265,7 +285,7 @@ public class ZoneBrowseGUI {
                     ));
         }
 
-        open(player, plot);
+        plugin.gui().myRentals().open(player);
     }
 
     private List<Zone> getBrowsableZones(Plot plot, Player viewer) {

@@ -1437,9 +1437,16 @@ private void handleUnsell(Player p) {
     }
 
     private void handleRentalContract(Player p, String[] args) {
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "status";
+        if (action.equals("status") || action.equals("info") || action.equals("gui") || action.equals("menu")) {
+            plugin.gui().myRentals().open(p);
+            return;
+        }
+
         TerritoryLifeService.RentalContract contract = findRentalContract(p);
         if (contract == null) {
             sendKey(p, "rental_contract_none", "&eYou do not have an active full-plot rental contract.");
+            plugin.gui().myRentals().open(p);
             return;
         }
         Plot plot = plugin.store().getAllPlots().stream()
@@ -1447,21 +1454,6 @@ private void handleUnsell(Player p) {
                 .findFirst().orElse(null);
         if (plot == null) {
             sendKey(p, "rental_contract_plot_missing", "&cThis contract's plot is missing. Ask an admin to run /agadmin doctor scan.");
-            return;
-        }
-
-        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "status";
-        if (action.equals("status") || action.equals("info")) {
-            long remaining = Math.max(0L, contract.expiresAt() - System.currentTimeMillis());
-            sendKey(p, "rental_contract_title", "&6Rental Contract &8- &f{PLOT}", Map.of(
-                    "PLOT", getReadablePlotName(plot)));
-            sendKey(p, "rental_contract_terms", "&7Rent: &6{RENT} &8| &7Deposit: &6{DEPOSIT}", Map.of(
-                    "RENT", plugin.eco().format(contract.rent(), CurrencyType.VAULT),
-                    "DEPOSIT", plugin.eco().format(contract.deposit(), CurrencyType.VAULT)));
-            sendKey(p, "rental_contract_remaining", "&7Remaining: &b{DAYS} day(s), {HOURS} hour(s)", Map.of(
-                    "DAYS", Long.toString(Math.max(0L, remaining / 86_400_000L)),
-                    "HOURS", Long.toString((remaining / 3_600_000L) % 24L)));
-            sendKey(p, "rental_contract_actions", "&e/ag rental renew &7or &e/ag rental cancel confirm");
             return;
         }
 

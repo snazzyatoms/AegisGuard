@@ -53,6 +53,8 @@ import com.aegisguard.gui.WorldControlsGUI.WorldControlsHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
 import com.aegisguard.gui.ZoneBrowseGUI.ZoneBrowseHolder;
 import com.aegisguard.gui.ZoneTenantGUI.ZoneTenantHolder;
+import com.aegisguard.gui.RentConfirmGUI.RentConfirmHolder;
+import com.aegisguard.gui.MyRentalsGUI.MyRentalsHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 
 import org.bukkit.ChatColor;
@@ -135,6 +137,8 @@ public class GUIListener implements Listener {
                 || holder instanceof MigrationPreviewHolder
                 || holder instanceof ZoneBrowseHolder
                 || holder instanceof ZoneTenantHolder
+                || holder instanceof RentConfirmHolder
+                || holder instanceof MyRentalsHolder
                 || holder instanceof LocalMarketHolder
                 || holder instanceof StallListHolder
                 || holder instanceof StallManageHolder
@@ -269,6 +273,12 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof ZoneTenantHolder castHolder) {
             plugin.gui().zoneTenant().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof RentConfirmHolder castHolder) {
+            plugin.gui().rentConfirm().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof MyRentalsHolder castHolder) {
+            plugin.gui().myRentals().handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotMarketHolder castHolder) {
             plugin.gui().market().handleClick(player, e, castHolder);

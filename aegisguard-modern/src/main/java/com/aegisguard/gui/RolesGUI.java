@@ -7,7 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -20,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RolesGUI
@@ -27,9 +33,12 @@ import java.util.UUID;
  * - Also manages per-role flag permissions via a submenu.
  * - Fully localized (Codex-backed) with safe fallbacks + title clamp.
  */
-public class RolesGUI {
+public class RolesGUI implements Listener {
 
     private final AegisGuard plugin;
+    private final Map<UUID, NicknamePrompt> pendingNicknames = new ConcurrentHashMap<>();
+
+    private record NicknamePrompt(UUID plotId, UUID targetId) {}
 
     private static final List<String> ROLE_FLAG_KEYS = List.of(
             "PVP",
@@ -457,8 +466,10 @@ public class RolesGUI {
             if (meta != null) {
                 meta.setOwningPlayer(member);
 
+                String nickname = plot.getRoleNickname(uuid);
+                String shown = (nickname != null && !nickname.isBlank()) ? nickname : name;
                 String displayName = t(player, "roles_member_name",
-                        Map.of("PLAYER", name),
+                        Map.of("PLAYER", shown),
                         "&e{PLAYER}"
                 );
                 meta.setDisplayName(GUIManager.color(displayName));
@@ -472,6 +483,11 @@ public class RolesGUI {
                         "&7Role: &f{ROLE}"
                 );
                 lore.add(GUIManager.color(roleLine));
+                if (nickname != null && !nickname.isBlank()) {
+                    lore.add(GUIManager.color(t(player, "roles_member_account_line",
+                            Map.of("PLAYER", name),
+                            "&7Account: &f{PLAYER}")));
+                }
                 lore.add(" ");
 
                 String clickLine = t(player, "roles_member_click_lore", "&eClick to Edit Role & Permissions");
@@ -487,11 +503,13 @@ public class RolesGUI {
                 Material.WRITABLE_BOOK,
                 t(player, "roles_guide_name", "&eRoles & Access Guide"),
                 tl(player, "roles_guide_lore", List.of(
-                        "&7Add nearby players, assign a role,",
-                        "&7then tune that role's permissions.",
+                        "&71. Add a nearby player",
+                        "&72. Assign a role from the list",
+                        "&73. Optional: set a nickname label",
+                        "&74. Edit role flags if needed",
                         " ",
-                        "&8Owner and protected staff roles cannot",
-                        "&8be removed through member controls."
+                        "&8Owner is not assignable here.",
+                        "&8Capacity limits new trusted members."
                 ))
         ));
         inv.setItem(47, GUIManager.createItem(
@@ -502,7 +520,7 @@ public class RolesGUI {
                         "&7Current capacity: &f{MAX}",
                         "&8Plot Ascension unlocks more capacity."
                 )).stream().map(line -> line
-                        .replace("{USED}", String.valueOf(members.size()))
+                        .replace("{USED}", String.valueOf(plot.countTrustedMembers()))
                         .replace("{MAX}", String.valueOf(plot.getMaxMembers()))).toList()
         ));
         inv.setItem(51, GUIManager.createItem(
@@ -788,6 +806,26 @@ public class RolesGUI {
                 tl(player, "remove_trusted_lore", List.of("&7Revoke all access."))
         ));
 
+        String nickname = plot.getRoleNickname(target.getUniqueId());
+        List<String> nickLore = new ArrayList<>(tl(player, "roles_nickname_button_lore", List.of(
+                "&7Set a plot-local display label",
+                "&7for this member (max 24 chars).",
+                " ",
+                "&eClick, then type in chat",
+                "&8Type &fcancel &8to abort."
+        )));
+        if (nickname != null && !nickname.isBlank()) {
+            nickLore.add(0, GUIManager.color(t(player, "roles_nickname_current_line",
+                    Map.of("NICK", nickname),
+                    "&7Current: &f{NICK}")));
+            nickLore.add(1, " ");
+        }
+        inv.setItem(21, GUIManager.createItem(
+                Material.NAME_TAG,
+                t(player, "button_roles_nickname", "&eRename Nickname"),
+                nickLore
+        ));
+
         String roleDisplay = (currentRole != null && !currentRole.equalsIgnoreCase("visitor"))
                 ? getRoleDisplayName(player, currentRole)
                 : t(player, "roles_unassigned", "Unassigned");
@@ -1065,6 +1103,12 @@ public class RolesGUI {
         if (slot == 19 && page > 0) { openManageMenu(player, plot, target, page - 1); return; }
         if (slot == 25 && page < maxPage) { openManageMenu(player, plot, target, page + 1); return; }
 
+        // Nickname rename via chat prompt
+        if (slot == 21) {
+            beginNicknamePrompt(player, plot, target);
+            return;
+        }
+
         // Remove trusted
         if (slot == 22) {
             // v1.2.6: Safety check - prevent owner self-removal and enforce admin override
@@ -1104,12 +1148,105 @@ public class RolesGUI {
 
             String newRole = roles.get(index);
             if (newRole == null || newRole.isBlank()) return;
+            if (newRole.equalsIgnoreCase("owner")) {
+                plugin.effects().playError(player);
+                plugin.msg().send(player, "roles_owner_not_assignable", Map.of());
+                return;
+            }
+
+            String existing = plot.getRole(target.getUniqueId());
+            boolean alreadyCounted = existing != null
+                    && !existing.isBlank()
+                    && !existing.equalsIgnoreCase("visitor")
+                    && !existing.equalsIgnoreCase("default")
+                    && !existing.equalsIgnoreCase("none");
+            if (!alreadyCounted && plot.isAtMemberCapacity()) {
+                plugin.effects().playError(player);
+                player.sendMessage(GUIManager.color(t(player, "roles_capacity_full",
+                        Map.of("MAX", String.valueOf(plot.getMaxMembers())),
+                        "&cThis plot is at capacity (&f{MAX}&c members).")));
+                return;
+            }
 
             plugin.store().addPlayerRole(plot, target.getUniqueId(), newRole);
             plugin.msg().send(player, "role_set_to", Map.of("PLAYER", safeName(target), "ROLE", getRoleDisplayName(player, newRole)));
             plugin.effects().playConfirm(player);
             openRolesMenu(player, plot, 0);
         }
+    }
+
+    private void beginNicknamePrompt(Player player, Plot plot, OfflinePlayer target) {
+        if (player == null || plot == null || target == null || target.getUniqueId() == null) return;
+        pendingNicknames.put(player.getUniqueId(), new NicknamePrompt(plot.getPlotId(), target.getUniqueId()));
+        player.closeInventory();
+        player.sendMessage(GUIManager.color(t(player, "roles_nickname_prompt",
+                Map.of("PLAYER", safeName(target)),
+                "&eType a nickname for &f{PLAYER}&e in chat (max 24), or &fcancel&e.")));
+        plugin.effects().playMenuFlip(player);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onNicknameChat(AsyncPlayerChatEvent e) {
+        NicknamePrompt prompt = pendingNicknames.remove(e.getPlayer().getUniqueId());
+        if (prompt == null) return;
+        e.setCancelled(true);
+
+        Player player = e.getPlayer();
+        String raw = e.getMessage() == null ? "" : e.getMessage().trim();
+        plugin.runMain(player, () -> finishNicknamePrompt(player, prompt, raw));
+    }
+
+    @EventHandler
+    public void onNicknameQuit(PlayerQuitEvent e) {
+        pendingNicknames.remove(e.getPlayer().getUniqueId());
+    }
+
+    private void finishNicknamePrompt(Player player, NicknamePrompt prompt, String raw) {
+        Plot plot = plugin.store().getAllPlots().stream()
+                .filter(p -> p != null && prompt.plotId().equals(p.getPlotId()))
+                .findFirst().orElse(null);
+        if (plot == null || !canManagePlot(player, plot)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(prompt.targetId());
+        if (!plot.canModifyMember(player, prompt.targetId(), plugin)) {
+            plugin.effects().playError(player);
+            openRolesMenu(player, plot, 0);
+            return;
+        }
+
+        if (raw.equalsIgnoreCase("cancel") || raw.equalsIgnoreCase("c")) {
+            player.sendMessage(GUIManager.color(t(player, "roles_nickname_cancelled", "&7Nickname rename cancelled.")));
+            openManageMenu(player, plot, target, 0);
+            return;
+        }
+        if (raw.equalsIgnoreCase("clear") || raw.equalsIgnoreCase("none") || raw.equalsIgnoreCase("reset")) {
+            plot.clearRoleNickname(prompt.targetId());
+            plugin.store().savePlotSync(plot);
+            player.sendMessage(GUIManager.color(t(player, "roles_nickname_cleared",
+                    Map.of("PLAYER", safeName(target)),
+                    "&aCleared nickname for &f{PLAYER}&a.")));
+            plugin.effects().playConfirm(player);
+            openManageMenu(player, plot, target, 0);
+            return;
+        }
+
+        plot.setRoleNickname(prompt.targetId(), raw);
+        String applied = plot.getRoleNickname(prompt.targetId());
+        if (applied == null) {
+            plugin.effects().playError(player);
+            player.sendMessage(GUIManager.color(t(player, "roles_nickname_invalid",
+                    "&cThat nickname is empty or invalid.")));
+            openManageMenu(player, plot, target, 0);
+            return;
+        }
+        plugin.store().savePlotSync(plot);
+        player.sendMessage(GUIManager.color(t(player, "roles_nickname_set",
+                Map.of("PLAYER", safeName(target), "NICK", applied),
+                "&aSet nickname for &f{PLAYER}&a to &e{NICK}&a.")));
+        plugin.effects().playConfirm(player);
+        openManageMenu(player, plot, target, 0);
     }
 
     public void handleRoleFlagsClick(Player player, InventoryClickEvent e, RoleFlagsHolder holder) {
@@ -1237,7 +1374,7 @@ public class RolesGUI {
         if (roles == null) roles = List.of();
 
         List<String> out = new ArrayList<>(roles);
-        out.removeIf(r -> r == null || r.trim().isEmpty());
+        out.removeIf(r -> r == null || r.trim().isEmpty() || r.equalsIgnoreCase("owner"));
 
         out.sort(Comparator
                 .comparingInt((String r) -> rolePriority(configRoleKey(r))).reversed()

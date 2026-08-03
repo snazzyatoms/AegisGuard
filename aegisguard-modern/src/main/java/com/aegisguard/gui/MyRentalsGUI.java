@@ -1,0 +1,411 @@
+package com.aegisguard.gui;
+
+import com.aegisguard.AegisGuard;
+import com.aegisguard.data.Plot;
+import com.aegisguard.data.Zone;
+import com.aegisguard.economy.CurrencyType;
+import com.aegisguard.territory.TerritoryLifeService;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+
+/**
+ * Unified hub for a player's active full-plot contracts and zone rentals.
+ */
+public class MyRentalsGUI {
+
+    private static final int ITEMS_PER_PAGE = 45;
+
+    private final AegisGuard plugin;
+
+    public MyRentalsGUI(AegisGuard plugin) {
+        this.plugin = plugin;
+    }
+
+    public static final class MyRentalsHolder implements InventoryHolder {
+        private final int page;
+        private final List<RentalEntry> entries;
+
+        public MyRentalsHolder(List<RentalEntry> entries, int page) {
+            this.entries = entries == null ? List.of() : entries;
+            this.page = page;
+        }
+
+        public int getPage() { return page; }
+        public List<RentalEntry> getEntries() { return entries; }
+
+        @Override
+        public Inventory getInventory() { return null; }
+    }
+
+    public record RentalEntry(Kind kind, UUID plotId, String zoneName) {
+        public enum Kind { FULL_PLOT, ZONE }
+    }
+
+    public void open(Player player) {
+        open(player, 0);
+    }
+
+    public void open(Player player, int page) {
+        if (player == null) return;
+        List<RentalEntry> entries = collectEntries(player.getUniqueId());
+
+        Inventory inv = Bukkit.createInventory(
+                new MyRentalsHolder(entries, page),
+                54,
+                plugin.gui().title(player, "my_rentals_title", "&6My Rentals")
+        );
+
+        ItemStack filler = GUIManager.getFiller();
+        for (int i = 45; i < 54; i++) inv.setItem(i, filler);
+
+        int maxPage = Math.max(0, (int) Math.ceil(entries.size() / (double) ITEMS_PER_PAGE) - 1);
+        int safePage = Math.max(0, Math.min(page, maxPage));
+        int start = safePage * ITEMS_PER_PAGE;
+        int end = Math.min(entries.size(), start + ITEMS_PER_PAGE);
+
+        int slot = 0;
+        for (int idx = start; idx < end; idx++) {
+            RentalEntry entry = entries.get(idx);
+            Plot plot = findPlot(entry.plotId());
+            if (plot == null) continue;
+
+            if (entry.kind() == RentalEntry.Kind.FULL_PLOT) {
+                inv.setItem(slot++, buildFullPlotItem(player, plot));
+            } else {
+                Zone zone = findZone(plot, entry.zoneName());
+                if (zone == null) continue;
+                inv.setItem(slot++, buildZoneItem(player, plot, zone));
+            }
+        }
+
+        if (entries.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(
+                    Material.GRAY_DYE,
+                    tr(player, "my_rentals_empty_name", "&7No Active Rentals"),
+                    trList(player, "my_rentals_empty_lore", List.of(
+                            "&7You are not renting any full plots",
+                            "&7or zones right now.",
+                            " ",
+                            "&8Browse Real Estate or Local Market",
+                            "&8to find rentals."
+                    ))
+            ));
+        }
+
+        inv.setItem(45, GUIManager.createItem(
+                Material.WRITABLE_BOOK,
+                tr(player, "my_rentals_guide_name", "&eRentals Guide"),
+                trList(player, "my_rentals_guide_lore", List.of(
+                        "&7Right-click: renew / extend",
+                        "&7Shift-right-click: cancel (full-plot)",
+                        "&7Zones: right-click opens room controls"
+                ))
+        ));
+
+        if (safePage > 0) {
+            inv.setItem(46, GUIManager.createItem(Material.ARROW,
+                    tr(player, "button_prev", "&fPrevious Page"),
+                    trList(player, "button_prev_lore", List.of("&7Go to the previous page."))));
+        }
+        if (safePage < maxPage) {
+            inv.setItem(52, GUIManager.createItem(Material.ARROW,
+                    tr(player, "button_next", "&fNext Page"),
+                    trList(player, "button_next_lore", List.of("&7Go to the next page."))));
+        }
+        inv.setItem(53, GUIManager.createItem(Material.PAPER,
+                tr(player, "button_page", "&7Page: &f{PAGE}")
+                        .replace("{PAGE}", (safePage + 1) + "/" + (maxPage + 1)),
+                List.of(GUIManager.color("&7 "))));
+
+        inv.setItem(48, GUIManager.createItem(Material.ARROW,
+                tr(player, "button_back", "&fBack"),
+                trList(player, "back_lore", List.of("&7Return to the main menu."))));
+        inv.setItem(50, GUIManager.createItem(Material.BARRIER,
+                tr(player, "button_exit", "&cClose"),
+                trList(player, "exit_lore", List.of("&7Close this menu."))));
+
+        player.openInventory(inv);
+        plugin.effects().playMenuOpen(player);
+    }
+
+    public void handleClick(Player player, InventoryClickEvent e, MyRentalsHolder holder) {
+        if (player == null || holder == null) return;
+        e.setCancelled(true);
+        if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
+        if (e.getCurrentItem() == null || e.getCurrentItem().getType().isAir()) return;
+
+        int slot = e.getRawSlot();
+        int page = holder.getPage();
+        List<RentalEntry> entries = holder.getEntries();
+        int maxPage = Math.max(0, (int) Math.ceil(entries.size() / (double) ITEMS_PER_PAGE) - 1);
+
+        if (slot == 48) {
+            plugin.gui().openMain(player);
+            return;
+        }
+        if (slot == 50) {
+            player.closeInventory();
+            plugin.effects().playMenuClose(player);
+            return;
+        }
+        if (slot == 46 && page > 0) {
+            open(player, page - 1);
+            return;
+        }
+        if (slot == 52 && page < maxPage) {
+            open(player, page + 1);
+            return;
+        }
+        if (slot >= ITEMS_PER_PAGE) return;
+
+        int index = (page * ITEMS_PER_PAGE) + slot;
+        if (index < 0 || index >= entries.size()) return;
+
+        RentalEntry entry = entries.get(index);
+        Plot plot = findPlot(entry.plotId());
+        if (plot == null) {
+            plugin.effects().playError(player);
+            open(player, page);
+            return;
+        }
+
+        if (entry.kind() == RentalEntry.Kind.FULL_PLOT) {
+            TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
+            if (contract == null || !contract.renterId().equals(player.getUniqueId())) {
+                plugin.effects().playError(player);
+                open(player, page);
+                return;
+            }
+            if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
+                plugin.gui().rentConfirm().openPlotCancel(player, plot, contract.deposit(), "my_rentals");
+                return;
+            }
+            if (e.getClick().isRightClick()) {
+                plugin.gui().rentConfirm().openPlotRenew(player, plot, contract.rent(), contract.termDays(), "my_rentals");
+                return;
+            }
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+
+        Zone zone = findZone(plot, entry.zoneName());
+        if (zone == null || !zone.isRentedBy(player.getUniqueId())) {
+            plugin.effects().playError(player);
+            open(player, page);
+            return;
+        }
+        if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
+            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
+            return;
+        }
+        if (e.getClick().isRightClick()) {
+            plugin.gui().zoneTenant().open(player, plot, zone);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (e.getClick().isLeftClick()) {
+            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
+        }
+    }
+
+    public void executePlotRenew(Player player, Plot plot) {
+        if (player == null || plot == null) return;
+        TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
+        if (contract == null || !contract.renterId().equals(player.getUniqueId())) {
+            plugin.effects().playError(player);
+            send(player, "rental_contract_only_renter", "&cOnly the renter can renew this contract.");
+            open(player);
+            return;
+        }
+        OfflinePlayer owner = Bukkit.getOfflinePlayer(contract.ownerId());
+        if (!plugin.eco().withdraw(player, contract.rent(), CurrencyType.VAULT)) {
+            plugin.effects().playError(player);
+            send(player, "rental_contract_need_funds",
+                    "&cYou need {AMOUNT} to renew."
+                            .replace("{AMOUNT}", plugin.eco().format(contract.rent(), CurrencyType.VAULT)));
+            open(player);
+            return;
+        }
+        if (plugin.vault() == null || !plugin.vault().deposit(owner, contract.rent())) {
+            if (plugin.vault() == null || !plugin.vault().deposit(player, contract.rent())) {
+                plugin.territoryLife().addSettlement(player.getUniqueId(), contract.rent(), "Failed rental renewal refund");
+            }
+            plugin.effects().playError(player);
+            send(player, "rental_contract_payment_failed", "&cRenewal payment failed. No contract time was added.");
+            open(player);
+            return;
+        }
+        plugin.territoryLife().renew(plot.getPlotId());
+        plot.setRentEndTime(contract.expiresAt());
+        plugin.store().savePlotSync(plot);
+        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "RENTAL_RENEWED",
+                "Contract renewed for " + contract.termDays() + " day(s).");
+        plugin.territoryLife().queueNotice(contract.ownerId(), "&aA rental contract was renewed for &e"
+                + contract.termDays() + " day(s)&a.");
+        plugin.effects().playConfirm(player);
+        send(player, "rental_contract_renewed",
+                "&aRental renewed for &e{DAYS} day(s)&a."
+                        .replace("{DAYS}", Integer.toString(contract.termDays())));
+        open(player);
+    }
+
+    public void executePlotCancel(Player player, Plot plot) {
+        if (player == null || plot == null) return;
+        TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
+        if (contract == null) {
+            plugin.effects().playError(player);
+            open(player);
+            return;
+        }
+        boolean renter = contract.renterId().equals(player.getUniqueId());
+        boolean owner = contract.ownerId().equals(player.getUniqueId());
+        if (!renter && !owner) {
+            plugin.effects().playError(player);
+            send(player, "rental_contract_not_party", "&cYou are not part of this rental contract.");
+            open(player);
+            return;
+        }
+        if (owner && !plugin.getConfig().getBoolean("full_plot_renting.allow_owner_early_cancel", false)) {
+            plugin.effects().playError(player);
+            send(player, "rental_contract_owner_cancel_disabled",
+                    "&cOwners cannot end active contracts early on this server.");
+            open(player);
+            return;
+        }
+        plugin.territoryLife().removeContract(plot.getPlotId());
+        plugin.territoryLife().refundDeposit(contract, "Deposit after early rental cancellation");
+        plot.clearRenter();
+        plugin.store().savePlotSync(plot);
+        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "RENTAL_CANCELLED",
+                "Contract ended early by " + (owner ? "owner" : "renter") + ".");
+        plugin.territoryLife().queueNotice(owner ? contract.renterId() : contract.ownerId(),
+                "&eThe rental contract for plot &f" + plot.getPlotId() + " &ewas ended early.");
+        plugin.effects().playConfirm(player);
+        send(player, "rental_contract_cancelled",
+                "&aRental contract ended. The deposit was refunded or queued for delivery.");
+        open(player);
+    }
+
+    private List<RentalEntry> collectEntries(UUID playerId) {
+        List<RentalEntry> out = new ArrayList<>();
+        if (playerId == null) return out;
+
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null) continue;
+            if (plot.isRentedBy(playerId)) {
+                out.add(new RentalEntry(RentalEntry.Kind.FULL_PLOT, plot.getPlotId(), null));
+            }
+            if (plot.getZones() == null) continue;
+            for (Zone zone : plot.getZones()) {
+                if (zone != null && zone.isRentedBy(playerId)) {
+                    out.add(new RentalEntry(RentalEntry.Kind.ZONE, plot.getPlotId(), zone.getName()));
+                }
+            }
+        }
+
+        out.sort(Comparator
+                .comparing((RentalEntry e) -> e.kind() != RentalEntry.Kind.FULL_PLOT)
+                .thenComparing(e -> {
+                    Plot p = findPlot(e.plotId());
+                    return p == null ? "" : plotDisplayName(p).toLowerCase(Locale.ROOT);
+                })
+                .thenComparing(e -> e.zoneName() == null ? "" : e.zoneName().toLowerCase(Locale.ROOT)));
+        return out;
+    }
+
+    private ItemStack buildFullPlotItem(Player player, Plot plot) {
+        TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
+        List<String> lore = new ArrayList<>();
+        lore.add(GUIManager.color(tr(player, "my_rentals_type_full", "&7Type: &fFull Plot")));
+        lore.add(GUIManager.color(tr(player, "my_rentals_landlord_line", "&7Landlord: &f{PLAYER}")
+                .replace("{PLAYER}", plot.getOwnerName() == null ? "Unknown" : plot.getOwnerName())));
+        if (contract != null) {
+            lore.add(GUIManager.color(tr(player, "my_rentals_price_line", "&7Rent: &6{PRICE}")
+                    .replace("{PRICE}", plugin.eco().format(contract.rent(), CurrencyType.VAULT))));
+            if (contract.deposit() > 0.0D) {
+                lore.add(GUIManager.color(tr(player, "my_rentals_deposit_line", "&7Deposit: &6{DEPOSIT}")
+                        .replace("{DEPOSIT}", plugin.eco().format(contract.deposit(), CurrencyType.VAULT))));
+            }
+            long remaining = Math.max(0L, contract.expiresAt() - System.currentTimeMillis());
+            lore.add(GUIManager.color(tr(player, "my_rentals_remaining_line",
+                    "&7Remaining: &b{DAYS}d {HOURS}h")
+                    .replace("{DAYS}", Long.toString(remaining / 86_400_000L))
+                    .replace("{HOURS}", Long.toString((remaining / 3_600_000L) % 24L))));
+        }
+        lore.add(" ");
+        lore.add(GUIManager.color(tr(player, "my_rentals_full_actions",
+                "&eRight-click renew &8| &cShift-right cancel")));
+        return GUIManager.createItem(Material.GOLDEN_HOE,
+                tr(player, "my_rentals_full_name", "&6{PLOT}").replace("{PLOT}", plotDisplayName(plot)),
+                lore);
+    }
+
+    private ItemStack buildZoneItem(Player player, Plot plot, Zone zone) {
+        List<String> lore = new ArrayList<>();
+        lore.add(GUIManager.color(tr(player, "my_rentals_type_zone", "&7Type: &fZone")));
+        lore.add(GUIManager.color(tr(player, "my_rentals_plot_line", "&7Plot: &f{PLOT}")
+                .replace("{PLOT}", plotDisplayName(plot))));
+        lore.add(GUIManager.color(tr(player, "my_rentals_price_line", "&7Rent: &6{PRICE}")
+                .replace("{PRICE}", plugin.eco().format(zone.getRentPrice(), CurrencyType.VAULT))));
+        lore.add(GUIManager.color(tr(player, "my_rentals_zone_remaining_line", "&7Remaining: &b{TIME}")
+                .replace("{TIME}", zone.getRemainingTimeFormatted())));
+        lore.add(" ");
+        lore.add(GUIManager.color(tr(player, "my_rentals_zone_actions",
+                "&eRight-click room &8| &aLeft-click extend")));
+        return GUIManager.createItem(Material.OAK_DOOR,
+                tr(player, "my_rentals_zone_name", "&a{ZONE}").replace("{ZONE}", safeZoneName(zone)),
+                lore);
+    }
+
+    private Plot findPlot(UUID plotId) {
+        if (plotId == null) return null;
+        return plugin.store().getAllPlots().stream()
+                .filter(p -> p != null && plotId.equals(p.getPlotId()))
+                .findFirst().orElse(null);
+    }
+
+    private Zone findZone(Plot plot, String zoneName) {
+        if (plot == null || zoneName == null || plot.getZones() == null) return null;
+        for (Zone zone : plot.getZones()) {
+            if (zone != null && zoneName.equals(zone.getName())) return zone;
+        }
+        return null;
+    }
+
+    private String plotDisplayName(Plot plot) {
+        if (plot == null) return "Plot";
+        String name = plot.getPlotName();
+        if (name != null && !name.isBlank()) return name;
+        String owner = plot.getOwnerName();
+        return (owner == null || owner.isBlank()) ? "Plot" : owner + "'s Plot";
+    }
+
+    private String safeZoneName(Zone zone) {
+        String zoneName = zone == null ? null : zone.getName();
+        return (zoneName == null || zoneName.isBlank()) ? "Zone" : zoneName;
+    }
+
+    private String tr(Player player, String key, String fallback) {
+        return plugin.gui().tr(player, key, fallback);
+    }
+
+    private List<String> trList(Player player, String key, List<String> fallback) {
+        return plugin.gui().trList(player, key, fallback);
+    }
+
+    private void send(Player player, String key, String fallback) {
+        player.sendMessage(GUIManager.color(tr(player, key, fallback)));
+    }
+}

@@ -9,9 +9,10 @@ Review these sections in order:
 1. `localization`
    Choose your default language and fallback language.
 2. `hooks`
-   Disable integrations you do not use.
+   All hooks are **off by default**. Enable only the integrations you actually use.
 3. `storage`
-   Keep `yml` for smaller servers. Move to database-backed storage later if needed.
+   Keep `yml` for smaller servers. Move to `sqlite`, `mysql`, or `mariadb` later if needed.
+   Keep `storage.backend` and `storage.type` equal. Plot data only; satellite files stay YAML.
 4. `economy`
    Decide whether plots use Vault, ClaimBlocks, or both.
 5. `claims`
@@ -49,12 +50,12 @@ Review these sections in order:
 
 Use these ideas if your server is new, private, or lightly staffed:
 
-- `storage.type: "yml"`
+- `storage.type: "yml"` (and matching `storage.backend`)
 - `claim_blocks.exchange.profile: safe_small`
 - `expansions.approval_mode: QUEUE`
 - `upkeep.enabled: false`
 - `group_plots.enabled: true`
-- `hooks.discord.enabled: false` if you do not actually use Discord webhooks
+- Leave map/Discord/protection hooks disabled unless you need them
 
 Why:
 This keeps the server easy to manage and lowers the chance of economy abuse.
@@ -77,10 +78,10 @@ This keeps player freedom high while still giving staff control over risky chang
 
 Use these ideas when claims, trading, and staff activity are heavy:
 
-- Move away from `yml` storage when your dataset grows
+- Move away from `yml` storage when your dataset grows (`sqlite`/`mysql`/`mariadb`)
 - `claim_blocks.exchange.profile: fast_large`
-- `hooks.protection_compat.enabled: true`
-- Disable any unused map hooks to reduce noise
+- Enable only the protection-compat plugins you actually run
+- Leave unused map hooks disabled
 - Keep `snapshots.enabled: true`
 - Keep `expansions.audit.enabled: true`
 - Keep `territory_activity.enabled: true`
@@ -164,7 +165,7 @@ This controls Rental Contracts 2.0.
 - `allow_owner_early_cancel`: whether owners may end active contracts before expiry
 - `max_active_rentals_per_player`: renter-side anti-abuse limit
 
-Owners list a plot with `/ag rent <price> [days] [deposit]`. Contract participants use `/ag rental status`, `/ag rental renew`, or `/ag rental cancel confirm`.
+Owners list a plot with `/ag rent <price> [days] [deposit]`. Players confirm rent charges in a GUI before Vault withdraws funds. Contract participants use **My Rentals** (menu or `/ag rental status`), renew/extend from there, or `/ag rental renew` / `/ag rental cancel confirm`.
 
 ### `plot_discovery`
 
@@ -234,8 +235,33 @@ Lockdown never changes ownership, permanent roles, or Guest Pass records. Moveme
 
 - `enabled`: enables player alliances and per-plot Alliance Access controls
 - `max_members`: caps alliance membership
+- `invite_expire_minutes`: pending invites older than this many minutes are ignored/pruned; `0` keeps invites indefinitely (legacy)
 
 Alliance membership alone grants no plot access. Plot owners opt in separately for entry, interaction, containers, building, animals/farms, and friendly PvP; all risky access begins disabled.
+
+### `travel` (Safe Travel)
+
+Shared safety gate for Travel, Routes, checkpoints, plot visits, markets, zones, Spawn, and staff destinations.
+
+- `enabled`: master switch for the shared travel service
+- `cooldown_seconds`: seconds between voluntary teleports (`0` = no cooldown)
+- `require_confirmation` / `confirmation_seconds`: optional second-click confirm before teleporting
+- `block_while_in_combat` / `combat_tag_seconds`: optional combat tag block
+- `safe_search_radius`: Chebyshev radius when searching for a standable block (default `4`)
+- `apply_to_staff`: when false, staff destination teleports skip cooldown/confirm/combat
+- `honor_bypass_permission`: honor `aegis.admin.bypass` / OP for voluntary travel guards
+
+### `storage`
+
+- Allowed values: `yml`, `sqlite`, `mysql`, `mariadb` (legacy `sql` → SQLite)
+- Keep `storage.backend` and `storage.type` **equal**
+- Covers plot/zone/stall records only; `alliances.yml`, `territory-life.yml`, audit, routes, and player prefs stay YAML
+- SQLite always uses `plugins/AegisGuard/aegisguard.db` (`storage.database.file` is currently ignored)
+- Do not commit real MySQL/MariaDB credentials
+
+### `hooks`
+
+All hooks ship **disabled**. Existing installs that already set `enabled: true` keep that value on migration; missing keys are filled as `false`.
 
 ## Good Default Choices
 

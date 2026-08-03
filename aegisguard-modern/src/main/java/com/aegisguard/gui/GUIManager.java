@@ -65,6 +65,8 @@ public class GUIManager {
     private final ZoningGUI zoningGUI;
     private final ZoneBrowseGUI zoneBrowseGUI;
     private final ZoneTenantGUI zoneTenantGUI;
+    private final RentConfirmGUI rentConfirmGUI;
+    private final MyRentalsGUI myRentalsGUI;
 
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
@@ -138,6 +140,8 @@ public class GUIManager {
         this.zoningGUI = new ZoningGUI(plugin);
         this.zoneBrowseGUI = new ZoneBrowseGUI(plugin);
         this.zoneTenantGUI = new ZoneTenantGUI(plugin);
+        this.rentConfirmGUI = new RentConfirmGUI(plugin);
+        this.myRentalsGUI = new MyRentalsGUI(plugin);
 
         // Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
@@ -255,6 +259,8 @@ public class GUIManager {
     public ZoningGUI zoning() { return zoningGUI; }
     public ZoneBrowseGUI zoneBrowse() { return zoneBrowseGUI; }
     public ZoneTenantGUI zoneTenant() { return zoneTenantGUI; }
+    public RentConfirmGUI rentConfirm() { return rentConfirmGUI; }
+    public MyRentalsGUI myRentals() { return myRentalsGUI; }
 
     // Plot Status Codex
     public PlotStatusGUI plotStatus() { return plotStatusGUI; }

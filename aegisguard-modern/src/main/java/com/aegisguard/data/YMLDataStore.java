@@ -177,6 +177,19 @@ public class YMLDataStore implements IDataStore {
                         }
                     }
 
+                    if (sec.isConfigurationSection("role-nicknames")) {
+                        ConfigurationSection nicks = sec.getConfigurationSection("role-nicknames");
+                        if (nicks != null) {
+                            for (String pUuid : nicks.getKeys(false)) {
+                                try {
+                                    UUID u = UUID.fromString(pUuid);
+                                    if (u.equals(ownerId)) continue;
+                                    plot.setRoleNickname(u, nicks.getString(pUuid));
+                                } catch (Exception ignored) {}
+                            }
+                        }
+                    }
+
                     String roleFlagsBlob = sec.getString("role-flags");
                     if (roleFlagsBlob != null && !roleFlagsBlob.isEmpty()) {
                         plot.deserializeRoleFlags(roleFlagsBlob);
@@ -491,6 +504,14 @@ public class YMLDataStore implements IDataStore {
             if (entry.getKey() == null) continue;
             if (ownerId != null && ownerId.equals(entry.getKey())) continue;
             roles.set(entry.getKey().toString(), entry.getValue());
+        }
+
+        ConfigurationSection nicknames = sec.createSection("role-nicknames");
+        for (Map.Entry<UUID, String> entry : plot.getRoleNicknames().entrySet()) {
+            if (entry.getKey() == null) continue;
+            if (ownerId != null && ownerId.equals(entry.getKey())) continue;
+            if (entry.getValue() == null || entry.getValue().isBlank()) continue;
+            nicknames.set(entry.getKey().toString(), entry.getValue());
         }
 
         String roleFlagsBlob = plot.serializeRoleFlags();

@@ -18,7 +18,7 @@ public class MapHookManager {
     private void initialize() {
         // 1. Check for Dynmap
         if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
-            if (plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", true)) {
+            if (plugin.cfg().raw().getBoolean("hooks.dynmap.enabled", false)) {
                 // Initialize DynmapHook
                 this.dynmap = new DynmapHook(plugin);
             }
@@ -26,7 +26,7 @@ public class MapHookManager {
 
         // 2. Check for BlueMap (Wrapped in try-catch for NoClassDefFoundError)
         if (Bukkit.getPluginManager().isPluginEnabled("BlueMap")) {
-            if (plugin.cfg().raw().getBoolean("hooks.bluemap.enabled", true)) {
+            if (plugin.cfg().raw().getBoolean("hooks.bluemap.enabled", false)) {
                 try {
                     this.blueMap = new BlueMapHook(plugin);
                     plugin.getLogger().info("Hooked into BlueMap!");
@@ -38,7 +38,7 @@ public class MapHookManager {
 
         // 3. Check for Pl3xMap / Squaremap (Wrapped in try-catch for NoClassDefFoundError)
         if (Bukkit.getPluginManager().isPluginEnabled("Pl3xMap") || Bukkit.getPluginManager().isPluginEnabled("Squaremap")) {
-            if (plugin.cfg().raw().getBoolean("hooks.pl3xmap.enabled", true)) {
+            if (plugin.cfg().raw().getBoolean("hooks.pl3xmap.enabled", false)) {
                 try {
                     this.pl3xMap = new Pl3xMapHook(plugin);
                     plugin.getLogger().info("Hooked into Pl3xMap!");

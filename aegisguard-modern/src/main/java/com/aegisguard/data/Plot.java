@@ -47,6 +47,8 @@ public class Plot {
 
     // --- MEMBERS & ROLES ---
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
+    // Plot-local display labels only; permission tokens still come from playerRoles / config roles.
+    private final Map<UUID, String> roleNicknames = new ConcurrentHashMap<>();
     private final List<UUID> bannedPlayers = new CopyOnWriteArrayList<>();
 
     // Role flag overrides (role -> flag -> TriState)
@@ -337,6 +339,7 @@ public class Plot {
 
         if (role == null || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none")) {
             playerRoles.remove(playerUUID);
+            roleNicknames.remove(playerUUID);
         } else {
             playerRoles.put(playerUUID, role.toLowerCase(Locale.ROOT));
             bannedPlayers.remove(playerUUID);
@@ -347,6 +350,86 @@ public class Plot {
         if (playerUUID == null) return;
         if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
         playerRoles.remove(playerUUID);
+        roleNicknames.remove(playerUUID);
+    }
+
+    public Map<UUID, String> getRoleNicknames() {
+        return roleNicknames;
+    }
+
+    public String getRoleNickname(UUID playerUUID) {
+        if (playerUUID == null) return null;
+        String nick = roleNicknames.get(playerUUID);
+        return (nick == null || nick.isBlank()) ? null : nick;
+    }
+
+    public void setRoleNickname(UUID playerUUID, String nickname) {
+        if (playerUUID == null) return;
+        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
+        if (nickname == null || nickname.isBlank()) {
+            roleNicknames.remove(playerUUID);
+            return;
+        }
+        String cleaned = nickname.replaceAll("[\\u0000-\\u001F\\u007F§]", "").trim();
+        if (cleaned.length() > 24) cleaned = cleaned.substring(0, 24);
+        if (cleaned.isBlank()) {
+            roleNicknames.remove(playerUUID);
+            return;
+        }
+        roleNicknames.put(playerUUID, cleaned);
+    }
+
+    public void clearRoleNickname(UUID playerUUID) {
+        if (playerUUID == null) return;
+        roleNicknames.remove(playerUUID);
+    }
+
+    /** Count members that consume territory capacity (non-visitor assigned roles). */
+    public int countTrustedMembers() {
+        int count = 0;
+        for (Map.Entry<UUID, String> entry : playerRoles.entrySet()) {
+            if (entry.getKey() == null) continue;
+            if (isOwner(entry.getKey()) || SERVER_OWNER_UUID.equals(entry.getKey())) continue;
+            String role = entry.getValue();
+            if (role == null || role.isBlank()) continue;
+            if (role.equalsIgnoreCase("visitor") || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none")) {
+                continue;
+            }
+            count++;
+        }
+        return count;
+    }
+
+    public boolean isAtMemberCapacity() {
+        return countTrustedMembers() >= getMaxMembers();
+    }
+
+    public String serializeRoleNicknames() {
+        if (roleNicknames.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (Map.Entry<UUID, String> entry : roleNicknames.entrySet()) {
+            if (entry.getKey() == null) continue;
+            String label = entry.getValue();
+            if (label == null || label.isBlank()) continue;
+            String encoded = Base64.getEncoder().encodeToString(label.getBytes(StandardCharsets.UTF_8));
+            entries.add(entry.getKey() + "|" + encoded);
+        }
+        return String.join("~", entries);
+    }
+
+    public void deserializeRoleNicknames(String serialized) {
+        roleNicknames.clear();
+        if (serialized == null || serialized.isBlank()) return;
+        for (String entry : serialized.split("~")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 2);
+            if (parts.length != 2) continue;
+            try {
+                UUID id = UUID.fromString(parts[0]);
+                String label = new String(Base64.getDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+                setRoleNickname(id, label);
+            } catch (Exception ignored) {}
+        }
     }
 
     public boolean isOwner(UUID uuid) {

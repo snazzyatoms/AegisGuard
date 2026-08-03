@@ -90,10 +90,12 @@ public class AGConfig {
         config.addDefault("leveling.expand_plot_on_levelup", false); // Default OFF as requested
         config.addDefault("leveling.expansion_amount", 5);
 
-        // Hooks
-        config.addDefault("hooks.bluemap.enabled", true);
-        config.addDefault("hooks.pl3xmap.enabled", true);
+        // Hooks (opt-in; missing keys stay disabled)
+        config.addDefault("hooks.dynmap.enabled", false);
+        config.addDefault("hooks.bluemap.enabled", false);
+        config.addDefault("hooks.pl3xmap.enabled", false);
         config.addDefault("hooks.discord.enabled", false);
+        config.addDefault("hooks.protection_compat.enabled", false);
         config.addDefault("claims.merging.enabled", true);
 
         // ✅ Leveling upgrade payment options (Vault vs Claim Blocks)
@@ -170,8 +172,8 @@ public class AGConfig {
 
         this.discordEnabled = config.getBoolean("hooks.discord.enabled", false);
         this.mergeEnabled = config.getBoolean("claims.merging.enabled", true);
-        this.bluemapEnabled = config.getBoolean("hooks.bluemap.enabled", true);
-        this.pl3xmapEnabled = config.getBoolean("hooks.pl3xmap.enabled", true);
+        this.bluemapEnabled = config.getBoolean("hooks.bluemap.enabled", false);
+        this.pl3xmapEnabled = config.getBoolean("hooks.pl3xmap.enabled", false);
 
         // --- Leveling Expansion Settings ---
         this.levelingExpansionEnabled = config.getBoolean("leveling.expand_plot_on_levelup", false);

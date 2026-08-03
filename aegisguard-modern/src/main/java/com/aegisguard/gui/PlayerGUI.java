@@ -249,6 +249,15 @@ public class PlayerGUI {
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
 
+        // My Rentals (Slot 33)
+        inv.setItem(33, GUIManager.createItem(
+                Material.GOLDEN_HOE,
+                t(player, "button_my_rentals", "&6My Rentals"),
+                tl(player, "my_rentals_button_lore", List.of(
+                        "&7View full-plot and zone rentals,",
+                        "&7renew, extend, or cancel contracts."))
+        ));
+
         // ClaimBlocks Exchange (Slot 30)
         boolean exchangeService = plugin.exchange() != null;
         boolean exchangeEnabled = false;
@@ -420,6 +429,8 @@ public class PlayerGUI {
                 if (preferLocal) plugin.gui().localMarket().open(player, plot);
                 else plugin.gui().market().open(player, 0);
             }
+
+            case 33 -> plugin.gui().myRentals().open(player);
 
             case 12 -> {
                 if (plot != null && canManage) plugin.gui().flags().open(player, plot);

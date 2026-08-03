@@ -527,7 +527,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (isProtectionActive(plot, "animals", true)) {
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.hasPermission(p.getUniqueId(), "ANIMALS", plugin)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", p, target.getLocation());
         }
@@ -553,7 +554,8 @@ public class ProtectionManager implements Listener {
             return;
         }
 
-        if (isProtectionActive(plot, "animals", true)) {
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.hasPermission(p.getUniqueId(), "ANIMALS", plugin)) {
             e.setCancelled(true);
             plugin.effects().playEffect("animals", "deny", p, clicked.getLocation());
         }

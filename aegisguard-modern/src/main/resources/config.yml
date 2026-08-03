@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1279
+config_schema: 1280
 
 
 # ------------------------------------------------------------------------------
@@ -118,11 +118,13 @@ localization:
 # ==============================================================================
 # Hooks and integrations
 # ==============================================================================
-# Disable integrations you do not use. That keeps startup cleaner and avoids
-# unnecessary hook checks on smaller servers.
+# All hooks are OFF by default (opt-in). Enable only what your server actually
+# uses so startup stays clean and unused integrations are never probed.
+# Existing installs that already set enabled: true keep their values; migration
+# only fills missing keys and never overwrites a custom true/false choice.
 hooks:
   dynmap:
-    enabled: true
+    enabled: false
     layer_name: "AegisGuard Plots"
     sync_interval_minutes: 5
     style:
@@ -133,7 +135,7 @@ hooks:
       fill_opacity: 0.35
 
   discord:
-    enabled: true
+    enabled: false
     webhook_url: ""
     events:
       claim_create: true
@@ -141,50 +143,76 @@ hooks:
       admin_actions: true
 
   bluemap:
-    enabled: true
+    enabled: false
     label: "Claims"
 
   pl3xmap:
-    enabled: true
+    enabled: false
 
   protection_compat:
-    enabled: true
+    enabled: false
 
     # EXTERNAL_WINS is the safest mode when multiple protection plugins overlap.
     overlap_policy: EXTERNAL_WINS
     debug_logging: false
     plugins:
       worldguard:
-        enabled: true
+        enabled: false
         priority: 100
       griefprevention:
-        enabled: true
+        enabled: false
         priority: 90
       griefdefender:
-        enabled: true
+        enabled: false
         priority: 90
       towny:
-        enabled: true
+        enabled: false
         priority: 80
       residence:
-        enabled: true
+        enabled: false
         priority: 70
 
 
 # ==============================================================================
 # Storage
 # ==============================================================================
-# YML is easiest for small and medium servers.
-# Database storage is a better long-term fit for larger networks.
+# Chooses where plot / zone / stall data is persisted.
+#
+# Allowed values for backend and type (keep them EQUAL):
+#   yml      - file-per-plot YAML under plugins/AegisGuard/plots/ (best for small/medium)
+#   sqlite   - local SQLite file (single-node without an external DB)
+#   mysql    - external MySQL
+#   mariadb  - external MariaDB (same connection settings as mysql)
+#   sql      - legacy alias; treated as sqlite
+#
+# Keep storage.backend and storage.type the same string. Both keys are read for
+# compatibility with older configs; mismatched values can surprise you.
+#
+# Scope: storage.* covers plot / zone / stall records only. Satellite files always
+# remain YAML regardless of backend (alliances.yml, territory-life.yml, audit,
+# routes, player notification prefs, etc.).
+#
+# Autosave: YML writes use synchronous save-on-change (temp file + atomic move).
+# SQL backends use a connection pool; savePlot is async and savePlotSync waits.
+# There is no separate storage.autosave interval toggle.
+#
+# Switching backends does NOT migrate existing plot data automatically. Plan a
+# manual export/import or keep the previous data folder until verified.
 storage:
+  # Keep these two keys equal (yml | sqlite | mysql | mariadb).
   backend: "yml"
   type: "yml"
 
   database:
+    # Currently ignored for SQLite: the plugin always uses
+    # plugins/AegisGuard/aegisguard.db (hardcoded). Kept for documentation /
+    # future use — do not rely on renaming this file via config yet.
     file: "aegisguard.db"
     host: "localhost"
     port: 3306
     database: "aegisguard"
+    # WARNING: replace these before enabling mysql/mariadb. Do not commit real
+    # credentials into version control or shared config packs.
     username: "root"
     password: "password"
     useSSL: false
@@ -750,27 +778,47 @@ expansions:
 # ==============================================================================
 # Zoning
 # ==============================================================================
+# Sub-regions inside a plot that can be listed for rent independently of a
+# full-plot rental contract. Zone rentals use Vault and the Local Market /
+# Zone Browse GUIs. They do not replace full_plot_renting below.
 zoning:
   enabled: true
+  # Soft cap on how many zones one plot may define.
   max_zones_per_plot: 10
+  # Minimum footprint (blocks) for a newly created zone.
   min_zone_area: 9
+  # Default listing price when an owner opens a zone for rent.
   default_rent_price: 100.0
+  # GUI step when adjusting zone rent price up/down.
   rent_price_step: 50.0
+  # Length of a new or extended zone rental term.
   default_rental_days: 7
+  # When false, owners cannot delete a zone that still has a tenant.
   allow_delete_while_rented: false
+  # When true, the full rent payment goes to the owner (or group treasury).
   landlord_gets_full_rent: true
 
-# Full-plot rental listings (/ag rent, /ag unrent, and the global market).
+# ==============================================================================
+# Full-plot renting
+# ==============================================================================
+# Full-plot rental listings (/ag rent, /ag unrent, market confirm GUI, My Rentals).
 # Renters receive only the permissions listed here; owners retain management control.
+# Deposits are refundable per Territory Life contract rules.
 full_plot_renting:
   enabled: true
+  # Default contract term (days) when an owner omits an explicit term.
   duration_days: 7
+  # Longest owner-selectable contract term.
   maximum_duration_days: 90
+  # Hours before expiry when the renter receives a reminder.
   reminder_hours: 24
+  # Hard safety cap for refundable deposits.
   maximum_deposit: 1000000.0
+  # When true, owners may end active contracts early (deposit still refunded).
   allow_owner_early_cancel: false
   minimum_price: 1.0
   maximum_price: 1000000000.0
+  # Renter-side anti-abuse limit across all plots.
   max_active_rentals_per_player: 3
   renter_permissions:
     - BUILD
@@ -1428,10 +1476,19 @@ protection_effects:
 # ==============================================================================
 # Role management
 # ==============================================================================
+# Server-wide role catalog used by RolesGUI. Owners assign these role IDs to
+# members; optional plot-local nicknames are display-only labels.
+#
 # icon       : Material shown in GUIs
 # name       : Display name shown to players
 # priority   : Higher values represent stronger roles
 # permissions: Internal role capabilities used by AegisGuard
+#
+# Notes:
+# - owner is not assignable through RolesGUI (ownership is separate).
+# - trusted is a member-like access tier kept for plots that already used it.
+# - co_owner includes MANAGE_MEMBERS so they can invite/remove trusted players.
+# - Plot capacity (maxMembers) is enforced when adding a new trusted member.
 roles:
   owner:
     name: "&cOwner"
@@ -1443,7 +1500,7 @@ roles:
     name: "&6Co-Owner"
     icon: GOLDEN_HELMET
     priority: 90
-    permissions: ["MANAGE", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP", "FARM", "REDSTONE", "ANIMALS"]
+    permissions: ["MANAGE", "MANAGE_MEMBERS", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP", "FARM", "REDSTONE", "ANIMALS"]
 
   steward:
     name: "&dSteward"
@@ -1486,6 +1543,12 @@ roles:
     icon: LEAD
     priority: 50
     permissions: ["ANIMALS", "INTERACT"]
+
+  trusted:
+    name: "&bTrusted"
+    icon: PLAYER_HEAD
+    priority: 45
+    permissions: ["INTERACT", "CONTAINERS"]
 
   member:
     name: "&bMember"

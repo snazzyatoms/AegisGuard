@@ -74,6 +74,31 @@ class ConfigMigrationServiceTest {
     }
 
     @Test
+    void migratingPreservesExplicitlyEnabledHooksAndMergesMissingAsFalse(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1279);
+        oldConfig.set("hooks.dynmap.enabled", true);
+        oldConfig.set("hooks.discord.enabled", true);
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        boolean migrated = service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults);
+        assertTrue(migrated);
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        assertEquals(ConfigMigrationService.CURRENT_SCHEMA, migratedConfig.getInt("config_schema"));
+        assertTrue(migratedConfig.getBoolean("hooks.dynmap.enabled"),
+                "Existing enabled hooks must not be force-disabled");
+        assertTrue(migratedConfig.getBoolean("hooks.discord.enabled"));
+        assertFalse(migratedConfig.getBoolean("hooks.bluemap.enabled"),
+                "Missing hook keys should merge shipped false defaults");
+        assertFalse(migratedConfig.getBoolean("hooks.protection_compat.enabled"));
+    }
+
+    @Test
     void migratingAnAlreadyCurrentConfigDoesNotRewriteOrBackUpAnything(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
         File dataFolder = tempDir.toFile();
         File configFile = new File(dataFolder, "config.yml");

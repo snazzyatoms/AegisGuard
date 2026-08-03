@@ -52,7 +52,8 @@ info_lore:
 
 plot_status_button_title: '&b✦ Estado de Parcela'
 plot_status_button_lore:
-- '&7Ver estado y detalles de la parcela.'
+  - '&7Ver estado, fusionar reclamos,'
+  - '&7transferir o regalar bloques.'
 
 visit_gui_title: '&3🧭 Menú de Viaje'
 visit_button_lore:
@@ -520,8 +521,9 @@ zone_tenant_guest_build_lore:
 - '&7y rompan bloques en esta habitación.'
 zone_tenant_evict_name: '&cDesalojar Inquilino'
 zone_tenant_evict_lore:
-- '&7Quitá al inquilino actual y limpiá'
-- '&7el acceso de invitados de esta habitación.'
+  - '&7Sacá al inquilino actual y'
+  - '&7limpiá el acceso de invitados.'
+  - '&cMayús+clic para confirmar el desalojo.'
 zone_tenant_guest_add_lore: '&7Clic para permitir que este jugador cercano entre a la habitación.'
 zone_tenant_guest_remove_lore: '&7Clic para sacar a este invitado de la habitación.'
 zone_tenant_guest_count: '&7Invitados aprobados: &f{COUNT}'
@@ -2152,7 +2154,9 @@ guest_pass_confirm_container_warning_2: '&cbarriles y otros contenedores de esta
 guest_pass_confirm_click_lore: '&aHacé clic para confirmar y emitir'
 guest_pass_detail_title: '&8Pase: {PLAYER}'
 button_revoke_guest_pass: '&cRevocar Pase'
-revoke_guest_pass_lore: ['&7Terminá de inmediato el acceso de este invitado.']
+revoke_guest_pass_lore:
+  - '&7Terminá de inmediato el acceso de este invitado.'
+  - '&cMayús+clic para confirmar la revocación.'
 
 # ------------------------------------------------------------
 # Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
@@ -2382,10 +2386,6 @@ my_rentals_empty_lore:
   - '&8Explora Bienes Raíces o Mercado Local'
   - '&8para encontrar alquileres.'
 my_rentals_guide_name: '&eGuía de alquileres'
-my_rentals_guide_lore:
-  - '&7Clic derecho: renovar / extender'
-  - '&7Mayús+clic derecho: cancelar (parcela)'
-  - '&7Zonas: clic derecho abre controles'
 my_rentals_type_full: '&7Tipo: &fParcela completa'
 my_rentals_type_zone: '&7Tipo: &fZona'
 my_rentals_landlord_line: '&7Propietario: &f{PLAYER}'
@@ -2396,8 +2396,6 @@ my_rentals_remaining_line: '&7Restante: &b{DAYS}d {HOURS}h'
 my_rentals_zone_remaining_line: '&7Restante: &b{TIME}'
 my_rentals_full_name: '&6{PLOT}'
 my_rentals_zone_name: '&a{ZONE}'
-my_rentals_full_actions: '&eClic der. renovar &8| &cMayús+der. cancelar'
-my_rentals_zone_actions: '&eClic der. habitación &8| &aClic izq. extender'
 button_roles_nickname: '&eRenombrar apodo'
 roles_nickname_button_lore:
   - '&7Define una etiqueta local de la parcela'
@@ -2423,11 +2421,16 @@ roles_guide_lore:
   - '&8El dueño no se asigna aquí.'
   - '&8La capacidad limita nuevos miembros.'
 # --- Further polish (1.3.0) ---
+my_rentals_full_actions: '&eDerecha renovar &8| &cShift-derecha cancelar &8| &bShift-izquierda auto'
+my_rentals_zone_actions: '&aDerecha extender &8| &eIzquierda habitación &8| &cShift-derecha salir'
+my_rentals_guide_lore:
+  - '&7Clic derecho: renovar / extender'
+  - '&7Mayús+clic derecho: cancelar / salir'
+  - '&7Zonas: clic izquierdo abre controles'
+  - '&7Mayús+izquierdo: auto-renovar (parcela)'
 my_rentals_auto_renew_line: '&7Auto-renovar: &f{STATE}'
 my_rentals_auto_renew_on: '&aON'
 my_rentals_auto_renew_off: '&cOFF'
-my_rentals_full_actions: '&eDerecha renovar &8| &cShift-derecha cancelar &8| &bShift-izquierda auto'
-my_rentals_zone_actions: '&aDerecha extender &8| &eIzquierda habitacion &8| &cShift-derecha salir'
 rent_confirm_zone_leave_line: '&7Saldras de esta zona alquilada antes de tiempo.'
 rent_confirm_zone_no_deposit_line: '&8Los alquileres de zona no tienen deposito aparte.'
 roles_add_by_name: '&eAgregar por nombre'
@@ -2545,10 +2548,6 @@ giftblocks_amount_lore:
 giftblocks_confirm_name: '&aRegalar &e{AMOUNT} &aa &f{PLAYER}'
 giftblocks_confirm_lore:
   - '&7Clic para enviar el regalo.'
-button_plot_status: '&bEstado del terreno'
-plot_status_button_lore:
-  - '&7Info del terreno, fusión,'
-  - '&7transferencia o regalos.'
 plot_status_button_locked_lore:
   - '&cParate en un terreno para ver el estado.'
 papi_wilderness: 'Naturaleza'
@@ -2780,3 +2779,22 @@ admin_set_spawn_lore:
   - '&7Puede tomarse una instantánea de recuperación primero.'
   - '&8No cambia la propiedad.'
   - '&eClic para fijar.'
+
+# --- GUI audit language sync (1.3.0) ---
+alliance_roster_title: '&6Lista de Alianza'
+alliance_roster_members_line: '&7Miembros: &f{COUNT}'
+alliance_roster_invites_line: '&7Invitaciones pendientes: &f{COUNT}'
+alliance_roster_leader: '&6Líder'
+alliance_roster_member: '&7Miembro'
+alliance_roster_pending_name: '&ePendiente: &f{PLAYER}'
+alliance_roster_pending_cancel_lore: '&eClic para cancelar la invitación.'
+alliance_roster_pending_locked_lore: '&8El líder puede cancelar esta invitación.'
+alliance_unknown_player: 'Desconocido'
+alliance_roster_accept: '&aAceptar Invitación'
+alliance_roster_accept_lore:
+  - '&eClic para unirte a esta alianza.'
+alliance_roster_decline: '&cRechazar Invitación'
+alliance_roster_decline_lore:
+  - '&eClic para rechazar esta invitación.'
+guest_pass_revoke_hint: '&eConsejo: &7Mayús+clic para confirmar la revocación.'
+zone_tenant_evict_hint: '&eConsejo: &7Mayús+clic en Desalojar Inquilino para confirmar.'

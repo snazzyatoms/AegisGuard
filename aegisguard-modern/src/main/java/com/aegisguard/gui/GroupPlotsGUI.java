@@ -66,8 +66,14 @@ public class GroupPlotsGUI {
         if (slot == 48) { plugin.gui().openMain(player); return; }
         if (slot == 50) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
         if (slot == 45) {
+            if (e.getCurrentItem() == null || e.getCurrentItem().getType() != Material.OAK_DOOR) return;
             PlotGroup group = plugin.groups().getGroupForPlayer(player.getUniqueId());
-            if (group != null && plugin.groups().leaveGroup(group, player.getUniqueId())) { plugin.groups().save(); plugin.effects().playConfirm(player); open(player); }
+            if (group != null && !group.getLeader().equals(player.getUniqueId())
+                    && plugin.groups().leaveGroup(group, player.getUniqueId())) {
+                plugin.groups().save();
+                plugin.effects().playConfirm(player);
+                open(player);
+            }
             return;
         }
         if (slot >= 36 && slot < 45) {

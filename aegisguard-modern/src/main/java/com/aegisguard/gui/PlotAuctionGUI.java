@@ -176,8 +176,8 @@ public class PlotAuctionGUI {
 
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                safeName(player, "button_back_menu", "&fBack"),
-                safeLore(player, "back_menu_lore", List.of("&7Return to the previous menu."))
+                safeName(player, "button_back", "&fBack"),
+                safeLore(player, "back_lore", List.of("&7Return to the previous menu."))
         ));
 
         if (page < maxPages - 1) {

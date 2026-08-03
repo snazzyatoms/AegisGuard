@@ -62,7 +62,8 @@ public class MyTenantsGUI {
     }
     public void handleClick(Player player, InventoryClickEvent e, MyTenantsHolder holder) {
         e.setCancelled(true);
-        if (e.getClickedInventory() != e.getView().getTopInventory()) return;
+        if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
+        if (e.getCurrentItem() == null || GUIManager.isFiller(e.getCurrentItem())) return;
         if (e.getRawSlot() == 48) { plugin.gui().openMain(player); return; }
         if (e.getRawSlot() == 50) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
         if (e.getRawSlot() < 0 || e.getRawSlot() >= holder.getEntries().size()) return;

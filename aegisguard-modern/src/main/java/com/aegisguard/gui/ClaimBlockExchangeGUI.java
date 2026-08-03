@@ -102,7 +102,7 @@ public class ClaimBlockExchangeGUI {
         }
 
         if (s.guide) {
-            if (slot == SLOT_GUIDE) {
+            if (slot == SLOT_GUIDE || slot == SLOT_BACK) {
                 s.guide = false;
                 render(p, e.getInventory(), s);
                 trySound(p, Sound.UI_BUTTON_CLICK, 0.7f, 1.1f);
@@ -337,8 +337,8 @@ public class ClaimBlockExchangeGUI {
         // Back button (slot 40 - arrow, returns to main menu)
         inv.setItem(SLOT_BACK, item(
                 Material.ARROW,
-                tr(p, "button_back_menu", "&e⟵ Back to Menu"),
-                trList(p, "back_menu_lore", List.of("&7Return to the main panel."))
+                tr(p, "button_back", "&e⟵ Back to Menu"),
+                trList(p, "back_lore", List.of("&7Return to the main panel."))
         ));
         
         // Exit button (slot 44 - barrier, closes GUI)
@@ -421,7 +421,11 @@ public class ClaimBlockExchangeGUI {
                         "&f4. &7Press CONFIRM once."
                 ))));
 
-        inv.setItem(SLOT_GUIDE, item(Material.ARROW,
+        // Keep a standard Back control in the guide view (returns to the exchange console).
+        inv.setItem(SLOT_BACK, item(Material.ARROW,
+                tr(p, "button_back", "&e⟵ Back"),
+                trList(p, "claimblocks_exchange_guide_back_lore", List.of("&7Return to the trading console."))));
+        inv.setItem(SLOT_GUIDE, item(Material.BOOK,
                 tr(p, "claimblocks_exchange_guide_back", "&eBack to Exchange"),
                 trList(p, "claimblocks_exchange_guide_back_lore", List.of("&7Return to the trading console."))));
         inv.setItem(SLOT_EXIT, item(Material.BARRIER,

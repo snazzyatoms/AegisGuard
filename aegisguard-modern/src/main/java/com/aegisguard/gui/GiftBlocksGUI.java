@@ -66,6 +66,7 @@ public class GiftBlocksGUI {
                     trList(player, "giftblocks_no_players_lore",
                             List.of("&7Stand near another player,", "&7or use &e/ag giftblocks <player> <amount>&7."))));
         }
+        // Players occupy 0-44; keep footer-only chrome so balance never steals a recipient slot.
         for (int i = 0; i < nearby.size() && i < 45; i++) {
             Player target = Bukkit.getPlayer(nearby.get(i));
             if (target == null) continue;
@@ -74,7 +75,7 @@ public class GiftBlocksGUI {
         }
         long available = plugin.getClaimBlockManager() == null ? 0L
                 : plugin.getClaimBlockManager().getAvailableBlocks(player.getUniqueId());
-        inv.setItem(4, GUIManager.createItem(Material.EMERALD,
+        inv.setItem(49, GUIManager.createItem(Material.EMERALD,
                 tr(player, "giftblocks_balance_name", "&aYour available blocks"),
                 List.of(GUIManager.color("&f" + available))));
         inv.setItem(48, GUIManager.createItem(Material.ARROW, tr(player, "button_back", "&fBack"),
@@ -155,9 +156,21 @@ public class GiftBlocksGUI {
         }
 
         if (e.getRawSlot() == 48) { plugin.gui().openMain(player); return; }
-        if (e.getRawSlot() == 50) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
+        if (e.getRawSlot() == 49 || e.getRawSlot() == 50) {
+            if (e.getRawSlot() == 50) {
+                player.closeInventory();
+                plugin.effects().playMenuClose(player);
+            }
+            return;
+        }
         if (e.getRawSlot() < 0 || e.getRawSlot() >= holder.getRecipients().size()) return;
-        openAmount(player, holder.getRecipients().get(e.getRawSlot()));
+        UUID recipient = holder.getRecipients().get(e.getRawSlot());
+        if (Bukkit.getPlayer(recipient) == null) {
+            plugin.effects().playError(player);
+            openPickPlayer(player);
+            return;
+        }
+        openAmount(player, recipient);
     }
 
     private void executeGift(Player sender, UUID recipient, long amount) {

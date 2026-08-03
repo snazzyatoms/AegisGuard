@@ -4,13 +4,20 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GuiNavigationContractTest {
 
     private static final Path JAVA_ROOT = Path.of("src/main/java/com/aegisguard");
+    private static final Pattern HOLDER_CLASS = Pattern.compile(
+            "static\\s+(?:final\\s+)?class\\s+(\\w+Holder)\\b");
 
     @Test
     void everySubmenuSourceDeclaresBackAndExitControls() throws Exception {
@@ -21,10 +28,11 @@ class GuiNavigationContractTest {
                 "gui/PlotCosmeticsGUI.java", "gui/PlotFlagsGUI.java", "gui/PlotMarketGUI.java",
                 "gui/PlotStatusGUI.java", "gui/RolesGUI.java", "gui/SettingsGUI.java",
                 "gui/StallBrowseGUI.java", "gui/VisitGUI.java", "gui/ZoneBrowseGUI.java",
-                "gui/ZoneTenantGUI.java", "gui/ZoningGUI.java",                 "gui/RentConfirmGUI.java",
+                "gui/ZoneTenantGUI.java", "gui/ZoningGUI.java", "gui/RentConfirmGUI.java",
                 "gui/MyRentalsGUI.java", "gui/SettlementsInboxGUI.java", "gui/ClaimMergeGUI.java",
                 "gui/TransferConfirmGUI.java", "gui/GiftBlocksGUI.java", "gui/MyTenantsGUI.java",
                 "gui/ModerationGUI.java", "gui/GroupPlotsGUI.java", "gui/StorageMigrateGUI.java",
+                "gui/WorldControlsGUI.java",
                 "expansions/ExpansionRequestGUI.java",
                 "expansions/ExpansionRequestAdminGUI.java", "snapshots/SnapshotAdminGUI.java",
                 "audit/AuditAdminGUI.java", "guestpass/GuestPassGUI.java", "lockdown/LockdownGUI.java",
@@ -43,8 +51,24 @@ class GuiNavigationContractTest {
     }
 
     @Test
-    void centralListenerRoutesEveryRoleAndDoctorHolder() throws Exception {
+    void centralListenerRoutesEveryDeclaredInventoryHolder() throws Exception {
         String listener = Files.readString(JAVA_ROOT.resolve("gui/GUIListener.java"));
+        List<String> missing = new ArrayList<>();
+        try (Stream<Path> paths = Files.walk(JAVA_ROOT)) {
+            for (Path path : paths.filter(p -> p.toString().endsWith(".java")).toList()) {
+                String source = Files.readString(path);
+                Matcher matcher = HOLDER_CLASS.matcher(source);
+                while (matcher.find()) {
+                    String holder = matcher.group(1);
+                    if (!listener.contains("holder instanceof " + holder)
+                            && !listener.contains("instanceof " + holder)) {
+                        missing.add(path.getFileName() + "#" + holder);
+                    }
+                }
+            }
+        }
+        assertTrue(missing.isEmpty(), "GUIListener must route holders: " + missing);
+
         for (String holder : List.of("DoctorHolder", "RoleManageHolder", "RoleFlagsHolder")) {
             assertTrue(listener.contains("holder instanceof " + holder), holder + " must be protected and routed");
         }
@@ -59,5 +83,40 @@ class GuiNavigationContractTest {
         assertTrue(doctor.contains("requestId"));
         assertTrue(doctor.contains("doctor_repair_confirm"));
         assertTrue(doctor.contains("confirmation"));
+    }
+
+    @Test
+    void giftBlocksBalanceDoesNotOverwriteRecipientSlots() throws Exception {
+        String gift = Files.readString(JAVA_ROOT.resolve("gui/GiftBlocksGUI.java"));
+        assertTrue(gift.contains("inv.setItem(49,"), "Balance chrome must stay on the footer row");
+        assertFalse(gift.contains("inv.setItem(4, GUIManager.createItem(Material.EMERALD"),
+                "Balance must not steal recipient slot 4");
+    }
+
+    @Test
+    void myRentalsKeepsClickIndexAlignedWithEntryIndex() throws Exception {
+        String rentals = Files.readString(JAVA_ROOT.resolve("gui/MyRentalsGUI.java"));
+        assertTrue(rentals.contains("int slot = idx - start"),
+                "My Rentals must map visual slots to entry indexes without compacting");
+        assertFalse(Pattern.compile("inv\\.setItem\\(slot\\+\\+").matcher(rentals).find(),
+                "My Rentals must not compact skipped entries into earlier slots");
+    }
+
+    @Test
+    void moderationSeparatesOnlineAndBannedSlots() throws Exception {
+        String moderation = Files.readString(JAVA_ROOT.resolve("gui/ModerationGUI.java"));
+        assertTrue(moderation.contains("ONLINE_SLOTS"));
+        assertTrue(moderation.contains("BAN_START"));
+        assertTrue(moderation.contains("getBanned()"));
+    }
+
+    @Test
+    void destructiveGuestAndZoneActionsRequireShiftConfirm() throws Exception {
+        String guest = Files.readString(JAVA_ROOT.resolve("guestpass/GuestPassGUI.java"));
+        String zone = Files.readString(JAVA_ROOT.resolve("gui/ZoneTenantGUI.java"));
+        assertTrue(guest.contains("guest_pass_revoke_hint"));
+        assertTrue(guest.contains("isShiftClick()"));
+        assertTrue(zone.contains("zone_tenant_evict_hint"));
+        assertTrue(zone.contains("isShiftClick()"));
     }
 }

@@ -276,7 +276,7 @@ public class AllianceAccessGUI {
     public void handleMenuClick(Player player, InventoryClickEvent e, AllianceMenuHolder holder) {
         if (!isTopClick(e)) return;
         e.setCancelled(true);
-        if (e.getCurrentItem() == null) return;
+        if (e.getCurrentItem() == null || GUIManager.isFiller(e.getCurrentItem())) return;
 
         Plot plot = holder.getPlot();
         int slot = e.getRawSlot();
@@ -345,8 +345,12 @@ public class AllianceAccessGUI {
                 plugin.gui().title(player, "alliance_roster_title", "&6Alliance Roster"));
         for (int i = 0; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
         inv.setItem(4, GUIManager.createItem(Material.SHIELD, "&6" + alliance.getName(),
-                List.of(GUIManager.color("&7Members: &f" + alliance.size()),
-                        GUIManager.color("&7Pending invites: &f" + alliance.getInvites().size()))));
+                List.of(GUIManager.color(t(player, "alliance_roster_members_line",
+                                Map.of("COUNT", String.valueOf(alliance.size())),
+                                "&7Members: &f{COUNT}")),
+                        GUIManager.color(t(player, "alliance_roster_invites_line",
+                                Map.of("COUNT", String.valueOf(alliance.getInvites().size())),
+                                "&7Pending invites: &f{COUNT}")))));
         int slot = 9;
         for (UUID memberId : alliance.getMemberIds()) {
             if (slot >= 36) break;
@@ -355,8 +359,13 @@ public class AllianceAccessGUI {
             org.bukkit.inventory.meta.SkullMeta meta = (org.bukkit.inventory.meta.SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(member);
-                meta.setDisplayName(GUIManager.color("&a" + (member.getName() == null ? "Unknown" : member.getName())));
-                meta.setLore(List.of(GUIManager.color(alliance.isLeader(memberId) ? "&6Leader" : "&7Member")));
+                String display = member.getName() == null
+                        ? t(player, "alliance_unknown_player", "Unknown")
+                        : member.getName();
+                meta.setDisplayName(GUIManager.color("&a" + display));
+                meta.setLore(List.of(GUIManager.color(alliance.isLeader(memberId)
+                        ? t(player, "alliance_roster_leader", "&6Leader")
+                        : t(player, "alliance_roster_member", "&7Member"))));
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
@@ -372,9 +381,15 @@ public class AllianceAccessGUI {
         for (UUID inviteeId : alliance.getInvites().keySet()) {
             if (slot >= 36) break;
             org.bukkit.OfflinePlayer invitee = Bukkit.getOfflinePlayer(inviteeId);
-            ItemStack item = GUIManager.createItem(Material.PAPER, "&ePending: &f"
-                    + (invitee.getName() == null ? inviteeId.toString().substring(0, 8) : invitee.getName()),
-                    List.of(GUIManager.color(leader ? "&eClick to cancel invitation." : "&8Leader can cancel this invite.")));
+            String inviteName = invitee.getName() == null
+                    ? inviteeId.toString().substring(0, 8)
+                    : invitee.getName();
+            ItemStack item = GUIManager.createItem(Material.PAPER,
+                    t(player, "alliance_roster_pending_name", Map.of("PLAYER", inviteName),
+                            "&ePending: &f{PLAYER}"),
+                    List.of(GUIManager.color(leader
+                            ? t(player, "alliance_roster_pending_cancel_lore", "&eClick to cancel invitation.")
+                            : t(player, "alliance_roster_pending_locked_lore", "&8Leader can cancel this invite."))));
             plugin.gui().tagAction(item, "alliance_invite:" + inviteeId);
             inv.setItem(slot++, item);
         }
@@ -389,6 +404,7 @@ public class AllianceAccessGUI {
     public void handleRosterClick(Player player, InventoryClickEvent e, AllianceRosterHolder holder) {
         if (!isTopClick(e)) return;
         e.setCancelled(true);
+        if (e.getCurrentItem() == null || GUIManager.isFiller(e.getCurrentItem())) return;
         int slot = e.getRawSlot();
         if (slot == 45) { openMenu(player, holder.getPlot()); return; }
         if (slot == 53) { player.closeInventory(); return; }

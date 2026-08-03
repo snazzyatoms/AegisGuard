@@ -908,6 +908,7 @@ zone_tenant_evict_name: '&cEvict Tenant'
 zone_tenant_evict_lore:
   - '&7Remove the current renter and'
   - '&7clear this room''s guest access.'
+  - '&cShift-click to confirm eviction.'
 zone_tenant_guest_add_lore: '&7Click to allow this nearby player into the room.'
 zone_tenant_guest_remove_lore: '&7Click to remove this guest from the room.'
 zone_tenant_guest_count: '&7Approved guests: &f{COUNT}'
@@ -1690,7 +1691,9 @@ guest_pass_confirm_container_warning_2: '&cbarrels, and other containers on this
 guest_pass_confirm_click_lore: '&aClick to confirm and issue'
 guest_pass_detail_title: '&8Pass: {PLAYER}'
 button_revoke_guest_pass: '&cRevoke Pass'
-revoke_guest_pass_lore: ['&7Immediately end this guest''s access.']
+revoke_guest_pass_lore:
+  - '&7Immediately end this guest''s access.'
+  - '&cShift-click to confirm revoke.'
 
 # ------------------------------------------------------------
 # Emergency Plot Lockdown (1.3.0+, Milestone 3)
@@ -1932,10 +1935,6 @@ my_rentals_empty_lore:
   - '&8Browse Real Estate or Local Market'
   - '&8to find rentals.'
 my_rentals_guide_name: '&eRentals Guide'
-my_rentals_guide_lore:
-  - '&7Right-click: renew / extend'
-  - '&7Shift-right-click: cancel (full-plot)'
-  - '&7Zones: right-click opens room controls'
 my_rentals_type_full: '&7Type: &fFull Plot'
 my_rentals_type_zone: '&7Type: &fZone'
 my_rentals_landlord_line: '&7Landlord: &f{PLAYER}'
@@ -1946,8 +1945,6 @@ my_rentals_remaining_line: '&7Remaining: &b{DAYS}d {HOURS}h'
 my_rentals_zone_remaining_line: '&7Remaining: &b{TIME}'
 my_rentals_full_name: '&6{PLOT}'
 my_rentals_zone_name: '&a{ZONE}'
-my_rentals_full_actions: '&eRight-click renew &8| &cShift-right cancel'
-my_rentals_zone_actions: '&eRight-click room &8| &aLeft-click extend'
 button_roles_nickname: '&eRename Nickname'
 roles_nickname_button_lore:
   - '&7Set a plot-local display label'
@@ -1973,9 +1970,6 @@ roles_guide_lore:
   - '&8Owner is not assignable here.'
   - '&8Capacity limits new trusted members.'
 # --- Further polish (1.3.0) ---
-my_rentals_auto_renew_line: '&7Auto-renew: &f{STATE}'
-my_rentals_auto_renew_on: '&aON'
-my_rentals_auto_renew_off: '&cOFF'
 my_rentals_full_actions: '&eRight renew &8| &cShift-right cancel &8| &bShift-left auto-renew'
 my_rentals_zone_actions: '&aRight-click extend &8| &eLeft room &8| &cShift-right leave'
 my_rentals_guide_lore:
@@ -1983,6 +1977,9 @@ my_rentals_guide_lore:
   - '&7Shift-right-click: cancel / leave'
   - '&7Zones: left-click opens room controls'
   - '&7Shift-left: toggle auto-renew (full-plot)'
+my_rentals_auto_renew_line: '&7Auto-renew: &f{STATE}'
+my_rentals_auto_renew_on: '&aON'
+my_rentals_auto_renew_off: '&cOFF'
 rent_confirm_zone_leave_line: '&7You will leave this rented zone early.'
 rent_confirm_zone_no_deposit_line: '&8Zone rentals do not hold a separate deposit.'
 roles_add_by_name: '&eAdd by Name'
@@ -2321,7 +2318,6 @@ giftblocks_amount_lore:
 giftblocks_confirm_name: '&aGift &e{AMOUNT} &ato &f{PLAYER}'
 giftblocks_confirm_lore:
   - '&7Click to send the gift.'
-button_plot_status: '&bPlot Status'
 plot_status_button_lore:
   - '&7View plot info, merge claims,'
   - '&7transfer ownership, or gift blocks.'
@@ -2333,3 +2329,22 @@ papi_na: 'N/A'
 papi_enabled: 'Enabled'
 papi_disabled: 'Disabled'
 papi_not_for_sale: 'Not for Sale'
+
+# --- GUI audit language sync (1.3.0) ---
+alliance_roster_title: '&6Alliance Roster'
+alliance_roster_members_line: '&7Members: &f{COUNT}'
+alliance_roster_invites_line: '&7Pending invites: &f{COUNT}'
+alliance_roster_leader: '&6Leader'
+alliance_roster_member: '&7Member'
+alliance_roster_pending_name: '&ePending: &f{PLAYER}'
+alliance_roster_pending_cancel_lore: '&eClick to cancel invitation.'
+alliance_roster_pending_locked_lore: '&8Leader can cancel this invite.'
+alliance_unknown_player: 'Unknown'
+alliance_roster_accept: '&aAccept Invite'
+alliance_roster_accept_lore:
+  - '&eClick to join this alliance.'
+alliance_roster_decline: '&cDecline Invite'
+alliance_roster_decline_lore:
+  - '&eClick to decline this invite.'
+guest_pass_revoke_hint: '&eTip: &7Shift-click to confirm revoke.'
+zone_tenant_evict_hint: '&eTip: &7Shift-click Evict Tenant to confirm.'

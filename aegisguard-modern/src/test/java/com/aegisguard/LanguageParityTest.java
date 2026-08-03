@@ -55,20 +55,45 @@ class LanguageParityTest {
     void allReleaseMenusAndCommandsAreLocalized() throws Exception {
         Set<String> required = Set.of(
                 "button_back", "button_exit", "button_back_admin", "button_back_menu",
+                "button_prev", "button_next", "button_page", "back_lore", "exit_lore",
                 "doctor_menu_title", "doctor_confirm_title", "doctor_summary_name",
                 "doctor_scan_name", "doctor_report_name", "doctor_repair_name",
                 "doctor_repair_confirm_name", "doctor_issue_name", "doctor_no_issues",
                 "admin_wand_doctor_hint", "rental_contract_title", "rental_contract_renewed",
                 "rental_contract_cancelled", "discovery_disabled", "discovery_visible",
                 "activity_title", "activity_empty", "doctor_scan_running",
-                "doctor_repair_running", "doctor_repair_complete", "doctor_report_saved");
+                "doctor_repair_running", "doctor_repair_complete", "doctor_report_saved",
+                "my_rentals_guide_lore", "my_rentals_full_actions", "my_rentals_zone_actions",
+                "plot_status_button_lore", "plot_status_button_locked_lore",
+                "alliance_roster_title", "alliance_roster_members_line", "alliance_roster_invites_line",
+                "alliance_roster_leader", "alliance_roster_member", "alliance_roster_pending_name",
+                "alliance_unknown_player", "guest_pass_revoke_hint", "zone_tenant_evict_hint",
+                "revoke_guest_pass_lore", "zone_tenant_evict_lore");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);
             List<String> missing = required.stream().filter(key -> !translated.containsKey(key)).sorted().toList();
             assertTrue(missing.isEmpty(), () -> language + " is missing release keys: " + missing);
             for (String key : required) {
-                assertFalse(String.valueOf(translated.get(key)).isBlank(), language + " has a blank " + key);
+                assertFalse(isBlankValue(translated.get(key)), language + " has a blank " + key);
+            }
+        }
+    }
+
+    @Test
+    void footerNavigationKeysStayNonBlankAcrossAllPacks() throws Exception {
+        Set<String> footerKeys = Set.of(
+                "button_back", "button_exit", "button_prev", "button_next", "button_page",
+                "button_previous_page", "button_next_page", "back_lore", "exit_lore");
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            for (String key : footerKeys) {
+                if (!translated.containsKey(key)) continue; // optional aliases may be absent
+                assertFalse(isBlankValue(translated.get(key)), language + " blank footer key " + key);
+            }
+            for (String required : List.of("button_back", "button_exit", "back_lore", "exit_lore")) {
+                assertTrue(translated.containsKey(required), language + " missing " + required);
+                assertFalse(isBlankValue(translated.get(required)), language + " blank " + required);
             }
         }
     }
@@ -129,5 +154,13 @@ class LanguageParityTest {
             while (matcher.find()) found.add(matcher.group());
         }
         return found;
+    }
+
+    private boolean isBlankValue(Object value) {
+        if (value == null) return true;
+        if (value instanceof List<?> list) {
+            return list.isEmpty() || list.stream().allMatch(element -> String.valueOf(element).isBlank());
+        }
+        return String.valueOf(value).isBlank();
     }
 }

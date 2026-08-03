@@ -75,18 +75,20 @@ public class MyRentalsGUI {
         int start = safePage * ITEMS_PER_PAGE;
         int end = Math.min(entries.size(), start + ITEMS_PER_PAGE);
 
-        int slot = 0;
+        // Keep visual slot == entry index so clicks never resolve to a different rental
+        // when a stale/missing plot or zone is skipped.
         for (int idx = start; idx < end; idx++) {
             RentalEntry entry = entries.get(idx);
+            int slot = idx - start;
             Plot plot = findPlot(entry.plotId());
             if (plot == null) continue;
 
             if (entry.kind() == RentalEntry.Kind.FULL_PLOT) {
-                inv.setItem(slot++, buildFullPlotItem(player, plot));
+                inv.setItem(slot, buildFullPlotItem(player, plot));
             } else {
                 Zone zone = findZone(plot, entry.zoneName());
                 if (zone == null) continue;
-                inv.setItem(slot++, buildZoneItem(player, plot, zone));
+                inv.setItem(slot, buildZoneItem(player, plot, zone));
             }
         }
 

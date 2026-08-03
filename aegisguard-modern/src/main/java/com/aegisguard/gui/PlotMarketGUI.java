@@ -186,8 +186,8 @@ public class PlotMarketGUI {
         // Back to main menu
         inv.setItem(48, GUIManager.createItem(
                 Material.NETHER_STAR,
-                plugin.gui().tr(player, "button_back_menu", "&fReturn to Menu"),
-                plugin.gui().trList(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
+                plugin.gui().tr(player, "button_back", "&fReturn to Menu"),
+                plugin.gui().trList(player, "back_lore", List.of("&7Go back to the main dashboard."))
         ));
 
         // Next page

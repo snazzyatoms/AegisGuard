@@ -168,7 +168,9 @@ public class ZoneTenantGUI {
                     tr(player, "zone_tenant_evict_name", "&cEvict Tenant"),
                     trList(player, "zone_tenant_evict_lore", List.of(
                             "&7Remove the current renter and",
-                            "&7clear this room's guest access."
+                            "&7clear this room's guest access.",
+                            " ",
+                            "&cShift-click to confirm eviction."
                     ))));
         }
         inv.setItem(53, GUIManager.createItem(Material.BARRIER,
@@ -294,6 +296,12 @@ public class ZoneTenantGUI {
             return;
         }
         if (slot == 50 && plot.canManage(player, plugin) && zone.isRented()) {
+            if (!e.getClick().isShiftClick()) {
+                plugin.effects().playError(player);
+                send(player, "zone_tenant_evict_hint",
+                        "&eTip: &7Shift-click Evict Tenant to confirm.");
+                return;
+            }
             zone.evict();
             save(plot);
             plugin.effects().playConfirm(player);

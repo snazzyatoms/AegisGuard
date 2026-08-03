@@ -687,7 +687,10 @@ public class GuestPassGUI implements Listener {
 
         inv.setItem(11, GUIManager.createItem(Material.REDSTONE_BLOCK,
                 t(player, "button_revoke_guest_pass", "&cRevoke Pass"),
-                tl(player, "revoke_guest_pass_lore", List.of("&7Immediately end this guest's access."))));
+                tl(player, "revoke_guest_pass_lore", List.of(
+                        "&7Immediately end this guest's access.",
+                        " ",
+                        "&cShift-click to confirm revoke."))));
 
         inv.setItem(18, GUIManager.createItem(Material.ARROW,
                 t(player, "button_back", "&fBack"),
@@ -931,6 +934,12 @@ public class GuestPassGUI implements Listener {
         if (slot == 20) { player.closeInventory(); return; }
 
         if (slot == 11) {
+            if (!e.getClick().isShiftClick()) {
+                plugin.effects().playError(player);
+                player.sendMessage(GUIManager.color(t(player, "guest_pass_revoke_hint",
+                        "&eTip: &7Shift-click to confirm revoke.")));
+                return;
+            }
             boolean revoked = plugin.guestPasses().revoke(player, plot, target.getUniqueId());
             if (revoked) {
                 plugin.msg().send(player, "guest_pass_revoked", Map.of("PLAYER", safeName(target)));

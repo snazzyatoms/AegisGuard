@@ -1,6 +1,8 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.data.Plot;
+import com.aegisguard.util.TeleportUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -60,6 +62,7 @@ public class AdminGUI {
     // 1.3.0: Staff Audit Ledger
     private static final int SLOT_TOOL_ROUTES         = 25;
     private static final int SLOT_TOOL_AUDIT_LEDGER   = 26;
+    private static final int SLOT_TOOL_SET_SPAWN      = 27;
 
     private static final int SLOT_NAV_EXIT = 40;
     private static final int SLOT_NAV_BACK = 44;
@@ -324,6 +327,20 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_AUDIT_LEDGER, auditLedger);
         }
 
+        ItemStack setSpawn = GUIManager.createItem(
+                Material.RESPAWN_ANCHOR,
+                plugin.gui().tr(player, "button_admin_set_spawn", "&aSet Current Plot as Spawn"),
+                plugin.gui().trList(player, "admin_set_spawn_lore", List.of(
+                        "&7Stand inside a staff plot, then click",
+                        "&7to make its current safe location the",
+                        "&7public Spawn destination in Travel.",
+                        " ",
+                        "&eStaff-only; does not change ownership."
+                ))
+        );
+        tagAction(setSpawn, "set_current_plot_spawn");
+        inv.setItem(SLOT_TOOL_SET_SPAWN, setSpawn);
+
         ItemStack close = GUIManager.createItem(
                 Material.BARRIER,
                 plugin.gui().tr(player, "button_exit", "&c✖ Close"),
@@ -434,6 +451,8 @@ public class AdminGUI {
                 }
             }
 
+            case "set_current_plot_spawn" -> setCurrentPlotAsSpawn(player);
+
             // --- Navigation ---
             case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); }
             case "back_main" -> plugin.gui().openMain(player);
@@ -442,6 +461,29 @@ public class AdminGUI {
                 // Unknown action: ignore safely
             }
         }
+    }
+
+    private void setCurrentPlotAsSpawn(Player player) {
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.isServerZone()) {
+            sendKey(player, "spawn_requires_staff_plot", "&cStand inside a staff/server plot to set Spawn.");
+            plugin.effects().playError(player);
+            return;
+        }
+
+        var safeLocation = TeleportUtil.findSafeDestination(player.getLocation());
+        if (safeLocation == null) {
+            sendKey(player, "spawn_unsafe_location", "&cThis location is not safe for player travel.");
+            plugin.effects().playError(player);
+            return;
+        }
+
+        plot.setSpawnLocation(safeLocation);
+        plot.setServerWarp(true, "Spawn", Material.BEACON);
+        plugin.store().savePlot(plot);
+        sendKey(player, "spawn_destination_set", "&aThis staff plot is now the public Spawn destination.");
+        plugin.effects().playConfirm(player);
+        open(player);
     }
 
     // --- 1.2.6 QoL: safer reload handlers split out for clarity ---

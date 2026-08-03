@@ -3,6 +3,7 @@ package com.aegisguard.util;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -152,6 +153,60 @@ public final class TeleportUtil {
             return CompletableFuture.completedFuture(false);
         }
         return safeTeleportToWorldSpawn(plugin, player, world);
+    }
+
+    /**
+     * Finds a standable location near a requested destination.  A configured plot
+     * spawn may be moved by a build, removed by world generation, or accidentally
+     * set inside a block; travel callers should resolve it before teleporting.
+     */
+    public static Location findSafeDestination(Location requested) {
+        if (requested == null || requested.getWorld() == null) return null;
+
+        World world = requested.getWorld();
+        int baseX = requested.getBlockX();
+        int baseZ = requested.getBlockZ();
+        int baseY = requested.getBlockY();
+
+        Location exact = standableLocation(world, baseX, baseY, baseZ, requested.getYaw(), requested.getPitch());
+        if (exact != null) return exact;
+
+        // Prefer a nearby safe surface over an unsafe configured point.  The
+        // bounded search prevents a teleport from unexpectedly moving far away.
+        for (int radius = 0; radius <= 4; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                    int x = baseX + dx;
+                    int z = baseZ + dz;
+                    int surfaceY = world.getHighestBlockYAt(x, z) + 1;
+                    Location candidate = standableLocation(world, x, surfaceY, z, requested.getYaw(), requested.getPitch());
+                    if (candidate != null) return candidate;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Location standableLocation(World world, int x, int feetY, int z, float yaw, float pitch) {
+        if (feetY <= world.getMinHeight() || feetY + 1 >= world.getMaxHeight()) return null;
+        Block ground = world.getBlockAt(x, feetY - 1, z);
+        Block feet = world.getBlockAt(x, feetY, z);
+        Block head = world.getBlockAt(x, feetY + 1, z);
+
+        if (!ground.getType().isSolid() || isHazardous(ground)
+                || !feet.isPassable() || !head.isPassable() || feet.isLiquid() || head.isLiquid()) {
+            return null;
+        }
+        return new Location(world, x + 0.5D, feetY, z + 0.5D, yaw, pitch);
+    }
+
+    private static boolean isHazardous(Block block) {
+        return switch (block.getType()) {
+            case LAVA, FIRE, SOUL_FIRE, MAGMA_BLOCK, CAMPFIRE, SOUL_CAMPFIRE,
+                    CACTUS, SWEET_BERRY_BUSH, POWDER_SNOW -> true;
+            default -> false;
+        };
     }
 
     private static String formatLoc(Location loc) {

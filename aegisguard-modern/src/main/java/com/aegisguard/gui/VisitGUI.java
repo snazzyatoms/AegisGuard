@@ -229,7 +229,7 @@ public class VisitGUI {
             case FAVORITES -> "visit_title_favorites";
         };
         String fallbackTitle = switch (mode) {
-            case WARPS -> "&6Server Waypoints";
+            case WARPS -> "&6Server Destinations";
             case OWNED -> "&aMy Plots";
             case TRUSTED -> "&9Friends & Trusted";
             case DISCOVER -> "&6Discover Plots";
@@ -279,7 +279,7 @@ public class VisitGUI {
                 String dn = t(player, "visit_warp_name", "&6{WARP}", Map.of("WARP", warpName));
 
                 List<String> lore = tl(player, "visit_warp_lore", List.of(
-                        "&7A public waypoint.",
+                            "&7A staff-managed server destination.",
                         " ",
                         "&eClick to teleport"
                 ), Map.of("WARP", warpName));
@@ -413,7 +413,7 @@ public class VisitGUI {
             case FAVORITES -> "visit_switch_favorites";
         };
         String fallback = switch (mode) {
-            case WARPS -> "&6Waypoints";
+            case WARPS -> "&6Server Places";
             case OWNED -> "&aMy Plots";
             case TRUSTED -> "&9Trusted";
             case DISCOVER -> "&6Discover";
@@ -525,8 +525,15 @@ public class VisitGUI {
             return;
         }
 
+        Location safeTarget = TeleportUtil.findSafeDestination(target);
+        if (safeTarget == null) {
+            sendSystem(player, "visit_fail_unsafe_spawn", "&cThis destination does not have a safe teleport point.");
+            plugin.effects().playError(player);
+            return;
+        }
+
         player.closeInventory();
-        TeleportUtil.safeTeleport(plugin, player, target);
+        TeleportUtil.safeTeleport(plugin, player, safeTarget);
         plugin.territoryLife().recordVisit(plot.getPlotId(), player.getUniqueId());
         sendSystem(player, "visit_teleport_success", "&aTeleported.");
         plugin.effects().playTeleport(player);

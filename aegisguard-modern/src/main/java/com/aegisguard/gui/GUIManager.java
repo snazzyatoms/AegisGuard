@@ -211,7 +211,10 @@ public class GUIManager {
 
         ClaimBlockExchangeGUI exchangeGUI = exchange();
         if (exchangeGUI == null || plugin.exchange() == null) {
-            try { player.sendMessage(color("&cClaimBlocks Exchange is unavailable.")); } catch (Throwable ignored) {}
+            try {
+                player.sendMessage(color(tr(player, "exchange_unavailable",
+                        "&cClaimBlocks Exchange is unavailable.")));
+            } catch (Throwable ignored) {}
             return;
         }
 
@@ -219,7 +222,8 @@ public class GUIManager {
         try { enabled = plugin.cfg().raw().getBoolean("claim_blocks.exchange.enabled", false); } catch (Throwable ignored) {}
 
         if (!enabled) {
-            player.sendMessage(color("&cClaimBlocks Exchange is disabled in config.yml."));
+            player.sendMessage(color(tr(player, "exchange_disabled",
+                    "&cClaimBlocks Exchange is disabled in config.yml.")));
             return;
         }
 
@@ -233,7 +237,10 @@ public class GUIManager {
         if (player == null) return;
 
         if (snapshotAdminGUI == null || plugin.getSnapshotManager() == null) {
-            try { player.sendMessage(color("&cSnapshot system is unavailable.")); } catch (Throwable ignored) {}
+            try {
+                player.sendMessage(color(tr(player, "snapshots_unavailable",
+                        "&cSnapshot system is unavailable.")));
+            } catch (Throwable ignored) {}
             return;
         }
 
@@ -241,7 +248,8 @@ public class GUIManager {
         try { enabled = plugin.cfg().raw().getBoolean("snapshots.enabled", true); } catch (Throwable ignored) {}
 
         if (!enabled) {
-            player.sendMessage(color("&cSnapshots are disabled in config.yml."));
+            player.sendMessage(color(tr(player, "snapshots_disabled_config",
+                    "&cSnapshots are disabled in config.yml.")));
             return;
         }
 

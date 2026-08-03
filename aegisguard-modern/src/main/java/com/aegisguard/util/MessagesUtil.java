@@ -162,7 +162,11 @@ public class MessagesUtil implements Listener {
 
         List<String> valid = getAvailableStyles();
         if (valid != null && !valid.isEmpty() && !valid.contains(style)) {
-            player.sendMessage(ChatColor.RED + "⚠ Invalid language style: " + style);
+            player.sendMessage(localizedOrFallback(
+                    player,
+                    "language_invalid_style",
+                    "&c⚠ Invalid language style: {STYLE}",
+                    Map.of("STYLE", style)));
             return;
         }
 
@@ -171,7 +175,11 @@ public class MessagesUtil implements Listener {
 
         String styleName = style.replace("_", " ");
         if (!styleName.isEmpty()) styleName = styleName.substring(0, 1).toUpperCase() + styleName.substring(1);
-        player.sendMessage(ChatColor.GOLD + "🕮 Language set to: " + ChatColor.AQUA + styleName);
+        player.sendMessage(localizedOrFallback(
+                player,
+                "language_set_to",
+                "&6🕮 Language set to: &b{STYLE}",
+                Map.of("STYLE", styleName)));
 
         // Live GUI Refresh (if Settings open)
         plugin.runMain(player, () -> {
@@ -255,6 +263,19 @@ public class MessagesUtil implements Listener {
     // ----------------------------
     // Internal Helpers
     // ----------------------------
+
+    private String localizedOrFallback(Player player, String key, String fallback, Map<String, String> placeholders) {
+        String raw = fallback;
+        try {
+            if (plugin.codex() != null) {
+                String v = plugin.codex().tr(player, key, placeholders);
+                if (v != null && !v.isBlank() && !v.equalsIgnoreCase(key)) {
+                    return v;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return format(applyPlaceholders(raw, placeholders));
+    }
 
     private String getRawForPlayer(Player player, String key) {
         try {

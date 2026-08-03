@@ -32,15 +32,15 @@ item_refund: '&e💰 Reembolsado &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 upkeep_paid: '&e💰 Pagado &6{AMOUNT}&e por mantenimiento de la parcela.'
 upkeep_failed_warning: '&c⚠ El mantenimiento está pendiente y tu saldo es demasiado bajo.'
 plot_expired_upkeep: '&c❌ Tu parcela fue eliminada por no pagar el mantenimiento.'
-plot-is-locked: '&c❌ Esta parcela está bloqueada y no se puede modificar.'
+'plot-is-locked': '&c❌ Esta parcela está bloqueada y no se puede modificar.'
 plot_is_locked: '&c❌ Esta parcela está bloqueada y no se puede modificar.'
-home-set-success: '&a✔ Hogar de la parcela establecido en tu ubicación actual.'
-home-fail-outside: '&c❌ Tenés que estar dentro de tu parcela para establecer su hogar.'
-home-fail-no-spawn: '&c❌ ¡No hay hogar establecido! Usá /ag setspawn.'
-welcome-set: '&a✔ Mensaje de bienvenida actualizado.'
-welcome-cleared: '&e✔ Mensaje de bienvenida borrado.'
-farewell-set: '&a✔ Mensaje de despedida actualizado.'
-farewell-cleared: '&e✔ Mensaje de despedida borrado.'
+'home-set-success': '&a✔ Hogar de la parcela establecido en tu ubicación actual.'
+'home-fail-outside': '&c❌ Tenés que estar dentro de tu parcela para establecer su hogar.'
+'home-fail-no-spawn': '&c❌ ¡No hay hogar establecido! Usá /ag setspawn.'
+'welcome-set': '&a✔ Mensaje de bienvenida actualizado.'
+'welcome-cleared': '&e✔ Mensaje de bienvenida borrado.'
+'farewell-set': '&a✔ Mensaje de despedida actualizado.'
+'farewell-cleared': '&e✔ Mensaje de despedida borrado.'
 plot_created: '&a✔ Parcela creada con éxito.'
 plot_claimed: '&a✔ Parcela creada con éxito.'
 plot_unclaimed: '&e⚠ Parcela eliminada.'
@@ -114,44 +114,42 @@ admin_broadcast_disabled: '&c✖ Registro de acciones de admin deshabilitado.'
 admin_removed_banned: '&eParcelas eliminadas del jugador baneado: {PLAYER}'
 admin_plot_teleport: '&eTeletransportado a la parcela de {PLAYER}.'
 admin_plot_deleted: '&c✖ Parcela de {PLAYER} eliminada.'
-admin-zone-created: '&a✔ Zona del Servidor creada.'
-admin-zone-deleted: '&c✖ Zona del Servidor eliminada.'
-admin-zone-not-found: '&c❌ No estás dentro de una Zona del Servidor.'
-admin-zone-no-claims: '&c❌ No se permiten parcelas en esta Zona del Servidor.'
+'admin-zone-created': '&a✔ Zona del Servidor creada.'
+'admin-zone-deleted': '&c✖ Zona del Servidor eliminada.'
+'admin-zone-not-found': '&c❌ No estás dentro de una Zona del Servidor.'
+'admin-zone-no-claims': '&c❌ No se permiten parcelas en esta Zona del Servidor.'
 wilderness_revert_start: '&7Tarea de reversión del wilderness iniciada...'
 wilderness_revert_end: '&7Tarea de reversión del wilderness finalizada. Bloques revertidos: &f{AMOUNT}&7.'
-market-now-auctioned: '&e⚠ ¡Tu parcela ahora está en subasta!'
-auction-bid-own: '&cError: No podés pujar por tu propia parcela vencida.'
-auction-already-highest: '&eYa sos el mayor postor.'
-auction-outbid: '&e{PLAYER} te superó la puja.'
-auction-bid-success: '&a✔ Puja de &6{AMOUNT}&a aceptada. Ahora sos el mayor postor.'
-auction-sold: '&a✔ Tu parcela fue vendida a {PLAYER} por &6{AMOUNT}&a.'
-auction-won: '&a✔ ¡Ganaste la subasta de la parcela de {PLOT_OWNER} por &6{AMOUNT}&a!'
-auction-bid-tie: '&eTu puja igualó la puja más alta.'
-auction-bid-too-low: '&c❌ Puja demasiado baja. Incremento mínimo: &6{AMOUNT}&c.'
-auction-bid-failed-funds: '&c❌ No tenés suficientes fondos para realizar esa puja.'
-market-teleport: '&eTeletransportando a la parcela de {PLAYER}...'
-market-buy-own: '&cError: No podés comprar tu propia parcela.'
-market-buy-success: '&a✔ ¡Compraste la parcela de {PLAYER} por &6{PRICE}&a!'
-market-sold: '&a✔ ¡{PLAYER} compró tu parcela por &6{PRICE}&a!'
-market-for-sale: '&a✔ Parcela listada por &6{PRICE}&a.'
-market-not-for-sale: '&e✔ Anuncio de parcela eliminado.'
-market-listing-unavailable: '&cThat market listing is no longer available.'
-market-transaction-busy: '&eAnother player is already processing that listing. Please try again.'
-market-payment-failed: '&cThe market transaction could not be completed. Any withdrawn funds were returned.'
-market-renting-disabled: '&cFull-plot renting is disabled on this server.'
-market-rent-own: '&cYou cannot rent your own plot.'
-market-rent-limit: '&cPodés tener como máximo {AMOUNT} alquileres de parcela activos.'
-market-rent-success: '&aYou rented this plot for {PRICE} for {DAYS} days.'
-market-rented: '&a{PLAYER} rented your plot for {PRICE} for {DAYS} days.'
-market-rental-expired: '&eTerminó el alquiler de tu parcela completa.'
-market-owner-rental-expired: '&eTerminó un alquiler de tu parcela y ya está disponible de nuevo.'
-market-listing-conflict: '&cThis plot cannot be listed while another ownership or market state is active.'
-market-for-rent: '&aClaim listed for rent at {PRICE} per term.'
-market-not-for-rent: '&eRental listing removed.'
-market-rental-active: '&cNo podés quitar esta oferta hasta que termine el alquiler activo.'
-
-# 1.2.7 alquiler, descubrimiento y actividad
+'market-now-auctioned': '&e⚠ ¡Tu parcela ahora está en subasta!'
+'auction-bid-own': '&cError: No podés pujar por tu propia parcela vencida.'
+'auction-already-highest': '&eYa sos el mayor postor.'
+'auction-outbid': '&e{PLAYER} te superó la puja.'
+'auction-bid-success': '&a✔ Puja de &6{AMOUNT}&a aceptada. Ahora sos el mayor postor.'
+'auction-sold': '&a✔ Tu parcela fue vendida a {PLAYER} por &6{AMOUNT}&a.'
+'auction-won': '&a✔ ¡Ganaste la subasta de la parcela de {PLOT_OWNER} por &6{AMOUNT}&a!'
+'auction-bid-tie': '&eTu puja igualó la puja más alta.'
+'auction-bid-too-low': '&c❌ Puja demasiado baja. Incremento mínimo: &6{AMOUNT}&c.'
+'auction-bid-failed-funds': '&c❌ No tenés suficientes fondos para realizar esa puja.'
+'market-teleport': '&eTeletransportando a la parcela de {PLAYER}...'
+'market-buy-own': '&cError: No podés comprar tu propia parcela.'
+'market-buy-success': '&a✔ ¡Compraste la parcela de {PLAYER} por &6{PRICE}&a!'
+'market-sold': '&a✔ ¡{PLAYER} compró tu parcela por &6{PRICE}&a!'
+'market-for-sale': '&a✔ Parcela listada por &6{PRICE}&a.'
+'market-not-for-sale': '&e✔ Anuncio de parcela eliminado.'
+'market-listing-unavailable': '&cThat market listing is no longer available.'
+'market-transaction-busy': '&eAnother player is already processing that listing. Please try again.'
+'market-payment-failed': '&cThe market transaction could not be completed. Any withdrawn funds were returned.'
+'market-renting-disabled': '&cFull-plot renting is disabled on this server.'
+'market-rent-own': '&cYou cannot rent your own plot.'
+'market-rent-limit': '&cPodés tener como máximo {AMOUNT} alquileres de parcela activos.'
+'market-rent-success': '&aYou rented this plot for {PRICE} for {DAYS} days.'
+'market-rented': '&a{PLAYER} rented your plot for {PRICE} for {DAYS} days.'
+'market-rental-expired': '&eTerminó el alquiler de tu parcela completa.'
+'market-owner-rental-expired': '&eTerminó un alquiler de tu parcela y ya está disponible de nuevo.'
+'market-listing-conflict': '&cThis plot cannot be listed while another ownership or market state is active.'
+'market-for-rent': '&aClaim listed for rent at {PRICE} per term.'
+'market-not-for-rent': '&eRental listing removed.'
+'market-rental-active': '&cNo podés quitar esta oferta hasta que termine el alquiler activo.'
 rental_contract_none: '&eNo tenés un contrato activo de alquiler de parcela completa.'
 rental_contract_plot_missing: '&cFalta la parcela de este contrato. Pedile a un admin que ejecute /agadmin doctor scan.'
 rental_contract_title: '&6Contrato de Alquiler &8- &f{PLOT}'
@@ -208,20 +206,15 @@ title_entering: '&aEntrando: &f{PLOT}'
 subtitle_entering: '&7Dueño: &f{OWNER}'
 title_leaving: '&cSaliendo: &f{PLOT}'
 subtitle_leaving: '&7Regresando al Wilderness'
-
-# ------------------------------------------------------------
-# Notificaciones de Entrada/Salida (Parcelas)
-# ------------------------------------------------------------
 claim_enter_exit_notify_usage: '&eUso: &f/aegis notify'
-claim_enter_exit_notify_server_disabled: '&cLas notificaciones de entrada/salida de parcelas están deshabilitadas en todo el servidor.'
+claim_enter_exit_notify_server_disabled: '&cLas notificaciones de entrada/salida de parcelas están deshabilitadas en todo
+  el servidor.'
 claim_enter_exit_notify_toggle_not_allowed: '&cEste servidor no permite que los jugadores alternen las notificaciones de parcelas.'
 claim_enter_exit_notify_enabled: '&a✔ Las notificaciones de entrada/salida de parcelas ahora están &aActivadas&a.'
 claim_enter_exit_notify_disabled: '&e✖ Las notificaciones de entrada/salida de parcelas ahora están &cDesactivadas&e.'
 claim_enter_exit_notify_status: '&7Notificaciones de entrada/salida: {STATE}'
 claim_enter_exit_notify_state_enabled: '&aActivadas'
 claim_enter_exit_notify_state_disabled: '&cDesactivadas'
-
-# Alias de compatibilidad (nombres internos/anteriores)
 claim_notify_usage: '&eUso: &f/aegis notify'
 claim_notify_server_disabled: '&cLas notificaciones de entrada/salida de parcelas están deshabilitadas en todo el servidor.'
 claim_notify_toggle_not_allowed: '&cEste servidor no permite que los jugadores alternen las notificaciones de parcelas.'
@@ -230,23 +223,23 @@ claim_notify_disabled: '&e✖ Las notificaciones de entrada/salida de parcelas a
 claim_notify_status: '&7Notificaciones de entrada/salida: {STATE}'
 claim_notify_state_enabled: '&aActivadas'
 claim_notify_state_disabled: '&cDesactivadas'
-
-# ✅ v1.2.6: Sistema de Notificaciones Mejorado
 notify_unavailable: '&cEl sistema de notificaciones no está disponible en este momento.'
 notify_greetings_enabled: '&a✔ Saludos activados. Verás mensajes de entrada y salida de parcelas.'
 notify_greetings_disabled: '&c✔ Saludos desactivados. No verás mensajes de entrada y salida de parcelas.'
 notify_admin_enabled: '&a✔ Notificaciones de administrador activadas. Recibirás actualizaciones administrativas.'
 notify_admin_disabled: '&c✔ Notificaciones de administrador desactivadas. Las actualizaciones administrativas están ocultas.'
 notify_mode_set: '&a✔ Modo de notificación establecido a: {MODE}'
-notify_mode_usage: '&eUso: &7/aegis notify mode <chat|actionbar|title>\n&7Modos disponibles:\n&7- &bchat &8- &7Mensajes de chat estándar\n&7- &bactionbar &8- &7Notificaciones en barra de acción (sobre hotbar)\n&7- &btitle &8- &7Notificaciones de título/subtítulo (centro de pantalla)'
+notify_mode_usage: '&eUso: &7/aegis notify mode <chat|actionbar|title>\n&7Modos disponibles:\n&7- &bchat &8- &7Mensajes de
+  chat estándar\n&7- &bactionbar &8- &7Notificaciones en barra de acción (sobre hotbar)\n&7- &btitle &8- &7Notificaciones
+  de título/subtítulo (centro de pantalla)'
 notify_mode_invalid: '&cModo inválido: &7{MODE}\n&eModos válidos: &7chat, actionbar, title'
-notify_status: '&e&l━━━━━━━━━ &6Configuración de Notificaciones &e&l━━━━━━━━━\n&7Saludos: {GREETINGS}\n&7Actualizaciones Admin: {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-notify_usage: '&eComandos de Notificación:\n&7/aegis notify &8- &7Alternar mensajes de saludo\n&7/aegis notify greetings &8- &7Alternar mensajes de entrada/salida\n&7/aegis notify admin &8- &7Alternar notificaciones de administrador\n&7/aegis notify mode <chat|actionbar|title> &8- &7Establecer estilo de notificación\n&7/aegis notify status &8- &7Ver configuración actual'
-
-# RolesGUI v1.2.6: Mensajes de Seguridad
+notify_status: '&e&l━━━━━━━━━ &6Configuración de Notificaciones &e&l━━━━━━━━━\n&7Saludos: {GREETINGS}\n&7Actualizaciones Admin:
+  {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_usage: '&eComandos de Notificación:\n&7/aegis notify &8- &7Alternar mensajes de saludo\n&7/aegis notify greetings &8-
+  &7Alternar mensajes de entrada/salida\n&7/aegis notify admin &8- &7Alternar notificaciones de administrador\n&7/aegis notify
+  mode <chat|actionbar|title> &8- &7Establecer estilo de notificación\n&7/aegis notify status &8- &7Ver configuración actual'
 role_cannot_remove_self: '&c❌ No podés removerte a vos mismo como dueño de la parcela. Transferí la propiedad primero.'
 role_no_permission: '&c❌ No tenés permiso para modificar este miembro.'
-
 travel_system_disabled: '&cEl sistema de viaje está deshabilitado.'
 travel_fail_cooldown: '&cEl viaje está en enfriamiento. Probá de nuevo en &e{SECONDS}&c segundo(s).'
 travel_fail_combat: '&cNo podés viajar en combate (&e{SECONDS}&cs restantes).'
@@ -257,7 +250,8 @@ travel_fail_disabled: '&cEl viaje seguro está deshabilitado en este servidor.'
 travel_fail_cancelled: '&cViaje cancelado.'
 alliance_toggle_disallowed: '&cEsa opción de Acceso de Alianza está deshabilitada por la política del servidor.'
 lockdown_activated_notify: '&cSe activó el Bloqueo de Emergencia en &f{PLOT}&c.'
-snapshot_restore_summary: '&eResumen de restauración: &f{TYPE} &7| &f{REASON} &7| edad &f{AGE}&7. Shift-Clic izquierdo otra vez para confirmar.'
+snapshot_restore_summary: '&eResumen de restauración: &f{TYPE} &7| &f{REASON} &7| edad &f{AGE}&7. Shift-Clic izquierdo otra
+  vez para confirmar.'
 visit_not_owner: '&cYa no sos dueño de esa parcela.'
 home_teleport_disabled: '&cEl teletransporte al hogar está deshabilitado.'
 leveling_disabled: '&cEl sistema de niveles está deshabilitado.'
@@ -290,11 +284,8 @@ admin_lang_refreshing: '&7Actualizando paquetes de idioma...'
 admin_lang_refresh_complete: '&a✔ Paquetes de idioma actualizados.'
 admin_lang_refresh_failed: '&c❌ No se pudieron actualizar los paquetes de idioma. Revisá la consola.'
 economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
-vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de economía.'
-
-# -------------------------------------------------
-# ClaimBlocks Exchange
-# -------------------------------------------------
+vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de
+  economía.'
 claim_blocks_earned_playtime: '&a+{AMOUNT} ClaimBlocks &7ganados por tiempo de juego. &8Total: &f{TOTAL}'
 claim_blocks_afk_warning: '&e⚠ Estuviste inactivo por {MINUTES} minutos. Reanudá la actividad para seguir ganando bloques.'
 claimblocks_exchange_disabled: '&cEl intercambio está deshabilitado en config.yml.'
@@ -308,7 +299,6 @@ claimblocks_exchange_insufficient_funds: '&cNo tenés suficiente dinero para com
 claimblocks_exchange_insufficient_blocks: '&cNo tenés suficientes Claim Blocks vendibles.'
 claimblocks_exchange_sell_locked: '&eAlgunos ClaimBlocks comprados están bloqueados. Probá más tarde.'
 claimblocks_exchange_trade_failed: '&cEl intercambio falló: &7{REASON}'
-
 vault_disabled_here: '&c❌ Los pagos por Vault están deshabilitados acá.'
 insufficient_funds: '&c❌ Fondos insuficientes. Necesitás: &e${NEEDED}&c | Tenés: &e${AVAILABLE}&c.'
 transaction_failed: '&c❌ La transacción falló. Probá de nuevo en un momento.'
@@ -343,18 +333,10 @@ help_lines:
 - '&e/aegis merge &7- Fusionar terrenos adyacentes (si está activo).'
 - '&e/aegis transfer <jugador> &7- Transferir la propiedad del terreno actual.'
 - '&e/aegis settlements &7- Abrir tu bandeja de pagos pendientes.'
-
-# ------------------------------------------------------------
-# Instantáneas (Mensajes del sistema/admin)
-# ------------------------------------------------------------
 snapshot_not_found: '&c❌ No se pudo encontrar esa instantánea.'
 snapshot_rollback_success: '&a✔ Restauración de instantánea aplicada con éxito.'
 snapshot_rollback_failed: '&c❌ La restauración falló. Revisá los registros de la consola.'
 snapshot_deleted: '&e✔ Instantánea eliminada.'
-
-# ------------------------------------------------------------
-# Sistema de Precios Justos (v1.2.5+)
-# ------------------------------------------------------------
 claim_cost_breakdown: '&c❌ No podés pagar esta parcela.'
 claim_cannot_afford: '&c❌ Necesitás &6{COST}&c para reclamar esta área.'
 claim_success_vault: '&a✔ ¡Reclamaste &e{AREA}&a bloques por &6{COST}&a!'
@@ -362,12 +344,6 @@ claim_success_blocks_fair: '&a✔ ¡Reclamaste &e{AREA}&a bloques (costo: &6{COS
 claim_blocks_not_enough_fair: '&c❌ Necesitás &6{AMOUNT}&c ClaimBlocks más.'
 cost_preview_title: '&b📊 Vista Previa del Costo de Parcela'
 invalid_selection: '&c❌ Selección inválida.'
-
-# ------------------------------------------------------------
-# Sistema de Migración (v1.2.5+)
-# Usado por: /agadmin migrate
-# Marcadores: {SOURCE}, {TOTAL}, {IMPORTED}, {SKIPPED}, {ERRORS}, {DURATION}
-# ------------------------------------------------------------
 migration_starting: '&6Iniciando migración desde &e{SOURCE}&6...'
 migration_dry_run_notice: '&e⚠ MODO PRUEBA - No se van a hacer cambios'
 migration_scanning: '&7Buscando parcelas para importar...'
@@ -413,7 +389,6 @@ migration_help_opt_force: '&f  --force      &7Importar parcelas superpuestas'
 migration_help_opt_trusted: '&f  --no-trusted &7Omitir jugadores de confianza'
 migration_help_opt_flags: '&f  --no-flags   &7Omitir configuración de flags'
 migration_help_opt_world: '&f  --world=nombre &7Filtrar por mundo'
-
 group_help_create: '&e/ag group create <nombre> &7- crear un grupo de jugadores'
 group_help_invite: '&e/ag group invite <jugador> &7- invitar a un jugador cercano'
 group_help_accept: '&e/ag group accept <nombre> &7- aceptar una invitación pendiente'
@@ -465,7 +440,8 @@ group_kick_locked: '&cLa protección starter está activa. Vas a poder remover m
 group_kick_failed: '&cNo se pudo expulsar a ese miembro.'
 group_member_kicked: '&eSacaste a &6{PLAYER} &edel grupo.'
 group_plot_already_exists: '&cEste grupo ya tiene una parcela vinculada.'
-group_not_enough_members: '&cTu grupo necesita al menos &e{COUNT} &cmiembros elegibles para starter antes de reclamar una parcela grupal.'
+group_not_enough_members: '&cTu grupo necesita al menos &e{COUNT} &cmiembros elegibles para starter antes de reclamar una
+  parcela grupal.'
 group_claim_requires_vault: '&cSe necesita economía de Vault para parcelas grupales pagas.'
 group_claim_not_enough_treasury: '&cEl tesoro del grupo necesita &e{AMOUNT} &cmás antes de reclamar esta parcela.'
 group_free_claim_created: '&aSe creó la parcela starter gratis para &e{GROUP}&a. Tamaño protegido usado: &e{AREA}&a bloques.'
@@ -494,7 +470,8 @@ market_stall_no_access: '&cNecesitás gestión de parcela o una zona alquilada p
 market_stall_inactive: '&cEse TradeStall no está disponible por ahora.'
 market_stall_missing: '&cEse TradeStall ya no está disponible.'
 market_stall_none: '&cNo hay TradeStalls disponibles acá por ahora.'
-market_stall_external_override: '&eTradeStalls está desactivado acá porque esta parcela está usando una integración de mercado externa.'
+market_stall_external_override: '&eTradeStalls está desactivado acá porque esta parcela está usando una integración de mercado
+  externa.'
 market_stall_listing_updated: '&aOferta de TradeStall actualizada.'
 market_stall_listing_cleared: '&eOferta de TradeStall limpiada.'
 market_stall_select_item_first: '&cPrimero elegí un espacio con artículos antes de editar su oferta.'
@@ -508,10 +485,6 @@ market_stall_generic_error: '&cNo se pudo completar esa acción de TradeStall.'
 charged_amount: '&7Monto cobrado: &6{AMOUNT}'
 refunded_amount: '&7Monto reembolsado: &a{AMOUNT}'
 claims_disabled_in_world: '&cLos reclamos nuevos están deshabilitados en este mundo.'
-
-# ------------------------------------------------------------
-# Pases de Invitado Temporales (1.3.0+, Hito 2)
-# ------------------------------------------------------------
 guest_pass_disabled: '&cLos Pases de Invitado están deshabilitados en este servidor.'
 guest_pass_invalid: '&cEsa solicitud de Pase de Invitado no es válida.'
 guest_pass_target_owner: '&cNo podés emitir un Pase de Invitado al dueño de la parcela.'
@@ -523,20 +496,12 @@ guest_pass_received: '&aRecibiste un Pase de Invitado de {PRESET} para &e{PLOT}&
 guest_pass_revoked: '&eSe revocó el Pase de Invitado de &6{PLAYER}&e.'
 guest_pass_expired_notice: '&eTu Pase de Invitado para &6{PLOT} &eexpiró.'
 guest_pass_expired_owner_notice: '&eEl Pase de Invitado de {PLAYER} para tu parcela expiró.'
-
-# ------------------------------------------------------------
-# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
-# ------------------------------------------------------------
 lockdown_action_blocked: '&cEsta parcela está en Bloqueo de Emergencia. Intentá de nuevo cuando se desactive.'
 lockdown_activated: '&c&lBloqueo de Emergencia activado. &7Las acciones sensibles están restringidas.'
 lockdown_deactivated: '&a&lBloqueo de Emergencia desactivado. &7Se restauró el acceso normal.'
 lockdown_disabled: '&cEl Bloqueo de Emergencia está deshabilitado en este servidor.'
 lockdown_invalid: '&cEsa solicitud de Bloqueo no es válida.'
 lockdown_already_active: '&cEsta parcela ya está en Bloqueo de Emergencia.'
-
-# ------------------------------------------------------------
-# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
-# ------------------------------------------------------------
 noticeboard_disabled: '&cEl tablón de anuncios está deshabilitado en este servidor.'
 usage_notice_add: '&cUso: /ag notice add <texto>'
 notice_too_long: '&cEse anuncio es demasiado largo (Máx {MAX} caracteres).'
@@ -544,10 +509,6 @@ notice_posted: '&a✔ Anuncio publicado en el tablón de esta parcela.'
 usage_notice_remove: '&cUso: /ag notice remove <#>'
 notice_invalid_index: '&cEse no es un número de anuncio válido. Usá /ag notice list para verlos.'
 notice_removed: '&e✔ Anuncio eliminado.'
-
-# ------------------------------------------------------------
-# Routes and Checkpoints (1.3.0+, Milestone 6)
-# ------------------------------------------------------------
 routes_disabled: '&cLas rutas están deshabilitadas en este servidor.'
 route_checkpoint_discovered: '&a✔ Descubriste &f{CHECKPOINT}&a en &f{ROUTE}&a ({COUNT}/{TOTAL}).'
 route_completed: '&a✔ Completaste la ruta &f{ROUTE}&a!'
@@ -557,10 +518,6 @@ routes_teleported: '&aTe teletransportaste cerca de &f{NAME}&a.'
 routes_admin_created: '&a✔ Ruta creada &f{NAME}&a.'
 routes_admin_checkpoint_added: '&a✔ Punto agregado (ahora &f{COUNT}&a en total).'
 routes_admin_deleted: '&e✔ Ruta eliminada &f{NAME}&e.'
-
-# ------------------------------------------------------------
-# Alliance Access (1.3.0+, Milestone 7)
-# ------------------------------------------------------------
 alliance_disabled: '&cEl Acceso de Alianza está deshabilitado en este servidor.'
 alliance_invalid: '&cEsa solicitud de alianza no es válida.'
 alliance_invalid_name: '&cLos nombres de alianza deben tener 1-32 caracteres.'
@@ -589,7 +546,6 @@ alliance_help_accept: '&e/ag alliance accept &7- aceptar una invitación pendien
 alliance_help_leave: '&e/ag alliance leave &7- salir de tu alianza'
 alliance_help_disband: '&e/ag alliance disband &7- disolver tu alianza (líder)'
 alliance_help_menu: '&e/ag alliance menu &7- abrir Acceso de Alianza'
-# --- Further polish (1.3.0) ---
 rental_auto_renew_disabled: '&cLa auto-renovacion de alquiler esta desactivada.'
 rental_auto_renew_on: '&aAuto-renovacion activada. Se revisara tu saldo Vault al vencer.'
 rental_auto_renew_off: '&eAuto-renovacion desactivada para este contrato.'
@@ -597,13 +553,11 @@ zone_leave_not_renter: '&cNo estas alquilando esta zona.'
 zone_leave_success: '&aSaliste de la zona alquilada.'
 upkeep_pay_failed: '&cNo se pudo cobrar el mantenimiento.'
 upkeep_pay_success: '&aPago de mantenimiento registrado.'
-
-# --- 1.3.0 polish: merge / gift / settlements / transfer / PAPI ---
-usage_main: '&eUsá: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
 settlement_delivered: '&aSe entregó un pago pendiente de &6{AMOUNT}&a.'
 claim_merge_disabled: '&cLa fusión de reclamos está desactivada en este servidor.'
 claim_merge_not_adjacent: '&cLos terrenos deben compartir un lado.'
-claim_merge_alignment_required: '&cLos terrenos deben alinearse por completo. Las formas en L están bloqueadas para evitar robo de tierra.'
+claim_merge_alignment_required: '&cLos terrenos deben alinearse por completo. Las formas en L están bloqueadas para evitar
+  robo de tierra.'
 claim_merge_foreign_land: '&cFusión bloqueada: el área combinada cubriría otro reclamo.'
 claim_merge_market_blocked: '&cQuita listados y rentas antes de fusionar.'
 claim_merge_role_conflict: '&cFusión bloqueada: ambos terrenos dan roles distintos al mismo miembro.'
@@ -638,7 +592,6 @@ papi_na: 'N/D'
 papi_enabled: 'Activado'
 papi_disabled: 'Desactivado'
 papi_not_for_sale: 'No está en venta'
-
 admin_help_header: '&6Comandos de Staff de AegisGuard'
 admin_help_menu: '&e/agadmin &7| &e/agadmin menu &8- Centro de Comando'
 admin_help_doctor: '&e/agadmin doctor [scan|report|repair confirm] &8- Doctor de Territorio'
@@ -678,3 +631,18 @@ convert_blocker_auction: '&cLas subastas deben cancelarse antes de convertir.'
 convert_blocker_zone_rent: '&cPrimero resuelve zonas hijas alquiladas o listadas.'
 convert_blocker_no_manage: '&cNo puedes gestionar esta parcela como staff.'
 convert_success: '&aParcela convertida en zona del servidor (&f{TARGET}&a). Instantánea de recuperación creada.'
+admin_refresh_lang_complete: '&aPaquetes de idiomas actualizados.'
+admin_refreshing_lang: '&aActualizando paquetes de idiomas...'
+snapshots_disabled: '&cLas instantáneas están deshabilitadas.'
+spawn_destination_set: '&aEsta trama del personal es ahora el destino público de Spawn.'
+spawn_requires_staff_plot: '&cPárese dentro de una parcela de personal/servidor para configurar Spawn.'
+spawn_unsafe_location: '&cEsta ubicación no es segura para que los jugadores viajen.'
+exchange_unavailable: '&cClaimBlocks El intercambio no está disponible.'
+exchange_disabled: '&cClaimBlocks Exchange está deshabilitado en config.yml.'
+snapshots_unavailable: '&cEl sistema de instantáneas no está disponible.'
+snapshots_disabled_config: '&cLas instantáneas están deshabilitadas en config.yml.'
+language_invalid_style: '&cEstilo de idioma no válido: {STYLE}'
+language_set_to: '&aIdioma configurado en: {STYLE}'
+expansion_manager_unavailable: '&c[AegisGuard] El administrador de solicitudes de expansión no está disponible.'
+admin_setting_enabled: '&aAjuste activado.'
+admin_setting_disabled: '&cAjuste desactivado.'

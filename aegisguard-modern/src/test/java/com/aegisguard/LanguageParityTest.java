@@ -213,6 +213,127 @@ class LanguageParityTest {
                 () -> "spanish_ar cannot resolve Guardian Guide keys in Spanish: " + missingEffectiveArgentinian);
     }
 
+    @Test
+    void guardianGuideHelpAndStaffKeysExistInEveryPack() throws Exception {
+        Set<String> required = extractGuideHelpStaffKeys();
+        assertTrue(required.size() >= 100, "expected a large guide/help/staff key set, found " + required.size());
+
+        Map<String, Object> english = loadLanguage("modern_english");
+        List<String> missingEnglish = required.stream().filter(key -> !english.containsKey(key)).sorted().toList();
+        assertTrue(missingEnglish.isEmpty(),
+                () -> "modern_english missing guide/help/staff keys: " + missingEnglish);
+
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            List<String> missing = required.stream()
+                    .filter(key -> !translated.containsKey(key) || isBlankValue(translated.get(key)))
+                    .sorted()
+                    .toList();
+            assertTrue(missing.isEmpty(), () -> language + " missing guide/help/staff keys: " + missing);
+        }
+    }
+
+    @Test
+    void guideHelpAndStaffLoreAreTranslatedInNonEnglishPacks() throws Exception {
+        Map<String, Object> english = loadLanguage("modern_english");
+        Set<String> required = extractGuideHelpStaffKeys();
+        Pattern colorOrToken = Pattern.compile(
+                "&[0-9a-fk-orx]|§[0-9a-fk-orx]|\\{[A-Z0-9_]+}|AegisGuard|/ag(?:admin)?(?:\\s+[\\w<>|-]+)*",
+                Pattern.CASE_INSENSITIVE);
+
+        for (String language : List.of(
+                "spanish_mx", "spanish_ar", "portuguese_br", "french_fr",
+                "italian_it", "german_de", "polish_pl")) {
+            Map<String, Object> translated = loadLanguage(language);
+            int compared = 0;
+            int identical = 0;
+            List<String> samples = new ArrayList<>();
+            for (String key : required) {
+                if (!english.containsKey(key) || !translated.containsKey(key)) continue;
+                String keyLower = key.toLowerCase();
+                boolean check = keyLower.contains("lore")
+                        || keyLower.endsWith("_name")
+                        || keyLower.endsWith("_title")
+                        || keyLower.startsWith("button_")
+                        || keyLower.startsWith("staff_")
+                        || keyLower.startsWith("walkthrough_");
+                if (!check) continue;
+
+                String eng = normalizedValue(english.get(key));
+                String loc = normalizedValue(translated.get(key));
+                if (eng.isBlank() || loc.isBlank()) continue;
+                String engPlain = colorOrToken.matcher(eng).replaceAll(" ").replaceAll("\\s+", " ").trim();
+                if (engPlain.length() < 4) continue;
+                if (engPlain.matches("\\{?[A-Z0-9_]+}?")) continue;
+                // Command-syntax help rows may stay English.
+                if (engPlain.startsWith("/ag") || engPlain.contains("griefprevention")
+                        || engPlain.contains("griefdefender")) {
+                    continue;
+                }
+                // Product/feature brand labels intentionally kept identical.
+                String brand = engPlain.replace(" ", "");
+                if (brand.equalsIgnoreCase("ClaimBlocks")
+                        || brand.equalsIgnoreCase("TradeStalls")
+                        || brand.equalsIgnoreCase("TradeStall")) {
+                    continue;
+                }
+
+                compared++;
+                if (eng.equals(loc)) {
+                    identical++;
+                    if (samples.size() < 15) samples.add(key);
+                }
+            }
+            assertTrue(compared >= 40, language + " expected many guide/staff UI values, found " + compared);
+            final int identicalCount = identical;
+            final int comparedCount = compared;
+            assertTrue(identicalCount == 0,
+                    () -> language + " still has English-copy guide/help/staff UI: "
+                            + identicalCount + "/" + comparedCount + ". Samples: " + samples);
+        }
+    }
+
+    private Set<String> extractGuideHelpStaffKeys() throws Exception {
+        Set<String> keys = new HashSet<>();
+        List<Path> sources = List.of(
+                Path.of("src/main/java/com/aegisguard/gui/InfoGUI.java"),
+                Path.of("src/main/java/com/aegisguard/gui/AdminGUI.java"),
+                Path.of("src/main/java/com/aegisguard/guidance/FirstClaimWalkthroughGUI.java"));
+        // Only keys that are passed to tr/trList/title/sendKey helpers.
+        Pattern keyPattern = Pattern.compile(
+                "(?:\\.tr|\\.trList|\\.title|sendKey)\\(\\s*(?:player|p)\\s*,\\s*\"((?:codex_|walkthrough_|staff_|button_|admin_|back_|exit_)[a-z0-9_]+)\"");
+        for (Path source : sources) {
+            Matcher matcher = keyPattern.matcher(Files.readString(source));
+            while (matcher.find()) keys.add(matcher.group(1));
+        }
+        // InfoGUI section/card helpers pass keys as bare string args before fallbacks.
+        Pattern infoKeyPattern = Pattern.compile(
+                "\"((?:codex_|button_|back_|exit_)[a-z0-9_]+)\"");
+        Matcher infoMatcher = infoKeyPattern.matcher(
+                Files.readString(Path.of("src/main/java/com/aegisguard/gui/InfoGUI.java")));
+        while (infoMatcher.find()) keys.add(infoMatcher.group(1));
+
+        // Walkthrough builds page titles via concatenation.
+        keys.add("walkthrough_menu_title_page1");
+        keys.add("walkthrough_menu_title_page2");
+
+        // Critical footer / language feedback keys used across menus.
+        keys.addAll(List.of(
+                "back_lore", "exit_lore", "back_menu_lore",
+                "exchange_unavailable", "exchange_disabled",
+                "snapshots_unavailable", "snapshots_disabled_config",
+                "language_invalid_style", "language_set_to",
+                "expansion_manager_unavailable",
+                "admin_refreshing_lang", "admin_refresh_lang_complete",
+                "admin_setting_enabled", "admin_setting_disabled",
+                "settings_notif_mode_action_bar", "settings_notif_mode_chat", "settings_notif_mode_title"));
+
+        // Action-tag / concatenation fragments are not language keys.
+        keys.remove("back_main");
+        keys.remove("walkthrough_menu_title_page");
+        return keys;
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> loadLanguage(String language) throws Exception {
         Map<String, Object> flattened = new HashMap<>();

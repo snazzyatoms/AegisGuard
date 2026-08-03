@@ -67,7 +67,9 @@ public class ExpansionInstantApprovalsGUI {
 
         ExpansionRequestManager manager = plugin.getExpansionRequestManager();
         if (manager == null) {
-            player.sendMessage("§c[AegisGuard] ExpansionRequestManager not loaded.");
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    plugin.gui().tr(player, "expansion_manager_unavailable",
+                            "&c[AegisGuard] Expansion request manager is unavailable.")));
             plugin.effects().playError(player);
             return;
         }

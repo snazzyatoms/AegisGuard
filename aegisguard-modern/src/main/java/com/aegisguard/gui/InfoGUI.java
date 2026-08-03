@@ -100,49 +100,49 @@ public class InfoGUI {
                 ))
         ));
 
-        inv.setItem(10, sectionItem(player, Material.GOLDEN_HOE, "codex_claim_title", "&e§lI. Claiming", "codex_claim_lore",
+        inv.setItem(10, sectionItem(player, Material.GOLDEN_HOE, "codex_claim_title", "&e&lI. Claiming", "codex_claim_lore",
                 List.of(
                         "&7Learn how to claim land,",
                         "&7select corners, and create",
                         "&7shared group claims."
                 )));
 
-        inv.setItem(12, sectionItem(player, Material.ENDER_PEARL, "codex_travel_title", "&b§lII. Travel", "codex_travel_lore",
+        inv.setItem(12, sectionItem(player, Material.ENDER_PEARL, "codex_travel_title", "&b&lII. Travel", "codex_travel_lore",
                 List.of(
                         "&7Review homes, plot spawn,",
                         "&7visit travel, and server",
                         "&7warp-style movement."
                 )));
 
-        inv.setItem(14, sectionItem(player, Material.WRITABLE_BOOK, "codex_menus_title", "&d§lIII. Menus", "codex_menus_lore",
+        inv.setItem(14, sectionItem(player, Material.WRITABLE_BOOK, "codex_menus_title", "&d&lIII. Menus", "codex_menus_lore",
                 List.of(
                         "&7Learn what each major",
                         "&7AegisGuard menu does and",
                         "&7where to manage your plot."
                 )));
 
-        inv.setItem(16, sectionItem(player, Material.SHIELD, "codex_security_title", "&c§lIV. Security", "codex_security_lore",
+        inv.setItem(16, sectionItem(player, Material.SHIELD, "codex_security_title", "&c&lIV. Security", "codex_security_lore",
                 List.of(
                         "&7See how trust, bans,",
                         "&7flags, and protection rules",
                         "&7keep your plot secure."
                 )));
 
-        inv.setItem(22, sectionItem(player, Material.GOLD_INGOT, "codex_economy_title", "&6§lV. Economy", "codex_economy_lore",
+        inv.setItem(22, sectionItem(player, Material.GOLD_INGOT, "codex_economy_title", "&6&lV. Economy", "codex_economy_lore",
                 List.of(
                         "&7Read about ClaimBlocks,",
                         "&7upkeep, expansion costs,",
                         "&7and market systems."
                 )));
 
-        inv.setItem(24, sectionItem(player, Material.NAME_TAG, "codex_identity_title", "&3§lVI. Identity", "codex_identity_lore",
+        inv.setItem(24, sectionItem(player, Material.NAME_TAG, "codex_identity_title", "&3&lVI. Identity", "codex_identity_lore",
                 List.of(
                         "&7Customize plot names,",
                         "&7descriptions, cosmetics,",
                         "&7and presentation."
                 )));
 
-        inv.setItem(31, sectionItem(player, Material.EXPERIENCE_BOTTLE, "codex_advanced_title", "&5§lVII. Advanced", "codex_advanced_lore",
+        inv.setItem(31, sectionItem(player, Material.EXPERIENCE_BOTTLE, "codex_advanced_title", "&5&lVII. Advanced", "codex_advanced_lore",
                 List.of(
                         "&7Explore leveling, zones,",
                         "&7rentals, TradeStalls, and",

@@ -9,6 +9,7 @@
 # ------------------------------------------------------------
 # Botones de Navegación Comunes
 # ------------------------------------------------------------
+
 button_back: '&e⟵ Atrás'
 back_lore:
 - '&7Vuelve a la página anterior.'
@@ -34,10 +35,6 @@ button_exit_lore:
 exit_lore:
 - '&7Cierra este menú.'
 button_back_admin: '&fVolver a Admin'
-
-# ------------------------------------------------------------
-# Menú Principal
-# ------------------------------------------------------------
 menu_title: '&3✦ Menú AegisGuard'
 main_section_territory_name: '&bTerritorio'
 main_section_territory_lore: '&7Tu reclamo, perfil y controles de tierra.'
@@ -47,20 +44,16 @@ main_section_economy_name: '&6Economía y Progreso'
 main_section_economy_lore: '&7Mercado, ClaimBlocks, mejoras y subastas.'
 main_section_explore_name: '&aExplorar'
 main_section_explore_lore: '&7Rutas y viajes del servidor.'
-
 button_info: '&bℹ Información'
 info_lore:
 - '&7Ver información y ayuda del plugin.'
-
 plot_status_button_title: '&b✦ Estado de Parcela'
 plot_status_button_lore:
-  - '&7Ver estado, fusionar reclamos,'
-  - '&7transferir o regalar bloques.'
-
+- '&7Ver estado, fusionar reclamos,'
+- '&7transferir o regalar bloques.'
 visit_gui_title: '&3🧭 Menú de Viaje'
 visit_button_lore:
 - '&7Visita parcelas y viaja rápidamente.'
-
 button_claim_land: '&a🛡 Reclamar Tierra'
 claim_land_lore:
 - '&7Selecciona dos puntos con tu varita primero.'
@@ -68,29 +61,23 @@ claim_land_ready_lore:
 - '&7Listo para reclamar tu selección.'
 - ' '
 - '&eClic para confirmar'
-
 button_plot_flags: '&6⚙ Ajustes de Parcela'
 plot_flags_title: '&3⚙ Ajustes de Parcela'
 plot_flags_lore:
 - '&7Administrar banderas de protección de esta parcela.'
 plot_flags_locked_lore:
 - '&cNo puedes administrar banderas aquí.'
-
 button_roles: '&e👥 Roles'
 roles_lore:
 - '&7Administrar roles y permisos de miembros.'
 roles_locked_lore:
 - '&cNo puedes administrar roles aquí.'
-
 level_button_lore:
 - '&7Sube de nivel tu parcela para beneficios.'
-
 zone_button_lore:
 - '&7Crea sub-zones y habitaciones rentables.'
-
 biome_button_lore:
 - '&7Cambia el bioma de tu parcela.'
-
 button_market: '&6💰 Mercado'
 market_lore:
 - '&7Compra y vende bienes de parcela.'
@@ -98,7 +85,6 @@ button_market_local: '&6Mercado Local'
 market_local_lore:
 - '&7Abre los alquileres, tiendas y'
 - '&7opciones comerciales de esta parcela.'
-
 button_claimblocks_exchange: '&a💱 Intercambio de Bloques'
 claimblocks_exchange_lore:
 - '&7Compra o vende bloques de reclamo por dinero.'
@@ -108,31 +94,22 @@ button_claimblocks_exchange_disabled: '&7💱 Intercambio de Bloques'
 claimblocks_exchange_disabled_lore:
 - '&7Esta función no está disponible actualmente.'
 - '&8Habilitar: claim_blocks.exchange.enabled: true'
-
 button_expand: '&b⛏ Expandir'
 expand_lore:
 - '&7Solicitar expansiones de terreno.'
-
 button_auction: '&c🔥 Subastas'
 auction_lore:
 - '&7Puja en parcelas y listados.'
-
 button_player_settings: '&e⚙ Configuración'
 player_settings_lore:
 - '&7Preferencias personales e idioma.'
-
 admin_menu_title: '&c✦ Herramientas del Alto Guardián'
 admin_menu_lore:
 - '&7Acceso exclusivo del operador'
-
 no_plot_here: '&cDebes estar parado dentro de una parcela para hacer eso.'
 no_selection: '&cNecesitas seleccionar dos puntos primero.'
 not_plot_owner: '&cNo puedes administrar esta parcela.'
 claimblocks_exchange_unavailable: '&cEl intercambio de bloques no está disponible en este momento.'
-
-# ------------------------------------------------------------
-# Menú de Viaje
-# ------------------------------------------------------------
 visit_title_warps: '&6Puntos del Servidor'
 visit_title_trusted: '&3Parcelas de Confianza'
 visit_title_owned: '&2Mis Parcelas'
@@ -164,10 +141,6 @@ visit_plot_lore:
 visit_role_owner: '&aPropietario'
 visit_fail_no_spawn: '&cEste destino no tiene un punto de aparición válido.'
 visit_teleport_success: '&aTeletransportado.'
-
-# ------------------------------------------------------------
-# Preferencias
-# ------------------------------------------------------------
 settings_menu_title: '&3⚙ Preferencias'
 settings_sounds_on_name: '&aSonidos: ACTIVADO'
 settings_sounds_off_name: '&cSonidos: DESACTIVADO'
@@ -209,10 +182,6 @@ settings_admin_updates_off_name: '&cAvisos de Admin: DESACTIVADO'
 settings_admin_updates_lore:
 - '&7Activa o desactiva avisos del staff,'
 - '&7revisiones y alertas.'
-
-# ------------------------------------------------------------
-# Gestión de Roles
-# ------------------------------------------------------------
 roles_gui_title: '&e👥 Gestión de Roles'
 roles_add_button: '&a➕ Agregar Miembro'
 roles_add_lore:
@@ -231,10 +200,6 @@ role_coowner: '&dCo-Dueño'
 role_trusted: '&aDe Confianza'
 role_visitor: '&7Visitante'
 role_banned: '&cBaneado'
-
-# ------------------------------------------------------------
-# Banderas de Parcela
-# ------------------------------------------------------------
 flags_gui_title: '&6⚙ Banderas de Parcela'
 flag_enabled: '&aActivado'
 flag_disabled: '&cDesactivado'
@@ -242,7 +207,6 @@ flag_toggle_lore:
 - '&7Estado actual: {STATUS}'
 - ' '
 - '&eClic para alternar'
-
 flag_pvp_name: '&c⚔ PvP'
 flag_pvp_lore:
 - '&7Permitir combate entre jugadores.'
@@ -402,14 +366,9 @@ flag_chiseled_bookshelf_lore:
 flag_suspicious_block_name: '&e🔍 Bloques Sospechosos'
 flag_suspicious_block_lore:
 - '&7Permitir cepillado de bloques sospechosos.'
-
-# ------------------------------------------------------------
-# Selección de Bioma
-# ------------------------------------------------------------
 biome_gui_title: '&d🌿 Selección de Bioma'
 biome_item_lore:
 - '&7Clic para establecer este bioma.'
-
 biome_plains: '&aLlanuras'
 biome_forest: '&2Bosque'
 biome_desert: '&eDesierto'
@@ -435,10 +394,6 @@ biome_cherry_grove: '&dArboleda de Cerezos'
 biome_frozen_peaks: '&bPicos Congelados'
 biome_mangrove_swamp: '&2Pantano de Manglares'
 biome_the_void: '&8El Vacío'
-
-# ------------------------------------------------------------
-# Gestión de Zonas
-# ------------------------------------------------------------
 zone_gui_title: '&3✦ Gestión de Zonas'
 zone_create_button: '&a➕ Crear Zona'
 zone_create_lore:
@@ -450,7 +405,6 @@ zone_item_lore:
 - ' '
 - '&eClic para gestionar'
 zone_delete_confirm: '&c¿Eliminar esta zona?'
-
 zone_type_rental: '&6Alquiler'
 zone_type_shop: '&aComercio'
 zone_type_farm: '&2Granja'
@@ -528,9 +482,9 @@ zone_tenant_guest_build_lore:
 - '&7y rompan bloques en esta habitación.'
 zone_tenant_evict_name: '&cDesalojar Inquilino'
 zone_tenant_evict_lore:
-  - '&7Quita al inquilino actual y'
-  - '&7limpia el acceso de invitados.'
-  - '&cShift+clic para confirmar el desalojo.'
+- '&7Quita al inquilino actual y'
+- '&7limpia el acceso de invitados.'
+- '&cShift+clic para confirmar el desalojo.'
 zone_tenant_guest_add_lore: '&7Clic para permitir que este jugador cercano entre a la habitación.'
 zone_tenant_guest_remove_lore: '&7Clic para quitar a este invitado de la habitación.'
 zone_tenant_guest_count: '&7Invitados aprobados: &f{COUNT}'
@@ -543,10 +497,6 @@ local_market_title: '&6✦ Mercado Local'
 local_market_global_name: '&6Mercado de Parcelas'
 local_market_rentals_name: '&aPuestos y Alquileres'
 local_market_manage_name: '&bGestionar Mercado Local'
-
-# ------------------------------------------------------------
-# Niveles de Parcela
-# ------------------------------------------------------------
 level_gui_title: '&d✦ Niveles de Parcela'
 level_header_owner: '&7Dueño: &f{OWNER}'
 level_header_world: '&7Mundo: &f{WORLD}'
@@ -555,20 +505,17 @@ level_header_multiplier: '&7Multiplicador de Costo: &f{MULTIPLIER}'
 level_header_growth_title: '&bCrecimiento de Territorio:'
 level_header_growth_line: '&7+&f{AMOUNT} &7bloques de radio por nivel.'
 level_current_status: '&eEstado del Dominio'
-
 level_current_blessings_name: '&bBendiciones Actuales'
 level_current_blessings_title: '&bBendiciones Activas'
 level_current_blessings_footer_1: '&7Solo se muestran tus mejoras más fuertes.'
 level_current_blessings_footer_2: '&8(Mantén esta vista limpia y legible.)'
 level_current_blessings_none: '&8Aún no hay bonificaciones especiales activas en este nivel.'
-
 level_upgrade_unavailable: '&cNo se puede mejorar'
 level_upgrade_unavailable_lore:
 - '&7No hay un método de pago disponible.'
 - '&8Habilita la progresión por bloques o Vault.'
 - ' '
 - '&cMejora bloqueada.'
-
 level_upgrade_next_tier: '&eSiguiente Rango: &fNivel {LEVEL}'
 level_upgrade_cost_money: '&7Dinero: &6{COST} &8({TYPE})'
 level_upgrade_cost_money_disabled: '&8Dinero: Deshabilitado/No disponible'
@@ -581,14 +528,12 @@ level_upgrade_territory_title: '&bGanancia de Territorio:'
 level_upgrade_territory_line: '&7+&f{AMOUNT} &7de radio en esta mejora.'
 level_upgrade_click_hint: '&eHaz clic para ascender al Nivel {LEVEL} si puedes pagarlo.'
 level_upgrade_blessings_none: '&8Esta mejora se enfoca en crecimiento o acceso, no en una nueva bonificación.'
-
 level_upgrade_button_money: '&6Mejorar con Dinero (Nivel {LEVEL})'
 level_upgrade_button_money_lore:
 - '&7Paga usando la economía del servidor.'
 - '&7Costo: &6{COST} &8({TYPE})'
 - ' '
 - '&eClic para mejorar'
-
 level_upgrade_button_blocks: '&bMejorar con Bloques (Nivel {LEVEL})'
 level_upgrade_button_blocks_lore:
 - '&7Gasta tus bloques ganados.'
@@ -596,7 +541,6 @@ level_upgrade_button_blocks_lore:
 - '&7Saldo: &b{BALANCE}'
 - ' '
 - '&eClic para mejorar'
-
 level_track_completed_name: '&aNivel {LEVEL} Completado'
 level_track_completed_lore:
 - '&7Ya dominaste este nivel.'
@@ -614,33 +558,25 @@ level_track_blessings_none: '&8No hay bonificaciones extra ligadas a este nivel.
 level_track_footer_next: '&eEl siguiente rango te espera.'
 level_track_footer_progress: '&7Avanza para desbloquear este rango.'
 level_track_footer_mastered: '&aDominado.'
-
 level_max_reached: '&6★ Nivel Máximo'
 level_max_reached_lore:
 - '&7Tu dominio ha alcanzado'
 - '&7su nivel más alto.'
 - ' '
 - '&aDisfruta de todo tu poder.'
-
 level_expansion_title: '&aExpansión de Territorio'
 level_expansion_lore:
 - '&bReglas de Crecimiento:'
 - '&7Cada mejora expande el radio'
 - '&7de tu reclamo equitativamente.'
-
 level_up_fail_cost: '&cNo tienes suficientes recursos para mejorar.'
 level_up_fail_overlap: '&cNo se puede mejorar: el terreno nuevo se superpone con otro reclamo.'
 level_up_fail_world_limit: '&cNo se puede mejorar: alcanzaste el límite de radio de este mundo ({LIMIT}).'
 level_up_success: '&a¡Tu parcela ha ascendido al nivel {LEVEL}!'
-
-# ------------------------------------------------------------
-# Sistema de Rangos de Ascensión
-# ------------------------------------------------------------
 tier_current_name: '&6Nivel Actual'
 tier_locked_name: '&8Nivel Bloqueado'
 tier_unlocked_name: '&aNivel Desbloqueado'
 tier_next_name: '&eSiguiente Nivel'
-
 tier_current_lore:
 - '&7Tu parcela está en este nivel.'
 tier_locked_lore:
@@ -650,20 +586,16 @@ tier_unlocked_lore:
 - '&aNivel desbloqueado y activo.'
 tier_next_lore:
 - '&7El siguiente nivel a desbloquear.'
-
 current_tier: '&6Nivel Actual'
 locked_tier: '&8Nivel Bloqueado'
 unlocked_tier: '&aNivel Desbloqueado'
 next_tier: '&eSiguiente Nivel'
-
 tier_description: '&7Tu parcela está en este nivel.'
 tier_locked_description: '&cEste nivel aún no está disponible.'
-
 unlocked_bonuses: '&bBonificaciones Desbloqueadas'
 locked_bonuses: '&7Bonificaciones Bloqueadas'
 no_bonuses: '&7Sin bonificaciones en este nivel.'
 bonus_prefix: '&a✦ '
-
 bonus_speed: '&bVelocidad {LEVEL}'
 bonus_haste: '&ePresto {LEVEL}'
 bonus_resistance: '&9Resistencia {LEVEL}'
@@ -676,17 +608,14 @@ bonus_fire_resistance: '&6Resistencia al Fuego'
 bonus_members: '&eMiembros: {COUNT}'
 bonus_claim_blocks: '&aBloques de Reclamo: +{AMOUNT}'
 bonus_homes: '&dHogares: {COUNT}'
-
 progression_mastered: '&dEsta línea de progresión está completamente dominada.'
 progression_locked: '&cProgresión bloqueada. Completa requisitos previos.'
 progression_available: '&eListo para subir de nivel.'
 progression_in_progress: '&7Progresión en curso...'
-
 tier_upgrade_cost: '&7Costo: &6{COST}'
 tier_upgrade_requirements: '&7Requisitos:'
 tier_upgrade_click: '&eClic para subir de nivel'
 tier_upgrade_insufficient: '&cNo tienes suficientes recursos.'
-
 tier_name_1: '&7Nivel I'
 tier_name_2: '&fNivel II'
 tier_name_3: '&aNivel III'
@@ -697,15 +626,10 @@ tier_name_7: '&cNivel VII'
 tier_name_8: '&5Nivel VIII'
 tier_name_9: '&eNivel IX'
 tier_name_10: '&6✦ Nivel X ✦'
-
 tier_max_reached: '&6★ Nivel Máximo Alcanzado'
 tier_max_lore:
 - '&dHas dominado completamente esta parcela.'
 - '&7¡Disfruta de todas las bonificaciones!'
-
-# ------------------------------------------------------------
-# Mercado de Parcelas
-# ------------------------------------------------------------
 market_gui_title: '&6✦ Mercado de Parcelas'
 market_sell_button: '&a💵 Vender Parcela'
 market_sell_lore:
@@ -725,10 +649,6 @@ market_your_listing_lore:
 - '&7Precio: &6{PRICE}'
 - ' '
 - '&cClic para quitar del mercado'
-
-# ------------------------------------------------------------
-# Subastas
-# ------------------------------------------------------------
 auction_gui_title: '&c✦ Subastas'
 auction_item_name: '&6{PLOT}'
 auction_item_lore:
@@ -741,29 +661,25 @@ auction_create_button: '&a➕ Crear Subasta'
 auction_create_lore:
 - '&7Subasta una de tus parcelas.'
 auction_no_auctions: '&7No hay subastas activas.'
-
-# ------------------------------------------------------------
-# Expansión de Parcela
-# ------------------------------------------------------------
 expansion_gui_title: '&d✦ Frontera en Expansión ✦'
 expansion_header_name: '&dConsola de Expansión'
 expansion_header_lore:
-  - '&7Abre más espacio para casas, caminos,'
-  - '&7granjas, mercados y futuros distritos.'
-  - ' '
-  - '&8Cada solicitud revisa límites,'
-  - '&8superposición y pago antes de avanzar.'
+- '&7Abre más espacio para casas, caminos,'
+- '&7granjas, mercados y futuros distritos.'
+- ' '
+- '&8Cada solicitud revisa límites,'
+- '&8superposición y pago antes de avanzar.'
 expansion_header_state_outside: '&cPárate dentro de una de tus propias parcelas para enviar una solicitud.'
 expansion_header_state_pending: '&eYa hay una solicitud en revisión para esta frontera.'
 expansion_header_state_ready_instant: '&bLas solicitudes válidas pueden resolverse al instante en este servidor.'
-expansion_header_state_ready_unattended: '&bNo hay revisores conectados, así que las solicitudes válidas pueden auto-aprobarse y quedar registradas.'
+expansion_header_state_ready_unattended: '&bNo hay revisores conectados, así que las solicitudes válidas pueden auto-aprobarse
+  y quedar registradas.'
 expansion_header_state_ready_queue: '&6Elige un nivel abajo y envíalo a revisión del staff.'
-
 expansion_plot_overview_name: '&bFrontera Actual'
 expansion_plot_overview_missing_lore:
-  - '&7No se detectó una parcela bajo tus pies.'
-  - '&7Muévete a una de tus propias parcelas'
-  - '&7para abrir una solicitud activa.'
+- '&7No se detectó una parcela bajo tus pies.'
+- '&7Muévete a una de tus propias parcelas'
+- '&7para abrir una solicitud activa.'
 expansion_plot_type_line: '&7Tipo de Parcela: &f{TYPE}'
 expansion_plot_owner_line: '&7Dueño: &f{OWNER}'
 expansion_plot_world_line: '&7Mundo: &f{WORLD}'
@@ -781,12 +697,11 @@ expansion_plot_type_server: '&dZona del Servidor'
 expansion_plot_type_group_named: '&bParcela de Grupo &8({GROUP})'
 expansion_plot_type_group: '&bParcela de Grupo'
 expansion_plot_type_personal: '&aParcela Personal'
-
 expansion_pending_none_name: '&aSin Solicitud Pendiente'
 expansion_pending_name: '&eSolicitud de Expansión Pendiente'
 expansion_pending_none_lore:
-  - '&7No hay una solicitud activa de expansión'
-  - '&7esperando en la cola en este momento.'
+- '&7No hay una solicitud activa de expansión'
+- '&7esperando en la cola en este momento.'
 expansion_pending_none_hint_outside: '&8Muévete a una de tus propias parcelas para comenzar.'
 expansion_pending_none_hint_ready: '&aElige un nivel abajo para preparar tu siguiente expansión.'
 expansion_pending_radius_line: '&7Radio Actual: &f{CURRENT}'
@@ -796,56 +711,53 @@ expansion_pending_world_line: '&7Ancla de Mundo: &f{WORLD}'
 expansion_pending_status_line: '&7Estado: &eEsperando revisión'
 expansion_pending_mode_line: '&bEste reino usa aprobación instantánea para expansiones válidas.'
 expansion_pending_mode_queue_line: '&6Se requiere revisión del staff antes de expandir esta frontera.'
-
 expansion_projection_name: '&d&lHorizontes de Expansión'
 expansion_projection_lore:
-  - '&7Desbloquea territorio a escala monumental'
-  - '&7mediante el nivel de Ascensión de tu parcela.'
-  - ' '
-  - '&8Cinco Horizontes amplían el crecimiento'
-  - '&8más allá de los niveles de Frontera.'
+- '&7Desbloquea territorio a escala monumental'
+- '&7mediante el nivel de Ascensión de tu parcela.'
+- ' '
+- '&8Cinco Horizontes amplían el crecimiento'
+- '&8más allá de los niveles de Frontera.'
 expansion_projection_hint_outside: '&8Entra a una de tus propias parcelas para ver números reales.'
 expansion_projection_smallest_line: '&7Paso Más Pequeño: &f{TARGET} de radio'
 expansion_projection_largest_line: '&7Paso Más Grande: &f{TARGET} de radio'
 expansion_projection_limit_line: '&7Techo del Mundo: &f{LIMIT} de radio'
 expansion_projection_role_line: '&7Este panel muestra los siguientes pasos legales de expansión desde tu parcela actual.'
 expansion_projection_audit_line: '&7Cada solicitud resuelta queda escrita en la auditoría.'
-
 expansion_tier1_name: '&aPulso Fronterizo I &8(+5)'
 expansion_tier1_lore:
-  - '&7Abre una primera expansión con cuidado.'
-  - '&7Aumenta el radio en &a+5&7 bloques.'
-  - ' '
-  - '&eClic para enviar solicitud.'
+- '&7Abre una primera expansión con cuidado.'
+- '&7Aumenta el radio en &a+5&7 bloques.'
+- ' '
+- '&eClic para enviar solicitud.'
 expansion_tier2_name: '&ePulso Fronterizo II &8(+10)'
 expansion_tier2_lore:
-  - '&7Empuja tus límites un poco más.'
-  - '&7Aumenta el radio en &a+10&7 bloques.'
-  - ' '
-  - '&eClic para enviar solicitud.'
+- '&7Empuja tus límites un poco más.'
+- '&7Aumenta el radio en &a+10&7 bloques.'
+- ' '
+- '&eClic para enviar solicitud.'
 expansion_tier3_name: '&fOleada Fronteriza III &8(+20)'
 expansion_tier3_lore:
-  - '&7Abre espacio para caminos y construcciones mayores.'
-  - '&7Aumenta el radio en &a+20&7 bloques.'
-  - ' '
-  - '&eClic para enviar solicitud.'
+- '&7Abre espacio para caminos y construcciones mayores.'
+- '&7Aumenta el radio en &a+20&7 bloques.'
+- ' '
+- '&eClic para enviar solicitud.'
 expansion_tier4_name: '&6Ascenso Fronterizo IV &8(+35)'
 expansion_tier4_lore:
-  - '&7Forma un distrito amplio alrededor de tu parcela.'
-  - '&7Aumenta el radio en &a+35&7 bloques.'
-  - ' '
-  - '&eClic para enviar solicitud.'
+- '&7Forma un distrito amplio alrededor de tu parcela.'
+- '&7Aumenta el radio en &a+35&7 bloques.'
+- ' '
+- '&eClic para enviar solicitud.'
 expansion_tier5_name: '&bCenit Fronterizo V &8(+50)'
 expansion_tier5_lore:
-  - '&7Llega a una frontera digna de un gran proyecto.'
-  - '&7Aumenta el radio en &a+50&7 bloques.'
-  - ' '
-  - '&eClic para enviar solicitud.'
+- '&7Llega a una frontera digna de un gran proyecto.'
+- '&7Aumenta el radio en &a+50&7 bloques.'
+- ' '
+- '&eClic para enviar solicitud.'
 expansion_tier_radius_line: '&7Radio: &f{CURRENT} &8→ &a{TARGET}'
 expansion_tier_area_line: '&7Superficie Proyectada: &b{AREA} bloques'
 expansion_tier_cost_line: '&7Costo Estimado: &6{COST}'
 expansion_tier_pending_block: '&eYa tienes una solicitud pendiente en revisión.'
-
 expansion_direction_north: '&bNorte'
 expansion_direction_south: '&6Sur'
 expansion_direction_east: '&aEste'
@@ -858,10 +770,6 @@ expansion_direction_lore:
 expansion_blocked_lore:
 - '&cNo se puede expandir en esta dirección.'
 - '&7Hay terreno reclamado bloqueando.'
-
-# ------------------------------------------------------------
-# Solicitudes Pendientes
-# ------------------------------------------------------------
 pending_requests_title: '&6📋 Solicitudes Pendientes'
 pending_request_item: '&e{TYPE}'
 pending_request_lore:
@@ -872,10 +780,6 @@ pending_request_lore:
 - ' '
 - '&aClic izquierdo: &7Aprobar'
 - '&cClic derecho: &7Rechazar'
-
-# ------------------------------------------------------------
-# Estado de Parcela
-# ------------------------------------------------------------
 plot_status_title: '&b✦ Estado de Parcela'
 plot_status_name_item: '&b{NAME}'
 plot_status_info_lore:
@@ -885,17 +789,12 @@ plot_status_info_lore:
 - '&7Miembros: &d{MEMBERS}'
 - ' '
 - '&7Creada: &f{CREATED}'
-
 plot_status_flags_item: '&6🚩 Banderas Activas'
 plot_status_flags_lore:
 - '&7Banderas habilitadas en esta parcela.'
 plot_status_members_item: '&e👥 Miembros'
 plot_status_members_lore:
 - '&7Jugadores de confianza en esta parcela.'
-
-# ------------------------------------------------------------
-# Guía del Guardián (Codex)
-# ------------------------------------------------------------
 codex_gui_title: '&b✦ Guía del Guardián ✦'
 codex_claim_page_title: '&e✦ Guía de Reclamos'
 codex_travel_page_title: '&b✦ Guía de Viaje'
@@ -933,7 +832,6 @@ codex_advanced_header: '&5Sistemas Avanzados'
 codex_advanced_header_lore:
 - '&7Sistemas más profundos para crecer,'
 - '&7rentas, seguridad administrativa y más.'
-
 codex_getting_started_title: '&e§lI. Empezando'
 codex_getting_started_lore:
 - '&7¡Bienvenido a AegisGuard!'
@@ -957,8 +855,7 @@ starter_note_lore:
 - '&7Para más ayuda, abre el Códice'
 - '&7dentro del menú principal.'
 starter_note_discard_lore: '&8Tira esta nota para desecharla.'
-
-codex_claim_title: '&a§lII. Reclamar'
+codex_claim_title: '&a&lII. Reclamar'
 codex_claim_lore:
 - '&7Cómo proteger terreno:'
 - ' '
@@ -975,9 +872,6 @@ codex_menus_ascension_lore:
 - '&7Ábrela cuando quieras hacer crecer'
 - '&7tu parcela mediante niveles, ventajas'
 - '&7y progresión a largo plazo.'
-
-# Contenido completo de la Guía del Guardián. Spanish (AR) reuses these
-# entries only when it does not provide its own regional wording.
 codex_gui_header_lore:
 - '&7Consulta los temas de ayuda cuando necesites'
 - '&7recordar cómo funciona una herramienta.'
@@ -987,7 +881,6 @@ codex_root_welcome_lore:
 - '&7Abre un capítulo para aprender sobre'
 - '&7reclamos, viajes, seguridad y economía.'
 - '&eCada icono abre su propia guía.'
-
 codex_start_menu_name: '&bAbre tu Menú Principal'
 codex_start_menu_lore:
 - '&7Usa &b/ag menu &7para abrir el panel principal.'
@@ -1028,7 +921,6 @@ codex_start_help_lore:
 - '&b/ag menu &7- abrir el menú principal'
 - '&b/ag wand &7- obtener el cetro de reclamo'
 - '&b/ag help &7- consultar la ayuda de comandos'
-
 codex_claim_step1_name: '&eObtén tu Cetro'
 codex_claim_step1_lore:
 - '&7Usa &b/ag wand &7y sostén el Cetro de Aegis.'
@@ -1074,8 +966,7 @@ codex_claim_commands_lore:
 - '&e/ag wand &7- obtener el cetro'
 - '&e/ag claim &7- crear una parcela personal'
 - '&e/ag group claim &7- crear una parcela grupal'
-
-codex_travel_title: '&b§lII. Viaje'
+codex_travel_title: '&b&lII. Viaje'
 codex_travel_lore:
 - '&7Administra hogares, visitas y destinos.'
 - '&7Viaja a parcelas propias o de confianza.'
@@ -1115,8 +1006,7 @@ codex_travel_unstuck_lore:
 - '&7Usa &e/ag stuck &7si quedas atrapado.'
 - '&7Te ayuda a salir de muros o lugares difíciles.'
 - '&7Pruébalo antes de pedir ayuda al staff.'
-
-codex_menus_title: '&d§lIII. Menús'
+codex_menus_title: '&d&lIII. Menús'
 codex_menus_lore:
 - '&7Conoce los principales paneles de AegisGuard.'
 - '&7Administra tu parcela desde un mismo lugar.'
@@ -1151,8 +1041,7 @@ codex_menus_info_lore:
 - '&7Esta guía es tu referencia dentro del juego.'
 - '&7Consulta aquí los comandos y sistemas.'
 - '&7Revisa un capítulo antes de experimentar.'
-
-codex_security_title: '&c§lIV. Seguridad'
+codex_security_title: '&c&lIV. Seguridad'
 codex_security_lore:
 - '&7Controla acceso, roles y protecciones.'
 - '&7Bloquea visitantes no deseados.'
@@ -1192,8 +1081,7 @@ codex_security_staff_lore:
 - '&7El staff autorizado administra zonas especiales.'
 - '&7Es útil para mercados y terrenos del servidor.'
 - '&7Reduce el uso cotidiano del modo bypass.'
-
-codex_economy_title: '&6§lV. Economía'
+codex_economy_title: '&6&lV. Economía'
 codex_economy_lore:
 - '&7Conoce ClaimBlocks, costos y mantenimiento.'
 - '&7Compra, vende o alquila espacios protegidos.'
@@ -1238,8 +1126,7 @@ codex_economy_warning_lore:
 - '&7Recibirás avisos de tesorería, costos o impuestos.'
 - '&7Actúa antes de que una operación sea rechazada.'
 - '&7Revisa tus notificaciones con frecuencia.'
-
-codex_identity_title: '&3§lVI. Identidad'
+codex_identity_title: '&3&lVI. Identidad'
 codex_identity_lore:
 - '&7Personaliza cómo se presenta tu parcela.'
 - '&7Define nombre, descripción y efectos visuales.'
@@ -1274,8 +1161,7 @@ codex_identity_showcase_lore:
 - '&7Un buen nombre y spawn facilitan las visitas.'
 - '&7Los detalles visuales vuelven memorable el lugar.'
 - '&7Revisa la parcela desde la vista de un visitante.'
-
-codex_advanced_title: '&5§lVII. Avanzado'
+codex_advanced_title: '&5&lVII. Avanzado'
 codex_advanced_lore:
 - '&7Explora progresión, zonas y alquileres.'
 - '&7Conoce herramientas de recuperación y diagnóstico.'
@@ -1320,19 +1206,11 @@ codex_advanced_diagnostics_lore:
 - '&7Ayudan a revisar la configuración y la salud.'
 - '&7Los reportes del doctor detectan problemas.'
 - '&7El staff debe consultarlos ante cualquier falla.'
-
-# ------------------------------------------------------------
-# Registro de Dominios (Ledger)
-# ------------------------------------------------------------
 ledger_title: '&6✦ Registro de Dominios'
 ledger_entry_lore:
 - '&7Fecha: &f{DATE}'
 - '&7Acción: &e{ACTION}'
 - '&7Por: &b{ACTOR}'
-
-# ------------------------------------------------------------
-# Mensajes de Estado Comunes
-# ------------------------------------------------------------
 status_enabled: '&aActivado'
 status_disabled: '&cDesactivado'
 status_on: '&aSí'
@@ -1342,10 +1220,6 @@ status_unlocked: '&aDesbloqueado'
 status_pending: '&ePendiente'
 status_approved: '&aAprobado'
 status_denied: '&cRechazado'
-
-# ------------------------------------------------------------
-# Cuadros de Confirmación
-# ------------------------------------------------------------
 confirm_title: '&c⚠ Confirmar Acción'
 confirm_yes: '&a✔ Sí, Confirmar'
 confirm_yes_lore:
@@ -1353,20 +1227,12 @@ confirm_yes_lore:
 confirm_no: '&c✖ No, Cancelar'
 confirm_no_lore:
 - '&7Haz clic para cancelar.'
-
-# ------------------------------------------------------------
-# Mensajes de Error
-# ------------------------------------------------------------
 error_no_permission: '&cNo tienes permiso para esto.'
 error_player_not_found: '&cJugador no encontrado.'
 error_plot_not_found: '&cParcela no encontrada.'
 error_not_enough_money: '&cNo tienes suficiente dinero.'
 error_not_enough_blocks: '&cNo tienes suficientes bloques.'
 error_generic: '&cOcurrió un error. Intenta de nuevo.'
-
-# ------------------------------------------------------------
-# Mensajes de Éxito
-# ------------------------------------------------------------
 success_generic: '&a¡Operación exitosa!'
 success_plot_claimed: '&a¡Parcela reclamada exitosamente!'
 success_plot_unclaimed: '&aParcela eliminada.'
@@ -1374,20 +1240,19 @@ success_player_trusted: '&a{PLAYER} ahora es de confianza.'
 success_player_untrusted: '&a{PLAYER} ya no es de confianza.'
 success_flag_toggled: '&aBandera actualizada.'
 success_settings_saved: '&aConfiguración guardada.'
-
 button_admin_auto_remove: '&cAuto-Remover Baneados'
 admin_auto_remove_lore:
-  - '&7Qué: limpiar automáticamente parcelas de baneados.'
-  - '&7Cuándo: quieres limpiar cuentas baneadas con el tiempo.'
-  - ' '
-  - '&cPrecaución: elimina territorio tras la limpieza por ban.'
-  - '&eClic para alternar.'
+- '&7Qué: limpiar automáticamente parcelas de baneados.'
+- '&7Cuándo: quieres limpiar cuentas baneadas con el tiempo.'
+- ' '
+- '&cPrecaución: elimina territorio tras la limpieza por ban.'
+- '&eClic para alternar.'
 button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
 admin_bypass_limit_lore:
-  - '&7Qué: permite al staff ignorar límites normales de parcelas.'
-  - '&7Cuándo: zonas de staff o reparar parcelas enormes.'
-  - ' '
-  - '&eClic para alternar.'
+- '&7Qué: permite al staff ignorar límites normales de parcelas.'
+- '&7Cuándo: zonas de staff o reparar parcelas enormes.'
+- ' '
+- '&eClic para alternar.'
 button_admin_broadcast: '&eTransmitir Acciones Admin'
 admin_broadcast_lore:
 - '&7Anuncia acciones administrativas'
@@ -1408,45 +1273,45 @@ button_admin_expansion_mode: '&eAprobación de Expansión: {MODE}'
 admin_expansion_mode_queue: '&6Cola'
 admin_expansion_mode_instant: '&bInstantánea'
 admin_expansion_mode_lore_queue:
-  - '&7Actual: &6Cola'
-  - '&7Qué: los jugadores envían solicitudes de expansión;'
-  - '&7el staff debe aprobar o rechazar cada una.'
-  - ' '
-  - '&7Modo predeterminado: mantiene el crecimiento revisado.'
-  - ' '
-  - '&7Instantánea auto-aprueba solicitudes válidas si el staff no está.'
-  - '&eClic para cambiar a Instantánea.'
+- '&7Actual: &6Cola'
+- '&7Qué: los jugadores envían solicitudes de expansión;'
+- '&7el staff debe aprobar o rechazar cada una.'
+- ' '
+- '&7Modo predeterminado: mantiene el crecimiento revisado.'
+- ' '
+- '&7Instantánea auto-aprueba solicitudes válidas si el staff no está.'
+- '&eClic para cambiar a Instantánea.'
 admin_expansion_mode_lore_instant:
-  - '&7Actual: &bInstantánea'
-  - '&7Qué: las solicitudes válidas se auto-aprueban'
-  - '&7y se registran en el historial de auditoría.'
-  - ' '
-  - '&7Cuándo: staff ausente / poca cobertura, o servidores'
-  - '&7pequeños y de confianza con crecimiento automático.'
-  - ' '
-  - '&cPrecaución: las fronteras crecen sin revisión del staff.'
-  - '&eClic para cambiar a Cola.'
+- '&7Actual: &bInstantánea'
+- '&7Qué: las solicitudes válidas se auto-aprueban'
+- '&7y se registran en el historial de auditoría.'
+- ' '
+- '&7Cuándo: staff ausente / poca cobertura, o servidores'
+- '&7pequeños y de confianza con crecimiento automático.'
+- ' '
+- '&cPrecaución: las fronteras crecen sin revisión del staff.'
+- '&eClic para cambiar a Cola.'
 button_admin_diagnostics: '&bDiagnósticos'
 admin_diagnostics_lore:
-  - '&7Qué: Doctor de Territorio — escaneo, reparación,'
-  - '&7reportes, liquidaciones, morosos y migración de storage.'
-  - '&7Cuándo: parcelas, alquileres o hooks se ven inconsistentes.'
-  - ' '
-  - '&eClic para abrir.'
+- '&7Qué: Doctor de Territorio — escaneo, reparación,'
+- '&7reportes, liquidaciones, morosos y migración de storage.'
+- '&7Cuándo: parcelas, alquileres o hooks se ven inconsistentes.'
+- ' '
+- '&eClic para abrir.'
 button_view_requests_admin: '&cRevisar Solicitudes'
 view_requests_admin_lore:
-  - '&7Qué: aprobar o rechazar peticiones de expansión.'
-  - '&7Cuándo: hay solicitudes pendientes en la cola.'
-  - ' '
-  - '&eClic para abrir.'
+- '&7Qué: aprobar o rechazar peticiones de expansión.'
+- '&7Cuándo: hay solicitudes pendientes en la cola.'
+- ' '
+- '&eClic para abrir.'
 button_admin_reload_all: '&eRecargar Ajustes'
 button_reload_all_settings: '&eRecargar Ajustes'
 reload_all_settings_lore:
-  - '&7Qué: recargar config, vistas de datos y menús.'
-  - '&7Cuándo: después de editar config.yml en disco.'
-  - ' '
-  - '&cNo reemplaza un reinicio completo para todo cambio.'
-  - '&eClic para recargar.'
+- '&7Qué: recargar config, vistas de datos y menús.'
+- '&7Cuándo: después de editar config.yml en disco.'
+- ' '
+- '&cNo reemplaza un reinicio completo para todo cambio.'
+- '&eClic para recargar.'
 button_refresh_language_packs: '&aActualizar Idiomas'
 button_admin_refresh_lang: '&aActualizar Idiomas'
 refresh_language_packs_lore:
@@ -1459,49 +1324,47 @@ admin_toggle_default_lore:
 - '&7todo el servidor.'
 button_admin_snapshots: '&d📸 Instantáneas'
 admin_snapshots_lore:
-  - '&7Qué: revisar puntos de recuperación y restaurar parcelas.'
-  - '&7Cuándo: deshacer un merge/expansión/edición mala.'
-  - ' '
-  - '&cLa restauración sobrescribe la parcela activa — confirma con cuidado.'
-  - '&eClic para abrir.'
+- '&7Qué: revisar puntos de recuperación y restaurar parcelas.'
+- '&7Cuándo: deshacer un merge/expansión/edición mala.'
+- ' '
+- '&cLa restauración sobrescribe la parcela activa — confirma con cuidado.'
+- '&eClic para abrir.'
 button_admin_snapshots_disabled: '&8📸 Deshabilitadas'
 admin_snapshots_disabled_lore:
 - '&7Las instantáneas de parcelas están'
 - '&7deshabilitadas en la configuración actual.'
 admin_plot_list_title: '&b✦ Lista de Parcelas'
 admin_plot_list_lore:
-  - '&7Qué: explorar parcelas registradas y teletransportarte.'
-  - '&7Cuándo: investigar un claim o ayudar a un jugador.'
-  - ' '
-  - '&eClic para abrir.'
+- '&7Qué: explorar parcelas registradas y teletransportarte.'
+- '&7Cuándo: investigar un claim o ayudar a un jugador.'
+- ' '
+- '&eClic para abrir.'
 button_admin_world_controls: '&b🌍 Controles del Mundo'
 admin_world_controls_lore:
-  - '&7Qué: defaults de claim por mundo y game rules en vivo.'
-  - '&7Cuándo: cerrar un mundo, ajustar PvP/mobs o spawn.'
-  - ' '
-  - '&cLos toggles de game rules aplican de inmediato.'
-  - '&eClic para abrir.'
+- '&7Qué: defaults de claim por mundo y game rules en vivo.'
+- '&7Cuándo: cerrar un mundo, ajustar PvP/mobs o spawn.'
+- ' '
+- '&cLos toggles de game rules aplican de inmediato.'
+- '&eClic para abrir.'
 button_admin_world_controls_missing: '&8🌍 Controles del Mundo No Disponibles'
 admin_world_controls_missing_lore:
 - '&7Esta versión aún no tiene'
 - '&7la interfaz de controles del mundo.'
 button_admin_migration: '&6Asistente de Migración'
 admin_migration_lore:
-  - '&7Qué: vista previa y luego importar de'
-  - '&7GriefPrevention, GriefDefender o Lands.'
-  - '&7Cuándo: al cambiar de plugin de protección.'
-  - ' '
-  - '&cLa importación escribe parcelas — primero previsualiza.'
-  - '&eClic para abrir.'
-
+- '&7Qué: vista previa y luego importar de'
+- '&7GriefPrevention, GriefDefender o Lands.'
+- '&7Cuándo: al cambiar de plugin de protección.'
+- ' '
+- '&cLa importación escribe parcelas — primero previsualiza.'
+- '&eClic para abrir.'
 button_admin_audit: '&eRegistro de Auditoría'
 admin_audit_lore:
-  - '&7Qué: revisar restauraciones, reparaciones del Doctor,'
-  - '&7migraciones, bypass y ajustes de ClaimBlocks.'
-  - '&7Cuándo: auditorías o revisión de incidentes.'
-  - ' '
-  - '&eClic para abrir.'
-
+- '&7Qué: revisar restauraciones, reparaciones del Doctor,'
+- '&7migraciones, bypass y ajustes de ClaimBlocks.'
+- '&7Cuándo: auditorías o revisión de incidentes.'
+- ' '
+- '&eClic para abrir.'
 audit_admin_title: '&e&lRegistro de Auditoría'
 audit_disabled: '&cEl registro de auditoría está deshabilitado.'
 audit_none_title: '&cSin Registros'
@@ -1528,7 +1391,6 @@ audit_category_claim_block_adjust: 'Ajuste de ClaimBlocks'
 audit_category_guest_pass: 'Pase de Invitado'
 audit_category_lockdown: 'Bloqueo de Emergencia'
 audit_category_alliance: 'Alianza'
-
 local_market_stalls_name: '&6Trade Stalls'
 local_market_stalls_lore:
 - '&7Explora TradeStalls integrados y'
@@ -1591,7 +1453,6 @@ market_stall_clear_name: '&cLimpiar Oferta'
 market_stall_clear_lore:
 - '&7Quita el precio y la moneda de'
 - '&7el espacio seleccionado.'
-
 button_plot_status: '&b📊 Estado de Parcela'
 plot_status_lore:
 - '&7Revisa propiedad, protecciones,'
@@ -1784,10 +1645,10 @@ animals_toggle_lore:
 - '&7del daño de extraños.'
 - '&eClic para cambiar.'
 redstone_toggle_lore:
-  - '&7Bloquea botones, palancas y'
-  - '&7placas de presión de forasteros.'
-  - '&7Las puertas usan la bandera Puertas.'
-  - '&eClic para alternar.'
+- '&7Bloquea botones, palancas y'
+- '&7placas de presión de forasteros.'
+- '&7Las puertas usan la bandera Puertas.'
+- '&eClic para alternar.'
 vehicles_toggle_lore:
 - '&7Bloquea que extraños usen botes,'
 - '&7vagonetas y vehículos similares.'
@@ -1817,15 +1678,15 @@ level_current_blessing_footer_2: '&8bonos y ventajas más fuertes.'
 level_track_title_completed: '&aRuta Completada'
 level_track_completed_1: '&7Todos los hitos de esta ruta'
 level_track_completed_2: '&7han sido desbloqueados.'
-"level_track_completed_[1]": '&7Todos los hitos de esta ruta'
-"level_track_completed_[2]": '&7han sido desbloqueados.'
+'level_track_completed_[1]': '&7Todos los hitos de esta ruta'
+'level_track_completed_[2]': '&7han sido desbloqueados.'
 level_track_title_current: '&dRuta Actual'
-"level_track_current_[1]": '&7Estos bonos están actualmente'
-"level_track_current_[2]": '&7activos en tu parcela.'
+'level_track_current_[1]': '&7Estos bonos están actualmente'
+'level_track_current_[2]': '&7activos en tu parcela.'
 level_track_title_locked: '&cRuta Bloqueada'
-"level_track_locked_[1]": '&7Las mejoras siguientes de esta ruta'
-"level_track_locked_[2]": '&7se desbloquean al progresar.'
-"level_track_next_[1]": '&7Siguiente mejora de esta ruta'
+'level_track_locked_[1]': '&7Las mejoras siguientes de esta ruta'
+'level_track_locked_[2]': '&7se desbloquean al progresar.'
+'level_track_next_[1]': '&7Siguiente mejora de esta ruta'
 level_track_next_cost: '&eCosto de Mejora: &6{COST}'
 level_upgrade_tier: '&dSiguiente Nivel'
 level_upgrade_cost: '&eCosto de Mejora: &6{COST}'
@@ -1923,101 +1784,93 @@ visit_tab_all_claims: '&9Vista: Todas las Parcelas'
 visit_tab_all_claims_lore:
 - '&7Muestra cada parcela'
 - '&7disponible en esta lista.'
-
-# ============================================================
-# FIN DEL ARCHIVO GUI ESPAÑOL MX
-# ============================================================
 visit_title_discover: '&6Descubrir Parcelas'
 visit_title_favorites: '&eParcelas Favoritas'
 visit_switch_discover: '&6Descubrir Parcelas'
 visit_switch_favorites: '&eParcelas Favoritas'
 favorite_added: '&aParcela añadida a favoritos.'
 favorite_removed: '&eParcela eliminada de favoritos.'
-
-# 1.2.7 Doctor de Territorios
 admin_wand_doctor_hint: '&bAgacharse + Clic derecho: &fAbrir Doctor'
 back_admin_lore:
-  - '&7Volver a las herramientas de administración.'
+- '&7Volver a las herramientas de administración.'
 doctor_menu_title: '&4Doctor de Territorios'
 doctor_confirm_title: '&4Confirmar Reparación'
 doctor_summary_name: '&bSalud de Territorios'
 doctor_summary_lore:
-  - '&7Parcelas revisadas: &f{PLOTS}'
-  - '&7Problemas: &e{ISSUES}'
-  - '&7Críticos: &c{CRITICAL}'
-  - '&7Reparables automáticamente: &a{REPAIRABLE}'
+- '&7Parcelas revisadas: &f{PLOTS}'
+- '&7Problemas: &e{ISSUES}'
+- '&7Críticos: &c{CRITICAL}'
+- '&7Reparables automáticamente: &a{REPAIRABLE}'
 doctor_scan_name: '&aAnalizar de Nuevo'
 doctor_scan_lore:
-  - '&7Revisa parcelas, contratos, mercado,'
-  - '&7mundos, traslapes y pagos.'
-  - ' '
-  - '&eClic para analizar'
+- '&7Revisa parcelas, contratos, mercado,'
+- '&7mundos, traslapes y pagos.'
+- ' '
+- '&eClic para analizar'
 doctor_report_name: '&eCrear Informe Completo'
 doctor_report_lore:
-  - '&7Guarda el diagnóstico completo en'
-  - '&7plugins/AegisGuard/reports/.'
-  - ' '
-  - '&eClic para crear el informe'
+- '&7Guarda el diagnóstico completo en'
+- '&7plugins/AegisGuard/reports/.'
+- ' '
+- '&eClic para crear el informe'
 doctor_repair_name: '&cReparar Problemas Deterministas'
 doctor_repair_lore:
-  - '&7Corrige solo estados con una solución segura.'
-  - '&7Requiere una segunda confirmación.'
-  - ' '
-  - '&eClic para revisar la reparación'
+- '&7Corrige solo estados con una solución segura.'
+- '&7Requiere una segunda confirmación.'
+- ' '
+- '&eClic para revisar la reparación'
 doctor_repair_confirm_name: '&cConfirmar Reparaciones Seguras'
 doctor_repair_confirm_lore:
-  - '&7Se crean respaldos antes de los cambios.'
-  - '&7Los casos ambiguos nunca se adivinan.'
-  - ' '
-  - '&cClic para confirmar'
+- '&7Se crean respaldos antes de los cambios.'
+- '&7Los casos ambiguos nunca se adivinan.'
+- ' '
+- '&cClic para confirmar'
 doctor_loading_lore:
-  - '&7Espera un momento. Puedes usar Atrás'
-  - '&7o Salir con seguridad mientras termina.'
+- '&7Espera un momento. Puedes usar Atrás'
+- '&7o Salir con seguridad mientras termina.'
 doctor_issue_name: '&e{CODE}'
 doctor_no_issues: '&aSin Problemas de Consistencia'
 doctor_no_issues_lore:
-  - '&7Los territorios aprobaron este análisis.'
+- '&7Los territorios aprobaron este análisis.'
 doctor_issue_missing_owner:
-  - '&cFalta la identidad del propietario.'
-  - '&8Se requiere recuperación manual.'
-  - '&8Parcela: {PLOT}'
+- '&cFalta la identidad del propietario.'
+- '&8Se requiere recuperación manual.'
+- '&8Parcela: {PLOT}'
 doctor_issue_missing_world:
-  - '&eEl mundo indicado no está disponible.'
-  - '&8Parcela: {PLOT}'
+- '&eEl mundo indicado no está disponible.'
+- '&8Parcela: {PLOT}'
 doctor_issue_market_conflict:
-  - '&eHay varios estados de mercado activos.'
-  - '&8Parcela: {PLOT}'
+- '&eHay varios estados de mercado activos.'
+- '&8Parcela: {PLOT}'
 doctor_issue_invalid_sale:
-  - '&eEl precio de venta no es válido.'
-  - '&8Parcela: {PLOT}'
+- '&eEl precio de venta no es válido.'
+- '&8Parcela: {PLOT}'
 doctor_issue_invalid_rent:
-  - '&eEl precio de renta no es válido.'
-  - '&8Parcela: {PLOT}'
+- '&eEl precio de renta no es válido.'
+- '&8Parcela: {PLOT}'
 doctor_issue_stale_renter:
-  - '&ePersisten datos de un inquilino vencido.'
-  - '&8Parcela: {PLOT}'
+- '&ePersisten datos de un inquilino vencido.'
+- '&8Parcela: {PLOT}'
 doctor_issue_contract_mismatch:
-  - '&cLa parcela y el contrato no coinciden.'
-  - '&8Parcela: {PLOT}'
+- '&cLa parcela y el contrato no coinciden.'
+- '&8Parcela: {PLOT}'
 doctor_issue_plot_rental_missing:
-  - '&cHay contrato sin datos de renta en la parcela.'
-  - '&8Parcela: {PLOT}'
+- '&cHay contrato sin datos de renta en la parcela.'
+- '&8Parcela: {PLOT}'
 doctor_issue_duplicate_id:
-  - '&cMás de una parcela comparte este ID.'
-  - '&8Se requiere recuperación manual.'
-  - '&8Parcela: {PLOT}'
+- '&cMás de una parcela comparte este ID.'
+- '&8Se requiere recuperación manual.'
+- '&8Parcela: {PLOT}'
 doctor_issue_orphan_contract:
-  - '&cUn contrato apunta a una parcela eliminada.'
-  - '&8Parcela: {PLOT}'
+- '&cUn contrato apunta a una parcela eliminada.'
+- '&8Parcela: {PLOT}'
 doctor_issue_overlap:
-  - '&cLos límites de dos parcelas se traslapan.'
-  - '&8Se requiere revisión manual.'
-  - '&8Parcela: {PLOT}'
+- '&cLos límites de dos parcelas se traslapan.'
+- '&8Se requiere revisión manual.'
+- '&8Parcela: {PLOT}'
 doctor_issue_pending_settlement:
-  - '&eHay un pago pendiente de entrega.'
-  - '&8Consulta el informe para más detalles.'
-
-# Controles administrativos del mundo
+- '&eHay un pago pendiente de entrega.'
+- '&8Consulta el informe para más detalles.'
 world_controls_title: '&bControles del Mundo'
 world_controls_detail_title: '&bMundo: {WORLD}'
 world_controls_world_name: '&b{WORLD}'
@@ -2055,8 +1908,6 @@ world_controls_environment_normal: 'Mundo principal'
 world_controls_environment_nether: 'Nether'
 world_controls_environment_end: 'El End'
 world_controls_save_failed: '&cNo se pudo guardar esa regla del mundo. Revisa la consola.'
-
-# Horizontes de Expansión
 expansion_projection_level_line: '&7Nivel de Parcela: &f{CURRENT} &8/ &d{REQUIRED}'
 expansion_projection_unlocked: '&aHorizontes desbloqueados; haz clic para explorar.'
 expansion_projection_locked: '&eAlcanza el Nivel de Parcela {LEVEL} para desbloquear.'
@@ -2064,27 +1915,27 @@ expansion_projection_open: '&dHaz clic para abrir Horizontes de Expansión.'
 expansion_horizons_title: '&5✦ Horizontes de Expansión ✦'
 expansion_horizons_header: '&d&lMás Allá de la Frontera'
 expansion_horizons_header_lore:
-  - '&7Convierte una parcela avanzada en territorio'
-  - '&7monumental mediante la Ascensión.'
-  - ' '
-  - '&8Cada Horizonte respeta costos, límites,'
-  - '&8aprobación, capturas y superposición.'
+- '&7Convierte una parcela avanzada en territorio'
+- '&7monumental mediante la Ascensión.'
+- ' '
+- '&8Cada Horizonte respeta costos, límites,'
+- '&8aprobación, capturas y superposición.'
 expansion_horizons_plot: '&bProyección Territorial'
 expansion_horizons_level: '&eRequisito de Ascensión'
 expansion_horizons_safety: '&aCrecimiento Protegido'
 expansion_horizons_safety_lore:
-  - '&7Captura de recuperación antes de expandir'
-  - '&7Validación de límites y superposición'
-  - '&7Aprobación por cola o instantánea'
-  - '&7Reembolso si la expansión falla'
+- '&7Captura de recuperación antes de expandir'
+- '&7Validación de límites y superposición'
+- '&7Aprobación por cola o instantánea'
+- '&7Reembolso si la expansión falla'
 expansion_horizons_back: '&eVolver a Expansión de Frontera'
 expansion_horizons_back_lore:
-  - '&7Regresa a los niveles estándar.'
+- '&7Regresa a los niveles estándar.'
 expansion_horizons_disabled: '&cLos Horizontes están desactivados en este servidor.'
 expansion_horizons_locked_message: '&cEste Horizonte requiere Nivel de Parcela {LEVEL}.'
 expansion_horizons_no_plot_lore:
-  - '&cNo se detectó ninguna parcela.'
-  - '&7Párate dentro de tu parcela para continuar.'
+- '&cNo se detectó ninguna parcela.'
+- '&7Párate dentro de tu parcela para continuar.'
 expansion_horizons_plot_name_line: '&7Parcela: &f{PLOT}'
 expansion_horizons_current_radius: '&7Radio Actual: &b{RADIUS}'
 expansion_horizons_current_area: '&7Superficie Actual: &b{AREA} bloques'
@@ -2098,19 +1949,19 @@ expansion_horizons_level_ready: '&aHorizontes de Expansión está desbloqueado.'
 expansion_horizons_level_locked: '&eAsciende {LEVELS} nivel(es) más para desbloquear.'
 expansion_horizon_tier_1_name: '&6Horizonte Amanecer &8(+{GAIN})'
 expansion_horizon_tier_1_lore:
-  - '&7Establece el primer distrito monumental.'
+- '&7Establece el primer distrito monumental.'
 expansion_horizon_tier_2_name: '&9Horizonte Celeste &8(+{GAIN})'
 expansion_horizon_tier_2_lore:
-  - '&7Abre una frontera a escala del horizonte.'
+- '&7Abre una frontera a escala del horizonte.'
 expansion_horizon_tier_3_name: '&dHorizonte del Reino &8(+{GAIN})'
 expansion_horizon_tier_3_lore:
-  - '&7Da forma a un territorio para un gran reino.'
+- '&7Da forma a un territorio para un gran reino.'
 expansion_horizon_tier_4_name: '&bHorizonte Astral &8(+{GAIN})'
 expansion_horizon_tier_4_lore:
-  - '&7Supera los límites territoriales ordinarios.'
+- '&7Supera los límites territoriales ordinarios.'
 expansion_horizon_tier_5_name: '&e&lHorizonte Eterno &8(+{GAIN})'
 expansion_horizon_tier_5_lore:
-  - '&7Completa la frontera máxima de Ascensión.'
+- '&7Completa la frontera máxima de Ascensión.'
 expansion_horizon_requirement_line: '&7Nivel Requerido: &e{LEVEL}'
 expansion_horizon_radius_line: '&7Radio: &f{CURRENT} &8→ &d{TARGET}'
 expansion_horizon_area_line: '&7Superficie Proyectada: &b{AREA} bloques'
@@ -2121,50 +1972,48 @@ expansion_horizon_state_level_locked: '&eBloqueado hasta el Nivel {LEVEL}.'
 expansion_horizon_state_world_locked: '&cLa proyección supera el límite del mundo.'
 expansion_horizon_state_pending: '&eResuelve primero tu solicitud pendiente.'
 expansion_horizon_state_ready: '&dHaz clic para solicitar este Horizonte.'
-
-# Guía del Intercambio de ClaimBlocks
 claimblocks_exchange_guide_button: '&b&lCómo Funciona el Intercambio'
 claimblocks_exchange_guide_button_lore:
-  - '&7Conoce tarifas, comisiones, límites,'
-  - '&7bloqueos de venta y comercio seguro.'
-  - ' '
-  - '&eHaz clic para abrir la guía.'
+- '&7Conoce tarifas, comisiones, límites,'
+- '&7bloqueos de venta y comercio seguro.'
+- ' '
+- '&eHaz clic para abrir la guía.'
 claimblocks_exchange_guide_title: '&b&lGuía del Intercambio de ClaimBlocks'
 claimblocks_exchange_guide_intro:
-  - '&7Convierte dinero en crecimiento territorial'
-  - '&7o vende ClaimBlocks elegibles por dinero.'
-  - ' '
-  - '&8La cotización aparece antes de confirmar.'
+- '&7Convierte dinero en crecimiento territorial'
+- '&7o vende ClaimBlocks elegibles por dinero.'
+- ' '
+- '&8La cotización aparece antes de confirmar.'
 claimblocks_exchange_guide_buy: '&aComprar ClaimBlocks'
 claimblocks_exchange_guide_buy_lore:
-  - '&7Elige COMPRAR, ajusta la cantidad y revisa'
-  - '&7el precio, la comisión y el costo final.'
-  - '&7Los bloques aparecen de inmediato.'
+- '&7Elige COMPRAR, ajusta la cantidad y revisa'
+- '&7el precio, la comisión y el costo final.'
+- '&7Los bloques aparecen de inmediato.'
 claimblocks_exchange_guide_quote: '&fCómo Leer la Cotización'
 claimblocks_exchange_guide_quote_lore:
-  - '&7Subtotal = cantidad × precio unitario.'
-  - '&7Las comisiones se suman o descuentan.'
-  - '&7El total verde es el valor final.'
+- '&7Subtotal = cantidad × precio unitario.'
+- '&7Las comisiones se suman o descuentan.'
+- '&7El total verde es el valor final.'
 claimblocks_exchange_guide_sell: '&6Vender ClaimBlocks'
 claimblocks_exchange_guide_sell_lore:
-  - '&7Solo se venden bloques elegibles no iniciales.'
-  - '&7Los bloques se descuentan únicamente si'
-  - '&7el pago de economía tiene éxito.'
+- '&7Solo se venden bloques elegibles no iniciales.'
+- '&7Los bloques se descuentan únicamente si'
+- '&7el pago de economía tiene éxito.'
 claimblocks_exchange_guide_protection: '&dProtecciones de Comercio'
 claimblocks_exchange_guide_protection_lore:
-  - '&7El bloqueo evita reventas abusivas.'
-  - '&7Los tiempos y límites estabilizan la economía.'
-  - '&7Un pago fallido restaura tus ClaimBlocks.'
+- '&7El bloqueo evita reventas abusivas.'
+- '&7Los tiempos y límites estabilizan la economía.'
+- '&7Un pago fallido restaura tus ClaimBlocks.'
 claimblocks_exchange_guide_limits: '&eTus Tarifas y Límites Actuales'
 claimblocks_exchange_guide_steps: '&bPasos Rápidos'
 claimblocks_exchange_guide_steps_lore:
-  - '&f1. &7Elige COMPRAR o VENDER.'
-  - '&f2. &7Ajusta la cantidad.'
-  - '&f3. &7Lee toda la cotización.'
-  - '&f4. &7Presiona CONFIRMAR una vez.'
+- '&f1. &7Elige COMPRAR o VENDER.'
+- '&f2. &7Ajusta la cantidad.'
+- '&f3. &7Lee toda la cotización.'
+- '&f4. &7Presiona CONFIRMAR una vez.'
 claimblocks_exchange_guide_back: '&eVolver al Intercambio'
 claimblocks_exchange_guide_back_lore:
-  - '&7Regresa a la consola de intercambio.'
+- '&7Regresa a la consola de intercambio.'
 claimblocks_exchange_guide_unlimited: 'Ilimitado'
 claimblocks_exchange_guide_buy_rate: '&aCompra: &f{PRICE} &7por bloque'
 claimblocks_exchange_guide_sell_rate: '&6Venta: &f{PRICE} &7por bloque'
@@ -2175,19 +2024,22 @@ claimblocks_exchange_guide_daily_remaining: '&7Restante Hoy: Compra &a{BUY} &8| 
 claimblocks_exchange_guide_hourly_remaining: '&7Operaciones Esta Hora: &f{TRADES}'
 claimblocks_exchange_guide_cooldown_live: '&7Espera Restante: &e{SECONDS}s'
 claimblocks_exchange_guide_sell_lock_live: '&dBloqueo de Venta: &f{MINUTES} minutos'
-
-# Ascensión de Horizontes
 horizon_rank_unawakened: 'Sin despertar'
 horizon_rank_dawnreach: 'Alcance del Alba'
 horizon_rank_skybound: 'Vínculo Celeste'
 horizon_rank_realmforge: 'Forja del Reino'
 horizon_rank_starward: 'Dominio Astral'
 horizon_rank_eternal_aegis: 'Égida Eterna'
-horizon_rank_dawnreach_perks: ['&bAterrizaje Seguro: protección contra caídas fuera de combate.']
-horizon_rank_skybound_perks: ['&bLente Climática: clima y cielo personales.']
-horizon_rank_realmforge_perks: ['&bGuardianes: controles de Proyectiles, Ender y Phantoms.']
-horizon_rank_starward_perks: ['&bPulso Astral: invoca un despertar territorial inofensivo.']
-horizon_rank_eternal_aegis_perks: ['&bCorazón de la Égida: bendición protectora al volver a casa.']
+horizon_rank_dawnreach_perks:
+- '&bAterrizaje Seguro: protección contra caídas fuera de combate.'
+horizon_rank_skybound_perks:
+- '&bLente Climática: clima y cielo personales.'
+horizon_rank_realmforge_perks:
+- '&bGuardianes: controles de Proyectiles, Ender y Phantoms.'
+horizon_rank_starward_perks:
+- '&bPulso Astral: invoca un despertar territorial inofensivo.'
+horizon_rank_eternal_aegis_perks:
+- '&bCorazón de la Égida: bendición protectora al volver a casa.'
 horizon_rank_renown_line: '&7Renombre: &d{CURRENT} &8/ &f{REQUIRED}'
 horizon_rank_state_mastered: '&aDespertado y expandido.'
 horizon_rank_state_expansion_ready: '&bHaz clic para solicitar la expansión de este rango.'
@@ -2213,20 +2065,38 @@ horizon_awakened_message: '&dTu territorio despertó &f{RANK}&d. Sus nuevos pode
 horizon_ender_seal_denied: '&cUn Sello de Ender rechaza la entrada a este territorio.'
 horizon_heart_blessing: '&dLa Égida Eterna te recibe en casa con una bendición protectora.'
 horizon_climate_name: '&bLente Climática'
-horizon_climate_locked_lore: ['&8Se desbloquea en Vínculo Celeste.']
-horizon_climate_lore: ['&7Ambiente actual: &f{CLIMATE}', ' ', '&eHaz clic para cambiar el ambiente personal.']
+horizon_climate_locked_lore:
+- '&8Se desbloquea en Vínculo Celeste.'
+horizon_climate_lore:
+- '&7Ambiente actual: &f{CLIMATE}'
+- ' '
+- '&eHaz clic para cambiar el ambiente personal.'
 horizon_wards_name: '&9Guardianes del Horizonte'
-horizon_wards_locked_lore: ['&8Se desbloquean en Forja del Reino.']
-horizon_wards_lore: ['&7Velo de Proyectiles: &f{PROJECTILE}', '&7Sello de Ender: &f{ENDER}', '&7Guardián de Phantoms: &f{PHANTOM}', ' ', '&eIzquierdo: Proyectiles | Derecho: Ender', '&eMayús + clic: Phantoms']
+horizon_wards_locked_lore:
+- '&8Se desbloquean en Forja del Reino.'
+horizon_wards_lore:
+- '&7Velo de Proyectiles: &f{PROJECTILE}'
+- '&7Sello de Ender: &f{ENDER}'
+- '&7Guardián de Phantoms: &f{PHANTOM}'
+- ' '
+- '&eIzquierdo: Proyectiles | Derecho: Ender'
+- '&eMayús + clic: Phantoms'
 horizon_pulse_name: '&dPulso Astral'
-horizon_pulse_locked_lore: ['&8Se desbloquea en Dominio Astral.']
-horizon_pulse_lore: ['&7Libera un pulso visual inofensivo', '&7por tu territorio despertado.', ' ', '&eHaz clic para invocarlo.']
+horizon_pulse_locked_lore:
+- '&8Se desbloquea en Dominio Astral.'
+horizon_pulse_lore:
+- '&7Libera un pulso visual inofensivo'
+- '&7por tu territorio despertado.'
+- ' '
+- '&eHaz clic para invocarlo.'
 horizon_pulse_cooldown: '&eEl Pulso Astral responderá otra vez en {SECONDS} segundos.'
 horizon_heart_name: '&dCorazón de la Égida Eterna'
-horizon_heart_locked_lore: ['&8Se desbloquea en Égida Eterna.']
-horizon_heart_lore: ['&7Los residentes de confianza reciben protección', '&7al volver a casa fuera de combate.', '&8Enfriamiento personal de treinta minutos.']
-
-# Salón de Ascensión
+horizon_heart_locked_lore:
+- '&8Se desbloquea en Égida Eterna.'
+horizon_heart_lore:
+- '&7Los residentes de confianza reciben protección'
+- '&7al volver a casa fuera de combate.'
+- '&8Enfriamiento personal de treinta minutos.'
 ascension_hall_title: '&6✦ Salón de Ascensión ✦'
 ascension_hall_status_name: '&6&lAscensión de {PLOT}'
 ascension_hall_status_level: '&7Nivel: &e{LEVEL}&7/&f{MAX}'
@@ -2234,7 +2104,11 @@ ascension_hall_status_chapter: '&7Capítulo: &f{CHAPTER}'
 ascension_hall_status_progress: '&7Progreso: {BAR}'
 ascension_hall_status_footer: '&8Construye un territorio duradero con progreso medido.'
 ascension_guide_name: '&eGuía de Ascensión del Guardián'
-ascension_guide_open_lore: ['&7Aprende sobre niveles, bendiciones, disciplinas,', '&7pagos y Horizontes.', ' ', '&eHaz clic para leer.']
+ascension_guide_open_lore:
+- '&7Aprende sobre niveles, bendiciones, disciplinas,'
+- '&7pagos y Horizontes.'
+- ' '
+- '&eHaz clic para leer.'
 ascension_blessings_name: '&dBendiciones Activas'
 ascension_blessings_none: '&8Todavía no hay bendiciones activas.'
 ascension_blessings_scope: '&8Solo para residentes de confianza dentro de esta parcela.'
@@ -2243,8 +2117,16 @@ ascension_discipline_current: '&7Actual: &f{FOCUS}'
 ascension_discipline_summary: '&7Elige una especialidad útil y moderada para esta parcela.'
 ascension_discipline_open: '&eHaz clic para elegir o revisar.'
 ascension_horizon_gateway_name: '&5Portal de Horizontes'
-ascension_horizon_ready_lore: ['&dLa Ascensión de Parcela está completa.', '&7Los Horizontes de Expansión te esperan.', ' ', '&eHaz clic para continuar.']
-ascension_horizon_locked_lore: ['&7Completa el Nivel 30 para desbloquear', '&7el viaje prolongado de los Horizontes.', ' ', '&8Aún sellado.']
+ascension_horizon_ready_lore:
+- '&dLa Ascensión de Parcela está completa.'
+- '&7Los Horizontes de Expansión te esperan.'
+- ' '
+- '&eHaz clic para continuar.'
+ascension_horizon_locked_lore:
+- '&7Completa el Nivel 30 para desbloquear'
+- '&7el viaje prolongado de los Horizontes.'
+- ' '
+- '&8Aún sellado.'
 ascension_chapter_foundation: 'Cimientos'
 ascension_chapter_pathfinder: 'Explorador'
 ascension_chapter_bastion: 'Bastión'
@@ -2268,40 +2150,71 @@ ascension_offer_blocks_name: '&bOfrenda de ClaimBlocks'
 ascension_offer_cost: '&7Costo: &f{COST}'
 ascension_offer_balance: '&7Saldo: &f{BALANCE}'
 ascension_offer_click: '&eHaz clic para revisar y confirmar.'
-ascension_offer_unavailable_lore: ['&8No disponible en este servidor.']
+ascension_offer_unavailable_lore:
+- '&8No disponible en este servidor.'
 ascension_currency_claimblocks: 'ClaimBlocks'
 ascension_reward_claimblocks: '&eBono de progreso de ClaimBlocks'
 ascension_reward_foundation: '&7Territorio fundador establecido'
 ascension_reward_flight: 'Vuelo en la Parcela'
 ascension_zenith_name: '&6&lAscensión Cénit Completa'
-ascension_zenith_lore: ['&7Dominaste los treinta niveles.', '&dEl Portal de Horizontes ya está disponible.']
+ascension_zenith_lore:
+- '&7Dominaste los treinta niveles.'
+- '&dEl Portal de Horizontes ya está disponible.'
 ascension_guide_title: '&eGuía de Ascensión del Guardián'
 ascension_guide_header: '&6&lCódice de Ascensión'
-ascension_guide_header_lore: ['&7Una guía breve para fortalecer tu parcela', '&7sin saltarte la progresión del servidor.']
+ascension_guide_header_lore:
+- '&7Una guía breve para fortalecer tu parcela'
+- '&7sin saltarte la progresión del servidor.'
 ascension_guide_purpose_name: '&d¿Qué es la Ascensión?'
-ascension_guide_purpose_lore: ['&7Treinta niveles forman seis capítulos.', '&7Cada paso entrega utilidad, capacidad', '&7o progreso seguro dentro de tu parcela.']
+ascension_guide_purpose_lore:
+- '&7Treinta niveles forman seis capítulos.'
+- '&7Cada paso entrega utilidad, capacidad'
+- '&7o progreso seguro dentro de tu parcela.'
 ascension_guide_payment_name: '&6Pagar un Nivel'
-ascension_guide_payment_lore: ['&7El servidor puede aceptar dinero, ClaimBlocks', '&7o ambos. La confirmación muestra el costo', '&7exacto antes de cobrar.']
+ascension_guide_payment_lore:
+- '&7El servidor puede aceptar dinero, ClaimBlocks'
+- '&7o ambos. La confirmación muestra el costo'
+- '&7exacto antes de cobrar.'
 ascension_guide_blessings_name: '&bBendiciones de Parcela'
-ascension_guide_blessings_lore: ['&7Afectan al dueño y residentes de confianza', '&7solo mientras permanezcan dentro.', '&7Los efectos externos se conservan y restauran.']
+ascension_guide_blessings_lore:
+- '&7Afectan al dueño y residentes de confianza'
+- '&7solo mientras permanezcan dentro.'
+- '&7Los efectos externos se conservan y restauran.'
 ascension_guide_disciplines_name: '&aDisciplinas'
-ascension_guide_disciplines_lore: ['&7Elige Cantero, Guardián Verde', '&7o Caminante para una especialidad moderada.', '&7Los cambios tienen enfriamiento.']
+ascension_guide_disciplines_lore:
+- '&7Elige Cantero, Guardián Verde'
+- '&7o Caminante para una especialidad moderada.'
+- '&7Los cambios tienen enfriamiento.'
 ascension_guide_members_name: '&eCapacidad Territorial'
-ascension_guide_members_lore: ['&7Ciertos hitos permiten confiar en más jugadores', '&7sin otorgar control administrativo peligroso.']
+ascension_guide_members_lore:
+- '&7Ciertos hitos permiten confiar en más jugadores'
+- '&7sin otorgar control administrativo peligroso.'
 ascension_guide_flight_name: '&fVuelo Cénit'
-ascension_guide_flight_lore: ['&7El vuelo es la recompensa final del Nivel 30.', '&7Solo funciona dentro de la parcela elegible', '&7y conserva el vuelo otorgado por otros medios.']
+ascension_guide_flight_lore:
+- '&7El vuelo es la recompensa final del Nivel 30.'
+- '&7Solo funciona dentro de la parcela elegible'
+- '&7y conserva el vuelo otorgado por otros medios.'
 ascension_guide_horizons_name: '&5Más Allá del Nivel 30'
-ascension_guide_horizons_lore: ['&7El Nivel 30 abre la Ascensión de Horizontes:', '&7un viaje lento de Renombre con Sigilos', '&7vinculados y poderes territoriales.']
+ascension_guide_horizons_lore:
+- '&7El Nivel 30 abre la Ascensión de Horizontes:'
+- '&7un viaje lento de Renombre con Sigilos'
+- '&7vinculados y poderes territoriales.'
 ascension_disciplines_title: '&bDisciplinas de Ascensión'
 ascension_disciplines_header: '&b&lElige una Vocación'
 ascension_disciplines_header_lore: '&7Una especialidad útil puede guiar esta parcela a la vez.'
 ascension_focus_unchosen_name: 'Sin elegir'
 ascension_focus_stonewright_name: '&fCantero'
-ascension_focus_stonewright_lore: ['&7Prisa I desde Nivel 5; Prisa II en 20.', '&8Útil para construir sin ventaja de combate.']
+ascension_focus_stonewright_lore:
+- '&7Prisa I desde Nivel 5; Prisa II en 20.'
+- '&8Útil para construir sin ventaja de combate.'
 ascension_focus_verdant_keeper_name: '&aGuardián Verde'
-ascension_focus_verdant_keeper_lore: ['&7Suerte I desde Nivel 5; Suerte II en 20.', '&7Los residentes no pisotean la tierra cultivada.']
+ascension_focus_verdant_keeper_lore:
+- '&7Suerte I desde Nivel 5; Suerte II en 20.'
+- '&7Los residentes no pisotean la tierra cultivada.'
 ascension_focus_wayfinder_name: '&bCaminante'
-ascension_focus_wayfinder_lore: ['&7Velocidad I desde Nivel 5; Velocidad II en 20.', '&8Una especialidad moderada para viajar.']
+ascension_focus_wayfinder_lore:
+- '&7Velocidad I desde Nivel 5; Velocidad II en 20.'
+- '&8Una especialidad moderada para viajar.'
 ascension_focus_active: '&aActualmente guía esta parcela.'
 ascension_focus_select: '&eHaz clic para elegir esta disciplina.'
 ascension_focus_change_ready: '&aYa puedes elegir una disciplina.'
@@ -2310,7 +2223,9 @@ ascension_focus_cooldown: '&eEsta parcela podrá cambiar de disciplina en {DAYS}
 ascension_focus_selected: '&a{FOCUS} ahora guía la Ascensión de esta parcela.'
 ascension_confirm_title: '&6Confirmar Ascensión'
 ascension_confirm_header: '&6Juramento de Ascensión'
-ascension_confirm_header_lore: ['&7Revisa esta mejora permanente.', '&7No se cobra nada hasta que confirmes.']
+ascension_confirm_header_lore:
+- '&7Revisa esta mejora permanente.'
+- '&7No se cobra nada hasta que confirmes.'
 ascension_confirm_transition: '&eNivel {CURRENT} &8→ &aNivel {NEXT}'
 ascension_confirm_cost_name: '&6Ofrenda'
 ascension_confirm_cost: '&7Costo: &f{COST}'
@@ -2318,9 +2233,13 @@ ascension_confirm_balance: '&7Saldo: &f{BALANCE}'
 ascension_confirm_charge_note: '&8Solo se cobra después de aprobar todas las revisiones.'
 ascension_confirm_after_name: '&dDespués de Ascender'
 ascension_confirm_cancel: '&eCancelar'
-ascension_confirm_cancel_lore: ['&7Regresa sin gastar nada.']
+ascension_confirm_cancel_lore:
+- '&7Regresa sin gastar nada.'
 ascension_confirm_accept: '&a&lConfirmar Ascensión'
-ascension_confirm_accept_lore: ['&7Valida, paga y despierta este nivel.', ' ', '&aHaz clic para confirmar.']
+ascension_confirm_accept_lore:
+- '&7Valida, paga y despierta este nivel.'
+- ' '
+- '&aHaz clic para confirmar.'
 ascension_transaction_rollback: '&cLa Ascensión no se completó. Se devolvió tu pago.'
 ascension_ceremony_title: '&6&lPARCELA ASCENDIDA'
 ascension_ceremony_subtitle: '&fNivel {LEVEL} &8- &e{CHAPTER}'
@@ -2335,38 +2254,86 @@ ascension_effect_jump: 'Salto Mejorado'
 ascension_effect_fire_resistance: 'Resistencia al Fuego'
 ascension_effect_conduit_power: 'Poder del Canalizador'
 ascension_effect_luck: 'Suerte'
-
-# Mejora de interfaces 1.2.7
 expansion_frontier_guide_name: '&eGuía de Campo Fronteriza'
-expansion_frontier_guide_lore: ['&7Elige un aumento de radio medido.', '&7Cada solicitud revisa superposición,', '&7límites, costo y modo de aprobación.', ' ', '&8Horizontes continúa después del Nivel 30.']
+expansion_frontier_guide_lore:
+- '&7Elige un aumento de radio medido.'
+- '&7Cada solicitud revisa superposición,'
+- '&7límites, costo y modo de aprobación.'
+- ' '
+- '&8Horizontes continúa después del Nivel 30.'
 local_market_guide_name: '&eGuía del Distrito Comercial'
-local_market_guide_lore: ['&7Bienes Raíces muestra parcelas completas.', '&7Alquileres muestra cuartos y subzonas.', '&7TradeStalls muestra tiendas locales.', ' ', '&8Solo se abren servicios disponibles.']
+local_market_guide_lore:
+- '&7Bienes Raíces muestra parcelas completas.'
+- '&7Alquileres muestra cuartos y subzonas.'
+- '&7TradeStalls muestra tiendas locales.'
+- ' '
+- '&8Solo se abren servicios disponibles.'
 local_market_pulse_name: '&6Pulso del Distrito'
-local_market_pulse_lore: ['&7Zonas gestionadas: &f{ZONES}', '&7Mercados vinculados: &f{BRIDGES}', '&7TradeStalls: {STALLS}']
+local_market_pulse_lore:
+- '&7Zonas gestionadas: &f{ZONES}'
+- '&7Mercados vinculados: &f{BRIDGES}'
+- '&7TradeStalls: {STALLS}'
 zone_manager_guide_name: '&eGuía de Planificación de Zonas'
-zone_manager_guide_lore: ['&7Las zonas privadas dividen espacios confiables.', '&7Pon un precio para publicar un alquiler.', '&7Las zonas alquiladas abren herramientas de inquilino.', ' ', '&eIzquierdo: &7listado o inquilino', '&eShift: &7ajustar precio', '&cDerecho: &7eliminar con seguridad']
+zone_manager_guide_lore:
+- '&7Las zonas privadas dividen espacios confiables.'
+- '&7Pon un precio para publicar un alquiler.'
+- '&7Las zonas alquiladas abren herramientas de inquilino.'
+- ' '
+- '&eIzquierdo: &7listado o inquilino'
+- '&eShift: &7ajustar precio'
+- '&cDerecho: &7eliminar con seguridad'
 zone_selection_status_name: '&bEstado de Selección'
-zone_selection_ready_lore: ['&aLas dos esquinas están listas.', '&7Usa Crear Zona para reservar el espacio.']
-zone_selection_missing_lore: ['&cNo hay selección completa.', '&7Usa el Cetro de Aegis para elegir', '&7dos esquinas dentro de la parcela.']
+zone_selection_ready_lore:
+- '&aLas dos esquinas están listas.'
+- '&7Usa Crear Zona para reservar el espacio.'
+zone_selection_missing_lore:
+- '&cNo hay selección completa.'
+- '&7Usa el Cetro de Aegis para elegir'
+- '&7dos esquinas dentro de la parcela.'
 zone_public_preview_name: '&aVista Pública de Alquileres'
-zone_public_preview_lore: ['&7Abre el mismo catálogo de alquileres', '&7que ven los visitantes de la parcela.', ' ', '&eHaz clic para previsualizar.']
-zone_public_preview_empty_lore: ['&8Aún no hay zonas publicadas.']
+zone_public_preview_lore:
+- '&7Abre el mismo catálogo de alquileres'
+- '&7que ven los visitantes de la parcela.'
+- ' '
+- '&eHaz clic para previsualizar.'
+zone_public_preview_empty_lore:
+- '&8Aún no hay zonas publicadas.'
 travel_tab_selected: '&aEstás viendo este atlas.'
 travel_tab_open: '&eHaz clic para abrir este atlas.'
 claim_settings_guide_name: '&eDoctrina de Protección'
-claim_settings_guide_lore: ['&7Los controles brillantes están protegidos.', '&7Los desactivados siguen las reglas del mundo.', '&7Los cambios se guardan inmediatamente.']
+claim_settings_guide_lore:
+- '&7Los controles brillantes están protegidos.'
+- '&7Los desactivados siguen las reglas del mundo.'
+- '&7Los cambios se guardan inmediatamente.'
 claim_settings_flight_ascension_name: '&fVuelo: Recompensa de Ascensión'
-claim_settings_flight_ascension_lore: ['&7El vuelo ya no se configura aquí.', '&7Alcanza el Nivel 30 de Ascensión para obtener', '&7vuelo seguro dentro de la parcela elegible.']
+claim_settings_flight_ascension_lore:
+- '&7El vuelo ya no se configura aquí.'
+- '&7Alcanza el Nivel 30 de Ascensión para obtener'
+- '&7vuelo seguro dentro de la parcela elegible.'
 roles_guide_name: '&eGuía de Roles y Acceso'
 roles_capacity_name: '&bCapacidad Territorial'
-roles_capacity_lore: ['&7Miembros asignados: &f{USED}', '&7Capacidad actual: &f{MAX}', '&8La Ascensión desbloquea más capacidad.']
+roles_capacity_lore:
+- '&7Miembros asignados: &f{USED}'
+- '&7Capacidad actual: &f{MAX}'
+- '&8La Ascensión desbloquea más capacidad.'
 roles_permission_model_name: '&dModelo de Permisos'
-roles_permission_model_lore: ['&aPermitir &7supera una restricción.', '&cDenegar &7siempre bloquea la acción.', '&fHeredar &7usa el comportamiento normal.']
+roles_permission_model_lore:
+- '&aPermitir &7supera una restricción.'
+- '&cDenegar &7siempre bloquea la acción.'
+- '&fHeredar &7usa el comportamiento normal.'
 world_controls_protection_section_name: '&bProtecciones Predeterminadas'
-world_controls_protection_section_lore: ['&7Se aplican a parcelas recién creadas.', '&8Las parcelas existentes no cambian.']
+world_controls_protection_section_lore:
+- '&7Se aplican a parcelas recién creadas.'
+- '&8Las parcelas existentes no cambian.'
 world_controls_runtime_section_name: '&6Reglas Activas del Mundo'
-world_controls_runtime_section_lore: ['&7Son reglas reales de Minecraft.', '&7Los cambios afectan al mundo inmediatamente.']
-world_controls_gamerule_lore: ['&7Actual: {STATE}', '&7Se aplica inmediatamente en este mundo.', ' ', '&eHaz clic para alternar.']
+world_controls_runtime_section_lore:
+- '&7Son reglas reales de Minecraft.'
+- '&7Los cambios afectan al mundo inmediatamente.'
+world_controls_gamerule_lore:
+- '&7Actual: {STATE}'
+- '&7Se aplica inmediatamente en este mundo.'
+- ' '
+- '&eHaz clic para alternar.'
 world_controls_spawn_mobs_name: '&aAparición Natural de Mobs'
 world_controls_daylight_name: '&eCiclo de Día'
 world_controls_weather_name: '&bCiclo del Clima'
@@ -2374,26 +2341,30 @@ world_controls_keep_inventory_name: '&6Conservar Inventario'
 world_controls_mob_griefing_name: '&cDaño de Mobs al Mundo'
 staff_command_center_name: '&c&lCentro de Mando Guardián'
 staff_command_center_lore:
-  - '&7Centro de staff para política, operaciones,'
-  - '&7recuperación, migración y diagnóstico.'
-  - ' '
-  - '&7Pasa el cursor para ver qué hace cada control,'
-  - '&7cuándo usarlo y cualquier advertencia.'
-  - ' '
-  - '&8Cada control de abajo verifica permisos.'
+- '&7Centro de staff para política, operaciones,'
+- '&7recuperación, migración y diagnóstico.'
+- ' '
+- '&7Pasa el cursor para ver qué hace cada control,'
+- '&7cuándo usarlo y cualquier advertencia.'
+- ' '
+- '&8Cada control de abajo verifica permisos.'
 staff_policy_section_name: '&ePolítica Operativa'
 staff_policy_section_lore:
-  - '&7Fila superior: política operativa del servidor.'
-  - '&7Alterna solo en ventanas de mantenimiento'
-  - '&7cuando entiendes los efectos secundarios.'
+- '&7Fila superior: política operativa del servidor.'
+- '&7Alterna solo en ventanas de mantenimiento'
+- '&7cuando entiendes los efectos secundarios.'
 staff_toolbelt_section_name: '&bHerramientas del Guardián'
 staff_toolbelt_section_lore:
-  - '&7Fila inferior: revisión, recuperación, mundos,'
-  - '&7migración, diagnóstico y mantenimiento.'
-  - '&7Las herramientas destructivas piden confirmación.'
+- '&7Fila inferior: revisión, recuperación, mundos,'
+- '&7migración, diagnóstico y mantenimiento.'
+- '&7Las herramientas destructivas piden confirmación.'
 button_guest_passes: '&d🎫 Pases de Invitado'
-guest_passes_lore: ['&7Otorga acceso temporal y autoexpirable', '&7sin confianza permanente.']
-guest_passes_locked_lore: ['&cEntra a una parcela que administres', '&cpara emitir Pases de Invitado.']
+guest_passes_lore:
+- '&7Otorga acceso temporal y autoexpirable'
+- '&7sin confianza permanente.'
+guest_passes_locked_lore:
+- '&cEntra a una parcela que administres'
+- '&cpara emitir Pases de Invitado.'
 guest_pass_menu_title: '&ePases de Invitado'
 guest_pass_entry_name: '&e{PLAYER}'
 guest_pass_entry_preset_line: '&7Preajuste: &f{PRESET}'
@@ -2403,30 +2374,51 @@ guest_pass_entry_playtime_remaining_line: '&7Tiempo de juego restante: &f{TIME}'
 guest_pass_entry_issuer_line: '&7Emitido por: &f{PLAYER}'
 guest_pass_entry_click_lore: '&eHaz clic para ver o revocar'
 guest_pass_none_title: '&7Sin Pases de Invitado Activos'
-guest_pass_none_lore: ['&7Emite un pase temporal para que un amigo,', '&7invitado de evento o constructor contratado', '&7ayude sin confianza permanente.']
+guest_pass_none_lore:
+- '&7Emite un pase temporal para que un amigo,'
+- '&7invitado de evento o constructor contratado'
+- '&7ayude sin confianza permanente.'
 guest_pass_guide_name: '&eGuía de Pases de Invitado'
-guest_pass_guide_lore: ['&7Los Pases de Invitado otorgan acceso temporal', '&7que expira automáticamente - incluso', '&7después de reiniciar el servidor.', ' ', '&7Elige tiempo real (siempre corre) o', '&7tiempo de juego activo (solo en línea).', ' ', '&8Expirar o revocar un pase nunca', '&8afecta los roles permanentes de esta parcela.']
+guest_pass_guide_lore:
+- '&7Los Pases de Invitado otorgan acceso temporal'
+- '&7que expira automáticamente - incluso'
+- '&7después de reiniciar el servidor.'
+- ' '
+- '&7Elige tiempo real (siempre corre) o'
+- '&7tiempo de juego activo (solo en línea).'
+- ' '
+- '&8Expirar o revocar un pase nunca'
+- '&8afecta los roles permanentes de esta parcela.'
 button_add_guest_pass: '&aEmitir Pase de Invitado'
-add_guest_pass_lore: ['&7Otorga acceso temporal a un jugador cercano.']
+add_guest_pass_lore:
+- '&7Otorga acceso temporal a un jugador cercano.'
 guest_pass_add_title: '&8Emitir Pase de Invitado'
 guest_pass_add_click_lore: '&7Haz clic para elegir un preajuste.'
 add_trusted_player_name: '&a{PLAYER}'
 add_trusted_none_title: '&cNo Hay Jugadores Cerca'
-add_trusted_none_lore: ['&7¡Pídele a tu amigo que se acerque!']
+add_trusted_none_lore:
+- '&7¡Pídele a tu amigo que se acerque!'
 guest_pass_preset_title: '&8Preajuste: {PLAYER}'
 guest_pass_preset_name_VISITOR: '&eVisitante'
 guest_pass_preset_name_EVENT_GUEST: '&eInvitado de Evento'
 guest_pass_preset_name_TEMPORARY_BUILDER: '&eConstructor Temporal'
 guest_pass_preset_name_TEMPORARY_TRUSTED_GUEST: '&eInvitado de Confianza Temporal'
-guest_pass_preset_desc_VISITOR: ['&7Solo entrada y puertas/botones ordinarios.']
-guest_pass_preset_desc_EVENT_GUEST: ['&7Entrada más interacción segura de eventos.', '&7Sin construcción ni contenedores.']
-guest_pass_preset_desc_TEMPORARY_BUILDER: ['&7Acceso para construir y romper.', '&7Los contenedores permanecen cerrados.']
-guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST: ['&7Acceso a construir, romper y contenedores.']
+guest_pass_preset_desc_VISITOR:
+- '&7Solo entrada y puertas/botones ordinarios.'
+guest_pass_preset_desc_EVENT_GUEST:
+- '&7Entrada más interacción segura de eventos.'
+- '&7Sin construcción ni contenedores.'
+guest_pass_preset_desc_TEMPORARY_BUILDER:
+- '&7Acceso para construir y romper.'
+- '&7Los contenedores permanecen cerrados.'
+guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST:
+- '&7Acceso a construir, romper y contenedores.'
 guest_pass_preset_container_warning: '&c⚠ ¡Otorga acceso a contenedores!'
 guest_pass_preset_click_lore: '&eHaz clic para elegir una duración'
 guest_pass_duration_title: '&8Duración: {PLAYER}'
 guest_pass_duration_label: '&e{TIME}'
-guest_pass_duration_click_lore: ['&7Haz clic para elegir cómo se cuenta el tiempo.']
+guest_pass_duration_click_lore:
+- '&7Haz clic para elegir cómo se cuenta el tiempo.'
 guest_pass_duration_unknown: '?'
 guest_pass_duration_days: '{DAYS}d'
 guest_pass_duration_hours: '{HOURS}h'
@@ -2436,8 +2428,21 @@ guest_pass_expiring_now: '<1m'
 guest_pass_mode_title: '&8Temporización: {PLAYER}'
 guest_pass_mode_name_REAL_TIME: '&eTiempo real'
 guest_pass_mode_name_ACTIVE_PLAYTIME: '&aTiempo de juego activo'
-guest_pass_mode_desc_REAL_TIME: ['&7La duración siempre cuenta,', '&7incluso sin conexión o con el', '&7servidor detenido.', ' ', '&8Temporización clásica por defecto.', ' ', '&eHaz clic para continuar']
-guest_pass_mode_desc_ACTIVE_PLAYTIME: ['&7La duración solo cuenta mientras', '&7este jugador está en línea.', '&7Se pausa sin conexión o cuando el', '&7servidor está detenido.', ' ', '&eHaz clic para continuar']
+guest_pass_mode_desc_REAL_TIME:
+- '&7La duración siempre cuenta,'
+- '&7incluso sin conexión o con el'
+- '&7servidor detenido.'
+- ' '
+- '&8Temporización clásica por defecto.'
+- ' '
+- '&eHaz clic para continuar'
+guest_pass_mode_desc_ACTIVE_PLAYTIME:
+- '&7La duración solo cuenta mientras'
+- '&7este jugador está en línea.'
+- '&7Se pausa sin conexión o cuando el'
+- '&7servidor está detenido.'
+- ' '
+- '&eHaz clic para continuar'
 guest_pass_confirm_title: '&8Confirmar Pase de Invitado'
 guest_pass_confirm_name: '&aConfirmar Pase de Invitado'
 guest_pass_confirm_player_line: '&7Jugador: &f{PLAYER}'
@@ -2450,43 +2455,70 @@ guest_pass_confirm_click_lore: '&aHaz clic para confirmar y emitir'
 guest_pass_detail_title: '&8Pase: {PLAYER}'
 button_revoke_guest_pass: '&cRevocar Pase'
 revoke_guest_pass_lore:
-  - '&7Termina de inmediato el acceso de este invitado.'
-  - '&cShift+clic para confirmar la revocación.'
-
-# ------------------------------------------------------------
-# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
-# ------------------------------------------------------------
+- '&7Termina de inmediato el acceso de este invitado.'
+- '&cShift+clic para confirmar la revocación.'
 button_lockdown: '&cBloqueo de Emergencia'
 button_lockdown_active: '&c&lBloqueo de Emergencia (ACTIVO)'
-lockdown_button_lore: ['&7Restringe al instante acciones sensibles', '&7si esta parcela está siendo dañada.']
-lockdown_button_active_lore: ['&c&lBLOQUEO ACTIVO', '&7Haz clic para revisar o desactivarlo.']
-lockdown_button_locked_lore: ['&cEntra a una parcela que administres', '&cpara usar el Bloqueo de Emergencia.']
+lockdown_button_lore:
+- '&7Restringe al instante acciones sensibles'
+- '&7si esta parcela está siendo dañada.'
+lockdown_button_active_lore:
+- '&c&lBLOQUEO ACTIVO'
+- '&7Haz clic para revisar o desactivarlo.'
+lockdown_button_locked_lore:
+- '&cEntra a una parcela que administres'
+- '&cpara usar el Bloqueo de Emergencia.'
 lockdown_menu_title: '&cBloqueo de Emergencia'
 lockdown_status_active_name: '&c&lBLOQUEO ACTIVO'
 lockdown_status_inactive_name: '&a&lOperación Normal'
-lockdown_status_active_lore: ['&7Esta parcela está actualmente bloqueada.']
+lockdown_status_active_lore:
+- '&7Esta parcela está actualmente bloqueada.'
 lockdown_status_activated_by: '&7Activado por: &f{PLAYER}'
 lockdown_status_activated_ago: '&7Activo hace: &f{MINUTES}m'
-lockdown_status_inactive_lore: ['&7Esta parcela opera con normalidad.', '&7Activa el bloqueo para restringir al instante', '&7construcción, destrucción y contenedores para', '&7todos excepto tú y el staff.']
+lockdown_status_inactive_lore:
+- '&7Esta parcela opera con normalidad.'
+- '&7Activa el bloqueo para restringir al instante'
+- '&7construcción, destrucción y contenedores para'
+- '&7todos excepto tú y el staff.'
 lockdown_guide_name: '&eGuía de Bloqueo'
-lockdown_guide_lore: ['&7El bloqueo anula al instante roles y', '&7Pases de Invitado para acciones sensibles.', ' ', '&8Las puertas y botones siempre funcionan,', '&8así que nadie queda nunca atrapado.', '&8La propiedad y los roles nunca cambian.']
+lockdown_guide_lore:
+- '&7El bloqueo anula al instante roles y'
+- '&7Pases de Invitado para acciones sensibles.'
+- ' '
+- '&8Las puertas y botones siempre funcionan,'
+- '&8así que nadie queda nunca atrapado.'
+- '&8La propiedad y los roles nunca cambian.'
 button_activate_lockdown: '&cActivar Bloqueo'
-activate_lockdown_lore: ['&7Restringe de inmediato acciones sensibles.']
+activate_lockdown_lore:
+- '&7Restringe de inmediato acciones sensibles.'
 button_deactivate_lockdown: '&aDesactivar Bloqueo'
-deactivate_lockdown_lore: ['&7Restaura de inmediato el acceso normal.']
+deactivate_lockdown_lore:
+- '&7Restaura de inmediato el acceso normal.'
 lockdown_confirm_activate_title: '&cConfirmar Bloqueo'
 lockdown_confirm_deactivate_title: '&aConfirmar Desbloqueo'
 lockdown_confirm_activate_name: '&cConfirmar Activación'
 lockdown_confirm_deactivate_name: '&aConfirmar Desactivación'
-lockdown_confirm_activate_lore: ['&7Todos excepto tú y el staff perderán', '&7al instante acceso a construir, romper', '&7y usar contenedores en esta parcela.', ' ', '&7Las puertas y botones seguirán funcionando,', '&7así que nadie quedará atrapado.', ' ', '&aHaz clic para activar el bloqueo.']
-lockdown_confirm_deactivate_lore: ['&7Esta parcela volverá de inmediato a', '&7sus roles y permisos normales.', ' ', '&aHaz clic para desactivar el bloqueo.']
-
-# ------------------------------------------------------------
-# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
-# ------------------------------------------------------------
+lockdown_confirm_activate_lore:
+- '&7Todos excepto tú y el staff perderán'
+- '&7al instante acceso a construir, romper'
+- '&7y usar contenedores en esta parcela.'
+- ' '
+- '&7Las puertas y botones seguirán funcionando,'
+- '&7así que nadie quedará atrapado.'
+- ' '
+- '&aHaz clic para activar el bloqueo.'
+lockdown_confirm_deactivate_lore:
+- '&7Esta parcela volverá de inmediato a'
+- '&7sus roles y permisos normales.'
+- ' '
+- '&aHaz clic para desactivar el bloqueo.'
 button_realm_profile: '&3📜 Perfil de Parcela'
-realm_profile_button_lore: ['&7Administra el nombre, categoría,', '&7saludo y tablón de esta parcela.']
-realm_profile_button_view_lore: ['&7Mira la identidad pública', '&7y el tablón de esta parcela.']
+realm_profile_button_lore:
+- '&7Administra el nombre, categoría,'
+- '&7saludo y tablón de esta parcela.'
+realm_profile_button_view_lore:
+- '&7Mira la identidad pública'
+- '&7y el tablón de esta parcela.'
 realm_profile_menu_title: '&3Perfil de Parcela'
 realm_profile_header_name: '&3&lPerfil de Parcela'
 realm_profile_name_line: '&7Nombre: &f{NAME}'
@@ -2495,7 +2527,9 @@ realm_profile_no_desc: '&8Todavía no hay descripción.'
 realm_profile_rename_hint: '&8Usa /ag rename <nombre> para cambiar esto.'
 realm_profile_desc_hint: '&8Usa /ag setdesc <texto> para cambiar esto.'
 realm_profile_category_name: '&6Categoría: &f{CATEGORY}'
-realm_profile_category_lore: ['&7Cómo se agrupa esta parcela en', '&7el navegador de Descubrimiento.']
+realm_profile_category_lore:
+- '&7Cómo se agrupa esta parcela en'
+- '&7el navegador de Descubrimiento.'
 realm_profile_category_click: '&eHaz clic para pasar a la siguiente categoría.'
 realm_profile_category_locked: '&8Solo el propietario puede cambiar esto.'
 realm_profile_category_build: 'Construcción'
@@ -2506,8 +2540,12 @@ realm_profile_category_event: 'Evento'
 realm_profile_category_other: 'Otro'
 realm_profile_visible_name: '&a&lVisible en Descubrimiento'
 realm_profile_hidden_name: '&7&lOculta del Descubrimiento'
-realm_profile_visible_lore: ['&7Esta parcela puede aparecer en', '&7el navegador público de Descubrimiento.']
-realm_profile_hidden_lore: ['&7Esta parcela está oculta del', '&7navegador público de Descubrimiento.']
+realm_profile_visible_lore:
+- '&7Esta parcela puede aparecer en'
+- '&7el navegador público de Descubrimiento.'
+realm_profile_hidden_lore:
+- '&7Esta parcela está oculta del'
+- '&7navegador público de Descubrimiento.'
 realm_profile_visibility_click: '&eHaz clic para alternar la visibilidad.'
 realm_profile_greeting_name: '&bSaludo de Entrada'
 realm_profile_no_greeting: '&8Todavía no hay saludo de entrada.'
@@ -2515,60 +2553,96 @@ realm_profile_entry_title_line: '&7Título: &f{TITLE}'
 realm_profile_welcome_line: '&7Chat: &f{MESSAGE}'
 realm_profile_greeting_hint: '&8Usa /ag rename y /ag welcome para cambiar esto.'
 realm_profile_noticeboard_name: '&dTablón de Anuncios'
-realm_profile_noticeboard_lore: ['&7Reglas, detalles de eventos, info de', '&7tienda, o anuncios para visitantes.']
+realm_profile_noticeboard_lore:
+- '&7Reglas, detalles de eventos, info de'
+- '&7tienda, o anuncios para visitantes.'
 realm_profile_noticeboard_count: '&7Anuncios: &f{COUNT}/{MAX}'
 realm_profile_noticeboard_click: '&eHaz clic para abrir el tablón de anuncios.'
 noticeboard_menu_title: '&dTablón de Anuncios'
 noticeboard_header_name: '&d&lTablón de Anuncios'
-noticeboard_add_hint_lore: ['&7Usa /ag notice add <texto> para publicar,', '&7y /ag notice remove <#> para quitar.']
+noticeboard_add_hint_lore:
+- '&7Usa /ag notice add <texto> para publicar,'
+- '&7y /ag notice remove <#> para quitar.'
 noticeboard_none_title: '&7Sin Anuncios Todavía'
-noticeboard_none_lore: ['&7Esta parcela no ha publicado reglas,', '&7eventos, ni anuncios.']
+noticeboard_none_lore:
+- '&7Esta parcela no ha publicado reglas,'
+- '&7eventos, ni anuncios.'
 noticeboard_entry_name: '&e📌 Anuncio'
 noticeboard_entry_author_line: '&7Publicado por: &f{PLAYER}'
 noticeboard_entry_age_line: '&7Hace: &f{AGE}'
 noticeboard_entry_remove_hint: '&cHaz clic para quitar este anuncio.'
 visit_plot_notice_count: '&7📌 {COUNT} anuncio(s) en el tablón'
-
-# ------------------------------------------------------------
-# Guía Más Clara para Jugadores (1.3.0+, Hito 5)
-# ------------------------------------------------------------
 settings_repeat_notifications_on_name: '&aRepetir Notificaciones: SÍ'
 settings_repeat_notifications_off_name: '&cRepetir Notificaciones: NO'
-settings_repeat_notifications_lore: ['&7Si está en NO, los mensajes de acción', '&7bloqueada repetidos se limitan a uno', '&7cada pocos segundos.']
+settings_repeat_notifications_lore:
+- '&7Si está en NO, los mensajes de acción'
+- '&7bloqueada repetidos se limitan a uno'
+- '&7cada pocos segundos.'
 settings_replay_walkthrough_name: '&eRepetir Guía de Primera Parcela'
-settings_replay_walkthrough_lore: ['&7Vuelve a ver la guía opcional sobre', '&7roles, Pases de Invitado y Bloqueo.']
+settings_replay_walkthrough_lore:
+- '&7Vuelve a ver la guía opcional sobre'
+- '&7roles, Pases de Invitado y Bloqueo.'
 walkthrough_menu_title_page1: '&b¡Bienvenido a AegisGuard! (1/2)'
 walkthrough_menu_title_page2: '&b¡Bienvenido a AegisGuard! (2/2)'
 walkthrough_claim_name: '&aTu Parcela Está Protegida'
-walkthrough_claim_lore: ['&7Nadie más puede construir, romper o abrir', '&7cofres aquí a menos que lo permitas.', '&7Usa /ag info para ver los detalles de tu parcela.']
+walkthrough_claim_lore:
+- '&7Nadie más puede construir, romper o abrir'
+- '&7cofres aquí a menos que lo permitas.'
+- '&7Usa /ag info para ver los detalles de tu parcela.'
 walkthrough_roles_name: '&bConfía en Amigos con Roles'
-walkthrough_roles_lore: ['&7Abre el menú de Roles para darle a amigos', '&7y aliados acceso permanente de construcción/cofres.', '&7La confianza permanente nunca vence sola.']
+walkthrough_roles_lore:
+- '&7Abre el menú de Roles para darle a amigos'
+- '&7y aliados acceso permanente de construcción/cofres.'
+- '&7La confianza permanente nunca vence sola.'
 walkthrough_guestpass_name: '&ePases de Invitado Temporales'
-walkthrough_guestpass_lore: ['&7¿Organizas un evento o contratas un', '&7constructor? Emite un Pase de Invitado -', '&7vence automáticamente y nunca toca', '&7el rol permanente de nadie.']
+walkthrough_guestpass_lore:
+- '&7¿Organizas un evento o contratas un'
+- '&7constructor? Emite un Pase de Invitado -'
+- '&7vence automáticamente y nunca toca'
+- '&7el rol permanente de nadie.'
 walkthrough_lockdown_name: '&cBloqueo de Emergencia'
-walkthrough_lockdown_lore: ['&7Si algo sale mal, puedes restringir', '&7al instante construcción/cofres para', '&7todos menos tú - reversible en', '&7cualquier momento, y nunca atrapa jugadores.']
+walkthrough_lockdown_lore:
+- '&7Si algo sale mal, puedes restringir'
+- '&7al instante construcción/cofres para'
+- '&7todos menos tú - reversible en'
+- '&7cualquier momento, y nunca atrapa jugadores.'
 walkthrough_profile_name: '&3Perfil de Parcela'
-walkthrough_profile_lore: ['&7Dale a tu parcela un nombre público,', '&7descripción, categoría y saludo', '&7para que los visitantes sepan qué es.']
+walkthrough_profile_lore:
+- '&7Dale a tu parcela un nombre público,'
+- '&7descripción, categoría y saludo'
+- '&7para que los visitantes sepan qué es.'
 walkthrough_notice_name: '&dTablón de Anuncios'
-walkthrough_notice_lore: ['&7Publica reglas cortas, detalles de eventos', '&7o info de tienda para visitantes con', '&7/ag notice add <texto>.']
+walkthrough_notice_lore:
+- '&7Publica reglas cortas, detalles de eventos'
+- '&7o info de tienda para visitantes con'
+- '&7/ag notice add <texto>.'
 walkthrough_guide_name: '&6Guía del Guardián'
-walkthrough_guide_lore: ['&7¿Olvidaste algo? Abre la guía completa', '&7cuando quieras desde el menú principal,', '&7o repite esta guía en Ajustes.']
-walkthrough_back_lore: ['&7Ir a la página anterior.']
+walkthrough_guide_lore:
+- '&7¿Olvidaste algo? Abre la guía completa'
+- '&7cuando quieras desde el menú principal,'
+- '&7o repite esta guía en Ajustes.'
+walkthrough_back_lore:
+- '&7Ir a la página anterior.'
 walkthrough_next_name: '&aSiguiente Página'
 walkthrough_done_name: '&aTerminar'
-walkthrough_next_lore: ['&7Continuar la guía.']
-walkthrough_skip_lore: ['&7Cerrar - puedes repetir esto', '&7cuando quieras desde Ajustes.']
-
-# ------------------------------------------------------------
-# Routes and Checkpoints (1.3.0+, Milestone 6)
-# ------------------------------------------------------------
+walkthrough_next_lore:
+- '&7Continuar la guía.'
+walkthrough_skip_lore:
+- '&7Cerrar - puedes repetir esto'
+- '&7cuando quieras desde Ajustes.'
 button_routes: '&a🗺 Routes'
-routes_button_lore: ['&7Mira rutas de exploración hechas por staff', '&7y Mira tu próximo punto.']
+routes_button_lore:
+- '&7Mira rutas de exploración hechas por staff'
+- '&7y Mira tu próximo punto.'
 routes_menu_title: '&aRutas'
 routes_none_title: '&7Sin Rutas Todavía'
-routes_none_lore: ['&7El staff no publicó ninguna', '&7ruta de exploración todavía.']
-routes_prev_lore: ['&7Página anterior.']
-routes_next_lore: ['&7Página siguiente.']
+routes_none_lore:
+- '&7El staff no publicó ninguna'
+- '&7ruta de exploración todavía.'
+routes_prev_lore:
+- '&7Página anterior.'
+routes_next_lore:
+- '&7Página siguiente.'
 routes_progress_line: '&7Progreso: &f{COUNT}/{TOTAL}'
 routes_next_checkpoint_line: '&7Siguiente: &e{NAME}'
 routes_complete_line: '&a✔ Ruta completa'
@@ -2580,9 +2654,15 @@ routes_walk_hint: '&7Acércate a este punto para descubrirlo.'
 routes_teleport_hint: '&eHaz clic para teletransportarte cerca (opcional).'
 routes_next_name: '&eSiguiente: {NAME}'
 routes_complete_title: '&aRuta completa'
-routes_complete_lore: ['&7Descubriste todos los', '&7puntos de esta ruta.']
+routes_complete_lore:
+- '&7Descubriste todos los'
+- '&7puntos de esta ruta.'
 button_admin_routes: '&aEditor de Rutas'
-admin_routes_lore: ['&7Crea rutas de exploración con', '&7puntos ordenados para que los jugadores exploren.', ' ', '&eHaz clic para abrir.']
+admin_routes_lore:
+- '&7Crea rutas de exploración con'
+- '&7puntos ordenados para que los jugadores exploren.'
+- ' '
+- '&eHaz clic para abrir.'
 routes_admin_title: '&cEditor de Rutas'
 routes_admin_edit_title: '&cEditar Ruta'
 routes_admin_enabled: '&aActiva'
@@ -2590,23 +2670,34 @@ routes_admin_disabled: '&cDesactivada'
 routes_admin_checkpoints_line: '&7Puntos: &f{COUNT}'
 routes_admin_click_edit: '&eHaz clic para editar.'
 routes_admin_create_name: '&a＋ Crear Ruta Aquí'
-routes_admin_create_lore: ['&7Creates a new Activa route named', '&7como tu mundo actual, empezando', '&7con un punto a tus pies.']
-routes_admin_toggle_lore: ['&eHaz clic para alternar visibilidad.']
+routes_admin_create_lore:
+- '&7Creates a new Activa route named'
+- '&7como tu mundo actual, empezando'
+- '&7con un punto a tus pies.'
+routes_admin_toggle_lore:
+- '&eHaz clic para alternar visibilidad.'
 routes_admin_add_checkpoint_name: '&b＋ Agregar Punto Aquí'
-routes_admin_add_checkpoint_lore: ['&7Agrega tu ubicación actual como', '&7el próximo punto ordenado.']
+routes_admin_add_checkpoint_lore:
+- '&7Agrega tu ubicación actual como'
+- '&7el próximo punto ordenado.'
 routes_admin_reward_money_name: '&6Money Recompensa: {AMOUNT}'
-routes_admin_reward_money_lore: ['&7Click to cycle: 0 → 10 → 25 → 50 → 100.']
+routes_admin_reward_money_lore:
+- '&7Click to cycle: 0 → 10 → 25 → 50 → 100.'
 routes_admin_reward_blocks_name: '&bBloques de claim: {AMOUNT}'
-routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
+routes_admin_reward_blocks_lore:
+- '&7Click to cycle: 0 → 25 → 50 → 100 → 250.'
 routes_admin_delete_name: '&cEliminar Ruta'
-routes_admin_delete_lore: ['&cElimina esta ruta y todo', '&cel progreso de jugadores.']
-
-# ------------------------------------------------------------
-# Alliance Access (1.3.0+, Milestone 7)
-# ------------------------------------------------------------
+routes_admin_delete_lore:
+- '&cElimina esta ruta y todo'
+- '&cel progreso de jugadores.'
 button_alliance_access: '&6🛡 Acceso de Alianza'
-alliance_button_lore: ['&7Administra los permisos de alianza', '&7de esta parcela.']
-alliance_button_grayed_lore: ['&7Esta parcela no se unió a una alianza.', '&7Crea o únete a una, luego activa', '&7esta parcela. Los riesgos quedan OFF.']
+alliance_button_lore:
+- '&7Administra los permisos de alianza'
+- '&7de esta parcela.'
+alliance_button_grayed_lore:
+- '&7Esta parcela no se unió a una alianza.'
+- '&7Crea o únete a una, luego activa'
+- '&7esta parcela. Los riesgos quedan OFF.'
 alliance_menu_title: '&6Acceso de Alianza'
 alliance_none_personal: '&8No estás en una alianza.'
 alliance_create_hint: '&8Usa /ag alliance create <name>'
@@ -2614,25 +2705,44 @@ alliance_personal_line: '&7Tu alianza: &f{NAME}'
 alliance_members_line: '&7Miembros: &f{COUNT}'
 alliance_header_name: '&6&lAcceso de Alianza'
 alliance_create_name: '&aCrear Alianza'
-alliance_create_lore: ['&7Usa &f/ag alliance create <name>', '&7para formar una nueva alianza.']
+alliance_create_lore:
+- '&7Usa &f/ag alliance create <name>'
+- '&7para formar una nueva alianza.'
 alliance_accept_name: '&eAceptar Invitación'
-alliance_accept_lore: ['&7Usa &f/ag alliance accept', '&7si tienes una invitación pendiente.']
+alliance_accept_lore:
+- '&7Usa &f/ag alliance accept'
+- '&7si tienes una invitación pendiente.'
 alliance_invite_name: '&bInvitar Jugador'
-alliance_invite_lore: ['&7Usa &f/ag alliance invite <player>', '&7para invitar a alguien (solo líder).']
+alliance_invite_lore:
+- '&7Usa &f/ag alliance invite <player>'
+- '&7para invitar a alguien (solo líder).'
 alliance_leave_name: '&eSalir de la Alianza'
-alliance_leave_lore: ['&7Los líderes deben disolverla.', '&eClick para confirmar.']
+alliance_leave_lore:
+- '&7Los líderes deben disolverla.'
+- '&eClick para confirmar.'
 alliance_disband_name: '&cDisolver Alianza'
-alliance_disband_lore: ['&cElimina la alianza para todos.', '&cLas parcelas unidas pierden acceso.', '&eClick para confirmar.']
+alliance_disband_lore:
+- '&cElimina la alianza para todos.'
+- '&cLas parcelas unidas pierden acceso.'
+- '&eClick para confirmar.'
 alliance_no_plot_name: '&7Párate en una Parcela'
-alliance_no_plot_lore: ['&7Los interruptores de Acceso de Alianza', '&7aplican a la parcela donde estás.']
-alliance_plot_not_joined_lore: ['&7Esta parcela no se unió a una alianza.', '&7Los aliados no ganan nada aquí', '&7hasta que actives la unión.']
+alliance_no_plot_lore:
+- '&7Los interruptores de Acceso de Alianza'
+- '&7aplican a la parcela donde estás.'
+alliance_plot_not_joined_lore:
+- '&7Esta parcela no se unió a una alianza.'
+- '&7Los aliados no ganan nada aquí'
+- '&7hasta que actives la unión.'
 alliance_join_click: '&eClick para unir tu alianza.'
 alliance_manage_locked: '&8Solo el dueño puede cambiar esto.'
 alliance_need_membership: '&8Únete o crea una alianza primero.'
 alliance_plot_not_joined_name: '&7Sin Alianza en Esta Parcela'
 alliance_plot_joined_name: '&aUnida: &f{NAME}'
-alliance_leave_plot_lore: ['&eClick para quitar esta parcela', '&ede la alianza.']
-alliance_manage_locked_lore: ['&8Solo el dueño puede cambiar esto.']
+alliance_leave_plot_lore:
+- '&eClick para quitar esta parcela'
+- '&ede la alianza.'
+alliance_manage_locked_lore:
+- '&8Solo el dueño puede cambiar esto.'
 alliance_toggle_on: '&aON'
 alliance_toggle_off: '&cOFF'
 alliance_toggle_click: '&eClick para alternar.'
@@ -2644,13 +2754,11 @@ alliance_toggle_animals: 'Los aliados pueden usar animales/granjas'
 alliance_toggle_friendly_pvp: 'Los aliados son amistosos en PvP'
 alliance_confirm_title: '&cConfirmar'
 alliance_confirm_yes: '&aConfirmar'
-alliance_confirm_yes_lore: ['&eClick para confirmar.']
+alliance_confirm_yes_lore:
+- '&eClick para confirmar.'
 alliance_confirm_no: '&cCancelar'
-alliance_confirm_no_lore: ['&7Volver.']
-
-# ------------------------------------------------------------
-# Rent Confirm / Mis alquileres (1.3.0 polish)
-# ------------------------------------------------------------
+alliance_confirm_no_lore:
+- '&7Volver.'
 rent_confirm_title: '&6Confirmar alquiler'
 rent_confirm_cancel_title: '&cConfirmar cancelación'
 rent_confirm_name: '&aConfirmar alquiler'
@@ -2667,19 +2775,19 @@ rent_confirm_missing: '&cEse anuncio ya no está disponible.'
 my_rentals_title: '&6Mis alquileres'
 button_my_rentals: '&6Mis alquileres'
 my_rentals_button_lore:
-  - '&7Ve alquileres de parcela y zona,'
-  - '&7renueva, extiende o cancela contratos.'
+- '&7Ve alquileres de parcela y zona,'
+- '&7renueva, extiende o cancela contratos.'
 local_market_my_rentals_name: '&6Mis alquileres'
 local_market_my_rentals_lore:
-  - '&7Administra tus alquileres activos'
-  - '&7de parcela y zona en un solo lugar.'
+- '&7Administra tus alquileres activos'
+- '&7de parcela y zona en un solo lugar.'
 my_rentals_empty_name: '&7Sin alquileres activos'
 my_rentals_empty_lore:
-  - '&7No estás alquilando parcelas'
-  - '&7ni zonas en este momento.'
-  - ' '
-  - '&8Explora Bienes Raíces o Mercado Local'
-  - '&8para encontrar alquileres.'
+- '&7No estás alquilando parcelas'
+- '&7ni zonas en este momento.'
+- ' '
+- '&8Explora Bienes Raíces o Mercado Local'
+- '&8para encontrar alquileres.'
 my_rentals_guide_name: '&eGuía de alquileres'
 my_rentals_type_full: '&7Tipo: &fParcela completa'
 my_rentals_type_zone: '&7Tipo: &fZona'
@@ -2693,11 +2801,11 @@ my_rentals_full_name: '&6{PLOT}'
 my_rentals_zone_name: '&a{ZONE}'
 button_roles_nickname: '&eRenombrar apodo'
 roles_nickname_button_lore:
-  - '&7Define una etiqueta local de la parcela'
-  - '&7para este miembro (máx. 24).'
-  - ' '
-  - '&eClic y escribe en el chat'
-  - '&8Escribe &fcancel &8para abortar.'
+- '&7Define una etiqueta local de la parcela'
+- '&7para este miembro (máx. 24).'
+- ' '
+- '&eClic y escribe en el chat'
+- '&8Escribe &fcancel &8para abortar.'
 roles_nickname_current_line: '&7Actual: &f{NICK}'
 roles_nickname_prompt: '&eEscribe un apodo para &f{PLAYER}&e en el chat (máx. 24), o &fcancel&e.'
 roles_nickname_cancelled: '&7Cambio de apodo cancelado.'
@@ -2708,21 +2816,20 @@ roles_member_account_line: '&7Cuenta: &f{PLAYER}'
 roles_capacity_full: '&cEsta parcela está al límite (&f{MAX}&c miembros).'
 roles_owner_not_assignable: '&cEl rol de dueño no se puede asignar aquí.'
 roles_guide_lore:
-  - '&71. Añade un jugador cercano'
-  - '&72. Asigna un rol de la lista'
-  - '&73. Opcional: pon un apodo'
-  - '&74. Edita las banderas del rol si hace falta'
-  - ' '
-  - '&8El dueño no se asigna aquí.'
-  - '&8La capacidad limita nuevos miembros.'
-# --- Further polish (1.3.0) ---
+- '&71. Añade un jugador cercano'
+- '&72. Asigna un rol de la lista'
+- '&73. Opcional: pon un apodo'
+- '&74. Edita las banderas del rol si hace falta'
+- ' '
+- '&8El dueño no se asigna aquí.'
+- '&8La capacidad limita nuevos miembros.'
 my_rentals_full_actions: '&eDerecha renovar &8| &cShift-derecha cancelar &8| &bShift-izquierda auto'
 my_rentals_zone_actions: '&aDerecha extender &8| &eIzquierda habitación &8| &cShift-derecha salir'
 my_rentals_guide_lore:
-  - '&7Clic derecho: renovar / extender'
-  - '&7Mayús+clic derecho: cancelar / salir'
-  - '&7Zonas: clic izquierdo abre controles'
-  - '&7Mayús+izquierdo: auto-renovar (parcela)'
+- '&7Clic derecho: renovar / extender'
+- '&7Mayús+clic derecho: cancelar / salir'
+- '&7Zonas: clic izquierdo abre controles'
+- '&7Mayús+izquierdo: auto-renovar (parcela)'
 my_rentals_auto_renew_line: '&7Auto-renovar: &f{STATE}'
 my_rentals_auto_renew_on: '&aON'
 my_rentals_auto_renew_off: '&cOFF'
@@ -2730,20 +2837,20 @@ rent_confirm_zone_leave_line: '&7Saldras de esta zona alquilada antes de tiempo.
 rent_confirm_zone_no_deposit_line: '&8Los alquileres de zona no tienen deposito aparte.'
 roles_add_by_name: '&eAgregar por nombre'
 roles_add_by_name_lore:
-  - '&7Escribe un nombre en el chat'
-  - '&7(puede estar desconectado).'
+- '&7Escribe un nombre en el chat'
+- '&7(puede estar desconectado).'
 roles_moderation_name: '&cExpulsar / Banear'
 roles_moderation_lore:
-  - '&7Expulsa, banea o desbanea'
-  - '&7jugadores en este terreno.'
+- '&7Expulsa, banea o desbanea'
+- '&7jugadores en este terreno.'
 local_market_my_tenants_name: '&6Mis inquilinos'
 local_market_my_tenants_lore:
-  - '&7Ve arrendatarios de terrenos'
-  - '&7y zonas que posees.'
+- '&7Ve arrendatarios de terrenos'
+- '&7y zonas que posees.'
 settings_settlements_name: '&6Bandeja de pagos'
 settings_settlements_lore:
-  - '&7Reembolsos en cola pendientes'
-  - '&7de entrega a tu saldo.'
+- '&7Reembolsos en cola pendientes'
+- '&7de entrega a tu saldo.'
 visit_discover_filter_name: '&eFiltro de descubrimiento'
 alliance_roster_name: '&bLista e invitaciones'
 doctor_settlements_name: '&6Pagos pendientes'
@@ -2753,98 +2860,96 @@ plot_status_upkeep_name: '&6Mantenimiento'
 plot_status_upkeep_cost: '&7Costo: &6{COST}'
 plot_status_upkeep_paid: '&7Ultimo pago: &f{TIME}'
 alliance_roster_lore:
-  - '&7Ver miembros e invitaciones pendientes.'
+- '&7Ver miembros e invitaciones pendientes.'
 doctor_settlements_lore:
-  - '&7Qué: pagos Vault en cola que no se entregaron.'
-  - '&7Cuándo: ventas, rentas o reembolsos parecen trabados.'
-  - ' '
-  - '&eClic para revisar y reintentar entregas.'
-  - '&8El staff puede reintentar todos los pendientes.'
+- '&7Qué: pagos Vault en cola que no se entregaron.'
+- '&7Cuándo: ventas, rentas o reembolsos parecen trabados.'
+- ' '
+- '&eClic para revisar y reintentar entregas.'
+- '&8El staff puede reintentar todos los pendientes.'
 doctor_delinquents_lore:
-  - '&7Qué: alquileres vencidos o por vencer en 24h.'
-  - '&7Cuándo: seguimiento a inquilinos o limpieza.'
-  - ' '
-  - '&eClic para ver la lista de vigilancia.'
-  - '&8No cancela alquileres por sí solo.'
+- '&7Qué: alquileres vencidos o por vencer en 24h.'
+- '&7Cuándo: seguimiento a inquilinos o limpieza.'
+- ' '
+- '&eClic para ver la lista de vigilancia.'
+- '&8No cancela alquileres por sí solo.'
 doctor_storage_migrate_lore:
-  - '&7Qué: convertir datos de parcelas entre YML y SQL.'
-  - '&7Cuándo: cambiar storage.backend en mantenimiento.'
-  - ' '
-  - '&cCrea un respaldo y luego reescribe el almacenamiento.'
-  - '&eClic para abrir el asistente de migración.'
+- '&7Qué: convertir datos de parcelas entre YML y SQL.'
+- '&7Cuándo: cambiar storage.backend en mantenimiento.'
+- ' '
+- '&cCrea un respaldo y luego reescribe el almacenamiento.'
+- '&eClic para abrir el asistente de migración.'
 visit_discover_filter_lore:
-  - '&7Ciclo: Todos / Destacados / Venta / Alquiler / Categoria'
-
-# --- 1.3.0 polish GUI keys ---
+- '&7Ciclo: Todos / Destacados / Venta / Alquiler / Categoria'
 settlements_inbox_title: '&6Pagos pendientes'
 settlements_empty_name: '&7Sin pagos pendientes'
 settlements_empty_lore:
-  - '&7Todos los pagos fueron entregados.'
+- '&7Todos los pagos fueron entregados.'
 settlements_entry_lore:
-  - '&7Motivo: &f{REASON}'
-  - '&7Antigüedad: &f{AGE} minutos'
+- '&7Motivo: &f{REASON}'
+- '&7Antigüedad: &f{AGE} minutos'
 settlements_entry_player: '&7Jugador: &f{PLAYER}'
 settlements_retry_name: '&aReintentar mi entrega'
 settlements_retry_lore:
-  - '&7Reintenta tus entregas Vault pendientes.'
+- '&7Reintenta tus entregas Vault pendientes.'
 settlements_retry_all_name: '&aReintentar todas'
 settlements_retry_all_lore:
-  - '&7Reintenta todas las entregas pendientes.'
-  - '&cSolo staff.'
+- '&7Reintenta todas las entregas pendientes.'
+- '&cSolo staff.'
 settlements_retry_result: '&aReintento hecho. Entregados: &f{COUNT}'
 claim_merge_title: '&6Fusionar reclamos'
 claim_merge_confirm_title: '&cConfirmar fusión'
 claim_merge_confirm_details: '&eResumen de fusión'
 claim_merge_confirm_lore:
-  - '&7Base: &f{BASE}'
-  - '&7Fusionar: &f{OTHER}'
-  - '&7Costo: &e{COST} ClaimBlocks'
+- '&7Base: &f{BASE}'
+- '&7Fusionar: &f{OTHER}'
+- '&7Costo: &e{COST} ClaimBlocks'
 claim_merge_confirm_accept: '&aConfirmar fusión'
 claim_merge_confirm_accept_lore:
-  - '&7Fusionar estos terrenos ahora.'
+- '&7Fusionar estos terrenos ahora.'
 button_claim_merge: '&aFusionar reclamos'
 claim_merge_button_lore:
-  - '&7Combina terrenos adyacentes propios.'
+- '&7Combina terrenos adyacentes propios.'
 claim_merge_button_disabled_lore:
-  - '&7La fusión está desactivada.'
+- '&7La fusión está desactivada.'
 claim_merge_button_locked_lore:
-  - '&7Solo dueños pueden fusionar.'
+- '&7Solo dueños pueden fusionar.'
 button_transfer: '&eTransferir propiedad'
 transfer_button_lore:
-  - '&7Transfiere con /ag transfer <jugador>'
+- '&7Transfiere con /ag transfer <jugador>'
 transfer_button_locked_lore:
-  - '&cSolo el dueño puede transferir.'
+- '&cSolo el dueño puede transferir.'
 transfer_confirm_title: '&cConfirmar transferencia'
 transfer_confirm_details_name: '&eTransferir propiedad'
 transfer_confirm_accept: '&aConfirmar transferencia'
 transfer_confirm_accept_lore:
-  - '&7Transferir este terreno ahora.'
+- '&7Transferir este terreno ahora.'
 transfer_confirm_success: '&aTerreno transferido a &f{PLAYER}&a.'
 button_giftblocks: '&aRegalar ClaimBlocks'
 giftblocks_button_lore:
-  - '&7Regala ClaimBlocks disponibles'
-  - '&7a un jugador cercano.'
+- '&7Regala ClaimBlocks disponibles'
+- '&7a un jugador cercano.'
 giftblocks_button_disabled_lore:
-  - '&7Los regalos están desactivados.'
+- '&7Los regalos están desactivados.'
 giftblocks_title: '&aRegalar ClaimBlocks'
 giftblocks_amount_title: '&aElegir cantidad'
 giftblocks_confirm_title: '&aConfirmar regalo'
 giftblocks_balance_name: '&aTus bloques disponibles'
 giftblocks_no_players_name: '&7No hay jugadores cerca'
 giftblocks_no_players_lore:
-  - '&7Acércate a otro jugador,'
-  - '&7o usa &e/ag giftblocks <jugador> <cantidad>&7.'
+- '&7Acércate a otro jugador,'
+- '&7o usa &e/ag giftblocks <jugador> <cantidad>&7.'
 giftblocks_player_lore:
-  - '&7Clic para elegir cantidad.'
+- '&7Clic para elegir cantidad.'
 giftblocks_amount_header_lore:
-  - '&7Elige cuántos bloques regalar.'
+- '&7Elige cuántos bloques regalar.'
 giftblocks_amount_lore:
-  - '&7Clic para continuar.'
+- '&7Clic para continuar.'
 giftblocks_confirm_name: '&aRegalar &e{AMOUNT} &aa &f{PLAYER}'
 giftblocks_confirm_lore:
-  - '&7Clic para enviar el regalo.'
+- '&7Clic para enviar el regalo.'
 plot_status_button_locked_lore:
-  - '&cPárate en un terreno para ver el estado.'
+- '&cPárate en un terreno para ver el estado.'
 papi_wilderness: 'Naturaleza'
 papi_none: 'Ninguno'
 papi_na: 'N/D'
@@ -2852,230 +2957,224 @@ papi_enabled: 'Activado'
 papi_disabled: 'Desactivado'
 papi_not_for_sale: 'No está en venta'
 claim_merge_plot_lore:
-  - '&7Límites: &f{BOUNDS}'
-  - '&eClic para seleccionar.'
+- '&7Límites: &f{BOUNDS}'
+- '&eClic para seleccionar.'
 transfer_confirm_details_lore:
-  - '&7Terreno: &f{PLOT}'
-  - '&7Destinatario: &f{PLAYER}'
-  - ' '
-  - '&cLos listados se limpian. Los depósitos activos'
-  - '&cse reembolsan o encolan antes de transferir.'
-
-# Asistente de Migración
+- '&7Terreno: &f{PLOT}'
+- '&7Destinatario: &f{PLAYER}'
+- ' '
+- '&cLos listados se limpian. Los depósitos activos'
+- '&cse reembolsan o encolan antes de transferir.'
 migration_gui_title: '&6Asistente de Migración'
 migration_loading_title: '&6Escaneando Migración'
 migration_preview_title: '&6Vista Previa de Migración'
 migration_confirm_title: '&cConfirmar Importación'
 migration_scan_name: '&eEscaneo de Ubicación Actual'
 migration_scan_clear_lore:
-  - '&7Ningún hook de protección externa'
-  - '&7reporta protección en tu ubicación.'
+- '&7Ningún hook de protección externa'
+- '&7reporta protección en tu ubicación.'
 migration_scan_detected_lore:
-  - '&7Fuente detectada: &e{HOOK}'
-  - '&7Fuente de migración sugerida: &a{SOURCE}'
+- '&7Fuente detectada: &e{HOOK}'
+- '&7Fuente de migración sugerida: &a{SOURCE}'
 migration_scan_aegis_plot_lore:
-  - '&7Parcela Aegis aquí: &fYes'
-  - '&7Dueño: &f{OWNER}'
+- '&7Parcela Aegis aquí: &fYes'
+- '&7Dueño: &f{OWNER}'
 migration_scan_focus_active_lore:
-  - '&7Filtro de parcela enfocada: &aACTIVE'
-  - '&7Objetivo: &f{X}, {Z}'
+- '&7Filtro de parcela enfocada: &aACTIVE'
+- '&7Objetivo: &f{X}, {Z}'
 migration_scan_footer_lore:
-  - '&eUsa los botones de fuente abajo para una vista previa (dry-run).'
-  - '&8La importación no inicia hasta que confirmes.'
+- '&eUsa los botones de fuente abajo para una vista previa (dry-run).'
+- '&8La importación no inicia hasta que confirmes.'
 migration_source_griefprevention_name: 'GriefPrevention'
 migration_source_griefdefender_name: 'GriefDefender'
 migration_source_lands_name: 'Lands'
 migration_source_detected_lore:
-  - '&7Se detectaron datos de origen en este servidor.'
-  - '&7Ejecuta una vista previa antes de importar.'
+- '&7Se detectaron datos de origen en este servidor.'
+- '&7Ejecuta una vista previa antes de importar.'
 migration_source_missing_lore:
-  - '&7Aún no se detectaron datos de origen.'
-  - '&7Instala/activa el plugin y vuelve a abrir.'
+- '&7Aún no se detectaron datos de origen.'
+- '&7Instala/activa el plugin y vuelve a abrir.'
 migration_source_recommended_lore:
-  - '&bDetectado cerca de tu ubicación actual.'
+- '&bDetectado cerca de tu ubicación actual.'
 migration_option_trusted_line: '&7Importar de confianza: {STATE}'
 migration_option_flags_line: '&7Importar flags: {STATE}'
 migration_option_force_line: '&7Forzar solapamiento: {STATE}'
 migration_source_click_lore:
-  - '&eClic para vista previa (dry-run).'
-  - '&8No se escriben parcelas hasta confirmar la importación.'
+- '&eClic para vista previa (dry-run).'
+- '&8No se escriben parcelas hasta confirmar la importación.'
 migration_toggle_trusted_name: '&bImportar de confianza'
 migration_toggle_trusted_lore:
-  - '&7Copia el acceso de confianza/miembros desde el origen.'
-  - '&7Úsalo cuando quieras que los jugadores mantengan acceso.'
-  - ' '
-  - '&eClic para alternar.'
+- '&7Copia el acceso de confianza/miembros desde el origen.'
+- '&7Úsalo cuando quieras que los jugadores mantengan acceso.'
+- ' '
+- '&eClic para alternar.'
 migration_toggle_flags_name: '&dImportar Flags'
 migration_toggle_flags_lore:
-  - '&7Copia flags de protección compatibles cuando sea posible.'
-  - '&7Úsalo para mayor paridad de funciones tras importar.'
-  - ' '
-  - '&eClic para alternar.'
+- '&7Copia flags de protección compatibles cuando sea posible.'
+- '&7Úsalo para mayor paridad de funciones tras importar.'
+- ' '
+- '&eClic para alternar.'
 migration_toggle_force_name: '&cForzar Solapamiento'
 migration_toggle_force_lore:
-  - '&7Permite importar aunque se solape una parcela Aegis.'
-  - '&cPrecaución: puede crear geometría conflictiva.'
-  - '&cMejor déjalo OFF salvo recuperación de un mundo roto.'
-  - ' '
-  - '&eClic para alternar.'
+- '&7Permite importar aunque se solape una parcela Aegis.'
+- '&cPrecaución: puede crear geometría conflictiva.'
+- '&cMejor déjalo OFF salvo recuperación de un mundo roto.'
+- ' '
+- '&eClic para alternar.'
 migration_focus_name: '&eFiltro de Parcela Enfocada'
 migration_focus_inactive_lore:
-  - '&7No hay parcela externa enfocada.'
-  - '&7La vista previa escaneará toda la fuente seleccionada.'
-  - ' '
-  - '&eUsa la varita de migración para apuntar a una parcela exacta.'
-  - '&8El clic no hace nada hasta que haya un enfoque activo.'
+- '&7No hay parcela externa enfocada.'
+- '&7La vista previa escaneará toda la fuente seleccionada.'
+- ' '
+- '&eUsa la varita de migración para apuntar a una parcela exacta.'
+- '&8El clic no hace nada hasta que haya un enfoque activo.'
 migration_focus_active_lore:
-  - '&7Coordenadas enfocadas: &f{X}, {Z}'
-  - '&7Mundo: &f{WORLD}'
-  - ' '
-  - '&eClic para limpiar este filtro de parcela exacta.'
+- '&7Coordenadas enfocadas: &f{X}, {Z}'
+- '&7Mundo: &f{WORLD}'
+- ' '
+- '&eClic para limpiar este filtro de parcela exacta.'
 migration_wand_name: '&6Obtener Varita de Migración'
 migration_wand_lore:
-  - '&7Right-click in another plugin''s protected area.'
-  - '&7Abre este asistente con esa fuente preseleccionada.'
-  - ' '
-  - '&eClic para recibir la varita.'
+- '&7Right-click in another plugin''s protected area.'
+- '&7Abre este asistente con esa fuente preseleccionada.'
+- ' '
+- '&eClic para recibir la varita.'
 migration_wand_item_name: '&6Varita de Migración'
 migration_wand_item_lore:
-  - '&7Clic derecho en un área protegida de'
-  - '&7otro plugin para abrir el'
-  - '&7asistente de migración de AegisGuard.'
+- '&7Clic derecho en un área protegida de'
+- '&7otro plugin para abrir el'
+- '&7asistente de migración de AegisGuard.'
 migration_wand_received: '&aYou received the Varita de Migración.'
 migration_open_doctor_name: '&bAbrir Doctor de Territorio'
 migration_open_doctor_lore:
-  - '&7Tras importar, busca solapamientos,'
-  - '&7contratos huérfanos y estados reparables.'
-  - ' '
-  - '&eClic para abrir el Doctor.'
+- '&7Tras importar, busca solapamientos,'
+- '&7contratos huérfanos y estados reparables.'
+- ' '
+- '&eClic para abrir el Doctor.'
 migration_scanning_name: '&eEscaneando {SOURCE}'
 migration_scanning_lore:
-  - '&7Ejecutando vista previa (dry-run).'
-  - '&7Puede tardar un momento en servidores grandes.'
-  - ' '
-  - '&8No se escriben parcelas durante la vista previa.'
+- '&7Ejecutando vista previa (dry-run).'
+- '&7Puede tardar un momento en servidores grandes.'
+- ' '
+- '&8No se escriben parcelas durante la vista previa.'
 migration_preview_summary_name: '&eVista previa de {SOURCE}'
 migration_preview_summary_lore:
-  - '&7Parcelas encontradas: &f{FOUND}'
-  - '&7Se importarían: &a{IMPORT}'
-  - '&7Omitidas por solape: &e{OVERLAP}'
-  - '&7Omitidas por filtro: &e{FILTER}'
-  - '&7Errores: &c{ERRORS}'
-  - '&7Duración: &f{MS}ms'
+- '&7Parcelas encontradas: &f{FOUND}'
+- '&7Se importarían: &a{IMPORT}'
+- '&7Omitidas por solape: &e{OVERLAP}'
+- '&7Omitidas por filtro: &e{FILTER}'
+- '&7Errores: &c{ERRORS}'
+- '&7Duración: &f{MS}ms'
 migration_focused_claim_name: '&bParcela Enfocada'
 migration_focused_none_lore:
-  - '&7No coincidió ninguna parcela enfocada.'
-  - '&7Esta vista previa representa toda la fuente seleccionada.'
+- '&7No coincidió ninguna parcela enfocada.'
+- '&7Esta vista previa representa toda la fuente seleccionada.'
 migration_focused_detail_lore:
-  - '&7Dueño: &f{OWNER}'
-  - '&7Mundo: &f{WORLD}'
-  - '&7Nombre: &f{NAME}'
-  - '&7Límites: &f{BOUNDS}'
-  - '&7Entradas de confianza: &f{TRUSTED}'
-  - '&7Flags importados: &f{FLAGS}'
+- '&7Dueño: &f{OWNER}'
+- '&7Mundo: &f{WORLD}'
+- '&7Nombre: &f{NAME}'
+- '&7Límites: &f{BOUNDS}'
+- '&7Entradas de confianza: &f{TRUSTED}'
+- '&7Flags importados: &f{FLAGS}'
 migration_run_import_name: '&aEjecutar Importación'
 migration_run_import_lore:
-  - '&7Importa esta fuente con las'
-  - '&7opciones seleccionadas actualmente.'
-  - ' '
-  - '&eClic para revisar la confirmación final.'
-  - '&cLa importación en vivo cambia datos de parcelas.'
+- '&7Importa esta fuente con las'
+- '&7opciones seleccionadas actualmente.'
+- ' '
+- '&eClic para revisar la confirmación final.'
+- '&cLa importación en vivo cambia datos de parcelas.'
 migration_confirm_import_name: '&cConfirmar Importación en Vivo'
 migration_confirm_import_lore:
-  - '&7Esto escribe nuevas parcelas AegisGuard desde el origen.'
-  - '&cIrreversible sin instantáneas / limpieza manual.'
-  - '&7Ejecuta un escaneo del Doctor después para verificar.'
-  - ' '
-  - '&cClic para importar ahora.'
+- '&7Esto escribe nuevas parcelas AegisGuard desde el origen.'
+- '&cIrreversible sin instantáneas / limpieza manual.'
+- '&7Ejecuta un escaneo del Doctor después para verificar.'
+- ' '
+- '&cClic para importar ahora.'
 migration_cancel_confirm_name: '&eCancelar'
 migration_cancel_confirm_lore:
-  - '&7Volver a la vista previa'
-  - '&7sin importar nada.'
+- '&7Volver a la vista previa'
+- '&7sin importar nada.'
 migration_back_wizard_name: '&bVolver al Asistente'
 migration_back_wizard_lore:
-  - '&7Cambia opciones de vista previa o'
-  - '&7vuelve a escanear otra fuente.'
+- '&7Cambia opciones de vista previa o'
+- '&7vuelve a escanear otra fuente.'
 migration_back_sources_lore:
-  - '&7Volver a las fuentes de migración.'
+- '&7Volver a las fuentes de migración.'
 migration_preview_notes_name: '&fNotas de Vista Previa'
 migration_preview_no_errors_lore:
-  - '&aNo se reportaron errores de vista previa.'
+- '&aNo se reportaron errores de vista previa.'
 migration_preview_errors_header_lore:
-  - '&eNotas / errores de vista previa:'
+- '&eNotas / errores de vista previa:'
 migration_unavailable: '&cEl sistema de migración no está disponible.'
 migration_preview_failed: '&cFalló la vista previa: {ERROR}'
 migration_import_starting: '&6[AegisGuard] &7Iniciando importación en vivo de &e{SOURCE}&7...'
 migration_import_failed: '&cMigración fallida: {ERROR}'
 migration_import_finished: '&aMigración terminada. Abriendo resumen...'
-
-# Storage backend migrate
 storage_migrate_title: '&cMigración de Almacenamiento'
 storage_migrate_confirm_title: '&cConfirm Migración de Almacenamiento'
 storage_migrate_info_name: '&eMigración de Backend de Almacenamiento'
 storage_migrate_info_lore:
-  - '&7Copia datos de parcelas entre YML y SQLite.'
-  - '&7Se crea una copia de seguridad antes de los cambios.'
-  - ' '
-  - '&cÚsalo durante mantenimiento programado.'
-  - '&cLuego cambia storage.backend en la config'
-  - '&csi planeas conservar el destino.'
+- '&7Copia datos de parcelas entre YML y SQLite.'
+- '&7Se crea una copia de seguridad antes de los cambios.'
+- ' '
+- '&cÚsalo durante mantenimiento programado.'
+- '&cLuego cambia storage.backend en la config'
+- '&csi planeas conservar el destino.'
 storage_migrate_yml_sql_name: '&eYML a SQLite'
 storage_migrate_yml_sql_lore:
-  - '&7Qué: copiar plots.yml a SQLite.'
-  - '&7Cuándo: pasar un servidor de archivos planos a SQL.'
-  - ' '
-  - '&7Primero se escribe un respaldo de plots.yml.'
-  - '&cDestructivo si el destino ya tiene parcelas.'
-  - ' '
-  - '&eClic para revisar la confirmación.'
+- '&7Qué: copiar plots.yml a SQLite.'
+- '&7Cuándo: pasar un servidor de archivos planos a SQL.'
+- ' '
+- '&7Primero se escribe un respaldo de plots.yml.'
+- '&cDestructivo si el destino ya tiene parcelas.'
+- ' '
+- '&eClic para revisar la confirmación.'
 storage_migrate_sql_yml_name: '&eSQLite a YML'
 storage_migrate_sql_yml_lore:
-  - '&7Qué: copiar parcelas SQLite a plots.yml.'
-  - '&7Cuándo: exportar datos SQL a archivos planos.'
-  - ' '
-  - '&7Primero se escribe un respaldo de la base de datos.'
-  - '&cDestructivo si plots.yml ya tiene parcelas.'
-  - ' '
-  - '&eClic para revisar la confirmación.'
+- '&7Qué: copiar parcelas SQLite a plots.yml.'
+- '&7Cuándo: exportar datos SQL a archivos planos.'
+- ' '
+- '&7Primero se escribe un respaldo de la base de datos.'
+- '&cDestructivo si plots.yml ya tiene parcelas.'
+- ' '
+- '&eClic para revisar la confirmación.'
 storage_migrate_confirm_name: '&cConfirmar {DIRECTION}'
 storage_migrate_confirm_lore:
-  - '&7Dirección: &f{DIRECTION}'
-  - '&7Se crea un respaldo antes de copiar.'
-  - ' '
-  - '&cEsto reescribe los datos de almacenamiento.'
-  - '&cNo interrumpas el servidor a mitad de la migración.'
-  - ' '
-  - '&cClic para ejecutar ahora.'
+- '&7Dirección: &f{DIRECTION}'
+- '&7Se crea un respaldo antes de copiar.'
+- ' '
+- '&cEsto reescribe los datos de almacenamiento.'
+- '&cNo interrumpas el servidor a mitad de la migración.'
+- ' '
+- '&cClic para ejecutar ahora.'
 storage_migrate_back_lore:
-  - '&7Volver al menú de staff anterior.'
+- '&7Volver al menú de staff anterior.'
 storage_migrate_result: '&e[Storage] &f{REPORT}'
 storage_migrate_unavailable: '&cLa migración de almacenamiento no está disponible.'
 doctor_delinquents_title: '&4Morosos de Alquiler'
 doctor_delinquents_empty_name: '&aSin Alquileres Morosos'
 doctor_delinquents_empty_lore:
-  - '&7Ningún alquiler vence en 24 horas.'
-  - '&7Revisa más tarde o usa /agadmin rentals.'
+- '&7Ningún alquiler vence en 24 horas.'
+- '&7Revisa más tarde o usa /agadmin rentals.'
 doctor_delinquent_entry_name: '&e{PLOT}'
 doctor_delinquent_entry_expired_lore:
-  - '&7Inquilino: &f{RENTER}'
-  - '&cVencido — da seguimiento o cancela con herramientas de staff.'
+- '&7Inquilino: &f{RENTER}'
+- '&cVencido — da seguimiento o cancela con herramientas de staff.'
 doctor_delinquent_entry_due_lore:
-  - '&7Inquilino: &f{RENTER}'
-  - '&eVence en &f{HOURS}&eh.'
-  - '&7Vigila o prepara una cancelación de staff.'
+- '&7Inquilino: &f{RENTER}'
+- '&eVence en &f{HOURS}&eh.'
+- '&7Vigila o prepara una cancelación de staff.'
 button_back_doctor: '&eVolver al Doctor'
 doctor_back_lore:
-  - '&7Volver al Doctor de Territorio.'
+- '&7Volver al Doctor de Territorio.'
 button_admin_set_spawn: '&aFijar Parcela Actual como Spawn'
 admin_set_spawn_lore:
-  - '&7Qué: fijar el punto seguro de esta parcela de staff como Spawn público.'
-  - '&7Cuándo: de pie dentro de una parcela de servidor/staff.'
-  - ' '
-  - '&7Puede tomarse una instantánea de recuperación primero.'
-  - '&8No cambia la propiedad.'
-  - '&eClic para fijar.'
-
-# --- GUI audit language sync (1.3.0) ---
+- '&7Qué: fijar el punto seguro de esta parcela de staff como Spawn público.'
+- '&7Cuándo: de pie dentro de una parcela de servidor/staff.'
+- ' '
+- '&7Puede tomarse una instantánea de recuperación primero.'
+- '&8No cambia la propiedad.'
+- '&eClic para fijar.'
 alliance_roster_title: '&6Lista de Alianza'
 alliance_roster_members_line: '&7Miembros: &f{COUNT}'
 alliance_roster_invites_line: '&7Invitaciones pendientes: &f{COUNT}'
@@ -3087,10 +3186,10 @@ alliance_roster_pending_locked_lore: '&8El líder puede cancelar esta invitació
 alliance_unknown_player: 'Desconocido'
 alliance_roster_accept: '&aAceptar Invitación'
 alliance_roster_accept_lore:
-  - '&eClic para unirte a esta alianza.'
+- '&eClic para unirte a esta alianza.'
 alliance_roster_decline: '&cRechazar Invitación'
 alliance_roster_decline_lore:
-  - '&eClic para rechazar esta invitación.'
+- '&eClic para rechazar esta invitación.'
 guest_pass_revoke_hint: '&eTip: &7Shift+clic para confirmar la revocación.'
 zone_tenant_evict_hint: '&eTip: &7Shift+clic en Desalojar Inquilino para confirmar.'
 button_doors_on: '&a🚪 Puertas: Protegidas'
@@ -3106,45 +3205,45 @@ button_storm_ward_off: '&c⚡ Custodia de Tormenta: Inactiva'
 button_decor_on: '&a🗿 Custodia de Decoración: Activa'
 button_decor_off: '&c🗿 Custodia de Decoración: Inactiva'
 doors_toggle_lore:
-  - '&7Protege puertas, trampillas y portones'
-  - '&7del uso de forasteros (aparte de redstone).'
-  - '&eClic para alternar.'
+- '&7Protege puertas, trampillas y portones'
+- '&7del uso de forasteros (aparte de redstone).'
+- '&eClic para alternar.'
 hopper_pipe_toggle_lore:
-  - '&7Bloquea tuberías de ítems por tolvas'
-  - '&7a través del borde del claim.'
-  - '&eClic para alternar.'
+- '&7Bloquea tuberías de ítems por tolvas'
+- '&7a través del borde del claim.'
+- '&eClic para alternar.'
 liquid_flow_toggle_lore:
-  - '&7Bloquea agua/lava que fluye a través'
-  - '&7del borde de este claim.'
-  - '&eClic para alternar.'
+- '&7Bloquea agua/lava que fluye a través'
+- '&7del borde de este claim.'
+- '&eClic para alternar.'
 teleport_ward_toggle_lore:
-  - '&7Bloquea perlas, chorus y portales'
-  - '&7de jugadores no confiados.'
-  - '&eClic para alternar.'
+- '&7Bloquea perlas, chorus y portales'
+- '&7de jugadores no confiados.'
+- '&eClic para alternar.'
 storm_ward_toggle_lore:
-  - '&7Cancela daño y fuego de rayos'
-  - '&7dentro de este claim protegido.'
-  - '&eClic para alternar.'
+- '&7Cancela daño y fuego de rayos'
+- '&7dentro de este claim protegido.'
+- '&eClic para alternar.'
 decor_toggle_lore:
-  - '&7Protege armaduras y marcos'
-  - '&7de manipulación externa.'
-  - '&eClic para alternar.'
+- '&7Protege armaduras y marcos'
+- '&7de manipulación externa.'
+- '&eClic para alternar.'
 protection_preset_name_HOME: '&bPreset Hogar'
 protection_preset_name_SHOP: '&bPreset Tienda'
 protection_preset_name_ARENA: '&bPreset Arena'
 protection_preset_name_FARM: '&bPreset Granja'
 protection_preset_lore_HOME:
-  - '&7Paquete de seguridad para hogar privado.'
-  - '&7Contenedores, construcción y custodia de bordes.'
+- '&7Paquete de seguridad para hogar privado.'
+- '&7Contenedores, construcción y custodia de bordes.'
 protection_preset_lore_SHOP:
-  - '&7Entrada abierta con interacción de tienda.'
-  - '&7Contenedores y construcción protegidos.'
+- '&7Entrada abierta con interacción de tienda.'
+- '&7Contenedores y construcción protegidos.'
 protection_preset_lore_ARENA:
-  - '&7PvP permitido. TNT y fuego seguros.'
-  - '&7Construcción y contenedores protegidos.'
+- '&7PvP permitido. TNT y fuego seguros.'
+- '&7Construcción y contenedores protegidos.'
 protection_preset_lore_FARM:
-  - '&7Granja y animales abiertos para ayudantes.'
-  - '&7Mobs y TNT protegidos.'
+- '&7Granja y animales abiertos para ayudantes.'
+- '&7Mobs y TNT protegidos.'
 protection_preset_click_lore: '&eClic para revisar y aplicar.'
 protection_preset_confirm_title: '&eAplicar preset'
 protection_preset_confirm_warning: '&cEsto sobrescribe banderas coincidentes.'
@@ -3154,39 +3253,39 @@ protection_preset_confirm_name_SHOP: '&aConfirmar: Tienda'
 protection_preset_confirm_name_ARENA: '&aConfirmar: Arena'
 protection_preset_confirm_name_FARM: '&aConfirmar: Granja'
 protection_preset_confirm_lore_HOME:
-  - '&7Paquete de seguridad para hogar privado.'
-  - '&7Contenedores, construcción y custodia de bordes.'
+- '&7Paquete de seguridad para hogar privado.'
+- '&7Contenedores, construcción y custodia de bordes.'
 protection_preset_confirm_lore_SHOP:
-  - '&7Entrada abierta con interacción de tienda.'
-  - '&7Contenedores y construcción protegidos.'
+- '&7Entrada abierta con interacción de tienda.'
+- '&7Contenedores y construcción protegidos.'
 protection_preset_confirm_lore_ARENA:
-  - '&7PvP permitido. TNT y fuego seguros.'
-  - '&7Construcción y contenedores protegidos.'
+- '&7PvP permitido. TNT y fuego seguros.'
+- '&7Construcción y contenedores protegidos.'
 protection_preset_confirm_lore_FARM:
-  - '&7Granja y animales abiertos para ayudantes.'
-  - '&7Mobs y TNT protegidos.'
+- '&7Granja y animales abiertos para ayudantes.'
+- '&7Mobs y TNT protegidos.'
 guest_pass_preset_name_ANIMAL_SITTER: '&eCuidador de Animales'
 guest_pass_preset_name_REDSTONE_HELPER: '&eAyudante de Redstone'
 guest_pass_preset_name_VEHICLE_GUEST: '&eInvitado de Vehículos'
 guest_pass_preset_desc_ANIMAL_SITTER:
-  - '&7Animales más puertas/interacción.'
-  - '&7Sin construcción ni contenedores.'
+- '&7Animales más puertas/interacción.'
+- '&7Sin construcción ni contenedores.'
 guest_pass_preset_desc_REDSTONE_HELPER:
-  - '&7Controles de redstone más puertas.'
-  - '&7Sin construcción ni contenedores.'
+- '&7Controles de redstone más puertas.'
+- '&7Sin construcción ni contenedores.'
 guest_pass_preset_desc_VEHICLE_GUEST:
-  - '&7Vehículos más puertas/interacción.'
-  - '&7Sin construcción ni contenedores.'
+- '&7Vehículos más puertas/interacción.'
+- '&7Sin construcción ni contenedores.'
 alliance_toggle_vehicles: 'Los aliados pueden usar botes/vagones'
 lockdown_options_title: '&cOpciones de Bloqueo'
 lockdown_mode_soft_name: '&eBloqueo Suave'
 lockdown_mode_full_name: '&cBloqueo Completo'
 lockdown_mode_soft_lore:
-  - '&7Solo restringe contenedores + construir/romper.'
-  - '&7Roles y pases de invitado intactos.'
+- '&7Solo restringe contenedores + construir/romper.'
+- '&7Roles y pases de invitado intactos.'
 lockdown_mode_full_lore:
-  - '&7Usa la lista restringida del servidor.'
-  - '&7Puertas/interacción siempre funcionan.'
+- '&7Usa la lista restringida del servidor.'
+- '&7Puertas/interacción siempre funcionan.'
 lockdown_mode_soft_label: 'Suave (contenedores + construcción)'
 lockdown_mode_full_label: 'Completo'
 lockdown_duration_manual: '&fHasta levantarlo manualmente'
@@ -3202,8 +3301,8 @@ lockdown_duration_6h_label: '6 horas'
 lockdown_duration_24h_label: '24 horas'
 lockdown_options_continue: '&aContinuar'
 lockdown_options_continue_lore:
-  - '&7Revisa modo y duración,'
-  - '&7luego continúa para confirmar.'
+- '&7Revisa modo y duración,'
+- '&7luego continúa para confirmar.'
 lockdown_status_mode_line: '&7Modo: &f{MODE}'
 lockdown_status_expires_line: '&7Se levanta en: &f{MINUTES}m'
 lockdown_status_manual_line: '&7Duración: &fHasta levantarlo manualmente'
@@ -3211,104 +3310,100 @@ lockdown_confirm_mode_line: '&7Modo: &f{MODE}'
 lockdown_confirm_duration_line: '&7Duración: &f{DURATION}'
 role_flag_name_DOORS: '&bPuertas'
 role_flag_name_DECOR: '&bCustodia de Decoración'
-# ------------------------------------------------------------
-# Convertir parcela personal → zona del servidor (1.3.0+)
-# ------------------------------------------------------------
 button_admin_convert_server: '&cConvertir parcela → Zona del servidor'
 admin_convert_server_lore:
-  - '&7Qué: convierte la parcela personal donde estás'
-  - '&7en una zona del servidor (Spawn, Hub, Pueblo,'
-  - '&7Evento, Tienda, Arena o zona simple).'
-  - '&7Cuándo: un build personal terminado debe ser'
-  - '&7territorio staff público sin reconstruir.'
-  - ' '
-  - '&cLa propiedad pasa al servidor.'
-  - '&cSe borran roles y Pases de Invitado.'
-  - '&7Pide confirmación antes de cambiar nada.'
-  - '&eClic para abrir.'
+- '&7Qué: convierte la parcela personal donde estás'
+- '&7en una zona del servidor (Spawn, Hub, Pueblo,'
+- '&7Evento, Tienda, Arena o zona simple).'
+- '&7Cuándo: un build personal terminado debe ser'
+- '&7territorio staff público sin reconstruir.'
+- ' '
+- '&cLa propiedad pasa al servidor.'
+- '&cSe borran roles y Pases de Invitado.'
+- '&7Pide confirmación antes de cambiar nada.'
+- '&eClic para abrir.'
 convert_select_title: '&cConvertir → Parcela del servidor'
 convert_select_info_name: '&eDetalles de conversión'
 convert_select_info_lore:
-  - '&7Parcela: &f{PLOT}'
-  - '&7Dueño: &f{OWNER}'
-  - ' '
-  - '&cTransfiere la propiedad personal al servidor.'
-  - '&cSe borran roles de confianza y Pases de Invitado.'
-  - '&7Se limpian listados inactivos de venta/alquiler.'
-  - '&7Primero se toma una instantánea de recuperación.'
+- '&7Parcela: &f{PLOT}'
+- '&7Dueño: &f{OWNER}'
+- ' '
+- '&cTransfiere la propiedad personal al servidor.'
+- '&cSe borran roles de confianza y Pases de Invitado.'
+- '&7Se limpian listados inactivos de venta/alquiler.'
+- '&7Primero se toma una instantánea de recuperación.'
 convert_select_blocked_hint:
-  - '&eResuelve el problema de arriba antes de convertir.'
+- '&eResuelve el problema de arriba antes de convertir.'
 convert_type_unavailable: '&cNo disponible hasta limpiar bloqueos.'
 convert_type_click: '&eClic para revisar y confirmar.'
 convert_type_plain_name: '&bZona del servidor'
 convert_type_plain_lore:
-  - '&7Qué: transferir la propiedad al servidor.'
-  - '&7Sin categoría de viaje ni preset de flags.'
-  - '&7Úsalo para terreno staff genérico.'
+- '&7Qué: transferir la propiedad al servidor.'
+- '&7Sin categoría de viaje ni preset de flags.'
+- '&7Úsalo para terreno staff genérico.'
 convert_type_spawn_name: '&aSpawn público'
 convert_type_spawn_lore:
-  - '&7Qué: zona del servidor + punto de viaje Spawn.'
-  - '&7Define la categoría SPAWN en tus pies.'
-  - '&7Mismo resultado que Fijar Spawn tras convertir.'
+- '&7Qué: zona del servidor + punto de viaje Spawn.'
+- '&7Define la categoría SPAWN en tus pies.'
+- '&7Mismo resultado que Fijar Spawn tras convertir.'
 convert_type_hub_name: '&dHub'
 convert_type_hub_lore:
-  - '&7Qué: zona del servidor marcada como viaje HUB.'
+- '&7Qué: zona del servidor marcada como viaje HUB.'
 convert_type_town_name: '&ePueblo'
 convert_type_town_lore:
-  - '&7Qué: zona del servidor marcada como viaje TOWN.'
+- '&7Qué: zona del servidor marcada como viaje TOWN.'
 convert_type_event_name: '&6Evento'
 convert_type_event_lore:
-  - '&7Qué: zona del servidor marcada como viaje EVENT.'
+- '&7Qué: zona del servidor marcada como viaje EVENT.'
 convert_type_shop_name: '&aTienda'
 convert_type_shop_lore:
-  - '&7Qué: zona del servidor marcada como viaje SHOP.'
+- '&7Qué: zona del servidor marcada como viaje SHOP.'
 convert_type_arena_name: '&cArena'
 convert_type_arena_lore:
-  - '&7Qué: zona del servidor + preset de protección Arena.'
-  - '&7Aplica el paquete de flags ARENA existente'
-  - '&7(entrada pública, PvP permitido, build bloqueado).'
+- '&7Qué: zona del servidor + preset de protección Arena.'
+- '&7Aplica el paquete de flags ARENA existente'
+- '&7(entrada pública, PvP permitido, build bloqueado).'
 convert_confirm_title: '&cConfirmar conversión a servidor'
 convert_confirm_details_name: '&eConfirmar conversión'
 convert_confirm_details_lore:
-  - '&7Parcela: &f{PLOT}'
-  - '&7Dueño actual: &f{OWNER}'
-  - '&7Se convierte en: &f{TARGET}'
-  - ' '
-  - '&cLa propiedad pasa al servidor.'
-  - '&cEste claim personal se vuelve zona del servidor.'
-  - '&cSe limpia el acceso de jugadores (roles / pases).'
-  - '&7Se limpian listados de venta, alquiler y subasta.'
-  - '&7Primero se crea una instantánea de recuperación.'
-  - ' '
-  - '&8No se puede deshacer salvo restaurar.'
+- '&7Parcela: &f{PLOT}'
+- '&7Dueño actual: &f{OWNER}'
+- '&7Se convierte en: &f{TARGET}'
+- ' '
+- '&cLa propiedad pasa al servidor.'
+- '&cEste claim personal se vuelve zona del servidor.'
+- '&cSe limpia el acceso de jugadores (roles / pases).'
+- '&7Se limpian listados de venta, alquiler y subasta.'
+- '&7Primero se crea una instantánea de recuperación.'
+- ' '
+- '&8No se puede deshacer salvo restaurar.'
 convert_confirm_accept: '&aConfirmar conversión'
 convert_confirm_accept_lore:
-  - '&7Convierte esta parcela en zona del servidor ahora.'
+- '&7Convierte esta parcela en zona del servidor ahora.'
 convert_confirm_back_lore:
-  - '&7Volver a la selección de tipo.'
+- '&7Volver a la selección de tipo.'
 staff_wand_menu_title: '&cOpciones del Cetro de Staff'
 staff_wand_doctor_name: '&bDoctor de Territorio'
 staff_wand_doctor_lore:
-  - '&7Qué: escanear, reparar y herramientas de almacenamiento.'
-  - '&eClic para abrir Doctor Tools.'
+- '&7Qué: escanear, reparar y herramientas de almacenamiento.'
+- '&eClic para abrir Doctor Tools.'
 staff_wand_convert_name: '&cConvertir → Parcela del servidor'
 staff_wand_convert_lore:
-  - '&7Qué: convertir una parcela personal en zona del servidor.'
-  - '&7Elige Spawn, Hub, Pueblo, Evento, Tienda, Arena'
-  - '&7o una zona simple tras confirmar.'
+- '&7Qué: convertir una parcela personal en zona del servidor.'
+- '&7Elige Spawn, Hub, Pueblo, Evento, Tienda, Arena'
+- '&7o una zona simple tras confirmar.'
 staff_wand_convert_ready: '&eClic para elegir un tipo de parcela del servidor.'
 staff_wand_admin_name: '&cHerramientas de Staff'
 staff_wand_admin_lore:
-  - '&7Abrir el Centro de Comandos de Staff.'
+- '&7Abrir el Centro de Comandos de Staff.'
 admin_plot_actions:
-  - '&eClic izquierdo: &7Teleport'
-  - '&bClic derecho: &7Convertir → Parcela del servidor'
-  - '&cShift-Clic derecho: &7Borrar parcela'
-
-# Instant Approvals (auto-approved history)
+- '&eClic izquierdo: &7Teleport'
+- '&bClic derecho: &7Convertir → Parcela del servidor'
+- '&cShift-Clic derecho: &7Borrar parcela'
 button_view_instant_approvals: '&bAprobaciones Instantáneas'
 view_instant_approvals_lore:
 - '&7Qué: consultar el historial de expansiones autoaprobadas.'
 - '&7Cuándo: auditar Modo Instantáneo o cola sin revisores.'
 - ' '
 - '&eClic para abrir.'
+button_admin_reload: '&eRecargar todas las configuraciones'

@@ -1,6 +1,7 @@
 package com.aegisguard.guidance;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -12,6 +13,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Milestone 5 (Clearer Player Guidance) - an optional, skippable, and always-replayable
@@ -26,6 +29,9 @@ import java.util.Map;
 public class FirstClaimWalkthroughGUI {
 
     private final AegisGuard plugin;
+    private final Map<UUID, ReturnPoint> linkedReturnPoints = new ConcurrentHashMap<>();
+
+    private record ReturnPoint(int page, long expiresAt) { }
 
     public FirstClaimWalkthroughGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -50,6 +56,25 @@ public class FirstClaimWalkthroughGUI {
 
     private boolean isTopClick(InventoryClickEvent e) {
         return e.getClickedInventory() != null && e.getClickedInventory() == e.getView().getTopInventory();
+    }
+
+    /** Marks the next normal submenu Back action as a return to this walkthrough page. */
+    public void linkBackToWalkthrough(Player player, int page) {
+        if (player == null) return;
+        linkedReturnPoints.put(player.getUniqueId(), new ReturnPoint(
+                Math.max(0, Math.min(PAGE_COUNT - 1, page)), System.currentTimeMillis() + 120_000L));
+    }
+
+    /** Consumes a short-lived linked return, if the player came from the walkthrough. */
+    public Integer consumeLinkedReturn(Player player) {
+        if (player == null) return null;
+        ReturnPoint point = linkedReturnPoints.remove(player.getUniqueId());
+        if (point == null || point.expiresAt() < System.currentTimeMillis()) return null;
+        return point.page();
+    }
+
+    private void clearLinkedReturn(Player player) {
+        if (player != null) linkedReturnPoints.remove(player.getUniqueId());
     }
 
     public void open(Player player, int page) {
@@ -153,16 +178,54 @@ public class FirstClaimWalkthroughGUI {
         int slot = e.getRawSlot();
         int page = holder.getPage();
 
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        boolean canManage = plot != null && plot.canManage(player, plugin);
+
+        // Feature cards are real shortcuts, not decorative text.  The walkthrough
+        // remains safe: plot-specific tools only open while standing in a claim
+        // the player can manage.
+        if (page == 0 && canManage) {
+            switch (slot) {
+                case 10 -> { plugin.gui().plotStatus().open(player, plot, page); return; }
+                case 12 -> { linkBackToWalkthrough(player, page); plugin.gui().roles().openRolesMenu(player, plot); return; }
+                case 14 -> { linkBackToWalkthrough(player, page); plugin.gui().guestPasses().open(player); return; }
+                case 16 -> { linkBackToWalkthrough(player, page); plugin.gui().lockdownGui().open(player); return; }
+                default -> { }
+            }
+        }
+        if (page == 1) {
+            switch (slot) {
+                case 11, 13 -> {
+                    if (plot != null) {
+                        linkBackToWalkthrough(player, page);
+                        plugin.gui().realmProfile().open(player);
+                    }
+                    else plugin.gui().openMain(player);
+                    return;
+                }
+                case 15 -> { linkBackToWalkthrough(player, page); plugin.gui().info().open(player); return; }
+                default -> { }
+            }
+        }
+
         if (slot == 18) {
             if (page > 0) open(player, page - 1);
+            else {
+                clearLinkedReturn(player);
+                plugin.gui().openMain(player);
+            }
             return;
         }
         if (slot == 22) {
             if (page < PAGE_COUNT - 1) open(player, page + 1);
-            else player.closeInventory();
+            else {
+                clearLinkedReturn(player);
+                player.closeInventory();
+            }
             return;
         }
         if (slot == 26) {
+            clearLinkedReturn(player);
             player.closeInventory();
         }
     }

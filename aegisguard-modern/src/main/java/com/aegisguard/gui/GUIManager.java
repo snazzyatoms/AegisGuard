@@ -166,6 +166,12 @@ public class GUIManager {
     // --- OPENERS ---
 
     public void openMain(Player player) {
+        Integer walkthroughPage = walkthroughGUI.consumeLinkedReturn(player);
+        if (walkthroughPage != null) {
+            playClick(player);
+            walkthroughGUI.open(player, walkthroughPage);
+            return;
+        }
         if (playerGUI != null) {
             playClick(player);
             playerGUI.open(player);

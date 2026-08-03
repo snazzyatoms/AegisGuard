@@ -249,7 +249,7 @@ plot_entry_denied: '&c⛔ This dominion is sealed to outsiders.'
 plot_banned_entry: '&c⛔ Thou art BANISHED from this land!'
 
 # --- Main Menu ---
-menu_title: '&6✦ The Guardian Ledger ✦'
+menu_title: '&6✦ AegisGuard Menu ✦'
 
 button_claim_land: '&a🛡 Lay Claim to Land'
 claim_land_lore:

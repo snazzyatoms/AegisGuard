@@ -75,6 +75,14 @@ public class PlayerGUI {
         try { return s.getAsBoolean(); } catch (Throwable ignored) { return def; }
     }
 
+    private void addSectionFrame(Inventory inv, Material material, String title, String description, int... slots) {
+        for (int slot : slots) {
+            ItemStack marker = GUIManager.createItem(material, title, List.of(description));
+            try { plugin.gui().tagAction(marker, "section_marker"); } catch (Throwable ignored) {}
+            inv.setItem(slot, marker);
+        }
+    }
+
     /* ---------------------------------------------------------
      * OPEN
      * --------------------------------------------------------- */
@@ -110,13 +118,23 @@ public class PlayerGUI {
         com.aegisguard.data.Zone currentRentedZone = currentPlot == null ? null : currentPlot.getRentedZoneAt(player.getLocation());
         boolean rentingCurrentZone = currentRentedZone != null && currentRentedZone.isRentedBy(player.getUniqueId());
 
+        // Colored frames make the four groups readable before a player even hovers an icon.
+        addSectionFrame(inv, Material.CYAN_STAINED_GLASS_PANE,
+                "&bTerritory", "&7Your claim, profile, and land controls.", 9, 10, 15, 16, 17);
+        addSectionFrame(inv, Material.PURPLE_STAINED_GLASS_PANE,
+                "&dAccess & Safety", "&7Members, temporary access, and protection.", 18, 19, 24, 25, 26);
+        addSectionFrame(inv, Material.ORANGE_STAINED_GLASS_PANE,
+                "&6Economy & Progress", "&7Market, ClaimBlocks, upgrades, and auctions.", 27, 28, 33, 34, 35);
+        addSectionFrame(inv, Material.LIME_STAINED_GLASS_PANE,
+                "&aExplore", "&7Routes and server travel.", 36, 37, 38, 41, 42, 43, 44);
+
         // The dashboard is grouped by purpose: territory, access, economy, then exploration.
         // This keeps every existing action one click away while making the first screen easier to scan.
 
         // --- 3. TERRITORY ---
 
-        // Realm Profile (Slot 10)
-        inv.setItem(10, GUIManager.createItem(
+        // Realm Profile (Slot 11)
+        inv.setItem(11, GUIManager.createItem(
                 Material.NAME_TAG,
                 t(player, "button_realm_profile", "&3📜 Realm Profile"),
                 tl(player, canManage ? "realm_profile_button_lore" : "realm_profile_button_view_lore",
@@ -125,9 +143,9 @@ public class PlayerGUI {
                                 : List.of("&7View this plot's public identity", "&7and noticeboard."))
         ));
 
-        // Flags (Slot 11)
+        // Flags (Slot 12)
         Material flagIcon = canManage ? Material.OAK_SIGN : Material.OAK_HANGING_SIGN;
-        inv.setItem(11, GUIManager.createItem(
+        inv.setItem(12, GUIManager.createItem(
                 flagIcon,
                 t(player, "button_plot_flags", "&6⚙ Claim Settings"),
                 tl(player, canManage ? "plot_flags_lore" : "plot_flags_locked_lore",
@@ -136,17 +154,17 @@ public class PlayerGUI {
                                 : List.of("&cStand inside a claim you manage", "&cto edit these protections."))
         ));
 
-        // Expansion (Slot 12)
-        inv.setItem(12, GUIManager.createItem(
+        // Expansion (Slot 13)
+        inv.setItem(13, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
                 t(player, "button_expand", "&b⛏ Expand"),
                 tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
         ));
 
-        // Zoning (Slot 13)
+        // Zoning (Slot 14)
         boolean zoningEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isZoningEnabled(), false);
         if (zoningEnabled) {
-            inv.setItem(13, GUIManager.createItem(
+            inv.setItem(14, GUIManager.createItem(
                     rentingCurrentZone ? Material.ENDER_PEARL : Material.IRON_BARS,
                     t(player, rentingCurrentZone ? "zone_tenant_button_name" : "zone_gui_title",
                             rentingCurrentZone ? "&bRoom Controls" : "&b🏗 Zoning"),
@@ -216,12 +234,12 @@ public class PlayerGUI {
 
         // --- 5. ECONOMY & PROGRESS ---
 
-        // Local / Global Market (Slot 28)
+        // Local / Global Market (Slot 29)
         boolean localMarketAvailable = currentPlot != null
                 && plugin.marketBridges() != null
                 && plugin.marketBridges().preferLocalWhenInPlot()
                 && plugin.marketBridges().plotQualifiesForLocalMarket(currentPlot, player);
-        inv.setItem(28, GUIManager.createItem(
+        inv.setItem(29, GUIManager.createItem(
                 localMarketAvailable ? Material.CHEST : Material.GOLD_INGOT,
                 t(player, localMarketAvailable ? "button_market_local" : "button_market",
                         localMarketAvailable ? "&6Local Market" : "&6💰 Market"),
@@ -231,7 +249,7 @@ public class PlayerGUI {
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
 
-        // ClaimBlocks Exchange (Slot 29)
+        // ClaimBlocks Exchange (Slot 30)
         boolean exchangeService = plugin.exchange() != null;
         boolean exchangeEnabled = false;
         try {
@@ -239,14 +257,14 @@ public class PlayerGUI {
         } catch (Throwable ignored) {}
 
         if (exchangeService && exchangeEnabled) {
-            inv.setItem(29, GUIManager.createItem(
+            inv.setItem(30, GUIManager.createItem(
                     Material.EMERALD,
                     t(player, "button_claimblocks_exchange", "&a💱 ClaimBlocks Exchange"),
                     tl(player, "claimblocks_exchange_lore",
                             List.of("&7Buy or sell Claim Blocks with", "&7your server economy.", " ", "&eClick to open."))
             ));
         } else {
-            inv.setItem(29, GUIManager.createItem(
+            inv.setItem(30, GUIManager.createItem(
                     Material.GRAY_DYE,
                     t(player, "button_claimblocks_exchange_disabled", "&7💱 ClaimBlocks Exchange"),
                     tl(player, "claimblocks_exchange_disabled_lore",
@@ -254,20 +272,20 @@ public class PlayerGUI {
             ));
         }
 
-        // Leveling (Slot 30)
+        // Leveling (Slot 31)
         boolean levelingEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isLevelingEnabled(), false);
         if (levelingEnabled) {
-            inv.setItem(30, GUIManager.createItem(
+            inv.setItem(31, GUIManager.createItem(
                     Material.EXPERIENCE_BOTTLE,
                     t(player, "level_gui_title", "&a📈 Leveling"),
                     tl(player, "level_button_lore", List.of("&7Upgrade your plot to unlock", "&7perks and stronger bonuses."))
             ));
         }
 
-        // Auctions (Slot 31)
+        // Auctions (Slot 32)
         boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
         if (upkeepEnabled) {
-            inv.setItem(31, GUIManager.createItem(
+            inv.setItem(32, GUIManager.createItem(
                     Material.LAVA_BUCKET,
                     t(player, "button_auction", "&c🔥 Auctions"),
                     tl(player, "auction_lore", List.of("&7Bid on auctioned claims", "&7and time-limited listings."))
@@ -276,9 +294,9 @@ public class PlayerGUI {
 
         // --- 6. EXPLORE ---
 
-        // Routes (Slot 37) — Milestone 6
+        // Routes (Slot 39) — Milestone 6
         if (plugin.getConfig().getBoolean("routes.enabled", true)) {
-            inv.setItem(37, GUIManager.createItem(
+            inv.setItem(39, GUIManager.createItem(
                     Material.FILLED_MAP,
                     t(player, "button_routes", "&a🗺 Routes"),
                     tl(player, "routes_button_lore", List.of(
@@ -287,10 +305,10 @@ public class PlayerGUI {
             ));
         }
 
-        // Travel (Slot 38)
+        // Travel (Slot 40)
         boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
         if (travelEnabled) {
-            inv.setItem(38, GUIManager.createItem(
+            inv.setItem(40, GUIManager.createItem(
                     Material.COMPASS,
                     t(player, "visit_gui_title", "&a🧭 Travel"),
                     tl(player, "visit_button_lore", List.of("&7Visit plots, warps, and", "&7trusted destinations."))
@@ -301,8 +319,8 @@ public class PlayerGUI {
 
         // --- 7. FOOTER / NAVIGATION ---
 
-        // Settings (Slot 45)
-        inv.setItem(45, GUIManager.createItem(
+        // Settings (Slot 47)
+        inv.setItem(47, GUIManager.createItem(
                 Material.COMPARATOR,
                 t(player, "button_player_settings", "&e⚙ Settings"),
                 tl(player, "player_settings_lore", List.of("&7Adjust language, sounds,", "&7and notification settings."))
@@ -363,7 +381,8 @@ public class PlayerGUI {
         // but we can safely ignore it here too.
         String action = null;
         try { action = plugin.gui().getAction(e.getCurrentItem()); } catch (Throwable ignored) {}
-        if (action != null && (action.equals("reload_all") || action.equals("refresh_lang") || action.equals("reload"))) {
+        if (action != null && (action.equals("reload_all") || action.equals("refresh_lang")
+                || action.equals("reload") || action.equals("section_marker"))) {
             return; // GUIListener will intercept reload triggers globally
         }
 
@@ -374,7 +393,7 @@ public class PlayerGUI {
         switch (slot) {
             case 4 -> plugin.gui().info().open(player);
 
-            case 37 -> {
+            case 39 -> {
                 if (plugin.getConfig().getBoolean("routes.enabled", true)) {
                     plugin.gui().routes().open(player);
                 } else {
@@ -383,7 +402,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 38 -> {
+            case 40 -> {
                 boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
                 if (travelEnabled) {
                     plugin.gui().visit().open(player, 0, VisitGUI.VisitMode.WARPS);
@@ -393,7 +412,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 28 -> {
+            case 29 -> {
                 boolean preferLocal = plot != null
                         && plugin.marketBridges() != null
                         && plugin.marketBridges().preferLocalWhenInPlot()
@@ -402,7 +421,7 @@ public class PlayerGUI {
                 else plugin.gui().market().open(player, 0);
             }
 
-            case 11 -> {
+            case 12 -> {
                 if (plot != null && canManage) plugin.gui().flags().open(player, plot);
                 else {
                     send(player, plot == null ? "no_plot_here" : "not_plot_owner",
@@ -455,7 +474,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 10 -> {
+            case 11 -> {
                 if (plot != null) plugin.gui().realmProfile().open(player);
                 else {
                     send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
@@ -463,10 +482,10 @@ public class PlayerGUI {
                 }
             }
 
-            case 12 -> plugin.gui().expansionRequest().open(player);
+            case 13 -> plugin.gui().expansionRequest().open(player);
 
             // Advanced Features
-            case 30 -> {
+            case 31 -> {
                 boolean levelingEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isLevelingEnabled(), false);
                 if (levelingEnabled) {
                     if (plot != null && canManage) plugin.gui().leveling().open(player, plot);
@@ -480,7 +499,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 13 -> {
+            case 14 -> {
                 boolean zoningEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isZoningEnabled(), false);
                 if (zoningEnabled) {
                     com.aegisguard.data.Zone rentedZone = plot == null ? null : plot.getRentedZoneAt(player.getLocation());
@@ -499,7 +518,7 @@ public class PlayerGUI {
                 }
             }
 
-            case 29 -> {
+            case 30 -> {
                 boolean exchangeOk = plugin.exchange() != null;
                 boolean exchangeEnabled = false;
                 try {
@@ -515,13 +534,13 @@ public class PlayerGUI {
             }
 
             // Economy
-            case 31 -> {
+            case 32 -> {
                 boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
                 if (upkeepEnabled) plugin.gui().auction().open(player, 0);
             }
 
             // System
-            case 45 -> plugin.gui().settings().open(player);
+            case 47 -> plugin.gui().settings().open(player);
 
             case 49 -> {
                 if (isAdmin) plugin.gui().admin().open(player);

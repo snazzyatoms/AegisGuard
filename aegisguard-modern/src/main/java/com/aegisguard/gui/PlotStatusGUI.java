@@ -26,12 +26,23 @@ public class PlotStatusGUI {
 
     public static class PlotStatusHolder implements InventoryHolder {
         private final Plot plot;
-        public PlotStatusHolder(Plot plot) { this.plot = plot; }
+        private final int returnWalkthroughPage;
+        public PlotStatusHolder(Plot plot) { this(plot, -1); }
+        public PlotStatusHolder(Plot plot, int returnWalkthroughPage) {
+            this.plot = plot;
+            this.returnWalkthroughPage = returnWalkthroughPage;
+        }
         public Plot getPlot() { return plot; }
+        public int getReturnWalkthroughPage() { return returnWalkthroughPage; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, Plot plot) {
+        open(player, plot, -1);
+    }
+
+    /** Opens status with an optional walkthrough page to return to. */
+    public void open(Player player, Plot plot, int returnWalkthroughPage) {
         if (plot == null) {
             // ✅ IMPORTANT FIX: System keys should come from system.yml (plugin.msg()),
             // not guis.yml (plugin.gui()).
@@ -42,7 +53,7 @@ public class PlotStatusGUI {
 
         // ✅ Title (language aware + safe)
         String title = plugin.gui().title(player, "plot_status_gui_title", "&8Plot Status");
-        Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot), 54, title);
+        Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot, returnWalkthroughPage), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
@@ -140,7 +151,11 @@ public class PlotStatusGUI {
 
         if (e.getSlot() == 49) {
             GUIManager.playClick(player);
-            plugin.gui().openMain(player);
+            if (holder.getReturnWalkthroughPage() >= 0) {
+                plugin.gui().walkthrough().open(player, holder.getReturnWalkthroughPage());
+            } else {
+                plugin.gui().openMain(player);
+            }
             return;
         }
 

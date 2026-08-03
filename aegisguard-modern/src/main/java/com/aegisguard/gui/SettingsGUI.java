@@ -287,6 +287,12 @@ public class SettingsGUI {
                 "settings_plot_notice_notify_on_name", "&aPlot Notice Alerts: ON",
                 "settings_plot_notice_notify_off_name", "&cPlot Notice Alerts: OFF",
                 "settings_plot_notice_notify_lore", List.of("&7Plot noticeboard updates."));
+        inv.setItem(34, GUIManager.createItem(Material.GOLD_INGOT,
+                t(player, "settings_settlements_name", "&6Settlements Inbox"),
+                tl(player, "settings_settlements_lore", List.of(
+                        "&7Review any pending payments",
+                        "&7waiting for delivery."
+                ))));
 
         // --------------------------------------------------
         // NAVIGATION (48/49)
@@ -511,6 +517,10 @@ public class SettingsGUI {
             case 30 -> toggleCategory(player, plot, "lockdown");
             case 32 -> toggleCategory(player, plot, "travel");
             case 33 -> toggleCategory(player, plot, "plot_notices");
+            case 34 -> {
+                playFlip(player);
+                plugin.gui().settlementsInbox().open(player);
+            }
 
             case 48 -> {
                 playFlip(player);

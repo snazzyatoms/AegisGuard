@@ -267,14 +267,20 @@ public class SQLDataStore implements IDataStore {
 
             plugin.getLogger().info("Connecting to MySQL/MariaDB (" + host + ":" + port + ", DB=" + database + ")...");
         } else {
-            File file = new File(plugin.getDataFolder(), "aegisguard.db");
-            if (!file.getParentFile().exists()) file.getParentFile().mkdirs();
+            String configured = db != null ? db.getString("file", "aegisguard.db") : "aegisguard.db";
+            if (configured == null || configured.isBlank()) configured = "aegisguard.db";
+            File file = new File(configured);
+            if (!file.isAbsolute()) {
+                file = new File(plugin.getDataFolder(), configured);
+            }
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
 
             cfg.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
             cfg.setDriverClassName("org.sqlite.JDBC");
             cfg.setMaximumPoolSize(1);
 
-            plugin.getLogger().info("Using local SQLite database file: " + file.getName());
+            plugin.getLogger().info("Using local SQLite database file: " + file.getAbsolutePath());
         }
 
         this.hikari = new HikariDataSource(cfg);

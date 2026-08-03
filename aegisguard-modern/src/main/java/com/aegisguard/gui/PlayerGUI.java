@@ -291,9 +291,12 @@ public class PlayerGUI {
             ));
         }
 
-        // Auctions (Slot 32)
-        boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
-        if (upkeepEnabled) {
+        // Auctions (Slot 32) — gated on auction system, not upkeep
+        boolean auctionsEnabled = plugin.cfg() != null
+                && cfgBool(() -> plugin.cfg().raw().getBoolean("auctions.enabled",
+                plugin.cfg().raw().getBoolean("auction.enabled",
+                        plugin.cfg().raw().getBoolean("market.auctions.enabled", true))), true);
+        if (auctionsEnabled) {
             inv.setItem(32, GUIManager.createItem(
                     Material.LAVA_BUCKET,
                     t(player, "button_auction", "&c🔥 Auctions"),
@@ -546,8 +549,11 @@ public class PlayerGUI {
 
             // Economy
             case 32 -> {
-                boolean upkeepEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isUpkeepEnabled(), false);
-                if (upkeepEnabled) plugin.gui().auction().open(player, 0);
+                boolean auctionsEnabled = plugin.cfg() != null
+                        && cfgBool(() -> plugin.cfg().raw().getBoolean("auctions.enabled",
+                        plugin.cfg().raw().getBoolean("auction.enabled",
+                                plugin.cfg().raw().getBoolean("market.auctions.enabled", true))), true);
+                if (auctionsEnabled) plugin.gui().auction().open(player, 0);
             }
 
             // System

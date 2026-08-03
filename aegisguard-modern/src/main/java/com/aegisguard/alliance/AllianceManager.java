@@ -96,6 +96,11 @@ public class AllianceManager {
     }
 
     public String accept(UUID playerId) {
+        return accept(playerId, null);
+    }
+
+    /** Accept an invitation from a specific alliance when chosen in the roster UI. */
+    public String accept(UUID playerId, UUID allianceId) {
         if (playerId == null) return "alliance_invalid";
         if (playerToAlliance.containsKey(playerId)) return "alliance_already_member";
 
@@ -103,6 +108,7 @@ public class AllianceManager {
 
         Alliance invited = null;
         for (Alliance alliance : alliancesById.values()) {
+            if (allianceId != null && !allianceId.equals(alliance.getId())) continue;
             if (!alliance.isInvited(playerId)) continue;
             Long invitedAt = alliance.getInvites().get(playerId);
             if (invitedAt != null && isInviteExpired(invitedAt)) {
@@ -118,6 +124,27 @@ public class AllianceManager {
 
         invited.addMember(playerId, System.currentTimeMillis());
         playerToAlliance.put(playerId, invited.getId());
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    /** Leader-only cancellation of a pending invitation. */
+    public String removeInvite(UUID leaderId, UUID allianceId, UUID targetId) {
+        Alliance alliance = get(allianceId);
+        if (alliance == null || leaderId == null || targetId == null) return "alliance_invalid";
+        if (!alliance.isLeader(leaderId)) return "alliance_not_leader";
+        if (!alliance.removeInvite(targetId)) return "alliance_no_invite";
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
+    /** Decline a specific invitation without requiring alliance leadership. */
+    public String decline(UUID playerId, UUID allianceId) {
+        Alliance alliance = get(allianceId);
+        if (alliance == null || playerId == null) return "alliance_invalid";
+        if (!alliance.removeInvite(playerId)) return "alliance_no_invite";
         dirty = true;
         saveAsync();
         return null;

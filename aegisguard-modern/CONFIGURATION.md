@@ -119,6 +119,7 @@ This section controls progression and exchange.
 - `earn.playtime`: passive rewards
 - `earn.player_opt_out_allowed`: lets players disable passive earnings
 - `exchange.profile`: best place to tune the buy and sell system quickly
+- `gift.enabled` / `gift.permission` / `gift.daily_limit` / `gift.max_amount`: player-to-player ClaimBlocks gifts via `/ag giftblocks`
 
 ### `group_plots`
 
@@ -165,7 +166,9 @@ This controls Rental Contracts 2.0.
 - `allow_owner_early_cancel`: whether owners may end active contracts before expiry
 - `max_active_rentals_per_player`: renter-side anti-abuse limit
 
-Owners list a plot with `/ag rent <price> [days] [deposit]`. Players confirm rent charges in a GUI before Vault withdraws funds. Contract participants use **My Rentals** (menu or `/ag rental status`), renew/extend from there, or `/ag rental renew` / `/ag rental cancel confirm`.
+Owners list a plot with `/ag rent <price> [days] [deposit]`. Players confirm rent charges in a GUI before Vault withdraws funds. Contract participants use **My Rentals** (menu or `/ag rental status`), renew/extend/leave from there, or `/ag rental renew` / `/ag rental cancel` (both open confirm GUIs). Landlords use **My Tenants** from Local Market.
+
+- `auto_renew.enabled`: allows renters to opt into Vault auto-renew at expiry (default on; per-contract toggle still required)
 
 ### `plot_discovery`
 
@@ -228,8 +231,19 @@ Lockdown never changes ownership, permanent roles, or Guest Pass records. Moveme
 
 - `enabled`: enables staff-authored routes and checkpoints
 - `default_checkpoint_radius`: sets how close a player must be to reach a checkpoint
-- `allow_optional_teleport`: offers an optional next-checkpoint teleport without forcing travel
+- `allow_optional_teleport`: offers an optional next-checkpoint teleport without forcing travel (default off)
+- `guidance.enabled` / `guidance.action_bar` / `guidance.particles`: next-checkpoint distance on the action bar and sparse particles
 - `rewards.enabled`: controls optional route-completion rewards
+
+### `claims.merging`
+
+- `enabled`: allows adjacent same-owner claim merge (`/ag merge`)
+- `cost`: ClaimBlocks charged for a successful merge (`0` = free)
+- `require_alignment`: when true, plots must share a full edge (not only a corner)
+
+### `auction`
+
+- `enabled` (aliases: `auctions.enabled`, `market.auctions.enabled`): shows the Auctions button on the main menu when true. This is independent of `upkeep.enabled`.
 
 ### `alliance_access`
 
@@ -256,12 +270,15 @@ Shared safety gate for Travel, Routes, checkpoints, plot visits, markets, zones,
 - Allowed values: `yml`, `sqlite`, `mysql`, `mariadb` (legacy `sql` → SQLite)
 - Keep `storage.backend` and `storage.type` **equal**
 - Covers plot/zone/stall records only; `alliances.yml`, `territory-life.yml`, audit, routes, and player prefs stay YAML
-- SQLite always uses `plugins/AegisGuard/aegisguard.db` (`storage.database.file` is currently ignored)
+- SQLite honors `storage.database.file` (relative paths resolve under the plugin data folder; absolute paths are accepted)
+- Use Doctor **Storage Migrate** or `/agadmin migrate` for YML ↔ SQL plot conversion with timestamped backups
 - Do not commit real MySQL/MariaDB credentials
 
 ### `hooks`
 
 All hooks ship **disabled**. Existing installs that already set `enabled: true` keep that value on migration; missing keys are filled as `false`.
+
+Discord webhook event keys under `hooks.discord.events` are also opt-in (default `false` for new events such as `market_sale`, `rental_start`, `rental_end`, `lockdown`, and `guest_pass`). Dynmap `for_rent_color` controls For Rent marker coloring when Dynmap is enabled.
 
 ## Good Default Choices
 

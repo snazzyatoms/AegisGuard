@@ -44,8 +44,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
-            "consume", "ledger", "blocks",
+            "consume", "ledger", "blocks", "giftblocks", "merge",
             "group", "alliance", "discover", "favorite", "activity",
+            "transfer", "settlements",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -304,7 +305,13 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "blocks" -> handleBlocks(p, args);
 
+            case "giftblocks" -> handleGiftBlocks(p, args);
+
+            case "merge" -> plugin.gui().claimMerge().open(p);
+
             case "group" -> handleGroup(p, args);
+            case "transfer" -> handleTransfer(p, args);
+            case "settlements" -> plugin.gui().settlementsInbox().open(p);
 
             case "alliance" -> handleAlliance(p, args);
 
@@ -323,6 +330,39 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         return true;
+    }
+
+    private void handleGiftBlocks(Player sender, String[] args) {
+        if (args.length < 3) {
+            sendMsg(sender, "&eUsage: /ag giftblocks <player> <amount>");
+            return;
+        }
+        long amount;
+        try {
+            amount = Long.parseLong(args[2]);
+        } catch (NumberFormatException ex) {
+            sendMsg(sender, "&cAmount must be a whole number.");
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            sendMsg(sender, "&cThat player has not played on this server.");
+            return;
+        }
+        ClaimBlockManager manager = plugin.getClaimBlockManager();
+        if (manager == null) {
+            sendMsg(sender, "&cClaim blocks are unavailable.");
+            return;
+        }
+        ClaimBlockManager.GiftResult result = manager.gift(sender, target.getUniqueId(), amount);
+        if (!result.success()) {
+            sendMsg(sender, "&cUnable to gift blocks: " + result.reason().replace('_', ' ') + ".");
+            return;
+        }
+        String targetName = target.getName() == null ? args[1] : target.getName();
+        sendMsg(sender, "&aGifted &e" + amount + " &aclaim blocks to &f" + targetName + "&a.");
+        Player online = target.getPlayer();
+        if (online != null) sendMsg(online, "&aYou received &e" + amount + " &aclaim blocks from &f" + sender.getName() + "&a.");
     }
 
     // --------------------------------------------------
@@ -726,6 +766,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         String sub = args[1].toLowerCase(Locale.ROOT);
 
         switch (sub) {
+            case "menu", "gui" -> {
+                plugin.gui().groupPlots().open(p);
+                return;
+            }
             case "help" -> {
                 sendMsg(p, "&8&m------------------------");
                 sendMsg(p, "&6&lClaimBlocks Exchange");
@@ -1462,36 +1506,11 @@ private void handleUnsell(Player p) {
                 sendKey(p, "rental_contract_only_renter", "&cOnly the renter can renew this contract.");
                 return;
             }
-            OfflinePlayer owner = Bukkit.getOfflinePlayer(contract.ownerId());
-            if (!plugin.eco().withdraw(p, contract.rent(), CurrencyType.VAULT)) {
-                sendKey(p, "rental_contract_need_funds", "&cYou need {AMOUNT} to renew.", Map.of(
-                        "AMOUNT", plugin.eco().format(contract.rent(), CurrencyType.VAULT)));
-                return;
-            }
-            if (plugin.vault() == null || !plugin.vault().deposit(owner, contract.rent())) {
-                if (plugin.vault() == null || !plugin.vault().deposit(p, contract.rent())) {
-                    plugin.territoryLife().addSettlement(p.getUniqueId(), contract.rent(), "Failed rental renewal refund");
-                }
-                sendKey(p, "rental_contract_payment_failed", "&cRenewal payment failed. No contract time was added.");
-                return;
-            }
-            plugin.territoryLife().renew(plot.getPlotId());
-            plot.setRentEndTime(contract.expiresAt());
-            plugin.store().savePlotSync(plot);
-            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_RENEWED",
-                    "Contract renewed for " + contract.termDays() + " day(s).");
-            plugin.territoryLife().queueNotice(contract.ownerId(), "&aA rental contract was renewed for &e"
-                    + contract.termDays() + " day(s)&a.");
-            sendKey(p, "rental_contract_renewed", "&aRental renewed for &e{DAYS} day(s)&a.", Map.of(
-                    "DAYS", Integer.toString(contract.termDays())));
+            plugin.gui().rentConfirm().openPlotRenew(p, plot, contract.rent(), contract.termDays(), "my_rentals");
             return;
         }
 
         if (action.equals("cancel")) {
-            if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
-                sendKey(p, "rental_contract_cancel_prompt", "&eRun &b/ag rental cancel confirm &eto end this contract and return its deposit.");
-                return;
-            }
             boolean renter = contract.renterId().equals(p.getUniqueId());
             boolean owner = contract.ownerId().equals(p.getUniqueId());
             if (!renter && !owner) {
@@ -1502,15 +1521,7 @@ private void handleUnsell(Player p) {
                 sendKey(p, "rental_contract_owner_cancel_disabled", "&cOwners cannot end active contracts early on this server.");
                 return;
             }
-            plugin.territoryLife().removeContract(plot.getPlotId());
-            plugin.territoryLife().refundDeposit(contract, "Deposit after early rental cancellation");
-            plot.clearRenter();
-            plugin.store().savePlotSync(plot);
-            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_CANCELLED",
-                    "Contract ended early by " + (owner ? "owner" : "renter") + ".");
-            plugin.territoryLife().queueNotice(owner ? contract.renterId() : contract.ownerId(),
-                    "&eThe rental contract for plot &f" + plot.getPlotId() + " &ewas ended early.");
-            sendKey(p, "rental_contract_cancelled", "&aRental contract ended. The deposit was refunded or queued for delivery.");
+            plugin.gui().rentConfirm().openPlotCancel(p, plot, contract.deposit(), "my_rentals");
             return;
         }
         sendKey(p, "rental_contract_usage", "&cUsage: /ag rental <status|renew|cancel confirm>");
@@ -1778,6 +1789,24 @@ private void handleUnsell(Player p) {
         if (helpLines != null) {
             for (String line : helpLines) sendMsg(sender, line);
         }
+    }
+
+    private void handleTransfer(Player player, String[] args) {
+        if (args.length < 2) {
+            sendKey(player, "transfer_usage", "&eUsage: /ag transfer <player>");
+            return;
+        }
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.isOwner(player.getUniqueId())) {
+            sendKey(player, "transfer_not_owner", "&cStand in a plot you own to transfer it.");
+            return;
+        }
+        org.bukkit.OfflinePlayer recipient = Bukkit.getOfflinePlayer(args[1]);
+        if (recipient.getUniqueId().equals(player.getUniqueId())) {
+            sendKey(player, "transfer_self", "&cYou already own this plot.");
+            return;
+        }
+        plugin.gui().transferConfirm().open(player, plot, recipient);
     }
 
     private void handleGroup(Player p, String[] args) {

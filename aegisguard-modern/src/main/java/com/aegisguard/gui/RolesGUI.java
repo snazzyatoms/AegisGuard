@@ -37,8 +37,10 @@ public class RolesGUI implements Listener {
 
     private final AegisGuard plugin;
     private final Map<UUID, NicknamePrompt> pendingNicknames = new ConcurrentHashMap<>();
+    private final Map<UUID, AddByNamePrompt> pendingNames = new ConcurrentHashMap<>();
 
     private record NicknamePrompt(UUID plotId, UUID targetId) {}
+    private record AddByNamePrompt(UUID plotId) {}
 
     private static final List<String> ROLE_FLAG_KEYS = List.of(
             "PVP",
@@ -532,6 +534,12 @@ public class RolesGUI implements Listener {
                         "&fInherit &7uses normal plot behavior."
                 ))
         ));
+        inv.setItem(44, GUIManager.createItem(Material.IRON_SWORD,
+                t(player, "roles_moderation_name", "&cKick / Ban"),
+                tl(player, "roles_moderation_lore", List.of(
+                        "&7Manage removals and bans for",
+                        "&7this territory."
+                ))));
 
         // Page controls in bottom row (46 prev, 52 next, 53 page)
         if (safePage > 0) {
@@ -660,6 +668,17 @@ public class RolesGUI implements Listener {
             List<String> noneLore = tl(player, "add_trusted_none_lore", List.of("&7Ask your friend to stand closer!"));
             inv.setItem(22, GUIManager.createItem(Material.BARRIER, noneName, noneLore));
         }
+
+        inv.setItem(45, GUIManager.createItem(
+                Material.NAME_TAG,
+                t(player, "roles_add_by_name", "&eAdd by Name"),
+                tl(player, "roles_add_by_name_lore", List.of(
+                        "&7Add an online or known player",
+                        "&7without requiring them nearby.",
+                        " ",
+                        "&eClick, then type their name in chat."
+                ))
+        ));
 
         // Page controls
         if (safePage > 0) {
@@ -1005,6 +1024,11 @@ public class RolesGUI implements Listener {
         }
         if (slot == 48) { plugin.gui().openMain(player); return; }
         if (slot == 50) { player.closeInventory(); return; }
+        if (slot == 44) {
+            if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
+            plugin.gui().moderation().open(player, plot);
+            return;
+        }
 
         int page = holder.getPage();
 
@@ -1045,6 +1069,10 @@ public class RolesGUI implements Listener {
 
         if (slot == 49) { openRolesMenu(player, plot, 0); return; }
         if (slot == 50) { player.closeInventory(); return; }
+        if (slot == 45) {
+            beginAddByNamePrompt(player, plot);
+            return;
+        }
 
         // Paging buttons
         List<Player> candidates = buildAddCandidates(player, plot);
@@ -1185,20 +1213,66 @@ public class RolesGUI implements Listener {
         plugin.effects().playMenuFlip(player);
     }
 
+    private void beginAddByNamePrompt(Player player, Plot plot) {
+        if (player == null || plot == null) return;
+        pendingNames.put(player.getUniqueId(), new AddByNamePrompt(plot.getPlotId()));
+        player.closeInventory();
+        player.sendMessage(GUIManager.color(t(player, "roles_add_by_name_prompt",
+                "&eType a player name in chat, or &fcancel&e.")));
+        plugin.effects().playMenuFlip(player);
+    }
+
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onNicknameChat(AsyncPlayerChatEvent e) {
         NicknamePrompt prompt = pendingNicknames.remove(e.getPlayer().getUniqueId());
-        if (prompt == null) return;
+        AddByNamePrompt namePrompt = pendingNames.remove(e.getPlayer().getUniqueId());
+        if (prompt == null && namePrompt == null) return;
         e.setCancelled(true);
 
         Player player = e.getPlayer();
         String raw = e.getMessage() == null ? "" : e.getMessage().trim();
-        plugin.runMain(player, () -> finishNicknamePrompt(player, prompt, raw));
+        plugin.runMain(player, () -> {
+            if (prompt != null) finishNicknamePrompt(player, prompt, raw);
+            else finishAddByNamePrompt(player, namePrompt, raw);
+        });
     }
 
     @EventHandler
     public void onNicknameQuit(PlayerQuitEvent e) {
         pendingNicknames.remove(e.getPlayer().getUniqueId());
+        pendingNames.remove(e.getPlayer().getUniqueId());
+    }
+
+    private void finishAddByNamePrompt(Player player, AddByNamePrompt prompt, String raw) {
+        Plot plot = plugin.store().getAllPlots().stream()
+                .filter(p -> p != null && prompt.plotId().equals(p.getPlotId()))
+                .findFirst().orElse(null);
+        if (plot == null || !canManagePlot(player, plot)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        if (raw.equalsIgnoreCase("cancel") || raw.equalsIgnoreCase("c")) {
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        if (raw.isBlank() || raw.length() > 16) {
+            player.sendMessage(GUIManager.color("&cEnter a valid Minecraft player name."));
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(raw);
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            player.sendMessage(GUIManager.color("&cThat player has not played on this server."));
+            plugin.effects().playError(player);
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        if (!plot.canModifyMember(player, target.getUniqueId(), plugin)) {
+            plugin.effects().playError(player);
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        openManageMenu(player, plot, target, 0);
     }
 
     private void finishNicknamePrompt(Player player, NicknamePrompt prompt, String raw) {

@@ -692,3 +692,11 @@ alliance_help_accept: '&e/ag alliance accept &7- aceptar una invitación pendien
 alliance_help_leave: '&e/ag alliance leave &7- salir de tu alianza'
 alliance_help_disband: '&e/ag alliance disband &7- disolver tu alianza (líder)'
 alliance_help_menu: '&e/ag alliance menu &7- abrir Acceso de Alianza'
+# --- Further polish (1.3.0) ---
+rental_auto_renew_disabled: '&cLa auto-renovacion de alquiler esta desactivada.'
+rental_auto_renew_on: '&aAuto-renovacion activada. Se revisara tu saldo Vault al vencer.'
+rental_auto_renew_off: '&eAuto-renovacion desactivada para este contrato.'
+zone_leave_not_renter: '&cNo estas alquilando esta zona.'
+zone_leave_success: '&aSaliste de la zona alquilada.'
+upkeep_pay_failed: '&cNo se pudo cobrar el mantenimiento.'
+upkeep_pay_success: '&aPago de mantenimiento registrado.'

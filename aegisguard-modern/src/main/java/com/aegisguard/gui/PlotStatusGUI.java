@@ -131,6 +131,21 @@ public class PlotStatusGUI {
                 buildLedgerLore(player, plot)
         ));
 
+        if (plugin.getConfig().getBoolean("upkeep.enabled", false)
+                || plugin.getConfig().getBoolean("economy.upkeep.enabled", false)) {
+            double cost = plugin.getConfig().getDouble("upkeep.cost_per_plot",
+                    plugin.getConfig().getDouble("economy.upkeep.cost", 0.0D));
+            inv.setItem(30, GUIManager.createItem(Material.GOLD_INGOT,
+                    tr(player, "plot_status_upkeep_name", null, "&6Upkeep"),
+                    colorList(List.of(
+                            tr(player, "plot_status_upkeep_cost", null, "&7Cost: &6{COST}",
+                                    Map.of("COST", plugin.eco().format(cost, com.aegisguard.economy.CurrencyType.VAULT))),
+                            tr(player, "plot_status_upkeep_paid", null, "&7Last paid: &f{TIME}",
+                                    Map.of("TIME", Long.toString(plot.getLastUpkeepPayment()))),
+                            "&eClick to pay early."
+                    ))));
+        }
+
         // --- Back ---
         String backName = tr(player, "button_back", null, "&fBack");
         List<String> backLore = plugin.gui().trList(player, "back_lore", List.of("&7Return to the main menu."));
@@ -163,6 +178,32 @@ public class PlotStatusGUI {
             try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
             player.closeInventory();
         }
+        if (e.getSlot() == 30) {
+            if (!plotCanManage(player, holder.getPlot())) {
+                sendSystem(player, "no_perm", null, "&cYou cannot manage this plot.");
+                plugin.effects().playError(player);
+                return;
+            }
+            double cost = plugin.getConfig().getDouble("upkeep.cost_per_plot",
+                    plugin.getConfig().getDouble("economy.upkeep.cost", 0.0D));
+            if (cost <= 0.0D || plugin.vault() == null || holder.getPlot().getOwner() == null
+                    || !plugin.vault().charge(org.bukkit.Bukkit.getOfflinePlayer(holder.getPlot().getOwner()), cost)) {
+                sendSystem(player, "upkeep_pay_failed", null, "&cUnable to collect upkeep payment.");
+                plugin.effects().playError(player);
+                return;
+            }
+            holder.getPlot().setLastUpkeepPayment(System.currentTimeMillis());
+            plugin.store().savePlotSync(holder.getPlot());
+            plugin.territoryLife().log(holder.getPlot().getPlotId(), player.getUniqueId(), "UPKEEP_PAID_EARLY",
+                    "Early upkeep payment collected: " + cost + ".");
+            sendSystem(player, "upkeep_pay_success", null, "&aUpkeep payment collected.");
+            plugin.effects().playConfirm(player);
+            open(player, holder.getPlot(), holder.getReturnWalkthroughPage());
+        }
+    }
+
+    private boolean plotCanManage(Player player, Plot plot) {
+        return plot != null && plot.canManage(player, plugin);
     }
 
     // --------------------------------------------------

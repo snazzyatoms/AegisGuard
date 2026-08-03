@@ -47,9 +47,15 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
      */
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, @NotNull String identifier) {
-        if (offlinePlayer == null || !offlinePlayer.isOnline()) {
+        if (offlinePlayer == null) {
             return null;
         }
+        // Wallet data is available without an active Player instance.
+        if (identifier.equals("claimblocks")) {
+            return plugin.getClaimBlockManager() == null ? "0"
+                    : String.valueOf(plugin.getClaimBlockManager().getAvailableBlocks(offlinePlayer.getUniqueId()));
+        }
+        if (!offlinePlayer.isOnline()) return null;
         Player player = offlinePlayer.getPlayer();
         if (player == null) {
             return null;
@@ -88,6 +94,28 @@ public class AegisPAPIExpansion extends PlaceholderExpansion {
         if (identifier.equals("plot_status")) {
             if (plot == null) return wilderness;
             return plot.getPlotStatus();
+        }
+
+        if (identifier.equals("realm_name") || identifier.equals("plot_name")) {
+            if (plot == null) return wilderness;
+            String name = plot.getEntryTitle();
+            if (name == null || name.isBlank()) name = plot.getPlotName();
+            return name == null || name.isBlank() ? wilderness : name;
+        }
+
+        if (identifier.equals("alliance")) {
+            if (plot == null || plot.getAllianceId() == null || plugin.alliances() == null) return "None";
+            var alliance = plugin.alliances().get(plot.getAllianceId());
+            return alliance == null ? "None" : alliance.getName();
+        }
+
+        if (identifier.equals("rental_remaining")) {
+            if (plot == null || !plot.isRentedBy(player.getUniqueId())) return "0";
+            return String.valueOf(Math.max(0L, (plot.getRentEndTime() - System.currentTimeMillis()) / 1000L));
+        }
+
+        if (identifier.equals("lockdown")) {
+            return plot != null && plot.isLockdownActive() ? "true" : "false";
         }
         
         // %aegis_plot_sale_price%

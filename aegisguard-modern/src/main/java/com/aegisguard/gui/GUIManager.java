@@ -67,6 +67,13 @@ public class GUIManager {
     private final ZoneTenantGUI zoneTenantGUI;
     private final RentConfirmGUI rentConfirmGUI;
     private final MyRentalsGUI myRentalsGUI;
+    private final ModerationGUI moderationGUI;
+    private final MyTenantsGUI myTenantsGUI;
+    private final SettlementsInboxGUI settlementsInboxGUI;
+    private final GroupPlotsGUI groupPlotsGUI;
+    private final TransferConfirmGUI transferConfirmGUI;
+    private final ClaimMergeGUI claimMergeGUI;
+    private final StorageMigrateGUI storageMigrateGUI;
 
     // New: Plot Status Codex (replaces sidebar)
     private final PlotStatusGUI plotStatusGUI;
@@ -142,6 +149,13 @@ public class GUIManager {
         this.zoneTenantGUI = new ZoneTenantGUI(plugin);
         this.rentConfirmGUI = new RentConfirmGUI(plugin);
         this.myRentalsGUI = new MyRentalsGUI(plugin);
+        this.moderationGUI = new ModerationGUI(plugin);
+        this.myTenantsGUI = new MyTenantsGUI(plugin);
+        this.settlementsInboxGUI = new SettlementsInboxGUI(plugin);
+        this.groupPlotsGUI = new GroupPlotsGUI(plugin);
+        this.transferConfirmGUI = new TransferConfirmGUI(plugin);
+        this.claimMergeGUI = new ClaimMergeGUI(plugin);
+        this.storageMigrateGUI = new StorageMigrateGUI(plugin);
 
         // Plot Status Codex GUI
         this.plotStatusGUI = new PlotStatusGUI(plugin);
@@ -261,6 +275,13 @@ public class GUIManager {
     public ZoneTenantGUI zoneTenant() { return zoneTenantGUI; }
     public RentConfirmGUI rentConfirm() { return rentConfirmGUI; }
     public MyRentalsGUI myRentals() { return myRentalsGUI; }
+    public ModerationGUI moderation() { return moderationGUI; }
+    public MyTenantsGUI myTenants() { return myTenantsGUI; }
+    public SettlementsInboxGUI settlementsInbox() { return settlementsInboxGUI; }
+    public GroupPlotsGUI groupPlots() { return groupPlotsGUI; }
+    public TransferConfirmGUI transferConfirm() { return transferConfirmGUI; }
+    public ClaimMergeGUI claimMerge() { return claimMergeGUI; }
+    public StorageMigrateGUI storageMigrate() { return storageMigrateGUI; }
 
     // Plot Status Codex
     public PlotStatusGUI plotStatus() { return plotStatusGUI; }

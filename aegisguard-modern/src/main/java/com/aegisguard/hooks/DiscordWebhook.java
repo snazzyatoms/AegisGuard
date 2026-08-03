@@ -48,6 +48,21 @@ public class DiscordWebhook {
     }
 
     /**
+     * Sends a configured domain event. Events are opt-in so routine server activity
+     * never reaches a webhook until its individual switch has been enabled.
+     */
+    public void sendEvent(String eventKey, String title, String description, int colorRgb) {
+        if (eventKey == null || eventKey.isBlank()
+                || !plugin.cfg().raw().getBoolean("hooks.discord.events." + eventKey, false)) {
+            return;
+        }
+        send(new EmbedObject()
+                .setTitle(title == null ? "" : title)
+                .setDescription(description == null ? "" : description)
+                .setColor(new Color(colorRgb & 0xFFFFFF)));
+    }
+
+    /**
      * Sends a plain text message asynchronously.
      */
     public void send(String content) {

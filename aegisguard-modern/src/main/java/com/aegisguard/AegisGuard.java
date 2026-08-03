@@ -387,6 +387,9 @@ public class AegisGuard extends JavaPlugin {
         if (gui != null && gui.roles() != null) {
             Bukkit.getPluginManager().registerEvents(gui.roles(), this);
         }
+        if (gui != null && gui.guestPasses() != null) {
+            Bukkit.getPluginManager().registerEvents(gui.guestPasses(), this);
+        }
         Bukkit.getPluginManager().registerEvents(guestPassService, this);
         Bukkit.getPluginManager().registerEvents(safeTravelService, this);
         Bukkit.getPluginManager().registerEvents(protection, this);
@@ -990,6 +993,7 @@ public class AegisGuard extends JavaPlugin {
         rentalExpiryTask = runGlobalRepeating(() -> {
             long now = System.currentTimeMillis();
             if (territoryLifeService != null) territoryLifeService.retrySettlements();
+            if (territoryLifeService != null) territoryLifeService.processAutoRenewals();
             for (Plot plot : plotStore.getAllPlots()) {
                 if (plot == null || plot.getCurrentRenter() == null) continue;
 

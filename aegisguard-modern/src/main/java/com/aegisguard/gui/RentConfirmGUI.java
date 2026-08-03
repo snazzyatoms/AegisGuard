@@ -26,6 +26,7 @@ public class RentConfirmGUI {
         PLOT_RENT,
         ZONE_RENT,
         ZONE_EXTEND,
+        ZONE_LEAVE,
         PLOT_RENEW,
         PLOT_CANCEL
     }
@@ -100,13 +101,24 @@ public class RentConfirmGUI {
                 safeZoneName(zone));
     }
 
+    public void openZoneLeave(Player player, Plot plot, Zone zone, String returnTo) {
+        if (player == null || plot == null || zone == null) return;
+        open(player, new RentConfirmHolder(
+                        Action.ZONE_LEAVE,
+                        plot.getPlotId(),
+                        zone.getName(),
+                        0.0D,
+                        0.0D,
+                        0,
+                        returnTo),
+                safeZoneName(zone));
+    }
+
     private void open(Player player, RentConfirmHolder holder, String subjectName) {
-        String titleKey = holder.getAction() == Action.PLOT_CANCEL
-                ? "rent_confirm_cancel_title"
-                : "rent_confirm_title";
-        String titleFallback = holder.getAction() == Action.PLOT_CANCEL
-                ? "&cConfirm Cancel"
-                : "&6Confirm Rental";
+        boolean cancelLike = holder.getAction() == Action.PLOT_CANCEL
+                || holder.getAction() == Action.ZONE_LEAVE;
+        String titleKey = cancelLike ? "rent_confirm_cancel_title" : "rent_confirm_title";
+        String titleFallback = cancelLike ? "&cConfirm Cancel" : "&6Confirm Rental";
         Inventory inv = Bukkit.createInventory(holder, 27,
                 plugin.gui().title(player, titleKey, titleFallback));
 
@@ -117,7 +129,7 @@ public class RentConfirmGUI {
         List<String> lore = new ArrayList<>();
         lore.add(GUIManager.color(tr(player, "rent_confirm_subject_line", "&7Listing: &f{NAME}")
                 .replace("{NAME}", subjectName)));
-        if (holder.getAction() != Action.PLOT_CANCEL) {
+        if (!cancelLike) {
             lore.add(GUIManager.color(tr(player, "rent_confirm_price_line", "&7Rent: &6{PRICE}")
                     .replace("{PRICE}", plugin.eco().format(holder.getRent(), CurrencyType.VAULT))));
             if (holder.getDeposit() > 0.0D) {
@@ -138,15 +150,19 @@ public class RentConfirmGUI {
                         "&7Deposit refund: &6{DEPOSIT}")
                         .replace("{DEPOSIT}", plugin.eco().format(holder.getDeposit(), CurrencyType.VAULT))));
             }
+            if (holder.getAction() == Action.ZONE_LEAVE) {
+                lore.add(GUIManager.color(tr(player, "rent_confirm_zone_leave_line",
+                        "&7You will leave this rented zone early.")));
+                lore.add(GUIManager.color(tr(player, "rent_confirm_zone_no_deposit_line",
+                        "&8Zone rentals do not hold a separate deposit.")));
+            }
             lore.add(" ");
             lore.add(GUIManager.color(tr(player, "rent_confirm_cancel_click_lore",
                     "&cClick to end this rental contract")));
         }
 
-        Material confirmMat = holder.getAction() == Action.PLOT_CANCEL
-                ? Material.REDSTONE_BLOCK
-                : Material.EMERALD_BLOCK;
-        String confirmName = holder.getAction() == Action.PLOT_CANCEL
+        Material confirmMat = cancelLike ? Material.REDSTONE_BLOCK : Material.EMERALD_BLOCK;
+        String confirmName = cancelLike
                 ? tr(player, "rent_confirm_cancel_name", "&cConfirm Cancel")
                 : tr(player, "rent_confirm_name", "&aConfirm Rental");
         inv.setItem(13, GUIManager.createItem(confirmMat, confirmName, lore));
@@ -195,6 +211,15 @@ public class RentConfirmGUI {
             case PLOT_RENT -> plugin.gui().market().executeRent(player, plot);
             case PLOT_RENEW -> plugin.gui().myRentals().executePlotRenew(player, plot);
             case PLOT_CANCEL -> plugin.gui().myRentals().executePlotCancel(player, plot);
+            case ZONE_LEAVE -> {
+                Zone zone = findZone(plot, holder.getZoneName());
+                if (zone == null) {
+                    plugin.effects().playError(player);
+                    send(player, "rent_confirm_missing", "&cThat listing is no longer available.");
+                    return;
+                }
+                plugin.gui().myRentals().executeZoneLeave(player, plot, zone);
+            }
             case ZONE_RENT, ZONE_EXTEND -> {
                 Zone zone = findZone(plot, holder.getZoneName());
                 if (zone == null) {

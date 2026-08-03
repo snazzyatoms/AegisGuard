@@ -53,6 +53,20 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 - Guest Pass / Alliance **ANIMALS** permissions honored by animal damage and interact protection
 - Docs catch-up for Safe Travel, alliance invite expiry, and Java 21 verification notes
 
+## Further Polish (1.3.0)
+
+- Zone leave/cancel parity in My Rentals; opt-in rental auto-renew with Vault balance checks
+- Role-flag editor overrides enforced in protection checks; all six Alliance toggles remain wired
+- Add trusted players and Guest Passes by name/offline; Kick/Ban management GUI beside Roles
+- YML ↔ SQL plot migrator (Doctor/Admin Storage Migrate) with backups; SQLite honors `storage.database.file`
+- Confirm GUI for `/ag rental renew` / cancel; Auctions menu gated on auction system (not upkeep)
+- Landlord **My Tenants** hub; player **Settlements Inbox**; Group Plots dashboard; ownership transfer confirm
+- ClaimBlocks gift (`/ag giftblocks`) with permission + daily/capped limits; adjacent claim merge MVP (`/ag merge`)
+- Visit discover filters (featured / for-sale / for-rent / category); nicknames + capacity on Travel entries
+- Alliance roster + pending invites GUI; Plot Status upkeep pay-early; Doctor delinquents + settlements panels
+- Richer PlaceholderAPI; Discord webhook events for market/rental/lockdown/guest-pass (all opt-in false)
+- Map markers: For Rent color + realm display name; route guidance action-bar distance + sparse particles
+
 ## Safety and Defaults
 
 - Risky Alliance Access toggles default **OFF**

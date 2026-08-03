@@ -7,7 +7,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -19,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Milestone 2 (Temporary Guest Passes) player-facing GUI.
@@ -31,12 +37,15 @@ import java.util.UUID;
  * Passes are entirely separate from {@code RolesGUI}'s permanent trust list: issuing, revoking, or
  * letting a pass expire never touches a player's permanent role.
  */
-public class GuestPassGUI {
+public class GuestPassGUI implements Listener {
 
     private final AegisGuard plugin;
+    private final Map<UUID, AddByNamePrompt> pendingNames = new ConcurrentHashMap<>();
 
     private static final int PASSES_PER_PAGE = 45;
     private static final int PLAYERS_PER_PAGE = 45;
+
+    private record AddByNamePrompt(UUID plotId) {}
 
     public GuestPassGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -376,6 +385,14 @@ public class GuestPassGUI {
                     t(player, "add_trusted_none_title", "&cNo Players Nearby"),
                     tl(player, "add_trusted_none_lore", List.of("&7Ask your friend to stand closer!"))));
         }
+
+        inv.setItem(45, GUIManager.createItem(Material.NAME_TAG,
+                t(player, "guest_pass_add_by_name", "&eAdd by Name"),
+                tl(player, "guest_pass_add_by_name_lore", List.of(
+                        "&7Issue a pass to an online or",
+                        "&7previously seen player.",
+                        " ",
+                        "&eClick, then type their name in chat."))));
 
         if (safePage > 0) {
             inv.setItem(48, GUIManager.createItem(Material.ARROW,
@@ -766,6 +783,10 @@ public class GuestPassGUI {
 
         if (slot == 49) { openMenu(player, plot, 0); return; }
         if (slot == 50) { player.closeInventory(); return; }
+        if (slot == 45) {
+            beginAddByNamePrompt(player, plot);
+            return;
+        }
 
         List<Player> candidates = buildAddCandidates(player, plot);
         int maxPage = Math.max(0, (int) Math.ceil(candidates.size() / (double) PLAYERS_PER_PAGE) - 1);
@@ -877,6 +898,12 @@ public class GuestPassGUI {
             plugin.msg().send(player, "guest_pass_issued", Map.of(
                     "PLAYER", safeName(target), "PRESET", presetLabel(player, preset)));
             plugin.effects().playConfirm(player);
+            if (plugin.getDiscord() != null) {
+                plugin.getDiscord().sendEvent("guest_pass", "Guest pass issued",
+                        player.getName() + " issued " + preset.fallbackLabel() + " access to "
+                                + safeName(target) + " for " + plotDisplayName(plot) + ".",
+                        0x4CAF50);
+            }
 
             Player online = target instanceof Player ? (Player) target : Bukkit.getPlayer(target.getUniqueId());
             if (online != null && online.isOnline()
@@ -919,5 +946,61 @@ public class GuestPassGUI {
         if (plot == null) return "";
         String name = plot.getPlotName();
         return (name == null || name.isBlank()) ? plot.getWorld() : name;
+    }
+
+    private void beginAddByNamePrompt(Player player, Plot plot) {
+        pendingNames.put(player.getUniqueId(), new AddByNamePrompt(plot.getPlotId()));
+        player.closeInventory();
+        player.sendMessage(GUIManager.color(t(player, "guest_pass_add_by_name_prompt",
+                "&eType a player name in chat, or &fcancel&e.")));
+        plugin.effects().playMenuFlip(player);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onAddByNameChat(AsyncPlayerChatEvent event) {
+        AddByNamePrompt prompt = pendingNames.remove(event.getPlayer().getUniqueId());
+        if (prompt == null) return;
+        event.setCancelled(true);
+        String raw = event.getMessage() == null ? "" : event.getMessage().trim();
+        plugin.runMain(event.getPlayer(), () -> finishAddByNamePrompt(event.getPlayer(), prompt, raw));
+    }
+
+    @EventHandler
+    public void onAddByNameQuit(PlayerQuitEvent event) {
+        pendingNames.remove(event.getPlayer().getUniqueId());
+    }
+
+    private void finishAddByNamePrompt(Player player, AddByNamePrompt prompt, String raw) {
+        Plot plot = plugin.store().getAllPlots().stream()
+                .filter(candidate -> candidate != null && prompt.plotId().equals(candidate.getPlotId()))
+                .findFirst().orElse(null);
+        if (plot == null || !canManagePlot(player, plot)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        if (raw.equalsIgnoreCase("cancel") || raw.equalsIgnoreCase("c")) {
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        if (raw.isBlank() || raw.length() > 16) {
+            player.sendMessage(GUIManager.color("&cEnter a valid Minecraft player name."));
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(raw);
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            player.sendMessage(GUIManager.color("&cThat player has not played on this server."));
+            plugin.effects().playError(player);
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        if (plot.isOwner(target.getUniqueId()) || Plot.SERVER_OWNER_UUID.equals(target.getUniqueId())
+                || plot.isBanned(target.getUniqueId())) {
+            player.sendMessage(GUIManager.color("&cThat player cannot receive a pass for this plot."));
+            plugin.effects().playError(player);
+            openAddMenu(player, plot, 0);
+            return;
+        }
+        openPresetMenu(player, plot, target);
     }
 }

@@ -2390,3 +2390,48 @@ roles_guide_lore:
   - ' '
   - '&8El dueño no se asigna aquí.'
   - '&8La capacidad limita nuevos miembros.'
+# --- Further polish (1.3.0) ---
+my_rentals_auto_renew_line: '&7Auto-renovar: &f{STATE}'
+my_rentals_auto_renew_on: '&aON'
+my_rentals_auto_renew_off: '&cOFF'
+my_rentals_full_actions: '&eDerecha renovar &8| &cShift-derecha cancelar &8| &bShift-izquierda auto'
+my_rentals_zone_actions: '&aDerecha extender &8| &eIzquierda habitacion &8| &cShift-derecha salir'
+rent_confirm_zone_leave_line: '&7Saldras de esta zona alquilada antes de tiempo.'
+rent_confirm_zone_no_deposit_line: '&8Los alquileres de zona no tienen deposito aparte.'
+roles_add_by_name: '&eAgregar por nombre'
+roles_add_by_name_lore:
+  - '&7Escribe un nombre en el chat'
+  - '&7(puede estar desconectado).'
+roles_moderation_name: '&cExpulsar / Banear'
+roles_moderation_lore:
+  - '&7Expulsa, banea o desbanea'
+  - '&7jugadores en este terreno.'
+local_market_my_tenants_name: '&6Mis inquilinos'
+local_market_my_tenants_lore:
+  - '&7Ve arrendatarios de terrenos'
+  - '&7y zonas que posees.'
+settings_settlements_name: '&6Bandeja de pagos'
+settings_settlements_lore:
+  - '&7Reembolsos en cola pendientes'
+  - '&7de entrega a tu saldo.'
+visit_discover_filter_name: '&eFiltro de descubrimiento'
+alliance_roster_name: '&bLista e invitaciones'
+doctor_settlements_name: '&6Pagos pendientes'
+doctor_delinquents_name: '&eAlquileres en mora'
+doctor_storage_migrate_name: '&bMigrar almacenamiento'
+plot_status_upkeep_name: '&6Mantenimiento'
+plot_status_upkeep_cost: '&7Costo: &6{COST}'
+plot_status_upkeep_paid: '&7Ultimo pago: &f{TIME}'
+alliance_roster_lore:
+  - '&7Ver miembros e invitaciones pendientes.'
+doctor_settlements_lore:
+  - '&7Revisa pagos en cola'
+  - '&7y reintenta la entrega.'
+doctor_delinquents_lore:
+  - '&7Ve alquileres vencidos o por vencer'
+  - '&7en las proximas 24 horas.'
+doctor_storage_migrate_lore:
+  - '&7Convierte datos de terrenos entre YML y SQL'
+  - '&7con una copia de seguridad.'
+visit_discover_filter_lore:
+  - '&7Ciclo: Todos / Destacados / Venta / Alquiler / Categoria'

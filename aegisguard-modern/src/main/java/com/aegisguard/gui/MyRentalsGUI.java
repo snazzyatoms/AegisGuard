@@ -109,8 +109,9 @@ public class MyRentalsGUI {
                 tr(player, "my_rentals_guide_name", "&eRentals Guide"),
                 trList(player, "my_rentals_guide_lore", List.of(
                         "&7Right-click: renew / extend",
-                        "&7Shift-right-click: cancel (full-plot)",
-                        "&7Zones: right-click opens room controls"
+                        "&7Shift-right-click: cancel / leave",
+                        "&7Zones: left-click opens room controls",
+                        "&7Shift-left: toggle auto-renew (full-plot)"
                 ))
         ));
 
@@ -188,6 +189,10 @@ public class MyRentalsGUI {
                 open(player, page);
                 return;
             }
+            if (e.getClick().isShiftClick() && e.getClick().isLeftClick()) {
+                toggleAutoRenew(player, plot, contract);
+                return;
+            }
             if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
                 plugin.gui().rentConfirm().openPlotCancel(player, plot, contract.deposit(), "my_rentals");
                 return;
@@ -207,17 +212,35 @@ public class MyRentalsGUI {
             return;
         }
         if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
-            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
+            plugin.gui().rentConfirm().openZoneLeave(player, plot, zone, "my_rentals");
             return;
         }
         if (e.getClick().isRightClick()) {
-            plugin.gui().zoneTenant().open(player, plot, zone);
-            plugin.effects().playMenuFlip(player);
+            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
             return;
         }
         if (e.getClick().isLeftClick()) {
-            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
+            plugin.gui().zoneTenant().open(player, plot, zone);
+            plugin.effects().playMenuFlip(player);
         }
+    }
+
+    private void toggleAutoRenew(Player player, Plot plot, TerritoryLifeService.RentalContract contract) {
+        if (!plugin.getConfig().getBoolean("full_plot_renting.auto_renew.enabled", true)) {
+            plugin.effects().playError(player);
+            send(player, "rental_auto_renew_disabled", "&cRental auto-renew is disabled on this server.");
+            return;
+        }
+        boolean next = !contract.autoRenew();
+        contract.setAutoRenew(next);
+        plugin.territoryLife().touch();
+        plugin.territoryLife().save();
+        plugin.effects().playConfirm(player);
+        send(player, next ? "rental_auto_renew_on" : "rental_auto_renew_off",
+                next
+                        ? "&aAuto-renew enabled. Vault balance will be checked at expiry."
+                        : "&eAuto-renew disabled for this contract.");
+        open(player);
     }
 
     public void executePlotRenew(Player player, Plot plot) {
@@ -292,6 +315,10 @@ public class MyRentalsGUI {
                 "Contract ended early by " + (owner ? "owner" : "renter") + ".");
         plugin.territoryLife().queueNotice(owner ? contract.renterId() : contract.ownerId(),
                 "&eThe rental contract for plot &f" + plot.getPlotId() + " &ewas ended early.");
+        if (plugin.getDiscord() != null) {
+            plugin.getDiscord().sendEvent("rental_end", "Plot rental ended",
+                    player.getName() + " ended the rental for " + plotDisplayName(plot), 0xE67E22);
+        }
         plugin.effects().playConfirm(player);
         send(player, "rental_contract_cancelled",
                 "&aRental contract ended. The deposit was refunded or queued for delivery.");
@@ -343,10 +370,14 @@ public class MyRentalsGUI {
                     "&7Remaining: &b{DAYS}d {HOURS}h")
                     .replace("{DAYS}", Long.toString(remaining / 86_400_000L))
                     .replace("{HOURS}", Long.toString((remaining / 3_600_000L) % 24L))));
+            lore.add(GUIManager.color(tr(player, "my_rentals_auto_renew_line", "&7Auto-renew: &f{STATE}")
+                    .replace("{STATE}", contract.autoRenew()
+                            ? tr(player, "my_rentals_auto_renew_on", "&aON")
+                            : tr(player, "my_rentals_auto_renew_off", "&cOFF"))));
         }
         lore.add(" ");
         lore.add(GUIManager.color(tr(player, "my_rentals_full_actions",
-                "&eRight-click renew &8| &cShift-right cancel")));
+                "&eRight renew &8| &cShift-right cancel &8| &bShift-left auto-renew")));
         return GUIManager.createItem(Material.GOLDEN_HOE,
                 tr(player, "my_rentals_full_name", "&6{PLOT}").replace("{PLOT}", plotDisplayName(plot)),
                 lore);
@@ -363,10 +394,39 @@ public class MyRentalsGUI {
                 .replace("{TIME}", zone.getRemainingTimeFormatted())));
         lore.add(" ");
         lore.add(GUIManager.color(tr(player, "my_rentals_zone_actions",
-                "&eRight-click room &8| &aLeft-click extend")));
+                "&aRight-click extend &8| &eLeft room &8| &cShift-right leave")));
         return GUIManager.createItem(Material.OAK_DOOR,
                 tr(player, "my_rentals_zone_name", "&a{ZONE}").replace("{ZONE}", safeZoneName(zone)),
                 lore);
+    }
+
+    public void executeZoneLeave(Player player, Plot plot, Zone zone) {
+        if (player == null || plot == null || zone == null) return;
+        if (!zone.isRentedBy(player.getUniqueId())) {
+            plugin.effects().playError(player);
+            send(player, "zone_leave_not_renter", "&cYou are not renting this zone.");
+            open(player);
+            return;
+        }
+        UUID landlord = plot.getOwner();
+        zone.evict();
+        plugin.store().savePlotSync(plot);
+        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "ZONE_RENT_LEFT",
+                "Zone " + safeZoneName(zone) + " left early by renter.");
+        if (landlord != null) {
+            plugin.territoryLife().queueNotice(landlord,
+                    "&eTenant &f" + player.getName() + " &eleft zone &f" + safeZoneName(zone) + "&e early.");
+        }
+        if (plugin.getDiscord() != null) {
+            plugin.getDiscord().sendEvent("rental_end",
+                    "Zone rental ended",
+                    player.getName() + " left zone " + safeZoneName(zone)
+                            + " on " + plotDisplayName(plot),
+                    0xE67E22);
+        }
+        plugin.effects().playConfirm(player);
+        send(player, "zone_leave_success", "&aYou left the rented zone.");
+        open(player);
     }
 
     private Plot findPlot(UUID plotId) {

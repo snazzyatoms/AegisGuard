@@ -24,6 +24,7 @@ import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
+import com.aegisguard.alliance.AllianceAccessGUI.AllianceRosterHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -55,6 +56,13 @@ import com.aegisguard.gui.ZoneBrowseGUI.ZoneBrowseHolder;
 import com.aegisguard.gui.ZoneTenantGUI.ZoneTenantHolder;
 import com.aegisguard.gui.RentConfirmGUI.RentConfirmHolder;
 import com.aegisguard.gui.MyRentalsGUI.MyRentalsHolder;
+import com.aegisguard.gui.ModerationGUI.ModerationHolder;
+import com.aegisguard.gui.MyTenantsGUI.MyTenantsHolder;
+import com.aegisguard.gui.SettlementsInboxGUI.SettlementsHolder;
+import com.aegisguard.gui.GroupPlotsGUI.GroupPlotsHolder;
+import com.aegisguard.gui.TransferConfirmGUI.TransferConfirmHolder;
+import com.aegisguard.gui.ClaimMergeGUI.ClaimMergeHolder;
+import com.aegisguard.gui.StorageMigrateGUI.StorageMigrateHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
 
 import org.bukkit.ChatColor;
@@ -139,6 +147,13 @@ public class GUIListener implements Listener {
                 || holder instanceof ZoneTenantHolder
                 || holder instanceof RentConfirmHolder
                 || holder instanceof MyRentalsHolder
+                || holder instanceof ModerationHolder
+                || holder instanceof MyTenantsHolder
+                || holder instanceof SettlementsHolder
+                || holder instanceof GroupPlotsHolder
+                || holder instanceof TransferConfirmHolder
+                || holder instanceof ClaimMergeHolder
+                || holder instanceof StorageMigrateHolder
                 || holder instanceof LocalMarketHolder
                 || holder instanceof StallListHolder
                 || holder instanceof StallManageHolder
@@ -162,7 +177,8 @@ public class GUIListener implements Listener {
                 || holder instanceof RouteAdminHolder
                 || holder instanceof RouteEditHolder
                 || holder instanceof AllianceMenuHolder
-                || holder instanceof AllianceConfirmHolder;
+                || holder instanceof AllianceConfirmHolder
+                || holder instanceof AllianceRosterHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -280,6 +296,27 @@ public class GUIListener implements Listener {
         else if (holder instanceof MyRentalsHolder castHolder) {
             plugin.gui().myRentals().handleClick(player, e, castHolder);
         }
+        else if (holder instanceof ModerationHolder castHolder) {
+            plugin.gui().moderation().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof MyTenantsHolder castHolder) {
+            plugin.gui().myTenants().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof SettlementsHolder castHolder) {
+            plugin.gui().settlementsInbox().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof GroupPlotsHolder castHolder) {
+            plugin.gui().groupPlots().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof TransferConfirmHolder castHolder) {
+            plugin.gui().transferConfirm().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof ClaimMergeHolder castHolder) {
+            plugin.gui().claimMerge().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof StorageMigrateHolder castHolder) {
+            plugin.gui().storageMigrate().handleClick(player, e, castHolder);
+        }
         else if (holder instanceof PlotMarketHolder castHolder) {
             plugin.gui().market().handleClick(player, e, castHolder);
         }
@@ -385,6 +422,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof AllianceConfirmHolder castHolder) {
             plugin.gui().allianceAccess().handleConfirmClick(player, e, castHolder);
+        }
+        else if (holder instanceof AllianceRosterHolder castHolder) {
+            plugin.gui().allianceAccess().handleRosterClick(player, e, castHolder);
         }
     }
 
@@ -686,6 +726,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof AllianceConfirmHolder castHolder) {
             plugin.gui().allianceAccess().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof AllianceRosterHolder castHolder) {
+            plugin.gui().allianceAccess().openRoster(player, castHolder.getPlot(), castHolder.getAllianceId());
             return;
         }
 

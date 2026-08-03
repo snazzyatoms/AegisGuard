@@ -1908,3 +1908,53 @@ roles_guide_lore:
   - ' '
   - '&8Owner is not assignable here.'
   - '&8Capacity limits new trusted members.'
+# --- Further polish (1.3.0) ---
+my_rentals_auto_renew_line: '&7Auto-renew: &f{STATE}'
+my_rentals_auto_renew_on: '&aON'
+my_rentals_auto_renew_off: '&cOFF'
+my_rentals_full_actions: '&eRight renew &8| &cShift-right cancel &8| &bShift-left auto-renew'
+my_rentals_zone_actions: '&aRight-click extend &8| &eLeft room &8| &cShift-right leave'
+my_rentals_guide_lore:
+  - '&7Right-click: renew / extend'
+  - '&7Shift-right-click: cancel / leave'
+  - '&7Zones: left-click opens room controls'
+  - '&7Shift-left: toggle auto-renew (full-plot)'
+rent_confirm_zone_leave_line: '&7You will leave this rented zone early.'
+rent_confirm_zone_no_deposit_line: '&8Zone rentals do not hold a separate deposit.'
+roles_add_by_name: '&eAdd by Name'
+roles_add_by_name_lore:
+  - '&7Type a player name in chat'
+  - '&7(online or offline is fine).'
+roles_moderation_name: '&cKick / Ban'
+roles_moderation_lore:
+  - '&7Kick, ban, or unban players'
+  - '&7on this plot.'
+local_market_my_tenants_name: '&6My Tenants'
+local_market_my_tenants_lore:
+  - '&7View renters on plots and zones'
+  - '&7you own.'
+settings_settlements_name: '&6Settlements Inbox'
+settings_settlements_lore:
+  - '&7Queued refunds waiting for'
+  - '&7delivery to your balance.'
+visit_discover_filter_name: '&eDiscover Filter'
+visit_discover_filter_lore:
+  - '&7Cycle: All / Featured / Sale / Rent / Category'
+alliance_roster_name: '&bRoster & Invites'
+alliance_roster_lore:
+  - '&7View members and pending invites.'
+doctor_settlements_name: '&6Pending Settlements'
+doctor_settlements_lore:
+  - '&7Review queued economy settlements'
+  - '&7and retry delivery.'
+doctor_delinquents_name: '&eRental Delinquents'
+doctor_delinquents_lore:
+  - '&7View rentals expired or due'
+  - '&7within the next 24 hours.'
+doctor_storage_migrate_name: '&bStorage Migrate'
+doctor_storage_migrate_lore:
+  - '&7Convert plot data between YML and SQL'
+  - '&7with a safety backup.'
+plot_status_upkeep_name: '&6Upkeep'
+plot_status_upkeep_cost: '&7Cost: &6{COST}'
+plot_status_upkeep_paid: '&7Last paid: &f{TIME}'

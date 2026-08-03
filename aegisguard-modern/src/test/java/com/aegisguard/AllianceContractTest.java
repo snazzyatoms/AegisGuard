@@ -30,7 +30,7 @@ class AllianceContractTest {
         assertTrue(alliance != null, "config.yml must declare an alliance_access section");
         assertEquals(Boolean.TRUE, alliance.get("enabled"));
         assertTrue(((Number) alliance.get("max_members")).intValue() >= 2);
-        assertEquals(1280, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1281, ((Number) config.get("config_schema")).intValue());
     }
 
     @Test
@@ -78,7 +78,8 @@ class AllianceContractTest {
     @Test
     void configSchemaWasBumpedForAllianceAccess() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1280")
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1281")
+                || migration.contains("CURRENT_SCHEMA = 1280")
                 || migration.contains("CURRENT_SCHEMA = 1278"));
     }
 

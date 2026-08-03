@@ -47,6 +47,18 @@ public class AllianceAccessGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
+    public static class AllianceRosterHolder implements InventoryHolder {
+        private final Plot plot;
+        private final UUID allianceId;
+        public AllianceRosterHolder(Plot plot, UUID allianceId) {
+            this.plot = plot;
+            this.allianceId = allianceId;
+        }
+        public Plot getPlot() { return plot; }
+        public UUID getAllianceId() { return allianceId; }
+        @Override public Inventory getInventory() { return null; }
+    }
+
     private String t(Player p, String key, String fallback) {
         return plugin.gui().tr(p, key, fallback);
     }
@@ -105,6 +117,16 @@ public class AllianceAccessGUI {
             header.add(GUIManager.color(t(player, "alliance_members_line",
                     Map.of("COUNT", String.valueOf(personal.size())),
                     "&7Members: &f{COUNT}")));
+        }
+        boolean hasPendingInvite = plugin.alliances().all().stream()
+                .anyMatch(alliance -> alliance.isInvited(player.getUniqueId()));
+        if (personal != null || hasPendingInvite) {
+            inv.setItem(16, GUIManager.createItem(Material.BOOK,
+                    t(player, "alliance_roster_name", "&bRoster & Invites"),
+                    tl(player, "alliance_roster_lore", List.of(
+                            "&7View alliance members and pending",
+                            "&7invitations. Click to open."
+                    ))));
         }
         inv.setItem(4, GUIManager.createItem(Material.SHIELD,
                 t(player, "alliance_header_name", "&6&lAlliance Access"), header));
@@ -262,6 +284,15 @@ public class AllianceAccessGUI {
         if (slot == 40) { player.closeInventory(); return; }
 
         Alliance personal = plugin.alliances().getByPlayer(player.getUniqueId());
+        if (slot == 16) {
+            Alliance rosterAlliance = personal;
+            if (rosterAlliance == null) {
+                rosterAlliance = plugin.alliances().all().stream()
+                        .filter(alliance -> alliance.isInvited(player.getUniqueId())).findFirst().orElse(null);
+            }
+            if (rosterAlliance != null) openRoster(player, holder.getPlot(), rosterAlliance.getId());
+            return;
+        }
 
         if (slot == 12 && personal != null) {
             openConfirm(player, plot, "leave_alliance");
@@ -302,6 +333,88 @@ public class AllianceAccessGUI {
             plugin.effects().playMenuFlip(player);
             openMenu(player, plot);
         }
+    }
+
+    public void openRoster(Player player, Plot plot, UUID allianceId) {
+        Alliance alliance = plugin.alliances().get(allianceId);
+        if (alliance == null) {
+            openMenu(player, plot);
+            return;
+        }
+        Inventory inv = Bukkit.createInventory(new AllianceRosterHolder(plot, allianceId), 54,
+                plugin.gui().title(player, "alliance_roster_title", "&6Alliance Roster"));
+        for (int i = 0; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
+        inv.setItem(4, GUIManager.createItem(Material.SHIELD, "&6" + alliance.getName(),
+                List.of(GUIManager.color("&7Members: &f" + alliance.size()),
+                        GUIManager.color("&7Pending invites: &f" + alliance.getInvites().size()))));
+        int slot = 9;
+        for (UUID memberId : alliance.getMemberIds()) {
+            if (slot >= 36) break;
+            org.bukkit.OfflinePlayer member = Bukkit.getOfflinePlayer(memberId);
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            org.bukkit.inventory.meta.SkullMeta meta = (org.bukkit.inventory.meta.SkullMeta) head.getItemMeta();
+            if (meta != null) {
+                meta.setOwningPlayer(member);
+                meta.setDisplayName(GUIManager.color("&a" + (member.getName() == null ? "Unknown" : member.getName())));
+                meta.setLore(List.of(GUIManager.color(alliance.isLeader(memberId) ? "&6Leader" : "&7Member")));
+                head.setItemMeta(meta);
+            }
+            inv.setItem(slot++, head);
+        }
+        boolean leader = alliance.isLeader(player.getUniqueId());
+        boolean invited = alliance.isInvited(player.getUniqueId());
+        if (invited) {
+            inv.setItem(39, GUIManager.createItem(Material.LIME_WOOL, t(player, "alliance_roster_accept", "&aAccept Invite"),
+                    tl(player, "alliance_roster_accept_lore", List.of("&eClick to join this alliance."))));
+            inv.setItem(41, GUIManager.createItem(Material.RED_WOOL, t(player, "alliance_roster_decline", "&cDecline Invite"),
+                    tl(player, "alliance_roster_decline_lore", List.of("&eClick to decline this invite."))));
+        }
+        for (UUID inviteeId : alliance.getInvites().keySet()) {
+            if (slot >= 36) break;
+            org.bukkit.OfflinePlayer invitee = Bukkit.getOfflinePlayer(inviteeId);
+            ItemStack item = GUIManager.createItem(Material.PAPER, "&ePending: &f"
+                    + (invitee.getName() == null ? inviteeId.toString().substring(0, 8) : invitee.getName()),
+                    List.of(GUIManager.color(leader ? "&eClick to cancel invitation." : "&8Leader can cancel this invite.")));
+            plugin.gui().tagAction(item, "alliance_invite:" + inviteeId);
+            inv.setItem(slot++, item);
+        }
+        inv.setItem(45, GUIManager.createItem(Material.ARROW, t(player, "button_back", "&fBack"),
+                tl(player, "back_lore", List.of("&7Return to alliance access."))));
+        inv.setItem(53, GUIManager.createItem(Material.BARRIER, t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))));
+        player.openInventory(inv);
+        plugin.effects().playMenuFlip(player);
+    }
+
+    public void handleRosterClick(Player player, InventoryClickEvent e, AllianceRosterHolder holder) {
+        if (!isTopClick(e)) return;
+        e.setCancelled(true);
+        int slot = e.getRawSlot();
+        if (slot == 45) { openMenu(player, holder.getPlot()); return; }
+        if (slot == 53) { player.closeInventory(); return; }
+        Alliance alliance = plugin.alliances().get(holder.getAllianceId());
+        if (alliance == null) { openMenu(player, holder.getPlot()); return; }
+        String error = null;
+        if (slot == 39 && alliance.isInvited(player.getUniqueId())) {
+            error = plugin.alliances().accept(player.getUniqueId(), alliance.getId());
+        } else if (slot == 41 && alliance.isInvited(player.getUniqueId())) {
+            error = plugin.alliances().decline(player.getUniqueId(), alliance.getId());
+        } else {
+            String action = plugin.gui().getAction(e.getCurrentItem());
+            if (action != null && action.startsWith("alliance_invite:") && alliance.isLeader(player.getUniqueId())) {
+                try { error = plugin.alliances().removeInvite(player.getUniqueId(), alliance.getId(),
+                        UUID.fromString(action.substring("alliance_invite:".length()))); }
+                catch (IllegalArgumentException ignored) { error = "alliance_invalid"; }
+            } else return;
+        }
+        if (error != null) {
+            plugin.msg().send(player, error);
+            plugin.effects().playError(player);
+        } else {
+            plugin.msg().send(player, "alliance_action_ok");
+            plugin.effects().playConfirm(player);
+        }
+        openRoster(player, holder.getPlot(), holder.getAllianceId());
     }
 
     public void handleConfirmClick(Player player, InventoryClickEvent e, AllianceConfirmHolder holder) {

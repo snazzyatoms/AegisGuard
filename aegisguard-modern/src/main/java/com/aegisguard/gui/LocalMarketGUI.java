@@ -158,6 +158,14 @@ public class LocalMarketGUI {
                         "&7zone rentals from one place."
                 ))
         ));
+        inv.setItem(33, GUIManager.createItem(
+                Material.PLAYER_HEAD,
+                tr(player, "local_market_my_tenants_name", "&bMy Tenants"),
+                trList(player, "local_market_my_tenants_lore", List.of(
+                        "&7Review renters and rental zones",
+                        "&7on plots you manage."
+                ))
+        ));
 
         inv.setItem(40, GUIManager.createItem(
                 hasStalls ? Material.CHEST : Material.GRAY_DYE,
@@ -291,6 +299,11 @@ public class LocalMarketGUI {
 
         if (slot == 31) {
             plugin.gui().myRentals().open(player);
+            plugin.effects().playMenuFlip(player);
+            return;
+        }
+        if (slot == 33) {
+            plugin.gui().myTenants().open(player);
             plugin.effects().playMenuFlip(player);
             return;
         }

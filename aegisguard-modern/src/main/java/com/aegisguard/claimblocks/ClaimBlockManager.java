@@ -139,6 +139,44 @@ public class ClaimBlockManager {
         return getAvailableBlocks(uuid) >= amount;
     }
 
+    /** Result of a player-to-player claim block gift. */
+    public record GiftResult(boolean success, String reason) {}
+
+    /**
+     * Transfers spendable claim blocks while enforcing the sender's configured
+     * daily allowance. Claimed or otherwise committed blocks are never giftable.
+     */
+    public GiftResult gift(Player sender, UUID recipient, long amount) {
+        if (sender == null || recipient == null || recipient.equals(sender.getUniqueId())) {
+            return new GiftResult(false, "invalid_recipient");
+        }
+        if (!plugin.cfg().raw().getBoolean("claim_blocks.gift.enabled", true)) {
+            return new GiftResult(false, "disabled");
+        }
+        String permission = plugin.cfg().raw().getString("claim_blocks.gift.permission", "aegis.claimblocks.gift");
+        if (permission != null && !permission.isBlank() && !sender.hasPermission(permission)) {
+            return new GiftResult(false, "no_permission");
+        }
+        long maximum = Math.max(1L, plugin.cfg().raw().getLong("claim_blocks.gift.max_amount", 1000L));
+        if (amount <= 0 || amount > maximum) return new GiftResult(false, "amount_limit");
+        if (getAvailableBlocks(sender.getUniqueId()) < amount) return new GiftResult(false, "insufficient_blocks");
+
+        String day = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString();
+        String path = "gifts." + sender.getUniqueId() + "." + day;
+        long dailyLimit = Math.max(0L, plugin.cfg().raw().getLong("claim_blocks.gift.daily_limit", 5000L));
+        synchronized (ioLock) {
+            long giftedToday = data == null ? 0L : data.getLong(path, 0L);
+            if (dailyLimit > 0 && giftedToday + amount > dailyLimit) {
+                return new GiftResult(false, "daily_limit");
+            }
+            setAvailableBlocks(sender.getUniqueId(), getAvailableBlocks(sender.getUniqueId()) - amount);
+            addBonus(recipient, amount);
+            if (data != null) data.set(path, giftedToday + amount);
+        }
+        saveAsync();
+        return new GiftResult(true, null);
+    }
+
     // -------------------------------------------------------------------------
     // --- Spending for upgrades/features ---
     // -------------------------------------------------------------------------

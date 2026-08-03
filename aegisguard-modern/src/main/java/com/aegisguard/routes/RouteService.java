@@ -34,6 +34,7 @@ public class RouteService {
     private final File progressFile;
     private final Map<UUID, Route> routes = new ConcurrentHashMap<>();
     private final Map<String, RouteProgress> progress = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> activeRoutes = new ConcurrentHashMap<>();
     private final Object ioLock = new Object();
     private volatile boolean dirtyRoutes;
     private volatile boolean dirtyProgress;
@@ -108,6 +109,27 @@ public class RouteService {
         if (route == null || playerId == null) return null;
         RouteProgress p = progressOf(playerId, route.getId());
         return route.nextAfter(p.getDiscoveredCount());
+    }
+
+    public void setActiveRoute(UUID playerId, UUID routeId) {
+        if (playerId == null) return;
+        if (routeId == null) activeRoutes.remove(playerId);
+        else activeRoutes.put(playerId, routeId);
+    }
+
+    public Route activeRoute(UUID playerId) {
+        UUID routeId = playerId == null ? null : activeRoutes.get(playerId);
+        Route route = getRoute(routeId);
+        if (route == null || !route.isEnabled()) {
+            if (playerId != null) activeRoutes.remove(playerId);
+            return null;
+        }
+        return route;
+    }
+
+    public Checkpoint activeNextCheckpoint(UUID playerId) {
+        Route route = activeRoute(playerId);
+        return route == null ? null : nextCheckpoint(playerId, route);
     }
 
     /**

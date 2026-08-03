@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1280
+config_schema: 1281
 
 
 # ------------------------------------------------------------------------------
@@ -127,6 +127,8 @@ hooks:
     enabled: false
     layer_name: "AegisGuard Plots"
     sync_interval_minutes: 5
+    # Hex color for rental listings; distinct from the yellow sale marker.
+    for_rent_color: "009688"
     style:
       stroke_color: "00FF00"
       stroke_opacity: 0.8
@@ -141,6 +143,11 @@ hooks:
       claim_create: true
       claim_delete: true
       admin_actions: true
+      market_sale: false
+      rental_start: false
+      rental_end: false
+      lockdown: false
+      guest_pass: false
 
   bluemap:
     enabled: false
@@ -204,9 +211,7 @@ storage:
   type: "yml"
 
   database:
-    # Currently ignored for SQLite: the plugin always uses
-    # plugins/AegisGuard/aegisguard.db (hardcoded). Kept for documentation /
-    # future use — do not rely on renaming this file via config yet.
+    # SQLite database filename, relative to plugins/AegisGuard/. This value is honored.
     file: "aegisguard.db"
     host: "localhost"
     port: 3306
@@ -339,6 +344,13 @@ claims:
 # ==============================================================================
 claim_blocks:
   enabled: true
+
+  gift:
+    # Gifts transfer only currently available blocks; they never reduce claimed land.
+    enabled: true
+    permission: "aegis.claimblocks.gift"
+    daily_limit: 5000
+    max_amount: 1000
 
   # Starting balance for new players.
   starting_blocks: 500
@@ -806,6 +818,8 @@ zoning:
 # Deposits are refundable per Territory Life contract rules.
 full_plot_renting:
   enabled: true
+  auto_renew:
+    enabled: true
   # Default contract term (days) when an owner omits an explicit term.
   duration_days: 7
   # Longest owner-selectable contract term.
@@ -887,6 +901,10 @@ routes:
   # When true, the route detail screen offers an optional teleport to the next
   # checkpoint. Discovery itself never requires teleporting.
   allow_optional_teleport: false
+  guidance:
+    enabled: true
+    particles: true
+    action_bar: true
   rewards:
     enabled: true
 
@@ -1180,6 +1198,7 @@ upkeep:
 # Auctions
 # ==============================================================================
 auction:
+  enabled: true
   duration_days: 3
   min_bid_increase: 50.0
   owner_cut_percent: 50

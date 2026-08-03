@@ -348,7 +348,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            if (plugin.gui().migration() != null) {
+            if (plugin.gui().storageMigrate() != null) {
+                plugin.gui().storageMigrate().open(player);
+            } else if (plugin.gui().migration() != null) {
                 plugin.gui().migration().open(player);
             } else {
                 player.sendMessage(ChatColor.RED + "Migration wizard is unavailable.");
@@ -357,6 +359,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         String action = args[1].toLowerCase(Locale.ROOT);
+        if (action.equals("storage") || action.equals("backend")) {
+            if (plugin.gui().storageMigrate() != null) plugin.gui().storageMigrate().open(player);
+            else player.sendMessage(ChatColor.RED + "Storage migration is unavailable.");
+            return;
+        }
         if (action.equals("help")) {
             player.sendMessage(ChatColor.GOLD + "AegisGuard Migration");
             player.sendMessage(ChatColor.YELLOW + "/agadmin migrate");

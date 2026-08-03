@@ -90,6 +90,10 @@ public class DynmapHook {
         
         for (Plot plot : plots) {
             String markerId = "ag_plot_" + plot.getPlotId().toString();
+            String label = plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank()
+                    ? plot.getEntryTitle()
+                    : plot.getPlotName() != null && !plot.getPlotName().isBlank()
+                    ? plot.getPlotName() : plot.getOwnerName() + "'s Plot";
             AreaMarker marker = existingMarkers.remove(markerId); 
             
             String worldName = plot.getWorld();
@@ -99,13 +103,13 @@ public class DynmapHook {
             double[] z = { plot.getZ1(), plot.getZ2() + 1.0 };
             
             if (marker == null) {
-                marker = markerSet.createAreaMarker(markerId, plot.getOwnerName(), false, worldName, x, z, false);
+                marker = markerSet.createAreaMarker(markerId, label, false, worldName, x, z, false);
             } else {
                 marker.setCornerLocations(x, z);
-                marker.setLabel(plot.getOwnerName());
+                marker.setLabel(label);
                 if (!marker.getWorld().equals(worldName)) {
                     marker.deleteMarker();
-                    marker = markerSet.createAreaMarker(markerId, plot.getOwnerName(), false, worldName, x, z, false);
+                    marker = markerSet.createAreaMarker(markerId, label, false, worldName, x, z, false);
                 }
             }
             
@@ -122,6 +126,9 @@ public class DynmapHook {
                 } else if (plot.isForSale()) {
                     sColor = 0xFFFF00; // Yellow
                     fColor = 0xFFFF00;
+                } else if (plot.isForRent()) {
+                    sColor = parseColor("hooks.dynmap.for_rent_color", 0x009688);
+                    fColor = sColor;
                 }
                 
                 marker.setFillStyle(fillOpacity, fColor);
@@ -144,7 +151,9 @@ public class DynmapHook {
         if (plot.isServerZone()) {
             sb.append("<span style=\"color:#FF0000;\">Server Zone</span>");
         } else {
-            sb.append(plot.getOwnerName()).append("'s Plot");
+            String name = plot.getEntryTitle();
+            if (name == null || name.isBlank()) name = plot.getPlotName();
+            sb.append(name == null || name.isBlank() ? plot.getOwnerName() + "'s Plot" : name);
         }
         sb.append("</div>");
         
@@ -175,5 +184,14 @@ public class DynmapHook {
         
         sb.append("</div>");
         return sb.toString();
+    }
+
+    private int parseColor(String path, int fallback) {
+        String value = plugin.cfg().raw().getString(path, Integer.toHexString(fallback));
+        try {
+            return Integer.parseInt(value.replace("#", ""), 16) & 0xFFFFFF;
+        } catch (RuntimeException ignored) {
+            return fallback;
+        }
     }
 }

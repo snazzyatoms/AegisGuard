@@ -69,21 +69,42 @@ public class VisitGUI {
         }
     }
 
+    /** Narrow the public discovery atlas without changing the other travel modes. */
+    public enum DiscoverFilter {
+        ALL, FEATURED, FOR_SALE, FOR_RENT, CATEGORY;
+
+        public DiscoverFilter next() {
+            return switch (this) {
+                case ALL -> FEATURED;
+                case FEATURED -> FOR_SALE;
+                case FOR_SALE -> FOR_RENT;
+                case FOR_RENT -> CATEGORY;
+                case CATEGORY -> ALL;
+            };
+        }
+    }
+
     public static class VisitHolder implements InventoryHolder {
         private final int page;
         private final VisitMode mode;
         private final List<Plot> plots;
+        private final DiscoverFilter discoverFilter;
+        private final String category;
 
-        public VisitHolder(List<Plot> plots, int page, VisitMode mode) {
+        public VisitHolder(List<Plot> plots, int page, VisitMode mode, DiscoverFilter discoverFilter, String category) {
             this.plots = plots;
             this.page = page;
             this.mode = mode == null ? VisitMode.TRUSTED : mode;
+            this.discoverFilter = discoverFilter == null ? DiscoverFilter.ALL : discoverFilter;
+            this.category = category;
         }
 
         public int getPage() { return page; }
         public VisitMode getMode() { return mode; }
         public boolean isShowingWarps() { return mode == VisitMode.WARPS; }
         public List<Plot> getPlots() { return plots; }
+        public DiscoverFilter getDiscoverFilter() { return discoverFilter; }
+        public String getCategory() { return category; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -139,8 +160,15 @@ public class VisitGUI {
     }
 
     public void open(Player player, int page, VisitMode mode) {
+        open(player, page, mode, DiscoverFilter.ALL, null);
+    }
+
+    public void open(Player player, int page, VisitMode mode, DiscoverFilter filter, String category) {
         final int requestedPage = page;
         final VisitMode requestedMode = mode == null ? VisitMode.TRUSTED : mode;
+        final DiscoverFilter requestedFilter = requestedMode == VisitMode.DISCOVER
+                ? (filter == null ? DiscoverFilter.ALL : filter) : DiscoverFilter.ALL;
+        final String requestedCategory = category;
 
         plugin.runGlobalAsync(() -> {
             List<Plot> displayPlots = new ArrayList<>();
@@ -176,7 +204,9 @@ public class VisitGUI {
                         }
                     }
                     case DISCOVER -> {
-                        if (!plot.isServerZone() && plugin.territoryLife().discovery(plot.getPlotId()).visible()) {
+                        var discovery = plugin.territoryLife().discovery(plot.getPlotId());
+                        if (!plot.isServerZone() && discovery.visible()
+                                && matchesDiscoverFilter(plot, requestedFilter, requestedCategory)) {
                             displayPlots.add(plot);
                         }
                     }
@@ -234,11 +264,26 @@ public class VisitGUI {
             final int safePages = Math.max(1, maxPages);
             final List<Plot> finalDisplayPlots = displayPlots;
 
-            plugin.runMain(player, () -> buildAndOpen(player, finalDisplayPlots, finalPage, safePages, requestedMode));
+            plugin.runMain(player, () -> buildAndOpen(player, finalDisplayPlots, finalPage, safePages,
+                    requestedMode, requestedFilter, requestedCategory));
         });
     }
 
-    private void buildAndOpen(Player player, List<Plot> displayPlots, int page, int safePages, VisitMode mode) {
+    private boolean matchesDiscoverFilter(Plot plot, DiscoverFilter filter, String category) {
+        var discovery = plugin.territoryLife().discovery(plot.getPlotId());
+        return switch (filter) {
+            case ALL -> true;
+            case FEATURED -> discovery.featured();
+            case FOR_SALE -> plot.isForSale();
+            case FOR_RENT -> plot.isForRent()
+                    || plot.getZones().stream().anyMatch(zone -> zone != null && zone.isListedForRent())
+                    || plugin.territoryLife().getOffer(plot.getPlotId(), 0.0D, 1).price() > 0.0D;
+            case CATEGORY -> category != null && category.equalsIgnoreCase(discovery.category());
+        };
+    }
+
+    private void buildAndOpen(Player player, List<Plot> displayPlots, int page, int safePages, VisitMode mode,
+                              DiscoverFilter discoverFilter, String category) {
         // Title
         String modeTitleKey = switch (mode) {
             case WARPS -> "visit_title_warps";
@@ -262,7 +307,7 @@ public class VisitGUI {
 
         String fullTitle = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, mode), 54, fullTitle);
+        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, mode, discoverFilter, category), 54, fullTitle);
 
         // 1.2.6: fill ALL slots
         ItemStack filler = GUIManager.getFiller();
@@ -299,14 +344,14 @@ public class VisitGUI {
 
                 String dn = t(player, "visit_warp_name", "&6{WARP}", Map.of("WARP", warpName));
 
-                String category = plot.getWarpCategory() == null || plot.getWarpCategory().isBlank()
+                String warpCategory = plot.getWarpCategory() == null || plot.getWarpCategory().isBlank()
                         ? "HUB" : plot.getWarpCategory();
                 List<String> lore = tl(player, "visit_warp_lore", List.of(
                         "&7A staff-managed server destination.",
                         "&7Category: &f{CATEGORY}",
                         " ",
                         "&eClick to teleport"
-                ), Map.of("WARP", warpName, "CATEGORY", category));
+                ), Map.of("WARP", warpName, "CATEGORY", warpCategory));
 
                 icon = GUIManager.createItem(mat, dn, lore);
             } else {
@@ -319,6 +364,11 @@ public class VisitGUI {
                         : plot.isRentedBy(player.getUniqueId())
                         ? t(player, "visit_role_renter", "&bRenter")
                         : safeRole(plot.getRole(player.getUniqueId()));
+                String nickname = plot.getRoleNickname(player.getUniqueId());
+                if (nickname != null && !nickname.isBlank()
+                        && mode != VisitMode.OWNED && !plot.isRentedBy(player.getUniqueId())) {
+                    role = nickname + " &8(" + role + "&8)";
+                }
                 String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank()) ? plot.getOwnerName() : "Unknown";
 
                 String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
@@ -343,9 +393,12 @@ public class VisitGUI {
                     List<String> lore = tl(player, "visit_plot_lore", List.of(
                             "&7World: &f{WORLD}",
                             "&7Role: &b{ROLE}",
+                            "&7Capacity: &f{TRUSTED}&7/&f{MAX}",
                             " ",
                             "&eClick to teleport"
-                    ), Map.of("WORLD", worldName, "ROLE", role));
+                    ), Map.of("WORLD", worldName, "ROLE", role,
+                            "TRUSTED", String.valueOf(plot.countTrustedMembers()),
+                            "MAX", String.valueOf(plot.getMaxMembers())));
 
                     if (mode == VisitMode.DISCOVER || mode == VisitMode.FAVORITES) {
                         var discovery = plugin.territoryLife().discovery(plot.getPlotId());
@@ -389,6 +442,21 @@ public class VisitGUI {
         );
         tagAction(help, "visit_help");
         inv.setItem(36, help);
+        if (mode == VisitMode.DISCOVER) {
+            String label = discoverFilter == DiscoverFilter.CATEGORY
+                    ? "Category: " + (category == null ? "other" : category)
+                    : prettyFilter(discoverFilter);
+            ItemStack filter = GUIManager.createItem(Material.HOPPER,
+                    t(player, "visit_discover_filter_name", "&eDiscover Filter: &f{FILTER}",
+                            Map.of("FILTER", label)),
+                    tl(player, "visit_discover_filter_lore", List.of(
+                            "&7Cycle: All, Featured, For Sale,",
+                            "&7For Rent, and discovery categories.",
+                            "&eClick to change filter."
+                    )));
+            tagAction(filter, "discover_filter");
+            inv.setItem(37, filter);
+        }
 
         ItemStack recentTab = travelTab(player, VisitMode.RECENT, mode == VisitMode.RECENT);
         tagAction(recentTab, "mode_RECENT");
@@ -467,6 +535,27 @@ public class VisitGUI {
         return GUIManager.createItem(selected ? Material.LIME_DYE : icon, t(player, key, fallback), lore);
     }
 
+    private String prettyFilter(DiscoverFilter filter) {
+        return switch (filter) {
+            case ALL -> "All";
+            case FEATURED -> "Featured";
+            case FOR_SALE -> "For Sale";
+            case FOR_RENT -> "For Rent";
+            case CATEGORY -> "Category";
+        };
+    }
+
+    private String nextCategory(String current) {
+        List<String> categories = plugin.store().getAllPlots().stream()
+                .filter(plot -> plot != null)
+                .map(plot -> plugin.territoryLife().discovery(plot.getPlotId()).category())
+                .filter(value -> value != null && !value.isBlank())
+                .distinct().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+        if (categories.isEmpty()) return "other";
+        int index = current == null ? -1 : categories.indexOf(current);
+        return categories.get((index + 1) % categories.size());
+    }
+
     // --------------------------------------------------
     // CLICK HANDLER
     // --------------------------------------------------
@@ -503,6 +592,13 @@ public class VisitGUI {
                 case "visit_help" -> {
                     sendSystem(player, "visit_help_chat",
                             "&eTravel: use the tabs for Destinations, Owned, Trusted, Discover, Favorites, or Recent.");
+                    plugin.effects().playMenuFlip(player);
+                    return;
+                }
+                case "discover_filter" -> {
+                    DiscoverFilter next = holder.getDiscoverFilter().next();
+                    String nextCategory = next == DiscoverFilter.CATEGORY ? nextCategory(holder.getCategory()) : null;
+                    open(player, 0, VisitMode.DISCOVER, next, nextCategory);
                     plugin.effects().playMenuFlip(player);
                     return;
                 }

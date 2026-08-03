@@ -22,15 +22,15 @@ class PolishPackContractTest {
     private static final Path RESOURCES = Path.of("src/main/resources");
 
     @Test
-    void schemaIs1280AndHooksShipDisabled() throws Exception {
-        assertEquals(1280, ConfigMigrationService.CURRENT_SCHEMA);
+    void schemaIs1281AndHooksShipDisabled() throws Exception {
+        assertEquals(1281, ConfigMigrationService.CURRENT_SCHEMA);
 
         Yaml yaml = new Yaml();
         Map<?, ?> config;
         try (InputStream in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1280, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1281, ((Number) config.get("config_schema")).intValue());
 
         @SuppressWarnings("unchecked")
         Map<String, Object> hooks = (Map<String, Object>) config.get("hooks");

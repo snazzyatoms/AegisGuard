@@ -434,9 +434,14 @@ public class ProtectionManager implements Listener {
             // Private plots deny entry unless the player has INTERACT trust OR this plot's
             // Alliance Entry toggle is ON and the player is a member of the joined alliance.
             // Alliance Entry defaults OFF — membership alone never opens a private plot.
-            if (!to.getFlag("entry", true)
+            // Role-flag ENTRY overrides (Allow/Deny) beat the plot entry flag for that role.
+            Boolean entryOverride = to.resolveRoleFlagOverride(p.getUniqueId(), "entry");
+            boolean entryDenied = entryOverride != null
+                    ? !entryOverride
+                    : (!to.getFlag("entry", true)
                     && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)
-                    && !to.allowsAllianceEntry(p.getUniqueId(), plugin)) {
+                    && !to.allowsAllianceEntry(p.getUniqueId(), plugin));
+            if (entryDenied) {
                 e.setCancelled(true);
                 String deniedMsg = tr(
                         p,
@@ -489,6 +494,15 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        Boolean pvpOverride = plot.resolveRoleFlagOverride(attacker.getUniqueId(), "pvp");
+        if (pvpOverride != null) {
+            if (!pvpOverride) {
+                e.setCancelled(true);
+                plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
+            }
+            return;
+        }
+
         if (isProtectionActive(plot, "pvp", true)) {
             e.setCancelled(true);
             plugin.effects().playEffect("pvp", "deny", attacker, victim.getLocation());
@@ -527,6 +541,14 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        Boolean animalsOverride = plot.resolveRoleFlagOverride(p.getUniqueId(), "animals");
+        if (animalsOverride != null) {
+            if (!animalsOverride) {
+                e.setCancelled(true);
+                plugin.effects().playEffect("animals", "deny", p, target.getLocation());
+            }
+            return;
+        }
         if (isProtectionActive(plot, "animals", true)
                 && !plot.hasPermission(p.getUniqueId(), "ANIMALS", plugin)) {
             e.setCancelled(true);
@@ -554,6 +576,14 @@ public class ProtectionManager implements Listener {
             return;
         }
 
+        Boolean animalsOverride = plot.resolveRoleFlagOverride(p.getUniqueId(), "animals");
+        if (animalsOverride != null) {
+            if (!animalsOverride) {
+                e.setCancelled(true);
+                plugin.effects().playEffect("animals", "deny", p, clicked.getLocation());
+            }
+            return;
+        }
         if (isProtectionActive(plot, "animals", true)
                 && !plot.hasPermission(p.getUniqueId(), "ANIMALS", plugin)) {
             e.setCancelled(true);

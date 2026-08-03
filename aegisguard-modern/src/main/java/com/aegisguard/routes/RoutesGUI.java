@@ -146,6 +146,7 @@ public class RoutesGUI {
 
     public void openDetail(Player player, Route route) {
         if (route == null) { plugin.effects().playError(player); return; }
+        plugin.routes().setActiveRoute(player.getUniqueId(), route.getId());
 
         String title = plugin.gui().title(player, "routes_detail_title", "&aRoute Details");
         Inventory inv = Bukkit.createInventory(new RouteDetailHolder(route), 27, title);

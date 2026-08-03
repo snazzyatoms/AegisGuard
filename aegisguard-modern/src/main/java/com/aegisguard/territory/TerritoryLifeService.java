@@ -47,9 +47,15 @@ public final class TerritoryLifeService implements Listener {
         private final long startedAt;
         private long expiresAt;
         private boolean reminderSent;
+        private boolean autoRenew;
 
         public RentalContract(UUID plotId, UUID ownerId, UUID renterId, double rent, double deposit,
                               int termDays, long startedAt, long expiresAt, boolean reminderSent) {
+            this(plotId, ownerId, renterId, rent, deposit, termDays, startedAt, expiresAt, reminderSent, false);
+        }
+
+        public RentalContract(UUID plotId, UUID ownerId, UUID renterId, double rent, double deposit,
+                              int termDays, long startedAt, long expiresAt, boolean reminderSent, boolean autoRenew) {
             this.plotId = plotId;
             this.ownerId = ownerId;
             this.renterId = renterId;
@@ -59,6 +65,7 @@ public final class TerritoryLifeService implements Listener {
             this.startedAt = startedAt;
             this.expiresAt = expiresAt;
             this.reminderSent = reminderSent;
+            this.autoRenew = autoRenew;
         }
 
         public UUID plotId() { return plotId; }
@@ -70,6 +77,8 @@ public final class TerritoryLifeService implements Listener {
         public long startedAt() { return startedAt; }
         public long expiresAt() { return expiresAt; }
         public boolean reminderSent() { return reminderSent; }
+        public boolean autoRenew() { return autoRenew; }
+        public void setAutoRenew(boolean autoRenew) { this.autoRenew = autoRenew; }
         public void extendFrom(long base) {
             expiresAt = Math.max(base, expiresAt) + termDays * 86_400_000L;
             reminderSent = false;
@@ -152,7 +161,8 @@ public final class TerritoryLifeService implements Listener {
                             Math.max(1, contractSection.getInt(key + ".term-days", 7)),
                             contractSection.getLong(key + ".started-at", 0L),
                             contractSection.getLong(key + ".expires-at", 0L),
-                            contractSection.getBoolean(key + ".reminder-sent", false)
+                            contractSection.getBoolean(key + ".reminder-sent", false),
+                            contractSection.getBoolean(key + ".auto-renew", false)
                     ));
                 }
             }
@@ -232,6 +242,7 @@ public final class TerritoryLifeService implements Listener {
                 yaml.set(base + ".started-at", contract.startedAt());
                 yaml.set(base + ".expires-at", contract.expiresAt());
                 yaml.set(base + ".reminder-sent", contract.reminderSent());
+                yaml.set(base + ".auto-renew", contract.autoRenew());
             }
             List<Map<String, Object>> activityRows = new ArrayList<>();
             for (ActivityEntry entry : activity) {
@@ -302,6 +313,51 @@ public final class TerritoryLifeService implements Listener {
         if (contract == null) return;
         contract.extendFrom(System.currentTimeMillis());
         dirty = true;
+    }
+
+    /** Mark dirty so the next save persists in-memory mutations (e.g. auto-renew toggle). */
+    public void touch() { dirty = true; }
+
+    public List<PendingSettlement> settlementsFor(UUID playerId) {
+        if (playerId == null) return List.of();
+        synchronized (ioLock) {
+            return settlements.stream().filter(s -> playerId.equals(s.playerId())).toList();
+        }
+    }
+
+    /**
+     * Attempt Vault auto-renew for contracts that opted in and are at/past expiry.
+     * Returns the number of contracts successfully renewed.
+     */
+    public int processAutoRenewals() {
+        if (!plugin.getConfig().getBoolean("full_plot_renting.auto_renew.enabled", true)) return 0;
+        if (plugin.vault() == null) return 0;
+        int renewed = 0;
+        long now = System.currentTimeMillis();
+        for (RentalContract contract : List.copyOf(contracts.values())) {
+            if (contract == null || !contract.autoRenew() || contract.expiresAt() > now) continue;
+            OfflinePlayer renter = Bukkit.getOfflinePlayer(contract.renterId());
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(contract.ownerId());
+            if (!plugin.vault().has(renter, contract.rent())
+                    || !plugin.vault().charge(renter, contract.rent())) {
+                queueNotice(contract.renterId(),
+                        "&cAuto-renew failed: insufficient funds. Your rental expires soon.");
+                continue;
+            }
+            if (!plugin.vault().deposit(owner, contract.rent())) {
+                if (!plugin.vault().deposit(renter, contract.rent())) {
+                    addSettlement(contract.renterId(), contract.rent(), "Failed auto-renew refund");
+                }
+                queueNotice(contract.renterId(), "&cAuto-renew payment failed. No time was added.");
+                continue;
+            }
+            contract.extendFrom(now);
+            dirty = true;
+            renewed++;
+            queueNotice(contract.renterId(), "&aRental auto-renewed for &e" + contract.termDays() + " day(s)&a.");
+            queueNotice(contract.ownerId(), "&aA rental contract auto-renewed for &e" + contract.termDays() + " day(s)&a.");
+        }
+        return renewed;
     }
 
     public RentalContract removeContract(UUID plotId) {

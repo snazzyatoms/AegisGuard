@@ -338,6 +338,10 @@ public class PlotMarketGUI {
         plugin.territoryLife().clearOffer(plot.getPlotId());
         plugin.territoryLife().log(plot.getPlotId(), buyer.getUniqueId(), "PLOT_SOLD",
                 "Ownership transferred from " + sellerName + " to " + buyer.getName() + " for " + price + ".");
+        if (plugin.getDiscord() != null) {
+            plugin.getDiscord().sendEvent("market_sale", "Plot sold",
+                    buyer.getName() + " bought " + plot.getPlotId() + " from " + sellerName + " for " + price + ".", 0x2ECC71);
+        }
         plugin.getClaimBlockManager().invalidateOwnerCache(sellerId);
         plugin.getClaimBlockManager().invalidateOwnerCache(buyer.getUniqueId());
         if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
@@ -439,6 +443,10 @@ public class PlotMarketGUI {
             plugin.territoryLife().activateContract(plot.getPlotId(), plot.getOwner(), renter.getUniqueId(), offer, expires);
             plugin.territoryLife().log(plot.getPlotId(), renter.getUniqueId(), "RENTAL_STARTED",
                     "Rental started for " + days + " day(s); rent=" + price + ", deposit=" + offer.deposit() + ".");
+            if (plugin.getDiscord() != null) {
+                plugin.getDiscord().sendEvent("rental_start", "Plot rental started",
+                        renter.getName() + " rented " + plot.getPlotId() + " for " + days + " day(s).", 0x3498DB);
+            }
             plugin.territoryLife().queueNotice(plot.getOwner(), "&aYour plot was rented by &f" + renter.getName()
                     + "&a for &e" + days + " day(s)&a.");
 

@@ -526,6 +526,11 @@ public class Plot {
         String role = getRole(playerUUID);
         if (role == null) role = "visitor";
 
+        // Per-role flag editor overrides (ROLE_FLAG_KEYS) beat catalog permissions.
+        TriState roleFlag = resolvePermissionRoleFlag(role, permission);
+        if (roleFlag == TriState.ALLOW) return true;
+        if (roleFlag == TriState.DENY) return false;
+
         // Role permissions from config: roles.<role>.permissions
         List<String> perms = pl.cfg().raw().getStringList("roles." + role.toLowerCase(Locale.ROOT) + ".permissions");
         if (perms == null || perms.isEmpty()) return false;
@@ -537,6 +542,57 @@ public class Plot {
             if ("ALL".equals(up) || up.equals(needle)) return true;
         }
         return false;
+    }
+
+    /**
+     * Maps a permission token onto a ROLE_FLAG_KEYS override when one exists.
+     * Returns INHERIT when the permission has no corresponding role-flag key.
+     */
+    public TriState resolvePermissionRoleFlag(String roleName, String permission) {
+        if (roleName == null || permission == null) return TriState.INHERIT;
+        String flagKey = permissionFlagKey(permission);
+        if (flagKey == null) return TriState.INHERIT;
+        return getRoleFlagState(roleName, flagKey);
+    }
+
+    /**
+     * Explicit role-flag override for a protection flag key (entry, pvp, animals, ...).
+     * null means inherit (no override); TRUE=allow; FALSE=deny.
+     */
+    public Boolean resolveRoleFlagOverride(UUID playerUUID, String flagKey) {
+        if (playerUUID == null || flagKey == null) return null;
+        if (isOwner(playerUUID)) return Boolean.TRUE;
+        if (isBanned(playerUUID)) return Boolean.FALSE;
+        String role = getRole(playerUUID);
+        if (role == null) role = "visitor";
+        TriState state = getRoleFlagState(role, flagKey);
+        if (state == TriState.ALLOW) return Boolean.TRUE;
+        if (state == TriState.DENY) return Boolean.FALSE;
+        return null;
+    }
+
+    private static String permissionFlagKey(String permission) {
+        if (permission == null || permission.isBlank()) return null;
+        String needle = permission.toUpperCase(Locale.ROOT);
+        return switch (needle) {
+            case "BUILD", "BLOCK_BREAK", "BLOCK_PLACE" -> "build";
+            case "CONTAINERS" -> "containers";
+            case "ANIMALS" -> "animals";
+            case "VEHICLES" -> "vehicles";
+            case "FARM" -> "farm";
+            case "REDSTONE" -> "redstone";
+            case "INTERACT", "ENTRY" -> "entry";
+            case "PVP" -> "pvp";
+            case "MOBS" -> "mobs";
+            case "PETS" -> "pets";
+            case "ENTITIES" -> "entities";
+            case "TNT" -> "tnt";
+            case "FIRE" -> "fire";
+            case "PISTON" -> "piston";
+            case "SHOP" -> "shop";
+            case "FLY" -> "fly";
+            default -> null;
+        };
     }
 
     // --- Role flag overrides ---
@@ -642,6 +698,9 @@ public class Plot {
 
         String role = getRole(uuid);
         TriState override = getRoleFlagState(role, "build");
+        if (override == TriState.INHERIT) {
+            override = resolvePermissionRoleFlag(role, perm);
+        }
         if (override == TriState.ALLOW) return true;
         if (override == TriState.DENY) return false;
 
@@ -738,6 +797,14 @@ public class Plot {
         // that exact token themselves; holding INTERACT alone must never unlock them. Bug fix
         // (1.3.0): previously any INTERACT holder bypassed every gated check below, silently
         // granting container/farm/vehicle access to roles and Guest Passes that only had INTERACT.
+        // Role-flag editor overrides for gated actions (containers/farm/vehicles/...).
+        Boolean flagOverride = resolveRoleFlagOverride(uuid, permissionFlagKey(needle) == null
+                ? needle.toLowerCase(Locale.ROOT)
+                : permissionFlagKey(needle));
+        if (flagOverride != null) {
+            return flagOverride;
+        }
+
         if ("INTERACT".equals(needle)) {
             if (hasPermission(uuid, "INTERACT", pl)) return true;
         } else if (hasPermission(uuid, needle, pl)) {

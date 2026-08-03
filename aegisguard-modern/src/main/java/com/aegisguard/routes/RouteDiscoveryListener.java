@@ -1,6 +1,8 @@
 package com.aegisguard.routes;
 
 import com.aegisguard.AegisGuard;
+import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,6 +23,7 @@ public class RouteDiscoveryListener implements Listener {
 
     private final AegisGuard plugin;
     private final Map<UUID, Long> lastCheck = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastGuidance = new ConcurrentHashMap<>();
 
     public RouteDiscoveryListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -44,5 +47,27 @@ public class RouteDiscoveryListener implements Listener {
         lastCheck.put(player.getUniqueId(), now);
 
         plugin.routes().tryDiscoverAt(player);
+        guide(player, now);
+    }
+
+    private void guide(Player player, long now) {
+        if (!plugin.getConfig().getBoolean("routes.guidance.enabled", true)) return;
+        var checkpoint = plugin.routes().activeNextCheckpoint(player.getUniqueId());
+        Location target = plugin.routes().toLocation(checkpoint);
+        Location here = player.getLocation();
+        if (target == null || here.getWorld() == null || target.getWorld() == null
+                || !here.getWorld().equals(target.getWorld())) return;
+        double distance = here.distance(target);
+        if (plugin.getConfig().getBoolean("routes.guidance.action_bar", true)) {
+            player.sendActionBar(net.kyori.adventure.text.Component.text(
+                    "Next checkpoint: " + checkpoint.getName() + " (" + Math.round(distance) + " blocks)"));
+        }
+        if (!plugin.getConfig().getBoolean("routes.guidance.particles", true)) return;
+        Long last = lastGuidance.get(player.getUniqueId());
+        if (last != null && now - last < 2_000L) return;
+        lastGuidance.put(player.getUniqueId(), now);
+        org.bukkit.util.Vector direction = target.toVector().subtract(here.toVector()).normalize().multiply(1.5D);
+        Location marker = here.clone().add(direction).add(0, 1.2D, 0);
+        player.spawnParticle(Particle.END_ROD, marker, 3, 0.18D, 0.18D, 0.18D, 0.01D);
     }
 }

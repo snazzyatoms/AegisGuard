@@ -105,9 +105,11 @@ class PhaseImprovementsContractTest {
     @Test
     void schemaBumpIncludesTravelImprovements() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1280"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1281")
+                || migration.contains("CURRENT_SCHEMA = 1280"));
         String config = Files.readString(Path.of("src/main/resources/config.yml"));
-        assertTrue(config.contains("config_schema: 1280"));
+        assertTrue(config.contains("config_schema: 1281")
+                || config.contains("config_schema: 1280"));
         assertFalse(config.contains("config_schema: 1278\n"));
     }
 }

@@ -17,6 +17,20 @@ public class PlayerNotificationSettings {
     private NotificationMode mode;
 
     /**
+     * Milestone 5 (Clearer Player Guidance) - when {@code false}, repeated protection denials
+     * (e.g. mashing a blocked action) are throttled to at most one message every few seconds
+     * instead of spamming chat/action bar/title. Defaults to {@code true} (unchanged behavior).
+     */
+    private boolean repeatNotifications;
+
+    /**
+     * Milestone 5 (Clearer Player Guidance) - whether this player has already seen the optional
+     * first-claim walkthrough. Tracked here (rather than a new store) so it persists with the
+     * rest of a player's guidance-related preferences and survives restarts.
+     */
+    private boolean walkthroughSeen;
+
+    /**
      * Create with safe defaults
      */
     public PlayerNotificationSettings(UUID playerUUID) {
@@ -24,6 +38,8 @@ public class PlayerNotificationSettings {
         this.greetingsEnabled = true; // Default: greetings ON (backwards compatible)
         this.adminUpdatesEnabled = true; // Default: admin updates ON
         this.mode = NotificationMode.ACTION_BAR; // Default: action bar
+        this.repeatNotifications = true; // Default: repeat every time (unchanged behavior)
+        this.walkthroughSeen = false;
     }
 
     /**
@@ -35,6 +51,8 @@ public class PlayerNotificationSettings {
         this.greetingsEnabled = greetingsEnabled;
         this.adminUpdatesEnabled = adminUpdatesEnabled;
         this.mode = (mode == null) ? NotificationMode.ACTION_BAR : mode;
+        this.repeatNotifications = true;
+        this.walkthroughSeen = false;
     }
 
     /**
@@ -49,6 +67,8 @@ public class PlayerNotificationSettings {
         // Safe deserialization with fallbacks
         this.greetingsEnabled = section.getBoolean("greetings", true);
         this.adminUpdatesEnabled = section.getBoolean("admin_updates", true);
+        this.repeatNotifications = section.getBoolean("repeat_notifications", true);
+        this.walkthroughSeen = section.getBoolean("walkthrough_seen", false);
 
         String modeString = section.getString("mode", "ACTION_BAR");
         this.mode = NotificationMode.fromString(modeString);
@@ -72,6 +92,14 @@ public class PlayerNotificationSettings {
         return mode;
     }
 
+    public boolean isRepeatNotificationsEnabled() {
+        return repeatNotifications;
+    }
+
+    public boolean isWalkthroughSeen() {
+        return walkthroughSeen;
+    }
+
     // ✅ Aliases used by your listener (keeps your existing calls intact)
     public boolean greetingsEnabled() { return greetingsEnabled; }
     public boolean adminUpdatesEnabled() { return adminUpdatesEnabled; }
@@ -88,6 +116,14 @@ public class PlayerNotificationSettings {
 
     public void setMode(NotificationMode mode) {
         this.mode = (mode == null) ? NotificationMode.ACTION_BAR : mode;
+    }
+
+    public void setRepeatNotifications(boolean enabled) {
+        this.repeatNotifications = enabled;
+    }
+
+    public void setWalkthroughSeen(boolean seen) {
+        this.walkthroughSeen = seen;
     }
 
     /**
@@ -113,6 +149,14 @@ public class PlayerNotificationSettings {
         return this.adminUpdatesEnabled;
     }
 
+    /**
+     * Toggle repeat notifications and return new state
+     */
+    public boolean toggleRepeatNotifications() {
+        this.repeatNotifications = !this.repeatNotifications;
+        return this.repeatNotifications;
+    }
+
     // === SERIALIZATION ===
 
     /**
@@ -124,6 +168,8 @@ public class PlayerNotificationSettings {
         section.set("greetings", greetingsEnabled);
         section.set("admin_updates", adminUpdatesEnabled);
         section.set("mode", mode.getConfigValue());
+        section.set("repeat_notifications", repeatNotifications);
+        section.set("walkthrough_seen", walkthroughSeen);
     }
 
     /**

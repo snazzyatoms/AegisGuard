@@ -19,6 +19,13 @@ prev_page_lore:
 button_next_page: '&fNext Page'
 next_page_lore:
   - '&7Go to the next page.'
+button_prev: '&fPrevious Page'
+button_prev_lore:
+  - '&7Go to the previous page.'
+button_next: '&fNext Page'
+button_next_lore:
+  - '&7Go to the next page.'
+button_page: '&7Page: &f{PAGE}'
 button_exit: '&c✖ Close'
 button_exit_lore:
   - '&7Close this menu.'
@@ -1138,6 +1145,41 @@ admin_migration_lore:
   - ' '
   - '&eClick to open.'
 
+button_admin_audit: '&eStaff Audit Ledger'
+admin_audit_lore:
+  - '&7Review snapshot restores, Doctor'
+  - '&7repairs, migrations, bypass toggles,'
+  - '&7and ClaimBlock adjustments.'
+  - ' '
+  - '&eClick to open.'
+
+audit_admin_title: '&e&lStaff Audit Ledger'
+audit_disabled: '&cThe audit ledger is disabled.'
+audit_none_title: '&cNo Audit Entries'
+audit_none_lore:
+  - '&7No recorded actions match'
+  - '&7this filter yet.'
+audit_filter_button: '&bFilter: &f{FILTER}'
+audit_filter_lore:
+  - '&7Click to cycle through categories.'
+audit_filter_all: 'All Categories'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore:
+  - '&7Actor: &f{ACTOR}'
+  - '&7Target: &f{TARGET}'
+  - '&7When: &f{AGE} ago'
+  - ' '
+  - '&f{SUMMARY}'
+audit_entry_detail: '&e[Audit] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Snapshot Restore'
+audit_category_doctor_repair: 'Doctor Repair'
+audit_category_migration: 'Migration'
+audit_category_admin_bypass: 'Admin Bypass'
+audit_category_claim_block_adjust: 'ClaimBlock Adjustment'
+audit_category_guest_pass: 'Guest Pass'
+audit_category_lockdown: 'Emergency Lockdown'
+audit_category_alliance: 'Alliance'
+
 toggle_on: '&aON'
 toggle_off: '&cOFF'
 admin_toggle_format: '{NAME}: {STATE}'
@@ -1536,3 +1578,252 @@ staff_policy_section_name: '&eOperational Policy'
 staff_policy_section_lore: ['&7The upper row controls server-wide', '&7AegisGuard operating policy.']
 staff_toolbelt_section_name: '&bGuardian Toolbelt'
 staff_toolbelt_section_lore: ['&7The lower row opens review, recovery,', '&7world, migration, and maintenance tools.']
+
+# ------------------------------------------------------------
+# Temporary Guest Passes (1.3.0+, Milestone 2)
+# ------------------------------------------------------------
+button_guest_passes: '&d🎫 Guest Passes'
+guest_passes_lore: ['&7Grant temporary, self-expiring', '&7access without permanent trust.']
+guest_passes_locked_lore: ['&cStand inside a claim you manage', '&cto issue Guest Passes.']
+guest_pass_menu_title: '&eGuest Passes'
+guest_pass_entry_name: '&e{PLAYER}'
+guest_pass_entry_preset_line: '&7Preset: &f{PRESET}'
+guest_pass_entry_remaining_line: '&7Expires in: &f{TIME}'
+guest_pass_entry_issuer_line: '&7Issued by: &f{PLAYER}'
+guest_pass_entry_click_lore: '&eClick to view or revoke'
+guest_pass_none_title: '&7No Active Guest Passes'
+guest_pass_none_lore: ['&7Issue a temporary pass so a friend,', '&7event guest, or hired builder can', '&7help out without permanent trust.']
+guest_pass_guide_name: '&eGuest Pass Guide'
+guest_pass_guide_lore: ['&7Guest Passes grant temporary access', '&7that expires automatically - even', '&7after a server restart.', ' ', '&8Expiring or revoking a pass never', '&8touches this plot''s permanent roles.']
+button_add_guest_pass: '&aIssue Guest Pass'
+add_guest_pass_lore: ['&7Grant a nearby player temporary access.']
+guest_pass_add_title: '&8Issue Guest Pass'
+guest_pass_add_click_lore: '&7Click to choose a preset.'
+add_trusted_player_name: '&a{PLAYER}'
+add_trusted_none_title: '&cNo Players Nearby'
+add_trusted_none_lore: ['&7Ask your friend to stand closer!']
+guest_pass_preset_title: '&8Preset: {PLAYER}'
+guest_pass_preset_name_VISITOR: '&eVisitor'
+guest_pass_preset_name_EVENT_GUEST: '&eEvent Guest'
+guest_pass_preset_name_TEMPORARY_BUILDER: '&eTemporary Builder'
+guest_pass_preset_name_TEMPORARY_TRUSTED_GUEST: '&eTemporary Trusted Guest'
+guest_pass_preset_desc_VISITOR: ['&7Entry and ordinary doors/buttons only.']
+guest_pass_preset_desc_EVENT_GUEST: ['&7Entry plus safe event interaction.', '&7No building or containers.']
+guest_pass_preset_desc_TEMPORARY_BUILDER: ['&7Build and break access.', '&7Containers stay closed.']
+guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST: ['&7Build, break, and container access.']
+guest_pass_preset_container_warning: '&c⚠ Grants container access!'
+guest_pass_preset_click_lore: '&eClick to choose a duration'
+guest_pass_duration_title: '&8Duration: {PLAYER}'
+guest_pass_duration_label: '&e{TIME}'
+guest_pass_duration_click_lore: ['&7Click to review and confirm.']
+guest_pass_duration_unknown: '?'
+guest_pass_duration_days: '{DAYS}d'
+guest_pass_duration_hours: '{HOURS}h'
+guest_pass_duration_minutes: '{MINUTES}m'
+guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
+guest_pass_expiring_now: '<1m'
+guest_pass_confirm_title: '&8Confirm Guest Pass'
+guest_pass_confirm_name: '&aConfirm Guest Pass'
+guest_pass_confirm_player_line: '&7Player: &f{PLAYER}'
+guest_pass_confirm_preset_line: '&7Preset: &f{PRESET}'
+guest_pass_confirm_duration_line: '&7Duration: &f{TIME}'
+guest_pass_confirm_container_warning: '&c⚠ This guest will be able to open chests,'
+guest_pass_confirm_container_warning_2: '&cbarrels, and other containers on this plot.'
+guest_pass_confirm_click_lore: '&aClick to confirm and issue'
+guest_pass_detail_title: '&8Pass: {PLAYER}'
+button_revoke_guest_pass: '&cRevoke Pass'
+revoke_guest_pass_lore: ['&7Immediately end this guest''s access.']
+
+# ------------------------------------------------------------
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ------------------------------------------------------------
+button_lockdown: '&cEmergency Lockdown'
+button_lockdown_active: '&c&lEmergency Lockdown (ACTIVE)'
+lockdown_button_lore: ['&7Instantly restrict sensitive actions', '&7if this plot is being griefed.']
+lockdown_button_active_lore: ['&c&lLOCKDOWN IS ACTIVE', '&7Click to review or deactivate.']
+lockdown_button_locked_lore: ['&cStand inside a claim you manage', '&cto use Emergency Lockdown.']
+lockdown_menu_title: '&cEmergency Lockdown'
+lockdown_status_active_name: '&c&lLOCKDOWN ACTIVE'
+lockdown_status_inactive_name: '&a&lNormal Operation'
+lockdown_status_active_lore: ['&7This plot is currently locked down.']
+lockdown_status_activated_by: '&7Activated by: &f{PLAYER}'
+lockdown_status_activated_ago: '&7Active for: &f{MINUTES}m'
+lockdown_status_inactive_lore: ['&7This plot is operating normally.', '&7Activate lockdown to instantly restrict', '&7building, breaking, and containers for', '&7everyone except you and staff.']
+lockdown_guide_name: '&eLockdown Guide'
+lockdown_guide_lore: ['&7Lockdown instantly overrides roles and', '&7Guest Passes for sensitive actions.', ' ', '&8Doors and buttons always keep working,', '&8so nobody is ever trapped inside.', '&8Ownership and roles are never changed.']
+button_activate_lockdown: '&cActivate Lockdown'
+activate_lockdown_lore: ['&7Immediately restrict sensitive actions.']
+button_deactivate_lockdown: '&aDeactivate Lockdown'
+deactivate_lockdown_lore: ['&7Immediately restore normal access.']
+lockdown_confirm_activate_title: '&cConfirm Lockdown'
+lockdown_confirm_deactivate_title: '&aConfirm Unlock'
+lockdown_confirm_activate_name: '&cConfirm Activation'
+lockdown_confirm_deactivate_name: '&aConfirm Deactivation'
+lockdown_confirm_activate_lore: ['&7Everyone except you and staff will', '&7instantly lose build, break, and', '&7container access on this plot.', ' ', '&7Doors and buttons keep working, so', '&7nobody gets trapped inside.', ' ', '&aClick to activate lockdown.']
+lockdown_confirm_deactivate_lore: ['&7This plot will immediately return to', '&7its normal roles and permissions.', ' ', '&aClick to deactivate lockdown.']
+
+# ------------------------------------------------------------
+# Realm Profiles and Noticeboards (1.3.0+, Milestone 4)
+# ------------------------------------------------------------
+button_realm_profile: '&3📜 Realm Profile'
+realm_profile_button_lore: ['&7Manage this plot''s name, category,', '&7greeting, and noticeboard.']
+realm_profile_button_view_lore: ['&7View this plot''s public identity', '&7and noticeboard.']
+realm_profile_menu_title: '&3Realm Profile'
+realm_profile_header_name: '&3&lRealm Profile'
+realm_profile_name_line: '&7Name: &f{NAME}'
+realm_profile_desc_line: '&7"{DESC}"'
+realm_profile_no_desc: '&8No description set yet.'
+realm_profile_rename_hint: '&8Use /ag rename <name> to change this.'
+realm_profile_desc_hint: '&8Use /ag setdesc <text> to change this.'
+realm_profile_category_name: '&6Category: &f{CATEGORY}'
+realm_profile_category_lore: ['&7How this plot is grouped in', '&7the Discover browser.']
+realm_profile_category_click: '&eClick to cycle to the next category.'
+realm_profile_category_locked: '&8Only the owner can change this.'
+realm_profile_category_build: 'Build'
+realm_profile_category_shop: 'Shop'
+realm_profile_category_town: 'Town'
+realm_profile_category_farm: 'Farm'
+realm_profile_category_event: 'Event'
+realm_profile_category_other: 'Other'
+realm_profile_visible_name: '&a&lPublicly Discoverable'
+realm_profile_hidden_name: '&7&lHidden From Discovery'
+realm_profile_visible_lore: ['&7This plot can appear in the', '&7public Discover browser.']
+realm_profile_hidden_lore: ['&7This plot is hidden from the', '&7public Discover browser.']
+realm_profile_visibility_click: '&eClick to toggle visibility.'
+realm_profile_greeting_name: '&bEntry Greeting'
+realm_profile_no_greeting: '&8No entry greeting set yet.'
+realm_profile_entry_title_line: '&7Title: &f{TITLE}'
+realm_profile_welcome_line: '&7Chat: &f{MESSAGE}'
+realm_profile_greeting_hint: '&8Use /ag rename and /ag welcome to change this.'
+realm_profile_noticeboard_name: '&dNoticeboard'
+realm_profile_noticeboard_lore: ['&7Rules, event details, shop info,', '&7or announcements for visitors.']
+realm_profile_noticeboard_count: '&7Notices: &f{COUNT}/{MAX}'
+realm_profile_noticeboard_click: '&eClick to open the noticeboard.'
+noticeboard_menu_title: '&dNoticeboard'
+noticeboard_header_name: '&d&lNoticeboard'
+noticeboard_add_hint_lore: ['&7Use /ag notice add <text> to post,', '&7and /ag notice remove <#> to remove.']
+noticeboard_none_title: '&7No Notices Yet'
+noticeboard_none_lore: ['&7This plot has not posted any', '&7rules, events, or announcements.']
+noticeboard_entry_name: '&e📌 Notice'
+noticeboard_entry_author_line: '&7Posted by: &f{PLAYER}'
+noticeboard_entry_age_line: '&7When: &f{AGE} ago'
+noticeboard_entry_remove_hint: '&cClick to remove this notice.'
+visit_plot_notice_count: '&7📌 {COUNT} noticeboard notice(s)'
+
+# ------------------------------------------------------------
+# Clearer Player Guidance (1.3.0+, Milestone 5)
+# ------------------------------------------------------------
+settings_repeat_notifications_on_name: '&aRepeat Notifications: ON'
+settings_repeat_notifications_off_name: '&cRepeat Notifications: OFF'
+settings_repeat_notifications_lore: ['&7When OFF, repeated blocked-action', '&7messages are limited to once every', '&7few seconds instead of spamming.']
+settings_replay_walkthrough_name: '&eReplay First-Claim Walkthrough'
+settings_replay_walkthrough_lore: ['&7Revisit the optional guide covering', '&7roles, Guest Passes, and Lockdown.']
+walkthrough_menu_title_page1: '&bWelcome to AegisGuard (1/2)'
+walkthrough_menu_title_page2: '&bWelcome to AegisGuard (2/2)'
+walkthrough_claim_name: '&aYour Claim is Protected'
+walkthrough_claim_lore: ['&7Nobody else can build, break, or open', '&7containers here unless you allow it.', '&7Use /ag info to see your claim''s details.']
+walkthrough_roles_name: '&bTrust Friends with Roles'
+walkthrough_roles_lore: ['&7Open the Roles menu to give friends and', '&7allies permanent build/container access.', '&7Permanent trust never expires on its own.']
+walkthrough_guestpass_name: '&eTemporary Guest Passes'
+walkthrough_guestpass_lore: ['&7Hosting an event or hiring a builder?', '&7Issue a time-limited Guest Pass instead -', '&7it expires automatically and never', '&7touches anyone''s permanent role.']
+walkthrough_lockdown_name: '&cEmergency Lockdown'
+walkthrough_lockdown_lore: ['&7If something goes wrong, you can', '&7instantly restrict building/containers', '&7for everyone but you - reversible', '&7any time, and never traps players.']
+walkthrough_profile_name: '&3Realm Profile'
+walkthrough_profile_lore: ['&7Give your claim a public name,', '&7description, category, and greeting', '&7so visitors know what it is.']
+walkthrough_notice_name: '&dNoticeboard'
+walkthrough_notice_lore: ['&7Post short rules, event details, or', '&7shop info for visitors with', '&7/ag notice add <text>.']
+walkthrough_guide_name: '&6Guardian''s Guide'
+walkthrough_guide_lore: ['&7Forgot something? Open the full guide', '&7any time from the main menu, or', '&7replay this walkthrough from Settings.']
+walkthrough_back_lore: ['&7Go to the previous page.']
+walkthrough_next_name: '&aNext Page'
+walkthrough_done_name: '&aFinish'
+walkthrough_next_lore: ['&7Continue the walkthrough.']
+walkthrough_skip_lore: ['&7Close - you can replay this', '&7any time from Settings.']
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+button_routes: '&a🗺 Routes'
+routes_button_lore: ['&7Browse staff-made exploration routes', '&7and see your next checkpoint.']
+routes_menu_title: '&aRoutes'
+routes_none_title: '&7No Routes Yet'
+routes_none_lore: ['&7Staff have not published any', '&7exploration routes yet.']
+routes_prev_lore: ['&7Previous page.']
+routes_next_lore: ['&7Next page.']
+routes_progress_line: '&7Progress: &f{COUNT}/{TOTAL}'
+routes_next_checkpoint_line: '&7Next: &e{NAME}'
+routes_complete_line: '&a✔ Route complete'
+routes_click_detail: '&eClick for details.'
+routes_entry_name: '&a🗺 {NAME}'
+routes_detail_title: '&aRoute Details'
+routes_reward_line: '&7Reward: &6{MONEY} &7+ &b{BLOCKS} blocks'
+routes_walk_hint: '&7Walk near this checkpoint to discover it.'
+routes_teleport_hint: '&eClick to teleport nearby (optional).'
+routes_next_name: '&eNext: {NAME}'
+routes_complete_title: '&aRoute Complete'
+routes_complete_lore: ['&7You have discovered every', '&7checkpoint on this route.']
+button_admin_routes: '&aRoute Editor'
+admin_routes_lore: ['&7Create named exploration routes with', '&7ordered checkpoints for players to browse.', ' ', '&eClick to open.']
+routes_admin_title: '&cRoute Editor'
+routes_admin_edit_title: '&cEdit Route'
+routes_admin_enabled: '&aEnabled'
+routes_admin_disabled: '&cDisabled'
+routes_admin_checkpoints_line: '&7Checkpoints: &f{COUNT}'
+routes_admin_click_edit: '&eClick to edit.'
+routes_admin_create_name: '&a＋ Create Route Here'
+routes_admin_create_lore: ['&7Creates a new enabled route named', '&7after your current world, starting', '&7with a checkpoint at your feet.']
+routes_admin_toggle_lore: ['&eClick to toggle visibility.']
+routes_admin_add_checkpoint_name: '&b＋ Add Checkpoint Here'
+routes_admin_add_checkpoint_lore: ['&7Appends your current location as', '&7the next ordered checkpoint.']
+routes_admin_reward_money_name: '&6Money Reward: {AMOUNT}'
+routes_admin_reward_money_lore: ['&7Click to cycle: 0 → 10 → 25 → 50 → 100.']
+routes_admin_reward_blocks_name: '&bClaim Blocks: {AMOUNT}'
+routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
+routes_admin_delete_name: '&cDelete Route'
+routes_admin_delete_lore: ['&cRemoves this route and all', '&cplayer progress for it.']
+# ------------------------------------------------------------
+# Alliance Access (1.3.0+, Milestone 7)
+# ------------------------------------------------------------
+button_alliance_access: '&6🛡 Alliance Access'
+alliance_button_lore: ['&7Manage this plot''s alliance', '&7access toggles.']
+alliance_button_grayed_lore: ['&7This plot has not joined an alliance.', '&7Create or join one, then opt this', '&7plot in. Risky toggles stay OFF.']
+alliance_menu_title: '&6Alliance Access'
+alliance_none_personal: '&8You are not in an alliance.'
+alliance_create_hint: '&8Use /ag alliance create <name>'
+alliance_personal_line: '&7Your alliance: &f{NAME}'
+alliance_members_line: '&7Members: &f{COUNT}'
+alliance_header_name: '&6&lAlliance Access'
+alliance_create_name: '&aCreate Alliance'
+alliance_create_lore: ['&7Use &f/ag alliance create <name>', '&7to form a new alliance.']
+alliance_accept_name: '&eAccept Invite'
+alliance_accept_lore: ['&7Use &f/ag alliance accept', '&7if you have a pending invite.']
+alliance_invite_name: '&bInvite Player'
+alliance_invite_lore: ['&7Use &f/ag alliance invite <player>', '&7to invite someone (leader only).']
+alliance_leave_name: '&eLeave Alliance'
+alliance_leave_lore: ['&7Leaders must disband instead.', '&eClick for confirmation.']
+alliance_disband_name: '&cDisband Alliance'
+alliance_disband_lore: ['&cRemoves the alliance for everyone.', '&cJoined plots lose alliance access.', '&eClick for confirmation.']
+alliance_no_plot_name: '&7Stand in a Plot'
+alliance_no_plot_lore: ['&7Alliance Access toggles apply to', '&7the plot you are standing in.']
+alliance_plot_not_joined_lore: ['&7This plot has not joined an alliance.', '&7Alliance members gain nothing here', '&7until you opt in.']
+alliance_join_click: '&eClick to join your alliance.'
+alliance_manage_locked: '&8Only the owner can change this.'
+alliance_need_membership: '&8Join or create an alliance first.'
+alliance_plot_not_joined_name: '&7No Alliance on This Plot'
+alliance_plot_joined_name: '&aJoined: &f{NAME}'
+alliance_leave_plot_lore: ['&eClick to remove this plot', '&efrom the alliance.']
+alliance_manage_locked_lore: ['&8Only the owner can change this.']
+alliance_toggle_on: '&aON'
+alliance_toggle_off: '&cOFF'
+alliance_toggle_click: '&eClick to toggle.'
+alliance_toggle_enter: 'Allies may enter'
+alliance_toggle_interact: 'Allies may use doors/controls'
+alliance_toggle_containers: 'Allies may use containers'
+alliance_toggle_build: 'Allies may build and break'
+alliance_toggle_animals: 'Allies may use animals/farms'
+alliance_toggle_friendly_pvp: 'Allies are friendly for PvP'
+alliance_confirm_title: '&cConfirm'
+alliance_confirm_yes: '&aConfirm'
+alliance_confirm_yes_lore: ['&eClick to confirm.']
+alliance_confirm_no: '&cCancel'
+alliance_confirm_no_lore: ['&7Go back.']

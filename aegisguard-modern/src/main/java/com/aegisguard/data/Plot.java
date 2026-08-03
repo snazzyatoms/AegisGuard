@@ -2,6 +2,11 @@ package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.flags.TriState;
+import com.aegisguard.alliance.Alliance;
+import com.aegisguard.alliance.AllianceAccess;
+import com.aegisguard.guestpass.GuestPass;
+import com.aegisguard.guestpass.GuestPassPreset;
+import com.aegisguard.profile.PlotNotice;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,6 +50,32 @@ public class Plot {
 
     // Role flag overrides (role -> flag -> TriState)
     private final Map<String, Map<String, TriState>> roleFlagStates = new ConcurrentHashMap<>();
+
+    // --- GUEST PASSES (Milestone 2) ---
+    // Additive, time-limited access. Kept entirely separate from playerRoles so a pass never
+    // grants management rights and never overwrites/removes permanent trust on expiry or revoke.
+    private final Map<UUID, GuestPass> guestPasses = new ConcurrentHashMap<>();
+
+    // --- EMERGENCY LOCKDOWN (Milestone 3) ---
+    // Disabled by default. While active, hasElevatedManagementAccess/owner keep full access, but
+    // every other player loses the configured "restricted" build/interact actions - even if their
+    // permanent role or an active Guest Pass would otherwise allow them. Ownership, roles, and
+    // Guest Passes themselves are never modified by a lockdown; it is purely a temporary gate.
+    private volatile boolean lockdownActive = false;
+    private volatile long lockdownActivatedAt = 0L;
+    private volatile UUID lockdownActivatedBy;
+    private volatile String lockdownActivatedByName = "Unknown";
+
+    // --- REALM PROFILE NOTICEBOARD (Milestone 4) ---
+    // Short, owner-moderated public notices (rules, event details, shop info, announcements).
+    // Purely presentational - never affects permissions, ownership, or protection behavior.
+    private final List<PlotNotice> noticeboard = new CopyOnWriteArrayList<>();
+
+    // --- ALLIANCE ACCESS (Milestone 7) ---
+    // Optional join to a player alliance plus six opt-in toggles (all risky defaults OFF).
+    // Alliance membership alone never grants manage/ownership/money/rental rights.
+    private volatile UUID allianceId;
+    private final AllianceAccess allianceAccess = new AllianceAccess();
 
     // --- PLOT META ---
     private String plotName;
@@ -334,6 +366,7 @@ public class Plot {
         if (playerUUID == null) return;
         if (!bannedPlayers.contains(playerUUID)) bannedPlayers.add(playerUUID);
         playerRoles.remove(playerUUID);
+        guestPasses.remove(playerUUID);
     }
 
     public void removeBan(UUID playerUUID) {
@@ -348,6 +381,7 @@ public class Plot {
         UUID uuid = player.getUniqueId();
         if (isBanned(uuid)) return false;
         if (isRentedBy(uuid)) return true;
+        if (getActiveGuestPass(uuid) != null) return true;
         String role = getRole(uuid);
         return role != null && !role.equalsIgnoreCase("visitor");
     }
@@ -386,6 +420,21 @@ public class Plot {
                     return true;
                 }
             }
+        }
+
+        // Temporary Guest Passes (Milestone 2) grant additive, time-limited access on top of
+        // whatever permanent role (if any) the player already has. A pass never overwrites or
+        // removes permanent trust: if its tokens don't cover this permission, we simply fall
+        // through to the normal role-based check below.
+        GuestPass guestPass = getActiveGuestPass(playerUUID);
+        if (guestPass != null && guestPass.hasPermission(permission)) {
+            return true;
+        }
+
+        // Alliance Access (Milestone 7): only the opted-in toggles on THIS plot grant tokens,
+        // and never MANAGE / MANAGE_MEMBERS.
+        if (grantsAlliancePermission(playerUUID, permission, pl)) {
+            return true;
         }
 
         String role = getRole(playerUUID);
@@ -497,6 +546,14 @@ public class Plot {
         if (isOwner(uuid)) return true;
         if (isBanned(uuid)) return false;
 
+        String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
+
+        // Emergency Lockdown (Milestone 3): a hard, temporary override for everyone except the
+        // owner and elevated staff (both already handled above). It beats role-flag overrides and
+        // the "public build" plot flag - the whole point is a fast, reversible safety response -
+        // but never restricts plain INTERACT, so leaving through a door is always possible.
+        if (lockdownActive && isLockdownRestrictable(perm, pl)) return false;
+
         String role = getRole(uuid);
         TriState override = getRoleFlagState(role, "build");
         if (override == TriState.ALLOW) return true;
@@ -505,8 +562,6 @@ public class Plot {
         // "build" acts as a public-build override.
         // By default claims are protected, so only trusted roles can build unless a plot explicitly opens building up.
         if (!getFlag("build", true)) return true;
-
-        String perm = (permission == null || permission.isEmpty()) ? "BUILD" : permission.toUpperCase(Locale.ROOT);
 
         if ("BLOCK_BREAK".equals(perm) || "BLOCK_PLACE".equals(perm)) {
             return hasPermission(uuid, perm, pl) || hasPermission(uuid, "BUILD", pl);
@@ -590,8 +645,18 @@ public class Plot {
         if (canBuildAt(player, location, pl, permission)) return true;
 
         UUID uuid = player.getUniqueId();
-        if (hasPermission(uuid, "INTERACT", pl)) return true;
-        if (permission != null && !permission.isBlank() && hasPermission(uuid, permission, pl)) return true;
+        String needle = (permission == null || permission.isBlank()) ? "INTERACT" : permission.toUpperCase(Locale.ROOT);
+
+        // A plain interaction (doors, buttons, levers - no specific gated action requested) only
+        // needs the broad INTERACT token. Gated actions (CONTAINERS, FARM, VEHICLES, ...) must hold
+        // that exact token themselves; holding INTERACT alone must never unlock them. Bug fix
+        // (1.3.0): previously any INTERACT holder bypassed every gated check below, silently
+        // granting container/farm/vehicle access to roles and Guest Passes that only had INTERACT.
+        if ("INTERACT".equals(needle)) {
+            if (hasPermission(uuid, "INTERACT", pl)) return true;
+        } else if (hasPermission(uuid, needle, pl)) {
+            return true;
+        }
 
         return isZoneRenter(uuid, location);
     }
@@ -945,6 +1010,387 @@ public class Plot {
         playerRoles.clear();
         bannedPlayers.clear();
         roleFlagStates.clear();
+        guestPasses.clear();
+    }
+
+    // ---------------------------------------------------------------------
+    // Guest Passes (Milestone 2 - Temporary Guest Passes)
+    // ---------------------------------------------------------------------
+
+    /** Live view of every stored pass (expired or not). Prefer {@link #getActiveGuestPasses()} for display. */
+    public Map<UUID, GuestPass> getGuestPasses() {
+        return guestPasses;
+    }
+
+    public GuestPass getGuestPass(UUID playerUUID) {
+        return playerUUID == null ? null : guestPasses.get(playerUUID);
+    }
+
+    /** Returns the pass only if it exists and has not expired as of {@code now}. */
+    public GuestPass getActiveGuestPass(UUID playerUUID, long now) {
+        GuestPass pass = getGuestPass(playerUUID);
+        if (pass == null || pass.isExpired(now)) return null;
+        return pass;
+    }
+
+    public GuestPass getActiveGuestPass(UUID playerUUID) {
+        return getActiveGuestPass(playerUUID, System.currentTimeMillis());
+    }
+
+    /** Issuing a new pass for a player replaces any previous pass they held on this plot. */
+    public void addGuestPass(GuestPass pass) {
+        if (pass == null) return;
+        guestPasses.put(pass.getPlayerId(), pass);
+    }
+
+    public boolean revokeGuestPass(UUID playerUUID) {
+        if (playerUUID == null) return false;
+        return guestPasses.remove(playerUUID) != null;
+    }
+
+    /** Every currently active (non-expired) pass, for GUI listing. */
+    public List<GuestPass> getActiveGuestPasses() {
+        long now = System.currentTimeMillis();
+        List<GuestPass> active = new ArrayList<>();
+        for (GuestPass pass : guestPasses.values()) {
+            if (pass != null && !pass.isExpired(now)) active.add(pass);
+        }
+        return active;
+    }
+
+    /**
+     * Removes every expired pass and returns the ones that were removed, so a caller (the expiry
+     * sweep task) can notify players and write audit entries. Never touches {@code playerRoles}.
+     */
+    public List<GuestPass> pruneExpiredGuestPasses(long now) {
+        List<GuestPass> expired = new ArrayList<>();
+        Iterator<Map.Entry<UUID, GuestPass>> it = guestPasses.entrySet().iterator();
+        while (it.hasNext()) {
+            GuestPass pass = it.next().getValue();
+            if (pass == null || pass.isExpired(now)) {
+                if (pass != null) expired.add(pass);
+                it.remove();
+            }
+        }
+        return expired;
+    }
+
+    /**
+     * Entries are joined with {@code ~} (not {@code ;}) because this blob is itself embedded as
+     * one {@code key=value} pair inside a {@code ;}-delimited settings blob by
+     * {@code SQLDataStore.serializeSettings}; using {@code ;} here would corrupt that outer split
+     * as soon as a plot had more than one active pass.
+     */
+    public String serializeGuestPasses() {
+        if (guestPasses.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (GuestPass pass : guestPasses.values()) {
+            if (pass == null) continue;
+            String perms = String.join(",", pass.getPermissions());
+            String issuer = pass.getIssuerId() == null ? "" : pass.getIssuerId().toString();
+            entries.add(String.join("|",
+                    pass.getPlayerId().toString(),
+                    pass.getPlayerName(),
+                    pass.getPreset().name(),
+                    perms,
+                    issuer,
+                    pass.getIssuerName(),
+                    String.valueOf(pass.getIssuedAt()),
+                    String.valueOf(pass.getExpiresAt())
+            ));
+        }
+        return String.join("~", entries);
+    }
+
+    public void deserializeGuestPasses(String serialized) {
+        guestPasses.clear();
+        if (serialized == null || serialized.isBlank()) return;
+
+        for (String entry : serialized.split("~")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 8);
+            if (parts.length != 8) continue;
+
+            try {
+                UUID playerId = UUID.fromString(parts[0]);
+                String playerName = parts[1];
+                GuestPassPreset preset = GuestPassPreset.valueOf(parts[2].toUpperCase(Locale.ROOT));
+                Set<String> perms = parts[3].isBlank()
+                        ? Set.of()
+                        : new HashSet<>(Arrays.asList(parts[3].split(",")));
+                UUID issuerId = parts[4].isBlank() ? null : UUID.fromString(parts[4]);
+                String issuerName = parts[5];
+                long issuedAt = Long.parseLong(parts[6]);
+                long expiresAt = Long.parseLong(parts[7]);
+
+                guestPasses.put(playerId, new GuestPass(playerId, playerName, preset, perms,
+                        issuerId, issuerName, issuedAt, expiresAt));
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Emergency Lockdown (Milestone 3)
+    // ---------------------------------------------------------------------
+
+    public boolean isLockdownActive() {
+        return lockdownActive;
+    }
+
+    public long getLockdownActivatedAt() {
+        return lockdownActivatedAt;
+    }
+
+    public @Nullable UUID getLockdownActivatedBy() {
+        return lockdownActivatedBy;
+    }
+
+    public String getLockdownActivatedByName() {
+        return lockdownActivatedByName;
+    }
+
+    /**
+     * Flips the lockdown switch. Never touches {@code owner}, {@code playerRoles}, or
+     * {@code guestPasses} - it is a purely temporary access gate, fully reversible by calling this
+     * again with {@code active=false}.
+     */
+    public void setLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName) {
+        this.lockdownActive = active;
+        if (active) {
+            this.lockdownActivatedAt = System.currentTimeMillis();
+            this.lockdownActivatedBy = actorId;
+            this.lockdownActivatedByName = (actorName == null || actorName.isBlank()) ? "Unknown" : actorName;
+        } else {
+            this.lockdownActivatedAt = 0L;
+            this.lockdownActivatedBy = null;
+            this.lockdownActivatedByName = "Unknown";
+        }
+    }
+
+    /**
+     * Restores a persisted lockdown state with its original activation timestamp, so "active for"
+     * displays survive a server restart instead of resetting to "just now". Data-store loaders only.
+     */
+    public void restoreLockdown(boolean active, @Nullable UUID actorId, @Nullable String actorName, long activatedAt) {
+        this.lockdownActive = active;
+        this.lockdownActivatedAt = active ? activatedAt : 0L;
+        this.lockdownActivatedBy = active ? actorId : null;
+        this.lockdownActivatedByName = active
+                ? ((actorName == null || actorName.isBlank()) ? "Unknown" : actorName)
+                : "Unknown";
+    }
+
+    /**
+     * Whether {@code permission} is one of the configured "sensitive" tokens that Emergency
+     * Lockdown restricts. {@code INTERACT} is a hard-coded exception and is never restrictable,
+     * regardless of config - lockdown must never trap a player behind a door they could otherwise
+     * open, only gate build/break/container style actions. Movement itself is never touched by
+     * AegisGuard, so leaving is always possible.
+     */
+    public static boolean isLockdownRestrictable(@Nullable String permission, @Nullable AegisGuard pl) {
+        if (permission == null || permission.isBlank()) return false;
+        String needle = permission.trim().toUpperCase(Locale.ROOT);
+        if ("INTERACT".equals(needle)) return false;
+
+        List<String> configured = pl == null ? null
+                : pl.getConfig().getStringList("lockdown.restricted_permissions");
+        if (configured == null || configured.isEmpty()) {
+            configured = List.of("BUILD", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "REDSTONE",
+                    "ANIMALS", "VEHICLES", "FARM", "SHOP");
+        }
+        for (String token : configured) {
+            if (token != null && needle.equals(token.trim().toUpperCase(Locale.ROOT))) return true;
+        }
+        return false;
+    }
+
+    // ---------------------------------------------------------------------
+    // Alliance Access (Milestone 7)
+    // ---------------------------------------------------------------------
+
+    public UUID getAllianceId() {
+        return allianceId;
+    }
+
+    public void setAllianceId(UUID allianceId) {
+        this.allianceId = allianceId;
+    }
+
+    public AllianceAccess getAllianceAccess() {
+        return allianceAccess;
+    }
+
+    public void clearAllianceAccess() {
+        this.allianceId = null;
+        this.allianceAccess.clear();
+    }
+
+    /**
+     * Whether this plot's Alliance Entry toggle is opted in.
+     * Membership alone is never enough — the toggle must be ON.
+     */
+    public boolean isAllianceEntryEnabled() {
+        return allianceId != null && allianceAccess.isEnter();
+    }
+
+    /**
+     * Whether this plot's Alliance Friendly PvP toggle is opted in.
+     * Membership alone is never enough — the toggle must be ON.
+     */
+    public boolean isAllianceFriendlyPvpEnabled() {
+        return allianceId != null && allianceAccess.isFriendlyPvp();
+    }
+
+    /**
+     * Pure membership-aware entry grant used by plot-entry protection.
+     * Defaults to denied: requires a joined alliance, Enter toggle ON, and membership.
+     */
+    public boolean allowsAllianceEntry(UUID playerUUID, Alliance alliance) {
+        if (!isAllianceEntryEnabled() || playerUUID == null || alliance == null) return false;
+        if (!alliance.getId().equals(allianceId)) return false;
+        return alliance.isMember(playerUUID);
+    }
+
+    public boolean allowsAllianceEntry(UUID playerUUID, Plugin plugin) {
+        if (!isAllianceEntryEnabled() || playerUUID == null) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (pl == null || pl.alliances() == null) return false;
+        return allowsAllianceEntry(playerUUID, pl.alliances().get(allianceId));
+    }
+
+    /**
+     * Pure membership-aware friendly-PvP grant used by plot-PvP damage protection.
+     * Defaults to denied: requires a joined alliance, Friendly PvP toggle ON, and both players as members.
+     */
+    public boolean areAllianceAllies(UUID a, UUID b, Alliance alliance) {
+        if (!isAllianceFriendlyPvpEnabled() || a == null || b == null || alliance == null) return false;
+        if (!alliance.getId().equals(allianceId)) return false;
+        return alliance.isMember(a) && alliance.isMember(b);
+    }
+
+    public boolean areAllianceAllies(UUID a, UUID b, Plugin plugin) {
+        if (!isAllianceFriendlyPvpEnabled() || a == null || b == null) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (pl == null || pl.alliances() == null) return false;
+        return areAllianceAllies(a, b, pl.alliances().get(allianceId));
+    }
+
+    private boolean grantsAlliancePermission(UUID playerUUID, String permission, AegisGuard pl) {
+        if (allianceId == null || playerUUID == null || permission == null || pl == null) return false;
+        String needle = permission.trim().toUpperCase(Locale.ROOT);
+        if ("MANAGE".equals(needle) || "MANAGE_MEMBERS".equals(needle)) return false;
+        if (!allianceAccess.grantsPermission(needle)) return false;
+        return pl.allianceService() != null && pl.allianceService().isAllianceMember(this, playerUUID);
+    }
+
+    public String serializeAllianceAccess() {
+        if (allianceId == null) return "";
+        return allianceId + "|" + allianceAccess.serialize();
+    }
+
+    public void deserializeAllianceAccess(String serialized) {
+        clearAllianceAccess();
+        if (serialized == null || serialized.isBlank()) return;
+        String[] parts = serialized.split("\\|", 2);
+        try {
+            allianceId = UUID.fromString(parts[0]);
+            if (parts.length > 1) {
+                AllianceAccess loaded = AllianceAccess.deserialize(parts[1]);
+                allianceAccess.setEnter(loaded.isEnter());
+                allianceAccess.setInteract(loaded.isInteract());
+                allianceAccess.setContainers(loaded.isContainers());
+                allianceAccess.setBuild(loaded.isBuild());
+                allianceAccess.setAnimals(loaded.isAnimals());
+                allianceAccess.setFriendlyPvp(loaded.isFriendlyPvp());
+            }
+        } catch (Exception ignored) {
+            clearAllianceAccess();
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Realm Profile Noticeboard (Milestone 4 - Realm Profiles and Noticeboards)
+    // ---------------------------------------------------------------------
+
+    /** Chronological (oldest first) view of every posted notice. */
+    public List<PlotNotice> getNoticeboard() {
+        return List.copyOf(noticeboard);
+    }
+
+    public PlotNotice getNotice(UUID noticeId) {
+        if (noticeId == null) return null;
+        for (PlotNotice notice : noticeboard) {
+            if (notice != null && noticeId.equals(notice.getId())) return notice;
+        }
+        return null;
+    }
+
+    /**
+     * Posts a new notice, dropping the oldest entry first once the plot is already at
+     * {@code maxEntries}. Moderation (explicit removal) is always a separate, deliberate call -
+     * posting never silently edits an existing notice.
+     */
+    public void postNotice(PlotNotice notice, int maxEntries) {
+        if (notice == null || maxEntries <= 0) return;
+        while (noticeboard.size() >= maxEntries) {
+            PlotNotice oldest = noticeboard.isEmpty() ? null : noticeboard.get(0);
+            if (oldest == null || !noticeboard.remove(oldest)) break;
+        }
+        noticeboard.add(notice);
+    }
+
+    /** Removes a single notice by id. Returns {@code true} if a notice was actually removed. */
+    public boolean removeNotice(UUID noticeId) {
+        if (noticeId == null) return false;
+        return noticeboard.removeIf(notice -> notice != null && noticeId.equals(notice.getId()));
+    }
+
+    public void clearNoticeboard() {
+        noticeboard.clear();
+    }
+
+    /**
+     * Entries are joined with {@code ~} for the same reason as
+     * {@link #serializeGuestPasses()}. Each notice's free-form text is Base64-encoded so
+     * owner-authored content can never break this delimiter scheme, even if it contains
+     * {@code |}, {@code ~}, {@code ;}, or newlines.
+     */
+    public String serializeNoticeboard() {
+        if (noticeboard.isEmpty()) return "";
+        List<String> entries = new ArrayList<>();
+        for (PlotNotice notice : noticeboard) {
+            if (notice == null) continue;
+            String authorId = notice.getAuthorId() == null ? "" : notice.getAuthorId().toString();
+            String encodedText = Base64.getEncoder().encodeToString(notice.getText().getBytes(StandardCharsets.UTF_8));
+            entries.add(String.join("|",
+                    notice.getId().toString(),
+                    authorId,
+                    notice.getAuthorName(),
+                    String.valueOf(notice.getCreatedAt()),
+                    encodedText
+            ));
+        }
+        return String.join("~", entries);
+    }
+
+    public void deserializeNoticeboard(String serialized) {
+        noticeboard.clear();
+        if (serialized == null || serialized.isBlank()) return;
+
+        for (String entry : serialized.split("~")) {
+            if (entry == null || entry.isBlank()) continue;
+            String[] parts = entry.split("\\|", 5);
+            if (parts.length != 5) continue;
+
+            try {
+                UUID id = UUID.fromString(parts[0]);
+                UUID authorId = parts[1].isBlank() ? null : UUID.fromString(parts[1]);
+                String authorName = parts[2];
+                long createdAt = Long.parseLong(parts[3]);
+                String text = new String(Base64.getDecoder().decode(parts[4]), StandardCharsets.UTF_8);
+                noticeboard.add(new PlotNotice(id, authorId, authorName, createdAt, text));
+            } catch (Exception ignored) {}
+        }
     }
 
     // ---------------------------------------------------------------------

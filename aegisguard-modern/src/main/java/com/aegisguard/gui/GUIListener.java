@@ -3,8 +3,26 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 
 // --- IMPORTS (Holders) ---
+import com.aegisguard.audit.AuditAdminGUI.AuditHolder;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI.ExpansionAdminHolder;
 import com.aegisguard.expansions.ExpansionRequestGUI.ExpansionHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassMenuHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassAddHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassPresetHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassDurationHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassConfirmHolder;
+import com.aegisguard.guestpass.GuestPassGUI.GuestPassDetailHolder;
+import com.aegisguard.lockdown.LockdownGUI.LockdownMenuHolder;
+import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
+import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
+import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
+import com.aegisguard.guidance.FirstClaimWalkthroughGUI.WalkthroughHolder;
+import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
+import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
+import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
+import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
+import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
+import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -120,7 +138,25 @@ public class GUIListener implements Listener {
                 || holder instanceof StallListHolder
                 || holder instanceof StallManageHolder
                 || holder instanceof StallPreviewHolder
-                || holder instanceof SnapshotHolder;
+                || holder instanceof SnapshotHolder
+                || holder instanceof AuditHolder
+                || holder instanceof GuestPassMenuHolder
+                || holder instanceof GuestPassAddHolder
+                || holder instanceof GuestPassPresetHolder
+                || holder instanceof GuestPassDurationHolder
+                || holder instanceof GuestPassConfirmHolder
+                || holder instanceof GuestPassDetailHolder
+                || holder instanceof LockdownMenuHolder
+                || holder instanceof LockdownConfirmHolder
+                || holder instanceof RealmProfileMenuHolder
+                || holder instanceof NoticeboardHolder
+                || holder instanceof WalkthroughHolder
+                || holder instanceof RoutesMenuHolder
+                || holder instanceof RouteDetailHolder
+                || holder instanceof RouteAdminHolder
+                || holder instanceof RouteEditHolder
+                || holder instanceof AllianceMenuHolder
+                || holder instanceof AllianceConfirmHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -278,6 +314,62 @@ public class GUIListener implements Listener {
             if (plugin.gui().snapshotAdmin() != null) {
                 plugin.gui().snapshotAdmin().handleClick(player, e);
             }
+        }
+        else if (holder instanceof AuditHolder) {
+            if (plugin.gui().audit() != null) {
+                plugin.gui().audit().handleClick(player, e);
+            }
+        }
+        else if (holder instanceof GuestPassMenuHolder castHolder) {
+            plugin.gui().guestPasses().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassAddHolder castHolder) {
+            plugin.gui().guestPasses().handleAddClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassPresetHolder castHolder) {
+            plugin.gui().guestPasses().handlePresetClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassDurationHolder castHolder) {
+            plugin.gui().guestPasses().handleDurationClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassConfirmHolder castHolder) {
+            plugin.gui().guestPasses().handleConfirmClick(player, e, castHolder);
+        }
+        else if (holder instanceof GuestPassDetailHolder castHolder) {
+            plugin.gui().guestPasses().handleDetailClick(player, e, castHolder);
+        }
+        else if (holder instanceof LockdownMenuHolder castHolder) {
+            plugin.gui().lockdownGui().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof LockdownConfirmHolder castHolder) {
+            plugin.gui().lockdownGui().handleConfirmClick(player, e, castHolder);
+        }
+        else if (holder instanceof RealmProfileMenuHolder castHolder) {
+            plugin.gui().realmProfile().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof NoticeboardHolder castHolder) {
+            plugin.gui().realmProfile().handleNoticeboardClick(player, e, castHolder);
+        }
+        else if (holder instanceof WalkthroughHolder castHolder) {
+            plugin.gui().walkthrough().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof RoutesMenuHolder castHolder) {
+            plugin.gui().routes().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteDetailHolder castHolder) {
+            plugin.gui().routes().handleDetailClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteAdminHolder castHolder) {
+            plugin.gui().routeAdmin().handleListClick(player, e, castHolder);
+        }
+        else if (holder instanceof RouteEditHolder castHolder) {
+            plugin.gui().routeAdmin().handleEditClick(player, e, castHolder);
+        }
+        else if (holder instanceof AllianceMenuHolder castHolder) {
+            plugin.gui().allianceAccess().handleMenuClick(player, e, castHolder);
+        }
+        else if (holder instanceof AllianceConfirmHolder castHolder) {
+            plugin.gui().allianceAccess().handleConfirmClick(player, e, castHolder);
         }
     }
 
@@ -507,6 +599,78 @@ public class GUIListener implements Listener {
                     safeInvokeOpen(plugin.gui().snapshotAdmin(), player);
                 }
             }
+            return;
+        }
+
+        if (holder instanceof AuditHolder castHolder) {
+            if (plugin.gui().audit() != null) {
+                plugin.gui().audit().open(player, castHolder.getFilter(), castHolder.getPage());
+            }
+            return;
+        }
+
+        if (holder instanceof GuestPassMenuHolder castHolder) {
+            plugin.gui().guestPasses().openMenu(player, castHolder.getPlot(), castHolder.getPage());
+            return;
+        }
+        if (holder instanceof GuestPassAddHolder || holder instanceof GuestPassPresetHolder
+                || holder instanceof GuestPassDurationHolder || holder instanceof GuestPassConfirmHolder
+                || holder instanceof GuestPassDetailHolder) {
+            Object plot = readHolderValue(holder, "getPlot");
+            if (plot instanceof com.aegisguard.data.Plot p) {
+                plugin.gui().guestPasses().openMenu(player, p, 0);
+            } else {
+                plugin.gui().openMain(player);
+            }
+            return;
+        }
+
+        if (holder instanceof LockdownMenuHolder castHolder) {
+            plugin.gui().lockdownGui().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof LockdownConfirmHolder castHolder) {
+            plugin.gui().lockdownGui().openMenu(player, castHolder.getPlot());
+            return;
+        }
+
+        if (holder instanceof RealmProfileMenuHolder castHolder) {
+            plugin.gui().realmProfile().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof NoticeboardHolder castHolder) {
+            plugin.gui().realmProfile().openNoticeboard(player, castHolder.getPlot());
+            return;
+        }
+
+        if (holder instanceof WalkthroughHolder castHolder) {
+            plugin.gui().walkthrough().open(player, castHolder.getPage());
+            return;
+        }
+
+        if (holder instanceof RoutesMenuHolder castHolder) {
+            plugin.gui().routes().open(player, castHolder.getPage());
+            return;
+        }
+        if (holder instanceof RouteDetailHolder castHolder) {
+            plugin.gui().routes().openDetail(player, castHolder.getRoute());
+            return;
+        }
+        if (holder instanceof RouteAdminHolder castHolder) {
+            plugin.gui().routeAdmin().open(player, castHolder.getPage());
+            return;
+        }
+        if (holder instanceof RouteEditHolder castHolder) {
+            plugin.gui().routeAdmin().openEdit(player, castHolder.getRoute());
+            return;
+        }
+
+        if (holder instanceof AllianceMenuHolder castHolder) {
+            plugin.gui().allianceAccess().openMenu(player, castHolder.getPlot());
+            return;
+        }
+        if (holder instanceof AllianceConfirmHolder castHolder) {
+            plugin.gui().allianceAccess().openMenu(player, castHolder.getPlot());
             return;
         }
 

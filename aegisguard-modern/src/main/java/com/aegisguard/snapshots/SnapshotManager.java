@@ -348,7 +348,12 @@ public class SnapshotManager {
         return matches.isEmpty() ? null : matches.get(0);
     }
 
-    private void restorePlotState(Plot plot, ClaimSnapshot snapshot) {
+    /**
+     * Applies every tracked field of {@code snapshot} onto {@code plot}. Package-visible and static
+     * (touches no {@code SnapshotManager} instance state) so rollback correctness can be unit tested
+     * directly, without a live plugin/data-store instance.
+     */
+    static void restorePlotState(Plot plot, ClaimSnapshot snapshot) {
         plot.setOwner(snapshot.getOwner());
         plot.setOwnerName(snapshot.getOwnerName());
         plot.setWorld(snapshot.getWorldName());

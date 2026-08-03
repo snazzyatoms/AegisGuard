@@ -328,6 +328,14 @@ public class VisitGUI {
                         lore = new ArrayList<>(lore);
                         lore.add(GUIManager.color("&7Likes: &d" + plot.getLikes() + " &8| &7Visits: &b" + discovery.visits()));
                         if (discovery.featured()) lore.add(GUIManager.color("&6★ Featured Territory"));
+                        if (plot.getDescription() != null && !plot.getDescription().isBlank()) {
+                            lore.add(GUIManager.color("&7\"" + plot.getDescription() + "\""));
+                        }
+                        if (!plot.getNoticeboard().isEmpty()) {
+                            lore.add(GUIManager.color(t(player, "visit_plot_notice_count",
+                                    "&7📌 " + plot.getNoticeboard().size() + " noticeboard notice(s)",
+                                    Map.of("COUNT", String.valueOf(plot.getNoticeboard().size())))));
+                        }
                         lore.add(GUIManager.color(plugin.territoryLife().isFavorite(player.getUniqueId(), plot.getPlotId())
                                 ? "&eRight-click to remove favorite" : "&eRight-click to favorite"));
                     }

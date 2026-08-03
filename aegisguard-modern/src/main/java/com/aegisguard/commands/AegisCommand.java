@@ -44,9 +44,9 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
-            "rename", "stuck", "setdesc",
+            "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks",
-            "group", "discover", "favorite", "activity",
+            "group", "alliance", "discover", "favorite", "activity",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -265,6 +265,12 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "setdesc" -> handleSetDesc(p, args);
 
+            case "notice" -> handleNotice(p, args);
+
+            case "profile" -> plugin.gui().realmProfile().open(p);
+
+            case "guide" -> plugin.gui().walkthrough().open(p, 0);
+
             case "market" -> openMarketMenu(p, args);
 
             case "sell" -> handleSell(p, args);
@@ -300,6 +306,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "blocks" -> handleBlocks(p, args);
 
             case "group" -> handleGroup(p, args);
+
+            case "alliance" -> handleAlliance(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -928,6 +936,97 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         sendKey(p, "plot_desc_updated", "&a✔ Plot description updated.");
         plugin.effects().playConfirm(p);
+    }
+
+    // --------------------------------------------------
+    // Realm Profile Noticeboard (Milestone 4)
+    // --------------------------------------------------
+
+    private void handleNotice(Player p, String[] args) {
+        if (!plugin.getConfig().getBoolean("realm_profiles.enabled", true)
+                || !plugin.getConfig().getBoolean("realm_profiles.noticeboard.enabled", true)) {
+            sendKey(p, "noticeboard_disabled", "&cThe noticeboard is disabled on this server.");
+            return;
+        }
+
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sendMsg(p, "&e/ag notice add <text> &7| &e/ag notice remove <#> &7| &e/ag notice list");
+            return;
+        }
+
+        String action = args[1].toLowerCase(Locale.ROOT);
+
+        if (action.equals("list")) {
+            plugin.gui().realmProfile().openNoticeboard(p, plot);
+            return;
+        }
+
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+
+        if (action.equals("add")) {
+            if (args.length < 3) {
+                sendKey(p, "usage_notice_add", "&cUsage: /ag notice add <text>");
+                return;
+            }
+            String text = Arrays.stream(args).skip(2).collect(Collectors.joining(" "));
+            text = ChatColor.translateAlternateColorCodes('&', text);
+
+            int maxLength = Math.max(1, plugin.getConfig().getInt("realm_profiles.noticeboard.max_length", 200));
+            if (text.length() > maxLength) {
+                sendKey(p, "notice_too_long", "&cThat notice is too long (Max {MAX} chars).",
+                        Map.of("MAX", String.valueOf(maxLength)));
+                return;
+            }
+
+            int maxEntries = Math.max(1, plugin.getConfig().getInt("realm_profiles.noticeboard.max_entries", 8));
+            plot.postNotice(com.aegisguard.profile.PlotNotice.post(p.getUniqueId(), p.getName(), text), maxEntries);
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_POSTED", "Posted a noticeboard notice.");
+
+            sendKey(p, "notice_posted", "&a✔ Notice posted to this plot's noticeboard.");
+            plugin.effects().playConfirm(p);
+            return;
+        }
+
+        if (action.equals("remove")) {
+            if (args.length < 3) {
+                sendKey(p, "usage_notice_remove", "&cUsage: /ag notice remove <#>");
+                return;
+            }
+            List<com.aegisguard.profile.PlotNotice> notices = plot.getNoticeboard();
+            int index;
+            try {
+                index = Integer.parseInt(args[2]) - 1;
+            } catch (NumberFormatException ex) {
+                sendKey(p, "usage_notice_remove", "&cUsage: /ag notice remove <#>");
+                return;
+            }
+            if (index < 0 || index >= notices.size()) {
+                sendKey(p, "notice_invalid_index", "&cThat is not a valid notice number. Use /ag notice list to see them.");
+                return;
+            }
+
+            plot.removeNotice(notices.get(index).getId());
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_REMOVED", "Removed a noticeboard notice.");
+
+            sendKey(p, "notice_removed", "&e✔ Notice removed.");
+            plugin.effects().playConfirm(p);
+            return;
+        }
+
+        sendMsg(p, "&e/ag notice add <text> &7| &e/ag notice remove <#> &7| &e/ag notice list");
     }
 
     // --------------------------------------------------
@@ -2093,6 +2192,154 @@ private void handleUnsell(Player p) {
         }
     }
 
+    private void handleAlliance(Player p, String[] args) {
+        if (plugin.alliances() == null || plugin.allianceService() == null) {
+            sendKey(p, "error_generic", "&cThat feature is not available right now.");
+            return;
+        }
+        if (!plugin.getConfig().getBoolean("alliance_access.enabled", true)) {
+            sendKey(p, "alliance_disabled", "&cAlliance Access is disabled on this server.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sendKey(p, "alliance_help_create", "&e/ag alliance create <name> &7- form a new alliance");
+            sendKey(p, "alliance_help_invite", "&e/ag alliance invite <player> &7- invite a player (leader)");
+            sendKey(p, "alliance_help_accept", "&e/ag alliance accept &7- accept a pending invite");
+            sendKey(p, "alliance_help_leave", "&e/ag alliance leave &7- leave your alliance");
+            sendKey(p, "alliance_help_disband", "&e/ag alliance disband &7- disband your alliance (leader)");
+            sendKey(p, "alliance_help_menu", "&e/ag alliance menu &7- open Alliance Access");
+            return;
+        }
+
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        com.aegisguard.alliance.Alliance current = plugin.alliances().getByPlayer(p.getUniqueId());
+
+        switch (sub) {
+            case "create" -> {
+                if (args.length < 3) {
+                    sendKey(p, "alliance_usage_create", "&cUsage: /ag alliance create <name>");
+                    return;
+                }
+                if (current != null) {
+                    sendKey(p, "alliance_already_member", "&cYou are already in an alliance.");
+                    return;
+                }
+                String name = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+                if (name.isEmpty() || name.length() > 32) {
+                    sendKey(p, "alliance_invalid_name", "&cAlliance names must be 1-32 characters.");
+                    return;
+                }
+                com.aegisguard.alliance.Alliance created = plugin.alliances().create(name, p.getUniqueId());
+                if (created == null) {
+                    sendKey(p, "alliance_already_member", "&cYou are already in an alliance.");
+                    return;
+                }
+                if (plugin.audit() != null) {
+                    plugin.audit().record(com.aegisguard.audit.AuditCategory.ALLIANCE, p,
+                            created.getName(), "Created alliance");
+                }
+                sendKey(p, "alliance_created", "&aCreated alliance &e{NAME}&a. Invite friends, then join a plot from Alliance Access.",
+                        Map.of("NAME", created.getName()));
+            }
+            case "invite" -> {
+                if (args.length < 3) {
+                    sendKey(p, "alliance_usage_invite", "&cUsage: /ag alliance invite <player>");
+                    return;
+                }
+                if (current == null) {
+                    sendKey(p, "alliance_not_member", "&cYou are not in an alliance.");
+                    return;
+                }
+                if (!current.isLeader(p.getUniqueId())) {
+                    sendKey(p, "alliance_not_leader", "&cOnly the alliance leader can invite players.");
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    sendKey(p, "player_not_found", "&cPlayer not found.");
+                    return;
+                }
+                String err = plugin.alliances().invite(current, target.getUniqueId());
+                if (err != null) {
+                    sendKey(p, err, "&cCould not invite that player.");
+                    return;
+                }
+                sendKey(p, "alliance_invite_sent", "&aInvited &e{PLAYER}&a to &e{NAME}&a.",
+                        Map.of("PLAYER", target.getName(), "NAME", current.getName()));
+                sendKey(target, "alliance_invite_received",
+                        "&e{PLAYER} &7invited you to alliance &e{NAME}&7. Use &e/ag alliance accept",
+                        Map.of("PLAYER", p.getName(), "NAME", current.getName()));
+            }
+            case "accept" -> {
+                String err = plugin.alliances().accept(p.getUniqueId());
+                if (err != null) {
+                    sendKey(p, err, "&cCould not accept that invite.");
+                    return;
+                }
+                com.aegisguard.alliance.Alliance joined = plugin.alliances().getByPlayer(p.getUniqueId());
+                String allianceName = joined == null ? "Alliance" : joined.getName();
+                if (plugin.audit() != null) {
+                    plugin.audit().record(com.aegisguard.audit.AuditCategory.ALLIANCE, p,
+                            allianceName, "Accepted alliance invite");
+                }
+                sendKey(p, "alliance_accepted", "&aYou joined alliance &e{NAME}&a.",
+                        Map.of("NAME", allianceName));
+            }
+            case "leave" -> {
+                if (current == null) {
+                    sendKey(p, "alliance_not_member", "&cYou are not in an alliance.");
+                    return;
+                }
+                String name = current.getName();
+                String err = plugin.alliances().leave(p.getUniqueId());
+                if (err != null) {
+                    sendKey(p, err, "&cCould not leave the alliance.");
+                    return;
+                }
+                if (plugin.audit() != null) {
+                    plugin.audit().record(com.aegisguard.audit.AuditCategory.ALLIANCE, p, name, "Left alliance");
+                }
+                sendKey(p, "alliance_left", "&eYou left alliance &6{NAME}&e.", Map.of("NAME", name));
+            }
+            case "disband" -> {
+                if (current == null) {
+                    sendKey(p, "alliance_not_member", "&cYou are not in an alliance.");
+                    return;
+                }
+                UUID id = current.getId();
+                String name = current.getName();
+                String err = plugin.alliances().disband(p.getUniqueId());
+                if (err != null) {
+                    sendKey(p, err, "&cCould not disband the alliance.");
+                    return;
+                }
+                plugin.allianceService().clearPlotsForDisbandedAlliance(id, p);
+                if (plugin.audit() != null) {
+                    plugin.audit().record(com.aegisguard.audit.AuditCategory.ALLIANCE, p, name, "Disbanded alliance");
+                }
+                sendKey(p, "alliance_disbanded", "&eDisbanded alliance &6{NAME}&e. Joined plots lost alliance access.",
+                        Map.of("NAME", name));
+            }
+            case "menu", "gui" -> plugin.gui().allianceAccess().open(p);
+            case "status", "info" -> {
+                if (current == null) {
+                    sendKey(p, "alliance_not_member", "&cYou are not in an alliance.");
+                    return;
+                }
+                sendKey(p, "alliance_status", "&6Alliance: &f{NAME} &7| Members: &f{COUNT} &7| Leader: &f{LEADER}",
+                        Map.of(
+                                "NAME", current.getName(),
+                                "COUNT", String.valueOf(current.size()),
+                                "LEADER", Optional.ofNullable(Bukkit.getOfflinePlayer(current.getLeaderId()).getName())
+                                        .orElse("Unknown")
+                        ));
+            }
+            default -> sendKey(p, "alliance_usage",
+                    "&cUsage: /ag alliance <create|invite|accept|leave|disband|menu|status>");
+        }
+    }
+
     private Plot getLinkedGroupPlot(PlotGroup group) {
         if (group == null || group.getLinkedPlotId() == null) return null;
         return plugin.store().getAllPlots().stream()
@@ -2151,6 +2398,14 @@ private void handleUnsell(Player p) {
                 return completions;
             }
 
+            if (args[0].equalsIgnoreCase("alliance")) {
+                List<String> completions = new ArrayList<>();
+                List<String> subs = Arrays.asList("create", "invite", "accept", "leave", "disband", "menu", "status");
+                StringUtil.copyPartialMatches(args[1], subs, completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
             if (args[0].equalsIgnoreCase("market")) {
                 List<String> completions = new ArrayList<>();
                 List<String> subs = Arrays.asList("local", "global");
@@ -2165,6 +2420,9 @@ private void handleUnsell(Player p) {
 
             if (args[0].equalsIgnoreCase("discover")) {
                 return StringUtil.copyPartialMatches(args[1], List.of("favorites", "category", "visibility"), new ArrayList<>());
+            }
+            if (args[0].equalsIgnoreCase("notice")) {
+                return StringUtil.copyPartialMatches(args[1], List.of("add", "remove", "list"), new ArrayList<>());
             }
         }
 
@@ -2211,6 +2469,16 @@ private void handleUnsell(Player p) {
                     StringUtil.copyPartialMatches(args[2], options, completions);
                     return completions;
                 }
+            }
+
+            if (args[0].equalsIgnoreCase("alliance") && args[1].equalsIgnoreCase("invite")) {
+                List<String> options = Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .sorted(String.CASE_INSENSITIVE_ORDER)
+                        .collect(Collectors.toList());
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[2], options, completions);
+                return completions;
             }
         }
 

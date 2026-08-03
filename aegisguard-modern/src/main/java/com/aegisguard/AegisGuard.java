@@ -3,6 +3,7 @@ package com.aegisguard;
 import com.aegisguard.api.AegisGuardAPI;
 import com.aegisguard.api.internal.DefaultAegisGuardAPI;
 import com.aegisguard.admin.AdminCommand;
+import com.aegisguard.audit.AuditService;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.claimblocks.ClaimBlockTask;
@@ -136,6 +137,14 @@ public class AegisGuard extends JavaPlugin {
     private EffectUtil effectUtil;
     private ExpansionRequestManager expansionManager;
 
+    // Staff Audit Ledger (1.3.0+)
+    private AuditService auditService;
+    private com.aegisguard.guestpass.GuestPassService guestPassService;
+    private com.aegisguard.lockdown.LockdownService lockdownService;
+    private com.aegisguard.routes.RouteService routeService;
+    private com.aegisguard.alliance.AllianceManager allianceManager;
+    private com.aegisguard.alliance.AllianceService allianceService;
+
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
@@ -149,6 +158,7 @@ public class AegisGuard extends JavaPlugin {
     private Object mobBarrierTask;
     private Object claimBlockTask;
     private Object rentalExpiryTask;
+    private Object guestPassExpiryTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
@@ -220,6 +230,12 @@ public class AegisGuard extends JavaPlugin {
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
     public ExpansionRequestManager expansions() { return expansionManager; }
+    public AuditService audit() { return auditService; }
+    public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
+    public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
+    public com.aegisguard.routes.RouteService routes() { return routeService; }
+    public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
+    public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -277,6 +293,12 @@ public class AegisGuard extends JavaPlugin {
         effectUtil = new EffectUtil(this);
         expansionManager = new ExpansionRequestManager(this);
         snapshotManager = new SnapshotManager(this);
+        auditService = new AuditService(this);
+        guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
+        lockdownService = new com.aegisguard.lockdown.LockdownService(this);
+        routeService = new com.aegisguard.routes.RouteService(this);
+        allianceManager = new com.aegisguard.alliance.AllianceManager(this);
+        allianceService = new com.aegisguard.alliance.AllianceService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -338,7 +360,19 @@ public class AegisGuard extends JavaPlugin {
             } catch (Throwable ignored) {}
 
             try {
+                if (auditService != null) auditService.load();
+            } catch (Throwable ignored) {}
+
+            try {
                 if (groupManager != null) groupManager.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (routeService != null) routeService.load();
+            } catch (Throwable ignored) {}
+
+            try {
+                if (allianceManager != null) allianceManager.load();
             } catch (Throwable ignored) {}
 
             // ✅ NotificationManager loads data inside constructor + reload()
@@ -355,6 +389,8 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
         Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
         levelingListener = new LevelingListener(this);
         Bukkit.getPluginManager().registerEvents(levelingListener, this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
@@ -370,6 +406,7 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         startClaimBlockTask();
         startRentalExpiryTask();
+        startGuestPassExpiryTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -407,6 +444,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
+        cancelTaskReflectively(guestPassExpiryTask);
 
         // Save plot + player data safely
         try {
@@ -443,9 +481,27 @@ public class AegisGuard extends JavaPlugin {
         }
 
         try {
+            if (auditService != null) auditService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save the audit ledger: " + t.getMessage());
+        }
+
+        try {
             if (groupManager != null && groupManager.isDirty()) groupManager.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save groups: " + t.getMessage());
+        }
+
+        try {
+            if (routeService != null) routeService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save routes: " + t.getMessage());
+        }
+
+        try {
+            if (allianceManager != null) allianceManager.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save alliances: " + t.getMessage());
         }
 
         try {
@@ -718,7 +774,10 @@ public class AegisGuard extends JavaPlugin {
                 if (claimBlockExchange != null) claimBlockExchange.save();
                 if (snapshotManager != null) snapshotManager.save();
                 if (expansionManager != null) expansionManager.save();
+                if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
+                if (routeService != null && routeService.isDirty()) routeService.save();
+                if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 if (territoryLifeService != null && territoryLifeService.isDirty()) territoryLifeService.save();
@@ -888,6 +947,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(mobBarrierTask);
         cancelTaskReflectively(claimBlockTask);
         cancelTaskReflectively(rentalExpiryTask);
+        cancelTaskReflectively(guestPassExpiryTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -895,6 +955,7 @@ public class AegisGuard extends JavaPlugin {
         mobBarrierTask = null;
         claimBlockTask = null;
         rentalExpiryTask = null;
+        guestPassExpiryTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -902,6 +963,7 @@ public class AegisGuard extends JavaPlugin {
         startMobBarrierTask();
         startClaimBlockTask();
         startRentalExpiryTask();
+        startGuestPassExpiryTask();
     }
 
     private void startRentalExpiryTask() {
@@ -944,6 +1006,18 @@ public class AegisGuard extends JavaPlugin {
                 if (owner != null) {
                     runMain(owner, () -> messages.send(owner, "market-owner-rental-expired"));
                 }
+            }
+        }, 20L, 1_200L);
+    }
+
+    private void startGuestPassExpiryTask() {
+        if (guestPassService == null || !guestPassService.isEnabled()) return;
+
+        guestPassExpiryTask = runGlobalRepeating(() -> {
+            try {
+                guestPassService.runExpirySweep();
+            } catch (Throwable t) {
+                getLogger().warning("Guest Pass expiry sweep error: " + t.getMessage());
             }
         }, 20L, 1_200L);
     }

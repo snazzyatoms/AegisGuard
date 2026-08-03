@@ -182,6 +182,30 @@ public class YMLDataStore implements IDataStore {
                         plot.deserializeRoleFlags(roleFlagsBlob);
                     }
 
+                    String guestPassesBlob = sec.getString("guest-passes");
+                    if (guestPassesBlob != null && !guestPassesBlob.isEmpty()) {
+                        plot.deserializeGuestPasses(guestPassesBlob);
+                    }
+
+                    String noticeboardBlob = sec.getString("noticeboard");
+                    if (noticeboardBlob != null && !noticeboardBlob.isEmpty()) {
+                        plot.deserializeNoticeboard(noticeboardBlob);
+                    }
+
+                    String allianceBlob = sec.getString("alliance-access");
+                    if (allianceBlob != null && !allianceBlob.isEmpty()) {
+                        plot.deserializeAllianceAccess(allianceBlob);
+                    }
+
+                    if (sec.getBoolean("lockdown-active", false)) {
+                        String actorStr = sec.getString("lockdown-activated-by", null);
+                        UUID actorId = null;
+                        try { if (actorStr != null && !actorStr.isBlank()) actorId = UUID.fromString(actorStr); }
+                        catch (IllegalArgumentException ignored) { }
+                        plot.restoreLockdown(true, actorId, sec.getString("lockdown-activated-by-name", "Unknown"),
+                                sec.getLong("lockdown-activated-at", System.currentTimeMillis()));
+                    }
+
                     for (String uuidStr : sec.getStringList("liked-by")) {
                         try { plot.toggleLike(UUID.fromString(uuidStr)); }
                         catch (IllegalArgumentException ignored) {}
@@ -470,6 +494,27 @@ public class YMLDataStore implements IDataStore {
 
         String roleFlagsBlob = plot.serializeRoleFlags();
         sec.set("role-flags", roleFlagsBlob.isEmpty() ? null : roleFlagsBlob);
+
+        String guestPassesBlob = plot.serializeGuestPasses();
+        sec.set("guest-passes", guestPassesBlob.isEmpty() ? null : guestPassesBlob);
+
+        String noticeboardBlob = plot.serializeNoticeboard();
+        sec.set("noticeboard", noticeboardBlob.isEmpty() ? null : noticeboardBlob);
+
+        String allianceBlob = plot.serializeAllianceAccess();
+        sec.set("alliance-access", allianceBlob.isEmpty() ? null : allianceBlob);
+
+        if (plot.isLockdownActive()) {
+            sec.set("lockdown-active", true);
+            sec.set("lockdown-activated-at", plot.getLockdownActivatedAt());
+            sec.set("lockdown-activated-by", plot.getLockdownActivatedBy() == null ? null : plot.getLockdownActivatedBy().toString());
+            sec.set("lockdown-activated-by-name", plot.getLockdownActivatedByName());
+        } else {
+            sec.set("lockdown-active", null);
+            sec.set("lockdown-activated-at", null);
+            sec.set("lockdown-activated-by", null);
+            sec.set("lockdown-activated-by-name", null);
+        }
 
         List<String> liked = plot.getLikedBy().stream().map(UUID::toString).collect(Collectors.toList());
         sec.set("liked-by", liked.isEmpty() ? null : liked);

@@ -1,9 +1,17 @@
 package com.aegisguard.gui;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.audit.AuditAdminGUI;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import com.aegisguard.expansions.ExpansionRequestAdminGUI;
 import com.aegisguard.expansions.ExpansionRequestGUI;
+import com.aegisguard.guestpass.GuestPassGUI;
+import com.aegisguard.guidance.FirstClaimWalkthroughGUI;
+import com.aegisguard.routes.RoutesGUI;
+import com.aegisguard.routes.RouteAdminGUI;
+import com.aegisguard.alliance.AllianceAccessGUI;
+import com.aegisguard.lockdown.LockdownGUI;
+import com.aegisguard.profile.RealmProfileGUI;
 import com.aegisguard.snapshots.SnapshotAdminGUI;
 import com.aegisguard.util.EffectUtil;
 import org.bukkit.ChatColor;
@@ -68,6 +76,28 @@ public class GUIManager {
     private final SnapshotAdminGUI snapshotAdminGUI;
     private final MigrationAdminGUI migrationAdminGUI;
 
+    // Staff Audit Ledger (1.3.0+)
+    private final AuditAdminGUI auditAdminGUI;
+
+    // Temporary Guest Passes (1.3.0+ Milestone 2)
+    private final GuestPassGUI guestPassGUI;
+
+    // Emergency Plot Lockdown (1.3.0+ Milestone 3)
+    private final LockdownGUI lockdownGUI;
+
+    // Realm Profiles & Noticeboards (1.3.0+ Milestone 4)
+    private final RealmProfileGUI realmProfileGUI;
+
+    // Clearer Player Guidance (1.3.0+ Milestone 5)
+    private final FirstClaimWalkthroughGUI walkthroughGUI;
+
+    // Routes and Checkpoints (1.3.0+ Milestone 6)
+    private final RoutesGUI routesGUI;
+    private final RouteAdminGUI routeAdminGUI;
+
+    // Alliance Access (1.3.0+ Milestone 7)
+    private final AllianceAccessGUI allianceAccessGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -123,6 +153,14 @@ public class GUIManager {
         }
 
         this.migrationAdminGUI = new MigrationAdminGUI(plugin);
+        this.auditAdminGUI = new AuditAdminGUI(plugin);
+        this.guestPassGUI = new GuestPassGUI(plugin);
+        this.lockdownGUI = new LockdownGUI(plugin);
+        this.realmProfileGUI = new RealmProfileGUI(plugin);
+        this.walkthroughGUI = new FirstClaimWalkthroughGUI(plugin);
+        this.routesGUI = new RoutesGUI(plugin);
+        this.routeAdminGUI = new RouteAdminGUI(plugin);
+        this.allianceAccessGUI = new AllianceAccessGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -232,6 +270,24 @@ public class GUIManager {
     // ✅ Snapshot Admin
     public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
     public MigrationAdminGUI migration() { return migrationAdminGUI; }
+
+    // Staff Audit Ledger (1.3.0+)
+    public AuditAdminGUI audit() { return auditAdminGUI; }
+
+    // Temporary Guest Passes (1.3.0+ Milestone 2)
+    public GuestPassGUI guestPasses() { return guestPassGUI; }
+
+    // Emergency Plot Lockdown (1.3.0+ Milestone 3)
+    public LockdownGUI lockdownGui() { return lockdownGUI; }
+    public RealmProfileGUI realmProfile() { return realmProfileGUI; }
+
+    public FirstClaimWalkthroughGUI walkthrough() { return walkthroughGUI; }
+
+    public RoutesGUI routes() { return routesGUI; }
+
+    public RouteAdminGUI routeAdmin() { return routeAdminGUI; }
+
+    public AllianceAccessGUI allianceAccess() { return allianceAccessGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

@@ -232,6 +232,34 @@ public class SettingsGUI {
         ));
 
         // --------------------------------------------------
+        // 3D) REPEAT NOTIFICATIONS TOGGLE (Slot 25, Milestone 5)
+        // --------------------------------------------------
+        boolean repeatNotifications = getRepeatNotificationsEnabled(player);
+
+        inv.setItem(25, GUIManager.createItem(
+                repeatNotifications ? Material.REPEATER : Material.COMPARATOR,
+                repeatNotifications
+                        ? t(player, "settings_repeat_notifications_on_name", "&aRepeat Notifications: ON")
+                        : t(player, "settings_repeat_notifications_off_name", "&cRepeat Notifications: OFF"),
+                tl(player, "settings_repeat_notifications_lore",
+                        List.of(
+                                "&7When OFF, repeated blocked-action",
+                                "&7messages are limited to once every",
+                                "&7few seconds instead of spamming."
+                        ))
+        ));
+
+        // --------------------------------------------------
+        // 3E) REPLAY WALKTHROUGH (Slot 31, Milestone 5)
+        // --------------------------------------------------
+        inv.setItem(31, GUIManager.createItem(
+                Material.KNOWLEDGE_BOOK,
+                t(player, "settings_replay_walkthrough_name", "&eReplay First-Claim Walkthrough"),
+                tl(player, "settings_replay_walkthrough_lore",
+                        List.of("&7Revisit the optional guide covering", "&7roles, Guest Passes, and Lockdown."))
+        ));
+
+        // --------------------------------------------------
         // NAVIGATION (48/49)
         // --------------------------------------------------
         inv.setItem(48, GUIManager.createItem(
@@ -425,6 +453,30 @@ public class SettingsGUI {
                 reopenNextTick(player, plot);
             }
 
+            case 25 -> { // Repeat Notifications toggle (Milestone 5)
+                if (!canManageNotifications(player)) {
+                    playError(player);
+                    return;
+                }
+
+                try {
+                    if (plugin.getNotificationManager() != null) {
+                        plugin.getNotificationManager().toggleRepeatNotifications(uuid);
+                    }
+                } catch (Throwable error) {
+                    preferenceFailure(player, error);
+                    return;
+                }
+
+                playFlip(player);
+                reopenNextTick(player, plot);
+            }
+
+            case 31 -> { // Replay First-Claim Walkthrough (Milestone 5)
+                playFlip(player);
+                plugin.runMain(player, () -> plugin.gui().walkthrough().open(player, 0));
+            }
+
             case 48 -> {
                 playFlip(player);
                 plugin.runMain(player, () -> plugin.gui().openMain(player));
@@ -558,6 +610,15 @@ public class SettingsGUI {
 
         String base = baseNotifPath(player);
         return plugin.getConfig().getBoolean(base + ".admin_updates", true);
+    }
+
+    private boolean getRepeatNotificationsEnabled(Player player) {
+        try {
+            if (plugin.getNotificationManager() != null) {
+                return plugin.getNotificationManager().hasRepeatNotificationsEnabled(player.getUniqueId());
+            }
+        } catch (Throwable ignored) {}
+        return true;
     }
 
     private boolean canManageGreetingNotifications(Player player, boolean togglingState) {

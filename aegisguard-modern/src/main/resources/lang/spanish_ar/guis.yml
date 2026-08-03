@@ -21,6 +21,13 @@ prev_page_lore:
 button_next_page: '&fPágina Siguiente'
 next_page_lore:
 - '&7Ir a la página siguiente.'
+button_prev: '&fPágina Anterior'
+button_prev_lore:
+- '&7Ir a la página anterior.'
+button_next: '&fPágina Siguiente'
+button_next_lore:
+- '&7Ir a la página siguiente.'
+button_page: '&7Página: &f{PAGE}'
 button_exit: '&c✖ Cerrar'
 button_exit_lore:
 - '&7Cerrá este menú.'
@@ -1110,6 +1117,41 @@ admin_migration_lore:
 - ' '
 - '&eClic para abrir'
 
+button_admin_audit: '&eRegistro de Auditoría'
+admin_audit_lore:
+- '&7Revisá restauraciones, reparaciones,'
+- '&7migraciones, cambios de bypass y'
+- '&7ajustes de ClaimBlocks del staff.'
+- ' '
+- '&eClic para abrir'
+
+audit_admin_title: '&e&lRegistro de Auditoría'
+audit_disabled: '&cEl registro de auditoría está deshabilitado.'
+audit_none_title: '&cSin Registros'
+audit_none_lore:
+- '&7Ningún registro coincide'
+- '&7con este filtro todavía.'
+audit_filter_button: '&bFiltro: &f{FILTER}'
+audit_filter_lore:
+- '&7Clic para cambiar entre categorías.'
+audit_filter_all: 'Todas las Categorías'
+audit_entry_name: '&e{CATEGORY}'
+audit_entry_lore:
+- '&7Responsable: &f{ACTOR}'
+- '&7Objetivo: &f{TARGET}'
+- '&7Cuándo: &f{AGE} atrás'
+- ' '
+- '&f{SUMMARY}'
+audit_entry_detail: '&e[Auditoría] &7{SUMMARY}'
+audit_category_snapshot_restore: 'Restauración de Instantánea'
+audit_category_doctor_repair: 'Reparación del Doctor'
+audit_category_migration: 'Migración'
+audit_category_admin_bypass: 'Bypass de Administrador'
+audit_category_claim_block_adjust: 'Ajuste de ClaimBlocks'
+audit_category_guest_pass: 'Pase de Invitado'
+audit_category_lockdown: 'Bloqueo de Emergencia'
+audit_category_alliance: 'Alianza'
+
 toggle_on: '&aACTIVADO'
 toggle_off: '&cDESACTIVADO'
 admin_toggle_format: '{NAME}: {STATE}'
@@ -2017,3 +2059,253 @@ staff_policy_section_name: '&ePolítica Operativa'
 staff_policy_section_lore: ['&7La fila superior controla la política', '&7general de AegisGuard.']
 staff_toolbelt_section_name: '&bHerramientas del Guardián'
 staff_toolbelt_section_lore: ['&7La fila inferior abre revisión, recuperación,', '&7mundos, migración y mantenimiento.']
+
+# ------------------------------------------------------------
+# Pases de Invitado Temporales (1.3.0+, Hito 2)
+# ------------------------------------------------------------
+button_guest_passes: '&d🎫 Pases de Invitado'
+guest_passes_lore: ['&7Otorgá acceso temporal y autoexpirable', '&7sin confianza permanente.']
+guest_passes_locked_lore: ['&cEntrá a una parcela que administrés', '&cpara emitir Pases de Invitado.']
+guest_pass_menu_title: '&ePases de Invitado'
+guest_pass_entry_name: '&e{PLAYER}'
+guest_pass_entry_preset_line: '&7Preajuste: &f{PRESET}'
+guest_pass_entry_remaining_line: '&7Expira en: &f{TIME}'
+guest_pass_entry_issuer_line: '&7Emitido por: &f{PLAYER}'
+guest_pass_entry_click_lore: '&eHacé clic para ver o revocar'
+guest_pass_none_title: '&7Sin Pases de Invitado Activos'
+guest_pass_none_lore: ['&7Emití un pase temporal para que un amigo,', '&7invitado de evento o constructor contratado', '&7ayude sin confianza permanente.']
+guest_pass_guide_name: '&eGuía de Pases de Invitado'
+guest_pass_guide_lore: ['&7Los Pases de Invitado otorgan acceso temporal', '&7que expira automáticamente - incluso', '&7después de reiniciar el servidor.', ' ', '&8Expirar o revocar un pase nunca', '&8afecta los roles permanentes de esta parcela.']
+button_add_guest_pass: '&aEmitir Pase de Invitado'
+add_guest_pass_lore: ['&7Otorgá acceso temporal a un jugador cercano.']
+guest_pass_add_title: '&8Emitir Pase de Invitado'
+guest_pass_add_click_lore: '&7Hacé clic para elegir un preajuste.'
+add_trusted_player_name: '&a{PLAYER}'
+add_trusted_none_title: '&cNo Hay Jugadores Cerca'
+add_trusted_none_lore: ['&7¡Pedile a tu amigo que se acerque!']
+guest_pass_preset_title: '&8Preajuste: {PLAYER}'
+guest_pass_preset_name_VISITOR: '&eVisitante'
+guest_pass_preset_name_EVENT_GUEST: '&eInvitado de Evento'
+guest_pass_preset_name_TEMPORARY_BUILDER: '&eConstructor Temporal'
+guest_pass_preset_name_TEMPORARY_TRUSTED_GUEST: '&eInvitado de Confianza Temporal'
+guest_pass_preset_desc_VISITOR: ['&7Solo entrada y puertas/botones ordinarios.']
+guest_pass_preset_desc_EVENT_GUEST: ['&7Entrada más interacción segura de eventos.', '&7Sin construcción ni contenedores.']
+guest_pass_preset_desc_TEMPORARY_BUILDER: ['&7Acceso para construir y romper.', '&7Los contenedores permanecen cerrados.']
+guest_pass_preset_desc_TEMPORARY_TRUSTED_GUEST: ['&7Acceso a construir, romper y contenedores.']
+guest_pass_preset_container_warning: '&c⚠ ¡Otorga acceso a contenedores!'
+guest_pass_preset_click_lore: '&eHacé clic para elegir una duración'
+guest_pass_duration_title: '&8Duración: {PLAYER}'
+guest_pass_duration_label: '&e{TIME}'
+guest_pass_duration_click_lore: ['&7Hacé clic para revisar y confirmar.']
+guest_pass_duration_unknown: '?'
+guest_pass_duration_days: '{DAYS}d'
+guest_pass_duration_hours: '{HOURS}h'
+guest_pass_duration_minutes: '{MINUTES}m'
+guest_pass_duration_hours_minutes: '{HOURS}h {MINUTES}m'
+guest_pass_expiring_now: '<1m'
+guest_pass_confirm_title: '&8Confirmar Pase de Invitado'
+guest_pass_confirm_name: '&aConfirmar Pase de Invitado'
+guest_pass_confirm_player_line: '&7Jugador: &f{PLAYER}'
+guest_pass_confirm_preset_line: '&7Preajuste: &f{PRESET}'
+guest_pass_confirm_duration_line: '&7Duración: &f{TIME}'
+guest_pass_confirm_container_warning: '&c⚠ Este invitado podrá abrir cofres,'
+guest_pass_confirm_container_warning_2: '&cbarriles y otros contenedores de esta parcela.'
+guest_pass_confirm_click_lore: '&aHacé clic para confirmar y emitir'
+guest_pass_detail_title: '&8Pase: {PLAYER}'
+button_revoke_guest_pass: '&cRevocar Pase'
+revoke_guest_pass_lore: ['&7Terminá de inmediato el acceso de este invitado.']
+
+# ------------------------------------------------------------
+# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
+# ------------------------------------------------------------
+button_lockdown: '&cBloqueo de Emergencia'
+button_lockdown_active: '&c&lBloqueo de Emergencia (ACTIVO)'
+lockdown_button_lore: ['&7Restringí al instante acciones sensibles', '&7si esta parcela está siendo griefeada.']
+lockdown_button_active_lore: ['&c&lBLOQUEO ACTIVO', '&7Hacé clic para revisar o desactivarlo.']
+lockdown_button_locked_lore: ['&cEntrá a una parcela que administrés', '&cpara usar el Bloqueo de Emergencia.']
+lockdown_menu_title: '&cBloqueo de Emergencia'
+lockdown_status_active_name: '&c&lBLOQUEO ACTIVO'
+lockdown_status_inactive_name: '&a&lOperación Normal'
+lockdown_status_active_lore: ['&7Esta parcela está actualmente bloqueada.']
+lockdown_status_activated_by: '&7Activado por: &f{PLAYER}'
+lockdown_status_activated_ago: '&7Activo hace: &f{MINUTES}m'
+lockdown_status_inactive_lore: ['&7Esta parcela opera con normalidad.', '&7Activá el bloqueo para restringir al instante', '&7construcción, destrucción y contenedores para', '&7todos excepto vos y el staff.']
+lockdown_guide_name: '&eGuía de Bloqueo'
+lockdown_guide_lore: ['&7El bloqueo anula al instante roles y', '&7Pases de Invitado para acciones sensibles.', ' ', '&8Las puertas y botones siempre funcionan,', '&8así que nadie queda nunca atrapado.', '&8La propiedad y los roles nunca cambian.']
+button_activate_lockdown: '&cActivar Bloqueo'
+activate_lockdown_lore: ['&7Restringí de inmediato acciones sensibles.']
+button_deactivate_lockdown: '&aDesactivar Bloqueo'
+deactivate_lockdown_lore: ['&7Restaurá de inmediato el acceso normal.']
+lockdown_confirm_activate_title: '&cConfirmar Bloqueo'
+lockdown_confirm_deactivate_title: '&aConfirmar Desbloqueo'
+lockdown_confirm_activate_name: '&cConfirmar Activación'
+lockdown_confirm_deactivate_name: '&aConfirmar Desactivación'
+lockdown_confirm_activate_lore: ['&7Todos excepto vos y el staff perderán', '&7al instante acceso a construir, romper', '&7y usar contenedores en esta parcela.', ' ', '&7Las puertas y botones seguirán funcionando,', '&7así que nadie quedará atrapado.', ' ', '&aHacé clic para activar el bloqueo.']
+lockdown_confirm_deactivate_lore: ['&7Esta parcela volverá de inmediato a', '&7sus roles y permisos normales.', ' ', '&aHacé clic para desactivar el bloqueo.']
+
+# ------------------------------------------------------------
+# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
+# ------------------------------------------------------------
+button_realm_profile: '&3📜 Perfil de Parcela'
+realm_profile_button_lore: ['&7Gestioná el nombre, categoría,', '&7saludo y tablón de esta parcela.']
+realm_profile_button_view_lore: ['&7Mirá la identidad pública', '&7y el tablón de esta parcela.']
+realm_profile_menu_title: '&3Perfil de Parcela'
+realm_profile_header_name: '&3&lPerfil de Parcela'
+realm_profile_name_line: '&7Nombre: &f{NAME}'
+realm_profile_desc_line: '&7"{DESC}"'
+realm_profile_no_desc: '&8Todavía no hay descripción.'
+realm_profile_rename_hint: '&8Usá /ag rename <nombre> para cambiar esto.'
+realm_profile_desc_hint: '&8Usá /ag setdesc <texto> para cambiar esto.'
+realm_profile_category_name: '&6Categoría: &f{CATEGORY}'
+realm_profile_category_lore: ['&7Cómo se agrupa esta parcela en', '&7el navegador de Descubrimiento.']
+realm_profile_category_click: '&eHacé clic para pasar a la siguiente categoría.'
+realm_profile_category_locked: '&8Solo el dueño puede cambiar esto.'
+realm_profile_category_build: 'Construcción'
+realm_profile_category_shop: 'Tienda'
+realm_profile_category_town: 'Pueblo'
+realm_profile_category_farm: 'Granja'
+realm_profile_category_event: 'Evento'
+realm_profile_category_other: 'Otro'
+realm_profile_visible_name: '&a&lVisible en Descubrimiento'
+realm_profile_hidden_name: '&7&lOculta del Descubrimiento'
+realm_profile_visible_lore: ['&7Esta parcela puede aparecer en', '&7el navegador público de Descubrimiento.']
+realm_profile_hidden_lore: ['&7Esta parcela está oculta del', '&7navegador público de Descubrimiento.']
+realm_profile_visibility_click: '&eHacé clic para alternar la visibilidad.'
+realm_profile_greeting_name: '&bSaludo de Entrada'
+realm_profile_no_greeting: '&8Todavía no hay saludo de entrada.'
+realm_profile_entry_title_line: '&7Título: &f{TITLE}'
+realm_profile_welcome_line: '&7Chat: &f{MESSAGE}'
+realm_profile_greeting_hint: '&8Usá /ag rename y /ag welcome para cambiar esto.'
+realm_profile_noticeboard_name: '&dTablón de Anuncios'
+realm_profile_noticeboard_lore: ['&7Reglas, detalles de eventos, info de', '&7tienda, o anuncios para visitantes.']
+realm_profile_noticeboard_count: '&7Anuncios: &f{COUNT}/{MAX}'
+realm_profile_noticeboard_click: '&eHacé clic para abrir el tablón de anuncios.'
+noticeboard_menu_title: '&dTablón de Anuncios'
+noticeboard_header_name: '&d&lTablón de Anuncios'
+noticeboard_add_hint_lore: ['&7Usá /ag notice add <texto> para publicar,', '&7y /ag notice remove <#> para quitar.']
+noticeboard_none_title: '&7Sin Anuncios Todavía'
+noticeboard_none_lore: ['&7Esta parcela no publicó reglas,', '&7eventos, ni anuncios.']
+noticeboard_entry_name: '&e📌 Anuncio'
+noticeboard_entry_author_line: '&7Publicado por: &f{PLAYER}'
+noticeboard_entry_age_line: '&7Hace: &f{AGE}'
+noticeboard_entry_remove_hint: '&cHacé clic para quitar este anuncio.'
+visit_plot_notice_count: '&7📌 {COUNT} anuncio(s) en el tablón'
+
+# ------------------------------------------------------------
+# Guía Más Clara para Jugadores (1.3.0+, Hito 5)
+# ------------------------------------------------------------
+settings_repeat_notifications_on_name: '&aRepetir Notificaciones: SÍ'
+settings_repeat_notifications_off_name: '&cRepetir Notificaciones: NO'
+settings_repeat_notifications_lore: ['&7Si está en NO, los mensajes de acción', '&7bloqueada repetidos se limitan a uno', '&7cada pocos segundos.']
+settings_replay_walkthrough_name: '&eRepetir Guía de Primera Parcela'
+settings_replay_walkthrough_lore: ['&7Volvé a ver la guía opcional sobre', '&7roles, Pases de Invitado y Bloqueo.']
+walkthrough_menu_title_page1: '&b¡Bienvenido a AegisGuard! (1/2)'
+walkthrough_menu_title_page2: '&b¡Bienvenido a AegisGuard! (2/2)'
+walkthrough_claim_name: '&aTu Parcela Está Protegida'
+walkthrough_claim_lore: ['&7Nadie más puede construir, romper o abrir', '&7cofres acá salvo que lo permitas.', '&7Usá /ag info para ver los detalles de tu parcela.']
+walkthrough_roles_name: '&bConfiá en Amigos con Roles'
+walkthrough_roles_lore: ['&7Abrí el menú de Roles para darle a amigos', '&7y aliados acceso permanente de construcción/cofres.', '&7La confianza permanente nunca vence sola.']
+walkthrough_guestpass_name: '&ePases de Invitado Temporales'
+walkthrough_guestpass_lore: ['&7¿Organizás un evento o contratás un', '&7constructor? Emití un Pase de Invitado -', '&7vence automáticamente y nunca toca', '&7el rol permanente de nadie.']
+walkthrough_lockdown_name: '&cBloqueo de Emergencia'
+walkthrough_lockdown_lore: ['&7Si algo sale mal, podés restringir', '&7al instante construcción/cofres para', '&7todos menos vos - reversible en', '&7cualquier momento, y nunca atrapa jugadores.']
+walkthrough_profile_name: '&3Perfil de Parcela'
+walkthrough_profile_lore: ['&7Dale a tu parcela un nombre público,', '&7descripción, categoría y saludo', '&7para que los visitantes sepan qué es.']
+walkthrough_notice_name: '&dTablón de Anuncios'
+walkthrough_notice_lore: ['&7Publicá reglas cortas, detalles de eventos', '&7o info de tienda para visitantes con', '&7/ag notice add <texto>.']
+walkthrough_guide_name: '&6Guía del Guardián'
+walkthrough_guide_lore: ['&7¿Te olvidaste de algo? Abrí la guía', '&7completa cuando quieras desde el menú', '&7principal, o repetí esta guía en Ajustes.']
+walkthrough_back_lore: ['&7Ir a la página anterior.']
+walkthrough_next_name: '&aSiguiente Página'
+walkthrough_done_name: '&aTerminar'
+walkthrough_next_lore: ['&7Continuar la guía.']
+walkthrough_skip_lore: ['&7Cerrar - podés repetir esto', '&7cuando quieras desde Ajustes.']
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+button_routes: '&a🗺 Routes'
+routes_button_lore: ['&7Mirá rutas de exploración hechas por staff', '&7y mirá tu próximo punto.']
+routes_menu_title: '&aRutas'
+routes_none_title: '&7Sin Rutas Todavía'
+routes_none_lore: ['&7El staff no publicó ninguna', '&7ruta de exploración todavía.']
+routes_prev_lore: ['&7Página anterior.']
+routes_next_lore: ['&7Página siguiente.']
+routes_progress_line: '&7Progreso: &f{COUNT}/{TOTAL}'
+routes_next_checkpoint_line: '&7Siguiente: &e{NAME}'
+routes_complete_line: '&a✔ Ruta completa'
+routes_click_detail: '&eHacé clic para ver detalles.'
+routes_entry_name: '&a🗺 {NAME}'
+routes_detail_title: '&aDetalles de Ruta'
+routes_reward_line: '&7Recompensa: &6{MONEY} &7+ &b{BLOCKS} blocks'
+routes_walk_hint: '&7Acercate a este punto para descubrirlo.'
+routes_teleport_hint: '&eHacé clic para teletransportarte cerca (opcional).'
+routes_next_name: '&eSiguiente: {NAME}'
+routes_complete_title: '&aRuta completa'
+routes_complete_lore: ['&7Descubriste todos los', '&7puntos de esta ruta.']
+button_admin_routes: '&aEditor de Rutas'
+admin_routes_lore: ['&7Creá rutas de exploración con', '&7puntos ordenados para que los jugadores exploren.', ' ', '&eHacé clic para abrir.']
+routes_admin_title: '&cEditor de Rutas'
+routes_admin_edit_title: '&cEditar Ruta'
+routes_admin_enabled: '&aActiva'
+routes_admin_disabled: '&cDesactivada'
+routes_admin_checkpoints_line: '&7Puntos: &f{COUNT}'
+routes_admin_click_edit: '&eHacé clic para editar.'
+routes_admin_create_name: '&a＋ Crear Ruta Acá'
+routes_admin_create_lore: ['&7Creates a new Activa route named', '&7como tu mundo actual, empezando', '&7con un punto a tus pies.']
+routes_admin_toggle_lore: ['&eHacé clic para alternar visibilidad.']
+routes_admin_add_checkpoint_name: '&b＋ Agregar Punto Acá'
+routes_admin_add_checkpoint_lore: ['&7Agrega tu ubicación actual como', '&7el próximo punto ordenado.']
+routes_admin_reward_money_name: '&6Money Recompensa: {AMOUNT}'
+routes_admin_reward_money_lore: ['&7Click to cycle: 0 → 10 → 25 → 50 → 100.']
+routes_admin_reward_blocks_name: '&bBloques de claim: {AMOUNT}'
+routes_admin_reward_blocks_lore: ['&7Click to cycle: 0 → 25 → 50 → 100 → 250.']
+routes_admin_delete_name: '&cEliminar Ruta'
+routes_admin_delete_lore: ['&cElimina esta ruta y todo', '&cel progreso de jugadores.']
+
+# ------------------------------------------------------------
+# Alliance Access (1.3.0+, Milestone 7)
+# ------------------------------------------------------------
+button_alliance_access: '&6🛡 Acceso de Alianza'
+alliance_button_lore: ['&7Administra los permisos de alianza', '&7de esta parcela.']
+alliance_button_grayed_lore: ['&7Esta parcela no se unió a una alianza.', '&7Crea o únete a una, luego activa', '&7esta parcela. Los riesgos quedan OFF.']
+alliance_menu_title: '&6Acceso de Alianza'
+alliance_none_personal: '&8No estás en una alianza.'
+alliance_create_hint: '&8Usa /ag alliance create <name>'
+alliance_personal_line: '&7Tu alianza: &f{NAME}'
+alliance_members_line: '&7Miembros: &f{COUNT}'
+alliance_header_name: '&6&lAcceso de Alianza'
+alliance_create_name: '&aCrear Alianza'
+alliance_create_lore: ['&7Usa &f/ag alliance create <name>', '&7para formar una nueva alianza.']
+alliance_accept_name: '&eAceptar Invitación'
+alliance_accept_lore: ['&7Usa &f/ag alliance accept', '&7si tienes una invitación pendiente.']
+alliance_invite_name: '&bInvitar Jugador'
+alliance_invite_lore: ['&7Usa &f/ag alliance invite <player>', '&7para invitar a alguien (solo líder).']
+alliance_leave_name: '&eSalir de la Alianza'
+alliance_leave_lore: ['&7Los líderes deben disolverla.', '&eClick para confirmar.']
+alliance_disband_name: '&cDisolver Alianza'
+alliance_disband_lore: ['&cElimina la alianza para todos.', '&cLas parcelas unidas pierden acceso.', '&eClick para confirmar.']
+alliance_no_plot_name: '&7Párate en una Parcela'
+alliance_no_plot_lore: ['&7Los interruptores de Acceso de Alianza', '&7aplican a la parcela donde estás.']
+alliance_plot_not_joined_lore: ['&7Esta parcela no se unió a una alianza.', '&7Los aliados no ganan nada aquí', '&7hasta que actives la unión.']
+alliance_join_click: '&eClick para unir tu alianza.'
+alliance_manage_locked: '&8Solo el dueño puede cambiar esto.'
+alliance_need_membership: '&8Únete o crea una alianza primero.'
+alliance_plot_not_joined_name: '&7Sin Alianza en Esta Parcela'
+alliance_plot_joined_name: '&aUnida: &f{NAME}'
+alliance_leave_plot_lore: ['&eClick para quitar esta parcela', '&ede la alianza.']
+alliance_manage_locked_lore: ['&8Solo el dueño puede cambiar esto.']
+alliance_toggle_on: '&aON'
+alliance_toggle_off: '&cOFF'
+alliance_toggle_click: '&eClick para alternar.'
+alliance_toggle_enter: 'Los aliados pueden entrar'
+alliance_toggle_interact: 'Los aliados pueden usar puertas/controles'
+alliance_toggle_containers: 'Los aliados pueden usar contenedores'
+alliance_toggle_build: 'Los aliados pueden construir y romper'
+alliance_toggle_animals: 'Los aliados pueden usar animales/granjas'
+alliance_toggle_friendly_pvp: 'Los aliados son amistosos en PvP'
+alliance_confirm_title: '&cConfirmar'
+alliance_confirm_yes: '&aConfirmar'
+alliance_confirm_yes_lore: ['&eClick para confirmar.']
+alliance_confirm_no: '&cCancelar'
+alliance_confirm_no_lore: ['&7Volver.']

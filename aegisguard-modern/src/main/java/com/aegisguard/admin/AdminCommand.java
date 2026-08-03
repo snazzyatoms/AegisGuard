@@ -1,6 +1,7 @@
 package com.aegisguard.admin;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.audit.AuditCategory;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
 import com.aegisguard.migration.MigrationManager;
@@ -40,7 +41,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "rentals", "discover", "activity", "snapshot", "restore"
+            "rentals", "discover", "activity", "snapshot", "restore", "audit"
     };
 
     private static final String[] MIGRATE_ACTIONS = {
@@ -101,6 +102,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "rentals" -> handleAdminRentals(player, args);
             case "discover" -> handleAdminDiscover(player, args);
             case "activity" -> handleAdminActivity(player);
+            case "audit" -> handleAudit(player);
             default -> player.sendMessage(ChatColor.YELLOW + "Usage: /aegisadmin <" + String.join("|", SUB_COMMANDS) + ">");
         }
 
@@ -201,7 +203,23 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                             + (enabled ? "&aENABLED" : "&cDISABLED") + "&7."
             );
         }
+        if (plugin.audit() != null) {
+            plugin.audit().record(AuditCategory.ADMIN_BYPASS, player, null,
+                    "Set bypass mode to " + (enabled ? "ENABLED" : "DISABLED"));
+        }
         plugin.effects().playConfirm(player);
+    }
+
+    private void handleAudit(Player player) {
+        if (!player.hasPermission("aegis.admin.audit")) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+        if (plugin.gui().audit() == null) {
+            player.sendMessage(ChatColor.RED + "The audit ledger is unavailable.");
+            return;
+        }
+        plugin.gui().audit().open(player);
     }
 
     private void handleWand(Player player, String[] args) {
@@ -388,8 +406,14 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     .whenComplete((result, error) -> plugin.runMain(player, () -> {
                         if (error != null) {
                             player.sendMessage(ChatColor.RED + "Migration failed: " + safeMessage(error));
-                        } else if (plugin.gui().migration() != null) {
-                            plugin.gui().migration().openPreview(player, source, result);
+                        } else {
+                            if (plugin.gui().migration() != null) {
+                                plugin.gui().migration().openPreview(player, source, result);
+                            }
+                            if (plugin.audit() != null) {
+                                plugin.audit().record(AuditCategory.MIGRATION, player, source.getDisplayName(),
+                                        "Imported claims from " + source.getDisplayName());
+                            }
                         }
                     }));
             return;
@@ -457,6 +481,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                             Map.of("PLOTS", String.valueOf(result.repairedPlots()),
                                     "REMAINING", String.valueOf(result.after().issues().size())));
                     audit(player, "ran Doctor repair (plots=" + result.repairedPlots() + ", remaining=" + result.after().issues().size() + ")");
+                    if (plugin.audit() != null) {
+                        plugin.audit().record(AuditCategory.DOCTOR_REPAIR, player, null,
+                                "Repaired " + result.repairedPlots() + " plot(s); "
+                                        + result.after().issues().size() + " issue(s) remain.");
+                    }
                 });
             });
             return;
@@ -526,6 +555,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         player.sendMessage(ChatColor.AQUA + "[AegisGuard] " + ChatColor.GRAY + "Restoring latest snapshot...");
+        UUID restoredPlotId = plot.getPlotId();
         plugin.runGlobalAsync(() -> {
             boolean restored = plugin.getSnapshotManager().rollback(latest.getSnapshotId());
             plugin.runMain(player, () -> {
@@ -533,6 +563,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.GREEN + "Plot restored from snapshot " + latest.getSnapshotId());
                 } else {
                     player.sendMessage(ChatColor.RED + "Plot restore failed. Check the logs or doctor report.");
+                }
+                if (plugin.audit() != null) {
+                    plugin.audit().record(AuditCategory.SNAPSHOT_RESTORE, player, restoredPlotId.toString(),
+                            "Restored plot from snapshot " + latest.getSnapshotId() + (restored ? "" : " (failed)"));
                 }
             });
         });
@@ -632,6 +666,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         };
         String reason = args.length > 4 ? String.join(" ", Arrays.copyOfRange(args, 4, args.length)) : "No reason supplied";
         audit(player, action + " ClaimBlocks for " + targetName + " by " + amount + " (available=" + newBalance + ", reason=" + reason + ")");
+        if (plugin.audit() != null) {
+            plugin.audit().record(AuditCategory.CLAIM_BLOCK_ADJUST, player, targetName,
+                    action + " ClaimBlocks by " + amount + " (available=" + newBalance + ", reason=" + reason + ")");
+        }
         player.sendMessage(ChatColor.GREEN + "Updated " + targetName + " to " + newBalance + " available ClaimBlocks.");
     }
 

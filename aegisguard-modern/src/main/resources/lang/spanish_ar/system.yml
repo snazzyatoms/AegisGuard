@@ -49,8 +49,16 @@ cannot_break: '&c❌ No podés romper bloques acá; esta área está protegida.'
 cannot_place: '&c❌ No podés colocar bloques acá; esta área está protegida.'
 cannot_interact: '&c❌ No tenés permitido interactuar con eso acá.'
 cannot_attack: '&c❌ El PvP está deshabilitado en esta parcela.'
-plot_entry_denied: '&c⛔ Acceso denegado. Esta parcela es privada.'
+plot_entry_denied: '&c⛔ Acceso denegado. Esta parcela es privada; pedile al dueño un Pase de Invitado.'
 plot_banned_entry: '&c⛔ Tenés prohibida la entrada a esta parcela.'
+plot_action_needs_pass: '&c❌ Esta parcela es privada; pedile al dueño un Pase de Invitado.'
+guest_pass_missing_permission: '&c❌ {PERMISSION} no está incluido en tu Pase de Invitado actual.'
+permission_label_containers: 'El acceso a contenedores'
+permission_label_build: 'Construir'
+permission_label_break: 'Romper bloques'
+permission_label_farm: 'La agricultura'
+permission_label_vehicles: 'El uso de vehículos'
+permission_label_other: 'Esa acción'
 zone_created: '&a✔ Zona ''{ZONE}'' creada.'
 zone_deleted: '&c✖ Zona ''{ZONE}'' eliminada.'
 zone_rented: '&a✔ {PLAYER} ahora está alquilando ''{ZONE}''.'
@@ -481,3 +489,84 @@ market_stall_generic_error: '&cNo se pudo completar esa acción de TradeStall.'
 charged_amount: '&7Monto cobrado: &6{AMOUNT}'
 refunded_amount: '&7Monto reembolsado: &a{AMOUNT}'
 claims_disabled_in_world: '&cLos reclamos nuevos están deshabilitados en este mundo.'
+
+# ------------------------------------------------------------
+# Pases de Invitado Temporales (1.3.0+, Hito 2)
+# ------------------------------------------------------------
+guest_pass_disabled: '&cLos Pases de Invitado están deshabilitados en este servidor.'
+guest_pass_invalid: '&cEsa solicitud de Pase de Invitado no es válida.'
+guest_pass_target_owner: '&cNo podés emitir un Pase de Invitado al dueño de la parcela.'
+guest_pass_target_banned: '&cEse jugador está vetado de esta parcela.'
+guest_pass_target_self: '&cNo podés emitirte un Pase de Invitado a vos mismo.'
+guest_pass_limit_reached: '&cEsta parcela ya tiene el número máximo de Pases de Invitado activos.'
+guest_pass_issued: '&aSe emitió un Pase de Invitado de {PRESET} a &e{PLAYER}&a.'
+guest_pass_received: '&aRecibiste un Pase de Invitado de {PRESET} para &e{PLOT}&a.'
+guest_pass_revoked: '&eSe revocó el Pase de Invitado de &6{PLAYER}&e.'
+guest_pass_expired_notice: '&eTu Pase de Invitado para &6{PLOT} &eexpiró.'
+guest_pass_expired_owner_notice: '&eEl Pase de Invitado de {PLAYER} para tu parcela expiró.'
+
+# ------------------------------------------------------------
+# Bloqueo de Emergencia de Parcela (1.3.0+, Hito 3)
+# ------------------------------------------------------------
+lockdown_action_blocked: '&cEsta parcela está en Bloqueo de Emergencia. Intentá de nuevo cuando se desactive.'
+lockdown_activated: '&c&lBloqueo de Emergencia activado. &7Las acciones sensibles están restringidas.'
+lockdown_deactivated: '&a&lBloqueo de Emergencia desactivado. &7Se restauró el acceso normal.'
+lockdown_disabled: '&cEl Bloqueo de Emergencia está deshabilitado en este servidor.'
+lockdown_invalid: '&cEsa solicitud de Bloqueo no es válida.'
+lockdown_already_active: '&cEsta parcela ya está en Bloqueo de Emergencia.'
+
+# ------------------------------------------------------------
+# Perfiles de Parcela y Tablones de Anuncios (1.3.0+, Hito 4)
+# ------------------------------------------------------------
+noticeboard_disabled: '&cEl tablón de anuncios está deshabilitado en este servidor.'
+usage_notice_add: '&cUso: /ag notice add <texto>'
+notice_too_long: '&cEse anuncio es demasiado largo (Máx {MAX} caracteres).'
+notice_posted: '&a✔ Anuncio publicado en el tablón de esta parcela.'
+usage_notice_remove: '&cUso: /ag notice remove <#>'
+notice_invalid_index: '&cEse no es un número de anuncio válido. Usá /ag notice list para verlos.'
+notice_removed: '&e✔ Anuncio eliminado.'
+
+# ------------------------------------------------------------
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ------------------------------------------------------------
+routes_disabled: '&cLas rutas están deshabilitadas en este servidor.'
+route_checkpoint_discovered: '&a✔ Descubriste &f{CHECKPOINT}&a en &f{ROUTE}&a ({COUNT}/{TOTAL}).'
+route_completed: '&a✔ Completaste la ruta &f{ROUTE}&a!'
+route_completed_rewarded: '&a✔ Ruta &f{ROUTE}&a completa! Recompensa: &6{MONEY}&a + &b{BLOCKS} bloques de claim&a.'
+routes_world_missing: '&cEl mundo de ese punto no está cargado.'
+routes_teleported: '&aTe teletransportaste cerca de &f{NAME}&a.'
+routes_admin_created: '&a✔ Ruta creada &f{NAME}&a.'
+routes_admin_checkpoint_added: '&a✔ Punto agregado (ahora &f{COUNT}&a en total).'
+routes_admin_deleted: '&e✔ Ruta eliminada &f{NAME}&e.'
+
+# ------------------------------------------------------------
+# Alliance Access (1.3.0+, Milestone 7)
+# ------------------------------------------------------------
+alliance_disabled: '&cEl Acceso de Alianza está deshabilitado en este servidor.'
+alliance_invalid: '&cEsa solicitud de alianza no es válida.'
+alliance_invalid_name: '&cLos nombres de alianza deben tener 1-32 caracteres.'
+alliance_already_member: '&cYa estás en una alianza.'
+alliance_target_in_other: '&cEse jugador ya está en otra alianza.'
+alliance_full: '&cEsa alianza está llena.'
+alliance_no_invite: '&cNo tienes una invitación de alianza pendiente.'
+alliance_not_member: '&cNo estás en una alianza.'
+alliance_leader_must_disband: '&cLos líderes deben disolver la alianza en lugar de salir.'
+alliance_not_leader: '&cSolo el líder de la alianza puede hacer eso.'
+alliance_plot_not_joined: '&cEsta parcela no se unió a una alianza.'
+alliance_action_ok: '&a✔ Acceso de Alianza actualizado.'
+alliance_created: '&aCreaste la alianza &e{NAME}&a. Invita amigos y luego une una parcela desde Acceso de Alianza.'
+alliance_invite_sent: '&aInvitaste a &e{PLAYER}&a a &e{NAME}&a.'
+alliance_invite_received: '&e{PLAYER} &7te invitó a la alianza &e{NAME}&7. Usa &e/ag alliance accept'
+alliance_accepted: '&aTe uniste a la alianza &e{NAME}&a.'
+alliance_left: '&eSaliste de la alianza &6{NAME}&e.'
+alliance_disbanded: '&eDisolviste la alianza &6{NAME}&e. Las parcelas unidas perdieron el acceso.'
+alliance_status: '&6Alianza: &f{NAME} &7| Miembros: &f{COUNT} &7| Líder: &f{LEADER}'
+alliance_usage: '&cUso: /ag alliance <create|invite|accept|leave|disband|menu|status>'
+alliance_usage_create: '&cUso: /ag alliance create <name>'
+alliance_usage_invite: '&cUso: /ag alliance invite <player>'
+alliance_help_create: '&e/ag alliance create <name> &7- formar una nueva alianza'
+alliance_help_invite: '&e/ag alliance invite <player> &7- invitar a un jugador (líder)'
+alliance_help_accept: '&e/ag alliance accept &7- aceptar una invitación pendiente'
+alliance_help_leave: '&e/ag alliance leave &7- salir de tu alianza'
+alliance_help_disband: '&e/ag alliance disband &7- disolver tu alianza (líder)'
+alliance_help_menu: '&e/ag alliance menu &7- abrir Acceso de Alianza'

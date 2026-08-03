@@ -104,6 +104,17 @@ public class PlayerGUI {
                 tl(player, "info_lore", List.of("&7Read the basics, commands,", "&7and protection tips."))
         ));
 
+        // Routes (Slot 10) — Milestone 6
+        if (plugin.getConfig().getBoolean("routes.enabled", true)) {
+            inv.setItem(10, GUIManager.createItem(
+                    Material.FILLED_MAP,
+                    t(player, "button_routes", "&a🗺 Routes"),
+                    tl(player, "routes_button_lore", List.of(
+                            "&7Browse staff-made exploration routes",
+                            "&7and see your next checkpoint."))
+            ));
+        }
+
         // Travel (Slot 11)
         boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
         if (travelEnabled) {
@@ -161,11 +172,65 @@ public class PlayerGUI {
                                 : List.of("&7Browse listed claims and", "&7market activity."))
         ));
 
+        // Emergency Lockdown (Slot 21)
+        boolean lockdownActive = currentPlot != null && currentPlot.isLockdownActive();
+        Material lockdownIcon = lockdownActive ? Material.RED_STAINED_GLASS_PANE
+                : (canManage ? Material.IRON_BARS : Material.GRAY_STAINED_GLASS_PANE);
+        inv.setItem(21, GUIManager.createItem(
+                lockdownIcon,
+                t(player, lockdownActive ? "button_lockdown_active" : "button_lockdown", "&cEmergency Lockdown"),
+                tl(player, canManage
+                                ? (lockdownActive ? "lockdown_button_active_lore" : "lockdown_button_lore")
+                                : "lockdown_button_locked_lore",
+                        lockdownActive
+                                ? List.of("&cThis plot is locked down.", "&7Click to view status or unlock.")
+                                : canManage
+                                ? List.of("&7A fast, reversible safety switch", "&7for griefing, disputes, or maintenance.")
+                                : List.of("&cStand inside a claim you manage", "&cto use Emergency Lockdown."))
+        ));
+
+        // Guest Passes (Slot 23)
+        Material guestPassIcon = canManage ? Material.NAME_TAG : Material.PAPER;
+        inv.setItem(23, GUIManager.createItem(
+                guestPassIcon,
+                t(player, "button_guest_passes", "&d🎫 Guest Passes"),
+                tl(player, canManage ? "guest_passes_lore" : "guest_passes_locked_lore",
+                        canManage
+                                ? List.of("&7Grant temporary, self-expiring", "&7access without permanent trust.")
+                                : List.of("&cStand inside a claim you manage", "&cto issue Guest Passes."))
+        ));
+
         // Expansion (Slot 24)
         inv.setItem(24, GUIManager.createItem(
                 Material.DIAMOND_PICKAXE,
                 t(player, "button_expand", "&b⛏ Expand"),
                 tl(player, "expand_lore", List.of("&7Request more land for this", "&7claim when you outgrow it."))
+        ));
+
+        // Alliance Access (Slot 25) — grayed until this plot joins an alliance
+        boolean allianceJoined = currentPlot != null && currentPlot.getAllianceId() != null;
+        boolean allianceEnabled = plugin.getConfig().getBoolean("alliance_access.enabled", true);
+        Material allianceIcon = !allianceEnabled ? Material.GRAY_DYE
+                : (allianceJoined ? Material.SHIELD : Material.GRAY_DYE);
+        inv.setItem(25, GUIManager.createItem(
+                allianceIcon,
+                t(player, "button_alliance_access", "&6🛡 Alliance Access"),
+                tl(player, allianceJoined ? "alliance_button_lore" : "alliance_button_grayed_lore",
+                        allianceJoined
+                                ? List.of("&7Manage this plot's alliance", "&7access toggles.")
+                                : List.of("&7This plot has not joined an alliance.",
+                                "&7Create or join one, then opt this",
+                                "&7plot in. Risky toggles stay OFF."))
+        ));
+
+        // Realm Profile (Slot 13)
+        inv.setItem(13, GUIManager.createItem(
+                Material.NAME_TAG,
+                t(player, "button_realm_profile", "&3📜 Realm Profile"),
+                tl(player, canManage ? "realm_profile_button_lore" : "realm_profile_button_view_lore",
+                        canManage
+                                ? List.of("&7Manage this plot's name, category,", "&7greeting, and noticeboard.")
+                                : List.of("&7View this plot's public identity", "&7and noticeboard."))
         ));
 
         // --- 4. ADVANCED FEATURES ---
@@ -304,6 +369,15 @@ public class PlayerGUI {
         switch (slot) {
             case 4 -> plugin.gui().info().open(player);
 
+            case 10 -> {
+                if (plugin.getConfig().getBoolean("routes.enabled", true)) {
+                    plugin.gui().routes().open(player);
+                } else {
+                    send(player, "routes_disabled", "&cRoutes are disabled on this server.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
             case 11 -> {
                 boolean travelEnabled = plugin.cfg() != null && cfgBool(() -> plugin.cfg().isTravelSystemEnabled(), false);
                 if (travelEnabled) {
@@ -341,6 +415,45 @@ public class PlayerGUI {
                             plot == null
                                     ? "&cYou must be standing inside a plot to do that."
                                     : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 21 -> {
+                if (plot != null && canManage) plugin.gui().lockdownGui().open(player);
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 23 -> {
+                if (plot != null && canManage) plugin.gui().guestPasses().open(player);
+                else {
+                    send(player, plot == null ? "no_plot_here" : "not_plot_owner",
+                            plot == null
+                                    ? "&cYou must be standing inside a plot to do that."
+                                    : "&cYou cannot manage this plot.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 25 -> {
+                if (plugin.getConfig().getBoolean("alliance_access.enabled", true)) {
+                    plugin.gui().allianceAccess().openMenu(player, plot);
+                } else {
+                    send(player, "alliance_disabled", "&cAlliance Access is disabled on this server.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 13 -> {
+                if (plot != null) plugin.gui().realmProfile().open(player);
+                else {
+                    send(player, "no_plot_here", "&cYou must be standing inside a plot to do that.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }

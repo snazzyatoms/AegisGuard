@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1271
+config_schema: 1278
 
 
 # ------------------------------------------------------------------------------
@@ -572,6 +572,78 @@ snapshots:
 
 
 # ==============================================================================
+# Staff Audit Ledger (1.3.0+)
+# ==============================================================================
+# A single, central, staff-only record of high-impact administrative actions:
+# snapshot restores, Doctor repairs, migrations, admin bypass toggles, and
+# ClaimBlock adjustments. Stored in plugins/AegisGuard/audit-log.yml.
+#
+# This intentionally does NOT log ordinary player actions (claiming, trusting,
+# chatting, etc.) or export to Discord. View it in-game with /agadmin audit.
+audit:
+  enabled: true
+
+  # Maximum entries kept (in memory and on disk) for the /agadmin audit viewer.
+  max_entries: 500
+
+  # Entries older than this are pruned automatically. Set to 0 to disable
+  # age-based pruning (max_entries still applies).
+  retention_days: 90
+
+  log_to_console: true
+
+
+# ==============================================================================
+# Temporary Guest Passes (1.3.0+, Milestone 2)
+# ==============================================================================
+# Owners can hand out short-lived access from the plot menu's "Guest Passes" button
+# without granting a permanent role. Passes always expire automatically - even across
+# a server restart - and revoking/expiring one never touches permanent roles/trust.
+guest_passes:
+  enabled: true
+
+  # Safety cap on how many passes can be active on a single plot at once.
+  max_active_per_plot: 10
+
+  # Longest duration (in minutes) an owner may choose, regardless of preset.
+  # 10080 minutes = 7 days.
+  max_duration_minutes: 10080
+
+  # Duration options offered in the GUI, in minutes. Values above max_duration_minutes
+  # are clamped automatically.
+  duration_presets_minutes: [15, 30, 60, 120, 360, 720, 1440, 4320, 10080]
+
+
+# ==============================================================================
+# Emergency Plot Lockdown (1.3.0+, Milestone 3)
+# ==============================================================================
+# A fast, fully reversible safety switch for the plot owner (or elevated staff) during griefing,
+# disputes, or maintenance. While active it overrides roles, Guest Passes, and the "public build"
+# flag for every restricted action - but INTERACT (doors, buttons, levers) is never restrictable,
+# so a player already inside a locked-down plot can always leave. Disabled by default is not an
+# option here in the safety sense - it simply never activates on its own; an owner/staff member
+# must explicitly flip it, and it never survives ownership transfer or role/pass deletion.
+lockdown:
+  enabled: true
+
+  # Permission tokens this feature is allowed to restrict while a plot is locked down.
+  # INTERACT is hard-coded as always-allowed in code and cannot be added here.
+  restricted_permissions:
+    - BUILD
+    - BLOCK_BREAK
+    - BLOCK_PLACE
+    - CONTAINERS
+    - REDSTONE
+    - ANIMALS
+    - VEHICLES
+    - FARM
+    - SHOP
+
+  # Require an extra confirmation click before activating or deactivating from the GUI.
+  require_confirmation: true
+
+
+# ==============================================================================
 # Expansion requests
 # ==============================================================================
 expansions:
@@ -714,6 +786,59 @@ territory_activity:
   enabled: true
   max_entries: 5000
   log_visits: false
+
+# Realm Profiles & Noticeboards (1.3.0+, Milestone 4). Gives every plot's existing name,
+# description, category, and entry greeting a single home in the Realm Profile GUI, plus a
+# short owner-moderated noticeboard for rules, event details, shop info, or announcements.
+# Never replaces an existing plot name, description, or greeting automatically.
+realm_profiles:
+  enabled: true
+
+  noticeboard:
+    enabled: true
+    # Maximum number of notices kept per plot. Oldest notice is dropped once a new one
+    # would exceed this limit.
+    max_entries: 8
+    # Maximum characters allowed per notice.
+    max_length: 200
+
+
+# ==============================================================================
+# Clearer Player Guidance (1.3.0+, Milestone 5)
+# ==============================================================================
+# An optional, skippable, and always-replayable two-page walkthrough shown once, a few seconds
+# after a player's first-ever claim. Never blocks or delays the claim itself, never repeats
+# automatically once shown, and is always reachable again via /ag guide or the "Replay
+# Walkthrough" button in Settings.
+first_claim_walkthrough:
+  enabled: true
+
+
+# ==============================================================================
+# Routes and Checkpoints (1.3.0+, Milestone 6)
+# ==============================================================================
+# Staff-authored named routes with ordered checkpoints. Players browse routes,
+# see the next destination, and optionally earn small completion rewards by
+# walking near checkpoints. Never forces teleports or alters claim boundaries.
+routes:
+  enabled: true
+  default_checkpoint_radius: 4.0
+  # When true, the route detail screen offers an optional teleport to the next
+  # checkpoint. Discovery itself never requires teleporting.
+  allow_optional_teleport: false
+  rewards:
+    enabled: true
+
+
+# ==============================================================================
+# Alliance Access (1.3.0+, Milestone 7)
+# ==============================================================================
+# Player alliances are completely separate from plot ownership, money, rentals,
+# and administration. Membership alone grants nothing. Each plot must opt in
+# via its six Alliance Access toggles (all default OFF).
+alliance_access:
+  enabled: true
+  max_members: 20
 
 
 # ==============================================================================

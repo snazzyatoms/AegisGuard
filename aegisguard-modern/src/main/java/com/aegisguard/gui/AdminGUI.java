@@ -57,6 +57,10 @@ public class AdminGUI {
     private static final int SLOT_TOOL_WORLD_CONTROLS = 34;
     private static final int SLOT_TOOL_MIGRATION      = 35;
 
+    // 1.3.0: Staff Audit Ledger
+    private static final int SLOT_TOOL_ROUTES         = 25;
+    private static final int SLOT_TOOL_AUDIT_LEDGER   = 26;
+
     private static final int SLOT_NAV_EXIT = 40;
     private static final int SLOT_NAV_BACK = 44;
 
@@ -289,6 +293,37 @@ public class AdminGUI {
         tagAction(migration, "open_migration");
         inv.setItem(SLOT_TOOL_MIGRATION, migration);
 
+        if (player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player)) {
+            ItemStack routes = GUIManager.createItem(
+                    Material.FILLED_MAP,
+                    plugin.gui().tr(player, "button_admin_routes", "&aRoute Editor"),
+                    plugin.gui().trList(player, "admin_routes_lore", List.of(
+                            "&7Create named exploration routes with",
+                            "&7ordered checkpoints for players to browse.",
+                            " ",
+                            "&eClick to open."
+                    ))
+            );
+            tagAction(routes, "open_routes");
+            inv.setItem(SLOT_TOOL_ROUTES, routes);
+        }
+
+        if (player.hasPermission("aegis.admin.audit")) {
+            ItemStack auditLedger = GUIManager.createItem(
+                    Material.WRITTEN_BOOK,
+                    plugin.gui().tr(player, "button_admin_audit", "&eStaff Audit Ledger"),
+                    plugin.gui().trList(player, "admin_audit_lore", List.of(
+                            "&7Review snapshot restores, Doctor repairs,",
+                            "&7migrations, bypass toggles, and ClaimBlock",
+                            "&7adjustments made by staff.",
+                            " ",
+                            "&eClick to open."
+                    ))
+            );
+            tagAction(auditLedger, "open_audit");
+            inv.setItem(SLOT_TOOL_AUDIT_LEDGER, auditLedger);
+        }
+
         ItemStack close = GUIManager.createItem(
                 Material.BARRIER,
                 plugin.gui().tr(player, "button_exit", "&c✖ Close"),
@@ -375,6 +410,26 @@ public class AdminGUI {
                     plugin.effects().playMenuFlip(player);
                 } else {
                     sendKey(player, "migration_unavailable", "&cMigration wizard is unavailable.");
+                    plugin.effects().playError(player);
+                }
+            }
+            case "open_routes" -> {
+                if ((player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player))
+                        && plugin.gui().routeAdmin() != null) {
+                    plugin.gui().routeAdmin().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.msg().send(player, "no_perm");
+                    plugin.effects().playError(player);
+                }
+            }
+
+            case "open_audit" -> {
+                if (player.hasPermission("aegis.admin.audit") && plugin.gui().audit() != null) {
+                    plugin.gui().audit().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.msg().send(player, "no_perm");
                     plugin.effects().playError(player);
                 }
             }

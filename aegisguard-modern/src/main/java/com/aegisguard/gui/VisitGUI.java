@@ -472,7 +472,9 @@ public class VisitGUI {
 
         // Prev / Next (45 / 53)
         if (page > 0) {
-            ItemStack prev = GUIManager.createItem(Material.ARROW, t(player, "button_prev_page", "&fPrevious Page"), null);
+            ItemStack prev = GUIManager.createItem(Material.ARROW,
+                    t(player, "button_prev_page", "&fPrevious Page"),
+                    tl(player, "prev_page_lore", List.of("&7Go to the previous page.")));
             tagAction(prev, "prev_page");
             inv.setItem(45, prev);
         }
@@ -494,7 +496,9 @@ public class VisitGUI {
         inv.setItem(52, close);
 
         if (page < (int) Math.ceil((double) displayPlots.size() / PLOTS_PER_PAGE) - 1) {
-            ItemStack next = GUIManager.createItem(Material.ARROW, t(player, "button_next_page", "&fNext Page"), null);
+            ItemStack next = GUIManager.createItem(Material.ARROW,
+                    t(player, "button_next_page", "&fNext Page"),
+                    tl(player, "next_page_lore", List.of("&7Go to the next page.")));
             tagAction(next, "next_page");
             inv.setItem(53, next);
         }

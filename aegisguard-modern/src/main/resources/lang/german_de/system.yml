@@ -139,7 +139,7 @@ zone_tenant_guest_removed: '&eEinen Zimmergast entfernt.'
 zone_tenant_renter_only: '&cNur der aktive Mieter kann die Gasteinstellungen dieses Zimmers ändern.'
 biome_changed: '&a ✔ Biom auf {BIOME}eingestellt.'
 biome_cost_paid: '&e💰 Bezahlt &6{AMOUNT}&e, um das Biom zu ändern.'
-like_success: '&a ✔ Dieser Claim hat Ihnen gefallen. Gesamtzahl der Likes: &e{AMOUNT}'
+like_success: '&a✔ Dir gefällt dieser Claim. Likes gesamt: &e{AMOUNT}'
 like_removed: '&eIhr Like wurde entfernt.'
 like_own_plot: '&cFehler: Sie können Ihren eigenen Claim nicht liken.'
 like_disabled: '&cLikes sind auf diesem Server/dieser Welt deaktiviert.'
@@ -165,8 +165,7 @@ admin_broadcast_enabled: '&a✔ Admin-Aktionsprotokollierung aktiviert.'
 admin_broadcast_disabled: '&c✖ Admin-Aktionsprotokollierung deaktiviert.'
 admin_lang_refreshing: '&7Sprachpakete werden aktualisiert...'
 admin_lang_refresh_complete: '&a ✔ Sprachpakete aktualisiert.'
-admin_lang_refresh_failed: '&c❌ Sprachpakete konnten nicht aktualisiert werden. Weitere Informationen finden Sie in der
-  Konsole.'
+admin_lang_refresh_failed: '&c❌ Sprachpakete konnten nicht aktualisiert werden. Weitere Informationen finden Sie in der Konsole.'
 admin_removed_banned: '&eGelöschte Claims für gesperrten Spieler: {PLAYER}'
 admin_plot_teleport: '&eTeleportiert zum Claim von {PLAYER}.'
 admin_plot_deleted: '&c✖ Claim von {PLAYER}gelöscht.'
@@ -226,8 +225,7 @@ rental_contract_cancelled: '&aMietvertrag beendet. Die Anzahlung wurde zurücker
   gestellt.'
 rental_contract_usage: '&cVerwendung: /ag Rental <Status|Erneuerung|Abbruch/Bestätigung>'
 discovery_disabled: '&cDie Grundstückserkennung ist auf diesem Server deaktiviert.'
-discovery_owner_required: '&cStellen Sie sich in ein Grundstück, das Ihnen gehört, um dessen Erkennungseinstellungen zu
-  ändern.'
+discovery_owner_required: '&cStellen Sie sich in ein Grundstück, das Ihnen gehört, um dessen Erkennungseinstellungen zu ändern.'
 discovery_invalid_category: '&cKategorie muss eine der folgenden sein: &f{CATEGORIES}'
 discovery_category_set: '&aErkennungskategorie auf &e{CATEGORY}&a gesetzt.'
 discovery_visibility_invalid: '&cDie Sichtbarkeit muss ein- oder ausgeschaltet sein.'
@@ -257,11 +255,11 @@ local_market_not_available: '&cAuf diesem Grundstück gibt es keinen lokalen Mar
 local_market_bridge_failed: '&cDiese Marktintegration kann derzeit nicht geöffnet werden.'
 market_stall_created: '&aTradeStall erstellt. Besucher durchsuchen es nun über ein geschütztes Menü.'
 market_stall_removed: '&eTradeStall entfernt.'
-market_stall_no_container: '&cPlatzieren Sie das Schild neben einer einzelnen Truhe oder einem Fass, um einen TradeStall
-  zu erstellen.'
+market_stall_no_container: '&cPlatzieren Sie das Schild neben einer einzelnen Truhe oder einem Fass, um einen TradeStall zu
+  erstellen.'
 market_stall_requires_shop: '&cAktivieren Sie Shop Interact auf diesem Grundstück, bevor Sie TradeStalls verwenden.'
-market_stall_no_access: '&cSie benötigen Zugang zur Grundstücksverwaltung oder eine gemietete Zone, um einen TradeStall
-  zu erstellen.'
+market_stall_no_access: '&cSie benötigen Zugang zur Grundstücksverwaltung oder eine gemietete Zone, um einen TradeStall zu
+  erstellen.'
 market_stall_inactive: '&cDieser TradeStall ist derzeit nicht verfügbar.'
 market_stall_missing: '&cDieser TradeStall ist nicht mehr verfügbar.'
 market_stall_none: '&cDerzeit sind hier keine TradeStalls verfügbar.'
@@ -432,8 +430,8 @@ group_usage_kick: '&cVerwendung: /ag group kick <player>'
 group_already_in_group: '&cSie sind bereits in einer Gruppe. Verlassen Sie es, bevor Sie ein anderes erstellen oder einem
   anderen beitreten.'
 group_create_failed_name_taken: '&cDieser Gruppenname ist nicht verfügbar oder Sie sind bereits einer Gruppe zugeordnet.'
-group_created: '&aErstellte Gruppe &e{GROUP}&a. Laden Sie Spieler ein, bauen Sie eine Schatzkammer auf und verwenden Sie
-  dann &e/AG-Gruppenanspruch&a.'
+group_created: '&aErstellte Gruppe &e{GROUP}&a. Laden Sie Spieler ein, bauen Sie eine Schatzkammer auf und verwenden Sie dann
+  &e/AG-Gruppenanspruch&a.'
 group_not_in_group: '&cSie sind derzeit nicht in einer Gruppe.'
 group_only_leader: '&cDas kann nur der Gruppenleiter.'
 group_player_not_found: '&cDieser Spieler ist nicht online.'
@@ -518,8 +516,8 @@ alliance_leader_must_disband: '&cAllianzführer müssen sich auflösen, anstatt 
 alliance_not_leader: '&cNur der Anführer der Allianz kann das tun.'
 alliance_plot_not_joined: '&cDieser Plot ist keiner Allianz beigetreten.'
 alliance_action_ok: '&a ✔ Allianzzugang aktualisiert.'
-alliance_created: '&aErstellte Allianz &e{NAME}&a. Laden Sie Freunde ein und schließen Sie sich dann einer Verschwörung
-  über Alliance Access an.'
+alliance_created: '&aErstellte Allianz &e{NAME}&a. Laden Sie Freunde ein und schließen Sie sich dann einer Verschwörung über
+  Alliance Access an.'
 alliance_invite_sent: '&aEingeladen &e{PLAYER}&a bis &e{NAME}&a.'
 alliance_invite_received: '&e{PLAYER}&7hat dich zur Allianz &e{NAME}&7 eingeladen. Verwenden Sie &e/ag Alliance Accept'
 alliance_accepted: '&aDu bist der Allianz &e{NAME}&a beigetreten.'
@@ -553,8 +551,8 @@ claim_merge_role_conflict: '&cZusammenführung blockiert: Beide Parzellen weisen
   zu. Lösen Sie zuerst die Rollen auf.'
 claim_merge_guest_conflict: '&cZusammenlegung gesperrt: Beide Parzellen haben Gastpässe für denselben Spieler. Widerrufen
   Sie zuerst einen.'
-claim_merge_member_cap: '&cZusammenführung blockiert: Durch das Zusammenführen von Mitgliedern würde das Mitgliederlimit
-  dieses Grundstücks überschritten.'
+claim_merge_member_cap: '&cZusammenführung blockiert: Durch das Zusammenführen von Mitgliedern würde das Mitgliederlimit dieses
+  Grundstücks überschritten.'
 claim_merge_insufficient_blocks: '&cSie benötigen &e{COST}&cClaimBlocks zum Zusammenführen.'
 claim_merge_failed_generic: '&cZusammenführung fehlgeschlagen: Diagramme sind nicht mehr verfügbar.'
 claim_merge_failed_rollback: '&cZusammenführung fehlgeschlagen und wurde zurückgesetzt: &7{ERROR}'

@@ -29,7 +29,15 @@ button_exit_lore:
 exit_lore:
 - '&7Feche este menu.'
 button_back_admin: '&fVoltar ao administrador'
-menu_title: '&3✦ AegisGuard Menu'
+menu_title: '&3✦ Menu AegisGuard'
+main_section_territory_name: '&bTerritório'
+main_section_territory_lore: '&7Sua parcela, perfil e controles de terreno.'
+main_section_access_name: '&dAcesso e Segurança'
+main_section_access_lore: '&7Membros, acesso temporário e proteção.'
+main_section_economy_name: '&6Economia e Progresso'
+main_section_economy_lore: '&7Mercado, ClaimBlocks, melhorias e leilões.'
+main_section_explore_name: '&aExplorar'
+main_section_explore_lore: '&7Rotas e viagens do servidor.'
 button_claim_land: '&a🛡 Criar parcela'
 claim_land_lore:
 - '&7Transforme sua seleção atual em'
@@ -110,8 +118,8 @@ expansion_header_lore:
 expansion_header_state_outside: '&cEntre em um de seus lotes para enviar uma solicitação.'
 expansion_header_state_pending: '&eUma solicitação já está em análise para esta fronteira.'
 expansion_header_state_ready_instant: '&bSolicitações válidas podem ser resolvidas imediatamente neste servidor.'
-expansion_header_state_ready_unattended: '&bNenhum revisor está online, portanto, solicitações válidas na fila podem ser
-  aprovadas automaticamente e registradas.'
+expansion_header_state_ready_unattended: '&bNenhum revisor está online, portanto, solicitações válidas na fila podem ser aprovadas
+  automaticamente e registradas.'
 expansion_header_state_ready_queue: '&6Escolha um nível abaixo e envie-o para avaliação da equipe.'
 expansion_plot_overview_name: '&bFronteira Atual'
 expansion_plot_overview_missing_lore:
@@ -175,7 +183,7 @@ expansion_tier2_lore:
 - '&7Aumentar o raio em &a+10&7 blocos.'
 - ' '
 - '&eClique para enviar a solicitação.'
-expansion_tier3_name: '&fFrontier Surge III &8(+20)'
+expansion_tier3_name: '&fSurto da Fronteira III &8(+20)'
 expansion_tier3_lore:
 - '&7Abra espaço para construções e caminhos maiores.'
 - '&7Aumentar o raio em &a+20&7 blocos.'
@@ -372,7 +380,7 @@ expansion_admin_title_paged: '&6&lSolicitações Pendentes &7({PAGE}/{PAGES})'
 expansion_request_item_name: '&bSolicitação: &f{PLAYER}'
 expansion_request_item_lore:
 - '&7Mundo: &f{WORLD}'
-- '&7Status: {STATUS}'
+- '&7Estado: {STATUS}'
 - '&7Idade: &f{AGE}'
 - '&7Raio: &e{CUR}&7→ &a{REQ}'
 - '&7Custo devido: &6{COST}'
@@ -746,7 +754,7 @@ zone_create_locked_lore:
 - '&7Então volte aqui.'
 zone_status_listed: '&eListado'
 zone_status_private: '&7Privado'
-zone_lore_status: '&7Status: &f{STATUS}'
+zone_lore_status: '&7Estado: &f{STATUS}'
 zone_item_name: '&b{ZONE}'
 zone_lore_dimensions: '&7Tamanho: &f{WIDTH}x{HEIGHT}x{DEPTH}'
 zone_lore_price: '&7Preço: &6{PRICE}'
@@ -2426,13 +2434,13 @@ transfer_confirm_accept: '&aConfirmar transferência'
 transfer_confirm_accept_lore:
 - '&7Transfira este gráfico agora.'
 transfer_confirm_success: '&aPlanejamento transferido para &f{PLAYER}&a.'
-button_giftblocks: '&aBloqueios de parcela de presentes'
+button_giftblocks: '&aPresentear ClaimBlocks'
 giftblocks_button_lore:
 - '&7Presente disponível ClaimBlocks'
 - '&7para um jogador próximo.'
 giftblocks_button_disabled_lore:
 - '&7Os presentes do ClaimBlocks estão desativados.'
-giftblocks_title: '&aBloqueios de parcela de presentes'
+giftblocks_title: '&aPresentear ClaimBlocks'
 giftblocks_amount_title: '&aEscolha o valor'
 giftblocks_confirm_title: '&aConfirmar presente'
 giftblocks_balance_name: '&aSeus blocos disponíveis'
@@ -2451,7 +2459,7 @@ giftblocks_confirm_lore:
 - '&7Clique para enviar o presente.'
 plot_status_button_lore:
 - '&7Ver informações do lote, mesclar parcelas,'
-- '&7transferir propriedade ou blocos de presentes.'
+- '&7transferir propriedade ou presentear blocos.'
 plot_status_button_locked_lore:
 - '&cFique dentro de um lote para visualizar o status.'
 papi_wilderness: 'Deserto'
@@ -2685,15 +2693,15 @@ admin_plot_actions:
 - '&eClique com o botão esquerdo: &7Teleporte'
 - '&bClique com o botão direito: &7Converter → Gráfico do servidor'
 - '&cShift-Clique com o botão direito: &7Excluir gráfico'
-style_old_english: '&dOld English'
-style_modern_english: '&aModern English'
-style_spanish_mx: '&bEspañol (México)'
-style_spanish_ar: '&bEspañol (Argentina)'
-style_portuguese_br: '&bPortuguês (Brasil)'
-style_french_fr: '&bFrançais'
+style_old_english: '&dInglês antigo'
+style_modern_english: '&aInglês moderno'
+style_spanish_mx: '&bEspanhol (México)'
+style_spanish_ar: '&bEspanhol (Argentina)'
+style_portuguese_br: 'String da UI: &bPortuguês (Brasil)'
+style_french_fr: '&bFrancês'
 style_italian_it: '&bItaliano'
-style_german_de: '&bDeutsch'
-style_polish_pl: '&bPolski'
+style_german_de: '&bAlemão'
+style_polish_pl: '&bPolês'
 prefix: '&8[&bAegisGuard&8]&r '
 role_edit_self_error: '&cErro: Você não pode editar sua própria função.'
 no_perm: '&cErro: Você não tem permissão para isso.'
@@ -2725,8 +2733,8 @@ notify_mode_usage: '&eUso: &7/aegis notify mode <chat|actionbar|title>\n&7Modos 
   mensagens\n&7- &bactionbar &8- &7Notificações da barra de ação (acima da barra de atalho)\n&7- &btitle &8- &7Notificações
   de título/subtítulo (tela central)'
 notify_mode_invalid: '&cModo inválido: &7{MODE}\n&eModos válidos: &7chat, barra de ação, título'
-notify_status: '&e&l━━━━━━━━━ &6Configurações de notificação &e&l━━━━━━━━━\n&7Saudações: {GREETINGS}\n&7Atualizações de
-  administrador: {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_status: '&e&l━━━━━━━━━ &6Configurações de notificação &e&l━━━━━━━━━\n&7Saudações: {GREETINGS}\n&7Atualizações de administrador:
+  {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
 notify_usage: '&eComandos de notificação:\n&7/aegis notify &8- &7Alternar mensagens de saudação\n&7/aegis notify greetings
   &8- &7Alternar mensagens de entrada/saída de parcela\n&7/aegis notify admin &8- &7Alternar notificações de administrador\n&7/aegis
   notify mode <chat|actionbar|title> &8- &7Definir estilo de notificação\n&7/aegis notify status &8- &7Ver configurações atuais'
@@ -2826,7 +2834,7 @@ zone_tenant_guest_removed: '&eUm hóspede do quarto foi removido.'
 zone_tenant_renter_only: '&cSomente o locatário ativo pode alterar as configurações de hóspedes deste quarto.'
 biome_changed: '&a✔ Bioma definido como {BIOME}.'
 biome_cost_paid: '&e💰 Pago &6{AMOUNT}&e para mudar de bioma.'
-like_success: '&a✔ Você gostou desta afirmação. Total de curtidas: &e{AMOUNT}'
+like_success: '&a✔ Você curtiu esta parcela. Total de curtidas: &e{AMOUNT}'
 like_removed: '&eSeu like foi removido.'
 like_own_plot: '&cErro: Você não pode gostar de sua própria parcela.'
 like_disabled: '&cAs curtidas estão desabilitadas neste servidor/mundo.'
@@ -2903,8 +2911,7 @@ rental_contract_only_renter: '&cSomente o locatário pode renovar este contrato.
 rental_contract_need_funds: '&cVocê precisa de {AMOUNT} para renovar.'
 rental_contract_payment_failed: '&cFalha no pagamento da renovação. Nenhum tempo de contrato foi adicionado.'
 rental_contract_renewed: '&aAluguel renovado por &e{DAYS} dia(s)&a.'
-rental_contract_cancel_prompt: '&eExecute &b/ag aluguel cancelar confirme &epara rescindir este contrato e devolver seu
-  depósito.'
+rental_contract_cancel_prompt: '&eExecute &b/ag aluguel cancelar confirme &epara rescindir este contrato e devolver seu depósito.'
 rental_contract_not_party: '&cVocê não faz parte deste contrato de aluguel.'
 rental_contract_owner_cancel_disabled: '&cOs proprietários não podem encerrar contratos ativos antecipadamente neste servidor.'
 rental_contract_cancelled: '&aContrato de aluguel encerrado. O depósito foi reembolsado ou colocado na fila para entrega.'
@@ -2945,8 +2952,8 @@ market_stall_no_access: '&cVocê precisa de acesso de gerenciamento de terreno o
 market_stall_inactive: '&cEsse TradeStall não está disponível no momento.'
 market_stall_missing: '&cEsse TradeStall não está mais disponível.'
 market_stall_none: '&cNão há TradeStalls disponíveis aqui no momento.'
-market_stall_external_override: '&eTradeStalls estão desativados aqui porque este gráfico está usando uma integração de
-  mercado externo.'
+market_stall_external_override: '&eTradeStalls estão desativados aqui porque este gráfico está usando uma integração de mercado
+  externo.'
 market_stall_listing_updated: '&aListagem TradeStall atualizada.'
 market_stall_listing_cleared: '&eListagem TradeStall limpa.'
 market_stall_select_item_first: '&cSelecione um slot em estoque antes de editar sua listagem.'
@@ -2981,8 +2988,7 @@ travel_fail_disabled: '&cSafe Travel está desabilitado neste servidor.'
 travel_fail_cancelled: '&cViagem cancelada.'
 alliance_toggle_disallowed: '&cEssa opção de acesso à aliança está desativada pela política do servidor.'
 lockdown_activated_notify: '&cBloqueio de emergência ativado em &f{PLOT}&c.'
-snapshot_restore_summary: '&eResumo da restauração: &f{TYPE}&7| &f{REASON}&7| idade &f{AGE}&7. Shift-Left novamente para
-  confirmar.'
+snapshot_restore_summary: '&eResumo da restauração: &f{TYPE}&7| &f{REASON}&7| idade &f{AGE}&7. Shift-Left novamente para confirmar.'
 usage_rename: '&cUso: /ag renomear <Nome>'
 rename_too_long: '&cO nome é muito longo (máx. {MAX} caracteres).'
 plot_renamed: '&a✔ Parcela renomeada para: &r{NAME}'
@@ -3129,8 +3135,8 @@ group_kick_locked: '&cA proteção da partida está ativa. Você pode remover me
 group_kick_failed: '&cEsse membro não pôde ser removido.'
 group_member_kicked: '&eRemovido &6{PLAYER}&edo grupo.'
 group_plot_already_exists: '&cEste grupo já possui um lote vinculado.'
-group_not_enough_members: '&cSeu grupo precisa de pelo menos &e{COUNT}&cmembros elegíveis para iniciantes antes de poder
-  reivindicar um lote de grupo.'
+group_not_enough_members: '&cSeu grupo precisa de pelo menos &e{COUNT}&cmembros elegíveis para iniciantes antes de poder reivindicar
+  um lote de grupo.'
 group_claim_requires_vault: '&cUma economia de cofre é necessária para parcelas de grupo pagas.'
 group_claim_not_enough_treasury: '&cO tesouro do seu grupo precisa de &e{AMOUNT}&cmais antes que este lote possa ser reivindicado.'
 group_free_claim_created: '&aCriado o enredo inicial gratuito para &e{GROUP}&a. Tamanho protegido usado: blocos &e{AREA}&a.'
@@ -3335,8 +3341,8 @@ expansion_mode_item_lore:
 - '&7Modo Instantâneo: &fAprovado automaticamente quando válido.'
 expansion_mode_hint_instant: '&bModo Instantâneo:&7 Aprovado automaticamente quando válido.'
 expansion_mode_hint_queue: '&6Modo de fila:&7 É necessária aprovação do administrador.'
-expansion_mode_hint_unattended: '&bFila autônoma:&7 Nenhum revisor está online, portanto, solicitações válidas podem ser
-  aprovadas automaticamente e registradas.'
+expansion_mode_hint_unattended: '&bFila autônoma:&7 Nenhum revisor está online, portanto, solicitações válidas podem ser aprovadas
+  automaticamente e registradas.'
 expansion_admin_title_paged_mode: '&6&lSolicitações Pendentes &7({PAGE}/{PAGES}) &8- {MODE}'
 expansion_admin_view_pending: '&eFila'
 expansion_admin_view_all: '&bHistórico'

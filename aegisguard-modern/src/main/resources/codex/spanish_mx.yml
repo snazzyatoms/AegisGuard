@@ -6,6 +6,14 @@
 
 # --- Menú Principal (Main Menu) ---
 menu_title: '&3✦ Menú AegisGuard'
+main_section_territory_name: '&bTerritorio'
+main_section_territory_lore: '&7Tu reclamo, perfil y controles de tierra.'
+main_section_access_name: '&dAcceso y Seguridad'
+main_section_access_lore: '&7Miembros, acceso temporal y protección.'
+main_section_economy_name: '&6Economía y Progreso'
+main_section_economy_lore: '&7Mercado, ClaimBlocks, mejoras y subastas.'
+main_section_explore_name: '&aExplorar'
+main_section_explore_lore: '&7Rutas y viajes del servidor.'
 
 button_claim_land: '&a🛡 Crear Parcela'
 claim_land_lore:

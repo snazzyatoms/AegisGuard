@@ -113,6 +113,8 @@ def load_yaml(path: Path) -> dict:
 
 def dump_yaml(path: Path, data: dict, header: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    plain_key = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
     class LiteralDumper(yaml.SafeDumper):
         pass
 
@@ -120,7 +122,17 @@ def dump_yaml(path: Path, data: dict, header: str) -> None:
         style = "|" if "\n" in value else "'"
         return dumper.represent_scalar("tag:yaml.org,2002:str", value, style=style)
 
+    def dict_representer(dumper, mapping):
+        value = []
+        for item_key, item_value in mapping.items():
+            node_key = dumper.represent_data(item_key)
+            if isinstance(item_key, str) and plain_key.match(item_key):
+                node_key = dumper.represent_scalar("tag:yaml.org,2002:str", item_key, style="")
+            value.append((node_key, dumper.represent_data(item_value)))
+        return yaml.nodes.MappingNode("tag:yaml.org,2002:map", value)
+
     LiteralDumper.add_representer(str, str_representer)
+    LiteralDumper.add_representer(dict, dict_representer)
     body = yaml.dump(
         data,
         Dumper=LiteralDumper,
@@ -129,6 +141,7 @@ def dump_yaml(path: Path, data: dict, header: str) -> None:
         width=120,
         default_flow_style=False,
     )
+    body = re.sub(r"^'([A-Za-z_][A-Za-z0-9_]*)':", r"\1:", body, flags=re.M)
     path.write_text(header.rstrip() + "\n\n" + body, encoding="utf-8")
 
 

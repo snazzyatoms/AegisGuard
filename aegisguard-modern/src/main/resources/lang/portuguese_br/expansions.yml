@@ -37,8 +37,8 @@ expansion_mode_item_lore:
 - '&7Modo Instantâneo: &fAprovado automaticamente quando válido.'
 expansion_mode_hint_instant: '&bModo Instantâneo:&7 Aprovado automaticamente quando válido.'
 expansion_mode_hint_queue: '&6Modo de fila:&7 É necessária aprovação do administrador.'
-expansion_mode_hint_unattended: '&bFila autônoma:&7 Nenhum revisor está online, portanto, solicitações válidas podem ser
-  aprovadas automaticamente e registradas.'
+expansion_mode_hint_unattended: '&bFila autônoma:&7 Nenhum revisor está online, portanto, solicitações válidas podem ser aprovadas
+  automaticamente e registradas.'
 expansion_admin_title: '&6&lSolicitações pendentes'
 expansion_admin_title_paged: '&6&lSolicitações Pendentes &7({PAGE}/{PAGES})'
 expansion_admin_title_paged_mode: '&6&lSolicitações Pendentes &7({PAGE}/{PAGES}) &8- {MODE}'
@@ -55,7 +55,7 @@ expansion_none_history_lore:
 expansion_request_item_name: '&bSolicitação: &f{PLAYER}'
 expansion_request_item_lore:
 - '&7Mundo: &f{WORLD}'
-- '&7Status: {STATUS}'
+- '&7Estado: {STATUS}'
 - '&7Idade: &f{AGE}'
 - '&7Raio: &e{CUR}&7→ &a{REQ}'
 - '&7Custo devido: &6{COST}'

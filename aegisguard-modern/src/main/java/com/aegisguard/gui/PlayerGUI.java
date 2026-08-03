@@ -75,9 +75,14 @@ public class PlayerGUI {
         try { return s.getAsBoolean(); } catch (Throwable ignored) { return def; }
     }
 
-    private void addSectionFrame(Inventory inv, Material material, String title, String description, int... slots) {
+    private void addSectionFrame(Player player, Inventory inv, Material material,
+                                 String titleKey, String titleFallback,
+                                 String loreKey, String loreFallback,
+                                 int... slots) {
+        String title = t(player, titleKey, titleFallback);
+        List<String> lore = tl(player, loreKey, List.of(loreFallback));
         for (int slot : slots) {
-            ItemStack marker = GUIManager.createItem(material, title, List.of(description));
+            ItemStack marker = GUIManager.createItem(material, title, lore);
             try { plugin.gui().tagAction(marker, "section_marker"); } catch (Throwable ignored) {}
             inv.setItem(slot, marker);
         }
@@ -119,14 +124,22 @@ public class PlayerGUI {
         boolean rentingCurrentZone = currentRentedZone != null && currentRentedZone.isRentedBy(player.getUniqueId());
 
         // Colored frames make the four groups readable before a player even hovers an icon.
-        addSectionFrame(inv, Material.CYAN_STAINED_GLASS_PANE,
-                "&bTerritory", "&7Your claim, profile, and land controls.", 9, 10, 16, 17);
-        addSectionFrame(inv, Material.PURPLE_STAINED_GLASS_PANE,
-                "&dAccess & Safety", "&7Members, temporary access, and protection.", 18, 19, 24, 25, 26);
-        addSectionFrame(inv, Material.ORANGE_STAINED_GLASS_PANE,
-                "&6Economy & Progress", "&7Market, ClaimBlocks, upgrades, and auctions.", 27, 35);
-        addSectionFrame(inv, Material.LIME_STAINED_GLASS_PANE,
-                "&aExplore", "&7Routes and server travel.", 36, 37, 38, 41, 42, 43, 44);
+        addSectionFrame(player, inv, Material.CYAN_STAINED_GLASS_PANE,
+                "main_section_territory_name", "&bTerritory",
+                "main_section_territory_lore", "&7Your claim, profile, and land controls.",
+                9, 10, 16, 17);
+        addSectionFrame(player, inv, Material.PURPLE_STAINED_GLASS_PANE,
+                "main_section_access_name", "&dAccess & Safety",
+                "main_section_access_lore", "&7Members, temporary access, and protection.",
+                18, 19, 24, 25, 26);
+        addSectionFrame(player, inv, Material.ORANGE_STAINED_GLASS_PANE,
+                "main_section_economy_name", "&6Economy & Progress",
+                "main_section_economy_lore", "&7Market, ClaimBlocks, upgrades, and auctions.",
+                27, 35);
+        addSectionFrame(player, inv, Material.LIME_STAINED_GLASS_PANE,
+                "main_section_explore_name", "&aExplore",
+                "main_section_explore_lore", "&7Routes and server travel.",
+                36, 37, 38, 41, 42, 43, 44);
 
         // The dashboard is grouped by purpose: territory, access, economy, then exploration.
         // This keeps every existing action one click away while making the first screen easier to scan.

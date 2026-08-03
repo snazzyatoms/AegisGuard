@@ -37,6 +37,14 @@ button_back_admin: '&fBack to Admin'
 # Main Menu
 # ------------------------------------------------------------
 menu_title: '&3✦ AegisGuard Menu'
+main_section_territory_name: '&bTerritory'
+main_section_territory_lore: '&7Your claim, profile, and land controls.'
+main_section_access_name: '&dAccess & Safety'
+main_section_access_lore: '&7Members, temporary access, and protection.'
+main_section_economy_name: '&6Economy & Progress'
+main_section_economy_lore: '&7Market, ClaimBlocks, upgrades, and auctions.'
+main_section_explore_name: '&aExplore'
+main_section_explore_lore: '&7Routes and server travel.'
 
 button_claim_land: '&a🛡 Create Claim'
 claim_land_lore:

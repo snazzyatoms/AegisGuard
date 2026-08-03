@@ -11,8 +11,8 @@ no_perm: '&cErreur : vous n''avez pas l''autorisation pour cela.'
 players_only: '&cErreur : Cette commande ne peut être utilisée que par les joueurs.'
 usage_main: '&eUtilisation : /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
 claim_enter_exit_notify_usage: '&eUtilisation : &f/aegis notify'
-claim_enter_exit_notify_server_disabled: '&cLes notifications d''entrée/sortie de claim sont désactivées sur l''ensemble
-  du serveur.'
+claim_enter_exit_notify_server_disabled: '&cLes notifications d''entrée/sortie de claim sont désactivées sur l''ensemble du
+  serveur.'
 claim_enter_exit_notify_toggle_not_allowed: '&cCe serveur ne permet pas aux joueurs de basculer les notifications de claim.'
 claim_enter_exit_notify_enabled: '&a✔ Les notifications d''entrée/sortie de claim ont été activées.'
 claim_enter_exit_notify_disabled: '&e✔ Les notifications d''entrée/sortie de claim ont été désactivées.'
@@ -29,24 +29,21 @@ claim_notify_state_enabled: '&aActivé'
 claim_notify_state_disabled: '&cDésactivé'
 notify_unavailable: '&cLe système de notification n''est pas disponible pour le moment.'
 notify_greetings_enabled: '&a✔ Messages d''accueil activés. Vous verrez des messages d’entrée et de sortie de claim.'
-notify_greetings_disabled: '&c✔ Messages d''accueil désactivés. Vous ne verrez pas les messages d’entrée et de sortie de
-  claim.'
+notify_greetings_disabled: '&c✔ Messages d''accueil désactivés. Vous ne verrez pas les messages d’entrée et de sortie de claim.'
 notify_admin_enabled: '&a✔ Notifications d''administrateur activées. Vous recevrez des mises à jour administratives.'
-notify_admin_disabled: '&c✔ Notifications d''administration désactivées. Les mises à jour administratives sont désormais
-  masquées.'
+notify_admin_disabled: '&c✔ Notifications d''administration désactivées. Les mises à jour administratives sont désormais masquées.'
 notify_mode_set: '&a ✔ Mode de notification défini sur : {MODE}'
 notify_mode_usage: '&eUtilisation : &7/aegis notify mode <chat|actionbar|title>\n&7Modes disponibles :\n&7- &bchat &8- &7Chat
   standard messages\n&7- &bbarre d''action &8- &7Notifications de la barre d''action (au-dessus de la barre de raccourcis)\n&7-
   &btitre &8- &7Notifications de titre/sous-titre (écran central)'
 notify_mode_invalid: '&cMode invalide : &7{MODE}\n&eModes valides : &7chat, barre d''action, titre'
-notify_status: '&e&l━━━━━━━━━ &6Paramètres de notification &e&l━━━━━━━━━\n&7Salutations : {GREETINGS}\n&7Mises à jour de
-  l''administrateur : {ADMIN}\n&7Mode : {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_status: '&e&l━━━━━━━━━ &6Paramètres de notification &e&l━━━━━━━━━\n&7Salutations : {GREETINGS}\n&7Mises à jour de l''administrateur :
+  {ADMIN}\n&7Mode : {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
 notify_usage: '&eCommandes de notification :\n&7/aegis notify &8- &7Basculer les messages d''accueil\n&7/aegis notify greetings
   &8- &7Toggle les messages d''entrée/sortie de claim\n&7/aegis notify admin &8- &7Toggle les notifications d''administrateur\n&7/aegis
   notify mode <chat|actionbar|title> &8- &7Définir le style de notification\n&7/aegis notify status &8- &7Afficher les paramètres
   actuels'
-role_cannot_remove_self: '&c❌ Vous ne pouvez pas vous retirer en tant que propriétaire du terrain. Transférez d’abord la
-  propriété.'
+role_cannot_remove_self: '&c❌ Vous ne pouvez pas vous retirer en tant que propriétaire du terrain. Transférez d’abord la propriété.'
 role_no_permission: '&c❌ Vous n''avez pas la permission de modifier ce membre.'
 sound_global_enabled: 'Les sons &a✔ AegisGuard ont été activés.'
 sound_global_disabled: 'Les sons &c✖ AegisGuard ont été désactivés.'
@@ -124,10 +121,10 @@ zone_create_outside_plot: '&cCette sélection doit rester à l''intérieur de vo
 zone_create_limit_reached: '&cVous avez atteint le nombre maximum de zones pour cette parcelle.'
 zone_create_too_small: '&cCette sélection de zone est trop petite.'
 zone_create_overlap: '&cCette sélection chevauche une zone existante.'
-subplot_usage: '&eUtilisez &b/ag wand &e, marquez deux coins à l''intérieur de votre revendication, puis exécutez &b/ag
-  subplot [name]&e.'
-subplot_created_hint: '&7Cette sous-parcelle apparaît désormais dans le &bZone Manager&7 pour la configuration du loyer,
-  de la chambre ou du marché.'
+subplot_usage: '&eUtilisez &b/ag wand &e, marquez deux coins à l''intérieur de votre revendication, puis exécutez &b/ag subplot
+  [name]&e.'
+subplot_created_hint: '&7Cette sous-parcelle apparaît désormais dans le &bZone Manager&7 pour la configuration du loyer, de
+  la chambre ou du marché.'
 zone_rent_enabled: '&aListe de location activée pour &f{ZONE}&a.'
 zone_rent_disabled: '&eListe de location désactivée pour &f{ZONE}&e.'
 zone_rent_price_set: '&aLoyer de zone mis à jour pour &f{ZONE}&a : &6{PRICE}'
@@ -144,7 +141,7 @@ zone_tenant_guest_removed: '&eSuppression d''un invité de la chambre.'
 zone_tenant_renter_only: '&cSeul le locataire actif peut modifier les paramètres des invités de cette chambre.'
 biome_changed: '&a✔ Biome réglé sur {BIOME}.'
 biome_cost_paid: '&e💰 Payé &6{AMOUNT}&e pour changer de biome.'
-like_success: '&a✔ You liked this claim. Total likes: &e{AMOUNT}'
+like_success: '&a✔ Vous avez aimé ce claim. Total des likes : &e{AMOUNT}'
 like_removed: '&eVotre like a été supprimé.'
 like_own_plot: '&cErreur : vous ne pouvez pas aimer votre propre claim.'
 like_disabled: '&cLes likes sont désactivés sur ce serveur/monde.'
@@ -222,11 +219,11 @@ rental_contract_only_renter: '&cSeul le locataire peut renouveler ce contrat.'
 rental_contract_need_funds: '&cVous avez besoin de {AMOUNT} pour renouveler.'
 rental_contract_payment_failed: '&cÉchec du paiement de renouvellement. Aucune durée contractuelle n’a été ajoutée.'
 rental_contract_renewed: '&aLocation renouvelée pour &e{DAYS} jour(s)&a.'
-rental_contract_cancel_prompt: '&eExécuter &b/ag location annuler confirmer &epour mettre fin à ce contrat et restituer
-  sa caution.'
+rental_contract_cancel_prompt: '&eExécuter &b/ag location annuler confirmer &epour mettre fin à ce contrat et restituer sa
+  caution.'
 rental_contract_not_party: '&cVous ne faites pas partie de ce contrat de location.'
-rental_contract_owner_cancel_disabled: '&cLes propriétaires ne peuvent pas mettre fin prématurément aux contrats actifs
-  sur ce serveur.'
+rental_contract_owner_cancel_disabled: '&cLes propriétaires ne peuvent pas mettre fin prématurément aux contrats actifs sur
+  ce serveur.'
 rental_contract_cancelled: '&aContrat de location terminé. La caution a été remboursée ou mise en file d''attente pour la
   livraison.'
 rental_contract_usage: '&cUtilisation : /ag location <statut|renouveller|annuler confirmer>'
@@ -457,10 +454,9 @@ group_plot_already_exists: '&cCe groupe possède déjà une parcelle liée.'
 group_not_enough_members: '&cVotre groupe a besoin d''au moins &e{COUNT}&cmembres éligibles pour démarrer avant de pouvoir
   revendiquer une parcelle de groupe.'
 group_claim_requires_vault: '&cUne économie Vault est requise pour les claims collectives payées.'
-group_claim_not_enough_treasury: '&cLa trésorerie de votre groupe a besoin de &e{AMOUNT}&cplus avant que cette parcelle
-  puisse être réclamée.'
-group_free_claim_created: '&aCréation du terrain de démarrage gratuit pour &e{GROUP}&a. Taille protégée utilisée : blocs
-  &e{AREA}&a.'
+group_claim_not_enough_treasury: '&cLa trésorerie de votre groupe a besoin de &e{AMOUNT}&cplus avant que cette parcelle puisse
+  être réclamée.'
+group_free_claim_created: '&aCréation du terrain de démarrage gratuit pour &e{GROUP}&a. Taille protégée utilisée : blocs &e{AREA}&a.'
 group_paid_claim_created: '&aCréation du terrain de groupe pour &e{GROUP}&a en utilisant &6{AMOUNT}&a de la trésorerie.'
 group_disband_plot_exists: '&cCe groupe possède déjà un terrain. Annulez la claim ou migrez-le avant de le dissoudre.'
 group_disbanded: '&eGroupe dissous &6{GROUP}&e.'
@@ -547,8 +543,8 @@ claim_merge_foreign_land: '&cFusion bloquée : la zone combinée couvrirait un a
 claim_merge_market_blocked: '&cEffacer les annonces et les locations avant de fusionner.'
 claim_merge_role_conflict: '&cFusion bloquée : les deux parcelles attribuent des rôles différents au même membre. Résolvez
   d''abord les rôles.'
-claim_merge_guest_conflict: '&cFusion bloquée : les deux parcelles ont des Pass Invité pour le même joueur. Révoquez-en
-  un d''abord.'
+claim_merge_guest_conflict: '&cFusion bloquée : les deux parcelles ont des Pass Invité pour le même joueur. Révoquez-en un
+  d''abord.'
 claim_merge_member_cap: '&cFusion bloquée : la combinaison de membres dépasserait la limite de membres de cette parcelle.'
 claim_merge_insufficient_blocks: '&cVous avez besoin de &e{COST}&cClaimBlocks pour fusionner.'
 claim_merge_failed_generic: '&cÉchec de la fusion : les tracés ne sont plus disponibles.'

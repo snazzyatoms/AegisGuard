@@ -104,7 +104,10 @@ class LanguageParityTest {
         Map<String, Object> english = loadLanguage("modern_english");
         List<String> probeKeys = List.of(
                 "button_back", "menu_title", "button_claim_land", "settings_language_name",
-                "no_perm", "players_only", "button_exit");
+                "no_perm", "players_only", "button_exit",
+                "main_section_territory_name", "main_section_access_name",
+                "main_section_economy_name", "main_section_explore_name",
+                "back_lore", "exit_lore");
         for (String language : List.of(
                 "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
             Map<String, Object> translated = loadLanguage(language);
@@ -113,16 +116,75 @@ class LanguageParityTest {
             for (String key : probeKeys) {
                 if (!english.containsKey(key) || !translated.containsKey(key)) continue;
                 compared++;
-                if (String.valueOf(english.get(key)).equals(String.valueOf(translated.get(key)))) {
+                if (normalizedValue(english.get(key)).equals(normalizedValue(translated.get(key)))) {
                     identical++;
                 }
             }
-            assertTrue(compared >= 5, language + " missing probe keys for translation check");
+            assertTrue(compared >= 8, language + " missing probe keys for translation check");
             final int identicalCount = identical;
             final int comparedCount = compared;
-            assertTrue(identicalCount < comparedCount,
+            assertTrue(identicalCount == 0,
                     () -> language + " still looks like English for core UI probes ("
                             + identicalCount + "/" + comparedCount + " identical)");
+        }
+    }
+
+    @Test
+    void newLanguagePackLoreAndButtonsAreMostlyTranslated() throws Exception {
+        Map<String, Object> english = loadLanguage("modern_english");
+        // Proper nouns / brands / config paths that may remain English.
+        Set<String> allowExact = Set.of(
+                "AegisGuard", "Vault", "Dynmap", "LuckPerms", "PlaceholderAPI",
+                "WorldGuard", "GriefPrevention", "GriefDefender", "Towny", "Essentials",
+                "ClaimBlocks", "TradeStall", "N/A", "ON", "OFF", "Hub", "Auto", "Arena",
+                "Admin", "Shop", "Nether", "Console", "System", "Dawnreach", "Realmforge",
+                "Bastion", "Stonewright", "Wayfinder");
+        Pattern colorOrToken = Pattern.compile(
+                "&[0-9a-fk-orx]|§[0-9a-fk-orx]|\\{[A-Z0-9_]+}|AegisGuard|plugins/AegisGuard/[\\w./-]+",
+                Pattern.CASE_INSENSITIVE);
+
+        for (String language : List.of(
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
+            Map<String, Object> translated = loadLanguage(language);
+            int compared = 0;
+            int identical = 0;
+            List<String> samples = new ArrayList<>();
+            for (Map.Entry<String, Object> entry : english.entrySet()) {
+                String key = entry.getKey();
+                String keyLower = key.toLowerCase();
+                boolean highVisibility = keyLower.contains("lore")
+                        || keyLower.startsWith("button_")
+                        || keyLower.endsWith("_title")
+                        || keyLower.endsWith("_name")
+                        || keyLower.startsWith("main_section_");
+                if (!highVisibility) continue;
+                if (keyLower.startsWith("style_")) continue;
+                if (!translated.containsKey(key)) continue;
+
+                String eng = normalizedValue(entry.getValue());
+                String loc = normalizedValue(translated.get(key));
+                if (eng.isBlank() || loc.isBlank()) continue;
+
+                String engPlain = colorOrToken.matcher(eng).replaceAll(" ").replaceAll("\\s+", " ").trim();
+                if (engPlain.length() < 4) continue;
+                if (allowExact.contains(engPlain)) continue;
+                // Skip rows that are only a placeholder label like "{PLAYER}".
+                if (engPlain.matches("\\{?[A-Z0-9_]+}?")) continue;
+
+                compared++;
+                if (eng.equals(loc)) {
+                    identical++;
+                    if (samples.size() < 12) samples.add(key);
+                }
+            }
+            assertTrue(compared >= 80, language + " expected many lore/button keys, found " + compared);
+            double ratio = compared == 0 ? 0.0 : (identical * 1.0 / compared);
+            final int identicalCount = identical;
+            final int comparedCount = compared;
+            assertTrue(ratio <= 0.08,
+                    () -> language + " has too many English-copy lore/button values: "
+                            + identicalCount + "/" + comparedCount
+                            + " (" + String.format("%.1f", ratio * 100) + "%). Samples: " + samples);
         }
     }
 
@@ -190,5 +252,12 @@ class LanguageParityTest {
             return list.isEmpty() || list.stream().allMatch(element -> String.valueOf(element).isBlank());
         }
         return String.valueOf(value).isBlank();
+    }
+
+    private String normalizedValue(Object value) {
+        if (value instanceof List<?> list) {
+            return list.stream().map(String::valueOf).reduce((a, b) -> a + "\n" + b).orElse("");
+        }
+        return String.valueOf(value);
     }
 }

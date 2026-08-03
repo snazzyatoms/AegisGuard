@@ -65,8 +65,8 @@ items_deducted: '&e💰 Pagato &6{AMOUNT} {ITEM}&e.'
 vault_refund: '&e💰 Rimborsato &6${AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Rimborsato &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 economy_disabled: '&c❌ Economy è disabilitata su questo server.'
-vault_hook_missing: '&c❌ L''economia del caveau non è disponibile. Chiedi a un amministratore di installare/configurare
-  Vault + un plug-in economico.'
+vault_hook_missing: '&c❌ L''economia del caveau non è disponibile. Chiedi a un amministratore di installare/configurare Vault
+  + un plug-in economico.'
 vault_disabled_here: '&c❌ I pagamenti Vault sono disabilitati qui.'
 insufficient_funds: '&c❌ Fondi insufficienti. Necessario: &e${NEEDED}&c | Disponibile: &e${AVAILABLE}&c.'
 transaction_failed: '&c❌ Transazione non riuscita. Per favore riprova più tardi.'
@@ -121,10 +121,9 @@ zone_create_outside_plot: '&cQuesta selezione deve rimanere all''interno della t
 zone_create_limit_reached: '&cHai raggiunto il numero massimo di zone per questo terreno.'
 zone_create_too_small: '&cLa selezione della zona è troppo piccola.'
 zone_create_overlap: '&cQuesta selezione si sovrappone a una zona esistente.'
-subplot_usage: '&eUsa &b/ag bacchetta &e, segna due angoli all''interno della tua richiesta, quindi esegui &b/ag subplot
-  [nome]&e.'
-subplot_created_hint: '&7Questa sottotrama ora appare nel &bZone Manager&7 per l''affitto, la stanza o la configurazione
-  del mercato.'
+subplot_usage: '&eUsa &b/ag bacchetta &e, segna due angoli all''interno della tua richiesta, quindi esegui &b/ag subplot [nome]&e.'
+subplot_created_hint: '&7Questa sottotrama ora appare nel &bZone Manager&7 per l''affitto, la stanza o la configurazione del
+  mercato.'
 zone_rent_enabled: '&aElenco di noleggio abilitato per &f{ZONE}&a.'
 zone_rent_disabled: '&eInserzione di noleggio disabilitata per &f{ZONE}&e.'
 zone_rent_price_set: '&aAffitto zona aggiornato per &f{ZONE}&a: &6{PRICE}'
@@ -141,7 +140,7 @@ zone_tenant_guest_removed: '&eRimosso un ospite della stanza.'
 zone_tenant_renter_only: '&cSolo l''affittuario attivo può modificare le impostazioni ospite di questa stanza.'
 biome_changed: '&a ✔ Bioma impostato su {BIOME}.'
 biome_cost_paid: '&e💰 Pagato &6{AMOUNT}&e per cambiare bioma.'
-like_success: '&a ✔ Ti è piaciuta questa affermazione. Mi piace totali: &e{AMOUNT}'
+like_success: '&a✔ Ti è piaciuta questa trama. Like totali: &e{AMOUNT}'
 like_removed: '&eIl tuo Mi piace è stato rimosso.'
 like_own_plot: '&cErrore: la tua richiesta non può piacerti.'
 like_disabled: '&cI Mi piace sono disabilitati su questo server/mondo.'
@@ -246,8 +245,8 @@ doctor_repair_running: '&eApplicazione delle riparazioni deterministiche Doctor.
 doctor_repair_complete: '&aDottore riparato {PLOTS} terreno(i); Rimangono problemi {REMAINING}.'
 doctor_repair_no_permission: '&cNon è possibile eseguire le riparazioni automatiche di Doctor.'
 doctor_repair_prompt: '&eEsegui prima la scansione /agadmin doctor, quindi conferma la riparazione di /agadmin doctor.'
-doctor_repair_scope: '&7Il medico ripara solo lo stato deterministico; le sovrapposizioni e i mondi mancanti non vengono
-  mai indovinati.'
+doctor_repair_scope: '&7Il medico ripara solo lo stato deterministico; le sovrapposizioni e i mondi mancanti non vengono mai
+  indovinati.'
 doctor_report_running: '&bGenerazione rapporto medico in corso...'
 doctor_report_saved: '&aRapporto medico salvato: &f{FILE}'
 doctor_report_failed: '&cRapporto medico fallito: {ERROR}'
@@ -299,8 +298,7 @@ travel_fail_disabled: '&cSafe Travel è disabilitato su questo server.'
 travel_fail_cancelled: '&cViaggio annullato.'
 alliance_toggle_disallowed: '&cL''opzione Alliance Access è disabilitata dalla politica del server.'
 lockdown_activated_notify: '&cBlocco di emergenza attivato il &f{PLOT}&c.'
-snapshot_restore_summary: '&eRiepilogo ripristino: &f{TYPE}&7| &f{REASON}&7| età &f{AGE}&7. Maiusc-Sinistra di nuovo per
-  confermare.'
+snapshot_restore_summary: '&eRiepilogo ripristino: &f{TYPE}&7| &f{REASON}&7| età &f{AGE}&7. Maiusc-Sinistra di nuovo per confermare.'
 usage_rename: '&cUtilizzo: /ag rinomina <Nome>'
 rename_too_long: '&cIl nome è troppo lungo (max. {MAX} caratteri).'
 plot_renamed: '&a ✔ Richiesta rinominata in: &r{NAME}'
@@ -456,8 +454,7 @@ group_not_enough_members: '&cIl tuo gruppo ha bisogno di almeno &e{COUNT}&cmembr
 group_claim_requires_vault: '&cÈ necessaria un''economia del Vault per le richieste di risarcimento di gruppo pagate.'
 group_claim_not_enough_treasury: '&cLa tesoreria del tuo gruppo ha bisogno di &e{AMOUNT}&cdi più prima che questo terreno
   possa essere rivendicato.'
-group_free_claim_created: '&aCreata la trama iniziale gratuita per &e{GROUP}&a. Dimensione protetta utilizzata: blocchi
-  &e{AREA}&a.'
+group_free_claim_created: '&aCreata la trama iniziale gratuita per &e{GROUP}&a. Dimensione protetta utilizzata: blocchi &e{AREA}&a.'
 group_paid_claim_created: '&aCreato il grafico di gruppo per &e{GROUP}&a utilizzando &6{AMOUNT}&a dalla tesoreria.'
 group_disband_plot_exists: '&cQuesto gruppo possiede già un terreno. Annulla la richiesta o esegui la migrazione prima dello
   scioglimento.'
@@ -543,8 +540,8 @@ claim_merge_alignment_required: '&cLe parcelle devono essere completamente allin
   parziali sono bloccate per evitare furti di terreno.'
 claim_merge_foreign_land: '&cUnione bloccata: l''area combinata coprirebbe un altro claim.'
 claim_merge_market_blocked: '&cCancella elenchi e affitti prima della fusione.'
-claim_merge_role_conflict: '&cUnione bloccata: entrambi i grafici assegnano ruoli diversi allo stesso membro. Risolvere
-  prima i ruoli.'
+claim_merge_role_conflict: '&cUnione bloccata: entrambi i grafici assegnano ruoli diversi allo stesso membro. Risolvere prima
+  i ruoli.'
 claim_merge_guest_conflict: '&cUnione bloccata: entrambe le parcelle hanno pass ospite per lo stesso giocatore. Prima revocarne
   uno.'
 claim_merge_member_cap: '&cUnione bloccata: la combinazione dei membri supererebbe il limite dei membri di questo grafico.'
@@ -602,8 +599,7 @@ admin_restore_need_plot: '&cStai all''interno del terreno che vuoi ripristinare.
 admin_restore_no_perm: '&cNon puoi ripristinare questo grafico.'
 admin_restore_none: '&eNon è stata trovata alcuna istantanea per questo grafico.'
 admin_restore_prompt: '&eUltima istantanea: &f{TYPE}&7| &f{REASON}&7| età &f{AGE}'
-admin_restore_confirm_hint: '&cQuesto sovrascrive l''attestazione live. Esegui &e/agadmin ripristino qui conferma &c per
-  continuare.'
+admin_restore_confirm_hint: '&cQuesto sovrascrive l''attestazione live. Esegui &e/agadmin ripristino qui conferma &c per continuare.'
 admin_restore_running: '&b[AegisGuard] &7Ripristino dell''ultima istantanea in corso...'
 admin_restore_success: '&aPlot ripristinato dall''istantanea &f{ID}'
 admin_restore_failed: '&cRipristino del grafico non riuscito. Controlla i registri o il rapporto del medico.'

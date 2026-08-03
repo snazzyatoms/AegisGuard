@@ -36,8 +36,8 @@ notify_mode_usage: '&eUso: &7/aegis notify mode <chat|actionbar|title>\n&7Modos 
   mensagens\n&7- &bactionbar &8- &7Notificações da barra de ação (acima da barra de atalho)\n&7- &btitle &8- &7Notificações
   de título/subtítulo (tela central)'
 notify_mode_invalid: '&cModo inválido: &7{MODE}\n&eModos válidos: &7chat, barra de ação, título'
-notify_status: '&e&l━━━━━━━━━ &6Configurações de notificação &e&l━━━━━━━━━\n&7Saudações: {GREETINGS}\n&7Atualizações de
-  administrador: {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+notify_status: '&e&l━━━━━━━━━ &6Configurações de notificação &e&l━━━━━━━━━\n&7Saudações: {GREETINGS}\n&7Atualizações de administrador:
+  {ADMIN}\n&7Modo: {MODE}\n&e&l━━━━━━ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
 notify_usage: '&eComandos de notificação:\n&7/aegis notify &8- &7Alternar mensagens de saudação\n&7/aegis notify greetings
   &8- &7Alternar mensagens de entrada/saída de parcela\n&7/aegis notify admin &8- &7Alternar notificações de administrador\n&7/aegis
   notify mode <chat|actionbar|title> &8- &7Definir estilo de notificação\n&7/aegis notify status &8- &7Ver configurações atuais'
@@ -137,7 +137,7 @@ zone_tenant_guest_removed: '&eUm hóspede do quarto foi removido.'
 zone_tenant_renter_only: '&cSomente o locatário ativo pode alterar as configurações de hóspedes deste quarto.'
 biome_changed: '&a✔ Bioma definido como {BIOME}.'
 biome_cost_paid: '&e💰 Pago &6{AMOUNT}&e para mudar de bioma.'
-like_success: '&a✔ Você gostou desta afirmação. Total de curtidas: &e{AMOUNT}'
+like_success: '&a✔ Você curtiu esta parcela. Total de curtidas: &e{AMOUNT}'
 like_removed: '&eSeu like foi removido.'
 like_own_plot: '&cErro: Você não pode gostar de sua própria parcela.'
 like_disabled: '&cAs curtidas estão desabilitadas neste servidor/mundo.'
@@ -214,8 +214,7 @@ rental_contract_only_renter: '&cSomente o locatário pode renovar este contrato.
 rental_contract_need_funds: '&cVocê precisa de {AMOUNT} para renovar.'
 rental_contract_payment_failed: '&cFalha no pagamento da renovação. Nenhum tempo de contrato foi adicionado.'
 rental_contract_renewed: '&aAluguel renovado por &e{DAYS} dia(s)&a.'
-rental_contract_cancel_prompt: '&eExecute &b/ag aluguel cancelar confirme &epara rescindir este contrato e devolver seu
-  depósito.'
+rental_contract_cancel_prompt: '&eExecute &b/ag aluguel cancelar confirme &epara rescindir este contrato e devolver seu depósito.'
 rental_contract_not_party: '&cVocê não faz parte deste contrato de aluguel.'
 rental_contract_owner_cancel_disabled: '&cOs proprietários não podem encerrar contratos ativos antecipadamente neste servidor.'
 rental_contract_cancelled: '&aContrato de aluguel encerrado. O depósito foi reembolsado ou colocado na fila para entrega.'
@@ -256,8 +255,8 @@ market_stall_no_access: '&cVocê precisa de acesso de gerenciamento de terreno o
 market_stall_inactive: '&cEsse TradeStall não está disponível no momento.'
 market_stall_missing: '&cEsse TradeStall não está mais disponível.'
 market_stall_none: '&cNão há TradeStalls disponíveis aqui no momento.'
-market_stall_external_override: '&eTradeStalls estão desativados aqui porque este gráfico está usando uma integração de
-  mercado externo.'
+market_stall_external_override: '&eTradeStalls estão desativados aqui porque este gráfico está usando uma integração de mercado
+  externo.'
 market_stall_listing_updated: '&aListagem TradeStall atualizada.'
 market_stall_listing_cleared: '&eListagem TradeStall limpa.'
 market_stall_select_item_first: '&cSelecione um slot em estoque antes de editar sua listagem.'
@@ -292,8 +291,7 @@ travel_fail_disabled: '&cSafe Travel está desabilitado neste servidor.'
 travel_fail_cancelled: '&cViagem cancelada.'
 alliance_toggle_disallowed: '&cEssa opção de acesso à aliança está desativada pela política do servidor.'
 lockdown_activated_notify: '&cBloqueio de emergência ativado em &f{PLOT}&c.'
-snapshot_restore_summary: '&eResumo da restauração: &f{TYPE}&7| &f{REASON}&7| idade &f{AGE}&7. Shift-Left novamente para
-  confirmar.'
+snapshot_restore_summary: '&eResumo da restauração: &f{TYPE}&7| &f{REASON}&7| idade &f{AGE}&7. Shift-Left novamente para confirmar.'
 usage_rename: '&cUso: /ag renomear <Nome>'
 rename_too_long: '&cO nome é muito longo (máx. {MAX} caracteres).'
 plot_renamed: '&a✔ Parcela renomeada para: &r{NAME}'
@@ -444,8 +442,8 @@ group_kick_locked: '&cA proteção da partida está ativa. Você pode remover me
 group_kick_failed: '&cEsse membro não pôde ser removido.'
 group_member_kicked: '&eRemovido &6{PLAYER}&edo grupo.'
 group_plot_already_exists: '&cEste grupo já possui um lote vinculado.'
-group_not_enough_members: '&cSeu grupo precisa de pelo menos &e{COUNT}&cmembros elegíveis para iniciantes antes de poder
-  reivindicar um lote de grupo.'
+group_not_enough_members: '&cSeu grupo precisa de pelo menos &e{COUNT}&cmembros elegíveis para iniciantes antes de poder reivindicar
+  um lote de grupo.'
 group_claim_requires_vault: '&cUma economia de cofre é necessária para parcelas de grupo pagas.'
 group_claim_not_enough_treasury: '&cO tesouro do seu grupo precisa de &e{AMOUNT}&cmais antes que este lote possa ser reivindicado.'
 group_free_claim_created: '&aCriado o enredo inicial gratuito para &e{GROUP}&a. Tamanho protegido usado: blocos &e{AREA}&a.'

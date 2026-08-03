@@ -1,0 +1,31 @@
+# ======================================
+# AegisGuard v1.3.0 - Deutsch
+# Language ID: german_de
+# File: upgrades.yml
+# Source of truth keys: modern_english/upgrades.yml
+# ======================================
+
+level_up_success: '&d⚡ Ihr Claim wurde auf Level &f{LEVEL}&d hochgestuft!'
+level_up_fail_cost: '&c❌ Sie haben nicht genügend Währung für ein Upgrade.'
+claim_blocks_name: '&bBlöcke beanspruchen'
+claim_blocks_disabled: '&cClaim-Blöcke sind auf diesem Server deaktiviert.'
+claim_blocks_balance: '&e⛏ Anspruchssperren: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Verdiente &6{AMOUNT}&a Anspruchsblöcke. &7 (Neu: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Verbrauchte &6{AMOUNT}&e Anspruchsblöcke. &7(Links: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Nicht genügend Anspruchsblöcke. &7Benötigt: &e{NEEDED}&7 | Verfügbar: &a{AVAILABLE}&7.'
+claim_blocks_first_claim_limit: '&c❌ Erste Anspruchsgrenze: maximale Fläche &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Anspruchssperren) &8Saldo: &f{BALANCE}'
+claim_blocks_earned_playtime: '&a✦ Spielzeitbelohnung: &b+{AMOUNT}&a Fordere Blöcke ein! &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_earned_levelup: '&d✦ Levelaufstiegsbelohnung: &b+{AMOUNT}&d Fordere Blöcke ein! &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_received_starter: '&b✦ Starter-Ledger: &a+{AMOUNT}&b Anspruchssperren gewährt. &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Gewährter Bonus: &b+{AMOUNT}&d Anspruchssperren. &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Kauf abgeschlossen: &b+{AMOUNT}&6 Anspruchssperren. &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Anspruchskosten: &c-{AMOUNT}&e Anspruchsblöcke. &7Verbleibend: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Levelaufstiegskosten: &c-{AMOUNT}&e Beanspruche Blöcke. &7Verbleibend: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Erstattet: &a+{AMOUNT}&e Anspruchsblöcke. &7Gesamt: &e{TOTAL}&7.'
+claim_blocks_cost_preview: '&7Kosten beanspruchen: &6{COST}&7 Blöcke.'
+first_claim_limit_exceeded: '&c❌ Erste Anspruchsgrenze überschritten. &7Maximal zulässig: &e{MAX}&7 Blöcke.'
+blocks_ledger_title: '&6&lGrundbuch &7({PLAYER})'
+blocks_ledger_total: '&7Gesamtkapazität: &e{TOTAL}'
+blocks_ledger_used: '&7Genutztes Land: &c{USED}'
+blocks_ledger_available: '&7Verfügbar: &a{AVAILABLE}'

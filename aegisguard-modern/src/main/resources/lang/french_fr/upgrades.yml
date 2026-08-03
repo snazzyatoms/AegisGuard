@@ -1,0 +1,31 @@
+# ======================================
+# AegisGuard v1.3.0 - Français
+# Language ID: french_fr
+# File: upgrades.yml
+# Source of truth keys: modern_english/upgrades.yml
+# ======================================
+
+level_up_success: '&d⚡ Votre claim a été améliorée au niveau &f{LEVEL}&d !'
+level_up_fail_cost: '&c❌ Vous n''avez pas assez de devises pour effectuer une mise à niveau.'
+claim_blocks_name: '&bBlocs de claim'
+claim_blocks_disabled: '&cLes blocs de claim sont désactivés sur ce serveur.'
+claim_blocks_balance: '&e⛏ Blocs de claim : &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Gagné &6{AMOUNT}&a Réclamez des blocs. &7(Nouveau : &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Dépensé &6{AMOUNT}&e Réclamez des blocs. &7(Gauche : &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Pas assez de blocs de claim. &7Nécessaire : &e{NEEDED}&7 | Disponible : &a{AVAILABLE}&7.'
+claim_blocks_first_claim_limit: '&c❌ Première limite de claim : superficie maximale &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Blocs de claim) &8Solde : &f{BALANCE}'
+claim_blocks_earned_playtime: '&a✦ Récompense de temps de jeu : &b+{AMOUNT}&a Réclamez des blocs ! &7Total : &e{TOTAL}&7.'
+claim_blocks_earned_levelup: '&d✦ Récompense de niveau supérieur : &b+{AMOUNT}&d Réclamez des blocs ! &7Total : &e{TOTAL}&7.'
+claim_blocks_received_starter: '&b✦ Grand livre de démarrage : &a+{AMOUNT}&b Blocs de claim accordés. &7Total : &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Bonus accordé : &b+{AMOUNT}&d Réclamez des blocs. &7Total : &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Achat terminé : &b+{AMOUNT}&6 Réclamez des blocs. &7Total : &e{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Coût de la claim : &c-{AMOUNT}&e Blocs de claim. &7Restant : &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Coût de mise à niveau : &c-{AMOUNT}&e Réclamez des blocs. &7Restant : &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Remboursé : &a+{AMOUNT}&e Réclamez des blocs. &7Total : &e{TOTAL}&7.'
+claim_blocks_cost_preview: '&7Coût de claim : &6{COST}&7 blocs.'
+first_claim_limit_exceeded: '&c❌ Limite de première claim dépassée. &7Max autorisé : &e{MAX}&7 blocs.'
+blocks_ledger_title: '&6&lGrand livre foncier &7({PLAYER})'
+blocks_ledger_total: '&7Capacité totale : &e{TOTAL}'
+blocks_ledger_used: '&7Terrain utilisé : &c{USED}'
+blocks_ledger_available: '&7Disponible : &a{AVAILABLE}'

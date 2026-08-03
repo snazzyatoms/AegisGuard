@@ -22,7 +22,8 @@ class LanguageParityTest {
 
     private static final Path LANG_ROOT = Path.of("src/main/resources/lang");
     private static final List<String> LANGUAGES = List.of(
-            "modern_english", "old_english", "spanish_mx", "spanish_ar");
+            "modern_english", "old_english", "spanish_mx", "spanish_ar",
+            "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl");
     private static final List<String> BUNDLES = List.of(
             "guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{[A-Z0-9_]+}");
@@ -95,6 +96,33 @@ class LanguageParityTest {
                 assertTrue(translated.containsKey(required), language + " missing " + required);
                 assertFalse(isBlankValue(translated.get(required)), language + " blank " + required);
             }
+        }
+    }
+
+    @Test
+    void newLanguagePacksAreNotSilentEnglishCopies() throws Exception {
+        Map<String, Object> english = loadLanguage("modern_english");
+        List<String> probeKeys = List.of(
+                "button_back", "menu_title", "button_claim_land", "settings_language_name",
+                "no_perm", "players_only", "button_exit");
+        for (String language : List.of(
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
+            Map<String, Object> translated = loadLanguage(language);
+            int identical = 0;
+            int compared = 0;
+            for (String key : probeKeys) {
+                if (!english.containsKey(key) || !translated.containsKey(key)) continue;
+                compared++;
+                if (String.valueOf(english.get(key)).equals(String.valueOf(translated.get(key)))) {
+                    identical++;
+                }
+            }
+            assertTrue(compared >= 5, language + " missing probe keys for translation check");
+            final int identicalCount = identical;
+            final int comparedCount = compared;
+            assertTrue(identicalCount < comparedCount,
+                    () -> language + " still looks like English for core UI probes ("
+                            + identicalCount + "/" + comparedCount + " identical)");
         }
     }
 

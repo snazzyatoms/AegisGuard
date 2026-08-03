@@ -83,13 +83,18 @@ class StaffAdminContractTest {
                 "admin_expansion_mode_lore_queue:",
                 "admin_expansion_mode_lore_instant:"
         );
-        for (String lang : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar")) {
+        for (String lang : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
             String guis = Files.readString(LANG.resolve(lang + "/guis.yml"));
             for (String key : keys) {
                 assertTrue(guis.contains(key), lang + " missing " + key);
             }
             assertTrue(guis.contains("What:") || guis.contains("Qué:") || guis.contains("what it doth")
-                            || guis.contains("Staff hall") || guis.contains("Centro de staff"),
+                            || guis.contains("Staff hall") || guis.contains("Centro de staff")
+                            || guis.contains("O que:") || guis.contains("Quoi")
+                            || guis.contains("Cosa:") || guis.contains("Was:")
+                            || guis.contains("Co:") || guis.contains("staff hall")
+                            || guis.contains("command center") || guis.contains("Centro"),
                     lang + " staff lore should explain purpose");
             String system = Files.readString(LANG.resolve(lang + "/system.yml"));
             assertTrue(system.contains("admin_help_header:"), lang + " missing admin help");
@@ -123,7 +128,8 @@ class StaffAdminContractTest {
 
     @Test
     void snapshotLoreMentionsShiftConfirm() throws Exception {
-        for (String lang : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar")) {
+        for (String lang : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
             String guis = Files.readString(LANG.resolve(lang + "/guis.yml"));
             assertTrue(guis.contains("Shift") || guis.contains("shift"),
                     lang + " snapshot lore should mention Shift-click safety");

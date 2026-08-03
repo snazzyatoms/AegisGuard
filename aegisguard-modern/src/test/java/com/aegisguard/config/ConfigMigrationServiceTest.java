@@ -99,6 +99,34 @@ class ConfigMigrationServiceTest {
     }
 
     @Test
+    void migratingAddsNewLanguageIdsWithoutRemovingOwnerChoices(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1283);
+        oldConfig.set("localization.available_languages",
+                java.util.List.of("old_english", "modern_english", "custom_pack"));
+        oldConfig.set("language_styles.available",
+                java.util.List.of("old_english", "modern_english"));
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        boolean migrated = service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults);
+        assertTrue(migrated);
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        java.util.List<String> available = migratedConfig.getStringList("localization.available_languages");
+        assertTrue(available.contains("custom_pack"), "Owner custom language IDs must be kept");
+        assertTrue(available.contains("portuguese_br"));
+        assertTrue(available.contains("french_fr"));
+        assertTrue(available.contains("italian_it"));
+        assertTrue(available.contains("german_de"));
+        assertTrue(available.contains("polish_pl"));
+        assertTrue(migratedConfig.getStringList("language_styles.available").contains("polish_pl"));
+    }
+
+    @Test
     void migratingAnAlreadyCurrentConfigDoesNotRewriteOrBackUpAnything(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
         File dataFolder = tempDir.toFile();
         File configFile = new File(dataFolder, "config.yml");

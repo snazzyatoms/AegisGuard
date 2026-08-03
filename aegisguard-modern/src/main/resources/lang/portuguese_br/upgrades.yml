@@ -1,0 +1,31 @@
+# ======================================
+# AegisGuard v1.3.0 - Português (Brasil)
+# Language ID: portuguese_br
+# File: upgrades.yml
+# Source of truth keys: modern_english/upgrades.yml
+# ======================================
+
+level_up_success: '&d⚡ Sua parcela foi atualizada para o nível &f{LEVEL}&d!'
+level_up_fail_cost: '&c❌ Você não tem moeda suficiente para atualizar.'
+claim_blocks_name: '&bBloqueios de parcela'
+claim_blocks_disabled: '&cOs Bloqueios de Parcela estão desabilitados neste servidor.'
+claim_blocks_balance: '&e⛏ Bloqueios de parcela: &6{BALANCE}'
+claim_blocks_earned: '&a⛏ Obtido &6{AMOUNT}&a Bloqueios de parcela. &7(Novo: &f{BALANCE}&7)'
+claim_blocks_spent: '&e⛏ Gasto &6{AMOUNT}&e Bloqueios de parcela. &7(Esquerda: &f{BALANCE}&7)'
+claim_blocks_insufficient: '&c❌ Bloqueios de parcela insuficientes. &7Necessário: &e{NEEDED}&7 | Disponível: &a{AVAILABLE}&7.'
+claim_blocks_first_claim_limit: '&c❌ Limite da primeira reclamação: área máxima &6{MAX}&c.'
+claim_blocks_earn_notify: '&7(+{AMOUNT} Bloqueios de parcela) &8Saldo: &f{BALANCE}'
+claim_blocks_earned_playtime: '&a✦ Recompensa de tempo de jogo: &b+{AMOUNT}&a Bloqueios de parcela! &7Total: &e{TOTAL}&7.'
+claim_blocks_earned_levelup: '&d✦ Recompensa de subida de nível: &b+{AMOUNT}&d Bloqueios de parcela! &7Total: &e{TOTAL}&7.'
+claim_blocks_received_starter: '&b✦ Starter Ledger: &a+{AMOUNT}&b Bloqueios de parcela concedidos. &7Total: &e{TOTAL}&7.'
+claim_blocks_received_bonus: '&d✦ Bônus concedido: &b+{AMOUNT}&d Bloqueios de parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_purchased: '&6✦ Compra concluída: &b+{AMOUNT}&6 Bloqueios de parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_spent_claim: '&e✦ Custo de reclamação: &c-{AMOUNT}&e Bloqueios de reclamação. &7Remanescente: &a{TOTAL}&7.'
+claim_blocks_spent_levelup: '&e✦ Custo de subida de nível: &c-{AMOUNT}&e Bloqueios de parcela. &7Remanescente: &a{TOTAL}&7.'
+claim_blocks_refunded: '&e✦ Reembolsado: &a+{AMOUNT}&e Bloqueios de parcela. &7Total: &e{TOTAL}&7.'
+claim_blocks_cost_preview: '&7Custo de reclamação: &6{COST}&7 blocos.'
+first_claim_limit_exceeded: '&c❌ Limite da primeira reclamação excedido. &7Máximo permitido: &e{MAX}&7 blocos.'
+blocks_ledger_title: '&6&lRegistro de terrenos &7({PLAYER})'
+blocks_ledger_total: '&7Capacidade total: &e{TOTAL}'
+blocks_ledger_used: '&7Terreno Usado: &c{USED}'
+blocks_ledger_available: '&7Disponível: &a{AVAILABLE}'

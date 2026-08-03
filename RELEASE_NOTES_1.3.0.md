@@ -87,7 +87,7 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 | **Minecraft** | `1.20+` |
 | **Server Software** | Spigot, Paper, Purpur, Folia, and compatible Bukkit forks |
 | **Upgrade path** | From AegisGuard `1.2.7` with automatic config schema migration |
-| **Languages** | Modern English, Old English, Mexican Spanish, and Argentinian Spanish |
+| **Languages** | Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish |
 
 > Test Minecraft or server-software upgrades on a staging server before deploying them to a live community.
 

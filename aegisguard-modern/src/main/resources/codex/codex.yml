@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.2.4 - Aegis Codex Engine
+# AegisGuard v1.3.0 - Aegis Codex Engine
 # ======================================
 
 # Which style is used by default if nothing else is specified
@@ -12,15 +12,25 @@ fallback_style: modern_english
 available_styles:
   - old_english
   - modern_english
-  - spanish_mx       # ✅ New: Español Neutro (Latinoamérica)
-  - spanish_ar       # ✅ New: Español Argentino
+  - spanish_mx
+  - spanish_ar
+  - portuguese_br
+  - french_fr
+  - italian_it
+  - german_de
+  - polish_pl
 
 # Mapping of style IDs to their codex files
 file_map:
   old_english: old_english.yml
   modern_english: modern_english.yml
-  spanish_mx: spanish_mx.yml       # ✅ Mapped to file
-  spanish_ar: spanish_ar.yml       # ✅ Mapped to file
+  spanish_mx: spanish_mx.yml
+  spanish_ar: spanish_ar.yml
+  portuguese_br: portuguese_br.yml
+  french_fr: french_fr.yml
+  italian_it: italian_it.yml
+  german_de: german_de.yml
+  polish_pl: polish_pl.yml
 
 # Shared/global text file
 core_file: core.yml

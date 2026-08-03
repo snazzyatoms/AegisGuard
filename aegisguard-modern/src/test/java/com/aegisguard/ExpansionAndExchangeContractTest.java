@@ -97,7 +97,8 @@ class ExpansionAndExchangeContractTest {
 
     @Test
     void everyLanguageShipsTheNewExperienceWithoutPlaceholderCopy() throws Exception {
-        for (String language : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar")) {
+        for (String language : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
             String gui = Files.readString(LANG_ROOT.resolve(language).resolve("guis.yml"));
             assertTrue(gui.contains("claimblocks_exchange_guide_button:"), language);
             assertTrue(gui.contains("expansion_horizons_title:"), language);

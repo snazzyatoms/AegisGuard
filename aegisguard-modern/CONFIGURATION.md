@@ -8,6 +8,10 @@ Review these sections in order:
 
 1. `localization`
    Choose your default language and fallback language.
+   Shipped packs: `old_english`, `modern_english`, `spanish_mx`, `spanish_ar`,
+   `portuguese_br`, `french_fr`, `italian_it`, `german_de`, `polish_pl`.
+   Schema migration adds any newly shipped IDs to `available_languages` without
+   removing owner customizations.
 2. `hooks`
    All hooks are **off by default**. Enable only the integrations you actually use.
 3. `storage`

@@ -81,6 +81,7 @@ class AllianceContractTest {
         assertTrue(migration.contains("CURRENT_SCHEMA = 1281")
                 || migration.contains("CURRENT_SCHEMA = 1282")
                 || migration.contains("CURRENT_SCHEMA = 1283")
+                || migration.contains("CURRENT_SCHEMA = 1284")
                 || migration.contains("CURRENT_SCHEMA = 1280")
                 || migration.contains("CURRENT_SCHEMA = 1278"));
     }

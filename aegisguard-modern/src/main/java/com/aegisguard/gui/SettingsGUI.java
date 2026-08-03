@@ -772,9 +772,14 @@ public class SettingsGUI {
 
         return switch (style.toLowerCase(Locale.ROOT)) {
             case "old_english" -> t(player, "style_old_english", "&dOld English");
-            case "modern_english" -> t(player, "style_modern_english", "&aModern");
-            case "spanish_mx" -> t(player, "style_spanish_mx", "&bEspañol (LatAm)");
-            case "spanish_ar" -> t(player, "style_spanish_ar", "&bEspañol (AR)");
+            case "modern_english" -> t(player, "style_modern_english", "&aModern English");
+            case "spanish_mx" -> t(player, "style_spanish_mx", "&bEspañol (México)");
+            case "spanish_ar" -> t(player, "style_spanish_ar", "&bEspañol (Argentina)");
+            case "portuguese_br" -> t(player, "style_portuguese_br", "&bPortuguês (Brasil)");
+            case "french_fr" -> t(player, "style_french_fr", "&bFrançais");
+            case "italian_it" -> t(player, "style_italian_it", "&bItaliano");
+            case "german_de" -> t(player, "style_german_de", "&bDeutsch");
+            case "polish_pl" -> t(player, "style_polish_pl", "&bPolski");
             default -> "&f" + pretty(style);
         };
     }

@@ -22,7 +22,7 @@ class ReleaseResourcesTest {
         try (var paths = Files.walk(root)) {
             files = paths.filter(path -> path.toString().endsWith(".yml")).sorted().toList();
         }
-        assertEquals(24, files.size(), "Unexpected resource count; update this assertion intentionally when adding YAML files");
+        assertEquals(49, files.size(), "Unexpected resource count; update this assertion intentionally when adding YAML files");
         Yaml yaml = new Yaml();
         for (Path file : files) {
             String content = Files.readString(file);

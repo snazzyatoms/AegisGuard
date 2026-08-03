@@ -1109,7 +1109,9 @@ public class AegisGuard extends JavaPlugin {
 
         List<String> languages = getConfig().getStringList("localization.available_languages");
         if (languages == null || languages.isEmpty()) {
-            languages = Arrays.asList("old_english", "modern_english", "spanish_mx", "spanish_ar");
+            languages = Arrays.asList(
+                    "old_english", "modern_english", "spanish_mx", "spanish_ar",
+                    "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl");
         }
 
         List<String> fallbackRootFiles = getConfig().getStringList("localization.fallback_root_files");
@@ -1121,7 +1123,12 @@ public class AegisGuard extends JavaPlugin {
                     "old_english.yml",
                     "modern_english.yml",
                     "spanish_mx.yml",
-                    "spanish_ar.yml"
+                    "spanish_ar.yml",
+                    "portuguese_br.yml",
+                    "french_fr.yml",
+                    "italian_it.yml",
+                    "german_de.yml",
+                    "polish_pl.yml"
             );
         }
 

@@ -51,7 +51,8 @@ class SafeTravelContractTest {
                 "travel_confirm_prompt:",
                 "travel_fail_unsafe:"
         );
-        for (String pack : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar")) {
+        for (String pack : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
             String system = Files.readString(LANG_ROOT.resolve(pack).resolve("system.yml"));
             for (String key : keys) {
                 assertTrue(system.contains(key), pack + " missing " + key);

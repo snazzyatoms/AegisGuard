@@ -195,7 +195,9 @@ public class MessagesUtil implements Listener {
             styles = plugin.getConfig().getStringList("language_styles.available");
         }
         if (styles == null || styles.isEmpty()) {
-            styles = Arrays.asList("old_english", "modern_english", "spanish_mx", "spanish_ar");
+            styles = Arrays.asList(
+                    "old_english", "modern_english", "spanish_mx", "spanish_ar",
+                    "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl");
         }
         return styles;
     }

@@ -147,7 +147,9 @@ public class CodexEngine {
             } else if (fromFallbackIndex != null && !fromFallbackIndex.isEmpty()) {
                 availableStyles.addAll(fromFallbackIndex);
             } else {
-                availableStyles.addAll(Arrays.asList("old_english", "modern_english", "spanish_mx", "spanish_ar"));
+                availableStyles.addAll(Arrays.asList(
+                        "old_english", "modern_english", "spanish_mx", "spanish_ar",
+                        "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl"));
             }
 
             normalizeAvailableStyles();
@@ -241,7 +243,12 @@ public class CodexEngine {
                     "old_english.yml",
                     "modern_english.yml",
                     "spanish_mx.yml",
-                    "spanish_ar.yml"
+                    "spanish_ar.yml",
+                    "portuguese_br.yml",
+                    "french_fr.yml",
+                    "italian_it.yml",
+                    "german_de.yml",
+                    "polish_pl.yml"
             );
         }
 

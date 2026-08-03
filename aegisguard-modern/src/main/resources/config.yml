@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1283
+config_schema: 1284
 
 
 # ------------------------------------------------------------------------------
@@ -67,6 +67,11 @@ language_styles:
     - modern_english
     - spanish_mx
     - spanish_ar
+    - portuguese_br
+    - french_fr
+    - italian_it
+    - german_de
+    - polish_pl
 
 
 # ==============================================================================
@@ -105,6 +110,11 @@ localization:
     - modern_english
     - spanish_mx
     - spanish_ar
+    - portuguese_br
+    - french_fr
+    - italian_it
+    - german_de
+    - polish_pl
 
   # If true, bundled language files will be copied into the plugin folder when
   # they do not already exist on disk.

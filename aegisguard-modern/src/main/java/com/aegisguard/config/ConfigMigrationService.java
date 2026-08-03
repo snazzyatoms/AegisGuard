@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1283;
+    public static final int CURRENT_SCHEMA = 1284;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -70,6 +70,7 @@ public final class ConfigMigrationService {
             }
             migrateAliases(config);
             mergeMissingDefaults(config, defaultsSupplier);
+            mergeAvailableLanguages(config);
             validateAndRepair(config);
             config.set("config_schema", CURRENT_SCHEMA);
             config.set("config-version", null);
@@ -118,6 +119,37 @@ public final class ConfigMigrationService {
             }
         } catch (IOException error) {
             warnings.add("Could not read embedded defaults: " + error.getMessage());
+        }
+    }
+
+    /**
+     * Adds newly shipped language IDs into owner-configured available-language lists
+     * without removing custom entries the owner already chose.
+     */
+    private void mergeAvailableLanguages(YamlConfiguration config) {
+        List<String> shipped = List.of(
+                "old_english", "modern_english", "spanish_mx", "spanish_ar",
+                "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl"
+        );
+        appendMissingLanguages(config, "localization.available_languages", shipped);
+        appendMissingLanguages(config, "language_styles.available", shipped);
+    }
+
+    private void appendMissingLanguages(YamlConfiguration config, String path, List<String> shipped) {
+        List<String> current = new ArrayList<>(config.getStringList(path));
+        boolean changed = false;
+        for (String language : shipped) {
+            if (language == null || language.isBlank()) continue;
+            boolean present = current.stream().anyMatch(existing ->
+                    existing != null && existing.equalsIgnoreCase(language));
+            if (!present) {
+                current.add(language);
+                changed = true;
+            }
+        }
+        if (changed) {
+            config.set(path, current);
+            changes.add("Merged newly shipped language IDs into " + path + ".");
         }
     }
 

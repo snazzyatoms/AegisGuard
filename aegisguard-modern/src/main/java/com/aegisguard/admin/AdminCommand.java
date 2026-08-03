@@ -41,11 +41,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit"
+            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "help"
     };
 
     private static final String[] MIGRATE_ACTIONS = {
-            "list", "preview", "import", "help"
+            "list", "preview", "import", "help", "storage", "backend"
     };
 
     private static final String[] MIGRATE_SOURCES = {
@@ -108,7 +108,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "discover" -> handleAdminDiscover(player, args);
             case "activity" -> handleAdminActivity(player);
             case "audit" -> handleAudit(player);
-            default -> player.sendMessage(ChatColor.YELLOW + "Usage: /aegisadmin <" + String.join("|", SUB_COMMANDS) + ">");
+            case "help" -> sendAdminHelp(player);
+            default -> sendAdminHelp(player);
         }
 
         return true;
@@ -138,8 +139,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        if ((args[0].equalsIgnoreCase("snapshot") || args[0].equalsIgnoreCase("restore")) && args.length == 2) {
+        if (args[0].equalsIgnoreCase("snapshot") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("here", "current"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("restore")) {
+            if (args.length == 2) {
+                return StringUtil.copyPartialMatches(args[1], List.of("here", "current", "confirm"), new ArrayList<>());
+            }
+            if (args.length == 3) {
+                return StringUtil.copyPartialMatches(args[2], List.of("confirm"), new ArrayList<>());
+            }
         }
 
         if (args[0].equalsIgnoreCase("convert") && args.length == 2) {
@@ -348,12 +357,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            if (plugin.gui().storageMigrate() != null) {
-                plugin.gui().storageMigrate().open(player);
-            } else if (plugin.gui().migration() != null) {
+            if (plugin.gui().migration() != null) {
                 plugin.gui().migration().open(player);
             } else {
-                player.sendMessage(ChatColor.RED + "Migration wizard is unavailable.");
+                sendLocalized(player, "migration_unavailable", "&cMigration wizard is unavailable.");
             }
             return;
         }
@@ -361,18 +368,18 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         String action = args[1].toLowerCase(Locale.ROOT);
         if (action.equals("storage") || action.equals("backend")) {
             if (plugin.gui().storageMigrate() != null) plugin.gui().storageMigrate().open(player);
-            else player.sendMessage(ChatColor.RED + "Storage migration is unavailable.");
+            else sendLocalized(player, "storage_migrate_unavailable", "&cStorage migration is unavailable.");
             return;
         }
         if (action.equals("help")) {
-            player.sendMessage(ChatColor.GOLD + "AegisGuard Migration");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin migrate");
-            player.sendMessage(ChatColor.GRAY + "Open the migration wizard.");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin migrate list");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin migrate preview <source> [options]");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin migrate import <source> [options]");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin snapshot here [reason]");
-            player.sendMessage(ChatColor.YELLOW + "/agadmin restore here");
+            sendLocalized(player, "admin_migrate_help_header", "&6AegisGuard Migration");
+            sendLocalized(player, "admin_migrate_help_wizard", "&e/agadmin migrate &7- open claim migration wizard");
+            sendLocalized(player, "admin_migrate_help_storage", "&e/agadmin migrate storage &7- YML ↔ SQL storage migrate");
+            sendLocalized(player, "admin_migrate_help_list", "&e/agadmin migrate list");
+            sendLocalized(player, "admin_migrate_help_preview", "&e/agadmin migrate preview <source> [options]");
+            sendLocalized(player, "admin_migrate_help_import", "&e/agadmin migrate import <source> [options]");
+            sendLocalized(player, "admin_migrate_help_snapshot", "&e/agadmin snapshot here [reason]");
+            sendLocalized(player, "admin_migrate_help_restore", "&e/agadmin restore here confirm");
             return;
         }
 
@@ -546,42 +553,93 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private void handleRestore(Player player, String[] args) {
         if (plugin.getSnapshotManager() == null) {
-            player.sendMessage(ChatColor.RED + "Snapshot system is unavailable.");
+            sendLocalized(player, "snapshots_disabled", "&cSnapshot system is unavailable.");
             return;
         }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
-            player.sendMessage(ChatColor.RED + "Stand inside the plot you want to restore.");
+            sendLocalized(player, "admin_restore_need_plot", "&cStand inside the plot you want to restore.");
             return;
         }
         if (!plot.canManage(player, plugin)) {
-            player.sendMessage(ChatColor.RED + "You cannot restore this plot.");
+            sendLocalized(player, "admin_restore_no_perm", "&cYou cannot restore this plot.");
             return;
         }
 
         ClaimSnapshot latest = plugin.getSnapshotManager().getLatestSnapshotForPlot(plot.getPlotId());
         if (latest == null) {
-            player.sendMessage(ChatColor.YELLOW + "No snapshots were found for this plot.");
+            sendLocalized(player, "admin_restore_none", "&eNo snapshots were found for this plot.");
             return;
         }
 
-        player.sendMessage(ChatColor.AQUA + "[AegisGuard] " + ChatColor.GRAY + "Restoring latest snapshot...");
+        boolean confirmed = false;
+        for (String arg : args) {
+            if (arg != null && arg.equalsIgnoreCase("confirm")) {
+                confirmed = true;
+                break;
+            }
+        }
+        if (!confirmed) {
+            sendLocalized(player, "admin_restore_prompt",
+                    "&eLatest snapshot: &f{TYPE} &7| &f{REASON} &7| age &f{AGE}",
+                    Map.of(
+                            "TYPE", latest.getType().name(),
+                            "REASON", latest.getReason() == null || latest.getReason().isBlank()
+                                    ? "No reason recorded" : latest.getReason(),
+                            "AGE", formatAgeMillis(latest.getAgeMillis())
+                    ));
+            sendLocalized(player, "admin_restore_confirm_hint",
+                    "&cThis overwrites the live claim. Run &e/agadmin restore here confirm &cto continue.");
+            return;
+        }
+
+        sendLocalized(player, "admin_restore_running", "&b[AegisGuard] &7Restoring latest snapshot...");
         UUID restoredPlotId = plot.getPlotId();
+        UUID snapshotId = latest.getSnapshotId();
         plugin.runGlobalAsync(() -> {
-            boolean restored = plugin.getSnapshotManager().rollback(latest.getSnapshotId());
+            boolean restored = plugin.getSnapshotManager().rollback(snapshotId);
             plugin.runMain(player, () -> {
                 if (restored) {
-                    player.sendMessage(ChatColor.GREEN + "Plot restored from snapshot " + latest.getSnapshotId());
+                    sendLocalized(player, "admin_restore_success",
+                            "&aPlot restored from snapshot &f{ID}",
+                            Map.of("ID", String.valueOf(snapshotId)));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Plot restore failed. Check the logs or doctor report.");
+                    sendLocalized(player, "admin_restore_failed",
+                            "&cPlot restore failed. Check the logs or doctor report.");
                 }
                 if (plugin.audit() != null) {
                     plugin.audit().record(AuditCategory.SNAPSHOT_RESTORE, player, restoredPlotId.toString(),
-                            "Restored plot from snapshot " + latest.getSnapshotId() + (restored ? "" : " (failed)"));
+                            "Restored plot from snapshot " + snapshotId + (restored ? "" : " (failed)"));
                 }
             });
         });
+    }
+
+    private void sendAdminHelp(Player player) {
+        sendLocalized(player, "admin_help_header", "&6AegisGuard Staff Commands");
+        sendLocalized(player, "admin_help_menu", "&e/agadmin &7| &e/agadmin menu &8- Staff Command Center");
+        sendLocalized(player, "admin_help_doctor", "&e/agadmin doctor [scan|report|repair confirm] &8- Territory Doctor");
+        sendLocalized(player, "admin_help_health", "&e/agadmin health &8- Quick health check");
+        sendLocalized(player, "admin_help_migrate", "&e/agadmin migrate &8- Claim migration wizard");
+        sendLocalized(player, "admin_help_migrate_storage", "&e/agadmin migrate storage &8- YML ↔ SQL storage");
+        sendLocalized(player, "admin_help_snapshot", "&e/agadmin snapshot here [reason] &8- Manual recovery snapshot");
+        sendLocalized(player, "admin_help_restore", "&e/agadmin restore here confirm &8- Restore latest snapshot");
+        sendLocalized(player, "admin_help_audit", "&e/agadmin audit &8- Staff Audit Ledger");
+        sendLocalized(player, "admin_help_rentals", "&e/agadmin rentals <cancel|retry-settlements> ...");
+        sendLocalized(player, "admin_help_bypass", "&e/agadmin bypass &8- Toggle personal protection bypass");
+        sendLocalized(player, "admin_help_reload", "&e/agadmin reload &8- Reload AegisGuard");
+        sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
+    }
+
+    private static String formatAgeMillis(long ageMillis) {
+        long seconds = Math.max(0L, ageMillis / 1000L);
+        if (seconds < 60) return seconds + "s";
+        long minutes = seconds / 60L;
+        if (minutes < 60) return minutes + "m";
+        long hours = minutes / 60L;
+        if (hours < 48) return hours + "h";
+        return (hours / 24L) + "d";
     }
 
     private void handleConvert(Player player, String[] args) {

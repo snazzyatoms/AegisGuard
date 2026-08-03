@@ -1043,12 +1043,18 @@ admin_gui_title: '&c✦ Herramientas del Alto Guardián'
 
 button_admin_auto_remove: '&cAuto-Remover Baneados'
 admin_auto_remove_lore:
-- '&7Desreclama automáticamente parcelas'
-- '&7cuando los dueños son baneados.'
+  - '&7Qué: limpiar automáticamente parcelas de baneados.'
+  - '&7Cuándo: querés limpiar cuentas baneadas con el tiempo.'
+  - ' '
+  - '&cPrecaución: elimina territorio tras la limpieza por ban.'
+  - '&eClic para alternar.'
 
 button_admin_bypass_limit: '&bOmitir Límite de Parcelas'
 admin_bypass_limit_lore:
-- '&7Los admins ignoran el límite de parcelas.'
+  - '&7Qué: permite al staff ignorar límites normales de parcelas.'
+  - '&7Cuándo: zonas de staff o reparar parcelas enormes.'
+  - ' '
+  - '&eClic para alternar.'
 
 button_admin_broadcast: '&eTransmitir Acciones Admin'
 admin_broadcast_lore:
@@ -1068,13 +1074,19 @@ admin_perf_lore:
 
 button_admin_diagnostics: '&bDiagnósticos'
 admin_diagnostics_lore:
-- '&7Mirá estadísticas del sistema.'
+  - '&7Qué: Doctor de Territorio — escaneo, reparación,'
+  - '&7reportes, liquidaciones, morosos y migración de storage.'
+  - '&7Cuándo: parcelas, alquileres o hooks se ven inconsistentes.'
+  - ' '
+  - '&eClic para abrir.'
 
 button_reload_all_settings: '&eRecargar Todos los Ajustes'
 reload_all_settings_lore:
-- '&7Recarga configuración y sistemas.'
-- ' '
-- '&eClic para recargar'
+  - '&7Qué: recargar config, vistas de datos y menús.'
+  - '&7Cuándo: después de editar config.yml en disco.'
+  - ' '
+  - '&cNo reemplaza un reinicio completo para todo cambio.'
+  - '&eClic para recargar.'
 
 button_refresh_language_packs: '&aActualizar Paquetes de Idioma'
 button_admin_refresh_lang: '&aActualizar Idiomas'
@@ -1086,10 +1098,11 @@ refresh_language_packs_lore:
 
 button_admin_snapshots: '&d📸 Instantáneas de Parcelas'
 admin_snapshots_lore:
-- '&7Mirá y gestioná instantáneas.'
-- '&7Restaurá parcelas a estados previos.'
-- ' '
-- '&eClic para abrir'
+  - '&7Qué: revisar puntos de recuperación y restaurar parcelas.'
+  - '&7Cuándo: deshacer un merge/expansión/edición mala.'
+  - ' '
+  - '&cLa restauración sobrescribe la parcela activa — confirma con cuidado.'
+  - '&eClic para abrir.'
 
 button_admin_snapshots_disabled: '&8📸 Instantáneas Deshabilitadas'
 admin_snapshots_disabled_lore:
@@ -1098,32 +1111,38 @@ admin_snapshots_disabled_lore:
 
 admin_plot_list_title: '&bLista de Parcelas'
 admin_plot_list_lore:
-- '&7Mirá y teletransportate a cualquier parcela.'
+  - '&7Qué: explorar parcelas registradas y teletransportarte.'
+  - '&7Cuándo: investigar un claim o ayudar a un jugador.'
+  - ' '
+  - '&eClic para abrir.'
 button_admin_reload_all: '&eRecargar Ajustes'
 button_admin_world_controls: '&b🌍 Controles del Mundo'
 admin_world_controls_lore:
-- '&7Gestioná protecciones globales'
-- '&7y reglas de seguridad.'
-- ' '
-- '&eClic para abrir'
+  - '&7Qué: defaults de claim por mundo y game rules en vivo.'
+  - '&7Cuándo: cerrar un mundo, ajustar PvP/mobs o spawn.'
+  - ' '
+  - '&cLos toggles de game rules aplican de inmediato.'
+  - '&eClic para abrir.'
 button_admin_world_controls_missing: '&8🌍 Controles del Mundo No Disponibles'
 admin_world_controls_missing_lore:
 - '&7Esta versión todavía no tiene'
 - '&7la interfaz de controles del mundo.'
 button_admin_migration: '&6Asistente de Migración'
 admin_migration_lore:
-- '&7Previsualizá e importá parcelas'
-- '&7de otros plugins compatibles.'
-- ' '
-- '&eClic para abrir'
+  - '&7Qué: vista previa y luego importar de'
+  - '&7GriefPrevention, GriefDefender o Lands.'
+  - '&7Cuándo: al cambiar de plugin de protección.'
+  - ' '
+  - '&cLa importación escribe parcelas — primero previsualiza.'
+  - '&eClic para abrir.'
 
 button_admin_audit: '&eRegistro de Auditoría'
 admin_audit_lore:
-- '&7Revisá restauraciones, reparaciones,'
-- '&7migraciones, cambios de bypass y'
-- '&7ajustes de ClaimBlocks del staff.'
-- ' '
-- '&eClic para abrir'
+  - '&7Qué: revisar restauraciones, reparaciones del Doctor,'
+  - '&7migraciones, bypass y ajustes de ClaimBlocks.'
+  - '&7Cuándo: auditorías o revisión de incidentes.'
+  - ' '
+  - '&eClic para abrir.'
 
 audit_admin_title: '&e&lRegistro de Auditoría'
 audit_disabled: '&cEl registro de auditoría está deshabilitado.'
@@ -1285,7 +1304,10 @@ expansion_admin_title: '&5✦ Solicitudes Pendientes'
 expansion_admin_title_paged: '&6&lSolicitudes Pendientes &7({PAGE}/{PAGES})'
 button_view_requests_admin: '&cRevisar Solicitudes'
 view_requests_admin_lore:
-- '&7Aprobá o rechazá solicitudes de expansión.'
+  - '&7Qué: aprobar o rechazar peticiones de expansión.'
+  - '&7Cuándo: hay solicitudes pendientes en la cola.'
+  - ' '
+  - '&eClic para abrir.'
 expansion_admin_view_toggle: '&bVista: &fTodo'
 expansion_admin_view_toggle_lore:
 - '&7Alterná entre cola e historial.'
@@ -1339,8 +1361,9 @@ snapshot_item_lore:
 - '&7Activado Por: &f{ACTOR}'
 - '&7Radio: &a{RADIUS}'
 - ' '
-- '&aClic izquierdo: &7Restaurar este estado'
-- '&cClic derecho: &7Eliminar instantánea'
+- '&cLa restauración sobrescribe la parcela activa.'
+- '&aShift+Clic izquierdo: &7Restaurar (confirmar dos veces)'
+- '&cShift+Clic derecho: &7Eliminar esta instantánea'
 snapshot_rollback_success: '&a✔ Parcela restaurada correctamente.'
 snapshot_rollback_failed: '&c❌ La restauración falló. Puede que la parcela ya no exista.'
 snapshot_deleted: '&e✔ Instantánea eliminada.'
@@ -2053,15 +2076,24 @@ world_controls_weather_name: '&bCiclo del Clima'
 world_controls_keep_inventory_name: '&6Conservar Inventario'
 world_controls_mob_griefing_name: '&cDaño de Mobs al Mundo'
 staff_command_center_name: '&c&lCentro de Mando Guardián'
-staff_command_center_lore: ['&7Política del servidor, operaciones territoriales,', '&7recuperación, migración y diagnóstico.', ' ', '&8Cada control verifica sus permisos.']
+staff_command_center_lore:
+  - '&7Centro de staff para política, operaciones,'
+  - '&7recuperación, migración y diagnóstico.'
+  - ' '
+  - '&7Pasa el cursor para ver qué hace cada control,'
+  - '&7cuándo usarlo y cualquier advertencia.'
+  - ' '
+  - '&8Cada control de abajo verifica permisos.'
 staff_policy_section_name: '&ePolítica Operativa'
-staff_policy_section_lore: ['&7La fila superior controla la política', '&7general de AegisGuard.']
+staff_policy_section_lore:
+  - '&7Fila superior: política operativa del servidor.'
+  - '&7Alterna solo en ventanas de mantenimiento'
+  - '&7cuando entendés los efectos secundarios.'
 staff_toolbelt_section_name: '&bHerramientas del Guardián'
-staff_toolbelt_section_lore: ['&7La fila inferior abre revisión, recuperación,', '&7mundos, migración y mantenimiento.']
-
-# ------------------------------------------------------------
-# Pases de Invitado Temporales (1.3.0+, Hito 2)
-# ------------------------------------------------------------
+staff_toolbelt_section_lore:
+  - '&7Fila inferior: revisión, recuperación, mundos,'
+  - '&7migración, diagnóstico y mantenimiento.'
+  - '&7Las herramientas destructivas piden confirmación.'
 button_guest_passes: '&d🎫 Pases de Invitado'
 guest_passes_lore: ['&7Otorgá acceso temporal y autoexpirable', '&7sin confianza permanente.']
 guest_passes_locked_lore: ['&cEntrá a una parcela que administrés', '&cpara emitir Pases de Invitado.']
@@ -2425,14 +2457,23 @@ plot_status_upkeep_paid: '&7Ultimo pago: &f{TIME}'
 alliance_roster_lore:
   - '&7Ver miembros e invitaciones pendientes.'
 doctor_settlements_lore:
-  - '&7Revisa pagos en cola'
-  - '&7y reintenta la entrega.'
+  - '&7Qué: pagos Vault en cola que no se entregaron.'
+  - '&7Cuándo: ventas, rentas o reembolsos parecen trabados.'
+  - ' '
+  - '&eClic para revisar y reintentar entregas.'
+  - '&8El staff puede reintentar todos los pendientes.'
 doctor_delinquents_lore:
-  - '&7Ve alquileres vencidos o por vencer'
-  - '&7en las proximas 24 horas.'
+  - '&7Qué: alquileres vencidos o por vencer en 24h.'
+  - '&7Cuándo: seguimiento a inquilinos o limpieza.'
+  - ' '
+  - '&eClic para ver la lista de vigilancia.'
+  - '&8No cancela alquileres por sí solo.'
 doctor_storage_migrate_lore:
-  - '&7Convierte datos de terrenos entre YML y SQL'
-  - '&7con una copia de seguridad.'
+  - '&7Qué: convertir datos de parcelas entre YML y SQL.'
+  - '&7Cuándo: cambiar storage.backend en mantenimiento.'
+  - ' '
+  - '&cCrea un respaldo y luego reescribe el almacenamiento.'
+  - '&eClic para abrir el asistente de migración.'
 visit_discover_filter_lore:
   - '&7Ciclo: Todos / Destacados / Venta / Alquiler / Categoria'
 
@@ -2525,3 +2566,217 @@ transfer_confirm_details_lore:
   - ' '
   - '&cLos listados se limpian. Los depósitos activos'
   - '&cse reembolsan o encolan antes de transferir.'
+
+# Asistente de Migración
+migration_gui_title: '&6Asistente de Migración'
+migration_loading_title: '&6Escaneando Migración'
+migration_preview_title: '&6Vista Previa de Migración'
+migration_confirm_title: '&cConfirmar Importación'
+migration_scan_name: '&eEscaneo de Ubicación Actual'
+migration_scan_clear_lore:
+  - '&7Ningún hook de protección externa'
+  - '&7reporta protección en tu ubicación.'
+migration_scan_detected_lore:
+  - '&7Fuente detectada: &e{HOOK}'
+  - '&7Fuente de migración sugerida: &a{SOURCE}'
+migration_scan_aegis_plot_lore:
+  - '&7Parcela Aegis aquí: &fYes'
+  - '&7Dueño: &f{OWNER}'
+migration_scan_focus_active_lore:
+  - '&7Filtro de parcela enfocada: &aACTIVE'
+  - '&7Objetivo: &f{X}, {Z}'
+migration_scan_footer_lore:
+  - '&eUsa los botones de fuente abajo para una vista previa (dry-run).'
+  - '&8La importación no inicia hasta que confirmes.'
+migration_source_griefprevention_name: 'GriefPrevention'
+migration_source_griefdefender_name: 'GriefDefender'
+migration_source_lands_name: 'Lands'
+migration_source_detected_lore:
+  - '&7Se detectaron datos de origen en este servidor.'
+  - '&7Ejecuta una vista previa antes de importar.'
+migration_source_missing_lore:
+  - '&7Aún no se detectaron datos de origen.'
+  - '&7Instala/activa el plugin y vuelve a abrir.'
+migration_source_recommended_lore:
+  - '&bDetectado cerca de tu ubicación actual.'
+migration_option_trusted_line: '&7Importar de confianza: {STATE}'
+migration_option_flags_line: '&7Importar flags: {STATE}'
+migration_option_force_line: '&7Forzar solapamiento: {STATE}'
+migration_source_click_lore:
+  - '&eClic para vista previa (dry-run).'
+  - '&8No se escriben parcelas hasta confirmar la importación.'
+migration_toggle_trusted_name: '&bImportar de confianza'
+migration_toggle_trusted_lore:
+  - '&7Copia el acceso de confianza/miembros desde el origen.'
+  - '&7Úsalo cuando quieras que los jugadores mantengan acceso.'
+  - ' '
+  - '&eClic para alternar.'
+migration_toggle_flags_name: '&dImportar Flags'
+migration_toggle_flags_lore:
+  - '&7Copia flags de protección compatibles cuando sea posible.'
+  - '&7Úsalo para mayor paridad de funciones tras importar.'
+  - ' '
+  - '&eClic para alternar.'
+migration_toggle_force_name: '&cForzar Solapamiento'
+migration_toggle_force_lore:
+  - '&7Permite importar aunque se solape una parcela Aegis.'
+  - '&cPrecaución: puede crear geometría conflictiva.'
+  - '&cMejor déjalo OFF salvo recuperación de un mundo roto.'
+  - ' '
+  - '&eClic para alternar.'
+migration_focus_name: '&eFiltro de Parcela Enfocada'
+migration_focus_inactive_lore:
+  - '&7No hay parcela externa enfocada.'
+  - '&7La vista previa escaneará toda la fuente seleccionada.'
+  - ' '
+  - '&eUsa la varita de migración para apuntar a una parcela exacta.'
+  - '&8El clic no hace nada hasta que haya un enfoque activo.'
+migration_focus_active_lore:
+  - '&7Coordenadas enfocadas: &f{X}, {Z}'
+  - '&7Mundo: &f{WORLD}'
+  - ' '
+  - '&eClic para limpiar este filtro de parcela exacta.'
+migration_wand_name: '&6Obtener Varita de Migración'
+migration_wand_lore:
+  - '&7Right-click in another plugin''s protected area.'
+  - '&7Abre este asistente con esa fuente preseleccionada.'
+  - ' '
+  - '&eClic para recibir la varita.'
+migration_wand_item_name: '&6Varita de Migración'
+migration_wand_item_lore:
+  - '&7Clic derecho en un área protegida de'
+  - '&7otro plugin para abrir el'
+  - '&7asistente de migración de AegisGuard.'
+migration_wand_received: '&aYou received the Varita de Migración.'
+migration_open_doctor_name: '&bAbrir Doctor de Territorio'
+migration_open_doctor_lore:
+  - '&7Tras importar, busca solapamientos,'
+  - '&7contratos huérfanos y estados reparables.'
+  - ' '
+  - '&eClic para abrir el Doctor.'
+migration_scanning_name: '&eEscaneando {SOURCE}'
+migration_scanning_lore:
+  - '&7Ejecutando vista previa (dry-run).'
+  - '&7Puede tardar un momento en servidores grandes.'
+  - ' '
+  - '&8No se escriben parcelas durante la vista previa.'
+migration_preview_summary_name: '&eVista previa de {SOURCE}'
+migration_preview_summary_lore:
+  - '&7Parcelas encontradas: &f{FOUND}'
+  - '&7Se importarían: &a{IMPORT}'
+  - '&7Omitidas por solape: &e{OVERLAP}'
+  - '&7Omitidas por filtro: &e{FILTER}'
+  - '&7Errores: &c{ERRORS}'
+  - '&7Duración: &f{MS}ms'
+migration_focused_claim_name: '&bParcela Enfocada'
+migration_focused_none_lore:
+  - '&7No coincidió ninguna parcela enfocada.'
+  - '&7Esta vista previa representa toda la fuente seleccionada.'
+migration_focused_detail_lore:
+  - '&7Dueño: &f{OWNER}'
+  - '&7Mundo: &f{WORLD}'
+  - '&7Nombre: &f{NAME}'
+  - '&7Límites: &f{BOUNDS}'
+  - '&7Entradas de confianza: &f{TRUSTED}'
+  - '&7Flags importados: &f{FLAGS}'
+migration_run_import_name: '&aEjecutar Importación'
+migration_run_import_lore:
+  - '&7Importa esta fuente con las'
+  - '&7opciones seleccionadas actualmente.'
+  - ' '
+  - '&eClic para revisar la confirmación final.'
+  - '&cLa importación en vivo cambia datos de parcelas.'
+migration_confirm_import_name: '&cConfirmar Importación en Vivo'
+migration_confirm_import_lore:
+  - '&7Esto escribe nuevas parcelas AegisGuard desde el origen.'
+  - '&cIrreversible sin instantáneas / limpieza manual.'
+  - '&7Ejecuta un escaneo del Doctor después para verificar.'
+  - ' '
+  - '&cClic para importar ahora.'
+migration_cancel_confirm_name: '&eCancelar'
+migration_cancel_confirm_lore:
+  - '&7Volver a la vista previa'
+  - '&7sin importar nada.'
+migration_back_wizard_name: '&bVolver al Asistente'
+migration_back_wizard_lore:
+  - '&7Cambia opciones de vista previa o'
+  - '&7vuelve a escanear otra fuente.'
+migration_back_sources_lore:
+  - '&7Volver a las fuentes de migración.'
+migration_preview_notes_name: '&fNotas de Vista Previa'
+migration_preview_no_errors_lore:
+  - '&aNo se reportaron errores de vista previa.'
+migration_preview_errors_header_lore:
+  - '&eNotas / errores de vista previa:'
+migration_unavailable: '&cEl sistema de migración no está disponible.'
+migration_preview_failed: '&cFalló la vista previa: {ERROR}'
+migration_import_starting: '&6[AegisGuard] &7Iniciando importación en vivo de &e{SOURCE}&7...'
+migration_import_failed: '&cMigración fallida: {ERROR}'
+migration_import_finished: '&aMigración terminada. Abriendo resumen...'
+
+# Storage backend migrate
+storage_migrate_title: '&cMigración de Almacenamiento'
+storage_migrate_confirm_title: '&cConfirm Migración de Almacenamiento'
+storage_migrate_info_name: '&eMigración de Backend de Almacenamiento'
+storage_migrate_info_lore:
+  - '&7Copia datos de parcelas entre YML y SQLite.'
+  - '&7Se crea una copia de seguridad antes de los cambios.'
+  - ' '
+  - '&cÚsalo durante mantenimiento programado.'
+  - '&cLuego cambia storage.backend en la config'
+  - '&csi planeas conservar el destino.'
+storage_migrate_yml_sql_name: '&eYML a SQLite'
+storage_migrate_yml_sql_lore:
+  - '&7Qué: copiar plots.yml a SQLite.'
+  - '&7Cuándo: pasar un servidor de archivos planos a SQL.'
+  - ' '
+  - '&7Primero se escribe un respaldo de plots.yml.'
+  - '&cDestructivo si el destino ya tiene parcelas.'
+  - ' '
+  - '&eClic para revisar la confirmación.'
+storage_migrate_sql_yml_name: '&eSQLite a YML'
+storage_migrate_sql_yml_lore:
+  - '&7Qué: copiar parcelas SQLite a plots.yml.'
+  - '&7Cuándo: exportar datos SQL a archivos planos.'
+  - ' '
+  - '&7Primero se escribe un respaldo de la base de datos.'
+  - '&cDestructivo si plots.yml ya tiene parcelas.'
+  - ' '
+  - '&eClic para revisar la confirmación.'
+storage_migrate_confirm_name: '&cConfirmar {DIRECTION}'
+storage_migrate_confirm_lore:
+  - '&7Dirección: &f{DIRECTION}'
+  - '&7Se crea un respaldo antes de copiar.'
+  - ' '
+  - '&cEsto reescribe los datos de almacenamiento.'
+  - '&cNo interrumpas el servidor a mitad de la migración.'
+  - ' '
+  - '&cClic para ejecutar ahora.'
+storage_migrate_back_lore:
+  - '&7Volver al menú de staff anterior.'
+storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_unavailable: '&cLa migración de almacenamiento no está disponible.'
+doctor_delinquents_title: '&4Morosos de Alquiler'
+doctor_delinquents_empty_name: '&aSin Alquileres Morosos'
+doctor_delinquents_empty_lore:
+  - '&7Ningún alquiler vence en 24 horas.'
+  - '&7Revisa más tarde o usa /agadmin rentals.'
+doctor_delinquent_entry_name: '&e{PLOT}'
+doctor_delinquent_entry_expired_lore:
+  - '&7Inquilino: &f{RENTER}'
+  - '&cVencido — da seguimiento o cancela con herramientas de staff.'
+doctor_delinquent_entry_due_lore:
+  - '&7Inquilino: &f{RENTER}'
+  - '&eVence en &f{HOURS}&eh.'
+  - '&7Vigila o prepara una cancelación de staff.'
+button_back_doctor: '&eVolver al Doctor'
+doctor_back_lore:
+  - '&7Volver al Doctor de Territorio.'
+button_admin_set_spawn: '&aFijar Parcela Actual como Spawn'
+admin_set_spawn_lore:
+  - '&7Qué: fijar el punto seguro de esta parcela de staff como Spawn público.'
+  - '&7Cuándo: de pie dentro de una parcela de servidor/staff.'
+  - ' '
+  - '&7Puede tomarse una instantánea de recuperación primero.'
+  - '&8No cambia la propiedad.'
+  - '&eClic para fijar.'

@@ -217,8 +217,9 @@ public class SnapshotAdminGUI {
                         "&7Triggered By: &f{ACTOR}",
                         "&7Radius: &a{RADIUS}",
                         " ",
-                        "&aShift-Left-Click: &7Rollback to this state",
-                        "&cShift-Right-Click: &7Delete snapshot"
+                        "&cRollback overwrites the live claim.",
+                        "&aShift-Left-Click: &7Rollback (confirm twice)",
+                        "&cShift-Right-Click: &7Delete this snapshot"
                 ), vars);
 
                 Material icon = snapshot.getType() == ClaimSnapshot.SnapshotType.PRE_EXPANSION

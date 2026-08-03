@@ -364,8 +364,9 @@ snapshot_item_lore:
   - '&7Created by: &f{ACTOR}'
   - '&7Radius: &a{RADIUS}'
   - ' '
-  - '&aLeft-click: &7Restore to this state'
-  - '&cRight-click: &7Delete snapshot'
+  - '&cRollback overwriteth the living claim.'
+  - '&aShift-Left-Click: &7Rollback (confirm twice)'
+  - '&cShift-Right-Click: &7Delete this snapshot'
 
 snapshot_rollback_success: '&a[OK] Claim restored successfully.'
 snapshot_rollback_failed: '&c[X] Restore failed. Claim may no longer exist.'
@@ -785,12 +786,18 @@ biome_item_lore_free:
 # ------------------------------------------------------------
 button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
-- '&7Automatically unclaim plots'
-- '&7when owners are banned.'
+  - '&7What: auto-clean claims owned by banned players.'
+  - '&7When: thou wouldst clear banned accounts over time.'
+  - ' '
+  - '&cCaution: removeth territory after the ban cleanup path.'
+  - '&eClick to toggle.'
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:
-- '&7Admins ignore max plot count.'
+  - '&7What: let staff ignore normal claim limits.'
+  - '&7When: building staff zones or repairing oversized claims.'
+  - ' '
+  - '&eClick to toggle.'
 
 button_admin_broadcast: '&ebroadcasts Admin Actions'
 admin_broadcast_lore:
@@ -810,13 +817,19 @@ admin_perf_lore:
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
-- '&7View system statistics and health.'
+  - '&7What: Territory Doctor — scan, repair,'
+  - '&7reports, settlements, delinquents, storage migrate.'
+  - '&7When: claims, rentals, or hooks look amiss.'
+  - ' '
+  - '&eClick to open.'
 
 button_reload_all_settings: '&eReload All Settings'
 reload_all_settings_lore:
-- '&7Reload configuration and systems.'
-- ' '
-- '&eClick to reload'
+  - '&7What: reload config, data views, and menus.'
+  - '&7When: after editing config.yml upon disk.'
+  - ' '
+  - '&cReplaceth not a full server restart for every change.'
+  - '&eClick to reload.'
 
 button_refresh_language_packs: '&aRefresh Language Packs'
 refresh_language_packs_lore:
@@ -827,10 +840,11 @@ refresh_language_packs_lore:
 
 button_admin_snapshots: '&d📸 Claim Snapshots'
 admin_snapshots_lore:
-- '&7View and manage claim snapshots.'
-- '&7Rollback plots to prior states.'
-- ' '
-- '&eClick to open browser'
+  - '&7What: browse recovery points and restore claims.'
+  - '&7When: undoing a bad merge, expansion, or staff edit.'
+  - ' '
+  - '&cRollback overwriteth the living claim — confirm carefully.'
+  - '&eClick to open.'
 
 button_admin_snapshots_disabled: '&8📸 Snapshots Disabled'
 admin_snapshots_disabled_lore:
@@ -947,9 +961,10 @@ button_admin_reload_all: '&eReload Settings'
 button_admin_refresh_lang: '&aRefresh Language Packs'
 button_admin_world_controls: '&b🌍 World Controls'
 admin_world_controls_lore:
-  - '&7Govern world-wide protection'
-  - '&7defaults and safety rules.'
+  - '&7What: per-world claim defaults and living game rules.'
+  - '&7When: locking a world or tuning PvP/mobs.'
   - ' '
+  - '&cLive game-rule toggles take hold at once.'
   - '&eClick to open.'
 button_admin_world_controls_missing: '&8🌍 World Controls Unavailable'
 admin_world_controls_missing_lore:
@@ -957,16 +972,18 @@ admin_world_controls_missing_lore:
   - '&7world controls GUI.'
 button_admin_migration: '&6Migration Wizard'
 admin_migration_lore:
-  - '&7Preview and import supported'
-  - '&7claims from other plugins.'
+  - '&7What: dry-run, then bring claims from'
+  - '&7GriefPrevention, GriefDefender, or Lands.'
+  - '&7When: changing thy protection plugin.'
   - ' '
+  - '&cLive import writeth claims — preview first.'
   - '&eClick to open.'
 
 button_admin_audit: '&eStaff Audit Ledger'
 admin_audit_lore:
-  - '&7Behold restorations, repairs,'
-  - '&7migrations, bypass toggles, and'
-  - '&7ClaimBlock decrees wrought by staff.'
+  - '&7What: behold restorations, Doctor repairs,'
+  - '&7migrations, bypass toggles, and ClaimBlock decrees.'
+  - '&7When: seeking accountability after staff work.'
   - ' '
   - '&eClick to open.'
 
@@ -1642,11 +1659,24 @@ world_controls_weather_name: '&bPassage of Weather'
 world_controls_keep_inventory_name: '&6Keep Inventory'
 world_controls_mob_griefing_name: '&cMob Griefing'
 staff_command_center_name: '&c&lGuardian Command Hall'
-staff_command_center_lore: ['&7Server law, dominion works,', '&7recovery, migration, and diagnosis.', ' ', '&8Every control below is permission-tried.']
+staff_command_center_lore:
+  - '&7Staff hall for server law, dominion works,'
+  - '&7recovery, migration, and diagnosis.'
+  - ' '
+  - '&7Hover each control to learn what it doth,'
+  - '&7when to use it, and what peril it holdeth.'
+  - ' '
+  - '&8Every control below is permission-tried.'
 staff_policy_section_name: '&eLaw of Operation'
-staff_policy_section_lore: ['&7The upper row governeth server-wide', '&7AegisGuard policy.']
+staff_policy_section_lore:
+  - '&7Upper row: server-wide operating law.'
+  - '&7Toggle only in hours of upkeep,'
+  - '&7when thou understandest the consequences.'
 staff_toolbelt_section_name: '&bGuardian Toolbelt'
-staff_toolbelt_section_lore: ['&7The lower row openeth review, recovery,', '&7world, migration, and upkeep tools.']
+staff_toolbelt_section_lore:
+  - '&7Lower row: review, recovery, world,'
+  - '&7migration, diagnosis, and upkeep.'
+  - '&7Destructive tools demand confirmation.'
 
 # ------------------------------------------------------------
 # Temporary Guest Passes (1.3.0+, Milestone 2)
@@ -2011,14 +2041,23 @@ plot_status_upkeep_name: '&6Upkeep'
 alliance_roster_lore:
   - '&7View members and pending invites.'
 doctor_settlements_lore:
-  - '&7Review queued economy settlements'
-  - '&7and retry delivery.'
+  - '&7What: queued Vault payouts that failed to deliver.'
+  - '&7When: sales, rents, or refunds seem stuck.'
+  - ' '
+  - '&eClick to review and retry deliveries.'
+  - '&8Staff may retry all pending settlements.'
 doctor_delinquents_lore:
-  - '&7View rentals expired or due'
-  - '&7within the next 24 hours.'
+  - '&7What: rentals expired or due within 24 hours.'
+  - '&7When: chasing late tenants or cleanup work.'
+  - ' '
+  - '&eClick to browse the watch list.'
+  - '&8Cancel eth not rentals by itself.'
 doctor_storage_migrate_lore:
-  - '&7Convert plot data between YML and SQL'
-  - '&7with a safety backup.'
+  - '&7What: convert plot data between YML and SQL.'
+  - '&7When: changing storage.backend in upkeep hours.'
+  - ' '
+  - '&cCreates a backup, then rewriteth storage.'
+  - '&eClick to open the migration assistant.'
 visit_discover_filter_lore:
   - '&7Cycle: All / Featured / Sale / Rent / Category'
 plot_status_upkeep_cost: '&7Cost: &6{COST}'
@@ -2119,3 +2158,215 @@ papi_na: 'N/A'
 papi_enabled: 'Enabled'
 papi_disabled: 'Disabled'
 papi_not_for_sale: 'Not for Sale'
+
+# Migration Wizard
+migration_gui_title: '&6Migration Wizard'
+migration_loading_title: '&6Scanning Migration'
+migration_preview_title: '&6Migration Preview'
+migration_confirm_title: '&cConfirm Migration Import'
+migration_scan_name: '&eScan of Thy Standing'
+migration_scan_clear_lore:
+  - '&7No foreign protection hook reporteth'
+  - '&7guarding the ground beneath thee.'
+migration_scan_detected_lore:
+  - '&7Detected source: &e{HOOK}'
+  - '&7Suggested migration source: &a{SOURCE}'
+migration_scan_aegis_plot_lore:
+  - '&7Aegis plot here: &fYes'
+  - '&7Owner: &f{OWNER}'
+migration_scan_focus_active_lore:
+  - '&7Focused claim filter: &aACTIVE'
+  - '&7Target: &f{X}, {Z}'
+migration_scan_footer_lore:
+  - '&eUse the source buttons below for a dry-run preview.'
+  - '&8Import beginneth not until thou confirm.'
+migration_source_griefprevention_name: 'GriefPrevention'
+migration_source_griefdefender_name: 'GriefDefender'
+migration_source_lands_name: 'Lands'
+migration_source_detected_lore:
+  - '&7Source data was found upon this server.'
+  - '&7Run a dry-run preview ere importing.'
+migration_source_missing_lore:
+  - '&7No source data detected yet.'
+  - '&7Install or enable the plugin, then return.'
+migration_source_recommended_lore:
+  - '&bDetected about thy present standing.'
+migration_option_trusted_line: '&7Trusted import: {STATE}'
+migration_option_flags_line: '&7Flag import: {STATE}'
+migration_option_force_line: '&7Force overlap: {STATE}'
+migration_source_click_lore:
+  - '&eClick to preview (dry-run).'
+  - '&8No claims are written until thou confirm import.'
+migration_toggle_trusted_name: '&bImport Trusted'
+migration_toggle_trusted_lore:
+  - '&7Copy trusted access from the source.'
+  - '&7Use when players must keep their rights.'
+  - ' '
+  - '&eClick to toggle.'
+migration_toggle_flags_name: '&dImport Flags'
+migration_toggle_flags_lore:
+  - '&7Copy compatible protection flags when able.'
+  - '&7Use for closer likeness after import.'
+  - ' '
+  - '&eClick to toggle.'
+migration_toggle_force_name: '&cForce Overlap'
+migration_toggle_force_lore:
+  - '&7Allow import even when an Aegis claim overlaps.'
+  - '&cCaution: may fashion conflicting claim shapes.'
+  - '&cLeave OFF unless recovering a broken world.'
+  - ' '
+  - '&eClick to toggle.'
+migration_focus_name: '&eFocused Claim Filter'
+migration_focus_inactive_lore:
+  - '&7No focused foreign claim.'
+  - '&7The preview shall scan the whole selected source.'
+  - ' '
+  - '&eUse the migration wand to mark one exact claim.'
+  - '&8Click doth naught until a focus is set.'
+migration_focus_active_lore:
+  - '&7Focused coordinates: &f{X}, {Z}'
+  - '&7World: &f{WORLD}'
+  - ' '
+  - '&eClick to clear this exact-claim filter.'
+migration_wand_name: '&6Receive Migration Wand'
+migration_wand_lore:
+  - '&7Right-click in another plugin''s guarded land.'
+  - '&7Opens this wizard with that source chosen.'
+  - ' '
+  - '&eClick to receive the wand.'
+migration_wand_item_name: '&6Migration Wand'
+migration_wand_item_lore:
+  - '&7Right-click a protected place from'
+  - '&7another plugin to open the'
+  - '&7AegisGuard migration wizard.'
+migration_wand_received: '&aThou hast received the Migration Wand.'
+migration_open_doctor_name: '&bOpen Territory Doctor'
+migration_open_doctor_lore:
+  - '&7After importing, scan for overlaps,'
+  - '&7orphaned contracts, and repairable state.'
+  - ' '
+  - '&eClick to open Doctor.'
+migration_scanning_name: '&eScanning {SOURCE}'
+migration_scanning_lore:
+  - '&7Running a dry-run preview.'
+  - '&7This may take a moment on larger realms.'
+  - ' '
+  - '&8No claims are written during preview.'
+migration_preview_summary_name: '&e{SOURCE} Preview'
+migration_preview_summary_lore:
+  - '&7Claims found: &f{FOUND}'
+  - '&7Would import: &a{IMPORT}'
+  - '&7Overlap skips: &e{OVERLAP}'
+  - '&7Filter skips: &e{FILTER}'
+  - '&7Errors: &c{ERRORS}'
+  - '&7Duration: &f{MS}ms'
+migration_focused_claim_name: '&bFocused Claim'
+migration_focused_none_lore:
+  - '&7No specific focused claim matched.'
+  - '&7This preview showeth the full selected source.'
+migration_focused_detail_lore:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Name: &f{NAME}'
+  - '&7Bounds: &f{BOUNDS}'
+  - '&7Trusted entries: &f{TRUSTED}'
+  - '&7Imported flags: &f{FLAGS}'
+migration_run_import_name: '&aRun Import'
+migration_run_import_lore:
+  - '&7Import this source using the'
+  - '&7options thou hast chosen.'
+  - ' '
+  - '&eClick to review a final confirmation.'
+  - '&cLive import changeth claim data.'
+migration_confirm_import_name: '&cConfirm Live Import'
+migration_confirm_import_lore:
+  - '&7This writeth new AegisGuard claims from the source.'
+  - '&cHard to undo without snapshots or manual cleanup.'
+  - '&7Run a Doctor scan afterward to prove health.'
+  - ' '
+  - '&cClick to import now.'
+migration_cancel_confirm_name: '&eCancel'
+migration_cancel_confirm_lore:
+  - '&7Return to the dry-run preview'
+  - '&7without importing aught.'
+migration_back_wizard_name: '&bBack to Wizard'
+migration_back_wizard_lore:
+  - '&7Change preview options or'
+  - '&7re-scan another source.'
+migration_back_sources_lore:
+  - '&7Return to migration sources.'
+migration_preview_notes_name: '&fPreview Notes'
+migration_preview_no_errors_lore:
+  - '&aNo preview errors were reported.'
+migration_preview_errors_header_lore:
+  - '&ePreview notes / errors:'
+migration_unavailable: '&cMigration system is unavailable.'
+migration_preview_failed: '&cMigration preview failed: {ERROR}'
+migration_import_starting: '&6[AegisGuard] &7Starting live import for &e{SOURCE}&7...'
+migration_import_failed: '&cMigration failed: {ERROR}'
+migration_import_finished: '&aMigration finished. Opening summary...'
+storage_migrate_title: '&cStorage Migration'
+storage_migrate_confirm_title: '&cConfirm Storage Migration'
+storage_migrate_info_name: '&eStorage Backend Migration'
+storage_migrate_info_lore:
+  - '&7Copy plot data between YML and SQLite.'
+  - '&7A backup is wrought before changes.'
+  - ' '
+  - '&cUse in hours of scheduled upkeep.'
+  - '&cSwitch storage.backend in config afterward'
+  - '&cif thou meanest to keep the destination.'
+storage_migrate_yml_sql_name: '&eYML to SQLite'
+storage_migrate_yml_sql_lore:
+  - '&7What: copy plots.yml into SQLite.'
+  - '&7When: moving a flat-file realm to SQL.'
+  - ' '
+  - '&7A plots.yml backup is written first.'
+  - '&cDestructive if destination already holdeth plots.'
+  - ' '
+  - '&eClick to review confirmation.'
+storage_migrate_sql_yml_name: '&eSQLite to YML'
+storage_migrate_sql_yml_lore:
+  - '&7What: copy SQLite plots into plots.yml.'
+  - '&7When: exporting SQL data back to flat files.'
+  - ' '
+  - '&7A database backup is written first.'
+  - '&cDestructive if plots.yml already holdeth plots.'
+  - ' '
+  - '&eClick to review confirmation.'
+storage_migrate_confirm_name: '&cConfirm {DIRECTION}'
+storage_migrate_confirm_lore:
+  - '&7Direction: &f{DIRECTION}'
+  - '&7A backup is wrought before the copy runs.'
+  - ' '
+  - '&cThis rewriteth plot storage data.'
+  - '&cInterrupt not the server mid-migration.'
+  - ' '
+  - '&cClick to run now.'
+storage_migrate_back_lore:
+  - '&7Return to the previous staff menu.'
+storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_unavailable: '&cStorage migration is unavailable.'
+doctor_delinquents_title: '&4Rental Delinquents'
+doctor_delinquents_empty_name: '&aNo Delinquent Rentals'
+doctor_delinquents_empty_lore:
+  - '&7No rental expireth within 24 hours.'
+  - '&7Look again later or use /agadmin rentals.'
+doctor_delinquent_entry_name: '&e{PLOT}'
+doctor_delinquent_entry_expired_lore:
+  - '&7Renter: &f{RENTER}'
+  - '&cExpired — follow up or cancel via staff tools.'
+doctor_delinquent_entry_due_lore:
+  - '&7Renter: &f{RENTER}'
+  - '&eExpires in &f{HOURS}&eh.'
+  - '&7Watch, or prepare a staff cancel if needed.'
+button_back_doctor: '&eBack to Doctor'
+doctor_back_lore:
+  - '&7Return to Territory Doctor.'
+button_admin_set_spawn: '&aSet Current Plot as Spawn'
+admin_set_spawn_lore:
+  - '&7What: set this staff plot''s safe spot as public Spawn.'
+  - '&7When: standing within a server/staff plot.'
+  - ' '
+  - '&7A recovery snapshot may be taken first.'
+  - '&8Changeth not ownership.'
+  - '&eClick to set.'

@@ -253,7 +253,7 @@ permissions:
     default: op
 
   aegis.admin.migrate:
-    description: Import claims from supported external protection plugins.
+    description: Open claim migration (GriefPrevention/GriefDefender/Lands) and YML↔SQL storage migration tools.
     default: op
 
   aegis.admin.blocks.view:

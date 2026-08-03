@@ -86,7 +86,7 @@ public final class DoctorRepairGUI {
             case "doctor_repair_confirm" -> repairAndOpen(player);
             case "doctor_settlements" -> plugin.gui().settlementsInbox().openAdmin(player);
             case "doctor_delinquents" -> openDelinquents(player);
-            case "doctor_storage_migrate" -> plugin.gui().storageMigrate().open(player);
+            case "doctor_storage_migrate" -> plugin.gui().storageMigrate().openFromDoctor(player);
             default -> { }
         }
     }
@@ -175,26 +175,66 @@ public final class DoctorRepairGUI {
         inventory.setItem(SLOT_SUMMARY, summaryItem);
 
         inventory.setItem(SLOT_SCAN, item(player, Material.SPYGLASS, "doctor_scan_name", "&aScan Again",
-                "doctor_scan_lore", List.of("&7Recheck plot, contract, market,", "&7world, overlap, and payment state.", " ", "&eClick to scan"), "doctor_scan"));
+                "doctor_scan_lore", List.of(
+                        "&7What: recheck plots, contracts, market,",
+                        "&7world, overlap, and payment consistency.",
+                        "&7When: after migrations, crashes, or odd claim state.",
+                        " ",
+                        "&eClick to scan"), "doctor_scan"));
         inventory.setItem(SLOT_REPORT, item(player, Material.WRITABLE_BOOK, "doctor_report_name", "&eWrite Full Report",
-                "doctor_report_lore", List.of("&7Write complete diagnostics to", "&7plugins/AegisGuard/reports/.", " ", "&eClick to create report"), "doctor_report"));
+                "doctor_report_lore", List.of(
+                        "&7What: write full diagnostics to",
+                        "&7plugins/AegisGuard/reports/.",
+                        "&7When: sharing a support pack or auditing health.",
+                        " ",
+                        "&eClick to create report"), "doctor_report"));
 
         if (confirmation) {
             inventory.setItem(SLOT_REPAIR, item(player, Material.RED_CONCRETE, "doctor_repair_confirm_name", "&cConfirm Safe Repairs",
-                    "doctor_repair_confirm_lore", List.of("&7Snapshots are created before changes.", "&7Ambiguous damage is never guessed.", " ", "&cClick to confirm repair"), "doctor_repair_confirm"));
+                    "doctor_repair_confirm_lore", List.of(
+                            "&7Snapshots are created before changes.",
+                            "&7Only deterministic issues are repaired.",
+                            "&7Ambiguous damage is never guessed.",
+                            " ",
+                            "&cClick to confirm repair"), "doctor_repair_confirm"));
         } else {
             inventory.setItem(SLOT_REPAIR, item(player, Material.ANVIL, "doctor_repair_name", "&cRepair Deterministic Issues",
-                    "doctor_repair_lore", List.of("&7Fix only states with one safe answer.", "&7Requires a second confirmation.", " ", "&eClick to review repair"), "doctor_repair"));
+                    "doctor_repair_lore", List.of(
+                            "&7What: fix states with one safe answer.",
+                            "&7When: Doctor lists repairable issues above.",
+                            " ",
+                            "&7Requires a second confirmation.",
+                            "&cDoes not invent ownership or clear overlaps.",
+                            " ",
+                            "&eClick to review repair"), "doctor_repair"));
         }
         inventory.setItem(SLOT_SETTLEMENTS, item(player, Material.GOLD_INGOT, "doctor_settlements_name",
                 "&6Pending Settlements", "doctor_settlements_lore",
-                List.of("&7View pending payments and retry", "&7their Vault delivery."), "doctor_settlements"));
+                List.of(
+                        "&7What: queued Vault payouts that failed to deliver.",
+                        "&7When: after sales, rents, or refunds look stuck.",
+                        " ",
+                        "&eClick to review and retry deliveries.",
+                        "&8Staff can retry all pending settlements."
+                ), "doctor_settlements"));
         inventory.setItem(SLOT_DELINQUENTS, item(player, Material.CLOCK, "doctor_delinquents_name",
                 "&eRental Delinquents", "doctor_delinquents_lore",
-                List.of("&7View rentals expired or due", "&7within the next 24 hours."), "doctor_delinquents"));
+                List.of(
+                        "&7What: rentals expired or due within 24 hours.",
+                        "&7When: chasing late tenants or cleanup work.",
+                        " ",
+                        "&eClick to browse the watch list.",
+                        "&8Does not cancel rentals by itself."
+                ), "doctor_delinquents"));
         inventory.setItem(SLOT_STORAGE, item(player, Material.CHEST_MINECART, "doctor_storage_migrate_name",
                 "&bStorage Migration", "doctor_storage_migrate_lore",
-                List.of("&7Open the storage backend migration", "&7assistant."), "doctor_storage_migrate"));
+                List.of(
+                        "&7What: convert plot data between YML and SQL.",
+                        "&7When: changing storage.backend during maintenance.",
+                        " ",
+                        "&cCreates a backup, then rewrites storage.",
+                        "&eClick to open the migration assistant."
+                ), "doctor_storage_migrate"));
 
         int slot = 28;
         for (DoctorRepairService.Issue issue : result.issues().stream().limit(7).toList()) {
@@ -240,15 +280,29 @@ public final class DoctorRepairGUI {
         for (var contract : entries) {
             if (slot >= 45) break;
             long remainingHours = Math.max(0L, (contract.expiresAt() - now) / 3_600_000L);
-            inventory.setItem(slot++, GUIManager.createItem(contract.expiresAt() <= now ? Material.REDSTONE_BLOCK : Material.YELLOW_CONCRETE,
-                    "&e" + contract.plotId(),
-                    List.of(GUIManager.color("&7Renter: &f" + contract.renterId()),
-                            GUIManager.color(contract.expiresAt() <= now ? "&cExpired" : "&eExpires in " + remainingHours + "h"))));
+            boolean expired = contract.expiresAt() <= now;
+            Map<String, String> vars = Map.of(
+                    "PLOT", String.valueOf(contract.plotId()),
+                    "RENTER", String.valueOf(contract.renterId()),
+                    "HOURS", Long.toString(remainingHours)
+            );
+            inventory.setItem(slot++, GUIManager.createItem(
+                    expired ? Material.REDSTONE_BLOCK : Material.YELLOW_CONCRETE,
+                    plugin.gui().tr(player, "doctor_delinquent_entry_name", "&e{PLOT}", vars),
+                    plugin.gui().trList(player, expired ? "doctor_delinquent_entry_expired_lore" : "doctor_delinquent_entry_due_lore",
+                            expired
+                                    ? List.of("&7Renter: &f{RENTER}", "&cExpired — follow up or cancel via staff tools.")
+                                    : List.of("&7Renter: &f{RENTER}", "&eExpires in &f{HOURS}&eh.", "&7Monitor or prepare a staff cancel if needed."),
+                            vars)));
         }
-        if (entries.isEmpty()) inventory.setItem(22, GUIManager.createItem(Material.LIME_CONCRETE,
-                "&aNo Delinquent Rentals", List.of(GUIManager.color("&7No rental expires within 24 hours."))));
-        inventory.setItem(SLOT_BACK, navigation(player, Material.ARROW, "button_back_admin", "&eBack to Doctor",
-                "back_admin_lore", List.of("&7Return to Doctor tools."), "doctor_scan"));
+        if (entries.isEmpty()) {
+            inventory.setItem(22, GUIManager.createItem(Material.LIME_CONCRETE,
+                    plugin.gui().tr(player, "doctor_delinquents_empty_name", "&aNo Delinquent Rentals"),
+                    plugin.gui().trList(player, "doctor_delinquents_empty_lore",
+                            List.of("&7No rental expires within 24 hours.", "&7Check again later or use /agadmin rentals."))));
+        }
+        inventory.setItem(SLOT_BACK, navigation(player, Material.ARROW, "button_back_doctor", "&eBack to Doctor",
+                "doctor_back_lore", List.of("&7Return to Territory Doctor."), "doctor_scan"));
         inventory.setItem(SLOT_EXIT, navigation(player, Material.BARRIER, "button_exit", "&cClose",
                 "button_exit_lore", List.of("&7Close this menu."), "doctor_exit"));
         player.openInventory(inventory);

@@ -92,8 +92,11 @@ public class AdminGUI {
                 Material.ENCHANTED_GOLDEN_APPLE,
                 plugin.gui().tr(player, "staff_command_center_name", "&c&lGuardian Command Center"),
                 plugin.gui().trList(player, "staff_command_center_lore", List.of(
-                        "&7Server policy, territory operations,",
+                        "&7Staff hub for server policy, territory ops,",
                         "&7recovery, migration, and diagnostics.",
+                        " ",
+                        "&7Hover any control for what it does,",
+                        "&7when to use it, and caution notes.",
                         " ",
                         "&8Every control below is permission-checked."
                 ))
@@ -103,16 +106,18 @@ public class AdminGUI {
                 Material.REPEATER,
                 plugin.gui().tr(player, "staff_policy_section_name", "&eOperational Policy"),
                 plugin.gui().trList(player, "staff_policy_section_lore", List.of(
-                        "&7The upper row controls server-wide",
-                        "&7AegisGuard operating policy."
+                        "&7Upper row: server-wide operating policy.",
+                        "&7Toggle only during maintenance windows",
+                        "&7when you understand the side effects."
                 ))
         ));
         inv.setItem(24, GUIManager.createItem(
                 Material.ENDER_CHEST,
                 plugin.gui().tr(player, "staff_toolbelt_section_name", "&bGuardian Toolbelt"),
                 plugin.gui().trList(player, "staff_toolbelt_section_lore", List.of(
-                        "&7The lower row opens review, recovery,",
-                        "&7world, migration, and maintenance tools."
+                        "&7Lower row: review, recovery, world,",
+                        "&7migration, diagnostics, and maintenance.",
+                        "&7Destructive tools ask for confirmation."
                 ))
         ));
 
@@ -122,8 +127,11 @@ public class AdminGUI {
                 "button_admin_auto_remove", "admin_auto_remove_lore",
                 Material.TNT, false,
                 List.of(
-                        "&7Automatically clean up claims",
-                        "&7owned by banned players."
+                        "&7What: auto-clean claims owned by banned players.",
+                        "&7When: you want banned accounts cleared over time.",
+                        " ",
+                        "&cCaution: removes territory after the ban cleanup path.",
+                        "&eClick to toggle."
                 ),
                 "toggle_auto_remove_banned"
         );
@@ -132,8 +140,10 @@ public class AdminGUI {
                 "button_admin_bypass_limit", "admin_bypass_limit_lore",
                 Material.NETHER_STAR, false,
                 List.of(
-                        "&7Let staff create or manage",
-                        "&7claims beyond normal limits."
+                        "&7What: let staff ignore normal claim limits.",
+                        "&7When: building staff zones or repairing oversized claims.",
+                        " ",
+                        "&eClick to toggle."
                 ),
                 "toggle_bypass_claim_limit"
         );
@@ -142,8 +152,10 @@ public class AdminGUI {
                 "button_admin_broadcast", "admin_broadcast_lore",
                 Material.BEACON, false,
                 List.of(
-                        "&7Broadcast major admin actions",
-                        "&7to the configured audience."
+                        "&7What: announce major staff actions to the audience.",
+                        "&7When: you want transparency for restores/migrations.",
+                        " ",
+                        "&eClick to toggle."
                 ),
                 "toggle_broadcast_admin_actions"
         );
@@ -152,8 +164,10 @@ public class AdminGUI {
                 "button_admin_unlimited", "admin_unlimited_lore",
                 Material.EMERALD_BLOCK, true,
                 List.of(
-                        "&7Remove normal plot limits",
-                        "&7for administrators."
+                        "&7What: remove normal plot-count limits for admins.",
+                        "&7When: large staff builds or recovery work.",
+                        " ",
+                        "&eClick to toggle."
                 ),
                 "toggle_unlimited_plots"
         );
@@ -162,8 +176,11 @@ public class AdminGUI {
                 "button_admin_sync", "admin_sync_lore",
                 Material.ENDER_EYE, false,
                 List.of(
-                        "&7Sync supported data across",
-                        "&7proxy-connected servers."
+                        "&7What: sync supported data across proxy servers.",
+                        "&7When: multi-server networks with shared claims.",
+                        " ",
+                        "&cRequires a correctly configured proxy sync setup.",
+                        "&eClick to toggle."
                 ),
                 "toggle_proxy_sync"
         );
@@ -172,8 +189,11 @@ public class AdminGUI {
                 "button_admin_perf", "admin_perf_lore",
                 Material.REDSTONE_BLOCK, false,
                 List.of(
-                        "&7Favor lighter background work",
-                        "&7for busy or larger servers."
+                        "&7What: favor lighter background work.",
+                        "&7When: busy events or large player counts.",
+                        " ",
+                        "&8Some cosmetics/background polish may reduce.",
+                        "&eClick to toggle."
                 ),
                 "toggle_low_overhead_mode"
         );
@@ -182,7 +202,12 @@ public class AdminGUI {
         ItemStack requests = GUIManager.createItem(
                 Material.AMETHYST_CLUSTER,
                 plugin.gui().tr(player, "button_view_requests_admin", "&cReview Requests"),
-                plugin.gui().trList(player, "view_requests_admin_lore", List.of("&7Approve or deny expansion requests."))
+                plugin.gui().trList(player, "view_requests_admin_lore", List.of(
+                        "&7What: approve or deny expansion petitions.",
+                        "&7When: the expansion queue has pending requests.",
+                        " ",
+                        "&eClick to open."
+                ))
         );
         tagAction(requests, "open_requests");
         inv.setItem(SLOT_TOOL_REQUESTS, requests);
@@ -190,7 +215,12 @@ public class AdminGUI {
         ItemStack plotList = GUIManager.createItem(
                 Material.WRITABLE_BOOK,
                 plugin.gui().tr(player, "admin_plot_list_title", "&bPlot List"),
-                plugin.gui().trList(player, "admin_plot_list_lore", List.of("&7View/TP to any plot."))
+                plugin.gui().trList(player, "admin_plot_list_lore", List.of(
+                        "&7What: browse tracked plots and teleport.",
+                        "&7When: investigating a claim or helping a player.",
+                        " ",
+                        "&eClick to open."
+                ))
         );
         tagAction(plotList, "open_plot_list");
         inv.setItem(SLOT_TOOL_PLOT_LIST, plotList);
@@ -198,7 +228,13 @@ public class AdminGUI {
         ItemStack diagnostics = GUIManager.createItem(
                 Material.COMPASS,
                 plugin.gui().tr(player, "button_admin_diagnostics", "&bDiagnostics"),
-                plugin.gui().trList(player, "admin_diagnostics_lore", List.of("&7View system stats."))
+                plugin.gui().trList(player, "admin_diagnostics_lore", List.of(
+                        "&7What: Territory Doctor — scan, repair,",
+                        "&7reports, settlements, delinquents, storage migrate.",
+                        "&7When: claims, rentals, or hooks look inconsistent.",
+                        " ",
+                        "&eClick to open."
+                ))
         );
         tagAction(diagnostics, "open_diagnostics");
         inv.setItem(SLOT_TOOL_DIAGNOSTICS, diagnostics);
@@ -215,8 +251,13 @@ public class AdminGUI {
                 plugin.gui().trList(
                         player,
                         "reload_all_settings_lore",
-                        plugin.gui().trList(player, "admin_reload_all_lore",
-                                plugin.gui().trList(player, "admin_reload_lore", List.of("&7Reload all settings.")))
+                        List.of(
+                                "&7What: reload config, data views, and menus.",
+                                "&7When: after editing config.yml on disk.",
+                                " ",
+                                "&cDoes not replace a full server restart for every change.",
+                                "&eClick to reload."
+                        )
                 )
         );
         tagAction(reloadAll, "reload_all");
@@ -233,8 +274,12 @@ public class AdminGUI {
                 plugin.gui().trList(
                         player,
                         "refresh_language_packs_lore",
-                        plugin.gui().trList(player, "admin_refresh_lang_lore",
-                                List.of("&7Reloads the language bundles.", "&7Use after editing lang files.", " ", "&eClick to refresh"))
+                        List.of(
+                                "&7What: reload menu and message language packs.",
+                                "&7When: after editing files under lang/.",
+                                " ",
+                                "&eClick to refresh."
+                        )
                 )
         );
         tagAction(refreshLang, "refresh_lang");
@@ -249,10 +294,11 @@ public class AdminGUI {
                     Material.SPYGLASS,
                     plugin.gui().tr(player, "button_admin_snapshots", "&d📸 Claim Snapshots"),
                     plugin.gui().trList(player, "admin_snapshots_lore", List.of(
-                            "&7View and manage claim snapshots.",
-                            "&7Rollback plots to previous states.",
+                            "&7What: browse recovery points and restore claims.",
+                            "&7When: undoing a bad merge, expansion, or staff edit.",
                             " ",
-                            "&eClick to open snapshot browser."
+                            "&cRollback overwrites the live claim — confirm carefully.",
+                            "&eClick to open."
                     ))
             );
             tagAction(snapshots, "open_snapshots");
@@ -262,8 +308,8 @@ public class AdminGUI {
                     Material.GRAY_DYE,
                     plugin.gui().tr(player, "button_admin_snapshots_disabled", "&8📸 Snapshots Disabled"),
                     plugin.gui().trList(player, "admin_snapshots_disabled_lore", List.of(
-                            "&7Snapshot system is disabled.",
-                            "&7Enable in config.yml under 'snapshots.enabled'"
+                            "&7Claim snapshots are disabled in config.",
+                            "&7Set snapshots.enabled to true, then reload."
                     ))
             );
             tagAction(snapshotsDisabled, "snapshots_disabled");
@@ -274,9 +320,10 @@ public class AdminGUI {
                 Material.LECTERN,
                 plugin.gui().tr(player, "button_admin_world_controls", "&b🌍 World Controls"),
                 plugin.gui().trList(player, "admin_world_controls_lore", List.of(
-                        "&7Manage claiming and default plot",
-                        "&7protection rules for every world.",
+                        "&7What: per-world claim defaults and live game rules.",
+                        "&7When: locking a world, tuning PvP/mobs, or spawn policy.",
                         " ",
+                        "&cLive game-rule toggles apply immediately.",
                         "&eClick to open."
                 ))
         );
@@ -287,9 +334,11 @@ public class AdminGUI {
                 Material.BLAZE_ROD,
                 plugin.gui().tr(player, "button_admin_migration", "&6Migration Wizard"),
                 plugin.gui().trList(player, "admin_migration_lore", List.of(
-                        "&7Preview and import supported",
-                        "&7external protection plugins.",
+                        "&7What: dry-run then import GriefPrevention,",
+                        "&7GriefDefender, or Lands claims into AegisGuard.",
+                        "&7When: switching protection plugins.",
                         " ",
+                        "&cLive import writes claims — preview first.",
                         "&eClick to open."
                 ))
         );
@@ -301,8 +350,9 @@ public class AdminGUI {
                     Material.FILLED_MAP,
                     plugin.gui().tr(player, "button_admin_routes", "&aRoute Editor"),
                     plugin.gui().trList(player, "admin_routes_lore", List.of(
-                            "&7Create named exploration routes with",
-                            "&7ordered checkpoints for players to browse.",
+                            "&7What: create named exploration routes",
+                            "&7with ordered checkpoints players can browse.",
+                            "&7When: building guided tours or trails.",
                             " ",
                             "&eClick to open."
                     ))
@@ -316,9 +366,9 @@ public class AdminGUI {
                     Material.WRITTEN_BOOK,
                     plugin.gui().tr(player, "button_admin_audit", "&eStaff Audit Ledger"),
                     plugin.gui().trList(player, "admin_audit_lore", List.of(
-                            "&7Review snapshot restores, Doctor repairs,",
-                            "&7migrations, bypass toggles, and ClaimBlock",
-                            "&7adjustments made by staff.",
+                            "&7What: review staff restores, Doctor repairs,",
+                            "&7migrations, bypass toggles, and ClaimBlock edits.",
+                            "&7When: accountability checks or incident review.",
                             " ",
                             "&eClick to open."
                     ))
@@ -331,11 +381,12 @@ public class AdminGUI {
                 Material.RESPAWN_ANCHOR,
                 plugin.gui().tr(player, "button_admin_set_spawn", "&aSet Current Plot as Spawn"),
                 plugin.gui().trList(player, "admin_set_spawn_lore", List.of(
-                        "&7Stand inside a staff plot, then click",
-                        "&7to make its current safe location the",
-                        "&7public Spawn destination in Travel.",
+                        "&7What: set this staff plot's safe spot as public Spawn.",
+                        "&7When: standing inside a server/staff plot.",
                         " ",
-                        "&eStaff-only; does not change ownership."
+                        "&7A recovery snapshot may be taken first.",
+                        "&8Does not change ownership.",
+                        "&eClick to set."
                 ))
         );
         tagAction(setSpawn, "set_current_plot_spawn");

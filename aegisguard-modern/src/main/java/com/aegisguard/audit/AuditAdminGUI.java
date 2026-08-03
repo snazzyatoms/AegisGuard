@@ -126,7 +126,10 @@ public class AuditAdminGUI {
                 plugin.gui().tr(player, "audit_filter_button", "&bFilter: &f{FILTER}",
                         Map.of("FILTER", filterLabel(player, filter))),
                 plugin.gui().trList(player, "audit_filter_lore", List.of(
-                        "&7Click to cycle through categories."
+                        "&7What: narrow the ledger by category.",
+                        "&7When: hunting restores, migrations, or bypass events.",
+                        " ",
+                        "&eClick to cycle categories."
                 ))
         );
         tagAction(filterItem, "cycle_filter");

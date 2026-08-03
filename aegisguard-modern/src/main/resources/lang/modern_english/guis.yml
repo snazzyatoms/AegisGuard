@@ -234,7 +234,10 @@ expansion_admin_title: '&5✦ Pending Petitions'
 
 button_view_requests_admin: '&cReview Requests'
 view_requests_admin_lore:
-- '&7Approve or deny expansion requests.'
+  - '&7What: approve or deny expansion petitions.'
+  - '&7When: the expansion queue has pending requests.'
+  - ' '
+  - '&eClick to open.'
 
 # View toggle button
 expansion_admin_view_toggle: '&bView: &fAll'
@@ -401,8 +404,9 @@ snapshot_item_lore:
   - '&7Triggered By: &f{ACTOR}'
   - '&7Radius: &a{RADIUS}'
   - ' '
-  - '&aLeft-click: &7Rollback to this state'
-  - '&cRight-click: &7Delete snapshot'
+  - '&cRollback overwrites the live claim.'
+  - '&aShift-Left-Click: &7Rollback (confirm twice)'
+  - '&cShift-Right-Click: &7Delete this snapshot'
 
 snapshot_rollback_success: '&a✔ Claim rolled back successfully.'
 snapshot_rollback_failed: '&c❌ Rollback failed. Claim may no longer exist.'
@@ -1049,8 +1053,11 @@ biome_button_exit: '&c✖ Close Biome Changer'
 # Admin Menu Translations
 button_admin_auto_remove: '&cAuto-Remove Banned'
 admin_auto_remove_lore:
-  - '&7Automatically clean up claims'
-  - '&7owned by banned players.'
+  - '&7What: auto-clean claims owned by banned players.'
+  - '&7When: you want banned accounts cleared over time.'
+  - ' '
+  - '&cCaution: removes territory after the ban cleanup path.'
+  - '&eClick to toggle.'
 
 codex_menus_ascension_name: '&5Plot Ascension'
 codex_menus_ascension_lore:
@@ -1064,47 +1071,63 @@ codex_menus_ascension_lore:
 
 button_admin_bypass_limit: '&bBypass Claim Limit'
 admin_bypass_limit_lore:
-  - '&7Let staff create or manage'
-  - '&7claims beyond normal limits.'
+  - '&7What: let staff ignore normal claim limits.'
+  - '&7When: building staff zones or repairing oversized claims.'
+  - ' '
+  - '&eClick to toggle.'
 
 button_admin_broadcast: '&eBroadcast Actions'
 admin_broadcast_lore:
-  - '&7Broadcast major admin actions'
-  - '&7to the configured audience.'
+  - '&7What: announce major staff actions to the audience.'
+  - '&7When: you want transparency for restores/migrations.'
+  - ' '
+  - '&eClick to toggle.'
 
 button_admin_unlimited: '&aUnlimited Plots'
 admin_unlimited_lore:
-  - '&7Remove normal plot limits'
-  - '&7for administrators.'
+  - '&7What: remove normal plot-count limits for admins.'
+  - '&7When: large staff builds or recovery work.'
+  - ' '
+  - '&eClick to toggle.'
 
 button_admin_sync: '&dProxy Sync'
 admin_sync_lore:
-  - '&7Sync supported data across'
-  - '&7proxy-connected servers.'
+  - '&7What: sync supported data across proxy servers.'
+  - '&7When: multi-server networks with shared claims.'
+  - ' '
+  - '&cRequires a correctly configured proxy sync setup.'
+  - '&eClick to toggle.'
 
 button_admin_perf: '&cLow Overhead'
 admin_perf_lore:
-  - '&7Favor lighter background work'
-  - '&7for busy or larger servers.'
+  - '&7What: favor lighter background work.'
+  - '&7When: busy events or large player counts.'
+  - ' '
+  - '&8Some cosmetics/background polish may reduce.'
+  - '&eClick to toggle.'
 
 button_admin_diagnostics: '&bDiagnostics'
 admin_diagnostics_lore:
-  - '&7Open health checks, hook status,'
-  - '&7and diagnostic reporting.'
+  - '&7What: Territory Doctor — scan, repair,'
+  - '&7reports, settlements, delinquents, storage migrate.'
+  - '&7When: claims, rentals, or hooks look inconsistent.'
+  - ' '
+  - '&eClick to open.'
 
 button_admin_reload_all: '&eReload Settings'
 button_reload_all_settings: '&eReload Settings'
 reload_all_settings_lore:
-  - '&7Reload config, data views, and'
-  - '&7menu-driven settings.'
+  - '&7What: reload config, data views, and menus.'
+  - '&7When: after editing config.yml on disk.'
   - ' '
+  - '&cDoes not replace a full server restart for every change.'
   - '&eClick to reload.'
 
 button_refresh_language_packs: '&aRefresh Languages'
 button_admin_refresh_lang: '&aRefresh Languages'
 refresh_language_packs_lore:
-  - '&7Reload menu and message packs'
-  - '&7after editing language files.'
+  - '&7What: reload menu and message language packs.'
+  - '&7When: after editing files under lang/.'
   - ' '
   - '&eClick to refresh.'
 
@@ -1113,26 +1136,30 @@ admin_toggle_default_lore:
   - '&7whole server.'
 button_admin_snapshots: '&d📸 Snapshots'
 admin_snapshots_lore:
-  - '&7Review, restore, or remove'
-  - '&7stored claim recovery points.'
+  - '&7What: browse recovery points and restore claims.'
+  - '&7When: undoing a bad merge, expansion, or staff edit.'
   - ' '
+  - '&cRollback overwrites the live claim — confirm carefully.'
   - '&eClick to open.'
 
 button_admin_snapshots_disabled: '&8📸 Disabled'
 admin_snapshots_disabled_lore:
-  - '&7Claim snapshots are disabled'
-  - '&7in the current config.'
+  - '&7Claim snapshots are disabled in config.'
+  - '&7Set snapshots.enabled to true, then reload.'
 
 admin_plot_list_title: '&b✦ Plot List'
 admin_plot_list_lore:
-  - '&7Browse, inspect, and teleport'
-  - '&7to tracked plots.'
+  - '&7What: browse tracked plots and teleport.'
+  - '&7When: investigating a claim or helping a player.'
+  - ' '
+  - '&eClick to open.'
 
 button_admin_world_controls: '&b🌍 World Controls'
 admin_world_controls_lore:
-  - '&7Manage world-level protection'
-  - '&7defaults and safety rules.'
+  - '&7What: per-world claim defaults and live game rules.'
+  - '&7When: locking a world, tuning PvP/mobs, or spawn policy.'
   - ' '
+  - '&cLive game-rule toggles apply immediately.'
   - '&eClick to open.'
 button_admin_world_controls_missing: '&8🌍 World Controls Unavailable'
 admin_world_controls_missing_lore:
@@ -1140,16 +1167,18 @@ admin_world_controls_missing_lore:
   - '&7have the world controls GUI yet.'
 button_admin_migration: '&6Migration Wizard'
 admin_migration_lore:
-  - '&7Preview and import supported'
-  - '&7claims from other plugins.'
+  - '&7What: dry-run then import GriefPrevention,'
+  - '&7GriefDefender, or Lands claims into AegisGuard.'
+  - '&7When: switching protection plugins.'
   - ' '
+  - '&cLive import writes claims — preview first.'
   - '&eClick to open.'
 
 button_admin_audit: '&eStaff Audit Ledger'
 admin_audit_lore:
-  - '&7Review snapshot restores, Doctor'
-  - '&7repairs, migrations, bypass toggles,'
-  - '&7and ClaimBlock adjustments.'
+  - '&7What: review staff restores, Doctor repairs,'
+  - '&7migrations, bypass toggles, and ClaimBlock edits.'
+  - '&7When: accountability checks or incident review.'
   - ' '
   - '&eClick to open.'
 
@@ -1161,7 +1190,10 @@ audit_none_lore:
   - '&7this filter yet.'
 audit_filter_button: '&bFilter: &f{FILTER}'
 audit_filter_lore:
-  - '&7Click to cycle through categories.'
+  - '&7What: narrow the ledger by category.'
+  - '&7When: hunting restores, migrations, or bypass events.'
+  - ' '
+  - '&eClick to cycle categories.'
 audit_filter_all: 'All Categories'
 audit_entry_name: '&e{CATEGORY}'
 audit_entry_lore:
@@ -1263,25 +1295,31 @@ doctor_summary_lore:
   - '&7Automatically repairable: &a{REPAIRABLE}'
 doctor_scan_name: '&aScan Again'
 doctor_scan_lore:
-  - '&7Recheck plot, contract, market,'
-  - '&7world, overlap, and payment state.'
+  - '&7What: recheck plots, contracts, market,'
+  - '&7world, overlap, and payment consistency.'
+  - '&7When: after migrations, crashes, or odd claim state.'
   - ' '
   - '&eClick to scan'
 doctor_report_name: '&eWrite Full Report'
 doctor_report_lore:
-  - '&7Write complete diagnostics to'
+  - '&7What: write full diagnostics to'
   - '&7plugins/AegisGuard/reports/.'
+  - '&7When: sharing a support pack or auditing health.'
   - ' '
   - '&eClick to create report'
 doctor_repair_name: '&cRepair Deterministic Issues'
 doctor_repair_lore:
-  - '&7Fix only states with one safe answer.'
+  - '&7What: fix states with one safe answer.'
+  - '&7When: Doctor lists repairable issues above.'
+  - ' '
   - '&7Requires a second confirmation.'
+  - '&cDoes not invent ownership or clear overlaps.'
   - ' '
   - '&eClick to review repair'
 doctor_repair_confirm_name: '&cConfirm Safe Repairs'
 doctor_repair_confirm_lore:
   - '&7Snapshots are created before changes.'
+  - '&7Only deterministic issues are repaired.'
   - '&7Ambiguous damage is never guessed.'
   - ' '
   - '&cClick to confirm repair'
@@ -1572,11 +1610,24 @@ world_controls_weather_name: '&bWeather Cycle'
 world_controls_keep_inventory_name: '&6Keep Inventory'
 world_controls_mob_griefing_name: '&cMob Griefing'
 staff_command_center_name: '&c&lGuardian Command Center'
-staff_command_center_lore: ['&7Server policy, territory operations,', '&7recovery, migration, and diagnostics.', ' ', '&8Every control below is permission-checked.']
+staff_command_center_lore:
+  - '&7Staff hub for server policy, territory ops,'
+  - '&7recovery, migration, and diagnostics.'
+  - ' '
+  - '&7Hover any control for what it does,'
+  - '&7when to use it, and caution notes.'
+  - ' '
+  - '&8Every control below is permission-checked.'
 staff_policy_section_name: '&eOperational Policy'
-staff_policy_section_lore: ['&7The upper row controls server-wide', '&7AegisGuard operating policy.']
+staff_policy_section_lore:
+  - '&7Upper row: server-wide operating policy.'
+  - '&7Toggle only during maintenance windows'
+  - '&7when you understand the side effects.'
 staff_toolbelt_section_name: '&bGuardian Toolbelt'
-staff_toolbelt_section_lore: ['&7The lower row opens review, recovery,', '&7world, migration, and maintenance tools.']
+staff_toolbelt_section_lore:
+  - '&7Lower row: review, recovery, world,'
+  - '&7migration, diagnostics, and maintenance.'
+  - '&7Destructive tools ask for confirmation.'
 
 # ------------------------------------------------------------
 # Temporary Guest Passes (1.3.0+, Milestone 2)
@@ -1770,7 +1821,20 @@ routes_next_name: '&eNext: {NAME}'
 routes_complete_title: '&aRoute Complete'
 routes_complete_lore: ['&7You have discovered every', '&7checkpoint on this route.']
 button_admin_routes: '&aRoute Editor'
-admin_routes_lore: ['&7Create named exploration routes with', '&7ordered checkpoints for players to browse.', ' ', '&eClick to open.']
+admin_routes_lore:
+  - '&7What: create named exploration routes'
+  - '&7with ordered checkpoints players can browse.'
+  - '&7When: building guided tours or trails.'
+  - ' '
+  - '&eClick to open.'
+button_admin_set_spawn: '&aSet Current Plot as Spawn'
+admin_set_spawn_lore:
+  - '&7What: set this staff plot''s safe spot as public Spawn.'
+  - '&7When: standing inside a server/staff plot.'
+  - ' '
+  - '&7A recovery snapshot may be taken first.'
+  - '&8Does not change ownership.'
+  - '&eClick to set.'
 routes_admin_title: '&cRoute Editor'
 routes_admin_edit_title: '&cEdit Route'
 routes_admin_enabled: '&aEnabled'
@@ -1945,16 +2009,231 @@ alliance_roster_lore:
   - '&7View members and pending invites.'
 doctor_settlements_name: '&6Pending Settlements'
 doctor_settlements_lore:
-  - '&7Review queued economy settlements'
-  - '&7and retry delivery.'
+  - '&7What: queued Vault payouts that failed to deliver.'
+  - '&7When: after sales, rents, or refunds look stuck.'
+  - ' '
+  - '&eClick to review and retry deliveries.'
+  - '&8Staff can retry all pending settlements.'
 doctor_delinquents_name: '&eRental Delinquents'
 doctor_delinquents_lore:
-  - '&7View rentals expired or due'
-  - '&7within the next 24 hours.'
+  - '&7What: rentals expired or due within 24 hours.'
+  - '&7When: chasing late tenants or cleanup work.'
+  - ' '
+  - '&eClick to browse the watch list.'
+  - '&8Does not cancel rentals by itself.'
 doctor_storage_migrate_name: '&bStorage Migrate'
 doctor_storage_migrate_lore:
-  - '&7Convert plot data between YML and SQL'
-  - '&7with a safety backup.'
+  - '&7What: convert plot data between YML and SQL.'
+  - '&7When: changing storage.backend during maintenance.'
+  - ' '
+  - '&cCreates a backup, then rewrites storage.'
+  - '&eClick to open the migration assistant.'
+doctor_delinquents_title: '&4Rental Delinquents'
+doctor_delinquents_empty_name: '&aNo Delinquent Rentals'
+doctor_delinquents_empty_lore:
+  - '&7No rental expires within 24 hours.'
+  - '&7Check again later or use /agadmin rentals.'
+doctor_delinquent_entry_name: '&e{PLOT}'
+doctor_delinquent_entry_expired_lore:
+  - '&7Renter: &f{RENTER}'
+  - '&cExpired — follow up or cancel via staff tools.'
+doctor_delinquent_entry_due_lore:
+  - '&7Renter: &f{RENTER}'
+  - '&eExpires in &f{HOURS}&eh.'
+  - '&7Monitor or prepare a staff cancel if needed.'
+button_back_doctor: '&eBack to Doctor'
+doctor_back_lore:
+  - '&7Return to Territory Doctor.'
+
+# Migration Wizard
+migration_gui_title: '&6Migration Wizard'
+migration_loading_title: '&6Scanning Migration'
+migration_preview_title: '&6Migration Preview'
+migration_confirm_title: '&cConfirm Migration Import'
+migration_scan_name: '&eCurrent Location Scan'
+migration_scan_clear_lore:
+  - '&7No external protection hook is'
+  - '&7reporting protection at your location.'
+migration_scan_detected_lore:
+  - '&7Detected source: &e{HOOK}'
+  - '&7Suggested migration source: &a{SOURCE}'
+migration_scan_aegis_plot_lore:
+  - '&7Aegis plot here: &fYes'
+  - '&7Owner: &f{OWNER}'
+migration_scan_focus_active_lore:
+  - '&7Focused claim filter: &aACTIVE'
+  - '&7Target: &f{X}, {Z}'
+migration_scan_footer_lore:
+  - '&eUse the source buttons below to run a dry-run preview.'
+  - '&8Import never starts until you confirm.'
+migration_source_griefprevention_name: 'GriefPrevention'
+migration_source_griefdefender_name: 'GriefDefender'
+migration_source_lands_name: 'Lands'
+migration_source_detected_lore:
+  - '&7Source data was detected on this server.'
+  - '&7Run a dry-run preview before importing.'
+migration_source_missing_lore:
+  - '&7No source data detected yet.'
+  - '&7Install/enable the plugin, then reopen.'
+migration_source_recommended_lore:
+  - '&bDetected around your current location.'
+migration_option_trusted_line: '&7Trusted import: {STATE}'
+migration_option_flags_line: '&7Flag import: {STATE}'
+migration_option_force_line: '&7Force overlap: {STATE}'
+migration_source_click_lore:
+  - '&eClick to preview (dry-run).'
+  - '&8No claims are written until you confirm import.'
+migration_toggle_trusted_name: '&bImport Trusted'
+migration_toggle_trusted_lore:
+  - '&7Copy trusted/member access from the source.'
+  - '&7Use when you want players to keep access.'
+  - ' '
+  - '&eClick to toggle.'
+migration_toggle_flags_name: '&dImport Flags'
+migration_toggle_flags_lore:
+  - '&7Copy compatible protection flags when possible.'
+  - '&7Use for closer feature parity after import.'
+  - ' '
+  - '&eClick to toggle.'
+migration_toggle_force_name: '&cForce Overlap'
+migration_toggle_force_lore:
+  - '&7Allow import even when an Aegis claim overlaps.'
+  - '&cCaution: can create conflicting claim geometry.'
+  - '&cPrefer leaving this OFF unless recovering a broken world.'
+  - ' '
+  - '&eClick to toggle.'
+migration_focus_name: '&eFocused Claim Filter'
+migration_focus_inactive_lore:
+  - '&7No focused external claim.'
+  - '&7The preview will scan the entire selected source.'
+  - ' '
+  - '&eUse the migration wand to target one exact claim.'
+  - '&8Click does nothing until a focus is active.'
+migration_focus_active_lore:
+  - '&7Focused coordinates: &f{X}, {Z}'
+  - '&7World: &f{WORLD}'
+  - ' '
+  - '&eClick to clear this exact-claim filter.'
+migration_wand_name: '&6Get Migration Wand'
+migration_wand_lore:
+  - '&7Right-click in another plugin''s protected area.'
+  - '&7Opens this wizard with that source preselected.'
+  - ' '
+  - '&eClick to receive the wand.'
+migration_wand_item_name: '&6Migration Wand'
+migration_wand_item_lore:
+  - '&7Right-click a protected area from'
+  - '&7another plugin to open the'
+  - '&7AegisGuard migration wizard.'
+migration_wand_received: '&aYou received the Migration Wand.'
+migration_open_doctor_name: '&bOpen Territory Doctor'
+migration_open_doctor_lore:
+  - '&7After importing, scan for overlaps,'
+  - '&7orphaned contracts, and repairable state.'
+  - ' '
+  - '&eClick to open Doctor.'
+migration_scanning_name: '&eScanning {SOURCE}'
+migration_scanning_lore:
+  - '&7Running a dry-run preview.'
+  - '&7This may take a moment on larger servers.'
+  - ' '
+  - '&8No claims are written during preview.'
+migration_preview_summary_name: '&e{SOURCE} Preview'
+migration_preview_summary_lore:
+  - '&7Claims found: &f{FOUND}'
+  - '&7Would import: &a{IMPORT}'
+  - '&7Overlap skips: &e{OVERLAP}'
+  - '&7Filter skips: &e{FILTER}'
+  - '&7Errors: &c{ERRORS}'
+  - '&7Duration: &f{MS}ms'
+migration_focused_claim_name: '&bFocused Claim'
+migration_focused_none_lore:
+  - '&7No specific focused claim matched.'
+  - '&7This preview represents the full selected source.'
+migration_focused_detail_lore:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Name: &f{NAME}'
+  - '&7Bounds: &f{BOUNDS}'
+  - '&7Trusted entries: &f{TRUSTED}'
+  - '&7Imported flags: &f{FLAGS}'
+migration_run_import_name: '&aRun Import'
+migration_run_import_lore:
+  - '&7Import this source using the'
+  - '&7currently selected options.'
+  - ' '
+  - '&eClick to review a final confirmation.'
+  - '&cLive import changes claim data.'
+migration_confirm_import_name: '&cConfirm Live Import'
+migration_confirm_import_lore:
+  - '&7This writes new AegisGuard claims from the source.'
+  - '&cIrreversible without snapshots / manual cleanup.'
+  - '&7Run a Doctor scan afterward to verify health.'
+  - ' '
+  - '&cClick to import now.'
+migration_cancel_confirm_name: '&eCancel'
+migration_cancel_confirm_lore:
+  - '&7Return to the dry-run preview'
+  - '&7without importing anything.'
+migration_back_wizard_name: '&bBack to Wizard'
+migration_back_wizard_lore:
+  - '&7Change preview options or'
+  - '&7re-scan another source.'
+migration_back_sources_lore:
+  - '&7Return to migration sources.'
+migration_preview_notes_name: '&fPreview Notes'
+migration_preview_no_errors_lore:
+  - '&aNo preview errors were reported.'
+migration_preview_errors_header_lore:
+  - '&ePreview notes / errors:'
+migration_unavailable: '&cMigration system is unavailable.'
+migration_preview_failed: '&cMigration preview failed: {ERROR}'
+migration_import_starting: '&6[AegisGuard] &7Starting live import for &e{SOURCE}&7...'
+migration_import_failed: '&cMigration failed: {ERROR}'
+migration_import_finished: '&aMigration finished. Opening summary...'
+
+# Storage backend migrate
+storage_migrate_title: '&cStorage Migration'
+storage_migrate_confirm_title: '&cConfirm Storage Migration'
+storage_migrate_info_name: '&eStorage Backend Migration'
+storage_migrate_info_lore:
+  - '&7Copy plot data between YML and SQLite.'
+  - '&7A backup is created before changes.'
+  - ' '
+  - '&cUse during scheduled maintenance.'
+  - '&cSwitch storage.backend in config afterward'
+  - '&cif you intend to keep the destination.'
+storage_migrate_yml_sql_name: '&eYML to SQLite'
+storage_migrate_yml_sql_lore:
+  - '&7What: copy plots.yml into SQLite.'
+  - '&7When: moving a flat-file server to SQL.'
+  - ' '
+  - '&7A plots.yml backup is written first.'
+  - '&cDestructive if destination already has plots.'
+  - ' '
+  - '&eClick to review confirmation.'
+storage_migrate_sql_yml_name: '&eSQLite to YML'
+storage_migrate_sql_yml_lore:
+  - '&7What: copy SQLite plots into plots.yml.'
+  - '&7When: exporting SQL data back to flat files.'
+  - ' '
+  - '&7A database backup is written first.'
+  - '&cDestructive if plots.yml already has plots.'
+  - ' '
+  - '&eClick to review confirmation.'
+storage_migrate_confirm_name: '&cConfirm {DIRECTION}'
+storage_migrate_confirm_lore:
+  - '&7Direction: &f{DIRECTION}'
+  - '&7A backup is created before the copy runs.'
+  - ' '
+  - '&cThis rewrites plot storage data.'
+  - '&cDo not interrupt the server mid-migration.'
+  - ' '
+  - '&cClick to run now.'
+storage_migrate_back_lore:
+  - '&7Return to the previous staff menu.'
+storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_unavailable: '&cStorage migration is unavailable.'
 plot_status_upkeep_name: '&6Upkeep'
 plot_status_upkeep_cost: '&7Cost: &6{COST}'
 plot_status_upkeep_paid: '&7Last paid: &f{TIME}'

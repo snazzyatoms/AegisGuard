@@ -326,7 +326,9 @@ public class PlotMarketGUI {
             if (plugin.vault() != null) plugin.vault().deposit(buyer, price);
             buyerCharged = false;
             plugin.msg().send(buyer, "market-payment-failed");
-            plugin.getLogger().warning("Plot sale aborted: could not pay offline seller " + sellerId + ".");
+            plugin.console().warning("log_plot_sale_offline_seller",
+                    "Plot sale aborted: could not pay offline seller {SELLER}.",
+                    "SELLER", String.valueOf(sellerId));
             return;
         }
         sellerPaid = true;
@@ -336,11 +338,24 @@ public class PlotMarketGUI {
         plugin.store().changePlotOwner(plot, buyer.getUniqueId(), buyer.getName());
         plugin.store().savePlotSync(plot);
         plugin.territoryLife().clearOffer(plot.getPlotId());
-        plugin.territoryLife().log(plot.getPlotId(), buyer.getUniqueId(), "PLOT_SOLD",
-                "Ownership transferred from " + sellerName + " to " + buyer.getName() + " for " + price + ".");
+        plugin.territoryLife().logKey(plot.getPlotId(), buyer.getUniqueId(), "PLOT_SOLD",
+                "activity_detail_plot_sold",
+                "Ownership transferred from " + sellerName + " to " + buyer.getName() + " for " + price + ".",
+                java.util.Map.of(
+                        "SELLER", sellerName == null ? "" : sellerName,
+                        "BUYER", buyer.getName(),
+                        "PRICE", String.valueOf(price)));
         if (plugin.getDiscord() != null) {
-            plugin.getDiscord().sendEvent("market_sale", "Plot sold",
-                    buyer.getName() + " bought " + plot.getPlotId() + " from " + sellerName + " for " + price + ".", 0x2ECC71);
+            plugin.getDiscord().sendEventKey("market_sale",
+                    "discord_event_market_sale_title", "Plot sold",
+                    "discord_event_market_sale_description",
+                    "{BUYER} bought {PLOT} from {SELLER} for {PRICE}.",
+                    java.util.Map.of(
+                            "BUYER", buyer.getName(),
+                            "PLOT", String.valueOf(plot.getPlotId()),
+                            "SELLER", sellerName == null ? "" : sellerName,
+                            "PRICE", String.valueOf(price)),
+                    0x2ECC71);
         }
         plugin.getClaimBlockManager().invalidateOwnerCache(sellerId);
         plugin.getClaimBlockManager().invalidateOwnerCache(buyer.getUniqueId());
@@ -360,9 +375,14 @@ public class PlotMarketGUI {
 
         buyer.closeInventory();
         } catch (Throwable transactionError) {
-            plugin.getLogger().severe("Plot sale transaction failed for " + transactionId + ": " + transactionError.getMessage());
+            plugin.console().severe("log_plot_sale_failed",
+                    "Plot sale transaction failed for {ID}: {ERROR}",
+                    "ID", String.valueOf(transactionId),
+                    "ERROR", transactionError.getMessage() == null ? "" : transactionError.getMessage());
             if (sellerPaid && plugin.vault() != null && !plugin.vault().charge(seller, price)) {
-                plugin.getLogger().severe("Could not reverse seller payment for failed plot sale " + transactionId + ".");
+                plugin.console().severe("log_plot_sale_reverse_failed",
+                        "Could not reverse seller payment for failed plot sale {ID}.",
+                        "ID", String.valueOf(transactionId));
             }
             if (buyerCharged && plugin.vault() != null) plugin.vault().deposit(buyer, price);
             if (plot.getOwner().equals(buyer.getUniqueId())) {
@@ -441,11 +461,23 @@ public class PlotMarketGUI {
             plot.setRenter(renter.getUniqueId(), expires);
             plugin.store().savePlotSync(plot);
             plugin.territoryLife().activateContract(plot.getPlotId(), plot.getOwner(), renter.getUniqueId(), offer, expires);
-            plugin.territoryLife().log(plot.getPlotId(), renter.getUniqueId(), "RENTAL_STARTED",
-                    "Rental started for " + days + " day(s); rent=" + price + ", deposit=" + offer.deposit() + ".");
+            plugin.territoryLife().logKey(plot.getPlotId(), renter.getUniqueId(), "RENTAL_STARTED",
+                    "activity_detail_rental_started",
+                    "Rental started for " + days + " day(s); rent=" + price + ", deposit=" + offer.deposit() + ".",
+                    java.util.Map.of(
+                            "DAYS", String.valueOf(days),
+                            "RENT", String.valueOf(price),
+                            "DEPOSIT", String.valueOf(offer.deposit())));
             if (plugin.getDiscord() != null) {
-                plugin.getDiscord().sendEvent("rental_start", "Plot rental started",
-                        renter.getName() + " rented " + plot.getPlotId() + " for " + days + " day(s).", 0x3498DB);
+                plugin.getDiscord().sendEventKey("rental_start",
+                        "discord_event_rental_start_title", "Plot rental started",
+                        "discord_event_rental_start_description",
+                        "{PLAYER} rented {PLOT} for {DAYS} day(s).",
+                        java.util.Map.of(
+                                "PLAYER", renter.getName(),
+                                "PLOT", String.valueOf(plot.getPlotId()),
+                                "DAYS", String.valueOf(days)),
+                        0x3498DB);
             }
             plugin.territoryLife().queueNoticeKey(plot.getOwner(), "rental_plot_rented_owner",
                     "&aYour plot was rented by &f{PLAYER}&a for &e{DAYS} day(s)&a.",
@@ -463,9 +495,14 @@ public class PlotMarketGUI {
             plugin.effects().playConfirm(renter);
             renter.closeInventory();
         } catch (Throwable transactionError) {
-            plugin.getLogger().severe("Plot rental transaction failed for " + transactionId + ": " + transactionError.getMessage());
+            plugin.console().severe("log_plot_rental_failed",
+                    "Plot rental transaction failed for {ID}: {ERROR}",
+                    "ID", String.valueOf(transactionId),
+                    "ERROR", transactionError.getMessage() == null ? "" : transactionError.getMessage());
             if (ownerPaid && plugin.vault() != null && !plugin.vault().charge(owner, price)) {
-                plugin.getLogger().severe("Could not reverse owner payment for failed plot rental " + transactionId + ".");
+                plugin.console().severe("log_plot_rental_reverse_failed",
+                        "Could not reverse owner payment for failed plot rental {ID}.",
+                        "ID", String.valueOf(transactionId));
             }
             if (renterCharged && (plugin.vault() == null || !plugin.vault().deposit(renter, total))) {
                 plugin.territoryLife().addSettlement(renter.getUniqueId(), total,

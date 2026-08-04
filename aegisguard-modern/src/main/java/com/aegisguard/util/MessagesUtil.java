@@ -59,7 +59,7 @@ public class MessagesUtil implements Listener {
         this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault.trim();
 
         loadPlayerPreferences();
-        plugin.getLogger().info("[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: " + defaultStyle);
+        plugin.console().info("log_messages_util_loaded", "[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: {STYLE}", "STYLE", defaultStyle);
     }
 
     // ----------------------------
@@ -231,7 +231,7 @@ public class MessagesUtil implements Listener {
                 } catch (IllegalArgumentException ignored) {}
             }
         }
-        plugin.getLogger().info("[AegisGuard] Loaded " + playerStyles.size() + " player language preferences.");
+        plugin.console().info("log_player_prefs_loaded", "[AegisGuard] Loaded {COUNT} player language preferences.", "COUNT", String.valueOf(playerStyles.size()));
     }
 
     private synchronized void savePlayerPreference(UUID uuid, String style) {

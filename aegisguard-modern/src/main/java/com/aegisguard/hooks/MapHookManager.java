@@ -29,9 +29,9 @@ public class MapHookManager {
             if (plugin.cfg().raw().getBoolean("hooks.bluemap.enabled", false)) {
                 try {
                     this.blueMap = new BlueMapHook(plugin);
-                    plugin.getLogger().info("Hooked into BlueMap!");
+                    plugin.console().info("log_map_bluemap_hooked", "Hooked into BlueMap!");
                 } catch (NoClassDefFoundError | Exception e) { // Catch both direct class errors and initialization errors
-                    plugin.getLogger().warning("BlueMap detected but API failed to initialize.");
+                    plugin.console().warning("log_map_bluemap_failed", "BlueMap detected but API failed to initialize.");
                 }
             }
         }
@@ -41,9 +41,9 @@ public class MapHookManager {
             if (plugin.cfg().raw().getBoolean("hooks.pl3xmap.enabled", false)) {
                 try {
                     this.pl3xMap = new Pl3xMapHook(plugin);
-                    plugin.getLogger().info("Hooked into Pl3xMap!");
+                    plugin.console().info("log_map_pl3xmap_hooked", "Hooked into Pl3xMap!");
                 } catch (NoClassDefFoundError | Exception e) {
-                    plugin.getLogger().warning("Pl3xMap detected but API failed to initialize.");
+                    plugin.console().warning("log_map_pl3xmap_failed", "Pl3xMap detected but API failed to initialize.");
                 }
             }
         }
@@ -56,13 +56,13 @@ public class MapHookManager {
     public void reload() {
         // Reload all maps if active. We catch errors on the reload as well.
         if (dynmap != null) {
-            try { dynmap.update(); } catch (Exception e) { plugin.getLogger().severe("Dynmap update failed!"); }
+            try { dynmap.update(); } catch (Exception e) { plugin.console().severe("log_map_dynmap_update_failed", "Dynmap update failed!"); }
         }
         if (blueMap != null) {
-             try { blueMap.update(); } catch (Exception e) { plugin.getLogger().severe("BlueMap update failed!"); }
+             try { blueMap.update(); } catch (Exception e) { plugin.console().severe("log_map_bluemap_update_failed", "BlueMap update failed!"); }
         }
         if (pl3xMap != null) {
-            try { pl3xMap.update(); } catch (Exception e) { plugin.getLogger().severe("Pl3xMap update failed!"); }
+            try { pl3xMap.update(); } catch (Exception e) { plugin.console().severe("log_map_pl3xmap_update_failed", "Pl3xMap update failed!"); }
         }
     }
 }

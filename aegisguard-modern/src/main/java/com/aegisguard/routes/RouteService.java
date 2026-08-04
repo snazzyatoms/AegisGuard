@@ -267,7 +267,7 @@ public class RouteService {
                 }
             }
             dirtyRoutes = false;
-            plugin.getLogger().info("Loaded " + routes.size() + " exploration route(s).");
+            plugin.console().info("log_routes_loaded", "Loaded {COUNT} exploration route(s).", "COUNT", String.valueOf(routes.size()));
         }
     }
 

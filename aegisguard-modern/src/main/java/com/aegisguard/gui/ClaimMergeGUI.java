@@ -272,8 +272,10 @@ public class ClaimMergeGUI {
                     check.bounds().x2(), check.bounds().z2());
             if (cost > 0 && blocks != null) blocks.adjustAvailableBlocks(player.getUniqueId(), -cost);
             if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
-            plugin.territoryLife().log(base.getPlotId(), player.getUniqueId(), "CLAIM_MERGE",
-                    "Merged plot " + other.getPlotId() + " into " + base.getPlotId());
+            plugin.territoryLife().logKey(base.getPlotId(), player.getUniqueId(), "CLAIM_MERGE",
+                    "activity_detail_claim_merge",
+                    "Merged plot " + other.getPlotId() + " into " + base.getPlotId(),
+                    java.util.Map.of("OTHER", String.valueOf(other.getPlotId()), "BASE", String.valueOf(base.getPlotId())));
             player.sendMessage(GUIManager.color(tr(player, "claim_merge_success",
                     "&aClaims merged successfully.")));
             plugin.effects().playConfirm(player);

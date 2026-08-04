@@ -1051,7 +1051,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plot.postNotice(com.aegisguard.profile.PlotNotice.post(p.getUniqueId(), p.getName(), text), maxEntries);
             plugin.store().savePlot(plot);
             plugin.store().setDirty(true);
-            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_POSTED", "Posted a noticeboard notice.");
+            plugin.territoryLife().logKey(plot.getPlotId(), p.getUniqueId(), "NOTICE_POSTED",
+                    "activity_detail_notice_posted", "Posted a noticeboard notice.", Map.of());
 
             sendKey(p, "notice_posted", "&a✔ Notice posted to this plot's noticeboard.");
             plugin.effects().playConfirm(p);
@@ -1079,7 +1080,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plot.removeNotice(notices.get(index).getId());
             plugin.store().savePlot(plot);
             plugin.store().setDirty(true);
-            plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "NOTICE_REMOVED", "Removed a noticeboard notice.");
+            plugin.territoryLife().logKey(plot.getPlotId(), p.getUniqueId(), "NOTICE_REMOVED",
+                    "activity_detail_notice_removed", "Removed a noticeboard notice.", Map.of());
 
             sendKey(p, "notice_removed", "&e✔ Notice removed.");
             plugin.effects().playConfirm(p);
@@ -1476,8 +1478,10 @@ private void handleUnsell(Player p) {
                 "PRICE", plugin.eco().format(price, CurrencyType.VAULT)));
         sendMsg(p, "&7Term: &b" + days + " day(s) &8| &7Deposit: &6"
                 + plugin.eco().format(deposit, CurrencyType.VAULT));
-        plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_LISTED",
-                "Listed for " + price + ", deposit=" + deposit + ", term=" + days + " day(s).");
+        plugin.territoryLife().logKey(plot.getPlotId(), p.getUniqueId(), "RENTAL_LISTED",
+                "activity_detail_rental_listed",
+                "Listed for " + price + ", deposit=" + deposit + ", term=" + days + " day(s).",
+                Map.of("PRICE", String.valueOf(price), "DEPOSIT", String.valueOf(deposit), "DAYS", String.valueOf(days)));
     }
 
     private void handleUnrent(Player p) {
@@ -1494,7 +1498,8 @@ private void handleUnsell(Player p) {
         plugin.territoryLife().clearOffer(plot.getPlotId());
         plugin.store().savePlotSync(plot);
         sendKey(p, "market-not-for-rent", "&e✔ Rental listing removed.");
-        plugin.territoryLife().log(plot.getPlotId(), p.getUniqueId(), "RENTAL_UNLISTED", "Rental listing removed.");
+        plugin.territoryLife().logKey(plot.getPlotId(), p.getUniqueId(), "RENTAL_UNLISTED",
+                "activity_detail_rental_unlisted", "Rental listing removed.", Map.of());
     }
 
     private void handleRentalContract(Player p, String[] args) {
@@ -1589,8 +1594,10 @@ private void handleUnsell(Player p) {
                 return;
             }
             plugin.territoryLife().setCategory(plot.getPlotId(), category);
-            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_CATEGORY",
-                    "Discovery category changed to " + category + ".");
+            plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_CATEGORY",
+                    "activity_detail_discovery_category",
+                    "Discovery category changed to " + category + ".",
+                    Map.of("CATEGORY", category == null ? "" : category));
             sendKey(player, "discovery_category_set", "&aDiscovery category set to &e{CATEGORY}&a.", Map.of(
                     "CATEGORY", category));
             return;
@@ -1603,8 +1610,11 @@ private void handleUnsell(Player p) {
             }
             boolean visible = args[2].equalsIgnoreCase("on") || args[2].equalsIgnoreCase("public");
             plugin.territoryLife().setVisible(plot.getPlotId(), visible);
-            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_VISIBILITY",
-                    "Discovery visibility changed to " + (visible ? "public" : "private") + ".");
+            String visibility = visible ? "public" : "private";
+            plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_VISIBILITY",
+                    "activity_detail_discovery_visibility",
+                    "Discovery visibility changed to " + visibility + ".",
+                    Map.of("VISIBILITY", visibility));
             sendKey(player, visible ? "discovery_visible" : "discovery_hidden",
                     visible ? "&aThis plot is visible in discovery." : "&eThis plot is hidden from discovery.");
             return;
@@ -1648,7 +1658,9 @@ private void handleUnsell(Player p) {
         for (TerritoryLifeService.ActivityEntry entry : entries) {
             long minutes = Math.max(0L, (now - entry.timestamp()) / 60_000L);
             sendKey(player, "activity_entry", "&8- &e{TYPE} &7{DETAILS} &8({MINUTES}m ago)", Map.of(
-                    "TYPE", entry.type(), "DETAILS", entry.details(), "MINUTES", Long.toString(minutes)));
+                    "TYPE", com.aegisguard.territory.ActivityText.resolveTypeLabel(plugin, player, entry.type()),
+                    "DETAILS", com.aegisguard.territory.ActivityText.resolveDetails(plugin, player, entry.details()),
+                    "MINUTES", Long.toString(minutes)));
         }
     }
 

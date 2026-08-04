@@ -116,8 +116,9 @@ public class TransferConfirmGUI {
         }
         plot.clearRenter();
         life.clearOffer(plot.getPlotId());
-        life.log(plot.getPlotId(), actor.getUniqueId(), "OWNERSHIP_TRANSFER_SETTLE",
-                "Cleared rentals/deposits before ownership transfer.");
+        life.logKey(plot.getPlotId(), actor.getUniqueId(), "OWNERSHIP_TRANSFER_SETTLE",
+                "activity_detail_transfer_settle",
+                "Cleared rentals/deposits before ownership transfer.", java.util.Map.of());
     }
 
     private boolean canTransfer(Player owner, Plot plot, UUID recipient) {

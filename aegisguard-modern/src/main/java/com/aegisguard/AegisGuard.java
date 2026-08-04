@@ -45,6 +45,7 @@ import com.aegisguard.selection.SelectionService;
 import com.aegisguard.listeners.WandSafetyListener;
 import com.aegisguard.snapshots.SnapshotManager;
 import com.aegisguard.territory.TerritoryLifeService;
+import com.aegisguard.util.ConsoleMessages;
 import com.aegisguard.util.EffectUtil;
 import com.aegisguard.util.MessagesUtil;
 import com.aegisguard.visualization.WandEquipListener;
@@ -95,6 +96,9 @@ public class AegisGuard extends JavaPlugin {
 
     // Compatibility layer for other protection plugins (WorldGuard, etc.)
     private ProtectionHookManager protectionHooks;
+
+    // Localized console / operational log helper (default language)
+    private ConsoleMessages console;
 
     // Aegis Codex language engine (1.2.4+)
     private CodexEngine codex;
@@ -228,6 +232,12 @@ public class AegisGuard extends JavaPlugin {
      */
     public MessagesUtil msg() { return messages; }
 
+    /** Localized console logging using localization.default_language. */
+    public ConsoleMessages console() {
+        if (console == null) console = new ConsoleMessages(this);
+        return console;
+    }
+
     public WorldRulesManager worldRules() { return worldRules; }
     public EffectUtil effects() { return effectUtil; }
     public ExpansionRequestManager getExpansionRequestManager() { return expansionManager; }
@@ -248,15 +258,16 @@ public class AegisGuard extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        console = new ConsoleMessages(this);
 
         // --- 1) Folia detection (safe) ---
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             isFolia = true;
-            getLogger().info("Folia detected! Enabling Region Scheduler compatibility.");
+            console().info("log_folia_detected", "Folia detected! Enabling Region Scheduler compatibility.");
         } catch (ClassNotFoundException e) {
             isFolia = false;
-            getLogger().info("Standard Bukkit/Spigot/Paper detected.");
+            console().info("log_standard_server", "Standard Bukkit/Spigot/Paper detected.");
         }
 
         saveDefaultConfig();
@@ -271,10 +282,11 @@ public class AegisGuard extends JavaPlugin {
         // --- LANGUAGE ENGINE ---
         try {
             codex = new CodexEngine(this);
-            getLogger().info("Codex language engine initialized.");
+            console().info("log_codex_initialized", "Codex language engine initialized.");
         } catch (Throwable t) {
             codex = null;
-            getLogger().warning("Codex language engine failed to initialize: " + t.getMessage());
+            console().warning("log_codex_init_failed", "Codex language engine failed to initialize: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         messages = new MessagesUtil(this);
@@ -312,10 +324,11 @@ public class AegisGuard extends JavaPlugin {
         // Notification Manager (1.2.6+) - per-player notification preferences
         try {
             this.notificationManager = new NotificationManager(this);
-            getLogger().info("Notification Manager initialized.");
+            console().info("log_notifications_initialized", "Notification Manager initialized.");
         } catch (Throwable t) {
             this.notificationManager = null;
-            getLogger().warning("NotificationManager failed to initialize: " + t.getMessage());
+            console().warning("log_notifications_init_failed", "NotificationManager failed to initialize: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         // ClaimBlocks (1.2.4+)
@@ -426,7 +439,7 @@ public class AegisGuard extends JavaPlugin {
             new AegisPAPIExpansion(this).register();
         }
 
-        getLogger().info("AegisGuard enabled.");
+        console().info("log_enabled", "AegisGuard enabled.");
     }
 
     private void registerPaperMobBoundaryListener() {
@@ -442,9 +455,11 @@ public class AegisGuard extends JavaPlugin {
                     .newInstance(this);
             Bukkit.getPluginManager().registerEvents(listener, this);
         } catch (ClassNotFoundException ignored) {
-            getLogger().info("Paper entity movement API not found; using the Spigot mob-barrier fallback.");
+            console().info("log_paper_mob_fallback",
+                    "Paper entity movement API not found; using the Spigot mob-barrier fallback.");
         } catch (ReflectiveOperationException | LinkageError error) {
-            getLogger().warning("Could not enable the Paper mob boundary: " + error.getMessage());
+            console().warning("log_paper_mob_failed", "Could not enable the Paper mob boundary: {ERROR}",
+                    "ERROR", error.getMessage() == null ? "" : error.getMessage());
         }
     }
 
@@ -466,7 +481,8 @@ public class AegisGuard extends JavaPlugin {
                 guestPassService.freezeAllActiveSessions();
             }
         } catch (Throwable t) {
-            getLogger().warning("Failed to freeze Guest Pass sessions: " + t.getMessage());
+            console().warning("log_guest_pass_freeze_failed", "Failed to freeze Guest Pass sessions: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         // Save plot + player data safely
@@ -476,67 +492,79 @@ public class AegisGuard extends JavaPlugin {
                 plotStore.shutdown();
             }
         } catch (Throwable t) {
-            getLogger().warning("Failed to save plot store: " + t.getMessage());
+            console().warning("log_save_plot_store_failed", "Failed to save plot store: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (claimBlockManager != null) claimBlockManager.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save claim blocks: " + t.getMessage());
+            console().warning("log_save_claim_blocks_failed", "Failed to save claim blocks: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (claimBlockExchange != null) claimBlockExchange.shutdown();
         } catch (Throwable t) {
-            getLogger().warning("Failed to shut down ClaimBlocks exchange: " + t.getMessage());
+            console().warning("log_claimblocks_exchange_shutdown_failed",
+                    "Failed to shut down ClaimBlocks exchange: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (snapshotManager != null) snapshotManager.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save snapshots: " + t.getMessage());
+            console().warning("log_save_snapshots_failed", "Failed to save snapshots: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (expansionManager != null) expansionManager.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save expansion requests: " + t.getMessage());
+            console().warning("log_save_expansions_failed", "Failed to save expansion requests: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (auditService != null) auditService.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save the audit ledger: " + t.getMessage());
+            console().warning("log_save_audit_failed", "Failed to save the audit ledger: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (groupManager != null && groupManager.isDirty()) groupManager.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save groups: " + t.getMessage());
+            console().warning("log_save_groups_failed", "Failed to save groups: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (routeService != null) routeService.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save routes: " + t.getMessage());
+            console().warning("log_save_routes_failed", "Failed to save routes: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (allianceManager != null) allianceManager.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save alliances: " + t.getMessage());
+            console().warning("log_save_alliances_failed", "Failed to save alliances: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (territoryLifeService != null) territoryLifeService.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save territory life data: " + t.getMessage());
+            console().warning("log_save_territory_life_failed", "Failed to save territory life data: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         try {
             if (horizonService != null) horizonService.save();
         } catch (Throwable t) {
-            getLogger().warning("Failed to save Horizon reward data: " + t.getMessage());
+            console().warning("log_save_horizons_failed", "Failed to save Horizon reward data: {ERROR}",
+                    "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
 
         // Save player data
@@ -545,7 +573,7 @@ public class AegisGuard extends JavaPlugin {
         // Save notification prefs
         if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
 
-        getLogger().info("AegisGuard disabled.");
+        console().info("log_disabled", "AegisGuard disabled.");
     }
 
     public boolean isAdmin(Player player) {
@@ -780,7 +808,7 @@ public class AegisGuard extends JavaPlugin {
             runMainGlobal(this::closeAllAegisGUIs);
         }
 
-        getLogger().info("AegisGuard reloaded successfully.");
+        console().info("log_reloaded", "AegisGuard reloaded successfully.");
     }
 
     // ---------------------------------------------------------------------
@@ -806,7 +834,7 @@ public class AegisGuard extends JavaPlugin {
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 if (territoryLifeService != null && territoryLifeService.isDirty()) territoryLifeService.save();
             } catch (Throwable t) {
-                getLogger().warning("Auto-save error: " + t.getMessage());
+                console().warning("log_autosave_error", "Auto-save error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, safeIntervalSeconds, safeIntervalSeconds);
     }
@@ -850,7 +878,7 @@ public class AegisGuard extends JavaPlugin {
                     } catch (Throwable ignored) {}
                 });
             } catch (Throwable t) {
-                getLogger().warning("Upkeep task error: " + t.getMessage());
+                console().warning("log_upkeep_error", "Upkeep task error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, intervalTicks, intervalTicks);
     }
@@ -904,7 +932,7 @@ public class AegisGuard extends JavaPlugin {
         if (!enabled) return;
 
         if (!(plotStore instanceof SQLDataStore)) {
-            getLogger().warning("Wilderness Revert is enabled, but the active storage backend is not SQL. Skipping wilderness revert startup.");
+            console().warning("log_wilderness_sql_required", "Wilderness Revert is enabled, but the active storage backend is not SQL. Skipping wilderness revert startup.");
             return;
         }
 
@@ -917,7 +945,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 logic.run();
             } catch (Throwable t) {
-                getLogger().warning("Wilderness revert task error: " + t.getMessage());
+                console().warning("log_wilderness_error", "Wilderness revert task error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, intervalTicks, intervalTicks);
     }
@@ -935,7 +963,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 logic.run();
             } catch (Throwable t) {
-                getLogger().warning("Mob barrier task error: " + t.getMessage());
+                console().warning("log_mob_barrier_error", "Mob barrier task error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, intervalTicks, intervalTicks);
     }
@@ -959,7 +987,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 claimBlockTaskLogic.run();
             } catch (Throwable t) {
-                getLogger().warning("ClaimBlock task error: " + t.getMessage());
+                console().warning("log_claimblock_task_error", "ClaimBlock task error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, intervalTicks, intervalTicks);
     }
@@ -1026,7 +1054,8 @@ public class AegisGuard extends JavaPlugin {
                 if (territoryLifeService != null) {
                     TerritoryLifeService.RentalContract expired = territoryLifeService.removeContract(plot.getPlotId());
                     territoryLifeService.refundDeposit(expired, "Rental deposit refund after expiry");
-                    territoryLifeService.log(plot.getPlotId(), null, "RENTAL_EXPIRED", "Rental term expired normally.");
+                    territoryLifeService.logKey(plot.getPlotId(), null, "RENTAL_EXPIRED",
+                            "activity_detail_rental_expired", "Rental term expired normally.", java.util.Map.of());
                 }
 
                 Player renter = Bukkit.getPlayer(renterId);
@@ -1048,7 +1077,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 guestPassService.runExpirySweep();
             } catch (Throwable t) {
-                getLogger().warning("Guest Pass expiry sweep error: " + t.getMessage());
+                console().warning("log_guest_pass_sweep_error", "Guest Pass expiry sweep error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, 20L, 1_200L);
     }
@@ -1060,7 +1089,7 @@ public class AegisGuard extends JavaPlugin {
             try {
                 lockdownService.sweepExpired();
             } catch (Throwable t) {
-                getLogger().warning("Lockdown expiry sweep error: " + t.getMessage());
+                console().warning("log_lockdown_sweep_error", "Lockdown expiry sweep error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, 20L, 1_200L);
     }
@@ -1160,8 +1189,9 @@ public class AegisGuard extends JavaPlugin {
         }
         int additions = languageSynchronizer.synchronize(path);
         if (additions > 0) {
-            getLogger().info("Added " + additions + " missing language key(s) to " + path
-                    + "; the previous file was backed up.");
+            console().info("log_lang_keys_added",
+                    "Added {COUNT} missing language key(s) to {PATH}; the previous file was backed up.",
+                    "COUNT", String.valueOf(additions), "PATH", path);
         }
     }
 
@@ -1215,7 +1245,9 @@ public class AegisGuard extends JavaPlugin {
                 Files.copy(in, out.toPath());
             }
         } catch (Throwable t) {
-            getLogger().warning("Failed to write language file: " + rel + " (" + t.getMessage() + ")");
+            console().warning("log_lang_write_failed",
+                    "Failed to write language file: {PATH} ({ERROR})",
+                    "PATH", rel, "ERROR", t.getMessage() == null ? "" : t.getMessage());
         }
     }
 }

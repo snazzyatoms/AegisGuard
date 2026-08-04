@@ -246,8 +246,10 @@ public class PlotStatusGUI {
             }
             holder.getPlot().setLastUpkeepPayment(System.currentTimeMillis());
             plugin.store().savePlotSync(holder.getPlot());
-            plugin.territoryLife().log(holder.getPlot().getPlotId(), player.getUniqueId(), "UPKEEP_PAID_EARLY",
-                    "Early upkeep payment collected: " + cost + ".");
+            plugin.territoryLife().logKey(holder.getPlot().getPlotId(), player.getUniqueId(), "UPKEEP_PAID_EARLY",
+                    "activity_detail_upkeep_paid",
+                    "Early upkeep payment collected: " + cost + ".",
+                    java.util.Map.of("AMOUNT", String.valueOf(cost)));
             sendSystem(player, "upkeep_pay_success", null, "&aUpkeep payment collected.");
             plugin.effects().playConfirm(player);
             open(player, holder.getPlot(), holder.getReturnWalkthroughPage());

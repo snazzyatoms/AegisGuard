@@ -46,7 +46,7 @@ public class DynmapHook {
                 loadConfig();
                 setupMarkerSet();
                 update(); // Initial update
-                plugin.getLogger().info("Successfully hooked into Dynmap.");
+                plugin.console().info("log_map_dynmap_hooked", "Successfully hooked into Dynmap.");
             }
         }
     }

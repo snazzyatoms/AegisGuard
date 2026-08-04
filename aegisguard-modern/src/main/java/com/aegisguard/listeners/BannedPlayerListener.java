@@ -8,9 +8,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.awt.Color; // --- ADDED IMPORT ---
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -54,30 +55,41 @@ public class BannedPlayerListener implements Listener {
 
         plugin.runGlobalAsync(() -> {
             List<Plot> plots = plugin.store().getPlots(uuid);
-            
+
             if (plots != null && !plots.isEmpty()) {
-                // Create copy to avoid concurrent modification exceptions during iteration
                 List<Plot> toRemove = new ArrayList<>(plots);
                 int count = toRemove.size();
-                
+
                 for (Plot plot : toRemove) {
-                    // This call handles DB/YML deletion asynchronously
                     plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 }
-                
-                plugin.getLogger().warning("[AegisGuard] Banned Player Detected: " + name);
-                plugin.getLogger().info("[AegisGuard] Auto-removed " + count + " plots belonging to " + name);
 
-                // --- v1.1.2 Feature: Discord Logging ---
+                plugin.console().warning("log_banned_player_detected",
+                        "[AegisGuard] Banned Player Detected: {PLAYER}",
+                        "PLAYER", name == null ? "" : name);
+                plugin.console().info("log_banned_plots_removed",
+                        "[AegisGuard] Auto-removed {COUNT} plots belonging to {PLAYER}",
+                        "COUNT", String.valueOf(count),
+                        "PLAYER", name == null ? "" : name);
+
                 if (plugin.getDiscord().isEnabled()) {
                     DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject()
-                        .setTitle("🚫 Banned Player Wipe")
-                        .setColor(Color.RED) // FIXED: Use java.awt.Color object
-                        .setDescription("Player **" + name + "** was detected as banned. Their land has been seized.")
-                        .addField("Action", "All plots removed", true)
-                        .addField("Count", String.valueOf(count), true)
-                        .setFooter("AegisGuard Automation", null);
-                    
+                        .setTitle(plugin.console().plain("discord_ban_wipe_title", "Banned Player Wipe"))
+                        .setColor(Color.RED)
+                        .setDescription(plugin.console().plain(
+                                "discord_ban_wipe_description",
+                                "Player **{PLAYER}** was detected as banned. Their land has been seized.",
+                                Map.of("PLAYER", name == null ? "" : name)))
+                        .addField(
+                                plugin.console().plain("discord_ban_wipe_action_name", "Action"),
+                                plugin.console().plain("discord_ban_wipe_action_value", "All plots removed"),
+                                true)
+                        .addField(
+                                plugin.console().plain("discord_ban_wipe_count_name", "Count"),
+                                String.valueOf(count),
+                                true)
+                        .setFooter(plugin.console().plain("discord_ban_wipe_footer", "AegisGuard Automation"), null);
+
                     plugin.getDiscord().send(embed);
                 }
             }

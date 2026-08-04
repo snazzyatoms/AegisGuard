@@ -42,7 +42,9 @@ public class DiscordWebhook {
                 String json = "{\"embeds\": [" + embed.toJson() + "]}";
                 performRequest(json);
             } catch (Exception e) {
-                plugin.getLogger().warning("[Discord] Failed to send webhook: " + e.getMessage());
+                plugin.console().warning("log_discord_webhook_failed",
+                        "[Discord] Failed to send webhook: {ERROR}",
+                        "ERROR", e.getMessage() == null ? "" : e.getMessage());
             }
         });
     }
@@ -63,6 +65,17 @@ public class DiscordWebhook {
     }
 
     /**
+     * Localized domain event using the server default language pack.
+     */
+    public void sendEventKey(String eventKey, String titleKey, String titleFallback,
+                             String descriptionKey, String descriptionFallback,
+                             java.util.Map<String, String> placeholders, int colorRgb) {
+        String title = plugin.console().plain(titleKey, titleFallback, placeholders);
+        String description = plugin.console().plain(descriptionKey, descriptionFallback, placeholders);
+        sendEvent(eventKey, title, description, colorRgb);
+    }
+
+    /**
      * Sends a plain text message asynchronously.
      */
     public void send(String content) {
@@ -73,7 +86,9 @@ public class DiscordWebhook {
                 String json = "{\"content\": \"" + escape(content) + "\"}";
                 performRequest(json);
             } catch (Exception e) {
-                plugin.getLogger().warning("[Discord] Failed to send webhook: " + e.getMessage());
+                plugin.console().warning("log_discord_webhook_failed",
+                        "[Discord] Failed to send webhook: {ERROR}",
+                        "ERROR", e.getMessage() == null ? "" : e.getMessage());
             }
         });
     }

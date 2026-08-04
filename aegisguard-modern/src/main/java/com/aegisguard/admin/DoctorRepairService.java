@@ -191,7 +191,8 @@ public final class DoctorRepairService {
             Plot plot = plots.get(plotId);
             if (plot != null) {
                 plugin.store().savePlotSync(plot);
-                plugin.territoryLife().log(plotId, null, "DOCTOR_REPAIR", "Doctor repaired inconsistent territory state.");
+                plugin.territoryLife().logKey(plotId, null, "DOCTOR_REPAIR",
+                        "activity_detail_doctor_repair", "Doctor repaired inconsistent territory state.", java.util.Map.of());
             }
         }
         plugin.territoryLife().save();

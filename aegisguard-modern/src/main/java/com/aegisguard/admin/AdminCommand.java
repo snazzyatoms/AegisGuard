@@ -67,7 +67,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.reloadAegisGuard(true);
                 sendLocalized(sender, "admin_console_reload_complete", "&aAegisGuard reload complete.");
-                plugin.getLogger().info("AegisGuard was reloaded from the server console.");
+                plugin.console().info("log_admin_console_reload",
+                        "AegisGuard was reloaded from the server console.");
                 return true;
             }
             if (args.length > 0 && args[0].equalsIgnoreCase("health")) {
@@ -818,8 +819,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             plugin.store().removePlot(adjacent.getOwner(), adjacent.getPlotId());
             plugin.store().updatePlotBounds(current, x1, z1, x2, z2);
             if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
-            plugin.territoryLife().log(current.getPlotId(), player.getUniqueId(), "SERVER_ZONE_MERGE",
-                    "Merged adjacent server zone " + adjacent.getPlotId() + ".");
+            plugin.territoryLife().logKey(current.getPlotId(), player.getUniqueId(), "SERVER_ZONE_MERGE",
+                    "activity_detail_server_zone_merge",
+                    "Merged adjacent server zone " + adjacent.getPlotId() + ".",
+                    Map.of("PLOT", String.valueOf(adjacent.getPlotId())));
             audit(player, "merged server zone " + adjacent.getPlotId() + " into " + current.getPlotId());
             sendLocalized(player, "admin_merge_success",
                     "&aServer zones merged. Recovery snapshots were created.");
@@ -911,7 +914,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         plugin.territoryLife().queueNoticeKey(contract.renterId(), "admin_rental_ended_renter",
                 "&eAn administrator ended rental contract &f{PLOT}&e. Your deposit was refunded or queued.",
                 Map.of("PLOT", String.valueOf(plotId)));
-        plugin.territoryLife().log(plotId, player.getUniqueId(), "ADMIN_RENTAL_CANCEL", "Contract cancelled by administrator.");
+        plugin.territoryLife().logKey(plotId, player.getUniqueId(), "ADMIN_RENTAL_CANCEL",
+                "activity_detail_admin_rental_cancel", "Contract cancelled by administrator.", Map.of());
         audit(player, "cancelled rental contract for plot " + plotId);
         sendLocalized(player, "admin_rentals_cancelled", "&aRental contract cancelled safely.");
     }
@@ -944,8 +948,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 return;
             }
         }
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "ADMIN_DISCOVERY",
-                "Discovery state changed: " + action + ".");
+        plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "ADMIN_DISCOVERY",
+                "activity_detail_admin_discovery",
+                "Discovery state changed: " + action + ".",
+                Map.of("ACTION", action));
         sendLocalized(player, "admin_discover_updated",
                 "&aDiscovery state updated: {ACTION}.", Map.of("ACTION", action));
     }
@@ -970,13 +976,20 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         for (TerritoryLifeService.ActivityEntry entry : entries) {
             sendLocalized(player, "admin_activity_line",
                     "&8- &e{TYPE} &7{DETAILS}",
-                    Map.of("TYPE", entry.type(), "DETAILS", entry.details() == null ? "" : entry.details()));
+                    Map.of(
+                            "TYPE", com.aegisguard.territory.ActivityText.resolveTypeLabel(plugin, player, entry.type()),
+                            "DETAILS", com.aegisguard.territory.ActivityText.resolveDetails(
+                                    plugin, player, entry.details() == null ? "" : entry.details())));
         }
     }
 
     private void audit(Player actor, String action) {
-        plugin.getLogger().info("[Admin Audit] " + actor.getName() + " " + action + ".");
+        plugin.console().info("log_admin_audit",
+                "[Admin Audit] {PLAYER} {ACTION}.",
+                "PLAYER", actor.getName(),
+                "ACTION", action == null ? "" : action);
         if (plugin.notifications() != null) {
+            // Permission node "aegis.admin" must remain an ASCII LuckPerms identifier.
             plugin.notifications().notifyAdmins(
                     "aegis.admin",
                     "admin_notify_action",

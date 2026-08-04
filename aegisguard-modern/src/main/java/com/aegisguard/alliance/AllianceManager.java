@@ -247,7 +247,7 @@ public class AllianceManager {
                 }
             }
             dirty = false;
-            plugin.getLogger().info("Loaded " + alliancesById.size() + " alliance(s).");
+            plugin.console().info("log_alliances_loaded", "Loaded {COUNT} alliance(s).", "COUNT", String.valueOf(alliancesById.size()));
         }
     }
 

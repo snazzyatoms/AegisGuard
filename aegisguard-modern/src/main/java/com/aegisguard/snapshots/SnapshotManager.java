@@ -43,8 +43,11 @@ public class SnapshotManager {
         snapshots.put(snapshot.getSnapshotId(), snapshot);
         setDirty(true);
         
-        plugin.getLogger().info("[Snapshots] Created snapshot " + snapshot.getSnapshotId() + 
-                " for plot " + plot.getPlotId() + " (" + type + ")");
+        plugin.console().info("log_snapshots_created",
+                "[Snapshots] Created snapshot {ID} for plot {PLOT} ({TYPE})",
+                "ID", String.valueOf(snapshot.getSnapshotId()),
+                "PLOT", String.valueOf(plot.getPlotId()),
+                "TYPE", String.valueOf(type));
         
         // Auto-cleanup old snapshots if limit exceeded
         pruneOldSnapshots();
@@ -59,7 +62,9 @@ public class SnapshotManager {
     public boolean rollback(UUID snapshotId) {
         ClaimSnapshot snapshot = snapshots.get(snapshotId);
         if (snapshot == null) {
-            plugin.getLogger().warning("[Snapshots] Cannot rollback: snapshot " + snapshotId + " not found");
+            plugin.console().warning("log_snapshots_rollback_missing",
+                    "[Snapshots] Cannot rollback: snapshot {ID} not found",
+                    "ID", String.valueOf(snapshotId));
             return false;
         }
 
@@ -85,8 +90,10 @@ public class SnapshotManager {
         plugin.store().savePlotSync(currentPlot);
         plugin.store().setDirty(true);
         
-        plugin.getLogger().info("[Snapshots] Rolled back plot " + currentPlot.getPlotId() + 
-                " to snapshot " + snapshotId);
+        plugin.console().info("log_snapshots_rolled_back",
+                "[Snapshots] Rolled back plot {PLOT} to snapshot {ID}",
+                "PLOT", String.valueOf(currentPlot.getPlotId()),
+                "ID", String.valueOf(snapshotId));
         
         return true;
     }
@@ -124,7 +131,9 @@ public class SnapshotManager {
         ClaimSnapshot removed = snapshots.remove(snapshotId);
         if (removed != null) {
             setDirty(true);
-            plugin.getLogger().info("[Snapshots] Deleted snapshot " + snapshotId);
+            plugin.console().info("log_snapshots_deleted",
+                "[Snapshots] Deleted snapshot {ID}",
+                "ID", String.valueOf(snapshotId));
             return true;
         }
         return false;
@@ -172,7 +181,9 @@ public class SnapshotManager {
         
         if (!toRemove.isEmpty()) {
             setDirty(true);
-            plugin.getLogger().info("[Snapshots] Pruned " + toRemove.size() + " old snapshots");
+            plugin.console().info("log_snapshots_pruned",
+                "[Snapshots] Pruned {COUNT} old snapshots",
+                "COUNT", String.valueOf(toRemove.size()));
         }
     }
     
@@ -277,7 +288,9 @@ public class SnapshotManager {
             }
         }
         
-        plugin.getLogger().info("[Snapshots] Loaded " + snapshots.size() + " snapshots");
+        plugin.console().info("log_snapshots_loaded",
+                "[Snapshots] Loaded {COUNT} snapshots",
+                "COUNT", String.valueOf(snapshots.size()));
         setDirty(false);
     }
     

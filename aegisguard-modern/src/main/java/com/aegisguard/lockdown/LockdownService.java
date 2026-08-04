@@ -71,8 +71,11 @@ public class LockdownService {
         plot.setLockdown(true, actorId, actorName, expiresAt, resolvedMode);
         plugin.store().savePlot(plot);
         if (plugin.getDiscord() != null) {
-            plugin.getDiscord().sendEvent("lockdown", "Emergency lockdown activated",
-                    actorName + " activated lockdown for " + plotLabel(plot) + ".", 0xE53935);
+            plugin.getDiscord().sendEventKey("lockdown",
+                    "discord_event_lockdown_title", "Emergency lockdown activated",
+                    "discord_event_lockdown_description", "{PLAYER} activated lockdown for {PLOT}.",
+                    java.util.Map.of("PLAYER", actorName == null ? "" : actorName, "PLOT", plotLabel(plot)),
+                    0xE53935);
         }
 
         if (plugin.audit() != null) {

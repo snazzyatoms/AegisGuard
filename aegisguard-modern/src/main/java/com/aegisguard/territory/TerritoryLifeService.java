@@ -444,7 +444,11 @@ public final class TerritoryLifeService implements Listener {
             settlements.add(new PendingSettlement(playerId, amount, safe(reason), System.currentTimeMillis()));
             dirty = true;
         }
-        plugin.getLogger().warning("Queued pending economy settlement of " + amount + " for " + playerId + ": " + reason);
+        plugin.console().warning("log_settlement_queued",
+                "Queued pending economy settlement of {AMOUNT} for {PLAYER}: {REASON}",
+                "AMOUNT", String.valueOf(amount),
+                "PLAYER", String.valueOf(playerId),
+                "REASON", reason == null ? "" : reason);
     }
 
     /** Admin / scheduled retry of every pending settlement. */
@@ -503,6 +507,15 @@ public final class TerritoryLifeService implements Listener {
         }
     }
 
+    /**
+     * Records activity with a localizable details template. TYPE remains a program ID;
+     * details are encoded for viewer-language resolution at display time.
+     */
+    public void logKey(UUID plotId, UUID actorId, String type, String detailsKey,
+                       String englishFallback, Map<String, String> placeholders) {
+        log(plotId, actorId, type, ActivityText.encode(detailsKey, placeholders, englishFallback));
+    }
+
     public List<ActivityEntry> activity(UUID plotId, int limit) {
         synchronized (ioLock) {
             return activity.stream().filter(entry -> plotId == null || plotId.equals(entry.plotId()))
@@ -558,8 +571,11 @@ public final class TerritoryLifeService implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlotClaim(PlotClaimEvent event) {
-        log(event.getPlotId(), event.getPlayerId(), "PLOT_CLAIMED",
-                "Territory claimed in " + event.getWorldName() + ".");
+        String world = event.getWorldName() == null ? "" : event.getWorldName();
+        logKey(event.getPlotId(), event.getPlayerId(), "PLOT_CLAIMED",
+                "activity_detail_plot_claimed",
+                "Territory claimed in " + world + ".",
+                Map.of("WORLD", world));
     }
 
     @EventHandler
@@ -567,7 +583,8 @@ public final class TerritoryLifeService implements Listener {
         RentalContract contract = removeContract(event.getPlotId());
         refundDeposit(contract, "Deposit after plot deletion");
         clearOffer(event.getPlotId());
-        log(event.getPlotId(), null, "PLOT_DELETED", "Territory removed.");
+        logKey(event.getPlotId(), null, "PLOT_DELETED",
+                "activity_detail_plot_deleted", "Territory removed.", Map.of());
     }
 
     public DiscoveryMeta discovery(UUID plotId) {
@@ -599,7 +616,8 @@ public final class TerritoryLifeService implements Listener {
         meta.visits++;
         meta.lastVisit = System.currentTimeMillis();
         if (plugin.getConfig().getBoolean("territory_activity.log_visits", false)) {
-            log(plotId, visitorId, "VISIT", "Plot visited through discovery or travel.");
+            logKey(plotId, visitorId, "VISIT", "activity_detail_visit",
+                    "Plot visited through discovery or travel.", Map.of());
         }
         if (plugin.horizons() != null) {
             plugin.store().getAllPlots().stream()
@@ -653,7 +671,9 @@ public final class TerritoryLifeService implements Listener {
             }
             return true;
         } catch (IOException error) {
-            plugin.getLogger().severe("Failed to save territory-life.yml: " + error.getMessage());
+            plugin.console().severe("log_territory_life_save_failed",
+                    "Failed to save territory-life.yml: {ERROR}",
+                    "ERROR", error.getMessage() == null ? "" : error.getMessage());
             return false;
         }
     }

@@ -909,9 +909,15 @@ public class GuestPassGUI implements Listener {
                     "PLAYER", safeName(target), "PRESET", presetLabel(player, preset)));
             plugin.effects().playConfirm(player);
             if (plugin.getDiscord() != null) {
-                plugin.getDiscord().sendEvent("guest_pass", "Guest pass issued",
-                        player.getName() + " issued " + preset.fallbackLabel() + " access to "
-                                + safeName(target) + " for " + plotDisplayName(plot) + ".",
+                plugin.getDiscord().sendEventKey("guest_pass",
+                        "discord_event_guest_pass_title", "Guest pass issued",
+                        "discord_event_guest_pass_description",
+                        "{PLAYER} issued {PRESET} access to {TARGET} for {PLOT}.",
+                        java.util.Map.of(
+                                "PLAYER", player.getName(),
+                                "PRESET", preset.fallbackLabel(),
+                                "TARGET", safeName(target),
+                                "PLOT", plotDisplayName(plot)),
                         0x4CAF50);
             }
 

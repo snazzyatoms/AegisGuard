@@ -82,6 +82,39 @@ class LanguageParityTest {
     }
 
     @Test
+    void consoleDiscordAndActivityLogKeysExistInEveryPack() throws Exception {
+        Set<String> required = Set.of(
+                "log_enabled", "log_disabled", "log_reloaded", "log_codex_initialized",
+                "log_codex_init_failed", "log_banned_player_detected", "log_banned_plots_removed",
+                "log_discord_webhook_failed", "log_admin_audit", "log_admin_console_reload",
+                "log_settlement_queued", "log_territory_life_save_failed",
+                "log_snapshots_created", "log_snapshots_rolled_back", "log_snapshots_loaded",
+                "log_map_dynmap_hooked", "log_map_bluemap_hooked", "log_map_pl3xmap_hooked",
+                "log_plot_sale_failed", "log_plot_rental_failed", "log_convert_audit",
+                "discord_ban_wipe_title", "discord_ban_wipe_description",
+                "discord_ban_wipe_footer", "discord_claim_title_plot", "discord_claim_title_server",
+                "discord_claim_description", "discord_event_lockdown_title",
+                "discord_event_market_sale_title", "discord_event_rental_start_title",
+                "discord_event_rental_end_title", "discord_event_zone_rental_end_title",
+                "discord_event_guest_pass_title",
+                "activity_detail_plot_claimed", "activity_detail_plot_deleted",
+                "activity_detail_plot_sold", "activity_detail_rental_started",
+                "activity_detail_rental_expired", "activity_detail_rental_cancelled",
+                "activity_type_plot_claimed", "activity_type_plot_sold",
+                "activity_type_rental_started", "rental_contract_ended_early_notice",
+                "zone_rent_left_landlord_notice");
+
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            List<String> missing = required.stream()
+                    .filter(key -> !translated.containsKey(key) || isBlankValue(translated.get(key)))
+                    .sorted()
+                    .toList();
+            assertTrue(missing.isEmpty(), () -> language + " missing console/discord/activity keys: " + missing);
+        }
+    }
+
+    @Test
     void footerNavigationKeysStayNonBlankAcrossAllPacks() throws Exception {
         Set<String> footerKeys = Set.of(
                 "button_back", "button_exit", "button_prev", "button_next", "button_page",
@@ -339,6 +372,23 @@ class LanguageParityTest {
                 "rental_plot_rented_owner", "visit_server_warp_default",
                 "visit_favorite_add", "visit_favorite_remove", "group_plots_join_name",
                 "admin_rentals_cancelled", "admin_merge_success", "admin_blocks_updated"));
+
+        // Console / Discord / territory-activity localization pass.
+        keys.addAll(List.of(
+                "log_enabled", "log_disabled", "log_reloaded", "log_codex_initialized",
+                "log_banned_player_detected", "log_banned_plots_removed",
+                "log_discord_webhook_failed", "log_admin_audit", "log_admin_console_reload",
+                "log_settlement_queued", "log_snapshots_created", "log_map_dynmap_hooked",
+                "log_plot_sale_failed", "log_convert_audit",
+                "discord_ban_wipe_title", "discord_ban_wipe_description",
+                "discord_claim_title_plot", "discord_claim_title_server",
+                "discord_event_lockdown_title", "discord_event_market_sale_title",
+                "discord_event_rental_start_title", "discord_event_rental_end_title",
+                "discord_event_guest_pass_title",
+                "activity_detail_plot_claimed", "activity_detail_plot_sold",
+                "activity_detail_rental_started", "activity_detail_rental_expired",
+                "activity_type_plot_claimed", "activity_type_plot_sold",
+                "rental_contract_ended_early_notice", "zone_rent_left_landlord_notice"));
 
         // Action-tag / concatenation fragments are not language keys.
         keys.remove("back_main");

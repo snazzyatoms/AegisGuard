@@ -329,8 +329,10 @@ public class RealmProfileGUI {
             int index = categories.indexOf(current);
             String next = categories.get((index + 1) % categories.size());
             plugin.territoryLife().setCategory(plot.getPlotId(), next);
-            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_CATEGORY",
-                    "Discovery category changed to " + next + ".");
+            plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_CATEGORY",
+                    "activity_detail_discovery_category",
+                    "Discovery category changed to " + next + ".",
+                    java.util.Map.of("CATEGORY", next == null ? "" : next));
             plugin.effects().playMenuFlip(player);
             openMenu(player, plot);
             return;
@@ -340,8 +342,11 @@ public class RealmProfileGUI {
             if (!canManage) { plugin.effects().playError(player); return; }
             boolean visible = plugin.territoryLife().discovery(plot.getPlotId()).visible();
             plugin.territoryLife().setVisible(plot.getPlotId(), !visible);
-            plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_VISIBILITY",
-                    "Discovery visibility changed to " + (!visible ? "public" : "private") + ".");
+            String visibility = !visible ? "public" : "private";
+            plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "DISCOVERY_VISIBILITY",
+                    "activity_detail_discovery_visibility",
+                    "Discovery visibility changed to " + visibility + ".",
+                    java.util.Map.of("VISIBILITY", visibility));
             plugin.effects().playMenuFlip(player);
             openMenu(player, plot);
             return;
@@ -375,7 +380,8 @@ public class RealmProfileGUI {
         plot.removeNotice(notice.getId());
         plugin.store().savePlot(plot);
         plugin.store().setDirty(true);
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "NOTICE_REMOVED", "Removed a noticeboard notice.");
+        plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "NOTICE_REMOVED",
+                "activity_detail_notice_removed", "Removed a noticeboard notice.", java.util.Map.of());
 
         plugin.msg().send(player, "notice_removed");
         plugin.effects().playConfirm(player);

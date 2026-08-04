@@ -504,12 +504,12 @@ public class ConvertToServerGUI {
         plugin.claimBlocks().invalidateOwnerCache(previousOwner);
         if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
         plugin.territoryLife().clearOffer(plot.getPlotId());
-        plugin.territoryLife().log(plot.getPlotId(), actor.getUniqueId(), "SERVER_ZONE_CONVERT",
-                "Player territory converted into a server zone (" + resolved.name() + ").");
+        plugin.territoryLife().logKey(plot.getPlotId(), actor.getUniqueId(), "SERVER_ZONE_CONVERT",
+                "activity_detail_server_zone_convert",
+                "Player territory converted into a server zone (" + resolved.name() + ").",
+                java.util.Map.of("TARGET", resolved.name()));
 
-        plugin.getLogger().info("[Admin Audit] " + actor.getName() + " converted plot "
-                + plot.getPlotId() + " from owner " + previousOwner + " into a server zone ("
-                + resolved.name() + ").");
+        plugin.console().info("log_convert_audit", "[Admin Audit] {PLAYER} converted plot {PLOT} into a server zone.", "PLAYER", actor.getName(), "PLOT", String.valueOf(plot.getPlotId()));
         if (plugin.notifications() != null) {
             plugin.notifications().notifyAdmins(
                     "aegis.admin",

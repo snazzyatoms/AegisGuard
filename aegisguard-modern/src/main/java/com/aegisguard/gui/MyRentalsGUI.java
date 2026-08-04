@@ -275,8 +275,10 @@ public class MyRentalsGUI {
         plugin.territoryLife().renew(plot.getPlotId());
         plot.setRentEndTime(contract.expiresAt());
         plugin.store().savePlotSync(plot);
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "RENTAL_RENEWED",
-                "Contract renewed for " + contract.termDays() + " day(s).");
+        plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "RENTAL_RENEWED",
+                "activity_detail_rental_renewed",
+                "Contract renewed for " + contract.termDays() + " day(s).",
+                java.util.Map.of("DAYS", Integer.toString(contract.termDays())));
         plugin.territoryLife().queueNoticeKey(contract.ownerId(), "rental_contract_renewed_owner",
                 "&aA rental contract was renewed for &e{DAYS} day(s)&a.",
                 java.util.Map.of("DAYS", Integer.toString(contract.termDays())));
@@ -314,13 +316,22 @@ public class MyRentalsGUI {
         plugin.territoryLife().refundDeposit(contract, "Deposit after early rental cancellation");
         plot.clearRenter();
         plugin.store().savePlotSync(plot);
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "RENTAL_CANCELLED",
-                "Contract ended early by " + (owner ? "owner" : "renter") + ".");
-        plugin.territoryLife().queueNotice(owner ? contract.renterId() : contract.ownerId(),
-                "&eThe rental contract for plot &f" + plot.getPlotId() + " &ewas ended early.");
+        String actorRole = owner ? "owner" : "renter";
+        plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "RENTAL_CANCELLED",
+                "activity_detail_rental_cancelled",
+                "Contract ended early by " + actorRole + ".",
+                java.util.Map.of("ACTOR_ROLE", actorRole));
+        plugin.territoryLife().queueNoticeKey(owner ? contract.renterId() : contract.ownerId(),
+                "rental_contract_ended_early_notice",
+                "&eThe rental contract for plot &f{PLOT} &ewas ended early.",
+                java.util.Map.of("PLOT", String.valueOf(plot.getPlotId())));
         if (plugin.getDiscord() != null) {
-            plugin.getDiscord().sendEvent("rental_end", "Plot rental ended",
-                    player.getName() + " ended the rental for " + plotDisplayName(plot), 0xE67E22);
+            plugin.getDiscord().sendEventKey("rental_end",
+                    "discord_event_rental_end_title", "Plot rental ended",
+                    "discord_event_rental_end_description",
+                    "{PLAYER} ended the rental for {PLOT}",
+                    java.util.Map.of("PLAYER", player.getName(), "PLOT", plotDisplayName(plot)),
+                    0xE67E22);
         }
         plugin.effects().playConfirm(player);
         send(player, "rental_contract_cancelled",
@@ -426,17 +437,24 @@ public class MyRentalsGUI {
         }
         plugin.territoryLife().clearZoneDeposit(plot.getPlotId(), zone.getName());
         plugin.store().savePlotSync(plot);
-        plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "ZONE_RENT_LEFT",
-                "Zone " + safeZoneName(zone) + " left early by renter.");
+        plugin.territoryLife().logKey(plot.getPlotId(), player.getUniqueId(), "ZONE_RENT_LEFT",
+                "activity_detail_zone_rent_left",
+                "Zone " + safeZoneName(zone) + " left early by renter.",
+                java.util.Map.of("ZONE", safeZoneName(zone)));
         if (landlord != null) {
-            plugin.territoryLife().queueNotice(landlord,
-                    "&eTenant &f" + player.getName() + " &eleft zone &f" + safeZoneName(zone) + "&e early.");
+            plugin.territoryLife().queueNoticeKey(landlord, "zone_rent_left_landlord_notice",
+                    "&eTenant &f{PLAYER} &eleft zone &f{ZONE}&e early.",
+                    java.util.Map.of("PLAYER", player.getName(), "ZONE", safeZoneName(zone)));
         }
         if (plugin.getDiscord() != null) {
-            plugin.getDiscord().sendEvent("rental_end",
-                    "Zone rental ended",
-                    player.getName() + " left zone " + safeZoneName(zone)
-                            + " on " + plotDisplayName(plot),
+            plugin.getDiscord().sendEventKey("rental_end",
+                    "discord_event_zone_rental_end_title", "Zone rental ended",
+                    "discord_event_zone_rental_end_description",
+                    "{PLAYER} left zone {ZONE} on {PLOT}",
+                    java.util.Map.of(
+                            "PLAYER", player.getName(),
+                            "ZONE", safeZoneName(zone),
+                            "PLOT", plotDisplayName(plot)),
                     0xE67E22);
         }
         plugin.effects().playConfirm(player);

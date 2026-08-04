@@ -128,4 +128,34 @@ class InterfaceQualityContractTest {
         assertTrue(visit.contains("visit_favorite_add"));
         assertFalse(visit.contains("\"Category: \" +"));
     }
+
+    @Test
+    void consoleAndDiscordOperationalTextUsesLanguageKeys() throws Exception {
+        String console = Files.readString(ROOT.resolve("util/ConsoleMessages.java"));
+        assertTrue(console.contains("localization.default_language")
+                || console.contains("plain("));
+        assertTrue(console.contains("ChatColor.stripColor"));
+
+        String aegis = Files.readString(ROOT.resolve("AegisGuard.java"));
+        assertTrue(aegis.contains("console().info(\"log_enabled\""));
+        assertTrue(aegis.contains("console().info(\"log_disabled\""));
+        assertFalse(aegis.contains("getLogger().info(\"AegisGuard enabled.\""));
+
+        String banned = Files.readString(ROOT.resolve("listeners/BannedPlayerListener.java"));
+        assertTrue(banned.contains("log_banned_player_detected"));
+        assertTrue(banned.contains("discord_ban_wipe_title"));
+        assertFalse(banned.contains("setTitle(\"🚫 Banned Player Wipe\")"));
+
+        String discord = Files.readString(ROOT.resolve("hooks/DiscordWebhook.java"));
+        assertTrue(discord.contains("log_discord_webhook_failed"));
+        assertTrue(discord.contains("sendEventKey"));
+
+        String market = Files.readString(ROOT.resolve("gui/PlotMarketGUI.java"));
+        assertTrue(market.contains("discord_event_market_sale_title"));
+        assertTrue(market.contains("activity_detail_plot_sold"));
+
+        String activity = Files.readString(ROOT.resolve("territory/ActivityText.java"));
+        assertTrue(activity.contains("@lang:"));
+        assertTrue(activity.contains("resolveTypeLabel"));
+    }
 }

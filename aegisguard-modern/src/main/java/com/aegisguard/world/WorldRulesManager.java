@@ -48,7 +48,7 @@ public class WorldRulesManager {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("claims.per_world");
         if (section == null) {
             rules = Map.of();
-            plugin.getLogger().info("[AegisGuard] No per-world configuration found. Using defaults.");
+            plugin.console().info("log_world_rules_defaults", "[AegisGuard] No per-world configuration found. Using defaults.");
             return;
         }
 
@@ -77,7 +77,7 @@ public class WorldRulesManager {
         }
 
         rules = Map.copyOf(loadedRules);
-        plugin.getLogger().info("[AegisGuard] Loaded rules for " + rules.size() + " worlds.");
+        plugin.console().info("log_world_rules_loaded", "[AegisGuard] Loaded rules for {COUNT} worlds.", "COUNT", String.valueOf(rules.size()));
     }
 
     /**

@@ -74,12 +74,12 @@ public class NotificationManager {
                         settingsCache.put(playerUUID, settings);
                     }
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid UUID in notifications.yml: " + uuidString);
+                    plugin.console().warning("log_notifications_invalid_uuid", "Invalid UUID in notifications.yml: {UUID}", "UUID", uuidString);
                 }
             }
         }
 
-        plugin.getLogger().info("Loaded " + settingsCache.size() + " notification preferences");
+        plugin.console().info("log_notifications_loaded", "Loaded {COUNT} notification preferences", "COUNT", String.valueOf(settingsCache.size()));
         dirty = false;
     }
 
@@ -114,7 +114,7 @@ public class NotificationManager {
                     settingsCache.put(playerUUID, settings);
                     migrated++;
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid UUID in player_notifications.players: " + uuidString);
+                    plugin.console().warning("log_notifications_invalid_uuid", "Invalid UUID in player_notifications.players: {UUID}", "UUID", uuidString);
                 }
             }
         }
@@ -143,13 +143,13 @@ public class NotificationManager {
                     settingsCache.put(playerUUID, settings);
                     migrated++;
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid UUID in legacy notifications: " + uuidString);
+                    plugin.console().warning("log_notifications_invalid_uuid", "Invalid UUID in legacy notifications: {UUID}", "UUID", uuidString);
                 }
             }
         }
 
         if (migrated > 0) {
-            plugin.getLogger().info("Migrated " + migrated + " legacy notification settings");
+            plugin.console().info("log_notifications_migrated", "Migrated {COUNT} legacy notification settings", "COUNT", String.valueOf(migrated));
             saveData();
         }
     }

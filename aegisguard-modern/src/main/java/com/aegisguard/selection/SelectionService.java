@@ -467,11 +467,20 @@ public class SelectionService implements Listener {
         if (plugin.getDiscord() != null) {
             try {
                 DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
-                embed.setTitle(isServerClaim ? "Admin Zone Created" : "Plot Claimed");
-                embed.setDescription(p.getName() + " claimed a plot.");
-                embed.addField("World", ctx.worldName, true);
-                embed.addField("Area", String.valueOf(ctx.area), true);
-                embed.addField("Owner", isServerClaim ? "Server" : p.getName(), true);
+                embed.setTitle(plugin.console().plain(
+                        isServerClaim ? "discord_claim_title_server" : "discord_claim_title_plot",
+                        isServerClaim ? "Admin Zone Created" : "Plot Claimed"));
+                embed.setDescription(plugin.console().plain(
+                        "discord_claim_description",
+                        "{PLAYER} claimed a plot.",
+                        java.util.Map.of("PLAYER", p.getName())));
+                embed.addField(plugin.console().plain("discord_claim_field_world", "World"), ctx.worldName, true);
+                embed.addField(plugin.console().plain("discord_claim_field_area", "Area"), String.valueOf(ctx.area), true);
+                embed.addField(plugin.console().plain("discord_claim_field_owner", "Owner"),
+                        isServerClaim
+                                ? plugin.console().plain("discord_claim_owner_server", "Server")
+                                : p.getName(),
+                        true);
                 embed.setColor(isServerClaim ? Color.CYAN : Color.GREEN);
 
                 plugin.getDiscord().send(embed);

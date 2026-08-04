@@ -3305,3 +3305,13 @@ button_claimblocks_exchange_disabled: '&8ClaimBlocks Échange désactivé'
 codex_gui_header_lore:
 - '&7Parcourir les rubriques d''aide et actualiser'
 - '&7votre mémoire quand vous en avez besoin.'
+# --- Hardcoded-string localization pass (french_fr)
+visit_server_warp_default: 'Warp serveur'
+visit_discover_category_filter: 'Catégorie : {CATEGORY}'
+visit_plot_likes_line: '&7J''aime : &d{LIKES} &8| &7Visites : &b{VISITS}'
+visit_featured_line: '&6★ Territoire mis en avant'
+visit_favorite_add: '&eClic droit pour ajouter aux favoris'
+visit_favorite_remove: '&eClic droit pour retirer des favoris'
+visit_unknown_label: 'Inconnu'
+group_plots_join_name: '&aRejoindre {GROUP}'
+group_plots_none_linked: 'Aucun'

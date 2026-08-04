@@ -3407,3 +3407,13 @@ view_instant_approvals_lore:
 - ' '
 - '&eClic para abrir.'
 button_admin_reload: '&eRecargar todas las configuraciones'
+# --- Hardcoded-string localization pass (spanish_mx)
+visit_server_warp_default: 'Warp del servidor'
+visit_discover_category_filter: 'Categoría: {CATEGORY}'
+visit_plot_likes_line: '&7Me gusta: &d{LIKES} &8| &7Visitas: &b{VISITS}'
+visit_featured_line: '&6★ Territorio destacado'
+visit_favorite_add: '&eClic derecho para favorito'
+visit_favorite_remove: '&eClic derecho para quitar favorito'
+visit_unknown_label: 'Desconocido'
+group_plots_join_name: '&aUnirse a {GROUP}'
+group_plots_none_linked: 'Ninguno'

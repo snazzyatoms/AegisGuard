@@ -459,16 +459,27 @@ public class NotificationManager {
 
     public void notifyAdmins(String permission, String message) {
         if (message == null || message.isBlank()) return;
+        notifyAdmins(permission, null, message, Map.of());
+    }
+
+    public void notifyAdmins(String permission, String messageKey, String fallback, Map<String, String> placeholders) {
+        if ((messageKey == null || messageKey.isBlank())
+                && (fallback == null || fallback.isBlank())) {
+            return;
+        }
 
         String requiredPermission = (permission == null || permission.isBlank()) ? "aegis.admin" : permission;
-        String colored = ChatColor.translateAlternateColorCodes('&', message);
 
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online == null) continue;
             if (!online.hasPermission(requiredPermission) && !plugin.isAdmin(online)) continue;
             if (!hasAdminUpdatesEnabled(online.getUniqueId())) continue;
 
-            dispatch(online, ChatColor.GOLD + "Admin Update", colored, true);
+            String body = messageKey == null || messageKey.isBlank()
+                    ? applyPlaceholders(fallback, placeholders)
+                    : translate(online, messageKey, fallback == null ? "" : fallback, placeholders);
+            String title = translate(online, "notify_admin_update_title", "&6Admin Update", Map.of());
+            dispatch(online, title, body, false);
         }
     }
 

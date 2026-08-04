@@ -447,8 +447,9 @@ public class PlotMarketGUI {
                 plugin.getDiscord().sendEvent("rental_start", "Plot rental started",
                         renter.getName() + " rented " + plot.getPlotId() + " for " + days + " day(s).", 0x3498DB);
             }
-            plugin.territoryLife().queueNotice(plot.getOwner(), "&aYour plot was rented by &f" + renter.getName()
-                    + "&a for &e" + days + " day(s)&a.");
+            plugin.territoryLife().queueNoticeKey(plot.getOwner(), "rental_plot_rented_owner",
+                    "&aYour plot was rented by &f{PLAYER}&a for &e{DAYS} day(s)&a.",
+                    java.util.Map.of("PLAYER", renter.getName(), "DAYS", String.valueOf(days)));
 
             plugin.msg().send(renter, "market-rent-success", Map.of(
                     "PRICE", plugin.eco().format(price, CurrencyType.VAULT),

@@ -511,9 +511,11 @@ public class ConvertToServerGUI {
                 + plot.getPlotId() + " from owner " + previousOwner + " into a server zone ("
                 + resolved.name() + ").");
         if (plugin.notifications() != null) {
-            plugin.notifications().notifyAdmins("aegis.admin",
-                    "&6[Admin] &e" + actor.getName() + " &7converted plot "
-                            + plot.getPlotId() + " into a server zone.");
+            plugin.notifications().notifyAdmins(
+                    "aegis.admin",
+                    "admin_notify_convert",
+                    "&6[Admin] &e{PLAYER} &7converted plot {PLOT} into a server zone.",
+                    java.util.Map.of("PLAYER", actor.getName(), "PLOT", String.valueOf(plot.getPlotId())));
         }
 
         send(actor, "convert_success",

@@ -3304,3 +3304,13 @@ button_claimblocks_exchange_disabled: '&8ClaimBlocks Scambio disabilitato'
 codex_gui_header_lore:
 - '&7Sfoglia gli argomenti della guida e aggiorna'
 - '&7la tua memoria ogni volta che ne hai bisogno.'
+# --- Hardcoded-string localization pass (italian_it)
+visit_server_warp_default: 'Warp del server'
+visit_discover_category_filter: 'Categoria: {CATEGORY}'
+visit_plot_likes_line: '&7Mi piace: &d{LIKES} &8| &7Visite: &b{VISITS}'
+visit_featured_line: '&6★ Territorio in evidenza'
+visit_favorite_add: '&eClick destro per aggiungere ai preferiti'
+visit_favorite_remove: '&eClick destro per rimuovere dai preferiti'
+visit_unknown_label: 'Sconosciuto'
+group_plots_join_name: '&aUnisciti a {GROUP}'
+group_plots_none_linked: 'Nessuno'

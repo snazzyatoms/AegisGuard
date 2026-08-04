@@ -1024,26 +1024,30 @@ public class ExpansionRequestManager {
         if (!notifyAdminsOnAuto()) return;
 
         String requesterName = requester.getName() == null ? "Unknown" : requester.getName();
-        String message = plugin.gui().tr(
-                requester,
-                "expansion_auto_admin_notice",
-                "&6[Admin] &e{PLAYER}&7 had an expansion auto-approved in &f{WORLD}&7. &8(&7{CUR} -> {REQ}&8)",
-                Map.of(
-                        "PLAYER", requesterName,
-                        "WORLD", req.getWorldName() == null ? "" : req.getWorldName(),
-                        "CUR", String.valueOf(req.getCurrentRadius()),
-                        "REQ", String.valueOf(req.getRequestedRadius())
-                )
+        Map<String, String> placeholders = Map.of(
+                "PLAYER", requesterName,
+                "WORLD", req.getWorldName() == null ? "" : req.getWorldName(),
+                "CUR", String.valueOf(req.getCurrentRadius()),
+                "REQ", String.valueOf(req.getRequestedRadius())
         );
 
         if (plugin.getNotificationManager() != null) {
-            plugin.getNotificationManager().notifyAdmins(notifyPermission(), message);
+            plugin.getNotificationManager().notifyAdmins(
+                    notifyPermission(),
+                    "expansion_auto_admin_notice",
+                    "&6[Admin] &e{PLAYER}&7 had an expansion auto-approved in &f{WORLD}&7. &8(&7{CUR} -> {REQ}&8)",
+                    placeholders);
             return;
         }
 
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online == null) continue;
             if (!online.hasPermission(notifyPermission()) && !plugin.isAdmin(online)) continue;
+            String message = plugin.gui().tr(
+                    online,
+                    "expansion_auto_admin_notice",
+                    "&6[Admin] &e{PLAYER}&7 had an expansion auto-approved in &f{WORLD}&7. &8(&7{CUR} -> {REQ}&8)",
+                    placeholders);
             online.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', message));
         }
     }

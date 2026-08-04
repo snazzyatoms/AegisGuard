@@ -44,8 +44,11 @@ public class GroupPlotsGUI {
                         trList(player, "group_plots_member_lore", List.of("&7Group member."))));
             }
             Plot linked = group.getLinkedPlotId() == null ? null : findPlot(group.getLinkedPlotId());
+            String linkedLabel = linked == null
+                    ? tr(player, "group_plots_none_linked", "None")
+                    : plotName(linked);
             inv.setItem(40, GUIManager.createItem(Material.GRASS_BLOCK, tr(player, "group_plots_linked_name", "&aLinked Plot"),
-                    trList(player, "group_plots_linked_lore", List.of("&7" + (linked == null ? "None" : plotName(linked))))));
+                    trList(player, "group_plots_linked_lore", List.of("&7" + linkedLabel))));
             if (!group.getLeader().equals(player.getUniqueId())) inv.setItem(45, GUIManager.createItem(Material.OAK_DOOR,
                     tr(player, "group_plots_leave_name", "&cLeave Group"), trList(player, "group_plots_leave_lore", List.of("&7Leave this group."))));
         }
@@ -53,7 +56,8 @@ public class GroupPlotsGUI {
         for (UUID groupId : invites) {
             if (slot >= 45) break;
             PlotGroup invite = plugin.groups().getGroup(groupId);
-            if (invite != null) inv.setItem(slot++, GUIManager.createItem(Material.LIME_DYE, "&aJoin " + invite.getName(),
+            if (invite != null) inv.setItem(slot++, GUIManager.createItem(Material.LIME_DYE,
+                    tr(player, "group_plots_join_name", "&aJoin {GROUP}", java.util.Map.of("GROUP", invite.getName())),
                     trList(player, "group_plots_invite_lore", List.of("&eClick to accept invitation."))));
         }
         inv.setItem(48, GUIManager.createItem(Material.ARROW, tr(player, "button_back", "&fBack"), trList(player, "back_lore", List.of("&7Return to menu."))));
@@ -87,5 +91,8 @@ public class GroupPlotsGUI {
     private Plot findPlot(UUID id) { return plugin.store().getAllPlots().stream().filter(p -> p != null && id.equals(p.getPlotId())).findFirst().orElse(null); }
     private String plotName(Plot p) { return p.getPlotName() == null ? "Plot" : p.getPlotName(); }
     private String tr(Player p, String k, String f) { return plugin.gui().tr(p, k, f); }
+    private String tr(Player p, String k, String f, java.util.Map<String, String> ph) {
+        return plugin.gui().tr(p, k, f, ph);
+    }
     private List<String> trList(Player p, String k, List<String> f) { return plugin.gui().trList(p, k, f); }
 }

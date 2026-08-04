@@ -1008,9 +1008,12 @@ public class AegisGuard extends JavaPlugin {
                 long reminderWindow = Math.max(1L, getConfig().getLong("full_plot_renting.reminder_hours", 24L)) * 3_600_000L;
                 if (contract != null && !contract.reminderSent() && contract.expiresAt() > now
                         && contract.expiresAt() - now <= reminderWindow) {
-                    territoryLifeService.queueNotice(contract.renterId(), "&eYour rental expires in less than "
-                            + Math.max(1L, (contract.expiresAt() - now) / 3_600_000L) + " hour(s). Use &b/ag rental renew&e.");
-                    territoryLifeService.queueNotice(contract.ownerId(), "&eA plot rental expires soon. Plot: &f" + plot.getPlotId());
+                    territoryLifeService.queueNoticeKey(contract.renterId(), "rental_expire_soon_renter",
+                            "&eYour rental expires in less than {HOURS} hour(s). Use &b/ag rental renew&e.",
+                            java.util.Map.of("HOURS", String.valueOf(Math.max(1L, (contract.expiresAt() - now) / 3_600_000L))));
+                    territoryLifeService.queueNoticeKey(contract.ownerId(), "rental_expire_soon_owner",
+                            "&eA plot rental expires soon. Plot: &f{PLOT}",
+                            java.util.Map.of("PLOT", String.valueOf(plot.getPlotId())));
                     territoryLifeService.markReminderSent(plot.getPlotId());
                 }
                 if (plot.getRentEndTime() > now) continue;

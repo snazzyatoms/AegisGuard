@@ -3301,3 +3301,13 @@ button_claimblocks_exchange_disabled: '&8ClaimBlocks Exchange Disabled'
 codex_gui_header_lore:
 - '&7Browse help topics and refresh'
 - '&7your memory whenever you need.'
+# --- Hardcoded-string localization pass (GUI labels) ---
+visit_server_warp_default: 'Server Warp'
+visit_discover_category_filter: 'Category: {CATEGORY}'
+visit_plot_likes_line: '&7Likes: &d{LIKES} &8| &7Visits: &b{VISITS}'
+visit_featured_line: '&6★ Featured Territory'
+visit_favorite_add: '&eRight-click to favorite'
+visit_favorite_remove: '&eRight-click to remove favorite'
+visit_unknown_label: 'Unknown'
+group_plots_join_name: '&aJoin {GROUP}'
+group_plots_none_linked: 'None'

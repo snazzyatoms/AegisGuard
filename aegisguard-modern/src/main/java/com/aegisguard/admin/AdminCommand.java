@@ -66,7 +66,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (!(sender instanceof Player player)) {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 plugin.reloadAegisGuard(true);
-                sender.sendMessage(ChatColor.GREEN + "AegisGuard reload complete.");
+                sendLocalized(sender, "admin_console_reload_complete", "&aAegisGuard reload complete.");
                 plugin.getLogger().info("AegisGuard was reloaded from the server console.");
                 return true;
             }
@@ -74,7 +74,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 StaffHealthCheck.report(plugin, sender);
                 return true;
             }
-            sender.sendMessage(ChatColor.RED + "Players only.");
+            sendLocalized(sender, "players_only", "&cError: This command can only be used by players.");
             return true;
         }
 
@@ -196,7 +196,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (plugin.getNotificationManager() != null) {
             plugin.getNotificationManager().notifyAdmins(
                     "aegis.admin",
-                    "&6[Admin] &e" + player.getName() + " &7reloaded AegisGuard."
+                    "admin_notify_reloaded",
+                    "&6[Admin] &e{PLAYER} &7reloaded AegisGuard.",
+                    Map.of("PLAYER", player.getName())
             );
         }
         plugin.effects().playConfirm(player);
@@ -209,12 +211,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         boolean enabled = plugin.toggleBypass(player);
-        player.sendMessage(ChatColor.GOLD + "Bypass Mode: " + (enabled ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED"));
+        String state = enabled
+                ? plugin.gui().tr(player, "toggle_on", "&aON")
+                : plugin.gui().tr(player, "toggle_off", "&cOFF");
+        sendLocalized(player, "admin_bypass_mode", "&6Bypass Mode: {STATE}", Map.of("STATE", state));
         if (plugin.getNotificationManager() != null) {
             plugin.getNotificationManager().notifyAdmins(
                     "aegis.admin",
-                    "&6[Admin] &e" + player.getName() + " &7set bypass mode to "
-                            + (enabled ? "&aENABLED" : "&cDISABLED") + "&7."
+                    "admin_notify_bypass",
+                    "&6[Admin] &e{PLAYER} &7set bypass mode to {STATE}&7.",
+                    Map.of("PLAYER", player.getName(), "STATE", state)
             );
         }
         if (plugin.audit() != null) {
@@ -230,7 +236,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         if (plugin.gui().audit() == null) {
-            player.sendMessage(ChatColor.RED + "The audit ledger is unavailable.");
+            sendLocalized(player, "admin_audit_unavailable", "&cThe audit ledger is unavailable.");
             return;
         }
         plugin.gui().audit().open(player);
@@ -244,14 +250,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1 || (args.length >= 2 && args[1].equalsIgnoreCase("server"))) {
             if (playerHasClaimWand(player)) {
-                player.sendMessage(ChatColor.YELLOW + "You already have an Aegis claim wand or Sentinel's Scepter.");
+                sendLocalized(player, "admin_wand_already_owned",
+                        "&eYou already have an Aegis claim wand or Sentinel's Scepter.");
                 return;
             }
 
             player.getInventory().addItem(createServerWand(player));
             plugin.selection().setPlayerWand(player, "server_claim_wand");
-            player.sendMessage(ChatColor.GREEN + "You received the Sentinel's Scepter.");
-            player.sendMessage(ChatColor.GRAY + "Select two corners, then use " + ChatColor.AQUA + "/agadmin claim" + ChatColor.GRAY + ".");
+            sendLocalized(player, "admin_wand_received", "&aYou received the Sentinel's Scepter.");
+            sendLocalized(player, "admin_wand_usage_hint",
+                    "&7Select two corners, then use &b/agadmin claim&7.");
             return;
         }
 
@@ -259,12 +267,12 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             if (plugin.gui().migration() != null) {
                 plugin.gui().migration().giveMigrationWand(player);
             } else {
-                player.sendMessage(ChatColor.RED + "Migration wand is unavailable.");
+                sendLocalized(player, "admin_migration_wand_unavailable", "&cMigration wand is unavailable.");
             }
             return;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Usage: /aegisadmin wand <server|migration>");
+        sendLocalized(player, "admin_wand_usage", "&eUsage: /aegisadmin wand <server|migration>");
     }
 
     private void handleServerClaim(Player player) {
@@ -274,8 +282,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
 
         if (!plugin.selection().hasSelection(player)) {
-            player.sendMessage(ChatColor.RED + "You need to select two corners first with the Sentinel's Scepter.");
-            player.sendMessage(ChatColor.GRAY + "Use " + ChatColor.AQUA + "/agadmin wand server" + ChatColor.GRAY + " to get it.");
+            sendLocalized(player, "admin_claim_need_selection",
+                    "&cYou need to select two corners first with the Sentinel's Scepter.");
+            sendLocalized(player, "admin_claim_get_wand_hint",
+                    "&7Use &b/agadmin wand server &7to get it.");
             return;
         }
 
@@ -286,7 +296,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private void handleServerManage(Player player) {
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null || !plot.isServerZone()) {
-            player.sendMessage(ChatColor.RED + "Stand inside the server zone you want to manage.");
+            sendLocalized(player, "admin_manage_need_server_zone",
+                    "&cStand inside the server zone you want to manage.");
             return;
         }
         if (!plot.canManage(player, plugin)) {
@@ -307,12 +318,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         List<String> lore = plugin.cfg().getAdminWandLore();
         if (lore == null || lore.isEmpty()) {
             lore = List.of(
-                    ChatColor.GRAY + "A tool of absolute authority.",
+                    ChatColor.translateAlternateColorCodes('&',
+                            plugin.gui().tr(player, "admin_wand_lore_authority", "&7A tool of absolute authority.")),
                     " ",
-                    ChatColor.YELLOW + "Right-Click: " + ChatColor.WHITE + "Select Pos 1",
-                    ChatColor.YELLOW + "Left-Click: " + ChatColor.WHITE + "Select Pos 2",
+                    ChatColor.translateAlternateColorCodes('&',
+                            plugin.gui().tr(player, "admin_wand_lore_pos1", "&eRight-Click: &fSelect Pos 1")),
+                    ChatColor.translateAlternateColorCodes('&',
+                            plugin.gui().tr(player, "admin_wand_lore_pos2", "&eLeft-Click: &fSelect Pos 2")),
                     " ",
-                    ChatColor.RED + "Creates server zones directly."
+                    ChatColor.translateAlternateColorCodes('&',
+                            plugin.gui().tr(player, "admin_wand_lore_creates", "&cCreates server zones directly."))
             );
         }
         lore = new ArrayList<>(lore);
@@ -386,24 +401,28 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (action.equals("list")) {
             List<SourcePlugin> available = migrationManager.getAvailableSources();
             if (available.isEmpty()) {
-                player.sendMessage(ChatColor.YELLOW + "No supported migration sources were detected.");
+                sendLocalized(player, "admin_migrate_no_sources",
+                        "&eNo supported migration sources were detected.");
                 return;
             }
-            player.sendMessage(ChatColor.GOLD + "Detected migration sources:");
+            sendLocalized(player, "admin_migrate_sources_header", "&6Detected migration sources:");
             for (SourcePlugin source : available) {
-                player.sendMessage(ChatColor.GRAY + " - " + source.getDisplayName());
+                sendLocalized(player, "admin_migrate_source_line", "&7 - {SOURCE}",
+                        Map.of("SOURCE", source.getDisplayName()));
             }
             return;
         }
 
         if (args.length < 3) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin migrate <preview|import> <source>");
+            sendLocalized(player, "admin_migrate_usage",
+                    "&eUsage: /agadmin migrate <preview|import> <source>");
             return;
         }
 
         SourcePlugin source = SourcePlugin.fromString(args[2]);
         if (source == null) {
-            player.sendMessage(ChatColor.RED + "Unknown source. Use griefprevention/gp, griefdefender/gd, or lands.");
+            sendLocalized(player, "admin_migrate_unknown_source",
+                    "&cUnknown source. Use griefprevention/gp, griefdefender/gd, or lands.");
             return;
         }
 
@@ -412,7 +431,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             migrationManager.previewMigration(player, source, options)
                     .whenComplete((result, error) -> plugin.runMain(player, () -> {
                         if (error != null) {
-                            player.sendMessage(ChatColor.RED + "Migration preview failed: " + safeMessage(error));
+                            sendLocalized(player, "admin_migrate_preview_failed",
+                                    "&cMigration preview failed: {ERROR}",
+                                    Map.of("ERROR", safeMessage(error)));
                         } else if (plugin.gui().migration() != null) {
                             plugin.gui().migration().openPreview(player, source, result);
                         }
@@ -424,7 +445,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             migrationManager.startMigration(player, source, options)
                     .whenComplete((result, error) -> plugin.runMain(player, () -> {
                         if (error != null) {
-                            player.sendMessage(ChatColor.RED + "Migration failed: " + safeMessage(error));
+                            sendLocalized(player, "admin_migrate_failed",
+                                    "&cMigration failed: {ERROR}",
+                                    Map.of("ERROR", safeMessage(error)));
                         } else {
                             if (plugin.gui().migration() != null) {
                                 plugin.gui().migration().openPreview(player, source, result);
@@ -438,7 +461,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Unknown migrate action. Use list, preview, import, or help.");
+        sendLocalized(player, "admin_migrate_unknown_action",
+                "&eUnknown migrate action. Use list, preview, import, or help.");
     }
 
     private MigrationOptions parseOptions(String[] args, int startIndex) {
@@ -525,30 +549,36 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private void handleSnapshot(Player player, String[] args) {
         if (plugin.getSnapshotManager() == null) {
-            player.sendMessage(ChatColor.RED + "Snapshot system is unavailable.");
+            sendLocalized(player, "snapshots_unavailable", "&cSnapshot system is unavailable.");
             return;
         }
 
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
-            player.sendMessage(ChatColor.RED + "Stand inside a plot to create a recovery snapshot.");
+            sendLocalized(player, "admin_snapshot_need_plot",
+                    "&cStand inside a plot to create a recovery snapshot.");
             return;
         }
         if (!plot.canManage(player, plugin)) {
-            player.sendMessage(ChatColor.RED + "You cannot create a recovery snapshot for this plot.");
+            sendLocalized(player, "admin_snapshot_no_perm",
+                    "&cYou cannot create a recovery snapshot for this plot.");
             return;
         }
 
         String reason = args.length > 2
                 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length))
-                : "Manual admin recovery snapshot by " + player.getName();
+                : plugin.gui().tr(player, "admin_snapshot_reason_default",
+                        "Manual admin recovery snapshot by {PLAYER}",
+                        Map.of("PLAYER", player.getName()));
         ClaimSnapshot snapshot = plugin.getSnapshotManager().createSnapshot(
                 plot,
                 ClaimSnapshot.SnapshotType.MANUAL,
                 reason,
                 player.getUniqueId()
         );
-        player.sendMessage(ChatColor.GREEN + "Created recovery snapshot: " + snapshot.getSnapshotId());
+        sendLocalized(player, "admin_snapshot_created",
+                "&aCreated recovery snapshot: {ID}",
+                Map.of("ID", String.valueOf(snapshot.getSnapshotId())));
     }
 
     private void handleRestore(Player player, String[] args) {
@@ -586,7 +616,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     Map.of(
                             "TYPE", latest.getType().name(),
                             "REASON", latest.getReason() == null || latest.getReason().isBlank()
-                                    ? "No reason recorded" : latest.getReason(),
+                                    ? plugin.gui().tr(player, "admin_restore_no_reason", "No reason recorded")
+                                    : latest.getReason(),
                             "AGE", formatAgeMillis(latest.getAgeMillis())
                     ));
             sendLocalized(player, "admin_restore_confirm_hint",
@@ -668,7 +699,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private void handleBlocks(Player player, String[] args) {
         if (args.length < 3) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin blocks <get|add|remove|set> <player> [amount] [reason]");
+            sendLocalized(player, "admin_blocks_usage",
+                    "&eUsage: /agadmin blocks <get|add|remove|set> <player> [amount] [reason]");
             return;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
@@ -683,14 +715,19 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         UUID targetId = target.getUniqueId();
         String targetName = target.getName() == null ? args[2] : target.getName();
         if (viewOnly) {
-            player.sendMessage(ChatColor.GOLD + targetName + ChatColor.GRAY + " ClaimBlocks: total="
-                    + plugin.claimBlocks().getTotalBlocks(targetId) + ", used="
-                    + plugin.claimBlocks().getUsedBlocks(targetId) + ", available="
-                    + plugin.claimBlocks().getAvailableBlocks(targetId));
+            sendLocalized(player, "admin_blocks_view",
+                    "&6{PLAYER} &7ClaimBlocks: total={TOTAL}, used={USED}, available={AVAILABLE}",
+                    Map.of(
+                            "PLAYER", targetName,
+                            "TOTAL", String.valueOf(plugin.claimBlocks().getTotalBlocks(targetId)),
+                            "USED", String.valueOf(plugin.claimBlocks().getUsedBlocks(targetId)),
+                            "AVAILABLE", String.valueOf(plugin.claimBlocks().getAvailableBlocks(targetId))
+                    ));
             return;
         }
         if (!List.of("add", "remove", "set").contains(action) || args.length < 4) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin blocks <add|remove|set> <player> <amount> [reason]");
+            sendLocalized(player, "admin_blocks_usage_mutate",
+                    "&eUsage: /agadmin blocks <add|remove|set> <player> <amount> [reason]");
             return;
         }
 
@@ -698,12 +735,14 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         try {
             amount = Long.parseLong(args[3]);
         } catch (NumberFormatException ignored) {
-            player.sendMessage(ChatColor.RED + "Amount must be a whole number.");
+            sendLocalized(player, "admin_blocks_amount_invalid", "&cAmount must be a whole number.");
             return;
         }
         long maximum = Math.max(1L, plugin.getConfig().getLong("admin.max_claimblock_adjustment", 1_000_000_000L));
         if (amount < 0L || amount > maximum) {
-            player.sendMessage(ChatColor.RED + "Amount must be between 0 and " + maximum + ".");
+            sendLocalized(player, "admin_blocks_amount_range",
+                    "&cAmount must be between 0 and {MAX}.",
+                    Map.of("MAX", String.valueOf(maximum)));
             return;
         }
 
@@ -712,13 +751,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "remove" -> plugin.claimBlocks().adjustAvailableBlocks(targetId, -amount);
             default -> plugin.claimBlocks().setAvailableBlocks(targetId, amount);
         };
-        String reason = args.length > 4 ? String.join(" ", Arrays.copyOfRange(args, 4, args.length)) : "No reason supplied";
+        String reason = args.length > 4
+                ? String.join(" ", Arrays.copyOfRange(args, 4, args.length))
+                : plugin.gui().tr(player, "admin_blocks_reason_default", "No reason supplied");
         audit(player, action + " ClaimBlocks for " + targetName + " by " + amount + " (available=" + newBalance + ", reason=" + reason + ")");
         if (plugin.audit() != null) {
             plugin.audit().record(AuditCategory.CLAIM_BLOCK_ADJUST, player, targetName,
                     action + " ClaimBlocks by " + amount + " (available=" + newBalance + ", reason=" + reason + ")");
         }
-        player.sendMessage(ChatColor.GREEN + "Updated " + targetName + " to " + newBalance + " available ClaimBlocks.");
+        sendLocalized(player, "admin_blocks_updated",
+                "&aUpdated {PLAYER} to {AMOUNT} available ClaimBlocks.",
+                Map.of("PLAYER", targetName, "AMOUNT", String.valueOf(newBalance)));
     }
 
     private void handleServerMerge(Player player, String[] args) {
@@ -727,28 +770,33 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin merge <north|south|east|west> confirm");
+            sendLocalized(player, "admin_merge_usage",
+                    "&eUsage: /agadmin merge <north|south|east|west> confirm");
             return;
         }
         String direction = args[1].toLowerCase(Locale.ROOT);
         if (!List.of("north", "south", "east", "west").contains(direction)) {
-            player.sendMessage(ChatColor.RED + "Direction must be north, south, east, or west.");
+            sendLocalized(player, "admin_merge_bad_direction",
+                    "&cDirection must be north, south, east, or west.");
             return;
         }
         Plot current = plugin.store().getPlotAt(player.getLocation());
         if (current == null || !current.isServerZone()) {
-            player.sendMessage(ChatColor.RED + "Stand inside the server zone that should remain after the merge.");
+            sendLocalized(player, "admin_merge_need_server_zone",
+                    "&cStand inside the server zone that should remain after the merge.");
             return;
         }
 
         Plot adjacent = findMergeCandidate(current, direction);
         if (adjacent == null) {
-            player.sendMessage(ChatColor.RED + "No perfectly aligned adjacent server zone exists in that direction.");
+            sendLocalized(player, "admin_merge_no_adjacent",
+                    "&cNo perfectly aligned adjacent server zone exists in that direction.");
             return;
         }
         if (current.hasActiveRental() || adjacent.hasActiveRental() || current.isForSale() || adjacent.isForSale()
                 || current.isForAuction() || adjacent.isForAuction()) {
-            player.sendMessage(ChatColor.RED + "Market or rental state must be cleared before merging server zones.");
+            sendLocalized(player, "admin_merge_market_blocker",
+                    "&cMarket or rental state must be cleared before merging server zones.");
             return;
         }
 
@@ -773,14 +821,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             plugin.territoryLife().log(current.getPlotId(), player.getUniqueId(), "SERVER_ZONE_MERGE",
                     "Merged adjacent server zone " + adjacent.getPlotId() + ".");
             audit(player, "merged server zone " + adjacent.getPlotId() + " into " + current.getPlotId());
-            player.sendMessage(ChatColor.GREEN + "Server zones merged. Recovery snapshots were created.");
+            sendLocalized(player, "admin_merge_success",
+                    "&aServer zones merged. Recovery snapshots were created.");
         } catch (Throwable error) {
             current.getZones().removeAll(transferredZones);
             adjacent.getZones().addAll(transferredZones);
             plugin.store().updatePlotBounds(current, oldX1, oldZ1, oldX2, oldZ2);
             plugin.store().addPlot(adjacent);
             plugin.store().savePlotSync(adjacent);
-            player.sendMessage(ChatColor.RED + "Merge failed and was rolled back: " + safeMessage(error));
+            sendLocalized(player, "admin_merge_failed",
+                    "&cMerge failed and was rolled back: {ERROR}",
+                    Map.of("ERROR", safeMessage(error)));
         }
     }
 
@@ -811,13 +862,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length >= 2 && args[1].equalsIgnoreCase("retry-settlements")) {
             int settled = plugin.territoryLife().retrySettlements();
-            player.sendMessage(ChatColor.GREEN + "Delivered " + settled + " pending settlement(s). Remaining: "
-                    + plugin.territoryLife().settlements().size());
+            sendLocalized(player, "admin_rentals_settlements_done",
+                    "&aDelivered {SETTLED} pending settlement(s). Remaining: {REMAINING}",
+                    Map.of("SETTLED", String.valueOf(settled),
+                            "REMAINING", String.valueOf(plugin.territoryLife().settlements().size())));
             return;
         }
         if (args.length < 4 || !args[1].equalsIgnoreCase("cancel") || !args[3].equalsIgnoreCase("confirm")) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin rentals cancel <plot-id> confirm");
-            player.sendMessage(ChatColor.GRAY + "Or: /agadmin rentals retry-settlements");
+            sendLocalized(player, "admin_rentals_usage",
+                    "&eUsage: /agadmin rentals cancel <plot-id> confirm");
+            sendLocalized(player, "admin_rentals_usage_or",
+                    "&7Or: /agadmin rentals retry-settlements");
             return;
         }
         Plot plot;
@@ -825,14 +880,16 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (args[2].equalsIgnoreCase("here")) {
             plot = plugin.store().getPlotAt(player.getLocation());
             if (plot == null) {
-                player.sendMessage(ChatColor.RED + "Stand inside the rented plot or provide its UUID.");
+                sendLocalized(player, "admin_rentals_need_plot",
+                        "&cStand inside the rented plot or provide its UUID.");
                 return;
             }
             plotId = plot.getPlotId();
         } else {
             try { plotId = UUID.fromString(args[2]); }
             catch (IllegalArgumentException error) {
-                player.sendMessage(ChatColor.RED + "Plot ID must be a valid UUID, or use 'here'.");
+                sendLocalized(player, "admin_rentals_bad_plot_id",
+                        "&cPlot ID must be a valid UUID, or use 'here'.");
                 return;
             }
             plot = plugin.store().getAllPlots().stream()
@@ -840,19 +897,23 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plotId);
         if (plot == null || contract == null) {
-            player.sendMessage(ChatColor.RED + "No active rental contract exists for that plot.");
+            sendLocalized(player, "admin_rentals_no_contract",
+                    "&cNo active rental contract exists for that plot.");
             return;
         }
         plugin.territoryLife().removeContract(plotId);
         plugin.territoryLife().refundDeposit(contract, "Deposit after admin rental cancellation");
         plot.clearRenter();
         plugin.store().savePlotSync(plot);
-        plugin.territoryLife().queueNotice(contract.ownerId(), "&eAn administrator ended rental contract &f" + plotId + "&e.");
-        plugin.territoryLife().queueNotice(contract.renterId(), "&eAn administrator ended rental contract &f" + plotId
-                + "&e. Your deposit was refunded or queued.");
+        plugin.territoryLife().queueNoticeKey(contract.ownerId(), "admin_rental_ended_owner",
+                "&eAn administrator ended rental contract &f{PLOT}&e.",
+                Map.of("PLOT", String.valueOf(plotId)));
+        plugin.territoryLife().queueNoticeKey(contract.renterId(), "admin_rental_ended_renter",
+                "&eAn administrator ended rental contract &f{PLOT}&e. Your deposit was refunded or queued.",
+                Map.of("PLOT", String.valueOf(plotId)));
         plugin.territoryLife().log(plotId, player.getUniqueId(), "ADMIN_RENTAL_CANCEL", "Contract cancelled by administrator.");
         audit(player, "cancelled rental contract for plot " + plotId);
-        player.sendMessage(ChatColor.GREEN + "Rental contract cancelled safely.");
+        sendLocalized(player, "admin_rentals_cancelled", "&aRental contract cancelled safely.");
     }
 
     private void handleAdminDiscover(Player player, String[] args) {
@@ -862,11 +923,13 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
-            player.sendMessage(ChatColor.RED + "Stand inside the plot you want to update.");
+            sendLocalized(player, "admin_discover_need_plot",
+                    "&cStand inside the plot you want to update.");
             return;
         }
         if (args.length < 2) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin discover <feature|unfeature|show|hide>");
+            sendLocalized(player, "admin_discover_usage",
+                    "&eUsage: /agadmin discover <feature|unfeature|show|hide>");
             return;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
@@ -876,13 +939,15 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "show" -> plugin.territoryLife().setVisible(plot.getPlotId(), true);
             case "hide" -> plugin.territoryLife().setVisible(plot.getPlotId(), false);
             default -> {
-                player.sendMessage(ChatColor.YELLOW + "Usage: /agadmin discover <feature|unfeature|show|hide>");
+                sendLocalized(player, "admin_discover_usage",
+                        "&eUsage: /agadmin discover <feature|unfeature|show|hide>");
                 return;
             }
         }
         plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "ADMIN_DISCOVERY",
                 "Discovery state changed: " + action + ".");
-        player.sendMessage(ChatColor.GREEN + "Discovery state updated: " + action + ".");
+        sendLocalized(player, "admin_discover_updated",
+                "&aDiscovery state updated: {ACTION}.", Map.of("ACTION", action));
     }
 
     private void handleAdminActivity(Player player) {
@@ -892,32 +957,67 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
-            player.sendMessage(ChatColor.RED + "Stand inside a plot to view its activity.");
+            sendLocalized(player, "admin_activity_need_plot",
+                    "&cStand inside a plot to view its activity.");
             return;
         }
         List<TerritoryLifeService.ActivityEntry> entries = plugin.territoryLife().activity(plot.getPlotId(), 20);
-        player.sendMessage(ChatColor.GOLD + "Territory Activity: " + plot.getPlotId());
-        if (entries.isEmpty()) player.sendMessage(ChatColor.GRAY + "No activity recorded.");
+        sendLocalized(player, "admin_activity_header",
+                "&6Territory Activity: {PLOT}", Map.of("PLOT", String.valueOf(plot.getPlotId())));
+        if (entries.isEmpty()) {
+            sendLocalized(player, "admin_activity_empty", "&7No activity recorded.");
+        }
         for (TerritoryLifeService.ActivityEntry entry : entries) {
-            player.sendMessage(ChatColor.DARK_GRAY + "- " + ChatColor.YELLOW + entry.type()
-                    + ChatColor.GRAY + " " + entry.details());
+            sendLocalized(player, "admin_activity_line",
+                    "&8- &e{TYPE} &7{DETAILS}",
+                    Map.of("TYPE", entry.type(), "DETAILS", entry.details() == null ? "" : entry.details()));
         }
     }
 
     private void audit(Player actor, String action) {
         plugin.getLogger().info("[Admin Audit] " + actor.getName() + " " + action + ".");
         if (plugin.notifications() != null) {
-            plugin.notifications().notifyAdmins("aegis.admin", "&6[Admin] &e" + actor.getName() + " &7" + action + ".");
+            plugin.notifications().notifyAdmins(
+                    "aegis.admin",
+                    "admin_notify_action",
+                    "&6[Admin] &e{PLAYER} &7{ACTION}.",
+                    Map.of("PLAYER", actor.getName(), "ACTION", action));
         }
     }
 
-    private void sendLocalized(Player player, String key, String fallback) {
-        sendLocalized(player, key, fallback, Map.of());
+    private void sendLocalized(CommandSender sender, String key, String fallback) {
+        sendLocalized(sender, key, fallback, Map.of());
     }
 
-    private void sendLocalized(Player player, String key, String fallback, Map<String, String> placeholders) {
-        String message = plugin.gui().tr(player, key, fallback, placeholders);
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+    private void sendLocalized(CommandSender sender, String key, String fallback, Map<String, String> placeholders) {
+        String message;
+        if (sender instanceof Player player) {
+            message = plugin.gui().tr(player, key, fallback, placeholders);
+        } else if (plugin.codex() != null) {
+            try {
+                message = plugin.codex().tr(key, placeholders == null ? Map.of() : placeholders);
+            } catch (Throwable ignored) {
+                message = null;
+            }
+            if (message == null || message.isBlank() || message.equals(key)) {
+                message = fallback;
+                if (placeholders != null) {
+                    for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                        message = message.replace("{" + entry.getKey() + "}",
+                                entry.getValue() == null ? "" : entry.getValue());
+                    }
+                }
+            }
+        } else {
+            message = fallback;
+            if (placeholders != null) {
+                for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+                    message = message.replace("{" + entry.getKey() + "}",
+                            entry.getValue() == null ? "" : entry.getValue());
+                }
+            }
+        }
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 
     private String safeMessage(Throwable throwable) {

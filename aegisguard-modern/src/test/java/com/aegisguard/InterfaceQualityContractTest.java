@@ -91,4 +91,41 @@ class InterfaceQualityContractTest {
         assertTrue(admin.contains("SLOT_TOGGLE_EXPANSION_MODE"));
         assertTrue(admin.contains("SLOT_TOOL_CONVERT"));
     }
+
+    @Test
+    void staffAndPlayerChatFeedbackUsesLanguageKeys() throws Exception {
+        String adminCommand = Files.readString(ROOT.resolve("admin/AdminCommand.java"));
+        assertFalse(adminCommand.contains("ChatColor.GREEN + \"AegisGuard reload complete.\""));
+        assertFalse(adminCommand.contains("ChatColor.RED + \"Players only.\""));
+        assertFalse(adminCommand.contains("\"Bypass Mode: \""));
+        assertTrue(adminCommand.contains("admin_bypass_mode"));
+        assertTrue(adminCommand.contains("admin_wand_received"));
+        assertTrue(adminCommand.contains("admin_rentals_cancelled"));
+        assertTrue(adminCommand.contains("queueNoticeKey"));
+
+        String notify = Files.readString(ROOT.resolve("commands/NotifyCommand.java"));
+        assertFalse(notify.contains("sender.sendMessage(\"Players only.\""));
+        assertTrue(notify.contains("notify_status_header"));
+
+        String selection = Files.readString(ROOT.resolve("selection/SelectionService.java"));
+        assertTrue(selection.contains("selection_corner1"));
+        assertTrue(selection.contains("selection_area_confirm"));
+        assertFalse(selection.contains("player.sendMessage(color(\"&aFirst corner selected:"));
+
+        String roles = Files.readString(ROOT.resolve("gui/RolesGUI.java"));
+        assertTrue(roles.contains("player_name_invalid"));
+        assertTrue(roles.contains("player_never_joined"));
+
+        String guest = Files.readString(ROOT.resolve("guestpass/GuestPassGUI.java"));
+        assertTrue(guest.contains("guest_pass_recipient_denied"));
+
+        String health = Files.readString(ROOT.resolve("admin/StaffHealthCheck.java"));
+        assertTrue(health.contains("staff_health_title"));
+        assertFalse(health.contains("sendMessage(\"§6§lAegisGuard Staff Health Check\")"));
+
+        String visit = Files.readString(ROOT.resolve("gui/VisitGUI.java"));
+        assertTrue(visit.contains("visit_server_warp_default"));
+        assertTrue(visit.contains("visit_favorite_add"));
+        assertFalse(visit.contains("\"Category: \" +"));
+    }
 }

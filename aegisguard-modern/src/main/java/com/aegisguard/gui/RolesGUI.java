@@ -1258,13 +1258,13 @@ public class RolesGUI implements Listener {
             return;
         }
         if (raw.isBlank() || raw.length() > 16) {
-            player.sendMessage(GUIManager.color("&cEnter a valid Minecraft player name."));
+            player.sendMessage(GUIManager.color(t(player, "player_name_invalid", "&cEnter a valid Minecraft player name.")));
             openAddMenu(player, plot, 0);
             return;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(raw);
         if (!target.hasPlayedBefore() && !target.isOnline()) {
-            player.sendMessage(GUIManager.color("&cThat player has not played on this server."));
+            player.sendMessage(GUIManager.color(t(player, "player_never_joined", "&cThat player has not played on this server.")));
             plugin.effects().playError(player);
             openAddMenu(player, plot, 0);
             return;

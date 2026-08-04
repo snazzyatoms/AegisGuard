@@ -124,20 +124,30 @@ public class SelectionService implements Listener {
 
         if (action == Action.RIGHT_CLICK_BLOCK) {
             setLoc1(player, selected);
-            player.sendMessage(color("&aFirst corner selected: &f"
-                    + selected.getBlockX() + ", " + selected.getBlockY() + ", " + selected.getBlockZ()));
+            player.sendMessage(color(plugin.gui().tr(player, "selection_corner1",
+                    "&aFirst corner selected: &f{X}, {Y}, {Z}",
+                    java.util.Map.of(
+                            "X", String.valueOf(selected.getBlockX()),
+                            "Y", String.valueOf(selected.getBlockY()),
+                            "Z", String.valueOf(selected.getBlockZ())))));
             if (plugin.effects() != null) plugin.effects().playConfirm(player);
             return;
         }
 
         setLoc2(player, selected);
-        player.sendMessage(color("&bSecond corner selected: &f"
-                + selected.getBlockX() + ", " + selected.getBlockY() + ", " + selected.getBlockZ()));
+        player.sendMessage(color(plugin.gui().tr(player, "selection_corner2",
+                "&bSecond corner selected: &f{X}, {Y}, {Z}",
+                java.util.Map.of(
+                        "X", String.valueOf(selected.getBlockX()),
+                        "Y", String.valueOf(selected.getBlockY()),
+                        "Z", String.valueOf(selected.getBlockZ())))));
 
         long area = getSelectionArea(player);
         if (area > 0L) {
             String confirmCommand = isServerWand(item) ? "/agadmin claim" : "/ag claim";
-            player.sendMessage(color("&7Selection area: &e" + area + " blocks &7- use &a" + confirmCommand + " &7to confirm."));
+            player.sendMessage(color(plugin.gui().tr(player, "selection_area_confirm",
+                    "&7Selection area: &e{AREA} blocks &7- use &a{COMMAND} &7to confirm.",
+                    java.util.Map.of("AREA", String.valueOf(area), "COMMAND", confirmCommand))));
         }
 
         if (plugin.effects() != null) plugin.effects().playConfirm(player);

@@ -277,8 +277,9 @@ public class MyRentalsGUI {
         plugin.store().savePlotSync(plot);
         plugin.territoryLife().log(plot.getPlotId(), player.getUniqueId(), "RENTAL_RENEWED",
                 "Contract renewed for " + contract.termDays() + " day(s).");
-        plugin.territoryLife().queueNotice(contract.ownerId(), "&aA rental contract was renewed for &e"
-                + contract.termDays() + " day(s)&a.");
+        plugin.territoryLife().queueNoticeKey(contract.ownerId(), "rental_contract_renewed_owner",
+                "&aA rental contract was renewed for &e{DAYS} day(s)&a.",
+                java.util.Map.of("DAYS", Integer.toString(contract.termDays())));
         plugin.effects().playConfirm(player);
         send(player, "rental_contract_renewed",
                 "&aRental renewed for &e{DAYS} day(s)&a."

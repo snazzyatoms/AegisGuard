@@ -328,6 +328,18 @@ class LanguageParityTest {
                 "admin_setting_enabled", "admin_setting_disabled",
                 "settings_notif_mode_action_bar", "settings_notif_mode_chat", "settings_notif_mode_title"));
 
+        // Hardcoded-string localization pass keys (staff/player chat + travel GUI).
+        keys.addAll(List.of(
+                "admin_console_reload_complete", "admin_bypass_mode", "admin_wand_received",
+                "admin_wand_usage_hint", "admin_claim_need_selection", "selection_corner1",
+                "selection_corner2", "selection_area_confirm", "player_name_invalid",
+                "player_never_joined", "guest_pass_recipient_denied", "staff_health_title",
+                "staff_health_ok", "notify_admin_update_title", "notify_status_header",
+                "rental_expire_soon_renter", "rental_auto_renewed_renter",
+                "rental_plot_rented_owner", "visit_server_warp_default",
+                "visit_favorite_add", "visit_favorite_remove", "group_plots_join_name",
+                "admin_rentals_cancelled", "admin_merge_success", "admin_blocks_updated"));
+
         // Action-tag / concatenation fragments are not language keys.
         keys.remove("back_main");
         keys.remove("walkthrough_menu_title_page");

@@ -340,7 +340,9 @@ public class VisitGUI {
 
             if (mode == VisitMode.WARPS) {
                 Material mat = (plot.getWarpIcon() != null) ? plot.getWarpIcon() : Material.BEACON;
-                String warpName = (plot.getWarpName() != null && !plot.getWarpName().isBlank()) ? plot.getWarpName() : "Server Warp";
+                String warpName = (plot.getWarpName() != null && !plot.getWarpName().isBlank())
+                        ? plot.getWarpName()
+                        : t(player, "visit_server_warp_default", "Server Warp");
 
                 String dn = t(player, "visit_warp_name", "&6{WARP}", Map.of("WARP", warpName));
 
@@ -369,7 +371,9 @@ public class VisitGUI {
                         && mode != VisitMode.OWNED && !plot.isRentedBy(player.getUniqueId())) {
                     role = nickname + " &8(" + role + "&8)";
                 }
-                String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank()) ? plot.getOwnerName() : "Unknown";
+                String ownerName = (plot.getOwnerName() != null && !plot.getOwnerName().isBlank())
+                        ? plot.getOwnerName()
+                        : t(player, "visit_unknown_label", "Unknown");
 
                 String alias = (plot.getEntryTitle() != null && !plot.getEntryTitle().isBlank())
                         ? plot.getEntryTitle()
@@ -388,7 +392,9 @@ public class VisitGUI {
                     String displayName = t(player, "visit_plot_name", "&e{PLOT}", Map.of("PLOT", alias));
                     meta.setDisplayName(GUIManager.color(displayName));
 
-                    String worldName = (plot.getWorld() != null && !plot.getWorld().isBlank()) ? plot.getWorld() : "Unknown";
+                    String worldName = (plot.getWorld() != null && !plot.getWorld().isBlank())
+                            ? plot.getWorld()
+                            : t(player, "visit_unknown_label", "Unknown");
 
                     List<String> lore = tl(player, "visit_plot_lore", List.of(
                             "&7World: &f{WORLD}",
@@ -403,8 +409,13 @@ public class VisitGUI {
                     if (mode == VisitMode.DISCOVER || mode == VisitMode.FAVORITES) {
                         var discovery = plugin.territoryLife().discovery(plot.getPlotId());
                         lore = new ArrayList<>(lore);
-                        lore.add(GUIManager.color("&7Likes: &d" + plot.getLikes() + " &8| &7Visits: &b" + discovery.visits()));
-                        if (discovery.featured()) lore.add(GUIManager.color("&6★ Featured Territory"));
+                        lore.add(GUIManager.color(t(player, "visit_plot_likes_line",
+                                "&7Likes: &d{LIKES} &8| &7Visits: &b{VISITS}",
+                                Map.of("LIKES", String.valueOf(plot.getLikes()),
+                                        "VISITS", String.valueOf(discovery.visits())))));
+                        if (discovery.featured()) {
+                            lore.add(GUIManager.color(t(player, "visit_featured_line", "&6★ Featured Territory")));
+                        }
                         if (plot.getDescription() != null && !plot.getDescription().isBlank()) {
                             lore.add(GUIManager.color("&7\"" + plot.getDescription() + "\""));
                         }
@@ -414,7 +425,8 @@ public class VisitGUI {
                                     Map.of("COUNT", String.valueOf(plot.getNoticeboard().size())))));
                         }
                         lore.add(GUIManager.color(plugin.territoryLife().isFavorite(player.getUniqueId(), plot.getPlotId())
-                                ? "&eRight-click to remove favorite" : "&eRight-click to favorite"));
+                                ? t(player, "visit_favorite_remove", "&eRight-click to remove favorite")
+                                : t(player, "visit_favorite_add", "&eRight-click to favorite")));
                     }
 
                     meta.setLore(lore);
@@ -444,7 +456,8 @@ public class VisitGUI {
         inv.setItem(36, help);
         if (mode == VisitMode.DISCOVER) {
             String label = discoverFilter == DiscoverFilter.CATEGORY
-                    ? "Category: " + (category == null ? "other" : category)
+                    ? t(player, "visit_discover_category_filter", "Category: {CATEGORY}",
+                            Map.of("CATEGORY", category == null ? "other" : category))
                     : prettyFilter(discoverFilter);
             ItemStack filter = GUIManager.createItem(Material.HOPPER,
                     t(player, "visit_discover_filter_name", "&eDiscover Filter: &f{FILTER}",

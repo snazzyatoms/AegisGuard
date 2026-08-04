@@ -395,22 +395,27 @@ public final class TerritoryLifeService implements Listener {
             OfflinePlayer owner = Bukkit.getOfflinePlayer(contract.ownerId());
             if (!plugin.vault().has(renter, contract.rent())
                     || !plugin.vault().charge(renter, contract.rent())) {
-                queueNotice(contract.renterId(),
-                        "&cAuto-renew failed: insufficient funds. Your rental expires soon.");
+                queueNoticeKey(contract.renterId(), "rental_auto_renew_insufficient",
+                        "&cAuto-renew failed: insufficient funds. Your rental expires soon.", Map.of());
                 continue;
             }
             if (!plugin.vault().deposit(owner, contract.rent())) {
                 if (!plugin.vault().deposit(renter, contract.rent())) {
                     addSettlement(contract.renterId(), contract.rent(), "Failed auto-renew refund");
                 }
-                queueNotice(contract.renterId(), "&cAuto-renew payment failed. No time was added.");
+                queueNoticeKey(contract.renterId(), "rental_auto_renew_payment_failed",
+                        "&cAuto-renew payment failed. No time was added.", Map.of());
                 continue;
             }
             contract.extendFrom(now);
             dirty = true;
             renewed++;
-            queueNotice(contract.renterId(), "&aRental auto-renewed for &e" + contract.termDays() + " day(s)&a.");
-            queueNotice(contract.ownerId(), "&aA rental contract auto-renewed for &e" + contract.termDays() + " day(s)&a.");
+            queueNoticeKey(contract.renterId(), "rental_auto_renewed_renter",
+                    "&aRental auto-renewed for &e{DAYS} day(s)&a.",
+                    Map.of("DAYS", String.valueOf(contract.termDays())));
+            queueNoticeKey(contract.ownerId(), "rental_auto_renewed_owner",
+                    "&aA rental contract auto-renewed for &e{DAYS} day(s)&a.",
+                    Map.of("DAYS", String.valueOf(contract.termDays())));
         }
         return renewed;
     }
@@ -425,7 +430,9 @@ public final class TerritoryLifeService implements Listener {
         if (contract == null || contract.deposit() <= 0.0D) return;
         OfflinePlayer renter = Bukkit.getOfflinePlayer(contract.renterId());
         if (plugin.vault() != null && plugin.vault().deposit(renter, contract.deposit())) {
-            queueNotice(contract.renterId(), "&aRental deposit refunded: &6" + contract.deposit() + "&a.");
+            queueNoticeKey(contract.renterId(), "rental_deposit_refunded",
+                    "&aRental deposit refunded: &6{AMOUNT}&a.",
+                    Map.of("AMOUNT", String.valueOf(contract.deposit())));
             return;
         }
         addSettlement(contract.renterId(), contract.deposit(), reason);
@@ -513,6 +520,32 @@ public final class TerritoryLifeService implements Listener {
         }
         notices.computeIfAbsent(playerId, ignored -> new CopyOnWriteArrayList<>()).add(message);
         dirty = true;
+    }
+
+    public void queueNoticeKey(UUID playerId, String key, String fallback, Map<String, String> placeholders) {
+        if (playerId == null) return;
+        Map<String, String> ph = placeholders == null ? Map.of() : placeholders;
+        Player online = Bukkit.getPlayer(playerId);
+        String message = null;
+        if (plugin.codex() != null) {
+            try {
+                if (online != null && online.isOnline()) {
+                    message = plugin.codex().tr(online, key, ph);
+                } else {
+                    message = plugin.codex().tr(key, ph);
+                }
+            } catch (Throwable ignored) {
+                message = null;
+            }
+        }
+        if (message == null || message.isBlank() || message.equals(key)) {
+            message = fallback == null ? "" : fallback;
+            for (Map.Entry<String, String> entry : ph.entrySet()) {
+                message = message.replace("{" + entry.getKey() + "}",
+                        entry.getValue() == null ? "" : entry.getValue());
+            }
+        }
+        queueNotice(playerId, message);
     }
 
     @EventHandler

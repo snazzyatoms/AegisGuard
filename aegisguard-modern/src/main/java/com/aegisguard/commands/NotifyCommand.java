@@ -24,7 +24,7 @@ public class NotifyCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Players only.");
+            plugin.msg().send(sender, "players_only");
             return true;
         }
 
@@ -139,11 +139,19 @@ public class NotifyCommand implements CommandExecutor {
             // status
             // ------------------------------------------------------------
             case "status": {
-                // Avoid requiring new lang keys. This is safe and always visible.
-                player.sendMessage(color("&8[&bAegisGuard&8] &7Notification Settings:"));
-                player.sendMessage(color(" &7- Plot Greetings: " + (settings.greetingsEnabled() ? "&aON" : "&cOFF")));
-                player.sendMessage(color(" &7- Admin Updates: " + (settings.adminUpdatesEnabled() ? "&aON" : "&cOFF")));
-                player.sendMessage(color(" &7- Mode: &b" + settings.getMode().name()));
+                String on = plugin.gui().tr(player, "toggle_on", "&aON");
+                String off = plugin.gui().tr(player, "toggle_off", "&cOFF");
+                player.sendMessage(color(plugin.gui().tr(player, "notify_status_header",
+                        "&8[&bAegisGuard&8] &7Notification Settings:")));
+                player.sendMessage(color(plugin.gui().tr(player, "notify_status_greetings",
+                        " &7- Plot Greetings: {STATE}",
+                        java.util.Map.of("STATE", settings.greetingsEnabled() ? on : off))));
+                player.sendMessage(color(plugin.gui().tr(player, "notify_status_admin",
+                        " &7- Admin Updates: {STATE}",
+                        java.util.Map.of("STATE", settings.adminUpdatesEnabled() ? on : off))));
+                player.sendMessage(color(plugin.gui().tr(player, "notify_status_mode",
+                        " &7- Mode: &b{MODE}",
+                        java.util.Map.of("MODE", settings.getMode().name()))));
                 return true;
             }
 

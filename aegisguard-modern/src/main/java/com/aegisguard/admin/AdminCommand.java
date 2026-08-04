@@ -302,7 +302,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         if (!plot.canManage(player, plugin)) {
-            plugin.msg().send(player, "no_perm");
+            player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                    plugin.gui().tr(player, "server_zone_manage_denied",
+                            "&cYou need server-zone manage permission or the Steward role to change these settings.")));
             return;
         }
 

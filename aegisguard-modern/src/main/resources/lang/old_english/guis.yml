@@ -2680,11 +2680,13 @@ convert_confirm_details_lore:
 - '&cPlayer access (roles / Guest Passes) clears.'
 - '&7Sale, rent, and auction listings clear.'
 - '&7A recovery snapshot is created first.'
+- "&aThou becomest Steward of this server zone."
+- "&7Claim Settings open next (if enabled)."
 - ' '
 - '&8This cannot be undone except by restore.'
 convert_confirm_accept: '&aConfirm Convert'
 convert_confirm_accept_lore:
-- '&7Convert this plot into a server zone now.'
+- "&7Convert now. Steward access is granted unto thee."
 convert_confirm_back_lore:
 - '&7Return to type selection.'
 staff_wand_menu_title: '&cStaff Scepter Options'
@@ -3279,3 +3281,4 @@ visit_favorite_remove: '&eRight-click to remove favorite'
 visit_unknown_label: 'Unknown'
 group_plots_join_name: '&aJoin {GROUP}'
 group_plots_none_linked: 'None'
+plot_status_server_zone_banner: "&bServer Zone &7— governed by staff / Steward."

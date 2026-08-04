@@ -914,3 +914,6 @@ activity_type_doctor_repair: 'Doctor Repair'
 activity_type_upkeep_paid_early: 'Upkeep Paid Early'
 rental_contract_ended_early_notice: '&eThe rental contract for plot &f{PLOT} &ewas hath ended early.'
 zone_rent_left_landlord_notice: '&eTenant &f{PLAYER} &eleft zone &f{ZONE}&e early.'
+server_zone_steward_granted: "&aSteward access granted. &7Thou mayst govern this server zone's settings."
+server_zone_settings_opened: "&7Opening Claim Settings for this server zone."
+server_zone_manage_denied: "&cThou needest server-zone manage permission or the Steward role to change these settings."

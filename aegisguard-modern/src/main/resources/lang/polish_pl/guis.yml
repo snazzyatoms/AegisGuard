@@ -2667,6 +2667,8 @@ convert_confirm_details_lore:
 - '&cDostęp gracza (role / przepustki gościa) został usunięty.'
 - '&7Wykazy sprzedaży, wynajmu i aukcji jasne.'
 - '&7 Najpierw tworzona jest migawka odzyskiwania.'
+- "&aStajesz sie Stewardem tej strefy serwera."
+- "&7Nastepnie otworza sie ustawienia claima (jesli wlaczone)."
 - ' '
 - '&8Nie można tego cofnąć, chyba że poprzez przywrócenie.'
 convert_confirm_accept: '&aPotwierdź konwersję'
@@ -3312,3 +3314,4 @@ visit_favorite_remove: '&ePPM, aby usunąć z ulubionych'
 visit_unknown_label: 'Nieznany'
 group_plots_join_name: '&aDołącz do {GROUP}'
 group_plots_none_linked: 'Brak'
+plot_status_server_zone_banner: "&bStrefa serwera &7— zarzadzana przez staff / Stewarda."

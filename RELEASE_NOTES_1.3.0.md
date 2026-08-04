@@ -66,6 +66,7 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 - Alliance roster + pending invites GUI; Plot Status upkeep pay-early; Doctor delinquents + settlements panels
 - Richer PlaceholderAPI; Discord webhook events for market/rental/lockdown/guest-pass (all opt-in false)
 - Map markers: For Rent color + realm display name; route guidance action-bar distance + sparse particles
+- **Server-zone stewardship unify:** wand create and convert-to-server both grant Steward to the acting staffer, clear prior access on convert, open Claim Settings when configured, and gate server-zone manage on `server_zone_manage_permissions` (or Steward role)—not blanket admin alone
 
 ## Safety and Defaults
 

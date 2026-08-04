@@ -454,8 +454,11 @@ public class ConvertToServerGUI {
                 boolean ok = executeConvert(player, plot, holder.getTarget());
                 if (ok) {
                     plugin.effects().playConfirm(player);
-                    player.closeInventory();
-                    plugin.gui().admin().open(player);
+                    // Stewardship helper opens Claim Settings when configured; otherwise close cleanly.
+                    if (!plugin.cfg().raw().getBoolean("admin.wand.open_settings_after_claim", true)) {
+                        player.closeInventory();
+                        plugin.gui().admin().open(player);
+                    }
                 } else {
                     plugin.effects().playError(player);
                     openSelect(player, plot);
@@ -521,6 +524,11 @@ public class ConvertToServerGUI {
         send(actor, "convert_success",
                 "&aPlot converted into a server zone (&f{TARGET}&a). Recovery snapshot created.",
                 "{TARGET}", targetLabel(actor, resolved));
+
+        // Shared pipeline with wand create: Steward for converter + optional Claim Settings.
+        if (plugin.serverZoneStewardship() != null) {
+            plugin.serverZoneStewardship().grantSteward(actor, plot, true);
+        }
         return true;
     }
 

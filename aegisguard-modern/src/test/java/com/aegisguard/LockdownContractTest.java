@@ -54,6 +54,13 @@ class LockdownContractTest {
     }
 
     @Test
+    void canInteractAtAlsoHonorsLockdownSoGuestPassesCannotBypassContainers() throws Exception {
+        String plotSource = Files.readString(JAVA_ROOT.resolve("data/Plot.java"));
+        assertTrue(plotSource.contains("isPermissionRestrictedByLockdown(needle, pl)"),
+                "canInteractAt must deny lockdown-restricted tokens instead of falling through to hasPermission");
+    }
+
+    @Test
     void lockdownServiceIsWiredIntoThePluginLifecycleAndAudited() throws Exception {
         String plugin = Files.readString(JAVA_ROOT.resolve("AegisGuard.java"));
         assertTrue(plugin.contains("lockdownService = new com.aegisguard.lockdown.LockdownService(this)"));

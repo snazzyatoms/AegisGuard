@@ -2668,6 +2668,8 @@ convert_confirm_details_lore:
 - '&cO acesso do jogador (funções/passes de convidado) é liberado.'
 - '&7Listagens de venda, aluguel e leilão limpas.'
 - '&7Um instantâneo de recuperação é criado primeiro.'
+- "&aVoce se torna Steward desta zona do servidor."
+- "&7As Configuracoes da claim abrem em seguida (se ativado)."
 - ' '
 - '&8Isso não pode ser desfeito, exceto por restauração.'
 convert_confirm_accept: '&aConfirmar conversão'
@@ -3313,3 +3315,4 @@ visit_favorite_remove: '&eClique direito para remover favorito'
 visit_unknown_label: 'Desconhecido'
 group_plots_join_name: '&aEntrar em {GROUP}'
 group_plots_none_linked: 'Nenhum'
+plot_status_server_zone_banner: "&bZona do servidor &7— gerenciada por staff / Steward."

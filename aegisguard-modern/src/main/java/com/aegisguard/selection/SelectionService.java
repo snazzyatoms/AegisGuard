@@ -408,9 +408,6 @@ public class SelectionService implements Listener {
             plot.setFlag("build", true);
             plot.setFlag("pvp", true);
             plot.setFlag("safe_zone", true);
-
-            // 1.2.6 QoL: server plot creators should never be locked out
-            plot.setRole(p.getUniqueId(), "steward");
         } else {
             plot = new Plot(
                     UUID.randomUUID(),
@@ -455,12 +452,8 @@ public class SelectionService implements Listener {
 
         plugin.msg().send(p, isServerClaim ? "admin-zone-created" : "plot_claimed");
 
-        if (isServerClaim && plugin.cfg().raw().getBoolean("admin.wand.open_settings_after_claim", true)) {
-            plugin.runMain(p, () -> {
-                if (p.isOnline() && plot.canManage(p, plugin)) {
-                    plugin.gui().flags().open(p, plot);
-                }
-            });
+        if (isServerClaim && plugin.serverZoneStewardship() != null) {
+            plugin.serverZoneStewardship().grantSteward(p, plot, true);
         }
 
         // Discord webhook (if configured)

@@ -84,4 +84,16 @@ class PlotLockdownTest {
         assertTrue(Plot.isLockdownRestrictable("BLOCK_PLACE", null));
         assertTrue(Plot.isLockdownRestrictable("CONTAINERS", null));
     }
+
+    @Test
+    void softLockdownBlocksContainersButNeverInteractOnPermissionProbe() {
+        UUID owner = UUID.randomUUID();
+        Plot plot = new Plot(UUID.randomUUID(), owner, "OwnerName", "world", 0, 0, 20, 20);
+        plot.setLockdown(true, owner, "OwnerName", 0L, "SOFT");
+
+        assertTrue(plot.isPermissionRestrictedByLockdown("CONTAINERS", null));
+        assertTrue(plot.isPermissionRestrictedByLockdown("BUILD", null));
+        assertFalse(plot.isPermissionRestrictedByLockdown("INTERACT", null),
+                "Doors/interact must remain usable during lockdown");
+    }
 }

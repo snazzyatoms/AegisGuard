@@ -16,9 +16,58 @@ class ServerZoneWorkflowContractTest {
     @Test
     void serverWandUsesAdminConfirmationAndOpensManagement() throws Exception {
         String selection = Files.readString(JAVA_ROOT.resolve("selection/SelectionService.java"));
+        String stewardship = Files.readString(JAVA_ROOT.resolve("admin/ServerZoneStewardship.java"));
         assertTrue(selection.contains("isServerWand(item) ? \"/agadmin claim\" : \"/ag claim\""));
-        assertTrue(selection.contains("admin.wand.open_settings_after_claim"));
-        assertTrue(selection.contains("plugin.gui().flags().open(p, plot)"));
+        assertTrue(selection.contains("serverZoneStewardship().grantSteward"));
+        assertTrue(stewardship.contains("admin.wand.open_settings_after_claim"));
+        assertTrue(stewardship.contains("flags().open"));
+    }
+
+    @Test
+    void createAndConvertShareStewardshipPipeline() throws Exception {
+        String stewardship = Files.readString(JAVA_ROOT.resolve("admin/ServerZoneStewardship.java"));
+        String convert = Files.readString(JAVA_ROOT.resolve("gui/ConvertToServerGUI.java"));
+        String selection = Files.readString(JAVA_ROOT.resolve("selection/SelectionService.java"));
+        String plot = Files.readString(JAVA_ROOT.resolve("data/Plot.java"));
+
+        assertTrue(stewardship.contains("grantSteward"));
+        assertTrue(stewardship.contains("setRole(actorId, \"steward\")"));
+        assertTrue(stewardship.contains("server_zone_steward_granted"));
+        assertTrue(stewardship.contains("open_settings_after_claim"));
+
+        assertTrue(convert.contains("clearPlayerAccess()"));
+        assertTrue(convert.contains("serverZoneStewardship().grantSteward"));
+        assertTrue(selection.contains("serverZoneStewardship().grantSteward"));
+
+        // Server zones: permission list / OP trust / bypass — not blanket isAdmin.
+        assertTrue(plot.contains("staff_access.server_zone_manage_permissions"));
+        assertTrue(plot.contains("admin.trust_operators"));
+        int elevateMethod = plot.indexOf("private boolean hasElevatedManagementAccess");
+        assertTrue(elevateMethod > 0);
+        String elevate = plot.substring(elevateMethod, elevateMethod + 1600);
+        assertTrue(elevate.contains("if (isServerZone())"));
+        assertTrue(elevate.contains("return false;"));
+        // Within the server-zone branch, isAdmin must not grant access.
+        int sz = elevate.indexOf("if (isServerZone())");
+        int after = elevate.indexOf("if (aegis.isAdmin(player))", sz);
+        // isAdmin may appear later for non-server plots; ensure server branch returns before that.
+        int retFalse = elevate.indexOf("return false;", sz);
+        assertTrue(retFalse > sz);
+        assertTrue(after < 0 || after > retFalse);
+    }
+
+    @Test
+    void stewardRoleIncludesManageMembers() throws Exception {
+        Map<String, Object> root;
+        try (var input = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
+            root = new Yaml().load(input);
+        }
+        Map<?, ?> roles = (Map<?, ?>) root.get("roles");
+        Map<?, ?> steward = (Map<?, ?>) roles.get("steward");
+        @SuppressWarnings("unchecked")
+        java.util.List<String> perms = (java.util.List<String>) steward.get("permissions");
+        assertTrue(perms.contains("MANAGE"));
+        assertTrue(perms.contains("MANAGE_MEMBERS"));
     }
 
     @Test

@@ -859,3 +859,6 @@ activity_type_doctor_repair: 'Reparo Doctor'
 activity_type_upkeep_paid_early: 'Manutenção paga antecipadamente'
 rental_contract_ended_early_notice: '&eO contrato de aluguel do terreno &f{PLOT} &efoi encerrado antecipadamente.'
 zone_rent_left_landlord_notice: '&eO locatário &f{PLAYER} &edeixou a zona &f{ZONE}&e antecipadamente.'
+server_zone_steward_granted: "&aAcesso de Steward concedido. &7Voce pode gerenciar as configuracoes desta zona do servidor."
+server_zone_settings_opened: "&7Abrindo Configuracoes da claim para esta zona do servidor."
+server_zone_manage_denied: "&cVoce precisa da permissao de gerenciar zona do servidor ou do cargo Steward para alterar estas configuracoes."

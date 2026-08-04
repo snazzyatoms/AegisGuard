@@ -796,6 +796,13 @@ public class Plot {
         UUID uuid = player.getUniqueId();
         String needle = (permission == null || permission.isBlank()) ? "INTERACT" : permission.toUpperCase(Locale.ROOT);
 
+        // Lockdown is enforced in canBuild for owners/staff already short-circuiting above.
+        // Without this gate, Guest Pass / role tokens (e.g. CONTAINERS) would still unlock
+        // sensitive interact paths after canBuild denied them during an active lockdown.
+        if (isPermissionRestrictedByLockdown(needle, pl)) {
+            return false;
+        }
+
         // A plain interaction (doors, buttons, levers - no specific gated action requested) only
         // needs the broad INTERACT token. Gated actions (CONTAINERS, FARM, VEHICLES, ...) must hold
         // that exact token themselves; holding INTERACT alone must never unlock them. Bug fix
@@ -833,12 +840,26 @@ public class Plot {
     private boolean hasElevatedManagementAccess(@Nullable Player player, @Nullable Plugin plugin) {
         AegisGuard aegis = (plugin instanceof AegisGuard ag) ? ag : AegisGuard.getInstance();
         if (player == null || aegis == null) return false;
-        if (aegis.isAdmin(player) || aegis.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
-        if (hasAnyPermission(player, aegis, "staff_access.global_manage_permissions", List.of("aegis.admin.manage"))) {
-            return true;
+        // Explicit emergency bypass only — not blanket isAdmin.
+        if (aegis.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
+
+        // Server zones: only configured server-zone manage perms (or trusted OP), not any admin.
+        // Plot-role Steward still reaches canManage via MANAGE / MANAGE_MEMBERS below.
+        if (isServerZone()) {
+            if (hasAnyPermission(player, aegis, "staff_access.server_zone_manage_permissions",
+                    List.of("aegis.serverzone.manage", "aegis.staff.co_owner"))) {
+                return true;
+            }
+            try {
+                if (aegis.getConfig().getBoolean("admin.trust_operators", true) && player.isOp()) {
+                    return true;
+                }
+            } catch (Throwable ignored) {}
+            return false;
         }
-        if (isServerZone() && hasAnyPermission(player, aegis, "staff_access.server_zone_manage_permissions",
-                List.of("aegis.serverzone.manage", "aegis.staff.co_owner"))) {
+
+        if (aegis.isAdmin(player)) return true;
+        if (hasAnyPermission(player, aegis, "staff_access.global_manage_permissions", List.of("aegis.admin.manage"))) {
             return true;
         }
         return isMarketManaged() && hasAnyPermission(player, aegis, "staff_access.market_plot_manage_permissions",

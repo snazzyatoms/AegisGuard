@@ -3104,6 +3104,8 @@ convert_confirm_details_lore:
 - '&cSe limpia el acceso de jugadores (roles / pases).'
 - '&7Se limpian listados de venta, alquiler y subasta.'
 - '&7Primero se crea una instantánea de recuperación.'
+- "&aPasas a ser Steward de esta zona del servidor."
+- "&7Despues se abren los ajustes de claim (si esta activo)."
 - ' '
 - '&8No se puede deshacer salvo restaurar.'
 convert_confirm_accept: '&aConfirmar conversión'
@@ -3700,3 +3702,4 @@ visit_favorite_remove: '&eClic derecho para quitar favorito'
 visit_unknown_label: 'Desconocido'
 group_plots_join_name: '&aUnirse a {GROUP}'
 group_plots_none_linked: 'Ninguno'
+plot_status_server_zone_banner: "&bZona del servidor &7— gestionada por staff / Steward."

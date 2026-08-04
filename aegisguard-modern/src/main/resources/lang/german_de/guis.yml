@@ -2670,6 +2670,8 @@ convert_confirm_details_lore:
 - '&cSpielerzugriff (Rollen / Gastpässe) wird gelöscht.'
 - '&7Verkaufs-, Miet- und Auktionsangebote klar.'
 - '&7Zuerst wird ein Wiederherstellungs-Snapshot erstellt.'
+- "&aDu wirst Steward dieser Server-Zone."
+- "&7Als Naechstes oeffnen sich die Claim-Einstellungen (falls aktiv)."
 - ' '
 - '&8Dies kann nur durch Wiederherstellung rückgängig gemacht werden.'
 convert_confirm_accept: '&aKonvertierung bestätigen'
@@ -3315,3 +3317,4 @@ visit_favorite_remove: '&eRechtsklick zum Entfernen aus Favoriten'
 visit_unknown_label: 'Unbekannt'
 group_plots_join_name: '&a{GROUP} beitreten'
 group_plots_none_linked: 'Keine'
+plot_status_server_zone_banner: "&bServer-Zone &7— verwaltet von Staff / Steward."

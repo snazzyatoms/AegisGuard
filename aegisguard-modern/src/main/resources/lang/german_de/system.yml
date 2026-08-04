@@ -878,3 +878,6 @@ activity_type_doctor_repair: 'Doctor-Reparatur'
 activity_type_upkeep_paid_early: 'Upkeep früh bezahlt'
 rental_contract_ended_early_notice: '&eDer Mietvertrag für Plot &f{PLOT} &ewurde vorzeitig beendet.'
 zone_rent_left_landlord_notice: '&eMieter &f{PLAYER} &ehat Zone &f{ZONE}&e vorzeitig verlassen.'
+server_zone_steward_granted: "&aSteward-Zugang gewaehrt. &7Du kannst die Einstellungen dieser Server-Zone verwalten."
+server_zone_settings_opened: "&7Claim-Einstellungen fuer diese Server-Zone werden geoeffnet."
+server_zone_manage_denied: "&cDu brauchst die Server-Zonen-Verwalten-Berechtigung oder die Steward-Rolle, um diese Einstellungen zu aendern."

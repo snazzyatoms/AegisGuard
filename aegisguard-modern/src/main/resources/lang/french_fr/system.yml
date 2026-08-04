@@ -870,3 +870,6 @@ activity_type_doctor_repair: 'Réparation Doctor'
 activity_type_upkeep_paid_early: 'Entretien payé en avance'
 rental_contract_ended_early_notice: '&eLe contrat de location du terrain &f{PLOT} &ea été terminé plus tôt.'
 zone_rent_left_landlord_notice: '&eLe locataire &f{PLAYER} &ea quitté la zone &f{ZONE}&e plus tôt.'
+server_zone_steward_granted: "&aAcces Steward accorde. &7Vous pouvez gerer les parametres de cette zone serveur."
+server_zone_settings_opened: "&7Ouverture des parametres de claim pour cette zone serveur."
+server_zone_manage_denied: "&cVous avez besoin de la permission de gestion de zone serveur ou du role Steward pour modifier ces parametres."

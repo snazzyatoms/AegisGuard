@@ -79,6 +79,16 @@ public class PlotFlagsGUI {
             plugin.msg().send(player, "no_plot_here");
             return;
         }
+        if (!plot.canManage(player, plugin)) {
+            if (plot.isServerZone()) {
+                player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                        plugin.gui().tr(player, "server_zone_manage_denied",
+                                "&cYou need server-zone manage permission or the Steward role to change these settings.")));
+            } else {
+                plugin.msg().send(player, "no_perm");
+            }
+            return;
+        }
 
         String title = plugin.gui().title(
                 player,
@@ -250,7 +260,13 @@ public class PlotFlagsGUI {
         if (plot == null) return;
 
         if (!plot.canManage(player, plugin)) {
-            plugin.msg().send(player, "no_perm");
+            if (plot.isServerZone()) {
+                player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                        plugin.gui().tr(player, "server_zone_manage_denied",
+                                "&cYou need server-zone manage permission or the Steward role to change these settings.")));
+            } else {
+                plugin.msg().send(player, "no_perm");
+            }
             return;
         }
 
@@ -321,7 +337,13 @@ public class PlotFlagsGUI {
         ProtectionPreset preset = holder.getPreset();
         if (plot == null || preset == null) return;
         if (!plot.canManage(player, plugin)) {
-            plugin.msg().send(player, "no_perm");
+            if (plot.isServerZone()) {
+                player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                        plugin.gui().tr(player, "server_zone_manage_denied",
+                                "&cYou need server-zone manage permission or the Steward role to change these settings.")));
+            } else {
+                plugin.msg().send(player, "no_perm");
+            }
             return;
         }
 

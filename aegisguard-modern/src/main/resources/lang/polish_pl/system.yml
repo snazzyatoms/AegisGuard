@@ -862,3 +862,6 @@ activity_type_doctor_repair: 'Naprawa Doctor'
 activity_type_upkeep_paid_early: 'Utrzymanie zapłacone wcześniej'
 rental_contract_ended_early_notice: '&eUmowa wynajmu działki &f{PLOT} &ezostała zakończona wcześniej.'
 zone_rent_left_landlord_notice: '&eNajemca &f{PLAYER} &eopuścił strefę &f{ZONE}&e wcześniej.'
+server_zone_steward_granted: "&aPrzyznano dostep Stewarda. &7Mozesz zarzadzac ustawieniami tej strefy serwera."
+server_zone_settings_opened: "&7Otwieranie ustawien claima dla tej strefy serwera."
+server_zone_manage_denied: "&cPotrzebujesz uprawnienia zarzadzania strefa serwera lub roli Stewarda, aby zmienic te ustawienia."

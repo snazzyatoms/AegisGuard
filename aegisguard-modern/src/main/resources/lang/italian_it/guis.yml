@@ -2669,6 +2669,8 @@ convert_confirm_details_lore:
 - '&cL''accesso del giocatore (ruoli/pass ospite) viene cancellato.'
 - '&7Elenchi di vendita, affitto e aste cancellati.'
 - '&7Per prima cosa viene creata una snapshot di ripristino.'
+- "&aDiventi Steward di questa zona server."
+- "&7Poi si aprono le Impostazioni claim (se abilitato)."
 - ' '
 - '&8L''operazione non può essere annullata se non tramite ripristino.'
 convert_confirm_accept: '&aConferma conversione'
@@ -3314,3 +3316,4 @@ visit_favorite_remove: '&eClick destro per rimuovere dai preferiti'
 visit_unknown_label: 'Sconosciuto'
 group_plots_join_name: '&aUnisciti a {GROUP}'
 group_plots_none_linked: 'Nessuno'
+plot_status_server_zone_banner: "&bZona server &7— gestita dallo staff / Steward."

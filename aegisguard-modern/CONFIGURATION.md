@@ -154,8 +154,12 @@ If you want a more survival-friendly setup, leave most of these enabled.
 This is where you define elevated server-plot management permissions.
 
 - `global_manage_permissions`
-- `server_zone_manage_permissions`
+- `server_zone_manage_permissions` — required to manage **server zones** (Flags / Roles / `/agadmin manage`). Blanket `isAdmin` is not enough by itself; give staff `aegis.serverzone.manage` (included under `aegis.admin`) or `aegis.staff.co_owner`. Trusted operators (`admin.trust_operators`) and emergency bypass still work.
 - `market_plot_manage_permissions`
+
+**Create and convert stewardship:** Wand-claiming a server zone or converting a personal plot to a server zone grants the acting staffer the **Steward** plot role, sends a localized “Steward access granted” message, and opens Claim Settings when `admin.wand.open_settings_after_claim` is true. Convert always clears the previous owner, friends, roles, and Guest Passes first.
+
+**Sell-to-server (recommended workflow):** A player lists their plot for sale on the market. Staff buy it (or otherwise acquire ownership), then use Convert → Server Plot. The shared stewardship pipeline then grants Steward to the converting staffer. A dedicated “buy for government” button is not required for this flow.
 
 Use this if you want admins or delegated staff to manage server plots without relying on bypass mode.
 

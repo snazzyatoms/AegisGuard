@@ -81,6 +81,11 @@ public class PlotStatusGUI {
                 "&7Plot Level: &b{LEVEL}&7 / &f{MAX}",
                 Map.of("LEVEL", String.valueOf(level), "MAX", String.valueOf(maxLevel))
         ));
+        if (plot.isServerZone()) {
+            headerLore.add("");
+            headerLore.add(tr(player, "plot_status_server_zone_banner", null,
+                    "&bServer Zone &7— managed by staff / Steward."));
+        }
 
         String headerTitle = tr(player, "plot_status_header_title", null, "&6Plot Information");
         inv.setItem(4, GUIManager.createItem(Material.NETHER_STAR, headerTitle, colorList(headerLore)));

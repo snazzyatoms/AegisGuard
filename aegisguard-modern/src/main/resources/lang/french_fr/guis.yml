@@ -2670,6 +2670,8 @@ convert_confirm_details_lore:
 - '&cL''accès des joueurs (rôles / Pass Invité) est effacé.'
 - '&7Les listes de vente, de location et d''enchères sont claires.'
 - '&7Un instantané de récupération est créé en premier.'
+- "&aVous devenez Steward de cette zone serveur."
+- "&7Les parametres de claim s ouvrent ensuite (si active)."
 - ' '
 - '&8Cela ne peut être annulé que par restauration.'
 convert_confirm_accept: '&aConfirmer la conversion'
@@ -3315,3 +3317,4 @@ visit_favorite_remove: '&eClic droit pour retirer des favoris'
 visit_unknown_label: 'Inconnu'
 group_plots_join_name: '&aRejoindre {GROUP}'
 group_plots_none_linked: 'Aucun'
+plot_status_server_zone_banner: "&bZone serveur &7— geree par le staff / Steward."

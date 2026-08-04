@@ -1449,7 +1449,7 @@ admin:
   wand:
     material: BLAZE_ROD
     name: "&c&lSentinel's Scepter"
-    # Opens the new Server Zone's Claim Settings after /agadmin claim.
+    # Opens Claim Settings after wand create OR convert-to-server (shared stewardship pipeline).
     open_settings_after_claim: true
     lore:
       - "&7A tool of absolute authority."
@@ -1461,6 +1461,11 @@ admin:
 
 staff_access:
   # Any permission in one of these lists grants the matching elevated access.
+  # Server zones do NOT treat blanket aegis.admin / isAdmin as enough by itself —
+  # staff need a node from server_zone_manage_permissions (aegis.admin already
+  # inherits aegis.serverzone.manage), or the Steward plot role on that zone.
+  # Trusted operators (admin.trust_operators) still manage server zones.
+  # Emergency: aegis.bypass or /agadmin bypass.
   global_manage_permissions:
     - "aegis.admin.manage"
   server_zone_manage_permissions:
@@ -1579,7 +1584,8 @@ roles:
     name: "&dSteward"
     icon: ENCHANTED_BOOK
     priority: 80
-    permissions: ["MANAGE", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP"]
+    # MANAGE_MEMBERS included so create/convert stewards can run Roles without a second Bukkit node.
+    permissions: ["MANAGE", "MANAGE_MEMBERS", "BLOCK_BREAK", "BLOCK_PLACE", "CONTAINERS", "INTERACT", "SHOP"]
 
   moderator:
     name: "&9Moderator"

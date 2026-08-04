@@ -90,6 +90,7 @@ public class AegisGuard extends JavaPlugin {
     private GUIManager gui;
     private ProtectionManager protection;
     private SelectionService selection;
+    private com.aegisguard.admin.ServerZoneStewardship serverZoneStewardship;
     private VaultHook vault;
     private EconomyManager ecoManager;
     private AegisGuardAPI api;
@@ -179,6 +180,7 @@ public class AegisGuard extends JavaPlugin {
     public ProtectionManager protection() { return protection; }
     public ProtectionManager getProtectionManager() { return protection; }
     public SelectionService selection() { return selection; }
+    public com.aegisguard.admin.ServerZoneStewardship serverZoneStewardship() { return serverZoneStewardship; }
     public SelectionService getSelection() { return selection; }
     public VaultHook vault() { return vault; }
     public EconomyManager eco() { return ecoManager; }
@@ -304,6 +306,7 @@ public class AegisGuard extends JavaPlugin {
         gui = new GUIManager(this);
         protection = new ProtectionManager(this);
         selection = new SelectionService(this);
+        serverZoneStewardship = new com.aegisguard.admin.ServerZoneStewardship(this);
         worldRules = new WorldRulesManager(this);
         effectUtil = new EffectUtil(this);
         expansionManager = new ExpansionRequestManager(this);

@@ -869,3 +869,6 @@ activity_type_doctor_repair: 'Riparazione Doctor'
 activity_type_upkeep_paid_early: 'Manutenzione pagata in anticipo'
 rental_contract_ended_early_notice: '&eIl contratto di affitto del lotto &f{PLOT} &è stato terminato in anticipo.'
 zone_rent_left_landlord_notice: '&eL''affittuario &f{PLAYER} &eha lasciato la zona &f{ZONE}&e in anticipo.'
+server_zone_steward_granted: "&aAccesso Steward concesso. &7Puoi gestire le impostazioni di questa zona server."
+server_zone_settings_opened: "&7Apertura Impostazioni claim per questa zona server."
+server_zone_manage_denied: "&cServe il permesso di gestione zona server o il ruolo Steward per modificare queste impostazioni."

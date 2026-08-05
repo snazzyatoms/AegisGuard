@@ -163,6 +163,47 @@ class LanguageParityTest {
     }
 
     @Test
+    void languageSelectorStyleTitlesArePresentAndSane() throws Exception {
+        List<String> styleKeys = List.of(
+                "style_old_english", "style_modern_english", "style_spanish_mx",
+                "style_spanish_ar", "style_portuguese_br", "style_french_fr",
+                "style_italian_it", "style_german_de", "style_polish_pl");
+        // Translation-pass artifacts that previously broke FR/PT cycling titles.
+        Pattern artifact = Pattern.compile(
+                "(?i)(string\\s+da\\s+ui|ui\\s+string|cha[iî]ne\\s+d[eu]\\s+l['’]?ui)");
+
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            assertTrue(translated.containsKey("settings_language_name"),
+                    language + " missing settings_language_name");
+            assertTrue(placeholders(translated.get("settings_language_name")).contains("{LANG}"),
+                    language + " settings_language_name must keep {LANG}");
+
+            for (String key : styleKeys) {
+                assertTrue(translated.containsKey(key), language + " missing " + key);
+                assertFalse(isBlankValue(translated.get(key)), language + " blank " + key);
+                String value = normalizedValue(translated.get(key));
+                assertFalse(artifact.matcher(value).find(),
+                        () -> language + " " + key + " has translation artifact: " + value);
+            }
+        }
+
+        // Self-labels used when the player is already on that pack.
+        String frenchSelf = normalizedValue(loadLanguage("french_fr").get("style_french_fr"));
+        assertTrue(frenchSelf.toLowerCase().contains("fran"),
+                "french_fr style_french_fr should name French, got: " + frenchSelf);
+        assertFalse(frenchSelf.toLowerCase().matches(".*\\benglish\\b.*"),
+                "french_fr style_french_fr must not say English, got: " + frenchSelf);
+
+        String portugueseSelf = normalizedValue(loadLanguage("portuguese_br").get("style_portuguese_br"));
+        assertTrue(portugueseSelf.toLowerCase().contains("portugu"),
+                "portuguese_br style_portuguese_br should name Portuguese, got: " + portugueseSelf);
+        assertFalse(portugueseSelf.toLowerCase().contains("string"),
+                "portuguese_br style_portuguese_br must not contain String artifact, got: "
+                        + portugueseSelf);
+    }
+
+    @Test
     void newLanguagePackLoreAndButtonsAreMostlyTranslated() throws Exception {
         Map<String, Object> english = loadLanguage("modern_english");
         // Proper nouns / brands / config paths that may remain English.

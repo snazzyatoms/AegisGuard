@@ -67,6 +67,7 @@ public class AdminGUI {
     private static final int SLOT_TOOL_ROUTES         = 25;
     private static final int SLOT_TOOL_AUDIT_LEDGER   = 26;
     private static final int SLOT_TOOL_SET_SPAWN      = 27;
+    private static final int SLOT_TOOL_ARENA          = 16;
     /** Convert standing personal plot → server zone (type picker + confirm). */
     private static final int SLOT_TOOL_CONVERT        = 19;
 
@@ -381,6 +382,22 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_ROUTES, routes);
         }
 
+        if (player.hasPermission("aegis.arena.admin") || player.hasPermission("aegis.arena.steward") || plugin.isAdmin(player)) {
+            ItemStack arena = GUIManager.createItem(
+                    Material.DIAMOND_SWORD,
+                    plugin.gui().tr(player, "button_admin_arena", "&cArena Admin"),
+                    plugin.gui().trList(player, "admin_arena_lore", List.of(
+                            "&7What: configure dungeon arenas, abort runs,",
+                            "&7and review reward ledger entries.",
+                            "&7When: building Lava Dungeon or party PvE.",
+                            " ",
+                            "&eClick to open."
+                    ))
+            );
+            tagAction(arena, "open_arena");
+            inv.setItem(SLOT_TOOL_ARENA, arena);
+        }
+
         if (player.hasPermission("aegis.admin.audit")) {
             ItemStack auditLedger = GUIManager.createItem(
                     Material.WRITTEN_BOOK,
@@ -529,6 +546,18 @@ public class AdminGUI {
                 if ((player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player))
                         && plugin.gui().routeAdmin() != null) {
                     plugin.gui().routeAdmin().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.msg().send(player, "no_perm");
+                    plugin.effects().playError(player);
+                }
+            }
+            case "open_arena" -> {
+                if ((player.hasPermission("aegis.arena.admin")
+                        || player.hasPermission("aegis.arena.steward")
+                        || plugin.isAdmin(player))
+                        && plugin.gui().arenaAdmin() != null) {
+                    plugin.gui().arenaAdmin().open(player);
                     plugin.effects().playMenuFlip(player);
                 } else {
                     plugin.msg().send(player, "no_perm");

@@ -4026,3 +4026,12 @@ open_pending_requests_lore:
 - '&7en attente d’approbation ou de refus.'
 - ' '
 - '&eCliquez pour ouvrir.'
+
+button_admin_arena: '&cAdmin Arenes'
+admin_arena_lore:
+- '&7Quoi: configurer les arenes, annuler les runs,'
+- '&7et revoir le registre des recompenses.'
+- '&7Quand: creer Lava Dungeon ou du PvE de groupe.'
+- ' '
+- '&eCliquer pour ouvrir.'
+

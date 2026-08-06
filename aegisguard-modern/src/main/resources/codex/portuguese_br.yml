@@ -4013,3 +4013,12 @@ open_pending_requests_lore:
 - '&7aguardando aprovar ou negar.'
 - ' '
 - '&eClique para abrir.'
+
+button_admin_arena: '&cAdmin de Arenas'
+admin_arena_lore:
+- '&7O que: configurar arenas, abortar runs,'
+- '&7e revisar o ledger de recompensas.'
+- '&7Quando: montar Lava Dungeon ou PvE em grupo.'
+- ' '
+- '&eClique para abrir.'
+

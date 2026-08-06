@@ -374,6 +374,17 @@ public class PlayerGUI {
             // Optional: keep slot empty when disabled (matches 1.2.5 behavior)
         }
 
+        // Arena (Slot 41) — optional dungeon module
+        if (plugin.getConfig().getBoolean("arena.enabled", false) && plugin.arena() != null) {
+            inv.setItem(41, GUIManager.createItem(
+                    Material.DIAMOND_SWORD,
+                    t(player, "button_arena", "&c⚔ Arenas"),
+                    tl(player, "arena_button_lore", List.of(
+                            "&7Join cooperative dungeon runs,",
+                            "&7parties, and Lava Dungeon challenges."))
+            ));
+        }
+
         // --- 7. FOOTER / NAVIGATION ---
 
         // Settings (Slot 47)
@@ -465,6 +476,15 @@ public class PlayerGUI {
                     plugin.gui().visit().open(player, 0, VisitGUI.VisitMode.WARPS);
                 } else {
                     send(player, "travel_system_disabled", "&cTravel is disabled.");
+                    if (plugin.effects() != null) plugin.effects().playError(player);
+                }
+            }
+
+            case 41 -> {
+                if (plugin.getConfig().getBoolean("arena.enabled", false) && plugin.gui().arena() != null) {
+                    plugin.gui().arena().open(player);
+                } else {
+                    send(player, "arena_disabled", "&cArenas are disabled on this server.");
                     if (plugin.effects() != null) plugin.effects().playError(player);
                 }
             }

@@ -4005,3 +4005,12 @@ expansion_request_denied_player: '&c✖ Your expansion request was denied.'
 expansion_request_approved_admin: '&a✔ Approved expansion request for &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Denied expansion request for &f{PLAYER}&c.'
 request_expired: '&c❌ That request has expired or been handled already.'
+
+button_admin_arena: '&cArena Admin'
+admin_arena_lore:
+- '&7What: configure dungeon arenas, abort runs,'
+- '&7and review reward ledger entries.'
+- '&7When: building Lava Dungeon or party PvE.'
+- ' '
+- '&eClick to open.'
+

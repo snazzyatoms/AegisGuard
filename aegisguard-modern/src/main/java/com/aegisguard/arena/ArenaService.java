@@ -1,0 +1,1623 @@
+package com.aegisguard.arena;
+
+import com.aegisguard.AegisGuard;
+import com.aegisguard.arena.preset.LavaDungeonPreset;
+import com.aegisguard.data.Plot;
+import com.aegisguard.economy.CurrencyType;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+
+/**
+ * Main Arena module facade: definitions, parties, runs, inventory, rewards, boards, crash recovery.
+ */
+public final class ArenaService {
+
+    private final AegisGuard plugin;
+    private final ArenaKeys keys;
+    private final ArenaInventoryService inventoryService;
+    private final ArenaPersistenceQueue persistenceQueue;
+    private final ArenaRarityGate rarityGate = ArenaRarityGate.defaults();
+
+    private final Map<String, ArenaDefinition> definitions = new ConcurrentHashMap<>();
+    private final Map<UUID, ArenaRun> activeRuns = new ConcurrentHashMap<>();
+    private final Map<String, Set<UUID>> runsByArenaId = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> playerToRun = new ConcurrentHashMap<>();
+    private final Map<UUID, ArenaParty> parties = new ConcurrentHashMap<>();
+    private final Map<UUID, ArenaPendingRecovery> pendingRecoveries = new ConcurrentHashMap<>();
+    private final ArenaRewardLedger rewardLedger = new ArenaRewardLedger();
+    private final ArenaLeaderboard leaderboard = new ArenaLeaderboard();
+    private final Set<UUID> teleportAllow = ConcurrentHashMap.newKeySet();
+
+    private final File arenasFile;
+    private final File runsFile;
+    private final File statsFile;
+    private final File rewardsFile;
+    private final File pendingFile;
+
+    private volatile boolean dirty;
+    private volatile boolean dirtyStats;
+    private volatile boolean dirtyRewards;
+    private volatile boolean dirtyPending;
+
+    public ArenaService(AegisGuard plugin) {
+        this.plugin = plugin;
+        this.keys = new ArenaKeys(plugin);
+        this.inventoryService = new ArenaInventoryService(plugin);
+        this.persistenceQueue = new ArenaPersistenceQueue(
+                plugin.getLogger(), plugin.getDataFolder(),
+                Math.max(1, plugin.getConfig().getInt("arena.persistence.backup_count", 5)));
+        this.arenasFile = new File(plugin.getDataFolder(), "arenas.yml");
+        this.runsFile = new File(plugin.getDataFolder(), "arena-runs.yml");
+        this.statsFile = new File(plugin.getDataFolder(), "arena-stats.yml");
+        this.rewardsFile = new File(plugin.getDataFolder(), "arena-rewards.yml");
+        this.pendingFile = new File(plugin.getDataFolder(), "arena-pending-recovery.yml");
+    }
+
+    // ------------------------------------------------------------------
+    // Accessors
+    // ------------------------------------------------------------------
+
+    public AegisGuard plugin() { return plugin; }
+    public ArenaKeys keys() { return keys; }
+    public ArenaInventoryService inventory() { return inventoryService; }
+    public ArenaPersistenceQueue persistence() { return persistenceQueue; }
+    public ArenaRewardLedger rewards() { return rewardLedger; }
+    public ArenaLeaderboard leaderboard() { return leaderboard; }
+    public ArenaRarityGate rarityGate() { return rarityGate; }
+
+    public boolean isEnabled() {
+        return plugin.getConfig().getBoolean("arena.enabled", false);
+    }
+
+    public long disconnectGraceMillis() {
+        return Math.max(5L, plugin.getConfig().getLong("arena.disconnect_grace_seconds", 60L)) * 1000L;
+    }
+
+    public int globalMaxActiveRuns() {
+        return Math.max(1, plugin.getConfig().getInt("arena.limits.max_active_runs",
+                plugin.getConfig().getInt("arena.max_concurrent_runs", 8)));
+    }
+
+    public int partyInviteExpireSeconds() {
+        return Math.max(10, plugin.getConfig().getInt("arena.party.invite_expire_seconds", 60));
+    }
+
+    public int leaderboardTopN() {
+        return Math.max(5, plugin.getConfig().getInt("arena.leaderboard.top_n", 10));
+    }
+
+    public boolean grantTeleportAllow(UUID playerId) {
+        return playerId != null && teleportAllow.add(playerId);
+    }
+
+    public boolean consumeTeleportAllow(UUID playerId) {
+        return playerId != null && teleportAllow.remove(playerId);
+    }
+
+    public boolean hasTeleportAllow(UUID playerId) {
+        return playerId != null && teleportAllow.contains(playerId);
+    }
+
+    // ------------------------------------------------------------------
+    // Load / save
+    // ------------------------------------------------------------------
+
+    public synchronized void load() {
+        loadDefinitions();
+        loadLeaderboard();
+        loadRewards();
+        loadPendingRecoveries();
+        loadActiveRunsJournal();
+        dirty = false;
+        dirtyStats = false;
+        dirtyRewards = false;
+        dirtyPending = false;
+    }
+
+    public synchronized void save() {
+        saveDefinitions();
+        saveLeaderboard();
+        saveRewards();
+        savePendingRecoveries();
+        saveActiveRunsJournal();
+        dirty = false;
+        dirtyStats = false;
+        dirtyRewards = false;
+        dirtyPending = false;
+    }
+
+    public boolean isDirty() {
+        return dirty || dirtyStats || dirtyRewards || dirtyPending;
+    }
+
+    public void markDirty() { dirty = true; }
+
+    private void loadDefinitions() {
+        definitions.clear();
+        if (!arenasFile.exists()) return;
+        try {
+            FileConfiguration data = YamlConfiguration.loadConfiguration(arenasFile);
+            ConfigurationSection root = data.getConfigurationSection("arenas");
+            if (root == null) return;
+            for (String id : root.getKeys(false)) {
+                ConfigurationSection sec = root.getConfigurationSection(id);
+                if (sec == null) continue;
+                ArenaDefinition def = deserializeDefinition(id, sec);
+                def.revalidate();
+                definitions.put(def.getId(), def);
+            }
+            plugin.getLogger().info("[Arena] Loaded " + definitions.size() + " arena definition(s).");
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to load arenas.yml", e);
+        }
+    }
+
+    private void saveDefinitions() {
+        try {
+            YamlConfiguration out = new YamlConfiguration();
+            for (ArenaDefinition def : definitions.values()) {
+                String base = "arenas." + def.getId();
+                serializeDefinition(out, base, def);
+            }
+            persistenceQueue.saveYamlAtomic(arenasFile, out, check -> {
+                if (!check.contains("arenas") && !definitions.isEmpty()) {
+                    throw new IllegalStateException("arenas.yml missing arenas root");
+                }
+            });
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to save arenas.yml", e);
+        }
+    }
+
+    private void loadLeaderboard() {
+        if (!statsFile.exists()) return;
+        try {
+            FileConfiguration data = YamlConfiguration.loadConfiguration(statsFile);
+            ConfigurationSection boards = data.getConfigurationSection("boards");
+            if (boards == null) return;
+            for (String key : boards.getKeys(false)) {
+                List<?> raw = boards.getList(key);
+                if (raw == null) continue;
+                List<ArenaLeaderboardRecord> list = new ArrayList<>();
+                for (Object o : raw) {
+                    if (!(o instanceof Map<?, ?> map)) continue;
+                    ArenaLeaderboardRecord rec = deserializeBoardRecord(map);
+                    if (rec != null) list.add(rec);
+                }
+                leaderboard.putAll(key, list);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to load arena-stats.yml", e);
+        }
+    }
+
+    private void saveLeaderboard() {
+        try {
+            YamlConfiguration out = new YamlConfiguration();
+            for (Map.Entry<String, List<ArenaLeaderboardRecord>> e : leaderboard.asMap().entrySet()) {
+                List<Map<String, Object>> rows = new ArrayList<>();
+                for (ArenaLeaderboardRecord r : e.getValue()) {
+                    rows.add(serializeBoardRecord(r));
+                }
+                out.set("boards." + e.getKey(), rows);
+            }
+            persistenceQueue.saveYamlAtomic(statsFile, out, null);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to save arena-stats.yml", e);
+        }
+    }
+
+    private void loadRewards() {
+        if (!rewardsFile.exists()) return;
+        try {
+            FileConfiguration data = YamlConfiguration.loadConfiguration(rewardsFile);
+            ConfigurationSection root = data.getConfigurationSection("entries");
+            if (root == null) return;
+            for (String id : root.getKeys(false)) {
+                ConfigurationSection sec = root.getConfigurationSection(id);
+                if (sec == null) continue;
+                UUID runId = parseUuid(sec.getString("runId"));
+                UUID playerId = parseUuid(sec.getString("playerId"));
+                String rewardKey = sec.getString("rewardKey", "default");
+                if (runId == null || playerId == null) continue;
+                ArenaRewardEntry entry = new ArenaRewardEntry(runId, playerId, rewardKey);
+                try {
+                    entry.setStatus(ArenaRewardStatus.valueOf(sec.getString("status", "PENDING")));
+                } catch (IllegalArgumentException ignored) {
+                    entry.setStatus(ArenaRewardStatus.NEEDS_REVIEW);
+                }
+                entry.setDetail(sec.getString("detail"));
+                rewardLedger.put(entry);
+            }
+            rewardLedger.sanitizeAfterLoad();
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to load arena-rewards.yml", e);
+        }
+    }
+
+    private void saveRewards() {
+        try {
+            YamlConfiguration out = new YamlConfiguration();
+            for (ArenaRewardEntry e : rewardLedger.all()) {
+                String base = "entries." + e.getEntryId().replace(':', '_');
+                out.set(base + ".entryId", e.getEntryId());
+                out.set(base + ".runId", e.getRunId().toString());
+                out.set(base + ".playerId", e.getPlayerId().toString());
+                out.set(base + ".rewardKey", e.getRewardKey());
+                out.set(base + ".status", e.getStatus().name());
+                out.set(base + ".detail", e.getDetail());
+                out.set(base + ".updatedAt", e.getUpdatedAt());
+            }
+            persistenceQueue.saveYamlAtomic(rewardsFile, out, null);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to save arena-rewards.yml", e);
+        }
+    }
+
+    private void loadPendingRecoveries() {
+        pendingRecoveries.clear();
+        if (!pendingFile.exists()) return;
+        try {
+            FileConfiguration data = YamlConfiguration.loadConfiguration(pendingFile);
+            ConfigurationSection root = data.getConfigurationSection("pending");
+            if (root == null) return;
+            for (String key : root.getKeys(false)) {
+                ConfigurationSection sec = root.getConfigurationSection(key);
+                if (sec == null) continue;
+                UUID playerId = parseUuid(sec.getString("playerId"));
+                UUID runId = parseUuid(sec.getString("runId"));
+                String path = sec.getString("snapshotPath");
+                if (playerId == null || runId == null || path == null) continue;
+                ArenaSpawnPoint lobby = readSpawn(sec.getConfigurationSection("lobby"));
+                ArenaPendingRecovery rec = new ArenaPendingRecovery(playerId, runId, path, lobby);
+                if ("COMPLETE".equalsIgnoreCase(sec.getString("status"))) {
+                    rec.setStatus(ArenaPendingRecovery.Status.COMPLETE);
+                }
+                rec.setAppliedToken(sec.getString("appliedToken"));
+                pendingRecoveries.put(playerId, rec);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to load arena-pending-recovery.yml", e);
+        }
+    }
+
+    private void savePendingRecoveries() {
+        try {
+            YamlConfiguration out = new YamlConfiguration();
+            for (ArenaPendingRecovery rec : pendingRecoveries.values()) {
+                String base = "pending." + rec.getPlayerId();
+                out.set(base + ".playerId", rec.getPlayerId().toString());
+                out.set(base + ".runId", rec.getRunId().toString());
+                out.set(base + ".snapshotPath", rec.getSnapshotPath());
+                out.set(base + ".status", rec.getStatus().name());
+                out.set(base + ".appliedToken", rec.getAppliedToken());
+                writeSpawn(out, base + ".lobby", rec.getLobbyDestination());
+            }
+            persistenceQueue.saveYamlAtomic(pendingFile, out, null);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to save arena-pending-recovery.yml", e);
+        }
+    }
+
+    /** Active runs journal is mainly for crash recovery; cleared after cleanup. */
+    private void loadActiveRunsJournal() {
+        if (!runsFile.exists()) return;
+        try {
+            FileConfiguration data = YamlConfiguration.loadConfiguration(runsFile);
+            ConfigurationSection root = data.getConfigurationSection("runs");
+            if (root == null) return;
+            for (String key : root.getKeys(false)) {
+                ConfigurationSection sec = root.getConfigurationSection(key);
+                if (sec == null) continue;
+                UUID runId = parseUuid(sec.getString("runId", key));
+                String arenaId = sec.getString("arenaId");
+                if (runId == null || arenaId == null) continue;
+                ArenaMode mode = ArenaMode.PVE_WAVES;
+                try {
+                    mode = ArenaMode.valueOf(sec.getString("mode", "PVE_WAVES"));
+                } catch (IllegalArgumentException ignored) {}
+                UUID leader = parseUuid(sec.getString("leaderId"));
+                ArenaRun run = new ArenaRun(runId, arenaId, mode, leader);
+                try {
+                    run.setState(ArenaRunState.valueOf(sec.getString("state", "WAVE")));
+                } catch (IllegalArgumentException ignored) {
+                    run.setState(ArenaRunState.WAVE);
+                }
+                run.setWaveIndex(sec.getInt("waveIndex", 0));
+                run.setStartedAt(sec.getLong("startedAt", System.currentTimeMillis()));
+                ConfigurationSection parts = sec.getConfigurationSection("participants");
+                if (parts != null) {
+                    for (String pid : parts.getKeys(false)) {
+                        UUID playerId = parseUuid(pid);
+                        if (playerId == null) continue;
+                        ArenaParticipant p = run.getOrCreate(playerId);
+                        ConfigurationSection ps = parts.getConfigurationSection(pid);
+                        if (ps == null) continue;
+                        p.setSnapshotPath(ps.getString("snapshotPath"));
+                        try {
+                            p.setState(ParticipantState.valueOf(ps.getString("state", "FIGHTING")));
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+                }
+                activeRuns.put(runId, run);
+                runsByArenaId.computeIfAbsent(arenaId, k -> ConcurrentHashMap.newKeySet()).add(runId);
+                for (UUID pid : run.memberIds()) {
+                    playerToRun.put(pid, runId);
+                }
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to load arena-runs.yml", e);
+        }
+    }
+
+    private void saveActiveRunsJournal() {
+        try {
+            YamlConfiguration out = new YamlConfiguration();
+            for (ArenaRun run : activeRuns.values()) {
+                if (run.getState() == ArenaRunState.CLOSED || run.isCleanupDone()) continue;
+                String base = "runs." + run.getRunId();
+                out.set(base + ".runId", run.getRunId().toString());
+                out.set(base + ".arenaId", run.getArenaId());
+                out.set(base + ".mode", run.getMode().name());
+                out.set(base + ".state", run.getState().name());
+                out.set(base + ".leaderId", run.getLeaderId() == null ? null : run.getLeaderId().toString());
+                out.set(base + ".waveIndex", run.getWaveIndex());
+                out.set(base + ".startedAt", run.getStartedAt());
+                if (run.getEndReason() != null) out.set(base + ".endReason", run.getEndReason().name());
+                for (ArenaParticipant p : run.getParticipants().values()) {
+                    String pb = base + ".participants." + p.getPlayerId();
+                    out.set(pb + ".state", p.getState().name());
+                    out.set(pb + ".snapshotPath", p.getSnapshotPath());
+                }
+            }
+            persistenceQueue.saveYamlAtomic(runsFile, out, null);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "[Arena] Failed to save arena-runs.yml", e);
+        }
+    }
+
+    private void flushJournalAsync() {
+        dirty = true;
+        persistenceQueue.enqueue(this::saveActiveRunsJournal);
+    }
+
+    // ------------------------------------------------------------------
+    // Definitions
+    // ------------------------------------------------------------------
+
+    public ArenaDefinition createArena(String id) {
+        if (id == null || id.isBlank()) throw new IllegalArgumentException("id");
+        String key = id.toLowerCase(Locale.ROOT).replace(' ', '_');
+        if (definitions.containsKey(key)) {
+            return definitions.get(key);
+        }
+        ArenaDefinition def = new ArenaDefinition(key);
+        def.revalidate();
+        definitions.put(def.getId(), def);
+        dirty = true;
+        saveDefinitions();
+        return def;
+    }
+
+    public ArenaDefinition getArena(String id) {
+        if (id == null) return null;
+        return definitions.get(id.toLowerCase(Locale.ROOT).replace(' ', '_'));
+    }
+
+    public Collection<ArenaDefinition> allArenas() {
+        List<ArenaDefinition> list = new ArrayList<>(definitions.values());
+        list.sort(Comparator.comparing(ArenaDefinition::getId));
+        return list;
+    }
+
+    public void saveDefinition(ArenaDefinition def) {
+        if (def == null) return;
+        def.revalidate();
+        definitions.put(def.getId(), def);
+        dirty = true;
+        saveDefinitions();
+    }
+
+    public ArenaDefinition applyLavaPreset(String arenaId) {
+        ArenaDefinition existing = getArena(arenaId);
+        if (existing != null) {
+            LavaDungeonPreset.applyPresetWaves(existing);
+            saveDefinition(existing);
+            return existing;
+        }
+        ArenaDefinition created = LavaDungeonPreset.createDefinition(arenaId);
+        definitions.put(created.getId(), created);
+        dirty = true;
+        saveDefinitions();
+        return created;
+    }
+
+    // ------------------------------------------------------------------
+    // Party
+    // ------------------------------------------------------------------
+
+    public ArenaParty getParty(UUID playerId) {
+        return playerId == null ? null : parties.get(playerId);
+    }
+
+    public ArenaParty createParty(Player leader) {
+        if (leader == null) return null;
+        leaveParty(leader);
+        ArenaParty party = new ArenaParty(leader.getUniqueId());
+        parties.put(leader.getUniqueId(), party);
+        return party;
+    }
+
+    public String invite(Player leader, Player target) {
+        if (leader == null || target == null) return "Invalid players.";
+        if (leader.getUniqueId().equals(target.getUniqueId())) return "Cannot invite yourself.";
+        ArenaParty party = parties.get(leader.getUniqueId());
+        if (party == null) party = createParty(leader);
+        if (!party.isLeader(leader.getUniqueId())) return "Only the party leader can invite.";
+        if (parties.containsKey(target.getUniqueId()) && parties.get(target.getUniqueId()) != party) {
+            return target.getName() + " is already in a party.";
+        }
+        if (playerToRun.containsKey(target.getUniqueId())) return target.getName() + " is already in a run.";
+        int max = plugin.getConfig().getInt("arena.party.max_size", 4);
+        if (party.size() >= max) return "Party is full.";
+        party.invite(target.getUniqueId(), System.currentTimeMillis() + partyInviteExpireSeconds() * 1000L);
+        return null;
+    }
+
+    public String accept(Player player) {
+        if (player == null) return "Invalid player.";
+        if (playerToRun.containsKey(player.getUniqueId())) return "You are already in a run.";
+        ArenaParty existing = parties.get(player.getUniqueId());
+        if (existing != null) return "You are already in a party.";
+        for (ArenaParty party : new ArrayList<>(parties.values())) {
+            party.purgeExpiredInvites();
+            if (!party.hasInvite(player.getUniqueId())) continue;
+            if (!party.acceptInvite(player.getUniqueId())) return "Invite expired.";
+            parties.put(player.getUniqueId(), party);
+            return null;
+        }
+        return "No pending party invite.";
+    }
+
+    public String decline(Player player) {
+        if (player == null) return "Invalid player.";
+        for (ArenaParty party : parties.values()) {
+            party.declineInvite(player.getUniqueId());
+        }
+        return null;
+    }
+
+    public String leaveParty(Player player) {
+        if (player == null) return "Invalid player.";
+        ArenaParty party = parties.get(player.getUniqueId());
+        if (party == null) {
+            parties.remove(player.getUniqueId());
+            return null;
+        }
+        party.removeMember(player.getUniqueId());
+        parties.remove(player.getUniqueId());
+        if (party.size() == 0) {
+            for (UUID m : new ArrayList<>(party.getMembers())) parties.remove(m);
+        } else {
+            // Keep remaining members mapped
+            for (UUID m : party.getMembers()) parties.put(m, party);
+        }
+        return null;
+    }
+
+    // ------------------------------------------------------------------
+    // Start
+    // ------------------------------------------------------------------
+
+    /**
+     * @return null on success, otherwise an error message
+     */
+    public String tryStart(Player leader, String arenaId) {
+        if (!isEnabled()) return "Arena module is disabled.";
+        if (leader == null) return "Invalid leader.";
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return "Unknown arena.";
+        if (!def.isEnabledFlag()) return "Arena is disabled.";
+        def.revalidate();
+        if (!def.isConfigValid()) {
+            return "Arena config invalid: " + def.getConfigError();
+        }
+        if (!def.isEnabled()) return "Arena is not enabled.";
+
+        if (countActiveRuns(def.getId()) >= def.getMaxActiveRuns()) {
+            return "This arena already has the maximum active runs.";
+        }
+        if (activeRuns.size() >= globalMaxActiveRuns()) {
+            return "Server has reached the global active-run limit.";
+        }
+
+        ArenaParty party = parties.get(leader.getUniqueId());
+        if (party == null) party = createParty(leader);
+        if (!party.isLeader(leader.getUniqueId())) return "Only the party leader can start.";
+
+        int size = party.size();
+        if (size < def.getMinPlayers()) return "Need at least " + def.getMinPlayers() + " players.";
+        if (size > def.getMaxPlayers()) return "Party exceeds max players (" + def.getMaxPlayers() + ").";
+
+        for (UUID mid : party.getMembers()) {
+            if (playerToRun.containsKey(mid)) return "A party member is already in a run.";
+            Player online = Bukkit.getPlayer(mid);
+            if (online == null || !online.isOnline()) return "All party members must be online to start.";
+        }
+
+        UUID runId = UUID.randomUUID();
+        ArenaRun run = new ArenaRun(runId, def.getId(), def.getMode(), leader.getUniqueId());
+        run.setStartFighterCount(size);
+        run.setLockedScale(def.getScaling().forPartySize(size));
+        run.setWaveIndex(0);
+        run.journal("start partySize=" + size);
+
+        List<Player> onlineMembers = new ArrayList<>();
+        for (UUID mid : party.getMembers()) {
+            Player p = Bukkit.getPlayer(mid);
+            if (p == null) return "Party member went offline.";
+            onlineMembers.add(p);
+            ArenaParticipant part = run.getOrCreate(mid);
+            part.setState(ParticipantState.FIGHTING);
+        }
+
+        // Inventory snapshot then clear (SAVE_AND_RESTORE / ARENA_LOADOUT)
+        ArenaInventoryPolicy policy = def.getInventoryPolicy();
+        if (policy.isProtectedInventory()) {
+            for (Player p : onlineMembers) {
+                try {
+                    String path = inventoryService.saveSnapshotAtomic(p, runId, persistenceQueue);
+                    ArenaParticipant part = run.getParticipant(p.getUniqueId());
+                    part.setSnapshotPath(path);
+                    inventoryService.clearPlayer(p);
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.WARNING, "[Arena] Snapshot failed for " + p.getName(), e);
+                    // Rollback any already-cleared players
+                    for (Player restored : onlineMembers) {
+                        ArenaParticipant rp = run.getParticipant(restored.getUniqueId());
+                        if (rp != null && rp.getSnapshotPath() != null && !rp.isSnapshotRestored()) {
+                            inventoryService.restoreFromFile(restored, rp.getSnapshotPath());
+                            rp.setSnapshotRestored(true);
+                        }
+                    }
+                    return "Failed to snapshot inventory for " + p.getName() + ".";
+                }
+            }
+        }
+
+        Location entry = toLocation(def.getEntrySpawn());
+        for (Player p : onlineMembers) {
+            playerToRun.put(p.getUniqueId(), runId);
+            if (entry != null) {
+                grantTeleportAllow(p.getUniqueId());
+                try {
+                    p.teleport(entry);
+                } finally {
+                    consumeTeleportAllow(p.getUniqueId());
+                }
+            }
+        }
+
+        activeRuns.put(runId, run);
+        runsByArenaId.computeIfAbsent(def.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
+        run.setState(ArenaRunState.COUNTDOWN);
+        run.setState(ArenaRunState.WAVE);
+        flushJournalAsync();
+        return null;
+    }
+
+    public int countActiveRuns(String arenaId) {
+        if (arenaId == null) return 0;
+        Set<UUID> set = runsByArenaId.get(arenaId.toLowerCase(Locale.ROOT));
+        if (set == null) return 0;
+        int n = 0;
+        for (UUID id : set) {
+            ArenaRun run = activeRuns.get(id);
+            if (run != null && !run.isCleanupDone() && !run.getState().isTerminal()
+                    && run.getState() != ArenaRunState.CLEANUP) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    public ArenaRun getRun(UUID runId) {
+        return runId == null ? null : activeRuns.get(runId);
+    }
+
+    public ArenaRun getRunForPlayer(UUID playerId) {
+        UUID runId = playerId == null ? null : playerToRun.get(playerId);
+        return getRun(runId);
+    }
+
+    public Collection<ArenaRun> allActiveRuns() {
+        return List.copyOf(activeRuns.values());
+    }
+
+    // ------------------------------------------------------------------
+    // Waves
+    // ------------------------------------------------------------------
+
+    /**
+     * Advance to the next wave index and return the rolled rarity for that wave (shared seed).
+     */
+    public ArenaRarity advanceWave(ArenaRun run) {
+        if (run == null) return ArenaRarity.COMMON;
+        ArenaDefinition def = getArena(run.getArenaId());
+        int next = run.getWaveIndex() + 1;
+        run.setWaveIndex(next);
+        ArenaWaveSpec spec = currentWaveSpec(def, run);
+        ArenaRarity max = spec == null ? ArenaRarity.COMMON : spec.maxRarity();
+        int seed = (int) (run.getRunSeed() ^ (next * 31L));
+        ArenaRarity rolled = rarityGate.roll(max, seed);
+        run.journal("wave=" + next + " rarity=" + rolled);
+        if (spec != null && spec.isBoss()) {
+            run.setState(ArenaRunState.MILESTONE_BOSS);
+        } else {
+            run.setState(ArenaRunState.WAVE);
+        }
+        flushJournalAsync();
+        return rolled;
+    }
+
+    public ArenaWaveSpec currentWaveSpec(ArenaDefinition def, ArenaRun run) {
+        if (def == null || run == null) return null;
+        List<ArenaWaveSpec> waves = def.getWaves();
+        if (waves.isEmpty()) return null;
+        int idx = Math.min(run.getWaveIndex(), waves.size() - 1);
+        return waves.get(Math.max(0, idx));
+    }
+
+    public boolean isFinalWaveCleared(ArenaRun run) {
+        ArenaDefinition def = run == null ? null : getArena(run.getArenaId());
+        if (def == null) return false;
+        return run.getWaveIndex() >= def.getWaves().size() - 1 && run.getActiveMobIds().isEmpty();
+    }
+
+    // ------------------------------------------------------------------
+    // Elimination / totem / disconnect
+    // ------------------------------------------------------------------
+
+    public ArenaTotemPolicy resolveTotemPolicy(ArenaDefinition def) {
+        if (def == null) return ArenaTotemPolicy.CONSUME_AND_ELIMINATE;
+        return def.getTotemPolicy() == null ? ArenaTotemPolicy.CONSUME_AND_ELIMINATE : def.getTotemPolicy();
+    }
+
+    /**
+     * Idempotent elimination. Does not restore inventory (that happens at CLEANUP).
+     */
+    public void eliminate(Player player, ArenaRun run, String reason) {
+        if (player == null || run == null) return;
+        ArenaParticipant part = run.getParticipant(player.getUniqueId());
+        if (part == null) return;
+        if (part.isEliminatedHandled()) return;
+        part.setEliminatedHandled(true);
+        part.setState(ParticipantState.ELIMINATED);
+        part.addElimination();
+        stripEffects(player);
+        run.journal("eliminate " + player.getUniqueId() + " reason=" + reason);
+        if (run.countFighting() == 0) {
+            endRun(run, ArenaEndReason.WIPE);
+        }
+    }
+
+    /**
+     * Apply totem policy on lethal damage. Returns true if death path should be cancelled
+     * (protected eliminate path).
+     */
+    public boolean handleTotemThenEliminate(Player player, ArenaRun run) {
+        if (player == null || run == null) return false;
+        ArenaDefinition def = getArena(run.getArenaId());
+        ArenaInventoryPolicy inv = def == null ? ArenaInventoryPolicy.SAVE_AND_RESTORE : def.getInventoryPolicy();
+        if (!inv.isProtectedInventory()) {
+            // DROP_ON_DEATH: let vanilla death proceed; still mark eliminated if wipe tracking needed
+            return false;
+        }
+        ArenaTotemPolicy policy = resolveTotemPolicy(def);
+        boolean hasTotem = hasTotem(player);
+        switch (policy) {
+            case ALLOW -> {
+                if (hasTotem) return false; // vanilla totem save
+                eliminate(player, run, "lethal");
+                return true;
+            }
+            case DISABLE -> {
+                // Prevent totem; eliminate
+                eliminate(player, run, "lethal_no_totem");
+                return true;
+            }
+            case CONSUME_AND_ELIMINATE -> {
+                if (hasTotem) consumeOneTotem(player);
+                eliminate(player, run, "lethal_consume_totem");
+                return true;
+            }
+            default -> {
+                eliminate(player, run, "lethal");
+                return true;
+            }
+        }
+    }
+
+    public void handleDisconnect(Player player) {
+        if (player == null) return;
+        ArenaRun run = getRunForPlayer(player.getUniqueId());
+        if (run == null) return;
+        ArenaParticipant part = run.getParticipant(player.getUniqueId());
+        if (part == null) return;
+        if (part.getState() == ParticipantState.ELIMINATED) return;
+        part.setState(ParticipantState.DISCONNECTED);
+        part.setDisconnectedSince(System.currentTimeMillis());
+        run.journal("disconnect " + player.getUniqueId());
+
+        if (player.getUniqueId().equals(run.getLeaderId())) {
+            ArenaLeadershipRules.Decision d = ArenaLeadershipRules.onLeaderDisconnect(run, System.currentTimeMillis());
+            run.journal("leadership " + d.action + " " + d.reason);
+        }
+        flushJournalAsync();
+    }
+
+    public void handleReconnect(Player player) {
+        if (player == null) return;
+        applyPendingRecovery(player);
+
+        ArenaRun run = getRunForPlayer(player.getUniqueId());
+        if (run == null) return;
+        if (run.getState().isTerminal() || run.getState() == ArenaRunState.CLEANUP || run.isCleanupDone()) {
+            return;
+        }
+        ArenaParticipant part = run.getParticipant(player.getUniqueId());
+        if (part == null) return;
+
+        long now = System.currentTimeMillis();
+        long grace = disconnectGraceMillis();
+        if (player.getUniqueId().equals(run.getReservedLeaderId())
+                || player.getUniqueId().equals(run.getLeaderId())) {
+            ArenaLeadershipRules.Decision d =
+                    ArenaLeadershipRules.onLeaderReconnectDuringGrace(run, player.getUniqueId(), now, grace);
+            if (d.action == ArenaLeadershipRules.Action.RESTORE_LEADER) {
+                run.setLeaderId(player.getUniqueId());
+                run.setReservedLeaderId(null);
+                run.setLeaderDisconnectAt(0L);
+                run.journal("leadership restored " + player.getUniqueId());
+            }
+        }
+
+        if (part.getState() == ParticipantState.DISCONNECTED && run.getState().isActiveCombat()) {
+            // Eligible fighter restore if grace still open and not eliminated
+            if (part.getDisconnectedSince() > 0 && now - part.getDisconnectedSince() <= grace) {
+                part.setState(ParticipantState.FIGHTING);
+                part.setDisconnectedSince(0L);
+                ArenaDefinition def = getArena(run.getArenaId());
+                Location entry = def == null ? null : toLocation(def.getEntrySpawn());
+                if (entry != null) {
+                    grantTeleportAllow(player.getUniqueId());
+                    try {
+                        player.teleport(entry);
+                    } finally {
+                        consumeTeleportAllow(player.getUniqueId());
+                    }
+                }
+                run.journal("reconnect fighter " + player.getUniqueId());
+            } else {
+                part.setState(ParticipantState.SPECTATING);
+                run.journal("reconnect spectator " + player.getUniqueId());
+            }
+        }
+        flushJournalAsync();
+    }
+
+    public void tickLeadership() {
+        long now = System.currentTimeMillis();
+        long grace = disconnectGraceMillis();
+        for (ArenaRun run : activeRuns.values()) {
+            if (run.isCleanupDone() || run.getState().isTerminal()) continue;
+            if (run.getLeaderDisconnectAt() <= 0) continue;
+            ArenaLeadershipRules.Decision d = ArenaLeadershipRules.onGraceExpired(run, now, grace);
+            if (d.action == ArenaLeadershipRules.Action.KEEP_RESERVED) continue;
+            if (d.action == ArenaLeadershipRules.Action.END_RUN) {
+                endRun(run, ArenaEndReason.WIPE);
+                continue;
+            }
+            if (d.action == ArenaLeadershipRules.Action.TRANSFER && d.newLeaderId != null) {
+                if (run.tryBeginLeadershipTransfer(d.reason)) {
+                    run.completeLeadershipTransfer(d.newLeaderId);
+                    flushJournalAsync();
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // End / cleanup / crash
+    // ------------------------------------------------------------------
+
+    public void endRun(ArenaRun run, ArenaEndReason reason) {
+        if (run == null) return;
+        if (run.isCleanupDone()) return;
+        if (!run.markCleanupDone()) return;
+
+        ArenaEndReason end = reason == null ? ArenaEndReason.ADMIN_ABORT : reason;
+        run.setEndReason(end);
+        run.setEndedAt(System.currentTimeMillis());
+
+        switch (end) {
+            case CLEAR -> run.setState(ArenaRunState.CLEAR);
+            case WIPE, FORFEIT, TIMEOUT -> run.setState(ArenaRunState.WIPE);
+            case CRASH_RECOVERY -> run.setState(ArenaRunState.CRASH_RECOVERY);
+            default -> run.setState(ArenaRunState.ABORT);
+        }
+        run.setState(ArenaRunState.CLEANUP);
+        run.journal("end reason=" + end);
+
+        ArenaDefinition def = getArena(run.getArenaId());
+
+        // Despawn tracked mobs
+        despawnTrackedMobs(run);
+
+        // Restore inventories / pending recovery
+        for (ArenaParticipant part : run.getParticipants().values()) {
+            Player online = Bukkit.getPlayer(part.getPlayerId());
+            if (online != null && online.isOnline()) {
+                restoreParticipant(online, part, def);
+            } else if (part.getSnapshotPath() != null && !part.isSnapshotRestored()) {
+                ArenaSpawnPoint lobby = def == null ? null : def.getExitSpawn();
+                ArenaPendingRecovery pending = new ArenaPendingRecovery(
+                        part.getPlayerId(), run.getRunId(), part.getSnapshotPath(), lobby);
+                pendingRecoveries.put(part.getPlayerId(), pending);
+                dirtyPending = true;
+            }
+            playerToRun.remove(part.getPlayerId());
+        }
+
+        // Leaderboards: only CLEAR (invalid / abort / crash never enter)
+        if (end == ArenaEndReason.CLEAR) {
+            updateLeaderboards(run, def);
+        }
+
+        // Rewards: CLEAR or WIPE if min wave and not crash/abort
+        if ((end == ArenaEndReason.CLEAR || end == ArenaEndReason.WIPE)
+                && def != null
+                && run.getDeepestWave() >= def.getMinWaveForPayout()) {
+            issueRewards(run, def, end);
+        }
+
+        run.setState(ArenaRunState.CLOSED);
+        Set<UUID> byArena = runsByArenaId.get(run.getArenaId());
+        if (byArena != null) byArena.remove(run.getRunId());
+        activeRuns.remove(run.getRunId());
+        dirty = true;
+        dirtyStats = true;
+        dirtyRewards = true;
+        flushJournalAsync();
+        persistenceQueue.enqueue(() -> {
+            saveLeaderboard();
+            saveRewards();
+            savePendingRecoveries();
+            saveActiveRunsJournal();
+        });
+    }
+
+    public void recoverIncompleteRunsOnEnable() {
+        List<ArenaRun> incomplete = new ArrayList<>(activeRuns.values());
+        for (ArenaRun run : incomplete) {
+            if (run.isCleanupDone() || run.getState() == ArenaRunState.CLOSED) continue;
+            plugin.getLogger().warning("[Arena] Crash-recovering incomplete run " + run.getRunId());
+            run.setState(ArenaRunState.CRASH_RECOVERY);
+            // No rewards/boards — endRun with CRASH_RECOVERY skips those
+            // Force cleanup path even if markCleanupDone was somehow set
+            if (run.isCleanupDone()) {
+                // already cleaned; just drop
+                activeRuns.remove(run.getRunId());
+                continue;
+            }
+            endRun(run, ArenaEndReason.CRASH_RECOVERY);
+        }
+    }
+
+    private void restoreParticipant(Player player, ArenaParticipant part, ArenaDefinition def) {
+        if (player == null || part == null) return;
+        if (part.isSnapshotRestored()) {
+            inventoryService.stripArenaTaggedItems(player, keys);
+            return;
+        }
+        if (part.getSnapshotPath() != null) {
+            inventoryService.restoreFromFile(player, part.getSnapshotPath());
+            part.setSnapshotRestored(true);
+        }
+        inventoryService.stripArenaTaggedItems(player, keys);
+        Location exit = def == null ? null : toLocation(def.getExitSpawn());
+        if (exit != null) {
+            grantTeleportAllow(player.getUniqueId());
+            try {
+                player.teleport(exit);
+            } finally {
+                consumeTeleportAllow(player.getUniqueId());
+            }
+        }
+    }
+
+    private void despawnTrackedMobs(ArenaRun run) {
+        if (run == null) return;
+        for (UUID mobId : new ArrayList<>(run.getActiveMobIds())) {
+            Entity entity = null;
+            for (World world : Bukkit.getWorlds()) {
+                entity = world.getEntity(mobId);
+                if (entity != null) break;
+            }
+            if (entity != null && entity.isValid()) {
+                entity.remove();
+            }
+            run.getActiveMobIds().remove(mobId);
+        }
+    }
+
+    public boolean applyPendingRecovery(Player player) {
+        if (player == null) return false;
+        ArenaPendingRecovery pending = pendingRecoveries.get(player.getUniqueId());
+        if (pending == null || !pending.isPending()) return false;
+        String token = pending.getRunId() + ":" + player.getUniqueId();
+        if (!pending.tryComplete(token)) return false;
+        inventoryService.restoreFromFile(player, pending.getSnapshotPath());
+        inventoryService.stripArenaTaggedItems(player, keys);
+        Location lobby = toLocation(pending.getLobbyDestination());
+        if (lobby != null) {
+            grantTeleportAllow(player.getUniqueId());
+            try {
+                player.teleport(lobby);
+            } finally {
+                consumeTeleportAllow(player.getUniqueId());
+            }
+        }
+        dirtyPending = true;
+        persistenceQueue.enqueue(this::savePendingRecoveries);
+        plugin.getLogger().info("[Arena] Applied pending recovery for " + player.getName());
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Admin
+    // ------------------------------------------------------------------
+
+    public String abortRun(UUID runId) {
+        ArenaRun run = getRun(runId);
+        if (run == null) return "No active run.";
+        endRun(run, ArenaEndReason.ADMIN_ABORT);
+        return null;
+    }
+
+    public String abortPlayerRun(Player player) {
+        ArenaRun run = getRunForPlayer(player.getUniqueId());
+        if (run == null) return "Player is not in a run.";
+        endRun(run, ArenaEndReason.ADMIN_ABORT);
+        return null;
+    }
+
+    public String recoverPlayer(Player player) {
+        if (player == null) return "Invalid player.";
+        if (applyPendingRecovery(player)) return null;
+        ArenaRun run = getRunForPlayer(player.getUniqueId());
+        if (run != null) {
+            ArenaParticipant part = run.getParticipant(player.getUniqueId());
+            ArenaDefinition def = getArena(run.getArenaId());
+            if (part != null) restoreParticipant(player, part, def);
+            return null;
+        }
+        return "Nothing to recover.";
+    }
+
+    public String cleanupArena(String arenaId) {
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return "Unknown arena.";
+        Set<UUID> set = runsByArenaId.get(def.getId());
+        if (set != null) {
+            for (UUID id : new ArrayList<>(set)) {
+                ArenaRun run = activeRuns.get(id);
+                if (run != null) endRun(run, ArenaEndReason.ADMIN_ABORT);
+            }
+        }
+        return null;
+    }
+
+    public String setArenaEnabled(String arenaId, boolean enabled) {
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return "Unknown arena.";
+        if (enabled) {
+            def.revalidate();
+            if (!def.isConfigValid()) return "Cannot enable: " + def.getConfigError();
+        }
+        def.setEnabled(enabled);
+        saveDefinition(def);
+        return null;
+    }
+
+    public String diagnostics() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Arena module enabled=").append(isEnabled()).append('\n');
+        sb.append("definitions=").append(definitions.size()).append('\n');
+        sb.append("activeRuns=").append(activeRuns.size())
+                .append('/').append(globalMaxActiveRuns()).append('\n');
+        sb.append("parties=").append(parties.size()).append('\n');
+        sb.append("pendingRecoveries=").append(pendingRecoveries.size()).append('\n');
+        sb.append("rewardEntries=").append(rewardLedger.all().size()).append('\n');
+        sb.append("needsReview=").append(rewardLedger.needsReview().size()).append('\n');
+        for (ArenaRun run : activeRuns.values()) {
+            sb.append(" run ").append(run.getRunId()).append(" arena=").append(run.getArenaId())
+                    .append(" state=").append(run.getState())
+                    .append(" fighters=").append(run.countFighting())
+                    .append(" wave=").append(run.getDeepestWave())
+                    .append('\n');
+        }
+        for (ArenaDefinition def : allArenas()) {
+            sb.append(" arena ").append(def.getId())
+                    .append(" enabled=").append(def.isEnabledFlag())
+                    .append(" valid=").append(def.isConfigValid())
+                    .append(" active=").append(countActiveRuns(def.getId()))
+                    .append('\n');
+            if (def.getConfigError() != null) {
+                sb.append("  error=").append(def.getConfigError()).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    public List<ArenaRewardEntry> rewardsReview() {
+        return rewardLedger.needsReview();
+    }
+
+    public String rewardsResolve(String entryId, boolean commit) {
+        ArenaRewardEntry entry = rewardLedger.get(entryId);
+        if (entry == null) {
+            // try underscore form
+            for (ArenaRewardEntry e : rewardLedger.all()) {
+                if (e.getEntryId().replace(':', '_').equals(entryId) || e.getEntryId().equals(entryId)) {
+                    entry = e;
+                    break;
+                }
+            }
+        }
+        if (entry == null) return "Unknown reward entry.";
+        if (commit) {
+            if (!rewardLedger.beginProcessing(entry)) {
+                return "Cannot process entry in status " + entry.getStatus();
+            }
+            Player online = Bukkit.getPlayer(entry.getPlayerId());
+            try {
+                payoutEntry(online, entry, 50.0D, 0);
+                rewardLedger.markCommitted(entry);
+            } catch (Exception e) {
+                rewardLedger.markFailed(entry, e.getMessage());
+                return "Payout failed: " + e.getMessage();
+            }
+        } else {
+            entry.setStatus(ArenaRewardStatus.CANCELLED);
+        }
+        dirtyRewards = true;
+        persistenceQueue.enqueue(this::saveRewards);
+        return null;
+    }
+
+    // ------------------------------------------------------------------
+    // Rewards / boards
+    // ------------------------------------------------------------------
+
+    private void issueRewards(ArenaRun run, ArenaDefinition def, ArenaEndReason end) {
+        if (!plugin.getConfig().getBoolean("arena.rewards.enabled", true)) return;
+        List<ArenaParticipant> eligible = new ArrayList<>();
+        for (ArenaParticipant p : run.getParticipants().values()) {
+            if (p.isRewardEligible()) eligible.add(p);
+        }
+        if (eligible.isEmpty()) return;
+
+        // Hybrid: equal milestone pot + score bonus
+        double milestonePot = end == ArenaEndReason.CLEAR ? 200.0D : 50.0D;
+        milestonePot *= run.getLockedScale().rewardMultiplier;
+        double equalShare = milestonePot / eligible.size();
+        int totalScore = Math.max(1, run.getPartyScore());
+
+        for (ArenaParticipant part : eligible) {
+            String rewardKey = end == ArenaEndReason.CLEAR ? "clear" : "wipe_wave_" + run.getDeepestWave();
+            if (rewardLedger.alreadyCommitted(run.getRunId(), part.getPlayerId(), rewardKey)) continue;
+            ArenaRewardEntry entry = rewardLedger.getOrCreate(run.getRunId(), part.getPlayerId(), rewardKey);
+            if (!rewardLedger.beginProcessing(entry)) continue;
+
+            double scoreBonus = milestonePot * 0.25D * (part.getPersonalScore() / (double) totalScore);
+            double amount = equalShare + scoreBonus;
+            Player online = Bukkit.getPlayer(part.getPlayerId());
+            try {
+                payoutEntry(online, entry, amount, (long) Math.max(0, amount / 10.0D));
+                rewardLedger.markCommitted(entry);
+            } catch (Exception e) {
+                rewardLedger.markFailed(entry, e.getMessage());
+                plugin.getLogger().log(Level.WARNING, "[Arena] Reward failed for " + part.getPlayerId(), e);
+            }
+        }
+        dirtyRewards = true;
+    }
+
+    private void payoutEntry(Player player, ArenaRewardEntry entry, double money, long claimBlocks) {
+        if (player == null) {
+            // Offline: leave for review if money was expected
+            if (money > 0) {
+                throw new IllegalStateException("Player offline for money payout");
+            }
+            return;
+        }
+        try {
+            if (plugin.eco() != null && money > 0) {
+                plugin.eco().deposit(player, money, CurrencyType.VAULT);
+            }
+        } catch (Throwable t) {
+            throw new IllegalStateException("Economy deposit failed: " + t.getMessage(), t);
+        }
+        try {
+            if (claimBlocks > 0 && plugin.getClaimBlockManager() != null) {
+                plugin.getClaimBlockManager().addEarned(player.getUniqueId(), claimBlocks);
+            }
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.FINE, "[Arena] Claim-block grant skipped", t);
+        }
+        entry.setDetail(String.format(Locale.ROOT, "money=%.2f blocks=%d", money, claimBlocks));
+    }
+
+    private void updateLeaderboards(ArenaRun run, ArenaDefinition def) {
+        if (run == null) return;
+        boolean solo = run.isSoloRun();
+        List<UUID> members = run.memberIds();
+        int score = run.getPartyScore();
+        int wave = run.getDeepestWave();
+        long time = run.durationMillis();
+        int bosses = run.getBossesDefeated();
+        ArenaMode mode = run.getMode();
+        String arenaId = run.getArenaId();
+        int top = leaderboardTopN();
+
+        if (solo) {
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.SOLO_SCORE, arenaId, mode, "default",
+                    1, members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.SOLO_WAVE, arenaId, mode, "default",
+                    1, members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.SOLO_FASTEST, arenaId, mode, "default",
+                    1, members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+        } else {
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.PARTY_SCORE, arenaId, mode, "default",
+                    members.size(), members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.PARTY_WAVE, arenaId, mode, "default",
+                    members.size(), members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.PARTY_FASTEST, arenaId, mode, "default",
+                    members.size(), members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            leaderboard.submit(new ArenaLeaderboardRecord(
+                    ArenaLeaderboardRecord.Board.PARTY_BOSS_KILLS, arenaId, mode, "default",
+                    members.size(), members, score, wave, time, bosses, run.getRunId(), "lifetime"), top);
+            for (ArenaParticipant p : run.getParticipants().values()) {
+                leaderboard.submit(new ArenaLeaderboardRecord(
+                        ArenaLeaderboardRecord.Board.GROUP_INDIVIDUAL_KILLS, arenaId, mode, "default",
+                        members.size(), List.of(p.getPlayerId()), p.getPersonalScore(), wave, time,
+                        p.getBossKills(), run.getRunId(), "lifetime"), top);
+                leaderboard.submit(new ArenaLeaderboardRecord(
+                        ArenaLeaderboardRecord.Board.GROUP_INDIVIDUAL_BOSS_KILLS, arenaId, mode, "default",
+                        members.size(), List.of(p.getPlayerId()), p.getPersonalScore(), wave, time,
+                        p.getBossKills(), run.getRunId(), "lifetime"), top);
+            }
+        }
+        dirtyStats = true;
+    }
+
+    // ------------------------------------------------------------------
+    // Plot / spawn helpers (admin bind)
+    // ------------------------------------------------------------------
+
+    public String bindLobbyFromPlayer(Player player, String arenaId) {
+        return bindPlot(player, arenaId, true);
+    }
+
+    public String bindFloorFromPlayer(Player player, String arenaId) {
+        return bindPlot(player, arenaId, false);
+    }
+
+    private String bindPlot(Player player, String arenaId, boolean lobby) {
+        if (player == null) return "Invalid player.";
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return "Unknown arena.";
+        Plot plot = plugin.store() == null ? null : plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) return "Stand inside a plot to bind.";
+        if (lobby) def.setLobbyPlotId(plot.getPlotId());
+        else def.setArenaPlotId(plot.getPlotId());
+        saveDefinition(def);
+        return null;
+    }
+
+    public String setSpawn(Player player, String arenaId, String kind) {
+        if (player == null) return "Invalid player.";
+        ArenaDefinition def = getArena(arenaId);
+        if (def == null) return "Unknown arena.";
+        Location loc = player.getLocation();
+        ArenaSpawnPoint sp = new ArenaSpawnPoint(
+                loc.getWorld() == null ? null : loc.getWorld().getUID(),
+                loc.getWorld() == null ? null : loc.getWorld().getName(),
+                loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+        String k = kind == null ? "" : kind.toLowerCase(Locale.ROOT);
+        switch (k) {
+            case "entry" -> def.setEntrySpawn(sp);
+            case "exit", "lobby" -> def.setExitSpawn(sp);
+            case "spectator" -> def.setSpectatorSpawn(sp);
+            case "mob" -> def.getMobSpawns().add(sp);
+            default -> {
+                return "Unknown spawn kind. Use entry|exit|mob.";
+            }
+        }
+        saveDefinition(def);
+        return null;
+    }
+
+    public boolean isLocationInActiveArenaPlot(Location loc) {
+        if (loc == null || plugin.store() == null) return false;
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return false;
+        UUID plotId = plot.getPlotId();
+        for (ArenaRun run : activeRuns.values()) {
+            if (!run.getState().isActiveCombat()) continue;
+            ArenaDefinition def = getArena(run.getArenaId());
+            if (def == null) continue;
+            if (plotId.equals(def.getArenaPlotId())) return true;
+        }
+        return false;
+    }
+
+    // ------------------------------------------------------------------
+    // Scoring helpers for listener
+    // ------------------------------------------------------------------
+
+    public void recordMobKill(ArenaRun run, Player killer, ArenaRarity rarity, boolean boss) {
+        if (run == null) return;
+        int base = boss ? ArenaScoreService.bossScore(false) : ArenaScoreService.killScore(rarity);
+        int scored = ArenaScoreService.applyScoreMultiplier(base, run.getLockedScale().scoreMultiplier);
+        run.addPartyKill();
+        run.addPartyScore(scored);
+        if (killer != null) {
+            ArenaParticipant p = run.getParticipant(killer.getUniqueId());
+            if (p != null) {
+                p.addKill();
+                p.addScore(scored);
+                if (boss) p.addBossKill();
+            }
+        }
+        if (boss) run.addBossDefeated();
+    }
+
+    // ------------------------------------------------------------------
+    // Misc helpers
+    // ------------------------------------------------------------------
+
+    public Location toLocation(ArenaSpawnPoint sp) {
+        if (sp == null || !sp.hasWorldIdentity()) return null;
+        World world = null;
+        if (sp.worldId() != null) {
+            for (World w : Bukkit.getWorlds()) {
+                if (sp.worldId().equals(w.getUID())) {
+                    world = w;
+                    break;
+                }
+            }
+        }
+        if (world == null && sp.worldName() != null) {
+            world = Bukkit.getWorld(sp.worldName());
+        }
+        if (world == null) return null;
+        return new Location(world, sp.x(), sp.y(), sp.z(), sp.yaw(), sp.pitch());
+    }
+
+    private static void stripEffects(Player player) {
+        if (player == null) return;
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
+        try {
+            AttributeInstance max = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            double maxHp = max == null ? 20.0D : max.getValue();
+            player.setHealth(Math.min(maxHp, Math.max(1.0D, player.getHealth())));
+        } catch (Throwable ignored) {
+            // Paper version variance
+        }
+        if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE) {
+            // leave gamemode; spectator transition can be applied by caller later
+        }
+    }
+
+    private static boolean hasTotem(Player player) {
+        if (player == null) return false;
+        PlayerInventory inv = player.getInventory();
+        ItemStack main = inv.getItemInMainHand();
+        ItemStack off = inv.getItemInOffHand();
+        return (main != null && main.getType() == Material.TOTEM_OF_UNDYING)
+                || (off != null && off.getType() == Material.TOTEM_OF_UNDYING);
+    }
+
+    private static void consumeOneTotem(Player player) {
+        if (player == null) return;
+        PlayerInventory inv = player.getInventory();
+        ItemStack off = inv.getItemInOffHand();
+        if (off != null && off.getType() == Material.TOTEM_OF_UNDYING) {
+            off.setAmount(off.getAmount() - 1);
+            if (off.getAmount() <= 0) inv.setItemInOffHand(null);
+            return;
+        }
+        ItemStack main = inv.getItemInMainHand();
+        if (main != null && main.getType() == Material.TOTEM_OF_UNDYING) {
+            main.setAmount(main.getAmount() - 1);
+            if (main.getAmount() <= 0) inv.setItemInMainHand(null);
+        }
+    }
+
+    private static UUID parseUuid(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // YAML (de)serialization
+    // ------------------------------------------------------------------
+
+    private ArenaDefinition deserializeDefinition(String id, ConfigurationSection sec) {
+        ArenaDefinition def = new ArenaDefinition(id);
+        def.setDisplayName(sec.getString("displayName", id));
+        def.setEnabled(sec.getBoolean("enabled", false));
+        def.setPresetId(sec.getString("presetId"));
+        try {
+            def.setMode(ArenaMode.valueOf(sec.getString("mode", "PVE_WAVES")));
+        } catch (IllegalArgumentException ignored) {}
+        def.setMaxActiveRuns(sec.getInt("maxActiveRuns", 1));
+        def.setMinPlayers(sec.getInt("minPlayers", 1));
+        def.setMaxPlayers(sec.getInt("maxPlayers", 4));
+        def.setAllowLateJoin(sec.getBoolean("allowLateJoin", false));
+        def.setInventoryPolicy(ArenaInventoryPolicy.fromConfig(
+                sec.getString("inventoryPolicy"), ArenaInventoryPolicy.SAVE_AND_RESTORE));
+        def.setTotemPolicy(ArenaTotemPolicy.fromConfig(
+                sec.getString("totemPolicy"), ArenaTotemPolicy.CONSUME_AND_ELIMINATE));
+        def.setMaxActiveMobs(sec.getInt("maxActiveMobs", 48));
+        def.setLobbyPlotId(parseUuid(sec.getString("lobbyPlotId")));
+        def.setArenaPlotId(parseUuid(sec.getString("arenaPlotId")));
+        def.setSpectatorPlotId(parseUuid(sec.getString("spectatorPlotId")));
+        def.setEntrySpawn(readSpawn(sec.getConfigurationSection("entrySpawn")));
+        def.setExitSpawn(readSpawn(sec.getConfigurationSection("exitSpawn")));
+        def.setSpectatorSpawn(readSpawn(sec.getConfigurationSection("spectatorSpawn")));
+        def.setRewardCooldownSeconds(sec.getLong("rewardCooldownSeconds", 1800L));
+        def.setMinWaveForPayout(sec.getInt("minWaveForPayout", 1));
+        def.setPresenceMinRatio(sec.getDouble("presenceMinRatio", 0.5D));
+
+        List<?> mobs = sec.getList("mobSpawns");
+        if (mobs != null) {
+            for (Object o : mobs) {
+                if (o instanceof Map<?, ?> map) {
+                    ArenaSpawnPoint sp = readSpawnMap(map);
+                    if (sp != null) def.getMobSpawns().add(sp);
+                }
+            }
+        }
+        ConfigurationSection waves = sec.getConfigurationSection("waves");
+        if (waves != null) {
+            for (String key : waves.getKeys(false)) {
+                ConfigurationSection ws = waves.getConfigurationSection(key);
+                if (ws == null) continue;
+                def.getWaves().add(new ArenaWaveSpec(
+                        ArenaWaveSpec.typeFrom(ws.getString("type")),
+                        ws.getString("id", key),
+                        ws.getInt("mobCount", 6),
+                        ArenaRarity.fromConfig(ws.getString("maxRarity"), ArenaRarity.COMMON),
+                        ws.getBoolean("finalBoss", false),
+                        ws.getString("checkpointRewardKey"),
+                        ws.getStringList("difficultyModifiers"),
+                        ws.getString("unlockPhaseId"),
+                        ws.getStringList("mobTemplateIds"),
+                        ws.getLong("timeLimitMillis", 0L)));
+            }
+        }
+        return def;
+    }
+
+    private void serializeDefinition(YamlConfiguration out, String base, ArenaDefinition def) {
+        out.set(base + ".displayName", def.getDisplayName());
+        out.set(base + ".enabled", def.isEnabledFlag());
+        out.set(base + ".presetId", def.getPresetId());
+        out.set(base + ".mode", def.getMode().name());
+        out.set(base + ".maxActiveRuns", def.getMaxActiveRuns());
+        out.set(base + ".minPlayers", def.getMinPlayers());
+        out.set(base + ".maxPlayers", def.getMaxPlayers());
+        out.set(base + ".allowLateJoin", def.isAllowLateJoin());
+        out.set(base + ".inventoryPolicy", def.getInventoryPolicy().name());
+        out.set(base + ".totemPolicy", def.getTotemPolicy().name());
+        out.set(base + ".maxActiveMobs", def.getMaxActiveMobs());
+        out.set(base + ".lobbyPlotId", def.getLobbyPlotId() == null ? null : def.getLobbyPlotId().toString());
+        out.set(base + ".arenaPlotId", def.getArenaPlotId() == null ? null : def.getArenaPlotId().toString());
+        out.set(base + ".spectatorPlotId", def.getSpectatorPlotId() == null ? null : def.getSpectatorPlotId().toString());
+        writeSpawn(out, base + ".entrySpawn", def.getEntrySpawn());
+        writeSpawn(out, base + ".exitSpawn", def.getExitSpawn());
+        writeSpawn(out, base + ".spectatorSpawn", def.getSpectatorSpawn());
+        out.set(base + ".rewardCooldownSeconds", def.getRewardCooldownSeconds());
+        out.set(base + ".minWaveForPayout", def.getMinWaveForPayout());
+        out.set(base + ".presenceMinRatio", def.getPresenceMinRatio());
+
+        List<Map<String, Object>> mobs = new ArrayList<>();
+        for (ArenaSpawnPoint sp : def.getMobSpawns()) {
+            mobs.add(spawnToMap(sp));
+        }
+        out.set(base + ".mobSpawns", mobs);
+
+        int i = 0;
+        for (ArenaWaveSpec w : def.getWaves()) {
+            String wb = base + ".waves." + (i++);
+            out.set(wb + ".type", w.type().name());
+            out.set(wb + ".id", w.id());
+            out.set(wb + ".mobCount", w.mobCount());
+            out.set(wb + ".maxRarity", w.maxRarity().name());
+            out.set(wb + ".finalBoss", w.finalBoss());
+            out.set(wb + ".checkpointRewardKey", w.checkpointRewardKey());
+            out.set(wb + ".difficultyModifiers", w.difficultyModifiers());
+            out.set(wb + ".unlockPhaseId", w.unlockPhaseId());
+            out.set(wb + ".mobTemplateIds", w.mobTemplateIds());
+            out.set(wb + ".timeLimitMillis", w.timeLimitMillis());
+        }
+    }
+
+    private ArenaSpawnPoint readSpawn(ConfigurationSection sec) {
+        if (sec == null) return null;
+        return new ArenaSpawnPoint(
+                parseUuid(sec.getString("worldId")),
+                sec.getString("worldName"),
+                sec.getDouble("x"), sec.getDouble("y"), sec.getDouble("z"),
+                (float) sec.getDouble("yaw"), (float) sec.getDouble("pitch"));
+    }
+
+    private ArenaSpawnPoint readSpawnMap(Map<?, ?> map) {
+        if (map == null) return null;
+        Object wid = map.get("worldId");
+        Object wn = map.get("worldName");
+        return new ArenaSpawnPoint(
+                wid == null ? null : parseUuid(String.valueOf(wid)),
+                wn == null ? null : String.valueOf(wn),
+                asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")),
+                (float) asDouble(map.get("yaw")), (float) asDouble(map.get("pitch")));
+    }
+
+    private void writeSpawn(YamlConfiguration out, String base, ArenaSpawnPoint sp) {
+        if (sp == null) return;
+        out.set(base + ".worldId", sp.worldId() == null ? null : sp.worldId().toString());
+        out.set(base + ".worldName", sp.worldName());
+        out.set(base + ".x", sp.x());
+        out.set(base + ".y", sp.y());
+        out.set(base + ".z", sp.z());
+        out.set(base + ".yaw", sp.yaw());
+        out.set(base + ".pitch", sp.pitch());
+    }
+
+    private Map<String, Object> spawnToMap(ArenaSpawnPoint sp) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        if (sp == null) return map;
+        map.put("worldId", sp.worldId() == null ? null : sp.worldId().toString());
+        map.put("worldName", sp.worldName());
+        map.put("x", sp.x());
+        map.put("y", sp.y());
+        map.put("z", sp.z());
+        map.put("yaw", sp.yaw());
+        map.put("pitch", sp.pitch());
+        return map;
+    }
+
+    private ArenaLeaderboardRecord deserializeBoardRecord(Map<?, ?> map) {
+        try {
+            ArenaLeaderboardRecord.Board board =
+                    ArenaLeaderboardRecord.Board.valueOf(String.valueOf(map.get("board")));
+            String arenaId = String.valueOf(map.get("arenaId"));
+            ArenaMode mode = ArenaMode.PVE_WAVES;
+            try {
+                mode = ArenaMode.valueOf(String.valueOf(map.get("mode")));
+            } catch (Exception ignored) {}
+            List<UUID> members = new ArrayList<>();
+            Object rawMembers = map.get("members");
+            if (rawMembers instanceof List<?> list) {
+                for (Object o : list) {
+                    UUID u = parseUuid(String.valueOf(o));
+                    if (u != null) members.add(u);
+                }
+            }
+            Object difficulty = map.get("difficulty");
+            Object seasonId = map.get("seasonId");
+            return new ArenaLeaderboardRecord(
+                    board, arenaId, mode,
+                    difficulty == null ? "default" : String.valueOf(difficulty),
+                    asInt(map.get("partySize"), 1),
+                    members,
+                    asInt(map.get("score"), 0),
+                    asInt(map.get("wave"), 0),
+                    (long) asDouble(map.get("clearTimeMillis")),
+                    asInt(map.get("bossKills"), 0),
+                    parseUuid(map.get("runId") == null ? null : String.valueOf(map.get("runId"))),
+                    seasonId == null ? "lifetime" : String.valueOf(seasonId));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Map<String, Object> serializeBoardRecord(ArenaLeaderboardRecord r) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("board", r.getBoard().name());
+        map.put("arenaId", r.getArenaId());
+        map.put("mode", r.getMode().name());
+        map.put("difficulty", r.getDifficultyLabel());
+        map.put("partySize", r.getPartySize());
+        List<String> members = new ArrayList<>();
+        for (UUID u : r.getMembers()) members.add(u.toString());
+        map.put("members", members);
+        map.put("score", r.getScore());
+        map.put("wave", r.getWave());
+        map.put("clearTimeMillis", r.getClearTimeMillis());
+        map.put("bossKills", r.getBossKills());
+        map.put("runId", r.getRunId() == null ? null : r.getRunId().toString());
+        map.put("seasonId", r.getSeasonId());
+        map.put("recordedAt", r.getRecordedAt());
+        return map;
+    }
+
+    private static double asDouble(Object o) {
+        if (o instanceof Number n) return n.doubleValue();
+        if (o == null) return 0.0D;
+        try {
+            return Double.parseDouble(String.valueOf(o));
+        } catch (Exception e) {
+            return 0.0D;
+        }
+    }
+
+    private static int asInt(Object o, int def) {
+        if (o instanceof Number n) return n.intValue();
+        if (o == null) return def;
+        try {
+            return Integer.parseInt(String.valueOf(o));
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public void shutdown() {
+        try {
+            save();
+        } finally {
+            persistenceQueue.close();
+        }
+    }
+}

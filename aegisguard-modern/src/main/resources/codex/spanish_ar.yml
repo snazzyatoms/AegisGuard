@@ -4426,3 +4426,12 @@ open_pending_requests_lore:
 - '&7que esperan aprobar o denegar.'
 - ' '
 - '&eClic para abrir.'
+
+button_admin_arena: '&cAdmin de Arenas'
+admin_arena_lore:
+- '&7Que: configura arenas de mazmorras, aborta runs,'
+- '&7y revisa el libro de recompensas.'
+- '&7Cuando: armas Lava Dungeon o PvE en grupo.'
+- ' '
+- '&eClic para abrir.'
+

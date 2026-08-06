@@ -4034,3 +4034,12 @@ open_pending_requests_lore:
 - '&7die genehmigt oder abgelehnt werden müssen.'
 - ' '
 - '&eKlicken zum Öffnen.'
+
+button_admin_arena: '&cArena-Admin'
+admin_arena_lore:
+- '&7Was: Arenen konfigurieren, Runs abbrechen,'
+- '&7und Belohnungsbuch pruefen.'
+- '&7Wann: Lava Dungeon oder Gruppen-PvE bauen.'
+- ' '
+- '&eKlicken zum Oeffnen.'
+

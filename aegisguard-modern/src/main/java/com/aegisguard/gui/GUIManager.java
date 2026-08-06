@@ -111,6 +111,10 @@ public class GUIManager {
     // Alliance Access (1.3.0+ Milestone 7)
     private final AllianceAccessGUI allianceAccessGUI;
 
+    // Arena / Dungeon runs (1.3.0+, optional)
+    private com.aegisguard.arena.ArenaGUI arenaGUI;
+    private com.aegisguard.arena.ArenaAdminGUI arenaAdminGUI;
+
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
 
@@ -339,6 +343,20 @@ public class GUIManager {
     public RouteAdminGUI routeAdmin() { return routeAdminGUI; }
 
     public AllianceAccessGUI allianceAccess() { return allianceAccessGUI; }
+
+    public com.aegisguard.arena.ArenaGUI arena() {
+        if (arenaGUI == null && plugin.arena() != null) {
+            arenaGUI = new com.aegisguard.arena.ArenaGUI(plugin, plugin.arena());
+        }
+        return arenaGUI;
+    }
+
+    public com.aegisguard.arena.ArenaAdminGUI arenaAdmin() {
+        if (arenaAdminGUI == null && plugin.arena() != null) {
+            arenaAdminGUI = new com.aegisguard.arena.ArenaAdminGUI(plugin, plugin.arena());
+        }
+        return arenaAdminGUI;
+    }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

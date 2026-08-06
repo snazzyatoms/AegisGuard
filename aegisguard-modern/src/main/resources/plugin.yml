@@ -92,6 +92,8 @@ permissions:
       aegis.admin.world: true
       aegis.admin.audit: true
       aegis.admin.routes: true
+      aegis.arena.admin: true
+      aegis.arena.steward: true
 
   aegis.user:
     description: Recommended base permissions for regular players.
@@ -106,6 +108,8 @@ permissions:
       aegis.discovery: true
       aegis.activity: true
       aegis.claimblocks.gift: true
+      aegis.arena.use: true
+      aegis.arena.spectate: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -290,6 +294,22 @@ permissions:
 
   aegis.admin.routes:
     description: Create and edit exploration routes with ordered checkpoints.
+    default: op
+
+  aegis.arena.use:
+    description: Browse, join, and party for Arena dungeon runs.
+    default: true
+
+  aegis.arena.spectate:
+    description: Spectate active Arena runs.
+    default: true
+
+  aegis.arena.steward:
+    description: Configure arenas on server plots you are trusted to manage.
+    default: op
+
+  aegis.arena.admin:
+    description: Bind any arena plots, abort runs, recover players, reset stats, and resolve rewards.
     default: op
 
   # ---------------------------------------------------------------------------

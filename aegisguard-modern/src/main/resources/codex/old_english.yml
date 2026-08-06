@@ -4020,3 +4020,12 @@ open_pending_requests_lore:
 - '&7awaiting approve or deny.'
 - ' '
 - '&eClick to open.'
+
+button_admin_arena: '&cArena Admin'
+admin_arena_lore:
+- '&7What: configure dungeon arenas, abort runs,'
+- '&7and review reward ledger entries.'
+- '&7When: building Lava Dungeon or party PvE.'
+- ' '
+- '&eClick to open.'
+

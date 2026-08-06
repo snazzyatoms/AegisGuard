@@ -147,6 +147,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.guestpass.GuestPassService guestPassService;
     private com.aegisguard.lockdown.LockdownService lockdownService;
     private com.aegisguard.routes.RouteService routeService;
+    private com.aegisguard.arena.ArenaService arenaService;
     private com.aegisguard.alliance.AllianceManager allianceManager;
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
@@ -248,6 +249,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.guestpass.GuestPassService guestPasses() { return guestPassService; }
     public com.aegisguard.lockdown.LockdownService lockdown() { return lockdownService; }
     public com.aegisguard.routes.RouteService routes() { return routeService; }
+    public com.aegisguard.arena.ArenaService arena() { return arenaService; }
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
@@ -315,6 +317,7 @@ public class AegisGuard extends JavaPlugin {
         guestPassService = new com.aegisguard.guestpass.GuestPassService(this);
         lockdownService = new com.aegisguard.lockdown.LockdownService(this);
         routeService = new com.aegisguard.routes.RouteService(this);
+        arenaService = new com.aegisguard.arena.ArenaService(this);
         allianceManager = new com.aegisguard.alliance.AllianceManager(this);
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
@@ -392,6 +395,13 @@ public class AegisGuard extends JavaPlugin {
             } catch (Throwable ignored) {}
 
             try {
+                if (arenaService != null) {
+                    arenaService.load();
+                    arenaService.recoverIncompleteRunsOnEnable();
+                }
+            } catch (Throwable ignored) {}
+
+            try {
                 if (allianceManager != null) allianceManager.load();
             } catch (Throwable ignored) {}
 
@@ -419,6 +429,9 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
+        if (arenaService != null) {
+            Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
+        }
         levelingListener = new LevelingListener(this);
         Bukkit.getPluginManager().registerEvents(levelingListener, this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
@@ -547,6 +560,12 @@ public class AegisGuard extends JavaPlugin {
         } catch (Throwable t) {
             console().warning("log_save_routes_failed", "Failed to save routes: {ERROR}",
                     "ERROR", t.getMessage() == null ? "" : t.getMessage());
+        }
+
+        try {
+            if (arenaService != null) arenaService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save arena data: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         try {
@@ -832,6 +851,7 @@ public class AegisGuard extends JavaPlugin {
                 if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
                 if (routeService != null && routeService.isDirty()) routeService.save();
+                if (arenaService != null && arenaService.isDirty()) arenaService.save();
                 if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();

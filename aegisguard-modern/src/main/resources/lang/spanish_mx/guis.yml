@@ -3420,3 +3420,17 @@ visit_unknown_label: 'Desconocido'
 group_plots_join_name: '&aUnirse a {GROUP}'
 group_plots_none_linked: 'Ninguno'
 plot_status_server_zone_banner: "&bZona del servidor &7— gestionada por staff / Steward."
+
+button_admin_arena: '&cAdmin de Arenas'
+admin_arena_lore:
+- '&7Que: configura arenas de mazmorras, aborta runs,'
+- '&7y revisa el libro de recompensas.'
+- '&7Cuando: construyes Lava Dungeon o PvE en grupo.'
+- ' '
+- '&eClic para abrir.'
+
+button_arena: '&cArenas'
+arena_button_lore:
+- '&7Join cooperative dungeon runs,'
+- '&7parties, and Lava Dungeon challenges.'
+

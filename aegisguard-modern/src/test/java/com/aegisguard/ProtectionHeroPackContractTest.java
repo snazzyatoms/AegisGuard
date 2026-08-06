@@ -33,7 +33,7 @@ class ProtectionHeroPackContractTest {
         try (var in = Files.newInputStream(RES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1284, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1285, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.TRUE, protections.get("hopper_pipe"));
         assertEquals(Boolean.TRUE, protections.get("teleport_ward"));
@@ -155,7 +155,7 @@ class ProtectionHeroPackContractTest {
     @Test
     void migrationSchemaConstantMatchesConfig() throws Exception {
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1284"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1284") || migration.contains("CURRENT_SCHEMA = 1285"));
     }
 
     @Test

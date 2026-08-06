@@ -41,6 +41,7 @@ public final class SafeTravelService implements Listener {
         SPAWN,
         STAFF,
         UNSTUCK,
+        ARENA,
         OTHER
     }
 

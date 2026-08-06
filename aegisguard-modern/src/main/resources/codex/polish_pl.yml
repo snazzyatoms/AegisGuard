@@ -4015,3 +4015,12 @@ open_pending_requests_lore:
 - '&7oczekujących na zatwierdzenie lub odrzucenie.'
 - ' '
 - '&eKliknij, aby otworzyć.'
+
+button_admin_arena: '&cAdmin Areny'
+admin_arena_lore:
+- '&7Co: konfiguruj areny, przerywaj runy,'
+- '&7i sprawdzaj rejestr nagrod.'
+- '&7Kiedy: budujesz Lava Dungeon lub PvE grupy.'
+- ' '
+- '&eKliknij, aby otworzyc.'
+

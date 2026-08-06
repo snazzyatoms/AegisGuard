@@ -3315,3 +3315,17 @@ visit_unknown_label: 'Nieznany'
 group_plots_join_name: '&aDołącz do {GROUP}'
 group_plots_none_linked: 'Brak'
 plot_status_server_zone_banner: "&bStrefa serwera &7— zarzadzana przez staff / Stewarda."
+
+button_admin_arena: '&cAdmin Areny'
+admin_arena_lore:
+- '&7Co: konfiguruj areny, przerywaj runy,'
+- '&7i sprawdzaj rejestr nagrod.'
+- '&7Kiedy: budujesz Lava Dungeon lub PvE grupy.'
+- ' '
+- '&eKliknij, aby otworzyc.'
+
+button_arena: '&cArenas'
+arena_button_lore:
+- '&7Join cooperative dungeon runs,'
+- '&7parties, and Lava Dungeon challenges.'
+

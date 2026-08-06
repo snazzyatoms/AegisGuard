@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1284
+config_schema: 1285
 
 
 # ------------------------------------------------------------------------------
@@ -1640,3 +1640,56 @@ roles:
     icon: OAK_DOOR
     priority: 10
     permissions: ["INTERACT"]
+
+# ==============================================================================
+# Arena / Dungeon / Mob-Run Module (1.3.0+, optional)
+# ==============================================================================
+# Cooperative PvE party dungeons on protected server plots. Disabled by default.
+# ProtectionPreset.ARENA is only a flag bundle — this module is separate.
+arena:
+  enabled: false
+  disconnect_grace_seconds: 60
+  allow_late_join: false
+  party:
+    invite_expire_seconds: 60
+    default_min_players: 1
+    default_max_players: 4
+    leadership_reserve_during_grace: true
+    leadership_transfer_after_grace: true
+  totem:
+    default_policy: CONSUME_AND_ELIMINATE
+  scaling:
+    lock_at_run_start: true
+    dynamic_mid_run: false
+  rewards:
+    mvp_model: EQUAL_MILESTONE_PLUS_SCORE_BONUS
+    presence_min_ratio: 0.5
+    enabled: true
+  defaults:
+    max_active_runs_per_arena: 1
+  limits:
+    max_active_arenas: 16
+    max_active_runs: 8
+    max_players_per_run: 8
+    max_mobs_per_run: 64
+    max_projectiles_per_run: 128
+    max_boss_minions_per_run: 16
+    max_loaded_chunks_per_run: 24
+    cleanup_timeout_ticks: 200
+    auto_disable_after_failures: 3
+  persistence:
+    backup_count: 5
+    archive_closed_runs_after_days: 14
+  inventory:
+    default_policy_pve: SAVE_AND_RESTORE
+    allow_drop_on_death: false
+  pvp:
+    enabled: false
+  hooks:
+    mythicmobs: false
+  presets:
+    lava_dungeon:
+      enabled: true
+      min_players: 1
+      max_players: 4
+      totem_policy: CONSUME_AND_ELIMINATE

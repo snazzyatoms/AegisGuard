@@ -27,6 +27,11 @@ import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceRosterHolder;
+import com.aegisguard.arena.ArenaGUI.ArenaMenuHolder;
+import com.aegisguard.arena.ArenaGUI.ArenaDetailHolder;
+import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminHolder;
+import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminEditHolder;
+import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminRunsHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -192,7 +197,12 @@ public class GUIListener implements Listener {
                 || holder instanceof RouteEditHolder
                 || holder instanceof AllianceMenuHolder
                 || holder instanceof AllianceConfirmHolder
-                || holder instanceof AllianceRosterHolder;
+                || holder instanceof AllianceRosterHolder
+                || holder instanceof ArenaMenuHolder
+                || holder instanceof ArenaDetailHolder
+                || holder instanceof ArenaAdminHolder
+                || holder instanceof ArenaAdminEditHolder
+                || holder instanceof ArenaAdminRunsHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -460,6 +470,15 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof AllianceRosterHolder castHolder) {
             plugin.gui().allianceAccess().handleRosterClick(player, e, castHolder);
+        }
+        else if (holder instanceof ArenaMenuHolder
+                || holder instanceof ArenaDetailHolder) {
+            if (plugin.gui().arena() != null) plugin.gui().arena().handleClick(e);
+        }
+        else if (holder instanceof ArenaAdminHolder
+                || holder instanceof ArenaAdminEditHolder
+                || holder instanceof ArenaAdminRunsHolder) {
+            if (plugin.gui().arenaAdmin() != null) plugin.gui().arenaAdmin().handleClick(e);
         }
     }
 

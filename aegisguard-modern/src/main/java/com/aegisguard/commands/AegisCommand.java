@@ -45,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "discover", "favorite", "activity",
+            "group", "alliance", "arena", "discover", "favorite", "activity",
             "transfer", "settlements",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
@@ -320,6 +320,14 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "settlements" -> plugin.gui().settlementsInbox().open(p);
 
             case "alliance" -> handleAlliance(p, args);
+            case "arena" -> {
+                if (plugin.arena() == null) {
+                    sendKey(p, "arena_unavailable", "&cArena module is unavailable.");
+                    return true;
+                }
+                String[] rest = args.length <= 1 ? new String[0] : java.util.Arrays.copyOfRange(args, 1, args.length);
+                return new com.aegisguard.arena.ArenaCommand(plugin, plugin.arena()).handle(p, rest);
+            }
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);

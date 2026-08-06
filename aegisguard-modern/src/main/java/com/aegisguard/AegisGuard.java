@@ -167,6 +167,7 @@ public class AegisGuard extends JavaPlugin {
     private Object rentalExpiryTask;
     private Object guestPassExpiryTask;
     private Object lockdownSweepTask;
+    private Object arenaTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
@@ -449,6 +450,7 @@ public class AegisGuard extends JavaPlugin {
         startRentalExpiryTask();
         startGuestPassExpiryTask();
         startLockdownSweepTask();
+        startArenaTickTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -490,6 +492,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
+        cancelTaskReflectively(arenaTickTask);
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
         try {
@@ -1024,6 +1027,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
+        cancelTaskReflectively(arenaTickTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -1033,6 +1037,7 @@ public class AegisGuard extends JavaPlugin {
         rentalExpiryTask = null;
         guestPassExpiryTask = null;
         lockdownSweepTask = null;
+        arenaTickTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -1042,6 +1047,7 @@ public class AegisGuard extends JavaPlugin {
         startRentalExpiryTask();
         startGuestPassExpiryTask();
         startLockdownSweepTask();
+        startArenaTickTask();
     }
 
     private void startRentalExpiryTask() {
@@ -1115,6 +1121,19 @@ public class AegisGuard extends JavaPlugin {
                 console().warning("log_lockdown_sweep_error", "Lockdown expiry sweep error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, 20L, 1_200L);
+    }
+
+    private void startArenaTickTask() {
+        if (arenaService == null) return;
+        // Always schedule; tickRuns no-ops when arena.enabled is false.
+        arenaTickTask = runGlobalRepeating(() -> {
+            try {
+                arenaService.tickRuns();
+            } catch (Throwable t) {
+                console().warning("log_arena_tick_error", "Arena tick error: {ERROR}",
+                        "ERROR", t.getMessage() == null ? "" : t.getMessage());
+            }
+        }, 20L, 20L);
     }
 
     private void cancelTaskReflectively(Object task) {

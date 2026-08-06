@@ -28,6 +28,8 @@ public final class ArenaRun {
     private final Set<UUID> activeMobIds = ConcurrentHashMap.newKeySet();
     private final List<String> journal = new ArrayList<>();
     private volatile int waveIndex;
+    /** Wave index for which mobs were last queued/spawned; -1 = none yet. */
+    private volatile int spawnedWaveIndex = -1;
     private volatile int deepestWave;
     private volatile int bossesDefeated;
     private volatile int partyKills;
@@ -89,6 +91,9 @@ public final class ArenaRun {
         this.waveIndex = Math.max(0, waveIndex);
         this.deepestWave = Math.max(deepestWave, this.waveIndex + 1);
     }
+
+    public int getSpawnedWaveIndex() { return spawnedWaveIndex; }
+    public void setSpawnedWaveIndex(int spawnedWaveIndex) { this.spawnedWaveIndex = spawnedWaveIndex; }
 
     public int getDeepestWave() { return deepestWave; }
     public int getBossesDefeated() { return bossesDefeated; }

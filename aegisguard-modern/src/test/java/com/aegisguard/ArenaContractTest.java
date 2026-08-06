@@ -88,4 +88,26 @@ class ArenaContractTest {
         assertFalse(service.contains("SelectionService") || service.contains("expandPlot"),
                 "ArenaService must never expand claim geometry");
     }
+
+    @Test
+    void tryStartBusyAndUnboundMessagingPresent() throws Exception {
+        String service = Files.readString(JAVA_ROOT.resolve("arena/ArenaService.java"));
+        assertTrue(service.contains("arena.defaults.max_active_runs_per_arena"),
+                "Must read per-arena max from config defaults path");
+        assertTrue(service.contains("This arena is busy (max 1 active run)"),
+                "Busy refuse must use clear max=1 messaging");
+        assertTrue(service.contains("plots/spawns unbound or incomplete"),
+                "Unbound plots must surface actionable start errors");
+        assertTrue(service.contains("spawnCurrentWave"),
+                "Wave spawn loop must be wired after start/advance");
+        assertTrue(service.contains("tickRuns"),
+                "Leadership/disconnect grace must tick");
+    }
+
+    @Test
+    void arenaTickTaskIsWired() throws Exception {
+        String plugin = Files.readString(JAVA_ROOT.resolve("AegisGuard.java"));
+        assertTrue(plugin.contains("startArenaTickTask()"));
+        assertTrue(plugin.contains("arenaService.tickRuns()"));
+    }
 }

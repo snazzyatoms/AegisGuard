@@ -61,4 +61,16 @@ class ArenaLeadershipRulesTest {
         run.completeLeadershipTransfer(UUID.randomUUID());
         assertTrue(run.tryBeginLeadershipTransfer("GRACE_EXPIRED"));
     }
+
+    @Test
+    void disconnectGraceExpiryLeavesNoFighters() {
+        UUID leader = UUID.randomUUID();
+        ArenaRun run = new ArenaRun(UUID.randomUUID(), "lava", ArenaMode.PVE_WAVES, leader);
+        ArenaParticipant part = run.getOrCreate(leader);
+        part.setState(ParticipantState.DISCONNECTED);
+        part.setDisconnectedSince(1_000L);
+        part.setEliminatedHandled(true);
+        part.setState(ParticipantState.ELIMINATED);
+        assertEquals(0, run.countFighting());
+    }
 }

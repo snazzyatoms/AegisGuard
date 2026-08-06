@@ -2,6 +2,8 @@ package com.aegisguard.arena;
 
 import com.aegisguard.AegisGuard;
 import org.bukkit.GameMode;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -93,7 +95,14 @@ public final class ArenaInventoryService {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
             clearPlayer(player);
             player.setGameMode(GameMode.valueOf(yaml.getString("gameMode", "SURVIVAL")));
-            player.setHealth(Math.min(player.getMaxHealth(), yaml.getDouble("health", 20.0D)));
+            double maxHp = 20.0D;
+            try {
+                AttributeInstance maxAttr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                if (maxAttr != null) maxHp = maxAttr.getValue();
+            } catch (Throwable ignored) {
+                // Paper version variance
+            }
+            player.setHealth(Math.min(maxHp, Math.max(1.0D, yaml.getDouble("health", 20.0D))));
             player.setFoodLevel(yaml.getInt("food", 20));
             player.setSaturation((float) yaml.getDouble("saturation", 5.0D));
             player.setLevel(yaml.getInt("level", 0));

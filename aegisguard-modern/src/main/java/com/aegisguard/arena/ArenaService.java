@@ -15,6 +15,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -102,6 +104,15 @@ public final class ArenaService {
     public int globalMaxActiveRuns() {
         return Math.max(1, plugin.getConfig().getInt("arena.limits.max_active_runs",
                 plugin.getConfig().getInt("arena.max_concurrent_runs", 8)));
+    }
+
+    public int defaultMaxActiveRunsPerArena() {
+        return Math.max(1, plugin.getConfig().getInt("arena.defaults.max_active_runs_per_arena", 1));
+    }
+
+    public int partyMaxSize() {
+        return Math.max(1, plugin.getConfig().getInt("arena.party.default_max_players",
+                plugin.getConfig().getInt("arena.party.max_size", 4)));
     }
 
     public int partyInviteExpireSeconds() {
@@ -418,6 +429,7 @@ public final class ArenaService {
             return definitions.get(key);
         }
         ArenaDefinition def = new ArenaDefinition(key);
+        def.setMaxActiveRuns(defaultMaxActiveRunsPerArena());
         def.revalidate();
         definitions.put(def.getId(), def);
         dirty = true;
@@ -484,7 +496,7 @@ public final class ArenaService {
             return target.getName() + " is already in a party.";
         }
         if (playerToRun.containsKey(target.getUniqueId())) return target.getName() + " is already in a run.";
-        int max = plugin.getConfig().getInt("arena.party.max_size", 4);
+        int max = partyMaxSize();
         if (party.size() >= max) return "Party is full.";
         party.invite(target.getUniqueId(), System.currentTimeMillis() + partyInviteExpireSeconds() * 1000L);
         return null;
@@ -546,12 +558,14 @@ public final class ArenaService {
         if (!def.isEnabledFlag()) return "Arena is disabled.";
         def.revalidate();
         if (!def.isConfigValid()) {
-            return "Arena config invalid: " + def.getConfigError();
+            return "Arena not ready — plots/spawns unbound or incomplete: " + def.getConfigError();
         }
         if (!def.isEnabled()) return "Arena is not enabled.";
 
         if (countActiveRuns(def.getId()) >= def.getMaxActiveRuns()) {
-            return "This arena already has the maximum active runs.";
+            return def.getMaxActiveRuns() <= 1
+                    ? "This arena is busy (max 1 active run). Wait for the current run to finish."
+                    : "This arena already has the maximum active runs.";
         }
         if (activeRuns.size() >= globalMaxActiveRuns()) {
             return "Server has reached the global active-run limit.";
@@ -628,6 +642,7 @@ public final class ArenaService {
         runsByArenaId.computeIfAbsent(def.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
         run.setState(ArenaRunState.COUNTDOWN);
         run.setState(ArenaRunState.WAVE);
+        spawnCurrentWave(run);
         flushJournalAsync();
         return null;
     }
@@ -682,8 +697,132 @@ public final class ArenaService {
         } else {
             run.setState(ArenaRunState.WAVE);
         }
+        spawnCurrentWave(run);
         flushJournalAsync();
         return rolled;
+    }
+
+    /**
+     * Spawn the mobs for the run's current wave index. Idempotent per wave index.
+     */
+    public int spawnCurrentWave(ArenaRun run) {
+        if (run == null || run.isCleanupDone()) return 0;
+        if (run.getState().isTerminal() || run.getState() == ArenaRunState.CLEANUP) return 0;
+        if (run.getSpawnedWaveIndex() >= run.getWaveIndex()) return 0;
+
+        ArenaDefinition def = getArena(run.getArenaId());
+        if (def == null) return 0;
+        ArenaWaveSpec spec = currentWaveSpec(def, run);
+        if (spec == null) {
+            run.setSpawnedWaveIndex(run.getWaveIndex());
+            return 0;
+        }
+
+        int desired = scaledMobCount(spec, run.getLockedScale());
+        int globalCap = Math.max(1, plugin.getConfig().getInt("arena.limits.max_mobs_per_run", 64));
+        int cap = Math.min(def.getMaxActiveMobs(), globalCap);
+        int room = Math.max(0, cap - run.getActiveMobIds().size());
+        int toSpawn = Math.min(desired, room);
+        if (toSpawn <= 0) {
+            run.setSpawnedWaveIndex(run.getWaveIndex());
+            run.journal("spawn_skipped wave=" + run.getWaveIndex() + " room=0");
+            return 0;
+        }
+
+        List<ArenaSpawnPoint> points = def.getMobSpawns();
+        if (points.isEmpty()) {
+            run.setSpawnedWaveIndex(run.getWaveIndex());
+            run.journal("spawn_failed no_mob_spawns");
+            return 0;
+        }
+
+        List<String> templates = spec.mobTemplateIds().isEmpty()
+                ? List.of("zombie") : spec.mobTemplateIds();
+        boolean boss = spec.isBoss();
+        double healthMult = boss ? run.getLockedScale().bossHealth : run.getLockedScale().mobHealth;
+        int spawned = 0;
+
+        for (int i = 0; i < toSpawn; i++) {
+            ArenaSpawnPoint point = points.get(i % points.size());
+            Location loc = toLocation(point);
+            if (loc == null || loc.getWorld() == null) continue;
+            String template = templates.get(i % templates.size());
+            EntityType type = resolveMobType(template);
+            final int index = i;
+            spawnAtLocation(loc, () -> {
+                if (run.isCleanupDone() || run.getState().isTerminal()) return;
+                try {
+                    Entity entity = loc.getWorld().spawnEntity(loc, type);
+                    if (!(entity instanceof LivingEntity living)) {
+                        entity.remove();
+                        return;
+                    }
+                    keys.tagEntity(living.getPersistentDataContainer(), run.getRunId(), run.getArenaId());
+                    if (boss) {
+                        living.setCustomName("Arena Boss");
+                        living.setCustomNameVisible(true);
+                    } else {
+                        living.setCustomName("Arena Mob");
+                        living.setCustomNameVisible(false);
+                    }
+                    applyHealthScale(living, healthMult);
+                    run.getActiveMobIds().add(living.getUniqueId());
+                } catch (Throwable t) {
+                    plugin.getLogger().log(Level.WARNING,
+                            "[Arena] Failed to spawn wave mob #" + index + " for run " + run.getRunId(), t);
+                }
+            });
+            spawned++;
+        }
+
+        run.setSpawnedWaveIndex(run.getWaveIndex());
+        run.journal("spawned wave=" + run.getWaveIndex() + " count=" + spawned
+                + (boss ? " boss=true" : ""));
+        return spawned;
+    }
+
+    /** Package-visible for unit tests: apply party scale + boss count rules. */
+    static int scaledMobCount(ArenaWaveSpec spec, ArenaScalingTable.Row scale) {
+        if (spec == null) return 0;
+        ArenaScalingTable.Row row = scale == null ? ArenaScalingTable.Row.identity() : scale;
+        if (spec.isBoss()) {
+            return Math.max(1, spec.mobCount());
+        }
+        return Math.max(1, (int) Math.ceil(spec.mobCount() * row.mobCount));
+    }
+
+    static EntityType resolveMobType(String template) {
+        if (template == null || template.isBlank()) return EntityType.ZOMBIE;
+        String key = template.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+        try {
+            EntityType type = EntityType.valueOf(key);
+            if (type.isAlive()) return type;
+        } catch (IllegalArgumentException ignored) {
+            // fall through
+        }
+        return EntityType.ZOMBIE;
+    }
+
+    private void spawnAtLocation(Location loc, Runnable task) {
+        if (loc == null || task == null) return;
+        if (plugin.isFolia()) {
+            plugin.runAt(loc, task);
+        } else {
+            task.run();
+        }
+    }
+
+    private static void applyHealthScale(LivingEntity living, double mult) {
+        if (living == null || mult <= 0.0D || Math.abs(mult - 1.0D) < 0.001D) return;
+        try {
+            AttributeInstance max = living.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            if (max == null) return;
+            double next = Math.max(1.0D, max.getBaseValue() * mult);
+            max.setBaseValue(next);
+            living.setHealth(Math.min(next, max.getValue()));
+        } catch (Throwable ignored) {
+            // Attribute API variance across versions
+        }
     }
 
     public ArenaWaveSpec currentWaveSpec(ArenaDefinition def, ArenaRun run) {
@@ -832,6 +971,16 @@ public final class ArenaService {
         flushJournalAsync();
     }
 
+    /** Periodic maintenance: leadership grace, disconnect wipe, party invite purge. */
+    public void tickRuns() {
+        if (!isEnabled()) return;
+        tickLeadership();
+        tickDisconnectGrace();
+        for (ArenaParty party : parties.values()) {
+            party.purgeExpiredInvites();
+        }
+    }
+
     public void tickLeadership() {
         long now = System.currentTimeMillis();
         long grace = disconnectGraceMillis();
@@ -848,6 +997,40 @@ public final class ArenaService {
                 if (run.tryBeginLeadershipTransfer(d.reason)) {
                     run.completeLeadershipTransfer(d.newLeaderId);
                     flushJournalAsync();
+                }
+            }
+        }
+    }
+
+    /**
+     * After disconnect grace, mark offline fighters eliminated and wipe if none remain.
+     */
+    public void tickDisconnectGrace() {
+        long now = System.currentTimeMillis();
+        long grace = disconnectGraceMillis();
+        for (ArenaRun run : new ArrayList<>(activeRuns.values())) {
+            if (run.isCleanupDone() || run.getState().isTerminal() || run.getState() == ArenaRunState.CLEANUP) {
+                continue;
+            }
+            boolean changed = false;
+            for (ArenaParticipant part : run.getParticipants().values()) {
+                if (part.getState() != ParticipantState.DISCONNECTED) continue;
+                if (part.getDisconnectedSince() <= 0L) continue;
+                if (now - part.getDisconnectedSince() <= grace) continue;
+                if (part.isEliminatedHandled()) {
+                    part.setState(ParticipantState.ELIMINATED);
+                    continue;
+                }
+                part.setEliminatedHandled(true);
+                part.setState(ParticipantState.ELIMINATED);
+                part.addElimination();
+                run.journal("grace_expired eliminate " + part.getPlayerId());
+                changed = true;
+            }
+            if (changed) {
+                flushJournalAsync();
+                if (run.countFighting() == 0) {
+                    endRun(run, ArenaEndReason.WIPE);
                 }
             }
         }
@@ -1062,6 +1245,7 @@ public final class ArenaService {
         sb.append("definitions=").append(definitions.size()).append('\n');
         sb.append("activeRuns=").append(activeRuns.size())
                 .append('/').append(globalMaxActiveRuns()).append('\n');
+        sb.append("defaultMaxRunsPerArena=").append(defaultMaxActiveRunsPerArena()).append('\n');
         sb.append("parties=").append(parties.size()).append('\n');
         sb.append("pendingRecoveries=").append(pendingRecoveries.size()).append('\n');
         sb.append("rewardEntries=").append(rewardLedger.all().size()).append('\n');

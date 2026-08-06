@@ -172,8 +172,7 @@ public final class ArenaListener implements Listener {
 
         Player killer = entity.getKiller();
         ArenaRarity rarity = ArenaRarity.COMMON;
-        boolean boss = entity.getCustomName() != null
-                && entity.getCustomName().toLowerCase().contains("boss");
+        boolean boss = service.keys().isBoss(pdc);
         service.recordMobKill(run, killer, rarity, boss);
 
         if (run.getActiveMobIds().isEmpty() && run.getState().isActiveCombat()) {

@@ -3318,16 +3318,79 @@ group_plots_join_name: '&aUnisciti a {GROUP}'
 group_plots_none_linked: 'Nessuno'
 plot_status_server_zone_banner: "&bZona server &7— gestita dallo staff / Steward."
 
+# --- Arena module (gui) ---
+arena_menu_title: '&6Arenas'
+arena_detail_title: '&6{NAME}'
+arena_enabled: '&aAbilitata'
+arena_disabled: '&cDisabilitata'
+arena_mode_line: '&7Modalità: &f{MODE}'
+arena_players_line: '&7Giocatori: &f{MIN}-{MAX}'
+arena_active_runs_line: '&7Corse attive: &f{COUNT}'
+arena_scale_line: '&7Scala gruppo: &f{SCALE}'
+arena_click_detail: '&eClicca per i dettagli.'
+arena_ready: '&aPronta'
+arena_not_available: '&cNon disponibile'
+arena_id_line: '&7Id: &f{ID}'
+arena_join: '&aUnisciti / Avvia'
+arena_join_lore:
+- '&7Avvia una corsa con il tuo gruppo.'
+arena_spectate: '&bSpetta'
+arena_spectate_lore:
+- '&7Teletrasportati allo spawn spettatore.'
+arena_party: '&eGruppo'
+arena_party_lore:
+- '&7Usa &f/ag arena party invite <giocatore>'
+- '&7poi accetta per formare un gruppo.'
+arena_none_title: '&7Nessuna Arena Ancora'
+arena_none_lore:
+- '&7Lo staff non ha ancora configurato'
+- '&7alcuna arena dungeon.'
+arena_prev_page: '&fPrecedente'
+arena_next_page: '&fSuccessiva'
+arena_admin_title: '&cAdmin Arena'
+arena_admin_edit_title: '&cModifica: {ID}'
+arena_admin_runs_title: '&cCorse Arena dal Vivo'
+arena_admin_preset: '&6＋ Crea lava_dungeon'
+arena_admin_preset_lore:
+- '&7Crea una nuova arena dal'
+- '&7modello lava_dungeon.'
+arena_admin_runs: '&cCorse dal Vivo'
+arena_admin_runs_lore:
+- '&7Vedi e interrompi corse attive.'
+arena_admin_diag: '&eDiagnostica'
+arena_admin_diag_lore:
+- '&7Mostra diagnostica arena.'
+arena_admin_click_edit: '&eClicca per modificare.'
+arena_admin_config_ok: '&aConfig OK'
+arena_admin_active_line: '&7Attive: &f{COUNT}'
+arena_admin_valid: '&aValida'
+arena_admin_toggle_enable: '&aAbilita'
+arena_admin_toggle_disable: '&cDisabilita'
+arena_admin_toggle_lore:
+- '&7Attiva/disattiva il flag arena.'
+arena_admin_set_lobby: '&eImposta plot lobby'
+arena_admin_set_lobby_lore:
+- '&7Collega il plot attuale come lobby.'
+arena_admin_set_floor: '&eImposta plot pavimento'
+arena_admin_set_floor_lore:
+- '&7Collega il plot attuale come pavimento di combattimento.'
+arena_admin_set_entry: '&eImposta spawn ingresso'
+arena_admin_set_entry_lore:
+- '&7Usa la tua posizione attuale.'
+arena_admin_run_arena_line: '&7Arena: &f{ID}'
+arena_admin_run_state_line: '&7Stato: &f{STATE}'
+arena_admin_run_wave_line: '&7Ondata: &f{WAVE}'
+arena_admin_run_fighters_line: '&7Combattenti: &f{COUNT}'
+arena_admin_run_abort_hint: '&cClicca per interrompere.'
+arena_admin_empty_runs: '&7Nessuna corsa dal vivo.'
+button_arena: '&cArenas'
+arena_button_lore:
+- '&7Unisciti a dungeon cooperativi,'
+- '&7gruppi e sfide Lava Dungeon.'
 button_admin_arena: '&cAdmin Arena'
 admin_arena_lore:
 - '&7Cosa: configura le arena, interrompi le run,'
-- '&7e rivedi il registro ricompense.'
-- '&7Quando: crei Lava Dungeon o PvE di gruppo.'
+- '&7e rivedi le voci del ledger ricompense.'
+- '&7Quando: costruendo Lava Dungeon o PvE di gruppo.'
 - ' '
-- '&eClic per aprire.'
-
-button_arena: '&cArenas'
-arena_button_lore:
-- '&7Join cooperative dungeon runs,'
-- '&7parties, and Lava Dungeon challenges.'
-
+- '&eClicca per aprire.'

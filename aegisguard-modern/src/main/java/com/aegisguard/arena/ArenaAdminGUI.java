@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Staff Arena admin tools: list, create preset, enable/disable, abort live runs, diagnostics.
@@ -50,8 +51,19 @@ public final class ArenaAdminGUI {
         return plugin.gui().tr(p, key, fallback);
     }
 
+    private String t(Player p, String key, Map<String, String> vars, String fallback) {
+        return plugin.gui().tr(p, key, fallback, vars);
+    }
+
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
+    }
+
+    private void sendFail(Player player, String key) {
+        if (key == null) return;
+        Map<String, String> vars = service.takeFailVars();
+        if (vars.isEmpty()) plugin.msg().send(player, key);
+        else plugin.msg().send(player, key, vars);
     }
 
     private boolean canEdit(Player player) {
@@ -82,11 +94,17 @@ public final class ArenaAdminGUI {
         for (int i = 0; i < perPage && start + i < arenas.size(); i++) {
             ArenaDefinition def = arenas.get(start + i);
             List<String> lore = new ArrayList<>();
-            lore.add(GUIManager.color(def.isEnabledFlag() ? "&aEnabled" : "&cDisabled"));
-            lore.add(GUIManager.color(def.isConfigValid() ? "&aConfig OK" : "&c" + def.getConfigError()));
-            lore.add(GUIManager.color("&7Active: &f" + service.countActiveRuns(def.getId())));
+            lore.add(GUIManager.color(def.isEnabledFlag()
+                    ? t(player, "arena_enabled", "&aEnabled")
+                    : t(player, "arena_disabled", "&cDisabled")));
+            lore.add(GUIManager.color(def.isConfigValid()
+                    ? t(player, "arena_admin_config_ok", "&aConfig OK")
+                    : "&c" + def.getConfigError()));
+            lore.add(GUIManager.color(t(player, "arena_admin_active_line",
+                    Map.of("COUNT", String.valueOf(service.countActiveRuns(def.getId()))),
+                    "&7Active: &f{COUNT}")));
             lore.add(" ");
-            lore.add(GUIManager.color("&eClick to edit."));
+            lore.add(GUIManager.color(t(player, "arena_admin_click_edit", "&eClick to edit.")));
             inv.setItem(i, GUIManager.createItem(
                     def.isEnabled() ? Material.DIAMOND_SWORD : Material.WOODEN_SWORD,
                     "&e" + def.getId(), lore));
@@ -120,28 +138,34 @@ public final class ArenaAdminGUI {
             open(player);
             return;
         }
-        String title = plugin.gui().title(player, "arena_admin_edit_title", "&cEdit: " + def.getId());
+        String title = plugin.gui().title(player, "arena_admin_edit_title",
+                "&cEdit: {ID}", Map.of("ID", def.getId()));
         Inventory inv = Bukkit.createInventory(new ArenaAdminEditHolder(def.getId()), 27, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
         inv.setItem(4, GUIManager.createItem(Material.NAME_TAG, "&e" + def.getDisplayName(), List.of(
                 GUIManager.color("&7" + def.getId()),
-                GUIManager.color(def.isConfigValid() ? "&aValid" : "&c" + def.getConfigError()))));
+                GUIManager.color(def.isConfigValid()
+                        ? t(player, "arena_admin_valid", "&aValid")
+                        : "&c" + def.getConfigError()))));
 
         inv.setItem(10, GUIManager.createItem(Material.LIME_DYE,
-                def.isEnabledFlag() ? "&aDisable" : "&aEnable",
-                List.of(GUIManager.color("&7Toggle arena enabled flag."))));
+                def.isEnabledFlag()
+                        ? t(player, "arena_admin_toggle_disable", "&cDisable")
+                        : t(player, "arena_admin_toggle_enable", "&aEnable"),
+                tl(player, "arena_admin_toggle_lore", List.of("&7Toggle arena enabled flag."))));
         inv.setItem(12, GUIManager.createItem(Material.COMPASS,
-                "&eSet lobby plot",
-                List.of(GUIManager.color("&7Bind standing plot as lobby."))));
+                t(player, "arena_admin_set_lobby", "&eSet lobby plot"),
+                tl(player, "arena_admin_set_lobby_lore", List.of("&7Bind standing plot as lobby."))));
         inv.setItem(14, GUIManager.createItem(Material.NETHER_BRICK,
-                "&eSet floor plot",
-                List.of(GUIManager.color("&7Bind standing plot as combat floor."))));
+                t(player, "arena_admin_set_floor", "&eSet floor plot"),
+                tl(player, "arena_admin_set_floor_lore", List.of("&7Bind standing plot as combat floor."))));
         inv.setItem(16, GUIManager.createItem(Material.ENDER_PEARL,
-                "&eSet entry spawn",
-                List.of(GUIManager.color("&7Use your current location."))));
-        inv.setItem(22, GUIManager.createItem(Material.ARROW, "&fBack", List.of()));
+                t(player, "arena_admin_set_entry", "&eSet entry spawn"),
+                tl(player, "arena_admin_set_entry_lore", List.of("&7Use your current location."))));
+        inv.setItem(22, GUIManager.createItem(Material.ARROW,
+                t(player, "button_back", "&fBack"), List.of()));
 
         player.openInventory(inv);
     }
@@ -156,16 +180,25 @@ public final class ArenaAdminGUI {
         for (ArenaRun run : service.allActiveRuns()) {
             if (slot >= 45) break;
             List<String> lore = new ArrayList<>();
-            lore.add(GUIManager.color("&7Arena: &f" + run.getArenaId()));
-            lore.add(GUIManager.color("&7State: &f" + run.getState()));
-            lore.add(GUIManager.color("&7Wave: &f" + run.getDeepestWave()));
-            lore.add(GUIManager.color("&7Fighters: &f" + run.countFighting()));
+            lore.add(GUIManager.color(t(player, "arena_admin_run_arena_line",
+                    Map.of("ID", run.getArenaId()), "&7Arena: &f{ID}")));
+            lore.add(GUIManager.color(t(player, "arena_admin_run_state_line",
+                    Map.of("STATE", String.valueOf(run.getState())), "&7State: &f{STATE}")));
+            lore.add(GUIManager.color(t(player, "arena_admin_run_wave_line",
+                    Map.of("WAVE", String.valueOf(run.getDeepestWave())), "&7Wave: &f{WAVE}")));
+            lore.add(GUIManager.color(t(player, "arena_admin_run_fighters_line",
+                    Map.of("COUNT", String.valueOf(run.countFighting())), "&7Fighters: &f{COUNT}")));
             lore.add(" ");
-            lore.add(GUIManager.color("&cClick to abort."));
+            lore.add(GUIManager.color(t(player, "arena_admin_run_abort_hint", "&cClick to abort.")));
             inv.setItem(slot++, GUIManager.createItem(Material.TNT,
                     "&c" + run.getRunId().toString().substring(0, 8), lore));
         }
-        inv.setItem(49, GUIManager.createItem(Material.ARROW, "&fBack", List.of()));
+        if (slot == 0) {
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER,
+                    t(player, "arena_admin_empty_runs", "&7No live runs."), List.of()));
+        }
+        inv.setItem(49, GUIManager.createItem(Material.ARROW,
+                t(player, "button_back", "&fBack"), List.of()));
         player.openInventory(inv);
     }
 
@@ -190,7 +223,9 @@ public final class ArenaAdminGUI {
             if (slot == 39) {
                 String id = "lava_dungeon_" + (service.allArenas().size() + 1);
                 ArenaDefinition def = service.applyLavaPreset(id);
-                player.sendMessage("§aCreated " + def.getId() + " from " + LavaDungeonPreset.PRESET_ID);
+                plugin.msg().send(player, "arena_created_from_preset", Map.of(
+                        "ID", def.getId(),
+                        "PRESET", LavaDungeonPreset.PRESET_ID));
                 openEdit(player, def.getId());
                 return;
             }
@@ -200,6 +235,7 @@ public final class ArenaAdminGUI {
             }
             if (slot == 41) {
                 player.closeInventory();
+                plugin.msg().send(player, "arena_diag_header");
                 for (String line : service.diagnostics().split("\n")) {
                     player.sendMessage("§7" + line);
                 }
@@ -228,25 +264,28 @@ public final class ArenaAdminGUI {
             }
             if (slot == 10) {
                 String err = service.setArenaEnabled(def.getId(), !def.isEnabledFlag());
-                if (err != null) player.sendMessage("§c" + err);
+                if (err != null) sendFail(player, err);
                 openEdit(player, def.getId());
                 return;
             }
             if (slot == 12) {
                 String err = service.bindLobbyFromPlayer(player, def.getId());
-                player.sendMessage(err == null ? "§aLobby plot bound." : "§c" + err);
+                if (err != null) sendFail(player, err);
+                else plugin.msg().send(player, "arena_lobby_bound");
                 openEdit(player, def.getId());
                 return;
             }
             if (slot == 14) {
                 String err = service.bindFloorFromPlayer(player, def.getId());
-                player.sendMessage(err == null ? "§aFloor plot bound." : "§c" + err);
+                if (err != null) sendFail(player, err);
+                else plugin.msg().send(player, "arena_floor_bound");
                 openEdit(player, def.getId());
                 return;
             }
             if (slot == 16) {
                 String err = service.setSpawn(player, def.getId(), "entry");
-                player.sendMessage(err == null ? "§aEntry spawn set." : "§c" + err);
+                if (err != null) sendFail(player, err);
+                else plugin.msg().send(player, "arena_entry_spawn_set");
                 openEdit(player, def.getId());
             }
             return;
@@ -259,7 +298,6 @@ public final class ArenaAdminGUI {
             }
             ItemStack item = e.getCurrentItem();
             if (item == null || item.getType() != Material.TNT) return;
-            // Match by abbreviated UUID prefix
             String name = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
                     ? item.getItemMeta().getDisplayName().replaceAll("§.", "")
                     : "";
@@ -268,7 +306,8 @@ public final class ArenaAdminGUI {
                         || run.getRunId().toString().substring(0, 8).equalsIgnoreCase(
                         name.replaceAll("§.", "").trim())) {
                     service.endRun(run, ArenaEndReason.ADMIN_ABORT);
-                    player.sendMessage("§aAborted run " + run.getRunId());
+                    plugin.msg().send(player, "arena_aborted_run_id",
+                            Map.of("ID", run.getRunId().toString()));
                     openRuns(player);
                     return;
                 }

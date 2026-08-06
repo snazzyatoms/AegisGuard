@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,11 +37,11 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
 
     public boolean handle(CommandSender sender, String[] args) {
         if (!service.isEnabled() && (args.length == 0 || !isAdminBypass(args[0]))) {
-            sender.sendMessage("§cArena module is disabled.");
+            msg(sender, "arena_disabled");
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("§e/ag arena <list|join|leave|party|stats|spectate|…>");
+            msg(sender, "arena_usage");
             return true;
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
@@ -63,7 +64,7 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             case "rewards" -> handleRewards(sender, args);
             case "gui" -> handleGui(sender);
             default -> {
-                sender.sendMessage("§cUnknown arena subcommand.");
+                msg(sender, "arena_unknown_subcommand");
                 yield true;
             }
         };
@@ -71,6 +72,21 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
 
     public boolean handle(Player player, String[] args) {
         return handle((CommandSender) player, args);
+    }
+
+    private void msg(CommandSender sender, String key) {
+        plugin.msg().send(sender, key);
+    }
+
+    private void msg(CommandSender sender, String key, Map<String, String> vars) {
+        plugin.msg().send(sender, key, vars);
+    }
+
+    private void sendFail(CommandSender sender, String key) {
+        if (key == null) return;
+        Map<String, String> vars = service.takeFailVars();
+        if (vars.isEmpty()) msg(sender, key);
+        else msg(sender, key, vars);
     }
 
     private boolean isAdminBypass(String sub) {
@@ -84,7 +100,7 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
 
     private boolean requirePlayer(CommandSender sender) {
         if (sender instanceof Player) return true;
-        sender.sendMessage("§cPlayers only.");
+        msg(sender, "arena_players_only");
         return false;
     }
 
@@ -94,35 +110,45 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
                 || sender.isOp()) {
             return true;
         }
-        sender.sendMessage("§cNo permission.");
+        msg(sender, "arena_no_permission");
         return false;
     }
 
     private boolean handleList(CommandSender sender) {
-        sender.sendMessage("§6Arenas:");
+        msg(sender, "arena_list_header");
+        boolean any = false;
         for (ArenaDefinition def : service.allArenas()) {
-            sender.sendMessage(" §7- §e" + def.getId()
-                    + " §7(" + def.getDisplayName() + ")"
-                    + (def.isEnabled() ? " §aenabled" : " §cdisabled")
-                    + " §8active=" + service.countActiveRuns(def.getId()));
+            any = true;
+            String enabledLabel = sender instanceof Player p
+                    ? plugin.msg().get(p, "arena_list_enabled")
+                    : plugin.msg().get("arena_list_enabled");
+            String disabledLabel = sender instanceof Player p
+                    ? plugin.msg().get(p, "arena_list_disabled")
+                    : plugin.msg().get("arena_list_disabled");
+            msg(sender, "arena_list_entry", Map.of(
+                    "ID", def.getId(),
+                    "NAME", def.getDisplayName(),
+                    "STATUS", def.isEnabled() ? enabledLabel : disabledLabel,
+                    "ACTIVE", String.valueOf(service.countActiveRuns(def.getId()))));
         }
+        if (!any) msg(sender, "arena_empty_none");
         return true;
     }
 
     private boolean handleJoin(CommandSender sender, String[] args) {
         if (!requirePlayer(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena join <arenaId>");
+            msg(sender, "arena_usage_join");
             return true;
         }
         Player player = (Player) sender;
         if (!player.hasPermission("aegis.arena.use")) {
-            sender.sendMessage("§cNo permission.");
+            msg(sender, "arena_no_permission");
             return true;
         }
         String err = service.tryStart(player, args[1]);
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aArena run started.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_run_started");
         return true;
     }
 
@@ -141,11 +167,11 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             } else if (d.action == ArenaLeadershipRules.Action.END_RUN || run.countFighting() == 0) {
                 service.endRun(run, ArenaEndReason.FORFEIT);
             }
-            sender.sendMessage("§eYou left the arena run.");
+            msg(sender, "arena_left_run");
             return true;
         }
         service.leaveParty(player);
-        sender.sendMessage("§eLeft party.");
+        msg(sender, "arena_left_party");
         return true;
     }
 
@@ -153,42 +179,42 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         if (!requirePlayer(sender)) return true;
         Player player = (Player) sender;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena party <invite|accept|deny|leave> [player]");
+            msg(sender, "arena_usage_party");
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
         switch (action) {
             case "invite" -> {
                 if (args.length < 3) {
-                    sender.sendMessage("§cUsage: /ag arena party invite <player>");
+                    msg(sender, "arena_usage_party_invite");
                     return true;
                 }
                 Player target = Bukkit.getPlayerExact(args[2]);
                 if (target == null) {
-                    sender.sendMessage("§cPlayer not found.");
+                    msg(sender, "arena_player_not_found");
                     return true;
                 }
                 String err = service.invite(player, target);
-                if (err != null) sender.sendMessage("§c" + err);
+                if (err != null) sendFail(sender, err);
                 else {
-                    sender.sendMessage("§aInvited " + target.getName() + ".");
-                    target.sendMessage("§e" + player.getName() + " invited you to an arena party. /ag arena party accept");
+                    msg(sender, "arena_invited", Map.of("PLAYER", target.getName()));
+                    msg(target, "arena_invite_received", Map.of("PLAYER", player.getName()));
                 }
             }
             case "accept" -> {
                 String err = service.accept(player);
-                if (err != null) sender.sendMessage("§c" + err);
-                else sender.sendMessage("§aJoined party.");
+                if (err != null) sendFail(sender, err);
+                else msg(sender, "arena_joined_party");
             }
             case "deny", "decline" -> {
                 service.decline(player);
-                sender.sendMessage("§eInvite declined.");
+                msg(sender, "arena_invite_declined");
             }
             case "leave" -> {
                 service.leaveParty(player);
-                sender.sendMessage("§eLeft party.");
+                msg(sender, "arena_left_party");
             }
-            default -> sender.sendMessage("§cUnknown party action.");
+            default -> msg(sender, "arena_unknown_party_action");
         }
         return true;
     }
@@ -196,23 +222,26 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
     private boolean handleStats(CommandSender sender, String[] args) {
         String arenaId = args.length >= 2 ? args[1] : null;
         if (arenaId == null) {
-            sender.sendMessage("§eUsage: /ag arena stats <arenaId>");
+            msg(sender, "arena_usage_stats");
             return true;
         }
         ArenaDefinition def = service.getArena(arenaId);
         if (def == null) {
-            sender.sendMessage("§cUnknown arena.");
+            msg(sender, "arena_unknown");
             return true;
         }
-        sender.sendMessage("§6Leaderboard — " + def.getDisplayName());
+        msg(sender, "arena_leaderboard_header", Map.of("NAME", def.getDisplayName()));
         List<ArenaLeaderboardRecord> top = service.leaderboard().top(
                 ArenaLeaderboardRecord.Board.SOLO_SCORE, def.getId(), def.getMode(), 5);
         int i = 1;
         for (ArenaLeaderboardRecord r : top) {
-            sender.sendMessage(" §7#" + (i++) + " wave=" + r.getWave() + " score=" + r.getScore()
-                    + " time=" + r.getClearTimeMillis() + "ms");
+            msg(sender, "arena_leaderboard_entry", Map.of(
+                    "RANK", String.valueOf(i++),
+                    "WAVE", String.valueOf(r.getWave()),
+                    "SCORE", String.valueOf(r.getScore()),
+                    "TIME", String.valueOf(r.getClearTimeMillis())));
         }
-        if (top.isEmpty()) sender.sendMessage(" §8No records yet.");
+        if (top.isEmpty()) msg(sender, "arena_leaderboard_empty");
         return true;
     }
 
@@ -220,36 +249,36 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         if (!requirePlayer(sender)) return true;
         Player player = (Player) sender;
         if (!player.hasPermission("aegis.arena.spectate")) {
-            sender.sendMessage("§cNo permission.");
+            msg(sender, "arena_no_permission");
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena spectate <arenaId>");
+            msg(sender, "arena_usage_spectate");
             return true;
         }
         ArenaDefinition def = service.getArena(args[1]);
         if (def == null) {
-            sender.sendMessage("§cUnknown arena.");
+            msg(sender, "arena_unknown");
             return true;
         }
         var loc = service.toLocation(def.getSpectatorSpawn() != null ? def.getSpectatorSpawn() : def.getExitSpawn());
         if (loc == null) {
-            sender.sendMessage("§cNo spectator/exit spawn set.");
+            msg(sender, "arena_no_spectator_spawn");
             return true;
         }
         service.teleportPlayerAllowed(player, loc);
-        sender.sendMessage("§aSpectating " + def.getDisplayName() + ".");
+        msg(sender, "arena_spectating", Map.of("NAME", def.getDisplayName()));
         return true;
     }
 
     private boolean handleCreate(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena create <id>");
+            msg(sender, "arena_usage_create");
             return true;
         }
         ArenaDefinition def = service.createArena(args[1]);
-        sender.sendMessage("§aCreated arena §e" + def.getId());
+        msg(sender, "arena_created", Map.of("ID", def.getId()));
         return true;
     }
 
@@ -257,7 +286,7 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         if (!requireAdmin(sender) || !requirePlayer(sender)) return true;
         Player player = (Player) sender;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena " + sub + " <arenaId>");
+            msg(sender, "arena_usage_bind", Map.of("SUB", sub));
             return true;
         }
         String arenaId = args[1];
@@ -272,51 +301,52 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
         } else {
             err = service.bindLobbyFromPlayer(player, arenaId);
         }
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aPlot bound.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_plot_bound");
         return true;
     }
 
     private boolean handleSetSpawn(CommandSender sender, String[] args) {
         if (!requireAdmin(sender) || !requirePlayer(sender)) return true;
         if (args.length < 3) {
-            sender.sendMessage("§cUsage: /ag arena setspawn <arenaId> <entry|exit|mob>");
+            msg(sender, "arena_usage_setspawn");
             return true;
         }
         String err = service.setSpawn((Player) sender, args[1], args[2]);
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aSpawn set.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_spawn_set");
         return true;
     }
 
     private boolean handleEnable(CommandSender sender, String[] args, boolean enable) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena " + (enable ? "enable" : "disable") + " <arenaId>");
+            msg(sender, enable ? "arena_usage_enable" : "arena_usage_disable");
             return true;
         }
         String err = service.setArenaEnabled(args[1], enable);
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aArena " + (enable ? "enabled." : "disabled."));
+        if (err != null) sendFail(sender, err);
+        else msg(sender, enable ? "arena_enabled_ok" : "arena_disabled_ok");
         return true;
     }
 
     private boolean handlePreset(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 3 || !"lava_dungeon".equalsIgnoreCase(args[1])) {
-            sender.sendMessage("§cUsage: /ag arena preset lava_dungeon <arenaId>");
+            msg(sender, "arena_usage_preset");
             return true;
         }
         ArenaDefinition def = service.applyLavaPreset(args[2]);
-        sender.sendMessage("§aApplied " + LavaDungeonPreset.PRESET_ID + " to §e" + def.getId()
-                + " §7(bind plots/spawns before enabling).");
+        msg(sender, "arena_preset_applied", Map.of(
+                "PRESET", LavaDungeonPreset.PRESET_ID,
+                "ID", def.getId()));
         return true;
     }
 
     private boolean handleAbort(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena abort <player|runUuid>");
+            msg(sender, "arena_usage_abort");
             return true;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
@@ -327,46 +357,47 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             try {
                 err = service.abortRun(UUID.fromString(args[1]));
             } catch (IllegalArgumentException e) {
-                sender.sendMessage("§cPlayer or run UUID required.");
+                msg(sender, "arena_abort_target_required");
                 return true;
             }
         }
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aRun aborted.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_run_aborted");
         return true;
     }
 
     private boolean handleRecover(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena recover <player>");
+            msg(sender, "arena_usage_recover");
             return true;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
         if (target == null) {
-            sender.sendMessage("§cPlayer not online.");
+            msg(sender, "arena_player_not_online");
             return true;
         }
         String err = service.recoverPlayer(target);
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aRecovery applied.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_recovery_applied");
         return true;
     }
 
     private boolean handleCleanup(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena cleanup <arenaId>");
+            msg(sender, "arena_usage_cleanup");
             return true;
         }
         String err = service.cleanupArena(args[1]);
-        if (err != null) sender.sendMessage("§c" + err);
-        else sender.sendMessage("§aCleanup complete.");
+        if (err != null) sendFail(sender, err);
+        else msg(sender, "arena_cleanup_complete");
         return true;
     }
 
     private boolean handleDiag(CommandSender sender) {
         if (!requireAdmin(sender)) return true;
+        msg(sender, "arena_diag_header");
         for (String line : service.diagnostics().split("\n")) {
             sender.sendMessage("§7" + line);
         }
@@ -376,38 +407,45 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
     private boolean handleRewards(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) return true;
         if (args.length < 2) {
-            sender.sendMessage("§cUsage: /ag arena rewards <review|resolve> [entryId] [commit|cancel]");
+            msg(sender, "arena_usage_rewards");
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
         if ("review".equals(action)) {
             List<ArenaRewardEntry> list = service.rewardsReview();
-            sender.sendMessage("§6Reward review (" + list.size() + "):");
+            msg(sender, "arena_reward_review_header", Map.of("COUNT", String.valueOf(list.size())));
             for (ArenaRewardEntry e : list) {
-                sender.sendMessage(" §e" + e.getEntryId() + " §7" + e.getStatus()
-                        + (e.getDetail() == null ? "" : " — " + e.getDetail()));
+                String detail = e.getDetail() == null ? "" : " — " + e.getDetail();
+                msg(sender, "arena_reward_review_entry", Map.of(
+                        "ID", e.getEntryId(),
+                        "STATUS", String.valueOf(e.getStatus()),
+                        "DETAIL", detail));
             }
             return true;
         }
         if ("resolve".equals(action)) {
             if (args.length < 3) {
-                sender.sendMessage("§cUsage: /ag arena rewards resolve <entryId> [commit|cancel]");
+                msg(sender, "arena_usage_rewards_resolve");
                 return true;
             }
             boolean commit = args.length < 4 || !"cancel".equalsIgnoreCase(args[3]);
             String err = service.rewardsResolve(args[2], commit);
-            if (err != null) sender.sendMessage("§c" + err);
-            else sender.sendMessage("§aReward entry " + (commit ? "committed." : "cancelled."));
+            if (err != null) sendFail(sender, err);
+            else msg(sender, commit ? "arena_reward_committed" : "arena_reward_cancelled");
             return true;
         }
-        sender.sendMessage("§cUnknown rewards action.");
+        msg(sender, "arena_unknown_rewards_action");
         return true;
     }
 
     private boolean handleGui(CommandSender sender) {
         if (!requirePlayer(sender)) return true;
-        // GUI opened by GUIManager when wired; provide a message fallback
-        sender.sendMessage("§eOpen the Arena GUI from the player menu when wired.");
+        Player player = (Player) sender;
+        if (plugin.gui() != null && plugin.gui().arena() != null) {
+            plugin.gui().arena().open(player);
+        } else {
+            msg(sender, "arena_gui_hint");
+        }
         return true;
     }
 

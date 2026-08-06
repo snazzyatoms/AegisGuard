@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Player-facing Arena hub: list arenas, join, spectate, party hint.
@@ -45,8 +46,19 @@ public final class ArenaGUI {
         return plugin.gui().tr(p, key, fallback);
     }
 
+    private String t(Player p, String key, Map<String, String> vars, String fallback) {
+        return plugin.gui().tr(p, key, fallback, vars);
+    }
+
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
+    }
+
+    private void sendFail(Player player, String key) {
+        if (key == null) return;
+        Map<String, String> vars = service.takeFailVars();
+        if (vars.isEmpty()) plugin.msg().send(player, key);
+        else plugin.msg().send(player, key, vars);
     }
 
     public void open(Player player) {
@@ -69,6 +81,14 @@ public final class ArenaGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
+        if (arenas.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER,
+                    t(player, "arena_none_title", "&7No Arenas Yet"),
+                    tl(player, "arena_none_lore", List.of(
+                            "&7Staff have not configured any",
+                            "&7dungeon arenas yet."))));
+        }
+
         int start = safePage * perPage;
         for (int i = 0; i < perPage && start + i < arenas.size(); i++) {
             ArenaDefinition def = arenas.get(start + i);
@@ -76,9 +96,15 @@ public final class ArenaGUI {
             lore.add(GUIManager.color(def.isEnabled()
                     ? t(player, "arena_enabled", "&aEnabled")
                     : t(player, "arena_disabled", "&cDisabled")));
-            lore.add(GUIManager.color("&7Mode: &f" + def.getMode().name()));
-            lore.add(GUIManager.color("&7Players: &f" + def.getMinPlayers() + "-" + def.getMaxPlayers()));
-            lore.add(GUIManager.color("&7Active runs: &f" + service.countActiveRuns(def.getId())));
+            lore.add(GUIManager.color(t(player, "arena_mode_line",
+                    Map.of("MODE", def.getMode().name()), "&7Mode: &f{MODE}")));
+            lore.add(GUIManager.color(t(player, "arena_players_line",
+                    Map.of("MIN", String.valueOf(def.getMinPlayers()),
+                            "MAX", String.valueOf(def.getMaxPlayers())),
+                    "&7Players: &f{MIN}-{MAX}")));
+            lore.add(GUIManager.color(t(player, "arena_active_runs_line",
+                    Map.of("COUNT", String.valueOf(service.countActiveRuns(def.getId()))),
+                    "&7Active runs: &f{COUNT}")));
             lore.add(" ");
             lore.add(GUIManager.color(t(player, "arena_click_detail", "&eClick for details.")));
             inv.setItem(i, GUIManager.createItem(
@@ -93,10 +119,12 @@ public final class ArenaGUI {
                 t(player, "button_close", "&cClose"),
                 tl(player, "close_lore", List.of("&7Close this menu."))));
         if (safePage > 0) {
-            inv.setItem(48, GUIManager.createItem(Material.ARROW, "&fPrevious", List.of()));
+            inv.setItem(48, GUIManager.createItem(Material.ARROW,
+                    t(player, "arena_prev_page", "&fPrevious"), List.of()));
         }
         if (safePage < maxPages - 1) {
-            inv.setItem(50, GUIManager.createItem(Material.ARROW, "&fNext", List.of()));
+            inv.setItem(50, GUIManager.createItem(Material.ARROW,
+                    t(player, "arena_next_page", "&fNext"), List.of()));
         }
 
         player.openInventory(inv);
@@ -108,15 +136,20 @@ public final class ArenaGUI {
             open(player);
             return;
         }
-        String title = plugin.gui().title(player, "arena_detail_title", "&6" + def.getDisplayName());
+        String title = plugin.gui().title(player, "arena_detail_title",
+                "&6{NAME}", Map.of("NAME", def.getDisplayName()));
         Inventory inv = Bukkit.createInventory(new ArenaDetailHolder(def.getId()), 27, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
         List<String> header = new ArrayList<>();
-        header.add(GUIManager.color("&7Id: &f" + def.getId()));
-        header.add(GUIManager.color("&7Mode: &f" + def.getMode().name()));
-        header.add(GUIManager.color(def.isEnabled() ? "&aReady" : "&cNot available"));
+        header.add(GUIManager.color(t(player, "arena_id_line",
+                Map.of("ID", def.getId()), "&7Id: &f{ID}")));
+        header.add(GUIManager.color(t(player, "arena_mode_line",
+                Map.of("MODE", def.getMode().name()), "&7Mode: &f{MODE}")));
+        header.add(GUIManager.color(def.isEnabled()
+                ? t(player, "arena_ready", "&aReady")
+                : t(player, "arena_not_available", "&cNot available")));
         if (def.getConfigError() != null) {
             header.add(GUIManager.color("&c" + def.getConfigError()));
         }
@@ -193,8 +226,8 @@ public final class ArenaGUI {
             if (slot == 11) {
                 player.closeInventory();
                 String err = service.tryStart(player, def.getId());
-                if (err != null) player.sendMessage("§c" + err);
-                else player.sendMessage("§aArena run started.");
+                if (err != null) sendFail(player, err);
+                else plugin.msg().send(player, "arena_run_started");
                 return;
             }
             if (slot == 13) {
@@ -202,14 +235,14 @@ public final class ArenaGUI {
                 var loc = service.toLocation(def.getSpectatorSpawn() != null
                         ? def.getSpectatorSpawn() : def.getExitSpawn());
                 if (loc == null) {
-                    player.sendMessage("§cNo spectator spawn set.");
+                    plugin.msg().send(player, "arena_no_spectator_spawn");
                     return;
                 }
                 service.teleportPlayerAllowed(player, loc);
                 return;
             }
             if (slot == 15) {
-                player.sendMessage("§eUse /ag arena party invite <player>");
+                plugin.msg().send(player, "arena_party_invite_hint");
             }
         }
     }

@@ -3421,16 +3421,79 @@ group_plots_join_name: '&aUnirse a {GROUP}'
 group_plots_none_linked: 'Ninguno'
 plot_status_server_zone_banner: "&bZona del servidor &7— gestionada por staff / Steward."
 
-button_admin_arena: '&cAdmin de Arenas'
-admin_arena_lore:
-- '&7Que: configura arenas de mazmorras, aborta runs,'
-- '&7y revisa el libro de recompensas.'
-- '&7Cuando: construyes Lava Dungeon o PvE en grupo.'
-- ' '
-- '&eClic para abrir.'
-
+# --- Arena module (gui) ---
+arena_menu_title: '&6Arenas'
+arena_detail_title: '&6{NAME}'
+arena_enabled: '&aHabilitada'
+arena_disabled: '&cDeshabilitada'
+arena_mode_line: '&7Modo: &f{MODE}'
+arena_players_line: '&7Jugadores: &f{MIN}-{MAX}'
+arena_active_runs_line: '&7Carreras activas: &f{COUNT}'
+arena_scale_line: '&7Escala de grupo: &f{SCALE}'
+arena_click_detail: '&eClic para detalles.'
+arena_ready: '&aLista'
+arena_not_available: '&cNo disponible'
+arena_id_line: '&7Id: &f{ID}'
+arena_join: '&aUnirse / Iniciar'
+arena_join_lore:
+- '&7Inicia una carrera con tu grupo.'
+arena_spectate: '&bEspectar'
+arena_spectate_lore:
+- '&7Teletransportarte al spawn de espectador.'
+arena_party: '&eGrupo'
+arena_party_lore:
+- '&7Usa &f/ag arena party invite <jugador>'
+- '&7y acepta para formar un grupo.'
+arena_none_title: '&7Sin Arenas Aún'
+arena_none_lore:
+- '&7El staff aún no configuró'
+- '&7ninguna arena de mazmorra.'
+arena_prev_page: '&fAnterior'
+arena_next_page: '&fSiguiente'
+arena_admin_title: '&cAdmin de Arenas'
+arena_admin_edit_title: '&cEditar: {ID}'
+arena_admin_runs_title: '&cCarreras de Arena en Vivo'
+arena_admin_preset: '&6＋ Crear lava_dungeon'
+arena_admin_preset_lore:
+- '&7Crea una nueva arena desde la'
+- '&7plantilla lava_dungeon.'
+arena_admin_runs: '&cCarreras en Vivo'
+arena_admin_runs_lore:
+- '&7Ver y abortar carreras activas.'
+arena_admin_diag: '&eDiagnósticos'
+arena_admin_diag_lore:
+- '&7Mostrar diagnósticos de arena.'
+arena_admin_click_edit: '&eClic para editar.'
+arena_admin_config_ok: '&aConfig OK'
+arena_admin_active_line: '&7Activas: &f{COUNT}'
+arena_admin_valid: '&aVálida'
+arena_admin_toggle_enable: '&aHabilitar'
+arena_admin_toggle_disable: '&cDeshabilitar'
+arena_admin_toggle_lore:
+- '&7Alternar el flag de arena habilitada.'
+arena_admin_set_lobby: '&eDefinir parcela de lobby'
+arena_admin_set_lobby_lore:
+- '&7Vincular la parcela actual como lobby.'
+arena_admin_set_floor: '&eDefinir parcela de piso'
+arena_admin_set_floor_lore:
+- '&7Vincular la parcela actual como piso de combate.'
+arena_admin_set_entry: '&eDefinir spawn de entrada'
+arena_admin_set_entry_lore:
+- '&7Usar tu ubicación actual.'
+arena_admin_run_arena_line: '&7Arena: &f{ID}'
+arena_admin_run_state_line: '&7Estado: &f{STATE}'
+arena_admin_run_wave_line: '&7Oleada: &f{WAVE}'
+arena_admin_run_fighters_line: '&7Combatientes: &f{COUNT}'
+arena_admin_run_abort_hint: '&cClic para abortar.'
+arena_admin_empty_runs: '&7No hay carreras en vivo.'
 button_arena: '&cArenas'
 arena_button_lore:
-- '&7Join cooperative dungeon runs,'
-- '&7parties, and Lava Dungeon challenges.'
-
+- '&7Únete a mazmorras cooperativas,'
+- '&7grupos y desafíos de Lava Dungeon.'
+button_admin_arena: '&cAdmin de Arenas'
+admin_arena_lore:
+- '&7Qué: configura arenas de mazmorras, aborta runs,'
+- '&7y revisa entradas del ledger de recompensas.'
+- '&7Cuándo: construyendo Lava Dungeon o PvE en grupo.'
+- ' '
+- '&eClic para abrir.'

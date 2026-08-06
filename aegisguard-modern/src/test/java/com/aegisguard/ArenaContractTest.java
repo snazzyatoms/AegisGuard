@@ -95,10 +95,10 @@ class ArenaContractTest {
         String service = Files.readString(JAVA_ROOT.resolve("arena/ArenaService.java"));
         assertTrue(service.contains("arena.defaults.max_active_runs_per_arena"),
                 "Must read per-arena max from config defaults path");
-        assertTrue(service.contains("This arena is busy (max 1 active run)"),
-                "Busy refuse must use clear max=1 messaging");
-        assertTrue(service.contains("plots/spawns unbound or incomplete"),
-                "Unbound plots must surface actionable start errors");
+        assertTrue(service.contains("arena_busy"),
+                "Busy refuse must use localized arena_busy key");
+        assertTrue(service.contains("arena_not_ready"),
+                "Unbound plots must surface actionable start errors via arena_not_ready");
         assertTrue(service.contains("spawnCurrentWave"),
                 "Wave spawn loop must be wired after start/advance");
         assertTrue(service.contains("tickRuns"),

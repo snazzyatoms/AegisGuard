@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 /**
@@ -44,6 +46,7 @@ public final class ArenaService {
     private final ArenaKeys keys;
     private final ArenaInventoryService inventoryService;
     private final ArenaPersistenceQueue persistenceQueue;
+    private final ArenaScheduler scheduler;
     private final ArenaRarityGate rarityGate = ArenaRarityGate.defaults();
 
     private final Map<String, ArenaDefinition> definitions = new ConcurrentHashMap<>();
@@ -66,11 +69,14 @@ public final class ArenaService {
     private volatile boolean dirtyStats;
     private volatile boolean dirtyRewards;
     private volatile boolean dirtyPending;
+    /** Folia without required schedulers → effective module off. */
+    private volatile boolean schedulerCapabilityBlocked;
 
     public ArenaService(AegisGuard plugin) {
         this.plugin = plugin;
         this.keys = new ArenaKeys(plugin);
         this.inventoryService = new ArenaInventoryService(plugin);
+        this.scheduler = new ArenaScheduler(plugin);
         this.persistenceQueue = new ArenaPersistenceQueue(
                 plugin.getLogger(), plugin.getDataFolder(),
                 Math.max(1, plugin.getConfig().getInt("arena.persistence.backup_count", 5)));
@@ -79,6 +85,7 @@ public final class ArenaService {
         this.statsFile = new File(plugin.getDataFolder(), "arena-stats.yml");
         this.rewardsFile = new File(plugin.getDataFolder(), "arena-rewards.yml");
         this.pendingFile = new File(plugin.getDataFolder(), "arena-pending-recovery.yml");
+        probeSchedulerCapabilities();
     }
 
     // ------------------------------------------------------------------
@@ -89,12 +96,26 @@ public final class ArenaService {
     public ArenaKeys keys() { return keys; }
     public ArenaInventoryService inventory() { return inventoryService; }
     public ArenaPersistenceQueue persistence() { return persistenceQueue; }
+    public ArenaScheduler scheduler() { return scheduler; }
     public ArenaRewardLedger rewards() { return rewardLedger; }
     public ArenaLeaderboard leaderboard() { return leaderboard; }
     public ArenaRarityGate rarityGate() { return rarityGate; }
 
     public boolean isEnabled() {
+        if (schedulerCapabilityBlocked) return false;
         return plugin.getConfig().getBoolean("arena.enabled", false);
+    }
+
+    private void probeSchedulerCapabilities() {
+        if (scheduler.hasRequiredCapabilities()) {
+            schedulerCapabilityBlocked = false;
+            plugin.getLogger().info("[Arena] Scheduler path: " + scheduler.pathName()
+                    + (scheduler.isFolia() ? " (entity/region/global/async)" : " (main-thread inline)"));
+            return;
+        }
+        schedulerCapabilityBlocked = true;
+        plugin.getLogger().severe("[Arena] Folia detected but required schedulers are unavailable; "
+                + "arena.enabled is effective-off until Folia-safe APIs are present.");
     }
 
     public long disconnectGraceMillis() {
@@ -603,6 +624,11 @@ public final class ArenaService {
 
         // Inventory snapshot then clear (SAVE_AND_RESTORE / ARENA_LOADOUT)
         ArenaInventoryPolicy policy = def.getInventoryPolicy();
+        Location entry = toLocation(def.getEntrySpawn());
+        if (scheduler.isFolia()) {
+            return beginRunFolia(def, run, runId, onlineMembers, policy, entry);
+        }
+
         if (policy.isProtectedInventory()) {
             for (Player p : onlineMembers) {
                 try {
@@ -625,17 +651,9 @@ public final class ArenaService {
             }
         }
 
-        Location entry = toLocation(def.getEntrySpawn());
         for (Player p : onlineMembers) {
             playerToRun.put(p.getUniqueId(), runId);
-            if (entry != null) {
-                grantTeleportAllow(p.getUniqueId());
-                try {
-                    p.teleport(entry);
-                } finally {
-                    consumeTeleportAllow(p.getUniqueId());
-                }
-            }
+            teleportAllowed(p, entry);
         }
 
         activeRuns.put(runId, run);
@@ -645,6 +663,76 @@ public final class ArenaService {
         spawnCurrentWave(run);
         flushJournalAsync();
         return null;
+    }
+
+    /**
+     * Folia party start: snapshot/teleport each member on their entity scheduler without
+     * waiting across regions from the caller's region thread.
+     */
+    private String beginRunFolia(ArenaDefinition def, ArenaRun run, UUID runId,
+                                 List<Player> onlineMembers, ArenaInventoryPolicy policy, Location entry) {
+        activeRuns.put(runId, run);
+        runsByArenaId.computeIfAbsent(def.getId(), k -> ConcurrentHashMap.newKeySet()).add(runId);
+        run.setState(ArenaRunState.COUNTDOWN);
+        for (Player p : onlineMembers) {
+            playerToRun.put(p.getUniqueId(), runId);
+        }
+
+        AtomicInteger remaining = new AtomicInteger(onlineMembers.size());
+        AtomicBoolean failed = new AtomicBoolean(false);
+
+        for (Player p : onlineMembers) {
+            scheduler.runForEntity(p, () -> {
+                if (failed.get() || run.isCleanupDone()) return;
+                try {
+                    if (policy.isProtectedInventory()) {
+                        String path = inventoryService.saveSnapshotAtomic(p, runId, persistenceQueue);
+                        ArenaParticipant part = run.getParticipant(p.getUniqueId());
+                        if (part != null) {
+                            part.setSnapshotPath(path);
+                        }
+                        inventoryService.clearPlayer(p);
+                    }
+                    teleportAllowedInline(p, entry);
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.WARNING, "[Arena] Folia start failed for " + p.getName(), e);
+                    if (failed.compareAndSet(false, true)) {
+                        scheduler.runGlobal(() -> endRun(run, ArenaEndReason.ADMIN_ABORT));
+                    }
+                    return;
+                }
+                if (remaining.decrementAndGet() == 0 && !failed.get()) {
+                    scheduler.runGlobal(() -> {
+                        if (run.isCleanupDone() || failed.get()) return;
+                        run.setState(ArenaRunState.WAVE);
+                        spawnCurrentWave(run);
+                        flushJournalAsync();
+                    });
+                }
+            });
+        }
+        flushJournalAsync();
+        return null;
+    }
+
+    private void teleportAllowed(Player player, Location loc) {
+        if (player == null || loc == null) return;
+        scheduler.runForEntity(player, () -> teleportAllowedInline(player, loc));
+    }
+
+    /** Public teleport helper for commands/GUIs (allow-token + entity scheduler). */
+    public void teleportPlayerAllowed(Player player, Location loc) {
+        teleportAllowed(player, loc);
+    }
+
+    private void teleportAllowedInline(Player player, Location loc) {
+        if (player == null || loc == null) return;
+        grantTeleportAllow(player.getUniqueId());
+        try {
+            player.teleport(loc);
+        } finally {
+            consumeTeleportAllow(player.getUniqueId());
+        }
     }
 
     public int countActiveRuns(String arenaId) {
@@ -804,12 +892,7 @@ public final class ArenaService {
     }
 
     private void spawnAtLocation(Location loc, Runnable task) {
-        if (loc == null || task == null) return;
-        if (plugin.isFolia()) {
-            plugin.runAt(loc, task);
-        } else {
-            task.run();
-        }
+        scheduler.runAtLocation(loc, task);
     }
 
     private static void applyHealthScale(LivingEntity living, double mult) {
@@ -859,7 +942,7 @@ public final class ArenaService {
         part.setEliminatedHandled(true);
         part.setState(ParticipantState.ELIMINATED);
         part.addElimination();
-        stripEffects(player);
+        scheduler.runForEntity(player, () -> stripEffects(player));
         run.journal("eliminate " + player.getUniqueId() + " reason=" + reason);
         if (run.countFighting() == 0) {
             endRun(run, ArenaEndReason.WIPE);
@@ -923,6 +1006,12 @@ public final class ArenaService {
 
     public void handleReconnect(Player player) {
         if (player == null) return;
+        // Defer +1 tick so join/entity ownership is stable on Folia and Paper.
+        scheduler.runForEntityLater(player, () -> handleReconnectBody(player), 1L);
+    }
+
+    private void handleReconnectBody(Player player) {
+        if (player == null || !player.isOnline()) return;
         applyPendingRecovery(player);
 
         ArenaRun run = getRunForPlayer(player.getUniqueId());
@@ -954,14 +1043,7 @@ public final class ArenaService {
                 part.setDisconnectedSince(0L);
                 ArenaDefinition def = getArena(run.getArenaId());
                 Location entry = def == null ? null : toLocation(def.getEntrySpawn());
-                if (entry != null) {
-                    grantTeleportAllow(player.getUniqueId());
-                    try {
-                        player.teleport(entry);
-                    } finally {
-                        consumeTeleportAllow(player.getUniqueId());
-                    }
-                }
+                teleportAllowed(player, entry);
                 run.journal("reconnect fighter " + player.getUniqueId());
             } else {
                 part.setState(ParticipantState.SPECTATING);
@@ -1060,14 +1142,22 @@ public final class ArenaService {
 
         ArenaDefinition def = getArena(run.getArenaId());
 
-        // Despawn tracked mobs
+        // Despawn tracked mobs on each entity's scheduler
         despawnTrackedMobs(run);
 
-        // Restore inventories / pending recovery
+        // Restore inventories / pending recovery on each player's entity scheduler
+        AtomicInteger pendingEntityWork = new AtomicInteger(0);
         for (ArenaParticipant part : run.getParticipants().values()) {
             Player online = Bukkit.getPlayer(part.getPlayerId());
             if (online != null && online.isOnline()) {
-                restoreParticipant(online, part, def);
+                pendingEntityWork.incrementAndGet();
+                scheduler.runForEntity(online, () -> {
+                    try {
+                        restoreParticipant(online, part, def);
+                    } finally {
+                        pendingEntityWork.decrementAndGet();
+                    }
+                });
             } else if (part.getSnapshotPath() != null && !part.isSnapshotRestored()) {
                 ArenaSpawnPoint lobby = def == null ? null : def.getExitSpawn();
                 ArenaPendingRecovery pending = new ArenaPendingRecovery(
@@ -1090,6 +1180,16 @@ public final class ArenaService {
             issueRewards(run, def, end);
         }
 
+        // Folia: wait briefly for entity restore tasks without holding locks (poll off region work).
+        if (scheduler.isFolia() && pendingEntityWork.get() > 0) {
+            scheduler.runGlobalLater(() -> finalizeClosedRun(run), 5L);
+        } else {
+            finalizeClosedRun(run);
+        }
+    }
+
+    private void finalizeClosedRun(ArenaRun run) {
+        if (run == null) return;
         run.setState(ArenaRunState.CLOSED);
         Set<UUID> byArena = runsByArenaId.get(run.getArenaId());
         if (byArena != null) byArena.remove(run.getRunId());
@@ -1135,14 +1235,7 @@ public final class ArenaService {
         }
         inventoryService.stripArenaTaggedItems(player, keys);
         Location exit = def == null ? null : toLocation(def.getExitSpawn());
-        if (exit != null) {
-            grantTeleportAllow(player.getUniqueId());
-            try {
-                player.teleport(exit);
-            } finally {
-                consumeTeleportAllow(player.getUniqueId());
-            }
-        }
+        teleportAllowedInline(player, exit);
     }
 
     private void despawnTrackedMobs(ArenaRun run) {
@@ -1154,7 +1247,10 @@ public final class ArenaService {
                 if (entity != null) break;
             }
             if (entity != null && entity.isValid()) {
-                entity.remove();
+                Entity victim = entity;
+                scheduler.runForEntity(victim, () -> {
+                    if (victim.isValid()) victim.remove();
+                });
             }
             run.getActiveMobIds().remove(mobId);
         }
@@ -1169,14 +1265,7 @@ public final class ArenaService {
         inventoryService.restoreFromFile(player, pending.getSnapshotPath());
         inventoryService.stripArenaTaggedItems(player, keys);
         Location lobby = toLocation(pending.getLobbyDestination());
-        if (lobby != null) {
-            grantTeleportAllow(player.getUniqueId());
-            try {
-                player.teleport(lobby);
-            } finally {
-                consumeTeleportAllow(player.getUniqueId());
-            }
-        }
+        teleportAllowedInline(player, lobby);
         dirtyPending = true;
         persistenceQueue.enqueue(this::savePendingRecoveries);
         plugin.getLogger().info("[Arena] Applied pending recovery for " + player.getName());
@@ -1203,15 +1292,16 @@ public final class ArenaService {
 
     public String recoverPlayer(Player player) {
         if (player == null) return "Invalid player.";
-        if (applyPendingRecovery(player)) return null;
-        ArenaRun run = getRunForPlayer(player.getUniqueId());
-        if (run != null) {
-            ArenaParticipant part = run.getParticipant(player.getUniqueId());
-            ArenaDefinition def = getArena(run.getArenaId());
-            if (part != null) restoreParticipant(player, part, def);
-            return null;
-        }
-        return "Nothing to recover.";
+        scheduler.runForEntity(player, () -> {
+            if (applyPendingRecovery(player)) return;
+            ArenaRun run = getRunForPlayer(player.getUniqueId());
+            if (run != null) {
+                ArenaParticipant part = run.getParticipant(player.getUniqueId());
+                ArenaDefinition def = getArena(run.getArenaId());
+                if (part != null) restoreParticipant(player, part, def);
+            }
+        });
+        return null;
     }
 
     public String cleanupArena(String arenaId) {
@@ -1242,6 +1332,9 @@ public final class ArenaService {
     public String diagnostics() {
         StringBuilder sb = new StringBuilder();
         sb.append("Arena module enabled=").append(isEnabled()).append('\n');
+        sb.append("schedulerPath=").append(scheduler.pathName())
+                .append(" capabilitiesOk=").append(scheduler.hasRequiredCapabilities())
+                .append(" blocked=").append(schedulerCapabilityBlocked).append('\n');
         sb.append("definitions=").append(definitions.size()).append('\n');
         sb.append("activeRuns=").append(activeRuns.size())
                 .append('/').append(globalMaxActiveRuns()).append('\n');
@@ -1291,13 +1384,24 @@ public final class ArenaService {
                 return "Cannot process entry in status " + entry.getStatus();
             }
             Player online = Bukkit.getPlayer(entry.getPlayerId());
-            try {
-                payoutEntry(online, entry, 50.0D, 0);
-                rewardLedger.markCommitted(entry);
-            } catch (Exception e) {
-                rewardLedger.markFailed(entry, e.getMessage());
-                return "Payout failed: " + e.getMessage();
+            if (online == null || !online.isOnline()) {
+                rewardLedger.markFailed(entry, "Player offline for money payout");
+                dirtyRewards = true;
+                persistenceQueue.enqueue(this::saveRewards);
+                return "Payout failed: Player offline for money payout";
             }
+            ArenaRewardEntry target = entry;
+            scheduler.runForEntity(online, () -> {
+                try {
+                    payoutEntry(online, target, 50.0D, 0);
+                    rewardLedger.markCommitted(target);
+                } catch (Exception e) {
+                    rewardLedger.markFailed(target, e.getMessage());
+                }
+                dirtyRewards = true;
+                persistenceQueue.enqueue(this::saveRewards);
+            });
+            return null;
         } else {
             entry.setStatus(ArenaRewardStatus.CANCELLED);
         }
@@ -1332,14 +1436,22 @@ public final class ArenaService {
 
             double scoreBonus = milestonePot * 0.25D * (part.getPersonalScore() / (double) totalScore);
             double amount = equalShare + scoreBonus;
+            long blocks = (long) Math.max(0, amount / 10.0D);
             Player online = Bukkit.getPlayer(part.getPlayerId());
-            try {
-                payoutEntry(online, entry, amount, (long) Math.max(0, amount / 10.0D));
-                rewardLedger.markCommitted(entry);
-            } catch (Exception e) {
-                rewardLedger.markFailed(entry, e.getMessage());
-                plugin.getLogger().log(Level.WARNING, "[Arena] Reward failed for " + part.getPlayerId(), e);
+            if (online == null || !online.isOnline()) {
+                rewardLedger.markFailed(entry, "Player offline for money payout");
+                plugin.getLogger().warning("[Arena] Reward needs review (offline): " + part.getPlayerId());
+                continue;
             }
+            scheduler.runForEntity(online, () -> {
+                try {
+                    payoutEntry(online, entry, amount, blocks);
+                    rewardLedger.markCommitted(entry);
+                } catch (Exception e) {
+                    rewardLedger.markFailed(entry, e.getMessage());
+                    plugin.getLogger().log(Level.WARNING, "[Arena] Reward failed for " + part.getPlayerId(), e);
+                }
+            });
         }
         dirtyRewards = true;
     }

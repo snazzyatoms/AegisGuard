@@ -47,6 +47,10 @@ Review these sections in order:
    Configure staff-authored routes, checkpoints, rewards, and optional teleporting.
 18. `alliance_access`
    Configure player alliance capacity; per-plot alliance permissions remain off until an owner enables them.
+19. `arena`
+   Optional cooperative PvE dungeon module (`arena.enabled` defaults to `false`).
+   Supports Paper and Folia via an internal `ArenaScheduler` (entity/region/global/async).
+   On Folia, Arena refuses to enable if required schedulers are missing (`/ag arena diag` shows the path).
 
 ## Recommended Profiles
 
@@ -350,6 +354,15 @@ If players should use the ClaimBlocks exchange, remember to grant the relevant p
 - Review your `group_plots` anti-abuse values before advertising shared plots to players.
 - Run `/agadmin doctor scan` before and after bulk imports or manual data maintenance.
 - Keep the generated config backup and migration report until the upgraded server has been verified.
+
+## Arena (optional)
+
+`arena.enabled` defaults to **false**. When enabled, Arena runs cooperative PvE party dungeons on bound server plots.
+
+- **Paper:** Arena work runs inline on the main thread through `ArenaScheduler`.
+- **Folia:** Entity, location, global, and async work is routed to Folia-safe schedulers. Startup logs the active path (`Paper` or `Folia`). If Folia schedulers are missing, Arena stays effective-off even when `arena.enabled` is true — check `/ag arena diag`.
+- Keep `arena.defaults.max_active_runs_per_arena: 1` unless you intentionally allow overlapping runs on the same map definition.
+- Persistence (rewards, boards, pending recovery) stays on the Arena IO queue, not on region tick threads.
 
 ## Files To Keep Together
 

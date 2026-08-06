@@ -792,6 +792,20 @@ public class AegisGuard extends JavaPlugin {
         entity.getScheduler().runDelayed(this, ignored -> task.run(), null, safeDelay);
     }
 
+    /**
+     * Delayed main-thread (Paper) or global-region (Folia) task.
+     * Prefer entity/region schedulers when the work touches world or entities.
+     */
+    public void runSyncLater(Runnable task, long delayTicks) {
+        if (task == null) return;
+        long safeDelay = Math.max(1L, delayTicks);
+        if (!isFolia) {
+            Bukkit.getScheduler().runTaskLater(this, task, safeDelay);
+            return;
+        }
+        Bukkit.getGlobalRegionScheduler().runDelayed(this, ignored -> task.run(), safeDelay);
+    }
+
     public void cancelScheduledTask(Object task) {
         cancelTaskReflectively(task);
     }
@@ -1126,7 +1140,7 @@ public class AegisGuard extends JavaPlugin {
     private void startArenaTickTask() {
         if (arenaService == null) return;
         // Always schedule; tickRuns no-ops when arena.enabled is false.
-        arenaTickTask = runGlobalRepeating(() -> {
+        arenaTickTask = arenaService.scheduler().runGlobalRepeating(() -> {
             try {
                 arenaService.tickRuns();
             } catch (Throwable t) {

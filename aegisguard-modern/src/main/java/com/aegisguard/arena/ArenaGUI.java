@@ -205,12 +205,7 @@ public final class ArenaGUI {
                     player.sendMessage("§cNo spectator spawn set.");
                     return;
                 }
-                service.grantTeleportAllow(player.getUniqueId());
-                try {
-                    player.teleport(loc);
-                } finally {
-                    service.consumeTeleportAllow(player.getUniqueId());
-                }
+                service.teleportPlayerAllowed(player, loc);
                 return;
             }
             if (slot == 15) {

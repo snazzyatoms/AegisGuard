@@ -5,6 +5,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -109,5 +110,28 @@ class ArenaContractTest {
         String plugin = Files.readString(JAVA_ROOT.resolve("AegisGuard.java"));
         assertTrue(plugin.contains("startArenaTickTask()"));
         assertTrue(plugin.contains("arenaService.tickRuns()"));
+    }
+
+    @Test
+    void arenaPackageDoesNotUseBukkitScheduler() throws Exception {
+        Path arenaDir = JAVA_ROOT.resolve("arena");
+        try (var stream = Files.walk(arenaDir)) {
+            List<Path> javaFiles = stream.filter(p -> p.toString().endsWith(".java")).toList();
+            assertFalse(javaFiles.isEmpty());
+            for (Path file : javaFiles) {
+                String src = Files.readString(file);
+                assertFalse(src.contains("Bukkit.getScheduler()"),
+                        "Arena must not call Bukkit.getScheduler() directly: " + file.getFileName());
+            }
+        }
+        String scheduler = Files.readString(arenaDir.resolve("ArenaScheduler.java"));
+        assertTrue(scheduler.contains("runForEntity"));
+        assertTrue(scheduler.contains("runAtLocation"));
+        assertTrue(scheduler.contains("runGlobal"));
+        assertTrue(scheduler.contains("runAsync"));
+        assertTrue(scheduler.contains("isFolia()"));
+        String service = Files.readString(arenaDir.resolve("ArenaService.java"));
+        assertTrue(service.contains("new ArenaScheduler(plugin)"));
+        assertTrue(service.contains("schedulerPath="));
     }
 }

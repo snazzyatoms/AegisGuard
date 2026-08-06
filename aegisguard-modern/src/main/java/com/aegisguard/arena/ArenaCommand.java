@@ -237,12 +237,7 @@ public final class ArenaCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§cNo spectator/exit spawn set.");
             return true;
         }
-        service.grantTeleportAllow(player.getUniqueId());
-        try {
-            player.teleport(loc);
-        } finally {
-            service.consumeTeleportAllow(player.getUniqueId());
-        }
+        service.teleportPlayerAllowed(player, loc);
         sender.sendMessage("§aSpectating " + def.getDisplayName() + ".");
         return true;
     }

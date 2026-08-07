@@ -25,9 +25,11 @@
 
 ## A Living Territory System
 
-**AegisGuard** turns land protection into a complete territory experience. Players can secure land, develop their plots, welcome communities, operate local markets, rent spaces, discover destinations, and pursue meaningful long-term progression. Staff receive the recovery, migration, diagnostics, and world-management tools needed to run the system confidently on public servers.
+**AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-Version `1.3.0` builds on the established progression, economy, administration, and interface with safer staff operations and new territory experiences. Existing `1.2.7` data and configuration remain valid.
+Version `1.3.0` adds Guest Passes, Lockdown, Realm Profiles, guided onboarding, Routes, opt-in Alliance Access, Safe Travel controls, staff health checks, broader language packs, and an optional Arena module. Existing `1.2.7` data and configuration remain valid through automatic schema migration. **Java 21+** is required.
+
+> The latest published GitHub Release may still be `1.2.7`. This repository branch targets plugin version `1.3.0`.
 
 ## What Is New In 1.3.0
 
@@ -37,7 +39,7 @@ Sensitive administrative actions are recorded in a structured audit trail with c
 
 ### Temporary Guest Passes
 
-Issue time-limited, self-expiring plot access without granting permanent trust. Presets cover visitor, event guest, temporary builder, and temporary trusted guest. Expiry and revoke never rewrite permanent roles.
+Issue time-limited, self-expiring plot access without granting permanent trust. Presets cover visitor, event guest, temporary builder, and temporary trusted guest. Passes can use wall-clock expiry or **Active Playtime** (remaining duration decreases only while the recipient is online). Expiry and revoke never rewrite permanent roles.
 
 ### Emergency Plot Lockdown
 
@@ -49,7 +51,7 @@ Give each plot a public identity: display name, category, greeting, description,
 
 ### Clearer Player Guidance
 
-Blocked-action messages explain the next useful step. An optional first-claim walkthrough is skippable, never blocks claiming, and can be replayed from Settings or `/ag guide`.
+Blocked-action messages explain the next useful step. An optional first-claim walkthrough is skippable, never blocks claiming, and can be replayed from Settings or `/ag guide`. Player notification preferences remain available for claim enter/exit, admin alerts, and delivery mode.
 
 ### Routes and Checkpoints
 
@@ -57,18 +59,31 @@ Staff can publish named exploration routes with ordered checkpoints. Players bro
 
 ### Alliance Access
 
-Player alliances are completely separate from ownership, money, rentals, and administration. Membership alone grants nothing. Each plot must opt into six Alliance Access toggles, all default **OFF**: Enter, Interact, Containers, Build, Animals, and Friendly PvP. Alliance Entry and Friendly PvP are wired into plot protection.
+Player alliances are completely separate from ownership, money, rentals, and administration. Membership alone grants nothing. Each plot must opt into Alliance Access toggles (Enter, Interact, Containers, Build, Animals, Friendly PvP, and related options), all default **OFF**. Server-wide `alliance_access.disallow.*` guardrails can block owners from enabling risky toggles. Alliance Entry and Friendly PvP are wired into plot protection.
+
+### Safe Travel and Destinations
+
+Voluntary teleports (visit, markets, spawn, staff destinations, and related flows) share Safe Travel cooldowns, confirmation, combat tagging, and safe-point search. Staff can manage Travel destinations used by the Travel Atlas.
+
+### Staff Health and Recovery
+
+`/agadmin health` reports operational signals such as travel gate status and stale Guest Passes. Recovery snapshots remain available for Doctor repairs and manual admin capture (`/agadmin snapshot`).
+
+### Optional Arena Module
+
+Cooperative PvE party dungeons on bound server plots. **Disabled by default** (`arena.enabled: false`). When enabled, scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia.
 
 ## Core Systems
 
 | System | Capabilities |
 |---|---|
-| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mobs, lockdown, and boundary enforcement |
+| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, and rentals |
-| Community | Roles, trusted members, Guest Passes, Alliance Access, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, travel, and routes |
-| Administration | Doctor tools, snapshots, restoration, migration, Audit Ledger, diagnostics, world controls, bypass tools, and activity history |
-| Presentation | Modern English, Old English, Mexican Spanish, and Argentinian Spanish |
+| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
+| Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, and activity history |
+| Optional modules | Arena cooperative PvE (`arena.enabled: false` by default; Folia-safe `ArenaScheduler`) |
+| Presentation | Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish |
 
 ## Compatibility
 
@@ -86,11 +101,12 @@ Server implementations evolve independently. Test new Minecraft server releases 
 ## Installation
 
 1. Stop the Minecraft server.
-2. Place `AegisGuard-1.3.0.jar` in the server's `plugins` directory.
-3. Install Vault and an economy provider if money-based features are required.
-4. Start the server and allow AegisGuard to generate its editable files.
-5. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
-6. Run `/agadmin doctor` before opening the server to players.
+2. Confirm the host is running **Java 21 or newer**.
+3. Place `AegisGuard-1.3.0.jar` in the server's `plugins` directory.
+4. Install Vault and an economy provider if money-based features are required.
+5. Start the server and allow AegisGuard to generate its editable files.
+6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
+7. Run `/agadmin doctor` (and optionally `/agadmin health`) before opening the server to players.
 
 Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supported AegisGuard configuration and language reloads, and perform a full restart after changing integrations or storage settings.
 
@@ -100,26 +116,43 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag wand                     Get the Aegis Scepter
 /ag claim                    Create a claim from the current selection
 /ag menu                     Open the territory dashboard
+/ag guide                    Replay the first-claim walkthrough
 /ag level                    Open the Ascension Hall
 /ag market local             Open the Local Market
 /ag visit                    Open the Travel Atlas
 /ag zone                     Manage sub-zones and rentals
+/ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
 /agadmin wand server         Get the server-zone wand
 /agadmin claim               Create a server-owned protected zone
 /agadmin doctor              Run diagnostics and repair tools
+/agadmin health              Quick staff health check
 /agadmin reload              Reload editable settings and languages
 ```
 
 See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed commands, permissions, configuration, economy, migration, and player guides.
 
+## Building From Source
+
+Requirements:
+
+- JDK 21 or newer
+- Maven 3.9 or newer
+
+From the repository root:
+
+```text
+mvn clean package
+```
 
 The server plugin and developer API artifacts are copied into the local `releases/` directory. Install only `AegisGuard-1.3.0.jar` on a Minecraft server; API artifacts are intended for developers.
 
-## Release Confidence
+For a fuller local verification pass:
 
-The release workflow performs clean Java compilation, automated tests, language parity checks, YAML validation, permission metadata checks, navigation contracts, storage contracts, Folia safety checks, and artifact verification. A local smoke-test script is also provided for startup, admin reload, shutdown, and exception scanning against server fixtures.
+```text
+mvn clean verify
+```
 
 ---
 

@@ -18,12 +18,12 @@ Only `AegisGuard-1.3.0.jar` belongs in a Minecraft server's `plugins` directory.
 
 ## Release Verification
 
-Use the full confidence build before publishing:
+Before publishing a build:
 
 ```text
 mvn clean verify
 ```
 
-The GitHub Actions workflow performs the same Java 21 verification and uploads the server JAR as a workflow artifact. For runtime checks, `scripts/smoke-test.ps1` validates plugin startup, `/agadmin reload`, clean shutdown, and exception-free logs against a supplied Folia, Paper, Purpur, or Spigot server fixture.
+The GitHub Actions workflow runs the same Java 21 verification and uploads the server JAR as a workflow artifact. For runtime checks, `scripts/smoke-test.ps1` validates plugin startup, `/agadmin reload`, clean shutdown, and exception-free logs against a supplied Folia, Paper, Purpur, or Spigot server fixture.
 
-Publish the verified server JAR through the GitHub Releases page. Keep checksums and release notes alongside the uploaded artifact so server owners can confirm exactly what they installed.
+When you publish a GitHub Release, keep checksums and release notes alongside the uploaded artifact so server owners can confirm exactly what they installed.

@@ -71,8 +71,17 @@ class LanguageParityTest {
                 "alliance_unknown_player", "guest_pass_revoke_hint", "zone_tenant_evict_hint",
                 "revoke_guest_pass_lore", "zone_tenant_evict_lore",
                 "local_market_rentals_name", "local_market_create_stall_name",
-                "local_market_external_name", "stall_buy_confirm_title",
-                "market_stall_visit_action", "market_stall_purchase_busy");
+                "local_market_create_stall_lore", "local_market_create_stall_locked_lore",
+                "local_market_create_stall_disabled_lore", "local_market_external_name",
+                "local_market_external_lore", "local_market_external_detected",
+                "local_market_external_unconfigured_lore", "local_market_stalls_empty_lore",
+                "local_market_stalls_no_vault_lore", "local_market_stalls_coexist_lore",
+                "local_market_bridge_coexist_line", "stall_buy_confirm_title",
+                "stall_buy_confirm_name", "stall_buy_confirm_item_line",
+                "stall_buy_confirm_click_lore", "market_stall_visit_action",
+                "market_stall_none_create_lore", "market_stall_no_vault_lore",
+                "market_stall_purchase_busy", "market_stall_bind_started",
+                "market_stall_create_guide", "market_stall_visit_arrived");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);
@@ -81,6 +90,29 @@ class LanguageParityTest {
             for (String key : required) {
                 assertFalse(isBlankValue(translated.get(key)), language + " has a blank " + key);
             }
+        }
+    }
+
+    @Test
+    void tradeStallKeysAreNotEnglishCopiesOutsideModernEnglish() throws Exception {
+        Map<String, Object> english = loadLanguage("modern_english");
+        Set<String> mustDiffer = Set.of(
+                "local_market_rentals_name", "local_market_create_stall_name",
+                "local_market_external_name", "stall_buy_confirm_title",
+                "stall_buy_confirm_name", "market_stall_visit_action",
+                "market_stall_purchase_busy", "market_stall_visit_arrived");
+        for (String language : LANGUAGES) {
+            if (language.equals("modern_english")) continue;
+            Map<String, Object> translated = loadLanguage(language);
+            List<String> copies = new ArrayList<>();
+            for (String key : mustDiffer) {
+                assertTrue(translated.containsKey(key), language + " missing " + key);
+                if (normalizedValue(english.get(key)).equals(normalizedValue(translated.get(key)))) {
+                    copies.add(key);
+                }
+            }
+            assertTrue(copies.isEmpty(),
+                    () -> language + " still has leftover English TradeStall strings: " + copies);
         }
     }
 

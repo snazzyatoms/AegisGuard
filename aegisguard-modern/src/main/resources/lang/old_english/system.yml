@@ -509,7 +509,7 @@ market_stall_bind_need_sign: '&cSet a sign beside this chest, then right-click a
 market_stall_bind_need_chest: '&cSet this sign beside a single chest or barrel, then right-click again.'
 market_stall_purchase_busy: '&eThat listing is already being bought. Try again.'
 market_stall_visit_arrived: '&aThou hast arrived at the TradeStall.'
-market_stall_visit_failed: '&cCould not travel to that TradeStall.'
+market_stall_visit_failed: '&cCould not fare unto that TradeStall.'
 market_stall_vault_unavailable: '&eVault coin is unavailable. Listings may still use Claim Blocks.'
 market_stall_none_owner_hint: '&7Shape a stall with a chest and a sign marked [stall] or [shop].'
 claim_enter_exit_notify_server_disabled: '&cClǣm inngang/ūtgāng tīdunga synd forboden on eallum þissum servere.'

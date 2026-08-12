@@ -6,9 +6,12 @@ import com.aegisguard.data.MarketStall;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -16,6 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TradeStallService {
 
@@ -34,6 +39,7 @@ public class TradeStallService {
         INSUFFICIENT_FUNDS,
         CURRENCY_UNAVAILABLE,
         STALL_INACTIVE,
+        BUSY,
         ERROR
     }
 
@@ -41,7 +47,11 @@ public class TradeStallService {
         public boolean ok() { return type == ResultType.OK; }
     }
 
+    private static final long BIND_MS = 30_000L;
+
     private final AegisGuard plugin;
+    private final ConcurrentHashMap<String, Boolean> purchaseLocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Long> pendingBindUntil = new ConcurrentHashMap<>();
 
     public TradeStallService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -115,6 +125,27 @@ public class TradeStallService {
         if (buyer == null || plot == null || stall == null) {
             return new Result(ResultType.INVALID, "&cThis TradeStall could not be processed.");
         }
+        String lockKey = lockKey(stall, chestSlot);
+        if (purchaseLocks.putIfAbsent(lockKey, Boolean.TRUE) != null) {
+            return new Result(ResultType.BUSY, "&eThat listing is already being purchased. Try again.");
+        }
+        try {
+            return purchaseLocked(buyer, plot, stall, chestSlot);
+        } finally {
+            purchaseLocks.remove(lockKey);
+        }
+    }
+
+    String lockKey(MarketStall stall, int chestSlot) {
+        if (stall == null) return "invalid:" + chestSlot;
+        return stall.getWorld() + ":" + stall.getStorageKey() + ":" + chestSlot;
+    }
+
+    boolean isPurchaseLocked(MarketStall stall, int chestSlot) {
+        return purchaseLocks.containsKey(lockKey(stall, chestSlot));
+    }
+
+    private Result purchaseLocked(Player buyer, Plot plot, MarketStall stall, int chestSlot) {
         if (!isEnabledFor(plot)) {
             return new Result(ResultType.DISABLED, "&cTradeStalls are disabled on this server.");
         }
@@ -142,6 +173,7 @@ public class TradeStallService {
         if (stack == null || stack.getType().isAir()) {
             stall.removeListing(chestSlot);
             plugin.store().savePlot(plot);
+            refreshSign(stall);
             return new Result(ResultType.OUT_OF_STOCK, "&cThat listing is out of stock.");
         }
 
@@ -176,11 +208,114 @@ public class TradeStallService {
         }
 
         plugin.store().savePlot(plot);
+        refreshSign(stall);
         var leftovers = buyer.getInventory().addItem(sold);
         leftovers.values().forEach(drop -> buyer.getWorld().dropItemNaturally(buyer.getLocation(), drop));
 
         return new Result(ResultType.OK, "&aPurchase complete.");
     }
+
+    public void startCreateBind(@Nullable Player player) {
+        if (player == null) return;
+        pendingBindUntil.put(player.getUniqueId(), System.currentTimeMillis() + BIND_MS);
+    }
+
+    public boolean hasCreateBind(@Nullable Player player) {
+        if (player == null) return false;
+        Long until = pendingBindUntil.get(player.getUniqueId());
+        if (until == null) return false;
+        if (until < System.currentTimeMillis()) {
+            pendingBindUntil.remove(player.getUniqueId());
+            return false;
+        }
+        return true;
+    }
+
+    public boolean consumeCreateBind(@Nullable Player player) {
+        if (player == null) return false;
+        Long until = pendingBindUntil.remove(player.getUniqueId());
+        return until != null && until >= System.currentTimeMillis();
+    }
+
+    public void clearCreateBind(@Nullable Player player) {
+        if (player == null) return;
+        pendingBindUntil.remove(player.getUniqueId());
+    }
+
+    public boolean isStallContainer(@Nullable Location location) {
+        if (location == null || plugin.store() == null) return false;
+        Plot plot = plugin.store().getPlotAt(location);
+        return plot != null && plot.getStallAtChest(location) != null;
+    }
+
+    public @Nullable Location visitLocation(@Nullable MarketStall stall) {
+        if (stall == null) return null;
+        Location sign = stall.getSignLocation();
+        Location chest = stall.getChestLocation();
+        Location base = sign != null ? sign : chest;
+        if (base == null) return null;
+        return base.clone().add(0.5D, 1.0D, 0.5D);
+    }
+
+    public void refreshSign(@Nullable MarketStall stall) {
+        if (stall == null) return;
+        Location signLoc = stall.getSignLocation();
+        if (signLoc == null || signLoc.getWorld() == null) return;
+        Block block = signLoc.getBlock();
+        BlockState state = block.getState();
+        if (!(state instanceof Sign sign)) return;
+
+        String title = stall.getTitle() == null ? "TradeStall" : stall.getTitle();
+        sign.setLine(0, ChatColor.GOLD + "[TradeStall]");
+        sign.setLine(1, clipSign(title));
+
+        ListingsHint hint = listingsHint(stall);
+        if (hint.listedCount() == 1 && hint.priceLine() != null && !hint.priceLine().isBlank()) {
+            sign.setLine(2, clipSign(hint.priceLine()));
+            sign.setLine(3, clipSign("to browse"));
+        } else {
+            sign.setLine(2, clipSign("Open chest"));
+            sign.setLine(3, clipSign("to browse"));
+        }
+        sign.update();
+    }
+
+    public void applyCreatedSignLines(@Nullable org.bukkit.event.block.SignChangeEvent event, @Nullable MarketStall stall) {
+        if (event == null) return;
+        String title = stall == null || stall.getTitle() == null ? "TradeStall" : stall.getTitle();
+        event.setLine(0, ChatColor.GOLD + "[TradeStall]");
+        event.setLine(1, clipSign(title));
+        event.setLine(2, clipSign("Open chest"));
+        event.setLine(3, clipSign("to browse"));
+    }
+
+    private ListingsHint listingsHint(MarketStall stall) {
+        Inventory inventory = resolveInventory(stall);
+        if (inventory == null) return new ListingsHint(0, null);
+
+        int count = 0;
+        String priceLine = null;
+        for (int slot = 0; slot < Math.min(27, inventory.getSize()); slot++) {
+            ItemStack item = inventory.getItem(slot);
+            MarketStall.StallListing listing = stall.getListing(slot);
+            if (item == null || item.getType().isAir() || listing == null || !listing.isValid()) continue;
+            count++;
+            if (count == 1) {
+                priceLine = plugin.eco() == null
+                        ? String.format(Locale.US, "%.0f", listing.getPrice())
+                        : plugin.eco().format(listing.getPrice(), listing.getCurrency());
+            }
+        }
+        return new ListingsHint(count, priceLine);
+    }
+
+    private String clipSign(String raw) {
+        String stripped = ChatColor.stripColor(raw == null ? "" : raw).trim();
+        if (stripped.length() <= 15) return stripped;
+        return stripped.substring(0, 15);
+    }
+
+    private record ListingsHint(int listedCount, String priceLine) {}
 
     private boolean chargeBuyer(Player buyer, MarketStall.StallListing listing) {
         return switch (listing.getCurrency()) {

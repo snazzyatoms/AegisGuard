@@ -33,6 +33,7 @@ class SafeTravelContractTest {
                 JAVA_ROOT.resolve("gui/PlotMarketGUI.java"),
                 JAVA_ROOT.resolve("gui/PlotAuctionGUI.java"),
                 JAVA_ROOT.resolve("gui/ZoneBrowseGUI.java"),
+                JAVA_ROOT.resolve("gui/StallBrowseGUI.java"),
                 JAVA_ROOT.resolve("gui/ZoneTenantGUI.java"),
                 JAVA_ROOT.resolve("gui/AdminPlotListGUI.java"),
                 JAVA_ROOT.resolve("commands/AegisCommand.java")

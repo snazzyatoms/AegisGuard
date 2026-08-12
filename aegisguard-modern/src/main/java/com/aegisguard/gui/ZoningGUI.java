@@ -36,18 +36,25 @@ public class ZoningGUI {
     public static class ZoningHolder implements InventoryHolder {
         private final Plot plot;
         private final List<String> zoneNames; // snapshot for slot->zone mapping
+        private final String returnTo;
 
         public ZoningHolder(Plot plot) {
-            this(plot, new ArrayList<>());
+            this(plot, new ArrayList<>(), MarketNav.MAIN);
         }
 
         public ZoningHolder(Plot plot, List<String> zoneNames) {
+            this(plot, zoneNames, MarketNav.MAIN);
+        }
+
+        public ZoningHolder(Plot plot, List<String> zoneNames, String returnTo) {
             this.plot = plot;
             this.zoneNames = (zoneNames == null) ? new ArrayList<>() : zoneNames;
+            this.returnTo = MarketNav.normalize(returnTo);
         }
 
         public Plot getPlot() { return plot; }
         public List<String> getZoneNames() { return zoneNames; }
+        public String getReturnTo() { return returnTo; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -74,6 +81,10 @@ public class ZoningGUI {
     // --------------------------------------------------
 
     public void open(Player player, Plot plot) {
+        open(player, plot, MarketNav.MAIN);
+    }
+
+    public void open(Player player, Plot plot, String returnTo) {
         if (plot == null) {
             plugin.msg().send(player, "no_plot_here");
             plugin.effects().playError(player);
@@ -98,7 +109,7 @@ public class ZoningGUI {
             if (z != null && z.getName() != null) zoneNames.add(z.getName());
         }
 
-        Inventory inv = Bukkit.createInventory(new ZoningHolder(plot, zoneNames), 54, title);
+        Inventory inv = Bukkit.createInventory(new ZoningHolder(plot, zoneNames, returnTo), 54, title);
 
         // Fill footer with filler panes
         ItemStack filler = GUIManager.getFiller();
@@ -296,7 +307,7 @@ public class ZoningGUI {
         // --- NAVIGATION ---
         if (slot == 45 && clicked.getType() == Material.ARROW) {
             plugin.effects().playMenuFlip(player);
-            plugin.gui().openMain(player);
+            MarketNav.back(plugin, player, holder.getReturnTo(), plot);
             return;
         }
 
@@ -308,7 +319,7 @@ public class ZoningGUI {
 
         if (slot == 51) {
             if (plot.hasBrowsableZonesFor(player)) {
-                plugin.gui().zoneBrowse().open(player, plot);
+                plugin.gui().zoneBrowse().open(player, plot, MarketNav.nest(MarketNav.ZONING, holder.getReturnTo()));
                 plugin.effects().playMenuFlip(player);
             } else {
                 plugin.effects().playError(player);
@@ -320,7 +331,7 @@ public class ZoningGUI {
         if (slot == 49) {
             if (plugin.selection().hasSelection(player)) {
                 createZoneFromSelection(player, plot);
-                open(player, plot);
+                open(player, plot, holder.getReturnTo());
             } else {
                 plugin.effects().playError(player);
                 send(player, "must_select", "&cYou must select two points first.");
@@ -358,7 +369,7 @@ public class ZoningGUI {
                         "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
                                 .replace("{ZONE}", target.getName())
                                 .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
-                open(player, plot);
+                open(player, plot, holder.getReturnTo());
                 return;
             }
 
@@ -372,7 +383,7 @@ public class ZoningGUI {
                         "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
                                 .replace("{ZONE}", target.getName())
                                 .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
-                open(player, plot);
+                open(player, plot, holder.getReturnTo());
                 return;
             }
 
@@ -395,14 +406,14 @@ public class ZoningGUI {
                 plugin.effects().playUnclaim(player);
 
                 send(player, "zone_deleted", "&cZone deleted: &f{ZONE}".replace("{ZONE}", target.getName()));
-                open(player, plot);
+                open(player, plot, holder.getReturnTo());
                 return;
             }
 
             // Left Click: Evict (only if rented)
             if (e.getClick().isLeftClick()) {
                 if (target.isRented()) {
-                    plugin.gui().zoneTenant().open(player, plot, target);
+                    plugin.gui().zoneTenant().open(player, plot, target, MarketNav.nest(MarketNav.ZONING, holder.getReturnTo()));
                     plugin.effects().playMenuFlip(player);
                 } else {
                     if (target.isListedForRent()) {
@@ -423,7 +434,7 @@ public class ZoningGUI {
                     plugin.store().savePlot(plot);
                     plugin.store().setDirty(true);
                     plugin.effects().playConfirm(player);
-                    open(player, plot);
+                    open(player, plot, holder.getReturnTo());
                 }
             }
         }

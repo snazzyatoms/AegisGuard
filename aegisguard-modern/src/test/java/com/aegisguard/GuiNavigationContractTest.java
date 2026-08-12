@@ -27,7 +27,7 @@ class GuiNavigationContractTest {
                 "gui/LocalMarketGUI.java", "gui/MigrationAdminGUI.java", "gui/PlotAuctionGUI.java",
                 "gui/PlotCosmeticsGUI.java", "gui/PlotFlagsGUI.java", "gui/PlotMarketGUI.java",
                 "gui/PlotStatusGUI.java", "gui/RolesGUI.java", "gui/SettingsGUI.java",
-                "gui/StallBrowseGUI.java", "gui/VisitGUI.java", "gui/ZoneBrowseGUI.java",
+                "gui/StallBrowseGUI.java", "gui/StallPurchaseConfirmGUI.java", "gui/VisitGUI.java", "gui/ZoneBrowseGUI.java",
                 "gui/ZoneTenantGUI.java", "gui/ZoningGUI.java", "gui/RentConfirmGUI.java",
                 "gui/MyRentalsGUI.java", "gui/SettlementsInboxGUI.java", "gui/ClaimMergeGUI.java",
                 "gui/TransferConfirmGUI.java", "gui/GiftBlocksGUI.java", "gui/MyTenantsGUI.java",

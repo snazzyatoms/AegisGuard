@@ -626,13 +626,13 @@ local_market_global_name: '&6Real Estate'
 local_market_global_lore:
 - '&7Browse plots for sale, public'
 - '&7rentals, and other listings.'
-local_market_rentals_name: '&aStalls & Rentals'
+local_market_rentals_name: '&aZone Hire'
 local_market_rentals_lore:
-- '&7Browse rentable subplots, market'
-- '&7stalls, and managed rooms.'
+- '&7Browse rentable subplots and'
+- '&7managed rooms upon this claim.'
 local_market_rentals_locked_lore:
-- '&7This claim has no public stalls or'
-- '&7rentable sub-zones right now.'
+- '&7This claim hath no public'
+- '&7rentable sub-zones at present.'
 local_market_manage_name: '&bManage Local Market'
 local_market_manage_lore:
 - '&7Create rental stalls, update'
@@ -643,6 +643,61 @@ local_market_manage_locked_lore:
 local_market_bridge_default_lore: '&7Open this linked market or shop system.'
 local_market_bridge_click: '&eClick to open.'
 local_market_bridge_requires_shop: '&cEnable Shop Interact on this plot first.'
+
+local_market_create_stall_name: '&eShape a TradeStall'
+local_market_create_stall_lore:
+- '&7Set a chest or barrel, then a'
+- '&7neighbouring sign with &e[stall]&7 or &e[shop]&7.'
+- ' '
+- '&eClick to begin a bind: the next'
+- '&eright-click upon a chest or sign'
+- '&eregisters this TradeStall.'
+local_market_create_stall_locked_lore:
+- '&7Owners and zone-renters may shape a stall:'
+- '&7set a chest, then a neighbouring sign'
+- '&7with &e[stall]&7 or &e[shop]&7 upon line 1.'
+local_market_create_stall_disabled_lore:
+- '&7Built-in TradeStalls are stayed here.'
+- '&7Use a listed third-party shop plugin,'
+- '&7or bid staff set integration.mode to COEXIST.'
+local_market_external_name: '&bOutland Shops'
+local_market_external_lore:
+- '&7Optional: QuickShop, ChestShop,'
+- '&7Shopkeepers, or ExcellentShop.'
+- '&7Add a bridge entry in config.yml'
+- '&7under market_hub.external_bridges.'
+local_market_external_detected: '&aFound: &f{PLUGINS}'
+local_market_external_unconfigured_lore:
+- '&7Found plugins are not yet linked.'
+- '&7Staff may add commands with player:'
+- '&7or console: prefixes in config.yml.'
+local_market_stalls_empty_lore:
+- '&7No TradeStalls are stocked yet.'
+- '&7Shape one with a chest and a'
+- '&7sign marked &e[stall]&7 or &e[shop]&7.'
+local_market_stalls_no_vault_lore:
+- '&eVault coin is unavailable.'
+- '&7Sellers may still list Claim Blocks.'
+local_market_stalls_coexist_lore:
+- '&7Built-in stalls and linked outland'
+- '&7shops may both be used upon this claim.'
+- '&8Thou art charged only by the shop thou openest.'
+local_market_bridge_coexist_line: '&8Built-in TradeStalls remain as well.'
+market_stall_visit_action: '&bRight-click to visit this stall.'
+market_stall_none_create_lore:
+- '&7Set a chest, then a neighbouring sign'
+- '&7with &e[stall]&7 or &e[shop]&7 upon line 1.'
+market_stall_no_vault_title: '&eVault Unavailable'
+market_stall_no_vault_lore:
+- '&eVault coin is unavailable.'
+- '&7Listings may still use Claim Blocks.'
+stall_buy_confirm_title: '&6Confirm Purchase'
+stall_buy_confirm_name: '&aConfirm Purchase'
+stall_buy_confirm_item_line: '&7Item: &f{ITEM}'
+stall_buy_confirm_price_line: '&7Price: &6{PRICE}'
+stall_buy_confirm_seller_line: '&7Seller: &f{OWNER}'
+stall_buy_confirm_bundle_line: '&7Bundle: &f{COUNT}'
+stall_buy_confirm_click_lore: '&aClick to confirm and pay'
 admin_button_lore:
 - '&7Operator Access Only'
 admin_lore:

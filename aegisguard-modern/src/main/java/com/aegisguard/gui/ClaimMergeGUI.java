@@ -30,22 +30,40 @@ public class ClaimMergeGUI {
         private final UUID candidateId;
         private final List<UUID> plotIds;
         private final boolean confirm;
+        private final String returnTo;
+        private final UUID originPlotId;
         public ClaimMergeHolder(UUID baseId, UUID candidateId, List<UUID> plotIds, boolean confirm) {
+            this(baseId, candidateId, plotIds, confirm, MarketNav.MAIN, null);
+        }
+        public ClaimMergeHolder(UUID baseId, UUID candidateId, List<UUID> plotIds, boolean confirm,
+                                String returnTo, UUID originPlotId) {
             this.baseId = baseId;
             this.candidateId = candidateId;
             this.plotIds = plotIds;
             this.confirm = confirm;
+            this.returnTo = MarketNav.normalize(returnTo);
+            this.originPlotId = originPlotId;
         }
         public UUID getBaseId() { return baseId; }
         public UUID getCandidateId() { return candidateId; }
         public List<UUID> getPlotIds() { return plotIds; }
         public boolean isConfirm() { return confirm; }
+        public String getReturnTo() { return returnTo; }
+        public UUID getOriginPlotId() { return originPlotId; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public void open(Player player) { openSelect(player, null); }
+    public void open(Player player) { openFrom(player, MarketNav.MAIN, null); }
+
+    public void openFrom(Player player, String returnTo, Plot originPlot) {
+        openSelect(player, null, returnTo, originPlot == null ? null : originPlot.getPlotId());
+    }
 
     private void openSelect(Player player, UUID baseId) {
+        openSelect(player, baseId, MarketNav.MAIN, null);
+    }
+
+    private void openSelect(Player player, UUID baseId, String returnTo, UUID originPlotId) {
         if (!isMergeEnabled()) {
             player.sendMessage(GUIManager.color(tr(player, "claim_merge_disabled",
                     "&cClaim merging is disabled on this server.")));
@@ -53,7 +71,7 @@ public class ClaimMergeGUI {
             return;
         }
         List<UUID> ids = plugin.store().getPlots(player.getUniqueId()).stream().map(Plot::getPlotId).toList();
-        Inventory inv = Bukkit.createInventory(new ClaimMergeHolder(baseId, null, ids, false), 54,
+        Inventory inv = Bukkit.createInventory(new ClaimMergeHolder(baseId, null, ids, false, returnTo, originPlotId), 54,
                 plugin.gui().title(player, "claim_merge_title", "&6Merge Claims"));
         for (int i = 45; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
         for (int i = 0; i < ids.size() && i < 45; i++) {
@@ -73,10 +91,10 @@ public class ClaimMergeGUI {
         plugin.effects().playMenuOpen(player);
     }
 
-    private void openConfirm(Player player, Plot base, Plot other) {
+    private void openConfirm(Player player, Plot base, Plot other, String returnTo, UUID originPlotId) {
         List<UUID> ids = List.of(base.getPlotId(), other.getPlotId());
         Inventory inv = Bukkit.createInventory(
-                new ClaimMergeHolder(base.getPlotId(), other.getPlotId(), ids, true), 27,
+                new ClaimMergeHolder(base.getPlotId(), other.getPlotId(), ids, true, returnTo, originPlotId), 27,
                 plugin.gui().title(player, "claim_merge_confirm_title", "&cConfirm Merge"));
         for (int i = 0; i < 27; i++) inv.setItem(i, GUIManager.getFiller());
         long cost = mergeCost();
@@ -112,27 +130,30 @@ public class ClaimMergeGUI {
         if (e.getClickedInventory() != e.getView().getTopInventory()) return;
 
         if (holder.isConfirm()) {
-            if (e.getRawSlot() == 15) { openSelect(player, holder.getBaseId()); return; }
+            if (e.getRawSlot() == 15) { openSelect(player, holder.getBaseId(), holder.getReturnTo(), holder.getOriginPlotId()); return; }
             if (e.getRawSlot() == 22) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
             if (e.getRawSlot() != 11) return;
             Plot base = find(holder.getBaseId());
             Plot other = find(holder.getCandidateId());
             if (base == null || other == null || !base.isOwner(player.getUniqueId()) || !other.isOwner(player.getUniqueId())) {
                 fail(player, "claim_merge_failed_generic", "&cMerge failed: plots are no longer available.");
-                openSelect(player, null);
+                openSelect(player, null, holder.getReturnTo(), holder.getOriginPlotId());
                 return;
             }
             MergeCheck check = validateMerge(player, base, other);
             if (!check.ok()) {
                 fail(player, check.key(), check.fallback());
-                openSelect(player, holder.getBaseId());
+                openSelect(player, holder.getBaseId(), holder.getReturnTo(), holder.getOriginPlotId());
                 return;
             }
             executeMerge(player, base, other, check);
             return;
         }
 
-        if (e.getRawSlot() == 48) { plugin.gui().openMain(player); return; }
+        if (e.getRawSlot() == 48) {
+            MarketNav.back(plugin, player, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
+            return;
+        }
         if (e.getRawSlot() == 50) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
         if (!isMergeEnabled()) {
             fail(player, "claim_merge_disabled", "&cClaim merging is disabled on this server.");
@@ -141,15 +162,15 @@ public class ClaimMergeGUI {
         if (e.getRawSlot() < 0 || e.getRawSlot() >= holder.getPlotIds().size()) return;
         Plot selected = find(holder.getPlotIds().get(e.getRawSlot()));
         if (selected == null || !selected.isOwner(player.getUniqueId())) return;
-        if (holder.getBaseId() == null) { openSelect(player, selected.getPlotId()); return; }
+        if (holder.getBaseId() == null) { openSelect(player, selected.getPlotId(), holder.getReturnTo(), holder.getOriginPlotId()); return; }
         Plot base = find(holder.getBaseId());
-        if (base == null || base.getPlotId().equals(selected.getPlotId())) { openSelect(player, null); return; }
+        if (base == null || base.getPlotId().equals(selected.getPlotId())) { openSelect(player, null, holder.getReturnTo(), holder.getOriginPlotId()); return; }
         MergeCheck check = validateMerge(player, base, selected);
         if (!check.ok()) {
             fail(player, check.key(), check.fallback());
             return;
         }
-        openConfirm(player, base, selected);
+        openConfirm(player, base, selected, holder.getReturnTo(), holder.getOriginPlotId());
     }
 
     private record MergeCheck(boolean ok, String key, String fallback, ClaimMergeMath.MergeBounds bounds,

@@ -23,14 +23,30 @@ public class MyTenantsGUI {
     public record Entry(UUID plotId, String zoneName) {}
     public static final class MyTenantsHolder implements InventoryHolder {
         private final List<Entry> entries;
-        public MyTenantsHolder(List<Entry> entries) { this.entries = entries; }
+        private final String returnTo;
+        private final UUID originPlotId;
+        public MyTenantsHolder(List<Entry> entries) {
+            this(entries, MarketNav.MAIN, null);
+        }
+        public MyTenantsHolder(List<Entry> entries, String returnTo, UUID originPlotId) {
+            this.entries = entries;
+            this.returnTo = MarketNav.normalize(returnTo);
+            this.originPlotId = originPlotId;
+        }
         public List<Entry> getEntries() { return entries; }
+        public String getReturnTo() { return returnTo; }
+        public UUID getOriginPlotId() { return originPlotId; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player) {
+        openFrom(player, MarketNav.MAIN, null);
+    }
+
+    public void openFrom(Player player, String returnTo, Plot originPlot) {
         List<Entry> entries = collect(player.getUniqueId());
-        Inventory inv = Bukkit.createInventory(new MyTenantsHolder(entries), 54,
+        Inventory inv = Bukkit.createInventory(new MyTenantsHolder(entries, returnTo,
+                        originPlot == null ? null : originPlot.getPlotId()), 54,
                 plugin.gui().title(player, "my_tenants_title", "&6My Tenants"));
         for (int i = 45; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
         if (entries.isEmpty()) inv.setItem(22, GUIManager.createItem(Material.GRAY_DYE,
@@ -64,14 +80,17 @@ public class MyTenantsGUI {
         e.setCancelled(true);
         if (e.getClickedInventory() == null || e.getClickedInventory() != e.getView().getTopInventory()) return;
         if (e.getCurrentItem() == null || GUIManager.isFiller(e.getCurrentItem())) return;
-        if (e.getRawSlot() == 48) { plugin.gui().openMain(player); return; }
+        if (e.getRawSlot() == 48) {
+            MarketNav.back(plugin, player, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
+            return;
+        }
         if (e.getRawSlot() == 50) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
         if (e.getRawSlot() < 0 || e.getRawSlot() >= holder.getEntries().size()) return;
         Entry entry = holder.getEntries().get(e.getRawSlot()); Plot plot = find(entry.plotId());
         if (plot == null || !plot.isOwner(player.getUniqueId())) { plugin.effects().playError(player); return; }
         if (entry.zoneName() != null) {
             Zone zone = plot.getZone(entry.zoneName());
-            if (zone != null) plugin.gui().zoneTenant().open(player, plot, zone);
+            if (zone != null) plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest("my_tenants", holder.getReturnTo()));
         } else if (e.getClick().isShiftClick() && e.getClick().isRightClick()
                 && plugin.getConfig().getBoolean("full_plot_renting.allow_owner_early_cancel", false)) {
             TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());

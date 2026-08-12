@@ -44,14 +44,21 @@ public class PlotMarketGUI {
     public static class PlotMarketHolder implements InventoryHolder {
         private final int page;
         private final List<Plot> plots;
+        private final UUID returnPlotId;
 
         public PlotMarketHolder(List<Plot> plots, int page) {
+            this(plots, page, null);
+        }
+
+        public PlotMarketHolder(List<Plot> plots, int page, UUID returnPlotId) {
             this.plots = plots;
             this.page = page;
+            this.returnPlotId = returnPlotId;
         }
 
         public int getPage() { return page; }
         public List<Plot> getPlots() { return plots; }
+        public UUID getReturnPlotId() { return returnPlotId; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -59,6 +66,14 @@ public class PlotMarketGUI {
      * OPEN GUI
      * ----------------------------- */
     public void open(Player player, int page) {
+        open(player, page, (Plot) null);
+    }
+
+    public void open(Player player, int page, Plot returnPlot) {
+        open(player, page, returnPlot == null ? null : returnPlot.getPlotId());
+    }
+
+    public void open(Player player, int page, UUID returnPlotId) {
         // 1. Gather all plots (Sale + Rent)
         List<Plot> allPlots = new ArrayList<>();
         allPlots.addAll(plugin.store().getPlotsForSale());
@@ -82,7 +97,7 @@ public class PlotMarketGUI {
         String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
         String title = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new PlotMarketHolder(allPlots, page), 54, title);
+        Inventory inv = Bukkit.createInventory(new PlotMarketHolder(allPlots, page, returnPlotId), 54, title);
 
         // 3. Fill Background (bottom row only, so listings stay empty)
         ItemStack filler = GUIManager.getFiller();
@@ -221,9 +236,14 @@ public class PlotMarketGUI {
         int page = holder.getPage();
 
         // Nav (only act if the clicked item matches)
-        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page - 1); return; }
-        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page + 1); return; }
-        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 45 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page - 1, holder.getReturnPlotId()); return; }
+        if (slot == 53 && e.getCurrentItem().getType() == Material.ARROW) { open(player, page + 1, holder.getReturnPlotId()); return; }
+        if (slot == 48) {
+            Plot origin = MarketNav.findPlot(plugin, holder.getReturnPlotId());
+            if (origin != null) plugin.gui().localMarket().open(player, origin);
+            else plugin.gui().openMain(player);
+            return;
+        }
         if (slot == 49) { player.closeInventory(); return; }
 
         // Listing Click

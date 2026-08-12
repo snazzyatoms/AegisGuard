@@ -835,13 +835,13 @@ local_market_global_name: '&6Immobilien'
 local_market_global_lore:
 - '&7Durchsuchen Sie Grundstücke zum Verkauf, öffentlich'
 - '&7Vermietungen und andere Angebote.'
-local_market_rentals_name: '&aStände und Verleih'
+local_market_rentals_name: '&aZonenmieten'
 local_market_rentals_lore:
-- '&7Vermietbare Nebengrundstücke durchsuchen, vermarkten'
-- '&7Stände und verwaltete Räume.'
+- '&7Durchsuche mietbare Unterparzellen'
+- '&7und verwaltete Räume auf diesem Grundstück.'
 local_market_rentals_locked_lore:
-- '&7Auf diesem Grundstück gibt es keine öffentlichen Stände oder'
-- '&7derzeit mietbare Unterzonen.'
+- '&7Dieses Grundstück hat derzeit keine'
+- '&7öffentlichen mietbaren Unterzonen.'
 local_market_manage_name: '&bLokalen Markt verwalten'
 local_market_manage_lore:
 - '&7Mietstände erstellen, aktualisieren'
@@ -863,6 +863,61 @@ local_market_stalls_external_lore:
 local_market_bridge_default_lore: '&7Öffnen Sie dieses verknüpfte Markt- oder Shopsystem.'
 local_market_bridge_click: '&eKlicken Sie zum Öffnen.'
 local_market_bridge_requires_shop: '&cAktivieren Sie zuerst Shop Interact auf diesem Grundstück.'
+
+local_market_create_stall_name: '&eTradeStall erstellen'
+local_market_create_stall_lore:
+- '&7Platziere eine Truhe oder ein Fass, dann ein'
+- '&7benachbartes Schild mit &e[stall]&7 oder &e[shop]&7.'
+- ' '
+- '&eKlicken zum Binden: der nächste'
+- '&eRechtsklick auf Truhe oder Schild'
+- '&eregistriert diesen TradeStall.'
+local_market_create_stall_locked_lore:
+- '&7Besitzer und Zonenmieter können einen Stand erstellen:'
+- '&7platziere eine Truhe, dann ein benachbartes Schild'
+- '&7mit &e[stall]&7 oder &e[shop]&7 in Zeile 1.'
+local_market_create_stall_disabled_lore:
+- '&7Integrierte TradeStalls sind hier deaktiviert.'
+- '&7Nutze ein gelistetes Drittanbieter-Shop-Plugin'
+- '&7oder bitte das Team, integration.mode auf COEXIST zu setzen.'
+local_market_external_name: '&bExterne Shops'
+local_market_external_lore:
+- '&7Optional: QuickShop, ChestShop,'
+- '&7Shopkeepers oder ExcellentShop.'
+- '&7Füge einen Brückeneintrag in config.yml'
+- '&7unter market_hub.external_bridges hinzu.'
+local_market_external_detected: '&aErkannt: &f{PLUGINS}'
+local_market_external_unconfigured_lore:
+- '&7Erkannte Plugins sind noch nicht verknüpft.'
+- '&7Das Team kann Befehle mit player:'
+- '&7oder console: in config.yml hinzufügen.'
+local_market_stalls_empty_lore:
+- '&7Noch keine TradeStalls mit Waren.'
+- '&7Erstelle einen mit einer Truhe und einem'
+- '&7Schild mit &e[stall]&7 oder &e[shop]&7.'
+local_market_stalls_no_vault_lore:
+- '&eVault-Geld ist nicht verfügbar.'
+- '&7Verkäufer können weiterhin Claim Blocks listen.'
+local_market_stalls_coexist_lore:
+- '&7Integrierte Stände und verknüpfte externe'
+- '&7Shops können beide auf diesem Grundstück genutzt werden.'
+- '&8Du wirst nur vom geöffneten Shop belastet.'
+local_market_bridge_coexist_line: '&8Integrierte TradeStalls bleiben verfügbar.'
+market_stall_visit_action: '&bRechtsklick, um diesen Stand zu besuchen.'
+market_stall_none_create_lore:
+- '&7Platziere eine Truhe, dann ein benachbartes Schild'
+- '&7mit &e[stall]&7 oder &e[shop]&7 in Zeile 1.'
+market_stall_no_vault_title: '&eVault nicht verfügbar'
+market_stall_no_vault_lore:
+- '&eVault-Geld ist nicht verfügbar.'
+- '&7Angebote können weiterhin Claim Blocks nutzen.'
+stall_buy_confirm_title: '&6Kauf bestätigen'
+stall_buy_confirm_name: '&aKauf bestätigen'
+stall_buy_confirm_item_line: '&7Gegenstand: &f{ITEM}'
+stall_buy_confirm_price_line: '&7Preis: &6{PRICE}'
+stall_buy_confirm_seller_line: '&7Verkäufer: &f{OWNER}'
+stall_buy_confirm_bundle_line: '&7Bündel: &f{COUNT}'
+stall_buy_confirm_click_lore: '&aKlicken zum Bestätigen und Bezahlen'
 market_stall_list_title: '&6✦ Handelsstände'
 market_stall_preview_title: '&6✦ TradeStall: {STALL}'
 market_stall_manage_title: '&6✦ TradeStall verwalten'

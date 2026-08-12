@@ -36,14 +36,24 @@ public class MyRentalsGUI {
     public static final class MyRentalsHolder implements InventoryHolder {
         private final int page;
         private final List<RentalEntry> entries;
+        private final String returnTo;
+        private final UUID originPlotId;
 
         public MyRentalsHolder(List<RentalEntry> entries, int page) {
+            this(entries, page, MarketNav.MAIN, null);
+        }
+
+        public MyRentalsHolder(List<RentalEntry> entries, int page, String returnTo, UUID originPlotId) {
             this.entries = entries == null ? List.of() : entries;
             this.page = page;
+            this.returnTo = MarketNav.normalize(returnTo);
+            this.originPlotId = originPlotId;
         }
 
         public int getPage() { return page; }
         public List<RentalEntry> getEntries() { return entries; }
+        public String getReturnTo() { return returnTo; }
+        public UUID getOriginPlotId() { return originPlotId; }
 
         @Override
         public Inventory getInventory() { return null; }
@@ -54,15 +64,20 @@ public class MyRentalsGUI {
     }
 
     public void open(Player player) {
-        open(player, 0);
+        openFrom(player, 0, MarketNav.MAIN, null);
     }
 
     public void open(Player player, int page) {
+        openFrom(player, page, MarketNav.MAIN, null);
+    }
+
+    public void openFrom(Player player, int page, String returnTo, Plot originPlot) {
         if (player == null) return;
         List<RentalEntry> entries = collectEntries(player.getUniqueId());
+        UUID originId = originPlot == null ? null : originPlot.getPlotId();
 
         Inventory inv = Bukkit.createInventory(
-                new MyRentalsHolder(entries, page),
+                new MyRentalsHolder(entries, page, returnTo, originId),
                 54,
                 plugin.gui().title(player, "my_rentals_title", "&6My Rentals")
         );
@@ -155,7 +170,7 @@ public class MyRentalsGUI {
         int maxPage = Math.max(0, (int) Math.ceil(entries.size() / (double) ITEMS_PER_PAGE) - 1);
 
         if (slot == 48) {
-            plugin.gui().openMain(player);
+            MarketNav.back(plugin, player, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
         if (slot == 50) {
@@ -164,11 +179,11 @@ public class MyRentalsGUI {
             return;
         }
         if (slot == 46 && page > 0) {
-            open(player, page - 1);
+            openFrom(player, page - 1, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
         if (slot == 52 && page < maxPage) {
-            open(player, page + 1);
+            openFrom(player, page + 1, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
         if (slot >= ITEMS_PER_PAGE) return;
@@ -180,7 +195,7 @@ public class MyRentalsGUI {
         Plot plot = findPlot(entry.plotId());
         if (plot == null) {
             plugin.effects().playError(player);
-            open(player, page);
+            openFrom(player, page, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
 
@@ -188,7 +203,7 @@ public class MyRentalsGUI {
             TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
             if (contract == null || !contract.renterId().equals(player.getUniqueId())) {
                 plugin.effects().playError(player);
-                open(player, page);
+                openFrom(player, page, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
                 return;
             }
             if (e.getClick().isShiftClick() && e.getClick().isLeftClick()) {
@@ -210,7 +225,7 @@ public class MyRentalsGUI {
         Zone zone = findZone(plot, entry.zoneName());
         if (zone == null || !zone.isRentedBy(player.getUniqueId())) {
             plugin.effects().playError(player);
-            open(player, page);
+            openFrom(player, page, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
         if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
@@ -222,7 +237,7 @@ public class MyRentalsGUI {
             return;
         }
         if (e.getClick().isLeftClick()) {
-            plugin.gui().zoneTenant().open(player, plot, zone);
+            plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest(MarketNav.MY_RENTALS, holder.getReturnTo()));
             plugin.effects().playMenuFlip(player);
         }
     }

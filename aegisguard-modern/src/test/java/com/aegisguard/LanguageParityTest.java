@@ -69,7 +69,10 @@ class LanguageParityTest {
                 "alliance_roster_title", "alliance_roster_members_line", "alliance_roster_invites_line",
                 "alliance_roster_leader", "alliance_roster_member", "alliance_roster_pending_name",
                 "alliance_unknown_player", "guest_pass_revoke_hint", "zone_tenant_evict_hint",
-                "revoke_guest_pass_lore", "zone_tenant_evict_lore");
+                "revoke_guest_pass_lore", "zone_tenant_evict_lore",
+                "local_market_rentals_name", "local_market_create_stall_name",
+                "local_market_external_name", "stall_buy_confirm_title",
+                "market_stall_visit_action", "market_stall_purchase_busy");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);

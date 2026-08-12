@@ -25,20 +25,34 @@ public class GiftBlocksGUI {
         private final UUID selected;
         private final long amount;
         private final boolean confirm;
+        private final String returnTo;
+        private final UUID originPlotId;
         public GiftBlocksHolder(List<UUID> recipients, UUID selected, long amount, boolean confirm) {
+            this(recipients, selected, amount, confirm, MarketNav.MAIN, null);
+        }
+        public GiftBlocksHolder(List<UUID> recipients, UUID selected, long amount, boolean confirm,
+                                String returnTo, UUID originPlotId) {
             this.recipients = recipients;
             this.selected = selected;
             this.amount = amount;
             this.confirm = confirm;
+            this.returnTo = MarketNav.normalize(returnTo);
+            this.originPlotId = originPlotId;
         }
         public List<UUID> getRecipients() { return recipients; }
         public UUID getSelected() { return selected; }
         public long getAmount() { return amount; }
         public boolean isConfirm() { return confirm; }
+        public String getReturnTo() { return returnTo; }
+        public UUID getOriginPlotId() { return originPlotId; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player) {
+        openFrom(player, MarketNav.MAIN, null);
+    }
+
+    public void openFrom(Player player, String returnTo, com.aegisguard.data.Plot originPlot) {
         if (!plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true)) {
             player.sendMessage(GUIManager.color(tr(player, "giftblocks_disabled",
                     "&cClaimBlocks gifting is disabled.")));
@@ -52,12 +66,16 @@ public class GiftBlocksGUI {
             plugin.effects().playError(player);
             return;
         }
-        openPickPlayer(player);
+        openPickPlayer(player, returnTo, originPlot == null ? null : originPlot.getPlotId());
     }
 
     private void openPickPlayer(Player player) {
+        openPickPlayer(player, MarketNav.MAIN, null);
+    }
+
+    private void openPickPlayer(Player player, String returnTo, UUID originPlotId) {
         List<UUID> nearby = nearbyPlayers(player);
-        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(nearby, null, 0L, false), 54,
+        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(nearby, null, 0L, false, returnTo, originPlotId), 54,
                 plugin.gui().title(player, "giftblocks_title", "&aGift ClaimBlocks"));
         for (int i = 45; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
         if (nearby.isEmpty()) {
@@ -86,9 +104,9 @@ public class GiftBlocksGUI {
         plugin.effects().playMenuOpen(player);
     }
 
-    private void openAmount(Player player, UUID recipient) {
+    private void openAmount(Player player, UUID recipient, String returnTo, UUID originPlotId) {
         List<UUID> nearby = List.of(recipient);
-        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(nearby, recipient, 0L, false), 27,
+        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(nearby, recipient, 0L, false, returnTo, originPlotId), 27,
                 plugin.gui().title(player, "giftblocks_amount_title", "&aChoose Amount"));
         for (int i = 0; i < 27; i++) inv.setItem(i, GUIManager.getFiller());
         Player target = Bukkit.getPlayer(recipient);
@@ -111,8 +129,8 @@ public class GiftBlocksGUI {
         plugin.effects().playMenuFlip(player);
     }
 
-    private void openConfirm(Player player, UUID recipient, long amount) {
-        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(List.of(recipient), recipient, amount, true), 27,
+    private void openConfirm(Player player, UUID recipient, long amount, String returnTo, UUID originPlotId) {
+        Inventory inv = Bukkit.createInventory(new GiftBlocksHolder(List.of(recipient), recipient, amount, true, returnTo, originPlotId), 27,
                 plugin.gui().title(player, "giftblocks_confirm_title", "&aConfirm Gift"));
         for (int i = 0; i < 27; i++) inv.setItem(i, GUIManager.getFiller());
         Player target = Bukkit.getPlayer(recipient);
@@ -134,7 +152,7 @@ public class GiftBlocksGUI {
         if (e.getClickedInventory() != e.getView().getTopInventory()) return;
 
         if (holder.isConfirm()) {
-            if (e.getRawSlot() == 11) { openAmount(player, holder.getSelected()); return; }
+            if (e.getRawSlot() == 11) { openAmount(player, holder.getSelected(), holder.getReturnTo(), holder.getOriginPlotId()); return; }
             if (e.getRawSlot() == 15) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
             if (e.getRawSlot() != 13) return;
             executeGift(player, holder.getSelected(), holder.getAmount());
@@ -142,20 +160,23 @@ public class GiftBlocksGUI {
         }
 
         if (holder.getSelected() != null && holder.getAmount() == 0L && e.getView().getTopInventory().getSize() == 27) {
-            if (e.getRawSlot() == 18) { openPickPlayer(player); return; }
+            if (e.getRawSlot() == 18) { openPickPlayer(player, holder.getReturnTo(), holder.getOriginPlotId()); return; }
             if (e.getRawSlot() == 26) { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
             long max = Math.max(1L, plugin.getConfig().getLong("claim_blocks.gift.max_amount", 1000L));
             int[] slots = {10, 11, 12, 13, 14, 15};
             for (int i = 0; i < AMOUNTS.length && i < slots.length; i++) {
                 if (e.getRawSlot() == slots[i] && AMOUNTS[i] <= max) {
-                    openConfirm(player, holder.getSelected(), AMOUNTS[i]);
+                    openConfirm(player, holder.getSelected(), AMOUNTS[i], holder.getReturnTo(), holder.getOriginPlotId());
                     return;
                 }
             }
             return;
         }
 
-        if (e.getRawSlot() == 48) { plugin.gui().openMain(player); return; }
+        if (e.getRawSlot() == 48) {
+            MarketNav.back(plugin, player, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
+            return;
+        }
         if (e.getRawSlot() == 49 || e.getRawSlot() == 50) {
             if (e.getRawSlot() == 50) {
                 player.closeInventory();
@@ -167,10 +188,10 @@ public class GiftBlocksGUI {
         UUID recipient = holder.getRecipients().get(e.getRawSlot());
         if (Bukkit.getPlayer(recipient) == null) {
             plugin.effects().playError(player);
-            openPickPlayer(player);
+            openPickPlayer(player, holder.getReturnTo(), holder.getOriginPlotId());
             return;
         }
-        openAmount(player, recipient);
+        openAmount(player, recipient, holder.getReturnTo(), holder.getOriginPlotId());
     }
 
     private void executeGift(Player sender, UUID recipient, long amount) {

@@ -501,7 +501,7 @@ zone_tenant_locked_lore:
 - '&7administra el inquilino actual.'
 local_market_title: '&6✦ Mercado Local'
 local_market_global_name: '&6Mercado de Parcelas'
-local_market_rentals_name: '&aPuestos y Alquileres'
+local_market_rentals_name: '&aAlquileres de zona'
 local_market_manage_name: '&bGestionar Mercado Local'
 level_gui_title: '&d✦ Niveles de Parcela'
 level_header_owner: '&7Dueño: &f{OWNER}'
@@ -1471,11 +1471,11 @@ local_market_global_lore:
 - '&7Explorá parcelas en venta, rentas'
 - '&7públicas y otras publicaciones.'
 local_market_rentals_lore:
-- '&7Explorá subparcelas rentables,'
-- '&7puestos de mercado y habitaciones.'
+- '&7Mirá subparcelas y habitaciones'
+- '&7en alquiler de esta parcela.'
 local_market_rentals_locked_lore:
-- '&7Esta parcela no tiene puestos públicos'
-- '&7ni subzonas rentables por ahora.'
+- '&7Esta parcela no tiene subzonas'
+- '&7públicas en alquiler ahora.'
 local_market_manage_lore:
 - '&7Creá puestos de renta, actualizá'
 - '&7precios y gestioná habitaciones.'
@@ -1485,6 +1485,61 @@ local_market_manage_locked_lore:
 local_market_bridge_default_lore: '&7Abrí este sistema de mercado o tienda vinculado.'
 local_market_bridge_click: '&eClic para abrir.'
 local_market_bridge_requires_shop: '&cActivá Interacción de Tienda en esta parcela primero.'
+
+local_market_create_stall_name: '&eCrear TradeStall'
+local_market_create_stall_lore:
+- '&7Poné un cofre o barril y después un'
+- '&7cartel al lado con &e[stall]&7 o &e[shop]&7.'
+- ' '
+- '&eClic para empezar un enlace: el siguiente'
+- '&eclic derecho en un cofre o cartel'
+- '&eregistra este TradeStall.'
+local_market_create_stall_locked_lore:
+- '&7Dueños e inquilinos de zona pueden crear un puesto:'
+- '&7poné un cofre y un cartel al lado'
+- '&7con &e[stall]&7 o &e[shop]&7 en la línea 1.'
+local_market_create_stall_disabled_lore:
+- '&7Los TradeStalls integrados están desactivados acá.'
+- '&7Usá un plugin de tienda de terceros de la lista,'
+- '&7o pedile a staff que ponga integration.mode en COEXIST.'
+local_market_external_name: '&bTiendas externas'
+local_market_external_lore:
+- '&7Opcional: QuickShop, ChestShop,'
+- '&7Shopkeepers o ExcellentShop.'
+- '&7Agregá una entrada de puente en config.yml'
+- '&7en market_hub.external_bridges.'
+local_market_external_detected: '&aDetectado: &f{PLUGINS}'
+local_market_external_unconfigured_lore:
+- '&7Los plugins detectados todavía no están vinculados.'
+- '&7El staff puede agregar comandos con player:'
+- '&7o console: en config.yml.'
+local_market_stalls_empty_lore:
+- '&7Todavía no hay TradeStalls con stock.'
+- '&7Creá uno con un cofre y un'
+- '&7cartel marcado &e[stall]&7 o &e[shop]&7.'
+local_market_stalls_no_vault_lore:
+- '&eLa plata de Vault no está disponible.'
+- '&7Los vendedores igual pueden listar Claim Blocks.'
+local_market_stalls_coexist_lore:
+- '&7Los puestos integrados y las tiendas'
+- '&7externas vinculadas se pueden usar juntos.'
+- '&8Solo te cobra la tienda que abras.'
+local_market_bridge_coexist_line: '&8Los TradeStalls integrados siguen disponibles.'
+market_stall_visit_action: '&bClic derecho para visitar este puesto.'
+market_stall_none_create_lore:
+- '&7Poné un cofre y un cartel al lado'
+- '&7con &e[stall]&7 o &e[shop]&7 en la línea 1.'
+market_stall_no_vault_title: '&eVault no disponible'
+market_stall_no_vault_lore:
+- '&eLa plata de Vault no está disponible.'
+- '&7Las ofertas igual pueden usar Claim Blocks.'
+stall_buy_confirm_title: '&6Confirmar compra'
+stall_buy_confirm_name: '&aConfirmar compra'
+stall_buy_confirm_item_line: '&7Artículo: &f{ITEM}'
+stall_buy_confirm_price_line: '&7Precio: &6{PRICE}'
+stall_buy_confirm_seller_line: '&7Vendedor: &f{OWNER}'
+stall_buy_confirm_bundle_line: '&7Paquete: &f{COUNT}'
+stall_buy_confirm_click_lore: '&aClic para confirmar y pagar'
 market_button_back: '&e⟵ Volver a Bienes Raíces'
 auction_button_back: '&e⟵ Volver a Subastas'
 realestate_button_back: '&e⟵ Volver a Bienes Raíces'

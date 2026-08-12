@@ -30,10 +30,16 @@ public class ZoneBrowseGUI {
     public static class ZoneBrowseHolder implements InventoryHolder {
         private final Plot plot;
         private final List<String> zoneNames;
+        private final String returnTo;
 
         public ZoneBrowseHolder(Plot plot, List<String> zoneNames) {
+            this(plot, zoneNames, MarketNav.MAIN);
+        }
+
+        public ZoneBrowseHolder(Plot plot, List<String> zoneNames, String returnTo) {
             this.plot = plot;
             this.zoneNames = zoneNames == null ? new ArrayList<>() : zoneNames;
+            this.returnTo = MarketNav.normalize(returnTo);
         }
 
         public Plot getPlot() {
@@ -42,6 +48,10 @@ public class ZoneBrowseGUI {
 
         public List<String> getZoneNames() {
             return zoneNames;
+        }
+
+        public String getReturnTo() {
+            return returnTo;
         }
 
         @Override
@@ -57,10 +67,14 @@ public class ZoneBrowseGUI {
             plugin.gui().openMain(player);
             return;
         }
-        open(player, plot);
+        open(player, plot, MarketNav.MAIN);
     }
 
     public void open(Player player, Plot plot) {
+        open(player, plot, MarketNav.MAIN);
+    }
+
+    public void open(Player player, Plot plot, String returnTo) {
         if (player == null || plot == null) return;
 
         String title = plugin.gui().title(player, "zone_browse_title", "&2Available Zones");
@@ -70,7 +84,7 @@ public class ZoneBrowseGUI {
             zoneNames.add(zone.getName());
         }
 
-        Inventory inv = Bukkit.createInventory(new ZoneBrowseHolder(plot, zoneNames), 54, title);
+        Inventory inv = Bukkit.createInventory(new ZoneBrowseHolder(plot, zoneNames, returnTo), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 45; i < 54; i++) {
@@ -172,12 +186,12 @@ public class ZoneBrowseGUI {
 
         if (slot == 45) {
             plugin.effects().playMenuFlip(player);
-            plugin.gui().openMain(player);
+            MarketNav.back(plugin, player, holder.getReturnTo(), plot);
             return;
         }
 
         if (slot == 49) {
-            open(player, plot);
+            open(player, plot, holder.getReturnTo());
             return;
         }
 
@@ -193,7 +207,7 @@ public class ZoneBrowseGUI {
         Zone zone = plot.getZone(holder.getZoneNames().get(slot));
         if (zone == null) {
             plugin.effects().playError(player);
-            open(player, plot);
+            open(player, plot, holder.getReturnTo());
             return;
         }
 
@@ -216,7 +230,7 @@ public class ZoneBrowseGUI {
                 return;
             }
             if (!e.isShiftClick()) {
-                plugin.gui().zoneTenant().open(player, plot, zone);
+                plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest(MarketNav.ZONE_BROWSE, holder.getReturnTo()));
                 plugin.effects().playMenuFlip(player);
                 return;
             }

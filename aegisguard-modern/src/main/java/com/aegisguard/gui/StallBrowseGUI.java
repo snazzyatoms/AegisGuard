@@ -113,13 +113,31 @@ public class StallBrowseGUI {
         fillBottom(inv, filler);
 
         if (stalls.isEmpty()) {
+            boolean canCreate = plot.canManage(player, plugin)
+                    || plugin.getConfig().getBoolean("market_stalls.allow_zone_renters", true);
+            boolean vaultReady = plugin.vault() != null && plugin.vault().isEnabled();
+            List<String> emptyLore = new ArrayList<>(trList(player, "market_stall_none_lore", List.of(
+                    "&7There are no registered TradeStalls",
+                    "&7available on this plot right now."
+            )));
+            if (canCreate) {
+                emptyLore.add(" ");
+                emptyLore.addAll(trList(player, "market_stall_none_create_lore", List.of(
+                        "&7Place a chest, then an adjacent sign",
+                        "&7with &e[stall]&7 or &e[shop]&7 on line 1."
+                )));
+            }
+            if (!vaultReady) {
+                emptyLore.add(" ");
+                emptyLore.addAll(trList(player, "market_stall_no_vault_lore", List.of(
+                        "&eVault money is unavailable.",
+                        "&7Listings can still use Claim Blocks."
+                )));
+            }
             inv.setItem(22, GUIManager.createItem(
                     Material.BARRIER,
                     tr(player, "market_stall_none_title", "&cNo Trade Stalls"),
-                    trList(player, "market_stall_none_lore", List.of(
-                            "&7There are no registered TradeStalls",
-                            "&7available on this plot right now."
-                    ))
+                    emptyLore
             ));
         } else {
             int slot = 0;
@@ -141,7 +159,8 @@ public class StallBrowseGUI {
                                 : "market_stall_browse_action",
                         stall.canStock(player, plot, plugin)
                                 ? "&eClick to manage this TradeStall."
-                                : "&eClick to browse this TradeStall."));
+                                : "&eLeft-click to browse this TradeStall."));
+                lore.add(tr(player, "market_stall_visit_action", "&bRight-click to visit this stall."));
 
                 inv.setItem(slot++, GUIManager.createItem(
                         resolveContainerMaterial(stall),
@@ -193,7 +212,7 @@ public class StallBrowseGUI {
                             .replace("{PRICE}", formatPrice(listing)));
                     lore.add(tr(player, "market_stall_bundle_line", "&7Bundle: &f{COUNT}")
                             .replace("{COUNT}", String.valueOf(listing.getBundleAmount())));
-                    lore.add(tr(player, "market_stall_buy_action", "&aClick to buy this bundle."));
+                    lore.add(tr(player, "market_stall_buy_action", "&aClick to confirm this purchase."));
                     meta.setLore(colorize(lore));
                     preview.setItemMeta(meta);
                 }
@@ -202,13 +221,22 @@ public class StallBrowseGUI {
         }
 
         if (!anyListed) {
+            boolean vaultReady = plugin.vault() != null && plugin.vault().isEnabled();
+            List<String> emptyLore = new ArrayList<>(trList(player, "market_stall_preview_empty_lore", List.of(
+                    "&7There are no displayed items in",
+                    "&7this TradeStall right now."
+            )));
+            if (!vaultReady) {
+                emptyLore.add(" ");
+                emptyLore.addAll(trList(player, "market_stall_no_vault_lore", List.of(
+                        "&eVault money is unavailable.",
+                        "&7Listings can still use Claim Blocks."
+                )));
+            }
             inv.setItem(22, GUIManager.createItem(
                     Material.BARRIER,
                     tr(player, "market_stall_preview_empty_name", "&cThis stall is empty"),
-                    trList(player, "market_stall_preview_empty_lore", List.of(
-                            "&7There are no displayed items in",
-                            "&7this TradeStall right now."
-                    ))
+                    emptyLore
             ));
         }
 
@@ -336,6 +364,11 @@ public class StallBrowseGUI {
             return;
         }
 
+        if (e.getClick().isRightClick()) {
+            visitStall(player, stall);
+            return;
+        }
+
         if (stall.canStock(player, holder.getPlot(), plugin)) {
             openManage(player, holder.getPlot(), stall, firstSelectableSlot(stall));
         } else {
@@ -382,16 +415,7 @@ public class StallBrowseGUI {
         int chestSlot = chestSlotForGuiSlot(slot);
         if (chestSlot < 0) return;
 
-        TradeStallService.Result result = plugin.tradeStalls().purchase(player, plot, stall, chestSlot);
-        if (result.ok()) {
-            plugin.effects().playConfirm(player);
-            send(player, "market_stall_purchase_success", "&aPurchase complete.");
-            openPreview(player, plot, stall);
-        } else {
-            plugin.effects().playError(player);
-            send(player, keyForResult(result.type()), result.message());
-            openPreview(player, plot, stall);
-        }
+        plugin.gui().stallBuyConfirm().open(player, plot, stall, chestSlot);
     }
 
     public void handleManageClick(Player player, InventoryClickEvent e, StallManageHolder holder) {
@@ -475,6 +499,7 @@ public class StallBrowseGUI {
 
         listing.setCurrency(next);
         plugin.store().savePlot(plot);
+        plugin.tradeStalls().refreshSign(stall);
         send(player, "market_stall_listing_updated", "&aTradeStall listing updated.");
     }
 
@@ -485,6 +510,7 @@ public class StallBrowseGUI {
         MarketStall.StallListing listing = stall.getListing(chestSlot);
         listing.setPrice(Math.max(1.0D, listing.getPrice() + delta));
         plugin.store().savePlot(plot);
+        plugin.tradeStalls().refreshSign(stall);
         send(player, "market_stall_listing_updated", "&aTradeStall listing updated.");
     }
 
@@ -500,6 +526,7 @@ public class StallBrowseGUI {
         int next = Math.max(1, Math.min(Math.min(plugin.tradeStalls().getMaxBundleAmount(), itemMax), listing.getBundleAmount() + delta));
         listing.setBundleAmount(next);
         plugin.store().savePlot(plot);
+        plugin.tradeStalls().refreshSign(stall);
         send(player, "market_stall_listing_updated", "&aTradeStall listing updated.");
     }
 
@@ -507,6 +534,7 @@ public class StallBrowseGUI {
         if (!ensureEditableSlot(player, plot, stall, chestSlot)) return;
         stall.removeListing(chestSlot);
         plugin.store().savePlot(plot);
+        plugin.tradeStalls().refreshSign(stall);
         send(player, "market_stall_listing_cleared", "&eTradeStall listing cleared.");
     }
 
@@ -644,6 +672,25 @@ public class StallBrowseGUI {
         inv.setItem(53, GUIManager.createItem(Material.BARRIER, tr(player, "button_exit", "&cClose"), trList(player, "exit_lore", List.of("&7Close this menu."))));
     }
 
+    private void visitStall(Player player, MarketStall stall) {
+        if (plugin.tradeStalls() == null || plugin.safeTravel() == null) {
+            plugin.effects().playError(player);
+            send(player, "market_stall_visit_failed", "&cCould not travel to that TradeStall.");
+            return;
+        }
+        var dest = plugin.tradeStalls().visitLocation(stall);
+        if (dest == null) {
+            plugin.effects().playError(player);
+            send(player, "market_stall_visit_failed", "&cCould not travel to that TradeStall.");
+            return;
+        }
+        var result = plugin.safeTravel().travel(player, dest, com.aegisguard.travel.SafeTravelService.Kind.STALL);
+        if (!result.isSuccess()) return;
+        player.closeInventory();
+        plugin.effects().playTeleport(player);
+        send(player, "market_stall_visit_arrived", "&aArrived at the TradeStall.");
+    }
+
     private Material resolveContainerMaterial(MarketStall stall) {
         Block block = plugin.tradeStalls().resolveContainerBlock(stall);
         return block == null ? Material.CHEST : block.getType();
@@ -682,6 +729,7 @@ public class StallBrowseGUI {
             case CURRENCY_UNAVAILABLE -> "market_stall_currency_unavailable";
             case STALL_INACTIVE -> "market_stall_inactive";
             case DISABLED -> "market_stall_disabled";
+            case BUSY -> "market_stall_purchase_busy";
             default -> "market_stall_generic_error";
         };
     }

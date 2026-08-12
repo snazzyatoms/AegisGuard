@@ -834,13 +834,13 @@ local_market_global_name: '&6Imóveis'
 local_market_global_lore:
 - '&7Navegar por lotes à venda, público'
 - '&7aluguéis e outras listagens.'
-local_market_rentals_name: '&aBarracas e Aluguéis'
+local_market_rentals_name: '&aAluguéis de zona'
 local_market_rentals_lore:
-- '&7Navegar por subparcelas alugáveis, mercado'
-- '&7balas e salas gerenciadas.'
+- '&7Veja sublotes e cômodos'
+- '&7alugáveis neste terreno.'
 local_market_rentals_locked_lore:
-- '&7Este terreno não possui barracas públicas ou'
-- '&7subzonas alugáveis ​​no momento.'
+- '&7Este terreno não tem subzonas'
+- '&7públicas para alugar agora.'
 local_market_manage_name: '&bGerenciar mercado local'
 local_market_manage_lore:
 - '&7Criar barracas de aluguel, atualizar'
@@ -862,6 +862,61 @@ local_market_stalls_external_lore:
 local_market_bridge_default_lore: '&7Abra este mercado vinculado ou sistema de loja.'
 local_market_bridge_click: '&eClique para abrir.'
 local_market_bridge_requires_shop: '&cAtive primeiro o Shop Interact neste terreno.'
+
+local_market_create_stall_name: '&eCriar TradeStall'
+local_market_create_stall_lore:
+- '&7Coloque um baú ou barril e depois uma'
+- '&7placa ao lado com &e[stall]&7 ou &e[shop]&7.'
+- ' '
+- '&eClique para iniciar um vínculo: o próximo'
+- '&eclique direito em um baú ou placa'
+- '&eregistra este TradeStall.'
+local_market_create_stall_locked_lore:
+- '&7Donos e inquilinos de zona podem criar uma barraca:'
+- '&7coloque um baú e uma placa ao lado'
+- '&7com &e[stall]&7 ou &e[shop]&7 na linha 1.'
+local_market_create_stall_disabled_lore:
+- '&7Os TradeStalls integrados estão desativados aqui.'
+- '&7Use um plugin de loja de terceiros da lista,'
+- '&7ou peça à staff para definir integration.mode como COEXIST.'
+local_market_external_name: '&bLojas externas'
+local_market_external_lore:
+- '&7Opcional: QuickShop, ChestShop,'
+- '&7Shopkeepers ou ExcellentShop.'
+- '&7Adicione uma entrada de ponte em config.yml'
+- '&7em market_hub.external_bridges.'
+local_market_external_detected: '&aDetectado: &f{PLUGINS}'
+local_market_external_unconfigured_lore:
+- '&7Os plugins detectados ainda não estão vinculados.'
+- '&7A staff pode adicionar comandos com player:'
+- '&7ou console: em config.yml.'
+local_market_stalls_empty_lore:
+- '&7Ainda não há TradeStalls com estoque.'
+- '&7Crie um com um baú e uma'
+- '&7placa marcada &e[stall]&7 ou &e[shop]&7.'
+local_market_stalls_no_vault_lore:
+- '&eO dinheiro do Vault está indisponível.'
+- '&7Vendedores ainda podem listar Claim Blocks.'
+local_market_stalls_coexist_lore:
+- '&7Barracas integradas e lojas externas'
+- '&7vinculadas podem ser usadas neste terreno.'
+- '&8Você só é cobrado pela loja que abrir.'
+local_market_bridge_coexist_line: '&8Os TradeStalls integrados continuam disponíveis.'
+market_stall_visit_action: '&bClique direito para visitar esta barraca.'
+market_stall_none_create_lore:
+- '&7Coloque um baú e uma placa ao lado'
+- '&7com &e[stall]&7 ou &e[shop]&7 na linha 1.'
+market_stall_no_vault_title: '&eVault indisponível'
+market_stall_no_vault_lore:
+- '&eO dinheiro do Vault está indisponível.'
+- '&7As listagens ainda podem usar Claim Blocks.'
+stall_buy_confirm_title: '&6Confirmar compra'
+stall_buy_confirm_name: '&aConfirmar compra'
+stall_buy_confirm_item_line: '&7Item: &f{ITEM}'
+stall_buy_confirm_price_line: '&7Preço: &6{PRICE}'
+stall_buy_confirm_seller_line: '&7Vendedor: &f{OWNER}'
+stall_buy_confirm_bundle_line: '&7Pacote: &f{COUNT}'
+stall_buy_confirm_click_lore: '&aClique para confirmar e pagar'
 market_stall_list_title: '&6✦ Bancas comerciais'
 market_stall_preview_title: '&6✦ TradeStall: {STALL}'
 market_stall_manage_title: '&6✦ Gerenciar TradeStall'

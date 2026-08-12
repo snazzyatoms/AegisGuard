@@ -33,6 +33,16 @@ public class MarketBridgeManager {
         return plugin.getConfig().getBoolean("market_hub.external_bridges.enabled", true);
     }
 
+    public List<String> getInstalledShopPluginNames() {
+        List<String> names = new ArrayList<>();
+        for (String pluginName : List.of("QuickShop", "ChestShop", "Shopkeepers", "ExcellentShop")) {
+            if (Bukkit.getPluginManager().isPluginEnabled(pluginName)) {
+                names.add(pluginName);
+            }
+        }
+        return names;
+    }
+
     public boolean hasInstalledBridge() {
         if (!externalBridgesEnabled()) return false;
 

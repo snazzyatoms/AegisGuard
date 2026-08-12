@@ -57,6 +57,7 @@ import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallListHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallManageHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallPreviewHolder;
+import com.aegisguard.gui.StallPurchaseConfirmGUI.StallBuyConfirmHolder;
 import com.aegisguard.gui.VisitGUI.VisitHolder;
 import com.aegisguard.gui.WorldControlsGUI.WorldControlsHolder;
 import com.aegisguard.gui.ZoningGUI.ZoningHolder;
@@ -176,6 +177,7 @@ public class GUIListener implements Listener {
                 || holder instanceof StallListHolder
                 || holder instanceof StallManageHolder
                 || holder instanceof StallPreviewHolder
+                || holder instanceof StallBuyConfirmHolder
                 || holder instanceof SnapshotHolder
                 || holder instanceof AuditHolder
                 || holder instanceof GuestPassMenuHolder
@@ -370,6 +372,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof StallPreviewHolder castHolder) {
             plugin.gui().stallBrowse().handlePreviewClick(player, e, castHolder);
+        }
+        else if (holder instanceof StallBuyConfirmHolder castHolder) {
+            plugin.gui().stallBuyConfirm().handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotAuctionHolder castHolder) {
             plugin.gui().auction().handleClick(player, e, castHolder);
@@ -877,6 +882,15 @@ public class GUIListener implements Listener {
             return;
         }
         if (holder instanceof StallPreviewHolder castHolder) {
+            Object stallKey = readHolderValue(castHolder, "getStallKey", "stallKey");
+            if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot, stallKey)) {
+                if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot)) {
+                    safeInvokeOpen(plugin.gui().localMarket(), player, plot);
+                }
+            }
+            return;
+        }
+        if (holder instanceof StallBuyConfirmHolder castHolder) {
             Object stallKey = readHolderValue(castHolder, "getStallKey", "stallKey");
             if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot, stallKey)) {
                 if (!safeInvokeOpen(plugin.gui().stallBrowse(), player, plot)) {

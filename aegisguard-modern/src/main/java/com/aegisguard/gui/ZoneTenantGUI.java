@@ -34,22 +34,33 @@ public class ZoneTenantGUI {
         private final String zoneName;
         private final List<UUID> guests;
         private final List<UUID> candidates;
+        private final String returnTo;
 
         public ZoneTenantHolder(Plot plot, String zoneName, List<UUID> guests, List<UUID> candidates) {
+            this(plot, zoneName, guests, candidates, MarketNav.MAIN);
+        }
+
+        public ZoneTenantHolder(Plot plot, String zoneName, List<UUID> guests, List<UUID> candidates, String returnTo) {
             this.plot = plot;
             this.zoneName = zoneName;
             this.guests = guests == null ? new ArrayList<>() : guests;
             this.candidates = candidates == null ? new ArrayList<>() : candidates;
+            this.returnTo = MarketNav.normalize(returnTo);
         }
 
         public Plot getPlot() { return plot; }
         public String getZoneName() { return zoneName; }
         public List<UUID> getGuests() { return guests; }
         public List<UUID> getCandidates() { return candidates; }
+        public String getReturnTo() { return returnTo; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, Plot plot, Zone zone) {
+        open(player, plot, zone, MarketNav.MAIN);
+    }
+
+    public void open(Player player, Plot plot, Zone zone, String returnTo) {
         if (player == null || plot == null || zone == null) return;
         if (!canOpen(player, plot, zone)) {
             plugin.effects().playError(player);
@@ -81,7 +92,7 @@ public class ZoneTenantGUI {
         }));
 
         Inventory inv = Bukkit.createInventory(
-                new ZoneTenantHolder(plot, zone.getName(), guests, candidates),
+                new ZoneTenantHolder(plot, zone.getName(), guests, candidates, returnTo),
                 54,
                 plugin.gui().title(player, "zone_tenant_title", "&3Room Controls: {ZONE}",
                         java.util.Map.of("ZONE", safeZoneName(zone)))
@@ -202,13 +213,17 @@ public class ZoneTenantGUI {
         if (slot < 0 || slot >= e.getInventory().getSize()) return;
 
         if (slot == 45) {
-            if (plot.canManage(player, plugin)) plugin.gui().zoning().open(player, plot);
-            else plugin.gui().zoneBrowse().open(player, plot);
+            if (MarketNav.MAIN.equals(MarketNav.normalize(holder.getReturnTo()))) {
+                if (plot.canManage(player, plugin)) plugin.gui().zoning().open(player, plot);
+                else plugin.gui().zoneBrowse().open(player, plot);
+            } else {
+                MarketNav.back(plugin, player, holder.getReturnTo(), plot);
+            }
             plugin.effects().playMenuFlip(player);
             return;
         }
         if (slot == 49) {
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 53) {
@@ -244,7 +259,7 @@ public class ZoneTenantGUI {
             save(plot);
             plugin.effects().playConfirm(player);
             send(player, "zone_tenant_spawn_set", "&aRoom teleport point updated.");
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 32) {
@@ -256,7 +271,7 @@ public class ZoneTenantGUI {
             zone.setFlag("hotel_mode", !zone.isHotelMode());
             save(plot);
             plugin.effects().playConfirm(player);
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 33) {
@@ -268,7 +283,7 @@ public class ZoneTenantGUI {
             zone.setFlag("guest_interact", !zone.getFlag("guest_interact", true));
             save(plot);
             plugin.effects().playConfirm(player);
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 34) {
@@ -280,7 +295,7 @@ public class ZoneTenantGUI {
             zone.setFlag("guest_containers", !zone.getFlag("guest_containers", true));
             save(plot);
             plugin.effects().playConfirm(player);
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 35) {
@@ -292,7 +307,7 @@ public class ZoneTenantGUI {
             zone.setFlag("guest_build", !zone.getFlag("guest_build", false));
             save(plot);
             plugin.effects().playConfirm(player);
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
         if (slot == 50 && plot.canManage(player, plugin) && zone.isRented()) {
@@ -306,7 +321,9 @@ public class ZoneTenantGUI {
             save(plot);
             plugin.effects().playConfirm(player);
             send(player, "zone_evicted", "&eTenant evicted from {ZONE}.".replace("{ZONE}", safeZoneName(zone)));
-            plugin.gui().zoning().open(player, plot);
+            plugin.gui().zoning().open(player, plot, holder.getReturnTo().startsWith(MarketNav.ZONING)
+                    ? holder.getReturnTo().substring(MarketNav.ZONING.length() + 1)
+                    : MarketNav.MAIN);
             return;
         }
 
@@ -321,7 +338,7 @@ public class ZoneTenantGUI {
             save(plot);
             plugin.effects().playConfirm(player);
             send(player, "zone_tenant_guest_removed", "&eRemoved a room guest.");
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
             return;
         }
 
@@ -338,7 +355,7 @@ public class ZoneTenantGUI {
             save(plot);
             plugin.effects().playConfirm(player);
             send(player, "zone_tenant_guest_added", "&aAdded a room guest.");
-            open(player, plot, zone);
+            open(player, plot, zone, holder.getReturnTo());
         }
     }
 

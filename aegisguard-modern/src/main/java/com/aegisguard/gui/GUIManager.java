@@ -61,6 +61,7 @@ public class GUIManager {
     private final PlotAuctionGUI plotAuctionGUI;
     private final LocalMarketGUI localMarketGUI;
     private final StallBrowseGUI stallBrowseGUI;
+    private final StallPurchaseConfirmGUI stallPurchaseConfirmGUI;
 
     // New v1.1.0+ Features
     private final LevelingGUI levelingGUI;
@@ -148,6 +149,7 @@ public class GUIManager {
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
         this.localMarketGUI = new LocalMarketGUI(plugin);
         this.stallBrowseGUI = new StallBrowseGUI(plugin);
+        this.stallPurchaseConfirmGUI = new StallPurchaseConfirmGUI(plugin);
         this.infoGUI = new InfoGUI(plugin);
         this.visitGUI = new VisitGUI(plugin);
 
@@ -313,6 +315,7 @@ public class GUIManager {
     public PlotAuctionGUI auction() { return plotAuctionGUI; }
     public LocalMarketGUI localMarket() { return localMarketGUI; }
     public StallBrowseGUI stallBrowse() { return stallBrowseGUI; }
+    public StallPurchaseConfirmGUI stallBuyConfirm() { return stallPurchaseConfirmGUI; }
 
     // ✅ ClaimBlocks Exchange
     public ClaimBlockExchangeGUI exchange() {

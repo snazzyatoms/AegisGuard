@@ -833,13 +833,13 @@ local_market_global_name: '&6Nieruchomości'
 local_market_global_lore:
 - '&7Przeglądaj działki na sprzedaż, publiczne'
 - '&7wynajem i inne oferty.'
-local_market_rentals_name: '&aStrony i wypożyczalnie'
+local_market_rentals_name: '&aWynajem stref'
 local_market_rentals_lore:
-- '&7Przeglądaj działki do wynajęcia, rynek'
-- '&7stragany i zarządzane pomieszczenia.'
+- '&7Przeglądaj wynajmowane poddziałki'
+- '&7i zarządzane pokoje na tej działce.'
 local_market_rentals_locked_lore:
-- '&7Na tej działce nie ma publicznych straganów ani'
-- '&7podstrefy do wynajęcia już teraz.'
+- '&7Ta działka nie ma teraz publicznych'
+- '&7stref do wynajęcia.'
 local_market_manage_name: '&bZarządzaj rynkiem lokalnym'
 local_market_manage_lore:
 - '&7Twórz stanowiska wynajmu, aktualizuj'
@@ -861,6 +861,61 @@ local_market_stalls_external_lore:
 local_market_bridge_default_lore: '&7Otwórz ten połączony rynek lub system sklepu.'
 local_market_bridge_click: '&eKliknij, aby otworzyć.'
 local_market_bridge_requires_shop: '&cWłącz najpierw interakcję ze sklepem na tej działce.'
+
+local_market_create_stall_name: '&eUtwórz TradeStall'
+local_market_create_stall_lore:
+- '&7Postaw skrzynię lub beczkę, a potem'
+- '&7sąsiednią tabliczkę z &e[stall]&7 lub &e[shop]&7.'
+- ' '
+- '&eKliknij, aby rozpocząć powiązanie: następne'
+- '&eprawe kliknięcie skrzyni lub tabliczki'
+- '&ezarejestruje to TradeStall.'
+local_market_create_stall_locked_lore:
+- '&7Właściciele i najemcy stref mogą utworzyć stoisko:'
+- '&7postaw skrzynię, a potem sąsiednią tabliczkę'
+- '&7z &e[stall]&7 lub &e[shop]&7 w linii 1.'
+local_market_create_stall_disabled_lore:
+- '&7Wbudowane TradeStalls są tutaj wyłączone.'
+- '&7Użyj wymienionej wtyczki sklepu zewnętrznego'
+- '&7albo poproś ekipę o ustawienie integration.mode na COEXIST.'
+local_market_external_name: '&bSklepy zewnętrzne'
+local_market_external_lore:
+- '&7Opcjonalnie: QuickShop, ChestShop,'
+- '&7Shopkeepers lub ExcellentShop.'
+- '&7Dodaj wpis mostu w config.yml'
+- '&7w market_hub.external_bridges.'
+local_market_external_detected: '&aWykryto: &f{PLUGINS}'
+local_market_external_unconfigured_lore:
+- '&7Wykryte wtyczki nie są jeszcze powiązane.'
+- '&7Ekipa może dodać komendy z player:'
+- '&7lub console: w config.yml.'
+local_market_stalls_empty_lore:
+- '&7Nie ma jeszcze zaopatrzonych TradeStalls.'
+- '&7Utwórz jedno ze skrzynią i'
+- '&7tabliczką &e[stall]&7 lub &e[shop]&7.'
+local_market_stalls_no_vault_lore:
+- '&ePieniądze Vault są niedostępne.'
+- '&7Sprzedawcy nadal mogą wystawiać Claim Blocks.'
+local_market_stalls_coexist_lore:
+- '&7Wbudowane stoiska i powiązane sklepy'
+- '&7zewnętrzne mogą działać razem na tej działce.'
+- '&8Płacisz tylko w sklepie, który otworzysz.'
+local_market_bridge_coexist_line: '&8Wbudowane TradeStalls pozostają dostępne.'
+market_stall_visit_action: '&bPPM, aby odwiedzić to stoisko.'
+market_stall_none_create_lore:
+- '&7Postaw skrzynię, a potem sąsiednią tabliczkę'
+- '&7z &e[stall]&7 lub &e[shop]&7 w linii 1.'
+market_stall_no_vault_title: '&eVault niedostępny'
+market_stall_no_vault_lore:
+- '&ePieniądze Vault są niedostępne.'
+- '&7Oferty nadal mogą używać Claim Blocks.'
+stall_buy_confirm_title: '&6Potwierdź zakup'
+stall_buy_confirm_name: '&aPotwierdź zakup'
+stall_buy_confirm_item_line: '&7Przedmiot: &f{ITEM}'
+stall_buy_confirm_price_line: '&7Cena: &6{PRICE}'
+stall_buy_confirm_seller_line: '&7Sprzedawca: &f{OWNER}'
+stall_buy_confirm_bundle_line: '&7Zestaw: &f{COUNT}'
+stall_buy_confirm_click_lore: '&aKliknij, aby potwierdzić i zapłacić'
 market_stall_list_title: '&6✦ Stragany handlowe'
 market_stall_preview_title: '&6✦ Stanowisko handlowe: {STALL}'
 market_stall_manage_title: '&6✦ Zarządzaj TradeStall'

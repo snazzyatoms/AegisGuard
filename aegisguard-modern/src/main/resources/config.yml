@@ -1026,7 +1026,9 @@ market_hub:
     # Optional third-party market/shop integrations.
     # These do not hard-depend on any one plugin API. Instead, AegisGuard checks
     # whether the named plugin is installed and then opens the configured command
-    # from the local market hub.
+    # from the local market hub. Built-in TradeStalls remain the default shop
+    # system (market_stalls.enabled: true). Bridges are discovery shortcuts, not
+    # a second checkout.
     #
     # Supported placeholders inside commands:
     # {player} {plot_owner} {plot_name} {plot_id} {world} {x} {y} {z}
@@ -1035,7 +1037,7 @@ market_hub:
     # - player:  run as the clicking player
     # - console: run from console
     #
-    # Example:
+    # Example — add one entry per plugin you want shown on Local Market:
     # entries:
     #   quickshop:
     #     plugin: "QuickShop"
@@ -1047,6 +1049,24 @@ market_hub:
     #       - "&7this plot."
     #     commands:
     #       - "player:qs find"
+    #   chestshop:
+    #     plugin: "ChestShop"
+    #     display_name: "&aChestShop"
+    #     icon: "OAK_SIGN"
+    #     commands:
+    #       - "player:chestshop"
+    #   shopkeepers:
+    #     plugin: "Shopkeepers"
+    #     display_name: "&aShopkeepers"
+    #     icon: "VILLAGER_SPAWN_EGG"
+    #     commands:
+    #       - "player:shopkeeper"
+    #   excellentshop:
+    #     plugin: "ExcellentShop"
+    #     display_name: "&aExcellentShop"
+    #     icon: "EMERALD"
+    #     commands:
+    #       - "player:eshop"
     entries: {}
 
 
@@ -1060,8 +1080,10 @@ market_stalls:
   integration:
     # How AegisGuard should behave when external market/shop bridges are active.
     #
-    # COEXIST:
+    # COEXIST (default):
     #   TradeStalls and external bridges can both be used together.
+    #   Players are only charged by the shop they actually open — AegisGuard
+    #   does not double-charge a bridged third-party purchase.
     #
     # DISABLE_ON_BRIDGED_PLOTS:
     #   If a plot has an active external market bridge, TradeStalls are hidden

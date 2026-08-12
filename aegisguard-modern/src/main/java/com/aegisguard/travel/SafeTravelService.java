@@ -37,6 +37,7 @@ public final class SafeTravelService implements Listener {
         VISIT,
         ROUTE,
         MARKET,
+        STALL,
         ZONE,
         SPAWN,
         STAFF,

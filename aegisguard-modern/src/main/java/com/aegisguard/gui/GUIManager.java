@@ -39,6 +39,7 @@ public class GUIManager {
     // --- SUB-MENUS ---
     private final PlayerGUI playerGUI;
     private final SettingsGUI settingsGUI;
+    private final LanguageSelectGUI languageSelectGUI;
     private final RolesGUI rolesGUI;
     private final InfoGUI infoGUI;
     private final VisitGUI visitGUI;
@@ -135,6 +136,7 @@ public class GUIManager {
         // Initialize all sub-menus
         this.playerGUI = new PlayerGUI(plugin);
         this.settingsGUI = new SettingsGUI(plugin);
+        this.languageSelectGUI = new LanguageSelectGUI(plugin);
         this.adminGUI = new AdminGUI(plugin);
         this.expansionRequestGUI = new ExpansionRequestGUI(plugin);
         this.expansionAdminGUI = new ExpansionRequestAdminGUI(plugin);
@@ -275,6 +277,7 @@ public class GUIManager {
     // Core
     public PlayerGUI player() { return playerGUI; }
     public SettingsGUI settings() { return settingsGUI; }
+    public LanguageSelectGUI languageSelect() { return languageSelectGUI; }
     public InfoGUI info() { return infoGUI; }
     public VisitGUI visit() { return visitGUI; }
 

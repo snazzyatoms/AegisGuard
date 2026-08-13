@@ -54,6 +54,7 @@ import com.aegisguard.gui.RolesGUI.RoleManageHolder;
 import com.aegisguard.gui.RolesGUI.RoleFlagsHolder;
 import com.aegisguard.gui.RolesGUI.RolesMenuHolder;
 import com.aegisguard.gui.SettingsGUI.SettingsGUIHolder;
+import com.aegisguard.gui.LanguageSelectGUI.LanguageSelectHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallListHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallManageHolder;
 import com.aegisguard.gui.StallBrowseGUI.StallPreviewHolder;
@@ -135,6 +136,7 @@ public class GUIListener implements Listener {
                 || holder instanceof VisitHolder
                 || holder instanceof InfoHolder
                 || holder instanceof SettingsGUIHolder
+                || holder instanceof LanguageSelectHolder
                 || holder instanceof AdminHolder
                 || holder instanceof DoctorHolder
                 || holder instanceof WorldControlsHolder
@@ -270,6 +272,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof SettingsGUIHolder) {
             plugin.gui().settings().handleClick(player, e);
+        }
+        else if (holder instanceof LanguageSelectHolder castHolder) {
+            plugin.gui().languageSelect().handleClick(player, e, castHolder);
         }
         else if (holder instanceof AdminHolder) {
             plugin.gui().admin().handleClick(player, e);
@@ -691,6 +696,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof SettingsGUIHolder) {
             safeInvokeOpen(plugin.gui().settings(), player);
+            return;
+        }
+        if (holder instanceof LanguageSelectHolder castHolder) {
+            plugin.gui().languageSelect().open(player, castHolder.getPlot());
             return;
         }
         if (holder instanceof AdminHolder) {

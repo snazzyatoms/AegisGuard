@@ -982,8 +982,20 @@ settings_language_unavailable_lore:
 - '&7dostępny już teraz.'
 settings_language_name: '&eJęzyk: {LANG}'
 settings_language_lore:
-- '&7Przełącz język wyświetlania'
-- '&7dla menu i komunikatów.'
+- '&7Otworz wybor jezyka'
+- '&7i wybierz ten, ktorego chcesz uzywac.'
+- ' '
+- '&eKliknij, aby wybrac jezyk.'
+language_select_title: '&bWybierz jezyk'
+language_select_option_lore:
+- '&7Uzyj tego jezyka w menu'
+- '&7i komunikatach.'
+- ' '
+- '&eKliknij, aby uzyc tego jezyka.'
+language_select_current_lore:
+- '&aAktualnie wybrany.'
+- '&7Menu i komunikaty juz'
+- '&7uzywaja tego jezyka.'
 settings_notifications_name: '&bPowiadomienia: {MODE}'
 settings_notifications_lore:
 - '&7Wybierz sposób wysyłania AegisGuard'

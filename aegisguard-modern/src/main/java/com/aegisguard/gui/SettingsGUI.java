@@ -21,7 +21,7 @@ import java.util.UUID;
 /**
  * SettingsGUI
  * - Personal player preferences (sounds, language, notifications)
- * - Language cycling uses CodexEngine style order (codex.yml or config).
+ * - Language selection opens LanguageSelectGUI instead of cycling packs.
  * - ✅ Persistence is handled by CodexEngine (config.yml), NOT MessagesUtil.
  *
  * 1.2.6 QOL:
@@ -155,7 +155,7 @@ public class SettingsGUI {
             String currentStyle = "old_english";
             try { currentStyle = plugin.codex().getPlayerStyle(player); } catch (Throwable ignored) {}
 
-            String langDisplay = formatStyle(player, currentStyle);
+            String langDisplay = plugin.gui().languageSelect().formatStyle(player, currentStyle);
 
             inv.setItem(13, GUIManager.createItem(
                     Material.WRITABLE_BOOK,
@@ -165,7 +165,12 @@ public class SettingsGUI {
                             Map.of("LANG", langDisplay)
                     ),
                     tl(player, "settings_language_lore",
-                            List.of("&7Click to cycle language styles."))
+                            List.of(
+                                    "&7Open the language picker",
+                                    "&7and choose a display language.",
+                                    " ",
+                                    "&eClick to choose your language."
+                            ))
             ));
         }
 
@@ -357,20 +362,13 @@ public class SettingsGUI {
                 reopenNextTick(player, plot);
             }
 
-            case 13 -> { // Language (Codex ordered cycle + persisted by CodexEngine)
+            case 13 -> { // Language picker (direct choice, persisted by CodexEngine)
                 if (plugin.codex() == null) {
                     playError(player);
                     return;
                 }
-
-                String current = plugin.codex().getPlayerStyle(player);
-                String next = plugin.codex().getNextStyle(current);
-
-                boolean applied = plugin.codex().setPlayerStyle(player, next);
-                if (applied) playFlip(player);
-                else playError(player);
-
-                reopenNextTick(player, plot);
+                playFlip(player);
+                plugin.runMain(player, () -> plugin.gui().languageSelect().open(player, plot));
             }
 
             case 16 -> { // Notifications MODE (notifications.yml preferred)
@@ -767,35 +765,4 @@ public class SettingsGUI {
         };
     }
 
-    private String formatStyle(Player player, String style) {
-        if (style == null || style.isEmpty()) return t(player, "style_old_english", "&dOld English");
-
-        return switch (style.toLowerCase(Locale.ROOT)) {
-            case "old_english" -> t(player, "style_old_english", "&dOld English");
-            case "modern_english" -> t(player, "style_modern_english", "&aModern English");
-            case "spanish_mx" -> t(player, "style_spanish_mx", "&bEspañol (México)");
-            case "spanish_ar" -> t(player, "style_spanish_ar", "&bEspañol (Argentina)");
-            case "portuguese_br" -> t(player, "style_portuguese_br", "&bPortuguês (Brasil)");
-            case "french_fr" -> t(player, "style_french_fr", "&bFrançais");
-            case "italian_it" -> t(player, "style_italian_it", "&bItaliano");
-            case "german_de" -> t(player, "style_german_de", "&bDeutsch");
-            case "polish_pl" -> t(player, "style_polish_pl", "&bPolski");
-            default -> "&f" + pretty(style);
-        };
-    }
-
-    private String pretty(String raw) {
-        String s = raw.replace('_', ' ').trim();
-        if (s.isEmpty()) return raw;
-
-        String[] parts = s.split("\\s+");
-        StringBuilder out = new StringBuilder();
-        for (String p : parts) {
-            if (p.isEmpty()) continue;
-            out.append(Character.toUpperCase(p.charAt(0)))
-               .append(p.length() > 1 ? p.substring(1).toLowerCase(Locale.ROOT) : "")
-               .append(' ');
-        }
-        return out.toString().trim();
-    }
 }

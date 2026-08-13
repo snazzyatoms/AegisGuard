@@ -988,8 +988,20 @@ settings_language_unavailable_lore:
 - '&7available right now.'
 settings_language_name: '&eLanguage: {LANG}'
 settings_language_lore:
-- '&7Cycle your display language'
-- '&7for menus and messages.'
+- '&7Open the language picker'
+- '&7and choose a display language.'
+- ' '
+- '&eClick to choose your language.'
+language_select_title: '&bChoose Your Language'
+language_select_option_lore:
+- '&7Switch menus and messages'
+- '&7to this language.'
+- ' '
+- '&eClick to use this language.'
+language_select_current_lore:
+- '&aCurrently selected.'
+- '&7Menus and messages already'
+- '&7use this language.'
 style_old_english: '&dOld English'
 style_modern_english: '&aModern English'
 style_spanish_mx: '&bEspañol (México)'

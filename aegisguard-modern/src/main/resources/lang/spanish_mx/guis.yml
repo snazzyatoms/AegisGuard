@@ -151,7 +151,20 @@ settings_sounds_global_off_lore:
 - '&7Un admin del servidor deshabilitó los sonidos de UI.'
 settings_language_name: '&eIdioma: {LANG}'
 settings_language_lore:
-- '&7Clic para cambiar el estilo de idioma.'
+- '&7Abre el selector de idioma'
+- '&7y elige el que quieres usar.'
+- ' '
+- '&eClic para elegir tu idioma.'
+language_select_title: '&bElige tu idioma'
+language_select_option_lore:
+- '&7Usar este idioma en menus'
+- '&7y mensajes.'
+- ' '
+- '&eClic para usar este idioma.'
+language_select_current_lore:
+- '&aIdioma actual.'
+- '&7Los menus y mensajes ya'
+- '&7usan este idioma.'
 style_old_english: '&dInglés Antiguo'
 style_modern_english: '&aInglés Moderno'
 style_spanish_mx: '&bEspañol (México)'

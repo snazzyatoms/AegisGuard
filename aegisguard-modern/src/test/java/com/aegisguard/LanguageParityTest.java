@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LanguageParityTest {
 
     private static final Path LANG_ROOT = Path.of("src/main/resources/lang");
+    private static final Path CODEX_ROOT = Path.of("src/main/resources/codex");
     private static final List<String> LANGUAGES = List.of(
             "modern_english", "old_english", "spanish_mx", "spanish_ar",
             "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl");
@@ -81,7 +82,10 @@ class LanguageParityTest {
                 "stall_buy_confirm_click_lore", "market_stall_visit_action",
                 "market_stall_none_create_lore", "market_stall_no_vault_lore",
                 "market_stall_purchase_busy", "market_stall_bind_started",
-                "market_stall_create_guide", "market_stall_visit_arrived");
+                "market_stall_create_guide", "market_stall_visit_arrived",
+                "language_select_title", "language_select_option_lore",
+                "language_select_current_lore", "settings_language_lore",
+                "settings_language_name", "language_set_to");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);
@@ -172,7 +176,7 @@ class LanguageParityTest {
         Map<String, Object> english = loadLanguage("modern_english");
         List<String> probeKeys = List.of(
                 "button_back", "menu_title", "button_claim_land", "settings_language_name",
-                "no_perm", "players_only", "button_exit",
+                "language_select_title", "no_perm", "players_only", "button_exit",
                 "main_section_territory_name", "main_section_access_name",
                 "main_section_economy_name", "main_section_explore_name",
                 "back_lore", "exit_lore");
@@ -213,6 +217,14 @@ class LanguageParityTest {
                     language + " missing settings_language_name");
             assertTrue(placeholders(translated.get("settings_language_name")).contains("{LANG}"),
                     language + " settings_language_name must keep {LANG}");
+            assertTrue(translated.containsKey("language_select_title"),
+                    language + " missing language_select_title");
+            assertFalse(isBlankValue(translated.get("language_select_title")),
+                    language + " blank language_select_title");
+            assertTrue(translated.containsKey("language_select_option_lore"),
+                    language + " missing language_select_option_lore");
+            assertTrue(translated.containsKey("language_select_current_lore"),
+                    language + " missing language_select_current_lore");
 
             for (String key : styleKeys) {
                 assertTrue(translated.containsKey(key), language + " missing " + key);
@@ -236,6 +248,39 @@ class LanguageParityTest {
         assertFalse(portugueseSelf.toLowerCase().contains("string"),
                 "portuguese_br style_portuguese_br must not contain String artifact, got: "
                         + portugueseSelf);
+    }
+
+    @Test
+    void languagePickerKeysStayTranslatedAndMatchCodexFallbacks() throws Exception {
+        List<String> pickerKeys = List.of(
+                "settings_language_name", "settings_language_lore",
+                "language_select_title", "language_select_option_lore",
+                "language_select_current_lore", "language_set_to");
+        Map<String, Object> english = loadLanguage("modern_english");
+
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            Map<String, Object> codex = loadCodex(language);
+            for (String key : pickerKeys) {
+                assertTrue(translated.containsKey(key), language + " missing " + key);
+                assertFalse(isBlankValue(translated.get(key)), language + " blank " + key);
+                assertTrue(codex.containsKey(key), "codex/" + language + " missing " + key);
+                assertEquals(normalizedValue(translated.get(key)), normalizedValue(codex.get(key)),
+                        "codex/" + language + " " + key + " must match lang pack");
+                assertEquals(placeholders(english.get(key)), placeholders(translated.get(key)),
+                        language + " " + key + " placeholder mismatch");
+            }
+
+            if (language.equals("modern_english")) continue;
+            List<String> copies = new ArrayList<>();
+            for (String key : pickerKeys) {
+                if (normalizedValue(english.get(key)).equals(normalizedValue(translated.get(key)))) {
+                    copies.add(key);
+                }
+            }
+            assertTrue(copies.isEmpty(),
+                    () -> language + " language-picker strings still copy English: " + copies);
+        }
     }
 
     @Test
@@ -480,6 +525,15 @@ class LanguageParityTest {
             Object loaded = yaml.load(Files.readString(LANG_ROOT.resolve(language).resolve(bundle)));
             flatten("", (Map<String, Object>) loaded, flattened);
         }
+        return flattened;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> loadCodex(String language) throws Exception {
+        Map<String, Object> flattened = new HashMap<>();
+        Yaml yaml = new Yaml();
+        Object loaded = yaml.load(Files.readString(CODEX_ROOT.resolve(language + ".yml")));
+        flatten("", (Map<String, Object>) loaded, flattened);
         return flattened;
     }
 

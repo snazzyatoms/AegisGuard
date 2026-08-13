@@ -27,11 +27,19 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-Version `1.3.0` adds Guest Passes, Lockdown, Realm Profiles, guided onboarding, Routes, opt-in Alliance Access, Safe Travel controls, staff health checks, broader language packs, and an optional Arena module. Existing `1.2.7` data and configuration remain valid through automatic schema migration. **Java 21+** is required.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. Version `1.2.7` shipped recently; `1.3.0` is a feature-rich follow-up currently soaking before a public GitHub Release. Existing `1.2.7` data and configuration remain valid through automatic schema migration.
 
-> The latest published GitHub Release may still be `1.2.7`. This repository branch targets plugin version `1.3.0`.
+> The latest published GitHub Release may still be `1.2.7`. Current `1.3.0` builds live on the `V1.3.0` branch.
 
 ## What Is New In 1.3.0
+
+### Language Picker
+
+Settings no longer cycles language packs one click at a time. Open language from Settings to reach **Choose Your Language**, which lists every installed pack. All nine packs — Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish — plus Codex fallbacks stay in sync, so switching languages does not fall back to English placeholders.
+
+### Server-Zone Stewardship
+
+Wand-create and convert-to-server share one stewardship pipeline. Converting a plot wipes old access, grants **Steward** to the acting staffer, and can open Claim Settings when configured. Managing a server zone is gated on server-zone manage permission **or** the Steward role — not blanket admin.
 
 ### Staff Audit Ledger
 
@@ -73,17 +81,31 @@ Voluntary teleports (visit, markets, spawn, staff destinations, and related flow
 
 Cooperative PvE party dungeons on bound server plots. **Disabled by default** (`arena.enabled: false`). When enabled, scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia.
 
+## What Improved In 1.3.0
+
+Everyday territory tools are clearer: **My Rentals** and **My Tenants** for contracts, a **Settlements Inbox** for related notices, ClaimBlock gifts (`/ag giftblocks`), and adjacent claim merge (`/ag merge`). Staff review expansion through **Instant Approvals** versus **Pending Review**. Convert-to-server now has a dedicated GUI that shares the stewardship pipeline above.
+
+Protection covers hopper, liquid, teleport, and storm wards alongside the rest of the plot defense set. Scheduling is Folia-safe across the plugin, including the optional Arena module. The nine-language UI is complete enough that players can switch packs without dropping into English placeholders.
+
+Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in.
+
+## Before the Public 1.3.0 Release
+
+`1.3.0` is in feature freeze and soak on Paper (and Folia where claimed). Upgrade-path checks from `1.2.7` are part of that soak. A public GitHub Release has not been cut yet; current builds live on the `V1.3.0` branch.
+
+After updating the JAR on a test server, refresh `plugins/AegisGuard/lang/` so language packs stay aligned with the plugin.
+
 ## Core Systems
 
 | System | Capabilities |
 |---|---|
-| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, and boundary enforcement |
+| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
-| Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, and rentals |
+| Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
 | Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
-| Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, and activity history |
+| Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Arena cooperative PvE (`arena.enabled: false` by default; Folia-safe `ArenaScheduler`) |
-| Presentation | Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish |
+| Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
 
 ## Compatibility
 
@@ -95,6 +117,7 @@ Cooperative PvE party dungeons on bound server plots. **Disabled by default** (`
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI and the public AegisGuard API |
+| Upgrade path | From AegisGuard `1.2.7` with automatic config schema migration |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -106,7 +129,8 @@ Server implementations evolve independently. Test new Minecraft server releases 
 4. Install Vault and an economy provider if money-based features are required.
 5. Start the server and allow AegisGuard to generate its editable files.
 6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
-7. Run `/agadmin doctor` (and optionally `/agadmin health`) before opening the server to players.
+7. After a JAR update on a test server, refresh `plugins/AegisGuard/lang/` so packs match the new build.
+8. Run `/agadmin doctor` (and optionally `/agadmin health`) before opening the server to players.
 
 Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supported AegisGuard configuration and language reloads, and perform a full restart after changing integrations or storage settings.
 
@@ -132,27 +156,6 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 ```
 
 See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed commands, permissions, configuration, economy, migration, and player guides.
-
-## Building From Source
-
-Requirements:
-
-- JDK 21 or newer
-- Maven 3.9 or newer
-
-From the repository root:
-
-```text
-mvn clean package
-```
-
-The server plugin and developer API artifacts are copied into the local `releases/` directory. Install only `AegisGuard-1.3.0.jar` on a Minecraft server; API artifacts are intended for developers.
-
-For a fuller local verification pass:
-
-```text
-mvn clean verify
-```
 
 ---
 

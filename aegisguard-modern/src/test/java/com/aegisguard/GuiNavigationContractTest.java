@@ -26,7 +26,7 @@ class GuiNavigationContractTest {
                 "gui/DoctorRepairGUI.java", "gui/InfoGUI.java", "gui/LevelingGUI.java",
                 "gui/LocalMarketGUI.java", "gui/MigrationAdminGUI.java", "gui/PlotAuctionGUI.java",
                 "gui/PlotCosmeticsGUI.java", "gui/PlotFlagsGUI.java", "gui/PlotMarketGUI.java",
-                "gui/PlotStatusGUI.java", "gui/RolesGUI.java", "gui/SettingsGUI.java",
+                "gui/PlotStatusGUI.java", "gui/RolesGUI.java", "gui/SettingsGUI.java", "gui/LanguageSelectGUI.java",
                 "gui/StallBrowseGUI.java", "gui/StallPurchaseConfirmGUI.java", "gui/VisitGUI.java", "gui/ZoneBrowseGUI.java",
                 "gui/ZoneTenantGUI.java", "gui/ZoningGUI.java", "gui/RentConfirmGUI.java",
                 "gui/MyRentalsGUI.java", "gui/SettlementsInboxGUI.java", "gui/ClaimMergeGUI.java",
@@ -50,6 +50,28 @@ class GuiNavigationContractTest {
 
         String rootMenu = Files.readString(JAVA_ROOT.resolve("gui/PlayerGUI.java"));
         assertTrue(rootMenu.contains("button_exit"), "The root menu must provide Exit");
+    }
+
+    @Test
+    void settingsLanguageOpensAPickerInsteadOfCycling() throws Exception {
+        String settings = Files.readString(JAVA_ROOT.resolve("gui/SettingsGUI.java"));
+        String picker = Files.readString(JAVA_ROOT.resolve("gui/LanguageSelectGUI.java"));
+        String manager = Files.readString(JAVA_ROOT.resolve("gui/GUIManager.java"));
+        String listener = Files.readString(JAVA_ROOT.resolve("gui/GUIListener.java"));
+
+        assertTrue(settings.contains("languageSelect().open(player, plot)"),
+                "Settings language button must open the picker");
+        assertFalse(settings.contains("getNextStyle("),
+                "Settings must not cycle languages on click");
+        assertTrue(picker.contains("getAvailableStyles()"));
+        assertTrue(picker.contains("setPlayerStyle(player, style)"));
+        assertTrue(picker.contains("language_select_title"));
+        assertTrue(picker.contains("button_back"));
+        assertTrue(picker.contains("button_exit"));
+        assertTrue(picker.contains("aegis_lang_style"));
+        assertTrue(manager.contains("new LanguageSelectGUI(plugin)"));
+        assertTrue(listener.contains("LanguageSelectHolder"));
+        assertTrue(listener.contains("languageSelect().handleClick"));
     }
 
     @Test

@@ -54,6 +54,73 @@ public class SnapshotManager {
         
         return snapshot;
     }
+
+    public int createSnapshotsForServerZones(UUID triggeredBy, String reason, SnapshotType type) {
+        if (plugin.store() == null) return 0;
+        int count = 0;
+        for (Plot plot : plugin.store().getAllPlots()) {
+            if (plot == null || !plot.isServerZone()) continue;
+            createSnapshot(plot, type == null ? SnapshotType.MANUAL : type, reason, triggeredBy);
+            count++;
+        }
+        return count;
+    }
+
+    public boolean isScheduledEnabled() {
+        return plugin.getConfig().getBoolean("snapshots.enabled", true)
+                && plugin.getConfig().getBoolean("snapshots.scheduled.enabled", false);
+    }
+
+    public int getScheduledIntervalMinutes() {
+        return Math.max(1, plugin.getConfig().getInt("snapshots.scheduled.interval_minutes", 360));
+    }
+
+    /**
+     * Cycle Off → 15 → 60 → 360 → 1440 → Off. Returns next interval minutes, or 0 when off.
+     */
+    public int cycleScheduledInterval() {
+        boolean enabled = plugin.getConfig().getBoolean("snapshots.scheduled.enabled", false);
+        int current = plugin.getConfig().getInt("snapshots.scheduled.interval_minutes", 360);
+        int[] steps = {15, 60, 360, 1440};
+        int nextMinutes = 0;
+        boolean nextEnabled = false;
+        if (!enabled) {
+            nextEnabled = true;
+            nextMinutes = 15;
+        } else {
+            int idx = -1;
+            for (int i = 0; i < steps.length; i++) {
+                if (steps[i] == current) {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx < 0) {
+                nextEnabled = true;
+                nextMinutes = 15;
+            } else if (idx + 1 < steps.length) {
+                nextEnabled = true;
+                nextMinutes = steps[idx + 1];
+            } else {
+                nextEnabled = false;
+                nextMinutes = 360;
+            }
+        }
+        plugin.getConfig().set("snapshots.scheduled.enabled", nextEnabled);
+        plugin.getConfig().set("snapshots.scheduled.interval_minutes", nextMinutes);
+        plugin.getConfig().set("snapshots.scheduled.targets", "server_zones");
+        if (plugin.cfg() != null && plugin.cfg().raw() != null && plugin.cfg().raw() != plugin.getConfig()) {
+            plugin.cfg().raw().set("snapshots.scheduled.enabled", nextEnabled);
+            plugin.cfg().raw().set("snapshots.scheduled.interval_minutes", nextMinutes);
+            plugin.cfg().raw().set("snapshots.scheduled.targets", "server_zones");
+        }
+        return nextEnabled ? nextMinutes : 0;
+    }
+
+    public int runScheduledPass() {
+        if (!isScheduledEnabled()) return 0;
+        return createSnapshotsForServerZones(null, "Scheduled server-zone snapshot", SnapshotType.SCHEDULED);
+    }
     
     /**
      * Rollback a plot to a previous snapshot.

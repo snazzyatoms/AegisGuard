@@ -22,7 +22,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1285
+config_schema: 1286
 
 
 # ------------------------------------------------------------------------------
@@ -627,6 +627,12 @@ snapshots:
     before_alliance_access: true
     before_staff_destination: true
     before_destructive_staff: true
+
+  scheduled:
+    # Timed plot-data snapshots of server/spawn zones (not player homes, not world blocks).
+    enabled: false
+    interval_minutes: 360
+    targets: server_zones
 
   # Require an explicit confirmation summary before restoring a snapshot.
   require_restore_confirmation: true

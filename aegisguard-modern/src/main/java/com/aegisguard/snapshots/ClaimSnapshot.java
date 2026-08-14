@@ -16,7 +16,8 @@ public class ClaimSnapshot {
         PRE_ALLIANCE_ACCESS,
         PRE_STAFF_DESTINATION,
         PRE_DESTRUCTIVE,
-        MANUAL
+        MANUAL,
+        SCHEDULED
     }
     
     private final UUID snapshotId;

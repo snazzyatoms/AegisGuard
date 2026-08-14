@@ -3,6 +3,7 @@ package com.aegisguard.guidance;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.gui.LanguageSelectGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -154,6 +155,18 @@ public class FirstClaimWalkthroughGUI {
     public void openIfFirstClaim(Player player) {
         if (!isEnabled()) return;
         if (plugin.getNotificationManager() != null && plugin.getNotificationManager().hasSeenWalkthrough(player.getUniqueId())) {
+            return;
+        }
+        if (plugin.codex() != null && !plugin.codex().hasSavedPlayerStyle(player)) {
+            plugin.gui().languageSelect().open(player, null, LanguageSelectGUI.ReturnTo.WALKTHROUGH);
+            return;
+        }
+        markSeen(player);
+        open(player, 0);
+    }
+
+    public void openAfterLanguageChoice(Player player) {
+        if (!isEnabled()) {
             return;
         }
         markSeen(player);

@@ -88,7 +88,7 @@ public class GUIManager {
     private ClaimBlockExchangeGUI claimBlockExchangeGUI;
 
     // ✅ Snapshot Admin GUI (Rollback System)
-    private final SnapshotAdminGUI snapshotAdminGUI;
+    private SnapshotAdminGUI snapshotAdminGUI;
     private final MigrationAdminGUI migrationAdminGUI;
 
     // Staff Audit Ledger (1.3.0+)
@@ -177,13 +177,7 @@ public class GUIManager {
 
         // Exchange may initialize slightly later during plugin startup, so this is lazy.
         this.claimBlockExchangeGUI = null;
-
-        // Snapshot Admin GUI (only if SnapshotManager exists)
-        if (plugin.getSnapshotManager() != null) {
-            this.snapshotAdminGUI = new SnapshotAdminGUI(plugin);
-        } else {
-            this.snapshotAdminGUI = null;
-        }
+        this.snapshotAdminGUI = null;
 
         this.migrationAdminGUI = new MigrationAdminGUI(plugin);
         this.auditAdminGUI = new AuditAdminGUI(plugin);
@@ -244,7 +238,7 @@ public class GUIManager {
     public void openSnapshotAdmin(Player player) {
         if (player == null) return;
 
-        if (snapshotAdminGUI == null || plugin.getSnapshotManager() == null) {
+        if (plugin.getSnapshotManager() == null) {
             try {
                 player.sendMessage(color(tr(player, "snapshots_unavailable",
                         "&cSnapshot system is unavailable.")));
@@ -261,7 +255,7 @@ public class GUIManager {
             return;
         }
 
-        snapshotAdminGUI.open(player);
+        snapshotAdmin().open(player);
     }
 
     /**
@@ -329,7 +323,12 @@ public class GUIManager {
     }
 
     // ✅ Snapshot Admin
-    public SnapshotAdminGUI snapshotAdmin() { return snapshotAdminGUI; }
+    public SnapshotAdminGUI snapshotAdmin() {
+        if (snapshotAdminGUI == null && plugin.getSnapshotManager() != null) {
+            snapshotAdminGUI = new SnapshotAdminGUI(plugin);
+        }
+        return snapshotAdminGUI;
+    }
     public MigrationAdminGUI migration() { return migrationAdminGUI; }
 
     // Staff Audit Ledger (1.3.0+)

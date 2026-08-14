@@ -38,41 +38,40 @@ public class AdminGUI {
 
     private final AegisGuard plugin;
 
-    private static final int SIZE = 45;
+    private static final int SIZE = 54;
 
-    // --- Slots (kept mostly the same as 1.2.5 structure) ---
+    // Policy row (10-16) — expansion QUEUE ↔ INSTANT must not collide with tools.
     private static final int SLOT_TOGGLE_AUTO_REMOVE = 10;
     private static final int SLOT_TOGGLE_BYPASS_LIMIT = 11;
     private static final int SLOT_TOGGLE_BROADCAST   = 12;
     private static final int SLOT_TOGGLE_UNLIMITED   = 13;
     private static final int SLOT_TOGGLE_PROXY_SYNC  = 14;
     private static final int SLOT_TOGGLE_LOW_OVERHEAD= 15;
-    /** Policy row: expansion QUEUE ↔ INSTANT (must not collide with tools/nav). */
     private static final int SLOT_TOGGLE_EXPANSION_MODE = 16;
 
-    private static final int SLOT_TOOL_REQUESTS      = 28;
-    /** Instant / auto-approved history — directly under Review Requests. */
-    private static final int SLOT_TOOL_INSTANT_APPROVALS = 37;
-    private static final int SLOT_TOOL_PLOT_LIST     = 29;
-    private static final int SLOT_TOOL_DIAGNOSTICS   = 30;
-    private static final int SLOT_TOOL_RELOAD_ALL    = 31;
-    private static final int SLOT_TOOL_REFRESH_LANG  = 32;
-    private static final int SLOT_TOOL_SNAPSHOTS     = 33;
-
-    // 1.2.6: World Controls entry + future stub (new, but still “tools row”)
-    private static final int SLOT_TOOL_WORLD_CONTROLS = 34;
-    private static final int SLOT_TOOL_MIGRATION      = 35;
-
-    // 1.3.0: Staff Audit Ledger
-    private static final int SLOT_TOOL_ROUTES         = 25;
-    private static final int SLOT_TOOL_AUDIT_LEDGER   = 26;
-    private static final int SLOT_TOOL_SET_SPAWN      = 27;
-    private static final int SLOT_TOOL_ARENA          = 16;
-    /** Convert standing personal plot → server zone (type picker + confirm). */
+    private static final int SLOT_SECTION_TERRITORY = 18;
     private static final int SLOT_TOOL_CONVERT        = 19;
+    private static final int SLOT_TOOL_PLOT_LIST     = 20;
+    private static final int SLOT_TOOL_REQUESTS      = 21;
+    private static final int SLOT_TOOL_INSTANT_APPROVALS = 22;
+    private static final int SLOT_TOOL_SET_SPAWN      = 23;
+    private static final int SLOT_TOOL_WORLD_CONTROLS = 24;
 
-    private static final int SLOT_NAV_EXIT = 40;
-    private static final int SLOT_NAV_BACK = 44;
+    private static final int SLOT_SECTION_RECOVERY = 27;
+    private static final int SLOT_TOOL_SNAPSHOTS     = 28;
+    private static final int SLOT_TOOL_SNAPSHOT_SCHEDULE = 29;
+    private static final int SLOT_TOOL_AUDIT_LEDGER   = 30;
+    private static final int SLOT_TOOL_DIAGNOSTICS   = 31;
+    private static final int SLOT_TOOL_MIGRATION      = 32;
+
+    private static final int SLOT_SECTION_MODULES = 36;
+    private static final int SLOT_TOOL_ROUTES         = 37;
+    private static final int SLOT_TOOL_ARENA          = 38;
+    private static final int SLOT_TOOL_REFRESH_LANG  = 39;
+    private static final int SLOT_TOOL_RELOAD_ALL    = 40;
+
+    private static final int SLOT_NAV_BACK = 48;
+    private static final int SLOT_NAV_EXIT = 49;
 
     public AdminGUI(AegisGuard plugin) {
         this.plugin = plugin;
@@ -109,22 +108,36 @@ public class AdminGUI {
                 ))
         ));
 
-        inv.setItem(20, GUIManager.createItem(
+        inv.setItem(9, GUIManager.createItem(
                 Material.REPEATER,
                 plugin.gui().tr(player, "staff_policy_section_name", "&eOperational Policy"),
                 plugin.gui().trList(player, "staff_policy_section_lore", List.of(
-                        "&7Upper row: server-wide operating policy.",
+                        "&7This row: server-wide operating policy.",
                         "&7Toggle only during maintenance windows",
                         "&7when you understand the side effects."
                 ))
         ));
-        inv.setItem(24, GUIManager.createItem(
+        inv.setItem(SLOT_SECTION_TERRITORY, GUIManager.createItem(
+                Material.GRASS_BLOCK,
+                plugin.gui().tr(player, "staff_territory_section_name", "&aTerritory"),
+                plugin.gui().trList(player, "staff_territory_section_lore", List.of(
+                        "&7Convert plots, browse claims,",
+                        "&7review expansions, and set spawn."
+                ))
+        ));
+        inv.setItem(SLOT_SECTION_RECOVERY, GUIManager.createItem(
                 Material.ENDER_CHEST,
+                plugin.gui().tr(player, "staff_recovery_section_name", "&dRecovery"),
+                plugin.gui().trList(player, "staff_recovery_section_lore", List.of(
+                        "&7Claim-data snapshots, audit, doctor,",
+                        "&7and migration. Snapshots do not save builds."
+                ))
+        ));
+        inv.setItem(SLOT_SECTION_MODULES, GUIManager.createItem(
+                Material.COMPARATOR,
                 plugin.gui().tr(player, "staff_toolbelt_section_name", "&bGuardian Toolbelt"),
-                plugin.gui().trList(player, "staff_toolbelt_section_lore", List.of(
-                        "&7Lower row: review, recovery, world,",
-                        "&7migration, diagnostics, and maintenance.",
-                        "&7Destructive tools ask for confirmation."
+                plugin.gui().trList(player, "staff_modules_section_lore", List.of(
+                        "&7Routes, Arena, language refresh, and reload."
                 ))
         ));
 
@@ -315,8 +328,9 @@ public class AdminGUI {
                     Material.SPYGLASS,
                     plugin.gui().tr(player, "button_admin_snapshots", "&d📸 Claim Snapshots"),
                     plugin.gui().trList(player, "admin_snapshots_lore", List.of(
-                            "&7What: browse recovery points and restore claims.",
-                            "&7When: undoing a bad merge, expansion, or staff edit.",
+                            "&7What: browse claim-data recovery points.",
+                            "&7Creates copies of flags, members, and bounds.",
+                            "&7Does not save world blocks or builds.",
                             " ",
                             "&cRollback overwrites the live claim — confirm carefully.",
                             "&eClick to open."
@@ -336,6 +350,8 @@ public class AdminGUI {
             tagAction(snapshotsDisabled, "snapshots_disabled");
             inv.setItem(SLOT_TOOL_SNAPSHOTS, snapshotsDisabled);
         }
+
+        addSnapshotScheduleButton(player, inv);
 
         ItemStack worldControls = GUIManager.createItem(
                 Material.LECTERN,
@@ -516,7 +532,7 @@ public class AdminGUI {
             case "refresh_lang" -> handleRefreshLang(player);
 
             case "open_snapshots" -> {
-                if (plugin.getSnapshotManager() != null && plugin.gui().snapshotAdmin() != null) {
+                if (plugin.getSnapshotManager() != null) {
                     plugin.gui().openSnapshotAdmin(player);
                     plugin.effects().playMenuFlip(player);
                 } else {
@@ -527,6 +543,10 @@ public class AdminGUI {
             case "snapshots_disabled" -> {
                 sendKey(player, "snapshots_disabled", "&cSnapshots are disabled.");
                 plugin.effects().playError(player);
+            }
+            case "cycle_snapshot_schedule" -> {
+                GUIManager.playClick(player);
+                cycleSnapshotSchedule(player);
             }
 
             case "open_world_controls" -> {
@@ -894,6 +914,62 @@ public class AdminGUI {
                 String msg = next ? "&aSetting enabled." : "&cSetting disabled.";
                 sendKey(p, next ? "admin_setting_enabled" : "admin_setting_disabled", msg);
 
+                open(p);
+            });
+        });
+    }
+
+    private void addSnapshotScheduleButton(Player p, Inventory inv) {
+        boolean enabled = plugin.getConfig().getBoolean("snapshots.scheduled.enabled", false)
+                && plugin.getConfig().getBoolean("snapshots.enabled", true);
+        int minutes = Math.max(1, plugin.getConfig().getInt("snapshots.scheduled.interval_minutes", 360));
+        String interval = enabled
+                ? plugin.gui().tr(p, "admin_snapshot_schedule_interval", "&aEvery {MINUTES} min",
+                Map.of("MINUTES", String.valueOf(minutes)))
+                : plugin.gui().tr(p, "admin_snapshot_schedule_off", "&cOff");
+        String display = plugin.gui().tr(p, "button_admin_snapshot_schedule",
+                "&dAuto Snapshots: {STATE}", Map.of("STATE", interval));
+        List<String> lore = plugin.gui().trList(p, enabled
+                        ? "admin_snapshot_schedule_lore_on"
+                        : "admin_snapshot_schedule_lore_off",
+                enabled
+                        ? List.of(
+                        "&7Takes plot-data snapshots of server zones",
+                        "&7on a timer. Does not copy world builds.",
+                        " ",
+                        "&eClick to cycle Off / 15m / 1h / 6h / 24h.")
+                        : List.of(
+                        "&7Automatic server-zone snapshots are off.",
+                        "&7Does not copy world builds.",
+                        " ",
+                        "&eClick to cycle Off / 15m / 1h / 6h / 24h."));
+        ItemStack it = GUIManager.createItem(enabled ? Material.CLOCK : Material.GRAY_DYE, display, lore);
+        tagAction(it, "cycle_snapshot_schedule");
+        inv.setItem(SLOT_TOOL_SNAPSHOT_SCHEDULE, it);
+    }
+
+    private void cycleSnapshotSchedule(Player p) {
+        if (plugin.getSnapshotManager() == null) {
+            sendKey(p, "snapshots_disabled", "&cSnapshots are disabled.");
+            plugin.effects().playError(p);
+            return;
+        }
+        int next = plugin.getSnapshotManager().cycleScheduledInterval();
+        plugin.runGlobalAsync(() -> {
+            try {
+                plugin.saveConfig();
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[AdminGUI] Failed to save snapshot schedule: " + t.getMessage());
+            }
+            plugin.runMain(p, () -> {
+                plugin.restartScheduledSnapshotTask();
+                String msg = next <= 0
+                        ? plugin.gui().tr(p, "admin_snapshot_schedule_set_off", "&cAutomatic snapshots disabled.")
+                        : plugin.gui().tr(p, "admin_snapshot_schedule_set",
+                        "&aAutomatic snapshots every {MINUTES} minutes.",
+                        Map.of("MINUTES", String.valueOf(next)));
+                p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+                plugin.effects().playConfirm(p);
                 open(p);
             });
         });

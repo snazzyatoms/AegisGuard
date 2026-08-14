@@ -100,6 +100,15 @@ public class InfoGUI {
                 ))
         ));
 
+        inv.setItem(20, infoCard(player, Material.GLOWSTONE_DUST, "codex_root_whats_new_name", "&eWhat's New in 1.3.0",
+                "codex_root_whats_new_lore", List.of(
+                        "&7Guest Passes, Lockdown, Realm Profiles,",
+                        "&7Safe Travel, Routes, Alliance Access,",
+                        "&7TradeStalls, and optional Arena.",
+                        " ",
+                        "&7Open the chapters below for details."
+                )));
+
         inv.setItem(10, sectionItem(player, Material.GOLDEN_HOE, "codex_claim_title", "&e&lI. Claiming", "codex_claim_lore",
                 List.of(
                         "&7Learn how to claim land,",
@@ -422,6 +431,23 @@ public class InfoGUI {
                         "&7Use it before asking staff for help",
                         "&7if you are simply wedged in terrain."
                 )));
+        inv.setItem(30, infoCard(player, Material.ENDER_EYE, "codex_travel_safe_name", "&bSafe Travel",
+                "codex_travel_safe_lore", List.of(
+                        "&7Safe Travel finds a clear landing spot",
+                        "&7before sending you to a plot, stall,",
+                        "&7or server destination.",
+                        " ",
+                        "&7If a warp would drop you in lava or",
+                        "&7a wall, AegisGuard looks for safer ground."
+                )));
+        inv.setItem(32, infoCard(player, Material.FILLED_MAP, "codex_travel_routes_name", "&aRoutes & Checkpoints",
+                "codex_travel_routes_lore", List.of(
+                        "&7Staff can publish named exploration",
+                        "&7routes with ordered checkpoints.",
+                        " ",
+                        "&7Open Routes from the main menu to",
+                        "&7follow a trail or tour."
+                )));
     }
 
     private void buildMenusSection(Player player, Inventory inv) {
@@ -435,14 +461,15 @@ public class InfoGUI {
                 )));
         inv.setItem(12, infoCard(player, Material.REDSTONE_TORCH, "codex_menus_settings_name", "&6Plot Settings",
                 "codex_menus_settings_lore", List.of(
-                        "&7Plot Settings control how your land",
-                        "&7behaves for you, friends, and visitors.",
+                        "&7Claim Settings now opens a category hub:",
+                        "&7Safety, Mechanics, Wards, and Presets.",
                         " ",
-                        "&7This includes entry, containers,",
-                        "&7mobs, PvP, redstone, and more.",
+                        "&7On a server or spawn plot you only see",
+                        "&7the controls that belong there — no Home",
+                        "&7preset or personal cosmetics.",
                         " ",
-                        "&7Review these after claiming so your",
-                        "&7plot behaves the way you want."
+                        "&7Stand in the plot you want to edit, then",
+                        "&7open Claim Settings from the main menu."
                 )));
         inv.setItem(14, infoCard(player, Material.PLAYER_HEAD, "codex_menus_members_name", "&eMembers & Roles",
                 "codex_menus_members_lore", List.of(
@@ -490,6 +517,14 @@ public class InfoGUI {
                         " ",
                         "&7If you are unsure what a button does,",
                         "&7check this guide before experimenting."
+                )));
+        inv.setItem(30, infoCard(player, Material.BOOK, "codex_menus_language_name", "&bChoose Your Language",
+                "codex_menus_language_lore", List.of(
+                        "&7The language picker lists every pack.",
+                        "&7New players also see it after their",
+                        "&7first claim, before the walkthrough.",
+                        " ",
+                        "&7You can change it later from Settings."
                 )));
     }
 
@@ -567,6 +602,33 @@ public class InfoGUI {
                         " ",
                         "&7This reduces the need to rely on",
                         "&7manual bypass for routine staff work."
+                )));
+        inv.setItem(30, infoCard(player, Material.PAPER, "codex_security_guest_name", "&eGuest Passes",
+                "codex_security_guest_lore", List.of(
+                        "&7Guest Passes grant timed access",
+                        "&7without adding a full member role.",
+                        " ",
+                        "&7Use them for visitors, helpers, or",
+                        "&7short-term builders. They can expire",
+                        "&7by time or active playtime."
+                )));
+        inv.setItem(32, infoCard(player, Material.IRON_BARS, "codex_security_lockdown_name", "&cEmergency Lockdown",
+                "codex_security_lockdown_lore", List.of(
+                        "&7Lockdown temporarily tightens a plot",
+                        "&7when something goes wrong.",
+                        " ",
+                        "&7Soft lockdown limits build and chests.",
+                        "&7Hard lockdown can seal the plot until",
+                        "&7you lift it or the timer ends."
+                )));
+        inv.setItem(34, infoCard(player, Material.SHIELD, "codex_security_alliance_name", "&6Alliance Access",
+                "codex_security_alliance_lore", List.of(
+                        "&7Alliance Access lets allied groups",
+                        "&7share selected permissions on a plot",
+                        "&7without adding every player by hand.",
+                        " ",
+                        "&7Open it from Access & Safety on the",
+                        "&7main menu when standing in your plot."
                 )));
     }
 
@@ -721,6 +783,15 @@ public class InfoGUI {
                         "&7Small presentation details make your",
                         "&7plot feel much more complete."
                 )));
+        inv.setItem(28, infoCard(player, Material.ITEM_FRAME, "codex_identity_realm_name", "&3Realm Profiles",
+                "codex_identity_realm_lore", List.of(
+                        "&7Realm Profiles control how your plot",
+                        "&7appears in discovery: name, category,",
+                        "&7and whether strangers can find it.",
+                        " ",
+                        "&7Open Realm Profile from the Territory",
+                        "&7section of the main menu."
+                )));
     }
 
     private void buildAdvancedSection(Player player, Inventory inv) {
@@ -792,14 +863,15 @@ public class InfoGUI {
                 )));
         inv.setItem(28, infoCard(player, Material.WRITABLE_BOOK, "codex_advanced_snapshot_name", "&bSnapshots",
                 "codex_advanced_snapshot_lore", List.of(
-                        "&7Snapshots record plot state so staff",
-                        "&7can roll back or restore later if needed.",
+                        "&7Snapshots copy plot data so staff can",
+                        "&7roll back flags, members, and bounds.",
                         " ",
-                        "&7They are useful after accidents, grief,",
-                        "&7bad expansions, or rollback situations.",
+                        "&7They do not restore world blocks or",
+                        "&7builds. Use them after bad expansions,",
+                        "&7merges, or staff edits.",
                         " ",
-                        "&7They are especially useful after bad",
-                        "&7expansions, grief, or server issues."
+                        "&7Staff Tools can create a snapshot and",
+                        "&7optionally run timed server-zone copies."
                 )));
         inv.setItem(30, infoCard(player, Material.BEACON, "codex_advanced_diagnostics_name", "&eDiagnostics",
                 "codex_advanced_diagnostics_lore", List.of(
@@ -812,6 +884,24 @@ public class InfoGUI {
                         "&7If something feels wrong, diagnostics",
                         "&7are the first place staff should look."
                 )));
+        boolean arenaOn = plugin.getConfig().getBoolean("arena.enabled", false);
+        if (arenaOn) {
+            inv.setItem(32, infoCard(player, Material.DIAMOND_SWORD, "codex_advanced_arena_name", "&cArena",
+                    "codex_advanced_arena_lore", List.of(
+                            "&7Arena is an optional party PvE module.",
+                            "&7Form a party, start a dungeon run, and",
+                            "&7earn rewards on the configured map.",
+                            " ",
+                            "&7Open Arenas from the Explore section."
+                    )));
+        } else {
+            inv.setItem(32, infoCard(player, Material.IRON_SWORD, "codex_advanced_arena_off_name", "&8Arena (Optional)",
+                    "codex_advanced_arena_off_lore", List.of(
+                            "&7Arena is an optional dungeon module.",
+                            "&7It stays off until the server enables",
+                            "&7arena.enabled in config.yml."
+                    )));
+        }
     }
 
     private ItemStack infoCard(Player player, Material material, String nameKey, String nameFallback, String loreKey, List<String> loreFallback) {

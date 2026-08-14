@@ -74,7 +74,8 @@ class ArenaContractTest {
     @Test
     void schemaBumpedForArena() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1285"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1285")
+                || migration.contains("CURRENT_SCHEMA = 1286"));
     }
 
     @Test

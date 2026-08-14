@@ -483,6 +483,12 @@ public class CodexEngine {
         return true;
     }
 
+    public boolean hasSavedPlayerStyle(Player player) {
+        if (player == null) return false;
+        String stored = plugin.getConfig().getString(PLAYER_STYLE_PATH + "." + player.getUniqueId(), null);
+        return stored != null && !stored.isBlank();
+    }
+
     // ----------------------------
     // Internal resolution
     // ----------------------------

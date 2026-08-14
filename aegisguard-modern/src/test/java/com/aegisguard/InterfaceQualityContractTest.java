@@ -82,7 +82,12 @@ class InterfaceQualityContractTest {
         String admin = Files.readString(ROOT.resolve("gui/AdminGUI.java"));
         assertTrue(admin.contains("staff_command_center_name"));
         assertTrue(admin.contains("staff_policy_section_name"));
+        assertTrue(admin.contains("staff_territory_section_name"));
+        assertTrue(admin.contains("staff_recovery_section_name"));
         assertTrue(admin.contains("staff_toolbelt_section_name"));
+        assertTrue(admin.contains("SIZE = 54"));
+        assertTrue(admin.contains("SLOT_TOOL_ARENA          = 38") || admin.contains("SLOT_TOOL_ARENA = 38"));
+        assertFalse(admin.contains("SLOT_TOOL_ARENA          = 16"));
         for (String action : List.of("open_requests", "open_instant_approvals", "open_diagnostics", "open_snapshots",
                 "open_world_controls", "open_migration", "toggle_expansion_approval_mode",
                 "open_convert_server")) {

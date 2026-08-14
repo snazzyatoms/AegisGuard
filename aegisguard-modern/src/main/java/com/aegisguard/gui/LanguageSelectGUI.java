@@ -34,21 +34,36 @@ public class LanguageSelectGUI {
         this.keyStyle = new NamespacedKey(plugin, "aegis_lang_style");
     }
 
+    public enum ReturnTo {
+        SETTINGS, WALKTHROUGH
+    }
+
     public static final class LanguageSelectHolder implements InventoryHolder {
         private final Plot plot;
-        public LanguageSelectHolder(Plot plot) { this.plot = plot; }
+        private final ReturnTo returnTo;
+        public LanguageSelectHolder(Plot plot) { this(plot, ReturnTo.SETTINGS); }
+        public LanguageSelectHolder(Plot plot, ReturnTo returnTo) {
+            this.plot = plot;
+            this.returnTo = returnTo == null ? ReturnTo.SETTINGS : returnTo;
+        }
         public Plot getPlot() { return plot; }
+        public ReturnTo getReturnTo() { return returnTo; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player) {
-        open(player, null);
+        open(player, null, ReturnTo.SETTINGS);
     }
 
     public void open(Player player, Plot plot) {
+        open(player, plot, ReturnTo.SETTINGS);
+    }
+
+    public void open(Player player, Plot plot, ReturnTo returnTo) {
         if (player == null) return;
+        ReturnTo dest = returnTo == null ? ReturnTo.SETTINGS : returnTo;
         if (plugin.codex() == null) {
-            plugin.gui().settings().open(player, plot);
+            resumeAfterLanguage(player, plot, dest);
             return;
         }
 
@@ -57,7 +72,7 @@ public class LanguageSelectGUI {
         int contentEnd = size - 9;
 
         String title = plugin.gui().title(player, "language_select_title", "&bChoose Your Language");
-        Inventory inv = Bukkit.createInventory(new LanguageSelectHolder(plot), size, title);
+        Inventory inv = Bukkit.createInventory(new LanguageSelectHolder(plot, dest), size, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < size; i++) inv.setItem(i, filler);
@@ -106,10 +121,11 @@ public class LanguageSelectGUI {
         if (clicked.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
 
         Plot plot = holder == null ? null : holder.getPlot();
+        ReturnTo dest = holder == null ? ReturnTo.SETTINGS : holder.getReturnTo();
         String action = plugin.gui().getAction(clicked);
         if ("back".equals(action)) {
             playFlip(player);
-            plugin.runMain(player, () -> plugin.gui().settings().open(player, plot));
+            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
             return;
         }
         if ("exit".equals(action)) {
@@ -127,7 +143,7 @@ public class LanguageSelectGUI {
         String current = plugin.codex().getPlayerStyle(player);
         if (style.equalsIgnoreCase(current)) {
             playFlip(player);
-            plugin.runMain(player, () -> plugin.gui().settings().open(player, plot));
+            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
             return;
         }
 
@@ -145,7 +161,15 @@ public class LanguageSelectGUI {
                 Map.of("STYLE", stripColors(display))
         ));
         playFlip(player);
-        plugin.runMain(player, () -> plugin.gui().settings().open(player, plot));
+        plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
+    }
+
+    private void resumeAfterLanguage(Player player, Plot plot, ReturnTo dest) {
+        if (dest == ReturnTo.WALKTHROUGH && plugin.gui().walkthrough() != null) {
+            plugin.gui().walkthrough().openAfterLanguageChoice(player);
+            return;
+        }
+        plugin.gui().settings().open(player, plot);
     }
 
     private ItemStack languageItem(Player player, String style, boolean selected) {

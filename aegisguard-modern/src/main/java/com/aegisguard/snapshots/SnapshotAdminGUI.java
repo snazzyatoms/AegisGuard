@@ -1,6 +1,7 @@
 package com.aegisguard.snapshots;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -36,7 +37,7 @@ public class SnapshotAdminGUI {
 
     private final AegisGuard plugin;
 
-    private static final int SNAPSHOTS_PER_PAGE = 45; // Slots 0-44
+    private static final int SNAPSHOTS_PER_PAGE = 36; // Slots 0-35; 36-38 are create actions
     private static final long RESTORE_CONFIRM_MS = 15_000L;
 
     private final NamespacedKey keyAction;
@@ -157,8 +158,9 @@ public class SnapshotAdminGUI {
                     plugin.gui().tr(player, "snapshots_none_title", "&cNo Snapshots"),
                     plugin.gui().trList(player, "snapshots_none_lore", List.of(
                             "&7No claim snapshots exist yet.",
-                            "&7Snapshots are created before",
-                            "&7expansions and merges."
+                            "&7Use Create Snapshot Here or wait",
+                            "&7for expansions, merges, or the timer.",
+                            "&cThese copies save plot data, not builds."
                     ))
             );
             tagAction(none, "snapshots_none");
@@ -217,6 +219,7 @@ public class SnapshotAdminGUI {
                         "&7Triggered By: &f{ACTOR}",
                         "&7Radius: &a{RADIUS}",
                         " ",
+                        "&cRestores plot data only — not world blocks.",
                         "&cRollback overwrites the live claim.",
                         "&aShift-Left-Click: &7Rollback (confirm twice)",
                         "&cShift-Right-Click: &7Delete this snapshot"
@@ -233,6 +236,33 @@ public class SnapshotAdminGUI {
                 inv.setItem(slot, item);
             }
         }
+
+        ItemStack createHere = GUIManager.createItem(
+                Material.WRITABLE_BOOK,
+                plugin.gui().tr(player, "snapshot_create_here_name", "&aCreate Snapshot Here"),
+                plugin.gui().trList(player, "snapshot_create_here_lore", List.of(
+                        "&7Copy plot data for the claim you stand in.",
+                        "&7Saves flags, members, bounds, and names.",
+                        "&cDoes not copy world blocks or builds.",
+                        " ",
+                        "&eClick to create."
+                ))
+        );
+        tagAction(createHere, "create_here");
+        inv.setItem(36, createHere);
+
+        ItemStack createZones = GUIManager.createItem(
+                Material.BEACON,
+                plugin.gui().tr(player, "snapshot_create_server_zones_name", "&bSnapshot All Server Zones"),
+                plugin.gui().trList(player, "snapshot_create_server_zones_lore", List.of(
+                        "&7Copy plot data for every server/spawn plot.",
+                        "&cDoes not copy world blocks or builds.",
+                        " ",
+                        "&eClick to create."
+                ))
+        );
+        tagAction(createZones, "create_server_zones");
+        inv.setItem(37, createZones);
 
         // Navigation (45 / 49 / 53) - PDC tagged
         if (page > 0) {
@@ -305,6 +335,8 @@ public class SnapshotAdminGUI {
                 case "back_admin" -> { plugin.gui().admin().open(player); plugin.effects().playMenuFlip(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "snapshots_none" -> { plugin.effects().playError(player); return; }
+                case "create_here" -> { createStandingSnapshot(player, page); return; }
+                case "create_server_zones" -> { createServerZoneSnapshots(player, page); return; }
                 case "snapshot_entry" -> { /* continue */ }
                 default -> { return; }
             }
@@ -423,6 +455,42 @@ public class SnapshotAdminGUI {
                 });
             });
         }
+    }
+
+    private void createStandingSnapshot(Player player, int page) {
+        Plot plot = plugin.store() == null ? null : plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    plugin.gui().tr(player, "snapshot_create_no_plot",
+                            "&cStand inside a plot to snapshot it.")));
+            plugin.effects().playError(player);
+            return;
+        }
+        plugin.getSnapshotManager().createSnapshot(plot, ClaimSnapshot.SnapshotType.MANUAL,
+                "Staff menu snapshot", player.getUniqueId());
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                plugin.gui().tr(player, "snapshot_created_here",
+                        "&aSaved plot-data snapshot. Builds were not copied.")));
+        plugin.effects().playConfirm(player);
+        open(player, page);
+    }
+
+    private void createServerZoneSnapshots(Player player, int page) {
+        int count = plugin.getSnapshotManager().createSnapshotsForServerZones(
+                player.getUniqueId(), "Staff menu server-zone snapshot", ClaimSnapshot.SnapshotType.MANUAL);
+        if (count <= 0) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                    plugin.gui().tr(player, "snapshot_create_no_server_zones",
+                            "&cNo server plots were found to snapshot.")));
+            plugin.effects().playError(player);
+            return;
+        }
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                plugin.gui().tr(player, "snapshot_created_server_zones",
+                        "&aSaved {COUNT} server-zone plot-data snapshots. Builds were not copied.",
+                        Map.of("COUNT", String.valueOf(count)))));
+        plugin.effects().playConfirm(player);
+        open(player, page);
     }
 
     // -------------------

@@ -33,7 +33,7 @@ class ProtectionHeroPackContractTest {
         try (var in = Files.newInputStream(RES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1285, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1286, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.TRUE, protections.get("hopper_pipe"));
         assertEquals(Boolean.TRUE, protections.get("teleport_ward"));
@@ -68,12 +68,14 @@ class ProtectionHeroPackContractTest {
     @Test
     void plotFlagsGuiExposesWardsAndPresetsWithoutCollidingNav() throws Exception {
         String flags = Files.readString(JAVA.resolve("gui/PlotFlagsGUI.java"));
-        assertTrue(flags.contains("case 28 ->"));
-        assertTrue(flags.contains("case 37 ->"));
+        assertTrue(flags.contains("Page.HUB"));
+        assertTrue(flags.contains("Page.SAFETY"));
+        assertTrue(flags.contains("Page.PRESETS"));
         assertTrue(flags.contains("ProtectionPreset.HOME"));
+        assertTrue(flags.contains("isServerZone()"));
         assertTrue(flags.contains("PlotFlagsPresetConfirmHolder"));
-        assertTrue(flags.contains("case 48 ->"));
-        assertTrue(flags.contains("case 49 ->"));
+        assertTrue(flags.contains("rawSlot == 48"));
+        assertTrue(flags.contains("rawSlot == 49"));
         assertFalse(flags.contains("togglePaid(player, plot, \"fly\""));
     }
 
@@ -155,7 +157,8 @@ class ProtectionHeroPackContractTest {
     @Test
     void migrationSchemaConstantMatchesConfig() throws Exception {
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1284") || migration.contains("CURRENT_SCHEMA = 1285"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1284") || migration.contains("CURRENT_SCHEMA = 1285")
+                || migration.contains("CURRENT_SCHEMA = 1286"));
     }
 
     @Test

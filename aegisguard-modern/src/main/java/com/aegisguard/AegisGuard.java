@@ -167,6 +167,7 @@ public class AegisGuard extends JavaPlugin {
     private Object rentalExpiryTask;
     private Object guestPassExpiryTask;
     private Object lockdownSweepTask;
+    private Object scheduledSnapshotTask;
     private Object arenaTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
@@ -450,6 +451,7 @@ public class AegisGuard extends JavaPlugin {
         startRentalExpiryTask();
         startGuestPassExpiryTask();
         startLockdownSweepTask();
+        startScheduledSnapshotTask();
         startArenaTickTask();
 
         // PlaceholderAPI (optional)
@@ -492,6 +494,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
+        cancelTaskReflectively(scheduledSnapshotTask);
         cancelTaskReflectively(arenaTickTask);
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
@@ -1041,6 +1044,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(rentalExpiryTask);
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
+        cancelTaskReflectively(scheduledSnapshotTask);
         cancelTaskReflectively(arenaTickTask);
 
         autoSaveTask = null;
@@ -1051,6 +1055,7 @@ public class AegisGuard extends JavaPlugin {
         rentalExpiryTask = null;
         guestPassExpiryTask = null;
         lockdownSweepTask = null;
+        scheduledSnapshotTask = null;
         arenaTickTask = null;
 
         startAutoSaver();
@@ -1061,6 +1066,7 @@ public class AegisGuard extends JavaPlugin {
         startRentalExpiryTask();
         startGuestPassExpiryTask();
         startLockdownSweepTask();
+        startScheduledSnapshotTask();
         startArenaTickTask();
     }
 
@@ -1135,6 +1141,26 @@ public class AegisGuard extends JavaPlugin {
                 console().warning("log_lockdown_sweep_error", "Lockdown expiry sweep error: {ERROR}", "ERROR", t.getMessage() == null ? "" : t.getMessage());
             }
         }, 20L, 1_200L);
+    }
+
+    public void restartScheduledSnapshotTask() {
+        cancelTaskReflectively(scheduledSnapshotTask);
+        scheduledSnapshotTask = null;
+        startScheduledSnapshotTask();
+    }
+
+    private void startScheduledSnapshotTask() {
+        if (snapshotManager == null || !snapshotManager.isScheduledEnabled()) return;
+        int minutes = snapshotManager.getScheduledIntervalMinutes();
+        long periodTicks = Math.max(20L * 60L, minutes * 60L * 20L);
+        scheduledSnapshotTask = runGlobalRepeating(() -> {
+            try {
+                snapshotManager.runScheduledPass();
+            } catch (Throwable t) {
+                console().warning("log_snapshot_schedule_error", "Scheduled snapshot error: {ERROR}",
+                        "ERROR", t.getMessage() == null ? "" : t.getMessage());
+            }
+        }, periodTicks, periodTicks);
     }
 
     private void startArenaTickTask() {

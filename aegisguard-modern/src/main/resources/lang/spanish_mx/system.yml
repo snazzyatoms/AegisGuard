@@ -1016,3 +1016,6 @@ arena_empty_none: '&8Aún no hay arenas configuradas.'
 arena_diag_header: '&eDiagnósticos de Arena:'
 arena_mob_boss_name: Jefe de Arena
 arena_mob_name: Mob de Arena
+
+# --- 1.3.0 menu snapshot guidebook polish ---
+log_snapshot_schedule_error: 'Error de instantánea programada: {ERROR}'

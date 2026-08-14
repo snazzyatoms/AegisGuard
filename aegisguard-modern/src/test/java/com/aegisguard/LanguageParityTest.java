@@ -85,7 +85,14 @@ class LanguageParityTest {
                 "market_stall_create_guide", "market_stall_visit_arrived",
                 "language_select_title", "language_select_option_lore",
                 "language_select_current_lore", "settings_language_lore",
-                "settings_language_name", "language_set_to");
+                "settings_language_name", "language_set_to",
+                "plot_flags_server_title", "plot_flags_page_safety",
+                "plot_flags_page_mechanics", "plot_flags_page_wards",
+                "plot_flags_page_presets", "button_back_claim_hub",
+                "staff_territory_section_name", "staff_recovery_section_name",
+                "snapshot_create_here_name", "snapshot_create_server_zones_name",
+                "codex_root_whats_new_name", "codex_travel_safe_name",
+                "codex_security_guest_name", "codex_menus_language_name");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);
@@ -428,7 +435,8 @@ class LanguageParityTest {
                 String brand = engPlain.replace(" ", "");
                 if (brand.equalsIgnoreCase("ClaimBlocks")
                         || brand.equalsIgnoreCase("TradeStalls")
-                        || brand.equalsIgnoreCase("TradeStall")) {
+                        || brand.equalsIgnoreCase("TradeStall")
+                        || brand.equalsIgnoreCase("Arena")) {
                     continue;
                 }
 

@@ -3609,3 +3609,74 @@ codex_advanced_arena_off_lore:
   - '&7Arena ist ein optionales Dungeon-Modul.'
   - '&7Es bleibt aus, bis der Server'
   - '&7arena.enabled in config.yml aktiviert.'
+
+# --- 1.3.0 claim status menu polish ---
+plot_status_gui_title: '&b✦ Anspruchsstatus'
+plot_status_header_title: '&b✦ Anspruchsstatus'
+plot_status_lore:
+  - '&7Überblick über dieses Grundstück: Besitzer, Schutz,'
+  - '&7Segen, Wachstum, ClaimBlocks und Zugang.'
+  - ' '
+  - '&eKlicken zum Öffnen.'
+plot_status_button_lore:
+  - '&7Überblick über dieses Grundstück: Besitzer, Schutz,'
+  - '&7Segen, Wachstum, ClaimBlocks und Zugang.'
+  - ' '
+  - '&eKlicken zum Öffnen.'
+plot_status_kind_personal: '&aPersönliches Grundstück'
+plot_status_kind_server: '&bServer- / Spawn-Grundstück'
+plot_status_owner_line: '&7Besitzer: &f{OWNER}'
+plot_status_world_line: '&7Welt: &f{WORLD}'
+plot_status_level_line: '&7Grundstücksstufe: &b{LEVEL}&7 / &f{MAX}'
+plot_status_name_line: '&7Name: &f{NAME}'
+plot_status_protection_title: '&cSchutz und Risiken'
+plot_status_blessings_title: '&dAktive Segen'
+plot_status_blessings_header_line: '&7Aktive Segen:'
+plot_status_blessings_none_line: '&8- Noch keine freigeschaltet.'
+plot_status_blessings_footer_line: '&8Es wird nur die höchste Stufe jedes Segens angezeigt.'
+plot_status_territory_title: '&aGebiet und Wachstum'
+plot_status_menu_name: '&3✦ AegisGuard-Menü'
+plot_status_territory_rules_line: '&7Gebietsregeln:'
+plot_status_territory_hint_line: '&b{MENU} &7→ &b{EXPAND}'
+plot_status_access_title: '&eZugangsüberblick'
+plot_status_members_line: '&7Mitglieder: &f{COUNT}'
+plot_status_guests_line: '&7Gästepässe: &f{COUNT}'
+plot_status_lockdown_on: '&cLockdown: &fAktiv'
+plot_status_lockdown_off: '&7Lockdown: &fAus'
+plot_status_access_hint:
+  - '&8Öffne Rollen, Gästepässe oder Lockdown'
+  - '&8im Hauptmenü, um dies zu ändern.'
+plot_status_upkeep_click: '&eKlicken, um früh zu zahlen.'
+plot_status_section_overview_name: '&bÜberblick'
+plot_status_section_overview_lore:
+  - '&7Ein Überblick über dieses Grundstück: Schutz,'
+  - '&7Segen, Wachstum und ClaimBlocks.'
+plot_status_section_actions_name: '&6Besitzeraktionen'
+plot_status_section_actions_lore:
+  - '&7Zusammenführen, übertragen, ClaimBlocks schenken'
+  - '&7oder Unterhalt früh zahlen.'
+plot_status_section_combat: '&7Kampf und Feinde:'
+plot_status_label_pvp: PvP
+plot_status_label_hostile_mobs: Feindliche Mobs
+plot_status_label_animals_pets: Tiere und Haustiere
+plot_status_section_environment: '&7Umgebung und Zugang:'
+plot_status_label_safe_zone: Schutzzone
+plot_status_state_enabled: '&aAktiviert'
+plot_status_state_disabled: '&7Deaktiviert'
+plot_status_label_entry_gate: Eingangstor
+plot_status_state_open: '&aOffen'
+plot_status_state_closed: '&cGeschlossen'
+plot_status_label_containers: Behälter
+plot_status_label_redstone_doors: Redstone und Türen
+plot_status_label_vehicles: Fahrzeuge
+plot_status_section_perks: '&7Vorteile und Dienste:'
+plot_status_label_shop_interact: Marktinteraktion
+plot_status_state_active: '&aAktiviert'
+plot_status_state_inactive: '&7Inaktiv'
+plot_status_label_flight: Flug auf diesem Grundstück
+plot_status_state_protected: '&aGeschützt'
+plot_status_state_vulnerable: '&cUngeschützt'
+plot_status_line_bullet: '&f- {LABEL}: {STATE}'
+plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effekt &f{TIER}&7)'
+plot_status_blessing_member_slots_format: '&a✦ &fVertrauenswürdige Mitgliederplätze: &b+{AMOUNT}'
+plot_status_blessing_generic_format: '&a✦ &f{TEXT}'

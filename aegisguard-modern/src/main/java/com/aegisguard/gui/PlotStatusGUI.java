@@ -51,54 +51,74 @@ public class PlotStatusGUI {
             return;
         }
 
-        // ✅ Title (language aware + safe)
-        String title = plugin.gui().title(player, "plot_status_gui_title", "&8Plot Status");
+        // Title matches the main-menu button ("Claim Status") in every language pack.
+        String title = plugin.gui().title(player, "plot_status_gui_title",
+                plugin.gui().tr(player, "plot_status_button_title", "&b✦ Claim Status"));
         Inventory inv = Bukkit.createInventory(new PlotStatusHolder(plot, returnWalkthroughPage), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
+        int[] borderSlots = {
+                0, 1, 2, 3, 5, 6, 7, 8,
+                18, 26,
+                27, 35,
+                36, 44,
+                45, 46, 47, 50, 51, 52, 53
+        };
+        for (int slot : borderSlots) inv.setItem(slot, filler);
+
+        addSectionFrame(player, inv, Material.CYAN_STAINED_GLASS_PANE,
+                "plot_status_section_overview_name", "&bOverview",
+                "plot_status_section_overview_lore",
+                List.of("&7A snapshot of this plot: protections,", "&7blessings, growth, and ClaimBlocks."),
+                9, 10, 16, 17);
+        addSectionFrame(player, inv, Material.ORANGE_STAINED_GLASS_PANE,
+                "plot_status_section_actions_name", "&6Owner Actions",
+                "plot_status_section_actions_lore",
+                List.of("&7Merge, transfer, gift ClaimBlocks,", "&7or pay upkeep early."),
+                19, 24, 25);
 
         int level = plot.getLevel();
         int maxLevel = plugin.cfg().getMaxLevel();
         String owner = plot.getOwnerName();
         String world = plot.getWorld();
 
-        // --- Header Info ---
         List<String> headerLore = new ArrayList<>();
+        headerLore.add(plot.isServerZone()
+                ? tr(player, "plot_status_kind_server", null, "&bServer / spawn plot")
+                : tr(player, "plot_status_kind_personal", null, "&aPersonal plot"));
         headerLore.add(tr(player,
                 "plot_status_owner_line", "plot_status_header_owner",
                 "&7Owner: &f{OWNER}",
-                Map.of("OWNER", owner)
+                Map.of("OWNER", owner == null || owner.isBlank() ? "—" : owner)
         ));
         headerLore.add(tr(player,
                 "plot_status_world_line", "plot_status_header_world",
                 "&7World: &f{WORLD}",
-                Map.of("WORLD", world)
+                Map.of("WORLD", world == null ? "—" : world)
         ));
-        headerLore.add("");
         headerLore.add(tr(player,
                 "plot_status_level_line", "plot_status_header_level",
                 "&7Plot Level: &b{LEVEL}&7 / &f{MAX}",
                 Map.of("LEVEL", String.valueOf(level), "MAX", String.valueOf(maxLevel))
         ));
+        if (plot.getPlotName() != null && !plot.getPlotName().isBlank()) {
+            headerLore.add(tr(player, "plot_status_name_line", null, "&7Name: &f{NAME}",
+                    Map.of("NAME", plot.getPlotName())));
+        }
         if (plot.isServerZone()) {
-            headerLore.add("");
             headerLore.add(tr(player, "plot_status_server_zone_banner", null,
                     "&bServer Zone &7— managed by staff / Steward."));
         }
 
-        String headerTitle = tr(player, "plot_status_header_title", null, "&6Plot Information");
+        String headerTitle = tr(player, "plot_status_header_title", "plot_status_button_title", "&b✦ Claim Status");
         inv.setItem(4, GUIManager.createItem(Material.NETHER_STAR, headerTitle, colorList(headerLore)));
 
-        // --- Protections & Risks ---
         String protTitle = tr(player, "plot_status_protection_title", null, "&cProtections & Risks");
-        inv.setItem(20, GUIManager.createItem(Material.SHIELD, protTitle, buildProtectionLore(player, plot)));
+        inv.setItem(11, GUIManager.createItem(Material.SHIELD, protTitle, buildProtectionLore(player, plot)));
 
-        // --- Blessings ---
         List<String> buffsLore = new ArrayList<>();
         buffsLore.add(tr(player, "plot_status_blessings_header_line", "plot_status_blessings_header", "&7Active Blessings:"));
         buffsLore.add("");
-
         List<String> buffs = buildBuffList(player, level);
         if (buffs.isEmpty()) {
             buffsLore.add(tr(player, "plot_status_blessings_none_line", "plot_status_blessings_none", "&8- None unlocked yet."));
@@ -108,17 +128,12 @@ public class PlotStatusGUI {
             buffsLore.add(tr(player, "plot_status_blessings_footer_line", "plot_status_blessings_footer",
                     "&8Only your highest tier of each blessing is shown."));
         }
-
         String blessingsTitle = tr(player, "plot_status_blessings_title", null, "&dActive Blessings");
-        inv.setItem(22, GUIManager.createItem(Material.ENCHANTED_BOOK, blessingsTitle, colorList(buffsLore)));
+        inv.setItem(12, GUIManager.createItem(Material.ENCHANTED_BOOK, blessingsTitle, colorList(buffsLore)));
 
-        // --- Territory ---
         String territoryTitle = tr(player, "plot_status_territory_title", null, "&aTerritory & Growth");
         String expandName = tr(player, "button_expand", null, "&bExpand");
-
-        // ✅ IMPORTANT: This key needs to exist in MX/AR guis.yml or you'll see "Aegis Menu" in English.
-        String menuName = tr(player, "plot_status_menu_name", null, "&bAegis Menu");
-
+        String menuName = tr(player, "plot_status_menu_name", "menu_title", "&bAegis Menu");
         List<String> territoryLore = new ArrayList<>();
         territoryLore.add(tr(player, "plot_status_territory_rules_line", "plot_status_territory_rules", "&7Territory Rules:"));
         territoryLore.add(tr(player,
@@ -126,34 +141,22 @@ public class PlotStatusGUI {
                 "&b{MENU} &7→ &b{EXPAND}",
                 Map.of("MENU", menuName, "EXPAND", expandName)
         ));
+        inv.setItem(13, GUIManager.createItem(Material.GRASS_BLOCK, territoryTitle, colorList(territoryLore)));
 
-        inv.setItem(24, GUIManager.createItem(Material.GRASS_BLOCK, territoryTitle, colorList(territoryLore)));
-
-        // --- Domain Registry (Claim Blocks) ---
-        inv.setItem(26, GUIManager.createItem(
+        inv.setItem(14, GUIManager.createItem(
                 Material.PAPER,
-                tr(player, "ledger_title", null, "&6📜 Domain Registry"),
+                tr(player, "ledger_title", null, "&6ClaimBlocks"),
                 buildLedgerLore(player, plot)
         ));
-
-        if (plugin.getConfig().getBoolean("upkeep.enabled", false)
-                || plugin.getConfig().getBoolean("economy.upkeep.enabled", false)) {
-            double cost = plugin.getConfig().getDouble("upkeep.cost_per_plot",
-                    plugin.getConfig().getDouble("economy.upkeep.cost", 0.0D));
-            inv.setItem(30, GUIManager.createItem(Material.GOLD_INGOT,
-                    tr(player, "plot_status_upkeep_name", null, "&6Upkeep"),
-                    colorList(List.of(
-                            tr(player, "plot_status_upkeep_cost", null, "&7Cost: &6{COST}",
-                                    Map.of("COST", plugin.eco().format(cost, com.aegisguard.economy.CurrencyType.VAULT))),
-                            tr(player, "plot_status_upkeep_paid", null, "&7Last paid: &f{TIME}",
-                                    Map.of("TIME", Long.toString(plot.getLastUpkeepPayment()))),
-                            "&eClick to pay early."
-                    ))));
-        }
+        inv.setItem(15, GUIManager.createItem(
+                Material.PLAYER_HEAD,
+                tr(player, "plot_status_access_title", null, "&eAccess Snapshot"),
+                buildAccessLore(player, plot)
+        ));
 
         boolean canOwn = plot.isOwner(player.getUniqueId());
         boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
-        inv.setItem(38, GUIManager.createItem(
+        inv.setItem(20, GUIManager.createItem(
                 canOwn && mergeEnabled ? Material.SLIME_BALL : Material.GRAY_DYE,
                 tr(player, "button_claim_merge", null, "&aMerge Claims"),
                 colorList(plugin.gui().trList(player, canOwn && mergeEnabled
@@ -162,7 +165,7 @@ public class PlotStatusGUI {
                                 ? List.of("&7Combine adjacent owned claims.")
                                 : List.of("&7Owners can merge aligned claims", "&7when merging is enabled.")))
         ));
-        inv.setItem(40, GUIManager.createItem(
+        inv.setItem(21, GUIManager.createItem(
                 canOwn ? Material.WRITABLE_BOOK : Material.GRAY_DYE,
                 tr(player, "button_transfer", null, "&eTransfer Ownership"),
                 colorList(plugin.gui().trList(player, canOwn ? "transfer_button_lore" : "transfer_button_locked_lore",
@@ -171,18 +174,38 @@ public class PlotStatusGUI {
                                 "&7or confirm from chat after targeting.")
                                 : List.of("&cOnly the owner can transfer this plot.")))
         ));
-        inv.setItem(42, GUIManager.createItem(
+        inv.setItem(22, GUIManager.createItem(
                 Material.GOLD_INGOT,
                 tr(player, "button_giftblocks", null, "&aGift ClaimBlocks"),
                 colorList(plugin.gui().trList(player, "giftblocks_button_lore",
                         List.of("&7Open the ClaimBlocks gift menu.")))
         ));
 
-        // --- Back ---
+        if (plugin.getConfig().getBoolean("upkeep.enabled", false)
+                || plugin.getConfig().getBoolean("economy.upkeep.enabled", false)) {
+            double cost = plugin.getConfig().getDouble("upkeep.cost_per_plot",
+                    plugin.getConfig().getDouble("economy.upkeep.cost", 0.0D));
+            inv.setItem(23, GUIManager.createItem(Material.GOLD_NUGGET,
+                    tr(player, "plot_status_upkeep_name", null, "&6Upkeep"),
+                    colorList(List.of(
+                            tr(player, "plot_status_upkeep_cost", null, "&7Cost: &6{COST}",
+                                    Map.of("COST", plugin.eco().format(cost, com.aegisguard.economy.CurrencyType.VAULT))),
+                            tr(player, "plot_status_upkeep_paid", null, "&7Last paid: &f{TIME}",
+                                    Map.of("TIME", Long.toString(plot.getLastUpkeepPayment()))),
+                            tr(player, "plot_status_upkeep_click", null, "&eClick to pay early.")
+                    ))));
+        } else {
+            addSectionFrame(player, inv, Material.ORANGE_STAINED_GLASS_PANE,
+                    "plot_status_section_actions_name", "&6Owner Actions",
+                    "plot_status_section_actions_lore",
+                    List.of("&7Merge, transfer, gift ClaimBlocks,", "&7or pay upkeep early."),
+                    23);
+        }
+
         String backName = tr(player, "button_back", null, "&fBack");
         List<String> backLore = plugin.gui().trList(player, "back_lore", List.of("&7Return to the main menu."));
-        inv.setItem(49, GUIManager.createItem(Material.ARROW, backName, colorList(backLore)));
-        inv.setItem(50, GUIManager.createItem(
+        inv.setItem(48, GUIManager.createItem(Material.ARROW, backName, colorList(backLore)));
+        inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
                 tr(player, "button_exit", null, "&cClose"),
                 colorList(plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu.")))
@@ -196,7 +219,7 @@ public class PlotStatusGUI {
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
 
-        if (e.getSlot() == 49) {
+        if (e.getSlot() == 48) {
             GUIManager.playClick(player);
             if (holder.getReturnWalkthroughPage() >= 0) {
                 plugin.gui().walkthrough().open(player, holder.getReturnWalkthroughPage());
@@ -206,12 +229,12 @@ public class PlotStatusGUI {
             return;
         }
 
-        if (e.getSlot() == 50) {
+        if (e.getSlot() == 49) {
             try { plugin.effects().playMenuClose(player); } catch (Throwable ignored) {}
             player.closeInventory();
             return;
         }
-        if (e.getSlot() == 38) {
+        if (e.getSlot() == 20) {
             if (holder.getPlot().isOwner(player.getUniqueId())
                     && plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
                 plugin.gui().claimMerge().open(player);
@@ -221,7 +244,7 @@ public class PlotStatusGUI {
             }
             return;
         }
-        if (e.getSlot() == 40) {
+        if (e.getSlot() == 21) {
             if (holder.getPlot().isOwner(player.getUniqueId())) {
                 sendSystem(player, "transfer_usage", null, "&eUsage: /ag transfer <player>");
                 player.closeInventory();
@@ -231,11 +254,14 @@ public class PlotStatusGUI {
             }
             return;
         }
-        if (e.getSlot() == 42) {
+        if (e.getSlot() == 22) {
             plugin.gui().giftBlocks().open(player);
             return;
         }
-        if (e.getSlot() == 30) {
+        if (e.getSlot() == 23) {
+            boolean upkeepOn = plugin.getConfig().getBoolean("upkeep.enabled", false)
+                    || plugin.getConfig().getBoolean("economy.upkeep.enabled", false);
+            if (!upkeepOn) return;
             if (!plotCanManage(player, holder.getPlot())) {
                 sendSystem(player, "no_perm", null, "&cYou cannot manage this plot.");
                 plugin.effects().playError(player);
@@ -268,6 +294,39 @@ public class PlotStatusGUI {
     // --------------------------------------------------
     // Domain Registry Lore (language aware)
     // --------------------------------------------------
+
+    private List<String> buildAccessLore(Player player, Plot plot) {
+        List<String> lore = new ArrayList<>();
+        int members = plot.getPlayerRoles() == null ? 0 : plot.getPlayerRoles().size();
+        int guests = 0;
+        try {
+            if (plot.getGuestPasses() != null) guests = plot.getGuestPasses().size();
+        } catch (Throwable ignored) {}
+        lore.add(tr(player, "plot_status_members_line", null, "&7Members: &f{COUNT}",
+                Map.of("COUNT", String.valueOf(members))));
+        lore.add(tr(player, "plot_status_guests_line", null, "&7Guest Passes: &f{COUNT}",
+                Map.of("COUNT", String.valueOf(guests))));
+        lore.add(plot.isLockdownActive()
+                ? tr(player, "plot_status_lockdown_on", null, "&cLockdown: &fActive")
+                : tr(player, "plot_status_lockdown_off", null, "&7Lockdown: &fOff"));
+        lore.add("");
+        lore.addAll(plugin.gui().trList(player, "plot_status_access_hint",
+                List.of("&8Open Roles, Guest Passes, or Lockdown", "&8from the main menu to change this.")));
+        return colorList(lore);
+    }
+
+    private void addSectionFrame(Player player, Inventory inv, Material material,
+                                 String titleKey, String titleFallback,
+                                 String loreKey, List<String> loreFallback,
+                                 int... slots) {
+        String title = tr(player, titleKey, null, titleFallback);
+        List<String> lore = colorList(plugin.gui().trList(player, loreKey, loreFallback));
+        for (int slot : slots) {
+            ItemStack marker = GUIManager.createItem(material, title, lore);
+            try { plugin.gui().tagAction(marker, "section_marker"); } catch (Throwable ignored) {}
+            inv.setItem(slot, marker);
+        }
+    }
 
     private List<String> buildLedgerLore(Player player, Plot plot) {
         List<String> lore = new ArrayList<>();

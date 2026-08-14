@@ -3609,3 +3609,74 @@ codex_advanced_arena_off_lore:
   - '&7Arena est un module de donjon optionnel.'
   - '&7Il reste éteint tant que le serveur'
   - '&7n''active pas arena.enabled dans config.yml.'
+
+# --- 1.3.0 claim status menu polish ---
+plot_status_gui_title: '&b✦ Statut de la claim'
+plot_status_header_title: '&b✦ Statut de la claim'
+plot_status_lore:
+  - '&7Aperçu de cette claim : propriétaire, protections,'
+  - '&7bénédictions, croissance, ClaimBlocks et accès.'
+  - ' '
+  - '&eCliquez pour ouvrir.'
+plot_status_button_lore:
+  - '&7Aperçu de cette claim : propriétaire, protections,'
+  - '&7bénédictions, croissance, ClaimBlocks et accès.'
+  - ' '
+  - '&eCliquez pour ouvrir.'
+plot_status_kind_personal: '&aClaim personnelle'
+plot_status_kind_server: '&bClaim serveur / spawn'
+plot_status_owner_line: '&7Propriétaire : &f{OWNER}'
+plot_status_world_line: '&7Monde : &f{WORLD}'
+plot_status_level_line: '&7Niveau de claim : &b{LEVEL}&7 / &f{MAX}'
+plot_status_name_line: '&7Nom : &f{NAME}'
+plot_status_protection_title: '&cProtections et risques'
+plot_status_blessings_title: '&dBénédictions actives'
+plot_status_blessings_header_line: '&7Bénédictions actives :'
+plot_status_blessings_none_line: '&8- Aucune débloquée pour le moment.'
+plot_status_blessings_footer_line: '&8Seul le palier le plus élevé de chaque bénédiction est affiché.'
+plot_status_territory_title: '&aTerritoire et croissance'
+plot_status_menu_name: '&3✦ Menu AegisGuard'
+plot_status_territory_rules_line: '&7Règles du territoire :'
+plot_status_territory_hint_line: '&b{MENU} &7→ &b{EXPAND}'
+plot_status_access_title: '&eAperçu des accès'
+plot_status_members_line: '&7Membres : &f{COUNT}'
+plot_status_guests_line: '&7Passes invités : &f{COUNT}'
+plot_status_lockdown_on: '&cLockdown : &fActif'
+plot_status_lockdown_off: '&7Lockdown : &fDésactivé'
+plot_status_access_hint:
+  - '&8Ouvrez Rôles, Passes invités ou Lockdown'
+  - '&8depuis le menu principal pour modifier ceci.'
+plot_status_upkeep_click: '&eCliquez pour payer en avance.'
+plot_status_section_overview_name: '&bAperçu'
+plot_status_section_overview_lore:
+  - '&7Un aperçu de cette claim : protections,'
+  - '&7bénédictions, croissance et ClaimBlocks.'
+plot_status_section_actions_name: '&6Actions du propriétaire'
+plot_status_section_actions_lore:
+  - '&7Fusionner, transférer, offrir des ClaimBlocks'
+  - '&7ou payer l''entretien en avance.'
+plot_status_section_combat: '&7Combat et hostiles :'
+plot_status_label_pvp: PvP
+plot_status_label_hostile_mobs: Mobs hostiles
+plot_status_label_animals_pets: Animaux et familiers
+plot_status_section_environment: '&7Environnement et accès :'
+plot_status_label_safe_zone: Zone sûre
+plot_status_state_enabled: '&aActivé'
+plot_status_state_disabled: '&7Désactivé'
+plot_status_label_entry_gate: 'Barrière d''entrée'
+plot_status_state_open: '&aOuverte'
+plot_status_state_closed: '&cFermée'
+plot_status_label_containers: Conteneurs
+plot_status_label_redstone_doors: Redstone et portes
+plot_status_label_vehicles: Véhicules
+plot_status_section_perks: '&7Avantages et services :'
+plot_status_label_shop_interact: Interaction boutique
+plot_status_state_active: '&aActivé'
+plot_status_state_inactive: '&7Inactif'
+plot_status_label_flight: Vol dans cette claim
+plot_status_state_protected: '&aProtégé'
+plot_status_state_vulnerable: '&cVulnérable'
+plot_status_line_bullet: '&f- {LABEL}: {STATE}'
+plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effet &f{TIER}&7)'
+plot_status_blessing_member_slots_format: '&a✦ &fEmplacements de membres de confiance : &b+{AMOUNT}'
+plot_status_blessing_generic_format: '&a✦ &f{TEXT}'

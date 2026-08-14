@@ -92,7 +92,11 @@ class LanguageParityTest {
                 "staff_territory_section_name", "staff_recovery_section_name",
                 "snapshot_create_here_name", "snapshot_create_server_zones_name",
                 "codex_root_whats_new_name", "codex_travel_safe_name",
-                "codex_security_guest_name", "codex_menus_language_name");
+                "codex_security_guest_name", "codex_menus_language_name",
+                "plot_status_gui_title", "plot_status_header_title",
+                "plot_status_kind_personal", "plot_status_kind_server",
+                "plot_status_access_title", "plot_status_upkeep_click",
+                "plot_status_section_overview_name", "plot_status_section_actions_name");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);

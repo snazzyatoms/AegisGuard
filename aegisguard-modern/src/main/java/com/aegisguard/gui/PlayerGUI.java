@@ -191,10 +191,13 @@ public class PlayerGUI {
         // Plot Status (Slot 15) — near territory controls; also hosts merge/transfer entry points
         inv.setItem(15, GUIManager.createItem(
                 currentPlot != null ? Material.BOOK : Material.GRAY_DYE,
-                t(player, "button_plot_status", "&bPlot Status"),
+                t(player, "button_plot_status", "&b📊 Claim Status"),
                 tl(player, currentPlot != null ? "plot_status_button_lore" : "plot_status_button_locked_lore",
                         currentPlot != null
-                                ? List.of("&7View plot info, merge claims,", "&7transfer ownership, or gift blocks.")
+                                ? List.of("&7A snapshot of this plot: owner, protections,",
+                                "&7blessings, growth, ClaimBlocks, and access.",
+                                " ",
+                                "&eClick to open.")
                                 : List.of("&cStand inside a plot to view status."))
         ));
 

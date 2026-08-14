@@ -3712,3 +3712,74 @@ codex_advanced_arena_off_lore:
   - '&7Arena es un módulo de mazmorra opcional.'
   - '&7Permanece apagado hasta que el servidor'
   - '&7active arena.enabled en config.yml.'
+
+# --- 1.3.0 claim status menu polish ---
+plot_status_gui_title: '&b✦ Estado de Parcela'
+plot_status_header_title: '&b✦ Estado de Parcela'
+plot_status_lore:
+  - '&7Resumen de esta parcela: dueño, protecciones,'
+  - '&7bendiciones, crecimiento, ClaimBlocks y acceso.'
+  - ' '
+  - '&eClic para abrir.'
+plot_status_button_lore:
+  - '&7Resumen de esta parcela: dueño, protecciones,'
+  - '&7bendiciones, crecimiento, ClaimBlocks y acceso.'
+  - ' '
+  - '&eClic para abrir.'
+plot_status_kind_personal: '&aParcela personal'
+plot_status_kind_server: '&bParcela de servidor / spawn'
+plot_status_owner_line: '&7Dueño: &f{OWNER}'
+plot_status_world_line: '&7Mundo: &f{WORLD}'
+plot_status_level_line: '&7Nivel de parcela: &b{LEVEL}&7 / &f{MAX}'
+plot_status_name_line: '&7Nombre: &f{NAME}'
+plot_status_protection_title: '&cProtecciones y riesgos'
+plot_status_blessings_title: '&dBendiciones activas'
+plot_status_blessings_header_line: '&7Bendiciones activas:'
+plot_status_blessings_none_line: '&8- Aún no hay ninguna.'
+plot_status_blessings_footer_line: '&8Solo se muestra el nivel más alto de cada bendición.'
+plot_status_territory_title: '&aTerritorio y crecimiento'
+plot_status_menu_name: '&3✦ Menú AegisGuard'
+plot_status_territory_rules_line: '&7Reglas de territorio:'
+plot_status_territory_hint_line: '&b{MENU} &7→ &b{EXPAND}'
+plot_status_access_title: '&eResumen de acceso'
+plot_status_members_line: '&7Miembros: &f{COUNT}'
+plot_status_guests_line: '&7Pases de invitado: &f{COUNT}'
+plot_status_lockdown_on: '&cLockdown: &fActivo'
+plot_status_lockdown_off: '&7Lockdown: &fApagado'
+plot_status_access_hint:
+  - '&8Abre Roles, Pases de invitado o Lockdown'
+  - '&8desde el menú principal para cambiarlo.'
+plot_status_upkeep_click: '&eClic para pagar anticipado.'
+plot_status_section_overview_name: '&bResumen'
+plot_status_section_overview_lore:
+  - '&7Un vistazo de esta parcela: protecciones,'
+  - '&7bendiciones, crecimiento y ClaimBlocks.'
+plot_status_section_actions_name: '&6Acciones del dueño'
+plot_status_section_actions_lore:
+  - '&7Fusiona, transfiere, regala ClaimBlocks'
+  - '&7o paga el mantenimiento anticipado.'
+plot_status_section_combat: '&7Combate y hostiles:'
+plot_status_label_pvp: PvP
+plot_status_label_hostile_mobs: Mobs hostiles
+plot_status_label_animals_pets: Animales y mascotas
+plot_status_section_environment: '&7Entorno y acceso:'
+plot_status_label_safe_zone: Zona segura
+plot_status_state_enabled: '&aActivado'
+plot_status_state_disabled: '&7Desactivado'
+plot_status_label_entry_gate: Puerta de entrada
+plot_status_state_open: '&aAbierta'
+plot_status_state_closed: '&cCerrada'
+plot_status_label_containers: Contenedores
+plot_status_label_redstone_doors: Redstone y puertas
+plot_status_label_vehicles: Vehículos
+plot_status_section_perks: '&7Ventajas y servicios:'
+plot_status_label_shop_interact: Interactuar con tiendas
+plot_status_state_active: '&aActivado'
+plot_status_state_inactive: '&7Inactivo'
+plot_status_label_flight: Vuelo dentro de esta parcela
+plot_status_state_protected: '&aProtegido'
+plot_status_state_vulnerable: '&cVulnerable'
+plot_status_line_bullet: '&f- {LABEL}: {STATE}'
+plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Efecto &f{TIER}&7)'
+plot_status_blessing_member_slots_format: '&a✦ &fEspacios de miembros de confianza: &b+{AMOUNT}'
+plot_status_blessing_generic_format: '&a✦ &f{TEXT}'

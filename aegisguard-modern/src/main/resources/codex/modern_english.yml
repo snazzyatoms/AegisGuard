@@ -4416,3 +4416,74 @@ codex_advanced_arena_off_lore:
   - '&7Arena is an optional dungeon module.'
   - '&7It stays off until the server enables'
   - '&7arena.enabled in config.yml.'
+
+# --- 1.3.0 claim status menu polish ---
+plot_status_gui_title: '&b✦ Claim Status'
+plot_status_header_title: '&b✦ Claim Status'
+plot_status_lore:
+  - '&7A snapshot of this plot: owner, protections,'
+  - '&7blessings, growth, ClaimBlocks, and access.'
+  - ' '
+  - '&eClick to open.'
+plot_status_button_lore:
+  - '&7A snapshot of this plot: owner, protections,'
+  - '&7blessings, growth, ClaimBlocks, and access.'
+  - ' '
+  - '&eClick to open.'
+plot_status_kind_personal: '&aPersonal plot'
+plot_status_kind_server: '&bServer / spawn plot'
+plot_status_owner_line: '&7Owner: &f{OWNER}'
+plot_status_world_line: '&7World: &f{WORLD}'
+plot_status_level_line: '&7Plot Level: &b{LEVEL}&7 / &f{MAX}'
+plot_status_name_line: '&7Name: &f{NAME}'
+plot_status_protection_title: '&cProtections & Risks'
+plot_status_blessings_title: '&dActive Blessings'
+plot_status_blessings_header_line: '&7Active Blessings:'
+plot_status_blessings_none_line: '&8- None unlocked yet.'
+plot_status_blessings_footer_line: '&8Only your highest tier of each blessing is shown.'
+plot_status_territory_title: '&aTerritory & Growth'
+plot_status_menu_name: '&3✦ AegisGuard Menu'
+plot_status_territory_rules_line: '&7Territory Rules:'
+plot_status_territory_hint_line: '&b{MENU} &7→ &b{EXPAND}'
+plot_status_access_title: '&eAccess Snapshot'
+plot_status_members_line: '&7Members: &f{COUNT}'
+plot_status_guests_line: '&7Guest Passes: &f{COUNT}'
+plot_status_lockdown_on: '&cLockdown: &fActive'
+plot_status_lockdown_off: '&7Lockdown: &fOff'
+plot_status_access_hint:
+  - '&8Open Roles, Guest Passes, or Lockdown'
+  - '&8from the main menu to change this.'
+plot_status_upkeep_click: '&eClick to pay early.'
+plot_status_section_overview_name: '&bOverview'
+plot_status_section_overview_lore:
+  - '&7A snapshot of this plot: protections,'
+  - '&7blessings, growth, and ClaimBlocks.'
+plot_status_section_actions_name: '&6Owner Actions'
+plot_status_section_actions_lore:
+  - '&7Merge, transfer, gift ClaimBlocks,'
+  - '&7or pay upkeep early.'
+plot_status_section_combat: '&7Combat & Hostiles:'
+plot_status_label_pvp: PvP
+plot_status_label_hostile_mobs: Hostile mobs
+plot_status_label_animals_pets: 'Animals & pets'
+plot_status_section_environment: '&7Environment & Access:'
+plot_status_label_safe_zone: Safe zone
+plot_status_state_enabled: '&aEnabled'
+plot_status_state_disabled: '&7Disabled'
+plot_status_label_entry_gate: Entry gate
+plot_status_state_open: '&aOpen'
+plot_status_state_closed: '&cClosed'
+plot_status_label_containers: Containers
+plot_status_label_redstone_doors: 'Redstone & doors'
+plot_status_label_vehicles: Vehicles
+plot_status_section_perks: '&7Perks & Services:'
+plot_status_label_shop_interact: Market shop interact
+plot_status_state_active: '&aEnabled'
+plot_status_state_inactive: '&7Inactive'
+plot_status_label_flight: Flight inside this plot
+plot_status_state_protected: '&aProtected'
+plot_status_state_vulnerable: '&cVulnerable'
+plot_status_line_bullet: '&f- {LABEL}: {STATE}'
+plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effect &f{TIER}&7)'
+plot_status_blessing_member_slots_format: '&a✦ &fTrusted member slots: &b+{AMOUNT}'
+plot_status_blessing_generic_format: '&a✦ &f{TEXT}'

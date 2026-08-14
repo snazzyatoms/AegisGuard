@@ -87,6 +87,22 @@ class MenuSnapshotGuidebookContractTest {
     }
 
     @Test
+    void claimStatusUsesSectionBandsAndLocalizedTitle() throws Exception {
+        String status = Files.readString(JAVA.resolve("gui/PlotStatusGUI.java"));
+        assertTrue(status.contains("plot_status_gui_title"));
+        assertTrue(status.contains("addSectionFrame"));
+        assertTrue(status.contains("plot_status_access_title"));
+        assertTrue(status.contains("getSlot() == 48"));
+        assertTrue(status.contains("getSlot() == 20"));
+        assertTrue(status.contains("getSlot() == 21"));
+        assertTrue(status.contains("getSlot() == 22"));
+        assertTrue(status.contains("getSlot() == 23"));
+        assertFalse(status.contains("getSlot() == 38"));
+        assertFalse(status.contains("getSlot() == 40"));
+        assertFalse(status.contains("getSlot() == 42"));
+    }
+
+    @Test
     void guidebookDocumentsNewFeatures() throws Exception {
         String info = Files.readString(JAVA.resolve("gui/InfoGUI.java"));
         for (String key : new String[]{

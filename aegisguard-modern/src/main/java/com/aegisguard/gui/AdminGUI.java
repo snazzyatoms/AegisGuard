@@ -92,7 +92,11 @@ public class AdminGUI {
         Inventory inv = Bukkit.createInventory(new AdminHolder(), SIZE, title);
 
         ItemStack filler = GUIManager.getFiller();
-        for (int i = 0; i < SIZE; i++) inv.setItem(i, filler);
+        int[] borderSlots = {
+                0, 1, 2, 3, 5, 6, 7, 8,
+                45, 46, 47, 50, 51, 52, 53
+        };
+        for (int slot : borderSlots) inv.setItem(slot, filler);
 
         inv.setItem(4, GUIManager.createItem(
                 Material.ENCHANTED_GOLDEN_APPLE,
@@ -108,38 +112,36 @@ public class AdminGUI {
                 ))
         ));
 
-        inv.setItem(9, GUIManager.createItem(
-                Material.REPEATER,
-                plugin.gui().tr(player, "staff_policy_section_name", "&eOperational Policy"),
-                plugin.gui().trList(player, "staff_policy_section_lore", List.of(
+        addSectionFrame(player, inv, Material.YELLOW_STAINED_GLASS_PANE,
+                "staff_policy_section_name", "&eOperational Policy",
+                "staff_policy_section_lore",
+                List.of(
                         "&7This row: server-wide operating policy.",
                         "&7Toggle only during maintenance windows",
                         "&7when you understand the side effects."
-                ))
-        ));
-        inv.setItem(SLOT_SECTION_TERRITORY, GUIManager.createItem(
-                Material.GRASS_BLOCK,
-                plugin.gui().tr(player, "staff_territory_section_name", "&aTerritory"),
-                plugin.gui().trList(player, "staff_territory_section_lore", List.of(
+                ),
+                9, 17);
+        addSectionFrame(player, inv, Material.LIME_STAINED_GLASS_PANE,
+                "staff_territory_section_name", "&aTerritory",
+                "staff_territory_section_lore",
+                List.of(
                         "&7Convert plots, browse claims,",
                         "&7review expansions, and set spawn."
-                ))
-        ));
-        inv.setItem(SLOT_SECTION_RECOVERY, GUIManager.createItem(
-                Material.ENDER_CHEST,
-                plugin.gui().tr(player, "staff_recovery_section_name", "&dRecovery"),
-                plugin.gui().trList(player, "staff_recovery_section_lore", List.of(
+                ),
+                18, 19, 20, 21, 22, 23, 24, 25, 26);
+        addSectionFrame(player, inv, Material.MAGENTA_STAINED_GLASS_PANE,
+                "staff_recovery_section_name", "&dRecovery",
+                "staff_recovery_section_lore",
+                List.of(
                         "&7Claim-data snapshots, audit, doctor,",
                         "&7and migration. Snapshots do not save builds."
-                ))
-        ));
-        inv.setItem(SLOT_SECTION_MODULES, GUIManager.createItem(
-                Material.COMPARATOR,
-                plugin.gui().tr(player, "staff_toolbelt_section_name", "&bGuardian Toolbelt"),
-                plugin.gui().trList(player, "staff_modules_section_lore", List.of(
-                        "&7Routes, Arena, language refresh, and reload."
-                ))
-        ));
+                ),
+                27, 28, 29, 30, 31, 32, 33, 34, 35);
+        addSectionFrame(player, inv, Material.CYAN_STAINED_GLASS_PANE,
+                "staff_toolbelt_section_name", "&bGuardian Toolbelt",
+                "staff_modules_section_lore",
+                List.of("&7Routes, Arena, language refresh, and reload."),
+                36, 37, 38, 39, 40, 41, 42, 43, 44);
 
         // --- SETTINGS TOGGLES ---
         addToggle(player, inv, SLOT_TOGGLE_AUTO_REMOVE,
@@ -764,7 +766,7 @@ public class AdminGUI {
                 Map.of("NAME", name, "STATE", status)
         );
 
-        Material icon = val ? mat : Material.GRAY_DYE;
+        Material icon = mat;
 
         List<String> lore = plugin.gui().trList(
                 p,
@@ -919,6 +921,19 @@ public class AdminGUI {
         });
     }
 
+    private void addSectionFrame(Player player, Inventory inv, Material material,
+                                 String titleKey, String titleFallback,
+                                 String loreKey, List<String> loreFallback,
+                                 int... slots) {
+        String title = plugin.gui().tr(player, titleKey, titleFallback);
+        List<String> lore = plugin.gui().trList(player, loreKey, loreFallback);
+        for (int slot : slots) {
+            ItemStack marker = GUIManager.createItem(material, title, lore);
+            tagAction(marker, "section_marker");
+            inv.setItem(slot, marker);
+        }
+    }
+
     private void addSnapshotScheduleButton(Player p, Inventory inv) {
         boolean enabled = plugin.getConfig().getBoolean("snapshots.scheduled.enabled", false)
                 && plugin.getConfig().getBoolean("snapshots.enabled", true);
@@ -943,7 +958,7 @@ public class AdminGUI {
                         "&7Does not copy world builds.",
                         " ",
                         "&eClick to cycle Off / 15m / 1h / 6h / 24h."));
-        ItemStack it = GUIManager.createItem(enabled ? Material.CLOCK : Material.GRAY_DYE, display, lore);
+        ItemStack it = GUIManager.createItem(Material.CLOCK, display, lore);
         tagAction(it, "cycle_snapshot_schedule");
         inv.setItem(SLOT_TOOL_SNAPSHOT_SCHEDULE, it);
     }

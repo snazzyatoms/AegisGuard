@@ -173,73 +173,75 @@ public class LocalMarketGUI {
                 ))
         ));
 
-        boolean canCreateStall = tradeStallsEnabled && (canManage || plugin.getConfig().getBoolean("market_stalls.allow_zone_renters", true));
-        List<String> createLore;
-        Material createMat;
-        if (!tradeStallsEnabled) {
-            createMat = Material.GRAY_DYE;
-            createLore = trList(player, "local_market_create_stall_disabled_lore", List.of(
-                    "&7Built-in TradeStalls are turned off here.",
-                    "&7Use a listed third-party shop plugin,",
-                    "&7or ask staff to set integration.mode to COEXIST."
-            ));
-        } else if (!canCreateStall) {
-            createMat = Material.GRAY_DYE;
-            createLore = trList(player, "local_market_create_stall_locked_lore", List.of(
-                    "&7Owners and zone renters can create a stall:",
-                    "&7place a chest, then an adjacent sign",
-                    "&7with &e[stall]&7 or &e[shop]&7 on line 1."
-            ));
-        } else {
-            createMat = Material.OAK_SIGN;
-            createLore = trList(player, "local_market_create_stall_lore", List.of(
-                    "&7Place a chest or barrel, then an",
-                    "&7adjacent sign with &e[stall]&7 or &e[shop]&7.",
-                    " ",
-                    "&eClick to start a bind: the next",
-                    "&eright-click on a chest or sign",
-                    "&eregisters this TradeStall."
+        if (tradeStallsEnabled) {
+            boolean canCreateStall = canManage || plugin.getConfig().getBoolean("market_stalls.allow_zone_renters", true);
+            List<String> createLore;
+            Material createMat;
+            if (!canCreateStall) {
+                createMat = Material.GRAY_DYE;
+                createLore = trList(player, "local_market_create_stall_locked_lore", List.of(
+                        "&7Owners and zone renters can create a stall:",
+                        "&7place a chest, then an adjacent sign",
+                        "&7with &e[stall]&7 or &e[shop]&7 on line 1."
+                ));
+            } else {
+                createMat = Material.OAK_SIGN;
+                createLore = trList(player, "local_market_create_stall_lore", List.of(
+                        "&7Place a chest or barrel, then an",
+                        "&7adjacent sign with &e[stall]&7 or &e[shop]&7.",
+                        " ",
+                        "&eClick to start a bind: the next",
+                        "&eright-click on a chest or sign",
+                        "&eregisters this TradeStall."
+                ));
+            }
+            inv.setItem(SLOT_CREATE, GUIManager.createItem(
+                    createMat,
+                    tr(player, "local_market_create_stall_name", "&eCreate TradeStall"),
+                    createLore
             ));
         }
-        inv.setItem(SLOT_CREATE, GUIManager.createItem(
-                createMat,
-                tr(player, "local_market_create_stall_name", "&eCreate TradeStall"),
-                createLore
-        ));
 
-        inv.setItem(SLOT_MY_RENTALS, GUIManager.createItem(
-                Material.GOLDEN_HOE,
-                tr(player, "local_market_my_rentals_name", "&6My Rentals"),
-                trList(player, "local_market_my_rentals_lore", List.of(
-                        "&7Manage your active full-plot and",
-                        "&7zone rentals from one place."
-                ))
-        ));
-        inv.setItem(SLOT_MY_TENANTS, GUIManager.createItem(
-                Material.PLAYER_HEAD,
-                tr(player, "local_market_my_tenants_name", "&bMy Tenants"),
-                trList(player, "local_market_my_tenants_lore", List.of(
-                        "&7Review renters and rental zones",
-                        "&7on plots you manage."
-                ))
-        ));
-        boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
-        inv.setItem(SLOT_MERGE, GUIManager.createItem(
-                mergeEnabled && canManage ? Material.SLIME_BALL : Material.GRAY_DYE,
-                tr(player, "button_claim_merge", "&aMerge Claims"),
-                trList(player, mergeEnabled ? "claim_merge_button_lore" : "claim_merge_button_disabled_lore",
-                        mergeEnabled
-                                ? List.of("&7Combine adjacent owned claims.")
-                                : List.of("&7Claim merging is disabled."))
-        ));
-        inv.setItem(SLOT_GIFT, GUIManager.createItem(
-                Material.GOLD_INGOT,
-                tr(player, "button_giftblocks", "&aGift ClaimBlocks"),
-                trList(player, "giftblocks_button_lore", List.of(
-                        "&7Gift available ClaimBlocks",
-                        "&7to a nearby player."
-                ))
-        ));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.RENTALS)) {
+            inv.setItem(SLOT_MY_RENTALS, GUIManager.createItem(
+                    Material.GOLDEN_HOE,
+                    tr(player, "local_market_my_rentals_name", "&6My Rentals"),
+                    trList(player, "local_market_my_rentals_lore", List.of(
+                            "&7Manage your active full-plot and",
+                            "&7zone rentals from one place."
+                    ))
+            ));
+            inv.setItem(SLOT_MY_TENANTS, GUIManager.createItem(
+                    Material.PLAYER_HEAD,
+                    tr(player, "local_market_my_tenants_name", "&bMy Tenants"),
+                    trList(player, "local_market_my_tenants_lore", List.of(
+                            "&7Review renters and rental zones",
+                            "&7on plots you manage."
+                    ))
+            ));
+        }
+        boolean mergeEnabled = plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_MERGE);
+        if (mergeEnabled) {
+            inv.setItem(SLOT_MERGE, GUIManager.createItem(
+                    canManage ? Material.SLIME_BALL : Material.GRAY_DYE,
+                    tr(player, "button_claim_merge", "&aMerge Claims"),
+                    trList(player, canManage ? "claim_merge_button_lore" : "claim_merge_button_locked_lore",
+                            canManage
+                                    ? List.of("&7Combine adjacent owned claims.")
+                                    : List.of("&cOnly managers can merge this plot."))
+            ));
+        }
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
+                && plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true)) {
+            inv.setItem(SLOT_GIFT, GUIManager.createItem(
+                    Material.GOLD_INGOT,
+                    tr(player, "button_giftblocks", "&aGift ClaimBlocks"),
+                    trList(player, "giftblocks_button_lore", List.of(
+                            "&7Gift available ClaimBlocks",
+                            "&7to a nearby player."
+                    ))
+            ));
+        }
 
         List<String> stallLore;
         Material stallMat;
@@ -435,17 +437,19 @@ public class LocalMarketGUI {
         }
 
         if (slot == SLOT_MY_RENTALS) {
+            if (!plugin.modules().on(com.aegisguard.config.Modules.Id.RENTALS)) return;
             plugin.gui().myRentals().openFrom(player, 0, MarketNav.LOCAL_MARKET, plot);
             plugin.effects().playMenuFlip(player);
             return;
         }
         if (slot == SLOT_MY_TENANTS) {
+            if (!plugin.modules().on(com.aegisguard.config.Modules.Id.RENTALS)) return;
             plugin.gui().myTenants().openFrom(player, MarketNav.LOCAL_MARKET, plot);
             plugin.effects().playMenuFlip(player);
             return;
         }
         if (slot == SLOT_MERGE) {
-            if (plugin.getConfig().getBoolean("claims.merging.enabled", false) && plot.canManage(player, plugin)) {
+            if (plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_MERGE) && plot.canManage(player, plugin)) {
                 plugin.gui().claimMerge().openFrom(player, MarketNav.LOCAL_MARKET, plot);
             } else {
                 plugin.effects().playError(player);
@@ -454,6 +458,8 @@ public class LocalMarketGUI {
             return;
         }
         if (slot == SLOT_GIFT) {
+            if (!(plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
+                    && plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true))) return;
             plugin.gui().giftBlocks().openFrom(player, MarketNav.LOCAL_MARKET, plot);
             return;
         }

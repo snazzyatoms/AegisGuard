@@ -342,6 +342,10 @@ public class ExpansionRequestManager {
      * REQUEST CREATION
      * ----------------------------- */
     public boolean createRequest(Player requester, Plot plot, int newRadius) {
+        if (!plugin.modules().on(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
+            plugin.msg().send(requester, "module_disabled", java.util.Map.of("MODULE", "Expansions"));
+            return false;
+        }
         if (plot == null || !plot.getOwner().equals(requester.getUniqueId())) {
             plugin.msg().send(requester, "no_perm");
             return false;

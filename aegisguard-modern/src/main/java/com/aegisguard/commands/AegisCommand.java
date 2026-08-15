@@ -219,6 +219,14 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        com.aegisguard.config.Modules.Id gated = com.aegisguard.config.Modules.commandModule(args[0]);
+        if (gated != null && !plugin.modules().on(gated)) {
+            sendKey(p, "module_disabled", "&c{MODULE} is disabled on this server.",
+                    Map.of("MODULE", gated.displayName()));
+            plugin.effects().playError(p);
+            return true;
+        }
+
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "wand" -> {
                 if (SelectionService.playerHasAnyWand(p)) {
@@ -308,7 +316,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "giftblocks" -> handleGiftBlocks(p, args);
 
             case "merge" -> {
-                if (!plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
+                if (!plugin.getConfig().getBoolean("claims.merging.enabled", true)) {
                     sendKey(p, "claim_merge_disabled", "&cClaim merging is disabled on this server.");
                 } else {
                     plugin.gui().claimMerge().open(p);
@@ -2419,7 +2427,13 @@ private void handleUnsell(Player p) {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
-            StringUtil.copyPartialMatches(args[0], Arrays.asList(SUB_COMMANDS), completions);
+            List<String> visible = new ArrayList<>();
+            for (String sub : SUB_COMMANDS) {
+                com.aegisguard.config.Modules.Id gated = com.aegisguard.config.Modules.commandModule(sub);
+                if (gated != null && !plugin.modules().on(gated)) continue;
+                visible.add(sub);
+            }
+            StringUtil.copyPartialMatches(args[0], visible, completions);
             Collections.sort(completions);
             return completions;
         }

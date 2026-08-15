@@ -98,6 +98,7 @@ class StaffAdminContractTest {
                     lang + " staff lore should explain purpose");
             String system = Files.readString(LANG.resolve(lang + "/system.yml"));
             assertTrue(system.contains("admin_help_header:"), lang + " missing admin help");
+            assertTrue(system.contains("admin_help_transition:"), lang + " missing transition help");
             assertTrue(system.contains("admin_restore_confirm_hint:"), lang + " missing restore confirm hint");
             assertTrue(system.contains("admin_expansion_mode_set_queue:"), lang + " missing expansion mode queue feedback");
             assertTrue(system.contains("admin_expansion_mode_set_instant:"), lang + " missing expansion mode instant feedback");

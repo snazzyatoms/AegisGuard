@@ -2,6 +2,7 @@ package com.aegisguard.admin;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.audit.AuditCategory;
+import com.aegisguard.config.ConfigMigrationService;
 import com.aegisguard.data.Plot;
 import com.aegisguard.data.Zone;
 import com.aegisguard.migration.MigrationManager;
@@ -25,6 +26,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.StringUtil;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +43,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "help"
+            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "transition", "upgrade", "v130",
+            "help"
     };
 
     private static final String[] MIGRATE_ACTIONS = {
@@ -73,6 +76,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             }
             if (args.length > 0 && args[0].equalsIgnoreCase("health")) {
                 StaffHealthCheck.report(plugin, sender);
+                return true;
+            }
+            if (args.length > 0 && isTransitionSubcommand(args[0])) {
+                handleTransition(sender);
                 return true;
             }
             sendLocalized(sender, "players_only", "&cError: This command can only be used by players.");
@@ -109,6 +116,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "discover" -> handleAdminDiscover(player, args);
             case "activity" -> handleAdminActivity(player);
             case "audit" -> handleAudit(player);
+            case "transition", "upgrade", "v130" -> handleTransition(player);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -663,7 +671,52 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_rentals", "&e/agadmin rentals <cancel|retry-settlements> ...");
         sendLocalized(player, "admin_help_bypass", "&e/agadmin bypass &8- Toggle personal protection bypass");
         sendLocalized(player, "admin_help_reload", "&e/agadmin reload &8- Reload AegisGuard");
+        sendLocalized(player, "admin_help_transition",
+                "&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade status");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
+    }
+
+    private static boolean isTransitionSubcommand(String sub) {
+        return sub != null && (sub.equalsIgnoreCase("transition")
+                || sub.equalsIgnoreCase("upgrade")
+                || sub.equalsIgnoreCase("v130"));
+    }
+
+    private void handleTransition(CommandSender sender) {
+        int schema = plugin.getConfig().getInt("config_schema", plugin.getConfig().getInt("config-version", 0));
+        int target = ConfigMigrationService.CURRENT_SCHEMA;
+        sendLocalized(sender, "admin_transition_schema",
+                "&7Config schema: &f{CURRENT} &7/ 1.3.0 target &f{TARGET}.",
+                Map.of("CURRENT", String.valueOf(schema), "TARGET", String.valueOf(target)));
+        sendLocalized(sender, "admin_transition_plots",
+                "&7Plots load as-is. Claim records are not rewritten.");
+
+        if (schema >= target) {
+            sendLocalized(sender, "admin_transition_already",
+                    "&aAlready on 1.3.0; nothing to convert.");
+            sendLocalized(sender, "admin_transition_doctor_optional",
+                    "&7Doctor is optional. Use &e/agadmin doctor scan &7only if something looks wrong.");
+            return;
+        }
+
+        plugin.reloadAegisGuard(true);
+        int after = plugin.getConfig().getInt("config_schema", plugin.getConfig().getInt("config-version", 0));
+        sendLocalized(sender, "admin_transition_ran",
+                "&aConfig and language merge re-ran. Schema is now &f{SCHEMA}&a.",
+                Map.of("SCHEMA", String.valueOf(after)));
+
+        ConfigMigrationService migration = plugin.configMigration();
+        File backup = migration == null ? null : migration.backup();
+        File report = migration == null ? null : migration.lastReport();
+        sendLocalized(sender, "admin_transition_backup",
+                "&7Config backup: &f{PATH}",
+                Map.of("PATH", backup != null ? backup.getAbsolutePath() : "none"));
+        sendLocalized(sender, "admin_transition_report",
+                "&7Migration report: &f{PATH}",
+                Map.of("PATH", report != null ? report.getAbsolutePath()
+                        : "plugins/AegisGuard/reports/config-migration-*.txt"));
+        sendLocalized(sender, "admin_transition_doctor_optional",
+                "&7Doctor is optional. Use &e/agadmin doctor scan &7only if something looks wrong.");
     }
 
     private static String formatAgeMillis(long ageMillis) {

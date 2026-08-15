@@ -53,6 +53,10 @@ public class PlotCosmeticsGUI {
             plugin.msg().send(player, "no_plot_here");
             return;
         }
+        if (!plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
+            plugin.msg().send(player, "module_disabled", java.util.Map.of("MODULE", "Cosmetics"));
+            return;
+        }
 
         // ✅ Title is now fully language-aware via GUIManager.title()
         String title = plugin.gui().title(

@@ -96,6 +96,14 @@ public class SettingsGUI {
         try { if (plugin.effects() != null) plugin.effects().playError(p); } catch (Throwable ignored) {}
     }
 
+    private boolean mod(com.aegisguard.config.Modules.Id id) {
+        try {
+            return plugin.modules().on(id);
+        } catch (Throwable ignored) {
+            return id.defaultOn();
+        }
+    }
+
     public void open(Player player) { open(player, null); }
 
     public void open(Player player, Plot plot) {
@@ -205,19 +213,20 @@ public class SettingsGUI {
         // --------------------------------------------------
         // 3B) PLOT GREETINGS TOGGLE (Slot 19)
         // --------------------------------------------------
-        boolean greetingsEnabled = getGreetingsEnabled(player);
-
-        inv.setItem(19, GUIManager.createItem(
-                greetingsEnabled ? Material.BELL : Material.BARRIER,
-                greetingsEnabled
-                        ? t(player, "settings_greetings_on_name", "&aPlot Greetings: ON")
-                        : t(player, "settings_greetings_off_name", "&cPlot Greetings: OFF"),
-                tl(player, "settings_greetings_lore",
-                        List.of(
-                                "&7Toggle enter/leave claim messages.",
-                                "&7(Does not affect approvals/denials.)"
-                        ))
-        ));
+        if (mod(com.aegisguard.config.Modules.Id.TITLES)) {
+            boolean greetingsEnabled = getGreetingsEnabled(player);
+            inv.setItem(19, GUIManager.createItem(
+                    greetingsEnabled ? Material.BELL : Material.BARRIER,
+                    greetingsEnabled
+                            ? t(player, "settings_greetings_on_name", "&aPlot Greetings: ON")
+                            : t(player, "settings_greetings_off_name", "&cPlot Greetings: OFF"),
+                    tl(player, "settings_greetings_lore",
+                            List.of(
+                                    "&7Toggle enter/leave claim messages.",
+                                    "&7(Does not affect approvals/denials.)"
+                            ))
+            ));
+        }
 
         // --------------------------------------------------
         // 3C) ADMIN UPDATES TOGGLE (Slot 22)
@@ -257,47 +266,58 @@ public class SettingsGUI {
         // --------------------------------------------------
         // 3E) REPLAY WALKTHROUGH (Slot 31, Milestone 5)
         // --------------------------------------------------
-        inv.setItem(31, GUIManager.createItem(
-                Material.KNOWLEDGE_BOOK,
-                t(player, "settings_replay_walkthrough_name", "&eReplay First-Claim Walkthrough"),
-                tl(player, "settings_replay_walkthrough_lore",
-                        List.of("&7Revisit the optional guide covering", "&7roles, Guest Passes, and Lockdown."))
-        ));
+        if (mod(com.aegisguard.config.Modules.Id.FIRST_CLAIM_WALKTHROUGH)) {
+            inv.setItem(31, GUIManager.createItem(
+                    Material.KNOWLEDGE_BOOK,
+                    t(player, "settings_replay_walkthrough_name", "&eReplay First-Claim Walkthrough"),
+                    tl(player, "settings_replay_walkthrough_lore",
+                            List.of("&7Revisit the optional guide covering", "&7roles, Guest Passes, and Lockdown."))
+            ));
+        }
 
-        // --------------------------------------------------
-        // 3F) CATEGORY PREFERENCES (1.3.0+) — defaults ON
-        // --------------------------------------------------
-        placeCategoryToggle(inv, 28, player, "guest_pass",
-                getCategoryEnabled(player, "guest_pass"), Material.NAME_TAG,
-                "settings_guest_pass_notify_on_name", "&aGuest Pass Alerts: ON",
-                "settings_guest_pass_notify_off_name", "&cGuest Pass Alerts: OFF",
-                "settings_guest_pass_notify_lore", List.of("&7Issue, revoke, and expiry notices."));
-        placeCategoryToggle(inv, 29, player, "alliance",
-                getCategoryEnabled(player, "alliance"), Material.SHIELD,
-                "settings_alliance_notify_on_name", "&aAlliance Alerts: ON",
-                "settings_alliance_notify_off_name", "&cAlliance Alerts: OFF",
-                "settings_alliance_notify_lore", List.of("&7Invites and alliance membership events."));
-        placeCategoryToggle(inv, 30, player, "lockdown",
-                getCategoryEnabled(player, "lockdown"), Material.IRON_BARS,
-                "settings_lockdown_notify_on_name", "&aLockdown Alerts: ON",
-                "settings_lockdown_notify_off_name", "&cLockdown Alerts: OFF",
-                "settings_lockdown_notify_lore", List.of("&7Emergency Lockdown activate/deactivate."));
-        placeCategoryToggle(inv, 32, player, "travel",
-                getCategoryEnabled(player, "travel"), Material.ENDER_PEARL,
-                "settings_travel_notify_on_name", "&aTravel Alerts: ON",
-                "settings_travel_notify_off_name", "&cTravel Alerts: OFF",
-                "settings_travel_notify_lore", List.of("&7Travel failures and cooldown notices."));
-        placeCategoryToggle(inv, 33, player, "plot_notices",
-                getCategoryEnabled(player, "plot_notices"), Material.OAK_SIGN,
-                "settings_plot_notice_notify_on_name", "&aPlot Notice Alerts: ON",
-                "settings_plot_notice_notify_off_name", "&cPlot Notice Alerts: OFF",
-                "settings_plot_notice_notify_lore", List.of("&7Plot noticeboard updates."));
-        inv.setItem(34, GUIManager.createItem(Material.GOLD_INGOT,
-                t(player, "settings_settlements_name", "&6Settlements Inbox"),
-                tl(player, "settings_settlements_lore", List.of(
-                        "&7Review any pending payments",
-                        "&7waiting for delivery."
-                ))));
+        if (mod(com.aegisguard.config.Modules.Id.GUEST_PASSES)) {
+            placeCategoryToggle(inv, 28, player, "guest_pass",
+                    getCategoryEnabled(player, "guest_pass"), Material.NAME_TAG,
+                    "settings_guest_pass_notify_on_name", "&aGuest Pass Alerts: ON",
+                    "settings_guest_pass_notify_off_name", "&cGuest Pass Alerts: OFF",
+                    "settings_guest_pass_notify_lore", List.of("&7Issue, revoke, and expiry notices."));
+        }
+        if (mod(com.aegisguard.config.Modules.Id.ALLIANCE_ACCESS)) {
+            placeCategoryToggle(inv, 29, player, "alliance",
+                    getCategoryEnabled(player, "alliance"), Material.SHIELD,
+                    "settings_alliance_notify_on_name", "&aAlliance Alerts: ON",
+                    "settings_alliance_notify_off_name", "&cAlliance Alerts: OFF",
+                    "settings_alliance_notify_lore", List.of("&7Invites and alliance membership events."));
+        }
+        if (mod(com.aegisguard.config.Modules.Id.LOCKDOWN)) {
+            placeCategoryToggle(inv, 30, player, "lockdown",
+                    getCategoryEnabled(player, "lockdown"), Material.IRON_BARS,
+                    "settings_lockdown_notify_on_name", "&aLockdown Alerts: ON",
+                    "settings_lockdown_notify_off_name", "&cLockdown Alerts: OFF",
+                    "settings_lockdown_notify_lore", List.of("&7Emergency Lockdown activate/deactivate."));
+        }
+        if (mod(com.aegisguard.config.Modules.Id.TRAVEL)) {
+            placeCategoryToggle(inv, 32, player, "travel",
+                    getCategoryEnabled(player, "travel"), Material.ENDER_PEARL,
+                    "settings_travel_notify_on_name", "&aTravel Alerts: ON",
+                    "settings_travel_notify_off_name", "&cTravel Alerts: OFF",
+                    "settings_travel_notify_lore", List.of("&7Travel failures and cooldown notices."));
+        }
+        if (mod(com.aegisguard.config.Modules.Id.REALM_PROFILES)) {
+            placeCategoryToggle(inv, 33, player, "plot_notices",
+                    getCategoryEnabled(player, "plot_notices"), Material.OAK_SIGN,
+                    "settings_plot_notice_notify_on_name", "&aPlot Notice Alerts: ON",
+                    "settings_plot_notice_notify_off_name", "&cPlot Notice Alerts: OFF",
+                    "settings_plot_notice_notify_lore", List.of("&7Plot noticeboard updates."));
+        }
+        if (mod(com.aegisguard.config.Modules.Id.ECONOMY) || mod(com.aegisguard.config.Modules.Id.RENTALS)) {
+            inv.setItem(34, GUIManager.createItem(Material.GOLD_INGOT,
+                    t(player, "settings_settlements_name", "&6Settlements Inbox"),
+                    tl(player, "settings_settlements_lore", List.of(
+                            "&7Review any pending payments",
+                            "&7waiting for delivery."
+                    ))));
+        }
 
         // --------------------------------------------------
         // NAVIGATION (48/49)
@@ -412,6 +432,7 @@ public class SettingsGUI {
             }
 
             case 19 -> { // Plot Greetings toggle (enter/leave)
+                if (!mod(com.aegisguard.config.Modules.Id.TITLES)) return;
                 if (!canManageGreetingNotifications(player, true)) {
                     playError(player);
                     return;
@@ -506,16 +527,28 @@ public class SettingsGUI {
             }
 
             case 31 -> { // Replay First-Claim Walkthrough (Milestone 5)
+                if (!mod(com.aegisguard.config.Modules.Id.FIRST_CLAIM_WALKTHROUGH)) return;
                 playFlip(player);
                 plugin.runMain(player, () -> plugin.gui().walkthrough().open(player, 0));
             }
 
-            case 28 -> toggleCategory(player, plot, "guest_pass");
-            case 29 -> toggleCategory(player, plot, "alliance");
-            case 30 -> toggleCategory(player, plot, "lockdown");
-            case 32 -> toggleCategory(player, plot, "travel");
-            case 33 -> toggleCategory(player, plot, "plot_notices");
+            case 28 -> {
+                if (mod(com.aegisguard.config.Modules.Id.GUEST_PASSES)) toggleCategory(player, plot, "guest_pass");
+            }
+            case 29 -> {
+                if (mod(com.aegisguard.config.Modules.Id.ALLIANCE_ACCESS)) toggleCategory(player, plot, "alliance");
+            }
+            case 30 -> {
+                if (mod(com.aegisguard.config.Modules.Id.LOCKDOWN)) toggleCategory(player, plot, "lockdown");
+            }
+            case 32 -> {
+                if (mod(com.aegisguard.config.Modules.Id.TRAVEL)) toggleCategory(player, plot, "travel");
+            }
+            case 33 -> {
+                if (mod(com.aegisguard.config.Modules.Id.REALM_PROFILES)) toggleCategory(player, plot, "plot_notices");
+            }
             case 34 -> {
+                if (!(mod(com.aegisguard.config.Modules.Id.ECONOMY) || mod(com.aegisguard.config.Modules.Id.RENTALS))) return;
                 playFlip(player);
                 plugin.gui().settlementsInbox().open(player);
             }

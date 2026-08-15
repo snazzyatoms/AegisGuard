@@ -83,7 +83,7 @@ class MenuSnapshotGuidebookContractTest {
         assertEquals(Boolean.FALSE, scheduled.get("enabled"));
         assertEquals(360, ((Number) scheduled.get("interval_minutes")).intValue());
         assertEquals("server_zones", scheduled.get("targets"));
-        assertEquals(1286, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1287, ((Number) config.get("config_schema")).intValue());
     }
 
     @Test

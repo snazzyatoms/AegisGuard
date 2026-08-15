@@ -21,7 +21,7 @@ class ArenaContractTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void configShipsArenaDisabledByDefault() throws Exception {
+    void configShipsArenaEnabledByDefault() throws Exception {
         Yaml yaml = new Yaml();
         Map<String, Object> config;
         try (var input = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
@@ -29,7 +29,7 @@ class ArenaContractTest {
         }
         Map<String, Object> arena = (Map<String, Object>) config.get("arena");
         assertTrue(arena != null, "config.yml must declare an arena section");
-        assertFalse(Boolean.TRUE.equals(arena.get("enabled")), "arena.enabled must default false");
+        assertEquals(Boolean.TRUE, arena.get("enabled"), "arena.enabled must default true");
         Map<String, Object> defaults = (Map<String, Object>) arena.get("defaults");
         assertTrue(defaults != null);
         assertEquals(1, ((Number) defaults.get("max_active_runs_per_arena")).intValue());
@@ -75,7 +75,8 @@ class ArenaContractTest {
     void schemaBumpedForArena() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
         assertTrue(migration.contains("CURRENT_SCHEMA = 1285")
-                || migration.contains("CURRENT_SCHEMA = 1286"));
+                || migration.contains("CURRENT_SCHEMA = 1286")
+                || migration.contains("CURRENT_SCHEMA = 1287"));
     }
 
     @Test

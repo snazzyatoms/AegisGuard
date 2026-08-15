@@ -71,6 +71,8 @@ class ConfigMigrationServiceTest {
         File reports = new File(dataFolder, "reports");
         assertTrue(reports.isDirectory());
         assertTrue(Files.list(reports.toPath()).findAny().isPresent(), "A migration report file must be written");
+        assertNotNull(service.lastReport());
+        assertTrue(service.lastReport().exists());
     }
 
     @Test
@@ -155,5 +157,93 @@ class ConfigMigrationServiceTest {
         } catch (IOException error) {
             throw new UncheckedIOException(error);
         }
+    }
+
+    @Test
+    void migratingPreservesDisabledOptionalModulesOnTheSwitchboard(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1286);
+        oldConfig.set("guest_passes.enabled", false);
+        oldConfig.set("routes.enabled", false);
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        assertFalse(migratedConfig.getBoolean("modules.guest_passes"));
+        assertFalse(migratedConfig.getBoolean("guest_passes.enabled"));
+        assertFalse(migratedConfig.getBoolean("modules.routes"));
+        assertFalse(migratedConfig.getBoolean("routes.enabled"));
+    }
+
+    @Test
+    void first1287UpgradeKeepsLegacyDisabledArenaAndUpkeep(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1286);
+        oldConfig.set("arena.enabled", false);
+        oldConfig.set("upkeep.enabled", false);
+        oldConfig.set("claims.merging.enabled", false);
+        oldConfig.set("wilderness_revert.enabled", false);
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        assertFalse(migratedConfig.getBoolean("modules.arena"));
+        assertFalse(migratedConfig.getBoolean("arena.enabled"));
+        assertFalse(migratedConfig.getBoolean("modules.upkeep"));
+        assertFalse(migratedConfig.getBoolean("upkeep.enabled"));
+        assertFalse(migratedConfig.getBoolean("modules.claim_merge"));
+        assertFalse(migratedConfig.getBoolean("claims.merging.enabled"));
+        assertFalse(migratedConfig.getBoolean("modules.wilderness_revert"));
+        assertFalse(migratedConfig.getBoolean("wilderness_revert.enabled"));
+    }
+
+    @Test
+    void missingModuleKeysOnFirst1287UpgradeDefaultOn(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1286);
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        assertTrue(migratedConfig.getBoolean("modules.arena"));
+        assertTrue(migratedConfig.getBoolean("arena.enabled"));
+        assertTrue(migratedConfig.getBoolean("modules.upkeep"));
+        assertTrue(migratedConfig.getBoolean("modules.claim_merge"));
+        assertTrue(migratedConfig.getBoolean("modules.wilderness_revert"));
+        assertTrue(migratedConfig.getBoolean("modules.guest_passes"));
+    }
+
+    @Test
+    void currentSchemaKeepsSavedModuleFalseValues(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration currentConfig = new YamlConfiguration();
+        currentConfig.set("config_schema", ConfigMigrationService.CURRENT_SCHEMA);
+        currentConfig.set("modules.arena", false);
+        currentConfig.set("arena.enabled", false);
+        currentConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertFalse(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration after = YamlConfiguration.loadConfiguration(configFile);
+        assertFalse(after.getBoolean("modules.arena"));
+        assertFalse(after.getBoolean("arena.enabled"));
     }
 }

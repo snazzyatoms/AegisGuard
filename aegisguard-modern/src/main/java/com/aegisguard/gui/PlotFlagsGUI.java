@@ -202,7 +202,7 @@ public class PlotFlagsGUI {
                 ))
         ));
 
-        if (!server) {
+        if (!server && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
             String cosName = t(player, "button_cosmetics", "&bCosmetics");
             List<String> cosLore = tl(player, "cosmetics_lore", List.of());
             inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
@@ -268,9 +268,11 @@ public class PlotFlagsGUI {
         if (!server) {
             placePresetButton(player, inv, 10, ProtectionPreset.HOME, Material.RED_BED);
             placePresetButton(player, inv, 16, ProtectionPreset.FARM, Material.HAY_BLOCK);
-            String cosName = t(player, "button_cosmetics", "&bCosmetics");
-            List<String> cosLore = tl(player, "cosmetics_lore", List.of());
-            inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
+            if (plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
+                String cosName = t(player, "button_cosmetics", "&bCosmetics");
+                List<String> cosLore = tl(player, "cosmetics_lore", List.of());
+                inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
+            }
         }
         placePresetButton(player, inv, 12, ProtectionPreset.SHOP, Material.EMERALD_BLOCK);
         placePresetButton(player, inv, 14, ProtectionPreset.ARENA, Material.IRON_SWORD);
@@ -373,7 +375,7 @@ public class PlotFlagsGUI {
                     case 14 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.WARDS); return; }
                     case 16 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.PRESETS); return; }
                     case 22 -> {
-                        if (!plot.isServerZone()) {
+                        if (!plot.isServerZone() && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
                             plugin.effects().playMenuFlip(player);
                             plugin.gui().cosmetics().open(player, plot);
                         }
@@ -437,7 +439,7 @@ public class PlotFlagsGUI {
                         }
                     }
                     case 22 -> {
-                        if (!plot.isServerZone()) {
+                        if (!plot.isServerZone() && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
                             plugin.effects().playMenuFlip(player);
                             plugin.gui().cosmetics().open(player, plot);
                         }

@@ -53,7 +53,7 @@ commands:
 
   aegisadmin:
     description: Staff command for administration, migration, diagnostics, recovery, and server zones.
-    usage: "/aegisadmin <subcommand>"
+    usage: "/aegisadmin <transition|reload|doctor|migrate|help|...>"
     aliases: [agadmin, aga]
     permission: aegis.admin
 

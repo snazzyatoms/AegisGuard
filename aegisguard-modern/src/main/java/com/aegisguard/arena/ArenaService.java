@@ -134,7 +134,7 @@ public final class ArenaService {
 
     public boolean isEnabled() {
         if (schedulerCapabilityBlocked) return false;
-        return plugin.getConfig().getBoolean("arena.enabled", false);
+        return plugin.getConfig().getBoolean("arena.enabled", true);
     }
 
     private void probeSchedulerCapabilities() {

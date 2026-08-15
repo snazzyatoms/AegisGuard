@@ -318,7 +318,7 @@ public class ClaimMergeGUI {
     }
 
     private boolean isMergeEnabled() {
-        return plugin.getConfig().getBoolean("claims.merging.enabled", false);
+        return plugin.getConfig().getBoolean("claims.merging.enabled", true);
     }
 
     private long mergeCost() {

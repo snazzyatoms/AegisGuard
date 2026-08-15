@@ -22,17 +22,16 @@ class HardenPolishContractTest {
     }
 
     @Test
-    void mergingDefaultsOffWithAlignmentRequired() throws Exception {
+    void mergingDefaultsOnWithAlignmentRequired() throws Exception {
         String config = Files.readString(RESOURCES.resolve("config.yml"));
         assertTrue(config.contains("merging:"));
         assertTrue(config.contains("require_alignment: true"));
-        // shipped default must be false (opt-in)
         int mergingIdx = config.indexOf("merging:");
         String mergingBlock = config.substring(mergingIdx, mergingIdx + 120);
-        assertTrue(mergingBlock.contains("enabled: false"));
+        assertTrue(mergingBlock.contains("enabled: true"));
 
         String ag = Files.readString(JAVA_ROOT.resolve("config/AGConfig.java"));
-        assertTrue(ag.contains("claims.merging.enabled\", false"));
+        assertTrue(ag.contains("claims.merging.enabled\", true"));
     }
 
     @Test

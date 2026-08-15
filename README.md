@@ -75,11 +75,15 @@ Voluntary teleports (visit, markets, spawn, staff destinations, and related flow
 
 ### Staff Health and Recovery
 
-`/agadmin health` reports operational signals such as travel gate status and stale Guest Passes. Recovery snapshots remain available for Doctor repairs and manual admin capture (`/agadmin snapshot`).
+`/agadmin health` reports operational signals such as travel gate status and stale Guest Passes. Recovery snapshots remain available for Doctor repairs and manual admin capture (`/agadmin snapshot`). Snapshots store **claim data only** (members, flags, metadata). Full world-block plot backups are planned for a later update.
+
+### Module Switchboard
+
+Optional systems live under `modules:` in `config.yml` and are **on by default**. Owners can turn any module off; player and staff menus hide entries for disabled modules. Claiming, plot protection, roles, settings, the guidebook, and core staff tools stay available. Third-party hooks (maps, Discord, protection-compat) stay off until you opt in.
 
 ### Optional Arena Module
 
-Cooperative PvE party dungeons on bound server plots. **Disabled by default** (`arena.enabled: false`). When enabled, scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia.
+Cooperative PvE party dungeons on bound server plots. **Enabled by default** (`modules.arena: true` / `arena.enabled: true`). Scheduling goes through an internal `ArenaScheduler` that stays Folia-safe (entity, region, global, and async paths). Use `/ag arena diag` if Arena will not activate on Folia. Turn Arena off from the module switchboard if your server does not want it.
 
 ## What Improved In 1.3.0
 
@@ -93,7 +97,7 @@ Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integ
 
 `1.3.0` is in feature freeze and soak on Paper (and Folia where claimed). Upgrade-path checks from `1.2.7` are part of that soak. A public GitHub Release has not been cut yet; current builds live on the `V1.3.0` branch.
 
-After updating the JAR on a test server, refresh `plugins/AegisGuard/lang/` so language packs stay aligned with the plugin.
+On a JAR swap, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`).
 
 ## Core Systems
 
@@ -104,7 +108,7 @@ After updating the JAR on a test server, refresh `plugins/AegisGuard/lang/` so l
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
 | Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
-| Optional modules | Arena cooperative PvE (`arena.enabled: false` by default; Folia-safe `ArenaScheduler`) |
+| Optional modules | Module switchboard (`modules:`): all listed systems default **on**; menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots are claim-data only until a later full plot-backup update |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
 
 ## Compatibility
@@ -127,10 +131,10 @@ Server implementations evolve independently. Test new Minecraft server releases 
 2. Confirm the host is running **Java 21 or newer**.
 3. Place `AegisGuard-1.3.0.jar` in the server's `plugins` directory.
 4. Install Vault and an economy provider if money-based features are required.
-5. Start the server and allow AegisGuard to generate its editable files.
+5. Start the server. On a JAR swap from 1.2.7, config and language merge run automatically and existing plots load as-is.
 6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
-7. After a JAR update on a test server, refresh `plugins/AegisGuard/lang/` so packs match the new build.
-8. Run `/agadmin doctor` (and optionally `/agadmin health`) before opening the server to players.
+7. After a JAR update, confirm status with `/agadmin transition` (aliases `/agadmin upgrade` and `/agadmin v130`). A folder backup of `plugins/AegisGuard/` is recommended, not required to keep claims.
+8. Run `/agadmin doctor` (and optionally `/agadmin health`) only if something looks wrong. Doctor is optional.
 
 Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supported AegisGuard configuration and language reloads, and perform a full restart after changing integrations or storage settings.
 
@@ -150,7 +154,8 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /agadmin menu                Open the Staff Command Center
 /agadmin wand server         Get the server-zone wand
 /agadmin claim               Create a server-owned protected zone
-/agadmin doctor              Run diagnostics and repair tools
+/agadmin transition          Confirm 1.2.7 to 1.3.0 upgrade (aliases: upgrade, v130)
+/agadmin doctor              Optional diagnostics and repair tools
 /agadmin health              Quick staff health check
 /agadmin reload              Reload editable settings and languages
 ```

@@ -245,7 +245,10 @@ public class SnapshotAdminGUI {
                         "&7Saves flags, members, bounds, and names.",
                         "&cDoes not copy world blocks or builds.",
                         " ",
-                        "&eClick to create."
+                        "&eClick to create.",
+                        " ",
+                        "&eFull plot backups (builds/blocks)",
+                        "&ewill come in a later update."
                 ))
         );
         tagAction(createHere, "create_here");
@@ -263,6 +266,21 @@ public class SnapshotAdminGUI {
         );
         tagAction(createZones, "create_server_zones");
         inv.setItem(37, createZones);
+
+        ItemStack scope = GUIManager.createItem(
+                Material.KNOWLEDGE_BOOK,
+                plugin.gui().tr(player, "snapshot_scope_header_name", "&dSnapshot Scope"),
+                plugin.gui().trList(player, "snapshot_scope_header_lore", List.of(
+                        "&7Claim snapshots save plot records:",
+                        "&7owner, flags, members, and bounds.",
+                        " ",
+                        "&eFull plot backups (builds/blocks)",
+                        "&ewill come in a later update.",
+                        "&7That needs a larger upgrade."
+                ))
+        );
+        tagAction(scope, "snapshot_scope");
+        inv.setItem(38, scope);
 
         // Navigation (45 / 49 / 53) - PDC tagged
         if (page > 0) {
@@ -337,6 +355,7 @@ public class SnapshotAdminGUI {
                 case "snapshots_none" -> { plugin.effects().playError(player); return; }
                 case "create_here" -> { createStandingSnapshot(player, page); return; }
                 case "create_server_zones" -> { createServerZoneSnapshots(player, page); return; }
+                case "snapshot_scope" -> { return; }
                 case "snapshot_entry" -> { /* continue */ }
                 default -> { return; }
             }

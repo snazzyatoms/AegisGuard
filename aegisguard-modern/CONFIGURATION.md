@@ -48,7 +48,7 @@ Review these sections in order:
 18. `alliance_access`
    Configure player alliance capacity; per-plot alliance permissions remain off until an owner enables them.
 19. `arena`
-   Optional cooperative PvE dungeon module (`arena.enabled` defaults to `false`).
+   Optional cooperative PvE dungeon module (`arena.enabled` is on by default; set false to disable).
    Supports Paper and Folia via an internal `ArenaScheduler` (entity/region/global/async).
    On Folia, Arena refuses to enable if required schedulers are missing (`/ag arena diag` shows the path).
 
@@ -90,7 +90,7 @@ Use these ideas when claims, trading, and staff activity are heavy:
 - `claim_blocks.exchange.profile: fast_large`
 - Enable only the protection-compat plugins you actually run
 - Leave unused map hooks disabled
-- Keep `snapshots.enabled: true`
+- Keep `snapshots.enabled: true` (claim-data snapshots only; full world-block plot backup is planned later)
 - Keep `expansions.audit.enabled: true`
 - Keep `territory_activity.enabled: true`
 - Run `/agadmin doctor scan` after migrations or large administrative changes
@@ -200,7 +200,7 @@ Owners and authorized members use `/ag activity`. Staff use `/agadmin activity` 
 
 ### Configuration migration
 
-`config_schema` is maintained by AegisGuard. When an older config is detected, version 1.3.0 creates a timestamped file under `plugins/AegisGuard/backups/`, merges missing defaults without replacing existing custom values, validates critical bounds, and writes a report under `plugins/AegisGuard/reports/`. Migration is refused if the safety backup cannot be created.
+`config_schema` is maintained by AegisGuard. Updating from 1.2.7 is a jar swap and server start: missing 1.3.0 keys are merged, live values are kept, and existing plots load as-is. When an older config is detected, version 1.3.0 creates a timestamped file under `plugins/AegisGuard/backups/`, validates critical bounds, and writes a report under `plugins/AegisGuard/reports/`. Migration is refused if the safety backup cannot be created. Staff can confirm with `/agadmin transition` (alias `/agadmin upgrade`). Doctor is optional (`/agadmin doctor scan`) and is not required to keep claims.
 
 ### Doctor repair tools
 
@@ -357,7 +357,7 @@ If players should use the ClaimBlocks exchange, remember to grant the relevant p
 
 ## Arena (optional)
 
-`arena.enabled` defaults to **false**. When enabled, Arena runs cooperative PvE party dungeons on bound server plots.
+`arena.enabled` is on by default; set false to disable. When enabled, Arena runs cooperative PvE party dungeons on bound server plots.
 
 - **Paper:** Arena work runs inline on the main thread through `ArenaScheduler`.
 - **Folia:** Entity, location, global, and async work is routed to Folia-safe schedulers. Startup logs the active path (`Paper` or `Folia`). If Folia schedulers are missing, Arena stays effective-off even when `arena.enabled` is true — check `/ag arena diag`.

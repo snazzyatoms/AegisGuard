@@ -176,6 +176,9 @@ public class AegisGuard extends JavaPlugin {
 
     // --- GETTERS ---
     public AGConfig cfg() { return configMgr; }
+    public com.aegisguard.config.Modules modules() {
+        return com.aegisguard.config.Modules.of(getConfig());
+    }
     public IDataStore store() { return plotStore; }
     public IDataStore getDataStore() { return plotStore; }
     public GUIManager gui() { return gui; }
@@ -883,7 +886,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startUpkeepTask() {
-        if (!getConfig().getBoolean("upkeep.enabled", false)
+        if (!getConfig().getBoolean("upkeep.enabled", true)
                 && !getConfig().getBoolean("economy.upkeep.enabled", false)) {
             return;
         }
@@ -971,7 +974,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startWildernessRevertTask() {
-        boolean enabled = getConfig().getBoolean("wilderness_revert.enabled", false);
+        boolean enabled = getConfig().getBoolean("wilderness_revert.enabled", true);
         if (!enabled) return;
 
         if (!(plotStore instanceof SQLDataStore)) {

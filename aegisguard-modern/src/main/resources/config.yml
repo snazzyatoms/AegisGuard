@@ -5,13 +5,14 @@
 #
 # Recommended setup order:
 # 1. localization   - choose default and fallback languages
-# 2. hooks          - enable only the integrations your server actually uses
-# 3. storage        - choose YML or database-backed storage
-# 4. economy        - decide whether claims use Vault, ClaimBlocks, or both
-# 5. claims         - set claim limits, costs, and per-world behavior
-# 6. protections    - review default protection behavior inside plots
-# 7. group_plots    - configure shared groups, treasury, and starter claims
-# 8. upkeep         - enable only if you want recurring plot taxes
+# 2. modules        - optional systems are on by default; set false to disable extras
+# 3. hooks          - enable only the integrations your server actually uses
+# 4. storage        - choose YML or database-backed storage
+# 5. economy        - decide whether claims use Vault, ClaimBlocks, or both
+# 6. claims         - set claim limits, costs, and per-world behavior
+# 7. protections    - review default protection behavior inside plots
+# 8. group_plots    - configure shared groups, treasury, and starter claims
+# 9. upkeep         - on by default; set false if you do not want recurring plot taxes
 #
 # After editing, run /agadmin reload or restart the server.
 #
@@ -22,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1286
+config_schema: 1287
 
 
 # ------------------------------------------------------------------------------
@@ -32,6 +33,57 @@ config_schema: 1286
 # Dual key: top-level `prefix` is a legacy chat prefix. Prefer
 # localization.prefix for new installs; both may exist during upgrades.
 prefix: '&8[&bAegisGuard&8]&r '
+
+
+# ==============================================================================
+# Module switchboard
+# ==============================================================================
+# Optional systems only. Claiming land, plot protection, member roles, Settings,
+# the guidebook, and Staff Tools stay available so a protection-only server still
+# works. Every optional module below is on by default; set a value to false to
+# hide that system's menus, block matching /ag commands, and skip its runtime
+# work. Flip it back to true later when you want the feature. After /agadmin
+# reload, each matching <section>.enabled key is kept in sync with this list.
+#
+# Example protection-only start: set guest_passes, lockdown, alliance_access,
+# realm_profiles, routes, travel, plot_discovery, expansions, zoning,
+# group_plots, leveling, claim_blocks, economy, market, market_stalls, rentals,
+# auction, cosmetics, titles, biomes, unstuck, social, first_claim_walkthrough,
+# starter_kit, and arena to false. Leave claiming and protection as they are.
+modules:
+  guest_passes: true
+  lockdown: true
+  alliance_access: true
+  realm_profiles: true
+  first_claim_walkthrough: true
+  starter_kit: true
+  routes: true
+  travel: true
+  plot_discovery: true
+  expansions: true
+  zoning: true
+  group_plots: true
+  leveling: true
+  claim_blocks: true
+  economy: true
+  market: true
+  market_stalls: true
+  rentals: true
+  auction: true
+  upkeep: true
+  claim_merge: true
+  # Claim-data snapshots only. Full world-block plot backup is planned later.
+  snapshots: true
+  audit: true
+  cosmetics: true
+  titles: true
+  biomes: true
+  unstuck: true
+  social: true
+  territory_activity: true
+  arena: true
+  wilderness_revert: true
+  mob_barrier: true
 
 
 # ==============================================================================
@@ -325,10 +377,10 @@ claims:
   consume_wand_on_claim: true
   admin_keep_wand: true
 
-  # Player claim merge stays OFF until operators opt in after reviewing
-  # alignment / access-data safety. require_alignment prevents L-shape bbox theft.
+  # Claim merge is on by default; set false to disable. require_alignment
+  # prevents L-shape bbox theft. Review alignment / access-data safety if needed.
   merging:
-    enabled: false
+    enabled: true
     cost: 500.0
     require_alignment: true
 
@@ -610,6 +662,9 @@ group_plots:
 # Claim snapshots and rollback
 # ==============================================================================
 # Snapshot data is stored in plugins/AegisGuard/claim-snapshots.yml
+# Current snapshots are claim-data only (owner, flags, members, bounds).
+# Full world-block plot backup and restore is planned for a later version;
+# it needs a larger upgrade and is not included in 1.3.0.
 snapshots:
   enabled: true
 
@@ -734,6 +789,8 @@ lockdown:
 # Expansion requests
 # ==============================================================================
 expansions:
+  enabled: true
+
   # QUEUE = admin approval required
   # INSTANT = auto-approved and recorded for audit
   approval_mode: QUEUE
@@ -1013,6 +1070,8 @@ alliance_access:
 # Local Market Hub
 # ==============================================================================
 market_hub:
+  enabled: true
+
   # When true, the main Market button opens the plot's local market hub first
   # whenever the player is standing in a plot that has rentals, shop access, or
   # linked external market integrations. Players can still use /ag market global.
@@ -1247,8 +1306,9 @@ leveling:
 # ==============================================================================
 # Plot upkeep
 # ==============================================================================
+# Plot upkeep is on by default; set false to disable recurring plot taxes.
 upkeep:
-  enabled: false
+  enabled: true
   check_interval_hours: 24
   cost_per_plot: 50.0
   grace_period_days: 7
@@ -1279,9 +1339,9 @@ auction:
 # Wilderness revert
 # ==============================================================================
 wilderness_revert:
-  # Disabled by default. This feature is intended for SQL-backed setups and
-  # should be turned on only when a server owner explicitly wants it.
-  enabled: false
+  # On by default; set false to disable. This feature is intended for SQL-backed
+  # setups. On YAML storage it stays a no-op and logs a warning.
+  enabled: true
   revert_after_hours: 2
   # Primary scheduler key for 1.2.7+. Older installs may still use
   # check_interval_minutes and will continue to work.
@@ -1364,6 +1424,8 @@ mob_barrier:
 # Cosmetics
 # ==============================================================================
 cosmetics:
+  enabled: true
+
   border_particles:
     flame:
       material: BLAZE_POWDER
@@ -1672,10 +1734,11 @@ roles:
 # ==============================================================================
 # Arena / Dungeon / Mob-Run Module (1.3.0+, optional)
 # ==============================================================================
-# Cooperative PvE party dungeons on protected server plots. Disabled by default.
-# ProtectionPreset.ARENA is only a flag bundle — this module is separate.
+# Cooperative PvE party dungeons on protected server plots. On by default;
+# set false to disable. ProtectionPreset.ARENA is only a flag bundle — this
+# module is separate.
 arena:
-  enabled: false
+  enabled: true
   disconnect_grace_seconds: 60
   allow_late_join: false
   party:

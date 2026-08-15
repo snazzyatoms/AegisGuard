@@ -67,6 +67,10 @@ public class ExpansionRequestGUI {
     }
 
     public void open(Player player) {
+        if (!plugin.modules().on(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
+            plugin.msg().send(player, "module_disabled", java.util.Map.of("MODULE", "Expansions"));
+            return;
+        }
         // Title via centralized gateway (colors + fallback + clamp handled)
         String title = plugin.gui().title(player, "expansion_gui_title", "&d✦ Frontier Expansion ✦");
         title = clampTitle(title);

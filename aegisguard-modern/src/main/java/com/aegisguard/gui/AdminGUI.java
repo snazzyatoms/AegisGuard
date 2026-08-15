@@ -335,7 +335,11 @@ public class AdminGUI {
                             "&7Does not save world blocks or builds.",
                             " ",
                             "&cRollback overwrites the live claim — confirm carefully.",
-                            "&eClick to open."
+                            "&eClick to open.",
+                            " ",
+                            "&7Saves plot records: owner, flags,",
+                            "&7members, and bounds. Not world blocks.",
+                            "&eFull plot backups (builds) come later."
                     ))
             );
             tagAction(snapshots, "open_snapshots");

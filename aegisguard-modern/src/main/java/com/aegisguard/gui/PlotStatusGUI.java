@@ -116,38 +116,44 @@ public class PlotStatusGUI {
         String protTitle = tr(player, "plot_status_protection_title", null, "&cProtections & Risks");
         inv.setItem(11, GUIManager.createItem(Material.SHIELD, protTitle, buildProtectionLore(player, plot)));
 
-        List<String> buffsLore = new ArrayList<>();
-        buffsLore.add(tr(player, "plot_status_blessings_header_line", "plot_status_blessings_header", "&7Active Blessings:"));
-        buffsLore.add("");
-        List<String> buffs = buildBuffList(player, level);
-        if (buffs.isEmpty()) {
-            buffsLore.add(tr(player, "plot_status_blessings_none_line", "plot_status_blessings_none", "&8- None unlocked yet."));
-        } else {
-            buffsLore.addAll(buffs);
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.LEVELING)) {
+            List<String> buffsLore = new ArrayList<>();
+            buffsLore.add(tr(player, "plot_status_blessings_header_line", "plot_status_blessings_header", "&7Active Blessings:"));
             buffsLore.add("");
-            buffsLore.add(tr(player, "plot_status_blessings_footer_line", "plot_status_blessings_footer",
-                    "&8Only your highest tier of each blessing is shown."));
+            List<String> buffs = buildBuffList(player, level);
+            if (buffs.isEmpty()) {
+                buffsLore.add(tr(player, "plot_status_blessings_none_line", "plot_status_blessings_none", "&8- None unlocked yet."));
+            } else {
+                buffsLore.addAll(buffs);
+                buffsLore.add("");
+                buffsLore.add(tr(player, "plot_status_blessings_footer_line", "plot_status_blessings_footer",
+                        "&8Only your highest tier of each blessing is shown."));
+            }
+            String blessingsTitle = tr(player, "plot_status_blessings_title", null, "&dActive Blessings");
+            inv.setItem(12, GUIManager.createItem(Material.ENCHANTED_BOOK, blessingsTitle, colorList(buffsLore)));
         }
-        String blessingsTitle = tr(player, "plot_status_blessings_title", null, "&dActive Blessings");
-        inv.setItem(12, GUIManager.createItem(Material.ENCHANTED_BOOK, blessingsTitle, colorList(buffsLore)));
 
-        String territoryTitle = tr(player, "plot_status_territory_title", null, "&aTerritory & Growth");
-        String expandName = tr(player, "button_expand", null, "&bExpand");
-        String menuName = tr(player, "plot_status_menu_name", "menu_title", "&bAegis Menu");
-        List<String> territoryLore = new ArrayList<>();
-        territoryLore.add(tr(player, "plot_status_territory_rules_line", "plot_status_territory_rules", "&7Territory Rules:"));
-        territoryLore.add(tr(player,
-                "plot_status_territory_hint_line", "plot_status_territory_path",
-                "&b{MENU} &7→ &b{EXPAND}",
-                Map.of("MENU", menuName, "EXPAND", expandName)
-        ));
-        inv.setItem(13, GUIManager.createItem(Material.GRASS_BLOCK, territoryTitle, colorList(territoryLore)));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
+            String territoryTitle = tr(player, "plot_status_territory_title", null, "&aTerritory & Growth");
+            String expandName = tr(player, "button_expand", null, "&bExpand");
+            String menuName = tr(player, "plot_status_menu_name", "menu_title", "&bAegis Menu");
+            List<String> territoryLore = new ArrayList<>();
+            territoryLore.add(tr(player, "plot_status_territory_rules_line", "plot_status_territory_rules", "&7Territory Rules:"));
+            territoryLore.add(tr(player,
+                    "plot_status_territory_hint_line", "plot_status_territory_path",
+                    "&b{MENU} &7→ &b{EXPAND}",
+                    Map.of("MENU", menuName, "EXPAND", expandName)
+            ));
+            inv.setItem(13, GUIManager.createItem(Material.GRASS_BLOCK, territoryTitle, colorList(territoryLore)));
+        }
 
-        inv.setItem(14, GUIManager.createItem(
-                Material.PAPER,
-                tr(player, "ledger_title", null, "&6ClaimBlocks"),
-                buildLedgerLore(player, plot)
-        ));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)) {
+            inv.setItem(14, GUIManager.createItem(
+                    Material.PAPER,
+                    tr(player, "ledger_title", null, "&6ClaimBlocks"),
+                    buildLedgerLore(player, plot)
+            ));
+        }
         inv.setItem(15, GUIManager.createItem(
                 Material.PLAYER_HEAD,
                 tr(player, "plot_status_access_title", null, "&eAccess Snapshot"),
@@ -155,16 +161,18 @@ public class PlotStatusGUI {
         ));
 
         boolean canOwn = plot.isOwner(player.getUniqueId());
-        boolean mergeEnabled = plugin.getConfig().getBoolean("claims.merging.enabled", false);
-        inv.setItem(20, GUIManager.createItem(
-                canOwn && mergeEnabled ? Material.SLIME_BALL : Material.GRAY_DYE,
-                tr(player, "button_claim_merge", null, "&aMerge Claims"),
-                colorList(plugin.gui().trList(player, canOwn && mergeEnabled
-                                ? "claim_merge_button_lore" : "claim_merge_button_locked_lore",
-                        canOwn && mergeEnabled
-                                ? List.of("&7Combine adjacent owned claims.")
-                                : List.of("&7Owners can merge aligned claims", "&7when merging is enabled.")))
-        ));
+        boolean mergeEnabled = plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_MERGE);
+        if (mergeEnabled) {
+            inv.setItem(20, GUIManager.createItem(
+                    canOwn ? Material.SLIME_BALL : Material.GRAY_DYE,
+                    tr(player, "button_claim_merge", null, "&aMerge Claims"),
+                    colorList(plugin.gui().trList(player, canOwn
+                                    ? "claim_merge_button_lore" : "claim_merge_button_locked_lore",
+                            canOwn
+                                    ? List.of("&7Combine adjacent owned claims.")
+                                    : List.of("&cOnly the owner can merge this plot.")))
+            ));
+        }
         inv.setItem(21, GUIManager.createItem(
                 canOwn ? Material.WRITABLE_BOOK : Material.GRAY_DYE,
                 tr(player, "button_transfer", null, "&eTransfer Ownership"),
@@ -174,15 +182,19 @@ public class PlotStatusGUI {
                                 "&7or confirm from chat after targeting.")
                                 : List.of("&cOnly the owner can transfer this plot.")))
         ));
-        inv.setItem(22, GUIManager.createItem(
-                Material.GOLD_INGOT,
-                tr(player, "button_giftblocks", null, "&aGift ClaimBlocks"),
-                colorList(plugin.gui().trList(player, "giftblocks_button_lore",
-                        List.of("&7Open the ClaimBlocks gift menu.")))
-        ));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
+                && plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true)) {
+            inv.setItem(22, GUIManager.createItem(
+                    Material.GOLD_INGOT,
+                    tr(player, "button_giftblocks", null, "&aGift ClaimBlocks"),
+                    colorList(plugin.gui().trList(player, "giftblocks_button_lore",
+                            List.of("&7Open the ClaimBlocks gift menu.")))
+            ));
+        }
 
-        if (plugin.getConfig().getBoolean("upkeep.enabled", false)
-                || plugin.getConfig().getBoolean("economy.upkeep.enabled", false)) {
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.UPKEEP)
+                && (plugin.getConfig().getBoolean("upkeep.enabled", true)
+                || plugin.getConfig().getBoolean("economy.upkeep.enabled", false))) {
             double cost = plugin.getConfig().getDouble("upkeep.cost_per_plot",
                     plugin.getConfig().getDouble("economy.upkeep.cost", 0.0D));
             inv.setItem(23, GUIManager.createItem(Material.GOLD_NUGGET,
@@ -236,7 +248,7 @@ public class PlotStatusGUI {
         }
         if (e.getSlot() == 20) {
             if (holder.getPlot().isOwner(player.getUniqueId())
-                    && plugin.getConfig().getBoolean("claims.merging.enabled", false)) {
+                    && plugin.getConfig().getBoolean("claims.merging.enabled", true)) {
                 plugin.gui().claimMerge().open(player);
             } else {
                 sendSystem(player, "claim_merge_disabled", null, "&cClaim merging is unavailable.");
@@ -259,7 +271,7 @@ public class PlotStatusGUI {
             return;
         }
         if (e.getSlot() == 23) {
-            boolean upkeepOn = plugin.getConfig().getBoolean("upkeep.enabled", false)
+            boolean upkeepOn = plugin.getConfig().getBoolean("upkeep.enabled", true)
                     || plugin.getConfig().getBoolean("economy.upkeep.enabled", false);
             if (!upkeepOn) return;
             if (!plotCanManage(player, holder.getPlot())) {

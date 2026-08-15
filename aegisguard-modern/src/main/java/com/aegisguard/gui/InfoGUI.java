@@ -116,12 +116,15 @@ public class InfoGUI {
                         "&7shared group claims."
                 )));
 
-        inv.setItem(12, sectionItem(player, Material.ENDER_PEARL, "codex_travel_title", "&b&lII. Travel", "codex_travel_lore",
-                List.of(
-                        "&7Review homes, plot spawn,",
-                        "&7visit travel, and server",
-                        "&7warp-style movement."
-                )));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.TRAVEL)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.ROUTES)) {
+            inv.setItem(12, sectionItem(player, Material.ENDER_PEARL, "codex_travel_title", "&b&lII. Travel", "codex_travel_lore",
+                    List.of(
+                            "&7Review homes, plot spawn,",
+                            "&7visit travel, and server",
+                            "&7warp-style movement."
+                    )));
+        }
 
         inv.setItem(14, sectionItem(player, Material.WRITABLE_BOOK, "codex_menus_title", "&d&lIII. Menus", "codex_menus_lore",
                 List.of(
@@ -137,26 +140,42 @@ public class InfoGUI {
                         "&7keep your plot secure."
                 )));
 
-        inv.setItem(22, sectionItem(player, Material.GOLD_INGOT, "codex_economy_title", "&6&lV. Economy", "codex_economy_lore",
-                List.of(
-                        "&7Read about ClaimBlocks,",
-                        "&7upkeep, expansion costs,",
-                        "&7and market systems."
-                )));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.ECONOMY)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET_STALLS)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.AUCTION)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.UPKEEP)) {
+            inv.setItem(22, sectionItem(player, Material.GOLD_INGOT, "codex_economy_title", "&6&lV. Economy", "codex_economy_lore",
+                    List.of(
+                            "&7Read about ClaimBlocks,",
+                            "&7upkeep, expansion costs,",
+                            "&7and market systems."
+                    )));
+        }
 
-        inv.setItem(24, sectionItem(player, Material.NAME_TAG, "codex_identity_title", "&3&lVI. Identity", "codex_identity_lore",
-                List.of(
-                        "&7Customize plot names,",
-                        "&7descriptions, cosmetics,",
-                        "&7and presentation."
-                )));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.REALM_PROFILES)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
+            inv.setItem(24, sectionItem(player, Material.NAME_TAG, "codex_identity_title", "&3&lVI. Identity", "codex_identity_lore",
+                    List.of(
+                            "&7Customize plot names,",
+                            "&7descriptions, cosmetics,",
+                            "&7and presentation."
+                    )));
+        }
 
-        inv.setItem(31, sectionItem(player, Material.EXPERIENCE_BOTTLE, "codex_advanced_title", "&5&lVII. Advanced", "codex_advanced_lore",
-                List.of(
-                        "&7Explore leveling, zones,",
-                        "&7rentals, TradeStalls, and",
-                        "&7other advanced systems."
-                )));
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.LEVELING)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.ZONING)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.RENTALS)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET_STALLS)
+                || plugin.modules().on(com.aegisguard.config.Modules.Id.ARENA)) {
+            inv.setItem(31, sectionItem(player, Material.EXPERIENCE_BOTTLE, "codex_advanced_title", "&5&lVII. Advanced", "codex_advanced_lore",
+                    List.of(
+                            "&7Explore leveling, zones,",
+                            "&7rentals, TradeStalls, and",
+                            "&7other advanced systems."
+                    )));
+        }
 
     }
 
@@ -884,7 +903,7 @@ public class InfoGUI {
                         "&7If something feels wrong, diagnostics",
                         "&7are the first place staff should look."
                 )));
-        boolean arenaOn = plugin.getConfig().getBoolean("arena.enabled", false);
+        boolean arenaOn = plugin.getConfig().getBoolean("arena.enabled", true);
         if (arenaOn) {
             inv.setItem(32, infoCard(player, Material.DIAMOND_SWORD, "codex_advanced_arena_name", "&cArena",
                     "codex_advanced_arena_lore", List.of(
@@ -1055,6 +1074,33 @@ public class InfoGUI {
         };
 
         if (target != null) {
+            if (target == CodexSection.TRAVEL
+                    && !(plugin.modules().on(com.aegisguard.config.Modules.Id.TRAVEL)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.ROUTES))) {
+                return;
+            }
+            if (target == CodexSection.ECONOMY
+                    && !(plugin.modules().on(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.ECONOMY)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET_STALLS)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.AUCTION)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.UPKEEP))) {
+                return;
+            }
+            if (target == CodexSection.IDENTITY
+                    && !(plugin.modules().on(com.aegisguard.config.Modules.Id.REALM_PROFILES)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS))) {
+                return;
+            }
+            if (target == CodexSection.ADVANCED
+                    && !(plugin.modules().on(com.aegisguard.config.Modules.Id.LEVELING)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.ZONING)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.RENTALS)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.MARKET_STALLS)
+                    || plugin.modules().on(com.aegisguard.config.Modules.Id.ARENA))) {
+                return;
+            }
             open(player, target);
             plugin.effects().playMenuFlip(player);
         }

@@ -98,12 +98,13 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 ## Installation and Updating
 
 1. Stop the server completely.
-2. Back up your existing `plugins/AegisGuard/` folder and server world data.
-3. Confirm the host is running **Java 21 or newer**.
-4. Replace the old `AegisGuard` plugin JAR with `AegisGuard-1.3.0.jar`.
-5. Start the server and allow AegisGuard to complete its safety backup and configuration checks.
-6. Review `plugins/AegisGuard/config.yml` and your language files.
-7. Run `/agadmin doctor` before reopening the server to players.
+2. Confirm the host is running **Java 21 or newer**.
+3. Replace the old `AegisGuard` plugin JAR with `AegisGuard-1.3.0.jar`.
+4. Start the server. Config and language merge run on enable. Existing plots load as-is.
+5. Optional but recommended: keep a copy of `plugins/AegisGuard/` (the plugin also writes its own config backup). This is not required to keep claims.
+6. Review `plugins/AegisGuard/config.yml` and your language files if you want to enable new 1.3.0 options.
+7. Confirm the upgrade with `/agadmin transition` (alias `/agadmin upgrade`).
+8. Run `/agadmin doctor` only if something looks wrong. Doctor is optional hygiene, not part of the version bridge.
 
 > Do **not** use Bukkit's global `/reload` command. Use `/agadmin reload` for supported configuration and language reloads.
 
@@ -117,7 +118,8 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 /ag alliance ...         Create, invite, accept, leave, or disband an alliance
 /ag notice ...           Manage the plot noticeboard
 /agadmin menu            Open the Staff Command Center
-/agadmin doctor          Run diagnostics and repair tools
+/agadmin transition      Confirm 1.2.7 → 1.3.0 upgrade status
+/agadmin doctor          Optional diagnostics and repair tools
 ```
 
 ---

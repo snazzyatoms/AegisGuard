@@ -21,12 +21,13 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1286;
+    public static final int CURRENT_SCHEMA = 1287;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
     private final List<String> warnings = new ArrayList<>();
     private File backup;
+    private File lastReport;
 
     public ConfigMigrationService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -40,6 +41,7 @@ public final class ConfigMigrationService {
             plugin.reloadConfig();
             plugin.getLogger().info("Configuration migrated to schema " + CURRENT_SCHEMA
                     + (backup == null ? "." : "; backup: " + backup.getName()));
+            plugin.getLogger().info("Upgraded to 1.3.0. Existing plots were left unchanged. Doctor is not required.");
             return;
         }
 
@@ -60,6 +62,7 @@ public final class ConfigMigrationService {
         changes.clear();
         warnings.clear();
         backup = null;
+        lastReport = null;
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         int previous = config.getInt("config_schema", config.getInt("config-version", 0));
 
@@ -71,6 +74,7 @@ public final class ConfigMigrationService {
             migrateAliases(config);
             mergeMissingDefaults(config, defaultsSupplier);
             mergeAvailableLanguages(config);
+            syncModuleSwitchboard(config, previous);
             validateAndRepair(config);
             config.set("config_schema", CURRENT_SCHEMA);
             config.set("config-version", null);
@@ -91,6 +95,7 @@ public final class ConfigMigrationService {
     public List<String> changes() { return List.copyOf(changes); }
     public List<String> warnings() { return List.copyOf(warnings); }
     public File backup() { return backup; }
+    public File lastReport() { return lastReport; }
 
     private void migrateAliases(YamlConfiguration config) {
         Map<String, String> aliases = Map.of(
@@ -150,6 +155,26 @@ public final class ConfigMigrationService {
         if (changed) {
             config.set(path, current);
             changes.add("Merged newly shipped language IDs into " + path + ".");
+        }
+    }
+
+    /**
+     * On first 1287 upgrade, copy existing section.enabled values onto modules.* so
+     * a server that already turned a system off does not get defaulted back on.
+     * After that, modules.* is canonical and is copied onto the matching enabled path.
+     */
+    private void syncModuleSwitchboard(YamlConfiguration config, int previous) {
+        for (Modules.Id id : Modules.Id.values()) {
+            if (previous < 1287 && config.isSet(id.legacyPath())) {
+                config.set(id.modulesPath(), config.getBoolean(id.legacyPath()));
+            }
+            if (config.isSet(id.modulesPath())) {
+                boolean on = config.getBoolean(id.modulesPath());
+                if (!config.isSet(id.legacyPath()) || config.getBoolean(id.legacyPath()) != on) {
+                    config.set(id.legacyPath(), on);
+                    changes.add("Synced " + id.legacyPath() + " from modules." + id.key() + ".");
+                }
+            }
         }
     }
 
@@ -272,10 +297,13 @@ public final class ConfigMigrationService {
             changes.forEach(change -> report.append("- ").append(change).append('\n'));
             report.append("\nWarnings\n--------\n");
             warnings.forEach(warning -> report.append("- ").append(warning).append('\n'));
-            Files.writeString(new File(reports, "config-migration-" + TS.format(LocalDateTime.now()) + ".txt").toPath(),
-                    report.toString(), StandardCharsets.UTF_8);
+            lastReport = new File(reports, "config-migration-" + TS.format(LocalDateTime.now()) + ".txt");
+            Files.writeString(lastReport.toPath(), report.toString(), StandardCharsets.UTF_8);
         } catch (IOException error) {
-            plugin.getLogger().warning("Could not write configuration migration report: " + error.getMessage());
+            lastReport = null;
+            if (plugin != null) {
+                plugin.getLogger().warning("Could not write configuration migration report: " + error.getMessage());
+            }
         }
     }
 }

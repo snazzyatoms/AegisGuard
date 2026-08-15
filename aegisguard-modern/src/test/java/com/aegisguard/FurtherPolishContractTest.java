@@ -32,10 +32,10 @@ class FurtherPolishContractTest {
     @Test
     void auctionsNotGatedByUpkeepInPlayerGui() throws Exception {
         String playerGui = Files.readString(JAVA_ROOT.resolve("gui/PlayerGUI.java"));
-        assertTrue(playerGui.contains("auction.enabled")
+        assertTrue(playerGui.contains("Modules.Id.AUCTION")
+                || playerGui.contains("auction.enabled")
                 || playerGui.contains("auctions.enabled")
                 || playerGui.contains("market.auctions.enabled"));
-        assertTrue(playerGui.contains("auctionsEnabled"));
         assertFalse(playerGui.contains("isUpkeepEnabled()"));
     }
 

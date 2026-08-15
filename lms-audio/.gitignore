@@ -1,6 +1,0 @@
-out/
-__pycache__/
-*.wav
-*.mp3
-*.m4a
-.ipynb_checkpoints/

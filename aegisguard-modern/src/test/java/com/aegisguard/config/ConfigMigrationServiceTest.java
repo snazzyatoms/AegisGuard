@@ -224,7 +224,8 @@ class ConfigMigrationServiceTest {
         assertTrue(migratedConfig.getBoolean("arena.enabled"));
         assertTrue(migratedConfig.getBoolean("modules.upkeep"));
         assertTrue(migratedConfig.getBoolean("modules.claim_merge"));
-        assertTrue(migratedConfig.getBoolean("modules.wilderness_revert"));
+        assertFalse(migratedConfig.getBoolean("modules.wilderness_revert"));
+        assertFalse(migratedConfig.getBoolean("wilderness_revert.enabled"));
         assertTrue(migratedConfig.getBoolean("modules.guest_passes"));
     }
 

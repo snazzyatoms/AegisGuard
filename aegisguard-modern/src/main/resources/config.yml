@@ -5,7 +5,7 @@
 #
 # Recommended setup order:
 # 1. localization   - choose default and fallback languages
-# 2. modules        - optional systems are on by default; set false to disable extras
+# 2. modules        - optional systems are on by default except wilderness_revert (off; SQL-only)
 # 3. hooks          - enable only the integrations your server actually uses
 # 4. storage        - choose YML or database-backed storage
 # 5. economy        - decide whether claims use Vault, ClaimBlocks, or both
@@ -40,10 +40,12 @@ prefix: '&8[&bAegisGuard&8]&r '
 # ==============================================================================
 # Optional systems only. Claiming land, plot protection, member roles, Settings,
 # the guidebook, and Staff Tools stay available so a protection-only server still
-# works. Every optional module below is on by default; set a value to false to
-# hide that system's menus, block matching /ag commands, and skip its runtime
-# work. Flip it back to true later when you want the feature. After /agadmin
-# reload, each matching <section>.enabled key is kept in sync with this list.
+# works. Optional modules below are on by default except wilderness_revert,
+# which ships off. Wilderness revert is SQL-only and does nothing on YAML
+# storage; enable it only if the owner wants it and storage is SQL. Set any
+# other module to false to hide its menus, block matching /ag commands, and
+# skip its runtime work. Flip it back to true later when you want the feature.
+# After /agadmin reload, each matching <section>.enabled key stays in sync.
 #
 # Example protection-only start: set guest_passes, lockdown, alliance_access,
 # realm_profiles, routes, travel, plot_discovery, expansions, zoning,
@@ -82,7 +84,9 @@ modules:
   social: true
   territory_activity: true
   arena: true
-  wilderness_revert: true
+  # Off by default. Enable only if the owner wants it AND storage is SQL.
+  # YAML storage is a no-op. SQL being on does not turn this on automatically.
+  wilderness_revert: false
   mob_barrier: true
 
 
@@ -1339,9 +1343,9 @@ auction:
 # Wilderness revert
 # ==============================================================================
 wilderness_revert:
-  # On by default; set false to disable. This feature is intended for SQL-backed
-  # setups. On YAML storage it stays a no-op and logs a warning.
-  enabled: true
+  # Disabled by default. Enable only if the owner wants it AND storage is SQL.
+  # YAML storage does nothing (no-op). SQL being on does not enable this.
+  enabled: false
   revert_after_hours: 2
   # Primary scheduler key for 1.2.7+. Older installs may still use
   # check_interval_minutes and will continue to work.

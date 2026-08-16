@@ -79,7 +79,7 @@ Voluntary teleports (visit, markets, spawn, staff destinations, and related flow
 
 ### Module Switchboard
 
-Optional systems live under `modules:` in `config.yml` and are **on by default**. Owners can turn any module off; player and staff menus hide entries for disabled modules. Claiming, plot protection, roles, settings, the guidebook, and core staff tools stay available. Third-party hooks (maps, Discord, protection-compat) stay off until you opt in.
+Optional systems live under `modules:` in `config.yml` and are **on by default**, except **wilderness revert**, which ships **off**. Wilderness revert is SQL-only and a no-op on YAML; owners must set it true (SQL being on does not auto-enable it). Owners can turn any other module off; player and staff menus hide entries for disabled modules. Claiming, plot protection, roles, settings, the guidebook, and core staff tools stay available. Third-party hooks (maps, Discord, protection-compat) stay off until you opt in.
 
 ### Optional Arena Module
 
@@ -91,7 +91,7 @@ Everyday territory tools are clearer: **My Rentals** and **My Tenants** for cont
 
 Protection covers hopper, liquid, teleport, and storm wards alongside the rest of the plot defense set. Scheduling is Folia-safe across the plugin, including the optional Arena module. The nine-language UI is complete enough that players can switch packs without dropping into English placeholders.
 
-Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in.
+Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in. Wilderness revert ships **OFF** (SQL-only; YAML does nothing).
 
 ## Before the Public 1.3.0 Release
 
@@ -108,7 +108,7 @@ On a JAR swap, config and language merge run automatically. Confirm the upgrade 
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
 | Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
-| Optional modules | Module switchboard (`modules:`): all listed systems default **on**; menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots are claim-data only until a later full plot-backup update |
+| Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots are claim-data only until a later full plot-backup update |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
 
 ## Compatibility

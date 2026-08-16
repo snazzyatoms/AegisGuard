@@ -73,6 +73,7 @@ Player alliances are completely separate from plot ownership, money, rentals, an
 
 - Risky Alliance Access toggles default **OFF**
 - Hooks and protection-compat plugins default **OFF** (opt-in)
+- Wilderness revert ships **OFF** (SQL-only, opt-in). Most servers start on YAML, where the feature is a no-op. SQL being on does not turn it on; the owner must set `modules.wilderness_revert` / `wilderness_revert.enabled` to true.
 - Guest Passes are additive and temporary; permanent roles are untouched
 - Lockdown is reversible and plot-scoped
 - Routes never alter claim boundaries

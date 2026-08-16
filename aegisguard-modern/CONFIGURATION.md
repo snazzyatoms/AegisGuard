@@ -94,7 +94,7 @@ Use these ideas when claims, trading, and staff activity are heavy:
 - Keep `expansions.audit.enabled: true`
 - Keep `territory_activity.enabled: true`
 - Run `/agadmin doctor scan` after migrations or large administrative changes
-- Review `wilderness_revert` carefully before enabling aggressive cleanup
+- Leave `wilderness_revert` **off** unless you want it **and** storage is SQL (YAML is a no-op; SQL being on does not auto-enable it)
 
 Why:
 Large servers benefit most from auditability, tuned exchange limits, and fewer unnecessary hooks.
@@ -316,7 +316,7 @@ These toggles are powerful and should be chosen intentionally:
 
 - `upkeep.enabled`
 - `upkeep.unclaim_on_fail`
-- `wilderness_revert.enabled`
+- `wilderness_revert.enabled` (ships **off**; SQL-only opt-in; YAML does nothing)
 - `admin.unlimited_plots`
 - `admin.trust_operators`
 - `hooks.protection_compat.overlap_policy`

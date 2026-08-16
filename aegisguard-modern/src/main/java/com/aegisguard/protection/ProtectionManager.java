@@ -100,7 +100,7 @@ public class ProtectionManager implements Listener {
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
-        this.wildernessRevertEnabled = plugin.cfg().raw().getBoolean("wilderness_revert.enabled", true);
+        this.wildernessRevertEnabled = plugin.modules().on(com.aegisguard.config.Modules.Id.WILDERNESS_REVERT);
     }
 
     // --------------------------------------------------

@@ -974,7 +974,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startWildernessRevertTask() {
-        boolean enabled = getConfig().getBoolean("wilderness_revert.enabled", true);
+        boolean enabled = modules().on(com.aegisguard.config.Modules.Id.WILDERNESS_REVERT);
         if (!enabled) return;
 
         if (!(plotStore instanceof SQLDataStore)) {

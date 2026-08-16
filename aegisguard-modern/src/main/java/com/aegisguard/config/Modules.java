@@ -42,7 +42,7 @@ public final class Modules {
         SOCIAL("social", "social.likes_enabled", true, "Likes"),
         TERRITORY_ACTIVITY("territory_activity", "territory_activity.enabled", true, "Territory activity"),
         ARENA("arena", "arena.enabled", true, "Arena"),
-        WILDERNESS_REVERT("wilderness_revert", "wilderness_revert.enabled", true, "Wilderness revert"),
+        WILDERNESS_REVERT("wilderness_revert", "wilderness_revert.enabled", false, "Wilderness revert"),
         MOB_BARRIER("mob_barrier", "mob_barrier.enabled", true, "Mob barrier");
 
         private final String key;

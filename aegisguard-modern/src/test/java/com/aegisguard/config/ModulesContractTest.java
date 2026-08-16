@@ -31,7 +31,7 @@ class ModulesContractTest {
         assertEquals(Boolean.TRUE, modules.get("arena"));
         assertEquals(Boolean.TRUE, modules.get("upkeep"));
         assertEquals(Boolean.TRUE, modules.get("claim_merge"));
-        assertEquals(Boolean.TRUE, modules.get("wilderness_revert"));
+        assertEquals(Boolean.FALSE, modules.get("wilderness_revert"));
         assertEquals(Boolean.TRUE, modules.get("guest_passes"));
         assertEquals(Boolean.TRUE, modules.get("alliance_access"));
         assertEquals(Boolean.TRUE, modules.get("group_plots"));
@@ -62,8 +62,12 @@ class ModulesContractTest {
     }
 
     @Test
-    void everyOptionalModuleDefaultsOn() {
+    void everyOptionalModuleDefaultsOnExceptWildernessRevert() {
         for (Modules.Id id : Modules.Id.values()) {
+            if (id == Modules.Id.WILDERNESS_REVERT) {
+                assertFalse(id.defaultOn(), id.key() + " must default off");
+                continue;
+            }
             assertTrue(id.defaultOn(), id.key() + " must default on");
         }
     }
@@ -75,7 +79,7 @@ class ModulesContractTest {
         assertTrue(modules.on(Modules.Id.ARENA));
         assertTrue(modules.on(Modules.Id.UPKEEP));
         assertTrue(modules.on(Modules.Id.CLAIM_MERGE));
-        assertTrue(modules.on(Modules.Id.WILDERNESS_REVERT));
+        assertFalse(modules.on(Modules.Id.WILDERNESS_REVERT));
         assertTrue(modules.on(Modules.Id.GUEST_PASSES));
     }
 

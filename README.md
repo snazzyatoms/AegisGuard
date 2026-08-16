@@ -27,9 +27,9 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. Version `1.2.7` shipped recently; `1.3.0` is a feature-rich follow-up currently soaking before a public GitHub Release. Existing `1.2.7` data and configuration remain valid through automatic schema migration.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. Version `1.3.0` is the current public release. Existing `1.2.7` data and configuration remain valid through automatic schema migration.
 
-> The latest published GitHub Release may still be `1.2.7`. Current `1.3.0` builds live on the `V1.3.0` branch.
+> Download `AegisGuard-1.3.0.jar` from [Releases](https://github.com/snazzyatoms/AegisGuard/releases). Full notes are in [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md). Wiki pages will be updated after this release.
 
 ## What Is New In 1.3.0
 
@@ -93,11 +93,9 @@ Protection covers hopper, liquid, teleport, and storm wards alongside the rest o
 
 Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in. Wilderness revert ships **OFF** (SQL-only; YAML does nothing).
 
-## Before the Public 1.3.0 Release
+## Public 1.3.0 Release
 
-`1.3.0` is in feature freeze and soak on Paper (and Folia where claimed). Upgrade-path checks from `1.2.7` are part of that soak. A public GitHub Release has not been cut yet; current builds live on the `V1.3.0` branch.
-
-On a JAR swap, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`).
+`1.3.0` is the current GitHub Release. On a JAR swap from `1.2.7`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki and SpigotMC pages will follow.
 
 ## Core Systems
 

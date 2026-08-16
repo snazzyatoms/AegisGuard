@@ -19,3 +19,12 @@ m2verify-clean/
 Thumbs.db
 .idea/
 .vscode/
+.cursor/
+
+# Local generate/translate caches and logs
+.tmp-*
+.tmp-lang-cache/
+.venv-lang/
+lms-audio/
+notebooklm/
+outputs/

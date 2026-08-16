@@ -93,6 +93,18 @@ Protection covers hopper, liquid, teleport, and storm wards alongside the rest o
 
 Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in. Wilderness revert ships **OFF** (SQL-only; YAML does nothing).
 
+## Known Issues In 1.3.0
+
+These issues exist in public `1.3.0`. They are addressed in `1.3.5`, which is an upcoming GitHub Release. The same list is on the [1.3.0 Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.0).
+
+- Restoring a snapshot after a plot changes owner can restore the wrong live plot
+- Staff snapshot restore can run off the region/main thread (unsafe on Folia)
+- Snapshot prune can delete more snapshots than the configured cap when age and count limits both apply
+- Rollback does not clear role nicknames added after the snapshot
+- Player menu footer can leave empty clickable holes for non-admins
+- Staff Tools can still show Routes, Arena, Expansions, Audit, and Snapshots when those modules are turned off
+- Saving a plot can auto-lift an expired timed lockdown as a side effect
+
 ## Public 1.3.0 Release
 
 `1.3.0` is the current GitHub Release. On a JAR swap from `1.2.7`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki and SpigotMC pages will follow.

@@ -13,10 +13,12 @@
   <img src="https://img.shields.io/badge/Minecraft-1.20%2B-56a64b?style=for-the-badge" alt="Minecraft 1.20 or newer" />
   <img src="https://img.shields.io/badge/Java-21%2B-e76f00?style=for-the-badge" alt="Java 21 or newer" />
   <img src="https://img.shields.io/badge/Folia-Supported-2d7ff9?style=for-the-badge" alt="Folia supported" />
+  <a href="https://discord.gg/nHwdhKzeKR"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord" /></a>
 </p>
 
 <p align="center">
   <a href="https://github.com/snazzyatoms/AegisGuard/wiki">Wiki</a> &bull;
+  <a href="https://discord.gg/nHwdhKzeKR">Discord</a> &bull;
   <a href="https://github.com/snazzyatoms/AegisGuard/issues">Issues</a> &bull;
   <a href="https://github.com/snazzyatoms/AegisGuard/releases">Releases</a>
 </p>

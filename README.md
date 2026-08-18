@@ -16,6 +16,7 @@
 </p>
 
 <p align="center">
+  <a href="https://discord.gg/nHwdhKzeKR">Discord</a> &bull;
   <a href="https://github.com/snazzyatoms/AegisGuard/wiki">Wiki</a> &bull;
   <a href="https://github.com/snazzyatoms/AegisGuard/issues">Issues</a> &bull;
   <a href="https://github.com/snazzyatoms/AegisGuard/releases">Releases</a>
@@ -171,6 +172,12 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 ```
 
 See the [Wiki](https://github.com/snazzyatoms/AegisGuard/wiki) for detailed commands, permissions, configuration, economy, migration, and player guides.
+
+## Community and Support
+
+Join the [official AegisGuard Discord server](https://discord.gg/nHwdhKzeKR) for community support, setup questions, announcements, and release discussion.
+
+Please use [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues) for reproducible bugs and technical reports. Do not post passwords, authentication tokens, license keys, private IP addresses, or other sensitive server information in public channels or issues.
 
 ---
 

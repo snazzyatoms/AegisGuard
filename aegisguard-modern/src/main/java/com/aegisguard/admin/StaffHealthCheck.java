@@ -13,6 +13,8 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Lightweight staff health check for destinations, Guest Passes, snapshots, and config.
@@ -52,9 +54,6 @@ public final class StaffHealthCheck {
             if (plot.isServerWarp() || plot.getSpawnLocation() != null) {
                 var spawn = plot.getSpawnLocation();
                 if (spawn == null || spawn.getWorld() == null) {
-                    invalidDestinations++;
-                } else if (plugin.safeTravel() != null
-                        && plugin.safeTravel().findSafeDestination(spawn) == null) {
                     invalidDestinations++;
                 }
             }
@@ -128,17 +127,148 @@ public final class StaffHealthCheck {
         return findings;
     }
 
-    public static void report(AegisGuard plugin, CommandSender sender) {
-        List<Finding> findings = scan(plugin);
-        send(plugin, sender, "staff_health_title", "&6&lAegisGuard Staff Health Check", Map.of());
-        for (Finding finding : findings) {
-            String color = "OK".equals(finding.code()) || finding.code().endsWith("STATUS")
-                    || "MOB_BARRIER".equals(finding.code()) ? "&a" : "&e";
-            String body = localize(plugin, sender, finding.messageKey(), finding.fallback(), finding.placeholders());
-            send(plugin, sender, "staff_health_line", "{COLOR}[{CODE}] &7{MESSAGE}",
-                    Map.of("COLOR", color, "CODE", finding.code(), "MESSAGE", ChatColor.stripColor(
-                            ChatColor.translateAlternateColorCodes('&', body))));
+    /** Full health scan with block checks on owning regions and file/storage checks asynchronously. */
+    public static CompletableFuture<List<Finding>> scanAsync(AegisGuard plugin) {
+        CompletableFuture<List<Finding>> result = new CompletableFuture<>();
+        if (plugin == null || plugin.scheduler() == null) {
+            result.complete(scan(plugin));
+            return result;
         }
+        var global = plugin.scheduler().runGlobal(() -> {
+            try {
+                List<Finding> base = new ArrayList<>(scan(plugin));
+                List<CompletableFuture<Void>> destinationJobs = new ArrayList<>();
+                AtomicInteger unsafeDestinations = new AtomicInteger();
+                if (plugin.store() != null && plugin.safeTravel() != null) {
+                    for (Plot plot : plugin.store().getAllPlots()) {
+                        if (plot == null || (!plot.isServerWarp() && plot.getSpawnLocation() == null)) continue;
+                        var spawn = plot.getSpawnLocation();
+                        if (spawn == null || spawn.getWorld() == null) continue;
+                        CompletableFuture<Void> checked = new CompletableFuture<>();
+                        var dispatch = plugin.scheduler().runAt(spawn, () -> {
+                            try {
+                                if (plugin.safeTravel().findSafeDestination(spawn) == null) {
+                                    unsafeDestinations.incrementAndGet();
+                                }
+                            } catch (Throwable checkError) {
+                                unsafeDestinations.incrementAndGet();
+                            } finally {
+                                checked.complete(null);
+                            }
+                        });
+                        if (!dispatch.accepted()) {
+                            unsafeDestinations.incrementAndGet();
+                            checked.complete(null);
+                        }
+                        destinationJobs.add(checked);
+                    }
+                }
+                CompletableFuture.allOf(destinationJobs.toArray(CompletableFuture[]::new))
+                        .thenCompose(ignored -> plugin.getSnapshotManager() == null
+                                ? CompletableFuture.completedFuture(null)
+                                : plugin.getSnapshotManager().buildBackup().maintainStorageAsync(true))
+                        .whenComplete((storage, error) -> {
+                            if (unsafeDestinations.get() > 0) {
+                                base.add(new Finding("UNSAFE_DESTINATIONS", "staff_health_unsafe_destinations",
+                                        "{COUNT} destination(s) failed a Folia-region-safe block check.",
+                                        Map.of("COUNT", String.valueOf(unsafeDestinations.get()))));
+                            }
+                            appendRecoveryFindings(plugin, base, storage, error);
+                            result.complete(List.copyOf(base));
+                        });
+            } catch (Throwable error) {
+                result.completeExceptionally(error);
+            }
+        });
+        if (!global.accepted()) result.complete(List.of(new Finding("SCHEDULER_REJECTED",
+                "staff_health_scheduler_rejected", "Scheduler rejected the health scan.")));
+        return result;
+    }
+
+    private static void appendRecoveryFindings(AegisGuard plugin, List<Finding> findings,
+                                                com.aegisguard.snapshots.PlotBuildBackup.StorageReport storage,
+                                                Throwable storageError) {
+        if (plugin.getSnapshotManager() == null) return;
+        var integration = plugin.getSnapshotManager().buildBackup().integrationInfo();
+        boolean buildRequired = plugin.getConfig().getBoolean("snapshots.build_backup.enabled", false)
+                || plugin.getConfig().getBoolean("snapshots.automatic_player.build_backup.enabled", false);
+        String integrationCode = integration.compatible() || !buildRequired
+                ? "BUILD_INTEGRATION_STATUS" : "BUILD_INTEGRATION_WARNING";
+        findings.add(new Finding(integrationCode,
+                "staff_health_build_integration",
+                "Build integration: {NAME} {VERSION}; compatible={COMPATIBLE}; {DETAIL}",
+                Map.of("NAME", integration.name(), "VERSION", integration.version(),
+                        "COMPATIBLE", String.valueOf(integration.compatible()), "DETAIL", integration.detail())));
+        if (storageError != null || storage == null) {
+            findings.add(new Finding("SNAPSHOT_STORAGE_ERROR", "staff_health_snapshot_storage_error",
+                    "Snapshot storage inspection failed: {ERROR}",
+                    Map.of("ERROR", storageError == null ? "unknown error" : String.valueOf(storageError.getMessage()))));
+        } else {
+            findings.add(new Finding("SNAPSHOT_STORAGE_STATUS", "staff_health_snapshot_storage_status",
+                    "Build storage {USED}/{LIMIT} bytes; manifests={MANIFESTS}, missing={MISSING}, corrupt={CORRUPT}, incompatible={INCOMPATIBLE}, orphans={ORPHANS}, protected={PROTECTED}.",
+                    Map.of("USED", String.valueOf(storage.totalBytes()),
+                            "LIMIT", String.valueOf(storage.configuredLimitBytes()),
+                            "MANIFESTS", String.valueOf(storage.manifests()),
+                            "MISSING", String.valueOf(storage.missingBackups()),
+                            "CORRUPT", String.valueOf(storage.corruptBackups()),
+                            "INCOMPATIBLE", String.valueOf(storage.incompatibleBackups()),
+                            "ORPHANS", String.valueOf(storage.orphanFiles()),
+                            "PROTECTED", String.valueOf(storage.protectedBackups()))));
+        }
+        long pending = 0, paused = 0, partial = 0, failed = 0;
+        for (var operation : plugin.getSnapshotManager().getRestoreOperations()) {
+            switch (operation.status()) {
+                case PREFLIGHT, RESCUE_CREATING, DATA_RESTORING, BUILD_QUEUED, BUILD_RUNNING -> pending++;
+                case PAUSED_REVIEW -> paused++;
+                case PARTIAL -> partial++;
+                case FAILED -> failed++;
+                default -> { }
+            }
+        }
+        findings.add(new Finding("RESTORE_OPERATIONS_STATUS", "staff_health_restore_operations",
+                "Restores pending={PENDING}, paused={PAUSED}, partial={PARTIAL}, failed={FAILED}, maintenance locks={LOCKS}.",
+                Map.of("PENDING", String.valueOf(pending), "PAUSED", String.valueOf(paused),
+                        "PARTIAL", String.valueOf(partial), "FAILED", String.valueOf(failed),
+                        "LOCKS", String.valueOf(plugin.getSnapshotManager().maintenanceLockCount()))));
+        findings.add(new Finding("SCHEDULER_STATUS", "staff_health_scheduler_status",
+                "Scheduler platform={PLATFORM}; in-flight restores={RESTORES}; automatic backups={BACKUPS}.",
+                Map.of("PLATFORM", plugin.isFolia() ? "Folia" : "Paper/Purpur/Spigot",
+                        "RESTORES", String.valueOf(plugin.getSnapshotManager().inFlightRestoreCount()),
+                        "BACKUPS", String.valueOf(plugin.getSnapshotManager().automaticPlayerBackups().inFlightCount()))));
+        var modules = plugin.getConfig().getConfigurationSection("modules");
+        if (modules != null) {
+            List<String> disabled = modules.getKeys(false).stream()
+                    .filter(key -> !modules.getBoolean(key, true)).sorted().toList();
+            findings.add(new Finding("DISABLED_MODULES_STATUS", "staff_health_disabled_modules",
+                    "Disabled modules: {MODULES}",
+                    Map.of("MODULES", disabled.isEmpty() ? "none" : String.join(", ", disabled))));
+        }
+    }
+
+    public static void report(AegisGuard plugin, CommandSender sender) {
+        sender.sendMessage(ChatColor.YELLOW + "Running region-safe AegisGuard health checks...");
+        scanAsync(plugin).whenComplete((findings, error) -> {
+            Runnable deliver = () -> {
+                List<Finding> safe = error == null && findings != null ? findings
+                        : List.of(new Finding("HEALTH_SCAN_FAILED", "staff_health_scan_failed",
+                        "Health scan failed: {ERROR}", Map.of("ERROR",
+                        error == null ? "unknown error" : String.valueOf(error.getMessage()))));
+                send(plugin, sender, "staff_health_title", "&6&lAegisGuard Staff Health Check", Map.of());
+                for (Finding finding : safe) {
+                    String color = "OK".equals(finding.code()) || finding.code().endsWith("STATUS")
+                            || "MOB_BARRIER".equals(finding.code()) ? "&a" : "&e";
+                    String body = localize(plugin, sender, finding.messageKey(), finding.fallback(), finding.placeholders());
+                    send(plugin, sender, "staff_health_line", "{COLOR}[{CODE}] &7{MESSAGE}",
+                            Map.of("COLOR", color, "CODE", finding.code(), "MESSAGE", ChatColor.stripColor(
+                                    ChatColor.translateAlternateColorCodes('&', body))));
+                }
+            };
+            if (sender instanceof Player player) plugin.runMain(player, deliver);
+            else {
+                var dispatch = plugin.scheduler().runGlobal(deliver);
+                if (!dispatch.accepted()) deliver.run();
+            }
+        });
     }
 
     private static void send(AegisGuard plugin, CommandSender sender, String key, String fallback,

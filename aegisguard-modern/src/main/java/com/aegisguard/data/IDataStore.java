@@ -51,6 +51,11 @@ public interface IDataStore {
 
     void createPlot(UUID owner, Location c1, Location c2);
     void addPlot(Plot plot);
+
+    /** Rebuild owner/spatial indexes in memory without performing disk or database I/O. */
+    default void reindexPlot(Plot plot) {
+        addPlot(plot);
+    }
     void removePlot(UUID owner, UUID plotId);
     void removeAllPlots(UUID owner);
 
@@ -99,6 +104,17 @@ public interface IDataStore {
 
     List<Plot> getPlots(UUID owner);
     Plot getPlot(UUID owner, UUID plotId);
+
+    /**
+     * Resolve a plot by id regardless of current owner (needed after transfers).
+     */
+    default Plot getPlotById(UUID plotId) {
+        if (plotId == null) return null;
+        for (Plot plot : getAllPlots()) {
+            if (plot != null && plotId.equals(plot.getPlotId())) return plot;
+        }
+        return null;
+    }
 
     Collection<Plot> getAllPlots();
     Collection<Plot> getPlotsForSale();

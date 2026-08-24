@@ -19,9 +19,9 @@ mvn clean verify
 
 This compiles the plugin, runs the automated tests, and creates these artifacts in `releases/`:
 
-- `AegisGuard-1.3.0.jar` — the server plugin
-- `AegisGuard-1.3.0-api.jar` — the public developer API
-- `AegisGuard-1.3.0-dev-api.jar` — a compatibility copy of the API
+- `AegisGuard-1.3.5.jar` — the server plugin
+- `AegisGuard-1.3.5-api.jar` — the public developer API library, not a server plugin
+- `AegisGuard-1.3.5-dev-api.jar` — a compatibility copy of the developer API, not a server plugin
 
 Only the standard server JAR belongs in a Minecraft server's `plugins` directory.
 

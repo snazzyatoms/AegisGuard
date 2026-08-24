@@ -29,9 +29,16 @@ class LanguageParityTest {
             "guis.yml", "system.yml", "upgrades.yml", "expansions.yml");
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{[A-Z0-9_]+}");
     private static final Pattern GUIDE_KEY = Pattern.compile("\"(codex_[a-zA-Z0-9_]+)\"");
+    private static final Pattern ROOT_KEY = Pattern.compile("^([A-Za-z0-9_]+):");
 
     @Test
     void everyLanguageContainsEveryModernEnglishKeyWithMatchingPlaceholders() throws Exception {
+        for (String language : LANGUAGES) {
+            for (String bundle : BUNDLES) {
+                assertNoDuplicateRootKeys(LANG_ROOT.resolve(language).resolve(bundle));
+            }
+            assertNoDuplicateRootKeys(CODEX_ROOT.resolve(language + ".yml"));
+        }
         Map<String, Object> reference = loadLanguage("modern_english");
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);
@@ -585,5 +592,15 @@ class LanguageParityTest {
             return list.stream().map(String::valueOf).reduce((a, b) -> a + "\n" + b).orElse("");
         }
         return String.valueOf(value);
+    }
+
+    private void assertNoDuplicateRootKeys(Path file) throws Exception {
+        Set<String> seen = new HashSet<>();
+        List<String> duplicates = new ArrayList<>();
+        for (String line : Files.readAllLines(file)) {
+            Matcher matcher = ROOT_KEY.matcher(line);
+            if (matcher.find() && !seen.add(matcher.group(1))) duplicates.add(matcher.group(1));
+        }
+        assertTrue(duplicates.isEmpty(), () -> file + " has duplicate root keys: " + duplicates);
     }
 }

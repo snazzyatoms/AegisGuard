@@ -25,6 +25,11 @@ Thumbs.db
 .tmp-*
 .tmp-lang-cache/
 .venv-lang/
+
+# Local one-off language inject scripts
+scripts/inject_*.py
+aegisguard-modern/scripts/inject_*.py
+
 lms-audio/
 notebooklm/
 outputs/

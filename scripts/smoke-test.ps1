@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$FixturesRoot,
 
-    [string]$Artifact = "$PSScriptRoot\..\aegisguard-modern\target\AegisGuard-1.3.0.jar",
+    [string]$Artifact = "$PSScriptRoot\..\aegisguard-modern\target\AegisGuard-1.3.5.jar",
 
     [string]$Java = "java",
 
@@ -32,7 +32,7 @@ foreach ($server in $servers) {
 
     $plugins = Join-Path $server.FullName "plugins"
     New-Item -ItemType Directory -Path $plugins -Force | Out-Null
-    Copy-Item -LiteralPath $artifactPath -Destination (Join-Path $plugins "AegisGuard-1.3.0.jar") -Force
+    Copy-Item -LiteralPath $artifactPath -Destination (Join-Path $plugins "AegisGuard-1.3.5.jar") -Force
 
     $log = Join-Path $server.FullName "logs\latest.log"
     $startedAt = Get-Date
@@ -87,9 +87,9 @@ foreach ($server in $servers) {
         $_ -match "\[ERROR\]|Exception|Caused by|disabled itself|not enabled|IllegalStateException|UnsupportedOperationException"
     })
     $pass = $started -and
-        $combined -match "AegisGuard enabled" -and
-        $combined -match "AegisGuard reload complete" -and
-        $combined -match "AegisGuard disabled" -and
+        $combined -match "AegisGuard (?:hath been )?enabled" -and
+        $combined -match "AegisGuard (?:reload complete|hath been reloaded successfully)" -and
+        $combined -match "AegisGuard (?:hath been )?disabled" -and
         $process.ExitCode -eq 0 -and
         $errors.Count -eq 0
 

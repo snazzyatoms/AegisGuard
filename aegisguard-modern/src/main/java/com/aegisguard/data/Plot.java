@@ -636,6 +636,7 @@ public class Plot {
     public boolean canManage(@Nullable Player player, @Nullable Plugin plugin) {
         if (player == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (isRestoreMaintenanceLocked(pl)) return false;
 
         if (hasElevatedManagementAccess(player, pl)) return true;
         return hasPermission(player.getUniqueId(), "MANAGE", pl);
@@ -655,6 +656,7 @@ public class Plot {
     public boolean canModifyMember(@Nullable Player editor, @Nullable UUID targetUUID, @Nullable Plugin plugin) {
         if (editor == null || targetUUID == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (isRestoreMaintenanceLocked(pl)) return false;
 
         if (isOwner(targetUUID) || SERVER_OWNER_UUID.equals(targetUUID)) return false;
         if (editor.getUniqueId().equals(targetUUID)) return false;
@@ -685,6 +687,7 @@ public class Plot {
     public boolean canBuild(@Nullable Player player, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (isRestoreMaintenanceLocked(pl)) return false;
 
         if (hasElevatedManagementAccess(player, pl)) return true;
 
@@ -770,6 +773,8 @@ public class Plot {
 
     public boolean canBuildAt(@Nullable Player player, @Nullable Location location, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (isRestoreMaintenanceLocked(pl)) return false;
         Zone rentedZone = getRentedZoneAt(location);
         if (rentedZone != null) {
             return canUseRentedZone(player, location, plugin, permission);
@@ -785,6 +790,7 @@ public class Plot {
     public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable Plugin plugin, @Nullable String permission) {
         if (player == null) return false;
         AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (isRestoreMaintenanceLocked(pl)) return false;
 
         Zone rentedZone = getRentedZoneAt(location);
         if (rentedZone != null) {
@@ -823,6 +829,11 @@ public class Plot {
         }
 
         return isZoneRenter(uuid, location);
+    }
+
+    private boolean isRestoreMaintenanceLocked(@Nullable AegisGuard plugin) {
+        return plugin != null && plugin.getSnapshotManager() != null
+                && plugin.getSnapshotManager().isRestoreLocked(plotId);
     }
 
     public boolean canInteractAt(@Nullable Player player, @Nullable Location location, @Nullable String permission) {
@@ -1260,12 +1271,31 @@ public class Plot {
      * as soon as a plot had more than one active pass.
      */
     public String serializeGuestPasses() {
+        return serializeGuestPasses(false);
+    }
+
+    /**
+     * Snapshot capture: freeze playtime remaining as-of-now without mutating live session
+     * counters, so rollback does not refund time already consumed in the current session.
+     */
+    public String serializeGuestPassesForSnapshot() {
+        return serializeGuestPasses(true);
+    }
+
+    private String serializeGuestPasses(boolean freezePlaytimeForSnapshot) {
         if (guestPasses.isEmpty()) return "";
+        long now = System.currentTimeMillis();
         List<String> entries = new ArrayList<>();
         for (GuestPass pass : guestPasses.values()) {
             if (pass == null) continue;
             String perms = String.join(",", pass.getPermissions());
             String issuer = pass.getIssuerId() == null ? "" : pass.getIssuerId().toString();
+            long remaining = pass.getStoredRemainingMillis();
+            long sessionStartedAt = pass.getSessionStartedAt();
+            if (freezePlaytimeForSnapshot && pass.isActivePlaytime()) {
+                remaining = pass.getStoredRemainingMillis() < 0L ? -1L : pass.getRemainingMillis(now);
+                sessionStartedAt = 0L;
+            }
             // Legacy fields (8) remain first for readability; mode/remaining/session append for
             // active-playtime support. Missing trailing fields deserialize as REAL_TIME.
             entries.add(String.join("|",
@@ -1278,8 +1308,8 @@ public class Plot {
                     String.valueOf(pass.getIssuedAt()),
                     String.valueOf(pass.getExpiresAt()),
                     pass.getMode().name(),
-                    String.valueOf(pass.getStoredRemainingMillis()),
-                    String.valueOf(pass.getSessionStartedAt())
+                    String.valueOf(remaining),
+                    String.valueOf(sessionStartedAt)
             ));
         }
         return String.join("~", entries);
@@ -1326,6 +1356,11 @@ public class Plot {
 
     public boolean isLockdownActive() {
         refreshLockdownExpiry();
+        return lockdownActive;
+    }
+
+    /** Raw flag for persistence/snapshots. Does not auto-lift expired timed lockdowns. */
+    public boolean isLockdownFlagSet() {
         return lockdownActive;
     }
 

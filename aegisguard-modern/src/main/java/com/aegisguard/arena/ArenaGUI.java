@@ -95,7 +95,7 @@ public final class ArenaGUI {
             List<String> lore = new ArrayList<>();
             lore.add(GUIManager.color(def.isEnabled()
                     ? t(player, "arena_enabled", "&aEnabled")
-                    : t(player, "arena_disabled", "&cDisabled")));
+                    : t(player, "arena_status_disabled", "&cDisabled")));
             lore.add(GUIManager.color(t(player, "arena_mode_line",
                     Map.of("MODE", def.getMode().name()), "&7Mode: &f{MODE}")));
             lore.add(GUIManager.color(t(player, "arena_players_line",

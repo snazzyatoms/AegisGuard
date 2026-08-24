@@ -6,6 +6,7 @@ import com.aegisguard.data.SQLDataStore;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * WildernessRevertTask
@@ -62,8 +63,9 @@ public class WildernessRevertTask extends BukkitRunnable {
             dataStore.revertWildernessBlocks(checkTime, revertBatchSize);
             
         } catch (Exception e) {
-            plugin.getLogger().severe("Error during wilderness revert task:");
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE,
+                    "Wilderness revert batch failed; no successful completion was recorded for this batch.",
+                    e);
         }
     }
 }

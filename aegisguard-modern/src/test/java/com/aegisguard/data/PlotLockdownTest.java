@@ -70,6 +70,18 @@ class PlotLockdownTest {
     }
 
     @Test
+    void readingTheLockdownFlagDoesNotAutoLiftAnExpiredTimedLockdown() {
+        UUID owner = UUID.randomUUID();
+        long now = System.currentTimeMillis();
+        Plot plot = new Plot(UUID.randomUUID(), owner, "OwnerName", "world", 0, 0, 20, 20);
+        plot.restoreLockdown(true, owner, "OwnerName", now - 60_000L, now - 1L, "FULL");
+
+        assertTrue(plot.isLockdownFlagSet());
+        assertTrue(plot.isLockdownFlagSet(), "Persistence reads must not clear live lockdown");
+        assertTrue(plot.getLockdownExpiresAt() > 0L);
+    }
+
+    @Test
     void interactIsNeverRestrictableSoLeavingIsAlwaysPossible() {
         assertFalse(Plot.isLockdownRestrictable("INTERACT", null));
         assertFalse(Plot.isLockdownRestrictable("interact", null));

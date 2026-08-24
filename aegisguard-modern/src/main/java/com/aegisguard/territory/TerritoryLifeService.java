@@ -3,6 +3,7 @@ package com.aegisguard.territory;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotClaimEvent;
 import com.aegisguard.api.events.PlotDeleteEvent;
+import com.aegisguard.data.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -299,7 +300,39 @@ public final class TerritoryLifeService implements Listener {
                 yaml.set(base + ".listing", entry.getValue().listingDeposit());
                 yaml.set(base + ".held", entry.getValue().heldDeposit());
             }
-            if (atomicSave(yaml.saveToString())) dirty = false;
+            if (!atomicSave(yaml.saveToString())) {
+                throw new IllegalStateException("Failed to durably save territory-life.yml");
+            }
+            dirty = false;
+        }
+    }
+
+    /** Reconcile auxiliary rental/deposit indexes after a versioned plot snapshot restore. */
+    public void synchronizeRestoredPlot(Plot plot, boolean economy, boolean zones) {
+        if (plot == null) return;
+        UUID plotId = plot.getPlotId();
+        if (economy) {
+            if (plot.isForRent() && plot.getRentPrice() > 0D) {
+                RentalOffer previous = getOffer(plotId, plot.getRentPrice(), 7);
+                setOffer(plotId, plot.getRentPrice(), previous.deposit(), previous.termDays());
+            } else {
+                clearOffer(plotId);
+            }
+            if (plot.getCurrentRenter() != null && plot.getRentExpires() > 0L) {
+                RentalOffer offer = getOffer(plotId, Math.max(0.01D, plot.getRentPrice()), 7);
+                activateContract(plotId, plot.getOwner(), plot.getCurrentRenter(), offer, plot.getRentExpires());
+            } else {
+                removeContract(plotId);
+            }
+        }
+        if (zones) {
+            String prefix = plotId + ":";
+            zoneDeposits.keySet().removeIf(key -> key != null && key.startsWith(prefix));
+            for (com.aegisguard.data.Zone zone : plot.getZones()) {
+                if (zone != null) rememberZoneDeposit(plotId, zone.getName(),
+                        zone.getDeposit(), zone.getHeldDeposit());
+            }
+            dirty = true;
         }
     }
 
@@ -338,6 +371,22 @@ public final class TerritoryLifeService implements Listener {
     public RentalOffer getOffer(UUID plotId, double fallbackPrice, int fallbackDays) {
         RentalOffer offer = plotId == null ? null : offers.get(plotId);
         return offer != null ? offer : new RentalOffer(fallbackPrice, 0.0D, Math.max(1, fallbackDays));
+    }
+
+    /** Exact offer lookup for snapshot capture; unlike getOffer, this never fabricates a fallback. */
+    public RentalOffer offer(UUID plotId) { return plotId == null ? null : offers.get(plotId); }
+
+    /** Replace the complete external rental state from a validated snapshot payload. */
+    public void restoreRentalState(UUID plotId, RentalOffer offer, RentalContract contract) {
+        if (plotId == null) throw new IllegalArgumentException("Plot ID is required");
+        if (contract != null && !plotId.equals(contract.plotId())) {
+            throw new IllegalArgumentException("Rental contract belongs to a different plot");
+        }
+        synchronized (ioLock) {
+            if (offer == null) offers.remove(plotId); else offers.put(plotId, offer);
+            if (contract == null) contracts.remove(plotId); else contracts.put(plotId, contract);
+            dirty = true;
+        }
     }
 
     public void setOffer(UUID plotId, double price, double deposit, int termDays) {

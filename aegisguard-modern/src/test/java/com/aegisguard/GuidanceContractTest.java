@@ -114,7 +114,8 @@ class GuidanceContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1283")
                 || migration.contains("CURRENT_SCHEMA = 1284") || migration.contains("CURRENT_SCHEMA = 1285")
                 || migration.contains("CURRENT_SCHEMA = 1286")
-                || migration.contains("CURRENT_SCHEMA = 1287"),
+                || migration.contains("CURRENT_SCHEMA = 1287")
+                || migration.contains("CURRENT_SCHEMA = 1292"),
                 "Config schema must be at least 1276 after Player Guidance");
     }
 

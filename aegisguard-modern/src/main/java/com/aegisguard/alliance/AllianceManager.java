@@ -27,6 +27,8 @@ public class AllianceManager {
     private final Map<UUID, UUID> playerToAlliance = new ConcurrentHashMap<>();
     private final Object ioLock = new Object();
     private volatile boolean dirty;
+    private volatile boolean storageReady;
+    private volatile boolean storageWriteWarningLogged;
 
     public AllianceManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -198,15 +200,11 @@ public class AllianceManager {
 
     public void load() {
         synchronized (ioLock) {
-            alliancesById.clear();
-            playerToAlliance.clear();
-            try {
-                File parent = file.getParentFile();
-                if (parent != null && !parent.exists()) parent.mkdirs();
-                if (!file.exists()) file.createNewFile();
-            } catch (IOException ignored) {}
+            if (!prepareStorageFile()) return;
 
             FileConfiguration data = YamlConfiguration.loadConfiguration(file);
+            alliancesById.clear();
+            playerToAlliance.clear();
             ConfigurationSection root = data.getConfigurationSection("alliances");
             if (root == null) {
                 dirty = false;
@@ -251,8 +249,40 @@ public class AllianceManager {
         }
     }
 
+    private boolean prepareStorageFile() {
+        try {
+            File parent = file.getParentFile();
+            if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                throw new IOException("Could not create plugin data directory " + parent);
+            }
+            if (!file.exists() && !file.createNewFile()) {
+                throw new IOException("Could not create " + file);
+            }
+            if (!file.isFile() || !file.canRead()) {
+                throw new IOException(file + " is not a readable file");
+            }
+            storageReady = true;
+            storageWriteWarningLogged = false;
+            return true;
+        } catch (IOException error) {
+            storageReady = false;
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not prepare alliances.yml; existing in-memory alliance state was retained and will not be replaced by an empty load.",
+                    error);
+            return false;
+        }
+    }
+
     public void save() {
         synchronized (ioLock) {
+            if (!storageReady) {
+                if (!storageWriteWarningLogged) {
+                    storageWriteWarningLogged = true;
+                    plugin.getLogger().severe("Refusing to save alliances.yml because alliance storage did not "
+                            + "initialize successfully. Repair the data directory or file permissions first.");
+                }
+                return;
+            }
             if (!dirty && file.exists()) return;
             YamlConfiguration out = new YamlConfiguration();
             for (Alliance alliance : alliancesById.values()) {
@@ -271,7 +301,8 @@ public class AllianceManager {
                 out.save(file);
                 dirty = false;
             } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not save alliances.yml", e);
+                plugin.getLogger().log(Level.SEVERE,
+                        "Failed to save alliances.yml. Alliance changes remain dirty and will be retried.", e);
             }
         }
     }

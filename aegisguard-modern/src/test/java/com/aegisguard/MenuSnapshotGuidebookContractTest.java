@@ -83,7 +83,9 @@ class MenuSnapshotGuidebookContractTest {
         assertEquals(Boolean.FALSE, scheduled.get("enabled"));
         assertEquals(360, ((Number) scheduled.get("interval_minutes")).intValue());
         assertEquals("server_zones", scheduled.get("targets"));
-        assertEquals(1287, ((Number) config.get("config_schema")).intValue());
+        Map<String, Object> backup = (Map<String, Object>) snapshots.get("build_backup");
+        assertEquals(Boolean.FALSE, backup.get("enabled"));
+        assertEquals(1292, ((Number) config.get("config_schema")).intValue());
     }
 
     @Test

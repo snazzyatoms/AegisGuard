@@ -572,7 +572,9 @@ public class SQLDataStore implements IDataStore {
     }
 
     private void savePlotInternal(Plot plot) {
-        if (hikari == null || hikari.isClosed()) return;
+        if (hikari == null || hikari.isClosed()) {
+            throw new IllegalStateException("SQL datastore is unavailable while saving plot " + plot.getPlotId());
+        }
 
         try (Connection conn = hikari.getConnection()) {
             boolean auto = conn.getAutoCommit();
@@ -730,11 +732,13 @@ public class SQLDataStore implements IDataStore {
             } catch (SQLException e) {
                 try { conn.rollback(); } catch (SQLException ignored) {}
                 plugin.getLogger().severe("Failed to save plot " + plot.getPlotId() + ": " + e.getMessage());
+                throw new IllegalStateException("Failed to save plot " + plot.getPlotId(), e);
             } finally {
                 try { conn.setAutoCommit(auto); } catch (SQLException ignored) {}
             }
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to save plot " + plot.getPlotId() + ": " + e.getMessage());
+            throw new IllegalStateException("Failed to save plot " + plot.getPlotId(), e);
         }
     }
 
@@ -804,7 +808,7 @@ public class SQLDataStore implements IDataStore {
         String allianceAccess = plot.serializeAllianceAccess();
         if (!allianceAccess.isEmpty()) add.accept("allianceAccess", allianceAccess);
 
-        if (plot.isLockdownActive()) {
+        if (plot.isLockdownFlagSet()) {
             add.accept("lockdownActive", "true");
             add.accept("lockdownActivatedAt", String.valueOf(plot.getLockdownActivatedAt()));
             if (plot.getLockdownExpiresAt() > 0L) {
@@ -1016,6 +1020,13 @@ public class SQLDataStore implements IDataStore {
         if (plot == null) return;
         cachePlot(plot);
         savePlot(plot);
+        isDirty = true;
+    }
+
+    @Override
+    public void reindexPlot(Plot plot) {
+        if (plot == null) return;
+        cachePlot(plot);
         isDirty = true;
     }
 

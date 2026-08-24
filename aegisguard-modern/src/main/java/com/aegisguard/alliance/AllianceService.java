@@ -7,6 +7,7 @@ import com.aegisguard.snapshots.ClaimSnapshot.SnapshotType;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * Milestone 7 - plot join/leave and access-toggle operations with audit logging.
@@ -96,7 +97,12 @@ public class AllianceService {
         try {
             plugin.getSnapshotManager().createSnapshot(plot, SnapshotType.PRE_ALLIANCE_ACCESS, reason,
                     actor == null ? null : actor.getUniqueId());
-        } catch (Throwable ignored) {}
+        } catch (Throwable error) {
+            plugin.getLogger().log(Level.WARNING,
+                    "Could not create the pre-alliance snapshot for plot " + plotLabel(plot)
+                            + ". The alliance change will continue without that recovery point.",
+                    error);
+        }
     }
 
     /**

@@ -1,11 +1,10 @@
 package com.aegisguard.hooks;
 
 import com.aegisguard.AegisGuard;
-import org.bukkit.Bukkit;
-
 import javax.net.ssl.HttpsURLConnection;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.Color;
@@ -18,17 +17,19 @@ import java.awt.Color;
 public class DiscordWebhook {
 
     private final AegisGuard plugin;
-    private final String url;
-
     public DiscordWebhook(AegisGuard plugin) {
         this.plugin = plugin;
-        this.url = plugin.cfg().raw().getString("hooks.discord.webhook_url", "");
+    }
+
+    private String configuredUrl() {
+        return plugin.cfg().raw().getString("hooks.discord.webhook_url", "");
     }
 
     public boolean isEnabled() {
-        return plugin.cfg().raw().getBoolean("hooks.discord.enabled", false) 
-               && url != null 
-               && url.startsWith("http");
+        String url = configuredUrl();
+        return plugin.cfg().raw().getBoolean("hooks.discord.enabled", false)
+               && url != null
+               && url.startsWith("https://");
     }
 
     /**
@@ -94,20 +95,28 @@ public class DiscordWebhook {
     }
 
     private void performRequest(String jsonPayload) throws Exception {
-        URL urlObj = new URL(this.url);
+        URL urlObj = new URL(configuredUrl());
         HttpsURLConnection connection = (HttpsURLConnection) urlObj.openConnection();
-        connection.addRequestProperty("Content-Type", "application/json");
-        connection.addRequestProperty("User-Agent", "AegisGuard-Plugin");
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
+        try {
+            connection.addRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            connection.addRequestProperty("User-Agent", "AegisGuard-Plugin");
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            connection.setConnectTimeout(5_000);
+            connection.setReadTimeout(5_000);
 
-        try (OutputStream stream = connection.getOutputStream()) {
-            stream.write(jsonPayload.getBytes());
-            stream.flush();
+            try (OutputStream stream = connection.getOutputStream()) {
+                stream.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
+                stream.flush();
+            }
+            int status = connection.getResponseCode();
+            if (status < 200 || status >= 300) {
+                throw new java.io.IOException("Discord webhook returned HTTP " + status);
+            }
+            connection.getInputStream().close();
+        } finally {
+            connection.disconnect();
         }
-
-        connection.getInputStream().close();
-        connection.disconnect();
     }
 
     private static String escape(String str) {

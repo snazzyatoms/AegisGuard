@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1287;
+    public static final int CURRENT_SCHEMA = 1292;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -41,7 +41,7 @@ public final class ConfigMigrationService {
             plugin.reloadConfig();
             plugin.getLogger().info("Configuration migrated to schema " + CURRENT_SCHEMA
                     + (backup == null ? "." : "; backup: " + backup.getName()));
-            plugin.getLogger().info("Upgraded to 1.3.0. Existing plots were left unchanged. Doctor is not required.");
+            plugin.getLogger().info("Upgraded to 1.3.5. Existing plots were left unchanged. Doctor is not required.");
             return;
         }
 
@@ -72,6 +72,7 @@ public final class ConfigMigrationService {
                 throw new IllegalStateException("Refusing to migrate config.yml because a safety backup could not be created.");
             }
             migrateAliases(config);
+            preserveLegacyModuleFlags(config);
             mergeMissingDefaults(config, defaultsSupplier);
             mergeAvailableLanguages(config);
             syncModuleSwitchboard(config, previous);
@@ -159,6 +160,18 @@ public final class ConfigMigrationService {
     }
 
     /**
+     * Copy {@code section.enabled} onto {@code modules.*} when the switchboard key is missing,
+     * so a later defaults-merge cannot turn a deliberately disabled system back on.
+     */
+    private void preserveLegacyModuleFlags(YamlConfiguration config) {
+        for (Modules.Id id : Modules.Id.values()) {
+            if (!config.isSet(id.modulesPath()) && config.isSet(id.legacyPath())) {
+                config.set(id.modulesPath(), config.getBoolean(id.legacyPath()));
+            }
+        }
+    }
+
+    /**
      * On first 1287 upgrade, copy existing section.enabled values onto modules.* so
      * a server that already turned a system off does not get defaulted back on.
      * After that, modules.* is canonical and is copied onto the matching enabled path.
@@ -192,6 +205,23 @@ public final class ConfigMigrationService {
         repairInt(config, "expansions.horizons.pulse_cooldown_seconds", 1, 86_400, 300);
         repairInt(config, "expansions.horizons.max_radius_global", 1, 100_000, 750);
         repairInt(config, "leveling.disciplines.change_cooldown_days", 0, 3650, 7);
+        repairInt(config, "snapshots.automatic_player.interval_minutes", 1, 1440, 5);
+        repairInt(config, "snapshots.automatic_player.batch_size", 1, 100, 5);
+        repairInt(config, "snapshots.automatic_player.minimum_backup_interval_minutes", 0, 10080, 60);
+        repairInt(config, "snapshots.automatic_player.retention_per_plot", 1, 100, 5);
+        repairInt(config, "snapshots.automatic_player.retention_days", 0, 3650, 14);
+        repairInt(config, "snapshots.automatic_player.eligibility.max_owner_inactive_days", 0, 3650, 30);
+        repairDouble(config, "snapshots.automatic_player.pause_below_tps", 0.0D, 20.0D, 18.0D);
+        repairInt(config, "snapshots.build_backup.max_chunks_per_region_job", 1, 256, 4);
+        repairInt(config, "snapshots.build_backup.storage.retention_per_plot", 1, 1000, 10);
+        repairInt(config, "snapshots.build_backup.storage.global_max_megabytes", 1, 1_000_000, 4096);
+        repairInt(config, "snapshots.build_backup.storage.warning_cooldown_minutes", 1, 10080, 60);
+        String orphanPolicy = config.getString("snapshots.build_backup.storage.orphan_policy", "quarantine");
+        if (!"quarantine".equalsIgnoreCase(orphanPolicy)
+                && !"report_only".equalsIgnoreCase(orphanPolicy)) {
+            config.set("snapshots.build_backup.storage.orphan_policy", "quarantine");
+            warnings.add("snapshots.build_backup.storage.orphan_policy was invalid and was reset to quarantine.");
+        }
         repairDouble(config, "expansions.horizons.renown.expansion_per_block", 0.0D, 1000.0D, 0.05D);
         repairInt(config, "expansions.horizons.renown.expansion_cap", 0, 10_000_000, 1500);
         repairInt(config, "expansions.horizons.renown.unique_visit", 0, 1_000_000, 15);
@@ -252,6 +282,25 @@ public final class ConfigMigrationService {
         }
         String material = config.getString("admin.wand.material", "BLAZE_ROD");
         if (Material.matchMaterial(material) == null) warnings.add("admin.wand.material is not a valid material: " + material);
+        if (config.getInt("snapshots.automatic_player.interval_minutes", 5) < 1
+                || config.getInt("snapshots.automatic_player.batch_size", 5) < 1
+                || config.getInt("snapshots.automatic_player.retention_per_plot", 5) < 1) {
+            warnings.add("Automatic player-backup interval, batch size, and retention must be positive.");
+        }
+        double backupTps = config.getDouble("snapshots.automatic_player.pause_below_tps", 18.0D);
+        if (!Double.isFinite(backupTps) || backupTps < 0.0D || backupTps > 20.0D) {
+            warnings.add("snapshots.automatic_player.pause_below_tps must be between 0 and 20.");
+        }
+        if (config.getInt("snapshots.build_backup.max_chunks_per_region_job", 4) < 1
+                || config.getInt("snapshots.build_backup.storage.retention_per_plot", 10) < 1
+                || config.getInt("snapshots.build_backup.storage.global_max_megabytes", 4096) < 1) {
+            warnings.add("Build-backup job, retention, and global storage limits must be positive.");
+        }
+        String orphanPolicy = config.getString("snapshots.build_backup.storage.orphan_policy", "quarantine");
+        if (!"quarantine".equalsIgnoreCase(orphanPolicy)
+                && !"report_only".equalsIgnoreCase(orphanPolicy)) {
+            warnings.add("snapshots.build_backup.storage.orphan_policy must be quarantine or report_only.");
+        }
         ConfigurationSection roles = config.getConfigurationSection("roles");
         if (roles == null || roles.getKeys(false).isEmpty()) warnings.add("No plot roles are configured.");
     }

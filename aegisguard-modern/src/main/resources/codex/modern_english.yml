@@ -99,7 +99,7 @@ starter_note_lore:
 starter_note_discard_lore: '&8Drop this note to discard it.'
 button_plot_status: '&b📊 Claim Status'
 plot_status_button_title: '&b✦ Claim Status'
-plot_status_lore:
+legacy_plot_status_lore:
 - '&7Review ownership, protections,'
 - '&7bonuses, and plot health.'
 - ' '
@@ -1137,8 +1137,8 @@ admin_snapshots_lore:
 - '&eClick to open.'
 - ' '
 - '&7Saves plot records: owner, flags,'
-- '&7members, and bounds. Not world blocks.'
-- '&eFull plot backups (builds) come later.'
+- '&7members, and bounds. Not world blocks unless build backup is on.'
+- '&eEnable snapshots.build_backup and install WorldEdit/FAWE.'
 button_admin_snapshots_disabled: '&8📸 Disabled'
 admin_snapshots_disabled_lore:
 - '&7Claim snapshots are disabled in config.'
@@ -2540,7 +2540,7 @@ giftblocks_amount_lore:
 giftblocks_confirm_name: '&aGift &e{AMOUNT} &ato &f{PLAYER}'
 giftblocks_confirm_lore:
 - '&7Click to send the gift.'
-plot_status_button_lore:
+legacy_plot_status_button_lore:
 - '&7View plot info, merge claims,'
 - '&7transfer ownership, or gift blocks.'
 plot_status_button_locked_lore:
@@ -3939,9 +3939,9 @@ admin_help_rentals: '&e/agadmin rentals <cancel|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin bypass &8- Toggle personal protection bypass'
 admin_help_reload: '&e/agadmin reload &8- Reload AegisGuard'
 admin_help_transition: '&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade status'
-admin_transition_schema: '&7Config schema: &f{CURRENT} &7/ 1.3.0 target &f{TARGET}.'
+admin_transition_schema: '&7Config schema: &f{CURRENT} &7/ 1.3.5 target &f{TARGET}.'
 admin_transition_plots: '&7Plots load as-is. Claim records are not rewritten.'
-admin_transition_already: '&aAlready on 1.3.0; nothing to convert.'
+admin_transition_already: '&aAlready on 1.3.5; nothing to convert.'
 admin_transition_ran: '&aConfig and language merge re-ran. Schema is now &f{SCHEMA}&a.'
 admin_transition_backup: '&7Config backup: &f{PATH}'
 admin_transition_report: '&7Migration report: &f{PATH}'
@@ -4209,7 +4209,7 @@ arena_mob_name: Arena Mob
 arena_menu_title: '&6Arenas'
 arena_detail_title: '&6{NAME}'
 arena_enabled: '&aEnabled'
-arena_disabled: '&cDisabled'
+arena_status_disabled: '&cDisabled'
 arena_mode_line: '&7Mode: &f{MODE}'
 arena_players_line: '&7Players: &f{MIN}-{MAX}'
 arena_active_runs_line: '&7Active runs: &f{COUNT}'
@@ -4320,7 +4320,7 @@ staff_territory_section_lore:
 staff_recovery_section_name: '&dRecovery'
 staff_recovery_section_lore:
   - '&7Claim-data snapshots, audit, doctor,'
-  - '&7and migration. Snapshots do not save builds.'
+  - '&7and migration. Build copies need WorldEdit.'
 staff_modules_section_lore:
   - '&7Routes, Arena, language refresh, and reload.'
 button_admin_snapshot_schedule: '&dAuto Snapshots: {STATE}'
@@ -4346,12 +4346,22 @@ snapshot_create_here_lore:
   - ' '
   - '&eClick to create.'
   - ' '
-  - '&eFull plot backups (builds/blocks)'
-  - '&ewill come in a later update.'
+  - '&eEnable snapshots.build_backup and install'
+  - '&eWorldEdit or FAWE for full plot backups.'
+snapshot_create_here_lore_builds:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&aAlso copies world blocks via WorldEdit/FAWE.'
+  - ' '
+  - '&eClick to create.'
+snapshot_create_here_lore_need_we:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&eInstall WorldEdit or FAWE to enable build copies.'
+  - ' '
+  - '&eClick to create plot-data snapshot.'
 snapshot_create_server_zones_name: '&bSnapshot All Server Zones'
 snapshot_create_server_zones_lore:
   - '&7Copy plot data for every server/spawn plot.'
-  - '&cDoes not copy world blocks or builds.'
+  - '&aQueues full build backups where enabled and compatible.'
   - ' '
   - '&eClick to create.'
 snapshot_scope_header_name: '&dSnapshot Scope'
@@ -4359,13 +4369,21 @@ snapshot_scope_header_lore:
   - '&7Claim snapshots save plot records:'
   - '&7owner, flags, members, and bounds.'
   - ' '
-  - '&eFull plot backups (builds/blocks)'
-  - '&ewill come in a later update.'
-  - '&7That needs a larger upgrade.'
+  - '&eEnable snapshots.build_backup and install'
+  - '&eWorldEdit or FAWE for full plot backups.'
+snapshot_scope_header_lore_builds:
+  - '&7Claim snapshots save plot records.'
+  - '&aBuild copies are on for this plot when size allows.'
+  - '&7Restore pastes blocks after claim-data rollback.'
+snapshot_scope_header_lore_need_we:
+  - '&7Claim snapshots save plot records.'
+  - '&eInstall WorldEdit or FAWE to copy builds.'
 snapshot_create_no_plot: '&cStand inside a plot to snapshot it.'
 snapshot_create_no_server_zones: '&cNo server plots were found to snapshot.'
 snapshot_created_here: '&aSaved plot-data snapshot. Builds were not copied.'
-snapshot_created_server_zones: '&aSaved {COUNT} server-zone plot-data snapshots. Builds were not copied.'
+snapshot_created_here_builds: '&aSaved plot data and queued a WorldEdit build backup.'
+snapshot_created_here_too_large: '&aSaved plot data. Build copy skipped: plot exceeds max_volume.'
+snapshot_created_server_zones: '&aSaved {COUNT} server-zone snapshots. Full build backups were queued where enabled and compatible.'
 codex_root_whats_new_name: '&eWhat''s New in 1.3.0'
 codex_root_whats_new_lore:
   - '&7Guest Passes, Lockdown, Realm Profiles,'

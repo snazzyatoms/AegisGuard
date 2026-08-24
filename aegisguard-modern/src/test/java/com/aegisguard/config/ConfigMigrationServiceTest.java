@@ -29,6 +29,34 @@ class ConfigMigrationServiceTest {
     private static final Path SHIPPED_DEFAULTS = Path.of("src/main/resources/config.yml");
 
     @Test
+    void migrationRepairsUnsafeAutomaticBackupLimits(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File configFile = tempDir.resolve("config.yml").toFile();
+        YamlConfiguration old = new YamlConfiguration();
+        old.set("config_schema", 1289);
+        old.set("snapshots.automatic_player.interval_minutes", 0);
+        old.set("snapshots.automatic_player.batch_size", 5000);
+        old.set("snapshots.automatic_player.retention_per_plot", 0);
+        old.set("snapshots.automatic_player.pause_below_tps", 25.0D);
+        old.set("snapshots.build_backup.max_chunks_per_region_job", 0);
+        old.set("snapshots.build_backup.storage.retention_per_plot", 0);
+        old.set("snapshots.build_backup.storage.global_max_megabytes", -1);
+        old.set("snapshots.build_backup.storage.orphan_policy", "delete_forever");
+        old.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, tempDir.toFile(), ConfigMigrationServiceTest::openShippedDefaults));
+        YamlConfiguration migrated = YamlConfiguration.loadConfiguration(configFile);
+        assertEquals(5, migrated.getInt("snapshots.automatic_player.interval_minutes"));
+        assertEquals(5, migrated.getInt("snapshots.automatic_player.batch_size"));
+        assertEquals(5, migrated.getInt("snapshots.automatic_player.retention_per_plot"));
+        assertEquals(18.0D, migrated.getDouble("snapshots.automatic_player.pause_below_tps"));
+        assertEquals(4, migrated.getInt("snapshots.build_backup.max_chunks_per_region_job"));
+        assertEquals(10, migrated.getInt("snapshots.build_backup.storage.retention_per_plot"));
+        assertEquals(4096, migrated.getInt("snapshots.build_backup.storage.global_max_megabytes"));
+        assertEquals("quarantine", migrated.getString("snapshots.build_backup.storage.orphan_policy"));
+    }
+
+    @Test
     void migratingACustomizedOldConfigBacksItUpAndKeepsCustomValues(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
         File dataFolder = tempDir.toFile();
         File configFile = new File(dataFolder, "config.yml");
@@ -66,6 +94,17 @@ class ConfigMigrationServiceTest {
                 "Unrecognized custom keys must be preserved, not dropped");
         assertEquals(500, migratedConfig.getInt("claim_blocks.starting_blocks"),
                 "Old alias keys must be migrated to their modern path");
+        assertFalse(migratedConfig.getBoolean("snapshots.automatic_player.enabled"));
+        assertTrue(migratedConfig.getBoolean("snapshots.automatic_player.include_server_zones"));
+        assertEquals(5, migratedConfig.getInt("snapshots.automatic_player.batch_size"));
+        assertTrue(migratedConfig.getBoolean("snapshots.automatic_player.skip_unchanged"));
+        assertFalse(migratedConfig.getBoolean("snapshots.automatic_player.build_backup.enabled"));
+        assertTrue(migratedConfig.getBoolean("snapshots.build_backup.folia.require_fawe"));
+        assertTrue(migratedConfig.getBoolean("snapshots.build_backup.storage.enforce_limits"));
+        assertEquals(4, migratedConfig.getInt("snapshots.build_backup.max_chunks_per_region_job"));
+        assertEquals(4096, migratedConfig.getInt("snapshots.build_backup.storage.global_max_megabytes"));
+        assertFalse(migratedConfig.getBoolean("hooks.discord.events.restore_failure"));
+        assertFalse(migratedConfig.getBoolean("hooks.discord.events.backup_warning"));
 
         // A migration report must be written for staff review.
         File reports = new File(dataFolder, "reports");
@@ -246,5 +285,23 @@ class ConfigMigrationServiceTest {
         YamlConfiguration after = YamlConfiguration.loadConfiguration(configFile);
         assertFalse(after.getBoolean("modules.arena"));
         assertFalse(after.getBoolean("arena.enabled"));
+    }
+
+    @Test
+    void schema1287UpgradeKeepsLegacyDisabledWhenModulesKeyIsMissing(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File dataFolder = tempDir.toFile();
+        File configFile = new File(dataFolder, "config.yml");
+
+        YamlConfiguration oldConfig = new YamlConfiguration();
+        oldConfig.set("config_schema", 1287);
+        oldConfig.set("arena.enabled", false);
+        oldConfig.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, dataFolder, ConfigMigrationServiceTest::openShippedDefaults));
+
+        YamlConfiguration migratedConfig = YamlConfiguration.loadConfiguration(configFile);
+        assertFalse(migratedConfig.getBoolean("modules.arena"));
+        assertFalse(migratedConfig.getBoolean("arena.enabled"));
     }
 }

@@ -96,7 +96,7 @@ public final class ArenaAdminGUI {
             List<String> lore = new ArrayList<>();
             lore.add(GUIManager.color(def.isEnabledFlag()
                     ? t(player, "arena_enabled", "&aEnabled")
-                    : t(player, "arena_disabled", "&cDisabled")));
+                    : t(player, "arena_status_disabled", "&cDisabled")));
             lore.add(GUIManager.color(def.isConfigValid()
                     ? t(player, "arena_admin_config_ok", "&aConfig OK")
                     : "&c" + def.getConfigError()));

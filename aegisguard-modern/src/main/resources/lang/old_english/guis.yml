@@ -46,7 +46,7 @@ button_info: '&bTidings'
 info_lore:
 - '&7Read lore, guidance, and counsel.'
 plot_status_button_title: '&b✦ Estate Status'
-plot_status_button_lore:
+legacy_plot_status_button_lore:
 - '&7Behold thy holding and its marks,'
 - '&7merge claims, transfer, or gift blocks.'
 visit_gui_title: '&3✦ Wayfaring'
@@ -787,7 +787,7 @@ admin_snapshots_lore:
 - ' '
 - '&7Saves plot records: owner, wards,'
 - '&7company, and bounds. Not world-blocks.'
-- '&eFull plot backups (masonry) come later.'
+- '&eEnable snapshots.build_backup and install WorldEdit/FAWE.'
 button_admin_snapshots_disabled: '&8📸 Snapshots Disabled'
 admin_snapshots_disabled_lore:
 - '&7Snapshot system is disabled.'
@@ -1022,7 +1022,7 @@ market_stall_clear_lore:
 - '&7Take away the price and coin from'
 - '&7the chosen slot.'
 button_plot_status: '&b⚔ Ledger of Dominion Status'
-plot_status_lore:
+legacy_plot_status_lore:
 - '&7Behold the tale of thy land:'
 - '&7boons, wards, tribute, and renown.'
 level_current_status: '&bThe Present Standing of Thy Holding'
@@ -3358,7 +3358,7 @@ plot_status_server_zone_banner: "&bServer Zone &7— governed by staff / Steward
 arena_menu_title: '&6Arenas'
 arena_detail_title: '&6{NAME}'
 arena_enabled: '&aEnabled'
-arena_disabled: '&cDisabled'
+arena_status_disabled: '&cDisabled'
 arena_mode_line: '&7Mode: &f{MODE}'
 arena_players_line: '&7Players: &f{MIN}-{MAX}'
 arena_active_runs_line: '&7Active runs: &f{COUNT}'
@@ -3495,12 +3495,11 @@ snapshot_create_here_lore:
   - ' '
   - '&eClick to copy.'
   - ' '
-  - '&eFull plot backups (masonry/blocks)'
-  - '&ewill come in a later update.'
+  - '&eEnable snapshots.build_backup and install WorldEdit/FAWE.'
 snapshot_create_server_zones_name: '&bCopy All Server Holdings'
 snapshot_create_server_zones_lore:
   - '&7Copy plot data for every server or spawn plot.'
-  - '&cCopies no masonry nor world-blocks.'
+  - '&aQueues full masonry copies where enabled and fitting.'
   - ' '
   - '&eClick to copy.'
 snapshot_scope_header_name: '&dSnapshot Scope'
@@ -3508,13 +3507,58 @@ snapshot_scope_header_lore:
   - '&7Claim copies save plot records:'
   - '&7owner, wards, company, and bounds.'
   - ' '
-  - '&eFull plot backups (masonry/blocks)'
-  - '&ewill come in a later update.'
-  - '&7That needs a larger upgrade.'
+  - '&eEnable snapshots.build_backup and install WorldEdit/FAWE.'
 snapshot_create_no_plot: '&cStand within a holding to copy it.'
 snapshot_create_no_server_zones: '&cNo server holdings were found to copy.'
+snapshot_created_here_builds: '&aSaved plot data and queued a WorldEdit build backup.'
+snapshot_created_here_too_large: '&aSaved plot data. Build copy skipped: plot exceeds max_volume.'
+snapshot_create_here_lore_builds:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&aAlso copies world blocks via WorldEdit/FAWE.'
+  - ' '
+  - '&eClick to create.'
+snapshot_create_here_lore_need_we:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&eInstall WorldEdit or FAWE to enable build copies.'
+  - ' '
+  - '&eClick to create plot-data snapshot.'
+snapshot_scope_header_lore_builds:
+  - '&7Claim snapshots save plot records.'
+  - '&aBuild copies are on for this plot when size allows.'
+  - '&7Restore pastes blocks after claim-data rollback.'
+snapshot_scope_header_lore_need_we:
+  - '&7Claim snapshots save plot records.'
+  - '&eInstall WorldEdit or FAWE to copy builds.'
+admin_snapshots_lore_builds:
+  - '&7What: browse recovery points and restore claims.'
+  - '&aWorldEdit build copies are enabled for staff snapshots.'
+  - ' '
+  - '&cRollback overwrites the live claim — confirm carefully.'
+  - '&eClick to open.'
+admin_snapshots_lore_need_we:
+  - '&7What: browse recovery points and restore claims.'
+  - '&eInstall WorldEdit or FAWE to copy builds.'
+  - ' '
+  - '&eClick to open.'
+staff_recovery_section_lore_builds:
+  - '&7Claim snapshots, optional WorldEdit build copies,'
+  - '&7audit, doctor, and migration.'
+snapshot_item_lore_builds:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &e{TYPE}'
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE}'
+  - '&7Triggered By: &f{ACTOR}'
+  - '&7Radius: &a{RADIUS}'
+  - ' '
+  - '&aThis snapshot includes a WorldEdit build copy.'
+  - '&cRollback overwrites the live claim.'
+  - '&aShift-Left-Click: &7Rollback (confirm twice)'
+  - '&cShift-Right-Click: &7Delete this snapshot'
+
 snapshot_created_here: '&aPlot-data copy saved. Masonry was not taken.'
-snapshot_created_server_zones: '&aSaved {COUNT} server-holding plot-data copies. Masonry was not taken.'
+snapshot_created_server_zones: '&aSaved {COUNT} server-holding copies. Full masonry backups were queued where enabled and fitting.'
 codex_root_whats_new_name: '&eWhat Is New in 1.3.0'
 codex_root_whats_new_lore:
   - '&7Guest Passes, Lockdown, Realm Profiles,'

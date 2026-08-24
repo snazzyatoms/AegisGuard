@@ -5,7 +5,7 @@ import java.util.*;
 
 /**
  * Immutable snapshot of a Plot's state at a specific moment.
- * Used for rollback functionality after risky operations (merge, expansion).
+ * Used for rollback after risky operations (merge, expansion) and staff restore.
  */
 public class ClaimSnapshot {
     
@@ -16,7 +16,10 @@ public class ClaimSnapshot {
         PRE_ALLIANCE_ACCESS,
         PRE_STAFF_DESTINATION,
         PRE_DESTRUCTIVE,
+        PRE_RESTORE_RESCUE,
         MANUAL,
+        AUTOMATIC_PLAYER,
+        AUTOMATIC_SERVER_ZONE,
         SCHEDULED
     }
     
@@ -25,14 +28,12 @@ public class ClaimSnapshot {
     private final UUID owner;
     private final String worldName;
     
-    // Bounds
     private final int x1, z1, x2, z2;
     
-    // Metadata
     private final long timestamp;
     private final SnapshotType type;
-    private final String reason; // e.g., "Before expansion +20 radius" or "Before merging with plot ABC"
-    private final UUID triggeredBy; // Admin who approved the change
+    private final String reason;
+    private final UUID triggeredBy;
     private final String ownerName;
     private final String plotName;
     private final String description;
@@ -48,12 +49,30 @@ public class ClaimSnapshot {
     private final UUID groupId;
     private final String groupName;
 
-    // Optional: Store flags, members, etc. for full state restoration
     private final Map<String, Boolean> flags;
-    private final Map<UUID, String> members; // UUID -> role
+    private final Map<UUID, String> members;
     private final List<UUID> bannedPlayers;
+
+    private final String guestPassesBlob;
+    private final String noticeboardBlob;
+    private final String allianceAccessBlob;
+    private final String roleNicknamesBlob;
+    private final String roleFlagsBlob;
+    private final boolean lockdownActive;
+    private final long lockdownActivatedAt;
+    private final long lockdownExpiresAt;
+    private final String lockdownMode;
+    private final UUID lockdownActivatedBy;
+    private final String lockdownActivatedByName;
+    private final String extendedStateBlob;
+    private final String territoryRentalStateBlob;
     
     public ClaimSnapshot(Plot plot, SnapshotType type, String reason, UUID triggeredBy) {
+        this(plot, type, reason, triggeredBy, "");
+    }
+
+    ClaimSnapshot(Plot plot, SnapshotType type, String reason, UUID triggeredBy,
+                  String territoryRentalStateBlob) {
         this.snapshotId = UUID.randomUUID();
         this.plotId = plot.getPlotId();
         this.owner = plot.getOwner();
@@ -86,9 +105,22 @@ public class ClaimSnapshot {
         this.flags = new HashMap<>(plot.getFlags());
         this.members = new HashMap<>(plot.getPlayerRoles());
         this.bannedPlayers = new ArrayList<>(plot.getBannedPlayers());
+
+        this.guestPassesBlob = nullToEmpty(plot.serializeGuestPassesForSnapshot());
+        this.noticeboardBlob = nullToEmpty(plot.serializeNoticeboard());
+        this.allianceAccessBlob = nullToEmpty(plot.serializeAllianceAccess());
+        this.roleNicknamesBlob = nullToEmpty(plot.serializeRoleNicknames());
+        this.roleFlagsBlob = nullToEmpty(plot.serializeRoleFlags());
+        this.lockdownActive = plot.isLockdownFlagSet();
+        this.lockdownActivatedAt = plot.getLockdownActivatedAt();
+        this.lockdownExpiresAt = plot.getLockdownExpiresAt();
+        this.lockdownMode = plot.getLockdownMode();
+        this.lockdownActivatedBy = plot.getLockdownActivatedBy();
+        this.lockdownActivatedByName = plot.getLockdownActivatedByName();
+        this.extendedStateBlob = PlotSnapshotState.capture(plot);
+        this.territoryRentalStateBlob = nullToEmpty(territoryRentalStateBlob);
     }
     
-    // Full constructor for loading from storage
     public ClaimSnapshot(UUID snapshotId, UUID plotId, UUID owner, String worldName,
                          int x1, int z1, int x2, int z2, long timestamp,
                          SnapshotType type, String reason, UUID triggeredBy,
@@ -98,6 +130,70 @@ public class ClaimSnapshot {
                          String customBiome, String plotStatus, boolean serverWarp,
                          boolean groupPlot, double treasuryBalance, UUID groupId, String groupName,
                          Map<String, Boolean> flags, Map<UUID, String> members, List<UUID> bannedPlayers) {
+        this(snapshotId, plotId, owner, worldName, x1, z1, x2, z2, timestamp, type, reason, triggeredBy,
+                ownerName, plotName, description, welcomeMessage, farewellMessage, entryTitle, entrySubtitle,
+                customBiome, plotStatus, serverWarp, groupPlot, treasuryBalance, groupId, groupName,
+                flags, members, bannedPlayers,
+                "", "", "", "", "", false, 0L, 0L, "FULL", null, "Unknown");
+    }
+
+    public ClaimSnapshot(UUID snapshotId, UUID plotId, UUID owner, String worldName,
+                         int x1, int z1, int x2, int z2, long timestamp,
+                         SnapshotType type, String reason, UUID triggeredBy,
+                         String ownerName, String plotName, String description,
+                         String welcomeMessage, String farewellMessage,
+                         String entryTitle, String entrySubtitle,
+                         String customBiome, String plotStatus, boolean serverWarp,
+                         boolean groupPlot, double treasuryBalance, UUID groupId, String groupName,
+                         Map<String, Boolean> flags, Map<UUID, String> members, List<UUID> bannedPlayers,
+                         String guestPassesBlob, String noticeboardBlob, String allianceAccessBlob,
+                         String roleNicknamesBlob, String roleFlagsBlob,
+                         boolean lockdownActive, long lockdownActivatedAt, long lockdownExpiresAt,
+                         String lockdownMode, UUID lockdownActivatedBy, String lockdownActivatedByName) {
+        this(snapshotId, plotId, owner, worldName, x1, z1, x2, z2, timestamp, type, reason, triggeredBy,
+                ownerName, plotName, description, welcomeMessage, farewellMessage, entryTitle, entrySubtitle,
+                customBiome, plotStatus, serverWarp, groupPlot, treasuryBalance, groupId, groupName,
+                flags, members, bannedPlayers, guestPassesBlob, noticeboardBlob, allianceAccessBlob,
+                roleNicknamesBlob, roleFlagsBlob, lockdownActive, lockdownActivatedAt, lockdownExpiresAt,
+                lockdownMode, lockdownActivatedBy, lockdownActivatedByName, "", "");
+    }
+
+    public ClaimSnapshot(UUID snapshotId, UUID plotId, UUID owner, String worldName,
+                         int x1, int z1, int x2, int z2, long timestamp,
+                         SnapshotType type, String reason, UUID triggeredBy,
+                         String ownerName, String plotName, String description,
+                         String welcomeMessage, String farewellMessage,
+                         String entryTitle, String entrySubtitle,
+                         String customBiome, String plotStatus, boolean serverWarp,
+                         boolean groupPlot, double treasuryBalance, UUID groupId, String groupName,
+                         Map<String, Boolean> flags, Map<UUID, String> members, List<UUID> bannedPlayers,
+                         String guestPassesBlob, String noticeboardBlob, String allianceAccessBlob,
+                         String roleNicknamesBlob, String roleFlagsBlob,
+                         boolean lockdownActive, long lockdownActivatedAt, long lockdownExpiresAt,
+                         String lockdownMode, UUID lockdownActivatedBy, String lockdownActivatedByName,
+                         String extendedStateBlob) {
+        this(snapshotId, plotId, owner, worldName, x1, z1, x2, z2, timestamp, type, reason, triggeredBy,
+                ownerName, plotName, description, welcomeMessage, farewellMessage, entryTitle, entrySubtitle,
+                customBiome, plotStatus, serverWarp, groupPlot, treasuryBalance, groupId, groupName,
+                flags, members, bannedPlayers, guestPassesBlob, noticeboardBlob, allianceAccessBlob,
+                roleNicknamesBlob, roleFlagsBlob, lockdownActive, lockdownActivatedAt, lockdownExpiresAt,
+                lockdownMode, lockdownActivatedBy, lockdownActivatedByName, extendedStateBlob, "");
+    }
+
+    public ClaimSnapshot(UUID snapshotId, UUID plotId, UUID owner, String worldName,
+                         int x1, int z1, int x2, int z2, long timestamp,
+                         SnapshotType type, String reason, UUID triggeredBy,
+                         String ownerName, String plotName, String description,
+                         String welcomeMessage, String farewellMessage,
+                         String entryTitle, String entrySubtitle,
+                         String customBiome, String plotStatus, boolean serverWarp,
+                         boolean groupPlot, double treasuryBalance, UUID groupId, String groupName,
+                         Map<String, Boolean> flags, Map<UUID, String> members, List<UUID> bannedPlayers,
+                         String guestPassesBlob, String noticeboardBlob, String allianceAccessBlob,
+                         String roleNicknamesBlob, String roleFlagsBlob,
+                         boolean lockdownActive, long lockdownActivatedAt, long lockdownExpiresAt,
+                         String lockdownMode, UUID lockdownActivatedBy, String lockdownActivatedByName,
+                         String extendedStateBlob, String territoryRentalStateBlob) {
         this.snapshotId = snapshotId;
         this.plotId = plotId;
         this.owner = owner;
@@ -127,9 +223,26 @@ public class ClaimSnapshot {
         this.flags = flags == null ? new HashMap<>() : new HashMap<>(flags);
         this.members = members == null ? new HashMap<>() : new HashMap<>(members);
         this.bannedPlayers = bannedPlayers == null ? new ArrayList<>() : new ArrayList<>(bannedPlayers);
+        this.guestPassesBlob = nullToEmpty(guestPassesBlob);
+        this.noticeboardBlob = nullToEmpty(noticeboardBlob);
+        this.allianceAccessBlob = nullToEmpty(allianceAccessBlob);
+        this.roleNicknamesBlob = nullToEmpty(roleNicknamesBlob);
+        this.roleFlagsBlob = nullToEmpty(roleFlagsBlob);
+        this.lockdownActive = lockdownActive;
+        this.lockdownActivatedAt = lockdownActivatedAt;
+        this.lockdownExpiresAt = lockdownExpiresAt;
+        this.lockdownMode = lockdownMode == null || lockdownMode.isBlank() ? "FULL" : lockdownMode;
+        this.lockdownActivatedBy = lockdownActivatedBy;
+        this.lockdownActivatedByName = lockdownActivatedByName == null || lockdownActivatedByName.isBlank()
+                ? "Unknown" : lockdownActivatedByName;
+        this.extendedStateBlob = nullToEmpty(extendedStateBlob);
+        this.territoryRentalStateBlob = nullToEmpty(territoryRentalStateBlob);
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
     
-    // Getters
     public UUID getSnapshotId() { return snapshotId; }
     public UUID getPlotId() { return plotId; }
     public UUID getOwner() { return owner; }
@@ -159,6 +272,19 @@ public class ClaimSnapshot {
     public Map<String, Boolean> getFlags() { return new HashMap<>(flags); }
     public Map<UUID, String> getMembers() { return new HashMap<>(members); }
     public List<UUID> getBannedPlayers() { return new ArrayList<>(bannedPlayers); }
+    public String getGuestPassesBlob() { return guestPassesBlob; }
+    public String getNoticeboardBlob() { return noticeboardBlob; }
+    public String getAllianceAccessBlob() { return allianceAccessBlob; }
+    public String getRoleNicknamesBlob() { return roleNicknamesBlob; }
+    public String getRoleFlagsBlob() { return roleFlagsBlob; }
+    public boolean isLockdownActive() { return lockdownActive; }
+    public long getLockdownActivatedAt() { return lockdownActivatedAt; }
+    public long getLockdownExpiresAt() { return lockdownExpiresAt; }
+    public String getLockdownMode() { return lockdownMode; }
+    public UUID getLockdownActivatedBy() { return lockdownActivatedBy; }
+    public String getLockdownActivatedByName() { return lockdownActivatedByName; }
+    public String getExtendedStateBlob() { return extendedStateBlob; }
+    public String getTerritoryRentalStateBlob() { return territoryRentalStateBlob; }
     
     public int getRadius() {
         return Math.max(0, (x2 - x1) / 2);

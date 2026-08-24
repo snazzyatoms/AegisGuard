@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class GroupManager {
 
@@ -27,6 +28,8 @@ public class GroupManager {
     private final Map<UUID, UUID> playerToGroup = new ConcurrentHashMap<>();
     private final Object ioLock = new Object();
     private volatile boolean dirty;
+    private volatile boolean storageReady;
+    private volatile boolean storageWriteWarningLogged;
 
     public GroupManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -35,16 +38,11 @@ public class GroupManager {
 
     public void load() {
         synchronized (ioLock) {
-            groupsById.clear();
-            playerToGroup.clear();
-
-            try {
-                File parent = file.getParentFile();
-                if (parent != null && !parent.exists()) parent.mkdirs();
-                if (!file.exists()) file.createNewFile();
-            } catch (IOException ignored) {}
+            if (!prepareStorageFile()) return;
 
             FileConfiguration data = YamlConfiguration.loadConfiguration(file);
+            groupsById.clear();
+            playerToGroup.clear();
             ConfigurationSection groupsSec = data.getConfigurationSection("groups");
             if (groupsSec == null) {
                 dirty = false;
@@ -114,8 +112,40 @@ public class GroupManager {
         }
     }
 
+    private boolean prepareStorageFile() {
+        try {
+            File parent = file.getParentFile();
+            if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                throw new IOException("Could not create plugin data directory " + parent);
+            }
+            if (!file.exists() && !file.createNewFile()) {
+                throw new IOException("Could not create " + file);
+            }
+            if (!file.isFile() || !file.canRead()) {
+                throw new IOException(file + " is not a readable file");
+            }
+            storageReady = true;
+            storageWriteWarningLogged = false;
+            return true;
+        } catch (IOException error) {
+            storageReady = false;
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not prepare groups.yml; existing in-memory group state was retained and will not be replaced by an empty load.",
+                    error);
+            return false;
+        }
+    }
+
     public void save() {
         synchronized (ioLock) {
+            if (!storageReady) {
+                if (!storageWriteWarningLogged) {
+                    storageWriteWarningLogged = true;
+                    plugin.getLogger().severe("Refusing to save groups.yml because group storage did not "
+                            + "initialize successfully. Repair the data directory or file permissions first.");
+                }
+                return;
+            }
             FileConfiguration data = new YamlConfiguration();
             for (PlotGroup group : groupsById.values()) {
                 String path = "groups." + group.getId();
@@ -145,7 +175,8 @@ public class GroupManager {
                 data.save(file);
                 dirty = false;
             } catch (IOException ex) {
-                plugin.getLogger().warning("Failed to save groups.yml: " + ex.getMessage());
+                plugin.getLogger().log(Level.SEVERE,
+                        "Failed to save groups.yml. Group changes remain dirty and will be retried.", ex);
             }
         }
     }

@@ -58,6 +58,20 @@ Wand-create and convert-to-server share one pipeline. Convert grants Steward to 
 
 ---
 
+## Known issues (fixed in 1.3.5)
+
+These issues exist in public `1.3.0`. They are addressed in the `1.3.5` tree and the upcoming `1.3.5` release (not published on GitHub yet). Until that release is available, treat the items below as known `1.3.0` soak issues.
+
+- Restoring a snapshot after a plot changes owner can restore the wrong live plot
+- Staff snapshot restore can run off the region/main thread (unsafe on Folia)
+- Snapshot prune can delete more snapshots than the configured cap when age and count limits both apply
+- Rollback does not clear role nicknames added after the snapshot
+- Player menu footer can leave empty clickable holes for non-admins
+- Staff Tools can still show Routes, Arena, Expansions, Audit, and Snapshots when those modules are turned off
+- Saving a plot can auto-lift an expired timed lockdown as a side effect
+
+---
+
 ## Also in 1.3.0
 
 - Module-aware AegisGuard menu: same framed layout; disabled modules do not appear as icons

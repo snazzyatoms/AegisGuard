@@ -1,5 +1,5 @@
 # ==============================================================================
-# AegisGuard 1.3.0 - Main Configuration
+# AegisGuard 1.3.5 - Main Configuration
 # ==============================================================================
 # This file is organized from core server setup to advanced gameplay systems.
 #
@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1287
+config_schema: 1292
 
 
 # ------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ modules:
   auction: true
   upkeep: true
   claim_merge: true
-  # Claim-data snapshots only. Full world-block plot backup is planned later.
+  # Claim-data snapshots. Optional WorldEdit/FAWE build copies: snapshots.build_backup (off by default).
   snapshots: true
   audit: true
   cosmetics: true
@@ -216,6 +216,9 @@ hooks:
       rental_end: false
       lockdown: false
       guest_pass: false
+      # Serious recovery events only; routine successful backups never send alerts.
+      restore_failure: false
+      backup_warning: false
 
   bluemap:
     enabled: false
@@ -666,9 +669,9 @@ group_plots:
 # Claim snapshots and rollback
 # ==============================================================================
 # Snapshot data is stored in plugins/AegisGuard/claim-snapshots.yml
-# Current snapshots are claim-data only (owner, flags, members, bounds).
-# Full world-block plot backup and restore is planned for a later version;
-# it needs a larger upgrade and is not included in 1.3.0.
+# Claim snapshots always store plot records (owner, flags, members, bounds,
+# guest passes, lockdown, alliance access, noticeboard).
+# Optional WorldEdit/FAWE build copies live in plugins/AegisGuard/plot-backups/.
 snapshots:
   enabled: true
 
@@ -688,13 +691,77 @@ snapshots:
     before_destructive_staff: true
 
   scheduled:
-    # Timed plot-data snapshots of server/spawn zones (not player homes, not world blocks).
+    # Legacy all-at-once plot-data snapshots of server/spawn zones (not player homes).
+    # Build copies follow build_backup below when that feature is on.
+    # When automatic_player is enabled with include_server_zones, this legacy pass is
+    # suppressed so two timers cannot snapshot the same server zone.
     enabled: false
     interval_minutes: 360
     targets: server_zones
 
+  automatic_player:
+    # Gradual player-plot and server-zone data backups. Disabled by default to preserve
+    # existing cost/storage behavior. Server zones use the same bounded queue, change
+    # detection, retention, TPS throttle, and Folia-safe region capture as player plots.
+    enabled: false
+    include_server_zones: true
+    # Time between bounded batches, not between individual plots.
+    interval_minutes: 5
+    batch_size: 5
+    # Even when a player plot or server zone changes repeatedly, do not retain a new
+    # backup more often than this.
+    minimum_backup_interval_minutes: 60
+    # Canonical plot-data fingerprints avoid duplicate data-only snapshots.
+    skip_unchanged: true
+    retention_per_plot: 5
+    # Set 0 to disable age-based automatic-backup retention.
+    retention_days: 14
+    # Pause a batch when the observed one-minute TPS is below this value.
+    # Servers without a TPS API safely assume 20 TPS.
+    pause_below_tps: 18.0
+    eligibility:
+      include_group_plots: true
+      # Set 0 to include plots regardless of owner inactivity.
+      max_owner_inactive_days: 30
+      # Empty allowlist means all loaded worlds except those denied below.
+      world_allowlist: []
+      world_denylist: []
+    build_backup:
+      # Separate from manual build backups and deliberately disabled by default.
+      # Build-enabled passes never use data-only change skipping because inventories and
+      # other plugins can alter builds without a reliable block event.
+      enabled: false
+
   # Require an explicit confirmation summary before restoring a snapshot.
   require_restore_confirmation: true
+
+  restore:
+    # Rescue snapshots, duplicate prevention, maintenance locking, and restart pause are
+    # mandatory safety behavior. This setting controls only build-rescue strictness.
+    # If build backups are enabled, abort before mutation when the rescue build copy fails.
+    require_build_rescue_when_enabled: true
+
+  # Optional per-plot schematic backup (WorldEdit or FastAsyncWorldEdit).
+  # Default off. Staff-only. Huge plots over max_volume skip the build copy.
+  build_backup:
+    enabled: false
+    max_volume: 2000000
+    # Standard servers handle at most this many chunks per checkpoint. Folia always
+    # uses one chunk per owning-region task because its region ownership is dynamic.
+    max_chunks_per_region_job: 4
+    copy_entities: false
+    folia:
+      # Fail closed on Folia unless FAWE is enabled. Set false only after validating
+      # the exact WorldEdit build on a staging Folia server.
+      require_fawe: true
+    storage:
+      # Applies to build artifacts only; claim-data snapshots remain available.
+      enforce_limits: true
+      retention_per_plot: 10
+      global_max_megabytes: 4096
+      # quarantine moves unknown files into a recoverable folder; report_only leaves them in place.
+      orphan_policy: "quarantine"
+      warning_cooldown_minutes: 60
 
   admin_gui:
     human_readable_age: true

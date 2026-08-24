@@ -1,0 +1,143 @@
+# AegisGuard Discord AutoMod — custom keywords
+# Paste these into: Server Settings → AutoMod → Add a keyword rule
+# Apply to: #general, forums, questions, screenshots, servers (public)
+# Do NOT apply to: #staff, tickets, or GitHub log dumps
+#
+# Also enable Discord's built-in preset: "Flagged Words"
+# That preset covers racial / homophobic / transphobic slurs and
+# common bypasses. Do not try to maintain those slurs yourself.
+#
+# Discord already strips a lot of separators (dots, spaces, symbols)
+# between letters. Wildcards (*) catch padding before/after a word.
+# You still cannot catch: screenshots of text, voice, homoglyphs in
+# every alphabet, or people who invent a new spelling. Timeout +
+# report-to-staff is the rest of the defense.
+#
+# False positives: add these to the rule Allow List if they fire:
+# class, assessment, passable, classic, shitake, cocktail, scunthorpe
+#
+# --- paste from the next line (one keyword per line) ---
+
+*fuck*
+*fck*
+*fuk*
+*fuq*
+*phuck*
+*fcking*
+*motherf*
+*mfucker*
+*mfer*
+
+*shit*
+*sht*
+*sh1t*
+*bullshit*
+*bsht*
+
+*bitch*
+*biatch*
+*b1tch*
+*btch*
+
+*asshole*
+*a-hole*
+*ahole*
+*arsehole*
+
+*bastard*
+*bstrd*
+
+*cunt*
+*cnt*
+
+*dickhead*
+*dikhead*
+
+*prick*
+
+*pussy*
+*pussies*
+
+*c0ck*
+
+*whore*
+*wh0re*
+*slut*
+*slvt*
+
+*nigg*
+*n1gg*
+*nigga*
+*negro*
+
+*faggot*
+*fag*
+*f4g*
+*fa66ot*
+
+*retard*
+*retarded*
+*r3tard*
+
+*kike*
+*spic*
+*chink*
+*gook*
+*tranny*
+*troon*
+
+*rapist*
+*molest*
+*pedo*
+*paedo*
+*pedophile*
+*child porn*
+*loli*
+*shota*
+
+*kys*
+*kill yourself*
+*kill urself*
+*hang yourself*
+*neck yourself*
+
+*nazi*
+*hitler*
+*1488*
+*heil*
+
+*stfu*
+*gtfo*
+
+*dumbass*
+*jackass*
+*smartass*
+*badass*
+
+*twat*
+*wanker*
+*tosser*
+
+*horny*
+*hentai*
+*onlyfans*
+*nudes*
+*send nudes*
+*send pics*
+
+# --- end ---
+#
+# Setup (Discord desktop):
+# 1. Server Settings → AutoMod
+# 2. Enable "Flagged Words" (slurs / hate) — leave on for public channels
+# 3. Enable "Spam" and "Mention spam" if you want
+# 4. Create custom rule: Block Custom Words
+#    Action: Block message + send alert to #triage or #staff
+#    Optional: Timeout 10 minutes after 3 hits
+# 5. Paste the keywords above (not the # comments)
+# 6. Channel scope: public only
+# 7. Exempt: Staff, Owner, bots
+#
+# Do not chase every leetspeak variant. If someone writes f.u.c.k,
+# Discord's filter usually still matches *fuck*. If a new bypass
+# shows up in #general, add THAT one spelling to the list and move on.

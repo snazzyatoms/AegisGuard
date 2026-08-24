@@ -111,7 +111,7 @@ class PhaseImprovementsContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1284") || migration.contains("CURRENT_SCHEMA = 1285")
                 || migration.contains("CURRENT_SCHEMA = 1286")
                 || migration.contains("CURRENT_SCHEMA = 1287")
-                || migration.contains("CURRENT_SCHEMA = 1287")
+                || migration.contains("CURRENT_SCHEMA = 1292")
                 || migration.contains("CURRENT_SCHEMA = 1280"));
         String config = Files.readString(Path.of("src/main/resources/config.yml"));
         assertTrue(config.contains("config_schema: 1281")
@@ -120,7 +120,8 @@ class PhaseImprovementsContractTest {
                 || config.contains("config_schema: 1283")
                 || config.contains("config_schema: 1284") || config.contains("config_schema: 1285")
                 || config.contains("config_schema: 1286")
-                || config.contains("config_schema: 1287"));
+                || config.contains("config_schema: 1287")
+                || config.contains("config_schema: 1292"));
         assertFalse(config.contains("config_schema: 1278\n"));
     }
 }

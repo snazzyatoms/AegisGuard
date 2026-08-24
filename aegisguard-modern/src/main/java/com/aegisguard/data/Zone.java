@@ -107,6 +107,11 @@ public class Zone {
     public UUID getRenter() { 
         return isRented() ? renter : null; 
     }
+
+    /** Persistence/snapshot accessor that never expires or mutates the live rental. */
+    public UUID getStoredRenter() {
+        return renter;
+    }
     
     public long getRentExpiration() { return rentExpiration; }
 

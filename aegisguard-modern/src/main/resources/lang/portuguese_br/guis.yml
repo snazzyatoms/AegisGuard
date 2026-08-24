@@ -98,7 +98,7 @@ starter_note_lore:
 starter_note_discard_lore: '&8Abandone esta nota para descartá-la.'
 button_plot_status: '&b📊 Status da parcela'
 plot_status_button_title: '&b✦ Status da parcela'
-plot_status_lore:
+legacy_plot_status_lore:
 - '&7Revisar propriedade, proteções,'
 - '&7bônus e saúde do enredo.'
 - ' '
@@ -2528,7 +2528,7 @@ giftblocks_amount_lore:
 giftblocks_confirm_name: '&aPresente &e{AMOUNT}&apara &f{PLAYER}'
 giftblocks_confirm_lore:
 - '&7Clique para enviar o presente.'
-plot_status_button_lore:
+legacy_plot_status_button_lore:
 - '&7Ver informações do lote, mesclar parcelas,'
 - '&7transferir propriedade ou presentear blocos.'
 plot_status_button_locked_lore:
@@ -3392,7 +3392,7 @@ plot_status_server_zone_banner: "&bZona do servidor &7— gerenciada por staff /
 arena_menu_title: '&6Arenas'
 arena_detail_title: '&6{NAME}'
 arena_enabled: '&aHabilitada'
-arena_disabled: '&cDesabilitada'
+arena_status_disabled: '&cDesabilitada'
 arena_mode_line: '&7Modo: &f{MODE}'
 arena_players_line: '&7Jogadores: &f{MIN}-{MAX}'
 arena_active_runs_line: '&7Corridas ativas: &f{COUNT}'
@@ -3529,12 +3529,11 @@ snapshot_create_here_lore:
   - ' '
   - '&eClique para criar.'
   - ' '
-  - '&eBackups completos (builds/blocos)'
-  - '&evirão em uma atualização futura.'
+  - '&eAtive snapshots.build_backup e instale WorldEdit/FAWE.'
 snapshot_create_server_zones_name: '&bInstantâneo de zonas do servidor'
 snapshot_create_server_zones_lore:
   - '&7Copia dados de cada parcela de servidor/spawn.'
-  - '&cNão copia blocos nem construções.'
+  - '&aEnfileira backups completos das construções quando habilitados e compatíveis.'
   - ' '
   - '&eClique para criar.'
 snapshot_scope_header_name: '&dAlcance do instantâneo'
@@ -3542,13 +3541,58 @@ snapshot_scope_header_lore:
   - '&7Instantâneos salvam registros da parcela:'
   - '&7dono, flags, membros e limites.'
   - ' '
-  - '&eBackups completos (builds/blocos)'
-  - '&evirão em uma atualização futura.'
-  - '&7Isso precisa de uma atualização maior.'
+  - '&eAtive snapshots.build_backup e instale WorldEdit/FAWE.'
 snapshot_create_no_plot: '&cFique dentro de uma parcela para copiá-la.'
 snapshot_create_no_server_zones: '&cNenhuma parcela de servidor foi encontrada.'
+snapshot_created_here_builds: '&aDados do território salvos e backup da construção do WorldEdit colocado na fila.'
+snapshot_created_here_too_large: '&aDados do território salvos. Cópia da construção ignorada: o território excede max_volume.'
+snapshot_create_here_lore_builds:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&aAlso copies world blocks via WorldEdit/FAWE.'
+  - ' '
+  - '&eClick to create.'
+snapshot_create_here_lore_need_we:
+  - '&7Copy plot data for the claim you stand in.'
+  - '&eInstall WorldEdit or FAWE to enable build copies.'
+  - ' '
+  - '&eClick to create plot-data snapshot.'
+snapshot_scope_header_lore_builds:
+  - '&7Claim snapshots save plot records.'
+  - '&aBuild copies are on for this plot when size allows.'
+  - '&7Restore pastes blocks after claim-data rollback.'
+snapshot_scope_header_lore_need_we:
+  - '&7Claim snapshots save plot records.'
+  - '&eInstall WorldEdit or FAWE to copy builds.'
+admin_snapshots_lore_builds:
+  - '&7What: browse recovery points and restore claims.'
+  - '&aWorldEdit build copies are enabled for staff snapshots.'
+  - ' '
+  - '&cRollback overwrites the live claim — confirm carefully.'
+  - '&eClick to open.'
+admin_snapshots_lore_need_we:
+  - '&7What: browse recovery points and restore claims.'
+  - '&eInstall WorldEdit or FAWE to copy builds.'
+  - ' '
+  - '&eClick to open.'
+staff_recovery_section_lore_builds:
+  - '&7Claim snapshots, optional WorldEdit build copies,'
+  - '&7audit, doctor, and migration.'
+snapshot_item_lore_builds:
+  - '&7Owner: &f{OWNER}'
+  - '&7World: &f{WORLD}'
+  - '&7Type: &e{TYPE}'
+  - '&7Reason: &f{REASON}'
+  - '&7Age: &f{AGE}'
+  - '&7Triggered By: &f{ACTOR}'
+  - '&7Radius: &a{RADIUS}'
+  - ' '
+  - '&aThis snapshot includes a WorldEdit build copy.'
+  - '&cRollback overwrites the live claim.'
+  - '&aShift-Left-Click: &7Rollback (confirm twice)'
+  - '&cShift-Right-Click: &7Delete this snapshot'
+
 snapshot_created_here: '&aInstantâneo de dados salvo. A construção não foi copiada.'
-snapshot_created_server_zones: '&aSalvos {COUNT} instantâneos de zonas do servidor. A construção não foi copiada.'
+snapshot_created_server_zones: '&aSalvos {COUNT} instantâneos de zonas do servidor. Backups completos das construções foram enfileirados quando habilitados e compatíveis.'
 codex_root_whats_new_name: '&eNovidades da 1.3.0'
 codex_root_whats_new_lore:
   - '&7Passes de convidado, Isolamento, Perfis de reino,'

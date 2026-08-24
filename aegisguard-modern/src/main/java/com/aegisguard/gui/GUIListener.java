@@ -78,6 +78,7 @@ import com.aegisguard.gui.ClaimMergeGUI.ClaimMergeHolder;
 import com.aegisguard.gui.GiftBlocksGUI.GiftBlocksHolder;
 import com.aegisguard.gui.StorageMigrateGUI.StorageMigrateHolder;
 import com.aegisguard.snapshots.SnapshotAdminGUI.SnapshotHolder;
+import com.aegisguard.snapshots.SnapshotAdminGUI.OperationHolder;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -181,6 +182,7 @@ public class GUIListener implements Listener {
                 || holder instanceof StallPreviewHolder
                 || holder instanceof StallBuyConfirmHolder
                 || holder instanceof SnapshotHolder
+                || holder instanceof OperationHolder
                 || holder instanceof AuditHolder
                 || holder instanceof GuestPassMenuHolder
                 || holder instanceof GuestPassAddHolder
@@ -411,7 +413,7 @@ public class GUIListener implements Listener {
                 plugin.gui().migration().handlePreviewClick(player, e, castHolder);
             }
         }
-        else if (holder instanceof SnapshotHolder) {
+        else if (holder instanceof SnapshotHolder || holder instanceof OperationHolder) {
             if (plugin.gui().snapshotAdmin() != null) {
                 plugin.gui().snapshotAdmin().handleClick(player, e);
             }

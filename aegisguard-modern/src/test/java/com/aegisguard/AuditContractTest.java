@@ -59,8 +59,10 @@ class AuditContractTest {
     @Test
     void auditRecordsExactlyTheFiveRequiredHookPointCategories() throws Exception {
         String adminCommand = Files.readString(JAVA_ROOT.resolve("admin/AdminCommand.java"));
+        String snapshotManager = Files.readString(JAVA_ROOT.resolve("snapshots/SnapshotManager.java"));
 
-        assertTrue(adminCommand.contains("AuditCategory.SNAPSHOT_RESTORE"), "Snapshot restore must be audited");
+        assertTrue(snapshotManager.contains("AuditCategory.SNAPSHOT_RESTORE"),
+                "The durable snapshot transaction must audit every terminal restore outcome");
         assertTrue(adminCommand.contains("AuditCategory.DOCTOR_REPAIR"), "Doctor repair must be audited");
         assertTrue(adminCommand.contains("AuditCategory.MIGRATION"), "Migration import must be audited");
         assertTrue(adminCommand.contains("AuditCategory.ADMIN_BYPASS"), "Admin bypass toggles must be audited");

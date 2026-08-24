@@ -10,6 +10,9 @@ import com.aegisguard.migration.MigrationManager.MigrationOptions;
 import com.aegisguard.migration.MigrationManager.SourcePlugin;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.snapshots.ClaimSnapshot;
+import com.aegisguard.snapshots.RestoreOperation;
+import com.aegisguard.snapshots.RestorePreview;
+import com.aegisguard.snapshots.RestoreScope;
 import com.aegisguard.territory.TerritoryLifeService;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -32,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -153,11 +158,24 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         if (args[0].equalsIgnoreCase("restore")) {
             if (args.length == 2) {
-                return StringUtil.copyPartialMatches(args[1], List.of("here", "current", "confirm"), new ArrayList<>());
+                return StringUtil.copyPartialMatches(args[1], List.of("here", "current", "operation"), new ArrayList<>());
             }
             if (args.length == 3) {
+                if (args[1].equalsIgnoreCase("operation") && plugin.getSnapshotManager() != null) {
+                    List<String> ids = plugin.getSnapshotManager().getRestoreOperations().stream()
+                            .filter(operation -> operation.status() == RestoreOperation.Status.PARTIAL
+                                    || operation.status() == RestoreOperation.Status.PAUSED_REVIEW)
+                            .map(operation -> operation.operationId().toString()).toList();
+                    return StringUtil.copyPartialMatches(args[2], ids, new ArrayList<>());
+                }
                 return StringUtil.copyPartialMatches(args[2], List.of("confirm"), new ArrayList<>());
             }
+            if (args.length == 4 && args[1].equalsIgnoreCase("operation")) {
+                return StringUtil.copyPartialMatches(args[3], List.of("retry", "release"), new ArrayList<>());
+            }
+            return StringUtil.copyPartialMatches(args[args.length - 1],
+                    List.of("all", "data", "build", "flags", "members", "bans", "guestpasses",
+                            "alliance", "lockdown", "noticeboard", "identity"), new ArrayList<>());
         }
 
         if (args[0].equalsIgnoreCase("convert") && args.length == 2) {
@@ -598,6 +616,11 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        if (args.length >= 4 && "operation".equalsIgnoreCase(args[1])) {
+            handleRestoreOperation(player, args[2], args[3]);
+            return;
+        }
+
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
             sendLocalized(player, "admin_restore_need_plot", "&cStand inside the plot you want to restore.");
@@ -621,41 +644,136 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 break;
             }
         }
+        EnumSet<RestoreScope> scopes = parseRestoreScopes(args);
         if (!confirmed) {
-            sendLocalized(player, "admin_restore_prompt",
-                    "&eLatest snapshot: &f{TYPE} &7| &f{REASON} &7| age &f{AGE}",
-                    Map.of(
-                            "TYPE", latest.getType().name(),
-                            "REASON", latest.getReason() == null || latest.getReason().isBlank()
-                                    ? plugin.gui().tr(player, "admin_restore_no_reason", "No reason recorded")
-                                    : latest.getReason(),
-                            "AGE", formatAgeMillis(latest.getAgeMillis())
-                    ));
-            sendLocalized(player, "admin_restore_confirm_hint",
-                    "&cThis overwrites the live claim. Run &e/agadmin restore here confirm &cto continue.");
+            plugin.getSnapshotManager().previewAsync(latest.getSnapshotId(), scopes).whenComplete((preview, error) ->
+                    plugin.runMain(player, () -> sendRestorePreview(player, latest, preview, error, scopes)));
             return;
         }
 
         sendLocalized(player, "admin_restore_running", "&b[AegisGuard] &7Restoring latest snapshot...");
-        UUID restoredPlotId = plot.getPlotId();
         UUID snapshotId = latest.getSnapshotId();
-        plugin.runGlobalAsync(() -> {
-            boolean restored = plugin.getSnapshotManager().rollback(snapshotId);
+        plugin.getSnapshotManager().restoreAsync(snapshotId, player.getUniqueId(), scopes).whenComplete((result, error) -> {
             plugin.runMain(player, () -> {
+                boolean restored = error == null && result != null && result.dataRestored();
                 if (restored) {
-                    sendLocalized(player, "admin_restore_success",
-                            "&aPlot restored from snapshot &f{ID}",
-                            Map.of("ID", String.valueOf(snapshotId)));
+                    if (result.status() == com.aegisguard.snapshots.SnapshotManager.RestoreStatus.PARTIAL
+                            || result.status() == com.aegisguard.snapshots.SnapshotManager.RestoreStatus.BUILD_PARTIALLY_QUEUED
+                            || result.status() == com.aegisguard.snapshots.SnapshotManager.RestoreStatus.BUILD_UNAVAILABLE) {
+                        sendLocalized(player, "admin_restore_partial",
+                                "&6Restore is partial and the plot remains maintenance-locked. Review the operation details.");
+                    } else {
+                        sendLocalized(player, "admin_restore_success",
+                                "&aPlot restored from snapshot &f{ID}",
+                                Map.of("ID", String.valueOf(snapshotId)));
+                    }
                 } else {
                     sendLocalized(player, "admin_restore_failed",
                             "&cPlot restore failed. Check the logs or doctor report.");
                 }
-                if (plugin.audit() != null) {
-                    plugin.audit().record(AuditCategory.SNAPSHOT_RESTORE, player, restoredPlotId.toString(),
-                            "Restored plot from snapshot " + snapshotId + (restored ? "" : " (failed)"));
-                }
             });
         });
+    }
+
+    private void sendRestorePreview(Player player, ClaimSnapshot snapshot, RestorePreview preview,
+                                    Throwable error, Set<RestoreScope> scopes) {
+        if (error != null || preview == null) {
+            sendLocalized(player, "admin_restore_failed", "&cCould not prepare the restore preview.");
+            return;
+        }
+        sendLocalized(player, "admin_restore_prompt",
+                "&eLatest snapshot: &f{TYPE} &7| &f{REASON} &7| age &f{AGE}",
+                Map.of("TYPE", snapshot.getType().name(),
+                        "REASON", snapshot.getReason() == null || snapshot.getReason().isBlank()
+                                ? plugin.gui().tr(player, "admin_restore_no_reason", "No reason recorded")
+                                : snapshot.getReason(), "AGE", formatAgeMillis(snapshot.getAgeMillis())));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7Owner: &f" + preview.currentOwnerName() + " &8-> &f" + preview.snapshotOwnerName()
+                        + " &7| World: &f" + preview.worldName()
+                        + " &7| Bounds: &f" + preview.x1() + "," + preview.z1() + " to "
+                        + preview.x2() + "," + preview.z2()));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7Selection: &f" + scopes + " &7| Chunks: &f" + preview.estimatedChunks()
+                        + " &7| Build backup: &f" + (preview.buildBackupPresent()
+                        ? preview.buildBackupBytes() + " bytes / " + preview.buildBackupFiles() + " file(s)"
+                        : "none")));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7Integrity: &f" + preview.buildIntegrity() + " &7| Compatible: &f"
+                        + preview.buildCompatible() + " &7| Destination safe: &f"
+                        + preview.buildDestinationSafe() + " &7| Format: &f" + preview.buildFormat()
+                        + " &7| Integration: &f" + preview.buildIntegration() + " "
+                        + preview.buildIntegrationVersion()));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7Build checksum: &f" + preview.buildChecksum()));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e" + preview.preflightMessage()));
+        if (preview.ready()) {
+            sendLocalized(player, "admin_restore_confirm_hint",
+                    "&cRun &e/agadmin restore here confirm [all|data|build|flags|members|bans|guestpasses|alliance|lockdown|noticeboard|identity] &cto continue.");
+        } else {
+            player.sendMessage(ChatColor.RED + "The selected restore cannot be confirmed until preflight passes. "
+                    + "Use a data-only scope if the build backup is unavailable.");
+        }
+    }
+
+    private EnumSet<RestoreScope> parseRestoreScopes(String[] args) {
+        EnumSet<RestoreScope> scopes = EnumSet.noneOf(RestoreScope.class);
+        for (String raw : args) {
+            if (raw == null) continue;
+            for (String token : raw.toLowerCase(Locale.ROOT).split(",")) {
+                switch (token) {
+                    case "all", "full" -> scopes.addAll(EnumSet.of(RestoreScope.FULL_DATA, RestoreScope.BUILD));
+                    case "data" -> scopes.add(RestoreScope.FULL_DATA);
+                    case "build", "builds" -> scopes.add(RestoreScope.BUILD);
+                    case "flags" -> scopes.add(RestoreScope.FLAGS);
+                    case "members", "roles" -> scopes.add(RestoreScope.MEMBERS_AND_ROLES);
+                    case "bans" -> scopes.add(RestoreScope.BANS);
+                    case "guestpasses", "passes" -> scopes.add(RestoreScope.GUEST_PASSES);
+                    case "alliance" -> scopes.add(RestoreScope.ALLIANCE_ACCESS);
+                    case "lockdown" -> scopes.add(RestoreScope.LOCKDOWN);
+                    case "noticeboard", "notices" -> scopes.add(RestoreScope.NOTICEBOARD);
+                    case "identity", "bounds", "settings" -> scopes.add(RestoreScope.IDENTITY_AND_BOUNDS);
+                    case "plotsettings", "travel", "cosmetics" -> scopes.add(RestoreScope.PLOT_SETTINGS);
+                    case "economy", "market", "rentals" -> scopes.add(RestoreScope.ECONOMY);
+                    case "progression", "horizons" -> scopes.add(RestoreScope.PROGRESSION);
+                    case "social", "likes" -> scopes.add(RestoreScope.SOCIAL);
+                    case "zones", "stalls" -> scopes.add(RestoreScope.ZONES_AND_STALLS);
+                    default -> { }
+                }
+            }
+        }
+        return scopes.isEmpty() ? EnumSet.of(RestoreScope.FULL_DATA, RestoreScope.BUILD) : scopes;
+    }
+
+    private void handleRestoreOperation(Player player, String operationRaw, String action) {
+        UUID operationId;
+        try {
+            operationId = UUID.fromString(operationRaw);
+        } catch (IllegalArgumentException error) {
+            player.sendMessage(ChatColor.RED + "Invalid restore operation ID.");
+            return;
+        }
+        RestoreOperation operation = plugin.getSnapshotManager().getRestoreOperation(operationId);
+        if (operation == null) {
+            player.sendMessage(ChatColor.RED + "Restore operation not found.");
+            return;
+        }
+        if ("release".equalsIgnoreCase(action)) {
+            plugin.getSnapshotManager().releaseRestoreLockAsync(operationId).whenComplete((released, error) ->
+                    plugin.runMain(player, () -> player.sendMessage(error == null && Boolean.TRUE.equals(released)
+                            ? ChatColor.GREEN + "Maintenance lock durably released after staff review."
+                            : ChatColor.RED + "That operation could not be durably released.")));
+            return;
+        }
+        if ("retry".equalsIgnoreCase(action)) {
+            player.sendMessage(ChatColor.AQUA + "Retrying restore operation as a new transaction...");
+            plugin.getSnapshotManager().retryRestore(operationId, player.getUniqueId()).whenComplete((result, error) ->
+                    plugin.runMain(player, () -> player.sendMessage(error == null && result != null && result.complete()
+                            ? ChatColor.GREEN + "Restore retry completed."
+                            : ChatColor.GOLD + "Restore retry needs review: "
+                                    + (result == null ? safeMessage(error) : result.detail()))));
+            return;
+        }
+        player.sendMessage(ChatColor.YELLOW + "Use retry or release.");
     }
 
     private void sendAdminHelp(Player player) {
@@ -666,7 +784,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_migrate", "&e/agadmin migrate &8- Claim migration wizard");
         sendLocalized(player, "admin_help_migrate_storage", "&e/agadmin migrate storage &8- YML ↔ SQL storage");
         sendLocalized(player, "admin_help_snapshot", "&e/agadmin snapshot here [reason] &8- Manual recovery snapshot");
-        sendLocalized(player, "admin_help_restore", "&e/agadmin restore here confirm &8- Restore latest snapshot");
+        sendLocalized(player, "admin_help_restore", "&e/agadmin restore here [confirm] [scope] &8- Preview/restore latest snapshot");
         sendLocalized(player, "admin_help_audit", "&e/agadmin audit &8- Staff Audit Ledger");
         sendLocalized(player, "admin_help_rentals", "&e/agadmin rentals <cancel|retry-settlements> ...");
         sendLocalized(player, "admin_help_bypass", "&e/agadmin bypass &8- Toggle personal protection bypass");
@@ -686,14 +804,14 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         int schema = plugin.getConfig().getInt("config_schema", plugin.getConfig().getInt("config-version", 0));
         int target = ConfigMigrationService.CURRENT_SCHEMA;
         sendLocalized(sender, "admin_transition_schema",
-                "&7Config schema: &f{CURRENT} &7/ 1.3.0 target &f{TARGET}.",
+                "&7Config schema: &f{CURRENT} &7/ 1.3.5 target &f{TARGET}.",
                 Map.of("CURRENT", String.valueOf(schema), "TARGET", String.valueOf(target)));
         sendLocalized(sender, "admin_transition_plots",
                 "&7Plots load as-is. Claim records are not rewritten.");
 
         if (schema >= target) {
             sendLocalized(sender, "admin_transition_already",
-                    "&aAlready on 1.3.0; nothing to convert.");
+                    "&aAlready on 1.3.5; nothing to convert.");
             sendLocalized(sender, "admin_transition_doctor_optional",
                     "&7Doctor is optional. Use &e/agadmin doctor scan &7only if something looks wrong.");
             return;

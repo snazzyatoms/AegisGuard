@@ -43,6 +43,7 @@ import com.aegisguard.protection.BlockProtectionListener;
 import com.aegisguard.protection.ProtectionManager;
 import com.aegisguard.selection.SelectionService;
 import com.aegisguard.listeners.WandSafetyListener;
+import com.aegisguard.scheduler.AegisScheduler;
 import com.aegisguard.snapshots.SnapshotManager;
 import com.aegisguard.territory.TerritoryLifeService;
 import com.aegisguard.util.ConsoleMessages;
@@ -63,7 +64,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -72,7 +72,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class AegisGuard extends JavaPlugin {
 
@@ -157,6 +157,7 @@ public class AegisGuard extends JavaPlugin {
     private DiscordWebhook discord;
 
     private boolean isFolia = false;
+    private AegisScheduler platformScheduler;
 
     // Task Objects
     private Object autoSaveTask;
@@ -168,6 +169,7 @@ public class AegisGuard extends JavaPlugin {
     private Object guestPassExpiryTask;
     private Object lockdownSweepTask;
     private Object scheduledSnapshotTask;
+    private Object automaticPlayerBackupTask;
     private Object arenaTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
 
@@ -261,6 +263,7 @@ public class AegisGuard extends JavaPlugin {
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
+    public AegisScheduler scheduler() { return platformScheduler; }
 
     public AGConfig getConfigManager() { return configMgr; }
 
@@ -278,6 +281,7 @@ public class AegisGuard extends JavaPlugin {
             isFolia = false;
             console().info("log_standard_server", "Standard Bukkit/Spigot/Paper detected.");
         }
+        platformScheduler = new AegisScheduler(this, isFolia);
 
         saveDefaultConfig();
         configMigration = new ConfigMigrationService(this);
@@ -375,40 +379,33 @@ public class AegisGuard extends JavaPlugin {
 
         // Load async data (safe)
         runGlobalAsync(() -> {
-            try {
+            loadPersistentState("player language preferences", () -> {
                 if (messages != null) messages.loadPlayerPreferences();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("expansion requests", () -> {
                 if (expansionManager != null) expansionManager.load();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("territory snapshots", () -> {
                 if (snapshotManager != null) snapshotManager.load();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("audit ledger", () -> {
                 if (auditService != null) auditService.load();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("plot groups", () -> {
                 if (groupManager != null) groupManager.load();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("routes and route progress", () -> {
                 if (routeService != null) routeService.load();
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("arena state", () -> {
                 if (arenaService != null) {
                     arenaService.load();
                     arenaService.recoverIncompleteRunsOnEnable();
                 }
-            } catch (Throwable ignored) {}
-
-            try {
+            });
+            loadPersistentState("alliances", () -> {
                 if (allianceManager != null) allianceManager.load();
-            } catch (Throwable ignored) {}
+            });
 
             // ✅ NotificationManager loads data inside constructor + reload()
             // ❌ Do NOT call notificationManager.loadData() (it's private).
@@ -428,6 +425,8 @@ public class AegisGuard extends JavaPlugin {
         registerPaperMobBoundaryListener();
         Bukkit.getPluginManager().registerEvents(selection, this);
         Bukkit.getPluginManager().registerEvents(new BlockProtectionListener(this), this);
+        Bukkit.getPluginManager().registerEvents(
+                new com.aegisguard.snapshots.RestoreMaintenanceListener(this), this);
 
         Bukkit.getPluginManager().registerEvents(new PlotGreetingListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandSafetyListener(this), this);
@@ -455,6 +454,7 @@ public class AegisGuard extends JavaPlugin {
         startGuestPassExpiryTask();
         startLockdownSweepTask();
         startScheduledSnapshotTask();
+        startAutomaticPlayerBackupTask();
         startArenaTickTask();
 
         // PlaceholderAPI (optional)
@@ -498,7 +498,10 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
         cancelTaskReflectively(scheduledSnapshotTask);
+        cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
+        if (snapshotManager != null) snapshotManager.shutdownOperations();
+        if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
         try {
@@ -673,14 +676,7 @@ public class AegisGuard extends JavaPlugin {
      * Run a task on the main thread (Bukkit) or global region (Folia).
      */
     public void runSync(Runnable task) {
-        if (task == null) return;
-
-        if (!isFolia) {
-            Bukkit.getScheduler().runTask(this, task);
-            return;
-        }
-
-        Bukkit.getGlobalRegionScheduler().run(this, ignored -> task.run());
+        if (platformScheduler != null) platformScheduler.runGlobal(task);
     }
 
     /**
@@ -693,46 +689,24 @@ public class AegisGuard extends JavaPlugin {
             return;
         }
 
-        if (!isFolia) {
-            Bukkit.getScheduler().runTask(this, task);
-            return;
-        }
-
-        player.getScheduler().run(this, ignored -> task.run(), null);
+        if (platformScheduler != null) platformScheduler.runEntity(player, task, null);
     }
 
     /** Run a task on an entity's owning region, or on the Bukkit main thread. */
     public void runEntity(Entity entity, Runnable task) {
-        if (entity == null || task == null) return;
-        if (!isFolia) {
-            Bukkit.getScheduler().runTask(this, task);
-            return;
-        }
-        entity.getScheduler().run(this, ignored -> task.run(), null);
+        if (platformScheduler != null) platformScheduler.runEntity(entity, task, null);
     }
 
     /** Run a task on the region that owns a location, or on the Bukkit main thread. */
     public void runAt(Location location, Runnable task) {
-        if (location == null || location.getWorld() == null || task == null) return;
-        if (!isFolia) {
-            Bukkit.getScheduler().runTask(this, task);
-            return;
-        }
-        Bukkit.getRegionScheduler().run(this, location, ignored -> task.run());
+        if (platformScheduler != null) platformScheduler.runAt(location, task);
     }
 
     /**
      * Run a task asynchronously on the global region.
      */
     public void runGlobalAsync(Runnable task) {
-        if (task == null) return;
-
-        if (!isFolia) {
-            Bukkit.getScheduler().runTaskAsynchronously(this, task);
-            return;
-        }
-
-        Bukkit.getAsyncScheduler().runNow(this, ignored -> task.run());
+        if (platformScheduler != null) platformScheduler.runAsync(task);
     }
 
     /**
@@ -743,59 +717,22 @@ public class AegisGuard extends JavaPlugin {
     }
 
     public Object runGlobalRepeating(Runnable task, long initialDelayTicks, long periodTicks) {
-        if (task == null) return null;
-        long safeDelay = Math.max(1L, initialDelayTicks);
-        long safePeriod = Math.max(1L, periodTicks);
-        if (!isFolia) {
-            return Bukkit.getScheduler().runTaskTimer(this, task, safeDelay, safePeriod);
-        }
-        return Bukkit.getGlobalRegionScheduler().runAtFixedRate(
-                this,
-                ignored -> task.run(),
-                safeDelay,
-                safePeriod
-        );
+        return platformScheduler == null ? null
+                : platformScheduler.runGlobalRepeating(task, initialDelayTicks, periodTicks);
     }
 
     public Object runAsyncRepeating(Runnable task, long initialDelaySeconds, long periodSeconds) {
-        if (task == null) return null;
-        long safeDelay = Math.max(1L, initialDelaySeconds);
-        long safePeriod = Math.max(1L, periodSeconds);
-        if (!isFolia) {
-            return Bukkit.getScheduler().runTaskTimerAsynchronously(
-                    this,
-                    task,
-                    safeDelay * 20L,
-                    safePeriod * 20L
-            );
-        }
-        return Bukkit.getAsyncScheduler().runAtFixedRate(
-                this,
-                ignored -> task.run(),
-                safeDelay,
-                safePeriod,
-                TimeUnit.SECONDS
-        );
+        return platformScheduler == null ? null
+                : platformScheduler.runAsyncRepeating(task, initialDelaySeconds, periodSeconds);
     }
 
     public Object runEntityRepeating(Entity entity, Runnable task, long initialDelayTicks, long periodTicks) {
-        if (entity == null || task == null) return null;
-        long safeDelay = Math.max(1L, initialDelayTicks);
-        long safePeriod = Math.max(1L, periodTicks);
-        if (!isFolia) {
-            return Bukkit.getScheduler().runTaskTimer(this, task, safeDelay, safePeriod);
-        }
-        return entity.getScheduler().runAtFixedRate(this, ignored -> task.run(), null, safeDelay, safePeriod);
+        return platformScheduler == null ? null
+                : platformScheduler.runEntityRepeating(entity, task, null, initialDelayTicks, periodTicks);
     }
 
     public void runEntityLater(Entity entity, Runnable task, long delayTicks) {
-        if (entity == null || task == null) return;
-        long safeDelay = Math.max(1L, delayTicks);
-        if (!isFolia) {
-            Bukkit.getScheduler().runTaskLater(this, task, safeDelay);
-            return;
-        }
-        entity.getScheduler().runDelayed(this, ignored -> task.run(), null, safeDelay);
+        if (platformScheduler != null) platformScheduler.runEntityLater(entity, task, null, delayTicks);
     }
 
     /**
@@ -803,13 +740,7 @@ public class AegisGuard extends JavaPlugin {
      * Prefer entity/region schedulers when the work touches world or entities.
      */
     public void runSyncLater(Runnable task, long delayTicks) {
-        if (task == null) return;
-        long safeDelay = Math.max(1L, delayTicks);
-        if (!isFolia) {
-            Bukkit.getScheduler().runTaskLater(this, task, safeDelay);
-            return;
-        }
-        Bukkit.getGlobalRegionScheduler().runDelayed(this, ignored -> task.run(), safeDelay);
+        if (platformScheduler != null) platformScheduler.runGlobalLater(task, delayTicks);
     }
 
     public void cancelScheduledTask(Object task) {
@@ -1048,6 +979,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(guestPassExpiryTask);
         cancelTaskReflectively(lockdownSweepTask);
         cancelTaskReflectively(scheduledSnapshotTask);
+        cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
 
         autoSaveTask = null;
@@ -1059,6 +991,7 @@ public class AegisGuard extends JavaPlugin {
         guestPassExpiryTask = null;
         lockdownSweepTask = null;
         scheduledSnapshotTask = null;
+        automaticPlayerBackupTask = null;
         arenaTickTask = null;
 
         startAutoSaver();
@@ -1070,6 +1003,7 @@ public class AegisGuard extends JavaPlugin {
         startGuestPassExpiryTask();
         startLockdownSweepTask();
         startScheduledSnapshotTask();
+        startAutomaticPlayerBackupTask();
         startArenaTickTask();
     }
 
@@ -1154,6 +1088,11 @@ public class AegisGuard extends JavaPlugin {
 
     private void startScheduledSnapshotTask() {
         if (snapshotManager == null || !snapshotManager.isScheduledEnabled()) return;
+        if (snapshotManager.usesUnifiedAutomaticServerZoneBackups()) {
+            getLogger().info("[Snapshots] Legacy server-zone schedule is configured but suppressed; "
+                    + "server zones are using the bounded automatic backup coordinator.");
+            return;
+        }
         int minutes = snapshotManager.getScheduledIntervalMinutes();
         long periodTicks = Math.max(20L * 60L, minutes * 60L * 20L);
         scheduledSnapshotTask = runGlobalRepeating(() -> {
@@ -1162,6 +1101,32 @@ public class AegisGuard extends JavaPlugin {
             } catch (Throwable t) {
                 console().warning("log_snapshot_schedule_error", "Scheduled snapshot error: {ERROR}",
                         "ERROR", t.getMessage() == null ? "" : t.getMessage());
+            }
+        }, periodTicks, periodTicks);
+    }
+
+    private void startAutomaticPlayerBackupTask() {
+        if (snapshotManager == null || snapshotManager.automaticPlayerBackups() == null
+                || !snapshotManager.automaticPlayerBackups().isEnabled()) return;
+        int minutes = snapshotManager.automaticPlayerBackups().intervalMinutes();
+        long periodTicks = Math.max(20L * 60L, minutes * 60L * 20L);
+        automaticPlayerBackupTask = runGlobalRepeating(() -> {
+            try {
+                snapshotManager.automaticPlayerBackups().runBatch().whenComplete((result, error) -> {
+                    if (error != null) {
+                        console().warning("log_automatic_backup_error",
+                                "Automatic plot backup error: {ERROR}",
+                                "ERROR", error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
+                    } else if (result != null && result.failed() > 0) {
+                        console().warning("log_automatic_backup_partial",
+                                "Automatic plot backup batch completed with {COUNT} failure(s).",
+                                "COUNT", String.valueOf(result.failed()));
+                    }
+                });
+            } catch (Throwable error) {
+                console().warning("log_automatic_backup_error",
+                        "Automatic plot backup error: {ERROR}",
+                        "ERROR", error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
             }
         }, periodTicks, periodTicks);
     }
@@ -1180,15 +1145,11 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void cancelTaskReflectively(Object task) {
-        if (task == null) return;
-        try {
-            if (task instanceof BukkitTask bt) {
-                bt.cancel();
-                return;
-            }
-            Method cancel = task.getClass().getMethod("cancel");
-            cancel.invoke(task);
-        } catch (Throwable ignored) {}
+        if (platformScheduler != null) {
+            platformScheduler.cancel(task);
+            return;
+        }
+        if (task instanceof BukkitTask bt) bt.cancel();
     }
 
     private void closeAllAegisGUIs() {
@@ -1277,6 +1238,17 @@ public class AegisGuard extends JavaPlugin {
             console().info("log_lang_keys_added",
                     "Added {COUNT} missing language key(s) to {PATH}; the previous file was backed up.",
                     "COUNT", String.valueOf(additions), "PATH", path);
+        }
+    }
+
+    private void loadPersistentState(String description, Runnable loader) {
+        try {
+            loader.run();
+        } catch (Throwable error) {
+            getLogger().log(Level.SEVERE,
+                    "Failed to load " + description + ". The related subsystem may be incomplete; "
+                            + "review its storage file and permissions before allowing related writes.",
+                    error);
         }
     }
 

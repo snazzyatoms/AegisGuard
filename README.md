@@ -2,14 +2,14 @@
   <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
 </p>
 
-<h1 align="center">AegisGuard 1.3.0</h1>
+<h1 align="center">AegisGuard 1.3.5</h1>
 
 <p align="center">
   <strong>Protect your world. Empower your players. Ascend.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.3.0-d9a441?style=for-the-badge" alt="Version 1.3.0" />
+  <img src="https://img.shields.io/badge/Version-1.3.5-d9a441?style=for-the-badge" alt="Version 1.3.5" />
   <img src="https://img.shields.io/badge/Minecraft-1.20%2B-56a64b?style=for-the-badge" alt="Minecraft 1.20 or newer" />
   <img src="https://img.shields.io/badge/Java-21%2B-e76f00?style=for-the-badge" alt="Java 21 or newer" />
   <img src="https://img.shields.io/badge/Folia-Supported-2d7ff9?style=for-the-badge" alt="Folia supported" />
@@ -29,9 +29,13 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. Version `1.3.0` is the current public release. Existing `1.2.7` data and configuration remain valid through automatic schema migration.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. The `V1.3.5` branch contains the reviewed 1.3.5 source line; no GitHub Release is created by updating this branch. Existing `1.2.7` and `1.3.0` data and configuration remain valid through automatic schema migration.
 
-> Download `AegisGuard-1.3.0.jar` from [Releases](https://github.com/snazzyatoms/AegisGuard/releases). Full notes are in [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md). Wiki pages will be updated after this release.
+> Release notes are in [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md). Wiki sources live in [`wiki/`](wiki/). Published server and API artifacts will be attached separately when a 1.3.5 GitHub Release is intentionally created.
+
+## What Is New In 1.3.5
+
+Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
 ## What Is New In 1.3.0
 
@@ -77,7 +81,7 @@ Voluntary teleports (visit, markets, spawn, staff destinations, and related flow
 
 ### Staff Health and Recovery
 
-`/agadmin health` reports operational signals such as travel gate status and stale Guest Passes. Recovery snapshots remain available for Doctor repairs and manual admin capture (`/agadmin snapshot`). Snapshots store **claim data only** (members, flags, metadata). Full world-block plot backups are planned for a later update.
+`/agadmin health` reports operational signals such as travel gate status and stale Guest Passes. Recovery snapshots remain available for Doctor repairs and manual admin capture (`/agadmin snapshot`). Snapshots always store claim data. Optional WorldEdit/FAWE plot-build copies are off by default (`snapshots.build_backup`), as are bounded automatic player-plot and server-zone backups (`snapshots.automatic_player`).
 
 ### Module Switchboard
 
@@ -95,21 +99,9 @@ Protection covers hopper, liquid, teleport, and storm wards alongside the rest o
 
 Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in. Wilderness revert ships **OFF** (SQL-only; YAML does nothing).
 
-## Known Issues In 1.3.0
+## Version 1.3.5
 
-These issues exist in public `1.3.0`. They are addressed in `1.3.5`, which is an upcoming GitHub Release. The same list is on the [1.3.0 Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.0).
-
-- Restoring a snapshot after a plot changes owner can restore the wrong live plot
-- Staff snapshot restore can run off the region/main thread (unsafe on Folia)
-- Snapshot prune can delete more snapshots than the configured cap when age and count limits both apply
-- Rollback does not clear role nicknames added after the snapshot
-- Player menu footer can leave empty clickable holes for non-admins
-- Staff Tools can still show Routes, Arena, Expansions, Audit, and Snapshots when those modules are turned off
-- Saving a plot can auto-lift an expired timed lockdown as a side effect
-
-## Public 1.3.0 Release
-
-`1.3.0` is the current GitHub Release. On a JAR swap from `1.2.7`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki and SpigotMC pages will follow.
+The `V1.3.5` branch is the source and verification line for this update; it is not itself a GitHub Release. On a JAR swap from `1.2.7` or `1.3.0`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki markdown lives in [`wiki/`](wiki/).
 
 ## Core Systems
 
@@ -120,7 +112,7 @@ These issues exist in public `1.3.0`. They are addressed in `1.3.5`, which is an
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
 | Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
-| Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots are claim-data only until a later full plot-backup update |
+| Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
 
 ## Compatibility
@@ -133,7 +125,7 @@ These issues exist in public `1.3.0`. They are addressed in `1.3.5`, which is an
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI and the public AegisGuard API |
-| Upgrade path | From AegisGuard `1.2.7` with automatic config schema migration |
+| Upgrade path | From AegisGuard `1.2.7` or `1.3.0` with automatic config schema migration |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -141,7 +133,7 @@ Server implementations evolve independently. Test new Minecraft server releases 
 
 1. Stop the Minecraft server.
 2. Confirm the host is running **Java 21 or newer**.
-3. Place `AegisGuard-1.3.0.jar` in the server's `plugins` directory.
+3. Place `AegisGuard-1.3.5.jar` in the server's `plugins` directory.
 4. Install Vault and an economy provider if money-based features are required.
 5. Start the server. On a JAR swap from 1.2.7, config and language merge run automatically and existing plots load as-is.
 6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.

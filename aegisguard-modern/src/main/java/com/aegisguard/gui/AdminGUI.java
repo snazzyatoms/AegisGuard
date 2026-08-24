@@ -120,7 +120,7 @@ public class AdminGUI {
                         "&7Toggle only during maintenance windows",
                         "&7when you understand the side effects."
                 ),
-                9, 17);
+                9, 16, 17);
         addSectionFrame(player, inv, Material.LIME_STAINED_GLASS_PANE,
                 "staff_territory_section_name", "&aTerritory",
                 "staff_territory_section_lore",
@@ -131,11 +131,8 @@ public class AdminGUI {
                 18, 19, 20, 21, 22, 23, 24, 25, 26);
         addSectionFrame(player, inv, Material.MAGENTA_STAINED_GLASS_PANE,
                 "staff_recovery_section_name", "&dRecovery",
-                "staff_recovery_section_lore",
-                List.of(
-                        "&7Claim-data snapshots, audit, doctor,",
-                        "&7and migration. Snapshots do not save builds."
-                ),
+                recoverySectionLoreKey(),
+                recoverySectionLoreDefault(),
                 27, 28, 29, 30, 31, 32, 33, 34, 35);
         addSectionFrame(player, inv, Material.CYAN_STAINED_GLASS_PANE,
                 "staff_toolbelt_section_name", "&bGuardian Toolbelt",
@@ -219,9 +216,11 @@ public class AdminGUI {
                 ),
                 "toggle_low_overhead_mode"
         );
-        addExpansionModeToggle(player, inv);
+        if (mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
+            addExpansionModeToggle(player, inv);
+        }
 
-        // --- TOOLS ---
+        if (mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) {
         ItemStack requests = GUIManager.createItem(
                 Material.AMETHYST_CLUSTER,
                 plugin.gui().tr(player, "button_view_requests_admin", "&cReview Requests"),
@@ -247,6 +246,7 @@ public class AdminGUI {
         );
         tagAction(instantApprovals, "open_instant_approvals");
         inv.setItem(SLOT_TOOL_INSTANT_APPROVALS, instantApprovals);
+        }
 
         ItemStack plotList = GUIManager.createItem(
                 Material.WRITABLE_BOOK,
@@ -323,41 +323,18 @@ public class AdminGUI {
 
         // Snapshots (enabled/disabled) (tagged either way)
         boolean snapshotsEnabled = plugin.getSnapshotManager() != null
-                && plugin.cfg().raw().getBoolean("snapshots.enabled", true);
+                && mod(com.aegisguard.config.Modules.Id.SNAPSHOTS);
 
         if (snapshotsEnabled) {
             ItemStack snapshots = GUIManager.createItem(
                     Material.SPYGLASS,
                     plugin.gui().tr(player, "button_admin_snapshots", "&d📸 Claim Snapshots"),
-                    plugin.gui().trList(player, "admin_snapshots_lore", List.of(
-                            "&7What: browse claim-data recovery points.",
-                            "&7Creates copies of flags, members, and bounds.",
-                            "&7Does not save world blocks or builds.",
-                            " ",
-                            "&cRollback overwrites the live claim — confirm carefully.",
-                            "&eClick to open.",
-                            " ",
-                            "&7Saves plot records: owner, flags,",
-                            "&7members, and bounds. Not world blocks.",
-                            "&eFull plot backups (builds) come later."
-                    ))
+                    plugin.gui().trList(player, snapshotsLoreKey(), snapshotsLoreDefault())
             );
             tagAction(snapshots, "open_snapshots");
             inv.setItem(SLOT_TOOL_SNAPSHOTS, snapshots);
-        } else {
-            ItemStack snapshotsDisabled = GUIManager.createItem(
-                    Material.GRAY_DYE,
-                    plugin.gui().tr(player, "button_admin_snapshots_disabled", "&8📸 Snapshots Disabled"),
-                    plugin.gui().trList(player, "admin_snapshots_disabled_lore", List.of(
-                            "&7Claim snapshots are disabled in config.",
-                            "&7Set snapshots.enabled to true, then reload."
-                    ))
-            );
-            tagAction(snapshotsDisabled, "snapshots_disabled");
-            inv.setItem(SLOT_TOOL_SNAPSHOTS, snapshotsDisabled);
+            addSnapshotScheduleButton(player, inv);
         }
-
-        addSnapshotScheduleButton(player, inv);
 
         ItemStack worldControls = GUIManager.createItem(
                 Material.LECTERN,
@@ -388,7 +365,8 @@ public class AdminGUI {
         tagAction(migration, "open_migration");
         inv.setItem(SLOT_TOOL_MIGRATION, migration);
 
-        if (player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player)) {
+        if (mod(com.aegisguard.config.Modules.Id.ROUTES)
+                && (player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player))) {
             ItemStack routes = GUIManager.createItem(
                     Material.FILLED_MAP,
                     plugin.gui().tr(player, "button_admin_routes", "&aRoute Editor"),
@@ -404,7 +382,8 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_ROUTES, routes);
         }
 
-        if (player.hasPermission("aegis.arena.admin") || player.hasPermission("aegis.arena.steward") || plugin.isAdmin(player)) {
+        if (mod(com.aegisguard.config.Modules.Id.ARENA)
+                && (player.hasPermission("aegis.arena.admin") || player.hasPermission("aegis.arena.steward") || plugin.isAdmin(player))) {
             ItemStack arena = GUIManager.createItem(
                     Material.DIAMOND_SWORD,
                     plugin.gui().tr(player, "button_admin_arena", "&cArena Admin"),
@@ -420,7 +399,8 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_ARENA, arena);
         }
 
-        if (player.hasPermission("aegis.admin.audit")) {
+        if (mod(com.aegisguard.config.Modules.Id.AUDIT)
+                && player.hasPermission("aegis.admin.audit")) {
             ItemStack auditLedger = GUIManager.createItem(
                     Material.WRITTEN_BOOK,
                     plugin.gui().tr(player, "button_admin_audit", "&eStaff Audit Ledger"),
@@ -523,11 +503,18 @@ public class AdminGUI {
             case "toggle_unlimited_plots" -> { GUIManager.playClick(player); toggleAndReopen(player, "admin.unlimited_plots", true); }
             case "toggle_proxy_sync" -> { GUIManager.playClick(player); toggleAndReopen(player, "sync.proxy.enabled", false); }
             case "toggle_low_overhead_mode" -> { GUIManager.playClick(player); toggleAndReopen(player, "performance.low_overhead_mode", false); }
-            case "toggle_expansion_approval_mode" -> { GUIManager.playClick(player); cycleExpansionApprovalMode(player); }
+            case "toggle_expansion_approval_mode" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) return;
+                GUIManager.playClick(player); cycleExpansionApprovalMode(player);
+            }
 
             // --- Tools ---
-            case "open_requests" -> { plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player); }
+            case "open_requests" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) return;
+                plugin.gui().expansionAdmin().open(player); plugin.effects().playMenuFlip(player);
+            }
             case "open_instant_approvals" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.EXPANSIONS)) return;
                 plugin.gui().expansionInstantApprovals().open(player);
                 plugin.effects().playMenuFlip(player);
             }
@@ -538,19 +525,16 @@ public class AdminGUI {
             case "refresh_lang" -> handleRefreshLang(player);
 
             case "open_snapshots" -> {
-                if (plugin.getSnapshotManager() != null) {
-                    plugin.gui().openSnapshotAdmin(player);
-                    plugin.effects().playMenuFlip(player);
-                } else {
+                if (!mod(com.aegisguard.config.Modules.Id.SNAPSHOTS) || plugin.getSnapshotManager() == null) {
                     sendKey(player, "snapshots_disabled", "&cSnapshots are disabled.");
                     plugin.effects().playError(player);
+                    return;
                 }
-            }
-            case "snapshots_disabled" -> {
-                sendKey(player, "snapshots_disabled", "&cSnapshots are disabled.");
-                plugin.effects().playError(player);
+                plugin.gui().openSnapshotAdmin(player);
+                plugin.effects().playMenuFlip(player);
             }
             case "cycle_snapshot_schedule" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.SNAPSHOTS)) return;
                 GUIManager.playClick(player);
                 cycleSnapshotSchedule(player);
             }
@@ -569,6 +553,7 @@ public class AdminGUI {
                 }
             }
             case "open_routes" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.ROUTES)) return;
                 if ((player.hasPermission("aegis.admin.routes") || plugin.isAdmin(player))
                         && plugin.gui().routeAdmin() != null) {
                     plugin.gui().routeAdmin().open(player);
@@ -579,6 +564,7 @@ public class AdminGUI {
                 }
             }
             case "open_arena" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.ARENA)) return;
                 if ((player.hasPermission("aegis.arena.admin")
                         || player.hasPermission("aegis.arena.steward")
                         || plugin.isAdmin(player))
@@ -592,6 +578,7 @@ public class AdminGUI {
             }
 
             case "open_audit" -> {
+                if (!mod(com.aegisguard.config.Modules.Id.AUDIT)) return;
                 if (player.hasPermission("aegis.admin.audit") && plugin.gui().audit() != null) {
                     plugin.gui().audit().open(player);
                     plugin.effects().playMenuFlip(player);
@@ -992,6 +979,72 @@ public class AdminGUI {
                 open(p);
             });
         });
+    }
+
+    private boolean mod(com.aegisguard.config.Modules.Id id) {
+        try {
+            return plugin.modules().on(id);
+        } catch (Throwable ignored) {
+            return id.defaultOn();
+        }
+    }
+
+    private String snapshotsLoreKey() {
+        var backup = plugin.getSnapshotManager() == null ? null : plugin.getSnapshotManager().buildBackup();
+        if (backup != null && backup.isReady()) return "admin_snapshots_lore_builds";
+        if (backup != null && backup.isConfiguredOn()) return "admin_snapshots_lore_need_we";
+        return "admin_snapshots_lore";
+    }
+
+    private List<String> snapshotsLoreDefault() {
+        var backup = plugin.getSnapshotManager() == null ? null : plugin.getSnapshotManager().buildBackup();
+        if (backup != null && backup.isReady()) {
+            return List.of(
+                    "&7What: browse recovery points and restore claims.",
+                    "&aWorldEdit build copies are enabled for staff snapshots.",
+                    " ",
+                    "&cRollback overwrites the live claim — confirm carefully.",
+                    "&eClick to open."
+            );
+        }
+        if (backup != null && backup.isConfiguredOn()) {
+            return List.of(
+                    "&7What: browse recovery points and restore claims.",
+                    "&eInstall WorldEdit or FAWE to copy builds.",
+                    " ",
+                    "&eClick to open."
+            );
+        }
+        return List.of(
+                "&7What: browse recovery points and restore claims.",
+                "&7Creates copies of flags, members, and bounds.",
+                "&7Does not save world blocks unless build backup is on.",
+                " ",
+                "&cRollback overwrites the live claim — confirm carefully.",
+                "&eClick to open.",
+                " ",
+                "&eEnable snapshots.build_backup and install WorldEdit/FAWE."
+        );
+    }
+
+    private String recoverySectionLoreKey() {
+        var backup = plugin.getSnapshotManager() == null ? null : plugin.getSnapshotManager().buildBackup();
+        if (backup != null && backup.isReady()) return "staff_recovery_section_lore_builds";
+        return "staff_recovery_section_lore";
+    }
+
+    private List<String> recoverySectionLoreDefault() {
+        var backup = plugin.getSnapshotManager() == null ? null : plugin.getSnapshotManager().buildBackup();
+        if (backup != null && backup.isReady()) {
+            return List.of(
+                    "&7Claim snapshots, optional WorldEdit build copies,",
+                    "&7audit, doctor, and migration."
+            );
+        }
+        return List.of(
+                "&7Claim-data snapshots, audit, doctor,",
+                "&7and migration. Build copies need WorldEdit."
+        );
     }
 
     private void sendKey(Player p, String key, String fallback) {

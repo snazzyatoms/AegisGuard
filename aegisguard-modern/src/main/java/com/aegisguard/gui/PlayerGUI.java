@@ -112,7 +112,7 @@ public class PlayerGUI {
                 18,26,
                 27,35,
                 36,44,
-                46,47,48,50,51
+                45,46,47,48,49,50,51,52,53
         };
         for (int i : borderSlots) inv.setItem(i, filler);
 

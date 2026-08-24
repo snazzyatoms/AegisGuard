@@ -38,6 +38,8 @@ public class RouteService {
     private final Object ioLock = new Object();
     private volatile boolean dirtyRoutes;
     private volatile boolean dirtyProgress;
+    private volatile boolean routesStorageReady;
+    private volatile boolean progressStorageReady;
 
     public RouteService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -175,13 +177,23 @@ public class RouteService {
             try {
                 plugin.eco().deposit(player, route.getRewardMoney(), CurrencyType.VAULT);
                 any = true;
-            } catch (Throwable ignored) {}
+            } catch (Throwable error) {
+                plugin.getLogger().log(Level.SEVERE,
+                        "Failed to grant the money reward for route " + route.getId()
+                                + " to player " + player.getUniqueId() + ".",
+                        error);
+            }
         }
         if (route.getRewardClaimBlocks() > 0 && plugin.getClaimBlockManager() != null) {
             try {
                 plugin.getClaimBlockManager().addEarned(player.getUniqueId(), (long) route.getRewardClaimBlocks());
                 any = true;
-            } catch (Throwable ignored) {}
+            } catch (Throwable error) {
+                plugin.getLogger().log(Level.SEVERE,
+                        "Failed to grant the claim-block reward for route " + route.getId()
+                                + " to player " + player.getUniqueId() + ".",
+                        error);
+            }
         }
 
         p.setRewardClaimed(true);
@@ -221,8 +233,12 @@ public class RouteService {
 
     private void loadRoutes() {
         synchronized (ioLock) {
+            if (!ensureFile(routesFile)) {
+                routesStorageReady = false;
+                return;
+            }
+            routesStorageReady = true;
             routes.clear();
-            ensureFile(routesFile);
             FileConfiguration data = YamlConfiguration.loadConfiguration(routesFile);
             ConfigurationSection sec = data.getConfigurationSection("routes");
             if (sec == null) {
@@ -273,6 +289,10 @@ public class RouteService {
 
     private void saveRoutes() {
         synchronized (ioLock) {
+            if (!routesStorageReady) {
+                plugin.getLogger().severe("Refusing to save routes.yml because route storage did not initialize successfully.");
+                return;
+            }
             if (!dirtyRoutes && routesFile.exists()) return;
             YamlConfiguration out = new YamlConfiguration();
             ConfigurationSection root = out.createSection("routes");
@@ -308,8 +328,12 @@ public class RouteService {
 
     private void loadProgress() {
         synchronized (ioLock) {
+            if (!ensureFile(progressFile)) {
+                progressStorageReady = false;
+                return;
+            }
+            progressStorageReady = true;
             progress.clear();
-            ensureFile(progressFile);
             FileConfiguration data = YamlConfiguration.loadConfiguration(progressFile);
             ConfigurationSection players = data.getConfigurationSection("players");
             if (players == null) {
@@ -344,6 +368,10 @@ public class RouteService {
 
     private void saveProgress() {
         synchronized (ioLock) {
+            if (!progressStorageReady) {
+                plugin.getLogger().severe("Refusing to save routes-progress.yml because route-progress storage did not initialize successfully.");
+                return;
+            }
             if (!dirtyProgress && progressFile.exists()) return;
             YamlConfiguration out = new YamlConfiguration();
             for (RouteProgress p : progress.values()) {
@@ -367,12 +395,26 @@ public class RouteService {
         plugin.runGlobalAsync(this::saveProgress);
     }
 
-    private void ensureFile(File file) {
+    private boolean ensureFile(File file) {
         try {
             File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
-            if (!file.exists()) file.createNewFile();
-        } catch (IOException ignored) {}
+            if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                throw new IOException("Could not create plugin data directory " + parent);
+            }
+            if (!file.exists() && !file.createNewFile()) {
+                throw new IOException("Could not create " + file);
+            }
+            if (!file.isFile() || !file.canRead()) {
+                throw new IOException(file + " is not a readable file");
+            }
+            return true;
+        } catch (IOException error) {
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not create or access " + file.getName()
+                            + ". Existing in-memory route data was retained and saves are disabled for this file.",
+                    error);
+            return false;
+        }
     }
 
     private static String key(UUID playerId, UUID routeId) {

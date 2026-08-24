@@ -435,19 +435,26 @@ public class YMLDataStore implements IDataStore {
     }
 
     private void safeSaveConfigToDisk() {
+        File tmp = null;
         try {
             File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
+            if (parent != null) Files.createDirectories(parent.toPath());
 
-            File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
+            tmp = new File(parent, file.getName() + ".tmp");
             config.save(tmp);
-            Files.move(tmp.toPath(), file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING,
-                    StandardCopyOption.ATOMIC_MOVE);
-        } catch (Exception e) {
             try {
-                config.save(file);
-            } catch (IOException ignored) {}
+                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException ignored) {
+                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (Exception error) {
+            if (tmp != null) {
+                try { Files.deleteIfExists(tmp.toPath()); } catch (IOException cleanupError) {
+                    error.addSuppressed(cleanupError);
+                }
+            }
+            throw new IllegalStateException("Failed to durably save plot data to " + file, error);
         }
     }
 
@@ -534,7 +541,7 @@ public class YMLDataStore implements IDataStore {
         String allianceBlob = plot.serializeAllianceAccess();
         sec.set("alliance-access", allianceBlob.isEmpty() ? null : allianceBlob);
 
-        if (plot.isLockdownActive()) {
+        if (plot.isLockdownFlagSet()) {
             sec.set("lockdown-active", true);
             sec.set("lockdown-activated-at", plot.getLockdownActivatedAt());
             sec.set("lockdown-expires-at", plot.getLockdownExpiresAt() > 0L ? plot.getLockdownExpiresAt() : null);
@@ -779,6 +786,13 @@ public class YMLDataStore implements IDataStore {
         removePlotByIdEverywhere(plot.getPlotId());
         cachePlot(plot);
         savePlotSync(plot);
+    }
+
+    @Override
+    public void reindexPlot(Plot plot) {
+        if (plot == null) return;
+        cachePlot(plot);
+        isDirty = true;
     }
 
     @Override

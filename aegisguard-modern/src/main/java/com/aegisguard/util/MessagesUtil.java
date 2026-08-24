@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -217,7 +218,27 @@ public class MessagesUtil implements Listener {
     public synchronized void loadPlayerPreferences() {
         playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
         if (!playerDataFile.exists()) {
-            try { playerDataFile.createNewFile(); } catch (IOException e) { e.printStackTrace(); }
+            try {
+                File parent = playerDataFile.getParentFile();
+                if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
+                    throw new IOException("Could not create plugin data directory " + parent);
+                }
+                if (!playerDataFile.createNewFile() && !playerDataFile.isFile()) {
+                    throw new IOException("Could not create " + playerDataFile);
+                }
+            } catch (IOException error) {
+                plugin.getLogger().log(Level.SEVERE,
+                        "Could not create playerdata.yml; player language preferences will not be loaded or saved.",
+                        error);
+                playerDataFile = null;
+                playerData = null;
+                return;
+            }
+        } else if (!playerDataFile.isFile() || !playerDataFile.canRead()) {
+            plugin.getLogger().severe("playerdata.yml is not a readable file; player language preferences will not be loaded or saved.");
+            playerDataFile = null;
+            playerData = null;
+            return;
         }
         playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 
@@ -249,7 +270,9 @@ public class MessagesUtil implements Listener {
             playerData.save(playerDataFile);
             isPlayerDataDirty = false;
         } catch (IOException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not save player language preferences to playerdata.yml; changes remain dirty for a later retry.",
+                    e);
         }
     }
 

@@ -3480,7 +3480,7 @@ players_only: '&cError: Este comando solo puede ser usado por jugadores.'
 player_not_found: '&cNo se encontró al jugador.'
 invalid_number: '&cNúmero inválido.'
 role_edit_self_error: '&cError: No puedes editar tu propio rol.'
-usage_main: '&eUso: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
+usage_main: '&eUso: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
 help_header: '&bAyuda de AegisGuard'
 help_lines:
 - '&e/aegis wand &7- Obtén la Varita Aegis (herramienta de selección).'

@@ -271,7 +271,7 @@ hooks:
 #
 # Scope: storage.* covers plot / zone / stall records only. Satellite files always
 # remain YAML regardless of backend (alliances.yml, territory-life.yml, audit,
-# routes, player notification prefs, etc.).
+# routes, beacons.yml, player notification prefs, etc.).
 #
 # Autosave: YML writes use synchronous save-on-change (temp file + atomic move).
 # SQL backends use a connection pool; savePlot is async and savePlotSync waits.

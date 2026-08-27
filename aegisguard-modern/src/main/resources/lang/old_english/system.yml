@@ -14,7 +14,7 @@ players_only: '&cError: This command may only be used by players.'
 player_not_found: '&cPlayer not found.'
 invalid_number: '&cInvalid number.'
 role_edit_self_error: '&cError: Thou canst not edit thine own role.'
-usage_main: '&eSpeak thus: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
+usage_main: '&eSpeak thus: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
 help_header: '&bAegisGuard Help'
 help_lines:
 - '&e/ag wand &7- Get the Aegis Scepter.'

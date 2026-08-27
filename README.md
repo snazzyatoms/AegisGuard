@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="100%" alt="AegisGuard Feature Art" src="https://github.com/user-attachments/assets/03f02b56-925b-468e-8d29-2839b6f06c95" />
+  <img width="100%" alt="AegisGuard" src="listing/aegisguard-spigot-header-v2.png" />
 </p>
 
 <h1 align="center">AegisGuard 1.3.5</h1>
@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/Java-21%2B-e76f00?style=for-the-badge" alt="Java 21 or newer" />
   <img src="https://img.shields.io/badge/Folia-Supported-2d7ff9?style=for-the-badge" alt="Folia supported" />
   <a href="https://discord.gg/nHwdhKzeKR"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord" /></a>
+  <a href="https://github.com/snazzyatoms/AegisGuard"><img src="https://img.shields.io/badge/OPEN_SOURCE-GITHUB-24292f?style=for-the-badge&logo=github&logoColor=white" alt="Open Source on GitHub" /></a>
 </p>
 
 <p align="center">
@@ -34,6 +35,8 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. The `V1.3.5` 
 > Release notes are in [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md). Wiki sources live in [`wiki/`](wiki/). Published server and API artifacts will be attached separately when a 1.3.5 GitHub Release is intentionally created.
 
 ## What Is New In 1.3.5
+
+**Teleport Beacons** let players place linked pads on claims they manage. Stand next to a pad, confirm, and land only at the linked pad. Visit, market, and auction travel can require a public arrival beacon when the module is on. Server owners choose the fee policy in `teleport_beacons.charges`: mixed free and paid pads (`owner_choice`), a server-wide fee (`always`), or no charges (`off`). Optional maintenance fees can pay the plot owner. `/ag home` stays personal plot spawn.
 
 Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
@@ -77,7 +80,7 @@ Player alliances are completely separate from ownership, money, rentals, and adm
 
 ### Safe Travel and Destinations
 
-Voluntary teleports (visit, markets, spawn, staff destinations, and related flows) share Safe Travel cooldowns, confirmation, combat tagging, and safe-point search. Staff can manage Travel destinations used by the Travel Atlas.
+Voluntary teleports (visit, markets, spawn, staff destinations, Teleport Beacons, and related flows) share Safe Travel cooldowns, confirmation, combat tagging, and safe-point search. Staff can manage Travel destinations used by the Travel Atlas.
 
 ### Staff Health and Recovery
 
@@ -110,7 +113,7 @@ The `V1.3.5` branch is the source and verification line for this update; it is n
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Travel destinations, and routes |
+| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Teleport Beacons, Travel destinations, and routes |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -152,6 +155,7 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag level                    Open the Ascension Hall
 /ag market local             Open the Local Market
 /ag visit                    Open the Travel Atlas
+/ag beacon                   Manage teleport pads on the claim you are standing in
 /ag zone                     Manage sub-zones and rentals
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 

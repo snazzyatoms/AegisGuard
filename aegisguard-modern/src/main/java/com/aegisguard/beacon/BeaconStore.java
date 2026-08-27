@@ -162,8 +162,8 @@ public final class BeaconStore {
             } catch (IOException error) {
                 plugin.getLogger().log(Level.WARNING, "Could not save beacons.yml", error);
             }
+            saveSqlAll();
         }
-        saveSqlAll();
     }
 
     private TeleportBeacon readSection(ConfigurationSection section, String key) {
@@ -241,23 +241,34 @@ public final class BeaconStore {
     private void saveSqlAll() {
         try (Connection conn = sqlConnection()) {
             if (conn == null) return;
-            try (Statement create = conn.createStatement()) {
-                create.execute(CREATE_TABLE);
-            }
-            try (PreparedStatement wipe = conn.prepareStatement("DELETE FROM aegis_teleport_beacons")) {
-                wipe.executeUpdate();
-            }
-            String insert = "INSERT INTO aegis_teleport_beacons (" +
-                    "beacon_id,plot_id,world,x,y,z,yaw,pitch,material,name,purpose,linked_id," +
-                    "custom_model_data,enabled,owners,members,trusted,guests,alliance_flag," +
-                    "public_access,staff_only,require_confirm,allow_combat,vault_cost," +
-                    "claim_block_cost,extra_cooldown,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            try (PreparedStatement ps = conn.prepareStatement(insert)) {
-                for (TeleportBeacon beacon : beacons.values()) {
-                    bind(ps, beacon);
-                    ps.addBatch();
+            boolean restoreAuto = true;
+            try {
+                restoreAuto = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+                try (Statement create = conn.createStatement()) {
+                    create.execute(CREATE_TABLE);
                 }
-                ps.executeBatch();
+                try (PreparedStatement wipe = conn.prepareStatement("DELETE FROM aegis_teleport_beacons")) {
+                    wipe.executeUpdate();
+                }
+                String insert = "INSERT INTO aegis_teleport_beacons (" +
+                        "beacon_id,plot_id,world,x,y,z,yaw,pitch,material,name,purpose,linked_id," +
+                        "custom_model_data,enabled,owners,members,trusted,guests,alliance_flag," +
+                        "public_access,staff_only,require_confirm,allow_combat,vault_cost," +
+                        "claim_block_cost,extra_cooldown,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                try (PreparedStatement ps = conn.prepareStatement(insert)) {
+                    for (TeleportBeacon beacon : beacons.values()) {
+                        bind(ps, beacon);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                conn.commit();
+            } catch (Exception inner) {
+                try { conn.rollback(); } catch (Exception ignored) {}
+                throw inner;
+            } finally {
+                try { conn.setAutoCommit(restoreAuto); } catch (Exception ignored) {}
             }
         } catch (Exception error) {
             plugin.getLogger().log(Level.FINE, "Beacon SQL dual-write skipped: " + error.getMessage());

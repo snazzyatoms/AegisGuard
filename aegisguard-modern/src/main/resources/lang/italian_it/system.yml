@@ -9,7 +9,7 @@ prefix: '&8[&bAegisGuard&8]&r '
 role_edit_self_error: '&cErrore: non puoi modificare il tuo ruolo.'
 no_perm: '&cErrore: non hai l''autorizzazione per questo.'
 players_only: '&cErrore: questo comando può essere utilizzato solo dai giocatori.'
-usage_main: '&eUtilizzo: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
+usage_main: '&eUtilizzo: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
 claim_enter_exit_notify_usage: '&eUtilizzo: &f/aegis notify'
 claim_enter_exit_notify_server_disabled: '&cLe notifiche di entrata/uscita dei claim sono disabilitate a livello di server.'
 claim_enter_exit_notify_toggle_not_allowed: '&cQuesto server non consente ai giocatori di attivare/disattivare le notifiche

@@ -3380,7 +3380,7 @@ prefix: '&8[&bAegisGuard&8]&r '
 role_edit_self_error: '&cErreur : vous ne pouvez pas modifier votre propre rôle.'
 no_perm: '&cErreur : vous n''avez pas l''autorisation pour cela.'
 players_only: '&cErreur : Cette commande ne peut être utilisée que par les joueurs.'
-usage_main: '&eUtilisation : /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|help>'
+usage_main: '&eUtilisation : /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
 claim_enter_exit_notify_usage: '&eUtilisation : &f/aegis notify'
 claim_enter_exit_notify_server_disabled: '&cLes notifications d''entrée/sortie de claim sont désactivées sur l''ensemble du
   serveur.'

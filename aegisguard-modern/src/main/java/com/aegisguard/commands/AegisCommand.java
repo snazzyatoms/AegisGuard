@@ -45,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "discover", "favorite", "activity",
+            "group", "alliance", "arena", "beacon", "discover", "favorite", "activity",
             "transfer", "settlements",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
@@ -335,6 +335,22 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 }
                 String[] rest = args.length <= 1 ? new String[0] : java.util.Arrays.copyOfRange(args, 1, args.length);
                 return new com.aegisguard.arena.ArenaCommand(plugin, plugin.arena()).handle(p, rest);
+            }
+
+            case "beacon" -> {
+                if (plugin.beacons() == null || !plugin.beacons().isEnabled()
+                        || plugin.gui() == null || plugin.gui().beacons() == null) {
+                    sendKey(p, "beacon_unavailable", "&cTeleport Beacons are unavailable.");
+                    return true;
+                }
+                if (args.length >= 2 && (args[1].equalsIgnoreCase("give")
+                        || args[1].equalsIgnoreCase("pad")
+                        || args[1].equalsIgnoreCase("kit"))) {
+                    plugin.beacons().giveStarterPads(p);
+                    plugin.gui().beacons().openManager(p);
+                    break;
+                }
+                plugin.gui().beacons().openManager(p);
             }
 
             // ✅ Added: /aegis reload [soft|nogui]
@@ -2441,6 +2457,13 @@ private void handleUnsell(Player p) {
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("subplot") || args[0].equalsIgnoreCase("subzone")) {
                 return Arrays.asList("Market Stall", "Room", "Hotel Suite", "Storage", "Booth");
+            }
+
+            if (args[0].equalsIgnoreCase("beacon")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("give", "pad", "kit"), completions);
+                Collections.sort(completions);
+                return completions;
             }
 
             if (args[0].equalsIgnoreCase("notify")) {

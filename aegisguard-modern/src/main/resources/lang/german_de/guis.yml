@@ -1,4 +1,4 @@
-# ======================================
+﻿# ======================================
 # AegisGuard v1.3.0 - Deutsch
 # Language ID: german_de
 # File: guis.yml
@@ -39,6 +39,26 @@ main_section_economy_name: '&6Wirtschaft & Fortschritt'
 main_section_economy_lore: '&7Markt, ClaimBlocks, Upgrades und Auktionen.'
 main_section_explore_name: '&aErkunden'
 main_section_explore_lore: '&7Routen und Serverreisen.'
+
+hub_category_territory_name: '&bTerritory'
+hub_category_territory_lore:
+- '&7Realm profile, expansion,'
+- '&7zoning, and claim merge.'
+hub_category_access_name: '&dAccess & Safety'
+hub_category_access_lore:
+- '&7Roles, guest passes,'
+- '&7alliance access, and lockdown.'
+hub_category_economy_name: '&6Economy & Progress'
+hub_category_economy_lore:
+- '&7Exchange, leveling, auctions,'
+- '&7gifts, and rentals.'
+hub_category_explore_name: '&aExplore'
+hub_category_explore_lore:
+- '&7Staff routes and arenas.'
+menu_page_territory_title: '&bTerritory'
+menu_page_access_title: '&dAccess & Safety'
+menu_page_economy_title: '&6Economy & Progress'
+menu_page_explore_title: '&aExplore'
 button_claim_land: '&a🛡 Claim erstellen'
 claim_land_lore:
 - '&7Verwandeln Sie Ihre aktuelle Auswahl in'
@@ -3739,3 +3759,122 @@ plot_status_line_bullet: '&f- {LABEL}: {STATE}'
 plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effekt &f{TIER}&7)'
 plot_status_blessing_member_slots_format: '&a✦ &fVertrauenswürdige Mitgliederplätze: &b+{AMOUNT}'
 plot_status_blessing_generic_format: '&a✦ &f{TEXT}'
+
+# --- Teleport Beacons (1.3.5) ---
+button_beacons: '&bTeleport-Baken'
+beacons_button_lore:
+- '&7Erstelle verknüpfte Pads, lege fest, wer sie nutzen darf,'
+- '&7und reise mit einem Bestätigungsbildschirm.'
+beacon_manager_title: '&bTeleport-Baken'
+beacon_manager_guide_name: '&bSo funktionieren sie'
+beacon_manager_guide_lore:
+- '&7Platziere einen Lodestone (oder ein anderes Pad).'
+- '&7Schleichen + Rechtsklick, um die Bake zu erstellen.'
+- '&71. Voreinstellung wählen  2. Anderes Pad verknüpfen'
+- '&73. Darauf stehen, um zu reisen.'
+beacon_setup_title: '&bBake erstellen'
+beacon_edit_title: '&dBake-Regeln'
+beacon_link_title: '&aBake verknüpfen'
+beacon_confirm_title: '&eTeleport bestätigen'
+beacon_confirm_go: '&aTeleport zu &f{NAME} &abestätigen'
+beacon_confirm_cancel: '&cAbbrechen'
+beacon_rename_button: '&bUmbenennen'
+beacon_purpose_button: '&dZweck: &f{PURPOSE}'
+beacon_link_button: '&aZiel verknüpfen'
+beacon_advanced_button: '&7Erweiterte Regeln'
+beacon_preset_private: '&7Privat'
+beacon_preset_members: '&eMitglieder'
+beacon_preset_alliance: '&6Allianz'
+beacon_preset_public: '&aÖffentlich'
+beacon_give_button: '&bPads erhalten'
+beacon_give_button_lore:
+- '&7Gibt Lodestones (oder das Server-Pad).'
+- '&7Platziere sie, dann Schleichen + Rechtsklick zum Binden.'
+- '&7Jedes erlaubte Pad, das du schon hast, funktioniert auch.'
+beacon_need_plot_lore: '&7Baken gehören zu dem Grundstück, auf dem du stehst.'
+beacon_confirm_go_lore:
+- '&7Du landest auf dem verknüpften Pad.'
+beacon_purpose_lore:
+- '&7Für Markt, Auktion und Besuchslisten.'
+- '&eKlicken zum Wechseln.'
+beacon_purpose_cycle_lore:
+- '&eKlicken zum Wechseln.'
+beacon_icon_purpose: '&7Zweck: &f{PURPOSE}'
+beacon_icon_linked: '&aVerknüpft'
+beacon_icon_unlinked: '&cNoch nicht verknüpft'
+beacon_icon_public: '&aÖffentlich'
+beacon_icon_not_public: '&7Nicht öffentlich'
+beacon_icon_plot: '&7Grundstück: &f{PLOT}'
+beacon_toggle_owners: '&7Besitzer'
+beacon_toggle_members: '&eMitglieder'
+beacon_toggle_trusted: '&6Vertraut'
+beacon_toggle_guests: '&dGäste'
+beacon_toggle_alliance: '&6Allianz'
+beacon_toggle_public: '&aÖffentlich'
+beacon_toggle_staff: '&bNur Team'
+beacon_toggle_enabled: '&aAktiv'
+beacon_toggle_confirm: '&eBestätigung verlangen'
+beacon_toggle_combat: '&cIm Kampf erlauben'
+beacon_toggle_on: '&aAn'
+beacon_toggle_off: '&cAus'
+beacon_toggle_click: '&eKlicken zum Umschalten.'
+beacon_purpose_personal: Persönlich
+beacon_purpose_shop: Shop
+beacon_purpose_market: Markt
+beacon_purpose_arena: Arena
+beacon_purpose_dungeon: Dungeon
+beacon_purpose_spawn: Spawn
+beacon_purpose_alliance: Allianz
+beacon_purpose_server: Server
+beacon_purpose_auction: Auktion
+beacon_charges_off: '&7Gebühren vom Server deaktiviert.'
+beacon_charges_off_lore:
+- '&7Dieser Server berechnet keine Bake-Reisen.'
+beacon_charges_always_vault: '&6Server-Vault-Gebühr: &f{VAULT}'
+beacon_charges_always_blocks: '&aServer-ClaimBlocks: &f{BLOCKS}'
+beacon_charges_always_lore:
+- '&7Steht in config.yml — Spieler können das nicht ändern.'
+beacon_vault_cost: '&6Vault-Wartung: &f{VAULT}'
+beacon_vault_cost_lore:
+- '&7Verlange eine Wartungsgebühr von Reisenden.'
+- '&7Geht bei Ankunft an den Grundstücksbesitzer.'
+- '&7Shift +10, Klick +1, Rechtsklick zum Leeren.'
+beacon_cb_cost: '&aClaimBlock-Gebühr: &f{BLOCKS}'
+beacon_cb_cost_lore:
+- '&7Optionale ClaimBlock-Wartungsgebühr.'
+- '&7Shift +10, Klick +1, Rechtsklick zum Leeren.'
+beacon_vault_locked: '&7Vault-Gebühren sind aus.'
+beacon_cb_locked: '&7ClaimBlock-Gebühren sind aus.'
+beacon_icon_fee: '&6Gebühr: &f{VAULT} &7/ &a{BLOCKS} CB'
+beacon_confirm_fee: '&6Gebühr: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks'
+beacon_confirm_free: '&aDiese Reise ist kostenlos.'
+beacon_need_plot: '&cStehe in einem Grundstück'
+beacon_item_name: '&bAegis-Pad'
+beacon_item_lore:
+- '&7Platziere es auf deinem Grundstück,'
+- '&7dann sneak + Rechtsklick zum Binden.'
+beacon_preset_private_lore:
+- '&7Nur Besitzer.'
+beacon_preset_members_lore:
+- '&7Besitzer, Mitglieder und Vertrauenswürdige.'
+beacon_preset_alliance_lore:
+- '&7Nur Allianz. Nicht öffentlich gelistet.'
+beacon_preset_public_lore:
+- '&7Jeder. Pflicht für Besuche.'
+beacon_preset_click: '&eKlicken zum Übernehmen.'
+beacon_rename_lore:
+- '&7Aktuell: &f{NAME}'
+- '&eKlicken, dann einen Namen im Chat eingeben.'
+beacon_rename_chat_lore:
+- '&7Gib einen Namen im Chat ein.'
+beacon_link_choose_lore:
+- '&7Wähle das Ziel-Pad.'
+beacon_advanced_lore:
+- '&7Zusätzliche Optionen für Kosten, Bestätigung und Zugang.'
+beacon_cooldown: '&eExtra-Abklingzeit: &f{SECONDS}s'
+beacon_cooldown_lore:
+- '&7Klick +5s, Rechtsklick zum Leeren.'
+beacon_link_status_linked: '&7Verknüpft. Klicken zum Ändern.'
+beacon_link_status_unlinked: '&cNoch nicht verknüpft.'
+beacon_confirm_cancel_lore:
+- '&7Bleib, wo du bist.'

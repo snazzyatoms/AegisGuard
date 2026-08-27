@@ -256,6 +256,11 @@ public class PlotMarketGUI {
 
             // Teleport (Left Click)
             if (e.getClick().isLeftClick()) {
+                if (plugin.beacons() != null
+                        && plugin.beacons().handlePublicListingTravel(player, plot,
+                        com.aegisguard.beacon.TeleportBeacon.Purpose.MARKET)) {
+                    return;
+                }
                 Location center = plot.getCenter(plugin);
                 if (center != null) {
                     var result = plugin.safeTravel().travel(player, center,

@@ -32,6 +32,11 @@ import com.aegisguard.arena.ArenaGUI.ArenaDetailHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminEditHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminRunsHolder;
+import com.aegisguard.beacon.BeaconGUI.ManagerHolder;
+import com.aegisguard.beacon.BeaconGUI.SetupHolder;
+import com.aegisguard.beacon.BeaconGUI.EditHolder;
+import com.aegisguard.beacon.BeaconGUI.LinkHolder;
+import com.aegisguard.beacon.BeaconGUI.ConfirmHolder;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -208,7 +213,12 @@ public class GUIListener implements Listener {
                 || holder instanceof ArenaDetailHolder
                 || holder instanceof ArenaAdminHolder
                 || holder instanceof ArenaAdminEditHolder
-                || holder instanceof ArenaAdminRunsHolder;
+                || holder instanceof ArenaAdminRunsHolder
+                || holder instanceof ManagerHolder
+                || holder instanceof SetupHolder
+                || holder instanceof EditHolder
+                || holder instanceof LinkHolder
+                || holder instanceof ConfirmHolder;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
@@ -491,6 +501,13 @@ public class GUIListener implements Listener {
                 || holder instanceof ArenaAdminEditHolder
                 || holder instanceof ArenaAdminRunsHolder) {
             if (plugin.gui().arenaAdmin() != null) plugin.gui().arenaAdmin().handleClick(e);
+        }
+        else if (holder instanceof ManagerHolder
+                || holder instanceof SetupHolder
+                || holder instanceof EditHolder
+                || holder instanceof LinkHolder
+                || holder instanceof ConfirmHolder) {
+            if (plugin.gui().beacons() != null) plugin.gui().beacons().handleClick(player, e);
         }
     }
 

@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1292;
+    public static final int CURRENT_SCHEMA = 1294;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -201,6 +201,8 @@ public final class ConfigMigrationService {
         repairInt(config, "mob_barrier.interval_seconds", 1, 3600, 3);
         repairInt(config, "mob_barrier.player_cleanup_interval_seconds", 1, 300, 2);
         repairInt(config, "mob_barrier.despawn_grace_seconds", 0, 300, 5);
+        repairInt(config, "teleport_beacons.max_per_plot", 1, 64, 3);
+        repairInt(config, "teleport_beacons.max_per_server_zone", 1, 64, 8);
         repairInt(config, "expansions.horizons.unlock_level", 30, 1000, 30);
         repairInt(config, "expansions.horizons.pulse_cooldown_seconds", 1, 86_400, 300);
         repairInt(config, "expansions.horizons.max_radius_global", 1, 100_000, 750);

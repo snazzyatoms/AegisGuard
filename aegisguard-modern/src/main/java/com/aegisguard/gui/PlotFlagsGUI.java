@@ -29,6 +29,13 @@ import java.util.Map;
  */
 public class PlotFlagsGUI {
 
+    private static final int HUB_SLOT_DOCTRINE = 4;
+    private static final int HUB_SLOT_PRESETS = 20;
+    private static final int HUB_SLOT_COSMETICS = 22;
+    private static final int HUB_SLOT_SAFETY = 29;
+    private static final int HUB_SLOT_MECHANICS = 31;
+    private static final int HUB_SLOT_WARDS = 33;
+
     public enum Page {
         HUB, SAFETY, MECHANICS, WARDS, PRESETS
     }
@@ -102,16 +109,20 @@ public class PlotFlagsGUI {
         String title = titleFor(player, plot, safePage);
         Inventory inv = Bukkit.createInventory(new PlotFlagsHolder(plot, safePage), 54, title);
 
-        ItemStack filler = GUIManager.getFiller();
-        int[] borderSlots = {
-                0, 1, 2, 3, 4, 5, 6, 7, 8,
-                9, 17,
-                18, 26,
-                27, 35,
-                36, 44,
-                45, 46, 47, 50, 51, 52, 53
-        };
-        for (int i : borderSlots) inv.setItem(i, filler);
+        if (safePage == Page.HUB) {
+            paintHubFrame(inv);
+        } else {
+            ItemStack filler = GUIManager.getFiller();
+            int[] borderSlots = {
+                    0, 1, 2, 3, 4, 5, 6, 7, 8,
+                    9, 17,
+                    18, 26,
+                    27, 35,
+                    36, 44,
+                    45, 46, 47, 50, 51, 52, 53
+            };
+            for (int i : borderSlots) inv.setItem(i, filler);
+        }
 
         switch (safePage) {
             case HUB -> buildHub(player, inv, plot);
@@ -152,7 +163,7 @@ public class PlotFlagsGUI {
 
     private void buildHub(Player player, Inventory inv, Plot plot) {
         boolean server = plot.isServerZone();
-        inv.setItem(13, GUIManager.createItem(
+        inv.setItem(HUB_SLOT_DOCTRINE, GUIManager.createItem(
                 Material.KNOWLEDGE_BOOK,
                 t(player, "claim_settings_guide_name", "&eProtection Doctrine"),
                 tl(player, server ? "plot_flags_hub_server_lore" : "plot_flags_hub_personal_lore",
@@ -168,7 +179,7 @@ public class PlotFlagsGUI {
                                 "&7Changes save immediately."))
         ));
 
-        inv.setItem(10, GUIManager.createItem(
+        inv.setItem(HUB_SLOT_SAFETY, GUIManager.createItem(
                 Material.SHIELD,
                 t(player, "plot_flags_page_safety", "&cSafety"),
                 tl(player, "plot_flags_page_safety_lore", List.of(
@@ -176,7 +187,7 @@ public class PlotFlagsGUI {
                         "&7and Safe Zone."
                 ))
         ));
-        inv.setItem(12, GUIManager.createItem(
+        inv.setItem(HUB_SLOT_MECHANICS, GUIManager.createItem(
                 Material.REDSTONE,
                 t(player, "plot_flags_page_mechanics", "&eMechanics"),
                 tl(player, "plot_flags_page_mechanics_lore", List.of(
@@ -184,7 +195,7 @@ public class PlotFlagsGUI {
                         "&7animals, doors, redstone, vehicles."
                 ))
         ));
-        inv.setItem(14, GUIManager.createItem(
+        inv.setItem(HUB_SLOT_WARDS, GUIManager.createItem(
                 Material.ENDER_PEARL,
                 t(player, "plot_flags_page_wards", "&bWards"),
                 tl(player, "plot_flags_page_wards_lore", List.of(
@@ -192,7 +203,7 @@ public class PlotFlagsGUI {
                         "&7decor, and shop interact."
                 ))
         ));
-        inv.setItem(16, GUIManager.createItem(
+        inv.setItem(server ? HUB_SLOT_COSMETICS : HUB_SLOT_PRESETS, GUIManager.createItem(
                 Material.WRITABLE_BOOK,
                 t(player, "plot_flags_page_presets", "&dPresets"),
                 tl(player, "plot_flags_page_presets_lore", List.of(
@@ -205,8 +216,22 @@ public class PlotFlagsGUI {
         if (!server && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
             String cosName = t(player, "button_cosmetics", "&bCosmetics");
             List<String> cosLore = tl(player, "cosmetics_lore", List.of());
-            inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
+            inv.setItem(HUB_SLOT_COSMETICS, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
         }
+    }
+
+    private void paintHubFrame(Inventory inv) {
+        ItemStack background = GUIManager.createItem(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack navy = GUIManager.createItem(Material.BLUE_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack gold = GUIManager.createItem(Material.YELLOW_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack cyan = GUIManager.createItem(Material.CYAN_STAINED_GLASS_PANE, " ", List.of());
+
+        for (int slot = 0; slot < inv.getSize(); slot++) inv.setItem(slot, background);
+        for (int slot : new int[]{0,1,2,3,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,50,51,52,53}) {
+            inv.setItem(slot, navy);
+        }
+        for (int slot : new int[]{3,5,12,13,14,19,21,23,24,28,30,32,34}) inv.setItem(slot, gold);
+        for (int slot : new int[]{10,11,15,16,37,38,39,40,41,42,43}) inv.setItem(slot, cyan);
     }
 
     private void buildSafety(Player player, Inventory inv, Plot plot) {
@@ -250,17 +275,6 @@ public class PlotFlagsGUI {
         addPaidFlagButton(player, inv, plot, 15, "shop-interact", Material.EMERALD,
                 "button_shop", "shop_toggle_lore", shopCostStr, "Shop Interact");
 
-        if (!plot.isServerZone()) {
-            inv.setItem(22, GUIManager.createItem(
-                    Material.FEATHER,
-                    t(player, "claim_settings_flight_ascension_name", "&fFlight: Ascension Reward"),
-                    tl(player, "claim_settings_flight_ascension_lore", List.of(
-                            "&7Flight is no longer configured here.",
-                            "&7Reach Plot Ascension Level 30 to earn",
-                            "&7safe flight inside the eligible plot."
-                    ))
-            ));
-        }
     }
 
     private void buildPresets(Player player, Inventory inv, Plot plot) {
@@ -370,14 +384,23 @@ public class PlotFlagsGUI {
         switch (page) {
             case HUB -> {
                 switch (rawSlot) {
-                    case 10 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.SAFETY); return; }
-                    case 12 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.MECHANICS); return; }
-                    case 14 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.WARDS); return; }
-                    case 16 -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.PRESETS); return; }
-                    case 22 -> {
+                    case HUB_SLOT_SAFETY -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.SAFETY); return; }
+                    case HUB_SLOT_MECHANICS -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.MECHANICS); return; }
+                    case HUB_SLOT_WARDS -> { plugin.effects().playMenuFlip(player); open(player, plot, Page.WARDS); return; }
+                    case HUB_SLOT_PRESETS -> {
+                        if (!plot.isServerZone()) {
+                            plugin.effects().playMenuFlip(player);
+                            open(player, plot, Page.PRESETS);
+                            return;
+                        }
+                    }
+                    case HUB_SLOT_COSMETICS -> {
                         if (!plot.isServerZone() && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
                             plugin.effects().playMenuFlip(player);
                             plugin.gui().cosmetics().open(player, plot);
+                        } else if (plot.isServerZone()) {
+                            plugin.effects().playMenuFlip(player);
+                            open(player, plot, Page.PRESETS);
                         }
                     }
                 }

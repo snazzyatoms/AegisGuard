@@ -220,6 +220,11 @@ public class PlotAuctionGUI {
             if (plot == null) return;
 
             if (e.getClick().isLeftClick()) {
+                if (plugin.beacons() != null
+                        && plugin.beacons().handlePublicListingTravel(player, plot,
+                        com.aegisguard.beacon.TeleportBeacon.Purpose.AUCTION)) {
+                    return;
+                }
                 Location loc = plot.getCenter(plugin);
                 if (loc != null) {
                     var result = plugin.safeTravel().travel(player, loc,

@@ -1,4 +1,4 @@
-# ======================================
+﻿# ======================================
 # AegisGuard - Español (Argentina)
 # File: spanish-ar-guis.yml
 # Updated: 2026-01-20
@@ -50,6 +50,26 @@ main_section_economy_name: '&6Economía y Progreso'
 main_section_economy_lore: '&7Mercado, ClaimBlocks, mejoras y subastas.'
 main_section_explore_name: '&aExplorar'
 main_section_explore_lore: '&7Rutas y viajes del servidor.'
+
+hub_category_territory_name: '&bTerritory'
+hub_category_territory_lore:
+- '&7Realm profile, expansion,'
+- '&7zoning, and claim merge.'
+hub_category_access_name: '&dAccess & Safety'
+hub_category_access_lore:
+- '&7Roles, guest passes,'
+- '&7alliance access, and lockdown.'
+hub_category_economy_name: '&6Economy & Progress'
+hub_category_economy_lore:
+- '&7Exchange, leveling, auctions,'
+- '&7gifts, and rentals.'
+hub_category_explore_name: '&aExplore'
+hub_category_explore_lore:
+- '&7Staff routes and arenas.'
+menu_page_territory_title: '&bTerritory'
+menu_page_access_title: '&dAccess & Safety'
+menu_page_economy_title: '&6Economy & Progress'
+menu_page_explore_title: '&aExplore'
 button_info: '&bℹ Información'
 info_lore:
 - '&7Ver información y ayuda del plugin.'
@@ -4126,3 +4146,122 @@ plot_status_line_bullet: '&f- {LABEL}: {STATE}'
 plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Efecto &f{TIER}&7)'
 plot_status_blessing_member_slots_format: '&a✦ &fEspacios de miembros de confianza: &b+{AMOUNT}'
 plot_status_blessing_generic_format: '&a✦ &f{TEXT}'
+
+# --- Teleport Beacons (1.3.5) ---
+button_beacons: '&bBalizas de teletransporte'
+beacons_button_lore:
+- '&7Crea plataformas enlazadas, elige quién las usa'
+- '&7y viaja con una pantalla de confirmación.'
+beacon_manager_title: '&bBalizas de teletransporte'
+beacon_manager_guide_name: '&bCómo funcionan'
+beacon_manager_guide_lore:
+- '&7Coloca una lodestone (u otra plataforma).'
+- '&7Mayús + clic derecho para crear la baliza.'
+- '&71. Elige un preset  2. Enlaza otra plataforma'
+- '&73. Parate encima para viajar.'
+beacon_setup_title: '&bCrear baliza'
+beacon_edit_title: '&dReglas de la baliza'
+beacon_link_title: '&aEnlazar baliza'
+beacon_confirm_title: '&eConfirmar teletransporte'
+beacon_confirm_go: '&aConfirmar teletransporte a &f{NAME}'
+beacon_confirm_cancel: '&cCancelar'
+beacon_rename_button: '&bRenombrar'
+beacon_purpose_button: '&dPropósito: &f{PURPOSE}'
+beacon_link_button: '&aEnlazar destino'
+beacon_advanced_button: '&7Reglas avanzadas'
+beacon_preset_private: '&7Privada'
+beacon_preset_members: '&eMiembros'
+beacon_preset_alliance: '&6Alianza'
+beacon_preset_public: '&aPública'
+beacon_give_button: '&bObtener plataformas'
+beacon_give_button_lore:
+- '&7Te da lodestones (o la plataforma del servidor).'
+- '&7Colocalas y luego mayús + clic derecho para vincular.'
+- '&7También sirve cualquier plataforma permitida que ya tengas.'
+beacon_need_plot_lore: '&7Las balizas pertenecen al terreno donde estás.'
+beacon_confirm_go_lore:
+- '&7Llegarás a la plataforma enlazada.'
+beacon_purpose_lore:
+- '&7Lo usan las listas de mercado, subasta y visitas.'
+- '&eClic para cambiar.'
+beacon_purpose_cycle_lore:
+- '&eClic para cambiar.'
+beacon_icon_purpose: '&7Propósito: &f{PURPOSE}'
+beacon_icon_linked: '&aEnlazada'
+beacon_icon_unlinked: '&cAún no enlazada'
+beacon_icon_public: '&aPública'
+beacon_icon_not_public: '&7No pública'
+beacon_icon_plot: '&7Terreno: &f{PLOT}'
+beacon_toggle_owners: '&7Dueños'
+beacon_toggle_members: '&eMiembros'
+beacon_toggle_trusted: '&6De confianza'
+beacon_toggle_guests: '&dInvitados'
+beacon_toggle_alliance: '&6Alianza'
+beacon_toggle_public: '&aPública'
+beacon_toggle_staff: '&bSolo staff'
+beacon_toggle_enabled: '&aActivada'
+beacon_toggle_confirm: '&ePedir confirmación'
+beacon_toggle_combat: '&cPermitir en combate'
+beacon_toggle_on: '&aSí'
+beacon_toggle_off: '&cNo'
+beacon_toggle_click: '&eClic para cambiar.'
+beacon_purpose_personal: Personal
+beacon_purpose_shop: Tienda
+beacon_purpose_market: Mercado
+beacon_purpose_arena: Arena
+beacon_purpose_dungeon: Mazmorra
+beacon_purpose_spawn: Spawn
+beacon_purpose_alliance: Alianza
+beacon_purpose_server: Servidor
+beacon_purpose_auction: Subasta
+beacon_charges_off: '&7El servidor desactivó las tarifas.'
+beacon_charges_off_lore:
+- '&7Este servidor no cobra por viajar en balizas.'
+beacon_charges_always_vault: '&6Tarifa Vault del servidor: &f{VAULT}'
+beacon_charges_always_blocks: '&aClaimBlocks del servidor: &f{BLOCKS}'
+beacon_charges_always_lore:
+- '&7Se define en config.yml — los jugadores no pueden cambiarlo.'
+beacon_vault_cost: '&6Mantenimiento Vault: &f{VAULT}'
+beacon_vault_cost_lore:
+- '&7Cobra una tarifa de mantenimiento a los viajeros.'
+- '&7Se paga al dueño del terreno al llegar.'
+- '&7Mayús +10, clic +1, clic derecho para borrar.'
+beacon_cb_cost: '&aTarifa ClaimBlocks: &f{BLOCKS}'
+beacon_cb_cost_lore:
+- '&7Tarifa opcional de ClaimBlocks.'
+- '&7Mayús +10, clic +1, clic derecho para borrar.'
+beacon_vault_locked: '&7Las tarifas Vault están apagadas.'
+beacon_cb_locked: '&7Las tarifas de ClaimBlocks están apagadas.'
+beacon_icon_fee: '&6Tarifa: &f{VAULT} &7/ &a{BLOCKS} CB'
+beacon_confirm_fee: '&6Tarifa: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks'
+beacon_confirm_free: '&aEste viaje es gratis.'
+beacon_need_plot: '&cDebes estar en un terreno'
+beacon_item_name: '&bPlataforma Aegis'
+beacon_item_lore:
+- '&7Colócala en tu terreno'
+- '&7y usa mayús + clic derecho para vincular.'
+beacon_preset_private_lore:
+- '&7Solo dueños.'
+beacon_preset_members_lore:
+- '&7Dueños, miembros y de confianza.'
+beacon_preset_alliance_lore:
+- '&7Solo alianza. No aparece en listas públicas.'
+beacon_preset_public_lore:
+- '&7Cualquiera. Obligatorio para visitas.'
+beacon_preset_click: '&eClic para aplicar.'
+beacon_rename_lore:
+- '&7Actual: &f{NAME}'
+- '&eClic y escribe un nombre en el chat.'
+beacon_rename_chat_lore:
+- '&7Escribe un nombre en el chat.'
+beacon_link_choose_lore:
+- '&7Elige la plataforma a la que envía.'
+beacon_advanced_lore:
+- '&7Toggles extra de costo, confirmación y acceso.'
+beacon_cooldown: '&eEnfriamiento extra: &f{SECONDS}s'
+beacon_cooldown_lore:
+- '&7Clic +5s, clic derecho para borrar.'
+beacon_link_status_linked: '&7Enlazada. Clic para cambiar.'
+beacon_link_status_unlinked: '&cAún no enlazada.'
+beacon_confirm_cancel_lore:
+- '&7Quédate donde estás.'

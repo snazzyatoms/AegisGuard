@@ -4576,3 +4576,152 @@ plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effet &f{TIER}&7)'
 plot_status_blessing_member_slots_format: '&a✦ &fEmplacements de membres de confiance : &b+{AMOUNT}'
 plot_status_blessing_generic_format: '&a✦ &f{TEXT}'
 module_disabled: '&c{MODULE} est desactive sur ce serveur.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+beacon_no_public_arrival: '&cCet endroit n''a pas de balise d''arrivée publique. Voyage annulé.'
+beacon_not_linked: '&eCette balise n''est pas encore liée.'
+beacon_denied: '&cVous ne pouvez pas utiliser cette balise.'
+beacon_created: '&aBalise créée. Choisissez un préréglage, puis liez-la à une autre dalle.'
+beacon_at_cap: '&cCe terrain a déjà le nombre maximal de balises.'
+beacon_removed: '&eBalise détachée. Les liaisons qui pointaient ici ont été effacées.'
+beacon_break_denied: '&cVous ne pouvez pas casser cette balise de téléportation.'
+beacon_rename_prompt: '&eTapez un nom dans le tchat, ou tapez &fcancel&e.'
+beacon_rename_cancelled: '&eRenommage annulé.'
+beacon_renamed: '&aBalise renommée en &f{NAME}&a.'
+beacon_linked: '&aLiée à &f{NAME}&a. Placez-vous ici pour voyager.'
+beacon_arrived: '&aArrivé à &f{NAME}&a.'
+beacon_disabled: '&cCette balise est désactivée.'
+beacon_dest_missing: '&cLe terrain de destination n''existe plus.'
+beacon_lockdown: '&cCe terrain est en confinement.'
+beacon_cannot_enter: '&cVous ne pouvez pas entrer sur ce terrain.'
+beacon_cannot_pay: '&cVous ne pouvez pas payer ce voyage de balise.'
+beacon_dest_unloaded: '&cLe monde de destination n''est pas chargé.'
+beacon_unavailable: '&cLes balises de téléportation sont indisponibles.'
+beacon_need_plot: '&cTenez-vous dans un terrain'
+beacon_give_disabled: '&cLes dalles de départ sont désactivées sur ce serveur.'
+beacon_give_need_plot: '&cTenez-vous dans un terrain que vous gérez pour recevoir des dalles.'
+beacon_give_cooldown: '&eVous pourrez demander d''autres dalles dans &f{SECONDS}&e seconde(s).'
+beacon_give_ok: '&aVous avez reçu &f{COUNT}&a dalle(s). Placez-les, puis accroupissement + clic droit. Toute dalle autorisée fonctionne aussi.'
+beacon_pad_gone: '&cLa dalle de destination est absente ou cassée.'
+beacon_travel_failed: '&cLa téléportation a échoué. Vous n''avez pas été débité.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+button_beacons: '&bBalises de téléportation'
+beacons_button_lore:
+- '&7Créez des dalles liées, choisissez qui peut les utiliser'
+- '&7et voyagez avec un écran de confirmation.'
+beacon_manager_title: '&bBalises de téléportation'
+beacon_manager_guide_name: '&bComment ça marche'
+beacon_manager_guide_lore:
+- '&7Placez une lodestone (ou une autre dalle).'
+- '&7Accroupissez-vous + clic droit pour créer la balise.'
+- '&71. Choisissez un préréglage  2. Reliez une autre dalle'
+- '&73. Placez-vous dessus pour voyager.'
+beacon_setup_title: '&bCréer une balise'
+beacon_edit_title: '&dRègles de la balise'
+beacon_link_title: '&aLier la balise'
+beacon_confirm_title: '&eConfirmer la téléportation'
+beacon_confirm_go: '&aConfirmer la téléportation vers &f{NAME}'
+beacon_confirm_cancel: '&cAnnuler'
+beacon_rename_button: '&bRenommer'
+beacon_purpose_button: '&dObjectif : &f{PURPOSE}'
+beacon_link_button: '&aLier la destination'
+beacon_advanced_button: '&7Règles avancées'
+beacon_preset_private: '&7Privée'
+beacon_preset_members: '&eMembres'
+beacon_preset_alliance: '&6Alliance'
+beacon_preset_public: '&aPublique'
+beacon_give_button: '&bObtenir des dalles'
+beacon_give_button_lore:
+- '&7Donne des lodestones (ou la dalle du serveur).'
+- '&7Placez-les, puis accroupissement + clic droit pour lier.'
+- '&7Toute dalle autorisée que vous avez déjà fonctionne aussi.'
+beacon_need_plot_lore: '&7Les balises appartiennent au terrain où vous êtes.'
+beacon_confirm_go_lore:
+- '&7Vous arriverez sur la dalle liée.'
+beacon_purpose_lore:
+- '&7Utilisé par le marché, les enchères et les visites.'
+- '&eCliquez pour changer.'
+beacon_purpose_cycle_lore:
+- '&eCliquez pour changer.'
+beacon_icon_purpose: '&7Objectif : &f{PURPOSE}'
+beacon_icon_linked: '&aLiée'
+beacon_icon_unlinked: '&cPas encore liée'
+beacon_icon_public: '&aPublique'
+beacon_icon_not_public: '&7Pas publique'
+beacon_icon_plot: '&7Terrain : &f{PLOT}'
+beacon_toggle_owners: '&7Propriétaires'
+beacon_toggle_members: '&eMembres'
+beacon_toggle_trusted: '&6De confiance'
+beacon_toggle_guests: '&dInvités'
+beacon_toggle_alliance: '&6Alliance'
+beacon_toggle_public: '&aPublique'
+beacon_toggle_staff: '&bStaff uniquement'
+beacon_toggle_enabled: '&aActivée'
+beacon_toggle_confirm: '&eDemander confirmation'
+beacon_toggle_combat: '&cAutoriser en combat'
+beacon_toggle_on: '&aOui'
+beacon_toggle_off: '&cNon'
+beacon_toggle_click: '&eCliquez pour changer.'
+beacon_purpose_personal: Personnel
+beacon_purpose_shop: Boutique
+beacon_purpose_market: Marché
+beacon_purpose_arena: Arène
+beacon_purpose_dungeon: Donjon
+beacon_purpose_spawn: Spawn
+beacon_purpose_alliance: Alliance
+beacon_purpose_server: Serveur
+beacon_purpose_auction: Enchères
+beacon_paid_owner: '&7Frais d''entretien payés : &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks.'
+beacon_charges_off: '&7Frais désactivés par le serveur.'
+beacon_charges_off_lore:
+- '&7Ce serveur ne facture pas les voyages de balise.'
+beacon_charges_always_vault: '&6Frais Vault du serveur : &f{VAULT}'
+beacon_charges_always_blocks: '&aClaimBlocks du serveur : &f{BLOCKS}'
+beacon_charges_always_lore:
+- '&7Défini dans config.yml — les joueurs ne peuvent pas le changer.'
+beacon_vault_cost: '&6Entretien Vault : &f{VAULT}'
+beacon_vault_cost_lore:
+- '&7Facturez des frais d''entretien aux voyageurs.'
+- '&7Versés au propriétaire du terrain à l''arrivée.'
+- '&7Maj +10, clic +1, clic droit pour effacer.'
+beacon_cb_cost: '&aFrais ClaimBlocks : &f{BLOCKS}'
+beacon_cb_cost_lore:
+- '&7Frais ClaimBlocks optionnels.'
+- '&7Maj +10, clic +1, clic droit pour effacer.'
+beacon_vault_locked: '&7Les frais Vault sont désactivés.'
+beacon_cb_locked: '&7Les frais ClaimBlocks sont désactivés.'
+beacon_icon_fee: '&6Frais : &f{VAULT} &7/ &a{BLOCKS} CB'
+beacon_confirm_fee: '&6Frais : &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks'
+beacon_confirm_free: '&aCe voyage est gratuit.'
+beacon_item_name: '&bDalle Aegis'
+beacon_item_lore:
+- '&7Placez-la sur votre terrain,'
+- '&7puis accroupissement + clic droit pour lier.'
+beacon_preset_private_lore:
+- '&7Propriétaires uniquement.'
+beacon_preset_members_lore:
+- '&7Propriétaires, membres et de confiance.'
+beacon_preset_alliance_lore:
+- '&7Alliance uniquement. Pas listé publiquement.'
+beacon_preset_public_lore:
+- '&7Tout le monde. Requis pour les visites.'
+beacon_preset_click: '&eCliquez pour appliquer.'
+beacon_rename_lore:
+- '&7Actuel : &f{NAME}'
+- '&eCliquez, puis tapez un nom dans le tchat.'
+beacon_rename_chat_lore:
+- '&7Tapez un nom dans le tchat.'
+beacon_link_choose_lore:
+- '&7Choisissez la dalle de destination.'
+beacon_advanced_lore:
+- '&7Options de coût, confirmation et accès.'
+beacon_cooldown: '&eTemps de recharge extra : &f{SECONDS}s'
+beacon_cooldown_lore:
+- '&7Clic +5s, clic droit pour effacer.'
+beacon_link_status_linked: '&7Liée. Cliquez pour changer.'
+beacon_link_status_unlinked: '&cPas encore liée.'
+beacon_confirm_cancel_lore:
+- '&7Restez où vous êtes.'

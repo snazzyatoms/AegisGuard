@@ -80,7 +80,7 @@ class RecoveryRegressionContractTest {
     @Test
     void nonAdminsDoNotReceiveEmptyClickableFooterItems() throws Exception {
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
-        assertTrue(player.contains("if (isAdmin) {") && player.contains("inv.setItem(49, adminItem)"));
+        assertTrue(player.contains("if (ctx.admin) {") && player.contains("inv.setItem(SLOT_ADMIN"));
         assertTrue(player.contains("if (GUIManager.isFiller(e.getCurrentItem())) return;"),
                 "Unassigned/filler footer cells must not be actionable");
     }

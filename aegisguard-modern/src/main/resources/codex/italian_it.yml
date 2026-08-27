@@ -4574,3 +4574,152 @@ plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effetto &f{TIER}&7
 plot_status_blessing_member_slots_format: '&a✦ &fSlot membri fidati: &b+{AMOUNT}'
 plot_status_blessing_generic_format: '&a✦ &f{TEXT}'
 module_disabled: '&c{MODULE} e disattivato su questo server.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+beacon_no_public_arrival: '&cQuesto posto non ha un beacon pubblico di arrivo. Viaggio annullato.'
+beacon_not_linked: '&eQuesto beacon non è ancora collegato.'
+beacon_denied: '&cNon puoi usare questo beacon.'
+beacon_created: '&aBeacon creato. Scegli un preset e collegalo a un''altra pedana.'
+beacon_at_cap: '&cQuesto terreno ha già il numero massimo di beacon.'
+beacon_removed: '&eBeacon scollegato. I collegamenti verso qui sono stati cancellati.'
+beacon_break_denied: '&cNon puoi rompere questo beacon di teletrasporto.'
+beacon_rename_prompt: '&eScrivi un nome in chat, oppure scrivi &fcancel&e.'
+beacon_rename_cancelled: '&eRinomina annullata.'
+beacon_renamed: '&aBeacon rinominato in &f{NAME}&a.'
+beacon_linked: '&aCollegato a &f{NAME}&a. Resta qui per viaggiare.'
+beacon_arrived: '&aArrivato a &f{NAME}&a.'
+beacon_disabled: '&cQuel beacon è disattivato.'
+beacon_dest_missing: '&cIl terreno di destinazione non esiste più.'
+beacon_lockdown: '&cQuel terreno è in lockdown.'
+beacon_cannot_enter: '&cNon puoi entrare in quel terreno.'
+beacon_cannot_pay: '&cNon puoi pagare questo viaggio con beacon.'
+beacon_dest_unloaded: '&cIl mondo di destinazione non è caricato.'
+beacon_unavailable: '&cI beacon di teletrasporto non sono disponibili.'
+beacon_need_plot: '&cDevi stare in un terreno'
+beacon_give_disabled: '&cLe pedane iniziali sono disattivate su questo server.'
+beacon_give_need_plot: '&cStai in un terreno che gestisci per ricevere pedane.'
+beacon_give_cooldown: '&ePotrai richiedere altre pedane tra &f{SECONDS}&e secondo/i.'
+beacon_give_ok: '&aHai ricevuto &f{COUNT}&a pedana/e. Piazzale, poi accovacciati + clic destro. Qualsiasi pedana consentita funziona.'
+beacon_pad_gone: '&cLa pedana di destinazione manca o è rotta.'
+beacon_travel_failed: '&cTeletrasporto fallito. Non ti è stato addebitato nulla.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+button_beacons: '&bBeacon di teletrasporto'
+beacons_button_lore:
+- '&7Crea pedane collegate, scegli chi può usarle'
+- '&7e viaggia con una schermata di conferma.'
+beacon_manager_title: '&bBeacon di teletrasporto'
+beacon_manager_guide_name: '&bCome funzionano'
+beacon_manager_guide_lore:
+- '&7Piazza una lodestone (o un''altra pedana).'
+- '&7Accovacciati + clic destro per creare il beacon.'
+- '&71. Scegli un preset  2. Collega un''altra pedana'
+- '&73. Stai sopra per viaggiare.'
+beacon_setup_title: '&bCrea beacon'
+beacon_edit_title: '&dRegole del beacon'
+beacon_link_title: '&aCollega beacon'
+beacon_confirm_title: '&eConferma teletrasporto'
+beacon_confirm_go: '&aConferma teletrasporto a &f{NAME}'
+beacon_confirm_cancel: '&cAnnulla'
+beacon_rename_button: '&bRinomina'
+beacon_purpose_button: '&dScopo: &f{PURPOSE}'
+beacon_link_button: '&aCollega destinazione'
+beacon_advanced_button: '&7Regole avanzate'
+beacon_preset_private: '&7Privato'
+beacon_preset_members: '&eMembri'
+beacon_preset_alliance: '&6Alleanza'
+beacon_preset_public: '&aPubblico'
+beacon_give_button: '&bOttieni pedane'
+beacon_give_button_lore:
+- '&7Dà lodestone (o la pedana del server).'
+- '&7Piazzale, poi accovacciati + clic destro per collegare.'
+- '&7Funziona anche qualsiasi pedana consentita che hai già.'
+beacon_need_plot_lore: '&7I beacon appartengono al terreno in cui ti trovi.'
+beacon_confirm_go_lore:
+- '&7Arriverai sul pad collegato.'
+beacon_purpose_lore:
+- '&7Usato da mercato, aste e visite.'
+- '&eClicca per cambiare.'
+beacon_purpose_cycle_lore:
+- '&eClicca per cambiare.'
+beacon_icon_purpose: '&7Scopo: &f{PURPOSE}'
+beacon_icon_linked: '&aCollegato'
+beacon_icon_unlinked: '&cNon ancora collegato'
+beacon_icon_public: '&aPubblico'
+beacon_icon_not_public: '&7Non pubblico'
+beacon_icon_plot: '&7Plot: &f{PLOT}'
+beacon_toggle_owners: '&7Proprietari'
+beacon_toggle_members: '&eMembri'
+beacon_toggle_trusted: '&6Fidati'
+beacon_toggle_guests: '&dOspiti'
+beacon_toggle_alliance: '&6Alleanza'
+beacon_toggle_public: '&aPubblico'
+beacon_toggle_staff: '&bSolo staff'
+beacon_toggle_enabled: '&aAttivo'
+beacon_toggle_confirm: '&eChiedi conferma'
+beacon_toggle_combat: '&cPermetti in combattimento'
+beacon_toggle_on: '&aSì'
+beacon_toggle_off: '&cNo'
+beacon_toggle_click: '&eClicca per cambiare.'
+beacon_purpose_personal: Personale
+beacon_purpose_shop: Negozio
+beacon_purpose_market: Mercato
+beacon_purpose_arena: Arena
+beacon_purpose_dungeon: Dungeon
+beacon_purpose_spawn: Spawn
+beacon_purpose_alliance: Alleanza
+beacon_purpose_server: Server
+beacon_purpose_auction: Asta
+beacon_paid_owner: '&7Commissione di manutenzione pagata: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks.'
+beacon_charges_off: '&7Tariffe disattivate dal server.'
+beacon_charges_off_lore:
+- '&7Questo server non fa pagare i viaggi beacon.'
+beacon_charges_always_vault: '&6Tariffa Vault del server: &f{VAULT}'
+beacon_charges_always_blocks: '&aClaimBlocks del server: &f{BLOCKS}'
+beacon_charges_always_lore:
+- '&7Impostato in config.yml — i giocatori non possono cambiarlo.'
+beacon_vault_cost: '&6Manutenzione Vault: &f{VAULT}'
+beacon_vault_cost_lore:
+- '&7Fai pagare una tassa di manutenzione ai viaggiatori.'
+- '&7Versata al proprietario del plot all''arrivo.'
+- '&7Shift +10, clic +1, clic destro per azzerare.'
+beacon_cb_cost: '&aTariffa ClaimBlocks: &f{BLOCKS}'
+beacon_cb_cost_lore:
+- '&7Tariffa ClaimBlocks opzionale.'
+- '&7Shift +10, clic +1, clic destro per azzerare.'
+beacon_vault_locked: '&7Le tariffe Vault sono disattivate.'
+beacon_cb_locked: '&7Le tariffe ClaimBlocks sono disattivate.'
+beacon_icon_fee: '&6Tariffa: &f{VAULT} &7/ &a{BLOCKS} CB'
+beacon_confirm_fee: '&6Tariffa: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks'
+beacon_confirm_free: '&aQuesto viaggio è gratis.'
+beacon_item_name: '&bPad Aegis'
+beacon_item_lore:
+- '&7Piazzalo sul tuo plot,'
+- '&7poi sneak + clic destro per associare.'
+beacon_preset_private_lore:
+- '&7Solo proprietari.'
+beacon_preset_members_lore:
+- '&7Proprietari, membri e fidati.'
+beacon_preset_alliance_lore:
+- '&7Solo alleanza. Non in elenco pubblico.'
+beacon_preset_public_lore:
+- '&7Chiunque. Obbligatorio per le visite.'
+beacon_preset_click: '&eClicca per applicare.'
+beacon_rename_lore:
+- '&7Attuale: &f{NAME}'
+- '&eClicca, poi scrivi un nome in chat.'
+beacon_rename_chat_lore:
+- '&7Scrivi un nome in chat.'
+beacon_link_choose_lore:
+- '&7Scegli il pad di destinazione.'
+beacon_advanced_lore:
+- '&7Opzioni extra per costo, conferma e accesso.'
+beacon_cooldown: '&eCooldown extra: &f{SECONDS}s'
+beacon_cooldown_lore:
+- '&7Clic +5s, clic destro per azzerare.'
+beacon_link_status_linked: '&7Collegato. Clicca per cambiare.'
+beacon_link_status_unlinked: '&cNon ancora collegato.'
+beacon_confirm_cancel_lore:
+- '&7Resta dove sei.'

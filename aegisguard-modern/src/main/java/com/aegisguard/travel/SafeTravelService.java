@@ -43,6 +43,7 @@ public final class SafeTravelService implements Listener {
         STAFF,
         UNSTUCK,
         ARENA,
+        BEACON,
         OTHER
     }
 
@@ -112,8 +113,10 @@ public final class SafeTravelService implements Listener {
             SafeTravelResult cooldown = checkCooldown(player);
             if (cooldown != null) return notify(player, cooldown);
 
-            SafeTravelResult confirm = checkConfirmation(player, safe, kind);
-            if (confirm != null) return notify(player, confirm);
+            if (kind != Kind.BEACON) {
+                SafeTravelResult confirm = checkConfirmation(player, safe, kind);
+                if (confirm != null) return notify(player, confirm);
+            }
         }
 
         pendingConfirm.remove(player.getUniqueId());

@@ -57,12 +57,46 @@ class InterfaceQualityContractTest {
         String protection = Files.readString(ROOT.resolve("protection/ProtectionManager.java"));
         String leveling = Files.readString(ROOT.resolve("listeners/LevelingListener.java"));
         String defaults = Files.readString(ROOT.resolve("world/WorldRulesManager.java"));
-        assertTrue(flags.contains("claim_settings_flight_ascension_name"));
+        assertFalse(flags.contains("claim_settings_flight_ascension_name"));
         assertFalse(flags.contains("togglePaid(player, plot, \"fly\""));
         assertFalse(protection.contains("getFlag(\"fly\""));
         assertFalse(defaults.contains("plot.setFlag(\"fly\""));
         assertFalse(leveling.contains("if (plot.getFlag(\"fly\""));
         assertTrue(leveling.contains("equalsIgnoreCase(\"FLIGHT\")"));
+    }
+
+    @Test
+    void claimSettingsHubHasAProfessionalUnambiguousHierarchy() throws Exception {
+        String flags = Files.readString(ROOT.resolve("gui/PlotFlagsGUI.java"));
+        assertTrue(flags.contains("HUB_SLOT_DOCTRINE = 4"));
+        assertTrue(flags.contains("HUB_SLOT_PRESETS = 20"));
+        assertTrue(flags.contains("HUB_SLOT_COSMETICS = 22"));
+        assertTrue(flags.contains("HUB_SLOT_SAFETY = 29"));
+        assertTrue(flags.contains("HUB_SLOT_MECHANICS = 31"));
+        assertTrue(flags.contains("HUB_SLOT_WARDS = 33"));
+        assertTrue(flags.contains("paintHubFrame(inv)"));
+        assertTrue(flags.contains("BLACK_STAINED_GLASS_PANE"));
+        assertTrue(flags.contains("BLUE_STAINED_GLASS_PANE"));
+        assertTrue(flags.contains("YELLOW_STAINED_GLASS_PANE"));
+        assertTrue(flags.contains("CYAN_STAINED_GLASS_PANE"));
+    }
+
+    @Test
+    void playerMenuUsesAHybridHubWithCategoryPages() throws Exception {
+        String player = Files.readString(ROOT.resolve("gui/PlayerGUI.java"));
+        assertTrue(player.contains("enum Page"));
+        assertTrue(player.contains("HUB, TERRITORY, ACCESS, ECONOMY, EXPLORE"));
+        assertTrue(player.contains("SLOT_SHORTCUT_FLAGS"));
+        assertTrue(player.contains("SLOT_SHORTCUT_STATUS"));
+        assertTrue(player.contains("SLOT_SHORTCUT_TRAVEL"));
+        assertTrue(player.contains("SLOT_SHORTCUT_MARKET"));
+        assertTrue(player.contains("SLOT_DOOR_TERRITORY"));
+        assertTrue(player.contains("SLOT_DOOR_ACCESS"));
+        assertTrue(player.contains("SLOT_DOOR_ECONOMY"));
+        assertTrue(player.contains("SLOT_DOOR_EXPLORE"));
+        assertTrue(player.contains("button_back"));
+        assertTrue(player.contains("open(player, Page.HUB)"));
+        assertFalse(player.contains("addSectionFrame"));
     }
 
     @Test

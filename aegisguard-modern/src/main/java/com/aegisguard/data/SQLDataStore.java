@@ -294,6 +294,24 @@ public class SQLDataStore implements IDataStore {
             s.execute(CREATE_STALL_LISTINGS_TABLE);
             s.execute(CREATE_ZONE_META_TABLE);
             s.execute(CREATE_ZONE_GUESTS_TABLE);
+            s.execute("CREATE TABLE IF NOT EXISTS aegis_teleport_beacons (" +
+                    " beacon_id VARCHAR(36) PRIMARY KEY," +
+                    " plot_id VARCHAR(36)," +
+                    " world VARCHAR(64)," +
+                    " x INT, y INT, z INT," +
+                    " yaw FLOAT, pitch FLOAT," +
+                    " material VARCHAR(48)," +
+                    " name VARCHAR(64)," +
+                    " purpose VARCHAR(24)," +
+                    " linked_id VARCHAR(36)," +
+                    " custom_model_data INT," +
+                    " enabled BOOLEAN," +
+                    " owners BOOLEAN, members BOOLEAN, trusted BOOLEAN, guests BOOLEAN," +
+                    " alliance_flag BOOLEAN, public_access BOOLEAN, staff_only BOOLEAN," +
+                    " require_confirm BOOLEAN, allow_combat BOOLEAN," +
+                    " vault_cost DOUBLE, claim_block_cost BIGINT," +
+                    " extra_cooldown INT, created_at BIGINT" +
+                    " )");
 
             if (storageType.equalsIgnoreCase("mysql") || storageType.equalsIgnoreCase("mariadb")) {
                 s.execute("CREATE TABLE IF NOT EXISTS aegis_wilderness_log ( " +
@@ -1449,6 +1467,19 @@ public class SQLDataStore implements IDataStore {
     private String zoneStorageKey(Plot plot, Zone zone) {
         if (plot == null || zone == null || zone.getName() == null) return "";
         return plot.getPlotId() + ":" + zone.getName().trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Borrow a JDBC connection for optional dual-write of teleport beacons.
+     * Caller must close the connection.
+     */
+    public Connection borrowBeaconConnection() {
+        if (hikari == null || hikari.isClosed()) return null;
+        try {
+            return hikari.getConnection();
+        } catch (SQLException ignored) {
+            return null;
+        }
     }
 
     // --- shutdown helper (HARDCORE EDITION) ---

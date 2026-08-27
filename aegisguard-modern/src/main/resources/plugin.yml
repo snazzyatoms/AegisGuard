@@ -111,6 +111,7 @@ permissions:
       aegis.claimblocks.gift: true
       aegis.arena.use: true
       aegis.arena.spectate: true
+      aegis.beacon: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -312,6 +313,10 @@ permissions:
   aegis.arena.admin:
     description: Bind any arena plots, abort runs, recover players, reset stats, and resolve rewards.
     default: op
+
+  aegis.beacon:
+    description: Open the Teleport Beacon manager and create pads on claims you manage.
+    default: true
 
   # ---------------------------------------------------------------------------
   # ClaimBlocks gift and exchange permissions

@@ -43,7 +43,8 @@ public final class Modules {
         TERRITORY_ACTIVITY("territory_activity", "territory_activity.enabled", true, "Territory activity"),
         ARENA("arena", "arena.enabled", true, "Arena"),
         WILDERNESS_REVERT("wilderness_revert", "wilderness_revert.enabled", false, "Wilderness revert"),
-        MOB_BARRIER("mob_barrier", "mob_barrier.enabled", true, "Mob barrier");
+        MOB_BARRIER("mob_barrier", "mob_barrier.enabled", true, "Mob barrier"),
+        TELEPORT_BEACONS("teleport_beacons", "teleport_beacons.enabled", true, "Teleport Beacons");
 
         private final String key;
         private final String legacyPath;
@@ -109,6 +110,7 @@ public final class Modules {
             case "group" -> Id.GROUP_PLOTS;
             case "alliance" -> Id.ALLIANCE_ACCESS;
             case "arena" -> Id.ARENA;
+            case "beacon" -> Id.TELEPORT_BEACONS;
             default -> null;
         };
     }

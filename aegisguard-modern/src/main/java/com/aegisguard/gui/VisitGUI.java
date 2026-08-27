@@ -676,6 +676,14 @@ public class VisitGUI {
             return;
         }
 
+        com.aegisguard.beacon.TeleportBeacon.Purpose purpose = switch (mode) {
+            case WARPS -> com.aegisguard.beacon.TeleportBeacon.Purpose.SPAWN;
+            default -> com.aegisguard.beacon.TeleportBeacon.Purpose.SPAWN;
+        };
+        if (plugin.beacons() != null && plugin.beacons().handlePublicListingTravel(player, plot, purpose)) {
+            return;
+        }
+
         Location target = plot.getSpawnLocation() != null
                 ? plot.getSpawnLocation()
                 : plot.getCenter(plugin);

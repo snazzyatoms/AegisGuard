@@ -151,6 +151,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.alliance.AllianceManager allianceManager;
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
+    private com.aegisguard.beacon.BeaconService beaconService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -260,6 +261,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
+    public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -330,6 +332,7 @@ public class AegisGuard extends JavaPlugin {
         allianceManager = new com.aegisguard.alliance.AllianceManager(this);
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
+        beaconService = new com.aegisguard.beacon.BeaconService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -397,6 +400,9 @@ public class AegisGuard extends JavaPlugin {
             loadPersistentState("routes and route progress", () -> {
                 if (routeService != null) routeService.load();
             });
+            loadPersistentState("teleport beacons", () -> {
+                if (beaconService != null) beaconService.load();
+            });
             loadPersistentState("arena state", () -> {
                 if (arenaService != null) {
                     arenaService.load();
@@ -433,6 +439,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new StarterKitListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.beacon.BeaconListener(this), this);
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
         }
@@ -572,6 +579,12 @@ public class AegisGuard extends JavaPlugin {
         } catch (Throwable t) {
             console().warning("log_save_routes_failed", "Failed to save routes: {ERROR}",
                     "ERROR", t.getMessage() == null ? "" : t.getMessage());
+        }
+
+        try {
+            if (beaconService != null) beaconService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save teleport beacons: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         try {
@@ -805,6 +818,7 @@ public class AegisGuard extends JavaPlugin {
                 if (auditService != null && auditService.isDirty()) auditService.save();
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
                 if (routeService != null && routeService.isDirty()) routeService.save();
+                if (beaconService != null && beaconService.isDirty()) beaconService.save();
                 if (arenaService != null && arenaService.isDirty()) arenaService.save();
                 if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();

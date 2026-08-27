@@ -4529,3 +4529,152 @@ plot_status_blessing_effect_format: '{COLOR}✦ &f{EFFECT} &7(Effect &f{TIER}&7)
 plot_status_blessing_member_slots_format: '&a✦ &fTrusted member slots: &b+{AMOUNT}'
 plot_status_blessing_generic_format: '&a✦ &f{TEXT}'
 module_disabled: '&c{MODULE} is disabled on this server.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+beacon_no_public_arrival: '&cThis place has no public arrival beacon. Travel was cancelled.'
+beacon_not_linked: '&eThis beacon is not linked yet.'
+beacon_denied: '&cYou are not allowed to use this beacon.'
+beacon_created: '&aBeacon created. Pick a preset, then link it to another pad.'
+beacon_at_cap: '&cThis plot already has the maximum number of beacons.'
+beacon_removed: '&eBeacon unbound. Linked pads that pointed here were cleared.'
+beacon_break_denied: '&cYou cannot break this teleport beacon.'
+beacon_rename_prompt: '&eType a new name in chat, or type &fcancel&e.'
+beacon_rename_cancelled: '&eRename cancelled.'
+beacon_renamed: '&aBeacon renamed to &f{NAME}&a.'
+beacon_linked: '&aLinked to &f{NAME}&a. Stand here to travel.'
+beacon_arrived: '&aArrived at &f{NAME}&a.'
+beacon_disabled: '&cThat beacon is disabled.'
+beacon_dest_missing: '&cThe destination plot is gone.'
+beacon_lockdown: '&cThat plot is in lockdown.'
+beacon_cannot_enter: '&cYou cannot enter that plot.'
+beacon_cannot_pay: '&cYou cannot afford this beacon trip.'
+beacon_dest_unloaded: '&cThe destination world is not loaded.'
+beacon_unavailable: '&cTeleport Beacons are unavailable.'
+beacon_need_plot: '&cStand in a claim'
+beacon_give_disabled: '&cStarter pads are disabled on this server.'
+beacon_give_need_plot: '&cStand in a claim you manage to get starter pads.'
+beacon_give_cooldown: '&eYou can request more pads in &f{SECONDS}&e second(s).'
+beacon_give_ok: '&aReceived &f{COUNT}&a pad(s). Place them, then sneak-right-click to bind. Any allowed pad also works.'
+beacon_pad_gone: '&cThe destination pad is missing or broken.'
+beacon_travel_failed: '&cTeleport failed. You were not charged.'
+
+
+# --- Teleport Beacons (1.3.5) ---
+button_beacons: '&bTeleport Beacons'
+beacons_button_lore:
+- '&7Create linked pads, pick who may use them,'
+- '&7and travel with a confirm screen.'
+beacon_manager_title: '&bTeleport Beacons'
+beacon_manager_guide_name: '&bHow beacons work'
+beacon_manager_guide_lore:
+- '&7Place a lodestone (or listed pad).'
+- '&7Sneak-click it to create a beacon.'
+- '&71. Pick a preset  2. Link another pad'
+- '&73. Stand on it to travel.'
+beacon_setup_title: '&bCreate Beacon'
+beacon_edit_title: '&dBeacon Rules'
+beacon_link_title: '&aLink Beacon'
+beacon_confirm_title: '&eConfirm teleport'
+beacon_confirm_go: '&aConfirm teleport to &f{NAME}'
+beacon_confirm_cancel: '&cCancel'
+beacon_rename_button: '&bRename'
+beacon_purpose_button: '&dPurpose: &f{PURPOSE}'
+beacon_link_button: '&aLink destination'
+beacon_advanced_button: '&7Advanced rules'
+beacon_preset_private: '&7Private'
+beacon_preset_members: '&eMembers'
+beacon_preset_alliance: '&6Alliance'
+beacon_preset_public: '&aPublic'
+beacon_give_button: '&bGet pad blocks'
+beacon_give_button_lore:
+- '&7Gives lodestones (or the server pad).'
+- '&7Place them, then sneak-right-click to bind.'
+- '&7Any allowed pad block you already have also works.'
+beacon_need_plot_lore: '&7Beacons belong to the plot you are in.'
+beacon_confirm_go_lore:
+- '&7You will arrive at the linked pad.'
+beacon_purpose_lore:
+- '&7Used by market, auction, and visit listings.'
+- '&eClick to cycle.'
+beacon_purpose_cycle_lore:
+- '&eClick to cycle.'
+beacon_icon_purpose: '&7Purpose: &f{PURPOSE}'
+beacon_icon_linked: '&aLinked'
+beacon_icon_unlinked: '&cNot linked yet'
+beacon_icon_public: '&aPublic'
+beacon_icon_not_public: '&7Not public'
+beacon_icon_plot: '&7Plot: &f{PLOT}'
+beacon_toggle_owners: '&7Owners'
+beacon_toggle_members: '&eMembers'
+beacon_toggle_trusted: '&6Trusted'
+beacon_toggle_guests: '&dGuests'
+beacon_toggle_alliance: '&6Alliance'
+beacon_toggle_public: '&aPublic'
+beacon_toggle_staff: '&bStaff only'
+beacon_toggle_enabled: '&aEnabled'
+beacon_toggle_confirm: '&eRequire confirm GUI'
+beacon_toggle_combat: '&cAllow in combat'
+beacon_toggle_on: '&aOn'
+beacon_toggle_off: '&cOff'
+beacon_toggle_click: '&eClick to toggle.'
+beacon_purpose_personal: Personal
+beacon_purpose_shop: Shop
+beacon_purpose_market: Market
+beacon_purpose_arena: Arena
+beacon_purpose_dungeon: Dungeon
+beacon_purpose_spawn: Spawn
+beacon_purpose_alliance: Alliance
+beacon_purpose_server: Server
+beacon_purpose_auction: Auction
+beacon_paid_owner: '&7Maintenance fee paid: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks.'
+beacon_charges_off: '&7Fees disabled by the server.'
+beacon_charges_off_lore:
+- '&7This server does not charge for beacon travel.'
+beacon_charges_always_vault: '&6Server vault fee: &f{VAULT}'
+beacon_charges_always_blocks: '&aServer ClaimBlocks: &f{BLOCKS}'
+beacon_charges_always_lore:
+- '&7Set in config.yml — players cannot change this.'
+beacon_vault_cost: '&6Vault maintenance: &f{VAULT}'
+beacon_vault_cost_lore:
+- '&7Charge travelers a maintenance fee.'
+- '&7Paid to the plot owner when they arrive.'
+- '&7Shift-click +10, click +1, right-click to clear.'
+beacon_cb_cost: '&aClaimBlock fee: &f{BLOCKS}'
+beacon_cb_cost_lore:
+- '&7Optional ClaimBlock maintenance fee.'
+- '&7Shift-click +10, click +1, right-click to clear.'
+beacon_vault_locked: '&7Vault fees are off on this server.'
+beacon_cb_locked: '&7ClaimBlock fees are off on this server.'
+beacon_icon_fee: '&6Fee: &f{VAULT} &7/ &a{BLOCKS} CB'
+beacon_confirm_fee: '&6Fee: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks'
+beacon_confirm_free: '&aThis trip is free.'
+beacon_item_name: '&bAegis Beacon Pad'
+beacon_item_lore:
+- '&7Place this on your claim,'
+- '&7then sneak-right-click to bind.'
+beacon_preset_private_lore:
+- '&7Owners only.'
+beacon_preset_members_lore:
+- '&7Owners, members, and trusted.'
+beacon_preset_alliance_lore:
+- '&7Alliance only. Not listed publicly.'
+beacon_preset_public_lore:
+- '&7Anyone. Required for Visit listings.'
+beacon_preset_click: '&eClick to apply.'
+beacon_rename_lore:
+- '&7Currently: &f{NAME}'
+- '&eClick, then type a name in chat.'
+beacon_rename_chat_lore:
+- '&7Type a name in chat.'
+beacon_link_choose_lore:
+- '&7Choose the pad this one sends you to.'
+beacon_advanced_lore:
+- '&7Optional toggles for cost, confirm, and access.'
+beacon_cooldown: '&eExtra cooldown: &f{SECONDS}s'
+beacon_cooldown_lore:
+- '&7Click +5s, right-click to clear.'
+beacon_link_status_linked: '&7Linked. Click to change.'
+beacon_link_status_unlinked: '&cNot linked yet.'
+beacon_confirm_cancel_lore:
+- '&7Stay where you are.'

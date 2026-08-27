@@ -22,7 +22,7 @@ class ModulesContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1292, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1294, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertTrue(modules.containsKey("guest_passes"));
         assertTrue(modules.containsKey("expansions"));
@@ -36,6 +36,7 @@ class ModulesContractTest {
         assertEquals(Boolean.TRUE, modules.get("alliance_access"));
         assertEquals(Boolean.TRUE, modules.get("group_plots"));
         assertEquals(Boolean.TRUE, modules.get("lockdown"));
+        assertEquals(Boolean.TRUE, modules.get("teleport_beacons"));
         Map<String, Object> expansions = (Map<String, Object>) config.get("expansions");
         assertEquals(Boolean.TRUE, expansions.get("enabled"));
         Map<String, Object> cosmetics = (Map<String, Object>) config.get("cosmetics");
@@ -88,6 +89,7 @@ class ModulesContractTest {
         assertEquals(Modules.Id.MARKET, Modules.commandModule("sell"));
         assertEquals(Modules.Id.TRAVEL, Modules.commandModule("home"));
         assertEquals(Modules.Id.ARENA, Modules.commandModule("arena"));
+        assertEquals(Modules.Id.TELEPORT_BEACONS, Modules.commandModule("beacon"));
         assertEquals(null, Modules.commandModule("claim"));
         assertEquals(null, Modules.commandModule("menu"));
         assertEquals(null, Modules.commandModule("wand"));
@@ -96,9 +98,10 @@ class ModulesContractTest {
     @Test
     void playerGuiHidesOptionalButtonsWhenModulesAreOff() throws Exception {
         String gui = Files.readString(Path.of("src/main/java/com/aegisguard/gui/PlayerGUI.java"));
-        assertTrue(gui.contains("if (showExpand)"));
-        assertTrue(gui.contains("9, 10, 11, 12, 13, 14, 15, 16, 17"));
-        assertTrue(gui.contains("27, 28, 29, 30, 31, 32, 33, 34, 35"));
+        assertTrue(gui.contains("if (ctx.showExpand)"));
+        assertTrue(gui.contains("if (ctx.showTravel)"));
+        assertTrue(gui.contains("if (ctx.showMarket)"));
+        assertTrue(gui.contains("if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge)"));
         assertFalse(gui.contains("claim_merge_button_disabled_lore"));
         String settings = Files.readString(Path.of("src/main/java/com/aegisguard/gui/SettingsGUI.java"));
         assertTrue(settings.contains("FIRST_CLAIM_WALKTHROUGH"));

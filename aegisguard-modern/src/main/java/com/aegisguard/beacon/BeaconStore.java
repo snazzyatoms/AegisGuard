@@ -89,7 +89,6 @@ public final class BeaconStore {
         if (beacon == null) return;
         beacons.put(beacon.getId(), beacon);
         dirty = true;
-        save();
     }
 
     public boolean remove(UUID id) {
@@ -101,7 +100,6 @@ public final class BeaconStore {
         }
         dirty = true;
         save();
-        deleteSql(id);
         return true;
     }
 

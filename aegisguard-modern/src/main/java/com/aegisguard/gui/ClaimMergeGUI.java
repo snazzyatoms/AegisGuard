@@ -273,6 +273,7 @@ public class ClaimMergeGUI {
                     "Before player merge", player.getUniqueId());
         }
         List<Zone> zones = new ArrayList<>(other.getZones());
+        java.util.List<java.util.UUID> movedBeacons = java.util.List.of();
         try {
             other.getZones().clear();
             base.getZones().addAll(zones);
@@ -288,9 +289,13 @@ public class ClaimMergeGUI {
             other.getPlayerRoles().clear();
             other.getRoleNicknames().clear();
             other.getGuestPasses().clear();
+            if (plugin.beacons() != null) {
+                movedBeacons = plugin.beacons().reassignPlot(other.getPlotId(), base.getPlotId());
+            }
             plugin.store().removePlot(other.getOwner(), other.getPlotId());
             plugin.store().updatePlotBounds(base, check.bounds().x1(), check.bounds().z1(),
                     check.bounds().x2(), check.bounds().z2());
+            if (plugin.beacons() != null) plugin.beacons().save();
             if (cost > 0 && blocks != null) blocks.adjustAvailableBlocks(player.getUniqueId(), -cost);
             if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
             plugin.territoryLife().logKey(base.getPlotId(), player.getUniqueId(), "CLAIM_MERGE",
@@ -304,6 +309,9 @@ public class ClaimMergeGUI {
         } catch (Throwable t) {
             base.getZones().removeAll(zones);
             other.getZones().addAll(zones);
+            if (plugin.beacons() != null && !movedBeacons.isEmpty()) {
+                plugin.beacons().moveBeacons(movedBeacons, other.getPlotId());
+            }
             plugin.store().addPlot(other);
             plugin.store().savePlotSync(other);
             fail(player, "claim_merge_failed_rollback",

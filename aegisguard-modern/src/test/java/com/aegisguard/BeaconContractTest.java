@@ -56,7 +56,9 @@ class BeaconContractTest {
         assertTrue(service.contains("destinationReady"));
         assertTrue(service.contains("recentlyTraveled"));
         assertTrue(service.contains("charges()"));
-        assertTrue(service.contains("payoutOwner"));
+        assertTrue(service.contains("reassignPlot"));
+        assertTrue(service.contains("tripLocks"));
+        assertTrue(service.contains("clearPlayerState"));
 
         String beacon = Files.readString(JAVA.resolve("beacon/TeleportBeacon.java"));
         assertTrue(beacon.contains("owners = true"));
@@ -142,5 +144,10 @@ class BeaconContractTest {
         assertTrue(charges.contains("OWNER_CHOICE"));
         assertTrue(charges.contains("pay_plot_owner"));
         assertTrue(charges.contains("always_vault_cost"));
+        assertTrue(gui.contains("player.closeInventory()"));
+        String merge = Files.readString(JAVA.resolve("gui/ClaimMergeGUI.java"));
+        assertTrue(merge.contains("reassignPlot"));
+        String store = Files.readString(JAVA.resolve("beacon/BeaconStore.java"));
+        assertTrue(store.contains("dirty = true"));
     }
 }

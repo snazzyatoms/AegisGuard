@@ -77,6 +77,7 @@ public final class BeaconListener implements Listener {
         Player player = event.getPlayer();
         Plot plot = plugin.store().getPlotAt(block.getLocation());
         if (plot == null) return;
+        if (hasBlockingInventory(player)) return;
 
         TeleportBeacon existing = service.getAt(block.getLocation());
         if (player.isSneaking() && plot.canManage(player, plugin)) {
@@ -89,6 +90,7 @@ public final class BeaconListener implements Listener {
                 }
                 TeleportBeacon created = service.create(player, plot, block);
                 if (created == null) return;
+                service.store().save();
                 service.send(player, "beacon_created",
                         "&aBeacon created. Pick a preset, then link it to another pad.");
                 plugin.gui().beacons().openSetup(player, created);
@@ -188,6 +190,6 @@ public final class BeaconListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         BeaconService service = beacons();
         if (service == null) return;
-        service.handleRenameChat(event.getPlayer(), "cancel");
+        service.clearPlayerState(event.getPlayer());
     }
 }

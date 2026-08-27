@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,7 @@ public final class BeaconService {
     private final Map<UUID, Long> lastUseAt = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> pendingRename = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastPadGiveAt = new ConcurrentHashMap<>();
+    private final Set<UUID> tripLocks = ConcurrentHashMap.newKeySet();
 
     public BeaconService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -197,6 +199,29 @@ public final class BeaconService {
         if (plotId == null) return;
         for (TeleportBeacon beacon : store.forPlot(plotId)) {
             if (beacon != null) store.remove(beacon.getId());
+        }
+    }
+
+    /** Keep pads when a claim is merged into another plot instead of deleting them. */
+    public java.util.List<UUID> reassignPlot(UUID fromPlotId, UUID toPlotId) {
+        java.util.List<UUID> moved = new ArrayList<>();
+        if (fromPlotId == null || toPlotId == null || fromPlotId.equals(toPlotId)) return moved;
+        for (TeleportBeacon beacon : store.forPlot(fromPlotId)) {
+            if (beacon == null) continue;
+            beacon.setPlotId(toPlotId);
+            store.put(beacon);
+            moved.add(beacon.getId());
+        }
+        return moved;
+    }
+
+    public void moveBeacons(java.util.Collection<UUID> ids, UUID toPlotId) {
+        if (ids == null || toPlotId == null) return;
+        for (UUID id : ids) {
+            TeleportBeacon beacon = store.get(id);
+            if (beacon == null) continue;
+            beacon.setPlotId(toPlotId);
+            store.put(beacon);
         }
     }
 
@@ -370,108 +395,125 @@ public final class BeaconService {
 
     public void executeTrip(Player player, @Nullable TeleportBeacon origin, TeleportBeacon dest, boolean listingArrival) {
         if (player == null || dest == null) return;
-        if (!dest.isEnabled() || !destinationReady(dest)) {
-            send(player, "beacon_pad_gone", "&cThe destination pad is missing or broken.");
-            if (plugin.effects() != null) plugin.effects().playError(player);
-            return;
-        }
-        if (origin != null && origin.getId().equals(dest.getId())) {
-            send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
-            return;
-        }
-        Plot destPlot = plugin.store().getPlotById(dest.getPlotId());
-        if (destPlot == null) {
-            send(player, "beacon_dest_missing", "&cThe destination plot is gone.");
-            return;
-        }
-        if (destPlot.isLockdownActive() && !plugin.isAdmin(player) && !destPlot.canManage(player, plugin)) {
-            send(player, "beacon_lockdown", "&cThat plot is in lockdown.");
-            if (plugin.effects() != null) plugin.effects().playError(player);
-            return;
-        }
-        if (plugin.protection() != null && !plugin.protection().canEnterPlot(player, destPlot)) {
-            send(player, "beacon_cannot_enter", "&cYou cannot enter that plot.");
-            if (plugin.effects() != null) plugin.effects().playError(player);
-            return;
-        }
-        if (origin != null && !canDepart(player, origin)) {
-            send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
-            return;
-        }
-        if (listingArrival && !dest.isPublicAccess() && !plugin.isAdmin(player)) {
-            send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
-            return;
-        }
-        if (origin != null && !origin.isAllowCombat() && plugin.safeTravel() != null && plugin.safeTravel().isInCombat(player.getUniqueId())) {
-            send(player, "travel_fail_combat", "&cYou cannot travel while in combat.");
-            return;
-        }
-        int extra = origin != null ? origin.getExtraCooldownSeconds() : dest.getExtraCooldownSeconds();
-        if (extra > 0) {
-            Long last = lastUseAt.get(player.getUniqueId());
-            if (last != null) {
-                long wait = (extra * 1000L) - (System.currentTimeMillis() - last);
-                if (wait > 0) {
-                    send(player, "travel_fail_cooldown",
-                            "&cTravel is cooling down. Try again in &e{SECONDS}&c second(s).",
-                            Map.of("SECONDS", String.valueOf(Math.max(1L, wait / 1000L))));
-                    return;
+        if (recentlyTraveled(player) || !tripLocks.add(player.getUniqueId())) return;
+        boolean holdUntilTeleport = false;
+        try {
+            if (!dest.isEnabled() || !destinationReady(dest)) {
+                send(player, "beacon_pad_gone", "&cThe destination pad is missing or broken.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
+            }
+            if (origin != null && origin.getId().equals(dest.getId())) {
+                send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
+                return;
+            }
+            Plot destPlot = plugin.store().getPlotById(dest.getPlotId());
+            if (destPlot == null) {
+                send(player, "beacon_dest_missing", "&cThe destination plot is gone.");
+                return;
+            }
+            if (destPlot.isLockdownActive() && !plugin.isAdmin(player) && !destPlot.canManage(player, plugin)) {
+                send(player, "beacon_lockdown", "&cThat plot is in lockdown.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
+            }
+            if (plugin.protection() != null && !plugin.protection().canEnterPlot(player, destPlot)) {
+                send(player, "beacon_cannot_enter", "&cYou cannot enter that plot.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
+            }
+            if (origin != null && !canDepart(player, origin)) {
+                send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
+                return;
+            }
+            if (listingArrival && !dest.isPublicAccess() && !plugin.isAdmin(player)) {
+                send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
+                return;
+            }
+            if (origin != null && !origin.isAllowCombat() && plugin.safeTravel() != null && plugin.safeTravel().isInCombat(player.getUniqueId())) {
+                send(player, "travel_fail_combat", "&cYou cannot travel while in combat.");
+                return;
+            }
+            int extra = origin != null ? origin.getExtraCooldownSeconds() : dest.getExtraCooldownSeconds();
+            if (extra > 0) {
+                Long last = lastUseAt.get(player.getUniqueId());
+                if (last != null) {
+                    long wait = (extra * 1000L) - (System.currentTimeMillis() - last);
+                    if (wait > 0) {
+                        send(player, "travel_fail_cooldown",
+                                "&cTravel is cooling down. Try again in &e{SECONDS}&c second(s).",
+                                Map.of("SECONDS", String.valueOf(Math.max(1L, wait / 1000L))));
+                        return;
+                    }
                 }
             }
-        }
-        TeleportBeacon billed = origin != null ? origin : dest;
-        BeaconCharges.TripCost cost = charges.resolve(player, billed);
-        if (!charges.charge(player, cost)) {
-            send(player, "beacon_cannot_pay", "&cYou cannot afford this beacon trip.");
-            if (plugin.effects() != null) plugin.effects().playError(player);
-            return;
-        }
-
-        Location destLoc = dest.toStandLocation();
-        if (destLoc == null || destLoc.getWorld() == null) {
-            charges.refund(player, cost);
-            send(player, "beacon_dest_unloaded", "&cThe destination world is not loaded.");
-            return;
-        }
-        if (plugin.safeTravel() == null) {
-            charges.refund(player, cost);
-            send(player, "beacon_unavailable", "&cTeleport Beacons are unavailable.");
-            return;
-        }
-
-        player.closeInventory();
-        SafeTravelResult result = plugin.safeTravel().travel(player, destLoc, SafeTravelService.Kind.BEACON);
-        if (!result.isSuccess()) {
-            charges.refund(player, cost);
-            return;
-        }
-        lastUseAt.put(player.getUniqueId(), System.currentTimeMillis());
-        result.teleportFuture().whenComplete((ok, error) -> {
-            Runnable finish = () -> {
-                if (error != null || !Boolean.TRUE.equals(ok)) {
-                    charges.refund(player, cost);
-                    send(player, "beacon_travel_failed", "&cTeleport failed. You were not charged.");
-                    if (plugin.effects() != null) plugin.effects().playError(player);
-                    return;
-                }
-                charges.payoutOwner(cost);
-                plugin.safeTravel().recordRecentDestination(player.getUniqueId(), destPlot.getPlotId());
-                flash(player, destLoc);
-                send(player, "beacon_arrived", "&aArrived at &f{NAME}&a.", Map.of("NAME", dest.getName()));
-                if (!cost.isFree() && cost.payOwner() != null) {
-                    send(player, "beacon_paid_owner",
-                            "&7Maintenance fee paid: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks.",
-                            Map.of("VAULT", charges.vaultLabel(cost.vault()),
-                                    "BLOCKS", String.valueOf(cost.claimBlocks())));
-                }
-                if (plugin.effects() != null) plugin.effects().playConfirm(player);
-            };
-            if (plugin.scheduler() != null) {
-                plugin.scheduler().runEntity(player, finish, finish);
-            } else {
-                finish.run();
+            TeleportBeacon billed = origin != null ? origin : dest;
+            BeaconCharges.TripCost cost = charges.resolve(player, billed);
+            if (!charges.charge(player, cost)) {
+                send(player, "beacon_cannot_pay", "&cYou cannot afford this beacon trip.");
+                if (plugin.effects() != null) plugin.effects().playError(player);
+                return;
             }
-        });
+
+            Location destLoc = dest.toStandLocation();
+            if (destLoc == null || destLoc.getWorld() == null) {
+                charges.refund(player, cost);
+                send(player, "beacon_dest_unloaded", "&cThe destination world is not loaded.");
+                return;
+            }
+            if (plugin.safeTravel() == null) {
+                charges.refund(player, cost);
+                send(player, "beacon_unavailable", "&cTeleport Beacons are unavailable.");
+                return;
+            }
+
+            player.closeInventory();
+            SafeTravelResult result = plugin.safeTravel().travel(player, destLoc, SafeTravelService.Kind.BEACON);
+            if (!result.isSuccess()) {
+                charges.refund(player, cost);
+                return;
+            }
+            lastUseAt.put(player.getUniqueId(), System.currentTimeMillis());
+            holdUntilTeleport = true;
+            result.teleportFuture().whenComplete((ok, error) -> {
+                Runnable finish = () -> {
+                    try {
+                        if (error != null || !Boolean.TRUE.equals(ok)) {
+                            charges.refund(player, cost);
+                            send(player, "beacon_travel_failed", "&cTeleport failed. You were not charged.");
+                            if (plugin.effects() != null) plugin.effects().playError(player);
+                            return;
+                        }
+                        charges.payoutOwner(cost);
+                        plugin.safeTravel().recordRecentDestination(player.getUniqueId(), destPlot.getPlotId());
+                        flash(player, destLoc);
+                        send(player, "beacon_arrived", "&aArrived at &f{NAME}&a.", Map.of("NAME", dest.getName()));
+                        if (!cost.isFree() && cost.payOwner() != null) {
+                            send(player, "beacon_paid_owner",
+                                    "&7Maintenance fee paid: &f{VAULT} &7/ &a{BLOCKS} ClaimBlocks.",
+                                    Map.of("VAULT", charges.vaultLabel(cost.vault()),
+                                            "BLOCKS", String.valueOf(cost.claimBlocks())));
+                        }
+                        if (plugin.effects() != null) plugin.effects().playConfirm(player);
+                    } finally {
+                        tripLocks.remove(player.getUniqueId());
+                    }
+                };
+                if (plugin.scheduler() != null) {
+                    plugin.scheduler().runEntity(player, finish, finish);
+                } else {
+                    finish.run();
+                }
+            });
+        } finally {
+            if (!holdUntilTeleport) tripLocks.remove(player.getUniqueId());
+        }
+    }
+
+    public void clearPlayerState(Player player) {
+        if (player == null) return;
+        tripLocks.remove(player.getUniqueId());
+        handleRenameChat(player, "cancel");
     }
 
     private void flash(Player player, Location dest) {

@@ -314,10 +314,10 @@ public final class BeaconGUI {
                 return;
             }
             if ("go".equals(action) || event.getSlot() == 11) {
+                player.closeInventory();
                 TeleportBeacon origin = confirm.originId == null ? null : service.store().get(confirm.originId);
                 TeleportBeacon dest = service.store().get(confirm.destId);
                 if (dest == null) {
-                    player.closeInventory();
                     service.send(player, "beacon_dest_missing", "&cThe destination plot is gone.");
                     return;
                 }

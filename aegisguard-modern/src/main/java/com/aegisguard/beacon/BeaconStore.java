@@ -118,7 +118,31 @@ public final class BeaconStore {
             }
         }
         if (beacons.isEmpty()) loadSqlFallback();
+        dedupeByBlock();
         dirty = false;
+    }
+
+    /**
+     * Enforces one beacon per world/x/y/z block. When a pub-test duplicate slips into
+     * storage, keep the oldest record, unbind and drop the extras, and log it. Also clears
+     * any dangling links that pointed at a removed duplicate.
+     */
+    private void dedupeByBlock() {
+        List<TeleportBeacon> extras = BeaconService.duplicateBlockBeacons(beacons.values());
+        if (extras.isEmpty()) return;
+        for (TeleportBeacon extra : extras) {
+            if (extra == null) continue;
+            beacons.remove(extra.getId());
+            for (TeleportBeacon other : beacons.values()) {
+                if (other != null && extra.getId().equals(other.getLinkedBeaconId())) {
+                    other.setLinkedBeaconId(null);
+                }
+            }
+            plugin.getLogger().warning("[Beacons] Removed duplicate beacon " + extra.getId()
+                    + " sharing block " + extra.getWorldName() + " "
+                    + extra.getX() + "," + extra.getY() + "," + extra.getZ() + " (kept the oldest).");
+        }
+        dirty = true;
     }
 
     public void save() {

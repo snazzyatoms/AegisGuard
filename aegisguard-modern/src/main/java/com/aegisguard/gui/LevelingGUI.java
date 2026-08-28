@@ -350,7 +350,9 @@ public final class LevelingGUI {
             plugin.effects().playError(player);
             return Bounds.INVALID;
         }
-        int radius = Math.max(bounds.x2 - bounds.x1, bounds.z2 - bounds.z1) / 2;
+        int halfWidth = Math.max(0, bounds.x2 - bounds.x1) / 2;
+        int halfDepth = Math.max(0, bounds.z2 - bounds.z1) / 2;
+        int radius = Math.max(halfWidth, halfDepth);
         int limit = plugin.cfg().getWorldMaxRadius(player.getWorld());
         if (radius > limit && !player.hasPermission("aegis.admin.bypass-limits")) {
             send(player, "level_up_fail_world_limit", "&cThis world permits a maximum radius of {LIMIT}.",
@@ -359,7 +361,8 @@ public final class LevelingGUI {
             return Bounds.INVALID;
         }
         int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(player.getWorld()));
-        if (radius < minRadius && !player.hasPermission("aegis.admin.bypass-limits")) {
+        if ((halfWidth < minRadius || halfDepth < minRadius)
+                && !player.hasPermission("aegis.admin.bypass-limits")) {
             send(player, "claim_too_small", "&cThis world requires a minimum radius of {MIN}.",
                     Map.of("MIN", String.valueOf(minRadius)));
             plugin.effects().playError(player);

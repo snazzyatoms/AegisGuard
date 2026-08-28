@@ -137,9 +137,15 @@ public class ClaimBlockManager {
         if (data.isLandSpendReconciled()) return;
         synchronized (data) {
             if (data.isLandSpendReconciled()) return;
-            long used = getUsedBlocks(uuid);
-            long overlap = Math.min(Math.max(0L, data.getSpentBlocks()), Math.max(0L, used));
-            if (overlap > 0L) data.removeSpentBlocks(overlap);
+            long used = Math.max(0L, getUsedBlocks(uuid));
+            long spent = Math.max(0L, data.getSpentBlocks());
+            long total = getTotalBlocks(uuid);
+            // Only peel when the old double-count would over-commit the wallet.
+            // Do not subtract min(spent, used) for healthy ledgers — that would
+            // treat beacon/exchange spend as duplicated land.
+            if (used > 0L && spent > 0L && spent + used > total) {
+                data.removeSpentBlocks(Math.min(spent, used));
+            }
             data.setLandSpendReconciled(true);
         }
         saveAsync();

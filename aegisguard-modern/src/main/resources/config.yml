@@ -391,6 +391,7 @@ economy:
 claims:
   # Global personal claim limits.
   max_claims_per_player: 2
+  # Minimum Chebyshev radius on both axes (a 10×10 plot has radius 5).
   min_radius: 5
   max_radius: 64
   max_area: 16000

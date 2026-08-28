@@ -604,14 +604,15 @@ public class SelectionService implements Listener {
         if (p.hasPermission("aegis.admin.bypass") || p.hasPermission("aegis.admin.bypass-limits")) {
             return false;
         }
-        int halfRadius = Math.max(ctx.width, ctx.depth) / 2;
+        int halfWidth = ctx.width / 2;
+        int halfDepth = ctx.depth / 2;
         int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(ctx.world));
-        if (halfRadius < minRadius) {
+        if (halfWidth < minRadius || halfDepth < minRadius) {
             plugin.msg().send(p, "claim_too_small", Map.of("MIN", String.valueOf(minRadius)));
             return true;
         }
         int worldMax = plugin.cfg().getWorldMaxRadius(ctx.world);
-        if (ctx.radius > maxRadius || halfRadius > worldMax) {
+        if (ctx.radius > maxRadius || Math.max(halfWidth, halfDepth) > worldMax) {
             plugin.msg().send(p, "claim_too_large");
             return true;
         }

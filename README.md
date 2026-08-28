@@ -30,15 +30,15 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. The `V1.3.5` branch contains the reviewed 1.3.5 source line; no GitHub Release is created by updating this branch. Existing `1.2.7` and `1.3.0` data and configuration remain valid through automatic schema migration.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.3.5** is the current public release. Existing `1.2.7` and `1.3.0` data and configuration remain valid through automatic schema migration.
 
-> Release notes are in [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md). Wiki sources live in [`wiki/`](wiki/). Published server and API artifacts will be attached separately when a 1.3.5 GitHub Release is intentionally created.
+> Release notes are in [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md). Wiki sources live in [`wiki/`](wiki/). Server and API JARs are attached to the [1.3.5 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5).
 
 ## What Is New In 1.3.5
 
 **Teleport Beacons** let players place linked pads on claims they manage. Stand next to a pad, confirm, and land only at the linked pad. Visit, market, and auction travel can require a public arrival beacon when the module is on. Server owners choose the fee policy in `teleport_beacons.charges`: mixed free and paid pads (`owner_choice`), a server-wide fee (`always`), or no charges (`off`). Optional maintenance fees can pay the plot owner. `/ag home` stays personal plot spawn.
 
-Language `{KEY}` placeholders now fill in on strings loaded from `lang/`, not only English fallbacks. Expanding land no longer drives ClaimBlocks negative; extra area is refused if the wallet cannot cover it. `claims.min_radius` is enforced on wand claims, group claims, expansion, and Ascension growth. Group claims check the leader's ClaimBlocks. Chest GUIs stay Java-normal for Java clients. With Geyser/Floodgate, Bedrock players are detected automatically (`gui.bedrock.detect`, default on) and use left-click plus sneak-left instead of right-click.
+Language `{KEY}` placeholders now fill in on strings loaded from `lang/`, not only English fallbacks. Expanding land no longer drives ClaimBlocks negative; extra area is refused if the wallet cannot cover it. `claims.min_radius` is enforced on **both** axes (default `5` is at least a 10×10 plot). Group claims check the leader's ClaimBlocks. Chest GUIs stay Java-normal for Java clients. With Geyser/Floodgate, Bedrock players are detected automatically (`gui.bedrock.detect`, default on) and use left-click plus sneak-left instead of right-click.
 
 Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
@@ -106,14 +106,14 @@ Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integ
 
 ## Version 1.3.5
 
-The `V1.3.5` branch is the source and verification line for this update; it is not itself a GitHub Release. On a JAR swap from `1.2.7` or `1.3.0`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki markdown lives in [`wiki/`](wiki/).
+On a JAR swap from `1.2.7` or `1.3.0`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki markdown lives in [`wiki/`](wiki/).
 
 ## Branches and GitHub layout
 
 | Place | What it is |
 |---|---|
-| [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Default branch and **public** 1.3.0 line (Spigot / current GitHub Release) |
-| [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Next source line (beacons, soak fixes, Bedrock GUI mapping). No GitHub Release until one is created on purpose |
+| [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Current public source line and GitHub Release **1.3.5** |
+| [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Previous public 1.3.0 line |
 | [`wiki/`](wiki/) | Pages to paste into the GitHub Wiki |
 | [`listing/`](listing/) | Spigot listing art |
 | [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) | 1.3.5 notes |

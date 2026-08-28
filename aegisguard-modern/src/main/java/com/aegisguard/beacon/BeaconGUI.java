@@ -344,15 +344,18 @@ public final class BeaconGUI {
             case "vault" -> {
                 if (!svc().charges().canEditVaultFees()) return;
                 if (right) beacon.setVaultCost(0);
-                else beacon.setVaultCost(svc().charges().clampVault(beacon.getVaultCost() + (shift ? 10 : 1)));
+                else if (shift) beacon.setVaultCost(svc().charges().clampVault(beacon.getVaultCost() - 1));
+                else beacon.setVaultCost(svc().charges().clampVault(beacon.getVaultCost() + 1));
             }
             case "blocks" -> {
                 if (!svc().charges().canEditClaimBlockFees()) return;
                 if (right) beacon.setClaimBlockCost(0);
-                else beacon.setClaimBlockCost(svc().charges().clampClaimBlocks(beacon.getClaimBlockCost() + (shift ? 10 : 1)));
+                else if (shift) beacon.setClaimBlockCost(svc().charges().clampClaimBlocks(beacon.getClaimBlockCost() - 1));
+                else beacon.setClaimBlockCost(svc().charges().clampClaimBlocks(beacon.getClaimBlockCost() + 1));
             }
             case "cool" -> {
                 if (right) beacon.setExtraCooldownSeconds(0);
+                else if (shift) beacon.setExtraCooldownSeconds(Math.max(0, beacon.getExtraCooldownSeconds() - 5));
                 else beacon.setExtraCooldownSeconds(beacon.getExtraCooldownSeconds() + 5);
             }
             default -> { return; }
@@ -399,7 +402,7 @@ public final class BeaconGUI {
                     tl(player, "beacon_vault_cost_lore", List.of(
                             "&7Charge travelers a maintenance fee.",
                             "&7Paid to the plot owner when they arrive.",
-                            "&7Shift-click +10, click +1, right-click to clear."))));
+                            "&7Left-click +1, shift-left -1, right-click to clear."))));
             plugin.gui().tagAction(inv.getItem(32), "vault");
         } else {
             inv.setItem(32, GUIManager.createItem(Material.BARRIER,
@@ -412,7 +415,7 @@ public final class BeaconGUI {
                             Map.of("BLOCKS", String.valueOf(beacon.getClaimBlockCost()))),
                     tl(player, "beacon_cb_cost_lore", List.of(
                             "&7Optional ClaimBlock maintenance fee.",
-                            "&7Shift-click +10, click +1, right-click to clear."))));
+                            "&7Left-click +1, shift-left -1, right-click to clear."))));
             plugin.gui().tagAction(inv.getItem(33), "blocks");
         } else {
             inv.setItem(33, GUIManager.createItem(Material.BARRIER,

@@ -91,7 +91,7 @@ public class MyTenantsGUI {
         if (entry.zoneName() != null) {
             Zone zone = plot.getZone(entry.zoneName());
             if (zone != null) plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest("my_tenants", holder.getReturnTo()));
-        } else if (e.getClick().isShiftClick() && e.getClick().isRightClick()
+        } else if (GuiClicks.destructive(e)
                 && plugin.getConfig().getBoolean("full_plot_renting.allow_owner_early_cancel", false)) {
             TerritoryLifeService.RentalContract contract = plugin.territoryLife().contract(plot.getPlotId());
             if (contract != null) plugin.gui().rentConfirm().openPlotCancel(player, plot, contract.deposit(), "my_tenants");

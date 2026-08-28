@@ -142,7 +142,7 @@ public class ClaimMergeGUI {
             }
             MergeCheck check = validateMerge(player, base, other);
             if (!check.ok()) {
-                fail(player, check.key(), check.fallback());
+                fail(player, check.key(), check.fallback(), mergeFailVars(check));
                 openSelect(player, holder.getBaseId(), holder.getReturnTo(), holder.getOriginPlotId());
                 return;
             }
@@ -167,7 +167,7 @@ public class ClaimMergeGUI {
         if (base == null || base.getPlotId().equals(selected.getPlotId())) { openSelect(player, null, holder.getReturnTo(), holder.getOriginPlotId()); return; }
         MergeCheck check = validateMerge(player, base, selected);
         if (!check.ok()) {
-            fail(player, check.key(), check.fallback());
+            fail(player, check.key(), check.fallback(), mergeFailVars(check));
             return;
         }
         openConfirm(player, base, selected, holder.getReturnTo(), holder.getOriginPlotId());
@@ -257,8 +257,7 @@ public class ClaimMergeGUI {
         ClaimBlockManager blocks = plugin.getClaimBlockManager();
         if (cost > 0 && (blocks == null || blocks.getAvailableBlocks(player.getUniqueId()) < cost)) {
             return MergeCheck.fail("claim_merge_insufficient_blocks",
-                    "&cYou need &e{COST} &cClaimBlocks to merge."
-                            .replace("{COST}", String.valueOf(cost)));
+                    "&cYou need &e{COST} &cClaimBlocks to merge.");
         }
         return MergeCheck.ok(bounds, rolesToCarry, nicksToCarry, passesToCarry);
     }
@@ -297,6 +296,9 @@ public class ClaimMergeGUI {
                     check.bounds().x2(), check.bounds().z2());
             if (plugin.beacons() != null) plugin.beacons().save();
             if (cost > 0 && blocks != null) blocks.adjustAvailableBlocks(player.getUniqueId(), -cost);
+            if (plugin.getClaimBlockManager() != null) {
+                plugin.getClaimBlockManager().invalidateOwnerCache(player.getUniqueId());
+            }
             if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
             plugin.territoryLife().logKey(base.getPlotId(), player.getUniqueId(), "CLAIM_MERGE",
                     "activity_detail_claim_merge",
@@ -315,13 +317,24 @@ public class ClaimMergeGUI {
             plugin.store().addPlot(other);
             plugin.store().savePlotSync(other);
             fail(player, "claim_merge_failed_rollback",
-                    "&cMerge failed and was rolled back: &7{ERROR}"
-                            .replace("{ERROR}", t.getMessage() == null ? "unknown error" : t.getMessage()));
+                    "&cMerge failed and was rolled back: &7{ERROR}",
+                    Map.of("ERROR", t.getMessage() == null ? "unknown error" : t.getMessage()));
         }
     }
 
+    private Map<String, String> mergeFailVars(MergeCheck check) {
+        if (check != null && "claim_merge_insufficient_blocks".equals(check.key())) {
+            return Map.of("COST", String.valueOf(mergeCost()));
+        }
+        return Map.of();
+    }
+
     private void fail(Player player, String key, String fallback) {
-        player.sendMessage(GUIManager.color(tr(player, key, fallback)));
+        fail(player, key, fallback, Map.of());
+    }
+
+    private void fail(Player player, String key, String fallback, Map<String, String> vars) {
+        player.sendMessage(GUIManager.color(plugin.gui().tr(player, key, fallback, vars)));
         plugin.effects().playError(player);
     }
 

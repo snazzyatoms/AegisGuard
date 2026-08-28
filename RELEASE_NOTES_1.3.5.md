@@ -2,9 +2,9 @@
 
 ### *Protect your world. Empower your players. Ascend.*
 
-AegisGuard `1.3.5` is the soak-and-feature follow-up to `1.3.0`. Claim snapshots now restore 1.3.0 plot maps, wiki sources live in the repo, and staff can optionally back up plot **builds** with WorldEdit or FastAsyncWorldEdit. Players can place **Teleport Beacons** — linked pads with Safe Travel, public arrival for listings, and a server-configurable fee policy.
+AegisGuard `1.3.5` is the soak-and-feature follow-up to `1.3.0`. Claim snapshots now restore 1.3.0 plot maps, wiki sources live in the repo, and staff can optionally back up plot **builds** with WorldEdit or FastAsyncWorldEdit. Players can place **Teleport Beacons** — linked pads with Safe Travel, public arrival for listings, and a server-configurable fee policy. Language placeholders apply to `lang/` strings, ClaimBlocks stay non-negative on expand, minimum claim radius is enforced, and Geyser/Floodgate Bedrock clients get left-click / sneak-left chest GUIs.
 
-Existing **1.2.7 and 1.3.0 data remain valid**. Schema `1292` adds recovery-safety, build-integrity/storage safeguards, and bounded automatic player-plot/server-zone backup defaults; automatic backups and automatic build copies remain off until enabled.
+Existing **1.2.7 and 1.3.0 data remain valid**. Schema `1294` covers current 1.3.5 config; automatic backups and automatic build copies remain off until enabled.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
 
@@ -15,6 +15,10 @@ Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia*
 ### Teleport Beacons
 
 Players place linked pads on claims they manage, confirm in a GUI, and land only at the paired pad. Visit, market, and auction listings can require a public arrival beacon. `teleport_beacons.charges.mode` is `owner_choice` (pads may be free or paid), `always` (server-wide fee), or `off`. Optional fees can pay the plot owner. Pads survive claim merges and unbind when a plot is deleted.
+
+### Language, claims, and Bedrock GUIs
+
+`{KEY}` substitution runs on translations from `lang/`, not only English fallbacks. Expanding a plot no longer double-counts ClaimBlocks; extra land is refused if the wallet cannot cover it. `claims.min_radius` applies to wand claims, group claims, expansion, and Ascension growth. Group claims spend against the leader's ClaimBlocks. Java clients keep right-click second actions. With Floodgate and/or Geyser, Bedrock players are detected automatically (`gui.bedrock.detect`) and use left-click plus sneak-left (drop to cancel). Horizon Sigils accept left- or right-click.
 
 ### Complete claim-data snapshots
 

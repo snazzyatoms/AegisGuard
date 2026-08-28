@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class ZoneTenantGUI {
@@ -311,16 +312,16 @@ public class ZoneTenantGUI {
             return;
         }
         if (slot == 50 && plot.canManage(player, plugin) && zone.isRented()) {
-            if (!e.getClick().isShiftClick()) {
+            if (!e.getClick().isShiftClick() && !GuiClicks.destructive(e)) {
                 plugin.effects().playError(player);
                 send(player, "zone_tenant_evict_hint",
-                        "&eTip: &7Shift-click Evict Tenant to confirm.");
+                        "&eTip: &7Sneak-click or drop (Q) Evict Tenant to confirm.");
                 return;
             }
             zone.evict();
             save(plot);
             plugin.effects().playConfirm(player);
-            send(player, "zone_evicted", "&eTenant evicted from {ZONE}.".replace("{ZONE}", safeZoneName(zone)));
+            send(player, "zone_evicted", "&eTenant evicted from {ZONE}.", java.util.Map.of("ZONE", safeZoneName(zone)));
             plugin.gui().zoning().open(player, plot, holder.getReturnTo().startsWith(MarketNav.ZONING)
                     ? holder.getReturnTo().substring(MarketNav.ZONING.length() + 1)
                     : MarketNav.MAIN);
@@ -447,7 +448,13 @@ public class ZoneTenantGUI {
     }
 
     private void send(Player player, String key, String fallback) {
-        String raw = tr(player, key, fallback);
+        send(player, key, fallback, null);
+    }
+
+    private void send(Player player, String key, String fallback, Map<String, String> vars) {
+        String raw = vars == null || vars.isEmpty()
+                ? tr(player, key, fallback)
+                : plugin.gui().tr(player, key, fallback, vars);
         if (raw == null || raw.isBlank()) return;
         player.sendMessage(plugin.msg().prefix() + raw);
     }

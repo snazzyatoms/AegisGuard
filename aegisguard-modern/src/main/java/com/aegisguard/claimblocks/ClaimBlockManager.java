@@ -121,8 +121,28 @@ public class ClaimBlockManager {
     }
 
     public long getAvailableBlocks(UUID uuid) {
+        reconcileLandSpendOnce(uuid);
         long available = getTotalBlocks(uuid) - getUsedBlocks(uuid) - getSpentBlocks(uuid);
-        return Math.max(0, available);
+        return Math.max(0L, available);
+    }
+
+    /**
+     * Older builds charged plot area via {@link #spend} and also subtracted live plot area,
+     * so expansion made the ledger look negative. Land is {@code used}; {@code spent} is
+     * non-land (beacons, exchange, etc.). Run once per player to peel duplicated land out of spent.
+     */
+    private void reconcileLandSpendOnce(UUID uuid) {
+        if (uuid == null) return;
+        ClaimBlockData data = getOrCreate(uuid);
+        if (data.isLandSpendReconciled()) return;
+        synchronized (data) {
+            if (data.isLandSpendReconciled()) return;
+            long used = getUsedBlocks(uuid);
+            long overlap = Math.min(Math.max(0L, data.getSpentBlocks()), Math.max(0L, used));
+            if (overlap > 0L) data.removeSpentBlocks(overlap);
+            data.setLandSpendReconciled(true);
+        }
+        saveAsync();
     }
 
     public void invalidateOwnerCache(UUID uuid) {
@@ -487,6 +507,7 @@ public class ClaimBlockManager {
                         cbd.setSpentBlocks(data.getLong(path + ".spent", 0)); // ✅ NEW
                         cbd.setClaimedStarter(data.getBoolean(path + ".starter_claimed", false));
                         cbd.setPlaytimeEarningEnabled(data.getBoolean(path + ".playtime_earning_enabled", true));
+                        cbd.setLandSpendReconciled(data.getBoolean(path + ".land_spend_reconciled", false));
 
                         // ✅ NEW (v1.2.5): Sell-Lock lots
                         List<String> lots = data.getStringList(path + ".sell_lock_lots");
@@ -525,6 +546,7 @@ public class ClaimBlockManager {
                 data.set(path + ".spent", cbd.getSpentBlocks()); // ✅ NEW
                 data.set(path + ".starter_claimed", cbd.hasClaimedStarter());
                 data.set(path + ".playtime_earning_enabled", cbd.isPlaytimeEarningEnabled());
+                data.set(path + ".land_spend_reconciled", cbd.isLandSpendReconciled());
 
                 // ✅ NEW (v1.2.5): Persist sell-lock lots
                 data.set(path + ".sell_lock_lots", cbd.serializeLots());

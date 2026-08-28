@@ -305,6 +305,7 @@ public class AegisGuard extends JavaPlugin {
         }
 
         messages = new MessagesUtil(this);
+        com.aegisguard.hooks.BedrockClients.bind(this);
 
         // --- DATA STORE ---
         String backend = resolveConfiguredStorageBackend();
@@ -772,6 +773,7 @@ public class AegisGuard extends JavaPlugin {
         if (codex != null) codex.reload();
         if (worldRules != null) worldRules.reload();
         if (messages != null) messages.reload();
+        com.aegisguard.hooks.BedrockClients.bind(this);
         if (pricingCalculator != null) pricingCalculator.reload();
         if (claimBlockExchange != null) claimBlockExchange.reload();
         if (safeTravelService != null) safeTravelService.reload();

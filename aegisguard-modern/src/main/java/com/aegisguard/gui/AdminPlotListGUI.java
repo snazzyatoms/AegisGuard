@@ -275,55 +275,51 @@ public class AdminPlotListGUI {
             return;
         }
 
-        if (e.getClick().isLeftClick()) {
-            Location loc = plot.getCenter(plugin);
-            if (loc != null && loc.getWorld() != null) {
-                int y = loc.getWorld().getHighestBlockYAt(loc);
-                loc.setY(y + 1);
-
-                var result = plugin.safeTravel().travel(player, loc,
-                        com.aegisguard.travel.SafeTravelService.Kind.STAFF);
-                if (!result.isSuccess()) return;
-
-                plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
-                plugin.effects().playConfirm(player);
-                player.closeInventory();
-            } else {
-                player.sendMessage(plugin.gui().tr(player, "admin_plot_invalid_location", "&cInvalid world or location."));
-                plugin.effects().playError(player);
-            }
-            return;
-        }
-
-        // Right-click: convert personal plot → server zone. Shift-right-click: delete.
-        if (e.getClick().isRightClick()) {
-            if (!e.getClick().isShiftClick()) {
-                if (plot.isServerZone()) {
-                    player.sendMessage(plugin.gui().tr(player, "convert_blocker_already_server",
-                            "&eThis plot is already a server zone."));
-                    player.sendMessage(plugin.gui().tr(player, "admin_plot_delete_hint",
-                            "&cShift-Right-Click to delete this plot."));
-                    plugin.effects().playError(player);
-                    return;
-                }
-                plugin.effects().playMenuFlip(player);
-                plugin.gui().convertToServer().openSelect(player, plot);
-                return;
-            }
-
-            plugin.runGlobalAsync(() -> {
+        if (GuiClicks.destructive(e)) {
+            plugin.runMain(player, () -> {
                 try {
                     plugin.store().removePlot(plot.getOwner(), plot.getPlotId());
                 } catch (Throwable t) {
                     plugin.getLogger().warning("[AdminPlotListGUI] removePlot failed: " + t.getMessage());
                 }
-
-                plugin.runMain(player, () -> {
-                    plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
-                    plugin.effects().playUnclaim(player);
-                    open(player, currentPage);
-                });
+                plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
+                plugin.effects().playUnclaim(player);
+                open(player, currentPage);
             });
+            return;
+        }
+
+        if (GuiClicks.alternate(e)) {
+            if (plot.isServerZone()) {
+                player.sendMessage(plugin.gui().tr(player, "convert_blocker_already_server",
+                        "&eThis plot is already a server zone."));
+                player.sendMessage(plugin.gui().tr(player, "admin_plot_delete_hint",
+                        "&cDrop (Q) or sneak-right-click to delete this plot."));
+                plugin.effects().playError(player);
+                return;
+            }
+            plugin.effects().playMenuFlip(player);
+            plugin.gui().convertToServer().openSelect(player, plot);
+            return;
+        }
+
+        if (!GuiClicks.primary(e)) return;
+
+        Location loc = plot.getCenter(plugin);
+        if (loc != null && loc.getWorld() != null) {
+            int y = loc.getWorld().getHighestBlockYAt(loc);
+            loc.setY(y + 1);
+
+            var result = plugin.safeTravel().travel(player, loc,
+                    com.aegisguard.travel.SafeTravelService.Kind.STAFF);
+            if (!result.isSuccess()) return;
+
+            plugin.msg().send(player, "admin_plot_teleport", Map.of("PLAYER", plot.getOwnerName()));
+            plugin.effects().playConfirm(player);
+            player.closeInventory();
+        } else {
+            player.sendMessage(plugin.gui().tr(player, "admin_plot_invalid_location", "&cInvalid world or location."));
+            plugin.effects().playError(player);
         }
     }
 

@@ -312,6 +312,9 @@ public final class LevelingGUI {
             }
             plot.setLevel(nextLevel);
             plugin.store().savePlotSync(plot);
+            if (plugin.getClaimBlockManager() != null) {
+                plugin.getClaimBlockManager().invalidateOwnerCache(player.getUniqueId());
+            }
             Bukkit.getPluginManager().callEvent(new PlotLevelUpEvent(plot, player, nextLevel));
             plugin.store().setDirty(true);
         } catch (Throwable error) {
@@ -354,6 +357,24 @@ public final class LevelingGUI {
                     Map.of("LIMIT", String.valueOf(limit)));
             plugin.effects().playError(player);
             return Bounds.INVALID;
+        }
+        int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(player.getWorld()));
+        if (radius < minRadius && !player.hasPermission("aegis.admin.bypass-limits")) {
+            send(player, "claim_too_small", "&cThis world requires a minimum radius of {MIN}.",
+                    Map.of("MIN", String.valueOf(minRadius)));
+            plugin.effects().playError(player);
+            return Bounds.INVALID;
+        }
+        if (plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)
+                && plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true)
+                && plugin.getClaimBlockManager() != null
+                && !player.hasPermission("aegis.admin.bypass-limits")) {
+            long added = Math.max(0L, ((long) (bounds.x2 - bounds.x1 + 1) * (bounds.z2 - bounds.z1 + 1)) - plot.getArea());
+            if (added > 0L && !plugin.getClaimBlockManager().canAfford(player.getUniqueId(), added)) {
+                send(player, "claim_blocks_not_enough", "&cYou do not have enough ClaimBlocks.", Map.of());
+                plugin.effects().playError(player);
+                return Bounds.INVALID;
+            }
         }
         return bounds;
     }

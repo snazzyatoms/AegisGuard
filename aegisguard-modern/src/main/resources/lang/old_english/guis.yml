@@ -3802,11 +3802,11 @@ beacon_vault_cost: '&6Vault maintenance: &f{VAULT}'
 beacon_vault_cost_lore:
 - '&7Charge travelers a maintenance fee.'
 - '&7Paid to the plot owner when they arrive.'
-- '&7Shift-click +10, click +1, right-click to clear.'
+- '&7Left-click +1, shift-left -1, right-click to clear.'
 beacon_cb_cost: '&aClaimBlock fee: &f{BLOCKS}'
 beacon_cb_cost_lore:
 - '&7Optional ClaimBlock maintenance fee.'
-- '&7Shift-click +10, click +1, right-click to clear.'
+- '&7Left-click +1, shift-left -1, right-click to clear.'
 beacon_vault_locked: '&7Vault fees are off on this server.'
 beacon_cb_locked: '&7ClaimBlock fees are off on this server.'
 beacon_icon_fee: '&6Fee: &f{VAULT} &7/ &a{BLOCKS} CB'

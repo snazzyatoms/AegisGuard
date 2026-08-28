@@ -11,6 +11,7 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Mini GUI: pick a nearby player, choose amount, confirm ClaimBlocks gift. */
@@ -136,8 +137,8 @@ public class GiftBlocksGUI {
         Player target = Bukkit.getPlayer(recipient);
         String name = target == null ? recipient.toString() : target.getName();
         inv.setItem(13, GUIManager.createItem(Material.EMERALD_BLOCK,
-                tr(player, "giftblocks_confirm_name", "&aGift &e{AMOUNT} &ato &f{PLAYER}")
-                        .replace("{AMOUNT}", String.valueOf(amount)).replace("{PLAYER}", name),
+                plugin.gui().tr(player, "giftblocks_confirm_name", "&aGift &e{AMOUNT} &ato &f{PLAYER}",
+                        Map.of("AMOUNT", String.valueOf(amount), "PLAYER", name)),
                 trList(player, "giftblocks_confirm_lore", List.of("&7Click to send the gift."))));
         inv.setItem(11, GUIManager.createItem(Material.ARROW, tr(player, "button_back", "&fBack"),
                 trList(player, "back_lore", List.of("&7Choose a different amount."))));
@@ -212,13 +213,13 @@ public class GiftBlocksGUI {
         }
         Player online = Bukkit.getPlayer(recipient);
         String targetName = online == null ? recipient.toString() : online.getName();
-        sender.sendMessage(GUIManager.color(tr(sender, "giftblocks_success_sender",
-                "&aGifted &e{AMOUNT} &aclaim blocks to &f{PLAYER}&a.")
-                .replace("{AMOUNT}", String.valueOf(amount)).replace("{PLAYER}", targetName)));
+        sender.sendMessage(GUIManager.color(plugin.gui().tr(sender, "giftblocks_success_sender",
+                "&aGifted &e{AMOUNT} &aclaim blocks to &f{PLAYER}&a.",
+                Map.of("AMOUNT", String.valueOf(amount), "PLAYER", targetName))));
         if (online != null) {
-            online.sendMessage(GUIManager.color(tr(online, "giftblocks_success_receiver",
-                    "&aYou received &e{AMOUNT} &aclaim blocks from &f{PLAYER}&a.")
-                    .replace("{AMOUNT}", String.valueOf(amount)).replace("{PLAYER}", sender.getName())));
+            online.sendMessage(GUIManager.color(plugin.gui().tr(online, "giftblocks_success_receiver",
+                    "&aYou received &e{AMOUNT} &aclaim blocks from &f{PLAYER}&a.",
+                    Map.of("AMOUNT", String.valueOf(amount), "PLAYER", sender.getName()))));
         }
         plugin.effects().playConfirm(sender);
         plugin.gui().openMain(sender);

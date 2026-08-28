@@ -419,9 +419,20 @@ public class ExpansionRequestGUI {
             return;
         }
         if (event.getSlot() == 38 && validateOwnedPlot(player, plot) && plot.getHorizonRank() >= 3) {
-            String flag = event.isShiftClick() ? "horizon-phantom-ward"
-                    : event.isRightClick() ? "horizon-ender-seal" : "horizon-projectile-veil";
-            plot.setFlag(flag, !plot.getFlag(flag, true));
+            String[] flags = {"horizon-projectile-veil", "horizon-ender-seal", "horizon-phantom-ward"};
+            if (event.isLeftClick() && !event.isShiftClick()) {
+                int bits = 0;
+                for (int i = 0; i < flags.length; i++) {
+                    if (plot.getFlag(flags[i], true)) bits |= (1 << i);
+                }
+                int next = (bits + 1) & 7;
+                for (int i = 0; i < flags.length; i++) {
+                    plot.setFlag(flags[i], (next & (1 << i)) != 0);
+                }
+            } else {
+                String flag = event.isShiftClick() ? flags[2] : flags[1];
+                plot.setFlag(flag, !plot.getFlag(flag, true));
+            }
             plugin.store().savePlot(plot);
             plugin.effects().playConfirm(player);
             openHorizons(player);
@@ -896,7 +907,7 @@ public class ExpansionRequestGUI {
         String off = tr(player, "label_off", "OFF");
         return trList(player, "horizon_wards_lore", List.of(
                         "&7Projectile Veil: &f{PROJECTILE}", "&7Ender Seal: &f{ENDER}",
-                        "&7Phantom Ward: &f{PHANTOM}", " ", "&eLeft: Projectile &8| &eRight: Ender", "&eShift-click: Phantom"))
+                        "&7Phantom Ward: &f{PHANTOM}", " ", "&eLeft-click cycles all three wards", "&eRight: Ender &8| &eShift: Phantom"))
                 .stream()
                 .map(line -> line.replace("{PROJECTILE}", plot.getFlag("horizon-projectile-veil", true) ? on : off)
                         .replace("{ENDER}", plot.getFlag("horizon-ender-seal", true) ? on : off)

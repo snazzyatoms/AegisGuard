@@ -125,10 +125,10 @@ public class MyRentalsGUI {
                 Material.WRITABLE_BOOK,
                 tr(player, "my_rentals_guide_name", "&eRentals Guide"),
                 trList(player, "my_rentals_guide_lore", List.of(
-                        "&7Right-click: renew / extend",
-                        "&7Shift-right-click: cancel / leave",
+                        "&7Full plot: left-click renews, sneak-click toggles auto-renew",
+                        "&7Drop (Q) or sneak-right: cancel / leave",
                         "&7Zones: left-click opens room controls",
-                        "&7Shift-left: toggle auto-renew (full-plot)"
+                        "&7Zone sneak-click: renew / extend"
                 ))
         ));
 
@@ -210,11 +210,11 @@ public class MyRentalsGUI {
                 toggleAutoRenew(player, plot, contract);
                 return;
             }
-            if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
+            if (GuiClicks.destructive(e)) {
                 plugin.gui().rentConfirm().openPlotCancel(player, plot, contract.deposit(), "my_rentals");
                 return;
             }
-            if (e.getClick().isRightClick()) {
+            if (GuiClicks.primary(e) || e.getClick().isRightClick()) {
                 plugin.gui().rentConfirm().openPlotRenew(player, plot, contract.rent(), contract.termDays(), "my_rentals");
                 return;
             }
@@ -228,11 +228,11 @@ public class MyRentalsGUI {
             openFrom(player, page, holder.getReturnTo(), MarketNav.findPlot(plugin, holder.getOriginPlotId()));
             return;
         }
-        if (e.getClick().isShiftClick() && e.getClick().isRightClick()) {
+        if (GuiClicks.destructive(e)) {
             plugin.gui().rentConfirm().openZoneLeave(player, plot, zone, "my_rentals");
             return;
         }
-        if (e.getClick().isRightClick()) {
+        if (GuiClicks.alternate(e)) {
             plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "my_rentals");
             return;
         }

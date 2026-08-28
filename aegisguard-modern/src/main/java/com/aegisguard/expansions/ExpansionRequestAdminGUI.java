@@ -341,7 +341,7 @@ public class ExpansionRequestAdminGUI {
 
         String reqName = safe(Bukkit.getOfflinePlayer(requesterId).getName(), "Unknown");
 
-        if (e.getClick().isLeftClick()) {
+        if (e.getClick().isLeftClick() && !e.isShiftClick()) {
             boolean ok = manager.approveRequest(req, player.getUniqueId());
             if (ok) {
                 plugin.msg().send(player, "admin_request_approved", Map.of("PLAYER", reqName));
@@ -350,7 +350,7 @@ public class ExpansionRequestAdminGUI {
                 sendSystem(player, "expansion_admin_approve_failed", "&cFailed to approve request (overlap or economy error).");
                 plugin.effects().playError(player);
             }
-        } else if (e.getClick().isRightClick()) {
+        } else if (com.aegisguard.gui.GuiClicks.alternate(e)) {
             manager.denyRequest(req, player.getUniqueId(), "Denied by staff review");
             plugin.msg().send(player, "admin_request_denied", Map.of("PLAYER", reqName));
             plugin.effects().playUnclaim(player);

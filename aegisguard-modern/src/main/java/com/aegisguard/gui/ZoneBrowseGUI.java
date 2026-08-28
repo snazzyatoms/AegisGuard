@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ZoneBrowseGUI {
 
@@ -211,7 +212,7 @@ public class ZoneBrowseGUI {
             return;
         }
 
-        if (e.getClick().isLeftClick()) {
+        if (e.getClick().isLeftClick() && !e.isShiftClick()) {
             if (zone.getTeleportLocation() != null) {
                 var result = plugin.safeTravel().travel(player, zone.getTeleportLocation(),
                         com.aegisguard.travel.SafeTravelService.Kind.ZONE);
@@ -221,7 +222,7 @@ public class ZoneBrowseGUI {
             return;
         }
 
-        if (!e.getClick().isRightClick()) return;
+        if (!GuiClicks.alternate(e) && !GuiClicks.destructive(e)) return;
 
         if (zone.isRented()) {
             if (!zone.isRentedBy(player.getUniqueId())) {
@@ -229,12 +230,12 @@ public class ZoneBrowseGUI {
                 send(player, "zone_already_rented", "&cThat zone is already rented by another player.");
                 return;
             }
-            if (!e.isShiftClick()) {
-                plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest(MarketNav.ZONE_BROWSE, holder.getReturnTo()));
-                plugin.effects().playMenuFlip(player);
+            if (GuiClicks.destructive(e)) {
+                plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "zone_browse");
                 return;
             }
-            plugin.gui().rentConfirm().openZoneRent(player, plot, zone, true, "zone_browse");
+            plugin.gui().zoneTenant().open(player, plot, zone, MarketNav.nest(MarketNav.ZONE_BROWSE, holder.getReturnTo()));
+            plugin.effects().playMenuFlip(player);
             return;
         }
 
@@ -264,9 +265,8 @@ public class ZoneBrowseGUI {
             save(plot);
             plugin.effects().playConfirm(player);
             send(player, "zone_extend_success",
-                    "&aRental extended for &f{ZONE}&a. New expiry: &f{TIME}"
-                            .replace("{ZONE}", safeZoneName(zone))
-                            .replace("{TIME}", zone.getRemainingTimeFormatted()));
+                    "&aRental extended for &f{ZONE}&a. New expiry: &f{TIME}",
+                    Map.of("ZONE", safeZoneName(zone), "TIME", zone.getRemainingTimeFormatted()));
             plugin.gui().myRentals().open(player);
             return;
         }
@@ -290,13 +290,13 @@ public class ZoneBrowseGUI {
         plugin.effects().playConfirm(player);
 
         send(player, "zone_rented_success",
-                "&aYou are now renting &f{ZONE}&a for &6{PRICE}&a."
-                        .replace("{ZONE}", safeZoneName(zone))
-                        .replace("{PRICE}", plugin.eco().format(zone.getRentPrice(), CurrencyType.VAULT)));
+                "&aYou are now renting &f{ZONE}&a for &6{PRICE}&a.",
+                Map.of("ZONE", safeZoneName(zone),
+                        "PRICE", plugin.eco().format(zone.getRentPrice(), CurrencyType.VAULT)));
         if (deposit > 0.0D) {
             send(player, "zone_deposit_held",
-                    "&7Security deposit held: &6{DEPOSIT}"
-                            .replace("{DEPOSIT}", plugin.eco().format(deposit, CurrencyType.VAULT)));
+                    "&7Security deposit held: &6{DEPOSIT}",
+                    Map.of("DEPOSIT", plugin.eco().format(deposit, CurrencyType.VAULT)));
         }
 
         Player ownerOnline = Bukkit.getPlayer(plot.getOwner());
@@ -396,7 +396,13 @@ public class ZoneBrowseGUI {
     }
 
     private void send(Player player, String key, String fallback) {
-        String raw = tr(player, key, fallback);
+        send(player, key, fallback, null);
+    }
+
+    private void send(Player player, String key, String fallback, Map<String, String> vars) {
+        String raw = vars == null || vars.isEmpty()
+                ? tr(player, key, fallback)
+                : plugin.gui().tr(player, key, fallback, vars);
         if (raw == null || raw.isBlank()) return;
         player.sendMessage(GUIManager.color(raw));
     }

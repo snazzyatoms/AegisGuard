@@ -947,10 +947,10 @@ public class GuestPassGUI implements Listener {
         if (slot == 20) { player.closeInventory(); return; }
 
         if (slot == 11) {
-            if (!e.getClick().isShiftClick()) {
+            if (!e.getClick().isShiftClick() && !com.aegisguard.gui.GuiClicks.destructive(e)) {
                 plugin.effects().playError(player);
                 player.sendMessage(GUIManager.color(t(player, "guest_pass_revoke_hint",
-                        "&eTip: &7Shift-click to confirm revoke.")));
+                        "&eTip: &7Sneak-click or drop (Q) to confirm revoke.")));
                 return;
             }
             boolean revoked = plugin.guestPasses().revoke(player, plot, target.getUniqueId());

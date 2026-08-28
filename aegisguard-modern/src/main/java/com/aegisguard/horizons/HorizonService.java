@@ -242,7 +242,13 @@ public final class HorizonService implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSigilUse(PlayerInteractEvent event) {
-        if (!event.getAction().isRightClick()) return;
+        org.bukkit.event.block.Action action = event.getAction();
+        if (action != org.bukkit.event.block.Action.RIGHT_CLICK_AIR
+                && action != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK
+                && action != org.bukkit.event.block.Action.LEFT_CLICK_AIR
+                && action != org.bukkit.event.block.Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
         ItemStack item = event.getItem();
         SigilData data = readSigil(item);
         if (data == null) return;

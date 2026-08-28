@@ -105,7 +105,7 @@ public class ModerationGUI {
         if (slot >= 0 && slot < holder.getTargets().size() && slot < ONLINE_SLOTS) {
             Player target = Bukkit.getPlayer(holder.getTargets().get(slot));
             if (target == null) { open(player, plot); return; }
-            if (e.getClick().isRightClick()) ban(player, plot, target);
+            if (GuiClicks.alternate(e)) ban(player, plot, target);
             else kick(player, plot, target);
             open(player, plot);
             return;
@@ -128,7 +128,8 @@ public class ModerationGUI {
         }
         plugin.safeTravel().travel(target, target.getWorld().getSpawnLocation(), SafeTravelService.Kind.SPAWN, false);
         target.sendMessage(GUIManager.color(tr(target, "kicked_target", "&cYou were kicked from this plot.")));
-        actor.sendMessage(GUIManager.color(tr(actor, "kicked_sender", "&eKicked {PLAYER}").replace("{PLAYER}", target.getName())));
+        actor.sendMessage(GUIManager.color(plugin.gui().tr(actor, "kicked_sender", "&eKicked {PLAYER}",
+                java.util.Map.of("PLAYER", target.getName()))));
         plugin.effects().playConfirm(actor);
     }
 

@@ -21,6 +21,8 @@ public class ClaimBlockData {
     // The "Starter" Flag
     private boolean claimedStarter;
     private boolean playtimeEarningEnabled;
+    /** True after 1.3.5 peeled duplicated plot-area spend out of {@code spentBlocks}. */
+    private boolean landSpendReconciled;
 
     // Transient (not saved to DB, calculated at runtime)
     private transient long usedBlocksCache = 0;
@@ -119,6 +121,9 @@ public class ClaimBlockData {
 
     public boolean isPlaytimeEarningEnabled() { return playtimeEarningEnabled; }
     public void setPlaytimeEarningEnabled(boolean enabled) { this.playtimeEarningEnabled = enabled; }
+
+    public boolean isLandSpendReconciled() { return landSpendReconciled; }
+    public void setLandSpendReconciled(boolean reconciled) { this.landSpendReconciled = reconciled; }
 
     public long getUsedBlocksCache() { return usedBlocksCache; }
     public void setUsedBlocksCache(long used) {

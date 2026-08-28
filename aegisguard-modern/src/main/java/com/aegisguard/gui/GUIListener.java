@@ -249,15 +249,10 @@ public class GUIListener implements Listener {
         // 1.2.6: block spammy / inventory-manipulation click types
         ClickType click = e.getClick();
         switch (click) {
-            case NUMBER_KEY,
-                 DOUBLE_CLICK,
-                 SWAP_OFFHAND,
-                 DROP,
-                 CONTROL_DROP,
-                 MIDDLE -> {
+            case NUMBER_KEY, DOUBLE_CLICK, MIDDLE -> {
                 return;
             }
-            default -> { /* continue */ }
+            default -> { /* continue; DROP / SWAP_OFFHAND are used by Bedrock-friendly menus */ }
         }
 
         long now = System.nanoTime();
@@ -536,6 +531,7 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         lastMenuClick.remove(event.getPlayer().getUniqueId());
+        com.aegisguard.hooks.BedrockClients.forget(event.getPlayer().getUniqueId());
         if (plugin.gui().exchange() != null) {
             plugin.gui().exchange().closeSession(event.getPlayer().getUniqueId());
         }

@@ -219,7 +219,7 @@ public class PlotAuctionGUI {
             Plot plot = holder.getPlots().get(index);
             if (plot == null) return;
 
-            if (e.getClick().isLeftClick()) {
+            if (e.getClick().isLeftClick() && !e.isShiftClick()) {
                 if (plugin.beacons() != null
                         && plugin.beacons().handlePublicListingTravel(player, plot,
                         com.aegisguard.beacon.TeleportBeacon.Purpose.AUCTION)) {
@@ -234,7 +234,7 @@ public class PlotAuctionGUI {
                     plugin.msg().send(player, "market-teleport", Map.of("PLAYER", plot.getOwnerName()));
                     plugin.effects().playConfirm(player);
                 }
-            } else if (e.getClick().isRightClick()) {
+            } else if (GuiClicks.alternate(e)) {
                 bidOnPlot(player, plot);
                 open(player, currentPage);
             }

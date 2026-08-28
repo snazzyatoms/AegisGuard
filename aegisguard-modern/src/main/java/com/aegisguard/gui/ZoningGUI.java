@@ -71,7 +71,13 @@ public class ZoningGUI {
     }
 
     private void send(Player p, String key, String fallback) {
-        String msg = tr(p, key, fallback);
+        send(p, key, fallback, null);
+    }
+
+    private void send(Player p, String key, String fallback, Map<String, String> vars) {
+        String msg = vars == null || vars.isEmpty()
+                ? tr(p, key, fallback)
+                : plugin.gui().tr(p, key, fallback, vars);
         if (msg == null || msg.isBlank()) return;
         p.sendMessage(GUIManager.color(msg));
     }
@@ -366,29 +372,32 @@ public class ZoningGUI {
                 plugin.store().setDirty(true);
                 plugin.effects().playConfirm(player);
                 send(player, "zone_rent_price_set",
-                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
-                                .replace("{ZONE}", target.getName())
-                                .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
+                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}",
+                        Map.of("ZONE", target.getName(),
+                                "PRICE", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
                 open(player, plot, holder.getReturnTo());
                 return;
             }
 
-            if (e.isShiftClick() && e.getClick().isRightClick()) {
+            if ((e.isShiftClick() && e.getClick().isRightClick())
+                    || e.getClick() == org.bukkit.event.inventory.ClickType.SWAP_OFFHAND) {
                 double nextPrice = Math.max(0.0D, target.getRentPrice() - rentPriceStep());
                 target.setRentPrice(nextPrice);
                 plugin.store().savePlot(plot);
                 plugin.store().setDirty(true);
                 plugin.effects().playConfirm(player);
                 send(player, "zone_rent_price_set",
-                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}"
-                                .replace("{ZONE}", target.getName())
-                                .replace("{PRICE}", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
+                        "&aZone rent updated for &f{ZONE}&a: &6{PRICE}",
+                        Map.of("ZONE", target.getName(),
+                                "PRICE", plugin.eco().format(target.getRentPrice(), CurrencyType.VAULT)));
                 open(player, plot, holder.getReturnTo());
                 return;
             }
 
-            // Right Click: Delete
-            if (e.getClick().isRightClick()) {
+            // Right Click: Delete (Java). Shift-left already adjusts price for Bedrock.
+            // Drop the item (Q) also deletes so Geyser/Bedrock can finish without right-click.
+            if (e.getClick().isRightClick() || e.getClick() == org.bukkit.event.inventory.ClickType.DROP
+                    || e.getClick() == org.bukkit.event.inventory.ClickType.CONTROL_DROP) {
                 if (target.isRented() && !allowDeleteWhileRented()) {
                     plugin.effects().playError(player);
                     send(player, "zone_delete_blocked_rented", "&cEvict the tenant before deleting this zone.");
@@ -405,7 +414,7 @@ public class ZoningGUI {
                 plugin.store().setDirty(true);
                 plugin.effects().playUnclaim(player);
 
-                send(player, "zone_deleted", "&cZone deleted: &f{ZONE}".replace("{ZONE}", target.getName()));
+                send(player, "zone_deleted", "&cZone deleted: &f{ZONE}", Map.of("ZONE", target.getName()));
                 open(player, plot, holder.getReturnTo());
                 return;
             }
@@ -418,7 +427,8 @@ public class ZoningGUI {
                 } else {
                     if (target.isListedForRent()) {
                         target.setRentPrice(0.0D);
-                        send(player, "zone_rent_disabled", "&eRental listing disabled for &f{ZONE}".replace("{ZONE}", target.getName()));
+                        send(player, "zone_rent_disabled", "&eRental listing disabled for &f{ZONE}",
+                                Map.of("ZONE", target.getName()));
                     } else {
                         target.setRentPrice(defaultRentPrice());
                         if (target.getDeposit() <= 0.0D) {
@@ -429,7 +439,8 @@ public class ZoningGUI {
                             plugin.territoryLife().rememberZoneDeposit(plot.getPlotId(), target.getName(),
                                     target.getDeposit(), target.getHeldDeposit());
                         }
-                        send(player, "zone_rent_enabled", "&aRental listing enabled for &f{ZONE}".replace("{ZONE}", target.getName()));
+                        send(player, "zone_rent_enabled", "&aRental listing enabled for &f{ZONE}",
+                                Map.of("ZONE", target.getName()));
                     }
                     plugin.store().savePlot(plot);
                     plugin.store().setDirty(true);
@@ -515,7 +526,7 @@ public class ZoningGUI {
             plugin.selection().clearSelection(player);
         }
         plugin.effects().playConfirm(player);
-        send(player, "zone_created", "&a✔ Zone ''{ZONE}'' created.".replace("{ZONE}", zoneName));
+        send(player, "zone_created", "&a✔ Zone ''{ZONE}'' created.", Map.of("ZONE", zoneName));
         return true;
     }
 

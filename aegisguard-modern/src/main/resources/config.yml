@@ -187,6 +187,19 @@ localization:
 
 
 # ==============================================================================
+# Chest GUIs and Bedrock (Geyser / Floodgate)
+# ==============================================================================
+# AegisGuard always runs on a Java server. Bedrock players are detected per
+# login when Floodgate and/or Geyser-Spigot is installed. Those clients use
+# left-click for the main action and sneak+left-click for the second action
+# (Java right-click). Drop (Q) is cancel/delete. Set detect to false to force
+# Java-only click mapping for everyone.
+gui:
+  bedrock:
+    detect: true
+
+
+# ==============================================================================
 # Hooks and integrations
 # ==============================================================================
 # All hooks are OFF by default (opt-in). Enable only what your server actually

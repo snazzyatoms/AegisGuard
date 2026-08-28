@@ -364,6 +364,12 @@ public class ExpansionRequestManager {
             return false;
         }
 
+        int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(requester.getWorld()));
+        if (newRadius < minRadius && !requester.hasPermission("aegis.admin.bypass-limits")) {
+            plugin.msg().send(requester, "claim_too_small", Map.of("MIN", String.valueOf(minRadius)));
+            return false;
+        }
+
         // 2) Limit Check
         int maxRadius = plugin.cfg().raw().getInt("expansions.max_radius_global", 100);
         if (plugin.horizons() != null && plugin.horizons().isNextHorizonExpansion(plot, currentRadius, newRadius)) {
@@ -380,6 +386,11 @@ public class ExpansionRequestManager {
 
         if (!canCoverExpansionCost(plot, requester, cost, type)) {
             plugin.msg().send(requester, "expansion_payment_failed");
+            return false;
+        }
+
+        if (!canCoverExpansionClaimBlocks(requester, plot, newRadius)) {
+            plugin.msg().send(requester, "claim_blocks_not_enough");
             return false;
         }
 
@@ -708,6 +719,16 @@ public class ExpansionRequestManager {
         return plugin.cfg().useVault() && plugin.vault() != null && plugin.vault().has(requester, amount);
     }
 
+    private boolean canCoverExpansionClaimBlocks(Player requester, Plot plot, int newRadius) {
+        if (requester == null || plot == null) return false;
+        if (requester.hasPermission("aegis.admin.bypass-limits")) return true;
+        if (plugin.cfg() == null || !plugin.cfg().raw().getBoolean("claim_blocks.enabled", true)) return true;
+        if (!plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true)) return true;
+        if (plugin.claimBlocks() == null) return true;
+        long added = addedAreaForExpansion(getRequiredRadius(plot), newRadius);
+        return added <= 0L || plugin.claimBlocks().canAfford(requester.getUniqueId(), added);
+    }
+
     private ExpansionChargeSource chargeExpansionCost(Plot plot, Player requester, double amount, CurrencyType type) {
         return chargeExpansionCost(plot, Bukkit.getOfflinePlayer(requester.getUniqueId()), requester, amount, type);
     }
@@ -807,6 +828,9 @@ public class ExpansionRequestManager {
 
         plugin.store().addPlot(oldPlot);
         plugin.store().setDirty(true);
+        if (plugin.claimBlocks() != null) {
+            plugin.claimBlocks().invalidateOwnerCache(oldPlot.getOwner());
+        }
 
         return true;
     }

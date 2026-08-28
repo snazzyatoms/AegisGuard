@@ -325,16 +325,7 @@ public class SelectionService implements Listener {
         int maxArea = getWorldInt(ctx.worldName, "max_area",
                 plugin.cfg().raw().getInt("claims.max_area", 50000));
 
-        if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
-            if (ctx.radius > maxRadius) {
-                plugin.msg().send(p, "claim_too_large");
-                return;
-            }
-            if (ctx.area > maxArea) {
-                plugin.msg().send(p, "claim_too_large");
-                return;
-            }
-        }
+        if (rejectIfOutsideClaimLimits(p, ctx, maxRadius, maxArea)) return;
 
         // Overlap checks against Aegis plots (robust AABB overlap, not only corners)
         for (Plot other : plugin.store().getPlotsInWorld(ctx.worldName)) {
@@ -378,17 +369,12 @@ public class SelectionService implements Listener {
             boolean perBlock = plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true);
             int required = perBlock ? ctx.area : 1;
 
-            if (blocks.getAvailable() < required) {
+            if (!plugin.claimBlocks().canAfford(p.getUniqueId(), required)) {
                 plugin.msg().send(p, "claim_blocks_not_enough");
                 return;
             }
-
-            // Spend blocks now (keeps 1.2.5 behavior: do not create plot if spend fails)
-            boolean spent = plugin.claimBlocks().spend(p.getUniqueId(), required);
-            if (!spent) {
-                plugin.msg().send(p, "claim_blocks_not_enough");
-                return;
-            }
+            // Land is counted in used plot area after the plot is created.
+            // Do not also spend() that area or expansion will drive the ledger negative.
         }
 
         // --- CREATION ---
@@ -424,6 +410,9 @@ public class SelectionService implements Listener {
         if (event.isCancelled()) return;
 
         plugin.store().addPlot(plot);
+        if (!isServerClaim && plugin.claimBlocks() != null) {
+            plugin.claimBlocks().invalidateOwnerCache(p.getUniqueId());
+        }
 
         // Mark starter claim as used AFTER successful save
         if (!isServerClaim && claimBlocksEnabled) {
@@ -502,12 +491,7 @@ public class SelectionService implements Listener {
         int maxArea = getWorldInt(ctx.worldName, "max_area",
                 plugin.cfg().raw().getInt("claims.max_area", 50000));
 
-        if (!p.hasPermission("aegis.admin.bypass") && !p.hasPermission("aegis.admin.bypass-limits")) {
-            if (ctx.radius > maxRadius || ctx.area > maxArea) {
-                plugin.msg().send(p, "claim_too_large");
-                return null;
-            }
-        }
+        if (rejectIfOutsideClaimLimits(p, ctx, maxRadius, maxArea)) return null;
 
         for (Plot other : plugin.store().getPlotsInWorld(ctx.worldName)) {
             if (other == null) continue;
@@ -526,6 +510,17 @@ public class SelectionService implements Listener {
         if (hooks != null && hooks.isAreaProtectedElsewhere(ctx.worldName, ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ)) {
             plugin.msg().send(p, "claim_external_protection_conflict");
             return null;
+        }
+
+        boolean claimBlocksEnabled = plugin.cfg().raw().getBoolean("claim_blocks.enabled", true);
+        if (claimBlocksEnabled && !p.hasPermission("aegis.admin.bypass-limits")) {
+            boolean perBlock = plugin.cfg().raw().getBoolean("claim_blocks.require_per_block", true);
+            int required = perBlock ? ctx.area : 1;
+            UUID payer = group.getLeader() != null ? group.getLeader() : p.getUniqueId();
+            if (plugin.claimBlocks() == null || !plugin.claimBlocks().canAfford(payer, required)) {
+                plugin.msg().send(p, "claim_blocks_not_enough");
+                return null;
+            }
         }
 
         Plot plot = new Plot(
@@ -555,6 +550,7 @@ public class SelectionService implements Listener {
         if (event.isCancelled()) return null;
 
         plugin.store().addPlot(plot);
+        if (plugin.claimBlocks() != null) plugin.claimBlocks().invalidateOwnerCache(group.getLeader());
         selections.remove(p.getUniqueId());
         setPlayerWand(p, null);
 
@@ -603,6 +599,28 @@ public class SelectionService implements Listener {
     // ------------------------------------------------------------
     // Config helpers
     // ------------------------------------------------------------
+
+    private boolean rejectIfOutsideClaimLimits(Player p, SelectionContext ctx, int maxRadius, int maxArea) {
+        if (p.hasPermission("aegis.admin.bypass") || p.hasPermission("aegis.admin.bypass-limits")) {
+            return false;
+        }
+        int halfRadius = Math.max(ctx.width, ctx.depth) / 2;
+        int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(ctx.world));
+        if (halfRadius < minRadius) {
+            plugin.msg().send(p, "claim_too_small", Map.of("MIN", String.valueOf(minRadius)));
+            return true;
+        }
+        int worldMax = plugin.cfg().getWorldMaxRadius(ctx.world);
+        if (ctx.radius > maxRadius || halfRadius > worldMax) {
+            plugin.msg().send(p, "claim_too_large");
+            return true;
+        }
+        if (ctx.area > maxArea) {
+            plugin.msg().send(p, "claim_too_large");
+            return true;
+        }
+        return false;
+    }
 
     private int getWorldInt(String worldName, String key, int def) {
         if (worldName == null) return def;

@@ -255,7 +255,7 @@ public class PlotMarketGUI {
             if (plot == null) return;
 
             // Teleport (Left Click)
-            if (e.getClick().isLeftClick()) {
+            if (e.getClick().isLeftClick() && !e.isShiftClick()) {
                 if (plugin.beacons() != null
                         && plugin.beacons().handlePublicListingTravel(player, plot,
                         com.aegisguard.beacon.TeleportBeacon.Purpose.MARKET)) {
@@ -271,8 +271,7 @@ public class PlotMarketGUI {
                     plugin.effects().playConfirm(player);
                 }
             }
-            // Buy/Rent (Right Click)
-            else if (e.getClick().isRightClick()) {
+            else if (GuiClicks.alternate(e)) {
                 if (plot.isForSale()) {
                     handleBuy(player, plot);
                 } else if (plot.isForRent()) {

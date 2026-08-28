@@ -45,6 +45,11 @@ softdepend:
   - ChestShop
   - ExcellentShop
 
+  # Bedrock players join a Java server through these (optional). AegisGuard
+  # detects Floodgate/Geyser clients so chest GUIs use left-click and sneak-left.
+  - floodgate
+  - Geyser-Spigot
+
 commands:
   aegis:
     description: Player command for claims, plot management, groups, travel, and ClaimBlocks.

@@ -386,7 +386,9 @@ public class GUIManager {
         } catch (Throwable ignored) {}
 
         String fb = applyPlaceholders(fallback, placeholders);
-        return safeText(key, value, fb);
+        // Apply again after safeText so a successful lang hit still replaces {KEY}
+        // even if Codex returned the raw translation without substitution.
+        return applyPlaceholders(safeText(key, value, fb), placeholders);
     }
 
     /**
@@ -412,7 +414,7 @@ public class GUIManager {
         } catch (Throwable ignored) {}
 
         String fb = applyPlaceholders(fallback, placeholders);
-        String t = safeText(key, raw, fb);
+        String t = applyPlaceholders(safeText(key, raw, fb), placeholders);
         return clampInventoryTitle(t, TITLE_MAX);
     }
 
@@ -454,12 +456,12 @@ public class GUIManager {
 
         if (out == null) {
             if (fallback == null || fallback.isEmpty()) return Collections.emptyList();
-            List<String> applied = new ArrayList<>(fallback.size());
-            for (String line : fallback) applied.add(applyPlaceholders(line, placeholders));
-            out = applied;
+            out = fallback;
         }
 
-        return colorizeList(out);
+        List<String> applied = new ArrayList<>(out.size());
+        for (String line : out) applied.add(applyPlaceholders(line, placeholders));
+        return colorizeList(applied);
     }
 
     // ======================================
@@ -489,7 +491,7 @@ public class GUIManager {
         return color(out);
     }
 
-    private static String applyPlaceholders(String input, Map<String, String> placeholders) {
+    public static String applyPlaceholders(String input, Map<String, String> placeholders) {
         if (input == null || input.isEmpty() || placeholders == null || placeholders.isEmpty()) return input;
 
         String out = input;

@@ -631,7 +631,7 @@ public class VisitGUI {
         Plot plot = resolvePlotFromItem(clicked, holder, page, slot);
         if (plot == null) return;
 
-        if ((mode == VisitMode.DISCOVER || mode == VisitMode.FAVORITES) && e.isRightClick()) {
+        if ((mode == VisitMode.DISCOVER || mode == VisitMode.FAVORITES) && GuiClicks.alternate(e)) {
             boolean added = plugin.territoryLife().toggleFavorite(player.getUniqueId(), plot.getPlotId());
             sendSystem(player, added ? "favorite_added" : "favorite_removed",
                     added ? "&aPlot added to favorites." : "&ePlot removed from favorites.");

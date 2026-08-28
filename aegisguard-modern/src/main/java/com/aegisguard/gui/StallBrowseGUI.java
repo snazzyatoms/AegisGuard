@@ -364,7 +364,7 @@ public class StallBrowseGUI {
             return;
         }
 
-        if (e.getClick().isRightClick()) {
+        if (GuiClicks.alternate(e)) {
             visitStall(player, stall);
             return;
         }

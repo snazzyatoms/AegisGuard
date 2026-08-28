@@ -3380,7 +3380,7 @@ prefix: '&8[&bAegisGuard&8]&r '
 role_edit_self_error: '&cErreur : vous ne pouvez pas modifier votre propre rôle.'
 no_perm: '&cErreur : vous n''avez pas l''autorisation pour cela.'
 players_only: '&cErreur : Cette commande ne peut être utilisée que par les joueurs.'
-usage_main: '&eUtilisation : /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
+usage_main: '&eUtilisation : /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|chat|help>'
 claim_enter_exit_notify_usage: '&eUtilisation : &f/aegis notify'
 claim_enter_exit_notify_server_disabled: '&cLes notifications d''entrée/sortie de claim sont désactivées sur l''ensemble du
   serveur.'
@@ -3960,9 +3960,9 @@ admin_help_rentals: '&e/agadmin locations <annuler|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin bypass &8- Basculer le contournement de la protection personnelle'
 admin_help_reload: '&e/agadmin recharger &8- Recharger AegisGuard'
 admin_help_transition: '&e/agadmin transition &8- État de la mise à jour 1.2.7 → 1.3.0'
-admin_transition_schema: '&7Schéma de config : &f{CURRENT} &7/ cible 1.3.5 &f{TARGET}.'
+admin_transition_schema: '&7Schéma de config : &f{CURRENT} &7/ cible 1.4.0 &f{TARGET}.'
 admin_transition_plots: '&7Les parcelles se chargent telles quelles. Les fiches ne sont pas réécrites.'
-admin_transition_already: '&aDéjà en 1.3.5 ; rien à convertir.'
+admin_transition_already: '&aDéjà en 1.4.0 ; rien à convertir.'
 admin_transition_ran: '&aFusion config et langues relancée. Le schéma est maintenant &f{SCHEMA}&a.'
 admin_transition_backup: '&7Sauvegarde config : &f{PATH}'
 admin_transition_report: '&7Rapport de migration : &f{PATH}'
@@ -4725,3 +4725,27 @@ beacon_link_status_linked: '&7Liée. Cliquez pour changer.'
 beacon_link_status_unlinked: '&cPas encore liée.'
 beacon_confirm_cancel_lore:
 - '&7Restez où vous êtes.'
+# --- Aegis Frequency and Visual Presence (1.4.0) ---
+plot_chat_on: '&aFréquence Aegis activée pour &f{PLOT}&a. Ton chat reste sur cette parcelle.'
+plot_chat_off: '&eFréquence Aegis désactivée. Le chat redevient public.'
+plot_chat_need_member: '&cPlace-toi dans une parcelle dont tu es membre avant d''ouvrir la Fréquence.'
+plot_chat_empty: '&cDis quelque chose après /ag chat, ou bascule avec /ag chat.'
+plot_chat_disabled: '&cLa Fréquence de parcelle est désactivée sur ce serveur.'
+plot_chat_format: '&8[&b{PLOT}&8] &f{PLAYER}&7: &f{MESSAGE}'
+plot_chat_no_listeners: '&ePersonne d''autre n''est en ligne sur cette Fréquence.'
+plot_chat_not_member: '&cTu n''es pas membre de cette Fréquence de parcelle.'
+plot_chat_switched: '&aFréquence basculée vers &f{PLOT}&a.'
+presence_enter_title: '&b{PLOT}'
+presence_enter_subtitle: '&7{OWNER}'
+presence_enter_sale: '&6À vendre : {PRICE}'
+presence_border_label: '&b{DIR} &7bordure · &f{PLOT}'
+presence_dir_north: Nord
+presence_dir_south: Sud
+presence_dir_west: Ouest
+presence_dir_east: Est
+
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bFréquence Aegis'
+plot_chat_button_lore:
+- '&7Active le chat privé de parcelle'
+- '&7pour les membres de cette claim.'

@@ -4,7 +4,9 @@
 
 AegisGuard 1.3.0 is the current release line. It strengthens release safety and staff recovery while adding the Audit Ledger, Guest Passes, Emergency Lockdown, Realm Profiles and Noticeboards, player guidance, Routes and Checkpoints, and opt-in Alliance Access.
 
-The 2.0 concepts below are future work. They are not part of 1.3.0 and must not alter existing claim ownership, rental, market, progression, or protection behaviour without a dedicated migration and release plan.
+The 2.0 concepts below are future work beyond 1.4.0. They must not alter existing claim ownership, rental, market, progression, or protection behaviour without a dedicated migration and release plan.
+
+AegisGuard **1.4.0** ships the same-server slice of **Aegis Frequency** (`/ag chat`) and **Visual Presence** (entry titles, for-sale labels, and scepter border labels). Cross-server Frequency, true hologram entities, townships, Nexus, and sieges remain here.
 
 
 > *"The Aegis has secured the present, but the future calls for expansion. We gaze now toward the horizon, where realms unite and cities rise from the dust."*

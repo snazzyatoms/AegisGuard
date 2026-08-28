@@ -3,7 +3,7 @@
 
 AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, Purpur, Spigot, and Folia**. It combines reliable claim security with economy features, RPG-style progression, and accessible in-game management tools.
 
-**AegisGuard 1.3.5** is the current public release. Existing `1.2.7` and `1.3.0` data remain valid through automatic schema migration.
+**AegisGuard 1.4.0** is the current source line. Public GitHub Release **1.3.5** remains the last published download until 1.4.0 is cut. Existing `1.2.7`, `1.3.0`, and `1.3.5` data remain valid through automatic schema migration.
 
 | Requirement | Support |
 | :--- | :--- |
@@ -72,6 +72,11 @@ A folder backup of `plugins/AegisGuard/` is recommended. It is not required to k
 
 ---
 
+## What's New in 1.4.0
+
+- **Aegis Frequency** — `/ag chat` toggles private plot-member chat on this server. Chat stays on that plot if you walk away. Guest Passes and alliance-only visitors are not on the channel.
+- **Visual Presence** — entering a plot shows the name and owner as a title; listed plots can show a for-sale price; the scepter shows a cardinal-direction border label on the action bar.
+
 ## What's New in 1.3.5
 
 - **Teleport Beacons** — linked pads on claims you manage; Safe Travel; optional public arrival for visit, market, and auction; configurable fees (`owner_choice`, `always`, or `off`). `/ag home` stays personal plot spawn.
@@ -103,15 +108,16 @@ The 1.2.7 territory platform remains: Ascension Hall, Expansion Horizons, rental
 /ag level                    Open the Ascension Hall
 /ag visit                    Open the Travel Atlas
 /ag beacon                   Manage teleport pads on the claim you are standing in
+/ag chat                     Toggle Aegis Frequency for a plot you belong to
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
-/agadmin transition          Confirm upgrade status from 1.2.7 or 1.3.0
+/agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools
 /agadmin reload              Reload supported settings and languages
 ```
 
-Install only `AegisGuard-1.3.5.jar` in the server's `/plugins` folder. API JARs are for developers and do not belong there.
+Install only `AegisGuard-1.4.0.jar` in the server's `/plugins` folder. API JARs are for developers and do not belong there.
 
 ---
 

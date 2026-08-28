@@ -3982,3 +3982,8 @@ beacon_link_status_linked: '&7Enlazada. Clic para cambiar.'
 beacon_link_status_unlinked: '&cAún no enlazada.'
 beacon_confirm_cancel_lore:
 - '&7Quédate donde estás.'
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bFrecuencia Aegis'
+plot_chat_button_lore:
+- '&7Activa el chat privado de parcela'
+- '&7para miembros de este terreno.'

@@ -108,7 +108,7 @@ class LanguageParityTest {
                 "plot_status_kind_personal", "plot_status_kind_server",
                 "plot_status_access_title", "plot_status_upkeep_click",
                 "plot_status_section_overview_name", "plot_status_section_actions_name",
-                "module_disabled");
+                "module_disabled", "plot_chat_on", "button_plot_chat", "presence_enter_title");
 
         for (String language : LANGUAGES) {
             Map<String, Object> translated = loadLanguage(language);

@@ -44,7 +44,9 @@ public final class Modules {
         ARENA("arena", "arena.enabled", true, "Arena"),
         WILDERNESS_REVERT("wilderness_revert", "wilderness_revert.enabled", false, "Wilderness revert"),
         MOB_BARRIER("mob_barrier", "mob_barrier.enabled", true, "Mob barrier"),
-        TELEPORT_BEACONS("teleport_beacons", "teleport_beacons.enabled", true, "Teleport Beacons");
+        TELEPORT_BEACONS("teleport_beacons", "teleport_beacons.enabled", true, "Teleport Beacons"),
+        PLOT_CHAT("plot_chat", "plot_chat.enabled", true, "Aegis Frequency"),
+        VISUAL_PRESENCE("visual_presence", "visual_presence.enabled", true, "Visual Presence");
 
         private final String key;
         private final String legacyPath;
@@ -111,6 +113,7 @@ public final class Modules {
             case "alliance" -> Id.ALLIANCE_ACCESS;
             case "arena" -> Id.ARENA;
             case "beacon" -> Id.TELEPORT_BEACONS;
+            case "chat", "frequency" -> Id.PLOT_CHAT;
             default -> null;
         };
     }

@@ -3876,3 +3876,8 @@ beacon_link_status_linked: '&7Ligada. Clique para mudar.'
 beacon_link_status_unlinked: '&cAinda não ligada.'
 beacon_confirm_cancel_lore:
 - '&7Permaneça onde está.'
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bFrequência Aegis'
+plot_chat_button_lore:
+- '&7Ative o chat privado do terreno'
+- '&7para membros desta reivindicação.'

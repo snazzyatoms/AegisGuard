@@ -1,13 +1,13 @@
 # Permissions and Commands
 
-This reference lists the main commands and recommended permissions for **AegisGuard** `v1.3.5`.
+This reference lists the main commands and recommended permissions for **AegisGuard** `v1.4.0`.
 
 > **Important notes**
 >
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
 > - **Biome Studio** is not part of the active plugin flow.
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
-> - Many 1.3.5 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, and the first-claim walkthrough.
+> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Aegis Frequency, Visual Presence, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
@@ -30,6 +30,7 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag home` | `aegis.user` | Teleport to a plot home point. |
 | `/ag visit` | `aegis.user` | Open the Travel menu. |
 | `/ag beacon` | `aegis.beacon` | Open the Teleport Beacon manager on a claim you manage. Included in `aegis.user`. |
+| `/ag chat` | `aegis.chat` | Toggle Aegis Frequency plot chat. Included in `aegis.user`. |
 | `/ag stuck` | `aegis.user` | Escape to a safer nearby location. |
 | `/ag rename <name>` | `aegis.user` | Set a custom plot name. |
 | `/ag setdesc <text>` | `aegis.user` | Set a plot description. |
@@ -122,6 +123,7 @@ Linked pads on claims you manage. Travel uses Safe Travel. `/ag home` stays plot
 | Command | Recommended Permission | Description |
 | :--- | :--- | :--- |
 | `/ag beacon` | `aegis.beacon` | Open the pad manager, place pads, link them, and set public-arrival / fee options the server allows. |
+| `/ag chat` | `aegis.chat` | Toggle same-server Frequency for a plot you belong to. `/ag chat off` leaves. `/ag chat <message>` sends one line. |
 
 Visit, market, and auction listings can require a public arrival beacon when that module is on. Fee policy is `teleport_beacons.charges.mode`: `owner_choice`, `always`, or `off`.
 
@@ -244,7 +246,7 @@ High-level commands for administrators, owners, and trusted staff.
 | :--- | :--- | :--- |
 | `/agadmin menu` | `aegis.admin` | Open the administrator control panel. |
 | `/agadmin reload` | `aegis.admin` or `aegis.reload` | Reload configuration and language files. |
-| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7 or 1.3.0 to 1.3.5 upgrade status (aliases `upgrade`, `v130`). |
+| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`, `v140`). |
 | `/agadmin health` | `aegis.admin` | Quick staff health check. |
 | `/agadmin bypass` | `aegis.admin.bypass` | Toggle protection-bypass mode. |
 | `/agadmin wand` | `aegis.admin.wand` | Receive the **Sentinel's Scepter** by default. |
@@ -365,6 +367,7 @@ Useful optional nodes for trusted staff and elevated server roles.
 | Permission | Description |
 | :--- | :--- |
 | `aegis.beacon` | Open `/ag beacon` and manage pads on claims you can manage. Included in `aegis.user`. |
+| `aegis.chat` | Use `/ag chat` Aegis Frequency on claims you belong to. Included in `aegis.user`. |
 | `aegis.notify.bypass` | Receive plot notifications when normal toggles are restricted. |
 | `aegis.notify.others` | Manage notification preferences for other players. |
 | `aegis.claimblocks.gift` | Gift ClaimBlocks (`/ag giftblocks`). Included in `aegis.user`. |

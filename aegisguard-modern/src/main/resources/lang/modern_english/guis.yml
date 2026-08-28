@@ -3875,3 +3875,8 @@ beacon_link_status_linked: '&7Linked. Click to change.'
 beacon_link_status_unlinked: '&cNot linked yet.'
 beacon_confirm_cancel_lore:
 - '&7Stay where you are.'
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bAegis Frequency'
+plot_chat_button_lore:
+- '&7Toggle private plot chat'
+- '&7for members of this claim.'

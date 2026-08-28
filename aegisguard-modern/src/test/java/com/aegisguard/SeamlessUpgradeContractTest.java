@@ -26,7 +26,7 @@ class SeamlessUpgradeContractTest {
                 || admin.contains("handleTransition"));
         assertTrue(admin.contains("isTransitionSubcommand") || admin.contains("equalsIgnoreCase(\"transition\")"));
         assertTrue(admin.contains("admin_transition_already"));
-        assertTrue(admin.contains("Already on 1.3.5; nothing to convert."));
+        assertTrue(admin.contains("Already on 1.4.0; nothing to convert."));
         assertTrue(admin.contains("reloadAegisGuard(true)"));
         assertTrue(admin.contains("configMigration()"));
         int transitionIdx = admin.indexOf("private void handleTransition");
@@ -43,7 +43,7 @@ class SeamlessUpgradeContractTest {
     @Test
     void first1287UpgradeLogsPlotsUnchangedAndDoctorNotRequired() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1294"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1300"));
         assertTrue(migration.contains("Existing plots were left unchanged"));
         assertTrue(migration.contains("Doctor is not required"));
         assertTrue(migration.contains("lastReport()"));

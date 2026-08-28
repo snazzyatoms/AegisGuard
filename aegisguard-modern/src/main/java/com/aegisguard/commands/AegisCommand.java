@@ -45,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "beacon", "discover", "favorite", "activity",
+            "group", "alliance", "arena", "beacon", "chat", "discover", "favorite", "activity",
             "transfer", "settlements",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
@@ -352,6 +352,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 }
                 plugin.gui().beacons().openManager(p);
             }
+
+            case "chat", "frequency" -> handlePlotChat(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -1852,6 +1854,47 @@ private void handleUnsell(Player p) {
         }
     }
 
+    private void handlePlotChat(Player p, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isEnabled()) {
+            sendKey(p, "plot_chat_disabled", "&cPlot Frequency is disabled on this server.");
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("off")) {
+            chat.turnOff(p);
+            sendKey(p, "plot_chat_off", "&eAegis Frequency off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 2) {
+            String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            switch (chat.send(p, message)) {
+                case NEED_MEMBER -> sendKey(p, "plot_chat_need_member",
+                        "&cStand in a plot you belong to before opening Frequency.");
+                case NOT_MEMBER -> sendKey(p, "plot_chat_not_member",
+                        "&cYou are not a member of that plot Frequency.");
+                case EMPTY -> sendKey(p, "plot_chat_empty",
+                        "&cSay something after /ag chat, or toggle with /ag chat.");
+                default -> {
+                }
+            }
+            return;
+        }
+        com.aegisguard.chat.PlotChatService.ToggleResult result = chat.toggle(p);
+        com.aegisguard.data.Plot plot = chat.resolvePlot(p);
+        String label = chat.plotLabel(plot);
+        switch (result) {
+            case ON -> sendKey(p, "plot_chat_on",
+                    "&aAegis Frequency on for &f{PLOT}&a. Your chat stays on this plot.",
+                    Map.of("PLOT", label));
+            case SWITCHED -> sendKey(p, "plot_chat_switched",
+                    "&aFrequency switched to &f{PLOT}&a.",
+                    Map.of("PLOT", label));
+            case OFF -> sendKey(p, "plot_chat_off", "&eAegis Frequency off. Chat is public again.");
+            case NEED_MEMBER -> sendKey(p, "plot_chat_need_member",
+                    "&cStand in a plot you belong to before opening Frequency.");
+        }
+    }
+
     private void handleTransfer(Player player, String[] args) {
         if (args.length < 2) {
             sendKey(player, "transfer_usage", "&eUsage: /ag transfer <player>");
@@ -2462,6 +2505,13 @@ private void handleUnsell(Player p) {
             if (args[0].equalsIgnoreCase("beacon")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("give", "pad", "kit"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("chat") || args[0].equalsIgnoreCase("frequency")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("off"), completions);
                 Collections.sort(completions);
                 return completions;
             }

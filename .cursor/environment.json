@@ -1,0 +1,4 @@
+{
+  "name": "AegisGuard",
+  "install": "sudo apt-get update && sudo apt-get install -y --no-install-recommends maven && mvn --batch-mode -f pom.xml clean verify"
+}

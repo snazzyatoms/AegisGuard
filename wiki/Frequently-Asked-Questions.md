@@ -8,7 +8,7 @@ This FAQ covers common questions about **AegisGuard** `v1.3.5`.
 
 ## Is AegisGuard compatible with Folia?
 
-**Yes.** AegisGuard `v1.3.0` declares Folia support and detects Folia at startup.
+**Yes.** AegisGuard `v1.3.5` declares Folia support and detects Folia at startup.
 
 On Folia, AegisGuard uses compatible global-region, entity-region, and asynchronous scheduling paths where appropriate (including the optional Arena scheduler). On standard servers, it uses the normal Bukkit scheduler path.
 
@@ -18,7 +18,7 @@ AegisGuard is designed for modern Paper-compatible servers and also includes a s
 
 ## Which Minecraft and Java versions are supported?
 
-AegisGuard `v1.3.0` targets the modern Minecraft server ecosystem.
+AegisGuard `v1.3.5` targets the modern Minecraft server ecosystem.
 
 | Requirement | Supported Target |
 | :--- | :--- |
@@ -26,13 +26,13 @@ AegisGuard `v1.3.0` targets the modern Minecraft server ecosystem.
 | Java | **Java `21` or newer** |
 | Server Software | Paper and Folia are recommended; a standard Bukkit or Spigot path is also included. |
 
-Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Servers still on Java 17 must upgrade the JVM before running 1.3.0.
+Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Servers still on Java 17 must upgrade the JVM before running 1.3.5.
 
 ---
 
-## Can I update from 1.2.7 to 1.3.0 without losing claims?
+## Can I update from 1.2.7 or 1.3.0 to 1.3.5 without losing claims?
 
-**Yes.** Existing 1.2.7 claims, configs, and plot data remain valid.
+**Yes.** Existing 1.2.7 and 1.3.0 claims, configs, and plot data remain valid.
 
 Swap the JAR, start the server, and config plus language merge run on enable. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
@@ -40,7 +40,7 @@ Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and 
 
 A copy of `plugins/AegisGuard/` is recommended. It is not required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-New 1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access do not wipe ownership, money, rentals, or permanent roles.
+1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons and the soak fixes below. None of these wipe ownership, money, rentals, or permanent roles.
 
 ---
 
@@ -62,13 +62,62 @@ Third-party hooks (Dynmap, Discord, protection-compat) stay **off** until you en
 
 ## Can players pay with items, experience, or levels instead of money?
 
-AegisGuard `v1.3.0` includes currency types for Vault money, ClaimBlocks, experience, levels, and items. The default configuration routes primary player economy features through Vault and can fall back to ClaimBlocks where supported.
+AegisGuard `v1.3.5` includes currency types for Vault money, ClaimBlocks, experience, levels, and items. The default configuration routes primary player economy features through Vault and can fall back to ClaimBlocks where supported.
 
 The configuration also includes item-cost settings, such as a material and amount. Before enabling an item, experience, or level-based payment flow on a live server, test the configured feature on a staging server to confirm that it is wired into the intended action.
 
 For the standard supported economy flow, use Vault with a compatible economy provider or ClaimBlocks.
 
 Optional Routes rewards may also use Vault money or ClaimBlocks when the server enables them. Those rewards are optional and do not replace the main land economy.
+
+---
+
+## What are Teleport Beacons?
+
+Teleport Beacons are linked pads players place on claims they manage.
+
+```text
+/ag beacon
+```
+
+Stand next to a pad, confirm, and you land only at the paired pad. Visit, market, and auction travel can require a public arrival beacon when the server turns that on. Server owners choose the fee policy in `teleport_beacons.charges`: mixed free and paid pads (`owner_choice`), a server-wide fee (`always`), or no charges (`off`). Optional maintenance fees can pay the plot owner. `/ag home` stays personal plot spawn. Pads survive claim merges and unbind when a plot is deleted.
+
+---
+
+## Why did language messages show `{PLOT}` or `{MIN}`?
+
+Those tokens are language placeholders (sometimes called macros). AegisGuard replaces them with real values such as a plot name or a minimum size.
+
+In `1.3.0`, substitution sometimes ran only on English fallbacks. In `1.3.5`, `{KEY}` replacement also runs on strings loaded from `lang/`. If you still see a leftover token after updating, confirm the language pack was merged on enable and that you are on `AegisGuard-1.3.5.jar`.
+
+---
+
+## Why did ClaimBlocks go negative when expanding?
+
+Older builds counted plot area as **used** land and also **spent** the same area. Expanding then subtracted the land twice.
+
+In `1.3.5`, land is **used** from live plot area. Expansion is refused if the wallet cannot cover the extra blocks. Group claims check the leader's ClaimBlocks. A one-time ledger repair runs only when an old double-count would over-commit the wallet; beacon and exchange spend is left alone.
+
+---
+
+## Why was a small or skinny claim rejected?
+
+`claims.min_radius` is now enforced on **both** width and depth. The default of `5` means at least a 10×10 plot (Chebyshev radius 5 on each axis). A long 64×2 strip does not pass just because one side is long.
+
+Staff with `aegis.admin.bypass-limits` can ignore the limit.
+
+---
+
+## Can Bedrock / Geyser players use the chest GUIs?
+
+**Yes, in 1.3.5**, when Floodgate and/or Geyser-Spigot is installed and `gui.bedrock.detect` is on (the default).
+
+| Client | Main action | Second action | Cancel / delete |
+| :--- | :--- | :--- | :--- |
+| Java | Left-click | Right-click | Shift-right or drop |
+| Bedrock | Left-click | Sneak+left (or swap-offhand) | Drop |
+
+Java clients keep the usual mapping. Horizon Sigils accept left- or right-click in the world. Staff snapshot rollback still uses shift-click as a safety gate.
 
 ---
 
@@ -208,7 +257,7 @@ To enable it:
 3. Configure values such as `revert_after_hours`, `interval_seconds`, and `revert_batch_size` for your server.
 4. Restart the server and check the console for the Wilderness Revert startup message.
 
-> **Important:** AegisGuard `v1.3.0` skips Wilderness Revert startup when the active storage backend is not SQL. Test the feature carefully on a backup or staging server before enabling it in production.
+> **Important:** AegisGuard `v1.3.5` skips Wilderness Revert startup when the active storage backend is not SQL. Test the feature carefully on a backup or staging server before enabling it in production.
 
 ---
 

@@ -1,18 +1,18 @@
 # AegisGuard API
 
-This page documents the public integration API for **AegisGuard** `v1.3.0`.
+This page documents the public integration API for **AegisGuard** `v1.3.5`.
 
 The API is intended for plugin developers who need to read plot data, perform supported economy and ClaimBlock operations, manage selections, check protection state, or listen for plot events.
 
 > **Scope:** This page focuses on runtime integration. Use the public API facade rather than internal managers so integrations remain compatible as AegisGuard evolves.
 
-> **1.3.0 note:** Guest Passes, Alliance Access, Emergency Lockdown, Realm Profiles, Routes, and the Staff Audit Ledger are part of the plugin runtime. For access checks, continue to use `Plot.hasPermission(...)` and the public protection helpers rather than reimplementing those systems. Existing 1.2.7 integrations that already use the public facade remain the supported approach.
+> **1.3.5 note:** Guest Passes, Alliance Access, Emergency Lockdown, Realm Profiles, Routes, Teleport Beacons, and the Staff Audit Ledger are part of the plugin runtime. For access checks, continue to use `Plot.hasPermission(...)` and the public protection helpers rather than reimplementing those systems. Existing 1.2.7 and 1.3.0 integrations that already use the public facade remain the supported approach. Land ClaimBlocks are **used** plot area; `spend()` is for non-land costs. Always prefer `getAvailableBlocks(...)` and `canAfford(...)` over inventing your own ledger math.
 
 ---
 
 ## Adding the API to Your Plugin
 
-Compile against `AegisGuard-1.3.5-api.jar` produced from the `V1.3.5` source branch. Do **not** put the API jar in a Minecraft server's `/plugins` folder. Server owners install only `AegisGuard-1.3.5.jar`. Published artifacts will be attached separately when a GitHub Release is intentionally created.
+Compile against `AegisGuard-1.3.5-api.jar` from the [1.3.5 GitHub Release](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5). Do **not** put the API jar in a Minecraft server's `/plugins` folder. Server owners install only `AegisGuard-1.3.5.jar`.
 
 Build with **Java 21**. Add AegisGuard as a softdepend in `plugin.yml`:
 
@@ -187,7 +187,7 @@ if (plot != null) {
 }
 ```
 
-In `v1.3.0`, `hasPermission(...)` already accounts for:
+In `v1.3.5`, `hasPermission(...)` already accounts for:
 
 - Owner and elevated admin/bypass access
 - Permanent plot roles
@@ -273,6 +273,8 @@ long used = api.claimBlocks().getUsedBlocks(playerId);
 long available = api.claimBlocks().getAvailableBlocks(playerId);
 ```
 
+`getAvailableBlocks` is `total − used − spent`, floored at zero. `used` is live plot area. Do **not** also `spend()` plot area when your plugin creates or expands a claim through AegisGuard's own claim flow — AegisGuard already counts that land as used. Use `spend()` only for extra non-land costs.
+
 ### Spend or Refund ClaimBlocks
 
 ```java
@@ -311,7 +313,7 @@ api.claimBlocks().setPlaytimeEarningEnabled(player.getUniqueId(), false);
 
 Call `invalidateOwnerCache(playerId)` only when an external integration has a valid reason to force a ClaimBlock owner-cache refresh.
 
-Optional route-completion rewards in 1.3.0 may award Vault money or ClaimBlocks through AegisGuard itself. External plugins should not double-pay for the same discovery event unless that is an intentional custom design.
+Optional route-completion rewards in 1.3.5 may award Vault money or ClaimBlocks through AegisGuard itself. External plugins should not double-pay for the same discovery event unless that is an intentional custom design. Teleport Beacon fees are charged by AegisGuard; do not charge a second fee for the same pad travel.
 
 ---
 

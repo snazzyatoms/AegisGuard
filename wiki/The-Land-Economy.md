@@ -1,6 +1,6 @@
 # The Land Economy
 
-In **AegisGuard** `v1.3.0`, land is more than protected space. Depending on server configuration, it can be expanded, maintained, sold, rented, shared, and traded through connected land and economy systems.
+In **AegisGuard** `v1.3.5`, land is more than protected space. Depending on server configuration, it can be expanded, maintained, sold, rented, shared, and traded through connected land and economy systems.
 
 The AegisGuard land economy can include:
 
@@ -13,11 +13,12 @@ The AegisGuard land economy can include:
 - Group treasuries.
 - TradeStalls.
 - Local Market access.
+- Optional Teleport Beacon travel fees and owner payouts.
 - Optional route-completion rewards where enabled.
 
 > **Server configuration:** Economy features, costs, limits, permissions, and currencies are controlled by the server owner. Not every system is enabled on every server. If an economy icon is missing from `/ag menu`, that module is turned off.
 
-> **Upgrade note:** Existing 1.2.7 economy data and configuration remain valid in 1.3.0. New systems such as Guest Passes, Lockdown, Realm Profiles, Routes, and Alliance Access do not take ownership of plots, treasuries, rentals, or market listings.
+> **Upgrade note:** Existing 1.2.7 and 1.3.0 economy data and configuration remain valid in 1.3.5. Teleport Beacons, Guest Passes, Lockdown, Realm Profiles, Routes, and Alliance Access do not take ownership of plots, treasuries, rentals, or market listings.
 
 ---
 
@@ -27,7 +28,7 @@ AegisGuard supports flexible land-economy setups. A server may use one or more o
 
 | Economy Model | Typical Uses |
 | :--- | :--- |
-| **Vault Money** | Claiming, expansion, markets, upkeep, optional route rewards, and other configured land costs. |
+| **Vault Money** | Claiming, expansion, markets, upkeep, optional beacon fees, optional route rewards, and other configured land costs. |
 | **ClaimBlocks** | Land progression, claim costs, exchanges, gifts, TradeStalls, and related systems. |
 | **Group Treasury** | Shared group claims, cooperative growth, and group-funded expenses. |
 | **TradeStalls** | Player storefronts using server money or ClaimBlocks where supported. |
@@ -38,17 +39,19 @@ Use `/ag menu` and the available economy menus to see which systems are active o
 
 ## ClaimBlocks
 
-ClaimBlocks are a core land-progression and trading resource in AegisGuard `v1.3.0`.
+ClaimBlocks are a core land-progression and trading resource in AegisGuard `v1.3.5`.
 
 They may be used for:
 
-- Claiming land.
-- Paying configured land costs.
+- Occupying land (counted as **used** plot area).
+- Paying configured non-land costs (beacon fees, exchange, and similar **spent** amounts).
 - Progressing through server-configured growth systems.
 - Buying and selling through the ClaimBlocks Exchange.
 - Gifting unused blocks to another player.
 - Acting as a TradeStall currency on supported servers.
 - Receiving optional route-completion rewards when the server enables them.
+
+Available ClaimBlocks are `total − used − spent`, never below zero. Expanding a plot is refused if you cannot cover the extra area. Group claims check the **leader's** ClaimBlocks. `claims.min_radius` still applies on both axes, so a tiny or skinny plot cannot be used to farm cheap land.
 
 ### ClaimBlocks Commands
 
@@ -73,7 +76,7 @@ They may be used for:
 
 ## Upkeep and Taxes
 
-Servers can enable **upkeep** to help keep land active and reduce abandoned claims. Upkeep ships **on** in the 1.3.0 module switchboard; owners can still turn it off.
+Servers can enable **upkeep** to help keep land active and reduce abandoned claims. Upkeep ships **on** in the module switchboard; owners can still turn it off.
 
 ### How Upkeep Works
 
@@ -315,9 +318,23 @@ Rewards are configured by staff and are never required to browse or discover rou
 
 ---
 
+## Teleport Beacon fees
+
+Teleport Beacons can charge Vault money when the server allows it. `teleport_beacons.charges.mode` is:
+
+| Mode | Meaning |
+| :--- | :--- |
+| `owner_choice` | Pads may be free or paid. |
+| `always` | A server-wide fee applies. |
+| `off` | No beacon travel charges. |
+
+Optional maintenance fees can pay the plot owner. Beacon spend is **not** plot area; it does not double-count against ClaimBlocks used for land.
+
+---
+
 ## Final Thoughts
 
-In AegisGuard `v1.3.0`, land is not something you claim once and forget.
+In AegisGuard `v1.3.5`, land is not something you claim once and forget.
 
 Land can become:
 
@@ -328,6 +345,7 @@ Land can become:
 - A hotel.
 - A TradeStall economy.
 - A public destination with a Realm Profile.
+- A Teleport Beacon hub for Safe Travel.
 - A long-term progression path.
 
 That is the foundation of the AegisGuard land economy.

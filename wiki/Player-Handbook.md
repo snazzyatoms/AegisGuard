@@ -24,6 +24,7 @@ Optional first steps after claiming:
 - Open **Settings** to choose a language and tune greetings, notifications, and sounds.
 - Use **Realm Profile** to set your plot's public name, category, greeting, and noticeboard.
 - Use **Guest Passes** for short-term helpers without permanent trust.
+- Place **Teleport Beacons** with `/ag beacon` if you want linked pads on the plot.
 - Replay the first-claim walkthrough any time with `/ag guide`.
 
 ---
@@ -37,6 +38,8 @@ Optional first steps after claiming:
 3. **Left-click** the opposite corner.
 4. Run `/ag claim` to confirm the selection.
 
+The server may reject a selection that is too small. Default `claims.min_radius` of `5` means both sides of the plot must be at least 10 blocks. Skinny strips do not count.
+
 > The **Aegis Scepter** is used exclusively to select land. It is not intended to be placed as a block.
 
 Depending on server configuration, new players may receive a scepter automatically. The scepter may also be consumed when a claim is successfully created.
@@ -48,6 +51,8 @@ If your server enables the first-claim walkthrough, AegisGuard may offer a short
 ## Managing Your Claim
 
 Run `/ag menu` while inside your claim to open the AegisGuard management menu. The framed dashboard stays the same on every server; optional icons only appear when that module is on.
+
+**Java vs Bedrock clicks:** Java uses left-click for the main action and right-click for the second action. If you play Bedrock through Geyser, use left-click for the main action and sneak+left for the second action. Drop cancels or deletes where that is the safety action.
 
 ### Claim Settings
 
@@ -250,6 +255,7 @@ AegisGuard includes built-in navigation tools so you can move between your claim
 | `/ag setspawn` | Set your claim's default teleport point. |
 | `/ag home` | Teleport directly to your claim home. |
 | `/ag visit <player or claim>` | Visit public plots or trusted player claims. |
+| `/ag beacon` | Manage teleport pads on the claim you are standing in. |
 
 The **Travel Menu** may provide access to:
 
@@ -270,6 +276,16 @@ If your server publishes exploration routes, open **Routes** from `/ag menu` to:
 - Earn optional completion rewards when configured.
 
 Routes are discovery-focused. They do not change claim boundaries, and optional teleports are only available if the server enables them.
+
+### Teleport Beacons
+
+Teleport Beacons are linked pads on a claim you manage.
+
+```text
+/ag beacon
+```
+
+Place two pads, link them, then stand next to a pad and confirm. You land only at the paired pad. Some servers require a public arrival beacon before visit, market, or auction travel can complete. Pads may be free or paid depending on `teleport_beacons.charges`. `/ag home` is still your personal plot spawn, not a beacon.
 
 ---
 
@@ -303,7 +319,7 @@ Depending on server configuration, TradeStalls may support:
 
 ### ClaimBlocks
 
-ClaimBlocks can be used for land expansion, claim upgrades, and economic trading.
+ClaimBlocks pay for land you occupy. Your **used** amount is the live area of your plots. Extra land on expand is refused if you cannot cover it, so the wallet does not go negative.
 
 | Command | Action |
 | :--- | :--- |
@@ -376,7 +392,7 @@ The guide contains step-by-step information for AegisGuard systems, including:
 - Subplots and zones.
 - Group claims.
 - Territory progression.
-- Travel and navigation.
+- Travel and Teleport Beacons.
 - Economy and ClaimBlocks.
 - Markets and TradeStalls.
 - Security and moderation.

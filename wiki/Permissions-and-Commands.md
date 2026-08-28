@@ -7,7 +7,7 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
 > - **Biome Studio** is not part of the active plugin flow.
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
-> - Many 1.3.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, and the first-claim walkthrough.
+> - Many 1.3.5 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
@@ -29,6 +29,7 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag setspawn` | `aegis.user` | Set a plot home point. |
 | `/ag home` | `aegis.user` | Teleport to a plot home point. |
 | `/ag visit` | `aegis.user` | Open the Travel menu. |
+| `/ag beacon` | `aegis.beacon` | Open the Teleport Beacon manager on a claim you manage. Included in `aegis.user`. |
 | `/ag stuck` | `aegis.user` | Escape to a safer nearby location. |
 | `/ag rename <name>` | `aegis.user` | Set a custom plot name. |
 | `/ag setdesc <text>` | `aegis.user` | Set a plot description. |
@@ -41,7 +42,7 @@ Basic commands for claiming, travel, and personal plot management.
 
 ## Realm Profile and Noticeboard
 
-Public plot identity tools introduced and expanded in 1.3.0.
+Public plot identity tools. Noticeboard posts restore with claim-data snapshots in 1.3.5.
 
 | Command | Recommended Permission | Description |
 | :--- | :--- | :--- |
@@ -113,6 +114,16 @@ Players browse staff-authored routes from **Routes** in `/ag menu`.
 | Route Editor | `aegis.admin.routes` | Create and edit routes and checkpoints from the Admin GUI. |
 
 Routes do not change claim boundaries. Optional teleports and rewards are server-configured and default safely.
+
+### Teleport Beacons
+
+Linked pads on claims you manage. Travel uses Safe Travel. `/ag home` stays plot spawn.
+
+| Command | Recommended Permission | Description |
+| :--- | :--- | :--- |
+| `/ag beacon` | `aegis.beacon` | Open the pad manager, place pads, link them, and set public-arrival / fee options the server allows. |
+
+Visit, market, and auction listings can require a public arrival beacon when that module is on. Fee policy is `teleport_beacons.charges.mode`: `owner_choice`, `always`, or `off`.
 
 ---
 
@@ -233,7 +244,7 @@ High-level commands for administrators, owners, and trusted staff.
 | :--- | :--- | :--- |
 | `/agadmin menu` | `aegis.admin` | Open the administrator control panel. |
 | `/agadmin reload` | `aegis.admin` or `aegis.reload` | Reload configuration and language files. |
-| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7 to 1.3.0 upgrade status (aliases `upgrade`, `v130`). |
+| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7 or 1.3.0 to 1.3.5 upgrade status (aliases `upgrade`, `v130`). |
 | `/agadmin health` | `aegis.admin` | Quick staff health check. |
 | `/agadmin bypass` | `aegis.admin.bypass` | Toggle protection-bypass mode. |
 | `/agadmin wand` | `aegis.admin.wand` | Receive the **Sentinel's Scepter** by default. |
@@ -243,12 +254,14 @@ High-level commands for administrators, owners, and trusted staff.
 | `/agadmin convert` | `aegis.convert` | Convert a supported plot into a server-controlled zone. |
 | `/agadmin doctor` | `aegis.admin` | Optional diagnostics report. Not required after a 1.2.7 JAR swap. |
 | `/agadmin snapshot here [reason]` | `aegis.admin` | Create a manual recovery snapshot for the current plot. |
-| `/agadmin restore here` | `aegis.admin` | Restore the latest snapshot for the current plot. |
+| `/agadmin restore here` | `aegis.admin` | Preview or restore a snapshot for the current plot. |
+| `/agadmin restore here confirm [scope]` | `aegis.admin` | Confirm a restore after preview. |
+| `/agadmin restore operation <id> retry\|release` | `aegis.admin` | Retry or release a paused restore transaction. |
 | `/agadmin audit` | `aegis.admin.audit` | Open the Staff Audit Ledger. |
 
-Snapshots store **claim data** (owner, bounds, flags, members). They do not copy world blocks.
+Snapshots always store **claim data** (owner, bounds, flags, members, guest passes, lockdown, alliance access, noticeboard, and 1.3.5 plot maps). Optional WorldEdit/FAWE **build** copies require `snapshots.build_backup.enabled`.
 
-### Admin GUI Tools in 1.3.0
+### Admin GUI Tools in 1.3.5
 
 From `/agadmin menu`, trusted staff may also access:
 
@@ -351,6 +364,7 @@ Useful optional nodes for trusted staff and elevated server roles.
 
 | Permission | Description |
 | :--- | :--- |
+| `aegis.beacon` | Open `/ag beacon` and manage pads on claims you can manage. Included in `aegis.user`. |
 | `aegis.notify.bypass` | Receive plot notifications when normal toggles are restricted. |
 | `aegis.notify.others` | Manage notification preferences for other players. |
 | `aegis.claimblocks.gift` | Gift ClaimBlocks (`/ag giftblocks`). Included in `aegis.user`. |
@@ -436,6 +450,7 @@ For a full owner or development-test setup:
 - `aegis.admin.wand`
 - `aegis.admin.routes`
 - `aegis.admin.audit`
+- `aegis.beacon`
 
 ---
 

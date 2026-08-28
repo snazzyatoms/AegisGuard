@@ -14,7 +14,7 @@ Confirm that the server meets these requirements before installing.
 | Server Software | Paper, Purpur, Pufferfish, or Folia (Spigot-compatible forks supported) |
 | Minecraft | `1.20`+ through current supported releases |
 
-> **Note:** Minecraft versions `1.8` through `1.12` are not supported because of legacy API limitations. Servers still on Java 17 must upgrade the JVM before running 1.3.0.
+> **Note:** Minecraft versions `1.8` through `1.12` are not supported because of legacy API limitations. Servers still on Java 17 must upgrade the JVM before running 1.3.5.
 
 ---
 
@@ -25,7 +25,7 @@ Confirm that the server meets these requirements before installing.
 Download the latest stable AegisGuard **1.3.5** release from an official source:
 
 - [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5) — Recommended
-- [SpigotMC](#)
+- SpigotMC — paste your resource URL here when the 1.3.5 listing is live
 
 Use the main plugin jar from the release assets: `AegisGuard-1.3.5.jar`. Do **not** install `AegisGuard-1.3.5-api.jar` or `AegisGuard-1.3.5-dev-api.jar` as the server plugin. Those are compile-time files for developers.
 
@@ -53,10 +53,12 @@ AegisGuard works without dependencies. Install the following plugins to enable a
 
 | Plugin | Enables |
 | :--- | :--- |
-| [Vault](https://www.spigotmc.org/resources/vault.34315/) | Economy features, upkeep, marketplace support, and optional route rewards. Requires a compatible economy provider. |
+| [Vault](https://www.spigotmc.org/resources/vault.34315/) | Economy features, upkeep, marketplace support, optional beacon fees, and optional route rewards. Requires a compatible economy provider. |
 | [Dynmap](https://www.spigotmc.org/resources/dynmap.274/) | Live claim rendering on the server map. |
 | [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | AegisGuard placeholders for chat, scoreboards, and other integrations. |
 | [LuckPerms](https://luckperms.net/) | Permission and group management. |
+| WorldEdit or FastAsyncWorldEdit | Optional staff plot-build backups (`snapshots.build_backup`, default **off**). Folia requires FAWE by default. |
+| Floodgate and/or Geyser-Spigot | Optional. When present, AegisGuard detects Bedrock clients so chest GUIs use left-click and sneak-left (`gui.bedrock.detect`, default on). |
 
 ---
 
@@ -81,9 +83,11 @@ After updating, verify:
 - `/agadmin transition` reports that you are on the current schema
 - `/ag menu` opens normally
 - Existing claims still protect correctly
-- Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access)
+- Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)
 - Modules you turned off in `modules:` do not appear on the player menu
 - Plot-build backups stay **off** until you set `snapshots.build_backup.enabled` and install WorldEdit or FAWE
+- `/ag beacon` opens the pad manager on a plot you can manage
+- Translated menus show real names and numbers instead of leftover `{KEY}` tokens
 
 ---
 
@@ -103,7 +107,6 @@ After updating, verify:
 
 - [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5)
 - [GitHub Issues](https://github.com/snazzyatoms/AegisGuard/issues)
-- [SpigotMC](#)
-- [Support Discord](#)
+- [Support Discord](https://discord.gg/nHwdhKzeKR)
 
 > *Simple. Steadfast. Eternal.*

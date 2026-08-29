@@ -49,6 +49,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
+            "staffchat", "sc",
             "help"
     };
 
@@ -124,6 +125,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "activity" -> handleAdminActivity(player);
             case "audit" -> handleAudit(player);
             case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
+            case "staffchat", "sc" -> handleStaffChat(player, args);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -215,6 +217,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (args[0].equalsIgnoreCase("discover") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("feature", "unfeature", "show", "hide"), new ArrayList<>());
         }
+        if ((args[0].equalsIgnoreCase("staffchat") || args[0].equalsIgnoreCase("sc")) && args.length == 2) {
+            return StringUtil.copyPartialMatches(args[1], List.of("off"), new ArrayList<>());
+        }
 
         return Collections.emptyList();
     }
@@ -231,6 +236,48 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             );
         }
         plugin.effects().playConfirm(player);
+    }
+
+    private void handleStaffChat(Player player, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isStaffEnabled()) {
+            sendLocalized(player, "staff_chat_disabled", "&cStaff chat is disabled on this server.");
+            return;
+        }
+        if (!player.hasPermission("aegis.admin.staffchat") && !plugin.isAdmin(player)) {
+            sendLocalized(player, "staff_chat_denied", "&cYou do not have permission to use staff chat.");
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("off")) {
+            chat.turnOffStaff(player);
+            sendLocalized(player, "staff_chat_off", "&eStaff chat off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 2) {
+            String message = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).trim();
+            switch (chat.sendStaff(player, message)) {
+                case DENIED -> sendLocalized(player, "staff_chat_denied",
+                        "&cYou do not have permission to use staff chat.");
+                case EMPTY -> sendLocalized(player, "staff_chat_empty",
+                        "&cSay something after /ag staff, or toggle with /ag staff.");
+                case DISABLED -> sendLocalized(player, "staff_chat_disabled",
+                        "&cStaff chat is disabled on this server.");
+                default -> {
+                }
+            }
+            return;
+        }
+        switch (chat.toggleStaff(player)) {
+            case ON -> sendLocalized(player, "staff_chat_on",
+                    "&aStaff chat on. Public chat stays with online staff.");
+            case OFF -> sendLocalized(player, "staff_chat_off", "&eStaff chat off. Chat is public again.");
+            case DENIED -> sendLocalized(player, "staff_chat_denied",
+                    "&cYou do not have permission to use staff chat.");
+            case DISABLED -> sendLocalized(player, "staff_chat_disabled",
+                    "&cStaff chat is disabled on this server.");
+            default -> {
+            }
+        }
     }
 
     private void handleBypass(Player player) {
@@ -795,6 +842,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 "&e/agadmin transition &8- 1.2.7 / 1.3.x → 1.4.0 upgrade status");
         sendLocalized(player, "admin_help_season", "&e/agadmin season &8- Staff season featured plots and routes");
         sendLocalized(player, "admin_help_skill", "&e/agadmin skill fly <player> [seconds] &8- Temporary flight skill");
+        sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 

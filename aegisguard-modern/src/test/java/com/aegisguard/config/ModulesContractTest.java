@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModulesContractTest {
@@ -22,7 +23,7 @@ class ModulesContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1309, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertTrue(modules.containsKey("guest_passes"));
         assertTrue(modules.containsKey("expansions"));
@@ -94,8 +95,10 @@ class ModulesContractTest {
         assertEquals(Modules.Id.TRAVEL, Modules.commandModule("home"));
         assertEquals(Modules.Id.ARENA, Modules.commandModule("arena"));
         assertEquals(Modules.Id.TELEPORT_BEACONS, Modules.commandModule("beacon"));
-        assertEquals(Modules.Id.PLOT_CHAT, Modules.commandModule("chat"));
-        assertEquals(Modules.Id.PLOT_CHAT, Modules.commandModule("frequency"));
+        assertNull(Modules.commandModule("chat"));
+        assertNull(Modules.commandModule("frequency"));
+        assertNull(Modules.commandModule("staff"));
+        assertNull(Modules.commandModule("staffchat"));
         assertEquals(Modules.Id.SUCCESSION, Modules.commandModule("transfer"));
         assertEquals(Modules.Id.SUCCESSION, Modules.commandModule("heir"));
         assertEquals(Modules.Id.CARAVANS, Modules.commandModule("caravan"));

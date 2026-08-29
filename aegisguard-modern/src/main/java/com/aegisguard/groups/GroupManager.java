@@ -75,6 +75,7 @@ public class GroupManager {
                             sec.getLong("starter-claim.claimed-at", 0L),
                             sec.getLong("starter-claim.removal-lock-until", 0L)
                     );
+                    group.setChatTitle(sec.getString("chat-title"));
 
                     ConfigurationSection membersSec = sec.getConfigurationSection("members");
                     if (membersSec != null) {
@@ -150,6 +151,9 @@ public class GroupManager {
             for (PlotGroup group : groupsById.values()) {
                 String path = "groups." + group.getId();
                 data.set(path + ".name", group.getName());
+                if (group.getChatTitle() != null && !group.getChatTitle().isBlank()) {
+                    data.set(path + ".chat-title", group.getChatTitle());
+                }
                 data.set(path + ".leader", group.getLeader().toString());
                 data.set(path + ".created-at", group.getCreatedAt());
                 data.set(path + ".treasury-balance", group.getTreasuryBalance());
@@ -187,6 +191,11 @@ public class GroupManager {
 
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
+    }
+
+    public void saveAsync() {
+        dirty = true;
+        plugin.runGlobalAsync(this::save);
     }
 
     public PlotGroup getGroup(UUID groupId) {
@@ -372,6 +381,25 @@ public class GroupManager {
         if (area <= 0) return 0.0D;
         double perBlock = Math.max(0.0D, plugin.getConfig().getDouble("group_plots.economy.cost_per_block", 1.0D));
         return area * perBlock;
+    }
+
+    public void setChatTitle(PlotGroup group, String title) {
+        if (group == null) return;
+        group.setChatTitle(title);
+        dirty = true;
+        saveAsync();
+    }
+
+    public String setChatTitle(UUID leaderId, String title) {
+        PlotGroup group = getGroupForPlayer(leaderId);
+        if (group == null) return "group_chat_not_member";
+        if (leaderId == null || !leaderId.equals(group.getLeader())) return "group_chat_rename_denied";
+        String cleaned = com.aegisguard.chat.PlotChatService.sanitizeTitle(title);
+        if (cleaned.isBlank()) return "group_chat_rename_usage";
+        group.setChatTitle(cleaned);
+        dirty = true;
+        saveAsync();
+        return null;
     }
 
     public String normalizeName(String input) {

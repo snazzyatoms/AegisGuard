@@ -10,6 +10,7 @@ public class PlotGroup {
 
     private final UUID id;
     private String name;
+    private String chatTitle;
     private UUID leader;
     private final Map<UUID, Long> members = new ConcurrentHashMap<>();
     private final Map<UUID, Long> pendingInvites = new ConcurrentHashMap<>();
@@ -48,6 +49,14 @@ public class PlotGroup {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getChatTitle() {
+        return chatTitle;
+    }
+
+    public void setChatTitle(String chatTitle) {
+        this.chatTitle = (chatTitle == null || chatTitle.isBlank()) ? null : chatTitle.trim();
     }
 
     public UUID getLeader() {

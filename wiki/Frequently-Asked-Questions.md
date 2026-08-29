@@ -34,7 +34,7 @@ Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Se
 
 **Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1309`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1310`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
@@ -199,9 +199,19 @@ Turn on **Hearth** in Claim Settings → Safety (player plots and server plots).
 
 That is how a closed house and an arena safe-zone stay quiet. We do not scan doors, trapdoors, or windows — those break on slabs, glass, and Folia. Mark the room with the wand, then close Hearth.
 
-Staff with `aegis.admin.hearth` still hear every room and are not muffled when they speak. Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
+Staff with `aegis.admin.hearth` still hear every room and are not muffled when they speak. Opt-in Aegis radios still exist beside Hearth: plot Frequency (`/ag chat`), alliance radio (`/ag chat alliance`), and staff chat (`/ag staff`). Tuning one of those pulls you off public chat, so Hearth never sees that message. Hearth starts **off**.
 
-Vanilla Minecraft has **no voice chat**. Hearth and Frequency scope the built-in `T` text chat. If the Simple Voice Chat plugin (`voicechat`) is installed, Hearth rooms also become isolated voice groups. AegisGuard does not ship a microphone client.
+Vanilla Minecraft has **no voice chat**. Hearth and the Aegis radios scope the built-in `T` text chat. If the Simple Voice Chat plugin (`voicechat`) is installed, Hearth rooms also become isolated voice groups. AegisGuard does not ship a microphone client.
+
+---
+
+## Can an alliance talk without using public chat?
+
+**Yes. Use `/ag chat alliance`.**
+
+That is an opt-in Aegis radio, separate from plot Frequency and from Hearth. Every online alliance member hears the send. The leader can name the radio with `/ag chat alliance name <title>`. `/ag chat off` returns you to public chat (then Hearth, if it is on). Permission `aegis.chat.alliance` is included in `aegis.user`. Servers with another chat plugin can set `alliance_chat.enabled: false`.
+
+Staff use `/ag staff` (or `/agadmin staffchat`) with `aegis.admin.staffchat`. Bedrock players use the same commands.
 
 ---
 

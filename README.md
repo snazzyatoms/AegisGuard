@@ -50,7 +50,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Flight.** Plot flight unlocks at Ascension / Horizon **level 30** for owner and trusted on that plot. Staff can fly when `flight_skill.staff_always` is on (`aegis.admin.fly`). Temporary grants use `/agadmin skill fly <player> [seconds]` and `/agadmin skill clear <player>`.
 
-**Hearth rooms (vanilla text chat).** Owners and server-plot stewards can turn on **Hearth** in Safety. Public *text* chat stays in the 3D subplot you are standing in (or the rest of the plot). Houses, pits, and lobbies stay quiet without door scanning. Staff with `aegis.admin.hearth` still hear every room. Aegis Frequency (`/ag chat`) remains the opt-in plot-member radio.
+**Hearth rooms (vanilla text chat).** Owners and server-plot stewards can turn on **Hearth** in Safety. Public *text* chat stays in the 3D subplot you are standing in (or the rest of the plot). Houses, pits, and lobbies stay quiet without door scanning. Staff with `aegis.admin.hearth` still hear every room. Opt-in Aegis radios: plot Frequency (`/ag chat`), alliance radio (`/ag chat alliance`), group chat (`/ag chat group`), and staff chat (`/ag staff`). Tuning one channel pulls you off public chat. Servers with another chat plugin can ignore these channels.
 
 **Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat).
 
@@ -58,7 +58,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 
-Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1309` and migration auto-merges the new keys with a timestamped backup.
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1310` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
 
@@ -159,7 +159,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, Hearth text-chat rooms, and an optional Simple Voice Chat hook for those rooms |
+| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, alliance radio, group chat, staff chat, Hearth text-chat rooms, and an optional Simple Voice Chat hook for those rooms |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -174,7 +174,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI, the public AegisGuard API, and an optional Simple Voice Chat hook for Hearth rooms |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1309`) |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1310`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -209,6 +209,9 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag zone                     Manage sub-zones and rentals
 /ag subplot [name]           Mark a 3D room inside a claim (Hearth uses these)
 /ag chat                     Toggle Aegis Frequency (plot-member text radio)
+/ag chat alliance            Toggle alliance radio (leader may /ag chat alliance name)
+/ag chat group               Toggle group chat (leader may /ag chat group name)
+/ag staff                    Toggle staff chat (aliases /ag staffchat)
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
@@ -216,6 +219,7 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /agadmin claim               Create a server-owned protected zone
 /agadmin season              Staff season featured Atlas plots and Routes
 /agadmin skill fly <player>  Grant a temporary flight skill
+/agadmin staffchat           Toggle staff radio (alias /agadmin sc)
 /agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools
 /agadmin health              Quick staff health check

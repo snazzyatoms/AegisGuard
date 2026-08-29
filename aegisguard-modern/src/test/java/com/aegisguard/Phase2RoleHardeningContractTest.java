@@ -24,7 +24,7 @@ class Phase2RoleHardeningContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1309, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> snapshots = (Map<String, Object>) config.get("snapshots");
         Map<String, Object> restore = (Map<String, Object>) snapshots.get("restore");
         assertEquals(Boolean.TRUE, restore.get("protect_roles"));
@@ -32,7 +32,8 @@ class Phase2RoleHardeningContractTest {
         assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
-                || migration.contains("CURRENT_SCHEMA = 1309"));
+                || migration.contains("CURRENT_SCHEMA = 1310")
+                || migration.contains("CURRENT_SCHEMA = 1310"));
     }
 
     @Test

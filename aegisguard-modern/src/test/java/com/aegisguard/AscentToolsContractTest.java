@@ -26,7 +26,7 @@ class AscentToolsContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1309, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.FALSE, protections.get("keep_xp"));
         assertEquals(Boolean.FALSE, protections.get("keep_inventory"));
@@ -39,7 +39,7 @@ class AscentToolsContractTest {
         assertEquals(Boolean.TRUE, seasons.get("enabled"));
         assertEquals(5, ((Number) seasons.get("max_featured_plots")).intValue());
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1309"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1310"));
     }
 
     @Test

@@ -45,7 +45,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "beacon", "caravan", "chat", "discover", "favorite", "activity",
+            "group", "alliance", "arena", "beacon", "caravan", "chat", "frequency", "staff", "staffchat",
+            "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
@@ -219,7 +220,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        com.aegisguard.config.Modules.Id gated = com.aegisguard.config.Modules.commandModule(args[0]);
+        String head = args[0].toLowerCase(Locale.ROOT);
+        boolean chatFamily = head.equals("chat") || head.equals("frequency");
+        com.aegisguard.config.Modules.Id gated = chatFamily
+                ? null : com.aegisguard.config.Modules.commandModule(args[0]);
         if (gated != null && !plugin.modules().on(gated)) {
             sendKey(p, "module_disabled", "&c{MODULE} is disabled on this server.",
                     Map.of("MODULE", gated.displayName()));
@@ -372,6 +376,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             // ✅ NEW: /aegis notify - Manage player notifications (v1.2.6 enhanced)
             case "notify" -> handleNotify(p, args);
+
+            case "chat", "frequency" -> handlePlotChat(p, args);
+
+            case "staff", "staffchat" -> handleStaffChat(p, args);
 
             case "help" -> sendHelp(p);
 
@@ -2028,18 +2036,54 @@ private void handleUnsell(Player p) {
             if (!caravanMentioned) {
                 sendMsg(sender, "&e/ag caravan &7- dispatch and track trade caravans");
             }
+            boolean chatMentioned = false;
+            for (String line : helpLines) {
+                if (line != null && line.toLowerCase(Locale.ROOT).contains("/ag chat")) {
+                    chatMentioned = true;
+                    break;
+                }
+            }
+            if (!chatMentioned) {
+                sendMsg(sender, "&e/ag chat &7- plot Frequency; &e/ag chat alliance|group &7- member radios");
+                sendMsg(sender, "&e/ag staff &7- staff chat (Bedrock-friendly)");
+            }
         }
     }
 
     private void handlePlotChat(Player p, String[] args) {
         com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
-        if (chat == null || !chat.isEnabled()) {
+        if (chat == null) {
             sendKey(p, "plot_chat_disabled", "&cPlot Frequency is disabled on this server.");
             return;
         }
         if (args.length >= 2 && args[1].equalsIgnoreCase("off")) {
+            com.aegisguard.chat.PlotChatService.Channel was = chat.activeChannel(p.getUniqueId());
             chat.turnOff(p);
-            sendKey(p, "plot_chat_off", "&eAegis Frequency off. Chat is public again.");
+            if (was == com.aegisguard.chat.PlotChatService.Channel.ALLIANCE) {
+                sendKey(p, "alliance_chat_off", "&eAlliance radio off. Chat is public again.");
+            } else if (was == com.aegisguard.chat.PlotChatService.Channel.GROUP) {
+                sendKey(p, "group_chat_off", "&eGroup chat off. Chat is public again.");
+            } else if (was == com.aegisguard.chat.PlotChatService.Channel.STAFF) {
+                sendKey(p, "staff_chat_off", "&eStaff chat off. Chat is public again.");
+            } else {
+                sendKey(p, "plot_chat_off", "&eAegis Frequency off. Chat is public again.");
+            }
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("alliance")) {
+            handleAllianceChat(p, args);
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("group")) {
+            handleGroupChat(p, args);
+            return;
+        }
+        if (!p.hasPermission("aegis.chat")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (!chat.isEnabled()) {
+            sendKey(p, "plot_chat_disabled", "&cPlot Frequency is disabled on this server.");
             return;
         }
         if (args.length >= 2) {
@@ -2069,6 +2113,204 @@ private void handleUnsell(Player p) {
             case OFF -> sendKey(p, "plot_chat_off", "&eAegis Frequency off. Chat is public again.");
             case NEED_MEMBER -> sendKey(p, "plot_chat_need_member",
                     "&cStand in a plot you belong to before opening Frequency.");
+            default -> {
+            }
+        }
+    }
+
+    private void handleAllianceChat(Player p, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isAllianceEnabled()) {
+            sendKey(p, "alliance_chat_disabled", "&cAlliance radio is disabled on this server.");
+            return;
+        }
+        if (!p.hasPermission("aegis.chat.alliance")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (args.length >= 3 && (args[2].equalsIgnoreCase("name") || args[2].equalsIgnoreCase("rename"))) {
+            if (args.length < 4) {
+                sendKey(p, "alliance_chat_rename_usage",
+                        "&eUsage: /ag chat alliance name <title>");
+                return;
+            }
+            if (plugin.alliances() == null) {
+                sendKey(p, "alliance_chat_not_member", "&cYou are not in an alliance.");
+                return;
+            }
+            String title = String.join(" ", Arrays.copyOfRange(args, 3, args.length)).trim();
+            String error = plugin.alliances().setChatTitle(p.getUniqueId(), title);
+            if (error == null) {
+                com.aegisguard.alliance.Alliance alliance = plugin.alliances().getByPlayer(p.getUniqueId());
+                String label = alliance == null ? title : alliance.getChatTitle();
+                sendKey(p, "alliance_chat_renamed",
+                        "&aAlliance radio is now called &f{ALLIANCE}&a.",
+                        Map.of("ALLIANCE", label));
+                return;
+            }
+            if ("alliance_chat_rename_denied".equals(error)) {
+                sendKey(p, "alliance_chat_rename_denied",
+                        "&cOnly the alliance leader can name the radio.");
+            } else if ("alliance_chat_rename_usage".equals(error)) {
+                sendKey(p, "alliance_chat_rename_usage",
+                        "&eUsage: /ag chat alliance name <title>");
+            } else {
+                sendKey(p, "alliance_chat_not_member", "&cYou are not in an alliance.");
+            }
+            return;
+        }
+        if (args.length >= 3 && args[2].equalsIgnoreCase("off")) {
+            chat.turnOffAlliance(p);
+            sendKey(p, "alliance_chat_off", "&eAlliance radio off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 3) {
+            String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            switch (chat.sendAlliance(p, message)) {
+                case NEED_MEMBER, NOT_MEMBER -> sendKey(p, "alliance_chat_not_member",
+                        "&cYou are not in an alliance.");
+                case EMPTY -> sendKey(p, "alliance_chat_empty",
+                        "&cSay something after /ag chat alliance, or toggle with /ag chat alliance.");
+                case DISABLED -> sendKey(p, "alliance_chat_disabled",
+                        "&cAlliance radio is disabled on this server.");
+                default -> {
+                }
+            }
+            return;
+        }
+        com.aegisguard.alliance.Alliance alliance = plugin.alliances() == null
+                ? null : plugin.alliances().getByPlayer(p.getUniqueId());
+        String label = alliance == null ? "Alliance" : alliance.getChatTitle();
+        switch (chat.toggleAlliance(p)) {
+            case ON -> sendKey(p, "alliance_chat_on",
+                    "&aAlliance radio on for &f{ALLIANCE}&a. Public chat stays with your alliance.",
+                    Map.of("ALLIANCE", label));
+            case OFF -> sendKey(p, "alliance_chat_off", "&eAlliance radio off. Chat is public again.");
+            case NEED_MEMBER -> sendKey(p, "alliance_chat_need",
+                    "&cJoin an alliance before opening alliance radio.");
+            case DISABLED -> sendKey(p, "alliance_chat_disabled",
+                    "&cAlliance radio is disabled on this server.");
+            default -> {
+            }
+        }
+    }
+
+    private void handleGroupChat(Player p, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isGroupEnabled()) {
+            sendKey(p, "group_chat_disabled", "&cGroup chat is disabled on this server.");
+            return;
+        }
+        if (!p.hasPermission("aegis.chat.group")) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (args.length >= 3 && (args[2].equalsIgnoreCase("name") || args[2].equalsIgnoreCase("rename"))) {
+            if (args.length < 4) {
+                sendKey(p, "group_chat_rename_usage",
+                        "&eUsage: /ag chat group name <title>");
+                return;
+            }
+            if (plugin.groups() == null) {
+                sendKey(p, "group_chat_not_member", "&cYou are not in a group.");
+                return;
+            }
+            String title = String.join(" ", Arrays.copyOfRange(args, 3, args.length)).trim();
+            String error = plugin.groups().setChatTitle(p.getUniqueId(), title);
+            if (error == null) {
+                com.aegisguard.groups.PlotGroup group = plugin.groups().getGroupForPlayer(p.getUniqueId());
+                String label = group == null ? title : chat.groupLabel(group);
+                sendKey(p, "group_chat_renamed",
+                        "&aGroup chat title is now &f{GROUP}&a.",
+                        Map.of("GROUP", label));
+                return;
+            }
+            if ("group_chat_rename_denied".equals(error)) {
+                sendKey(p, "group_chat_rename_denied",
+                        "&cOnly the group leader can rename group chat.");
+            } else if ("group_chat_rename_usage".equals(error)) {
+                sendKey(p, "group_chat_rename_usage",
+                        "&eUsage: /ag chat group name <title>");
+            } else {
+                sendKey(p, "group_chat_not_member", "&cYou are not in a group.");
+            }
+            return;
+        }
+        if (args.length >= 3 && args[2].equalsIgnoreCase("off")) {
+            chat.turnOffGroup(p);
+            sendKey(p, "group_chat_off", "&eGroup chat off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 3) {
+            String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            switch (chat.sendGroup(p, message)) {
+                case NEED_MEMBER, NOT_MEMBER -> sendKey(p, "group_chat_not_member",
+                        "&cYou are not a member of that group.");
+                case EMPTY -> sendKey(p, "group_chat_empty",
+                        "&cSay something after /ag chat group, or toggle with /ag chat group.");
+                case DISABLED -> sendKey(p, "group_chat_disabled",
+                        "&cGroup chat is disabled on this server.");
+                default -> {
+                }
+            }
+            return;
+        }
+        com.aegisguard.groups.PlotGroup group = plugin.groups() == null
+                ? null : plugin.groups().getGroupForPlayer(p.getUniqueId());
+        String label = group == null ? "Group" : chat.groupLabel(group);
+        switch (chat.toggleGroup(p)) {
+            case ON -> sendKey(p, "group_chat_on",
+                    "&aGroup chat on for &f{GROUP}&a. Your chat stays with your group.",
+                    Map.of("GROUP", label));
+            case OFF -> sendKey(p, "group_chat_off", "&eGroup chat off. Chat is public again.");
+            case NEED_MEMBER -> sendKey(p, "group_chat_need",
+                    "&cJoin a group before opening group chat.");
+            case DISABLED -> sendKey(p, "group_chat_disabled",
+                    "&cGroup chat is disabled on this server.");
+            default -> {
+            }
+        }
+    }
+
+    private void handleStaffChat(Player p, String[] args) {
+        com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+        if (chat == null || !chat.isStaffEnabled()) {
+            sendKey(p, "staff_chat_disabled", "&cStaff chat is disabled on this server.");
+            return;
+        }
+        if (!chat.canHearStaff(p)) {
+            sendKey(p, "staff_chat_denied", "&cYou do not have permission to use staff chat.");
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("off")) {
+            chat.turnOffStaff(p);
+            sendKey(p, "staff_chat_off", "&eStaff chat off. Chat is public again.");
+            return;
+        }
+        if (args.length >= 2) {
+            String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            switch (chat.sendStaff(p, message)) {
+                case DENIED -> sendKey(p, "staff_chat_denied",
+                        "&cYou do not have permission to use staff chat.");
+                case EMPTY -> sendKey(p, "staff_chat_empty",
+                        "&cSay something after /ag staff, or toggle with /ag staff.");
+                case DISABLED -> sendKey(p, "staff_chat_disabled",
+                        "&cStaff chat is disabled on this server.");
+                default -> {
+                }
+            }
+            return;
+        }
+        switch (chat.toggleStaff(p)) {
+            case ON -> sendKey(p, "staff_chat_on",
+                    "&aStaff chat on. Public chat stays with online staff.");
+            case OFF -> sendKey(p, "staff_chat_off", "&eStaff chat off. Chat is public again.");
+            case DENIED -> sendKey(p, "staff_chat_denied",
+                    "&cYou do not have permission to use staff chat.");
+            case DISABLED -> sendKey(p, "staff_chat_disabled",
+                    "&cStaff chat is disabled on this server.");
+            default -> {
+            }
         }
     }
 
@@ -2767,6 +3009,11 @@ private void handleUnsell(Player p) {
             List<String> completions = new ArrayList<>();
             List<String> visible = new ArrayList<>();
             for (String sub : SUB_COMMANDS) {
+                if (("staff".equals(sub) || "staffchat".equals(sub))
+                        && (plugin.plotChat() == null || !plugin.plotChat().canHearStaff(
+                        sender instanceof Player player ? player : null))) {
+                    continue;
+                }
                 com.aegisguard.config.Modules.Id gated = com.aegisguard.config.Modules.commandModule(sub);
                 if (gated != null && !plugin.modules().on(gated)) continue;
                 visible.add(sub);
@@ -2815,6 +3062,12 @@ private void handleUnsell(Player p) {
             }
 
             if (args[0].equalsIgnoreCase("chat") || args[0].equalsIgnoreCase("frequency")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("off", "alliance", "group"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+            if (args[0].equalsIgnoreCase("staff") || args[0].equalsIgnoreCase("staffchat")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("off"), completions);
                 Collections.sort(completions);
@@ -2882,6 +3135,13 @@ private void handleUnsell(Player p) {
         }
 
         if (args.length == 3) {
+            if ((args[0].equalsIgnoreCase("chat") || args[0].equalsIgnoreCase("frequency"))
+                    && (args[1].equalsIgnoreCase("alliance") || args[1].equalsIgnoreCase("group"))) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[2], List.of("off", "name", "rename"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
             if (args[0].equalsIgnoreCase("rental") && args[1].equalsIgnoreCase("cancel")) {
                 return StringUtil.copyPartialMatches(args[2], List.of("confirm"), new ArrayList<>());
             }

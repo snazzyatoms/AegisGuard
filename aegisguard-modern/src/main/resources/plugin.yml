@@ -103,6 +103,7 @@ permissions:
       aegis.admin.skill: true
       aegis.admin.fly: true
       aegis.admin.hearth: true
+      aegis.admin.staffchat: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -123,6 +124,8 @@ permissions:
       aegis.arena.spectate: true
       aegis.beacon: true
       aegis.chat: true
+      aegis.chat.alliance: true
+      aegis.chat.group: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -154,6 +157,7 @@ permissions:
       aegis.admin.skill: true
       aegis.admin.fly: true
       aegis.admin.hearth: true
+      aegis.admin.staffchat: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -352,6 +356,19 @@ permissions:
   aegis.chat:
     description: Use Aegis Frequency plot chat (/ag chat) on claims you belong to.
     default: true
+
+  aegis.chat.alliance:
+    description: Use alliance chat (/ag chat alliance) with your alliance members.
+    default: true
+
+  aegis.chat.group:
+    description: Use group chat (/ag chat group) with your group members.
+    default: true
+
+  aegis.admin.staffchat:
+    description: Use staff chat (/ag staff, /agadmin staffchat).
+    default: op
+
 
   # ---------------------------------------------------------------------------
   # ClaimBlocks gift and exchange permissions

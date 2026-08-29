@@ -19,12 +19,12 @@ public final class PlotChatListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent event) {
         PlotChatService chat = plugin.plotChat();
-        if (chat == null || !chat.isEnabled()) return;
+        if (chat == null) return;
         Player player = event.getPlayer();
         if (!chat.interceptPublicChat(player)) return;
         event.setCancelled(true);
         String message = event.getMessage();
-        plugin.runMain(player, () -> chat.send(player, message));
+        plugin.runMain(player, () -> chat.sendActive(player, message));
     }
 
     @EventHandler

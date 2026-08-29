@@ -182,6 +182,18 @@ public class AllianceManager {
         return null;
     }
 
+    public String setChatTitle(UUID leaderId, String title) {
+        Alliance alliance = getByPlayer(leaderId);
+        if (alliance == null) return "alliance_chat_not_member";
+        if (!alliance.isLeader(leaderId)) return "alliance_chat_rename_denied";
+        String cleaned = Alliance.sanitizeChatTitle(title);
+        if (cleaned.isBlank()) return "alliance_chat_rename_usage";
+        alliance.setChatTitle(cleaned);
+        dirty = true;
+        saveAsync();
+        return null;
+    }
+
     public String disband(UUID leaderId) {
         Alliance alliance = getByPlayer(leaderId);
         if (alliance == null) return "alliance_not_member";
@@ -219,6 +231,7 @@ public class AllianceManager {
                     UUID leader = UUID.fromString(sec.getString("leader"));
                     Alliance alliance = new Alliance(id, sec.getString("name", "Alliance"),
                             leader, sec.getLong("created-at", System.currentTimeMillis()));
+                    alliance.setChatTitle(sec.getString("chat-title", ""));
 
                     ConfigurationSection members = sec.getConfigurationSection("members");
                     if (members != null) {
@@ -290,6 +303,9 @@ public class AllianceManager {
                 out.set(base + ".name", alliance.getName());
                 out.set(base + ".leader", alliance.getLeaderId().toString());
                 out.set(base + ".created-at", alliance.getCreatedAt());
+                if (alliance.hasCustomChatTitle()) {
+                    out.set(base + ".chat-title", alliance.rawChatTitle());
+                }
                 for (Map.Entry<UUID, Long> entry : alliance.getMembers().entrySet()) {
                     out.set(base + ".members." + entry.getKey(), entry.getValue());
                 }
@@ -310,5 +326,12 @@ public class AllianceManager {
     public void saveAsync() {
         dirty = true;
         plugin.runGlobalAsync(this::save);
+    }
+
+    public void setChatTitle(Alliance alliance, String title) {
+        if (alliance == null) return;
+        alliance.setChatTitle(title);
+        dirty = true;
+        saveAsync();
     }
 }

@@ -7,7 +7,7 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
 > - **Biome Studio** is not part of the active plugin flow.
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
-> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Travel Atlas, Aegis Frequency, Visual Presence, Quick-Claim, Stewardship, Caravans, and the first-claim walkthrough.
+> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Travel Atlas, Aegis Frequency, alliance radio, staff chat, Visual Presence, Quick-Claim, Stewardship, Caravans, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
@@ -42,6 +42,10 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag farewell <message>` | `aegis.user` | Set a plot farewell message. Leave the message blank to clear it. |
 | `/ag guide` | `aegis.user` | Open or replay the first-claim walkthrough. |
 | `/ag profile` | `aegis.user` | Open Realm Profile for the current plot. |
+| `/ag chat` | `aegis.chat` | Toggle plot Frequency (opt-in plot-member radio). `/ag chat off` turns off any Aegis channel. |
+| `/ag chat alliance` | `aegis.chat.alliance` | Toggle alliance radio. `/ag chat alliance name <title>` lets the leader name it. |
+| `/ag chat group` | `aegis.chat.group` | Toggle group radio. `/ag chat group name <title>` lets the leader name it. |
+| `/ag staff` | `aegis.admin.staffchat` | Toggle staff chat. Aliases `/ag staffchat`. Bedrock uses the same command. |
 
 ---
 
@@ -138,7 +142,7 @@ Each plot manager chooses how their **public listings** (Visit, market jump, and
 - **classic** — Safe Travel to the plot spawn, even when pads exist (1.3.0 style).
 - **beacon** — visitors must land on a public arrival pad; if none exists the trip fails closed (`beacon_no_public_arrival`) instead of falling back to spawn.
 
-Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1309` on upgrade, with a backup.
+Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1310` on upgrade, with a backup.
 
 ---
 
@@ -175,6 +179,7 @@ Alliances share optional plot permissions. Membership alone grants nothing, and 
 | `/ag alliance disband` | `aegis.user` | Disband the alliance (leader only). |
 | `/ag alliance menu` | `aegis.user` | Open Alliance Access for the current context. |
 | `/ag alliance status` | `aegis.user` | View alliance name, members, and leader. |
+| `/ag chat alliance` | `aegis.chat.alliance` | Toggle the alliance radio. Online members hear sends. Leader may `/ag chat alliance name <title>`. |
 
 Plot owners/managers join a plot to an alliance and enable only the toggles they want:
 
@@ -261,6 +266,7 @@ High-level commands for administrators, owners, and trusted staff.
 | `/agadmin reload` | `aegis.admin` or `aegis.reload` | Reload configuration and language files. |
 | `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`). |
 | `/agadmin health` | `aegis.admin` | Quick staff health check. |
+| `/agadmin staffchat` | `aegis.admin.staffchat` | Toggle staff radio. Alias `/agadmin sc`. Same as `/ag staff`. |
 | `/agadmin bypass` | `aegis.admin.bypass` | Toggle protection-bypass mode. |
 | `/agadmin wand` | `aegis.admin.wand` | Receive the **Sentinel's Scepter** by default. |
 | `/agadmin wand server` | `aegis.admin.wand` | Explicitly receive the Sentinel's Scepter for server-zone claiming. |
@@ -383,6 +389,9 @@ Useful optional nodes for trusted staff and elevated server roles.
 | :--- | :--- |
 | `aegis.beacon` | Open `/ag beacon` and manage pads on claims you can manage. Included in `aegis.user`. |
 | `aegis.chat` | Use `/ag chat` Aegis Frequency on claims you belong to. Included in `aegis.user`. |
+| `aegis.chat.alliance` | Use `/ag chat alliance` alliance radio. Included in `aegis.user`. |
+| `aegis.chat.group` | Use `/ag chat group` group radio. Included in `aegis.user`. |
+| `aegis.admin.staffchat` | Use `/ag staff` and `/agadmin staffchat`. Included in `aegis.admin`. |
 | `aegis.notify.bypass` | Receive plot notifications when normal toggles are restricted. |
 | `aegis.notify.others` | Manage notification preferences for other players. |
 | `aegis.claimblocks.gift` | Gift ClaimBlocks (`/ag giftblocks`). Included in `aegis.user`. |

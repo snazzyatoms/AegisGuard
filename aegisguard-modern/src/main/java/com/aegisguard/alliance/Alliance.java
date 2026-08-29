@@ -14,8 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class Alliance {
 
+    public static final int MAX_CHAT_TITLE = 32;
+
     private final UUID id;
     private String name;
+    private String chatTitle;
     private UUID leaderId;
     private final long createdAt;
     private final Map<UUID, Long> members = new ConcurrentHashMap<>();
@@ -38,6 +41,34 @@ public final class Alliance {
     public void setName(String name) {
         this.name = (name == null || name.isBlank()) ? this.name : name.trim();
     }
+
+    /** Radio title shown in alliance chat. Falls back to the alliance name. */
+    public String getChatTitle() {
+        return (chatTitle == null || chatTitle.isBlank()) ? name : chatTitle;
+    }
+
+    public String rawChatTitle() {
+        return chatTitle;
+    }
+
+    public boolean hasCustomChatTitle() {
+        return chatTitle != null && !chatTitle.isBlank();
+    }
+
+    public void setChatTitle(String title) {
+        String cleaned = sanitizeChatTitle(title);
+        this.chatTitle = cleaned.isBlank() ? null : cleaned;
+    }
+
+    public static String sanitizeChatTitle(String title) {
+        if (title == null) return "";
+        String stripped = title.replaceAll("(?i)[&§][0-9A-FK-ORX]", "").trim();
+        if (stripped.length() > MAX_CHAT_TITLE) {
+            stripped = stripped.substring(0, MAX_CHAT_TITLE).trim();
+        }
+        return stripped;
+    }
+
     public UUID getLeaderId() { return leaderId; }
     public long getCreatedAt() { return createdAt; }
 

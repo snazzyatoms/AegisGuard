@@ -4,7 +4,7 @@
 
 AegisGuard `1.4.0` builds on the public `1.3.5` release. It finishes the Travel Atlas, adds Quick-Claim and restore-safe roles, ships Guardian Succession, introduces Caravans & Trade Routes, and lets staff opt a server/spawn plot into Keep Health / Keep Hunger sanctuary.
 
-Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1309`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
+Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1310`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
 
@@ -49,7 +49,18 @@ After a successful claim, the main preset chooser opens (Home / Shop / Arena / F
 
 ### Hearth rooms
 
-Plot owners and server-plot stewards can turn on **Hearth** in Claim Settings → Safety. Public chat then stays in the room you are standing in. A room is a 3D subplot (`/ag subplot`) — the house, the pit, the lobby — or the rest of that plot if you are not in a subplot. People outside cannot hear inside, and the room cannot hear the street. That is how a closed house and an arena safe-zone stay quiet without scanning doors. Staff with `aegis.admin.hearth` still hear every text room and are not muffled when they speak. If Simple Voice Chat is installed, the same rooms become isolated voice groups. The voice hook is Folia-safe (SVC threads hop to the global/entity scheduler; room changes are coalesced; reload resyncs groups). Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
+Plot owners and server-plot stewards can turn on **Hearth** in Claim Settings → Safety. Public chat then stays in the room you are standing in. A room is a 3D subplot (`/ag subplot`) — the house, the pit, the lobby — or the rest of that plot if you are not in a subplot. People outside cannot hear inside, and the room cannot hear the street. That is how a closed house and an arena safe-zone stay quiet without scanning doors. Staff with `aegis.admin.hearth` still hear every text room and are not muffled when they speak. If Simple Voice Chat is installed, the same rooms become isolated voice groups. The voice hook is Folia-safe (SVC threads hop to the global/entity scheduler; room changes are coalesced; reload resyncs groups). Opt-in Aegis radios sit beside Hearth: plot Frequency (`/ag chat`), alliance radio (`/ag chat alliance`), group chat (`/ag chat group`), and staff chat (`/ag staff` / `/agadmin staffchat`). Tuning one channel pulls you off public chat. Hearth starts **off**.
+
+### Alliance, group, and staff chat
+
+Vanilla multiplayer is still text-only (`T`). These Aegis channels are opt-in radios, separate from global/public chat. A server with its own chat plugin can leave them unused (`alliance_chat.enabled` / `group_chat.enabled` / `staff_chat.enabled`).
+
+- **Plot Frequency** (`/ag chat`, permission `aegis.chat`) stays the plot-member radio. `/ag chat off` turns off any tuned channel.
+- **Alliance radio** (`/ag chat alliance`, permission `aegis.chat.alliance`) reaches every online alliance member. The leader can name it with `/ag chat alliance name <title>` (max 32 characters, stored as `chat-title`).
+- **Group chat** (`/ag chat group`, permission `aegis.chat.group`) reaches every online group member. The leader can name it with `/ag chat group name <title>` (max 32 characters, stored as `chat-title` on the group).
+- **Staff chat** (`/ag staff`, `/ag staffchat`, `/agadmin staffchat`) reaches online players with `aegis.admin.staffchat` or `aegis.admin`. Bedrock uses the same commands (Floodgate/Geyser); there is no extra client.
+
+Only one opt-in channel is active at a time. Public chat that is not intercepted still goes through Hearth rooms.
 
 Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the voice-hook console lines are real language keys in all nine packs. Java English is only used when a key is missing everywhere. Copy `lang/modern_english/` to add your own pack; `lang/overrides.yml` wins over every style. Language sync never overwrites a translation you already wrote.
 
@@ -60,7 +71,7 @@ Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the voi
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1309`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1310`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
 

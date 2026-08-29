@@ -27,13 +27,19 @@ class PlotChatContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1309, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("plot_chat"));
         assertEquals(Boolean.TRUE, modules.get("visual_presence"));
         Map<String, Object> chat = (Map<String, Object>) config.get("plot_chat");
         assertEquals(Boolean.TRUE, chat.get("enabled"));
         assertEquals(256, ((Number) chat.get("max_message_length")).intValue());
+        Map<String, Object> allianceChat = (Map<String, Object>) config.get("alliance_chat");
+        assertEquals(Boolean.TRUE, allianceChat.get("enabled"));
+        Map<String, Object> groupChat = (Map<String, Object>) config.get("group_chat");
+        assertEquals(Boolean.TRUE, groupChat.get("enabled"));
+        Map<String, Object> staffChat = (Map<String, Object>) config.get("staff_chat");
+        assertEquals(Boolean.TRUE, staffChat.get("enabled"));
         Map<String, Object> presence = (Map<String, Object>) config.get("visual_presence");
         assertEquals(Boolean.TRUE, presence.get("holographic_entry"));
         assertEquals(Boolean.TRUE, presence.get("smart_borders"));
@@ -61,10 +67,25 @@ class PlotChatContractTest {
         assertTrue(plugin.contains("PlotChatListener"));
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("handlePlotChat"));
-        assertTrue(command.contains("\"chat\""));
+        assertTrue(command.contains("case \"chat\", \"frequency\""));
+        assertTrue(command.contains("handleAllianceChat"));
+        assertTrue(command.contains("handleGroupChat"));
+        assertTrue(command.contains("handleStaffChat"));
+        assertTrue(command.contains("aegis.chat.group"));
+        String service = Files.readString(JAVA.resolve("chat/PlotChatService.java"));
+        assertTrue(service.contains("enum Channel"));
+        assertTrue(service.contains("ALLIANCE"));
+        assertTrue(service.contains("GROUP"));
+        assertTrue(service.contains("STAFF"));
+        String admin = Files.readString(JAVA.resolve("admin/AdminCommand.java"));
+        assertTrue(admin.contains("staffchat"));
+        String perms = Files.readString(Path.of("src/main/resources/plugin.yml"));
+        assertTrue(perms.contains("aegis.chat.alliance"));
+        assertTrue(perms.contains("aegis.chat.group"));
+        assertTrue(perms.contains("aegis.admin.staffchat"));
         String modules = Files.readString(JAVA.resolve("config/Modules.java"));
         assertTrue(modules.contains("PLOT_CHAT"));
-        assertTrue(modules.contains("case \"chat\", \"frequency\""));
+        assertFalse(modules.contains("case \"chat\", \"frequency\" -> Id.PLOT_CHAT"));
         String gui = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
         assertTrue(gui.contains("showPlotChat"));
         assertTrue(gui.contains("button_plot_chat"));

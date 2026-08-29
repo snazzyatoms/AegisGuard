@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1309
+config_schema: 1310
 
 
 # ------------------------------------------------------------------------------
@@ -1270,6 +1270,19 @@ teleport_beacons:
 plot_chat:
   enabled: true
   max_message_length: 256
+
+# Same-server alliance member radio. Reuses plot_chat.max_message_length.
+alliance_chat:
+  enabled: true
+
+# Same-server group member radio. Reuses plot_chat.max_message_length.
+group_chat:
+  enabled: true
+
+# Same-server staff radio. Reuses plot_chat.max_message_length.
+staff_chat:
+  enabled: true
+
 
 
 # ==============================================================================

@@ -76,11 +76,11 @@ Use this process when updating AegisGuard:
 
 A copy of `plugins/AegisGuard/` (and world data) is recommended. It is **not** required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1309`, auto-merging new keys with a backup when migration runs.
+> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1310`, auto-merging new keys with a backup when migration runs.
 
 After updating, verify:
 
-- `/agadmin transition` reports that you are on the current schema (`1309`)
+- `/agadmin transition` reports that you are on the current schema (`1310`)
 - `/ag menu` opens normally
 - Existing claims still protect correctly (and remain on classic arrival)
 - Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)

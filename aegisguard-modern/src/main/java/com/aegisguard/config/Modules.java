@@ -115,7 +115,6 @@ public final class Modules {
             case "alliance" -> Id.ALLIANCE_ACCESS;
             case "arena" -> Id.ARENA;
             case "beacon" -> Id.TELEPORT_BEACONS;
-            case "chat", "frequency" -> Id.PLOT_CHAT;
             case "transfer", "heir", "succession" -> Id.SUCCESSION;
             case "caravan", "caravans" -> Id.CARAVANS;
             default -> null;

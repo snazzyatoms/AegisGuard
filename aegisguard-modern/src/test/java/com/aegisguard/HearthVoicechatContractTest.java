@@ -28,12 +28,12 @@ class HearthVoicechatContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1309, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> hearth = (Map<String, Object>) config.get("hearth");
         assertEquals(Boolean.TRUE, hearth.get("voicechat"));
         assertEquals(Boolean.FALSE, hearth.get("voicechat_override_player_groups"));
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1309"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1310"));
     }
 
     @Test

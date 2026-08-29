@@ -23,8 +23,7 @@ public final class SanctuaryExhaustionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSanctuaryExhaustion(EntityExhaustionEvent e) {
-        Player player = e.getEntity();
-        if (player == null) return;
+        if (!(e.getEntity() instanceof Player player)) return;
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (!plugin.protection().keepsHunger(plot)) return;
         e.setCancelled(true);

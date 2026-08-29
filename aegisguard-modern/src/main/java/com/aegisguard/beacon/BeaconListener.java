@@ -52,12 +52,8 @@ public final class BeaconListener implements Listener {
         if (service.recentlyTraveled(player)) return;
         TeleportBeacon origin = service.nearest(to);
         if (origin == null || !origin.isLinked()) return;
-        if (!service.canDepart(player, origin)) return;
-        // Soft, throttled sparkle while the player lingers in range, before the confirm opens.
-        service.sparkleForArrival(player, origin);
-        // Never open a second confirm on top of one the player already has open.
-        if (hasBeaconConfirmOpen(player)) return;
         if (!service.shouldPrompt(player)) return;
+        if (!service.canDepart(player, origin)) return;
         service.openPadConfirm(player, origin);
     }
 
@@ -67,14 +63,6 @@ public final class BeaconListener implements Listener {
             return type != InventoryType.CRAFTING && type != InventoryType.CREATIVE;
         } catch (Throwable ignored) {
             return true;
-        }
-    }
-
-    private boolean hasBeaconConfirmOpen(Player player) {
-        try {
-            return player.getOpenInventory().getTopInventory().getHolder() instanceof BeaconGUI.ConfirmHolder;
-        } catch (Throwable ignored) {
-            return false;
         }
     }
 
@@ -97,14 +85,6 @@ public final class BeaconListener implements Listener {
             if (existing == null) {
                 if (service.store().forPlot(plot.getPlotId()).size() >= service.maxFor(plot)) {
                     service.send(player, "beacon_at_cap", "&cThis plot already has the maximum number of beacons.");
-                    if (plugin.effects() != null) plugin.effects().playError(player);
-                    return;
-                }
-                if (service.onCreateCooldown(player)) {
-                    service.send(player, "beacon_create_cooldown",
-                            "&eYou are binding beacons too quickly. Try again in &f{SECONDS}&e second(s).",
-                            java.util.Map.of("SECONDS",
-                                    String.valueOf(service.createCooldownRemainingSeconds(player))));
                     if (plugin.effects() != null) plugin.effects().playError(player);
                     return;
                 }

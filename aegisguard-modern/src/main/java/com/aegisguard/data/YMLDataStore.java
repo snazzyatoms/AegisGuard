@@ -210,8 +210,6 @@ public class YMLDataStore implements IDataStore {
                         plot.deserializeAllianceAccess(allianceBlob);
                     }
 
-                    plot.setArrivalMode(Plot.ArrivalMode.parse(sec.getString("arrival-mode")));
-
                     if (sec.getBoolean("lockdown-active", false)) {
                         String actorStr = sec.getString("lockdown-activated-by", null);
                         UUID actorId = null;
@@ -542,9 +540,6 @@ public class YMLDataStore implements IDataStore {
 
         String allianceBlob = plot.serializeAllianceAccess();
         sec.set("alliance-access", allianceBlob.isEmpty() ? null : allianceBlob);
-
-        sec.set("arrival-mode", plot.getArrivalMode() == Plot.ArrivalMode.CLASSIC
-                ? null : plot.getArrivalMode().name());
 
         if (plot.isLockdownFlagSet()) {
             sec.set("lockdown-active", true);

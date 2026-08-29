@@ -23,7 +23,7 @@ import java.util.UUID;
 
 /** Versioned snapshot payload for Plot fields that pre-1.3.5 snapshots did not capture. */
 final class PlotSnapshotState {
-    static final int SCHEMA = 2;
+    static final int SCHEMA = 1;
 
     private PlotSnapshotState() { }
 
@@ -38,7 +38,6 @@ final class PlotSnapshotState {
         yaml.set("settings.warp_name", plot.getWarpName());
         yaml.set("settings.warp_icon", plot.getWarpIcon() == null ? null : plot.getWarpIcon().name());
         yaml.set("settings.warp_category", plot.getWarpCategory());
-        yaml.set("settings.arrival_mode", plot.getArrivalMode().name());
 
         yaml.set("economy.for_sale", plot.isForSale());
         yaml.set("economy.sale_price", plot.getSalePrice());
@@ -150,7 +149,6 @@ final class PlotSnapshotState {
         Material icon = material(yaml.getString("settings.warp_icon"));
         plot.setServerWarp(plot.isServerWarp(), yaml.getString("settings.warp_name"), icon);
         plot.setWarpCategory(yaml.getString("settings.warp_category"));
-        plot.setArrivalMode(Plot.ArrivalMode.parse(yaml.getString("settings.arrival_mode")));
     }
 
     private static void restoreEconomy(Plot plot, YamlConfiguration yaml) {

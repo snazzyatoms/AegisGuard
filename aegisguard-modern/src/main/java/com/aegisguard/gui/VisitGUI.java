@@ -680,12 +680,7 @@ public class VisitGUI {
             case WARPS -> com.aegisguard.beacon.TeleportBeacon.Purpose.SPAWN;
             default -> com.aegisguard.beacon.TeleportBeacon.Purpose.SPAWN;
         };
-        // 1.4 per-plot arrival choice: only route through beacons when this plot's owner
-        // chose beacon arrival (or the server forces it). Classic plots Safe Travel to the
-        // plot spawn even if pads exist. Beacon plots fail closed if no public pad exists.
-        if (plugin.beacons() != null && plugin.beacons().isEnabled()
-                && plugin.beacons().requiresBeaconArrival(plot)
-                && plugin.beacons().handlePublicListingTravel(player, plot, purpose)) {
+        if (plugin.beacons() != null && plugin.beacons().handlePublicListingTravel(player, plot, purpose)) {
             return;
         }
 

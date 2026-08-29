@@ -30,8 +30,6 @@ public final class BeaconService {
     private final Map<UUID, Long> lastUseAt = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> pendingRename = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastPadGiveAt = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> lastCreateAt = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> lastSparkleAt = new ConcurrentHashMap<>();
     private final Set<UUID> tripLocks = ConcurrentHashMap.newKeySet();
 
     public BeaconService(AegisGuard plugin) {
@@ -176,9 +174,6 @@ public final class BeaconService {
 
     public TeleportBeacon create(Player player, Plot plot, Block block) {
         if (player == null || plot == null || block == null) return null;
-        // One beacon per block: if a pad is already bound here, never insert a second UUID.
-        TeleportBeacon existing = getAt(block.getLocation());
-        if (existing != null) return existing;
         if (store.forPlot(plot.getPlotId()).size() >= maxFor(plot)) return null;
         TeleportBeacon beacon = new TeleportBeacon(UUID.randomUUID());
         beacon.setPlotId(plot.getPlotId());
@@ -188,7 +183,6 @@ public final class BeaconService {
         beacon.setName(player.getName() + " Beacon");
         beacon.applyPreset(TeleportBeacon.Preset.PRIVATE);
         store.put(beacon);
-        lastCreateAt.put(player.getUniqueId(), System.currentTimeMillis());
         return beacon;
     }
 
@@ -196,7 +190,6 @@ public final class BeaconService {
         if (origin == null || destId == null || destId.equals(origin.getId())) return false;
         TeleportBeacon dest = store.get(destId);
         if (dest == null || !dest.isEnabled()) return false;
-        // One directed link A->B: updates linked_id on A only; never clones A or B.
         origin.setLinkedBeaconId(destId);
         store.put(origin);
         return true;
@@ -308,90 +301,13 @@ public final class BeaconService {
         return publicPads.get(0);
     }
 
-    /**
-     * How long a player must linger before a stand-to-travel confirm re-opens.
-     * 1.4 default is 7s (was a hard-coded 2.5s), configurable per server so a quick
-     * walk-over no longer pops the menu. Owners can raise it.
-     */
-    public long promptCooldownMillis() {
-        int seconds = plugin.getConfig().getInt("teleport_beacons.prompt_cooldown_seconds", 7);
-        if (seconds <= 0) seconds = 7;
-        return seconds * 1000L;
-    }
-
     public boolean shouldPrompt(Player player) {
         if (player == null) return false;
         long now = System.currentTimeMillis();
         Long last = lastPromptAt.get(player.getUniqueId());
-        if (last != null && now - last < promptCooldownMillis()) return false;
+        if (last != null && now - last < 2500L) return false;
         lastPromptAt.put(player.getUniqueId(), now);
         return true;
-    }
-
-    // --------------------------------------------------
-    // Create rate limit (1.4): one wizard at a time
-    // --------------------------------------------------
-
-    public int createCooldownSeconds() {
-        return Math.max(0, plugin.getConfig().getInt("teleport_beacons.create_cooldown_seconds", 8));
-    }
-
-    public boolean onCreateCooldown(Player player) {
-        if (player == null) return false;
-        return createCooldownRemainingSeconds(player) > 0L;
-    }
-
-    public long createCooldownRemainingSeconds(Player player) {
-        if (player == null) return 0L;
-        int cd = createCooldownSeconds();
-        if (cd <= 0) return 0L;
-        Long last = lastCreateAt.get(player.getUniqueId());
-        if (last == null) return 0L;
-        long wait = (cd * 1000L) - (System.currentTimeMillis() - last);
-        return wait > 0 ? Math.max(1L, wait / 1000L) : 0L;
-    }
-
-    // --------------------------------------------------
-    // Travel Atlas arrival choice (1.4)
-    // --------------------------------------------------
-
-    /**
-     * Whether this plot's public listings must land visitors on a public arrival pad.
-     * True when the server forces public arrival network-wide, or the owner chose
-     * beacon arrival for this plot. Existing plots default to classic (false).
-     */
-    public boolean requiresBeaconArrival(Plot plot) {
-        if (plot == null) return false;
-        if (plugin.getConfig().getBoolean("teleport_beacons.force_public_arrival", false)) return true;
-        return plot.requiresBeaconArrival();
-    }
-
-    /**
-     * Inbound link rules for the create/link wizard. A pad owner picks a destination from:
-     *   - pads they manage (their own),
-     *   - public pads,
-     *   - alliance pads when the destination plot allows alliance entry,
-     *   - friend/trusted pads only when the destination pad opts in to member/trusted use.
-     * Never links A->A and never links into a stranger's private pad.
-     */
-    public boolean canLinkTo(Player player, TeleportBeacon origin, TeleportBeacon dest) {
-        if (player == null || origin == null || dest == null) return false;
-        if (dest.getId().equals(origin.getId())) return false; // never A->A
-        if (!dest.isEnabled()) return false;
-        if (plugin.isAdmin(player)) return true;
-        if (canManage(player, dest)) return true; // your own pad
-        Plot destPlot = plugin.store().getPlotById(dest.getPlotId());
-        if (destPlot == null) return false;
-        if (destPlot.isBanned(player.getUniqueId())) return false;
-        if (dest.isStaffOnly()) return false;
-        if (dest.isPublicAccess()) return true; // openly listed public pad
-        if (dest.isAlliance() && destPlot.allowsAllianceEntry(player.getUniqueId(), plugin)) return true;
-        // friend / trusted: only if the destination pad allows inbound member/trusted use
-        if ((dest.isMembers() || dest.isTrusted())
-                && (hasMemberRole(destPlot, player.getUniqueId()) || destPlot.isTrusted(player))) {
-            return true;
-        }
-        return false; // never link into a stranger private pad
     }
 
     public boolean hasPendingRename(Player player) {
@@ -598,56 +514,6 @@ public final class BeaconService {
         if (player == null) return;
         tripLocks.remove(player.getUniqueId());
         handleRenameChat(player, "cancel");
-    }
-
-    /**
-     * Soft, throttled end-rod sparkle on a linked pad the player may use, shown while they
-     * linger inside the stand radius before the confirm opens. Folia-safe (region scheduler),
-     * no chat spam. Stops naturally once they confirm or walk away (the listener stops calling).
-     */
-    public void sparkleForArrival(Player player, TeleportBeacon pad) {
-        if (player == null || pad == null) return;
-        long now = System.currentTimeMillis();
-        Long last = lastSparkleAt.get(player.getUniqueId());
-        if (last != null && now - last < 600L) return;
-        lastSparkleAt.put(player.getUniqueId(), now);
-        Location center = pad.toStandLocation();
-        if (center == null || center.getWorld() == null) return;
-        Runnable fx = () -> {
-            if (center.getWorld() == null) return;
-            center.getWorld().spawnParticle(Particle.END_ROD, center.clone().add(0, 0.2, 0),
-                    6, 0.2, 0.35, 0.2, 0.01);
-        };
-        try {
-            if (plugin.scheduler() != null) plugin.scheduler().runAt(center, fx);
-            else fx.run();
-        } catch (Throwable ignored) {}
-    }
-
-    /**
-     * Finds beacons that share the same world/x/y/z block. Keeps the oldest record per block
-     * (smallest createdAt) and returns the extra duplicate records so callers can unbind them.
-     * Pure and side-effect free so it can be unit tested without a running server.
-     */
-    public static List<TeleportBeacon> duplicateBlockBeacons(java.util.Collection<TeleportBeacon> beacons) {
-        List<TeleportBeacon> extras = new ArrayList<>();
-        if (beacons == null) return extras;
-        Map<String, TeleportBeacon> keepers = new java.util.HashMap<>();
-        for (TeleportBeacon beacon : beacons) {
-            if (beacon == null || beacon.getWorldName() == null) continue;
-            String key = beacon.getWorldName().toLowerCase(java.util.Locale.ROOT)
-                    + ":" + beacon.getX() + ":" + beacon.getY() + ":" + beacon.getZ();
-            TeleportBeacon kept = keepers.get(key);
-            if (kept == null) {
-                keepers.put(key, beacon);
-            } else if (beacon.getCreatedAt() < kept.getCreatedAt()) {
-                keepers.put(key, beacon);
-                extras.add(kept);
-            } else {
-                extras.add(beacon);
-            }
-        }
-        return extras;
     }
 
     private void flash(Player player, Location dest) {

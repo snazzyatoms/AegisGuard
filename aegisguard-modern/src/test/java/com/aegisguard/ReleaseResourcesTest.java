@@ -47,7 +47,7 @@ class ReleaseResourcesTest {
         }
         assertTrue(loaded instanceof Map<?, ?>, "plugin.yml must contain a YAML map");
         Map<String, Object> plugin = (Map<String, Object>) loaded;
-        assertEquals("1.4.0", String.valueOf(plugin.get("version")));
+        assertEquals("1.3.5", String.valueOf(plugin.get("version")));
         assertEquals(Boolean.TRUE, plugin.get("folia-supported"));
         Map<String, Object> permissions = (Map<String, Object>) plugin.get("permissions");
         assertTrue(permissions.containsKey("aegis.admin.doctor.repair"));

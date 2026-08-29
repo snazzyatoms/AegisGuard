@@ -220,9 +220,7 @@ public class PlotAuctionGUI {
             if (plot == null) return;
 
             if (e.getClick().isLeftClick() && !e.isShiftClick()) {
-                // 1.4: honor the plot's arrival choice; classic plots skip beacons entirely.
-                if (plugin.beacons() != null && plugin.beacons().isEnabled()
-                        && plugin.beacons().requiresBeaconArrival(plot)
+                if (plugin.beacons() != null
                         && plugin.beacons().handlePublicListingTravel(player, plot,
                         com.aegisguard.beacon.TeleportBeacon.Purpose.AUCTION)) {
                     return;

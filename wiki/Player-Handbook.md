@@ -1,6 +1,6 @@
 # Player Handbook
 
-Welcome to **AegisGuard** `v1.4.0`.
+Welcome to **AegisGuard** `v1.3.5`.
 
 This handbook explains how to claim land, manage access, grow your territory, use travel and economy features, and protect your community.
 
@@ -256,7 +256,6 @@ AegisGuard includes built-in navigation tools so you can move between your claim
 | `/ag home` | Teleport directly to your claim home. |
 | `/ag visit <player or claim>` | Visit public plots or trusted player claims. |
 | `/ag beacon` | Manage teleport pads on the claim you are standing in. |
-| `/ag arrival <classic\|beacon>` | Choose how visitors arrive at the plot you manage. |
 
 The **Travel Menu** may provide access to:
 
@@ -286,19 +285,7 @@ Teleport Beacons are linked pads on a claim you manage.
 /ag beacon
 ```
 
-Place two pads, link them, then stand next to a pad and confirm. You land only at the paired pad. Pads may be free or paid depending on `teleport_beacons.charges`. `/ag home` is still your personal plot spawn, not a beacon.
-
-#### Choosing how visitors arrive (1.4.0)
-
-You decide how visitors reach the plots you manage when they use your public listings (Visit, market, or auction):
-
-```text
-/ag arrival classic   Visitors Safe Travel to the plot spawn (default)
-/ag arrival beacon    Visitors must land on a public arrival pad
-/ag arrival           Show the current arrival mode
-```
-
-If you choose **beacon** but have no public arrival pad, visit/market/auction trips to your plot fail closed rather than dropping visitors at spawn — so place and publish a public pad first. Every plot starts on **classic**, so nothing changes until you opt in. Your server may also require pad arrival everywhere with `teleport_beacons.force_public_arrival`.
+Place two pads, link them, then stand next to a pad and confirm. You land only at the paired pad. Some servers require a public arrival beacon before visit, market, or auction travel can complete. Pads may be free or paid depending on `teleport_beacons.charges`. `/ag home` is still your personal plot spawn, not a beacon.
 
 ---
 

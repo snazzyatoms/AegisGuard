@@ -25,7 +25,7 @@ class BeaconContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1300, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1294, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("teleport_beacons"));
         Map<String, Object> section = (Map<String, Object>) config.get("teleport_beacons");

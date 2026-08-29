@@ -33,6 +33,3 @@ aegisguard-modern/scripts/inject_*.py
 lms-audio/
 notebooklm/
 outputs/
-
-# Local Paper test server (env validation)
-.dev-server/

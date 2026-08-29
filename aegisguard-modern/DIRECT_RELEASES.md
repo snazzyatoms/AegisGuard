@@ -1,12 +1,12 @@
-# AegisGuard 1.4.0 Release Artifacts
+# AegisGuard 1.3.5 Release Artifacts
 
 This module produces the AegisGuard server plugin and its developer API artifacts.
 
 Artifacts:
 
-- `AegisGuard-1.4.0.jar` - Minecraft server plugin
-- `AegisGuard-1.4.0-api.jar` - public API library for plugin developers; do not install it as a server plugin
-- `AegisGuard-1.4.0-dev-api.jar` - compatibility copy of the developer API; do not install it as a server plugin
+- `AegisGuard-1.3.5.jar` - Minecraft server plugin
+- `AegisGuard-1.3.5-api.jar` - public API library for plugin developers; do not install it as a server plugin
+- `AegisGuard-1.3.5-dev-api.jar` - compatibility copy of the developer API; do not install it as a server plugin
 
 Build from the `aegisguard-modern` directory with `mvn clean verify`. Release artifacts are copied to that module's `releases/` directory.
 

@@ -826,10 +826,6 @@ public class SQLDataStore implements IDataStore {
         String allianceAccess = plot.serializeAllianceAccess();
         if (!allianceAccess.isEmpty()) add.accept("allianceAccess", allianceAccess);
 
-        if (plot.getArrivalMode() != Plot.ArrivalMode.CLASSIC) {
-            add.accept("arrivalMode", plot.getArrivalMode().name());
-        }
-
         if (plot.isLockdownFlagSet()) {
             add.accept("lockdownActive", "true");
             add.accept("lockdownActivatedAt", String.valueOf(plot.getLockdownActivatedAt()));
@@ -931,8 +927,6 @@ public class SQLDataStore implements IDataStore {
                     case "guestPasses" -> plot.deserializeGuestPasses(value);
                     case "noticeboard" -> plot.deserializeNoticeboard(value);
                     case "allianceAccess" -> plot.deserializeAllianceAccess(value);
-
-                    case "arrivalMode" -> plot.setArrivalMode(Plot.ArrivalMode.parse(value));
 
                     case "lockdownActive" -> lockdownActive[0] = Boolean.parseBoolean(value);
                     case "lockdownActivatedAt" -> lockdownActivatedAt[0] = Long.parseLong(value);

@@ -295,14 +295,11 @@ public final class BeaconGUI {
             if (event.getSlot() == 45) { openSetup(player, origin); return; }
             if (action != null && action.startsWith("dest:")) {
                 UUID destId = parseUuid(action.substring(5));
-                TeleportBeacon dest = destId == null ? null : service.store().get(destId);
-                if (dest != null && !service.canLinkTo(player, origin, dest)) {
-                    // Social/alliance/inbound rules: never link into a stranger's private pad.
-                    service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
-                } else if (dest != null && service.link(origin, dest.getId())) {
+                if (destId != null && service.link(origin, destId)) {
+                    TeleportBeacon dest = service.store().get(destId);
                     service.send(player, "beacon_linked",
                             "&aLinked to &f{NAME}&a. Stand here to travel.",
-                            Map.of("NAME", dest.getName()));
+                            Map.of("NAME", dest == null ? "beacon" : dest.getName()));
                     openSetup(player, origin);
                 } else {
                     service.send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
@@ -488,11 +485,7 @@ public final class BeaconGUI {
             if (candidate == null || candidate.getId().equals(origin.getId())) continue;
             if (!candidate.isEnabled()) continue;
             boolean samePlot = originPlot != null && originPlot.equals(candidate.getPlotId());
-            // Own pads plus public / alliance / inbound-allowed friend pads (see canLinkTo).
-            boolean linkable = samePlot
-                    || svc().canManage(player, candidate)
-                    || svc().canLinkTo(player, origin, candidate);
-            if (!linkable) continue;
+            if (!samePlot && !svc().canManage(player, candidate)) continue;
             if (samePlot) same.add(candidate);
             else other.add(candidate);
         }

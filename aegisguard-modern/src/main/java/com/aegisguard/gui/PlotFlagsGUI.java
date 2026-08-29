@@ -186,10 +186,11 @@ public class PlotFlagsGUI {
                         plot.isServerZone()
                                 ? List.of(
                                 "&7PvP, TNT, fire, mobs, entry, Safe Zone,",
-                                "&7Keep Health, Hunger, XP, and Inventory.")
+                                "&7Keep Health, Hunger, XP, Inventory,",
+                                "&7and Hearth chat rooms.")
                                 : List.of(
                                 "&7PvP, TNT, fire, mobs, entry,",
-                                "&7and Safe Zone."))
+                                "&7Safe Zone, and Hearth chat rooms."))
         ));
         inv.setItem(HUB_SLOT_MECHANICS, GUIManager.createItem(
                 Material.REDSTONE,
@@ -300,6 +301,23 @@ public class PlotFlagsGUI {
             if (keepInv) glow(invItem);
             inv.setItem(22, invItem);
         }
+
+        boolean hearth = plot.getFlag("hearth", false);
+        String hearthName = t(player, "button_hearth" + (hearth ? "_on" : "_off"),
+                onOffFallback(player, hearth, "Hearth"));
+        List<String> hearthLore = tl(player, "hearth_toggle_lore", List.of(
+                "&7Public chat stays in this room.",
+                "&7A room is a 3D subplot, or the rest",
+                "&7of the plot if you are not in one.",
+                "&7People outside cannot hear inside,",
+                "&7and the room cannot hear the street.",
+                "&7Mark houses, pits, and lobbies with",
+                "&7/ag subplot. Off by default.",
+                "&eClick to toggle."
+        ));
+        ItemStack hearthItem = GUIManager.createItem(Material.CAMPFIRE, hearthName, hearthLore);
+        if (hearth) glow(hearthItem);
+        inv.setItem(23, hearthItem);
     }
 
     private void buildMechanics(Player player, Inventory inv, Plot plot) {
@@ -516,6 +534,13 @@ public class PlotFlagsGUI {
                             plugin.effects().playConfirm(player);
                             refresh = true;
                         }
+                    }
+                    case 23 -> {
+                        plot.setFlag("hearth", !plot.getFlag("hearth", false));
+                        plugin.store().savePlot(plot);
+                        plugin.store().setDirty(true);
+                        plugin.effects().playConfirm(player);
+                        refresh = true;
                     }
                 }
             }

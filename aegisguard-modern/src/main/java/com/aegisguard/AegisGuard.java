@@ -155,6 +155,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.succession.SuccessionService successionService;
     private com.aegisguard.caravans.CaravanService caravanService;
     private com.aegisguard.chat.PlotChatService plotChatService;
+    private com.aegisguard.chat.HearthService hearthService;
     private com.aegisguard.protection.FlightSkillService flightSkillService;
     private com.aegisguard.season.SeasonService seasonService;
 
@@ -273,6 +274,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.succession.SuccessionService succession() { return successionService; }
     public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
+    public com.aegisguard.chat.HearthService hearth() { return hearthService; }
     public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
     public com.aegisguard.season.SeasonService seasons() { return seasonService; }
     public DiscordWebhook getDiscord() { return discord; }
@@ -350,6 +352,7 @@ public class AegisGuard extends JavaPlugin {
         successionService = new com.aegisguard.succession.SuccessionService(this);
         caravanService = new com.aegisguard.caravans.CaravanService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
+        hearthService = new com.aegisguard.chat.HearthService(this);
         flightSkillService = new com.aegisguard.protection.FlightSkillService(this);
         seasonService = new com.aegisguard.season.SeasonService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
@@ -469,6 +472,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.beacon.BeaconListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.caravans.CaravanListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.HearthListener(this), this);
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
         }

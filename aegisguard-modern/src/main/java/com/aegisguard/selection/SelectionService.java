@@ -444,6 +444,7 @@ public class SelectionService implements Listener {
             plot.setFlag("keep_hunger", plugin.getConfig().getBoolean("protections.keep_hunger", false));
             plot.setFlag("keep_xp", plugin.getConfig().getBoolean("protections.keep_xp", false));
             plot.setFlag("keep_inventory", plugin.getConfig().getBoolean("protections.keep_inventory", false));
+            plot.setFlag("hearth", plugin.getConfig().getBoolean("protections.hearth", false));
         } else {
             plot = new Plot(
                     UUID.randomUUID(),

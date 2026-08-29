@@ -90,6 +90,7 @@ class AllianceContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1305")
                 || migration.contains("CURRENT_SCHEMA = 1306")
                 || migration.contains("CURRENT_SCHEMA = 1307")
+                || migration.contains("CURRENT_SCHEMA = 1308")
                 || migration.contains("CURRENT_SCHEMA = 1280")
                 || migration.contains("CURRENT_SCHEMA = 1278"));
     }

@@ -25,12 +25,13 @@ class Phase3TravelAtlasContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1307, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1308, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> beacons = (Map<String, Object>) config.get("teleport_beacons");
         assertEquals(Boolean.TRUE, beacons.get("allow_traveler_override"));
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
         assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
-                || migration.contains("CURRENT_SCHEMA = 1307"));
+                || migration.contains("CURRENT_SCHEMA = 1307")
+                || migration.contains("CURRENT_SCHEMA = 1308"));
     }
 
     @Test

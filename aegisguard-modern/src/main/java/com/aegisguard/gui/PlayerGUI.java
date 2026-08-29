@@ -11,6 +11,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Player dashboard: a sparse hub with daily shortcuts plus category pages.
@@ -216,12 +217,12 @@ public class PlayerGUI {
             ));
         }
 
-        if (ctx.showRoutes || ctx.showArena || ctx.showBeacons) {
+        if (ctx.showRoutes || ctx.showArena || ctx.showBeacons || ctx.showPlotChat) {
             inv.setItem(SLOT_DOOR_EXPLORE, GUIManager.createItem(
                     Material.FILLED_MAP,
                     t(player, "hub_category_explore_name", "&aExplore"),
                     tl(player, "hub_category_explore_lore", List.of(
-                            "&7Staff routes, arenas, and beacons."))
+                            "&7Staff routes, arenas, beacons,", "&7and plot Frequency chat."))
             ));
         }
     }
@@ -379,6 +380,15 @@ public class PlayerGUI {
                     tl(player, "routes_button_lore", List.of(
                             "&7Browse staff-made exploration routes",
                             "&7and see your next checkpoint."))
+            ));
+        }
+        if (ctx.showPlotChat) {
+            inv.setItem(SLOT_CAT_C, GUIManager.createItem(
+                    Material.GOAT_HORN,
+                    t(player, "button_plot_chat", "&bAegis Frequency"),
+                    tl(player, "plot_chat_button_lore", List.of(
+                            "&7Toggle private plot chat",
+                            "&7for members of this claim."))
             ));
         }
         if (ctx.showArena) {
@@ -647,6 +657,41 @@ public class PlayerGUI {
                 plugin.gui().routes().open(player);
                 return true;
             }
+            case SLOT_CAT_C -> {
+                if (!mod(com.aegisguard.config.Modules.Id.PLOT_CHAT) || plugin.plotChat() == null) return false;
+                com.aegisguard.chat.PlotChatService chat = plugin.plotChat();
+                com.aegisguard.chat.PlotChatService.ToggleResult result = chat.toggle(player);
+                com.aegisguard.data.Plot tuned = chat.resolvePlot(player);
+                String label = chat.plotLabel(tuned);
+                String key;
+                String fallback;
+                Map<String, String> placeholders = Map.of("PLOT", label);
+                switch (result) {
+                    case ON -> {
+                        key = "plot_chat_on";
+                        fallback = "&aAegis Frequency on for &f{PLOT}&a. Your chat stays on this plot.";
+                    }
+                    case SWITCHED -> {
+                        key = "plot_chat_switched";
+                        fallback = "&aFrequency switched to &f{PLOT}&a.";
+                    }
+                    case OFF -> {
+                        key = "plot_chat_off";
+                        fallback = "&eAegis Frequency off. Chat is public again.";
+                        placeholders = Map.of();
+                    }
+                    default -> {
+                        key = "plot_chat_need_member";
+                        fallback = "&cStand in a plot you belong to before opening Frequency.";
+                        placeholders = Map.of();
+                    }
+                }
+                player.closeInventory();
+                player.sendMessage(GUIManager.color(
+                        t(player, "prefix", "&8[&bAegisGuard&8]&r ")
+                                + plugin.gui().tr(player, key, fallback, placeholders)));
+                return true;
+            }
             case SLOT_CAT_D -> {
                 if (!(mod(com.aegisguard.config.Modules.Id.ARENA) && plugin.gui().arena() != null)) return false;
                 plugin.gui().arena().open(player);
@@ -738,6 +783,7 @@ public class PlayerGUI {
         final boolean showTravel;
         final boolean showArena;
         final boolean showBeacons;
+        final boolean showPlotChat;
 
         private Context(PlayerGUI gui, Player player) {
             this.plot = gui.plugin.store().getPlotAt(player.getLocation());
@@ -774,6 +820,7 @@ public class PlayerGUI {
             this.showTravel = gui.mod(com.aegisguard.config.Modules.Id.TRAVEL);
             this.showArena = gui.mod(com.aegisguard.config.Modules.Id.ARENA) && gui.plugin.gui().arena() != null;
             this.showBeacons = gui.mod(com.aegisguard.config.Modules.Id.TELEPORT_BEACONS);
+            this.showPlotChat = gui.mod(com.aegisguard.config.Modules.Id.PLOT_CHAT);
             this.localMarket = plot != null
                     && gui.plugin.marketBridges() != null
                     && gui.plugin.marketBridges().preferLocalWhenInPlot()

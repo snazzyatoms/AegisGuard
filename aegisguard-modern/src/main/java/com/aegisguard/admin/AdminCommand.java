@@ -48,7 +48,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "transition", "upgrade", "v130",
+            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "transition", "upgrade", "v130", "v140",
             "help"
     };
 
@@ -121,7 +121,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "discover" -> handleAdminDiscover(player, args);
             case "activity" -> handleAdminActivity(player);
             case "audit" -> handleAudit(player);
-            case "transition", "upgrade", "v130" -> handleTransition(player);
+            case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -790,14 +790,15 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_bypass", "&e/agadmin bypass &8- Toggle personal protection bypass");
         sendLocalized(player, "admin_help_reload", "&e/agadmin reload &8- Reload AegisGuard");
         sendLocalized(player, "admin_help_transition",
-                "&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade status");
+                "&e/agadmin transition &8- 1.2.7 / 1.3.x → 1.4.0 upgrade status");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 
     private static boolean isTransitionSubcommand(String sub) {
         return sub != null && (sub.equalsIgnoreCase("transition")
                 || sub.equalsIgnoreCase("upgrade")
-                || sub.equalsIgnoreCase("v130"));
+                || sub.equalsIgnoreCase("v130")
+                || sub.equalsIgnoreCase("v140"));
     }
 
     private void handleTransition(CommandSender sender) {

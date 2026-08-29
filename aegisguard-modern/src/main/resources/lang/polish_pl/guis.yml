@@ -3875,3 +3875,8 @@ beacon_link_status_linked: '&7Połączony. Kliknij, aby zmienić.'
 beacon_link_status_unlinked: '&cJeszcze nie połączony.'
 beacon_confirm_cancel_lore:
 - '&7Zostań tam, gdzie jesteś.'
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bCzęstotliwość Aegis'
+plot_chat_button_lore:
+- '&7Przełącz prywatny czat działki'
+- '&7dla członków tego terenu.'

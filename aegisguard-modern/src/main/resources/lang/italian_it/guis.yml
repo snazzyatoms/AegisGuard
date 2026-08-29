@@ -3877,3 +3877,8 @@ beacon_link_status_linked: '&7Collegato. Clicca per cambiare.'
 beacon_link_status_unlinked: '&cNon ancora collegato.'
 beacon_confirm_cancel_lore:
 - '&7Resta dove sei.'
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bFrequenza Aegis'
+plot_chat_button_lore:
+- '&7Attiva la chat privata del lotto'
+- '&7per i membri di questa claim.'

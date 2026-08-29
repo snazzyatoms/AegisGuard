@@ -89,6 +89,7 @@ public class PlotGreetingListener implements Listener {
 
         if (toPlot != null && !Objects.equals(toId, fromId)) {
             sendWelcome(player, toPlot);
+            com.aegisguard.visualization.VisualPresence.showEntry(plugin, player, toPlot);
         }
 
         // Update last state: remove for wilderness, store for plots

@@ -1,5 +1,5 @@
 # ==============================================================================
-# AegisGuard 1.3.5 - Main Configuration
+# AegisGuard 1.4.0 - Main Configuration
 # ==============================================================================
 # This file is organized from core server setup to advanced gameplay systems.
 #
@@ -91,6 +91,10 @@ modules:
   # Public travel uses paired pads + Safe Travel confirm. Set false to restore
   # 1.3.0-style plot-spawn Visit/market/auction landings. Later versions drop this off-switch.
   teleport_beacons: true
+  # Private plot member chat on this server. Cross-server Frequency is still 2.0.
+  plot_chat: true
+  # Entry titles, for-sale labels, and scepter border direction labels.
+  visual_presence: true
 
 
 # ==============================================================================
@@ -1189,6 +1193,32 @@ teleport_beacons:
     max_claim_block_cost: 500
     always_vault_cost: 0.0
     always_claim_block_cost: 0
+
+
+# ==============================================================================
+# Aegis Frequency (1.4.0+)
+# ==============================================================================
+# Same-server private chat for plot members. /ag chat toggles Frequency for the
+# claim you are standing in; chat then stays on that plot even if you walk away.
+# Guests and alliance-only visitors are not on the channel. Cross-server
+# Frequency remains a 2.0 network feature.
+plot_chat:
+  enabled: true
+  max_message_length: 256
+
+
+# ==============================================================================
+# Visual Presence (1.4.0+)
+# ==============================================================================
+# Optional entry titles (owner + plot name), for-sale labels, and scepter
+# border direction labels. Uses titles and action bars only; no hologram
+# entities are spawned, so Paper and Folia stay compatible.
+visual_presence:
+  enabled: true
+  holographic_entry: true
+  for_sale_labels: true
+  smart_borders: true
+  border_label_distance: 3
 
 
 # ==============================================================================

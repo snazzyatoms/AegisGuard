@@ -117,6 +117,7 @@ permissions:
       aegis.arena.use: true
       aegis.arena.spectate: true
       aegis.beacon: true
+      aegis.chat: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -321,6 +322,10 @@ permissions:
 
   aegis.beacon:
     description: Open the Teleport Beacon manager and create pads on claims you manage.
+    default: true
+
+  aegis.chat:
+    description: Use Aegis Frequency plot chat (/ag chat) on claims you belong to.
     default: true
 
   # ---------------------------------------------------------------------------

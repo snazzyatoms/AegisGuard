@@ -65,6 +65,7 @@ public class PlotVisualizerTask extends BukkitRunnable {
             // Refresh cosmetic each tick in case player changes border style
             updateParticle(currentPlot.getBorderParticle());
             drawPlotBorders(currentPlot);
+            VisualPresence.showBorderLabel(plugin, player, currentPlot);
         } else {
             lastPlot = null;
         }

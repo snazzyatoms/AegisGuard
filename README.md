@@ -112,9 +112,9 @@ Protection covers hopper, liquid, teleport, and storm wards alongside the rest o
 
 Risky Alliance Access toggles default **OFF**. Hooks and protection-compat integrations stay **OFF** until a server opts in. Wilderness revert ships **OFF** (SQL-only; YAML does nothing).
 
-## Version 1.3.5
+## Version 1.4.0
 
-On a JAR swap from `1.2.7` or `1.3.0`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional. Wiki markdown lives in [`wiki/`](wiki/).
+On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run automatically. Confirm the upgrade with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional. Wiki markdown lives in [`wiki/`](wiki/).
 
 ## Branches and GitHub layout
 

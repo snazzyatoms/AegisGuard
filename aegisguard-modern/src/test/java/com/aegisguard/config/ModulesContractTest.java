@@ -37,6 +37,8 @@ class ModulesContractTest {
         assertEquals(Boolean.TRUE, modules.get("group_plots"));
         assertEquals(Boolean.TRUE, modules.get("lockdown"));
         assertEquals(Boolean.TRUE, modules.get("teleport_beacons"));
+        assertEquals(Boolean.TRUE, modules.get("plot_chat"));
+        assertEquals(Boolean.TRUE, modules.get("visual_presence"));
         Map<String, Object> expansions = (Map<String, Object>) config.get("expansions");
         assertEquals(Boolean.TRUE, expansions.get("enabled"));
         Map<String, Object> cosmetics = (Map<String, Object>) config.get("cosmetics");
@@ -90,6 +92,8 @@ class ModulesContractTest {
         assertEquals(Modules.Id.TRAVEL, Modules.commandModule("home"));
         assertEquals(Modules.Id.ARENA, Modules.commandModule("arena"));
         assertEquals(Modules.Id.TELEPORT_BEACONS, Modules.commandModule("beacon"));
+        assertEquals(Modules.Id.PLOT_CHAT, Modules.commandModule("chat"));
+        assertEquals(Modules.Id.PLOT_CHAT, Modules.commandModule("frequency"));
         assertEquals(null, Modules.commandModule("claim"));
         assertEquals(null, Modules.commandModule("menu"));
         assertEquals(null, Modules.commandModule("wand"));
@@ -102,6 +106,7 @@ class ModulesContractTest {
         assertTrue(gui.contains("if (ctx.showTravel)"));
         assertTrue(gui.contains("if (ctx.showMarket)"));
         assertTrue(gui.contains("if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge)"));
+        assertTrue(gui.contains("if (ctx.showRoutes || ctx.showArena || ctx.showBeacons || ctx.showPlotChat)"));
         assertFalse(gui.contains("claim_merge_button_disabled_lore"));
         String settings = Files.readString(Path.of("src/main/java/com/aegisguard/gui/SettingsGUI.java"));
         assertTrue(settings.contains("FIRST_CLAIM_WALKTHROUGH"));

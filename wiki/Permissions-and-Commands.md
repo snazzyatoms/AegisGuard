@@ -7,7 +7,7 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
 > - **Biome Studio** is not part of the active plugin flow.
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
-> - Many 1.3.5 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, and the first-claim walkthrough.
+> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Aegis Frequency, Visual Presence, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
@@ -378,6 +378,7 @@ Useful optional nodes for trusted staff and elevated server roles.
 | Permission | Description |
 | :--- | :--- |
 | `aegis.beacon` | Open `/ag beacon` and manage pads on claims you can manage. Included in `aegis.user`. |
+| `aegis.chat` | Use `/ag chat` Aegis Frequency on claims you belong to. Included in `aegis.user`. |
 | `aegis.notify.bypass` | Receive plot notifications when normal toggles are restricted. |
 | `aegis.notify.others` | Manage notification preferences for other players. |
 | `aegis.claimblocks.gift` | Gift ClaimBlocks (`/ag giftblocks`). Included in `aegis.user`. |

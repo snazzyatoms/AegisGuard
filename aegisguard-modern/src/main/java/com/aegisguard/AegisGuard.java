@@ -152,6 +152,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
     private com.aegisguard.beacon.BeaconService beaconService;
+    private com.aegisguard.chat.PlotChatService plotChatService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -262,6 +263,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
     public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
+    public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -334,6 +336,7 @@ public class AegisGuard extends JavaPlugin {
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
         beaconService = new com.aegisguard.beacon.BeaconService(this);
+        plotChatService = new com.aegisguard.chat.PlotChatService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -441,6 +444,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.beacon.BeaconListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
         }
@@ -509,6 +513,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
         if (snapshotManager != null) snapshotManager.shutdownOperations();
+        if (plotChatService != null) plotChatService.clearAll();
         if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.

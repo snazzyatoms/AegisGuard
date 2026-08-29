@@ -3339,7 +3339,7 @@ players_only: '&cError: This command may only be used by players.'
 player_not_found: '&cPlayer not found.'
 invalid_number: '&cInvalid number.'
 role_edit_self_error: '&cError: Thou canst not edit thine own role.'
-usage_main: '&eSpeak thus: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|help>'
+usage_main: '&eSpeak thus: /aegis <wand|menu|claim|unclaim|guide|alliance|notice|giftblocks|merge|transfer|settlements|beacon|chat|help>'
 help_header: '&bAegisGuard Help'
 help_lines:
 - '&e/ag wand &7- Get the Aegis Scepter.'
@@ -3960,7 +3960,7 @@ admin_help_reload: '&e/agadmin reload &8- Reload AegisGuard'
 admin_help_transition: '&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade tidings'
 admin_transition_schema: '&7Config schema: &f{CURRENT} &7/ 1.3.0 mark &f{TARGET}.'
 admin_transition_plots: '&7Holdings load as they stand. Claim records are not rewritten.'
-admin_transition_already: '&aAlready on 1.3.5; nothing to convert.'
+admin_transition_already: '&aAlready on 1.4.0; nothing to convert.'
 admin_transition_ran: '&aConfig and tongue-packs were merged again. Schema is now &f{SCHEMA}&a.'
 admin_transition_backup: '&7Config backup: &f{PATH}'
 admin_transition_report: '&7Migration report: &f{PATH}'
@@ -4719,3 +4719,27 @@ beacon_link_status_linked: '&7Linked. Click to change.'
 beacon_link_status_unlinked: '&cNot linked yet.'
 beacon_confirm_cancel_lore:
 - '&7Stay where you are.'
+# --- Aegis Frequency and Visual Presence (1.4.0) ---
+plot_chat_on: '&aAegis Frequency is open for &f{PLOT}&a. Thy speech stayeth on this plot.'
+plot_chat_off: '&eAegis Frequency is closed. Chat returneth to the public square.'
+plot_chat_need_member: '&cStand in a plot thou belongest to ere thou openest Frequency.'
+plot_chat_empty: '&cSpeak after /ag chat, or toggle with /ag chat.'
+plot_chat_disabled: '&cPlot Frequency is forbidden on this server.'
+plot_chat_format: '&8[&b{PLOT}&8] &f{PLAYER}&7: &f{MESSAGE}'
+plot_chat_no_listeners: '&eNone else heareth this Frequency now.'
+plot_chat_not_member: '&cThou art not a member of that plot Frequency.'
+plot_chat_switched: '&aFrequency now heareth &f{PLOT}&a.'
+presence_enter_title: '&b{PLOT}'
+presence_enter_subtitle: '&7{OWNER}'
+presence_enter_sale: '&6For sale: {PRICE}'
+presence_border_label: '&b{DIR} &7border · &f{PLOT}'
+presence_dir_north: North
+presence_dir_south: South
+presence_dir_west: West
+presence_dir_east: East
+
+# --- Aegis Frequency (1.4.0) ---
+button_plot_chat: '&bAegis Frequency'
+plot_chat_button_lore:
+- '&7Open private plot speech'
+- '&7for members of this claim.'

@@ -2,9 +2,9 @@
 
 ### *Protect your world. Empower your players. Ascend.*
 
-AegisGuard `1.4.0` is the source follow-up to public `1.3.5`. It adds **Aegis Frequency** (same-server plot member chat) and **Visual Presence** (entry titles, for-sale labels, and scepter border direction labels). Cross-server Frequency, township tax, siege, and hologram entities stay on the 2.0 roadmap.
+AegisGuard `1.4.0` builds on the public `1.3.5` release. It gives every plot a **per-plot Travel Atlas arrival choice** and hardens Teleport Beacons against duplicate pads and accidental stand prompts, from a live public-test soak.
 
-Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. Schema `1300` covers current 1.4.0 config. Plots are not rewritten.
+Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1300`; migration auto-merges the new `teleport_beacons` keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
 
@@ -12,19 +12,33 @@ Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia*
 
 ## What's new
 
-### Aegis Frequency (plot chat)
+### Per-plot arrival choice (classic vs beacon)
 
-`/ag chat` toggles a private channel for the claim you belong to. Chat then stays on that plot even if you walk away. `/ag chat off` returns you to public chat. `/ag chat <message>` sends one Frequency line without changing the toggle.
+Each plot manager decides how their **public listings** — Visit Discover/Warps, auction visit, and market jump — let visitors land:
 
-Only the owner, assigned non-visitor roles, and an active full-plot renter hear Frequency. Guest Passes and alliance-only visitors are not on the channel. The Explore menu includes an Aegis Frequency button. Turn the module off with `modules.plot_chat: false`.
+- **classic** — Safe Travel to the plot spawn / listing point (1.3.0 style), even when pads exist.
+- **beacon** — visitors **must** land on a public arrival pad. If none exists, the trip **fails closed** (`beacon_no_public_arrival`) instead of silently dropping the visitor at spawn.
 
-This is the same-server slice of the 2.0 "Aegis Frequency" idea. Bungee/Velocity sync is not included.
+Set the mode with `/ag arrival <classic|beacon>` while managing the plot (running `/ag arrival` alone reports the current mode). The choice is persisted in YML, SQL, and versioned plot snapshots, so restores keep it. `/ag home` stays personal plot spawn and is unaffected.
 
-### Visual Presence
+New `teleport_beacons` config keys:
 
-When you enter a plot, a title shows the plot name and owner. Listed plots can show a for-sale price instead of the owner line. Holding the Aegis Scepter near a border shows the cardinal direction and plot name on the action bar.
+- `force_public_arrival` (default **false**): a network-wide override. When `true`, every public listing behaves as if its owner chose beacon arrival (1.3.5-style mandatory pads).
+- `prompt_cooldown_seconds` (default **7**): how long a player lingers near a linked pad before the stand confirm opens, and the minimum gap between repeat prompts. Replaces the old hard-coded 2.5s delay.
+- `create_cooldown_seconds` (default **8**): rate-limits sneak-binding new pads.
 
-These use titles and action bars only. No hologram entities are spawned, so Paper and Folia stay compatible. Turn the module off with `modules.visual_presence: false`.
+### Beacon anti-duplicate and prompt hardening
+
+- **One pad per block.** Creation checks for an existing pad first, so a bound block never gets a second pad. Startup de-duplicates pads by world/x/y/z, keeps the oldest, unbinds the extras, and logs it.
+- **One directed link.** Linking keeps a single A→B route and never links a pad to itself.
+- **Calmer stand prompt.** The confirm no longer stacks on an already-open confirm, and a throttled, Folia-safe end-rod sparkle plays on a usable linked pad while a player lingers, before the confirm.
+- **Clear link rules.** A pad can link to your own pads, public pads, and alliance pads (when the destination plot allows alliance entry), plus friend/trusted pads only when the destination pad opts in to member/trusted use — never into a stranger's private pad.
+
+---
+
+## Coming next (not in 1.4.0)
+
+The Travel Atlas **GUI consolidation** is the next milestone and is **not** part of 1.4.0: folding the beacon manager into the Visit GUI as Atlas tabs (Destinations / My Beacons / Arrival), the create/link wizard UI, `/ag beacon` opening the Atlas on My Beacons, a single Player-dashboard Travel button, and the new translated GUI strings across all nine language packs and the Codex. See [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md).
 
 ---
 
@@ -33,9 +47,11 @@ These use titles and action bars only. No hologram entities are spawned, so Pape
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable. Existing plots load as-is.
-5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1300`, with a backup). Existing plots load as-is and stay on classic arrival.
+5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
+
+Owners who want mandatory pad arrival can set `teleport_beacons.force_public_arrival: true`, or let each manager opt in per plot with `/ag arrival beacon`.
 
 ---
 
@@ -48,16 +64,21 @@ These use titles and action bars only. No hologram entities are spawned, so Pape
 | **Server software** | Spigot, Paper, Purpur, Folia, and compatible Bukkit forks |
 | **Upgrade path** | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration |
 | **Languages** | Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish |
+| **Optional** | Vault, PlaceholderAPI, WorldEdit/FAWE, Floodgate, Geyser-Spigot |
 
 ---
 
 ## Release files
 
+### Server owners
+
 Install this file in the server's `/plugins` folder:
 
 `AegisGuard-1.4.0.jar`
 
-API libraries for developers:
+### Plugin developers
+
+These files are for compiling integrations. They do **not** belong in `/plugins`:
 
 `AegisGuard-1.4.0-api.jar`  
 `AegisGuard-1.4.0-dev-api.jar`
@@ -67,17 +88,17 @@ API libraries for developers:
 ## Quick commands
 
 ```text
-/ag menu                 Open the territory dashboard
-/ag chat                 Toggle Aegis Frequency for the claim you belong to
-/ag chat off             Leave Frequency and use public chat
-/ag chat <message>       Send one Frequency line
-/ag beacon               Manage teleport pads on the claim you are standing in
-/agadmin transition      Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
+/ag menu                     Open the territory dashboard
+/ag beacon                   Manage teleport pads on the claim you are standing in
+/ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
+/agadmin menu                Open the Staff Command Center
+/agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
+/agadmin doctor              Optional diagnostics and repair tools
 ```
 
 ---
 
-See also [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) for Teleport Beacons and the 1.3.5 soak fixes this release still includes.
+See also [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) and [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md) for the systems this release still includes.
 
 **Simple. Steadfast. Eternal.**  
 *Forged by Aegis Divine.*

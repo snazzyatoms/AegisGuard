@@ -3,14 +3,15 @@
 
 AegisGuard is a modern land-protection plugin for Minecraft, built for **Paper, Purpur, Spigot, and Folia**. It combines reliable claim security with economy features, RPG-style progression, and accessible in-game management tools.
 
-**AegisGuard 1.4.0** is the current source line. Public GitHub Release **1.3.5** remains the last published download until 1.4.0 is cut. Existing `1.2.7`, `1.3.0`, and `1.3.5` data remain valid through automatic schema migration.
+**AegisGuard 1.4.0** is the current source line, built on the public **1.3.5** release. Existing `1.2.7`, `1.3.0`, and `1.3.5` data remain valid through automatic schema migration.
 
 | Requirement | Support |
 | :--- | :--- |
 | Minecraft | 1.20+ |
 | Java | 21+ |
 | Platforms | Spigot, Paper, Purpur, Folia |
-| Latest release | [AegisGuard 1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5) |
+| Current line | AegisGuard 1.4.0 |
+| Latest published release | [AegisGuard 1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5) |
 
 ## Why AegisGuard?
 
@@ -22,7 +23,7 @@ Land is more than protected space. It can become part of your server's economy, 
 | Land Management | Create and manage claims, members, permissions, and settings in game. |
 | Empire Building | Build sub-claims, rentable zones, plot progression, and economy-driven communities. |
 | Guardian Codex | Use a clear GUI to manage claims without relying on commands for every action. |
-| Travel System | Visit friends, public destinations, server warps, and **Teleport Beacons**. |
+| Travel System | Visit friends, public destinations, server warps, and **Teleport Beacons** with a per-plot arrival choice (`/ag arrival`). |
 | Active Security | Protect claims with anti-sniper tools, mob vaporizers, emergency lockdown, hopper/liquid/teleport/storm wards, and configurable safeguards. |
 | Guest Passes | Grant temporary, self-expiring access without permanent trust. |
 | Realm Profiles | Give each plot a public name, category, greeting, and noticeboard. |
@@ -57,12 +58,12 @@ Optional first steps after your first claim:
 
 ---
 
-## Updating from 1.2.7 or 1.3.0
+## Updating from 1.2.7, 1.3.0, or 1.3.5
 
 1. Stop the server.
 2. Confirm **Java 21** or newer.
-3. Replace the old JAR with `AegisGuard-1.3.5.jar`.
-4. Start the server. Config and language merge run on enable. Existing plots load as-is.
+3. Replace the old JAR with `AegisGuard-1.4.0.jar`.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1300`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`).
 6. Run `/agadmin doctor` only if something looks wrong.
 
@@ -74,8 +75,11 @@ A folder backup of `plugins/AegisGuard/` is recommended. It is not required to k
 
 ## What's New in 1.4.0
 
-- **Aegis Frequency** — `/ag chat` toggles private plot-member chat on this server. Chat stays on that plot if you walk away. Guest Passes and alliance-only visitors are not on the channel.
-- **Visual Presence** — entering a plot shows the name and owner as a title; listed plots can show a for-sale price; the scepter shows a cardinal-direction border label on the action bar.
+- **Per-plot Travel Atlas arrival choice** — each plot manager sets `/ag arrival <classic|beacon>`. **Classic** plots Safe Travel to the plot spawn; **beacon** plots require a public arrival pad and fail closed (`beacon_no_public_arrival`) instead of falling back to spawn. Existing plots default to **classic**; `/ag home` stays personal plot spawn.
+- **Network-wide arrival override** — `teleport_beacons.force_public_arrival` (default off) can require pad arrival across every public listing.
+- **Beacon anti-duplicate + prompt hardening** — one pad per block (startup de-duplicates by world/x/y/z, keeping the oldest), one directed A→B link, a configurable stand prompt (`prompt_cooldown_seconds`, default `7`) that no longer stacks, a Folia-safe end-rod sparkle on usable pads, and `create_cooldown_seconds` (default `8`) to rate-limit new pads.
+- **Schema migration** — `config_schema` moves `1294` → `1300`; new `teleport_beacons` keys auto-merge on upgrade with a backup.
+- **Coming next** — the Travel Atlas GUI consolidation (beacon tabs, create/link wizard, and nine-language GUI strings) is the next milestone, not part of 1.4.0.
 
 ## What's New in 1.3.5
 
@@ -108,7 +112,7 @@ The 1.2.7 territory platform remains: Ascension Hall, Expansion Horizons, rental
 /ag level                    Open the Ascension Hall
 /ag visit                    Open the Travel Atlas
 /ag beacon                   Manage teleport pads on the claim you are standing in
-/ag chat                     Toggle Aegis Frequency for a plot you belong to
+/ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center

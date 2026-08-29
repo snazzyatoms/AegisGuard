@@ -1133,18 +1133,34 @@ travel:
 
 
 # ==============================================================================
-# Teleport Beacons (1.3.5+)
+# Teleport Beacons (1.3.5+, Travel Atlas arrival choice 1.4.0+)
 # ==============================================================================
-# When enabled (default), public travel (Visit Discover/Warps, auction visit,
-# market jump) requires a public arrival beacon. Stand next to a pad, confirm,
-# and land only at the linked pad. /ag home stays personal plot spawn.
-# Set modules.teleport_beacons (and teleport_beacons.enabled) false to keep
-# today's plot-spawn public travel. A later version will remove that fallback.
+# Beacons are pad-to-pad travel. In 1.4 each plot owner chooses how their public
+# listings (Visit Discover/Warps, auction visit, market jump) let visitors land:
+#   * classic - Safe Travel to the plot spawn / listing point (1.3.0 style)
+#   * beacon  - visitors MUST land on a public arrival pad; if none exists the
+#               trip fails closed (never a silent fallback)
+# Existing plots default to classic, so turning 1.4 on never suddenly gates old
+# servers on pads. Owners opt into beacon arrival per plot.
+# /ag home always stays personal plot spawn regardless of this setting.
+# Set modules.teleport_beacons (and teleport_beacons.enabled) false to hide pad
+# tools entirely.
 teleport_beacons:
   enabled: true
+  # Network-wide override. When true, every public listing behaves as if its
+  # owner chose beacon arrival (1.3.5-style mandatory pads). Default false so the
+  # per-plot owner choice above is respected.
+  force_public_arrival: false
   max_per_plot: 3
   max_per_server_zone: 8
   stand_radius: 1.6
+  # How long (seconds) a player must linger near a linked pad before the stand
+  # confirm opens, and the minimum gap between repeat prompts. Raised from the
+  # old 2.5s so a quick walk-over no longer pops the menu. Owners can raise it.
+  prompt_cooldown_seconds: 7
+  # One create wizard at a time; minimum gap (seconds) between sneak-binding new
+  # pads so a manager cannot spam duplicate rows.
+  create_cooldown_seconds: 8
   # Hand players placeable pads from /ag beacon give or the manager button.
   # They may still place any pad_materials block they already have.
   give_starter_pads: true

@@ -30,15 +30,17 @@
 
 **AegisGuard** is a Minecraft land-protection plugin that turns claims into a full territory experience. Players secure land, develop plots, manage roles and rentals, run local markets, discover destinations, and pursue long-term progression. Staff get recovery snapshots, migration tools, diagnostics, world controls, and an audit trail for high-impact actions.
 
-It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is the current source line. Existing `1.2.7`, `1.3.0`, and `1.3.5` data and configuration remain valid through automatic schema migration.
+It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is the current source line, built on the public **1.3.5** release. Existing `1.2.7`, `1.3.0`, and `1.3.5` data and configuration remain valid through automatic schema migration.
 
-> Release notes are in [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md). Wiki sources live in [`wiki/`](wiki/). Public GitHub Release **1.3.5** remains the last published download until 1.4.0 is cut.
+> Release notes are in [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md). The previous release is documented in [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md). Wiki sources live in [`wiki/`](wiki/).
 
 ## What Is New In 1.4.0
 
-**Aegis Frequency** is same-server private chat for plot members. `/ag chat` toggles Frequency for a claim you belong to; your chat stays on that plot even if you walk away. Guest Passes and alliance-only visitors are not on the channel. Cross-server Frequency remains a 2.0 network feature.
+**Per-plot Travel Atlas arrival choice.** Each plot manager decides how their public listings (Visit, Local/Global Market, and auction jumps) let visitors land. **Classic** plots Safe Travel to the plot spawn like 1.3.0, even when pads exist. **Beacon** plots require visitors to land on a public arrival pad and **fail closed** when none is available (`beacon_no_public_arrival`) — never a silent fallback. Existing plots stay **classic**, so enabling 1.4.0 never suddenly gates older servers on pads. Managers set the mode with `/ag arrival <classic|beacon>`, and `/ag home` remains personal plot spawn. A server-wide `teleport_beacons.force_public_arrival` override can require pad arrival network-wide.
 
-**Visual Presence** shows a plot name and owner title when you enter a claim, a for-sale price on listed plots, and a cardinal-direction label on the action bar when you hold the Aegis Scepter near a border. Titles and action bars only — no hologram entities.
+**Beacon anti-duplicate and prompt hardening.** A block holds at most one pad: creation checks for an existing pad first, and startup de-duplicates pads by world/x/y/z (keeping the oldest, unbinding extras). Links stay one directed A→B and never A→A. The stand prompt is now configurable (`teleport_beacons.prompt_cooldown_seconds`, default `7`, replacing the old hard-coded 2.5s delay), never stacks on an already-open confirm, and plays a throttled, Folia-safe end-rod sparkle on a usable linked pad while a player lingers. A new `teleport_beacons.create_cooldown_seconds` (default `8`) rate-limits sneak-binding new pads. Link rules allow own, public, and alliance pads (when the destination allows alliance entry) plus friend/trusted pads only when the destination pad opts in — never into a stranger's private pad.
+
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1300` and migration auto-merges the new `teleport_beacons` keys with a timestamped backup. The GUI consolidation of the Travel Atlas (beacon tabs, create/link wizard, and the nine-language GUI strings) is the next milestone — see [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md).
 
 ## What Is New In 1.3.5
 
@@ -118,12 +120,13 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 
 | Place | What it is |
 |---|---|
-| [`V1.4.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.4.0) | 1.4.0 source line (Frequency + Visual Presence) |
-| [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Current public GitHub Release **1.3.5** |
+| [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Public source line and GitHub Release **1.3.5** (1.4.0 base) |
 | [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Previous public 1.3.0 line |
 | [`wiki/`](wiki/) | Pages to paste into the GitHub Wiki |
 | [`listing/`](listing/) | Spigot listing art |
 | [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md) | 1.4.0 notes |
+| [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) | 1.3.5 notes |
+| [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md) | Next-milestone roadmap (Travel Atlas GUI consolidation) |
 | [`aegisguard-modern/`](aegisguard-modern/) | Plugin source (Maven) |
 
 ## Core Systems
@@ -133,7 +136,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Teleport Beacons, Aegis Frequency plot chat, Visual Presence, Travel destinations, and routes |
+| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Teleport Beacons, per-plot arrival choice (`/ag arrival`), Travel destinations, and routes |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -148,7 +151,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI and the public AegisGuard API |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1300`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -156,9 +159,9 @@ Server implementations evolve independently. Test new Minecraft server releases 
 
 1. Stop the Minecraft server.
 2. Confirm the host is running **Java 21 or newer**.
-3. Place `AegisGuard-1.3.5.jar` in the server's `plugins` directory.
+3. Place `AegisGuard-1.4.0.jar` in the server's `plugins` directory.
 4. Install Vault and an economy provider if money-based features are required.
-5. Start the server. On a JAR swap from 1.2.7, config and language merge run automatically and existing plots load as-is.
+5. Start the server. On a JAR swap from 1.2.7, 1.3.0, or 1.3.5, config and language merge run automatically and existing plots load as-is (existing plots stay on classic arrival).
 6. Review `plugins/AegisGuard/config.yml` and the files under `plugins/AegisGuard/lang/`.
 7. After a JAR update, confirm status with `/agadmin transition` (aliases `/agadmin upgrade` and `/agadmin v130`). A folder backup of `plugins/AegisGuard/` is recommended, not required to keep claims.
 8. Run `/agadmin doctor` (and optionally `/agadmin health`) only if something looks wrong. Doctor is optional.
@@ -176,6 +179,7 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag market local             Open the Local Market
 /ag visit                    Open the Travel Atlas
 /ag beacon                   Manage teleport pads on the claim you are standing in
+/ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
 /ag zone                     Manage sub-zones and rentals
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 

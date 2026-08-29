@@ -353,7 +353,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 plugin.gui().beacons().openManager(p);
             }
 
-            case "chat", "frequency" -> handlePlotChat(p, args);
+            // 1.4: per-plot public arrival choice (classic vs beacon) for the plot you manage.
+            case "arrival" -> handleArrival(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -956,6 +957,43 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     // --------------------------------------------------
     // Rename / Description
     // --------------------------------------------------
+
+    // --------------------------------------------------
+    // Travel Atlas arrival choice (1.4): classic spawn vs public beacon pad
+    // --------------------------------------------------
+
+    private void handleArrival(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
+            return;
+        }
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (args.length < 2) {
+            sendKey(p, "arrival_status",
+                    "&7Public arrival for this plot: &f{MODE}&7. Use &e/ag arrival classic|beacon&7.",
+                    Map.of("MODE", plot.getArrivalMode().name().toLowerCase(Locale.ROOT)));
+            return;
+        }
+        Plot.ArrivalMode mode;
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "classic", "spawn", "off" -> mode = Plot.ArrivalMode.CLASSIC;
+            case "beacon", "pad", "on" -> mode = Plot.ArrivalMode.BEACON;
+            default -> {
+                sendKey(p, "arrival_usage", "&cUsage: /ag arrival <classic|beacon>");
+                return;
+            }
+        }
+        plot.setArrivalMode(mode);
+        plugin.store().savePlot(plot);
+        plugin.store().setDirty(true);
+        sendKey(p, "arrival_set", "&a✔ Public arrival set to &f{MODE}&a for this plot.",
+                Map.of("MODE", mode.name().toLowerCase(Locale.ROOT)));
+        if (plugin.effects() != null) plugin.effects().playConfirm(p);
+    }
 
     private void handleRename(Player p, String[] args) {
         Plot plot = plugin.store().getPlotAt(p.getLocation());

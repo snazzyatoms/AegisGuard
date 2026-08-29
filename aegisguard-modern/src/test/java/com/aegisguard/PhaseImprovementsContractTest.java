@@ -122,6 +122,7 @@ class PhaseImprovementsContractTest {
                 || config.contains("config_schema: 1284") || config.contains("config_schema: 1285")
                 || config.contains("config_schema: 1286")
                 || config.contains("config_schema: 1287")
+                || config.contains("config_schema: 1294")
                 || config.contains("config_schema: 1300"));
         assertFalse(config.contains("config_schema: 1278\n"));
     }

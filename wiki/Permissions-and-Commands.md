@@ -30,7 +30,7 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag home` | `aegis.user` | Teleport to a plot home point. |
 | `/ag visit` | `aegis.user` | Open the Travel menu. |
 | `/ag beacon` | `aegis.beacon` | Open the Teleport Beacon manager on a claim you manage. Included in `aegis.user`. |
-| `/ag chat` | `aegis.chat` | Toggle Aegis Frequency plot chat. Included in `aegis.user`. |
+| `/ag arrival <classic\|beacon>` | `aegis.user` | Choose how visitors arrive at the plot you manage. Run with no argument to see the current mode. |
 | `/ag stuck` | `aegis.user` | Escape to a safer nearby location. |
 | `/ag rename <name>` | `aegis.user` | Set a custom plot name. |
 | `/ag setdesc <text>` | `aegis.user` | Set a plot description. |
@@ -123,9 +123,20 @@ Linked pads on claims you manage. Travel uses Safe Travel. `/ag home` stays plot
 | Command | Recommended Permission | Description |
 | :--- | :--- | :--- |
 | `/ag beacon` | `aegis.beacon` | Open the pad manager, place pads, link them, and set public-arrival / fee options the server allows. |
-| `/ag chat` | `aegis.chat` | Toggle same-server Frequency for a plot you belong to. `/ag chat off` leaves. `/ag chat <message>` sends one line. |
+| `/ag arrival <classic\|beacon>` | `aegis.user` | Set how visitors arrive at the plot you manage; run with no argument to report the current mode. |
 
-Visit, market, and auction listings can require a public arrival beacon when that module is on. Fee policy is `teleport_beacons.charges.mode`: `owner_choice`, `always`, or `off`.
+Fee policy is `teleport_beacons.charges.mode`: `owner_choice`, `always`, or `off`.
+
+### Travel Atlas arrival choice (1.4.0)
+
+Each plot manager chooses how their **public listings** (Visit, market jump, and auction visit) let visitors land:
+
+- **classic** — Safe Travel to the plot spawn, even when pads exist (1.3.0 style).
+- **beacon** — visitors must land on a public arrival pad; if none exists the trip fails closed (`beacon_no_public_arrival`) instead of falling back to spawn.
+
+Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. Owners can also raise `teleport_beacons.prompt_cooldown_seconds` (default `7`) and `teleport_beacons.create_cooldown_seconds` (default `8`). The `config_schema` bumps from `1294` to `1300` on upgrade, with a backup.
+
+> **Coming next:** a future update will fold the beacon manager into the Travel Atlas so `/ag beacon` opens the Atlas on a **My Beacons** tab. For 1.4.0, `/ag beacon` opens the standalone pad manager and `/ag arrival` sets the mode.
 
 ---
 
@@ -246,7 +257,7 @@ High-level commands for administrators, owners, and trusted staff.
 | :--- | :--- | :--- |
 | `/agadmin menu` | `aegis.admin` | Open the administrator control panel. |
 | `/agadmin reload` | `aegis.admin` or `aegis.reload` | Reload configuration and language files. |
-| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`, `v140`). |
+| `/agadmin transition` | `aegis.admin` | Confirm 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 upgrade status (aliases `upgrade`, `v130`). |
 | `/agadmin health` | `aegis.admin` | Quick staff health check. |
 | `/agadmin bypass` | `aegis.admin.bypass` | Toggle protection-bypass mode. |
 | `/agadmin wand` | `aegis.admin.wand` | Receive the **Sentinel's Scepter** by default. |

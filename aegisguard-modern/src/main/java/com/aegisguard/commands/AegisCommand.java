@@ -46,7 +46,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
             "group", "alliance", "arena", "beacon", "chat", "discover", "favorite", "activity",
-            "transfer", "settlements", "roles",
+            "transfer", "heir", "succession", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -359,6 +359,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "arrival" -> handleArrival(p, args);
 
             case "roles" -> handleRoles(p, args);
+            case "heir" -> handleHeir(p, args);
+            case "succession" -> handleSuccession(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -2075,6 +2077,70 @@ private void handleUnsell(Player p) {
         plugin.gui().transferConfirm().open(player, plot, recipient);
     }
 
+    private void handleHeir(Player player, String[] args) {
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.isOwner(player.getUniqueId())) {
+            sendKey(player, "heir_not_owner", "&cStand in a plot you own to set an heir.");
+            return;
+        }
+        if (args.length < 2) {
+            String name = plot.getHeir() == null ? "none" : Bukkit.getOfflinePlayer(plot.getHeir()).getName();
+            sendKey(player, "heir_status", "&7Heir: &f{PLAYER}",
+                    Map.of("PLAYER", name == null ? (plot.getHeir() == null ? "none" : plot.getHeir().toString()) : name));
+            return;
+        }
+        if (args[1].equalsIgnoreCase("clear") || args[1].equalsIgnoreCase("none")) {
+            plot.setHeir(null);
+            plugin.store().savePlot(plot);
+            sendKey(player, "heir_cleared", "&aHeir cleared.");
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            sendKey(player, "heir_self", "&cYou cannot name yourself as heir.");
+            return;
+        }
+        plot.setHeir(target.getUniqueId());
+        plot.lockMember(target.getUniqueId());
+        plugin.store().savePlot(plot);
+        sendKey(player, "heir_set", "&aHeir set to &f{PLAYER}&a.",
+                Map.of("PLAYER", target.getName() == null ? args[1] : target.getName()));
+    }
+
+    private void handleSuccession(Player player, String[] args) {
+        if (plugin.succession() == null || !plugin.succession().enabled()) {
+            sendKey(player, "succession_disabled", "&cSuccession is disabled.");
+            return;
+        }
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null) {
+            sendKey(player, "no_plot_here", "&c❌ You are not standing inside your claim.");
+            return;
+        }
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "menu";
+        switch (action) {
+            case "assume" -> {
+                if (plugin.succession().assume(player, plot)) {
+                    sendKey(player, "stewardship_assume_ok", "&aYou are now the owner of this plot.");
+                } else {
+                    sendKey(player, "succession_assume_denied",
+                            "&cYou cannot assume this plot. You must be the heir and the owner must be inactive.");
+                    plugin.effects().playError(player);
+                }
+            }
+            case "rollback" -> {
+                if (plugin.succession().rollback(player, plot)) {
+                    sendKey(player, "stewardship_rollback_ok", "&aOwnership transfer was rolled back.");
+                } else {
+                    sendKey(player, "succession_rollback_denied",
+                            "&cNo recent transfer is available to roll back.");
+                    plugin.effects().playError(player);
+                }
+            }
+            default -> plugin.gui().stewardship().open(player, plot);
+        }
+    }
+
     private void handleGroup(Player p, String[] args) {
         if (plugin.groups() == null) {
             sendKey(p, "error_generic", "&cThat feature is not available right now.");
@@ -2674,6 +2740,12 @@ private void handleUnsell(Player p) {
             if (args[0].equalsIgnoreCase("roles")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("lock", "unlock", "undo"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+            if (args[0].equalsIgnoreCase("succession")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("assume", "rollback", "menu"), completions);
                 Collections.sort(completions);
                 return completions;
             }

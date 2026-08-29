@@ -330,6 +330,14 @@ public class PlayerGUI {
                                     : List.of("&cStand inside a claim you manage", "&cto use Emergency Lockdown."))
             ));
         }
+        if (ctx.showSuccession) {
+            inv.setItem(SLOT_CAT_E, GUIManager.createItem(
+                    Material.GOLDEN_HELMET,
+                    t(player, "button_stewardship", "&6Stewardship"),
+                    tl(player, "stewardship_button_lore", List.of(
+                            "&7Co-owners, heir, transfer,", "&7and succession for this claim."))
+            ));
+        }
     }
 
     private void paintEconomy(Player player, Inventory inv, Context ctx) {
@@ -602,6 +610,12 @@ public class PlayerGUI {
                 else denyNeedPlot(player, plot, canManage, false);
                 return true;
             }
+            case SLOT_CAT_E -> {
+                if (!mod(com.aegisguard.config.Modules.Id.SUCCESSION)) return false;
+                if (plot != null) plugin.gui().stewardship().open(player, plot);
+                else denyNeedPlot(player, plot, canManage, false);
+                return true;
+            }
             default -> {
                 return false;
             }
@@ -811,6 +825,7 @@ public class PlayerGUI {
         final boolean showArena;
         final boolean showBeacons;
         final boolean showPlotChat;
+        final boolean showSuccession;
 
         private Context(PlayerGUI gui, Player player) {
             this.plot = gui.plugin.store().getPlotAt(player.getLocation());
@@ -854,6 +869,7 @@ public class PlayerGUI {
             this.showArena = gui.mod(com.aegisguard.config.Modules.Id.ARENA) && gui.plugin.gui().arena() != null;
             this.showBeacons = gui.mod(com.aegisguard.config.Modules.Id.TELEPORT_BEACONS);
             this.showPlotChat = gui.mod(com.aegisguard.config.Modules.Id.PLOT_CHAT);
+            this.showSuccession = gui.mod(com.aegisguard.config.Modules.Id.SUCCESSION);
             this.localMarket = plot != null
                     && gui.plugin.marketBridges() != null
                     && gui.plugin.marketBridges().preferLocalWhenInPlot()

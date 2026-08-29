@@ -40,6 +40,7 @@ final class PlotSnapshotState {
         yaml.set("settings.warp_category", plot.getWarpCategory());
         yaml.set("settings.arrival_mode", plot.getArrivalMode().name());
         yaml.set("settings.allow_traveler_override", plot.isAllowTravelerOverride());
+        yaml.set("settings.heir", plot.getHeir() == null ? null : plot.getHeir().toString());
         yaml.set("settings.locked_members", plot.getLockedMembers().stream()
                 .map(UUID::toString).sorted().toList());
 
@@ -155,6 +156,11 @@ final class PlotSnapshotState {
         plot.setWarpCategory(yaml.getString("settings.warp_category"));
         plot.setArrivalMode(Plot.ArrivalMode.parse(yaml.getString("settings.arrival_mode")));
         plot.setAllowTravelerOverride(yaml.getBoolean("settings.allow_traveler_override", false));
+        String heirRaw = yaml.getString("settings.heir");
+        if (heirRaw != null && !heirRaw.isBlank()) {
+            UUID heir = uuid(heirRaw);
+            if (heir != null) plot.setHeir(heir);
+        }
         for (String raw : yaml.getStringList("settings.locked_members")) {
             UUID id = uuid(raw);
             if (id != null) plot.lockMember(id);

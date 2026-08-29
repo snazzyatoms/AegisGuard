@@ -27,7 +27,7 @@ class Phase1QolContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1303, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1304, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> claims = (Map<String, Object>) config.get("claims");
         Map<String, Object> quick = (Map<String, Object>) claims.get("quick_claim");
         assertEquals(Boolean.TRUE, quick.get("enabled"));
@@ -35,7 +35,7 @@ class Phase1QolContractTest {
         assertEquals(25, ((Number) quick.get("max_radius")).intValue());
 
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1303"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1304"));
     }
 
     @Test

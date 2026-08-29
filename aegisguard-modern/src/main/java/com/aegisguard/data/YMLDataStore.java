@@ -212,6 +212,10 @@ public class YMLDataStore implements IDataStore {
 
                     plot.setArrivalMode(Plot.ArrivalMode.parse(sec.getString("arrival-mode")));
                     plot.setAllowTravelerOverride(sec.getBoolean("allow-traveler-override", false));
+                    String heirRaw = sec.getString("heir");
+                    if (heirRaw != null && !heirRaw.isBlank()) {
+                        try { plot.setHeir(UUID.fromString(heirRaw)); } catch (IllegalArgumentException ignored) {}
+                    }
                     if (sec.isList("locked-members")) {
                         for (String raw : sec.getStringList("locked-members")) {
                             try { plot.lockMember(UUID.fromString(raw)); } catch (Exception ignored) {}
@@ -552,6 +556,7 @@ public class YMLDataStore implements IDataStore {
         sec.set("arrival-mode", plot.getArrivalMode() == Plot.ArrivalMode.CLASSIC
                 ? null : plot.getArrivalMode().name());
         sec.set("allow-traveler-override", plot.isAllowTravelerOverride() ? true : null);
+        sec.set("heir", plot.getHeir() == null ? null : plot.getHeir().toString());
         List<String> lockedMembers = plot.getLockedMembers().stream().map(UUID::toString).sorted().toList();
         sec.set("locked-members", lockedMembers.isEmpty() ? null : lockedMembers);
 

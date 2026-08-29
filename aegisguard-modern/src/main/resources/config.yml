@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1303
+config_schema: 1304
 
 
 # ------------------------------------------------------------------------------
@@ -95,6 +95,16 @@ modules:
   plot_chat: true
   # Entry titles, for-sale labels, and scepter border direction labels.
   visual_presence: true
+  succession: true
+
+
+# Guardian Succession: co-owners, heirs, transfer cooldown, and inactivity assume.
+succession:
+  enabled: true
+  inactivity_days: 30
+  transfer_cooldown_seconds: 3600
+  rollback_window_seconds: 300
+  auto_lock_co_owners: true
 
 
 # ==============================================================================

@@ -152,6 +152,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.alliance.AllianceService allianceService;
     private com.aegisguard.travel.SafeTravelService safeTravelService;
     private com.aegisguard.beacon.BeaconService beaconService;
+    private com.aegisguard.succession.SuccessionService successionService;
     private com.aegisguard.chat.PlotChatService plotChatService;
 
     // --- HOOKS ---
@@ -265,6 +266,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
     public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
+    public com.aegisguard.succession.SuccessionService succession() { return successionService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
@@ -338,6 +340,7 @@ public class AegisGuard extends JavaPlugin {
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
         beaconService = new com.aegisguard.beacon.BeaconService(this);
+        successionService = new com.aegisguard.succession.SuccessionService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);

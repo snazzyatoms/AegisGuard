@@ -76,6 +76,7 @@ public class GUIManager {
     private final SettlementsInboxGUI settlementsInboxGUI;
     private final GroupPlotsGUI groupPlotsGUI;
     private final TransferConfirmGUI transferConfirmGUI;
+    private final com.aegisguard.succession.StewardshipGUI stewardshipGUI;
     private final ConvertToServerGUI convertToServerGUI;
     private final ClaimMergeGUI claimMergeGUI;
     private final GiftBlocksGUI giftBlocksGUI;
@@ -168,6 +169,7 @@ public class GUIManager {
         this.settlementsInboxGUI = new SettlementsInboxGUI(plugin);
         this.groupPlotsGUI = new GroupPlotsGUI(plugin);
         this.transferConfirmGUI = new TransferConfirmGUI(plugin);
+        this.stewardshipGUI = new com.aegisguard.succession.StewardshipGUI(plugin);
         this.convertToServerGUI = new ConvertToServerGUI(plugin);
         this.claimMergeGUI = new ClaimMergeGUI(plugin);
         this.giftBlocksGUI = new GiftBlocksGUI(plugin);
@@ -301,6 +303,7 @@ public class GUIManager {
     public SettlementsInboxGUI settlementsInbox() { return settlementsInboxGUI; }
     public GroupPlotsGUI groupPlots() { return groupPlotsGUI; }
     public TransferConfirmGUI transferConfirm() { return transferConfirmGUI; }
+    public com.aegisguard.succession.StewardshipGUI stewardship() { return stewardshipGUI; }
     public ConvertToServerGUI convertToServer() { return convertToServerGUI; }
     public ClaimMergeGUI claimMerge() { return claimMergeGUI; }
     public GiftBlocksGUI giftBlocks() { return giftBlocksGUI; }

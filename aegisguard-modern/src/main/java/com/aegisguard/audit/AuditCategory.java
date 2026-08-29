@@ -22,6 +22,9 @@ public enum AuditCategory {
     /** Role/claim protection: grant, revoke, lock, and undo. */
     ROLE_CHANGE,
 
+    /** Guardian Succession: ownership transfer, assume, and rollback. */
+    OWNERSHIP_TRANSFER,
+
     /** Milestone 7 (Alliance Access): join/leave/disband and per-plot access toggles. */
     ALLIANCE
 }

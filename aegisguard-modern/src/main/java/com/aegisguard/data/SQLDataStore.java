@@ -832,6 +832,9 @@ public class SQLDataStore implements IDataStore {
         if (plot.isAllowTravelerOverride()) {
             add.accept("allowTravelerOverride", "true");
         }
+        if (plot.getHeir() != null) {
+            add.accept("heir", plot.getHeir().toString());
+        }
         if (!plot.getLockedMembers().isEmpty()) {
             add.accept("lockedMembers", plot.getLockedMembers().stream().map(UUID::toString)
                     .sorted().collect(Collectors.joining(",")));
@@ -941,6 +944,9 @@ public class SQLDataStore implements IDataStore {
 
                     case "arrivalMode" -> plot.setArrivalMode(Plot.ArrivalMode.parse(value));
                     case "allowTravelerOverride" -> plot.setAllowTravelerOverride(Boolean.parseBoolean(value));
+                    case "heir" -> {
+                        try { plot.setHeir(UUID.fromString(value)); } catch (IllegalArgumentException ignored) {}
+                    }
                     case "lockedMembers" -> {
                         for (String uStr : value.split(",")) {
                             if (uStr == null || uStr.isBlank()) continue;

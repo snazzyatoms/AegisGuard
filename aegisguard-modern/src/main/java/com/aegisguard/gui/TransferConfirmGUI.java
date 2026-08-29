@@ -69,6 +69,17 @@ public class TransferConfirmGUI {
             player.closeInventory();
             return;
         }
+        if (plugin.succession() != null && plugin.succession().enabled()
+                && !plugin.succession().canTransferNow(plot)) {
+            long wait = Math.max(1L, plugin.succession().remainingTransferCooldown(plot.getPlotId()) / 1000L);
+            player.sendMessage(GUIManager.color(tr(player, "transfer_cooldown",
+                    "&cWait {SECONDS}s before transferring this plot again.")
+                    .replace("{SECONDS}", String.valueOf(wait))));
+            plugin.effects().playError(player);
+            return;
+        }
+        UUID previous = plot.getOwner();
+        String previousName = plot.getOwnerName();
         settleBeforeTransfer(plot, player);
         plot.setForSale(false, 0);
         plot.setForRent(false, 0);
@@ -77,6 +88,9 @@ public class TransferConfirmGUI {
         plugin.territoryLife().clearOffer(plot.getPlotId());
         plugin.store().changePlotOwner(plot, recipient.getUniqueId(), name(recipient));
         plugin.store().savePlotSync(plot);
+        if (plugin.succession() != null) {
+            plugin.succession().recordTransfer(plot, previous, previousName, recipient.getUniqueId(), player);
+        }
         if (plugin.getMapHooks() != null) plugin.getMapHooks().reload();
         plugin.effects().playConfirm(player);
         player.sendMessage(GUIManager.color(tr(player, "transfer_confirm_success",

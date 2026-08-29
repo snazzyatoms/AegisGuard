@@ -101,6 +101,7 @@ public class Plot {
     private volatile ArrivalMode arrivalMode = ArrivalMode.CLASSIC;
     /** When true, visitors may override this plot's arrival mode with their own preference. */
     private volatile boolean allowTravelerOverride;
+    private volatile UUID heir;
 
     // --- REALM PROFILE NOTICEBOARD (Milestone 4) ---
     // Short, owner-moderated public notices (rules, event details, shop info, announcements).
@@ -392,6 +393,9 @@ public class Plot {
         }
         playerRoles.put(playerUUID, role.toLowerCase(Locale.ROOT));
         bannedPlayers.remove(playerUUID);
+        if ("co_owner".equalsIgnoreCase(role) || "steward".equalsIgnoreCase(role)) {
+            lockMember(playerUUID);
+        }
         if (!bypassLock) recordRoleChange(playerUUID, previous, role.toLowerCase(Locale.ROOT));
         return true;
     }
@@ -1481,6 +1485,20 @@ public class Plot {
 
     public void setAllowTravelerOverride(boolean allow) {
         this.allowTravelerOverride = allow;
+    }
+
+    public UUID getHeir() {
+        return heir;
+    }
+
+    public void setHeir(UUID heir) {
+        this.heir = heir;
+    }
+
+    public boolean isCoOwnerOrSteward(UUID playerUUID) {
+        if (playerUUID == null) return false;
+        String role = getRole(playerUUID);
+        return "co_owner".equalsIgnoreCase(role) || "steward".equalsIgnoreCase(role);
     }
 
     // ---------------------------------------------------------------------

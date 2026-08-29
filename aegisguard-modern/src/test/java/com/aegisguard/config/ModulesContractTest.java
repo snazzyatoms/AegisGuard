@@ -22,7 +22,7 @@ class ModulesContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1304, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1305, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertTrue(modules.containsKey("guest_passes"));
         assertTrue(modules.containsKey("expansions"));
@@ -40,6 +40,7 @@ class ModulesContractTest {
         assertEquals(Boolean.TRUE, modules.get("plot_chat"));
         assertEquals(Boolean.TRUE, modules.get("visual_presence"));
         assertEquals(Boolean.TRUE, modules.get("succession"));
+        assertEquals(Boolean.TRUE, modules.get("caravans"));
         Map<String, Object> expansions = (Map<String, Object>) config.get("expansions");
         assertEquals(Boolean.TRUE, expansions.get("enabled"));
         Map<String, Object> cosmetics = (Map<String, Object>) config.get("cosmetics");
@@ -97,6 +98,7 @@ class ModulesContractTest {
         assertEquals(Modules.Id.PLOT_CHAT, Modules.commandModule("frequency"));
         assertEquals(Modules.Id.SUCCESSION, Modules.commandModule("transfer"));
         assertEquals(Modules.Id.SUCCESSION, Modules.commandModule("heir"));
+        assertEquals(Modules.Id.CARAVANS, Modules.commandModule("caravan"));
         assertEquals(null, Modules.commandModule("claim"));
         assertEquals(null, Modules.commandModule("menu"));
         assertEquals(null, Modules.commandModule("wand"));

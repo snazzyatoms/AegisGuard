@@ -86,7 +86,7 @@ public class VisitGUI {
 
     /** Top-level Travel Atlas tabs. Destinations keeps the existing VisitMode footer. */
     public enum AtlasTab {
-        DESTINATIONS, MY_BEACONS, ARRIVAL
+        DESTINATIONS, MY_BEACONS, ARRIVAL, CARAVANS
     }
 
     public static class VisitHolder implements InventoryHolder {
@@ -181,6 +181,14 @@ public class VisitGUI {
     }
 
     public void openAtlas(Player player, AtlasTab tab) {
+        if (tab == AtlasTab.CARAVANS) {
+            plugin.runMain(player, () -> {
+                if (plugin.gui() != null && plugin.gui().caravans() != null) {
+                    plugin.gui().caravans().open(player);
+                }
+            });
+            return;
+        }
         if (tab == AtlasTab.MY_BEACONS || tab == AtlasTab.ARRIVAL) {
             plugin.runMain(player, () -> {
                 if (tab == AtlasTab.MY_BEACONS) buildBeaconsTab(player);
@@ -192,6 +200,10 @@ public class VisitGUI {
     }
 
     public void openAtlas(Player player, AtlasTab tab, int page, VisitMode mode, DiscoverFilter filter, String category) {
+        if (tab == AtlasTab.CARAVANS) {
+            openAtlas(player, tab);
+            return;
+        }
         if (tab == AtlasTab.MY_BEACONS || tab == AtlasTab.ARRIVAL) {
             openAtlas(player, tab);
             return;
@@ -642,6 +654,7 @@ public class VisitGUI {
                 case "atlas_destinations" -> { openAtlas(player, AtlasTab.DESTINATIONS); plugin.effects().playMenuFlip(player); return; }
                 case "atlas_beacons" -> { openAtlas(player, AtlasTab.MY_BEACONS); plugin.effects().playMenuFlip(player); return; }
                 case "atlas_arrival" -> { openAtlas(player, AtlasTab.ARRIVAL); plugin.effects().playMenuFlip(player); return; }
+                case "atlas_caravans" -> { openAtlas(player, AtlasTab.CARAVANS); plugin.effects().playMenuFlip(player); return; }
                 case "back_menu" -> { plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "visit_empty" -> { plugin.effects().playError(player); return; }
@@ -799,6 +812,19 @@ public class VisitGUI {
             tagAction(arrival, "atlas_arrival");
             inv.setItem(41, arrival);
         }
+        boolean caravansOn = plugin.caravans() != null && plugin.caravans().isEnabled();
+        if (caravansOn) {
+            ItemStack caravans = atlasTabItem(player, Material.CHEST_MINECART, selected == AtlasTab.CARAVANS,
+                    "atlas_tab_caravans", "&6Caravans",
+                    List.of("&7Dispatch goods along public beacon hops.", "&7Track ETA, insurance, and payouts."));
+            tagAction(caravans, "atlas_caravans");
+            inv.setItem(40, caravans);
+        }
+    }
+
+    public void attachAtlasChrome(Player player, Inventory inv, AtlasTab selected) {
+        paintAtlasTabs(player, inv, selected);
+        paintVisitChrome(player, inv);
     }
 
     private ItemStack atlasTabItem(Player player, Material icon, boolean selected, String key, String fallback,

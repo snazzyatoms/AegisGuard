@@ -45,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "beacon", "chat", "discover", "favorite", "activity",
+            "group", "alliance", "arena", "beacon", "caravan", "chat", "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
@@ -354,6 +354,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                 }
                 plugin.gui().beacons().openManager(p);
             }
+
+            case "caravan", "caravans" -> handleCaravan(p, args);
 
             // 1.4: per-plot public arrival choice (classic vs beacon) for the plot you manage.
             case "arrival" -> handleArrival(p, args);
@@ -2015,6 +2017,16 @@ private void handleUnsell(Player p) {
             if (!mentioned) {
                 sendMsg(sender, "&e/ag quickclaim [radius] &7- claim a square around you");
             }
+            boolean caravanMentioned = false;
+            for (String line : helpLines) {
+                if (line != null && line.toLowerCase(Locale.ROOT).contains("caravan")) {
+                    caravanMentioned = true;
+                    break;
+                }
+            }
+            if (!caravanMentioned) {
+                sendMsg(sender, "&e/ag caravan &7- dispatch and track trade caravans");
+            }
         }
     }
 
@@ -2138,6 +2150,44 @@ private void handleUnsell(Player p) {
                 }
             }
             default -> plugin.gui().stewardship().open(player, plot);
+        }
+    }
+
+    private void handleCaravan(Player player, String[] args) {
+        if (plugin.caravans() == null || !plugin.caravans().isEnabled()
+                || plugin.gui() == null || plugin.gui().caravans() == null) {
+            sendKey(player, "caravan_unavailable", "&cCaravans are unavailable.");
+            return;
+        }
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "menu";
+        switch (action) {
+            case "list", "status" -> {
+                var owned = plugin.caravans().store().forOwner(player.getUniqueId());
+                if (owned.isEmpty()) {
+                    sendKey(player, "caravan_none", "&eYou have no caravans. Open &f/ag caravan&e to dispatch one.");
+                    plugin.gui().caravans().open(player);
+                    return;
+                }
+                sendKey(player, "caravan_list_header", "&6Your caravans:");
+                for (var caravan : owned) {
+                    sendMsg(player, "&7- &f" + caravan.routeLabel() + " &8(" + caravan.getStatus().name() + ")");
+                }
+            }
+            case "cancel" -> {
+                if (args.length < 3) {
+                    sendKey(player, "caravan_cancel_usage", "&eUsage: &f/ag caravan cancel <id>");
+                    return;
+                }
+                try {
+                    java.util.UUID id = java.util.UUID.fromString(args[2]);
+                    if (!plugin.caravans().cancel(player, id)) {
+                        plugin.effects().playError(player);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    sendKey(player, "caravan_bad_id", "&cThat is not a valid caravan id.");
+                }
+            }
+            default -> plugin.gui().caravans().open(player);
         }
     }
 
@@ -2753,6 +2803,12 @@ private void handleUnsell(Player p) {
             if (args[0].equalsIgnoreCase("beacon")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("give", "pad", "kit"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+            if (args[0].equalsIgnoreCase("caravan") || args[0].equalsIgnoreCase("caravans")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("menu", "list", "status", "cancel"), completions);
                 Collections.sort(completions);
                 return completions;
             }

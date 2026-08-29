@@ -118,6 +118,7 @@ public class GUIManager {
     private com.aegisguard.arena.ArenaGUI arenaGUI;
     private com.aegisguard.arena.ArenaAdminGUI arenaAdminGUI;
     private final com.aegisguard.beacon.BeaconGUI beaconGUI;
+    private final com.aegisguard.caravans.CaravanGUI caravanGUI;
 
     // Title limits (Spigot inventory titles)
     private static final int TITLE_MAX = 32;
@@ -192,6 +193,7 @@ public class GUIManager {
         this.routeAdminGUI = new RouteAdminGUI(plugin);
         this.allianceAccessGUI = new AllianceAccessGUI(plugin);
         this.beaconGUI = new com.aegisguard.beacon.BeaconGUI(plugin);
+        this.caravanGUI = new com.aegisguard.caravans.CaravanGUI(plugin);
     }
 
     // --- OPENERS ---
@@ -369,6 +371,7 @@ public class GUIManager {
     }
 
     public com.aegisguard.beacon.BeaconGUI beacons() { return beaconGUI; }
+    public com.aegisguard.caravans.CaravanGUI caravans() { return caravanGUI; }
 
     // ======================================
     // --- LANGUAGE GATEWAY (Codex Engine) ---

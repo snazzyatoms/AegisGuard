@@ -38,6 +38,7 @@ import com.aegisguard.beacon.BeaconGUI.EditHolder;
 import com.aegisguard.beacon.BeaconGUI.LinkHolder;
 import com.aegisguard.beacon.BeaconGUI.ConfirmHolder;
 import com.aegisguard.succession.StewardshipGUI;
+import com.aegisguard.caravans.CaravanGUI;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -177,6 +178,7 @@ public class GUIListener implements Listener {
                 || holder instanceof GroupPlotsHolder
                 || holder instanceof TransferConfirmHolder
                 || holder instanceof StewardshipGUI.Holder
+                || holder instanceof CaravanGUI.Holder
                 || holder instanceof StaffWandHolder
                 || holder instanceof ConvertSelectHolder
                 || holder instanceof ConvertConfirmHolder
@@ -356,6 +358,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof StewardshipGUI.Holder castHolder) {
             plugin.gui().stewardship().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof CaravanGUI.Holder castHolder) {
+            plugin.gui().caravans().handleClick(player, e, castHolder);
         }
         else if (holder instanceof StaffWandHolder) {
             plugin.gui().convertToServer().handleStaffWandClick(player, e);

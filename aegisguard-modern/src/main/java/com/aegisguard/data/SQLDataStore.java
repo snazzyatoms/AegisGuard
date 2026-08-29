@@ -1508,6 +1508,11 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
+    /** Same pool as beacons; caller must close the connection. */
+    public Connection borrowCaravanConnection() {
+        return borrowBeaconConnection();
+    }
+
     // --- shutdown helper (HARDCORE EDITION) ---
     @Override
     public void shutdown() {

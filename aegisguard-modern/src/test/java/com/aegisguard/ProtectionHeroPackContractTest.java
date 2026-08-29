@@ -33,7 +33,7 @@ class ProtectionHeroPackContractTest {
         try (var in = Files.newInputStream(RES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1304, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1305, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.TRUE, protections.get("hopper_pipe"));
         assertEquals(Boolean.TRUE, protections.get("teleport_ward"));
@@ -162,7 +162,8 @@ class ProtectionHeroPackContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1287")
                 || migration.contains("CURRENT_SCHEMA = 1294")
                 || migration.contains("CURRENT_SCHEMA = 1300")
-                || migration.contains("CURRENT_SCHEMA = 1304"));
+                || migration.contains("CURRENT_SCHEMA = 1304")
+                || migration.contains("CURRENT_SCHEMA = 1305"));
     }
 
     @Test

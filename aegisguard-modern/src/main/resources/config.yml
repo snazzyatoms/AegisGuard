@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1304
+config_schema: 1305
 
 
 # ------------------------------------------------------------------------------
@@ -96,6 +96,7 @@ modules:
   # Entry titles, for-sale labels, and scepter border direction labels.
   visual_presence: true
   succession: true
+  caravans: true
 
 
 # Guardian Succession: co-owners, heirs, transfer cooldown, and inactivity assume.
@@ -105,6 +106,43 @@ succession:
   transfer_cooldown_seconds: 3600
   rollback_window_seconds: 300
   auto_lock_co_owners: true
+
+# Caravans & Trade Routes: real-time shipments along public beacon hops.
+caravans:
+  enabled: true
+  tick_interval_ticks: 20
+  max_active_per_player: 3
+  dispatch_cooldown_seconds: 30
+  min_cargo: 10
+  max_cargo: 10000
+  default_cargo: 100
+  fee_rate: 0.05
+  min_fee: 1
+  insurance_enabled: true
+  insurance_rate: 0.15
+  ms_per_block: 50
+  min_travel_ms: 5000
+  max_travel_ms: 600000
+  risk_medium_distance: 250
+  risk_high_distance: 800
+  require_vault: true
+  require_trade_purpose: false
+  market_purposes:
+    - SHOP
+    - MARKET
+    - AUCTION
+  events:
+    ambush_weight: 15
+    toll_weight: 15
+    boon_weight: 10
+    delay_weight: 10
+  ambush_loss_rate: 1.0
+  boon_bonus_rate: 0.20
+  toll_rate: 0.05
+  escort_cut_rate: 0.10
+  escort_ambush_divisor: 2
+  delay_ms: 15000
+  cancel_progress: 0.25
 
 
 # ==============================================================================

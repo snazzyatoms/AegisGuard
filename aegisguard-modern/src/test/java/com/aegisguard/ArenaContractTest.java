@@ -79,7 +79,8 @@ class ArenaContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1287")
                 || migration.contains("CURRENT_SCHEMA = 1294")
                 || migration.contains("CURRENT_SCHEMA = 1300")
-                || migration.contains("CURRENT_SCHEMA = 1304"));
+                || migration.contains("CURRENT_SCHEMA = 1304")
+                || migration.contains("CURRENT_SCHEMA = 1305"));
     }
 
     @Test

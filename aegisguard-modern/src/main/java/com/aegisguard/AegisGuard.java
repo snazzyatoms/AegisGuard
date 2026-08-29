@@ -153,6 +153,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.travel.SafeTravelService safeTravelService;
     private com.aegisguard.beacon.BeaconService beaconService;
     private com.aegisguard.succession.SuccessionService successionService;
+    private com.aegisguard.caravans.CaravanService caravanService;
     private com.aegisguard.chat.PlotChatService plotChatService;
 
     // --- HOOKS ---
@@ -174,6 +175,7 @@ public class AegisGuard extends JavaPlugin {
     private Object scheduledSnapshotTask;
     private Object automaticPlayerBackupTask;
     private Object arenaTickTask;
+    private Object caravanTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
     private AegisCommand playerCommand;
 
@@ -267,6 +269,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
     public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
     public com.aegisguard.succession.SuccessionService succession() { return successionService; }
+    public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
@@ -341,6 +344,7 @@ public class AegisGuard extends JavaPlugin {
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
         beaconService = new com.aegisguard.beacon.BeaconService(this);
         successionService = new com.aegisguard.succession.SuccessionService(this);
+        caravanService = new com.aegisguard.caravans.CaravanService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
@@ -413,6 +417,12 @@ public class AegisGuard extends JavaPlugin {
             loadPersistentState("teleport beacons", () -> {
                 if (beaconService != null) beaconService.load();
             });
+            loadPersistentState("caravans", () -> {
+                if (caravanService != null) {
+                    caravanService.load();
+                    caravanService.resumeOverdue(System.currentTimeMillis());
+                }
+            });
             loadPersistentState("arena state", () -> {
                 if (arenaService != null) {
                     arenaService.load();
@@ -450,6 +460,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.guidance.FirstClaimGuidanceListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.beacon.BeaconListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.caravans.CaravanListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
@@ -474,6 +485,7 @@ public class AegisGuard extends JavaPlugin {
         startScheduledSnapshotTask();
         startAutomaticPlayerBackupTask();
         startArenaTickTask();
+        startCaravanTickTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -518,6 +530,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(scheduledSnapshotTask);
         cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
+        cancelTaskReflectively(caravanTickTask);
         if (snapshotManager != null) snapshotManager.shutdownOperations();
         if (plotChatService != null) plotChatService.clearAll();
         if (platformScheduler != null) platformScheduler.shutdown();
@@ -597,6 +610,12 @@ public class AegisGuard extends JavaPlugin {
             if (beaconService != null) beaconService.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save teleport beacons: " + (t.getMessage() == null ? "" : t.getMessage()));
+        }
+
+        try {
+            if (caravanService != null) caravanService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save caravans: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         try {
@@ -832,6 +851,7 @@ public class AegisGuard extends JavaPlugin {
                 if (groupManager != null && groupManager.isDirty()) groupManager.save();
                 if (routeService != null && routeService.isDirty()) routeService.save();
                 if (beaconService != null && beaconService.isDirty()) beaconService.save();
+                if (caravanService != null && caravanService.isDirty()) caravanService.save();
                 if (arenaService != null && arenaService.isDirty()) arenaService.save();
                 if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();
@@ -1008,6 +1028,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(scheduledSnapshotTask);
         cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
+        cancelTaskReflectively(caravanTickTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -1020,6 +1041,7 @@ public class AegisGuard extends JavaPlugin {
         scheduledSnapshotTask = null;
         automaticPlayerBackupTask = null;
         arenaTickTask = null;
+        caravanTickTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -1032,6 +1054,7 @@ public class AegisGuard extends JavaPlugin {
         startScheduledSnapshotTask();
         startAutomaticPlayerBackupTask();
         startArenaTickTask();
+        startCaravanTickTask();
     }
 
     private void startRentalExpiryTask() {
@@ -1171,6 +1194,18 @@ public class AegisGuard extends JavaPlugin {
         }, 20L, 20L);
     }
 
+    private void startCaravanTickTask() {
+        if (caravanService == null) return;
+        long period = Math.max(20L, getConfig().getLong("caravans.tick_interval_ticks", 20L));
+        caravanTickTask = runGlobalRepeating(() -> {
+            try {
+                if (caravanService != null) caravanService.tick();
+            } catch (Throwable t) {
+                getLogger().warning("Caravan tick error: " + (t.getMessage() == null ? "" : t.getMessage()));
+            }
+        }, period, period);
+    }
+
     private void cancelTaskReflectively(Object task) {
         if (platformScheduler != null) {
             platformScheduler.cancel(task);
@@ -1191,7 +1226,10 @@ public class AegisGuard extends JavaPlugin {
                     if (holder == null) return;
 
                     String hn = holder.getClass().getName();
-                    if (hn.startsWith("com.aegisguard.gui")) {
+                    if (hn.startsWith("com.aegisguard.gui")
+                            || hn.startsWith("com.aegisguard.caravans")
+                            || hn.startsWith("com.aegisguard.beacon")
+                            || hn.startsWith("com.aegisguard.succession")) {
                         p.closeInventory();
                     }
                 } catch (Throwable ignored) {}

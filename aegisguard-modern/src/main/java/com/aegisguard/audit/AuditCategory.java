@@ -25,6 +25,9 @@ public enum AuditCategory {
     /** Guardian Succession: ownership transfer, assume, and rollback. */
     OWNERSHIP_TRANSFER,
 
+    /** Caravans & Trade Routes: dispatch, arrival, fail, and cancel. */
+    CARAVAN,
+
     /** Milestone 7 (Alliance Access): join/leave/disband and per-plot access toggles. */
     ALLIANCE
 }

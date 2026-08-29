@@ -46,9 +46,11 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Caravans & Trade Routes.** `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops, with insurance, weighted route events, Folia-safe ticks, and resume after restart.
 
-**Server sanctuary.** On a server or spawn plot, staff with manage/steward can turn on **Keep Health** and **Keep Hunger** in Claim Settings → Safety. Players then do not lose hearts or food while standing in that plot. Both start **off**. Personal plots cannot use this.
+**Server sanctuary.** On a server or spawn plot, staff with manage/steward can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players then do not lose hearts or food there, and deaths can keep levels and items. All start **off**. Personal plots cannot use this. There is no hub-flight Safety toggle. Flight is Ascension/Horizon level 30, staff fly, or `/agadmin skill fly`.
 
-Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1306` and migration auto-merges the new keys with a timestamped backup.
+**Claim presets and staff seasons.** A successful claim opens the main preset chooser. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
+
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1307` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
 
@@ -160,7 +162,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI and the public AegisGuard API |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1306`) |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1307`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 

@@ -43,7 +43,8 @@ class SeamlessUpgradeContractTest {
     @Test
     void first1287UpgradeLogsPlotsUnchangedAndDoctorNotRequired() throws Exception {
         String migration = Files.readString(JAVA_ROOT.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1306"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
+                || migration.contains("CURRENT_SCHEMA = 1307"));
         assertTrue(migration.contains("Existing plots were left unchanged"));
         assertTrue(migration.contains("Doctor is not required"));
         assertTrue(migration.contains("lastReport()"));

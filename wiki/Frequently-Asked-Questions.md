@@ -34,7 +34,7 @@ Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Se
 
 **Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1306`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1307`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
@@ -164,9 +164,11 @@ Use `/agadmin menu` to access available administrative controls for server-owned
 
 **Yes, per server plot, and only if staff turn it on.**
 
-Open Claim Settings on that server/spawn plot and use Safety → **Keep Health** and **Keep Hunger**. Players inside then do not lose hearts or food. Eating can still fill hunger. Void and `/kill` still apply.
+Open Claim Settings on that server/spawn plot and use Safety → **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory**. Players inside then do not lose hearts or food. Deaths there can keep levels and items. Eating can still fill hunger. Void and `/kill` still apply.
 
-This is opt-in and **off by default**. Personal player claims cannot use it. `protections.keep_health` and `protections.keep_hunger` in `config.yml` only seed **new** server claims; existing spawn plots stay unchanged until someone toggles the plot.
+This is opt-in and **off by default**. Personal player claims cannot use it. There is **no hub-flight Safety toggle**. Flight unlocks at Ascension / Horizon level 30, or staff can fly / grant `/agadmin skill fly`.
+
+`protections.keep_*` keys in `config.yml` only seed **new** server claims; existing spawn plots stay unchanged until someone toggles the plot.
 
 Staff with `aegis.serverzone.manage` or the Steward role on that plot can change the toggles. Safe Zone remains admin-only.
 

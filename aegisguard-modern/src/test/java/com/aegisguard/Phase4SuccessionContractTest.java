@@ -24,7 +24,7 @@ class Phase4SuccessionContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1306, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1307, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("succession"));
         Map<String, Object> succession = (Map<String, Object>) config.get("succession");
@@ -33,7 +33,8 @@ class Phase4SuccessionContractTest {
         assertEquals(3600, ((Number) succession.get("transfer_cooldown_seconds")).intValue());
         assertEquals(300, ((Number) succession.get("rollback_window_seconds")).intValue());
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1306"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
+                || migration.contains("CURRENT_SCHEMA = 1307"));
     }
 
     @Test

@@ -155,6 +155,8 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.succession.SuccessionService successionService;
     private com.aegisguard.caravans.CaravanService caravanService;
     private com.aegisguard.chat.PlotChatService plotChatService;
+    private com.aegisguard.protection.FlightSkillService flightSkillService;
+    private com.aegisguard.season.SeasonService seasonService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -271,6 +273,8 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.succession.SuccessionService succession() { return successionService; }
     public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
+    public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
+    public com.aegisguard.season.SeasonService seasons() { return seasonService; }
     public DiscordWebhook getDiscord() { return discord; }
     public MapHookManager getMapHooks() { return mapHookManager; }
     public boolean isFolia() { return isFolia; }
@@ -346,6 +350,8 @@ public class AegisGuard extends JavaPlugin {
         successionService = new com.aegisguard.succession.SuccessionService(this);
         caravanService = new com.aegisguard.caravans.CaravanService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
+        flightSkillService = new com.aegisguard.protection.FlightSkillService(this);
+        seasonService = new com.aegisguard.season.SeasonService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -468,6 +474,9 @@ public class AegisGuard extends JavaPlugin {
         }
         levelingListener = new LevelingListener(this);
         Bukkit.getPluginManager().registerEvents(levelingListener, this);
+        if (flightSkillService != null) {
+            Bukkit.getPluginManager().registerEvents(flightSkillService, this);
+        }
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.listeners.MigrationWandListener(this), this);
         Bukkit.getPluginManager().registerEvents(new MarketStallListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
@@ -638,6 +647,18 @@ public class AegisGuard extends JavaPlugin {
             if (caravanService != null) caravanService.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save caravans: " + (t.getMessage() == null ? "" : t.getMessage()));
+        }
+
+        try {
+            if (flightSkillService != null) flightSkillService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save flight skills: " + (t.getMessage() == null ? "" : t.getMessage()));
+        }
+
+        try {
+            if (seasonService != null) seasonService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save seasons: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         try {

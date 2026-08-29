@@ -185,8 +185,8 @@ public class PlotFlagsGUI {
                 tl(player, "plot_flags_page_safety_lore",
                         plot.isServerZone()
                                 ? List.of(
-                                "&7PvP, TNT, fire, mobs, entry,",
-                                "&7Safe Zone, Keep Health, and Keep Hunger.")
+                                "&7PvP, TNT, fire, mobs, entry, Safe Zone,",
+                                "&7Keep Health, Hunger, XP, and Inventory.")
                                 : List.of(
                                 "&7PvP, TNT, fire, mobs, entry,",
                                 "&7and Safe Zone."))
@@ -212,7 +212,7 @@ public class PlotFlagsGUI {
                 t(player, "plot_flags_page_presets", "&dPresets"),
                 tl(player, "plot_flags_page_presets_lore", List.of(
                         server
-                                ? "&7Shop and Arena bundles for this server plot."
+                                ? "&7Spawn, Hub, Shop, and Arena bundles."
                                 : "&7Home, Shop, Arena, and Farm bundles."
                 ))
         ));
@@ -277,6 +277,28 @@ public class PlotFlagsGUI {
             ItemStack hungerItem = GUIManager.createItem(Material.COOKED_BEEF, hungerName, hungerLore);
             if (keepHunger) glow(hungerItem);
             inv.setItem(20, hungerItem);
+
+            boolean keepXp = plugin.protection().keepsXp(plot);
+            String xpName = t(player, "button_keep_xp" + (keepXp ? "_on" : "_off"),
+                    onOffFallback(player, keepXp, "Keep XP"));
+            List<String> xpLore = tl(player, "keep_xp_toggle_lore", List.of(
+                    "&7Players who die in this server plot keep levels.",
+                    "&eClick to toggle. Off by default."
+            ));
+            ItemStack xpItem = GUIManager.createItem(Material.EXPERIENCE_BOTTLE, xpName, xpLore);
+            if (keepXp) glow(xpItem);
+            inv.setItem(21, xpItem);
+
+            boolean keepInv = plugin.protection().keepsInventory(plot);
+            String invName = t(player, "button_keep_inventory" + (keepInv ? "_on" : "_off"),
+                    onOffFallback(player, keepInv, "Keep Inventory"));
+            List<String> invLore = tl(player, "keep_inventory_toggle_lore", List.of(
+                    "&7Players who die in this server plot keep items.",
+                    "&eClick to toggle. Off by default."
+            ));
+            ItemStack invItem = GUIManager.createItem(Material.CHEST, invName, invLore);
+            if (keepInv) glow(invItem);
+            inv.setItem(22, invItem);
         }
     }
 
@@ -309,17 +331,22 @@ public class PlotFlagsGUI {
 
     private void buildPresets(Player player, Inventory inv, Plot plot) {
         boolean server = plot.isServerZone();
-        if (!server) {
-            placePresetButton(player, inv, 10, ProtectionPreset.HOME, Material.RED_BED);
-            placePresetButton(player, inv, 16, ProtectionPreset.FARM, Material.HAY_BLOCK);
-            if (plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
-                String cosName = t(player, "button_cosmetics", "&bCosmetics");
-                List<String> cosLore = tl(player, "cosmetics_lore", List.of());
-                inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
-            }
+        if (server) {
+            placePresetButton(player, inv, 10, ProtectionPreset.SPAWN, Material.BEACON);
+            placePresetButton(player, inv, 12, ProtectionPreset.HUB, Material.LODESTONE);
+            placePresetButton(player, inv, 14, ProtectionPreset.SHOP, Material.EMERALD_BLOCK);
+            placePresetButton(player, inv, 16, ProtectionPreset.ARENA, Material.IRON_SWORD);
+            return;
         }
+        placePresetButton(player, inv, 10, ProtectionPreset.HOME, Material.RED_BED);
         placePresetButton(player, inv, 12, ProtectionPreset.SHOP, Material.EMERALD_BLOCK);
         placePresetButton(player, inv, 14, ProtectionPreset.ARENA, Material.IRON_SWORD);
+        placePresetButton(player, inv, 16, ProtectionPreset.FARM, Material.HAY_BLOCK);
+        if (plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {
+            String cosName = t(player, "button_cosmetics", "&bCosmetics");
+            List<String> cosLore = tl(player, "cosmetics_lore", List.of());
+            inv.setItem(22, GUIManager.createItem(Material.NETHER_STAR, cosName, cosLore));
+        }
     }
 
     private void placePresetButton(Player player, Inventory inv, int slot, ProtectionPreset preset, Material icon) {
@@ -339,6 +366,8 @@ public class PlotFlagsGUI {
             case SHOP -> List.of("&7Open entry with shop interact.", "&7Containers and build stay protected.");
             case ARENA -> List.of("&7PvP allowed. TNT and fire stay safe.", "&7Build and containers stay protected.");
             case FARM -> List.of("&7Farm and animals open for helpers.", "&7Mobs and TNT stay protected.");
+            case SPAWN -> List.of("&7Staff spawn bundle: open entry,", "&7combat and mobs locked down.");
+            case HUB -> List.of("&7Public hub bundle with shop interact.", "&7Does not change Keep Health or Hunger.");
         };
     }
 
@@ -470,6 +499,24 @@ public class PlotFlagsGUI {
                             refresh = true;
                         }
                     }
+                    case 21 -> {
+                        if (plot.isServerZone()) {
+                            plot.setFlag("keep_xp", !plugin.protection().keepsXp(plot));
+                            plugin.store().savePlot(plot);
+                            plugin.store().setDirty(true);
+                            plugin.effects().playConfirm(player);
+                            refresh = true;
+                        }
+                    }
+                    case 22 -> {
+                        if (plot.isServerZone()) {
+                            plot.setFlag("keep_inventory", !plugin.protection().keepsInventory(plot));
+                            plugin.store().savePlot(plot);
+                            plugin.store().setDirty(true);
+                            plugin.effects().playConfirm(player);
+                            refresh = true;
+                        }
+                    }
                 }
             }
             case MECHANICS -> {
@@ -496,18 +543,20 @@ public class PlotFlagsGUI {
             case PRESETS -> {
                 switch (rawSlot) {
                     case 10 -> {
-                        if (!plot.isServerZone()) {
-                            openPresetConfirm(player, plot, ProtectionPreset.HOME);
-                            return;
-                        }
+                        openPresetConfirm(player, plot, plot.isServerZone() ? ProtectionPreset.SPAWN : ProtectionPreset.HOME);
+                        return;
                     }
-                    case 12 -> { openPresetConfirm(player, plot, ProtectionPreset.SHOP); return; }
-                    case 14 -> { openPresetConfirm(player, plot, ProtectionPreset.ARENA); return; }
+                    case 12 -> {
+                        openPresetConfirm(player, plot, plot.isServerZone() ? ProtectionPreset.HUB : ProtectionPreset.SHOP);
+                        return;
+                    }
+                    case 14 -> {
+                        openPresetConfirm(player, plot, plot.isServerZone() ? ProtectionPreset.SHOP : ProtectionPreset.ARENA);
+                        return;
+                    }
                     case 16 -> {
-                        if (!plot.isServerZone()) {
-                            openPresetConfirm(player, plot, ProtectionPreset.FARM);
-                            return;
-                        }
+                        openPresetConfirm(player, plot, plot.isServerZone() ? ProtectionPreset.ARENA : ProtectionPreset.FARM);
+                        return;
                     }
                     case 22 -> {
                         if (!plot.isServerZone() && plugin.modules().on(com.aegisguard.config.Modules.Id.COSMETICS)) {

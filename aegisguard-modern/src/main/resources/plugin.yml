@@ -98,6 +98,9 @@ permissions:
       aegis.admin.world: true
       aegis.admin.audit: true
       aegis.admin.routes: true
+      aegis.admin.season: true
+      aegis.admin.skill: true
+      aegis.admin.fly: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -145,6 +148,9 @@ permissions:
       aegis.admin.world: true
       aegis.admin.audit: true
       aegis.admin.routes: true
+      aegis.admin.season: true
+      aegis.admin.skill: true
+      aegis.admin.fly: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -302,6 +308,18 @@ permissions:
 
   aegis.admin.routes:
     description: Create and edit exploration routes with ordered checkpoints.
+    default: op
+
+  aegis.admin.season:
+    description: Set the staff season title and featured Atlas/Route pins.
+    default: op
+
+  aegis.admin.skill:
+    description: Grant or revoke temporary flight skills.
+    default: op
+
+  aegis.admin.fly:
+    description: Allow this staff member survival flight when flight_skill.staff_always is true.
     default: op
 
   aegis.arena.use:

@@ -2054,6 +2054,13 @@ admin_routes_lore:
 - '&7ordered checkpoints for players to browse.'
 - ' '
 - '&eClick to open.'
+button_admin_season: '&6Season of the Guard'
+admin_season_lore:
+- '&7What: pin favoured plots and routes'
+- '&7for the present season of staff.'
+- '&7When: festivals, town spotlights, tours.'
+- ' '
+- '&eClick to open.'
 routes_admin_title: '&cRoute Editor'
 routes_admin_edit_title: '&cEdit Route'
 routes_admin_enabled: '&aEnabled'

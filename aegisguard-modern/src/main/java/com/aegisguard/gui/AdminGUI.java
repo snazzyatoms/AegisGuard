@@ -66,6 +66,7 @@ public class AdminGUI {
 
     private static final int SLOT_SECTION_MODULES = 36;
     private static final int SLOT_TOOL_ROUTES         = 37;
+    private static final int SLOT_TOOL_SEASON         = 41;
     private static final int SLOT_TOOL_ARENA          = 38;
     private static final int SLOT_TOOL_REFRESH_LANG  = 39;
     private static final int SLOT_TOOL_RELOAD_ALL    = 40;
@@ -383,6 +384,22 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_ROUTES, routes);
         }
 
+        if (player.hasPermission("aegis.admin.season") || plugin.isAdmin(player)) {
+            ItemStack season = GUIManager.createItem(
+                    Material.GOLDEN_HELMET,
+                    plugin.gui().tr(player, "button_admin_season", "&6Staff Season"),
+                    plugin.gui().trList(player, "admin_season_lore", List.of(
+                            "&7What: pin featured plots and routes",
+                            "&7for the current staff season.",
+                            "&7When: events, town spotlights, tours.",
+                            " ",
+                            "&eClick to open."
+                    ))
+            );
+            tagAction(season, "open_season");
+            inv.setItem(SLOT_TOOL_SEASON, season);
+        }
+
         if (mod(com.aegisguard.config.Modules.Id.ARENA)
                 && (player.hasPermission("aegis.arena.admin") || player.hasPermission("aegis.arena.steward") || plugin.isAdmin(player))) {
             ItemStack arena = GUIManager.createItem(
@@ -559,6 +576,15 @@ public class AdminGUI {
                     plugin.effects().playMenuFlip(player);
                 } else {
                     sendKey(player, "migration_unavailable", "&cMigration wizard is unavailable.");
+                    plugin.effects().playError(player);
+                }
+            }
+            case "open_season" -> {
+                if (player.hasPermission("aegis.admin.season") || plugin.isAdmin(player)) {
+                    plugin.gui().seasons().open(player);
+                    plugin.effects().playMenuFlip(player);
+                } else {
+                    plugin.msg().send(player, "no_perm");
                     plugin.effects().playError(player);
                 }
             }

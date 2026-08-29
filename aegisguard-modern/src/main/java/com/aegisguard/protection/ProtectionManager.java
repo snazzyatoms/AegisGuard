@@ -27,6 +27,7 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -314,6 +315,16 @@ public class ProtectionManager implements Listener {
         return plot != null && plot.isServerZone() && plot.getFlag("keep_hunger", false);
     }
 
+    /** Server-plot only: death does not drop experience. */
+    public boolean keepsXp(Plot plot) {
+        return plot != null && plot.isServerZone() && plot.getFlag("keep_xp", false);
+    }
+
+    /** Server-plot only: death does not drop the inventory. */
+    public boolean keepsInventory(Plot plot) {
+        return plot != null && plot.isServerZone() && plot.getFlag("keep_inventory", false);
+    }
+
     static boolean isUnavoidableDamage(EntityDamageEvent.DamageCause cause) {
         if (cause == null) return false;
         return switch (cause) {
@@ -345,6 +356,21 @@ public class ProtectionManager implements Listener {
         if (!keepsHunger(plot)) return;
         if (e.getFoodLevel() < player.getFoodLevel()) {
             e.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSanctuaryDeath(PlayerDeathEvent e) {
+        Player player = e.getEntity();
+        if (player == null) return;
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (keepsInventory(plot)) {
+            e.setKeepInventory(true);
+            e.getDrops().clear();
+        }
+        if (keepsXp(plot)) {
+            e.setKeepLevel(true);
+            e.setDroppedExp(0);
         }
     }
 

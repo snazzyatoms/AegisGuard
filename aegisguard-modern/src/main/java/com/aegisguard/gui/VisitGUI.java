@@ -249,8 +249,10 @@ public class VisitGUI {
                     }
                     case DISCOVER -> {
                         var discovery = plugin.territoryLife().discovery(plot.getPlotId());
-                        if (!plot.isServerZone() && discovery.visible()
-                                && matchesDiscoverFilter(plot, requestedFilter, requestedCategory)) {
+                        boolean seasonHit = plugin.seasons() != null && plugin.seasons().isEnabled()
+                                && plugin.seasons().isFeaturedPlot(plot.getPlotId());
+                        if (seasonHit || (!plot.isServerZone() && discovery.visible()
+                                && matchesDiscoverFilter(plot, requestedFilter, requestedCategory))) {
                             displayPlots.add(plot);
                         }
                     }
@@ -280,7 +282,9 @@ public class VisitGUI {
 
             if (requestedMode == VisitMode.DISCOVER || requestedMode == VisitMode.FAVORITES) {
                 displayPlots.sort(Comparator
-                        .comparing((Plot plot) -> plugin.territoryLife().discovery(plot.getPlotId()).featured()).reversed()
+                        .comparing((Plot plot) -> plugin.seasons() != null && plugin.seasons().isEnabled()
+                                && plugin.seasons().isFeaturedPlot(plot.getPlotId())).reversed()
+                        .thenComparing((Plot plot) -> plugin.territoryLife().discovery(plot.getPlotId()).featured()).reversed()
                         .thenComparing(Plot::getLikes, Comparator.reverseOrder())
                         .thenComparing((Plot plot) -> plugin.territoryLife().discovery(plot.getPlotId()).visits(), Comparator.reverseOrder())
                         .thenComparing((Plot plot) -> plugin.territoryLife().discovery(plot.getPlotId()).lastVisit(), Comparator.reverseOrder()));
@@ -458,6 +462,14 @@ public class VisitGUI {
                                 "&7Likes: &d{LIKES} &8| &7Visits: &b{VISITS}",
                                 Map.of("LIKES", String.valueOf(plot.getLikes()),
                                         "VISITS", String.valueOf(discovery.visits())))));
+                        if (plugin.seasons() != null && plugin.seasons().isEnabled()
+                                && plugin.seasons().isFeaturedPlot(plot.getPlotId())) {
+                            String seasonName = plugin.seasons().title().isBlank()
+                                    ? t(player, "season_untitled", "Season")
+                                    : plugin.seasons().title();
+                            lore.add(GUIManager.color(t(player, "visit_season_featured_line",
+                                    "&6★ Season feature: {SEASON}", Map.of("SEASON", seasonName))));
+                        }
                         if (discovery.featured()) {
                             lore.add(GUIManager.color(t(player, "visit_featured_line", "&6★ Featured Territory")));
                         }

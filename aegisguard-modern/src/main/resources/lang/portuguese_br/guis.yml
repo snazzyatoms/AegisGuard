@@ -2038,6 +2038,13 @@ admin_routes_lore:
 - '&7Quando: construção de passeios guiados ou trilhas.'
 - ' '
 - '&eClique para abrir.'
+button_admin_season: '&6Temporada da equipe'
+admin_season_lore:
+- '&7O que: destacar parcelas e rotas'
+- '&7da temporada atual da equipe.'
+- '&7Quando: eventos, vitrines da cidade, tours.'
+- ' '
+- '&eClique para abrir.'
 button_admin_set_spawn: '&aDefinir plotagem atual como spawn'
 admin_set_spawn_lore:
 - '&7O que: defina o local seguro desta área de equipe como Spawn público.'

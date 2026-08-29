@@ -48,7 +48,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
-            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "transition", "upgrade", "v130", "v140",
+            "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
             "help"
     };
 
@@ -119,6 +119,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "merge" -> handleServerMerge(player, args);
             case "rentals" -> handleAdminRentals(player, args);
             case "discover" -> handleAdminDiscover(player, args);
+            case "season" -> handleAdminSeason(player, args);
+            case "skill" -> handleAdminSkill(player, args);
             case "activity" -> handleAdminActivity(player);
             case "audit" -> handleAudit(player);
             case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
@@ -791,6 +793,8 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_reload", "&e/agadmin reload &8- Reload AegisGuard");
         sendLocalized(player, "admin_help_transition",
                 "&e/agadmin transition &8- 1.2.7 / 1.3.x → 1.4.0 upgrade status");
+        sendLocalized(player, "admin_help_season", "&e/agadmin season &8- Staff season featured plots and routes");
+        sendLocalized(player, "admin_help_skill", "&e/agadmin skill fly <player> [seconds] &8- Temporary flight skill");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 
@@ -1128,6 +1132,148 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 Map.of("ACTION", action));
         sendLocalized(player, "admin_discover_updated",
                 "&aDiscovery state updated: {ACTION}.", Map.of("ACTION", action));
+    }
+
+    private void handleAdminSeason(Player player, String[] args) {
+        if (!player.hasPermission("aegis.admin.season") && !plugin.isAdmin(player)) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+        if (plugin.seasons() == null || !plugin.seasons().isEnabled()) {
+            sendLocalized(player, "season_disabled", "&cStaff seasons are disabled.");
+            return;
+        }
+        if (args.length < 2) {
+            plugin.gui().seasons().open(player);
+            return;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        switch (action) {
+            case "title" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "season_title_usage", "&eUsage: /agadmin season title <name>");
+                    return;
+                }
+                plugin.seasons().setTitle(String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
+                sendLocalized(player, "season_title_set", "&aSeason title updated.");
+            }
+            case "desc", "description" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "season_desc_usage", "&eUsage: /agadmin season desc <text>");
+                    return;
+                }
+                plugin.seasons().setDescription(String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
+                sendLocalized(player, "season_desc_set", "&aSeason description updated.");
+            }
+            case "feature" -> {
+                Plot plot = plugin.store().getPlotAt(player.getLocation());
+                if (plot == null) {
+                    sendLocalized(player, "season_need_plot", "&cStand inside the plot you want to feature.");
+                    return;
+                }
+                if (!plugin.seasons().featurePlot(plot.getPlotId())) {
+                    sendLocalized(player, "season_plot_limit", "&cSeason plot limit reached.");
+                    return;
+                }
+                plugin.territoryLife().setFeatured(plot.getPlotId(), true);
+                sendLocalized(player, "season_plot_featured", "&aThis plot is featured for the current season.");
+            }
+            case "unfeature" -> {
+                Plot plot = plugin.store().getPlotAt(player.getLocation());
+                if (plot == null) {
+                    sendLocalized(player, "season_need_plot", "&cStand inside the plot you want to feature.");
+                    return;
+                }
+                plugin.seasons().unfeaturePlot(plot.getPlotId());
+                sendLocalized(player, "season_plot_unfeatured", "&aThis plot is no longer a season feature.");
+            }
+            case "route" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "season_route_usage", "&eUsage: /agadmin season route <name>");
+                    return;
+                }
+                UUID routeId = plugin.seasons().resolveRoute(String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
+                if (routeId == null) {
+                    sendLocalized(player, "season_route_missing", "&cNo matching route.");
+                    return;
+                }
+                if (!plugin.seasons().featureRoute(routeId)) {
+                    sendLocalized(player, "season_route_limit", "&cSeason route limit reached.");
+                    return;
+                }
+                sendLocalized(player, "season_route_featured", "&aThat route is featured for the current season.");
+            }
+            case "unroute" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "season_route_usage", "&eUsage: /agadmin season unroute <name>");
+                    return;
+                }
+                UUID routeId = plugin.seasons().resolveRoute(String.join(" ", Arrays.copyOfRange(args, 2, args.length)));
+                if (routeId == null) {
+                    sendLocalized(player, "season_route_missing", "&cNo matching route.");
+                    return;
+                }
+                plugin.seasons().unfeatureRoute(routeId);
+                sendLocalized(player, "season_route_unfeatured", "&aThat route is no longer a season feature.");
+            }
+            case "clear" -> {
+                plugin.seasons().clear();
+                sendLocalized(player, "season_cleared", "&aStaff season cleared.");
+            }
+            default -> plugin.gui().seasons().open(player);
+        }
+    }
+
+    private void handleAdminSkill(Player player, String[] args) {
+        if (!player.hasPermission("aegis.admin.skill") && !plugin.isAdmin(player)) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+        if (plugin.flightSkills() == null || !plugin.flightSkills().isEnabled()) {
+            sendLocalized(player, "flight_skill_disabled", "&cFlight skills are disabled.");
+            return;
+        }
+        if (args.length < 3) {
+            sendLocalized(player, "flight_skill_usage",
+                    "&eUsage: /agadmin skill fly <player> [seconds] &7or &e/agadmin skill clear <player>");
+            return;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        Player target = Bukkit.getPlayerExact(args[2]);
+        if (target == null) {
+            sendLocalized(player, "player_not_found", "&cPlayer not found.");
+            return;
+        }
+        if (action.equals("clear") || action.equals("revoke")) {
+            plugin.flightSkills().clear(target.getUniqueId());
+            plugin.flightSkills().refreshLater(target);
+            sendLocalized(player, "flight_skill_cleared", "&aCleared flight skill for {PLAYER}.",
+                    Map.of("PLAYER", target.getName()));
+            return;
+        }
+        if (!action.equals("fly") && !action.equals("flight")) {
+            sendLocalized(player, "flight_skill_usage",
+                    "&eUsage: /agadmin skill fly <player> [seconds] &7or &e/agadmin skill clear <player>");
+            return;
+        }
+        int seconds = plugin.flightSkills().defaultSeconds();
+        if (args.length >= 4) {
+            try {
+                seconds = Integer.parseInt(args[3]);
+            } catch (NumberFormatException ignored) {
+                sendLocalized(player, "flight_skill_usage",
+                        "&eUsage: /agadmin skill fly <player> [seconds] &7or &e/agadmin skill clear <player>");
+                return;
+            }
+        }
+        plugin.flightSkills().grant(target.getUniqueId(), seconds);
+        plugin.flightSkills().refreshLater(target);
+        sendLocalized(player, "flight_skill_granted",
+                "&aGranted flight skill to {PLAYER} for {SECONDS}s.",
+                Map.of("PLAYER", target.getName(), "SECONDS", String.valueOf(seconds)));
+        target.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                plugin.gui().tr(target, "flight_skill_received",
+                        "&aA staff member granted you a temporary flight skill.")));
     }
 
     private void handleAdminActivity(Player player) {

@@ -75,6 +75,9 @@ public class RoutesGUI {
         }
 
         List<Route> routes = plugin.routes().enabledRoutes();
+        if (plugin.seasons() != null && plugin.seasons().isEnabled()) {
+            routes = plugin.seasons().sortRoutes(routes);
+        }
         int perPage = 21;
         int maxPages = Math.max(1, (int) Math.ceil(routes.size() / (double) perPage));
         int safePage = Math.max(0, Math.min(page, maxPages - 1));
@@ -137,6 +140,10 @@ public class RoutesGUI {
                     "&7Next: &e{NAME}")));
         } else if (route.size() > 0) {
             lore.add(GUIManager.color(t(player, "routes_complete_line", "&a✔ Route complete")));
+        }
+        if (plugin.seasons() != null && plugin.seasons().isEnabled()
+                && plugin.seasons().isFeaturedRoute(route.getId())) {
+            lore.add(GUIManager.color(t(player, "routes_season_featured_line", "&6★ Featured on the staff season")));
         }
         lore.add(" ");
         lore.add(GUIManager.color(t(player, "routes_click_detail", "&eClick for details.")));

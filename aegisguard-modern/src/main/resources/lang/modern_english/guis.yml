@@ -2051,6 +2051,13 @@ admin_routes_lore:
 - '&7When: building guided tours or trails.'
 - ' '
 - '&eClick to open.'
+button_admin_season: '&6Staff Season'
+admin_season_lore:
+- '&7What: pin featured plots and routes'
+- '&7for the current staff season.'
+- '&7When: events, town spotlights, tours.'
+- ' '
+- '&eClick to open.'
 button_admin_set_spawn: '&aSet Current Plot as Spawn'
 admin_set_spawn_lore:
 - '&7What: set this staff plot''s safe spot as public Spawn.'

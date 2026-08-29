@@ -45,10 +45,14 @@ class AscensionHallContractTest {
     void effectsHaveOneOwnerAndPreserveExternalState() throws Exception {
         String listener = Files.readString(JAVA_ROOT.resolve("listeners/LevelingListener.java"));
         String protection = Files.readString(JAVA_ROOT.resolve("protection/ProtectionManager.java"));
+        String flight = Files.readString(JAVA_ROOT.resolve("protection/FlightSkillService.java"));
         assertTrue(listener.contains("managedEffects"));
         assertTrue(listener.contains("displacedEffects"));
-        assertTrue(listener.contains("previousFlight"));
         assertTrue(listener.contains("public void refresh(Player player, Plot plot)"));
+        assertTrue(listener.contains("flightSkills().refresh"));
+        assertTrue(flight.contains("previousFlight"));
+        assertTrue(flight.contains("putIfAbsent"));
+        assertFalse(listener.contains("setAllowFlight"));
         assertFalse(listener.contains("effect.getDuration() > 100000"));
         assertFalse(protection.contains("applyPlotBuffs"));
         assertFalse(protection.contains("clearPlotBuffs"));

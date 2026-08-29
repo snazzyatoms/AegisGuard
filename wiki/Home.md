@@ -63,7 +63,7 @@ Optional first steps after your first claim:
 1. Stop the server.
 2. Confirm **Java 21** or newer.
 3. Replace the old JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1306`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1307`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`).
 6. Run `/agadmin doctor` only if something looks wrong.
 
@@ -80,8 +80,11 @@ A folder backup of `plugins/AegisGuard/` is recommended. It is not required to k
 - **Restore-safe roles** — snapshot restore merges members/roles by default; `/ag roles lock|unlock|undo`.
 - **Guardian Succession** — `/ag heir`, `/ag succession`, Stewardship GUI, transfer cooldown and rollback.
 - **Caravans** — `/ag caravan` charge-then-deliver shipments on public beacon hops.
-- **Server sanctuary** — staff can toggle **Keep Health** and **Keep Hunger** on a server/spawn plot in Claim Settings → Safety so players do not lose hearts or food there. Off by default. Player plots never get this.
-- **Schema migration** — `config_schema` moves `1294` → `1306`; new keys auto-merge on upgrade with a backup.
+- **Server sanctuary** — staff can toggle **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** on a server/spawn plot in Claim Settings → Safety. Off by default. Player plots never get this. No hub-flight Safety flag.
+- **Claim presets** — after claim, choose Home / Shop / Arena / Farm (or Spawn / Hub / Shop / Arena on server plots).
+- **Staff seasons** — `/agadmin season` pins featured Atlas plots and Routes.
+- **Flight** — Ascension/Horizon level 30, staff fly, or `/agadmin skill fly <player> [seconds]`.
+- **Schema migration** — `config_schema` moves `1294` → `1307`; new keys auto-merge on upgrade with a backup.
 
 ## What's New in 1.3.5
 

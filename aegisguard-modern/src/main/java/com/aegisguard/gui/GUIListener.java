@@ -24,6 +24,7 @@ import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
 import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
+import com.aegisguard.season.SeasonAdminGUI;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceRosterHolder;
@@ -210,6 +211,7 @@ public class GUIListener implements Listener {
                 || holder instanceof RouteDetailHolder
                 || holder instanceof RouteAdminHolder
                 || holder instanceof RouteEditHolder
+                || holder instanceof SeasonAdminGUI.Holder
                 || holder instanceof AllianceMenuHolder
                 || holder instanceof AllianceConfirmHolder
                 || holder instanceof AllianceRosterHolder
@@ -485,6 +487,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof RouteAdminHolder castHolder) {
             plugin.gui().routeAdmin().handleListClick(player, e, castHolder);
+        }
+        else if (holder instanceof SeasonAdminGUI.Holder) {
+            plugin.gui().seasons().handleClick(player, e);
         }
         else if (holder instanceof RouteEditHolder castHolder) {
             plugin.gui().routeAdmin().handleEditClick(player, e, castHolder);
@@ -811,6 +816,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof RouteEditHolder castHolder) {
             plugin.gui().routeAdmin().openEdit(player, castHolder.getRoute());
+            return;
+        }
+        if (holder instanceof SeasonAdminGUI.Holder) {
+            plugin.gui().seasons().open(player);
             return;
         }
 

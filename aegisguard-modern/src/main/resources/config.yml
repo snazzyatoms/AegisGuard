@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1306
+config_schema: 1307
 
 
 # ------------------------------------------------------------------------------
@@ -455,6 +455,10 @@ claims:
     enabled: true
     default_radius: 5
     max_radius: 25
+
+  # After a successful claim, open the main preset chooser (Home/Shop/Arena/Farm,
+  # or Spawn/Hub/Shop/Arena on server plots). Sanctuary flags are never overwritten.
+  preset_chooser: true
 
   # Wand behavior.
   consume_wand_on_claim: true
@@ -1541,6 +1545,7 @@ leveling:
     29:
       - "EFFECT:CONDUIT_POWER:1"
     30:
+      # Horizon-tier perk. Hub Safety never grants flight.
       - "FLIGHT"
       - "MEMBERS:5"
 
@@ -1628,6 +1633,26 @@ protections:
   # plot can toggle these in Claim Settings → Safety. Player plots ignore them.
   keep_health: false
   keep_hunger: false
+  keep_xp: false
+  keep_inventory: false
+
+# ==============================================================================
+# Temporary flight skill (staff grant). Plot flight still unlocks at Ascension 30.
+# Hub Safety never grants flight.
+# ==============================================================================
+flight_skill:
+  enabled: true
+  staff_always: true
+  default_seconds: 300
+  max_seconds: 3600
+
+# ==============================================================================
+# Staff season overlay for Atlas Discover and Routes
+# ==============================================================================
+seasons:
+  enabled: true
+  max_featured_plots: 5
+  max_featured_routes: 5
 
 
 # ==============================================================================

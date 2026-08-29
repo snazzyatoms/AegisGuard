@@ -42,6 +42,18 @@ Language `{KEY}` placeholders now fill in on strings loaded from `lang/`, not on
 
 Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
+## Upcoming in 1.4.0
+
+The next release is still in development and is **not part of 1.3.5**. The features below are **planned and not yet released**; they are previewed here so server owners can plan ahead. Nothing in this section ships in the current 1.3.5 build.
+
+**Travel Atlas arrival choice.** Each plot will offer a player and owner choice between classic plot-spawn travel and beacon-pad arrival, with a traveler override available where the owner permits it. A new `/ag arrival <classic|beacon>` control will let players pick how they land.
+
+**Beacon hardening.** Teleport beacons will enforce one beacon per block and strict one-to-one A→B links, so a pad cannot hold duplicate connections. Stray or orphaned pads will be de-duplicated automatically.
+
+**Arrival flow polish.** A configurable stand-to-confirm delay, a soft arrival sparkle, and a create cooldown are planned to make travel feel deliberate and prevent accidental or rapid pad creation.
+
+**Schema.** 1.4.0 will ship with its own config schema bump; the current 1.3.5 schema is unchanged by this preview.
+
 ## What Is New In 1.3.0
 
 ### Language Picker

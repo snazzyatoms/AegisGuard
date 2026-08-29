@@ -101,6 +101,7 @@ permissions:
       aegis.admin.season: true
       aegis.admin.skill: true
       aegis.admin.fly: true
+      aegis.admin.hearth: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -151,6 +152,7 @@ permissions:
       aegis.admin.season: true
       aegis.admin.skill: true
       aegis.admin.fly: true
+      aegis.admin.hearth: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -320,6 +322,10 @@ permissions:
 
   aegis.admin.fly:
     description: Allow this staff member survival flight when flight_skill.staff_always is true.
+    default: op
+
+  aegis.admin.hearth:
+    description: Hear every Hearth room and speak without being muffled.
     default: op
 
   aegis.arena.use:

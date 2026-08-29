@@ -42,6 +42,22 @@ Language `{KEY}` placeholders now fill in on strings loaded from `lang/`, not on
 
 Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
+## Upcoming In 1.4.0
+
+The following features are planned for the next major release and are being tracked in the 1.4.0 development line:
+
+**Travel Atlas and Caravans.** A unified travel menu will bring together destinations, teleport beacons, arrival settings, and trade caravans. Caravans will use charge-then-deliver shipments, public beacon hops, insurance and route events, with Folia-safe ticking and resume-after-restart behavior.
+
+**Quick-Claim and Guardian Succession.** Quick-claim will use the existing claim pipeline, while co-owner and steward grants will support heir designation, inactivity assumption, transfer cooldowns, and a short rollback window.
+
+**Server Sanctuary and progression updates.** Staff-managed server or spawn plots will gain optional Keep Health, Keep Hunger, Keep XP, and Keep Inventory safety flags. Flight progression and staff flight skills will receive the 1.4.0 updates, while existing defaults remain safe and opt-in where applicable.
+
+**Aegis radios (vanilla text chat).** Plot Frequency, alliance radio, group radio, and staff radio will be separate text-chat channels with `/ag chat`, `/ag frequency`, `/ag chat <message>`, `/ag chat off`, `/ag chat alliance`, `/ag chat group`, `/ag staff`, `/ag staffchat`, and `/agadmin staffchat`. Permissions include `aegis.chat`, `aegis.chat.alliance`, `aegis.chat.group`, and `aegis.admin.staffchat`. Players can opt into only one Aegis channel at a time; radios are independent of Hearth Rooms, work for Java and Bedrock players, and remain optional alongside other chat plugins.
+
+**Hearth Rooms and optional voice integration.** Hearth will keep public text chat scoped to 3D rooms or plots. If Simple Voice Chat is installed, an optional hook can isolate voice groups by Hearth room; AegisGuard will still work without it. Hearth and Aegis radios are separate systems.
+
+**Language and upgrade readiness.** The release will continue the language-pack parity work, preserve translated values while adding missing keys, support server-provided language packs that retain the required keys and placeholders, and migrate existing 1.3.5 data through the planned schema update with a timestamped backup.
+
 ## What Is New In 1.3.0
 
 ### Language Picker

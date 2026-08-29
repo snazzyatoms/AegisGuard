@@ -442,6 +442,8 @@ public class SelectionService implements Listener {
             plot.setFlag("safe_zone", true);
             plot.setFlag("keep_health", plugin.getConfig().getBoolean("protections.keep_health", false));
             plot.setFlag("keep_hunger", plugin.getConfig().getBoolean("protections.keep_hunger", false));
+            plot.setFlag("keep_xp", plugin.getConfig().getBoolean("protections.keep_xp", false));
+            plot.setFlag("keep_inventory", plugin.getConfig().getBoolean("protections.keep_inventory", false));
         } else {
             plot = new Plot(
                     UUID.randomUUID(),
@@ -491,6 +493,10 @@ public class SelectionService implements Listener {
 
         if (isServerClaim && plugin.serverZoneStewardship() != null) {
             plugin.serverZoneStewardship().grantSteward(p, plot, true);
+        }
+
+        if (plugin.getConfig().getBoolean("claims.preset_chooser", true) && plugin.gui() != null) {
+            plugin.runMain(p, () -> plugin.gui().flags().open(p, plot, com.aegisguard.gui.PlotFlagsGUI.Page.PRESETS));
         }
 
         // Discord webhook (if configured)

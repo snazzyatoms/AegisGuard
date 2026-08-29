@@ -110,6 +110,7 @@ public class GUIManager {
     // Routes and Checkpoints (1.3.0+ Milestone 6)
     private final RoutesGUI routesGUI;
     private final RouteAdminGUI routeAdminGUI;
+    private final com.aegisguard.season.SeasonAdminGUI seasonAdminGUI;
 
     // Alliance Access (1.3.0+ Milestone 7)
     private final AllianceAccessGUI allianceAccessGUI;
@@ -190,6 +191,7 @@ public class GUIManager {
         this.realmProfileGUI = new RealmProfileGUI(plugin);
         this.walkthroughGUI = new FirstClaimWalkthroughGUI(plugin);
         this.routesGUI = new RoutesGUI(plugin);
+        this.seasonAdminGUI = new com.aegisguard.season.SeasonAdminGUI(plugin);
         this.routeAdminGUI = new RouteAdminGUI(plugin);
         this.allianceAccessGUI = new AllianceAccessGUI(plugin);
         this.beaconGUI = new com.aegisguard.beacon.BeaconGUI(plugin);
@@ -353,6 +355,8 @@ public class GUIManager {
     public RoutesGUI routes() { return routesGUI; }
 
     public RouteAdminGUI routeAdmin() { return routeAdminGUI; }
+
+    public com.aegisguard.season.SeasonAdminGUI seasons() { return seasonAdminGUI; }
 
     public AllianceAccessGUI allianceAccess() { return allianceAccessGUI; }
 

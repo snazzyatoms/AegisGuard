@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.api.events.PlotLevelUpEvent;
 import com.aegisguard.data.Plot;
 import com.aegisguard.progression.AscensionFocus;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,7 +31,6 @@ public final class LevelingListener implements Listener {
     private final Map<UUID, UUID> activePlotCache = new ConcurrentHashMap<>();
     private final Map<UUID, Set<PotionEffectType>> managedEffects = new ConcurrentHashMap<>();
     private final Map<UUID, Map<PotionEffectType, PotionEffect>> displacedEffects = new ConcurrentHashMap<>();
-    private final Map<UUID, Boolean> previousFlight = new ConcurrentHashMap<>();
 
     public LevelingListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -169,10 +167,7 @@ public final class LevelingListener implements Listener {
         if (!applied.isEmpty()) managedEffects.put(player.getUniqueId(), applied);
         if (!displaced.isEmpty()) displacedEffects.put(player.getUniqueId(), displaced);
 
-        if (hasFlight(plot) && isSurvivalLike(player)) {
-            previousFlight.putIfAbsent(player.getUniqueId(), player.getAllowFlight());
-            player.setAllowFlight(true);
-        }
+        if (plugin.flightSkills() != null) plugin.flightSkills().refresh(player);
     }
 
     private Map<PotionEffectType, Integer> collectEffects(Plot plot) {
@@ -199,7 +194,8 @@ public final class LevelingListener implements Listener {
         return effects;
     }
 
-    private boolean hasFlight(Plot plot) {
+    public boolean hasFlightReward(Plot plot) {
+        if (plot == null) return false;
         for (int level = 1; level <= plot.getLevel(); level++) {
             List<String> rewards = plugin.cfg().getLevelRewards(level);
             if (rewards == null) continue;
@@ -218,19 +214,11 @@ public final class LevelingListener implements Listener {
         Map<PotionEffectType, PotionEffect> displaced = displacedEffects.remove(playerId);
         if (displaced != null) displaced.values().forEach(effect -> player.addPotionEffect(effect, true));
 
-        Boolean priorFlight = previousFlight.remove(playerId);
-        if (priorFlight != null && isSurvivalLike(player)) {
-            player.setAllowFlight(priorFlight);
-            if (!priorFlight && player.isFlying()) player.setFlying(false);
-        }
+        if (plugin.flightSkills() != null) plugin.flightSkills().refresh(player);
     }
 
     private boolean isAllowed(Player player, Plot plot) {
         return plot.isOwner(player) || plot.isTrusted(player);
-    }
-
-    private boolean isSurvivalLike(Player player) {
-        return player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE;
     }
 
     private void send(Player player, String key, String fallback, Map<String, String> replacements) {

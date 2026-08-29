@@ -14,7 +14,9 @@ public enum ProtectionPreset {
     HOME,
     SHOP,
     ARENA,
-    FARM;
+    FARM,
+    SPAWN,
+    HUB;
 
     public Map<String, Boolean> flagBundle() {
         return switch (this) {
@@ -101,6 +103,48 @@ public enum ProtectionPreset {
                     "decor", true,
                     "shop-interact", false
             );
+            case SPAWN -> bundle(
+                    "entry", true,
+                    "pvp", true,
+                    "mobs", true,
+                    "tnt-damage", true,
+                    "fire-spread", true,
+                    "containers", true,
+                    "build", true,
+                    "animals", true,
+                    "farm", true,
+                    "doors", true,
+                    "redstone", true,
+                    "vehicles", true,
+                    "piston-use", true,
+                    "hopper-pipe", true,
+                    "liquid-flow", true,
+                    "teleport-ward", true,
+                    "storm-ward", true,
+                    "decor", true,
+                    "shop-interact", false
+            );
+            case HUB -> bundle(
+                    "entry", true,
+                    "shop-interact", true,
+                    "pvp", true,
+                    "mobs", true,
+                    "tnt-damage", true,
+                    "fire-spread", true,
+                    "containers", true,
+                    "build", true,
+                    "animals", true,
+                    "farm", true,
+                    "doors", false,
+                    "redstone", false,
+                    "vehicles", true,
+                    "piston-use", true,
+                    "hopper-pipe", true,
+                    "liquid-flow", true,
+                    "teleport-ward", false,
+                    "storm-ward", true,
+                    "decor", true
+            );
         };
     }
 
@@ -117,11 +161,17 @@ public enum ProtectionPreset {
             case SHOP -> "Shop";
             case ARENA -> "Arena";
             case FARM -> "Farm";
+            case SPAWN -> "Spawn";
+            case HUB -> "Hub";
         };
     }
 
     public static java.util.List<ProtectionPreset> ordered() {
-        return java.util.List.of(HOME, SHOP, ARENA, FARM);
+        return java.util.List.of(HOME, SHOP, ARENA, FARM, SPAWN, HUB);
+    }
+
+    public static java.util.List<ProtectionPreset> forPlot(boolean serverZone) {
+        return serverZone ? java.util.List.of(SPAWN, HUB, SHOP, ARENA) : java.util.List.of(HOME, SHOP, ARENA, FARM);
     }
 
     private static Map<String, Boolean> bundle(Object... keyValues) {

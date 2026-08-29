@@ -4,7 +4,7 @@
 
 AegisGuard `1.4.0` builds on the public `1.3.5` release. It finishes the Travel Atlas, adds Quick-Claim and restore-safe roles, ships Guardian Succession, introduces Caravans & Trade Routes, and lets staff opt a server/spawn plot into Keep Health / Keep Hunger sanctuary.
 
-Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1306`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
+Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1307`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
 
@@ -41,7 +41,11 @@ Granting `co_owner` or `steward` auto-locks that member. `/ag heir`, `/ag succes
 
 ### Server sanctuary
 
-Staff who can manage a **server plot** (spawn, hub, and other staff-owned land) can turn on **Keep Health** and **Keep Hunger** in Claim Settings → Safety. Players standing in that plot then do not lose hearts or food. Eating can still fill the hunger bar. Void and `/kill` still apply. Both toggles start **off**, including on existing server plots, so upgrading does not suddenly make spawn invincible. Personal player claims never get these buttons. `protections.keep_health` / `protections.keep_hunger` in `config.yml` are defaults for **new** server claims only.
+Staff who can manage a **server plot** (spawn, hub, and other staff-owned land) can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players standing in that plot then do not lose hearts or food, and deaths there can keep levels and items. Eating can still fill the hunger bar. Void and `/kill` still apply. All four toggles start **off**. Personal player claims never get them. There is **no hub-flight Safety flag**. Plot flight still unlocks at Ascension / Horizon level 30. Staff can fly when `flight_skill.staff_always` is on, or grant a temporary flight skill with `/agadmin skill fly <player> [seconds]`.
+
+### Claim presets and staff seasons
+
+After a successful claim, the main preset chooser opens (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags. Staff can run a season overlay: `/agadmin season` pins featured plots on Atlas Discover and featured routes in the Routes browser.
 
 ---
 
@@ -50,7 +54,7 @@ Staff who can manage a **server plot** (spawn, hub, and other staff-owned land) 
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1306`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1307`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
 
@@ -90,6 +94,8 @@ API JARs (`AegisGuard-1.4.0-api.jar`, `AegisGuard-1.4.0-dev-api.jar`) are for de
 /ag heir [player|clear]      Name a succession heir
 /ag succession               Open Stewardship / assume / rollback
 /ag caravan                  Dispatch and track trade caravans
+/agadmin season              Staff season featured plots and routes
+/agadmin skill fly <player>  Grant a temporary flight skill
 /agadmin menu                Open the Staff Command Center
 /agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools

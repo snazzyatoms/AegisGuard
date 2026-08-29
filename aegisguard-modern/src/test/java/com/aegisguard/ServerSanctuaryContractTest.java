@@ -25,12 +25,13 @@ class ServerSanctuaryContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1306, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1307, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.FALSE, protections.get("keep_health"));
         assertEquals(Boolean.FALSE, protections.get("keep_hunger"));
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1306"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
+                || migration.contains("CURRENT_SCHEMA = 1307"));
     }
 
     @Test

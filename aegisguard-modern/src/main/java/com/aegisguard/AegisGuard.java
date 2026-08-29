@@ -593,6 +593,12 @@ public class AegisGuard extends JavaPlugin {
         }
     }
 
+    public void refreshAllHearthVoice() {
+        for (org.bukkit.entity.Player online : Bukkit.getOnlinePlayers()) {
+            refreshHearthVoice(online);
+        }
+    }
+
     @Override
     public void onDisable() {
         // Cancel tasks safely
@@ -917,6 +923,7 @@ public class AegisGuard extends JavaPlugin {
         if (refreshGuis) {
             runMainGlobal(this::closeAllAegisGUIs);
         }
+        refreshAllHearthVoice();
 
         console().info("log_reloaded", "AegisGuard reloaded successfully.");
     }

@@ -46,15 +46,30 @@ class HearthVoicechatContractTest {
         assertTrue(hook.contains("Group.Type.ISOLATED"));
         assertTrue(hook.contains("GROUP_PREFIX"));
         assertTrue(hook.contains("voicechat_override_player_groups"));
+        assertTrue(hook.contains("plugin.runSync"));
+        assertTrue(hook.contains("RemoveGroupEvent"));
+        assertTrue(hook.contains("voice.getGroup"));
+        assertTrue(hook.contains("voice.removeGroup"));
+        assertTrue(hook.contains("lastVoiceRoom"));
+        assertFalse(hook.contains("Player player = Bukkit.getPlayer(id);")
+                && hook.contains("if (player != null) refreshLater(player);")
+                && !hook.contains("plugin.runSync"));
         String main = Files.readString(JAVA.resolve("AegisGuard.java"));
         assertTrue(main.contains("registerHearthVoicechatHook"));
         assertTrue(main.contains("BukkitVoicechatService"));
+        assertTrue(main.contains("refreshAllHearthVoice"));
         assertFalse(main.contains("import de.maxhenkel.voicechat"));
         String pom = Files.readString(Path.of("pom.xml"));
         assertTrue(pom.contains("voicechat-api"));
         assertTrue(pom.contains("maven.maxhenkel.de"));
         assertTrue(pom.contains("<artifactId>voicechat-api</artifactId>")
                 && pom.contains("<scope>provided</scope>"));
+        String englishGuis = Files.readString(Path.of("src/main/resources/lang/modern_english/guis.yml"));
+        String englishSystem = Files.readString(Path.of("src/main/resources/lang/modern_english/system.yml"));
+        assertTrue(englishGuis.contains("hearth_toggle_lore:"));
+        assertTrue(englishGuis.contains("button_hearth_on:"));
+        assertTrue(englishSystem.contains("log_voicechat_hooked:"));
+        assertTrue(englishSystem.contains("flight_skill_granted:"));
     }
 
     @Test

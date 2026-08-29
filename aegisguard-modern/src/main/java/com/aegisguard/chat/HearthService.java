@@ -7,8 +7,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Hearth: location-scoped public chat. The "closed door" is a marked room
@@ -29,6 +31,7 @@ public final class HearthService {
     public static final String SPY_PERMISSION = "aegis.admin.hearth";
 
     private final AegisGuard plugin;
+    private final Map<UUID, Room> lastRoom = new ConcurrentHashMap<>();
 
     public HearthService(AegisGuard plugin) {
         this.plugin = plugin;
@@ -48,6 +51,32 @@ public final class HearthService {
 
     public Room roomOf(Player player) {
         return player == null ? null : roomAt(player.getLocation());
+    }
+
+    /**
+     * Last room captured on the player's region thread. Safe to read from
+     * {@code AsyncPlayerChatEvent} without touching Bukkit location APIs.
+     */
+    public Room cachedRoom(Player player) {
+        return player == null ? null : lastRoom.get(player.getUniqueId());
+    }
+
+    /** Call only on the player's region / entity thread. */
+    public Room updatePresence(Player player) {
+        return player == null ? null : updatePresenceAt(player, player.getLocation());
+    }
+
+    /** Call only on the region thread that owns {@code location}. */
+    public Room updatePresenceAt(Player player, Location location) {
+        if (player == null) return null;
+        Room next = roomAt(location);
+        if (next == null) lastRoom.remove(player.getUniqueId());
+        else lastRoom.put(player.getUniqueId(), next);
+        return next;
+    }
+
+    public void forget(Player player) {
+        if (player != null) lastRoom.remove(player.getUniqueId());
     }
 
     public boolean isSpy(Player player) {

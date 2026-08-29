@@ -3496,8 +3496,8 @@ plot_flags_server_title: '&3⚙ Ustawienia działki serwera'
 plot_flags_page_safety: '&cBezpieczeństwo'
 plot_flags_page_safety_title: '&cBezpieczeństwo'
 plot_flags_page_safety_lore:
-  - '&7PvP, TNT, ogień, moby, wstęp'
-  - '&7i strefa bezpieczna.'
+  - '&7PvP, TNT, ogień, moby, wstęp,'
+  - '&7strefa bezpieczna, Ognisko i Zachowaj.'
 plot_flags_page_mechanics: '&eMechanika'
 plot_flags_page_mechanics_title: '&eMechanika'
 plot_flags_page_mechanics_lore:
@@ -3887,3 +3887,73 @@ button_plot_chat: '&bCzęstotliwość Aegis'
 plot_chat_button_lore:
 - '&7Przełącz prywatny czat działki'
 - '&7dla członków tego terenu.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aOgnisko: włączone'
+button_hearth_off: '&cOgnisko: wyłączone'
+hearth_toggle_lore:
+- '&7Czat publiczny zostaje w tym pomieszczeniu.'
+- '&7Pomieszczenie to podobszar 3D albo reszta'
+- '&7działki, jeśli w żadnym nie stoisz.'
+- '&7Ci na zewnątrz nie słyszą tych w środku,'
+- '&7a pomieszczenie nie słyszy ulicy.'
+- '&7Jeśli zainstalowano Simple Voice Chat,'
+- '&7głos jest izolowany tak samo.'
+- '&7Oznacz domy, areny i hol z'
+- '&7/ag subplot. Domyślnie wyłączone.'
+- '&eKliknij, aby przełączyć.'
+button_keep_health_on: '&aZachowaj zdrowie: włączone'
+button_keep_health_off: '&cZachowaj zdrowie: wyłączone'
+keep_health_toggle_lore:
+- '&7Gracze na tej działce serwera nie otrzymują obrażeń.'
+- '&7Otchłań i /kill nadal działają.'
+- '&eKliknij, aby przełączyć. Domyślnie wyłączone.'
+button_keep_hunger_on: '&aZachowaj głód: włączone'
+button_keep_hunger_off: '&cZachowaj głód: wyłączone'
+keep_hunger_toggle_lore:
+- '&7Gracze na tej działce serwera nie tracą jedzenia.'
+- '&7Jedzenie nadal może wypełnić pasek.'
+- '&eKliknij, aby przełączyć. Domyślnie wyłączone.'
+button_keep_xp_on: '&aZachowaj XP: włączone'
+button_keep_xp_off: '&cZachowaj XP: wyłączone'
+keep_xp_toggle_lore:
+- '&7Kto zginie na tej działce serwera, zachowuje poziomy.'
+- '&eKliknij, aby przełączyć. Domyślnie wyłączone.'
+button_keep_inventory_on: '&aZachowaj ekwipunek: włączone'
+button_keep_inventory_off: '&cZachowaj ekwipunek: wyłączone'
+keep_inventory_toggle_lore:
+- '&7Kto zginie na tej działce serwera, zachowuje przedmioty.'
+- '&eKliknij, aby przełączyć. Domyślnie wyłączone.'
+protection_preset_name_SPAWN: '&bPreset spawnu'
+protection_preset_name_HUB: '&bPreset huba'
+protection_preset_lore_SPAWN:
+- '&7Pakiet spawnu staffa: otwarte wejście,'
+- '&7walka i moby zablokowane.'
+protection_preset_lore_HUB:
+- '&7Publiczny hub ze sklepami.'
+- '&7Nie zmienia Zachowaj zdrowie ani głód.'
+protection_preset_confirm_name_SPAWN: '&aPotwierdź: Spawn'
+protection_preset_confirm_name_HUB: '&aPotwierdź: Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Pakiet spawnu staffa: otwarte wejście,'
+- '&7walka i moby zablokowane.'
+protection_preset_confirm_lore_HUB:
+- '&7Publiczny hub ze sklepami.'
+- '&7Nie zmienia Zachowaj zdrowie ani głód.'
+season_admin_title: '&6Sezon staffa'
+season_admin_header: '&6Sezon staffa'
+season_untitled: '&7Brak tytułu sezonu'
+season_feature_plot_name: '&aWyróżnij tę działkę'
+season_unfeature_plot_name: '&eUsuń tę działkę'
+season_feature_plot_lore:
+- '&7Stań na działce i kliknij.'
+- '&7Wyróżnienia sezonu są pierwsze na Atlasie.'
+season_clear_name: '&cWyczyść sezon'
+season_clear_lore:
+- '&7Usuwa tytuł, opis'
+- '&7oraz każdą wyróżnioną działkę i trasę.'
+season_featured_plot_name: '&6★ Działka {NAME}'
+season_featured_plot_lore:
+- '&7Przypięte w Odkrywaj i Destynacjach.'
+season_featured_route_name: '&a★ Trasa {NAME}'
+season_featured_route_lore:
+- '&7Przypięte jako pierwsze w przeglądarce Tras.'

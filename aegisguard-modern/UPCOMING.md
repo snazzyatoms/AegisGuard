@@ -4,7 +4,7 @@
 
 AegisGuard 1.4.0 is the current source line, built on the public 1.3.5 release. The `V1.4.0` line now includes Travel Atlas GUI tabs, Quick-Claim, restore-safe roles, Guardian Succession, Caravans, server sanctuary, claim presets, staff seasons, and Hearth chat rooms. See [`../RELEASE_NOTES_1.4.0.md`](../RELEASE_NOTES_1.4.0.md).
 
-Follow-ups that are **not** required to run 1.4.0: dedicated nine-pack translations for the newest Atlas/Succession/Caravan/season strings (English `tr()` fallbacks ship today), Roles GUI lock/undo buttons (the commands already exist), and a Plasmo Voice hook if a server uses that stack instead of Simple Voice Chat. AegisGuard already hooks Simple Voice Chat for Hearth rooms and will not ship its own microphone client.
+Follow-ups that are **not** required to run 1.4.0: Roles GUI lock/undo buttons (the commands already exist), and a Plasmo Voice hook if a server uses that stack instead of Simple Voice Chat. Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the Simple Voice Chat hook now have keys in all nine packs. AegisGuard will not ship its own microphone client.
 
 -----
 

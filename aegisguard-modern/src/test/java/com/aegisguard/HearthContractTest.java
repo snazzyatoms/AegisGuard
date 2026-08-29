@@ -89,11 +89,20 @@ class HearthContractTest {
         String listener = Files.readString(JAVA.resolve("chat/HearthListener.java"));
         assertTrue(listener.contains("AsyncPlayerChatEvent"));
         assertTrue(listener.contains("interceptPublicChat"));
+        assertTrue(listener.contains("cachedRoom"));
+        assertFalse(listener.contains("hearth.roomOf(speaker)"));
+        String service = Files.readString(JAVA.resolve("chat/HearthService.java"));
+        assertTrue(service.contains("cachedRoom"));
+        assertTrue(service.contains("updatePresenceAt"));
         String pluginMain = Files.readString(JAVA.resolve("AegisGuard.java"));
         assertTrue(pluginMain.contains("HearthService"));
         assertTrue(pluginMain.contains("HearthListener"));
         String perms = Files.readString(Path.of("src/main/resources/plugin.yml"));
         assertTrue(perms.contains("aegis.admin.hearth"));
+        String englishGuis = Files.readString(RESOURCES.resolve("lang/modern_english/guis.yml"));
+        assertTrue(englishGuis.contains("hearth_toggle_lore:"));
+        assertTrue(englishGuis.contains("button_hearth_on:"));
+        assertTrue(englishGuis.contains("button_keep_health_on:"));
         for (ProtectionPreset preset : ProtectionPreset.values()) {
             assertFalse(preset.flagBundle().containsKey("hearth"));
         }

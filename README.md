@@ -54,7 +54,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat).
 
-**Simple Voice Chat hook.** If the `voicechat` plugin is installed, Hearth rooms also become isolated SVC groups. People in the house or pit only hear each other on the mic. AegisGuard still starts without Simple Voice Chat. Player-made SVC groups are left alone unless `hearth.voicechat_override_player_groups` is true. Staff text spy still hears every room; voice follows the room you are standing in. AegisGuard does not ship a microphone client.
+**Simple Voice Chat hook.** If the `voicechat` plugin is installed, Hearth rooms also become isolated SVC groups. People in the house or pit only hear each other on the mic. AegisGuard still starts without Simple Voice Chat. Player-made SVC groups are left alone unless `hearth.voicechat_override_player_groups` is true. Staff text spy still hears every room; voice follows the room you are standing in. The hook is Folia-safe: SVC network threads never call Bukkit player APIs, room changes are coalesced, and `/agadmin reload` clears or resyncs groups. AegisGuard does not ship a microphone client.
 
 **Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 
@@ -73,6 +73,10 @@ Staff recovery snapshots now restore complete versioned plot state, including ac
 ### Language Picker
 
 Settings no longer cycles language packs one click at a time. Open language from Settings to reach **Choose Your Language**, which lists every installed pack. All nine packs — Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish — plus Codex fallbacks stay in sync, so switching languages does not fall back to English placeholders.
+
+1.4.0 Hearth, Keep Health / Hunger / XP / Inventory, Spawn/Hub presets, staff seasons, flight skills, and the Simple Voice Chat console lines ship as real keys in every pack. Java English strings are only a last resort when a key is missing everywhere. Language sync **adds missing keys** and never overwrites a value you already translated.
+
+**Add your own language.** Copy `plugins/AegisGuard/lang/modern_english/` to `plugins/AegisGuard/lang/my_lang/`, translate the values, keep the key names and `{PLACEHOLDER}` tokens, then add `my_lang` to `localization.available_languages`. Server-wide overrides go in `lang/overrides.yml` (highest priority). After edits, run `/agadmin reload` or Refresh Language Packs. Your translations stay; a plugin update will not replace them with English.
 
 ### Server-Zone Stewardship
 

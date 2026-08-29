@@ -3499,8 +3499,8 @@ plot_flags_server_title: '&3⚙ Réglages de parcelle serveur'
 plot_flags_page_safety: '&cSécurité'
 plot_flags_page_safety_title: '&cSécurité'
 plot_flags_page_safety_lore:
-  - '&7PvP, TNT, feu, monstres, entrée'
-  - '&7et zone sûre.'
+  - '&7PvP, TNT, feu, monstres, entrée,'
+  - '&7zone sûre, Âtre et Conservation.'
 plot_flags_page_mechanics: '&eMécaniques'
 plot_flags_page_mechanics_title: '&eMécaniques'
 plot_flags_page_mechanics_lore:
@@ -3890,3 +3890,73 @@ button_plot_chat: '&bFréquence Aegis'
 plot_chat_button_lore:
 - '&7Active le chat privé de parcelle'
 - '&7pour les membres de cette claim.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aÂtre : activé'
+button_hearth_off: '&cÂtre : désactivé'
+hearth_toggle_lore:
+- '&7Le chat public reste dans cette pièce.'
+- '&7Une pièce est une sous-parcelle 3D, ou le reste'
+- '&7du terrain si vous n’êtes dans aucune.'
+- '&7Ceux dehors n’entendent pas ceux dedans,'
+- '&7et la pièce n’entend pas la rue.'
+- '&7Si Simple Voice Chat est installé,'
+- '&7la voix est isolée de la même façon.'
+- '&7Marquez maisons, fosses et halls avec'
+- '&7/ag subplot. Désactivé par défaut.'
+- '&eCliquez pour basculer.'
+button_keep_health_on: '&aGarder la vie : activé'
+button_keep_health_off: '&cGarder la vie : désactivé'
+keep_health_toggle_lore:
+- '&7Les joueurs de cette parcelle serveur ne subissent pas de dégâts.'
+- '&7Le vide et /kill s’appliquent encore.'
+- '&eCliquez pour basculer. Désactivé par défaut.'
+button_keep_hunger_on: '&aGarder la faim : activé'
+button_keep_hunger_off: '&cGarder la faim : désactivé'
+keep_hunger_toggle_lore:
+- '&7Les joueurs de cette parcelle serveur ne perdent pas de nourriture.'
+- '&7Manger peut encore remplir la barre.'
+- '&eCliquez pour basculer. Désactivé par défaut.'
+button_keep_xp_on: '&aGarder l’XP : activé'
+button_keep_xp_off: '&cGarder l’XP : désactivé'
+keep_xp_toggle_lore:
+- '&7Ceux qui meurent sur cette parcelle serveur gardent leurs niveaux.'
+- '&eCliquez pour basculer. Désactivé par défaut.'
+button_keep_inventory_on: '&aGarder l’inventaire : activé'
+button_keep_inventory_off: '&cGarder l’inventaire : désactivé'
+keep_inventory_toggle_lore:
+- '&7Ceux qui meurent sur cette parcelle serveur gardent leurs objets.'
+- '&eCliquez pour basculer. Désactivé par défaut.'
+protection_preset_name_SPAWN: '&bPréréglage spawn'
+protection_preset_name_HUB: '&bPréréglage hub'
+protection_preset_lore_SPAWN:
+- '&7Pack spawn staff : entrée ouverte,'
+- '&7combat et monstres verrouillés.'
+protection_preset_lore_HUB:
+- '&7Pack hub public avec boutiques.'
+- '&7Ne change pas Garder la vie ni la faim.'
+protection_preset_confirm_name_SPAWN: '&aConfirmer : Spawn'
+protection_preset_confirm_name_HUB: '&aConfirmer : Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Pack spawn staff : entrée ouverte,'
+- '&7combat et monstres verrouillés.'
+protection_preset_confirm_lore_HUB:
+- '&7Pack hub public avec boutiques.'
+- '&7Ne change pas Garder la vie ni la faim.'
+season_admin_title: '&6Saison du staff'
+season_admin_header: '&6Saison du staff'
+season_untitled: '&7Pas encore de titre de saison'
+season_feature_plot_name: '&aMettre ce terrain en avant'
+season_unfeature_plot_name: '&eRetirer ce terrain'
+season_feature_plot_lore:
+- '&7Tenez-vous dans un terrain et cliquez.'
+- '&7Les mises en avant de saison apparaissent d’abord sur l’Atlas.'
+season_clear_name: '&cEffacer la saison'
+season_clear_lore:
+- '&7Retire le titre, la description'
+- '&7et chaque terrain ou route mis en avant.'
+season_featured_plot_name: '&6★ Terrain {NAME}'
+season_featured_plot_lore:
+- '&7Épinglé dans Découvrir et Destinations.'
+season_featured_route_name: '&a★ Route {NAME}'
+season_featured_route_lore:
+- '&7Épinglé en premier dans l’explorateur de routes.'

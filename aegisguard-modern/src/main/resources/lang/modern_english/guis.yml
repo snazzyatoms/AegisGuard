@@ -3496,7 +3496,7 @@ plot_flags_page_safety: '&cSafety'
 plot_flags_page_safety_title: '&cSafety'
 plot_flags_page_safety_lore:
   - '&7PvP, TNT, fire, mobs, entry,'
-  - '&7and Safe Zone.'
+  - '&7Safe Zone, Hearth, and Keep flags.'
 plot_flags_page_mechanics: '&eMechanics'
 plot_flags_page_mechanics_title: '&eMechanics'
 plot_flags_page_mechanics_lore:
@@ -3887,3 +3887,73 @@ button_plot_chat: '&bAegis Frequency'
 plot_chat_button_lore:
 - '&7Toggle private plot chat'
 - '&7for members of this claim.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aHearth: On'
+button_hearth_off: '&cHearth: Off'
+hearth_toggle_lore:
+- '&7Public chat stays in this room.'
+- '&7A room is a 3D subplot, or the rest'
+- '&7of the plot if you are not in one.'
+- '&7People outside cannot hear inside,'
+- '&7and the room cannot hear the street.'
+- '&7If Simple Voice Chat is installed,'
+- '&7voice is isolated the same way.'
+- '&7Mark houses, pits, and lobbies with'
+- '&7/ag subplot. Off by default.'
+- '&eClick to toggle.'
+button_keep_health_on: '&aKeep Health: On'
+button_keep_health_off: '&cKeep Health: Off'
+keep_health_toggle_lore:
+- '&7Players in this server plot do not take damage.'
+- '&7Void and /kill still apply.'
+- '&eClick to toggle. Off by default.'
+button_keep_hunger_on: '&aKeep Hunger: On'
+button_keep_hunger_off: '&cKeep Hunger: Off'
+keep_hunger_toggle_lore:
+- '&7Players in this server plot do not lose food.'
+- '&7Eating can still fill the bar.'
+- '&eClick to toggle. Off by default.'
+button_keep_xp_on: '&aKeep XP: On'
+button_keep_xp_off: '&cKeep XP: Off'
+keep_xp_toggle_lore:
+- '&7Players who die in this server plot keep levels.'
+- '&eClick to toggle. Off by default.'
+button_keep_inventory_on: '&aKeep Inventory: On'
+button_keep_inventory_off: '&cKeep Inventory: Off'
+keep_inventory_toggle_lore:
+- '&7Players who die in this server plot keep items.'
+- '&eClick to toggle. Off by default.'
+protection_preset_name_SPAWN: '&bSpawn Preset'
+protection_preset_name_HUB: '&bHub Preset'
+protection_preset_lore_SPAWN:
+- '&7Staff spawn bundle: open entry,'
+- '&7combat and mobs locked down.'
+protection_preset_lore_HUB:
+- '&7Public hub bundle with shop interact.'
+- '&7Does not change Keep Health or Hunger.'
+protection_preset_confirm_name_SPAWN: '&aConfirm: Spawn'
+protection_preset_confirm_name_HUB: '&aConfirm: Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Staff spawn bundle: open entry,'
+- '&7combat and mobs locked down.'
+protection_preset_confirm_lore_HUB:
+- '&7Public hub bundle with shop interact.'
+- '&7Does not change Keep Health or Hunger.'
+season_admin_title: '&6Staff Season'
+season_admin_header: '&6Staff Season'
+season_untitled: '&7No season title yet'
+season_feature_plot_name: '&aFeature this plot'
+season_unfeature_plot_name: '&eUnfeature this plot'
+season_feature_plot_lore:
+- '&7Stand inside a plot and click.'
+- '&7Season features pin first on the Atlas.'
+season_clear_name: '&cClear season'
+season_clear_lore:
+- '&7Removes the title, description,'
+- '&7and every featured plot and route.'
+season_featured_plot_name: '&6★ {NAME}'
+season_featured_plot_lore:
+- '&7Pinned on Discover and Destinations.'
+season_featured_route_name: '&a★ {NAME}'
+season_featured_route_lore:
+- '&7Pinned first in the Routes browser.'

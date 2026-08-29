@@ -3499,8 +3499,8 @@ plot_flags_server_title: '&3⚙ Server-Parzelleneinstellungen'
 plot_flags_page_safety: '&cSicherheit'
 plot_flags_page_safety_title: '&cSicherheit'
 plot_flags_page_safety_lore:
-  - '&7PvP, TNT, Feuer, Mobs, Zutritt'
-  - '&7und Schutzzone.'
+  - '&7PvP, TNT, Feuer, Mobs, Zutritt,'
+  - '&7Schutzzone, Herd und Bewahren.'
 plot_flags_page_mechanics: '&eMechanik'
 plot_flags_page_mechanics_title: '&eMechanik'
 plot_flags_page_mechanics_lore:
@@ -3890,3 +3890,73 @@ button_plot_chat: '&bAegis-Frequenz'
 plot_chat_button_lore:
 - '&7Schalte den privaten Grundstückschat'
 - '&7für Mitglieder dieses Claims um.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aHerd: An'
+button_hearth_off: '&cHerd: Aus'
+hearth_toggle_lore:
+- '&7Der öffentliche Chat bleibt in diesem Raum.'
+- '&7Ein Raum ist ein 3D-Untergrundstück oder der Rest'
+- '&7des Grundstücks, wenn du in keinem stehst.'
+- '&7Draußen hört man innen nicht,'
+- '&7und der Raum hört die Straße nicht.'
+- '&7Wenn Simple Voice Chat installiert ist,'
+- '&7wird die Stimme genauso getrennt.'
+- '&7Markiere Häuser, Gruben und Lobbys mit'
+- '&7/ag subplot. Standardmäßig aus.'
+- '&eKlicken zum Umschalten.'
+button_keep_health_on: '&aLeben behalten: An'
+button_keep_health_off: '&cLeben behalten: Aus'
+keep_health_toggle_lore:
+- '&7Spieler auf diesem Servergrundstück erleiden keinen Schaden.'
+- '&7Leere und /kill gelten weiter.'
+- '&eKlicken zum Umschalten. Standardmäßig aus.'
+button_keep_hunger_on: '&aHunger behalten: An'
+button_keep_hunger_off: '&cHunger behalten: Aus'
+keep_hunger_toggle_lore:
+- '&7Spieler auf diesem Servergrundstück verlieren kein Essen.'
+- '&7Essen kann die Leiste weiter füllen.'
+- '&eKlicken zum Umschalten. Standardmäßig aus.'
+button_keep_xp_on: '&aXP behalten: An'
+button_keep_xp_off: '&cXP behalten: Aus'
+keep_xp_toggle_lore:
+- '&7Wer auf diesem Servergrundstück stirbt, behält Stufen.'
+- '&eKlicken zum Umschalten. Standardmäßig aus.'
+button_keep_inventory_on: '&aInventar behalten: An'
+button_keep_inventory_off: '&cInventar behalten: Aus'
+keep_inventory_toggle_lore:
+- '&7Wer auf diesem Servergrundstück stirbt, behält Gegenstände.'
+- '&eKlicken zum Umschalten. Standardmäßig aus.'
+protection_preset_name_SPAWN: '&bSpawn-Voreinstellung'
+protection_preset_name_HUB: '&bHub-Voreinstellung'
+protection_preset_lore_SPAWN:
+- '&7Staff-Spawn-Paket: offener Zugang,'
+- '&7Kampf und Mobs gesperrt.'
+protection_preset_lore_HUB:
+- '&7Öffentliches Hub-Paket mit Shops.'
+- '&7Ändert Leben/Hunger behalten nicht.'
+protection_preset_confirm_name_SPAWN: '&aBestätigen: Spawn'
+protection_preset_confirm_name_HUB: '&aBestätigen: Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Staff-Spawn-Paket: offener Zugang,'
+- '&7Kampf und Mobs gesperrt.'
+protection_preset_confirm_lore_HUB:
+- '&7Öffentliches Hub-Paket mit Shops.'
+- '&7Ändert Leben/Hunger behalten nicht.'
+season_admin_title: '&6Staff-Saison'
+season_admin_header: '&6Staff-Saison'
+season_untitled: '&7Noch kein Saisontitel'
+season_feature_plot_name: '&aDieses Grundstück hervorheben'
+season_unfeature_plot_name: '&eDieses Grundstück entfernen'
+season_feature_plot_lore:
+- '&7Stelle dich in ein Grundstück und klicke.'
+- '&7Saison-Highlights stehen zuerst im Atlas.'
+season_clear_name: '&cSaison leeren'
+season_clear_lore:
+- '&7Entfernt Titel, Beschreibung'
+- '&7und jedes hervorgehobene Grundstück oder Route.'
+season_featured_plot_name: '&6★ Grundstück {NAME}'
+season_featured_plot_lore:
+- '&7Angeheftet unter Entdecken und Ziele.'
+season_featured_route_name: '&a★ Route {NAME}'
+season_featured_route_lore:
+- '&7Zuerst im Routen-Browser angeheftet.'

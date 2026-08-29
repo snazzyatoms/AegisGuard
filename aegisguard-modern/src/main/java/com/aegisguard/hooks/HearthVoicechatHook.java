@@ -8,6 +8,8 @@ import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.PlayerConnectedEvent;
+import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
+import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStoppedEvent;
 import org.bukkit.Bukkit;
@@ -31,6 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * and Hearth is on, each Hearth room becomes an isolated SVC group. AegisGuard
  * still runs without Simple Voice Chat. Player-made groups are left alone unless
  * {@code hearth.voicechat_override_player_groups} is true.
+ *
+ * SVC network callbacks never touch Bukkit player/world APIs. Those hops go
+ * through {@code runSync} / {@code runEntity} so Folia region ownership holds.
  */
 public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
@@ -39,6 +44,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
     private final AegisGuard plugin;
     private final Map<String, Group> groups = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastVoiceRoom = new ConcurrentHashMap<>();
     private volatile VoicechatServerApi api;
 
     public HearthVoicechatHook(AegisGuard plugin) {
@@ -64,19 +70,33 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             api = null;
             groups.clear();
+            lastVoiceRoom.clear();
         });
         registration.registerEvent(PlayerConnectedEvent.class, event -> {
             UUID id = event.getConnection().getPlayer().getUuid();
-            Player player = Bukkit.getPlayer(id);
-            if (player != null) refreshLater(player);
+            plugin.runSync(() -> {
+                Player player = Bukkit.getPlayer(id);
+                if (player != null && player.isOnline()) refreshLater(player);
+            });
+        });
+        registration.registerEvent(PlayerDisconnectedEvent.class, event ->
+                lastVoiceRoom.remove(event.getPlayerUuid()));
+        registration.registerEvent(RemoveGroupEvent.class, event -> {
+            Group removed = event.getGroup();
+            if (removed == null || removed.getId() == null) return;
+            UUID id = removed.getId();
+            groups.entrySet().removeIf(entry ->
+                    entry.getValue() != null && id.equals(entry.getValue().getId()));
         });
     }
 
     private void onVoiceStarted(VoicechatServerStartedEvent event) {
         api = event.getVoicechat();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            refreshLater(player);
-        }
+        plugin.runSync(() -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                refreshLater(player);
+            }
+        });
     }
 
     public void refreshLater(Player player) {
@@ -85,19 +105,26 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     }
 
     public void refresh(Player player) {
-        if (player == null || !player.isOnline() || !isHookEnabled()) return;
+        if (player == null || !player.isOnline()) return;
         VoicechatServerApi voice = api;
         if (voice == null) return;
         VoicechatConnection connection = voice.getConnectionOf(player.getUniqueId());
         if (connection == null) return;
 
         Group current = connection.getGroup();
+        if (!isHookEnabled()) {
+            if (current != null && isOurs(current)) connection.setGroup(null);
+            lastVoiceRoom.remove(player.getUniqueId());
+            return;
+        }
+
         if (current != null && !isOurs(current) && !overridePlayerGroups()) {
             return;
         }
 
         HearthService hearth = plugin.hearth();
         HearthService.Room room = hearth == null ? null : hearth.roomOf(player);
+        lastVoiceRoom.put(player.getUniqueId(), roomKey(room));
         if (room == null) {
             if (current != null && isOurs(current)) connection.setGroup(null);
             return;
@@ -113,7 +140,12 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     private Group groupFor(VoicechatServerApi voice, HearthService.Room room) {
         String key = roomKey(room);
         Group existing = groups.get(key);
-        if (existing != null) return existing;
+        if (existing != null) {
+            if (existing.getId() != null && voice.getGroup(existing.getId()) != null) {
+                return existing;
+            }
+            groups.remove(key, existing);
+        }
         Group created = voice.groupBuilder()
                 .setName(groupName(room))
                 .setPersistent(false)
@@ -121,7 +153,14 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
                 .setType(Group.Type.ISOLATED)
                 .build();
         Group raced = groups.putIfAbsent(key, created);
-        return raced == null ? created : raced;
+        if (raced != null && raced != created) {
+            if (created.getId() != null) voice.removeGroup(created.getId());
+            if (raced.getId() != null && voice.getGroup(raced.getId()) != null) return raced;
+            groups.remove(key, raced);
+            Group retry = groups.putIfAbsent(key, created);
+            return retry == null ? created : retry;
+        }
+        return created;
     }
 
     public static boolean isOurs(Group group) {
@@ -149,31 +188,40 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        // Non-persistent groups drop when empty.
+        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
         Location from = event.getFrom();
         Location to = event.getTo();
-        if (to == null) return;
-        if (from.getBlockX() == to.getBlockX()
-                && from.getBlockY() == to.getBlockY()
-                && from.getBlockZ() == to.getBlockZ()
-                && from.getWorld() != null
-                && from.getWorld().equals(to.getWorld())) {
-            return;
-        }
-        refreshLater(event.getPlayer());
+        if (to == null || sameBlock(from, to)) return;
+        Player player = event.getPlayer();
+        HearthService hearth = plugin.hearth();
+        HearthService.Room next = hearth == null ? null : hearth.roomAt(to);
+        String key = roomKey(next);
+        if (key.equals(lastVoiceRoom.get(player.getUniqueId()))) return;
+        lastVoiceRoom.put(player.getUniqueId(), key);
+        refreshLater(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
+        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
         refreshLater(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorld(PlayerChangedWorldEvent event) {
+        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
         refreshLater(event.getPlayer());
+    }
+
+    private static boolean sameBlock(Location from, Location to) {
+        return from.getBlockX() == to.getBlockX()
+                && from.getBlockY() == to.getBlockY()
+                && from.getBlockZ() == to.getBlockZ()
+                && from.getWorld() != null
+                && from.getWorld().equals(to.getWorld());
     }
 }

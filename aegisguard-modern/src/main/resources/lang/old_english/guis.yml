@@ -3464,7 +3464,7 @@ plot_flags_page_safety: '&cSafeguards'
 plot_flags_page_safety_title: '&cSafeguards'
 plot_flags_page_safety_lore:
   - '&7Strife, blast, flame, beasts, entry,'
-  - '&7and the Safe Haven.'
+  - '&7the Safe Haven, Hearth, and Keep wards.'
 plot_flags_page_mechanics: '&eWorkings'
 plot_flags_page_mechanics_title: '&eWorkings'
 plot_flags_page_mechanics_lore:
@@ -3854,3 +3854,73 @@ button_plot_chat: '&bAegis Frequency'
 plot_chat_button_lore:
 - '&7Open private plot speech'
 - '&7for members of this claim.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aHearth: Kindled'
+button_hearth_off: '&cHearth: Dark'
+hearth_toggle_lore:
+- '&7Public speech stays in this chamber.'
+- '&7A chamber is a marked 3D holding, or'
+- '&7the remainder of the claim if thou art not within one.'
+- '&7Those without cannot hear those within,'
+- '&7nor can the chamber hear the road.'
+- '&7If Simple Voice Chat be installed,'
+- '&7the voice is likewise kept apart.'
+- '&7Mark halls, pits, and waiting rooms with'
+- '&7/ag subplot. Dark by default.'
+- '&eClick to change.'
+button_keep_health_on: '&aKeep Health: Raised'
+button_keep_health_off: '&cKeep Health: Lowered'
+keep_health_toggle_lore:
+- '&7Souls in this server holding take no wound.'
+- '&7The void and /kill still claim them.'
+- '&eClick to change. Lowered by default.'
+button_keep_hunger_on: '&aKeep Hunger: Raised'
+button_keep_hunger_off: '&cKeep Hunger: Lowered'
+keep_hunger_toggle_lore:
+- '&7Souls in this server holding lose no meat.'
+- '&7Eating may still fill the measure.'
+- '&eClick to change. Lowered by default.'
+button_keep_xp_on: '&aKeep XP: Raised'
+button_keep_xp_off: '&cKeep XP: Lowered'
+keep_xp_toggle_lore:
+- '&7Those who fall in this server holding keep their ranks.'
+- '&eClick to change. Lowered by default.'
+button_keep_inventory_on: '&aKeep Inventory: Raised'
+button_keep_inventory_off: '&cKeep Inventory: Lowered'
+keep_inventory_toggle_lore:
+- '&7Those who fall in this server holding keep their goods.'
+- '&eClick to change. Lowered by default.'
+protection_preset_name_SPAWN: '&bSpawn Bundle'
+protection_preset_name_HUB: '&bHub Bundle'
+protection_preset_lore_SPAWN:
+- '&7Staff spawn bundle: open gates,'
+- '&7strife and beasts held fast.'
+protection_preset_lore_HUB:
+- '&7Public hub bundle with shop-talk.'
+- '&7Does not change Keep Health or Hunger.'
+protection_preset_confirm_name_SPAWN: '&aConfirm: Spawn'
+protection_preset_confirm_name_HUB: '&aConfirm: Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Staff spawn bundle: open gates,'
+- '&7strife and beasts held fast.'
+protection_preset_confirm_lore_HUB:
+- '&7Public hub bundle with shop-talk.'
+- '&7Does not change Keep Health or Hunger.'
+season_admin_title: '&6Staff Season'
+season_admin_header: '&6Staff Season'
+season_untitled: '&7No season title yet'
+season_feature_plot_name: '&aPin this holding'
+season_unfeature_plot_name: '&eUnpin this holding'
+season_feature_plot_lore:
+- '&7Stand within a holding and click.'
+- '&7Season pins rise first upon the Atlas.'
+season_clear_name: '&cClear the season'
+season_clear_lore:
+- '&7Takes away the title, the writing,'
+- '&7and every pinned holding and road.'
+season_featured_plot_name: '&6★ {NAME}'
+season_featured_plot_lore:
+- '&7Pinned upon Discover and Destinations.'
+season_featured_route_name: '&a★ {NAME}'
+season_featured_route_lore:
+- '&7Pinned first among the Routes.'

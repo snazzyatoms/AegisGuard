@@ -3498,8 +3498,8 @@ plot_flags_server_title: '&3⚙ Impostazioni parcela server'
 plot_flags_page_safety: '&cSicurezza'
 plot_flags_page_safety_title: '&cSicurezza'
 plot_flags_page_safety_lore:
-  - '&7PvP, TNT, fuoco, mob, ingresso'
-  - '&7e zona sicura.'
+  - '&7PvP, TNT, fuoco, mob, ingresso,'
+  - '&7zona sicura, Focolare e Conserva.'
 plot_flags_page_mechanics: '&eMeccaniche'
 plot_flags_page_mechanics_title: '&eMeccaniche'
 plot_flags_page_mechanics_lore:
@@ -3889,3 +3889,73 @@ button_plot_chat: '&bFrequenza Aegis'
 plot_chat_button_lore:
 - '&7Attiva la chat privata del lotto'
 - '&7per i membri di questa claim.'
+# --- 1.4.0 Hearth, sanctuary, presets, and staff season ---
+button_hearth_on: '&aFocolare: attivo'
+button_hearth_off: '&cFocolare: disattivo'
+hearth_toggle_lore:
+- '&7La chat pubblica resta in questa stanza.'
+- '&7Una stanza è un sottolotto 3D, o il resto'
+- '&7del terreno se non sei in uno.'
+- '&7Chi è fuori non sente chi è dentro,'
+- '&7e la stanza non sente la strada.'
+- '&7Se Simple Voice Chat è installato,'
+- '&7la voce è isolata allo stesso modo.'
+- '&7Segna case, fosse e atri con'
+- '&7/ag subplot. Disattivo di default.'
+- '&eClic per cambiare.'
+button_keep_health_on: '&aMantieni vita: attivo'
+button_keep_health_off: '&cMantieni vita: disattivo'
+keep_health_toggle_lore:
+- '&7I giocatori in questo terreno server non subiscono danni.'
+- '&7Il vuoto e /kill valgono ancora.'
+- '&eClic per cambiare. Disattivo di default.'
+button_keep_hunger_on: '&aMantieni fame: attivo'
+button_keep_hunger_off: '&cMantieni fame: disattivo'
+keep_hunger_toggle_lore:
+- '&7I giocatori in questo terreno server non perdono cibo.'
+- '&7Mangiare può ancora riempire la barra.'
+- '&eClic per cambiare. Disattivo di default.'
+button_keep_xp_on: '&aMantieni XP: attivo'
+button_keep_xp_off: '&cMantieni XP: disattivo'
+keep_xp_toggle_lore:
+- '&7Chi muore in questo terreno server mantiene i livelli.'
+- '&eClic per cambiare. Disattivo di default.'
+button_keep_inventory_on: '&aMantieni inventario: attivo'
+button_keep_inventory_off: '&cMantieni inventario: disattivo'
+keep_inventory_toggle_lore:
+- '&7Chi muore in questo terreno server mantiene gli oggetti.'
+- '&eClic per cambiare. Disattivo di default.'
+protection_preset_name_SPAWN: '&bPreset spawn'
+protection_preset_name_HUB: '&bPreset hub'
+protection_preset_lore_SPAWN:
+- '&7Pacchetto spawn staff: ingresso aperto,'
+- '&7combattimento e mob bloccati.'
+protection_preset_lore_HUB:
+- '&7Pacchetto hub pubblico con negozi.'
+- '&7Non cambia Mantieni vita o fame.'
+protection_preset_confirm_name_SPAWN: '&aConferma: Spawn'
+protection_preset_confirm_name_HUB: '&aConferma: Hub'
+protection_preset_confirm_lore_SPAWN:
+- '&7Pacchetto spawn staff: ingresso aperto,'
+- '&7combattimento e mob bloccati.'
+protection_preset_confirm_lore_HUB:
+- '&7Pacchetto hub pubblico con negozi.'
+- '&7Non cambia Mantieni vita o fame.'
+season_admin_title: '&6Stagione dello staff'
+season_admin_header: '&6Stagione dello staff'
+season_untitled: '&7Nessun titolo di stagione ancora'
+season_feature_plot_name: '&aMetti in evidenza questo terreno'
+season_unfeature_plot_name: '&eTogli questo terreno'
+season_feature_plot_lore:
+- '&7Stai dentro un terreno e clicca.'
+- '&7Le evidenze di stagione compaiono prima sull’Atlante.'
+season_clear_name: '&cSvuota stagione'
+season_clear_lore:
+- '&7Rimuove il titolo, la descrizione'
+- '&7e ogni terreno o percorso in evidenza.'
+season_featured_plot_name: '&6★ Terreno {NAME}'
+season_featured_plot_lore:
+- '&7Fissato in Scopri e Destinazioni.'
+season_featured_route_name: '&a★ Percorso {NAME}'
+season_featured_route_lore:
+- '&7Fissato per primo nell’elenco Percorsi.'

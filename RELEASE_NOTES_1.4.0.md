@@ -49,7 +49,9 @@ After a successful claim, the main preset chooser opens (Home / Shop / Arena / F
 
 ### Hearth rooms
 
-Plot owners and server-plot stewards can turn on **Hearth** in Claim Settings → Safety. Public chat then stays in the room you are standing in. A room is a 3D subplot (`/ag subplot`) — the house, the pit, the lobby — or the rest of that plot if you are not in a subplot. People outside cannot hear inside, and the room cannot hear the street. That is how a closed house and an arena safe-zone stay quiet without scanning doors. Staff with `aegis.admin.hearth` still hear every text room and are not muffled when they speak. If Simple Voice Chat is installed, the same rooms become isolated voice groups. Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
+Plot owners and server-plot stewards can turn on **Hearth** in Claim Settings → Safety. Public chat then stays in the room you are standing in. A room is a 3D subplot (`/ag subplot`) — the house, the pit, the lobby — or the rest of that plot if you are not in a subplot. People outside cannot hear inside, and the room cannot hear the street. That is how a closed house and an arena safe-zone stay quiet without scanning doors. Staff with `aegis.admin.hearth` still hear every text room and are not muffled when they speak. If Simple Voice Chat is installed, the same rooms become isolated voice groups. The voice hook is Folia-safe (SVC threads hop to the global/entity scheduler; room changes are coalesced; reload resyncs groups). Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
+
+Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the voice-hook console lines are real language keys in all nine packs. Java English is only used when a key is missing everywhere. Copy `lang/modern_english/` to add your own pack; `lang/overrides.yml` wins over every style. Language sync never overwrites a translation you already wrote.
 
 ---
 

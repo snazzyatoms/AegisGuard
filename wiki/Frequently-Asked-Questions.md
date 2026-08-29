@@ -104,7 +104,20 @@ Each plot has an arrival mode you set while managing it:
 
 Those tokens are language placeholders (sometimes called macros). AegisGuard replaces them with real values such as a plot name or a minimum size.
 
-In `1.3.0`, substitution sometimes ran only on English fallbacks. In `1.3.5`, `{KEY}` replacement also runs on strings loaded from `lang/`. If you still see a leftover token after updating, confirm the language pack was merged on enable and that you are on `AegisGuard-1.3.5.jar`.
+In `1.3.0`, substitution sometimes ran only on English fallbacks. In `1.3.5` and `1.4.0`, `{KEY}` replacement also runs on strings loaded from `lang/`. If you still see a leftover token after updating, confirm the language pack was merged on enable.
+
+---
+
+## Can I add my own language?
+
+**Yes.** The nine shipped packs are not a closed list.
+
+1. Copy `plugins/AegisGuard/lang/modern_english/` to `plugins/AegisGuard/lang/my_lang/`.
+2. Translate the **values**. Keep every key name and every `{PLACEHOLDER}` token.
+3. Add `my_lang` to `localization.available_languages` in `config.yml`.
+4. Run `/agadmin reload` or use Refresh Language Packs.
+
+For a few server-wide string changes, edit `plugins/AegisGuard/lang/overrides.yml` instead — that file beats every pack. Language sync on enable **adds missing keys** from the JAR and never overwrites a value you already set, so custom translations do not snap back to hardcoded English. Java fallbacks are last resort only, when the key is absent from overrides, your pack, related packs, and the fallback language.
 
 ---
 

@@ -85,6 +85,14 @@ class FoliaRestoreFoundationContractTest {
     }
 
     @Test
+    void plotCenterDoesNotReadForeignFoliaRegions() throws Exception {
+        String plot = Files.readString(JAVA.resolve("data/Plot.java"));
+        assertTrue(plot.contains("TeleportUtil.highestBlockYOr("),
+                "Plot.getCenter must not call getHighestBlockYAt from a foreign region");
+        assertFalse(plot.contains("w.getHighestBlockYAt(centerX, centerZ)"));
+    }
+
+    @Test
     void dispatchResultOnlyAcceptsAcceptedState() {
         assertTrue(AegisScheduler.DispatchResult.ACCEPTED.accepted());
         assertFalse(AegisScheduler.DispatchResult.REJECTED_SHUTDOWN.accepted());

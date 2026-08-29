@@ -65,5 +65,11 @@ class SafeTravelContractTest {
     void teleportUtilAcceptsConfigurableSafeSearchRadius() throws Exception {
         String util = Files.readString(JAVA_ROOT.resolve("util/TeleportUtil.java"));
         assertTrue(util.contains("findSafeDestination(Location requested, int maxRadius)"));
+        assertTrue(util.contains("regionOwns("),
+                "Safe destination search must skip foreign Folia regions");
+        assertTrue(util.contains("Bukkit.isOwnedByCurrentRegion(location)"));
+        assertTrue(util.contains("highestBlockYOr("));
+        assertTrue(util.contains("return requested.clone()"),
+                "Unowned regions must fall back to the requested point instead of reading blocks");
     }
 }

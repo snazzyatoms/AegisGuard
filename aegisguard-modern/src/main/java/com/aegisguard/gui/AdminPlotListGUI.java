@@ -307,9 +307,6 @@ public class AdminPlotListGUI {
 
         Location loc = plot.getCenter(plugin);
         if (loc != null && loc.getWorld() != null) {
-            int y = loc.getWorld().getHighestBlockYAt(loc);
-            loc.setY(y + 1);
-
             var result = plugin.safeTravel().travel(player, loc,
                     com.aegisguard.travel.SafeTravelService.Kind.STAFF);
             if (!result.isSuccess()) return;

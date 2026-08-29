@@ -58,6 +58,10 @@ class Phase5CaravansContractTest {
         assertTrue(service.contains("resumeOverdue"));
         assertTrue(service.contains("AuditCategory.CARAVAN"));
         assertTrue(service.contains("charge"));
+        assertTrue(service.contains("runMain(owner"),
+                "Caravan arrival notices must hop to the owner's entity scheduler");
+        assertTrue(service.contains("scheduler().runAt(loc, fx)"),
+                "Caravan arrival particles must run on the destination region");
         String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
         assertTrue(visit.contains("CARAVANS"));
         assertTrue(visit.contains("atlas_tab_caravans"));

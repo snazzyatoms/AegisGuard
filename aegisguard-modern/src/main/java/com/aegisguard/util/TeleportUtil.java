@@ -116,9 +116,8 @@ public final class TeleportUtil {
 
         Location loc = base.clone();
         World world = loc.getWorld();
-
-        int y = world.getHighestBlockYAt(loc);
-        loc.setY(y + 1);
+        int fallbackY = loc.getBlockY();
+        loc.setY(highestBlockYOr(world, loc.getBlockX(), loc.getBlockZ(), fallbackY) + 1);
 
         return safeTeleport(plugin, player, loc);
     }
@@ -174,30 +173,71 @@ public final class TeleportUtil {
     public static Location findSafeDestination(Location requested, int maxRadius) {
         if (requested == null || requested.getWorld() == null) return null;
 
+        // Folia: heightmap and block reads are owned by the destination region.
+        // Visiting / beacon hops start on the player's current region thread, so
+        // probing a distant plot here throws. teleportAsync still lands correctly.
+        if (!regionOwns(requested)) {
+            return requested.clone();
+        }
+
         World world = requested.getWorld();
         int baseX = requested.getBlockX();
         int baseZ = requested.getBlockZ();
         int baseY = requested.getBlockY();
         int radiusLimit = Math.max(0, maxRadius);
 
-        Location exact = standableLocation(world, baseX, baseY, baseZ, requested.getYaw(), requested.getPitch());
-        if (exact != null) return exact;
+        try {
+            Location exact = standableLocation(world, baseX, baseY, baseZ, requested.getYaw(), requested.getPitch());
+            if (exact != null) return exact;
 
-        // Prefer a nearby safe surface over an unsafe configured point. The
-        // bounded search prevents a teleport from unexpectedly moving far away.
-        for (int radius = 0; radius <= radiusLimit; radius++) {
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
-                    int x = baseX + dx;
-                    int z = baseZ + dz;
-                    int surfaceY = world.getHighestBlockYAt(x, z) + 1;
-                    Location candidate = standableLocation(world, x, surfaceY, z, requested.getYaw(), requested.getPitch());
-                    if (candidate != null) return candidate;
+            // Prefer a nearby safe surface over an unsafe configured point. The
+            // bounded search prevents a teleport from unexpectedly moving far away.
+            for (int radius = 0; radius <= radiusLimit; radius++) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                        int x = baseX + dx;
+                        int z = baseZ + dz;
+                        int surfaceY = world.getHighestBlockYAt(x, z) + 1;
+                        Location candidate = standableLocation(world, x, surfaceY, z, requested.getYaw(), requested.getPitch());
+                        if (candidate != null) return candidate;
+                    }
                 }
             }
+            return null;
+        } catch (Throwable foliaRegion) {
+            return requested.clone();
         }
-        return null;
+    }
+
+    /**
+     * True when the calling thread owns {@code location}'s Folia region.
+     * Paper/Spigot without the Folia API treat every call as owned (single main thread).
+     */
+    public static boolean regionOwns(Location location) {
+        if (location == null || location.getWorld() == null) return false;
+        try {
+            return Bukkit.isOwnedByCurrentRegion(location);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Heightmap lookup that does not touch another Folia region.
+     * When the current thread does not own {@code (x, z)}, returns {@code fallbackY}.
+     */
+    public static int highestBlockYOr(World world, int x, int z, int fallbackY) {
+        if (world == null) return fallbackY;
+        try {
+            Location probe = new Location(world, x + 0.5D, Math.max(world.getMinHeight() + 1, fallbackY), z + 0.5D);
+            if (!regionOwns(probe)) return fallbackY;
+            return world.getHighestBlockYAt(x, z);
+        } catch (Throwable ignored) {
+            return fallbackY;
+        }
     }
 
     private static Location standableLocation(World world, int x, int feetY, int z, float yaw, float pitch) {

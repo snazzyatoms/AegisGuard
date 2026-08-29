@@ -768,11 +768,8 @@ public final class ArenaService {
     private void teleportAllowedInline(Player player, Location loc) {
         if (player == null || loc == null) return;
         grantTeleportAllow(player.getUniqueId());
-        try {
-            player.teleport(loc);
-        } finally {
-            consumeTeleportAllow(player.getUniqueId());
-        }
+        com.aegisguard.util.TeleportUtil.safeTeleport(plugin, player, loc)
+                .whenComplete((ok, error) -> consumeTeleportAllow(player.getUniqueId()));
     }
 
     public int countActiveRuns(String arenaId) {

@@ -1310,7 +1310,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         else target.setZ(plot.getZ2() + 2);
 
         World world = loc.getWorld();
-        int safeY = world.getHighestBlockYAt(target);
+        int safeY = com.aegisguard.util.TeleportUtil.highestBlockYOr(
+                world, target.getBlockX(), target.getBlockZ(), loc.getBlockY());
         target.setY(safeY + 1);
 
         var unstuck = plugin.safeTravel().travel(p, target, com.aegisguard.travel.SafeTravelService.Kind.UNSTUCK);

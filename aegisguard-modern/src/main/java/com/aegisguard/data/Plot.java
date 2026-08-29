@@ -1,6 +1,7 @@
 package com.aegisguard.data;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.util.TeleportUtil;
 import com.aegisguard.flags.TriState;
 import com.aegisguard.alliance.Alliance;
 import com.aegisguard.alliance.AllianceAccess;
@@ -328,7 +329,14 @@ public class Plot {
 
         int centerX = (x1 + x2) / 2;
         int centerZ = (z1 + z2) / 2;
-        return new Location(w, centerX + 0.5, w.getHighestBlockYAt(centerX, centerZ) + 1.0, centerZ + 0.5);
+        int fallbackY = 64;
+        try {
+            Location worldSpawn = w.getSpawnLocation();
+            if (worldSpawn != null) fallbackY = worldSpawn.getBlockY();
+        } catch (Throwable ignored) {
+        }
+        int y = TeleportUtil.highestBlockYOr(w, centerX, centerZ, fallbackY) + 1;
+        return new Location(w, centerX + 0.5, y, centerZ + 0.5);
     }
 
     /** Original 1.2.5 signature used by older GUIs */

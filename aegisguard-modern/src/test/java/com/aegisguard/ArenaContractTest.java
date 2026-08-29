@@ -139,5 +139,9 @@ class ArenaContractTest {
         String service = Files.readString(arenaDir.resolve("ArenaService.java"));
         assertTrue(service.contains("new ArenaScheduler(plugin)"));
         assertTrue(service.contains("schedulerPath="));
+        assertTrue(service.contains("TeleportUtil.safeTeleport"),
+                "Arena player teleports must use teleportAsync / entity-scheduler fallback, not Entity#teleport");
+        assertFalse(service.contains("player.teleport(loc)"),
+                "Sync Entity#teleport is not Folia-safe for cross-region arena entry");
     }
 }

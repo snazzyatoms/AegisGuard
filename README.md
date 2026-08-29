@@ -42,9 +42,9 @@ Language `{KEY}` placeholders now fill in on strings loaded from `lang/`, not on
 
 Staff recovery snapshots now restore complete versioned plot state, including access, market, progression, social, zone, stall, spawn, cosmetic, and travel settings. Optional **full plot backups** copy the complete claim volume through WorldEdit or FastAsyncWorldEdit, with atomic manifests, SHA-256 integrity checks, exact coverage validation, one-chunk Folia ownership tasks, durable per-tile restart progress, protected rescue snapshots, and fail-closed compatibility checks. Configurable automatic backups cover player plots and server zones in bounded Folia-safe batches, skip unchanged plot data, pause under load, and enforce retention. Automatic data and build backups are both **off** by default; Folia build backups require FAWE by default.
 
-## Upcoming In 1.4.0
+## Upcoming in 1.4.0
 
-The following features are planned for the next major release and are being tracked in the 1.4.0 development line:
+The next release is still in development and is **not part of 1.3.5**. The features below are **planned and not yet released**; they are previewed here so server owners can plan ahead. Nothing in this section ships in the current 1.3.5 build.
 
 **Travel Atlas and Caravans.** A unified travel menu will bring together destinations, teleport beacons, arrival settings, and trade caravans. Caravans will use charge-then-deliver shipments, public beacon hops, insurance and route events, with Folia-safe ticking and resume-after-restart behavior.
 
@@ -56,7 +56,7 @@ The following features are planned for the next major release and are being trac
 
 **Hearth Rooms and optional voice integration.** Hearth will keep public text chat scoped to 3D rooms or plots. If Simple Voice Chat is installed, an optional hook can isolate voice groups by Hearth room; AegisGuard will still work without it. Hearth and Aegis radios are separate systems.
 
-**Language and upgrade readiness.** The release will continue the language-pack parity work, preserve translated values while adding missing keys, support server-provided language packs that retain the required keys and placeholders, and migrate existing 1.3.5 data through the planned schema update with a timestamped backup.
+**Schema.** 1.4.0 will ship with its own config schema bump; the current 1.3.5 schema is unchanged by this preview.
 
 ## What Is New In 1.3.0
 

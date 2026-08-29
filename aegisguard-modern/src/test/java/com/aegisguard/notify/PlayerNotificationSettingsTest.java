@@ -61,6 +61,21 @@ class PlayerNotificationSettingsTest {
         assertFalse(restored.isGuestPassNotificationsEnabled());
         assertTrue(restored.isAllianceNotificationsEnabled());
         assertEquals(NotificationMode.ACTION_BAR, restored.getMode());
+        assertEquals(PlayerNotificationSettings.ArrivalPreference.OWNER_DEFAULT, restored.getPreferredArrival());
+    }
+
+    @Test
+    void preferredArrivalRoundTripsAndCycles() {
+        UUID id = UUID.randomUUID();
+        PlayerNotificationSettings source = new PlayerNotificationSettings(id);
+        assertEquals(PlayerNotificationSettings.ArrivalPreference.OWNER_DEFAULT, source.getPreferredArrival());
+        assertEquals(PlayerNotificationSettings.ArrivalPreference.CLASSIC, source.cyclePreferredArrival());
+        assertEquals(PlayerNotificationSettings.ArrivalPreference.BEACON, source.cyclePreferredArrival());
+
+        YamlConfiguration yaml = new YamlConfiguration();
+        source.serialize(yaml.createSection("player"));
+        PlayerNotificationSettings restored = new PlayerNotificationSettings(id, yaml.getConfigurationSection("player"));
+        assertEquals(PlayerNotificationSettings.ArrivalPreference.BEACON, restored.getPreferredArrival());
     }
 
     @Test

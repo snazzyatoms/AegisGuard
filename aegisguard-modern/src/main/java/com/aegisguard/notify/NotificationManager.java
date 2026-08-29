@@ -275,6 +275,13 @@ public class NotificationManager {
         return state;
     }
 
+    public PlayerNotificationSettings.ArrivalPreference cyclePreferredArrival(UUID playerUUID) {
+        PlayerNotificationSettings settings = getSettings(playerUUID);
+        PlayerNotificationSettings.ArrivalPreference next = settings.cyclePreferredArrival();
+        updateSettings(settings);
+        return next;
+    }
+
     public boolean allowsCategory(UUID playerUUID, String category) {
         return getSettings(playerUUID).allowsCategory(category);
     }

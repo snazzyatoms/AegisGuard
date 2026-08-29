@@ -3,6 +3,7 @@ package com.aegisguard.beacon;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.config.Modules;
 import com.aegisguard.data.Plot;
+import com.aegisguard.notify.PlayerNotificationSettings;
 import com.aegisguard.travel.SafeTravelResult;
 import com.aegisguard.travel.SafeTravelService;
 import org.bukkit.Location;
@@ -361,9 +362,46 @@ public final class BeaconService {
      * beacon arrival for this plot. Existing plots default to classic (false).
      */
     public boolean requiresBeaconArrival(Plot plot) {
+        return requiresBeaconArrival(null, plot);
+    }
+
+    /**
+     * Listing arrival with traveler override. Precedence:
+     * {@code force_public_arrival} &gt; plot mode &gt; traveler preference
+     * (only when the server and plot allow it, and the chosen mode is available).
+     */
+    public boolean requiresBeaconArrival(Player player, Plot plot) {
         if (plot == null) return false;
-        if (plugin.getConfig().getBoolean("teleport_beacons.force_public_arrival", false)) return true;
-        return plot.requiresBeaconArrival();
+        boolean force = plugin.getConfig().getBoolean("teleport_beacons.force_public_arrival", false);
+        boolean serverAllow = plugin.getConfig().getBoolean("teleport_beacons.allow_traveler_override", true);
+        PlayerNotificationSettings.ArrivalPreference preference =
+                PlayerNotificationSettings.ArrivalPreference.OWNER_DEFAULT;
+        if (player != null && plugin.notifications() != null) {
+            preference = plugin.notifications().getSettings(player.getUniqueId()).getPreferredArrival();
+        }
+        boolean padAvailable = resolvePublicArrival(plot, TeleportBeacon.Purpose.SPAWN) != null;
+        return resolveBeaconArrival(force, plot.requiresBeaconArrival(), serverAllow,
+                plot.isAllowTravelerOverride(), preference, padAvailable);
+    }
+
+    /**
+     * Pure precedence used by listings and contract tests.
+     * Traveler BEACON only applies when a public pad exists; otherwise the owner mode stands.
+     */
+    static boolean resolveBeaconArrival(boolean forcePublicArrival,
+                                        boolean plotBeaconMode,
+                                        boolean serverAllowOverride,
+                                        boolean plotAllowOverride,
+                                        PlayerNotificationSettings.ArrivalPreference preference,
+                                        boolean publicPadAvailable) {
+        if (forcePublicArrival) return true;
+        if (serverAllowOverride && plotAllowOverride
+                && preference != null
+                && preference != PlayerNotificationSettings.ArrivalPreference.OWNER_DEFAULT) {
+            if (preference == PlayerNotificationSettings.ArrivalPreference.CLASSIC) return false;
+            if (preference == PlayerNotificationSettings.ArrivalPreference.BEACON) return publicPadAvailable;
+        }
+        return plotBeaconMode;
     }
 
     /**

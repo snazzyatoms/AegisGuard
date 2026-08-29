@@ -35,6 +35,30 @@ public class PlayerNotificationSettings {
     private boolean travelNotifications;
     private boolean plotNoticeNotifications;
 
+    /** Travel Atlas: traveler arrival preference applied only when a plot allows overrides. */
+    public enum ArrivalPreference {
+        OWNER_DEFAULT, CLASSIC, BEACON;
+
+        public ArrivalPreference next() {
+            return switch (this) {
+                case OWNER_DEFAULT -> CLASSIC;
+                case CLASSIC -> BEACON;
+                case BEACON -> OWNER_DEFAULT;
+            };
+        }
+
+        public static ArrivalPreference parse(String raw) {
+            if (raw == null || raw.isBlank()) return OWNER_DEFAULT;
+            try {
+                return ArrivalPreference.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return OWNER_DEFAULT;
+            }
+        }
+    }
+
+    private ArrivalPreference preferredArrival = ArrivalPreference.OWNER_DEFAULT;
+
     public PlayerNotificationSettings(UUID playerUUID) {
         this.playerUUID = playerUUID;
         this.greetingsEnabled = true;
@@ -47,6 +71,7 @@ public class PlayerNotificationSettings {
         this.lockdownNotifications = true;
         this.travelNotifications = true;
         this.plotNoticeNotifications = true;
+        this.preferredArrival = ArrivalPreference.OWNER_DEFAULT;
     }
 
     public PlayerNotificationSettings(NotificationMode mode, boolean greetingsEnabled, boolean adminUpdatesEnabled) {
@@ -61,6 +86,7 @@ public class PlayerNotificationSettings {
         this.lockdownNotifications = true;
         this.travelNotifications = true;
         this.plotNoticeNotifications = true;
+        this.preferredArrival = ArrivalPreference.OWNER_DEFAULT;
     }
 
     public PlayerNotificationSettings(UUID playerUUID, ConfigurationSection section) {
@@ -74,6 +100,7 @@ public class PlayerNotificationSettings {
         this.lockdownNotifications = section.getBoolean("lockdown", true);
         this.travelNotifications = section.getBoolean("travel", true);
         this.plotNoticeNotifications = section.getBoolean("plot_notices", true);
+        this.preferredArrival = ArrivalPreference.parse(section.getString("preferred_arrival"));
 
         String modeString = section.getString("mode", "ACTION_BAR");
         this.mode = NotificationMode.fromString(modeString);
@@ -90,6 +117,9 @@ public class PlayerNotificationSettings {
     public boolean isLockdownNotificationsEnabled() { return lockdownNotifications; }
     public boolean isTravelNotificationsEnabled() { return travelNotifications; }
     public boolean isPlotNoticeNotificationsEnabled() { return plotNoticeNotifications; }
+    public ArrivalPreference getPreferredArrival() {
+        return preferredArrival == null ? ArrivalPreference.OWNER_DEFAULT : preferredArrival;
+    }
 
     public boolean greetingsEnabled() { return greetingsEnabled; }
     public boolean adminUpdatesEnabled() { return adminUpdatesEnabled; }
@@ -104,6 +134,14 @@ public class PlayerNotificationSettings {
     public void setLockdownNotifications(boolean enabled) { this.lockdownNotifications = enabled; }
     public void setTravelNotifications(boolean enabled) { this.travelNotifications = enabled; }
     public void setPlotNoticeNotifications(boolean enabled) { this.plotNoticeNotifications = enabled; }
+    public void setPreferredArrival(ArrivalPreference preference) {
+        this.preferredArrival = preference == null ? ArrivalPreference.OWNER_DEFAULT : preference;
+    }
+
+    public ArrivalPreference cyclePreferredArrival() {
+        this.preferredArrival = getPreferredArrival().next();
+        return this.preferredArrival;
+    }
 
     public void cycleMode() { this.mode = this.mode.next(); }
 
@@ -175,6 +213,7 @@ public class PlayerNotificationSettings {
         section.set("lockdown", lockdownNotifications);
         section.set("travel", travelNotifications);
         section.set("plot_notices", plotNoticeNotifications);
+        section.set("preferred_arrival", getPreferredArrival().name());
     }
 
     public static PlayerNotificationSettings fromLegacyConfig(UUID playerUUID, String legacyValue) {

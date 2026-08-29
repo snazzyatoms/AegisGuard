@@ -99,6 +99,8 @@ public class Plot {
     //   BEACON  - visitors must land on a public arrival pad; fails closed if none exists
     // Existing plots default to CLASSIC so enabling 1.4 never suddenly gates a server on pads.
     private volatile ArrivalMode arrivalMode = ArrivalMode.CLASSIC;
+    /** When true, visitors may override this plot's arrival mode with their own preference. */
+    private volatile boolean allowTravelerOverride;
 
     // --- REALM PROFILE NOTICEBOARD (Milestone 4) ---
     // Short, owner-moderated public notices (rules, event details, shop info, announcements).
@@ -1471,6 +1473,14 @@ public class Plot {
 
     public boolean requiresBeaconArrival() {
         return getArrivalMode() == ArrivalMode.BEACON;
+    }
+
+    public boolean isAllowTravelerOverride() {
+        return allowTravelerOverride;
+    }
+
+    public void setAllowTravelerOverride(boolean allow) {
+        this.allowTravelerOverride = allow;
     }
 
     // ---------------------------------------------------------------------

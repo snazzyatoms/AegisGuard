@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1302
+config_schema: 1303
 
 
 # ------------------------------------------------------------------------------
@@ -1161,6 +1161,9 @@ teleport_beacons:
   # owner chose beacon arrival (1.3.5-style mandatory pads). Default false so the
   # per-plot owner choice above is respected.
   force_public_arrival: false
+  # When true, travelers may pick classic vs beacon on plots whose owner allowed it.
+  # force_public_arrival always wins. Beacon still requires a public pad.
+  allow_traveler_override: true
   max_per_plot: 3
   max_per_server_zone: 8
   stand_radius: 1.6

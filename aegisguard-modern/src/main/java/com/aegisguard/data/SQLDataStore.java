@@ -829,6 +829,9 @@ public class SQLDataStore implements IDataStore {
         if (plot.getArrivalMode() != Plot.ArrivalMode.CLASSIC) {
             add.accept("arrivalMode", plot.getArrivalMode().name());
         }
+        if (plot.isAllowTravelerOverride()) {
+            add.accept("allowTravelerOverride", "true");
+        }
         if (!plot.getLockedMembers().isEmpty()) {
             add.accept("lockedMembers", plot.getLockedMembers().stream().map(UUID::toString)
                     .sorted().collect(Collectors.joining(",")));
@@ -937,6 +940,7 @@ public class SQLDataStore implements IDataStore {
                     case "allianceAccess" -> plot.deserializeAllianceAccess(value);
 
                     case "arrivalMode" -> plot.setArrivalMode(Plot.ArrivalMode.parse(value));
+                    case "allowTravelerOverride" -> plot.setAllowTravelerOverride(Boolean.parseBoolean(value));
                     case "lockedMembers" -> {
                         for (String uStr : value.split(",")) {
                             if (uStr == null || uStr.isBlank()) continue;

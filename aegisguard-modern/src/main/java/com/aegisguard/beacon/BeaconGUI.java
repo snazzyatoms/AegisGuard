@@ -75,6 +75,14 @@ public final class BeaconGUI {
     }
 
     public void openManager(Player player) {
+        if (plugin.gui() != null && plugin.gui().visit() != null) {
+            plugin.gui().visit().openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS);
+            return;
+        }
+        openManagerLegacy(player);
+    }
+
+    private void openManagerLegacy(Player player) {
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         String title = plugin.gui().title(player, "beacon_manager_title", "&bTeleport Beacons");
         Inventory inv = Bukkit.createInventory(new ManagerHolder(), 54, title);
@@ -452,7 +460,7 @@ public final class BeaconGUI {
         inv.setItem(slot, item);
     }
 
-    private ItemStack padIcon(Player player, TeleportBeacon beacon) {
+    public ItemStack padIcon(Player player, TeleportBeacon beacon) {
         Material mat = beacon.getPadMaterial() == null ? Material.LODESTONE : beacon.getPadMaterial();
         if (!mat.isItem()) mat = Material.LODESTONE;
         List<String> lore = new ArrayList<>();

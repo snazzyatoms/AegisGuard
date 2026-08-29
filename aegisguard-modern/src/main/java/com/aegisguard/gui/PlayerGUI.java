@@ -176,7 +176,7 @@ public class PlayerGUI {
             inv.setItem(SLOT_SHORTCUT_TRAVEL, GUIManager.createItem(
                     Material.COMPASS,
                     t(player, "visit_gui_title", "&a🧭 Travel"),
-                    tl(player, "visit_button_lore", List.of("&7Visit plots, warps, and", "&7trusted destinations."))
+                    tl(player, "visit_button_lore", List.of("&7Visit plots, warps, beacons,", "&7and arrival settings."))
             ));
         }
 
@@ -375,15 +375,6 @@ public class PlayerGUI {
     }
 
     private void paintExplore(Player player, Inventory inv, Context ctx) {
-        if (ctx.showBeacons) {
-            inv.setItem(SLOT_CAT_A, GUIManager.createItem(
-                    Material.END_PORTAL_FRAME,
-                    t(player, "button_beacons", "&bTeleport Beacons"),
-                    tl(player, "beacons_button_lore", List.of(
-                            "&7Create linked pads, pick who may use them,",
-                            "&7and travel with a confirm screen."))
-            ));
-        }
         if (ctx.showRoutes) {
             inv.setItem(SLOT_CAT_B, GUIManager.createItem(
                     Material.FILLED_MAP,
@@ -663,11 +654,6 @@ public class PlayerGUI {
 
     private boolean handleExploreClick(Player player, int slot) {
         switch (slot) {
-            case SLOT_CAT_A -> {
-                if (!mod(com.aegisguard.config.Modules.Id.TELEPORT_BEACONS)) return false;
-                plugin.gui().beacons().openManager(player);
-                return true;
-            }
             case SLOT_CAT_B -> {
                 if (!mod(com.aegisguard.config.Modules.Id.ROUTES)) return false;
                 plugin.gui().routes().open(player);

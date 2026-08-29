@@ -39,6 +39,7 @@ final class PlotSnapshotState {
         yaml.set("settings.warp_icon", plot.getWarpIcon() == null ? null : plot.getWarpIcon().name());
         yaml.set("settings.warp_category", plot.getWarpCategory());
         yaml.set("settings.arrival_mode", plot.getArrivalMode().name());
+        yaml.set("settings.allow_traveler_override", plot.isAllowTravelerOverride());
         yaml.set("settings.locked_members", plot.getLockedMembers().stream()
                 .map(UUID::toString).sorted().toList());
 
@@ -153,6 +154,7 @@ final class PlotSnapshotState {
         plot.setServerWarp(plot.isServerWarp(), yaml.getString("settings.warp_name"), icon);
         plot.setWarpCategory(yaml.getString("settings.warp_category"));
         plot.setArrivalMode(Plot.ArrivalMode.parse(yaml.getString("settings.arrival_mode")));
+        plot.setAllowTravelerOverride(yaml.getBoolean("settings.allow_traveler_override", false));
         for (String raw : yaml.getStringList("settings.locked_members")) {
             UUID id = uuid(raw);
             if (id != null) plot.lockMember(id);

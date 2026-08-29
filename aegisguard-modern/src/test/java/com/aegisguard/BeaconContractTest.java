@@ -25,7 +25,7 @@ class BeaconContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1302, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1303, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("teleport_beacons"));
         Map<String, Object> section = (Map<String, Object>) config.get("teleport_beacons");
@@ -77,7 +77,10 @@ class BeaconContractTest {
         String market = Files.readString(JAVA.resolve("gui/PlotMarketGUI.java"));
         assertTrue(market.contains("handlePublicListingTravel"));
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
-        assertTrue(player.contains("beacons().openManager"));
+        assertTrue(player.contains("visit().open") || player.contains("openAtlas"));
+        String visitGui = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
+        assertTrue(visitGui.contains("AtlasTab"));
+        assertTrue(visitGui.contains("openAtlas"));
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("giveStarterPads"));

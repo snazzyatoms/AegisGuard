@@ -32,6 +32,7 @@ class TravelAtlasContractTest {
         Map<String, Object> beacons = (Map<String, Object>) config.get("teleport_beacons");
         // Server override defaults OFF so the per-plot owner choice is respected.
         assertEquals(Boolean.FALSE, beacons.get("force_public_arrival"));
+        assertEquals(Boolean.TRUE, beacons.get("allow_traveler_override"));
         // Stand-confirm delay raised from the old 2.5s.
         assertEquals(7, ((Number) beacons.get("prompt_cooldown_seconds")).intValue());
         assertTrue(((Number) beacons.get("create_cooldown_seconds")).intValue() > 0);
@@ -52,10 +53,13 @@ class TravelAtlasContractTest {
         assertTrue(plot.contains("CLASSIC"));
         assertTrue(plot.contains("getArrivalMode"));
         assertTrue(plot.contains("requiresBeaconArrival"));
+        assertTrue(plot.contains("allowTravelerOverride") || plot.contains("setAllowTravelerOverride"));
 
         // Persisted across all three stores + versioned snapshot map.
         assertTrue(Files.readString(JAVA.resolve("data/YMLDataStore.java")).contains("arrival-mode"));
+        assertTrue(Files.readString(JAVA.resolve("data/YMLDataStore.java")).contains("allow-traveler-override"));
         assertTrue(Files.readString(JAVA.resolve("data/SQLDataStore.java")).contains("arrivalMode"));
+        assertTrue(Files.readString(JAVA.resolve("data/SQLDataStore.java")).contains("allowTravelerOverride"));
         String snapshot = Files.readString(JAVA.resolve("snapshots/PlotSnapshotState.java"));
         assertTrue(snapshot.contains("settings.arrival_mode"));
     }

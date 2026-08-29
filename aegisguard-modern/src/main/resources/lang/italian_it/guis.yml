@@ -2039,6 +2039,13 @@ admin_routes_lore:
 - '&7Quando: realizzazione di visite o percorsi guidati.'
 - ' '
 - '&eFai clic per aprire.'
+button_admin_season: '&6Stagione dello staff'
+admin_season_lore:
+- '&7Cosa: metti in evidenza lotti e percorsi'
+- '&7per la stagione attuale dello staff.'
+- '&7Quando: eventi, vetrine della città, tour.'
+- ' '
+- '&eFai clic per aprire.'
 button_admin_set_spawn: '&aImposta la trama corrente come spawn'
 admin_set_spawn_lore:
 - '&7Cosa: imposta il punto sicuro di questa trama personale come Spawn pubblico.'

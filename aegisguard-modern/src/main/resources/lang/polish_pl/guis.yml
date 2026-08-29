@@ -2037,6 +2037,13 @@ admin_routes_lore:
 - '&7Kiedy: budowanie wycieczek lub szlaków z przewodnikiem.'
 - ' '
 - '&eKliknij, aby otworzyć.'
+button_admin_season: '&6Sezon personelu'
+admin_season_lore:
+- '&7Co: przypnij wyróżnione działki i trasy'
+- '&7na bieżący sezon personelu.'
+- '&7Kiedy: wydarzenia, wystawy miast, wycieczki.'
+- ' '
+- '&eKliknij, aby otworzyć.'
 button_admin_set_spawn: '&aUstaw bieżącą działkę jako spawn'
 admin_set_spawn_lore:
 - '&7Co: ustaw bezpieczne miejsce tej działki personelu jako publiczny spawn.'

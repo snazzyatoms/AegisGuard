@@ -2755,6 +2755,13 @@ admin_routes_lore:
 - '&7puntos ordenados para que los jugadores exploren.'
 - ' '
 - '&eHaz clic para abrir.'
+button_admin_season: '&6Temporada del staff'
+admin_season_lore:
+- '&7Qué: fija parcelas y rutas destacadas'
+- '&7para la temporada actual del staff.'
+- '&7Cuándo: eventos, focos del pueblo, recorridos.'
+- ' '
+- '&eHaz clic para abrir.'
 routes_admin_title: '&cEditor de Rutas'
 routes_admin_edit_title: '&cEditar Ruta'
 routes_admin_enabled: '&aActiva'

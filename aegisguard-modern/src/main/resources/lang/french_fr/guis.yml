@@ -2040,6 +2040,13 @@ admin_routes_lore:
 - '&7Quand : construction de visites guidées ou de sentiers.'
 - ' '
 - '&eCliquez pour ouvrir.'
+button_admin_season: '&6Saison du staff'
+admin_season_lore:
+- '&7Quoi : épingler les parcelles et itinéraires'
+- '&7mis en avant pour la saison du staff.'
+- '&7Quand : événements, vitrines de ville, visites.'
+- ' '
+- '&eCliquez pour ouvrir.'
 button_admin_set_spawn: '&aDéfinir le tracé actuel comme Spawn'
 admin_set_spawn_lore:
 - '&7Quoi : définissez l''endroit sûr de cette parcelle du personnel comme Spawn public.'

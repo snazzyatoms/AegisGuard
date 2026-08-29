@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FlightSkillService implements Listener {
     private final AegisGuard plugin;
     private final Map<UUID, Long> expiresAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> previousFlight = new ConcurrentHashMap<>();
     private final File file;
 
     public FlightSkillService(AegisGuard plugin) {
@@ -101,9 +102,18 @@ public final class FlightSkillService implements Listener {
     public void refresh(Player player) {
         if (player == null || !player.isOnline()) return;
         if (isCreativeLike(player)) return;
+        UUID playerId = player.getUniqueId();
         boolean allow = shouldAllowFlight(player);
-        player.setAllowFlight(allow);
-        if (!allow && player.isFlying()) player.setFlying(false);
+        if (allow) {
+            previousFlight.putIfAbsent(playerId, player.getAllowFlight());
+            player.setAllowFlight(true);
+            return;
+        }
+        Boolean prior = previousFlight.remove(playerId);
+        if (prior != null) {
+            player.setAllowFlight(prior);
+            if (!prior && player.isFlying()) player.setFlying(false);
+        }
     }
 
     public void refreshLater(Player player) {
@@ -118,6 +128,7 @@ public final class FlightSkillService implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        previousFlight.remove(event.getPlayer().getUniqueId());
         pruneExpired();
     }
 

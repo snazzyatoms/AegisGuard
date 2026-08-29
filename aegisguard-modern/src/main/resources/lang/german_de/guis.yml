@@ -2040,6 +2040,13 @@ admin_routes_lore:
 - '&7Wann: Aufbau geführter Touren oder Wanderwege.'
 - ' '
 - '&eKlicken Sie zum Öffnen.'
+button_admin_season: '&6Staff-Saison'
+admin_season_lore:
+- '&7Was: Hebe Grundstücke und Routen'
+- '&7für die aktuelle Staff-Saison hervor.'
+- '&7Wann: Events, Stadtvitrinen, Touren.'
+- ' '
+- '&eKlicken Sie zum Öffnen.'
 button_admin_set_spawn: '&aAktuelles Grundstück als Spawn festlegen'
 admin_set_spawn_lore:
 - '&7Was: Legen Sie den sicheren Ort dieses Personalgrundstücks als öffentlichen Spawn fest.'

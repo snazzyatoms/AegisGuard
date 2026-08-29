@@ -46,11 +46,15 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Caravans & Trade Routes.** `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops, with insurance, weighted route events, Folia-safe ticks, and resume after restart.
 
-**Server sanctuary.** On a server or spawn plot, staff with manage/steward can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players then do not lose hearts or food there, and deaths can keep levels and items. All start **off**. Personal plots cannot use this. There is no hub-flight Safety toggle. Flight is Ascension/Horizon level 30, staff fly, or `/agadmin skill fly`.
+**Server sanctuary.** On a server or spawn plot, staff with manage/steward can turn on **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** in Claim Settings → Safety. Players then do not lose hearts or food there, and deaths can keep levels and items. All start **off**. Personal plots cannot use this. There is no hub-flight Safety toggle.
 
-**Hearth rooms.** Owners and server-plot stewards can turn on **Hearth** in Safety. Public chat stays in the 3D subplot you are standing in (or the rest of the plot). Houses, pits, and lobbies stay quiet without door scanning. Staff with `aegis.admin.hearth` still hear every room.
+**Flight.** Plot flight unlocks at Ascension / Horizon **level 30** for owner and trusted on that plot. Staff can fly when `flight_skill.staff_always` is on (`aegis.admin.fly`). Temporary grants use `/agadmin skill fly <player> [seconds]` and `/agadmin skill clear <player>`.
 
-**Claim presets and staff seasons.** A successful claim opens the main preset chooser. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
+**Hearth rooms (vanilla text chat).** Owners and server-plot stewards can turn on **Hearth** in Safety. Public *text* chat stays in the 3D subplot you are standing in (or the rest of the plot). Houses, pits, and lobbies stay quiet without door scanning. Staff with `aegis.admin.hearth` still hear every room. Aegis Frequency (`/ag chat`) remains the opt-in plot-member radio.
+
+**Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) or Plasmo Voice. AegisGuard cannot ship a microphone stack by itself: Paper never sees a player’s mic, and vanilla clients have no voice protocol. Building our own would mean a Fabric/Forge/NeoForge client mod, UDP, encryption, and proximity — a separate product. The right follow-up is an optional hook so Hearth rooms also isolate Simple Voice Chat groups, not a custom Aegis voice client.
+
+**Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 
 Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1308` and migration auto-merges the new keys with a timestamped backup.
 
@@ -149,7 +153,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, and trade caravans |
+| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, and Hearth text-chat rooms |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -197,11 +201,15 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag heir [player|clear]      Name a succession heir
 /ag caravan                  Dispatch and track trade caravans
 /ag zone                     Manage sub-zones and rentals
+/ag subplot [name]           Mark a 3D room inside a claim (Hearth uses these)
+/ag chat                     Toggle Aegis Frequency (plot-member text radio)
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
 /agadmin wand server         Get the server-zone wand
 /agadmin claim               Create a server-owned protected zone
+/agadmin season              Staff season featured Atlas plots and Routes
+/agadmin skill fly <player>  Grant a temporary flight skill
 /agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools
 /agadmin health              Quick staff health check

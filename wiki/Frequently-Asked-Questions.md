@@ -188,6 +188,18 @@ That is how a closed house and an arena safe-zone stay quiet. We do not scan doo
 
 Staff with `aegis.admin.hearth` still hear every room and are not muffled when they speak. Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
 
+Vanilla Minecraft has **no voice chat**. Hearth and Frequency only scope the built-in `T` text chat. Servers that have proximity voice are running a client mod such as Simple Voice Chat or Plasmo Voice. AegisGuard does not ship a microphone client; a later optional hook can map Hearth rooms onto those voice groups.
+
+---
+
+## Does Minecraft have voice chat?
+
+**No. Vanilla multiplayer is text-only.**
+
+The `T` key is the game’s chat. There is no microphone in unmodified Minecraft. When a private server “has voice,” players installed a **client mod** and the host installed the matching **server plugin** — usually Simple Voice Chat, sometimes Plasmo Voice. Discord is the other common path and lives outside the game.
+
+AegisGuard cannot add voice by itself. Paper never receives microphone audio, and vanilla clients have no voice protocol. Shipping “Aegis Voice” would mean a Fabric/Forge/NeoForge client, UDP, encryption, and proximity audio — a separate product. The planned path is an optional Simple Voice Chat hook so Hearth rooms can also isolate those voice groups.
+
 ---
 
 ## Can players rent out parts of their land?

@@ -33,6 +33,25 @@ public class Plot {
 
     public static final UUID SERVER_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
+    /**
+     * How this plot's public listings (visit / market / auction) let visitors arrive.
+     * CLASSIC is the 1.3.0-style Safe Travel to the plot spawn; BEACON requires a public
+     * arrival pad and fails closed when none is available.
+     */
+    public enum ArrivalMode {
+        CLASSIC,
+        BEACON;
+
+        public static ArrivalMode parse(String raw) {
+            if (raw == null || raw.isBlank()) return CLASSIC;
+            try {
+                return ArrivalMode.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return CLASSIC;
+            }
+        }
+    }
+
     // --- CORE ---
     private UUID plotId;
     private UUID owner;
@@ -70,6 +89,13 @@ public class Plot {
     private volatile String lockdownMode = "FULL"; // FULL or SOFT
     private volatile UUID lockdownActivatedBy;
     private volatile String lockdownActivatedByName = "Unknown";
+
+    // --- TRAVEL ATLAS ARRIVAL MODE (1.4.0) ---
+    // Owner choice for how public listings (visit / market / auction) let visitors land:
+    //   CLASSIC - Safe Travel to plot spawn / listing point (1.3.0 style)
+    //   BEACON  - visitors must land on a public arrival pad; fails closed if none exists
+    // Existing plots default to CLASSIC so enabling 1.4 never suddenly gates a server on pads.
+    private volatile ArrivalMode arrivalMode = ArrivalMode.CLASSIC;
 
     // --- REALM PROFILE NOTICEBOARD (Milestone 4) ---
     // Short, owner-moderated public notices (rules, event details, shop info, announcements).
@@ -1348,6 +1374,23 @@ public class Plot {
                 guestPasses.put(playerId, pass);
             } catch (Exception ignored) {}
         }
+    }
+
+    // ---------------------------------------------------------------------
+    // Travel Atlas arrival mode (1.4.0)
+    // ---------------------------------------------------------------------
+
+    /** Never null; defaults to CLASSIC for plots that predate the 1.4 arrival choice. */
+    public ArrivalMode getArrivalMode() {
+        return arrivalMode == null ? ArrivalMode.CLASSIC : arrivalMode;
+    }
+
+    public void setArrivalMode(ArrivalMode mode) {
+        this.arrivalMode = mode == null ? ArrivalMode.CLASSIC : mode;
+    }
+
+    public boolean requiresBeaconArrival() {
+        return getArrivalMode() == ArrivalMode.BEACON;
     }
 
     // ---------------------------------------------------------------------

@@ -80,7 +80,23 @@ Teleport Beacons are linked pads players place on claims they manage.
 /ag beacon
 ```
 
-Stand next to a pad, confirm, and you land only at the paired pad. Visit, market, and auction travel can require a public arrival beacon when the server turns that on. Server owners choose the fee policy in `teleport_beacons.charges`: mixed free and paid pads (`owner_choice`), a server-wide fee (`always`), or no charges (`off`). Optional maintenance fees can pay the plot owner. `/ag home` stays personal plot spawn. Pads survive claim merges and unbind when a plot is deleted.
+Stand next to a pad, confirm, and you land only at the paired pad. Visit, market, and auction travel can require a public arrival beacon when the plot manager chooses beacon arrival (see below). Server owners choose the fee policy in `teleport_beacons.charges`: mixed free and paid pads (`owner_choice`), a server-wide fee (`always`), or no charges (`off`). Optional maintenance fees can pay the plot owner. `/ag home` stays personal plot spawn. Pads survive claim merges and unbind when a plot is deleted.
+
+In `1.4.0`, one block holds at most one pad (startup de-duplicates pads by world/x/y/z and unbinds extras), links stay one directed A→B, and the stand prompt is configurable with `teleport_beacons.prompt_cooldown_seconds` (default `7`) instead of a hard-coded 2.5s delay.
+
+---
+
+## How do I choose whether visitors arrive at spawn or a beacon pad? (1.4.0)
+
+Each plot has an arrival mode you set while managing it:
+
+```text
+/ag arrival classic   Visitors Safe Travel to the plot spawn (default)
+/ag arrival beacon    Visitors must land on a public arrival pad
+/ag arrival           Show the current mode
+```
+
+**Classic** plots behave like 1.3.0 and Safe Travel visitors to the plot spawn, even when pads exist. **Beacon** plots require a public arrival pad; if none is available, the visit/market/auction trip fails closed (`beacon_no_public_arrival`) instead of silently dropping the visitor at spawn. Every existing plot defaults to **classic**, so upgrading to 1.4.0 changes nothing until an owner opts in. Server owners can require pad arrival everywhere with `teleport_beacons.force_public_arrival: true`.
 
 ---
 

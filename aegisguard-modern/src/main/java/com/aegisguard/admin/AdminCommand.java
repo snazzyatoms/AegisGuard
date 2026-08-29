@@ -804,14 +804,14 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         int schema = plugin.getConfig().getInt("config_schema", plugin.getConfig().getInt("config-version", 0));
         int target = ConfigMigrationService.CURRENT_SCHEMA;
         sendLocalized(sender, "admin_transition_schema",
-                "&7Config schema: &f{CURRENT} &7/ 1.3.5 target &f{TARGET}.",
+                "&7Config schema: &f{CURRENT} &7/ 1.4.0 target &f{TARGET}.",
                 Map.of("CURRENT", String.valueOf(schema), "TARGET", String.valueOf(target)));
         sendLocalized(sender, "admin_transition_plots",
                 "&7Plots load as-is. Claim records are not rewritten.");
 
         if (schema >= target) {
             sendLocalized(sender, "admin_transition_already",
-                    "&aAlready on 1.3.5; nothing to convert.");
+                    "&aAlready on 1.4.0; nothing to convert.");
             sendLocalized(sender, "admin_transition_doctor_optional",
                     "&7Doctor is optional. Use &e/agadmin doctor scan &7only if something looks wrong.");
             return;

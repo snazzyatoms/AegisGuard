@@ -270,6 +270,25 @@ Lockdown never changes ownership, permanent roles, or Guest Pass records. Moveme
 
 Alliance membership alone grants no plot access. Plot owners opt in separately for entry, interaction, containers, building, animals/farms, and friendly PvP; all risky access begins disabled.
 
+### `teleport_beacons` (Teleport Beacons and Travel Atlas arrival)
+
+Teleport Beacons are pad-to-pad travel placed on claims a player manages. In **1.4.0** each plot owner also chooses how their **public listings** (Visit Discover/Warps, auction visit, market jump) let visitors land. `/ag home` always stays personal plot spawn regardless of these settings.
+
+- `enabled`: master switch for pad tools (set `modules.teleport_beacons` and this to `false` to hide pad tools entirely)
+- `force_public_arrival`: network-wide override (default **false**). When `true`, every public listing behaves as if its owner chose beacon arrival (1.3.5-style mandatory pads), ignoring the per-plot choice
+- `max_per_plot` / `max_per_server_zone`: pad count caps
+- `stand_radius`: how close a player must stand to a pad for the stand prompt
+- `prompt_cooldown_seconds`: how long (seconds) a player lingers near a linked pad before the stand confirm opens, and the minimum gap between repeat prompts (default `7`, raised from the old hard-coded 2.5s so a quick walk-over no longer pops the menu)
+- `create_cooldown_seconds`: minimum gap (seconds) between sneak-binding new pads so a manager cannot spam duplicate rows (default `8`; one create wizard runs at a time)
+- `charges.mode`: fee policy — `owner_choice` (pads may be free or paid), `always` (server-wide fee), or `off`
+
+**Per-plot arrival choice.** Each plot has an arrival mode:
+
+- **classic** — Safe Travel to the plot spawn / listing point (1.3.0 style), even when pads exist
+- **beacon** — visitors **must** land on a public arrival pad; if none exists the trip **fails closed** (`beacon_no_public_arrival`), never a silent fallback
+
+Existing plots default to **classic**, so turning 1.4.0 on never suddenly gates old servers on pads. A plot manager sets the mode with `/ag arrival <classic|beacon>` (running `/ag arrival` with no argument reports the current mode). The choice is persisted in YML, SQL, and versioned plot snapshots, so restores keep it. One block holds at most one pad; startup de-duplicates pads by world/x/y/z, and links stay one directed A→B.
+
 ### `travel` (Safe Travel)
 
 Shared safety gate for Travel, Routes, checkpoints, plot visits, markets, zones, Spawn, and staff destinations.

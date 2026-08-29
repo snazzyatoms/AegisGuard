@@ -62,31 +62,32 @@ AegisGuard works without dependencies. Install the following plugins to enable a
 
 ---
 
-## Updating from 1.2.7 or 1.3.0 to 1.3.5
+## Updating from 1.2.7, 1.3.0, or 1.3.5 to 1.4.0
 
 Use this process when updating AegisGuard:
 
 1. Stop the server completely.
 2. Confirm the host is running **Java 21+**.
 3. Remove the previous AegisGuard jar from the `plugins` folder.
-4. Add `AegisGuard-1.3.5.jar`.
-5. Start the server. Config and language merge run on enable. Existing plots load as-is.
+4. Add `AegisGuard-1.4.0.jar`.
+5. Start the server. Config and language merge run on enable. Existing plots load as-is and stay on classic arrival.
 6. Confirm the upgrade with `/agadmin transition` (aliases `/agadmin upgrade`, `/agadmin v130`).
 7. Run `/agadmin doctor` only if something looks wrong.
 
 A copy of `plugins/AegisGuard/` (and world data) is recommended. It is **not** required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.3.5 may add `plot-backups/` schematic files when that feature is enabled and will bump `config_schema` safely with a backup when migration runs.
+> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1300`, auto-merging the new `teleport_beacons` keys (`force_public_arrival`, `prompt_cooldown_seconds`, `create_cooldown_seconds`) with a backup when migration runs.
 
 After updating, verify:
 
-- `/agadmin transition` reports that you are on the current schema
+- `/agadmin transition` reports that you are on the current schema (`1300`)
 - `/ag menu` opens normally
-- Existing claims still protect correctly
+- Existing claims still protect correctly (and remain on classic arrival)
 - Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)
 - Modules you turned off in `modules:` do not appear on the player menu
 - Plot-build backups stay **off** until you set `snapshots.build_backup.enabled` and install WorldEdit or FAWE
 - `/ag beacon` opens the pad manager on a plot you can manage
+- `/ag arrival` reports the plot's arrival mode and `/ag arrival beacon` requires a public pad
 - Translated menus show real names and numbers instead of leftover `{KEY}` tokens
 
 ---

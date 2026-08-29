@@ -211,6 +211,11 @@ public class YMLDataStore implements IDataStore {
                     }
 
                     plot.setArrivalMode(Plot.ArrivalMode.parse(sec.getString("arrival-mode")));
+                    if (sec.isList("locked-members")) {
+                        for (String raw : sec.getStringList("locked-members")) {
+                            try { plot.lockMember(UUID.fromString(raw)); } catch (Exception ignored) {}
+                        }
+                    }
 
                     if (sec.getBoolean("lockdown-active", false)) {
                         String actorStr = sec.getString("lockdown-activated-by", null);
@@ -545,6 +550,8 @@ public class YMLDataStore implements IDataStore {
 
         sec.set("arrival-mode", plot.getArrivalMode() == Plot.ArrivalMode.CLASSIC
                 ? null : plot.getArrivalMode().name());
+        List<String> lockedMembers = plot.getLockedMembers().stream().map(UUID::toString).sorted().toList();
+        sec.set("locked-members", lockedMembers.isEmpty() ? null : lockedMembers);
 
         if (plot.isLockdownFlagSet()) {
             sec.set("lockdown-active", true);

@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1301
+config_schema: 1302
 
 
 # ------------------------------------------------------------------------------
@@ -764,6 +764,9 @@ snapshots:
   require_restore_confirmation: true
 
   restore:
+    # When true (default), restoring MEMBERS_AND_ROLES merges snapshot members into
+    # the live roster instead of wiping current trust. Set false for a full role revert.
+    protect_roles: true
     # Rescue snapshots, duplicate prevention, maintenance locking, and restart pause are
     # mandatory safety behavior. This setting controls only build-rescue strictness.
     # If build backups are enabled, abort before mutation when the rescue build copy fails.

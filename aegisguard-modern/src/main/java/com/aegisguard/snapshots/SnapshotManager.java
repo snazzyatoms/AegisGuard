@@ -583,7 +583,7 @@ public class SnapshotManager {
             }
             if (RestoreScope.includesData(operation.scopes())) {
                 TerritoryRentalSnapshotState.validate(snapshot.getTerritoryRentalStateBlob(), snapshot.getPlotId());
-                restorePlotState(plot, snapshot, operation.scopes());
+                restorePlotState(plot, snapshot, operation.scopes(), shouldOverwriteRoles());
                 restoreTerritoryState(plot, snapshot, operation.scopes());
                 plugin.store().reindexPlot(plot);
                 plugin.store().setDirty(true);
@@ -1486,10 +1486,15 @@ public class SnapshotManager {
      * directly, without a live plugin/data-store instance.
      */
     static void restorePlotState(Plot plot, ClaimSnapshot snapshot) {
-        restorePlotState(plot, snapshot, RestoreScope.fullData());
+        restorePlotState(plot, snapshot, RestoreScope.fullData(), false);
     }
 
     static void restorePlotState(Plot plot, ClaimSnapshot snapshot, Set<RestoreScope> requestedScopes) {
+        restorePlotState(plot, snapshot, requestedScopes, false);
+    }
+
+    static void restorePlotState(Plot plot, ClaimSnapshot snapshot, Set<RestoreScope> requestedScopes,
+                                 boolean overwriteRoles) {
         EnumSet<RestoreScope> scopes = RestoreScope.normalize(requestedScopes);
         PlotSnapshotState.validate(snapshot.getExtendedStateBlob());
         if (scopes.contains(RestoreScope.IDENTITY_AND_BOUNDS)) {
@@ -1516,14 +1521,7 @@ public class SnapshotManager {
             plot.getFlags().putAll(snapshot.getFlags());
         }
         if (scopes.contains(RestoreScope.MEMBERS_AND_ROLES)) {
-            plot.getPlayerRoles().clear();
-            plot.getRoleNicknames().clear();
-            plot.getRoleFlagStates().clear();
-            for (Map.Entry<UUID, String> member : snapshot.getMembers().entrySet()) {
-                plot.setRole(member.getKey(), member.getValue());
-            }
-            plot.deserializeRoleNicknames(snapshot.getRoleNicknamesBlob());
-            plot.deserializeRoleFlags(snapshot.getRoleFlagsBlob());
+            restoreMembersAndRoles(plot, snapshot, overwriteRoles);
         }
         if (scopes.contains(RestoreScope.BANS)) {
             plot.getBannedPlayers().clear();
@@ -1546,7 +1544,53 @@ public class SnapshotManager {
         }
         PlotSnapshotState.restore(plot, snapshot.getExtendedStateBlob(), scopes);
     }
-    
+
+    private boolean shouldOverwriteRoles() {
+        try {
+            return plugin.cfg() != null && !plugin.cfg().raw().getBoolean("snapshots.restore.protect_roles", true);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static void restoreMembersAndRoles(Plot plot, ClaimSnapshot snapshot, boolean overwriteRoles) {
+        if (overwriteRoles) {
+            Map<UUID, String> lockedRoles = new HashMap<>();
+            Map<UUID, String> lockedNicks = new HashMap<>();
+            for (UUID locked : new ArrayList<>(plot.getLockedMembers())) {
+                lockedRoles.put(locked, plot.getRole(locked));
+                String nick = plot.getRoleNickname(locked);
+                if (nick != null) lockedNicks.put(locked, nick);
+            }
+            plot.getPlayerRoles().clear();
+            plot.getRoleNicknames().clear();
+            plot.getRoleFlagStates().clear();
+            for (Map.Entry<UUID, String> member : snapshot.getMembers().entrySet()) {
+                if (plot.isMemberLocked(member.getKey())) continue;
+                plot.setRole(member.getKey(), member.getValue(), true);
+            }
+            for (Map.Entry<UUID, String> locked : lockedRoles.entrySet()) {
+                plot.setRole(locked.getKey(), locked.getValue(), true);
+                plot.lockMember(locked.getKey());
+            }
+            plot.deserializeRoleNicknames(snapshot.getRoleNicknamesBlob());
+            for (Map.Entry<UUID, String> nick : lockedNicks.entrySet()) {
+                plot.setRoleNickname(nick.getKey(), nick.getValue());
+            }
+            plot.deserializeRoleFlags(snapshot.getRoleFlagsBlob());
+            return;
+        }
+
+        for (Map.Entry<UUID, String> member : snapshot.getMembers().entrySet()) {
+            if (plot.isMemberLocked(member.getKey())) continue;
+            if (!plot.getPlayerRoles().containsKey(member.getKey())) {
+                plot.setRole(member.getKey(), member.getValue(), true);
+            }
+        }
+        plot.deserializeRoleNicknames(snapshot.getRoleNicknamesBlob(), false);
+        plot.deserializeRoleFlags(snapshot.getRoleFlagsBlob(), false);
+    }
+
     public boolean isDirty() { return isDirty; }
     public void setDirty(boolean dirty) { this.isDirty = dirty; }
     public void saveSync() { save(); }

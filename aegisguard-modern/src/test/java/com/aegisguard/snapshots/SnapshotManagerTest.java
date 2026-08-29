@@ -248,7 +248,7 @@ class SnapshotManagerTest {
         plot.addBan(laterBannedPlayer);
         plot.setTreasuryBalance(0.0D);
 
-        SnapshotManager.restorePlotState(plot, snapshot);
+        SnapshotManager.restorePlotState(plot, snapshot, RestoreScope.fullData(), true);
 
         assertEquals(owner, plot.getOwner());
         assertEquals("Original Homestead", plot.getPlotName());
@@ -339,7 +339,7 @@ class SnapshotManagerTest {
         plot.setRoleNickname(member, "BuilderBob");
         assertEquals("BuilderBob", plot.getRoleNicknames().get(member));
 
-        SnapshotManager.restorePlotState(plot, snapshot);
+        SnapshotManager.restorePlotState(plot, snapshot, RestoreScope.fullData(), true);
 
         assertTrue(plot.getRoleNicknames().isEmpty(), "Nicknames added after the snapshot must not survive rollback");
         assertEquals("trusted", plot.getPlayerRoles().get(member));
@@ -408,5 +408,55 @@ class SnapshotManagerTest {
                 "Owner", "Plot", "", "", "", "", "",
                 "", "PRIVATE", false, false, 0.0D, null, "",
                 Map.of(), Map.of(), List.of());
+    }
+
+    @Test
+    void defaultRestoreMergesRolesInsteadOfClobberingCurrentTrust() {
+        UUID owner = UUID.randomUUID();
+        UUID original = UUID.randomUUID();
+        UUID laterTrusted = UUID.randomUUID();
+        Plot plot = new Plot(UUID.randomUUID(), owner, "Owner", "world", 0, 0, 20, 20);
+        plot.setRole(original, "trusted");
+        ClaimSnapshot snapshot = new ClaimSnapshot(plot, ClaimSnapshot.SnapshotType.MANUAL, "base", owner);
+
+        plot.setRole(laterTrusted, "builder");
+        SnapshotManager.restorePlotState(plot, snapshot);
+
+        assertEquals("trusted", plot.getPlayerRoles().get(original));
+        assertEquals("builder", plot.getPlayerRoles().get(laterTrusted),
+                "Default restore must keep members granted after the snapshot");
+    }
+
+    @Test
+    void lockedMembersSurviveOverwriteRestoreAndRefuseSetRole() {
+        UUID owner = UUID.randomUUID();
+        UUID locked = UUID.randomUUID();
+        Plot plot = new Plot(UUID.randomUUID(), owner, "Owner", "world", 0, 0, 20, 20);
+        plot.setRole(locked, "trusted");
+        plot.lockMember(locked);
+        ClaimSnapshot snapshot = new ClaimSnapshot(plot, ClaimSnapshot.SnapshotType.MANUAL, "before", owner);
+
+        assertFalse(plot.setRole(locked, "builder", false));
+        assertEquals("trusted", plot.getRole(locked));
+        SnapshotManager.restorePlotState(plot, snapshot, RestoreScope.fullData(), true);
+
+        assertEquals("trusted", plot.getPlayerRoles().get(locked));
+        assertTrue(plot.isMemberLocked(locked));
+    }
+
+    @Test
+    void malformedRoleBlobKeepsLastGoodValue() {
+        UUID owner = UUID.randomUUID();
+        UUID member = UUID.randomUUID();
+        Plot plot = new Plot(UUID.randomUUID(), owner, "Owner", "world", 0, 0, 20, 20);
+        plot.setRole(member, "trusted");
+        plot.deserializeRoles("not-a-uuid-blob");
+        assertEquals("trusted", plot.getPlayerRoles().get(member));
+        plot.deserializeRoleFlags("totally|broken");
+        assertTrue(plot.getRoleFlagStates().isEmpty() || plot.getRoleFlagState("trusted", "build") == null
+                || plot.getRoleFlagStates().isEmpty());
+        plot.setRoleFlagState("trusted", "build", com.aegisguard.flags.TriState.DENY);
+        plot.deserializeRoleFlags("%%%not-flags%%%");
+        assertEquals(com.aegisguard.flags.TriState.DENY, plot.getRoleFlagState("trusted", "build"));
     }
 }

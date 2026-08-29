@@ -19,6 +19,9 @@ public enum AuditCategory {
     /** Milestone 3 (Emergency Plot Lockdown): activation and deactivation. */
     LOCKDOWN,
 
+    /** Role/claim protection: grant, revoke, lock, and undo. */
+    ROLE_CHANGE,
+
     /** Milestone 7 (Alliance Access): join/leave/disband and per-plot access toggles. */
     ALLIANCE
 }

@@ -27,7 +27,7 @@ class PlotChatContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1301, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1302, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("plot_chat"));
         assertEquals(Boolean.TRUE, modules.get("visual_presence"));

@@ -275,6 +275,7 @@ public class AuditAdminGUI {
             case GUEST_PASS -> Material.PAPER;
             case LOCKDOWN -> Material.IRON_BARS;
             case ALLIANCE -> Material.SHIELD;
+            case ROLE_CHANGE -> Material.NAME_TAG;
         };
     }
 

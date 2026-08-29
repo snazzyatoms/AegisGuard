@@ -829,6 +829,10 @@ public class SQLDataStore implements IDataStore {
         if (plot.getArrivalMode() != Plot.ArrivalMode.CLASSIC) {
             add.accept("arrivalMode", plot.getArrivalMode().name());
         }
+        if (!plot.getLockedMembers().isEmpty()) {
+            add.accept("lockedMembers", plot.getLockedMembers().stream().map(UUID::toString)
+                    .sorted().collect(Collectors.joining(",")));
+        }
 
         if (plot.isLockdownFlagSet()) {
             add.accept("lockdownActive", "true");
@@ -933,6 +937,12 @@ public class SQLDataStore implements IDataStore {
                     case "allianceAccess" -> plot.deserializeAllianceAccess(value);
 
                     case "arrivalMode" -> plot.setArrivalMode(Plot.ArrivalMode.parse(value));
+                    case "lockedMembers" -> {
+                        for (String uStr : value.split(",")) {
+                            if (uStr == null || uStr.isBlank()) continue;
+                            try { plot.lockMember(UUID.fromString(uStr.trim())); } catch (IllegalArgumentException ignored) {}
+                        }
+                    }
 
                     case "lockdownActive" -> lockdownActive[0] = Boolean.parseBoolean(value);
                     case "lockdownActivatedAt" -> lockdownActivatedAt[0] = Long.parseLong(value);

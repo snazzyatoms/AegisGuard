@@ -68,6 +68,9 @@ public class Plot {
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
     // Plot-local display labels only; permission tokens still come from playerRoles / config roles.
     private final Map<UUID, String> roleNicknames = new ConcurrentHashMap<>();
+    private final Set<UUID> lockedMembers = ConcurrentHashMap.newKeySet();
+    private final ArrayDeque<RoleChange> roleHistory = new ArrayDeque<>();
+    private static final int ROLE_HISTORY_LIMIT = 16;
     private final List<UUID> bannedPlayers = new CopyOnWriteArrayList<>();
 
     // Role flag overrides (role -> flag -> TriState)
@@ -362,24 +365,80 @@ public class Plot {
     }
 
     public void setRole(UUID playerUUID, String role) {
-        if (playerUUID == null) return;
-        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
+        setRole(playerUUID, role, false);
+    }
 
-        if (role == null || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none")) {
+    /**
+     * @return false when a member lock blocked the change
+     */
+    public boolean setRole(UUID playerUUID, String role, boolean bypassLock) {
+        if (playerUUID == null) return false;
+        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return false;
+
+        String previous = playerRoles.get(playerUUID);
+        boolean removing = role == null || role.equalsIgnoreCase("default") || role.equalsIgnoreCase("none");
+        if (!bypassLock && isMemberLocked(playerUUID) && (removing || (previous != null && role != null
+                && !previous.equalsIgnoreCase(role)))) {
+            return false;
+        }
+
+        if (removing) {
             playerRoles.remove(playerUUID);
             roleNicknames.remove(playerUUID);
-        } else {
-            playerRoles.put(playerUUID, role.toLowerCase(Locale.ROOT));
-            bannedPlayers.remove(playerUUID);
+            if (!bypassLock) recordRoleChange(playerUUID, previous, null);
+            return true;
         }
+        playerRoles.put(playerUUID, role.toLowerCase(Locale.ROOT));
+        bannedPlayers.remove(playerUUID);
+        if (!bypassLock) recordRoleChange(playerUUID, previous, role.toLowerCase(Locale.ROOT));
+        return true;
     }
 
     public void removeRole(UUID playerUUID) {
-        if (playerUUID == null) return;
-        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return;
-        playerRoles.remove(playerUUID);
-        roleNicknames.remove(playerUUID);
+        removeRole(playerUUID, false);
     }
+
+    public boolean removeRole(UUID playerUUID, boolean bypassLock) {
+        if (playerUUID == null) return false;
+        if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return false;
+        if (!bypassLock && isMemberLocked(playerUUID)) return false;
+        String previous = playerRoles.remove(playerUUID);
+        roleNicknames.remove(playerUUID);
+        if (!bypassLock && previous != null) recordRoleChange(playerUUID, previous, null);
+        return true;
+    }
+
+    public Set<UUID> getLockedMembers() {
+        return lockedMembers;
+    }
+
+    public boolean isMemberLocked(UUID playerUUID) {
+        return playerUUID != null && lockedMembers.contains(playerUUID);
+    }
+
+    public boolean lockMember(UUID playerUUID) {
+        if (playerUUID == null || isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return false;
+        return lockedMembers.add(playerUUID);
+    }
+
+    public boolean unlockMember(UUID playerUUID) {
+        return playerUUID != null && lockedMembers.remove(playerUUID);
+    }
+
+    public boolean undoLastRoleChange() {
+        RoleChange last = roleHistory.pollLast();
+        if (last == null) return false;
+        setRole(last.target, last.previous, true);
+        return true;
+    }
+
+    private void recordRoleChange(UUID target, String previous, String next) {
+        if (Objects.equals(previous, next)) return;
+        roleHistory.addLast(new RoleChange(target, previous, next));
+        while (roleHistory.size() > ROLE_HISTORY_LIMIT) roleHistory.pollFirst();
+    }
+
+    private record RoleChange(UUID target, String previous, String next) {}
 
     public Map<UUID, String> getRoleNicknames() {
         return roleNicknames;
@@ -446,17 +505,37 @@ public class Plot {
     }
 
     public void deserializeRoleNicknames(String serialized) {
-        roleNicknames.clear();
-        if (serialized == null || serialized.isBlank()) return;
-        for (String entry : serialized.split("~")) {
-            if (entry == null || entry.isBlank()) continue;
-            String[] parts = entry.split("\\|", 2);
-            if (parts.length != 2) continue;
-            try {
-                UUID id = UUID.fromString(parts[0]);
-                String label = new String(Base64.getDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-                setRoleNickname(id, label);
-            } catch (Exception ignored) {}
+        deserializeRoleNicknames(serialized, true);
+    }
+
+    public void deserializeRoleNicknames(String serialized, boolean replace) {
+        if (serialized == null) return;
+        Map<UUID, String> parsed = new LinkedHashMap<>();
+        int rejected = 0;
+        if (!serialized.isBlank()) {
+            for (String entry : serialized.split("~")) {
+                if (entry == null || entry.isBlank()) continue;
+                String[] parts = entry.split("\\|", 2);
+                if (parts.length != 2) {
+                    rejected++;
+                    continue;
+                }
+                try {
+                    UUID id = UUID.fromString(parts[0]);
+                    String label = new String(Base64.getDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+                    parsed.put(id, label);
+                } catch (Exception ignored) {
+                    rejected++;
+                }
+            }
+        }
+        if (!serialized.isBlank() && parsed.isEmpty() && rejected > 0) {
+            return;
+        }
+        if (replace) roleNicknames.clear();
+        for (Map.Entry<UUID, String> entry : parsed.entrySet()) {
+            if (!replace && roleNicknames.containsKey(entry.getKey())) continue;
+            setRoleNickname(entry.getKey(), entry.getValue());
         }
     }
 
@@ -478,6 +557,7 @@ public class Plot {
 
     public void addBan(UUID playerUUID) {
         if (playerUUID == null) return;
+        if (isMemberLocked(playerUUID)) return;
         if (!bannedPlayers.contains(playerUUID)) bannedPlayers.add(playerUUID);
         playerRoles.remove(playerUUID);
         guestPasses.remove(playerUUID);
@@ -2155,14 +2235,29 @@ public class Plot {
     }
 
     public void deserializeRoles(String serialized) {
+        if (serialized == null) return;
+        Map<UUID, String> parsed = new LinkedHashMap<>();
+        int rejected = 0;
+        if (!serialized.isBlank()) {
+            for (String entry : serialized.split(";")) {
+                String[] parts = entry.split("=", 2);
+                if (parts.length != 2) {
+                    rejected++;
+                    continue;
+                }
+                try {
+                    parsed.put(UUID.fromString(parts[0]), parts[1]);
+                } catch (IllegalArgumentException ignored) {
+                    rejected++;
+                }
+            }
+        }
+        if (!serialized.isBlank() && parsed.isEmpty() && rejected > 0) {
+            return;
+        }
         playerRoles.clear();
-        if (serialized == null || serialized.isBlank()) return;
-        for (String entry : serialized.split(";")) {
-            String[] parts = entry.split("=", 2);
-            if (parts.length != 2) continue;
-            try {
-                setRole(UUID.fromString(parts[0]), parts[1]);
-            } catch (IllegalArgumentException ignored) {}
+        for (Map.Entry<UUID, String> entry : parsed.entrySet()) {
+            setRole(entry.getKey(), entry.getValue(), true);
         }
     }
 
@@ -2186,23 +2281,43 @@ public class Plot {
     }
 
     public void deserializeRoleFlags(String serialized) {
-        roleFlagStates.clear();
-        if (serialized == null || serialized.isBlank()) return;
+        deserializeRoleFlags(serialized, true);
+    }
 
-        for (String entry : serialized.split(";")) {
-            if (entry == null || entry.isBlank()) continue;
-            String[] parts = entry.split("\\|", 3);
-            if (parts.length != 3) continue;
-
-            String role = parts[0].trim().toLowerCase(Locale.ROOT);
-            String flag = parts[1].trim().toLowerCase(Locale.ROOT);
-            if (role.isEmpty() || flag.isEmpty()) continue;
-
-            try {
-                TriState state = TriState.valueOf(parts[2].trim().toUpperCase(Locale.ROOT));
-                if (state == TriState.INHERIT) continue;
-                roleFlagStates.computeIfAbsent(role, k -> new ConcurrentHashMap<>()).put(flag, state);
-            } catch (IllegalArgumentException ignored) {}
+    public void deserializeRoleFlags(String serialized, boolean replace) {
+        if (serialized == null) return;
+        Map<String, Map<String, TriState>> parsed = new LinkedHashMap<>();
+        int rejected = 0;
+        if (!serialized.isBlank()) {
+            for (String entry : serialized.split(";")) {
+                if (entry == null || entry.isBlank()) continue;
+                String[] parts = entry.split("\\|", 3);
+                if (parts.length != 3) {
+                    rejected++;
+                    continue;
+                }
+                String role = parts[0].trim().toLowerCase(Locale.ROOT);
+                String flag = parts[1].trim().toLowerCase(Locale.ROOT);
+                if (role.isEmpty() || flag.isEmpty()) {
+                    rejected++;
+                    continue;
+                }
+                try {
+                    TriState state = TriState.valueOf(parts[2].trim().toUpperCase(Locale.ROOT));
+                    if (state == TriState.INHERIT) continue;
+                    parsed.computeIfAbsent(role, k -> new ConcurrentHashMap<>()).put(flag, state);
+                } catch (IllegalArgumentException ignored) {
+                    rejected++;
+                }
+            }
+        }
+        if (!serialized.isBlank() && parsed.isEmpty() && rejected > 0) {
+            return;
+        }
+        if (replace) roleFlagStates.clear();
+        for (Map.Entry<String, Map<String, TriState>> roleEntry : parsed.entrySet()) {
+            Map<String, TriState> dest = roleFlagStates.computeIfAbsent(roleEntry.getKey(), k -> new ConcurrentHashMap<>());
+            dest.putAll(roleEntry.getValue());
         }
     }
 }

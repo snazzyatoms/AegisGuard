@@ -46,7 +46,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
             "group", "alliance", "arena", "beacon", "chat", "discover", "favorite", "activity",
-            "transfer", "settlements",
+            "transfer", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
             "reload", "refresh",
             // ✅ NEW: cost preview command
@@ -357,6 +357,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             // 1.4: per-plot public arrival choice (classic vs beacon) for the plot you manage.
             case "arrival" -> handleArrival(p, args);
+
+            case "roles" -> handleRoles(p, args);
 
             // ✅ Added: /aegis reload [soft|nogui]
             case "reload", "refresh" -> handleReload(p, args);
@@ -1044,6 +1046,67 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         sendKey(p, "arrival_set", "&a✔ Public arrival set to &f{MODE}&a for this plot.",
                 Map.of("MODE", mode.name().toLowerCase(Locale.ROOT)));
         if (plugin.effects() != null) plugin.effects().playConfirm(p);
+    }
+
+    private void handleRoles(Player p, String[] args) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "no_plot_here", "&c❌ You are not standing inside your claim.");
+            return;
+        }
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (args.length < 2) {
+            sendKey(p, "roles_usage", "&eUsage: /ag roles <lock|unlock|undo> [player]");
+            return;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        if (action.equals("undo")) {
+            if (!plot.undoLastRoleChange()) {
+                sendKey(p, "roles_undo_empty", "&cNo recent role change to undo on this plot.");
+                plugin.effects().playError(p);
+                return;
+            }
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            if (plugin.audit() != null) {
+                plugin.audit().record(com.aegisguard.audit.AuditCategory.ROLE_CHANGE, p,
+                        plot.getPlotName(), "Undid last role change");
+            }
+            sendKey(p, "roles_undo_ok", "&aUndid the last role change on this plot.");
+            plugin.effects().playConfirm(p);
+            return;
+        }
+        if (!action.equals("lock") && !action.equals("unlock")) {
+            sendKey(p, "roles_usage", "&eUsage: /ag roles <lock|unlock|undo> [player]");
+            return;
+        }
+        if (args.length < 3) {
+            sendKey(p, "roles_usage", "&eUsage: /ag roles <lock|unlock|undo> [player]");
+            return;
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+        UUID targetId = target.getUniqueId();
+        boolean changed = action.equals("lock") ? plot.lockMember(targetId) : plot.unlockMember(targetId);
+        if (!changed) {
+            sendKey(p, "roles_lock_failed", "&cCould not {ACTION} that member.",
+                    Map.of("ACTION", action));
+            plugin.effects().playError(p);
+            return;
+        }
+        plugin.store().savePlot(plot);
+        plugin.store().setDirty(true);
+        if (plugin.audit() != null) {
+            String name = target.getName() == null ? targetId.toString() : target.getName();
+            plugin.audit().record(com.aegisguard.audit.AuditCategory.ROLE_CHANGE, p,
+                    plot.getPlotName(), action + " " + name);
+        }
+        sendKey(p, "roles_lock_ok", "&aMember {PLAYER} is now {ACTION}.",
+                Map.of("PLAYER", target.getName() == null ? args[2] : target.getName(),
+                        "ACTION", action + "ed"));
+        plugin.effects().playConfirm(p);
     }
 
     private void handleRename(Player p, String[] args) {
@@ -2604,6 +2667,13 @@ private void handleUnsell(Player p) {
             if (args[0].equalsIgnoreCase("quickclaim") || args[0].equalsIgnoreCase("qc")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("5", "10", "15", "25"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+
+            if (args[0].equalsIgnoreCase("roles")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("lock", "unlock", "undo"), completions);
                 Collections.sort(completions);
                 return completions;
             }

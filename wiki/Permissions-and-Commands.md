@@ -7,7 +7,7 @@ This reference lists the main commands and recommended permissions for **AegisGu
 > - **Claim Status** stays on the Territory row of `/ag menu`. It is a plot snapshot (owner, protections, growth, access), not a separate primary flow.
 > - **Biome Studio** is not part of the active plugin flow.
 > - **Frontier Expansion** is AegisGuard's current presentation for land expansion. It remains the plot-expansion system, presented through a more distinct identity and GUI flow.
-> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Aegis Frequency, Visual Presence, and the first-claim walkthrough.
+> - Many 1.4.0 features are available through `/ag menu` as well as commands: Guest Passes, Emergency Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons, Travel Atlas, Aegis Frequency, Visual Presence, Quick-Claim, Stewardship, Caravans, and the first-claim walkthrough.
 > - If a menu icon is missing, that module is turned off on this server.
 > - The recommended permission bundles are `aegis.user` for regular players and `aegis.admin` for administrators.
 
@@ -21,6 +21,7 @@ Basic commands for claiming, travel, and personal plot management.
 | :--- | :--- | :--- |
 | `/ag wand` | `aegis.user` | Receive the **Aegis Scepter** for normal claim selection. |
 | `/ag claim` | `aegis.user` | Claim the selected area as a personal plot. |
+| `/ag quickclaim [radius]` | `aegis.user` | Claim a square around you using the same validation as `/ag claim`. Alias `/ag qc`. |
 | `/ag unclaim` | `aegis.user` | Remove the plot you are standing in. |
 | `/ag menu` | `aegis.user` | Open the main AegisGuard menu / Guardian Codex. |
 | `/ag help` | `aegis.user` | View the command and help summary. |
@@ -28,9 +29,12 @@ Basic commands for claiming, travel, and personal plot management.
 | `/ag resize <direction> <amount>` | `aegis.user` | Expand or shrink a plot. Directions are `north`, `south`, `east`, or `west`. |
 | `/ag setspawn` | `aegis.user` | Set a plot home point. |
 | `/ag home` | `aegis.user` | Teleport to a plot home point. |
-| `/ag visit` | `aegis.user` | Open the Travel menu. |
-| `/ag beacon` | `aegis.beacon` | Open the Teleport Beacon manager on a claim you manage. Included in `aegis.user`. |
+| `/ag visit` | `aegis.user` | Open the Travel Atlas. |
+| `/ag beacon` | `aegis.beacon` | Open the Atlas **My Beacons** tab on a claim you manage. Included in `aegis.user`. |
 | `/ag arrival <classic\|beacon>` | `aegis.user` | Choose how visitors arrive at the plot you manage. Run with no argument to see the current mode. |
+| `/ag heir [player\|clear]` | `aegis.user` | Name or clear the succession heir for the plot you manage. |
+| `/ag succession [assume\|rollback\|menu]` | `aegis.user` | Open Stewardship, assume an inactive owner's plot as heir, or roll back a recent transfer. |
+| `/ag caravan` | `aegis.user` | Open the Atlas Caravans tab; list, dispatch, or cancel trade shipments. |
 | `/ag stuck` | `aegis.user` | Escape to a safer nearby location. |
 | `/ag rename <name>` | `aegis.user` | Set a custom plot name. |
 | `/ag setdesc <text>` | `aegis.user` | Set a plot description. |
@@ -134,9 +138,7 @@ Each plot manager chooses how their **public listings** (Visit, market jump, and
 - **classic** — Safe Travel to the plot spawn, even when pads exist (1.3.0 style).
 - **beacon** — visitors must land on a public arrival pad; if none exists the trip fails closed (`beacon_no_public_arrival`) instead of falling back to spawn.
 
-Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. Owners can also raise `teleport_beacons.prompt_cooldown_seconds` (default `7`) and `teleport_beacons.create_cooldown_seconds` (default `8`). The `config_schema` bumps from `1294` to `1300` on upgrade, with a backup.
-
-> **Coming next:** a future update will fold the beacon manager into the Travel Atlas so `/ag beacon` opens the Atlas on a **My Beacons** tab. For 1.4.0, `/ag beacon` opens the standalone pad manager and `/ag arrival` sets the mode.
+Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1305` on upgrade, with a backup.
 
 ---
 

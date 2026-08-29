@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-This FAQ covers common questions about **AegisGuard** `v1.3.5`.
+This FAQ covers common questions about **AegisGuard** `v1.4.0`. The last published GitHub Release remains `1.3.5`.
 
 > **Server configuration:** AegisGuard is highly configurable. Commands, costs, economy routes, integrations, and optional systems may differ between servers. Disabled modules do not appear on `/ag menu`.
 
@@ -8,7 +8,7 @@ This FAQ covers common questions about **AegisGuard** `v1.3.5`.
 
 ## Is AegisGuard compatible with Folia?
 
-**Yes.** AegisGuard `v1.3.5` declares Folia support and detects Folia at startup.
+**Yes.** AegisGuard `v1.4.0` declares Folia support and detects Folia at startup.
 
 On Folia, AegisGuard uses compatible global-region, entity-region, and asynchronous scheduling paths where appropriate (including the optional Arena scheduler). On standard servers, it uses the normal Bukkit scheduler path.
 
@@ -18,7 +18,7 @@ AegisGuard is designed for modern Paper-compatible servers and also includes a s
 
 ## Which Minecraft and Java versions are supported?
 
-AegisGuard `v1.3.5` targets the modern Minecraft server ecosystem.
+AegisGuard `v1.4.0` targets the modern Minecraft server ecosystem.
 
 | Requirement | Supported Target |
 | :--- | :--- |
@@ -26,21 +26,21 @@ AegisGuard `v1.3.5` targets the modern Minecraft server ecosystem.
 | Java | **Java `21` or newer** |
 | Server Software | Paper and Folia are recommended; a standard Bukkit or Spigot path is also included. |
 
-Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Servers still on Java 17 must upgrade the JVM before running 1.3.5.
+Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Servers still on Java 17 must upgrade the JVM before running 1.4.0.
 
 ---
 
-## Can I update from 1.2.7 or 1.3.0 to 1.3.5 without losing claims?
+## Can I update from 1.2.7, 1.3.0, or 1.3.5 to 1.4.0 without losing claims?
 
-**Yes.** Existing 1.2.7 and 1.3.0 claims, configs, and plot data remain valid.
+**Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR, start the server, and config plus language merge run on enable. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1305`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
 A copy of `plugins/AegisGuard/` is recommended. It is not required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons and the soak fixes below. None of these wipe ownership, money, rentals, or permanent roles.
+1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons. 1.4.0 adds the Travel Atlas tabs, Quick-Claim, restore-safe roles, Guardian Succession, and Caravans. None of these wipe ownership, money, rentals, or permanent roles.
 
 ---
 
@@ -62,7 +62,7 @@ Third-party hooks (Dynmap, Discord, protection-compat) stay **off** until you en
 
 ## Can players pay with items, experience, or levels instead of money?
 
-AegisGuard `v1.3.5` includes currency types for Vault money, ClaimBlocks, experience, levels, and items. The default configuration routes primary player economy features through Vault and can fall back to ClaimBlocks where supported.
+AegisGuard `v1.4.0` includes currency types for Vault money, ClaimBlocks, experience, levels, and items. The default configuration routes primary player economy features through Vault and can fall back to ClaimBlocks where supported.
 
 The configuration also includes item-cost settings, such as a material and amount. Before enabling an item, experience, or level-based payment flow on a live server, test the configured feature on a staging server to confirm that it is wired into the intended action.
 
@@ -273,7 +273,7 @@ To enable it:
 3. Configure values such as `revert_after_hours`, `interval_seconds`, and `revert_batch_size` for your server.
 4. Restart the server and check the console for the Wilderness Revert startup message.
 
-> **Important:** AegisGuard `v1.3.5` skips Wilderness Revert startup when the active storage backend is not SQL. Test the feature carefully on a backup or staging server before enabling it in production.
+> **Important:** AegisGuard `v1.4.0` skips Wilderness Revert startup when the active storage backend is not SQL. Test the feature carefully on a backup or staging server before enabling it in production.
 
 ---
 

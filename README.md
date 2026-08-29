@@ -36,11 +36,17 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 ## What Is New In 1.4.0
 
-**Per-plot Travel Atlas arrival choice.** Each plot manager decides how their public listings (Visit, Local/Global Market, and auction jumps) let visitors land. **Classic** plots Safe Travel to the plot spawn like 1.3.0, even when pads exist. **Beacon** plots require visitors to land on a public arrival pad and **fail closed** when none is available (`beacon_no_public_arrival`) — never a silent fallback. Existing plots stay **classic**, so enabling 1.4.0 never suddenly gates older servers on pads. Managers set the mode with `/ag arrival <classic|beacon>`, and `/ag home` remains personal plot spawn. A server-wide `teleport_beacons.force_public_arrival` override can require pad arrival network-wide.
+**Travel Atlas.** Visit is one travel menu: Destinations, My Beacons, Arrival, and Caravans. `/ag beacon` opens **My Beacons**. Plot managers still choose **classic** vs **beacon** arrival (`/ag arrival`); travelers may override when the owner allows. Public listings fail closed (`beacon_no_public_arrival`) when beacon arrival has no public pad. Existing plots stay **classic**. `/ag home` remains personal plot spawn. Beacons stay one pad per block and one directed A→B link.
 
-**Beacon anti-duplicate and prompt hardening.** A block holds at most one pad: creation checks for an existing pad first, and startup de-duplicates pads by world/x/y/z (keeping the oldest, unbinding extras). Links stay one directed A→B and never A→A. The stand prompt is now configurable (`teleport_beacons.prompt_cooldown_seconds`, default `7`, replacing the old hard-coded 2.5s delay), never stacks on an already-open confirm, and plays a throttled, Folia-safe end-rod sparkle on a usable linked pad while a player lingers. A new `teleport_beacons.create_cooldown_seconds` (default `8`) rate-limits sneak-binding new pads. Link rules allow own, public, and alliance pads (when the destination allows alliance entry) plus friend/trusted pads only when the destination pad opts in — never into a stranger's private pad.
+**Quick-Claim and clearer menus.** `/ag quickclaim [radius]` (and a Territory hub button) claims a square around you through the existing claim pipeline. Settings appears only on the main player hub and the staff menu; Back returns to wherever opened it. Claiming honors `max_claims_per_player`.
 
-Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1300` and migration auto-merges the new `teleport_beacons` keys with a timestamped backup. The GUI consolidation of the Travel Atlas (beacon tabs, create/link wizard, and the nine-language GUI strings) is the next milestone — see [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md).
+**Restore-safe roles.** Snapshot restore **merges** members and roles by default (`snapshots.restore.protect_roles`). Owners can lock members; `/ag roles lock|unlock|undo` records to the audit ledger.
+
+**Guardian Succession.** Co-owner and steward grants auto-lock. `/ag heir`, `/ag succession assume|rollback|menu`, and a Stewardship page cover inactivity assume, transfer cooldown, and a short rollback window.
+
+**Caravans & Trade Routes.** `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops, with insurance, weighted route events, Folia-safe ticks, and resume after restart.
+
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1305` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
 
@@ -120,13 +126,14 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 
 | Place | What it is |
 |---|---|
+| [`V1.4.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.4.0) | Current 1.4.0 client source (not a GitHub Release) |
 | [`V1.3.5`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.5) | Public source line and GitHub Release **1.3.5** (1.4.0 base) |
 | [`V1.3.0`](https://github.com/snazzyatoms/AegisGuard/tree/V1.3.0) | Previous public 1.3.0 line |
 | [`wiki/`](wiki/) | Pages to paste into the GitHub Wiki |
 | [`listing/`](listing/) | Spigot listing art |
 | [`RELEASE_NOTES_1.4.0.md`](RELEASE_NOTES_1.4.0.md) | 1.4.0 notes |
 | [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) | 1.3.5 notes |
-| [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md) | Next-milestone roadmap (Travel Atlas GUI consolidation) |
+| [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md) | Roadmap beyond the current 1.4.0 line |
 | [`aegisguard-modern/`](aegisguard-modern/) | Plugin source (Maven) |
 
 ## Core Systems
@@ -136,7 +143,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, trusted members, Guest Passes (real-time and Active Playtime), Alliance Access with server guardrails, group plots, shared treasury, Realm Profiles, discovery, likes, favorites, Safe Travel, Teleport Beacons, per-plot arrival choice (`/ag arrival`), Travel destinations, and routes |
+| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, and trade caravans |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -151,7 +158,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI and the public AegisGuard API |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1300`) |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1305`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 
@@ -178,15 +185,18 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag level                    Open the Ascension Hall
 /ag market local             Open the Local Market
 /ag visit                    Open the Travel Atlas
-/ag beacon                   Manage teleport pads on the claim you are standing in
+/ag quickclaim [radius]      Claim a square around you
+/ag beacon                   Open the Atlas My Beacons tab
 /ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
+/ag heir [player|clear]      Name a succession heir
+/ag caravan                  Dispatch and track trade caravans
 /ag zone                     Manage sub-zones and rentals
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
 
 /agadmin menu                Open the Staff Command Center
 /agadmin wand server         Get the server-zone wand
 /agadmin claim               Create a server-owned protected zone
-/agadmin transition          Confirm 1.2.7 to 1.3.0 upgrade (aliases: upgrade, v130)
+/agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools
 /agadmin health              Quick staff health check
 /agadmin reload              Reload editable settings and languages

@@ -1,6 +1,6 @@
 # The Land Economy
 
-In **AegisGuard** `v1.3.5`, land is more than protected space. Depending on server configuration, it can be expanded, maintained, sold, rented, shared, and traded through connected land and economy systems.
+In **AegisGuard** `v1.4.0`, land is more than protected space. Depending on server configuration, it can be expanded, maintained, sold, rented, shared, and traded through connected land and economy systems.
 
 The AegisGuard land economy can include:
 
@@ -39,7 +39,7 @@ Use `/ag menu` and the available economy menus to see which systems are active o
 
 ## ClaimBlocks
 
-ClaimBlocks are a core land-progression and trading resource in AegisGuard `v1.3.5`.
+ClaimBlocks are a core land-progression and trading resource in AegisGuard `v1.4.0`.
 
 They may be used for:
 
@@ -334,7 +334,7 @@ Optional maintenance fees can pay the plot owner. Beacon spend is **not** plot a
 
 ## Final Thoughts
 
-In AegisGuard `v1.3.5`, land is not something you claim once and forget.
+In AegisGuard `v1.4.0`, land is not something you claim once and forget.
 
 Land can become:
 

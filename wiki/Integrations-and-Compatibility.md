@@ -1,6 +1,6 @@
 # Integrations and Compatibility
 
-AegisGuard `v1.3.5` is designed to work alongside the modern Minecraft plugin ecosystem. It provides land protection while allowing compatible economy, permissions, mapping, shop, database, and community tools to operate around it.
+AegisGuard `v1.4.0` is designed to work alongside the modern Minecraft plugin ecosystem. It provides land protection while allowing compatible economy, permissions, mapping, shop, database, and community tools to operate around it.
 
 > **Important:** Do not run AegisGuard alongside another player land-protection plugin in the same world. Two protection systems can compete for the same interaction events, resulting in inconsistent protection behavior, blocked actions, or bypasses.
 
@@ -166,7 +166,7 @@ Other permission plugins can work if they support Bukkit-style permission nodes.
 
 ## Compatibility Checklist
 
-Before launching AegisGuard `v1.3.5` on a live server:
+Before launching AegisGuard `v1.4.0` on a live server:
 
 1. Confirm the host is running **Java 21+**.
 2. Use only one player land-protection system per world.

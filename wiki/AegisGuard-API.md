@@ -1,6 +1,6 @@
 # AegisGuard API
 
-This page documents the public integration API for **AegisGuard** `v1.3.5`.
+This page documents the public integration API for **AegisGuard** `v1.4.0`.
 
 The API is intended for plugin developers who need to read plot data, perform supported economy and ClaimBlock operations, manage selections, check protection state, or listen for plot events.
 
@@ -187,7 +187,7 @@ if (plot != null) {
 }
 ```
 
-In `v1.3.5`, `hasPermission(...)` already accounts for:
+In `v1.4.0`, `hasPermission(...)` already accounts for:
 
 - Owner and elevated admin/bypass access
 - Permanent plot roles

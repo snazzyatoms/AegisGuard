@@ -2,43 +2,42 @@
 
 ### *Protect your world. Empower your players. Ascend.*
 
-AegisGuard `1.4.0` builds on the public `1.3.5` release. It gives every plot a **per-plot Travel Atlas arrival choice** and hardens Teleport Beacons against duplicate pads and accidental stand prompts, from a live public-test soak.
+AegisGuard `1.4.0` builds on the public `1.3.5` release. It finishes the Travel Atlas, adds Quick-Claim and restore-safe roles, ships Guardian Succession, and introduces Caravans & Trade Routes.
 
-Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1300`; migration auto-merges the new `teleport_beacons` keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
+Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1305`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
+
+This document describes the `V1.4.0` source line. It is **not** a GitHub Release.
 
 ---
 
 ## What's new
 
-### Per-plot arrival choice (classic vs beacon)
+### Travel Atlas
 
-Each plot manager decides how their **public listings** — Visit Discover/Warps, auction visit, and market jump — let visitors land:
+Visit is one travel menu with **Destinations**, **My Beacons**, **Arrival**, and **Caravans**. `/ag beacon` opens My Beacons. Plot managers still choose how public listings land:
 
 - **classic** — Safe Travel to the plot spawn / listing point (1.3.0 style), even when pads exist.
-- **beacon** — visitors **must** land on a public arrival pad. If none exists, the trip **fails closed** (`beacon_no_public_arrival`) instead of silently dropping the visitor at spawn.
+- **beacon** — visitors **must** land on a public arrival pad. If none exists, the trip **fails closed** (`beacon_no_public_arrival`).
 
-Set the mode with `/ag arrival <classic|beacon>` while managing the plot (running `/ag arrival` alone reports the current mode). The choice is persisted in YML, SQL, and versioned plot snapshots, so restores keep it. `/ag home` stays personal plot spawn and is unaffected.
+Set the mode with `/ag arrival <classic|beacon>`. Travelers may override when the owner permits. `/ag home` stays personal plot spawn. Beacons stay one pad per block and one directed A→B link. `teleport_beacons.force_public_arrival` can require pad arrival network-wide.
 
-New `teleport_beacons` config keys:
+### Quick-Claim and menu navigation
 
-- `force_public_arrival` (default **false**): a network-wide override. When `true`, every public listing behaves as if its owner chose beacon arrival (1.3.5-style mandatory pads).
-- `prompt_cooldown_seconds` (default **7**): how long a player lingers near a linked pad before the stand confirm opens, and the minimum gap between repeat prompts. Replaces the old hard-coded 2.5s delay.
-- `create_cooldown_seconds` (default **8**): rate-limits sneak-binding new pads.
+`/ag quickclaim [radius]` (alias `/ag qc`) and a Territory hub button claim a square around you through the existing claim pipeline. Settings appears only on the main player hub and the staff menu; Back returns to the screen that opened it. Claiming honors `max_claims_per_player`.
 
-### Beacon anti-duplicate and prompt hardening
+### Restore-safe roles
 
-- **One pad per block.** Creation checks for an existing pad first, so a bound block never gets a second pad. Startup de-duplicates pads by world/x/y/z, keeps the oldest, unbinds the extras, and logs it.
-- **One directed link.** Linking keeps a single A→B route and never links a pad to itself.
-- **Calmer stand prompt.** The confirm no longer stacks on an already-open confirm, and a throttled, Folia-safe end-rod sparkle plays on a usable linked pad while a player lingers, before the confirm.
-- **Clear link rules.** A pad can link to your own pads, public pads, and alliance pads (when the destination plot allows alliance entry), plus friend/trusted pads only when the destination pad opts in to member/trusted use — never into a stranger's private pad.
+Snapshot restore **merges** members and roles by default (`snapshots.restore.protect_roles: true`). Owners can lock members so restore and role edits cannot silently drop them. `/ag roles lock|unlock|undo` writes to the audit ledger.
 
----
+### Guardian Succession
 
-## Coming next (not in 1.4.0)
+Granting `co_owner` or `steward` auto-locks that member. `/ag heir`, `/ag succession assume|rollback|menu`, and the Access-page Stewardship GUI cover inactivity assume, transfer cooldown, and a short rollback window.
 
-The Travel Atlas **GUI consolidation** is the next milestone and is **not** part of 1.4.0: folding the beacon manager into the Visit GUI as Atlas tabs (Destinations / My Beacons / Arrival), the create/link wizard UI, `/ag beacon` opening the Atlas on My Beacons, a single Player-dashboard Travel button, and the new translated GUI strings across all nine language packs and the Codex. See [`aegisguard-modern/UPCOMING.md`](aegisguard-modern/UPCOMING.md).
+### Caravans & Trade Routes
+
+`/ag caravan` dispatches charge-then-deliver shipments along public beacon hops. Insurance, weighted route events (safe, ambush, toll, boon, delay), Folia-safe ticks, YAML+SQL persistence, and resume-on-load are included. Gate with `modules.caravans`.
 
 ---
 
@@ -47,11 +46,9 @@ The Travel Atlas **GUI consolidation** is the next milestone and is **not** part
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1300`, with a backup). Existing plots load as-is and stay on classic arrival.
-5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`). Doctor is optional.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1305`, with a backup). Existing plots load as-is and stay on classic arrival.
+5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
-
-Owners who want mandatory pad arrival can set `teleport_beacons.force_public_arrival: true`, or let each manager opt in per plot with `/ag arrival beacon`.
 
 ---
 
@@ -68,20 +65,13 @@ Owners who want mandatory pad arrival can set `teleport_beacons.force_public_arr
 
 ---
 
-## Release files
-
-### Server owners
+## Plugin file
 
 Install this file in the server's `/plugins` folder:
 
 `AegisGuard-1.4.0.jar`
 
-### Plugin developers
-
-These files are for compiling integrations. They do **not** belong in `/plugins`:
-
-`AegisGuard-1.4.0-api.jar`  
-`AegisGuard-1.4.0-dev-api.jar`
+API JARs (`AegisGuard-1.4.0-api.jar`, `AegisGuard-1.4.0-dev-api.jar`) are for developers and do **not** belong in `/plugins`.
 
 ---
 
@@ -89,8 +79,13 @@ These files are for compiling integrations. They do **not** belong in `/plugins`
 
 ```text
 /ag menu                     Open the territory dashboard
-/ag beacon                   Manage teleport pads on the claim you are standing in
+/ag quickclaim [radius]      Claim a square around you
+/ag visit                    Open the Travel Atlas
+/ag beacon                   Open the Atlas My Beacons tab
 /ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
+/ag heir [player|clear]      Name a succession heir
+/ag succession               Open Stewardship / assume / rollback
+/ag caravan                  Dispatch and track trade caravans
 /agadmin menu                Open the Staff Command Center
 /agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5
 /agadmin doctor              Optional diagnostics and repair tools
@@ -98,7 +93,7 @@ These files are for compiling integrations. They do **not** belong in `/plugins`
 
 ---
 
-See also [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) and [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md) for the systems this release still includes.
+See also [`RELEASE_NOTES_1.3.5.md`](RELEASE_NOTES_1.3.5.md) and [`RELEASE_NOTES_1.3.0.md`](RELEASE_NOTES_1.3.0.md) for the systems this line still includes.
 
 **Simple. Steadfast. Eternal.**  
 *Forged by Aegis Divine.*

@@ -2,7 +2,7 @@
 
 AegisGuard is designed for a straightforward installation on single servers and larger Paper or Folia networks.
 
-**AegisGuard 1.3.5** installs the same way as previous releases. Existing 1.2.7 and 1.3.0 claims, configs, and plot data remain valid and are migrated automatically on first startup.
+**AegisGuard 1.4.0** is the current client on this branch. Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid and are migrated automatically on first startup. There is **no GitHub Release for 1.4.0** yet; the last published GitHub Release remains [1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5).
 
 ## Requirements
 
@@ -10,11 +10,11 @@ Confirm that the server meets these requirements before installing.
 
 | Requirement | Supported Version / Software |
 | :--- | :--- |
-| Java | **Java 21** or newer (required for AegisGuard 1.3.5) |
+| Java | **Java 21** or newer (required for AegisGuard 1.4.0) |
 | Server Software | Paper, Purpur, Pufferfish, or Folia (Spigot-compatible forks supported) |
 | Minecraft | `1.20`+ through current supported releases |
 
-> **Note:** Minecraft versions `1.8` through `1.12` are not supported because of legacy API limitations. Servers still on Java 17 must upgrade the JVM before running 1.3.5.
+> **Note:** Minecraft versions `1.8` through `1.12` are not supported because of legacy API limitations. Servers still on Java 17 must upgrade the JVM before running 1.4.0.
 
 ---
 
@@ -22,17 +22,16 @@ Confirm that the server meets these requirements before installing.
 
 ### 1. Download
 
-Download the latest stable AegisGuard **1.3.5** release from an official source:
+Build or copy the **1.4.0** plugin jar from this branch (`aegisguard-modern` produces `AegisGuard-1.4.0.jar`). This source line is **not** published as a GitHub Release.
 
-- [GitHub Releases](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5) — Recommended
-- SpigotMC — paste your resource URL here when the 1.3.5 listing is live
+The last published GitHub Release remains [AegisGuard 1.3.5](https://github.com/snazzyatoms/AegisGuard/releases/tag/1.3.5).
 
-Use the main plugin jar from the release assets: `AegisGuard-1.3.5.jar`. Do **not** install `AegisGuard-1.3.5-api.jar` or `AegisGuard-1.3.5-dev-api.jar` as the server plugin. Those are compile-time files for developers.
+Use the main plugin jar: `AegisGuard-1.4.0.jar`. Do **not** install `AegisGuard-1.4.0-api.jar` or `AegisGuard-1.4.0-dev-api.jar` as the server plugin. Those are compile-time files for developers.
 
 ### 2. Add the Plugin
 
 1. Stop the server completely with the `stop` command.
-2. Place `AegisGuard-1.3.5.jar` in the server's `plugins` folder.
+2. Place `AegisGuard-1.4.0.jar` in the server's `plugins` folder.
 3. Start the server.
 
 On first launch, AegisGuard creates its data folder and writes default configuration files. Configuration schema upgrades are applied automatically when needed. Optional systems ship **on** except **wilderness revert**, which ships **off**. Third-party hooks stay off until you opt in.
@@ -76,18 +75,19 @@ Use this process when updating AegisGuard:
 
 A copy of `plugins/AegisGuard/` (and world data) is recommended. It is **not** required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1300`, auto-merging the new `teleport_beacons` keys (`force_public_arrival`, `prompt_cooldown_seconds`, `create_cooldown_seconds`) with a backup when migration runs.
+> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1305`, auto-merging new keys with a backup when migration runs.
 
 After updating, verify:
 
-- `/agadmin transition` reports that you are on the current schema (`1300`)
+- `/agadmin transition` reports that you are on the current schema (`1305`)
 - `/ag menu` opens normally
 - Existing claims still protect correctly (and remain on classic arrival)
 - Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)
 - Modules you turned off in `modules:` do not appear on the player menu
 - Plot-build backups stay **off** until you set `snapshots.build_backup.enabled` and install WorldEdit or FAWE
-- `/ag beacon` opens the pad manager on a plot you can manage
+- `/ag beacon` opens the Travel Atlas My Beacons tab on a plot you can manage
 - `/ag arrival` reports the plot's arrival mode and `/ag arrival beacon` requires a public pad
+- `/ag quickclaim` and `/ag caravan` open when those modules are on
 - Translated menus show real names and numbers instead of leftover `{KEY}` tokens
 
 ---
@@ -95,7 +95,7 @@ After updating, verify:
 ## Fresh Install Checklist
 
 - [ ] Java 21+ is installed on the host
-- [ ] AegisGuard 1.3.5 jar is in `plugins/`
+- [ ] AegisGuard 1.4.0 jar is in `plugins/`
 - [ ] Server starts without AegisGuard errors
 - [ ] `/ag wand` and `/ag claim` work for a test player
 - [ ] `/ag menu` opens the Guardian Codex

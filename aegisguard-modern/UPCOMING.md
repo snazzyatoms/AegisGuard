@@ -2,25 +2,9 @@
 
 ## AegisGuard 1.4.0 status
 
-AegisGuard 1.4.0 is the current source line, built on the public 1.3.5 release. It adds the **per-plot Travel Atlas arrival choice** (`/ag arrival <classic|beacon>`) and hardens Teleport Beacons against duplicate pads and accidental stand prompts. See [`../RELEASE_NOTES_1.4.0.md`](../RELEASE_NOTES_1.4.0.md).
+AegisGuard 1.4.0 is the current source line, built on the public 1.3.5 release. The `V1.4.0` line now includes Travel Atlas GUI tabs, Quick-Claim, restore-safe roles, Guardian Succession, and Caravans & Trade Routes. See [`../RELEASE_NOTES_1.4.0.md`](../RELEASE_NOTES_1.4.0.md).
 
------
-
-## 🧭 Next milestone: Travel Atlas GUI consolidation
-
-### *One Atlas for destinations, beacons, and arrival.*
-
-> **Status:** `[In Progress]`  •  **Target:** next 1.4.x
-
-The 1.4.0 backend landed the arrival choice and beacon hardening. The **GUI consolidation is deferred** and is the next milestone. It is **not** shipped in 1.4.0:
-
-  * **Atlas tabs:** Fold the standalone Beacon manager into the Visit GUI as tabs — **Destinations**, **My Beacons**, and **Arrival** — so players manage travel from one place.
-  * **Create / link wizard:** A guided in-GUI flow for placing a pad, linking A→B, and choosing public/alliance/member visibility, replacing the current place-and-sneak-bind steps.
-  * **`/ag beacon` entry point:** Route `/ag beacon` to open the Atlas on the **My Beacons** tab instead of a separate manager.
-  * **Single Travel button:** One **Travel** button on the Player dashboard that opens the consolidated Atlas.
-  * **Nine-language GUI strings + Codex:** New translated strings for the Atlas tabs, wizard, and arrival controls across all nine language packs (Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, Polish) plus synced Codex fallbacks.
-
-This milestone is presentation-only: it must not change the arrival semantics, beacon link rules, or fail-closed behaviour shipped in 1.4.0.
+Follow-ups that are **not** required to run 1.4.0: claim presets, dedicated nine-pack translations for the newest Atlas/Succession/Caravan strings (English `tr()` fallbacks ship today), and Roles GUI lock/undo buttons (the commands already exist).
 
 -----
 

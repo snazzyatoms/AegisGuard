@@ -29,6 +29,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -294,6 +295,57 @@ public class ProtectionManager implements Listener {
         }
         plot.setFlag("safe_zone", enabled);
         plugin.store().savePlot(plot);
+    }
+
+    /**
+     * Server-plot only: players inside do not take damage (except void / kill).
+     * Opt-in via Claim Settings. Folia-safe: EntityDamageEvent runs on the victim's region.
+     */
+    public boolean keepsHealth(Plot plot) {
+        return plot != null && plot.isServerZone() && plot.getFlag("keep_health", false);
+    }
+
+    /**
+     * Server-plot only: food and saturation do not drain. Eating can still raise food.
+     * Folia-safe: FoodLevelChangeEvent runs on the player's region. Exhaustion
+     * (1.20.3+) is handled by {@link SanctuaryExhaustionListener}.
+     */
+    public boolean keepsHunger(Plot plot) {
+        return plot != null && plot.isServerZone() && plot.getFlag("keep_hunger", false);
+    }
+
+    static boolean isUnavoidableDamage(EntityDamageEvent.DamageCause cause) {
+        if (cause == null) return false;
+        return switch (cause) {
+            case VOID, SUICIDE -> true;
+            default -> {
+                String name = cause.name();
+                yield "KILL".equals(name) || "WORLD_BORDER".equals(name);
+            }
+        };
+    }
+
+    // --------------------------------------------------
+    // SERVER SANCTUARY (keep health / keep hunger)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSanctuaryDamage(EntityDamageEvent e) {
+        if (!(e.getEntity() instanceof Player player)) return;
+        if (isUnavoidableDamage(e.getCause())) return;
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (!keepsHealth(plot)) return;
+        e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSanctuaryFood(FoodLevelChangeEvent e) {
+        if (!(e.getEntity() instanceof Player player)) return;
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (!keepsHunger(plot)) return;
+        if (e.getFoodLevel() < player.getFoodLevel()) {
+            e.setCancelled(true);
+        }
     }
 
     // --------------------------------------------------

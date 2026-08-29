@@ -182,10 +182,14 @@ public class PlotFlagsGUI {
         inv.setItem(HUB_SLOT_SAFETY, GUIManager.createItem(
                 Material.SHIELD,
                 t(player, "plot_flags_page_safety", "&cSafety"),
-                tl(player, "plot_flags_page_safety_lore", List.of(
-                        "&7PvP, TNT, fire, mobs, entry,",
-                        "&7and Safe Zone."
-                ))
+                tl(player, "plot_flags_page_safety_lore",
+                        plot.isServerZone()
+                                ? List.of(
+                                "&7PvP, TNT, fire, mobs, entry,",
+                                "&7Safe Zone, Keep Health, and Keep Hunger.")
+                                : List.of(
+                                "&7PvP, TNT, fire, mobs, entry,",
+                                "&7and Safe Zone."))
         ));
         inv.setItem(HUB_SLOT_MECHANICS, GUIManager.createItem(
                 Material.REDSTONE,
@@ -248,6 +252,32 @@ public class PlotFlagsGUI {
         ItemStack safeItem = GUIManager.createItem(Material.SHIELD, safeName, safeLore);
         if (safeOn) glow(safeItem);
         inv.setItem(16, safeItem);
+
+        if (plot.isServerZone()) {
+            boolean keepHealth = plugin.protection().keepsHealth(plot);
+            String healthName = t(player, "button_keep_health" + (keepHealth ? "_on" : "_off"),
+                    onOffFallback(player, keepHealth, "Keep Health"));
+            List<String> healthLore = tl(player, "keep_health_toggle_lore", List.of(
+                    "&7Players in this server plot do not take damage.",
+                    "&7Void and /kill still apply.",
+                    "&eClick to toggle. Off by default."
+            ));
+            ItemStack healthItem = GUIManager.createItem(Material.GOLDEN_APPLE, healthName, healthLore);
+            if (keepHealth) glow(healthItem);
+            inv.setItem(19, healthItem);
+
+            boolean keepHunger = plugin.protection().keepsHunger(plot);
+            String hungerName = t(player, "button_keep_hunger" + (keepHunger ? "_on" : "_off"),
+                    onOffFallback(player, keepHunger, "Keep Hunger"));
+            List<String> hungerLore = tl(player, "keep_hunger_toggle_lore", List.of(
+                    "&7Players in this server plot do not lose food.",
+                    "&7Eating can still fill the bar.",
+                    "&eClick to toggle. Off by default."
+            ));
+            ItemStack hungerItem = GUIManager.createItem(Material.COOKED_BEEF, hungerName, hungerLore);
+            if (keepHunger) glow(hungerItem);
+            inv.setItem(20, hungerItem);
+        }
     }
 
     private void buildMechanics(Player player, Inventory inv, Plot plot) {
@@ -420,6 +450,24 @@ public class PlotFlagsGUI {
                             refresh = true;
                         } else {
                             plugin.effects().playError(player);
+                        }
+                    }
+                    case 19 -> {
+                        if (plot.isServerZone()) {
+                            plot.setFlag("keep_health", !plugin.protection().keepsHealth(plot));
+                            plugin.store().savePlot(plot);
+                            plugin.store().setDirty(true);
+                            plugin.effects().playConfirm(player);
+                            refresh = true;
+                        }
+                    }
+                    case 20 -> {
+                        if (plot.isServerZone()) {
+                            plot.setFlag("keep_hunger", !plugin.protection().keepsHunger(plot));
+                            plugin.store().savePlot(plot);
+                            plugin.store().setDirty(true);
+                            plugin.effects().playConfirm(player);
+                            refresh = true;
                         }
                     }
                 }

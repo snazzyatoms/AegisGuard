@@ -417,6 +417,20 @@ public class PlotStatusGUI {
                         ? tr(player, "plot_status_state_enabled", "plot_status_state_enabled_simple", "&aEnabled")
                         : tr(player, "plot_status_state_disabled", null, "&7Disabled")
         ));
+        if (plot.isServerZone()) {
+            lore.add(bullet(player,
+                    tr(player, "plot_status_label_keep_health", null, "Keep health"),
+                    plugin.protection().keepsHealth(plot)
+                            ? tr(player, "plot_status_state_enabled", "plot_status_state_enabled_simple", "&aEnabled")
+                            : tr(player, "plot_status_state_disabled", null, "&7Disabled")
+            ));
+            lore.add(bullet(player,
+                    tr(player, "plot_status_label_keep_hunger", null, "Keep hunger"),
+                    plugin.protection().keepsHunger(plot)
+                            ? tr(player, "plot_status_state_enabled", "plot_status_state_enabled_simple", "&aEnabled")
+                            : tr(player, "plot_status_state_disabled", null, "&7Disabled")
+            ));
+        }
         lore.add(bullet(player,
                 tr(player, "plot_status_label_entry_gate", null, "Entry gate"),
                 entryOpen

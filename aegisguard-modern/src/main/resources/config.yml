@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1305
+config_schema: 1306
 
 
 # ------------------------------------------------------------------------------
@@ -1622,6 +1622,12 @@ protections:
   fly: false
   entry: true
   shop-interact: false
+
+  # Server-plot sanctuary (spawn-style). Off by default so existing server
+  # plots keep current damage and hunger. Staff with manage/steward on that
+  # plot can toggle these in Claim Settings → Safety. Player plots ignore them.
+  keep_health: false
+  keep_hunger: false
 
 
 # ==============================================================================

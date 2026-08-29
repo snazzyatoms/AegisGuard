@@ -34,13 +34,13 @@ Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Se
 
 **Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1305`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1306`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
 A copy of `plugins/AegisGuard/` is recommended. It is not required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons. 1.4.0 adds the Travel Atlas tabs, Quick-Claim, restore-safe roles, Guardian Succession, and Caravans. None of these wipe ownership, money, rentals, or permanent roles.
+1.3.0 systems such as Guest Passes, Emergency Lockdown, Realm Profiles, Routes, and Alliance Access remain. 1.3.5 adds Teleport Beacons. 1.4.0 adds the Travel Atlas tabs, Quick-Claim, restore-safe roles, Guardian Succession, Caravans, and optional server-plot Keep Health / Keep Hunger. None of these wipe ownership, money, rentals, or permanent roles.
 
 ---
 
@@ -157,6 +157,18 @@ Recommended permissions:
 Use `/agadmin menu` to access available administrative controls for server-owned areas, including Route Editor and Audit Ledger tools where permitted.
 
 > Prefer the Sentinel's Scepter workflow for new server zones. `/agadmin convert` can still convert an existing player plot into a server zone when you need that path.
+
+---
+
+## Can spawn stop health and hunger drain?
+
+**Yes, per server plot, and only if staff turn it on.**
+
+Open Claim Settings on that server/spawn plot and use Safety → **Keep Health** and **Keep Hunger**. Players inside then do not lose hearts or food. Eating can still fill hunger. Void and `/kill` still apply.
+
+This is opt-in and **off by default**. Personal player claims cannot use it. `protections.keep_health` and `protections.keep_hunger` in `config.yml` only seed **new** server claims; existing spawn plots stay unchanged until someone toggles the plot.
+
+Staff with `aegis.serverzone.manage` or the Steward role on that plot can change the toggles. Safe Zone remains admin-only.
 
 ---
 

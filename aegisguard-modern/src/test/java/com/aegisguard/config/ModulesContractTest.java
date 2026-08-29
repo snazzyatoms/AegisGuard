@@ -105,7 +105,7 @@ class ModulesContractTest {
         assertTrue(gui.contains("if (ctx.showExpand)"));
         assertTrue(gui.contains("if (ctx.showTravel)"));
         assertTrue(gui.contains("if (ctx.showMarket)"));
-        assertTrue(gui.contains("if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge)"));
+        assertTrue(gui.contains("if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge || ctx.showQuickClaim)"));
         assertTrue(gui.contains("if (ctx.showRoutes || ctx.showArena || ctx.showBeacons || ctx.showPlotChat)"));
         assertFalse(gui.contains("claim_merge_button_disabled_lore"));
         String settings = Files.readString(Path.of("src/main/java/com/aegisguard/gui/SettingsGUI.java"));

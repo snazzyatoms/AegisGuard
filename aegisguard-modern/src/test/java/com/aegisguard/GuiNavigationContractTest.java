@@ -59,7 +59,7 @@ class GuiNavigationContractTest {
         String manager = Files.readString(JAVA_ROOT.resolve("gui/GUIManager.java"));
         String listener = Files.readString(JAVA_ROOT.resolve("gui/GUIListener.java"));
 
-        assertTrue(settings.contains("languageSelect().open(player, plot)"),
+        assertTrue(settings.contains("languageSelect().open(player, plot"),
                 "Settings language button must open the picker");
         assertFalse(settings.contains("getNextStyle("),
                 "Settings must not cycle languages on click");

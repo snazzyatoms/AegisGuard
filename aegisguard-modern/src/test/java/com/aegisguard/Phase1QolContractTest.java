@@ -58,7 +58,7 @@ class Phase1QolContractTest {
         assertTrue(settings.contains("STAFF_MENU"));
         assertTrue(settings.contains("dest == ReturnTo.STAFF_MENU"));
         assertTrue(settings.contains("plugin.gui().admin().open(player)"));
-        assertTrue(settings.contains("languageSelect().open(player, plot)"));
+        assertTrue(settings.contains("languageSelect().open(player, plot"));
     }
 
     @Test

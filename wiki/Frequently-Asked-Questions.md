@@ -34,7 +34,7 @@ Legacy Minecraft versions, including `1.8` through `1.12`, are not supported. Se
 
 **Yes.** Existing 1.2.7, 1.3.0, and 1.3.5 claims, configs, and plot data remain valid.
 
-Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1307`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
+Swap the JAR to `AegisGuard-1.4.0.jar`, start the server, and config plus language merge run on enable (`config_schema` `1294` → `1308`). Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). `/agadmin doctor` is optional — use it only if something looks wrong.
 
 Do **not** use Bukkit `/reload`. Use `/agadmin reload` for supported config and language reloads.
 
@@ -171,6 +171,34 @@ This is opt-in and **off by default**. Personal player claims cannot use it. The
 `protections.keep_*` keys in `config.yml` only seed **new** server claims; existing spawn plots stay unchanged until someone toggles the plot.
 
 Staff with `aegis.serverzone.manage` or the Steward role on that plot can change the toggles. Safe Zone remains admin-only.
+
+---
+
+## Can a house or arena lobby keep chat private?
+
+**Yes. Use Hearth, not door detection.**
+
+Turn on **Hearth** in Claim Settings → Safety (player plots and server plots). Public chat then stays in the room you are standing in:
+
+- A 3D subplot (`/ag subplot`) is a room — the house, the pit, the waiting lobby.
+- The rest of that plot is one open-air room.
+- People outside cannot hear inside, and the room cannot hear the street.
+
+That is how a closed house and an arena safe-zone stay quiet. We do not scan doors, trapdoors, or windows — those break on slabs, glass, and Folia. Mark the room with the wand, then close Hearth.
+
+Staff with `aegis.admin.hearth` still hear every room and are not muffled when they speak. Aegis Frequency remains the opt-in plot-member radio. Hearth starts **off**.
+
+Vanilla Minecraft has **no voice chat**. Hearth and Frequency only scope the built-in `T` text chat. Servers that have proximity voice are running a client mod such as Simple Voice Chat or Plasmo Voice. AegisGuard does not ship a microphone client; a later optional hook can map Hearth rooms onto those voice groups.
+
+---
+
+## Does Minecraft have voice chat?
+
+**No. Vanilla multiplayer is text-only.**
+
+The `T` key is the game’s chat. There is no microphone in unmodified Minecraft. When a private server “has voice,” players installed a **client mod** and the host installed the matching **server plugin** — usually Simple Voice Chat, sometimes Plasmo Voice. Discord is the other common path and lives outside the game.
+
+AegisGuard cannot add voice by itself. Paper never receives microphone audio, and vanilla clients have no voice protocol. Shipping “Aegis Voice” would mean a Fabric/Forge/NeoForge client, UDP, encryption, and proximity audio — a separate product. The planned path is an optional Simple Voice Chat hook so Hearth rooms can also isolate those voice groups.
 
 ---
 

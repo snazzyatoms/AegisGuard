@@ -118,6 +118,7 @@ public class WorldRulesManager {
         plot.setFlag("teleport-ward", plugin.getConfig().getBoolean("protections.teleport_ward", true));
         plot.setFlag("storm-ward", plugin.getConfig().getBoolean("protections.storm_ward", true));
         plot.setFlag("decor", plugin.getConfig().getBoolean("protections.decor", true));
+        plot.setFlag("hearth", plugin.getConfig().getBoolean("protections.hearth", false));
     }
 
     private WorldRuleSet getRules(World world) {

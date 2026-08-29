@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1307
+config_schema: 1308
 
 
 # ------------------------------------------------------------------------------
@@ -1635,6 +1635,12 @@ protections:
   keep_hunger: false
   keep_xp: false
   keep_inventory: false
+
+  # Hearth seals public chat to the room you are standing in. A room is a
+  # 3D subplot/zone, or the rest of the plot if you are not in a zone.
+  # Off by default. Player and server plots can toggle it in Safety.
+  # Staff with aegis.admin.hearth still hear every room.
+  hearth: false
 
 # ==============================================================================
 # Temporary flight skill (staff grant). Plot flight still unlocks at Ascension 30.

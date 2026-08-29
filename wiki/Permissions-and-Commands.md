@@ -138,7 +138,7 @@ Each plot manager chooses how their **public listings** (Visit, market jump, and
 - **classic** — Safe Travel to the plot spawn, even when pads exist (1.3.0 style).
 - **beacon** — visitors must land on a public arrival pad; if none exists the trip fails closed (`beacon_no_public_arrival`) instead of falling back to spawn.
 
-Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1307` on upgrade, with a backup.
+Set the mode with `/ag arrival <classic|beacon>`. Existing plots default to **classic**. A server-wide `teleport_beacons.force_public_arrival: true` requires pad arrival network-wide. `/ag beacon` opens the Atlas **My Beacons** tab. The `config_schema` bumps from `1294` to `1308` on upgrade, with a backup.
 
 ---
 
@@ -303,7 +303,7 @@ This creates a **server zone**, not a personal player claim. Wand-create and con
 
 Server plots and server zones are staff-owned protected areas. Use them for spawn, public hubs, marketplaces, event grounds, staff facilities, infrastructure, and other areas that should not belong to an individual player.
 
-On a server plot, Claim Settings → Safety includes optional **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** toggles. All start **off**. Player plots never show them. Steward / `aegis.serverzone.manage` can change those; Safe Zone stays admin-only. There is no hub-flight Safety flag. Flight is Ascension/Horizon level 30, staff fly (`aegis.admin.fly`), or `/agadmin skill fly`. `/agadmin season` pins featured Atlas plots and Routes.
+On a server plot, Claim Settings → Safety includes optional **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** toggles. All start **off**. Player plots never show them. Steward / `aegis.serverzone.manage` can change those; Safe Zone stays admin-only. There is no hub-flight Safety flag. Flight is Ascension/Horizon level 30, staff fly (`aegis.admin.fly`), or `/agadmin skill fly`. `/agadmin season` pins featured Atlas plots and Routes. **Hearth** is on Safety for player and server plots: public chat stays in the 3D subplot (or the rest of the plot). Staff with `aegis.admin.hearth` still hear every room.
 
 Use the administrator panel to access available server-plot controls:
 

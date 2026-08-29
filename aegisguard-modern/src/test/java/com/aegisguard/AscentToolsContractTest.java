@@ -26,7 +26,7 @@ class AscentToolsContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1307, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1308, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> protections = (Map<String, Object>) config.get("protections");
         assertEquals(Boolean.FALSE, protections.get("keep_xp"));
         assertEquals(Boolean.FALSE, protections.get("keep_inventory"));
@@ -39,7 +39,7 @@ class AscentToolsContractTest {
         assertEquals(Boolean.TRUE, seasons.get("enabled"));
         assertEquals(5, ((Number) seasons.get("max_featured_plots")).intValue());
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1307"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1308"));
     }
 
     @Test
@@ -68,6 +68,7 @@ class AscentToolsContractTest {
             assertFalse(preset.flagBundle().containsKey("keep_xp"));
             assertFalse(preset.flagBundle().containsKey("keep_inventory"));
             assertFalse(preset.flagBundle().containsKey("fly"));
+            assertFalse(preset.flagBundle().containsKey("hearth"));
         }
         assertTrue(ProtectionPreset.forPlot(true).contains(ProtectionPreset.SPAWN));
         assertTrue(ProtectionPreset.forPlot(false).contains(ProtectionPreset.HOME));

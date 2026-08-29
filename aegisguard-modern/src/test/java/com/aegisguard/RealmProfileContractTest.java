@@ -113,7 +113,8 @@ class RealmProfileContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1304")
                 || migration.contains("CURRENT_SCHEMA = 1305")
                 || migration.contains("CURRENT_SCHEMA = 1306")
-                || migration.contains("CURRENT_SCHEMA = 1307"),
+                || migration.contains("CURRENT_SCHEMA = 1307")
+                || migration.contains("CURRENT_SCHEMA = 1308"),
                 "Config schema must be at least 1275 after Realm Profiles");
     }
 }

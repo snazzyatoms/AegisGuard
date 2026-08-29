@@ -29,6 +29,7 @@ The following plugins are supported integrations or commonly recommended compani
 | PlaceholderAPI | Placeholders | Use AegisGuard placeholders such as `%aegis_owner%`, `%aegis_plot%`, and `%aegis_role%` where configured. |
 | LuckPerms | Permissions | Recommended permission manager for player, staff, and integration permission nodes, including `aegis.admin.routes`, `aegis.admin.audit`, and `aegis.beacon`. |
 | Floodgate / Geyser-Spigot | Bedrock proxy | Optional. AegisGuard detects Bedrock clients at runtime so chest GUIs use left-click and sneak-left. No compile-time Geyser dependency. |
+| Simple Voice Chat | Voice groups | Optional softdepend (`voicechat`). When present, Hearth rooms become isolated SVC groups. AegisGuard does not ship a microphone client and still starts without this plugin. |
 | WorldGuard | Global Regions | Can be used for global regions, such as spawn, alongside AegisGuard player claims. Avoid overlapping protection rules unless intentionally configured. |
 | Multiverse | World Management | Compatible with multi-world server setups. |
 | DecentHolograms | Visuals | Generally compatible with AegisGuard visual systems. |
@@ -152,6 +153,10 @@ Plugins that aggressively format, replace, or reroute chat messages can override
 
 Examples include VentureChat and ChatControl. If chat features do not behave as expected, review plugin listener priorities, PlaceholderAPI configuration, and formatting rules in the chat plugin.
 
+### Simple Voice Chat
+
+Vanilla Minecraft has no microphone. If the Simple Voice Chat plugin (`voicechat`) is installed, Hearth rooms become isolated SVC groups (`hearth.voicechat`, default on). Player-made groups are left alone unless `hearth.voicechat_override_player_groups` is true. AegisGuard still starts without this plugin and does not ship a microphone client. Plasmo Voice is a later follow-up, not part of this hook.
+
 ### Heavy Hologram and Visual Plugins
 
 AegisGuard visual effects are generally compatible with hologram plugins. However, many simultaneous holograms, titles, markers, or spawn-area visuals can create clutter and reduce client performance.
@@ -179,6 +184,7 @@ Before launching AegisGuard `v1.4.0` on a live server:
 9. Back up data before migrations, major updates, or integration changes.
 10. After upgrading from 1.2.7 or 1.3.0, run `/agadmin transition`, then verify claims, markets, Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, and `/ag beacon`. Run `/agadmin doctor` only if something looks wrong.
 11. If Bedrock players join through Geyser, confirm Floodgate/Geyser is loaded and `gui.bedrock.detect` is on.
+12. If you already run Simple Voice Chat, confirm Hearth rooms become isolated voice groups. AegisGuard starts without that plugin.
 
 ---
 

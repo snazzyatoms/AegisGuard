@@ -311,6 +311,8 @@ public class PlotFlagsGUI {
                 "&7of the plot if you are not in one.",
                 "&7People outside cannot hear inside,",
                 "&7and the room cannot hear the street.",
+                "&7If Simple Voice Chat is installed,",
+                "&7voice is isolated the same way.",
                 "&7Mark houses, pits, and lobbies with",
                 "&7/ag subplot. Off by default.",
                 "&eClick to toggle."
@@ -540,6 +542,11 @@ public class PlotFlagsGUI {
                         plugin.store().savePlot(plot);
                         plugin.store().setDirty(true);
                         plugin.effects().playConfirm(player);
+                        for (org.bukkit.entity.Player online : org.bukkit.Bukkit.getOnlinePlayers()) {
+                            if (online != null && plot.contains(online.getLocation())) {
+                                plugin.refreshHearthVoice(online);
+                            }
+                        }
                         refresh = true;
                     }
                 }

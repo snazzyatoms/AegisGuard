@@ -38,6 +38,7 @@ softdepend:
   # Gameplay integrations
   - mcMMO
   - Jobs
+  - voicechat
 
   # Optional market / shop integrations exposed through the local market hub
   - QuickShop

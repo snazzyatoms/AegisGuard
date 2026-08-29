@@ -63,7 +63,7 @@ Optional first steps after your first claim:
 1. Stop the server.
 2. Confirm **Java 21** or newer.
 3. Replace the old JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1308`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1309`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`).
 6. Run `/agadmin doctor` only if something looks wrong.
 
@@ -81,11 +81,11 @@ A folder backup of `plugins/AegisGuard/` is recommended. It is not required to k
 - **Guardian Succession** — `/ag heir`, `/ag succession`, Stewardship GUI, transfer cooldown and rollback.
 - **Caravans** — `/ag caravan` charge-then-deliver shipments on public beacon hops.
 - **Server sanctuary** — staff can toggle **Keep Health**, **Keep Hunger**, **Keep XP**, and **Keep Inventory** on a server/spawn plot in Claim Settings → Safety. Off by default. Player plots never get this. No hub-flight Safety flag.
-- **Hearth rooms** — owners and server-plot stewards can seal public chat to a 3D subplot or the rest of the plot. Off by default. Staff with `aegis.admin.hearth` still hear every room.
+- **Hearth rooms** — owners and server-plot stewards can seal public chat to a 3D subplot or the rest of the plot. Off by default. Staff with `aegis.admin.hearth` still hear every room. If Simple Voice Chat (`voicechat`) is installed, the same rooms become isolated voice groups.
 - **Claim presets** — after claim, choose Home / Shop / Arena / Farm (or Spawn / Hub / Shop / Arena on server plots).
 - **Staff seasons** — `/agadmin season` pins featured Atlas plots and Routes.
 - **Flight** — Ascension/Horizon level 30, staff fly, or `/agadmin skill fly <player> [seconds]`.
-- **Schema migration** — `config_schema` moves `1294` → `1308`; new keys auto-merge on upgrade with a backup.
+- **Schema migration** — `config_schema` moves `1294` → `1309`; new keys auto-merge on upgrade with a backup.
 
 ## What's New in 1.3.5
 

@@ -58,6 +58,7 @@ AegisGuard works without dependencies. Install the following plugins to enable a
 | [LuckPerms](https://luckperms.net/) | Permission and group management. |
 | WorldEdit or FastAsyncWorldEdit | Optional staff plot-build backups (`snapshots.build_backup`, default **off**). Folia requires FAWE by default. |
 | Floodgate and/or Geyser-Spigot | Optional. When present, AegisGuard detects Bedrock clients so chest GUIs use left-click and sneak-left (`gui.bedrock.detect`, default on). |
+| [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) | Optional. When the `voicechat` plugin is present, Hearth rooms become isolated voice groups. AegisGuard still starts without it. |
 
 ---
 
@@ -75,11 +76,11 @@ Use this process when updating AegisGuard:
 
 A copy of `plugins/AegisGuard/` (and world data) is recommended. It is **not** required to keep claims. The plugin also writes its own config backup when schema migration runs.
 
-> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1308`, auto-merging new keys with a backup when migration runs.
+> **Your data is preserved.** Updating does not remove `config.yml`, language files, or existing plot data stored in YAML or a configured SQL database. 1.4.0 bumps `config_schema` from `1294` to `1309`, auto-merging new keys with a backup when migration runs.
 
 After updating, verify:
 
-- `/agadmin transition` reports that you are on the current schema (`1308`)
+- `/agadmin transition` reports that you are on the current schema (`1309`)
 - `/ag menu` opens normally
 - Existing claims still protect correctly (and remain on classic arrival)
 - Optional new features appear with safe defaults (Guest Passes, Lockdown, Realm Profile, Routes, Alliance Access, Teleport Beacons)
@@ -89,6 +90,7 @@ After updating, verify:
 - `/ag arrival` reports the plot's arrival mode and `/ag arrival beacon` requires a public pad
 - `/ag quickclaim` and `/ag caravan` open when those modules are on
 - Server-plot Claim Settings → Safety can toggle Keep Health / Hunger / XP / Inventory (all start off)
+- Optional Simple Voice Chat (`voicechat`) is a softdepend — Hearth rooms become isolated voice groups when that plugin is present
 - `/agadmin season` and `/agadmin skill fly` are available to staff
 - Translated menus show real names and numbers instead of leftover `{KEY}` tokens
 

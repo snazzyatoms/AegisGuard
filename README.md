@@ -52,11 +52,13 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Hearth rooms (vanilla text chat).** Owners and server-plot stewards can turn on **Hearth** in Safety. Public *text* chat stays in the 3D subplot you are standing in (or the rest of the plot). Houses, pits, and lobbies stay quiet without door scanning. Staff with `aegis.admin.hearth` still hear every room. Aegis Frequency (`/ag chat`) remains the opt-in plot-member radio.
 
-**Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) or Plasmo Voice. AegisGuard cannot ship a microphone stack by itself: Paper never sees a player’s mic, and vanilla clients have no voice protocol. Building our own would mean a Fabric/Forge/NeoForge client mod, UDP, encryption, and proximity — a separate product. The right follow-up is an optional hook so Hearth rooms also isolate Simple Voice Chat groups, not a custom Aegis voice client.
+**Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat).
+
+**Simple Voice Chat hook.** If the `voicechat` plugin is installed, Hearth rooms also become isolated SVC groups. People in the house or pit only hear each other on the mic. AegisGuard still starts without Simple Voice Chat. Player-made SVC groups are left alone unless `hearth.voicechat_override_player_groups` is true. Staff text spy still hears every room; voice follows the room you are standing in. AegisGuard does not ship a microphone client.
 
 **Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 
-Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1308` and migration auto-merges the new keys with a timestamped backup.
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1309` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
 
@@ -153,7 +155,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
-| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, and Hearth text-chat rooms |
+| Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, Hearth text-chat rooms, and an optional Simple Voice Chat hook for those rooms |
 | Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
@@ -167,8 +169,8 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Platforms | Spigot, Paper, Purpur, Folia, and compatible Bukkit server forks |
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
-| Extensions | PlaceholderAPI and the public AegisGuard API |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1308`) |
+| Extensions | PlaceholderAPI, the public AegisGuard API, and an optional Simple Voice Chat hook for Hearth rooms |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1309`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 

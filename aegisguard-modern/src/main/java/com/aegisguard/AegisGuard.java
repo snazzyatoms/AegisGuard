@@ -156,6 +156,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.caravans.CaravanService caravanService;
     private com.aegisguard.chat.PlotChatService plotChatService;
     private com.aegisguard.chat.HearthService hearthService;
+    private Object hearthVoicechatHook;
     private com.aegisguard.protection.FlightSkillService flightSkillService;
     private com.aegisguard.season.SeasonService seasonService;
 
@@ -275,6 +276,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public com.aegisguard.chat.HearthService hearth() { return hearthService; }
+    public Object hearthVoice() { return hearthVoicechatHook; }
     public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
     public com.aegisguard.season.SeasonService seasons() { return seasonService; }
     public DiscordWebhook getDiscord() { return discord; }
@@ -473,6 +475,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.caravans.CaravanListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.HearthListener(this), this);
+        registerHearthVoicechatHook();
         if (arenaService != null) {
             Bukkit.getPluginManager().registerEvents(new com.aegisguard.arena.ArenaListener(arenaService), this);
         }
@@ -548,6 +551,45 @@ public class AegisGuard extends JavaPlugin {
         } catch (ReflectiveOperationException | LinkageError error) {
             console().warning("log_paper_mob_failed", "Could not enable the Paper mob boundary: {ERROR}",
                     "ERROR", error.getMessage() == null ? "" : error.getMessage());
+        }
+    }
+
+    private void registerHearthVoicechatHook() {
+        if (!getConfig().getBoolean("hearth.voicechat", true)) return;
+        if (Bukkit.getPluginManager().getPlugin("voicechat") == null) return;
+        try {
+            Class<?> serviceType = Class.forName("de.maxhenkel.voicechat.api.BukkitVoicechatService");
+            Object service = getServer().getServicesManager().load(serviceType);
+            Class<?> hookType = Class.forName("com.aegisguard.hooks.HearthVoicechatHook");
+            Object hook = hookType.getConstructor(AegisGuard.class).newInstance(this);
+            if (service != null) {
+                serviceType.getMethod("registerPlugin",
+                                Class.forName("de.maxhenkel.voicechat.api.VoicechatPlugin"))
+                        .invoke(service, hook);
+            } else {
+                console().warning("log_voicechat_service_missing",
+                        "Simple Voice Chat is installed, but BukkitVoicechatService is not ready.");
+            }
+            if (hook instanceof org.bukkit.event.Listener listener) {
+                Bukkit.getPluginManager().registerEvents(listener, this);
+            }
+            hearthVoicechatHook = hook;
+            console().info("log_voicechat_hooked", "Simple Voice Chat hook enabled for Hearth rooms.");
+        } catch (ClassNotFoundException ignored) {
+            // voicechat-api is not on the classpath; text Hearth still works.
+        } catch (ReflectiveOperationException | LinkageError error) {
+            console().warning("log_voicechat_hook_failed",
+                    "Could not enable Simple Voice Chat hook: {ERROR}",
+                    "ERROR", error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
+        }
+    }
+
+    public void refreshHearthVoice(org.bukkit.entity.Player player) {
+        Object hook = hearthVoicechatHook;
+        if (hook == null || player == null) return;
+        try {
+            hook.getClass().getMethod("refreshLater", org.bukkit.entity.Player.class).invoke(hook, player);
+        } catch (ReflectiveOperationException ignored) {
         }
     }
 

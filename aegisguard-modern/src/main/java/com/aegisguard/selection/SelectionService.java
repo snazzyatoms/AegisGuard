@@ -440,6 +440,8 @@ public class SelectionService implements Listener {
             plot.setFlag("build", true);
             plot.setFlag("pvp", true);
             plot.setFlag("safe_zone", true);
+            plot.setFlag("keep_health", plugin.getConfig().getBoolean("protections.keep_health", false));
+            plot.setFlag("keep_hunger", plugin.getConfig().getBoolean("protections.keep_hunger", false));
         } else {
             plot = new Plot(
                     UUID.randomUUID(),

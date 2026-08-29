@@ -448,6 +448,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(guestPassService, this);
         Bukkit.getPluginManager().registerEvents(safeTravelService, this);
         Bukkit.getPluginManager().registerEvents(protection, this);
+        registerSanctuaryExhaustionListener();
         registerPaperMobBoundaryListener();
         Bukkit.getPluginManager().registerEvents(selection, this);
         Bukkit.getPluginManager().registerEvents(new BlockProtectionListener(this), this);
@@ -493,6 +494,27 @@ public class AegisGuard extends JavaPlugin {
         }
 
         console().info("log_enabled", "AegisGuard enabled.");
+    }
+
+    private void registerSanctuaryExhaustionListener() {
+        try {
+            Class.forName("org.bukkit.event.entity.EntityExhaustionEvent", false, getClassLoader());
+            Class<?> listenerType = Class.forName(
+                    "com.aegisguard.protection.SanctuaryExhaustionListener",
+                    true,
+                    getClassLoader()
+            );
+            org.bukkit.event.Listener listener = (org.bukkit.event.Listener) listenerType
+                    .getConstructor(AegisGuard.class)
+                    .newInstance(this);
+            Bukkit.getPluginManager().registerEvents(listener, this);
+        } catch (ClassNotFoundException ignored) {
+            // 1.20.0–1.20.2: FoodLevelChangeEvent still blocks hunger loss.
+        } catch (ReflectiveOperationException | LinkageError error) {
+            console().warning("log_sanctuary_exhaustion_failed",
+                    "Could not enable sanctuary exhaustion protection: {ERROR}",
+                    "ERROR", error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
+        }
     }
 
     private void registerPaperMobBoundaryListener() {

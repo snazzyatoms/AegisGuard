@@ -2,9 +2,9 @@
 
 ### *Protect your world. Empower your players. Ascend.*
 
-AegisGuard `1.4.0` builds on the public `1.3.5` release. It finishes the Travel Atlas, adds Quick-Claim and restore-safe roles, ships Guardian Succession, and introduces Caravans & Trade Routes.
+AegisGuard `1.4.0` builds on the public `1.3.5` release. It finishes the Travel Atlas, adds Quick-Claim and restore-safe roles, ships Guardian Succession, introduces Caravans & Trade Routes, and lets staff opt a server/spawn plot into Keep Health / Keep Hunger sanctuary.
 
-Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1305`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
+Existing **1.2.7, 1.3.0, and 1.3.5 data remain valid**. `config_schema` moves from `1294` to `1306`; migration auto-merges new keys with a timestamped backup. Existing plots default to **classic** arrival, so enabling 1.4.0 never suddenly gates old servers on pads.
 
 Built for **Java 21+**, **Minecraft 1.20+**, **Paper, Purpur, Spigot, and Folia**.
 
@@ -39,6 +39,10 @@ Granting `co_owner` or `steward` auto-locks that member. `/ag heir`, `/ag succes
 
 `/ag caravan` dispatches charge-then-deliver shipments along public beacon hops. Insurance, weighted route events (safe, ambush, toll, boon, delay), Folia-safe ticks, YAML+SQL persistence, and resume-on-load are included. Gate with `modules.caravans`.
 
+### Server sanctuary
+
+Staff who can manage a **server plot** (spawn, hub, and other staff-owned land) can turn on **Keep Health** and **Keep Hunger** in Claim Settings → Safety. Players standing in that plot then do not lose hearts or food. Eating can still fill the hunger bar. Void and `/kill` still apply. Both toggles start **off**, including on existing server plots, so upgrading does not suddenly make spawn invincible. Personal player claims never get these buttons. `protections.keep_health` / `protections.keep_hunger` in `config.yml` are defaults for **new** server claims only.
+
 ---
 
 ## Upgrade
@@ -46,7 +50,7 @@ Granting `co_owner` or `steward` auto-locks that member. `/ag heir`, `/ag succes
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1305`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1306`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
 

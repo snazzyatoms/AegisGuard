@@ -18,26 +18,35 @@ public class SettlementsInboxGUI {
     public SettlementsInboxGUI(AegisGuard plugin) { this.plugin = plugin; }
     public static final class SettlementsHolder implements InventoryHolder {
         private final boolean adminView;
-        public SettlementsHolder() { this(false); }
-        public SettlementsHolder(boolean adminView) { this.adminView = adminView; }
+        private final SettingsGUI.ReturnTo settingsReturn;
+        public SettlementsHolder() { this(false, SettingsGUI.ReturnTo.PLAYER_MENU); }
+        public SettlementsHolder(boolean adminView) { this(adminView, SettingsGUI.ReturnTo.PLAYER_MENU); }
+        public SettlementsHolder(boolean adminView, SettingsGUI.ReturnTo settingsReturn) {
+            this.adminView = adminView;
+            this.settingsReturn = settingsReturn == null ? SettingsGUI.ReturnTo.PLAYER_MENU : settingsReturn;
+        }
         public boolean isAdminView() { return adminView; }
+        public SettingsGUI.ReturnTo getSettingsReturn() { return settingsReturn; }
         @Override public Inventory getInventory() { return null; }
     }
     public void open(Player player) {
-        open(player, false);
+        open(player, false, SettingsGUI.ReturnTo.PLAYER_MENU);
+    }
+    public void openFromSettings(Player player, SettingsGUI.ReturnTo settingsReturn) {
+        open(player, false, settingsReturn);
     }
     public void openAdmin(Player player) {
         if (!player.hasPermission("aegis.admin") && !player.hasPermission("aegis.admin.rentals")
                 && !player.hasPermission("aegis.admin.doctor.repair")) {
             return;
         }
-        open(player, true);
+        open(player, true, SettingsGUI.ReturnTo.PLAYER_MENU);
     }
-    private void open(Player player, boolean adminView) {
+    private void open(Player player, boolean adminView, SettingsGUI.ReturnTo settingsReturn) {
         List<TerritoryLifeService.PendingSettlement> entries = adminView
                 ? plugin.territoryLife().settlements()
                 : plugin.territoryLife().settlementsFor(player.getUniqueId());
-        Inventory inv = Bukkit.createInventory(new SettlementsHolder(adminView), 54,
+        Inventory inv = Bukkit.createInventory(new SettlementsHolder(adminView, settingsReturn), 54,
                 plugin.gui().title(player, "settlements_inbox_title", "&6Pending Payments"));
         for (int i = 45; i < 54; i++) inv.setItem(i, GUIManager.getFiller());
         if (entries.isEmpty()) inv.setItem(22, GUIManager.createItem(Material.GRAY_DYE,
@@ -89,10 +98,10 @@ public class SettlementsInboxGUI {
             }
             player.sendMessage(GUIManager.color(tr(player, "settlements_retry_result",
                     "&aRetried delivery. Delivered: &f{COUNT}").replace("{COUNT}", String.valueOf(delivered))));
-            open(player, holder.isAdminView());
+            open(player, holder.isAdminView(), holder.getSettingsReturn());
         } else if (e.getRawSlot() == 48) {
             if (holder.isAdminView()) plugin.gui().doctor().open(player);
-            else plugin.gui().settings().open(player);
+            else plugin.gui().settings().open(player, holder.getSettingsReturn());
         } else if (e.getRawSlot() == 50) {
             player.closeInventory();
             plugin.effects().playMenuClose(player);

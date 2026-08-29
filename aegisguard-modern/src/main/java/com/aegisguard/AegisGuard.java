@@ -174,6 +174,7 @@ public class AegisGuard extends JavaPlugin {
     private Object automaticPlayerBackupTask;
     private Object arenaTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
+    private AegisCommand playerCommand;
 
     // --- 1.2.6 QoL: runtime bypass toggle ("Master Key Mode") ---
     private final Set<UUID> bypassMode = ConcurrentHashMap.newKeySet();
@@ -192,6 +193,7 @@ public class AegisGuard extends JavaPlugin {
     public SelectionService selection() { return selection; }
     public com.aegisguard.admin.ServerZoneStewardship serverZoneStewardship() { return serverZoneStewardship; }
     public SelectionService getSelection() { return selection; }
+    public AegisCommand playerCommand() { return playerCommand; }
     public VaultHook vault() { return vault; }
     public EconomyManager eco() { return ecoManager; }
     public EconomyManager getEconomy() { return ecoManager; }
@@ -373,6 +375,7 @@ public class AegisGuard extends JavaPlugin {
         PluginCommand cmd = getCommand("aegis");
         if (cmd != null) {
             AegisCommand aegisCmd = new AegisCommand(this);
+            this.playerCommand = aegisCmd;
             cmd.setExecutor(aegisCmd);
             cmd.setTabCompleter(aegisCmd);
         }

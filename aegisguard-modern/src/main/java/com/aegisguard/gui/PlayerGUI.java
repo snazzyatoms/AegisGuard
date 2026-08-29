@@ -192,7 +192,7 @@ public class PlayerGUI {
             ));
         }
 
-        if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge) {
+        if (ctx.showRealm || ctx.showExpand || ctx.showZoning || ctx.showMerge || ctx.showQuickClaim) {
             inv.setItem(SLOT_DOOR_TERRITORY, GUIManager.createItem(
                     Material.GRASS_BLOCK,
                     t(player, "hub_category_territory_name", "&bTerritory"),
@@ -262,6 +262,17 @@ public class PlayerGUI {
                     t(player, "button_claim_merge", "&aMerge Claims"),
                     tl(player, "claim_merge_button_lore",
                             List.of("&7Combine adjacent owned claims", "&7into one larger plot."))
+            ));
+        }
+        if (ctx.showQuickClaim) {
+            inv.setItem(SLOT_CAT_E, GUIManager.createItem(
+                    Material.GOLDEN_AXE,
+                    t(player, "button_quick_claim", "&a⚡ Quick-Claim"),
+                    tl(player, "quick_claim_button_lore", List.of(
+                            "&7Claim a default-size square",
+                            "&7around where you are standing.",
+                            " ",
+                            "&eClick to claim now."))
             ));
         }
     }
@@ -411,11 +422,13 @@ public class PlayerGUI {
             ));
         }
 
-        inv.setItem(SLOT_SETTINGS, GUIManager.createItem(
-                Material.COMPARATOR,
-                t(player, "button_player_settings", "&e⚙ Settings"),
-                tl(player, "player_settings_lore", List.of("&7Adjust language, sounds,", "&7and notification settings."))
-        ));
+        if (!showBack) {
+            inv.setItem(SLOT_SETTINGS, GUIManager.createItem(
+                    Material.COMPARATOR,
+                    t(player, "button_player_settings", "&e⚙ Settings"),
+                    tl(player, "player_settings_lore", List.of("&7Adjust language, sounds,", "&7and notification settings."))
+            ));
+        }
 
         if (ctx.admin) {
             inv.setItem(SLOT_ADMIN, GUIManager.createItem(
@@ -470,8 +483,8 @@ public class PlayerGUI {
             player.closeInventory();
             return;
         }
-        if (raw == SLOT_SETTINGS) {
-            plugin.gui().settings().open(player);
+        if (raw == SLOT_SETTINGS && page == Page.HUB) {
+            plugin.gui().settings().open(player, SettingsGUI.ReturnTo.PLAYER_MENU);
             GUIManager.playClick(player);
             return;
         }
@@ -564,6 +577,9 @@ public class PlayerGUI {
                 if (!mod(com.aegisguard.config.Modules.Id.CLAIM_MERGE)) return false;
                 plugin.gui().claimMerge().open(player);
                 return true;
+            }
+            case SLOT_CAT_E -> {
+                return handleQuickClaimClick(player);
             }
             default -> {
                 return false;
@@ -703,6 +719,30 @@ public class PlayerGUI {
         }
     }
 
+    private boolean handleQuickClaimClick(Player player) {
+        boolean enabled = true;
+        int radius = 5;
+        try {
+            if (plugin.cfg() != null) {
+                enabled = plugin.cfg().raw().getBoolean("claims.quick_claim.enabled", true);
+                radius = plugin.cfg().raw().getInt("claims.quick_claim.default_radius", 5);
+            }
+        } catch (Throwable ignored) {}
+        if (!enabled) {
+            send(player, "quickclaim_disabled", "&cQuick-Claim is disabled on this server.");
+            if (plugin.effects() != null) plugin.effects().playError(player);
+            return true;
+        }
+        player.closeInventory();
+        plugin.selection().setSelectionAround(player, Math.max(1, radius));
+        if (plugin.playerCommand() != null) {
+            plugin.playerCommand().runClaim(player);
+        } else {
+            plugin.selection().confirmClaim(player);
+        }
+        return true;
+    }
+
     private void openFlags(Player player, Plot plot, boolean canManage) {
         if (plot != null && canManage) plugin.gui().flags().open(player, plot);
         else denyNeedPlot(player, plot, canManage, false);
@@ -774,6 +814,7 @@ public class PlayerGUI {
         final boolean showLockdown;
         final boolean showMarket;
         final boolean showMerge;
+        final boolean showQuickClaim;
         final boolean showGift;
         final boolean showRentals;
         final boolean showExchange;
@@ -803,6 +844,12 @@ public class PlayerGUI {
                     || gui.mod(com.aegisguard.config.Modules.Id.MARKET_STALLS)
                     || gui.mod(com.aegisguard.config.Modules.Id.RENTALS);
             this.showMerge = gui.mod(com.aegisguard.config.Modules.Id.CLAIM_MERGE);
+            boolean quickClaim = true;
+            try {
+                quickClaim = gui.plugin.cfg() == null
+                        || gui.plugin.cfg().raw().getBoolean("claims.quick_claim.enabled", true);
+            } catch (Throwable ignored) {}
+            this.showQuickClaim = quickClaim;
             this.showGift = gui.mod(com.aegisguard.config.Modules.Id.CLAIM_BLOCKS)
                     && gui.plugin.getConfig().getBoolean("claim_blocks.gift.enabled", true);
             this.showRentals = gui.mod(com.aegisguard.config.Modules.Id.RENTALS);

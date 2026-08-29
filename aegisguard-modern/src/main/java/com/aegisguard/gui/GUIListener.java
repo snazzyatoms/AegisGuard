@@ -709,12 +709,13 @@ public class GUIListener implements Listener {
             safeInvokeOpen(plugin.gui().info(), player);
             return;
         }
-        if (holder instanceof SettingsGUIHolder) {
-            safeInvokeOpen(plugin.gui().settings(), player);
+        if (holder instanceof SettingsGUIHolder castHolder) {
+            plugin.gui().settings().open(player, castHolder.getPlot(), castHolder.getReturnTo());
             return;
         }
         if (holder instanceof LanguageSelectHolder castHolder) {
-            plugin.gui().languageSelect().open(player, castHolder.getPlot());
+            plugin.gui().languageSelect().open(player, castHolder.getPlot(),
+                    castHolder.getReturnTo(), castHolder.getSettingsReturn());
             return;
         }
         if (holder instanceof AdminHolder) {

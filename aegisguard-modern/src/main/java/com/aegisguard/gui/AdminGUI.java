@@ -70,6 +70,7 @@ public class AdminGUI {
     private static final int SLOT_TOOL_REFRESH_LANG  = 39;
     private static final int SLOT_TOOL_RELOAD_ALL    = 40;
 
+    private static final int SLOT_NAV_SETTINGS = 47;
     private static final int SLOT_NAV_BACK = 48;
     private static final int SLOT_NAV_EXIT = 49;
 
@@ -458,6 +459,15 @@ public class AdminGUI {
         tagAction(close, "close_menu");
         inv.setItem(SLOT_NAV_EXIT, close);
 
+        ItemStack settings = GUIManager.createItem(
+                Material.COMPARATOR,
+                plugin.gui().tr(player, "button_player_settings", "&e⚙ Settings"),
+                plugin.gui().trList(player, "player_settings_lore",
+                        List.of("&7Adjust language, sounds,", "&7and notification settings."))
+        );
+        tagAction(settings, "open_settings");
+        inv.setItem(SLOT_NAV_SETTINGS, settings);
+
         // --- NAVIGATION ---
         ItemStack back = GUIManager.createItem(
                 Material.ARROW,
@@ -597,6 +607,10 @@ public class AdminGUI {
             // --- Navigation ---
             case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); }
             case "back_main" -> plugin.gui().openMain(player);
+            case "open_settings" -> {
+                plugin.effects().playMenuFlip(player);
+                plugin.gui().settings().open(player, SettingsGUI.ReturnTo.STAFF_MENU);
+            }
 
             default -> {
                 // Unknown action: ignore safely

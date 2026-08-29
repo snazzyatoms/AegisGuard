@@ -38,7 +38,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private final ClaimBlockExchangeService exchange;
 
     private static final String[] SUB_COMMANDS = {
-            "wand", "menu", "claim", "unclaim", "help",
+            "wand", "menu", "claim", "quickclaim", "qc", "unclaim", "help",
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
@@ -242,6 +242,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "menu" -> plugin.gui().openMain(p);
 
             case "claim" -> handleClaim(p);
+
+            case "quickclaim", "qc" -> handleQuickClaim(p, args);
 
             case "unclaim" -> plugin.selection().unclaimHere(p);
 
@@ -613,6 +615,55 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         // PATH C: No economy system (free claiming)
         // -------------------------------------------------------
         plugin.selection().confirmClaim(p);
+    }
+
+    /**
+     * Shared by {@code /ag claim}, {@code /ag quickclaim}, and the Territory Quick-Claim button
+     * so Vault / Claim Block affordability stays in one place.
+     */
+    public void runClaim(Player p) {
+        handleClaim(p);
+    }
+
+    private void handleQuickClaim(Player p, String[] args) {
+        boolean enabled = true;
+        int defRadius = 5;
+        int maxRadius = 25;
+        try {
+            if (plugin.cfg() != null) {
+                enabled = plugin.cfg().raw().getBoolean("claims.quick_claim.enabled", true);
+                defRadius = plugin.cfg().raw().getInt("claims.quick_claim.default_radius", 5);
+                maxRadius = plugin.cfg().raw().getInt("claims.quick_claim.max_radius", 25);
+            }
+        } catch (Throwable ignored) {}
+        if (!enabled) {
+            sendKey(p, "quickclaim_disabled", "&cQuick-Claim is disabled on this server.");
+            plugin.effects().playError(p);
+            return;
+        }
+        int radius = Math.max(1, defRadius);
+        if (args.length >= 2) {
+            try {
+                radius = Integer.parseInt(args[1]);
+            } catch (NumberFormatException ex) {
+                sendKey(p, "quickclaim_usage", "&eUsage: /ag quickclaim [radius]");
+                plugin.effects().playError(p);
+                return;
+            }
+        }
+        if (radius < 1) {
+            sendKey(p, "quickclaim_usage", "&eUsage: /ag quickclaim [radius]");
+            plugin.effects().playError(p);
+            return;
+        }
+        int cap = Math.max(1, maxRadius);
+        if (radius > cap) {
+            sendKey(p, "quickclaim_radius_capped", "&eRadius capped at {MAX}.",
+                    Map.of("MAX", String.valueOf(cap)));
+            radius = cap;
+        }
+        plugin.selection().setSelectionAround(p, radius);
+        handleClaim(p);
     }
 
     // --------------------------------------------------
@@ -1889,6 +1940,16 @@ private void handleUnsell(Player p) {
 
         if (helpLines != null) {
             for (String line : helpLines) sendMsg(sender, line);
+            boolean mentioned = false;
+            for (String line : helpLines) {
+                if (line != null && line.toLowerCase(Locale.ROOT).contains("quickclaim")) {
+                    mentioned = true;
+                    break;
+                }
+            }
+            if (!mentioned) {
+                sendMsg(sender, "&e/ag quickclaim [radius] &7- claim a square around you");
+            }
         }
     }
 
@@ -2538,6 +2599,13 @@ private void handleUnsell(Player p) {
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("subplot") || args[0].equalsIgnoreCase("subzone")) {
                 return Arrays.asList("Market Stall", "Room", "Hotel Suite", "Storage", "Booth");
+            }
+
+            if (args[0].equalsIgnoreCase("quickclaim") || args[0].equalsIgnoreCase("qc")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("5", "10", "15", "25"), completions);
+                Collections.sort(completions);
+                return completions;
             }
 
             if (args[0].equalsIgnoreCase("beacon")) {

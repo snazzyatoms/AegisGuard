@@ -41,13 +41,19 @@ public class LanguageSelectGUI {
     public static final class LanguageSelectHolder implements InventoryHolder {
         private final Plot plot;
         private final ReturnTo returnTo;
-        public LanguageSelectHolder(Plot plot) { this(plot, ReturnTo.SETTINGS); }
+        private final SettingsGUI.ReturnTo settingsReturn;
+        public LanguageSelectHolder(Plot plot) { this(plot, ReturnTo.SETTINGS, SettingsGUI.ReturnTo.PLAYER_MENU); }
         public LanguageSelectHolder(Plot plot, ReturnTo returnTo) {
+            this(plot, returnTo, SettingsGUI.ReturnTo.PLAYER_MENU);
+        }
+        public LanguageSelectHolder(Plot plot, ReturnTo returnTo, SettingsGUI.ReturnTo settingsReturn) {
             this.plot = plot;
             this.returnTo = returnTo == null ? ReturnTo.SETTINGS : returnTo;
+            this.settingsReturn = settingsReturn == null ? SettingsGUI.ReturnTo.PLAYER_MENU : settingsReturn;
         }
         public Plot getPlot() { return plot; }
         public ReturnTo getReturnTo() { return returnTo; }
+        public SettingsGUI.ReturnTo getSettingsReturn() { return settingsReturn; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -60,10 +66,15 @@ public class LanguageSelectGUI {
     }
 
     public void open(Player player, Plot plot, ReturnTo returnTo) {
+        open(player, plot, returnTo, SettingsGUI.ReturnTo.PLAYER_MENU);
+    }
+
+    public void open(Player player, Plot plot, ReturnTo returnTo, SettingsGUI.ReturnTo settingsReturn) {
         if (player == null) return;
         ReturnTo dest = returnTo == null ? ReturnTo.SETTINGS : returnTo;
+        SettingsGUI.ReturnTo settingsDest = settingsReturn == null ? SettingsGUI.ReturnTo.PLAYER_MENU : settingsReturn;
         if (plugin.codex() == null) {
-            resumeAfterLanguage(player, plot, dest);
+            resumeAfterLanguage(player, plot, dest, settingsDest);
             return;
         }
 
@@ -72,7 +83,7 @@ public class LanguageSelectGUI {
         int contentEnd = size - 9;
 
         String title = plugin.gui().title(player, "language_select_title", "&bChoose Your Language");
-        Inventory inv = Bukkit.createInventory(new LanguageSelectHolder(plot, dest), size, title);
+        Inventory inv = Bukkit.createInventory(new LanguageSelectHolder(plot, dest, settingsDest), size, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < size; i++) inv.setItem(i, filler);
@@ -122,10 +133,11 @@ public class LanguageSelectGUI {
 
         Plot plot = holder == null ? null : holder.getPlot();
         ReturnTo dest = holder == null ? ReturnTo.SETTINGS : holder.getReturnTo();
+        SettingsGUI.ReturnTo settingsDest = holder == null ? SettingsGUI.ReturnTo.PLAYER_MENU : holder.getSettingsReturn();
         String action = plugin.gui().getAction(clicked);
         if ("back".equals(action)) {
             playFlip(player);
-            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
+            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest, settingsDest));
             return;
         }
         if ("exit".equals(action)) {
@@ -143,7 +155,7 @@ public class LanguageSelectGUI {
         String current = plugin.codex().getPlayerStyle(player);
         if (style.equalsIgnoreCase(current)) {
             playFlip(player);
-            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
+            plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest, settingsDest));
             return;
         }
 
@@ -161,15 +173,15 @@ public class LanguageSelectGUI {
                 Map.of("STYLE", stripColors(display))
         ));
         playFlip(player);
-        plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest));
+        plugin.runMain(player, () -> resumeAfterLanguage(player, plot, dest, settingsDest));
     }
 
-    private void resumeAfterLanguage(Player player, Plot plot, ReturnTo dest) {
+    private void resumeAfterLanguage(Player player, Plot plot, ReturnTo dest, SettingsGUI.ReturnTo settingsReturn) {
         if (dest == ReturnTo.WALKTHROUGH && plugin.gui().walkthrough() != null) {
             plugin.gui().walkthrough().openAfterLanguageChoice(player);
             return;
         }
-        plugin.gui().settings().open(player, plot);
+        plugin.gui().settings().open(player, plot, settingsReturn);
     }
 
     private ItemStack languageItem(Player player, String style, boolean selected) {

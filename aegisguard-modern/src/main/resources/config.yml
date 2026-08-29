@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1300
+config_schema: 1301
 
 
 # ------------------------------------------------------------------------------
@@ -400,6 +400,13 @@ claims:
   max_radius: 64
   max_area: 16000
   preview_seconds: 10
+
+  # Quick-Claim: one command / one click claims a square of the given radius
+  # around the player, reusing all normal claim validation and economy.
+  quick_claim:
+    enabled: true
+    default_radius: 5
+    max_radius: 25
 
   # Wand behavior.
   consume_wand_on_claim: true

@@ -177,6 +177,32 @@ public class SelectionService implements Listener {
         return sel != null && sel.isComplete();
     }
 
+    /**
+     * Quick-Claim helper: sets the player's two selection corners to a square of the
+     * given radius centered on their current location. A radius of 5 yields an 11x11 plot.
+     */
+    public void setSelectionAround(Player p, int radius) {
+        if (p == null) return;
+        int r = Math.max(0, radius);
+        Location center = p.getLocation();
+        if (center == null || center.getWorld() == null) return;
+        Location c1 = new Location(center.getWorld(), center.getBlockX() - r, center.getBlockY(), center.getBlockZ() - r);
+        Location c2 = new Location(center.getWorld(), center.getBlockX() + r, center.getBlockY(), center.getBlockZ() + r);
+        setLoc1(p, c1);
+        setLoc2(p, c2);
+    }
+
+    /**
+     * Quick-Claim: builds a square selection of the given radius around the player and
+     * delegates to {@link #confirmClaim(Player)} so ALL existing validation and economy
+     * (overlap, min/max radius, world rules, claim blocks, max claims, PlotClaimEvent) run.
+     */
+    public void quickClaim(Player p, int radius) {
+        if (p == null) return;
+        setSelectionAround(p, radius);
+        confirmClaim(p);
+    }
+
     public void clearSelection(Player p) {
         if (p == null) return;
         clear(p.getUniqueId());
@@ -312,8 +338,8 @@ public class SelectionService implements Listener {
         World selectedWorld = Bukkit.getWorld(ctx.worldName);
         if (!isServerClaim && !p.hasPermission("aegis.admin.bypass")
                 && !plugin.worldRules().allowClaims(selectedWorld)) {
-            plugin.msg().send(p, "claims_disabled_in_world");
-            plugin.effects().playError(p);
+            denyClaim(p, "claims_disabled_in_world", null,
+                    "claim_hint_world_disabled", "&7Claiming is turned off in this world. Try a claimable world.");
             return;
         }
 
@@ -327,6 +353,21 @@ public class SelectionService implements Listener {
 
         if (rejectIfOutsideClaimLimits(p, ctx, maxRadius, maxArea)) return;
 
+        // Guardrail: enforce max_claims_per_player for personal claims (quick-claim + normal claim).
+        // Skipped for server claims and admins/bypass, matching the PlotMarketGUI purchase cap.
+        if (!isServerClaim && !hasClaimLimitBypass(p)) {
+            int maxClaims = plugin.cfg().getWorldMaxClaims(ctx.world);
+            if (maxClaims > 0) {
+                int current = plugin.store().getPlots(p.getUniqueId()).size();
+                if (current >= maxClaims) {
+                    denyClaim(p, "max_claims_reached", Map.of("AMOUNT", String.valueOf(maxClaims)),
+                            "claim_hint_max_claims",
+                            "&7Unclaim a plot you no longer need, or ask staff to raise your limit.");
+                    return;
+                }
+            }
+        }
+
         // Overlap checks against Aegis plots (robust AABB overlap, not only corners)
         for (Plot other : plugin.store().getPlotsInWorld(ctx.worldName)) {
             if (other == null) continue;
@@ -339,7 +380,9 @@ public class SelectionService implements Listener {
 
             boolean overlaps = (ctx.minX <= oMaxX && ctx.maxX >= oMinX) && (ctx.minZ <= oMaxZ && ctx.maxZ >= oMinZ);
             if (overlaps) {
-                plugin.msg().send(p, "claim_overlap");
+                denyClaim(p, "claim_overlap", null,
+                        "claim_hint_overlap",
+                        "&7Move to open land or pick a spot that doesn't touch another claim.");
                 return;
             }
         }
@@ -347,7 +390,8 @@ public class SelectionService implements Listener {
         // Compatibility: if other protection plugin present, yield if configured
         ProtectionHookManager hooks = plugin.protectionHooks();
         if (hooks != null && hooks.isAreaProtectedElsewhere(ctx.worldName, ctx.minX, ctx.minZ, ctx.maxX, ctx.maxZ)) {
-            plugin.msg().send(p, "claim_external_protection_conflict");
+            denyClaim(p, "claim_external_protection_conflict", null,
+                    "claim_hint_external", "&7That land is protected by another plugin. Pick a different spot.");
             return;
         }
 
@@ -362,7 +406,8 @@ public class SelectionService implements Listener {
             int firstClaimLimit = plugin.cfg().raw().getInt("claim_blocks.first_claim_limit.max_area", 10000);
 
             if (starterEnabled && !blocks.hasClaimedStarter() && ctx.area > firstClaimLimit) {
-                plugin.msg().send(p, "first_claim_too_large");
+                denyClaim(p, "first_claim_too_large", null,
+                        "claim_hint_first_claim", "&7Try a smaller first claim, then expand it later.");
                 return;
             }
 
@@ -370,7 +415,8 @@ public class SelectionService implements Listener {
             int required = perBlock ? ctx.area : 1;
 
             if (!plugin.claimBlocks().canAfford(p.getUniqueId(), required)) {
-                plugin.msg().send(p, "claim_blocks_not_enough");
+                denyClaim(p, "claim_blocks_not_enough", null,
+                        "claim_hint_need_blocks", "&7Earn or buy more Claim Blocks, then try again.");
                 return;
             }
             // Land is counted in used plot area after the plot is created.
@@ -608,19 +654,70 @@ public class SelectionService implements Listener {
         int halfDepth = ctx.depth / 2;
         int minRadius = Math.max(1, plugin.cfg().getWorldMinRadius(ctx.world));
         if (halfWidth < minRadius || halfDepth < minRadius) {
-            plugin.msg().send(p, "claim_too_small", Map.of("MIN", String.valueOf(minRadius)));
+            denyClaim(p, "claim_too_small", Map.of("MIN", String.valueOf(minRadius)),
+                    "claim_hint_too_small",
+                    "&7Expand your selection so both sides meet the minimum radius.");
             return true;
         }
         int worldMax = plugin.cfg().getWorldMaxRadius(ctx.world);
         if (ctx.radius > maxRadius || Math.max(halfWidth, halfDepth) > worldMax) {
-            plugin.msg().send(p, "claim_too_large");
+            denyClaim(p, "claim_too_large", null,
+                    "claim_hint_too_large",
+                    "&7Shrink the selection, or use /ag quickclaim for a default-size plot.");
             return true;
         }
         if (ctx.area > maxArea) {
-            plugin.msg().send(p, "claim_too_large");
+            denyClaim(p, "claim_too_large", null,
+                    "claim_hint_too_large",
+                    "&7Shrink the selection, or use /ag quickclaim for a default-size plot.");
             return true;
         }
         return false;
+    }
+
+    /**
+     * Claim-limit bypass used by personal claims (including Quick-Claim). Matches the
+     * market purchase cap: staff and explicit bypass permissions skip the cap.
+     */
+    private boolean hasClaimLimitBypass(Player p) {
+        if (p == null) return false;
+        if (p.hasPermission("aegis.admin.bypass") || p.hasPermission("aegis.admin.bypass-limits")) {
+            return true;
+        }
+        try {
+            return plugin.isAdmin(p);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Sends the existing denial key plus a one-line next-step hint (English fallback,
+     * no new language-pack keys) and plays the error sound.
+     */
+    private void denyClaim(Player p, String key, Map<String, String> placeholders, String hintKey, String hintFallback) {
+        if (p == null) return;
+        try {
+            if (plugin.msg() != null) {
+                if (placeholders != null && !placeholders.isEmpty()) {
+                    plugin.msg().send(p, key, placeholders);
+                } else {
+                    plugin.msg().send(p, key);
+                }
+            }
+        } catch (Throwable ignored) {}
+        if (hintFallback != null && !hintFallback.isBlank()) {
+            String hint = hintFallback;
+            try {
+                if (plugin.gui() != null) {
+                    hint = plugin.gui().tr(p, hintKey, hintFallback);
+                }
+            } catch (Throwable ignored) {}
+            if (hint != null && !hint.isBlank()) {
+                p.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', hint));
+            }
+        }
+        if (plugin.effects() != null) plugin.effects().playError(p);
     }
 
     private int getWorldInt(String worldName, String key, int def) {

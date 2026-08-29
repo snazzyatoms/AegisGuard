@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1300;
+    public static final int CURRENT_SCHEMA = 1301;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();

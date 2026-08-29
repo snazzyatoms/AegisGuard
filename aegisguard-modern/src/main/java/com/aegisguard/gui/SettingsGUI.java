@@ -42,10 +42,24 @@ public class SettingsGUI {
         this.plugin = plugin;
     }
 
+    /**
+     * Where Settings Back should return. The player hub and the staff menu both
+     * expose Settings; sub-pages and other GUIs do not.
+     */
+    public enum ReturnTo {
+        PLAYER_MENU, STAFF_MENU
+    }
+
     public static class SettingsGUIHolder implements InventoryHolder {
         private final Plot plot;
-        public SettingsGUIHolder(Plot plot) { this.plot = plot; }
+        private final ReturnTo returnTo;
+        public SettingsGUIHolder(Plot plot) { this(plot, ReturnTo.PLAYER_MENU); }
+        public SettingsGUIHolder(Plot plot, ReturnTo returnTo) {
+            this.plot = plot;
+            this.returnTo = returnTo == null ? ReturnTo.PLAYER_MENU : returnTo;
+        }
         public Plot getPlot() { return plot; }
+        public ReturnTo getReturnTo() { return returnTo; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -65,9 +79,9 @@ public class SettingsGUI {
         return plugin.gui().trList(p, key, fallback);
     }
 
-    private void reopenNextTick(Player player, Plot plot) {
+    private void reopenNextTick(Player player, Plot plot, ReturnTo returnTo) {
         // Prevents flash + cursor snapping (especially noticeable on some clients)
-        plugin.runMain(player, () -> open(player, plot));
+        plugin.runMain(player, () -> open(player, plot, returnTo));
     }
 
     private boolean saveConfigSafe() {
@@ -104,16 +118,21 @@ public class SettingsGUI {
         }
     }
 
-    public void open(Player player) { open(player, null); }
+    public void open(Player player) { open(player, null, ReturnTo.PLAYER_MENU); }
 
-    public void open(Player player, Plot plot) {
+    public void open(Player player, ReturnTo returnTo) { open(player, null, returnTo); }
+
+    public void open(Player player, Plot plot) { open(player, plot, ReturnTo.PLAYER_MENU); }
+
+    public void open(Player player, Plot plot, ReturnTo returnTo) {
         String title = plugin.gui().title(
                 player,
                 "settings_menu_title",
                 "&b⚙ AegisGuard Settings"
         );
 
-        Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot), 54, title);
+        ReturnTo dest = returnTo == null ? ReturnTo.PLAYER_MENU : returnTo;
+        Inventory inv = Bukkit.createInventory(new SettingsGUIHolder(plot, dest), 54, title);
 
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
@@ -320,13 +339,15 @@ public class SettingsGUI {
         }
 
         // --------------------------------------------------
-        // NAVIGATION (48/49)
+        // NAVIGATION (48/49) — Back returns to the menu that opened Settings
         // --------------------------------------------------
-        inv.setItem(48, GUIManager.createItem(
-                Material.NETHER_STAR,
-                t(player, "button_back_menu", "&fReturn to Menu"),
-                tl(player, "back_menu_lore", List.of("&7Go back to the main dashboard."))
-        ));
+        String backName = dest == ReturnTo.STAFF_MENU
+                ? t(player, "button_back_staff", "&fReturn to Staff Menu")
+                : t(player, "button_back_menu", "&fReturn to Menu");
+        List<String> backLore = dest == ReturnTo.STAFF_MENU
+                ? tl(player, "back_staff_lore", List.of("&7Go back to the staff command center."))
+                : tl(player, "back_menu_lore", List.of("&7Go back to the main dashboard."));
+        inv.setItem(48, GUIManager.createItem(Material.NETHER_STAR, backName, backLore));
 
         inv.setItem(49, GUIManager.createItem(
                 Material.BARRIER,
@@ -379,7 +400,7 @@ public class SettingsGUI {
                 }
 
                 playFlip(player);
-                reopenNextTick(player, plot);
+                reopenNextTick(player, plot, holder.getReturnTo());
             }
 
             case 13 -> { // Language picker (direct choice, persisted by CodexEngine)
@@ -388,7 +409,7 @@ public class SettingsGUI {
                     return;
                 }
                 playFlip(player);
-                plugin.runMain(player, () -> plugin.gui().languageSelect().open(player, plot));
+                plugin.runMain(player, () -> plugin.gui().languageSelect().open(player, plot, LanguageSelectGUI.ReturnTo.SETTINGS, holder.getReturnTo()));
             }
 
             case 16 -> { // Notifications MODE (notifications.yml preferred)
@@ -428,7 +449,7 @@ public class SettingsGUI {
                 }
 
                 playFlip(player);
-                reopenNextTick(player, plot);
+                reopenNextTick(player, plot, holder.getReturnTo());
             }
 
             case 19 -> { // Plot Greetings toggle (enter/leave)
@@ -471,7 +492,7 @@ public class SettingsGUI {
                 }
 
                 playFlip(player);
-                reopenNextTick(player, plot);
+                reopenNextTick(player, plot, holder.getReturnTo());
             }
 
             case 22 -> { // Admin Updates toggle
@@ -504,7 +525,7 @@ public class SettingsGUI {
                 }
 
                 playFlip(player);
-                reopenNextTick(player, plot);
+                reopenNextTick(player, plot, holder.getReturnTo());
             }
 
             case 25 -> { // Repeat Notifications toggle (Milestone 5)
@@ -523,7 +544,7 @@ public class SettingsGUI {
                 }
 
                 playFlip(player);
-                reopenNextTick(player, plot);
+                reopenNextTick(player, plot, holder.getReturnTo());
             }
 
             case 31 -> { // Replay First-Claim Walkthrough (Milestone 5)
@@ -533,29 +554,43 @@ public class SettingsGUI {
             }
 
             case 28 -> {
-                if (mod(com.aegisguard.config.Modules.Id.GUEST_PASSES)) toggleCategory(player, plot, "guest_pass");
+                if (mod(com.aegisguard.config.Modules.Id.GUEST_PASSES)) {
+                    toggleCategory(player, plot, "guest_pass", holder.getReturnTo());
+                }
             }
             case 29 -> {
-                if (mod(com.aegisguard.config.Modules.Id.ALLIANCE_ACCESS)) toggleCategory(player, plot, "alliance");
+                if (mod(com.aegisguard.config.Modules.Id.ALLIANCE_ACCESS)) {
+                    toggleCategory(player, plot, "alliance", holder.getReturnTo());
+                }
             }
             case 30 -> {
-                if (mod(com.aegisguard.config.Modules.Id.LOCKDOWN)) toggleCategory(player, plot, "lockdown");
+                if (mod(com.aegisguard.config.Modules.Id.LOCKDOWN)) {
+                    toggleCategory(player, plot, "lockdown", holder.getReturnTo());
+                }
             }
             case 32 -> {
-                if (mod(com.aegisguard.config.Modules.Id.TRAVEL)) toggleCategory(player, plot, "travel");
+                if (mod(com.aegisguard.config.Modules.Id.TRAVEL)) {
+                    toggleCategory(player, plot, "travel", holder.getReturnTo());
+                }
             }
             case 33 -> {
-                if (mod(com.aegisguard.config.Modules.Id.REALM_PROFILES)) toggleCategory(player, plot, "plot_notices");
+                if (mod(com.aegisguard.config.Modules.Id.REALM_PROFILES)) {
+                    toggleCategory(player, plot, "plot_notices", holder.getReturnTo());
+                }
             }
             case 34 -> {
                 if (!(mod(com.aegisguard.config.Modules.Id.ECONOMY) || mod(com.aegisguard.config.Modules.Id.RENTALS))) return;
                 playFlip(player);
-                plugin.gui().settlementsInbox().open(player);
+                plugin.gui().settlementsInbox().openFromSettings(player, holder.getReturnTo());
             }
 
             case 48 -> {
                 playFlip(player);
-                plugin.runMain(player, () -> plugin.gui().openMain(player));
+                ReturnTo dest = holder.getReturnTo();
+                plugin.runMain(player, () -> {
+                    if (dest == ReturnTo.STAFF_MENU) plugin.gui().admin().open(player);
+                    else plugin.gui().openMain(player);
+                });
             }
 
             case 49 -> {
@@ -590,7 +625,7 @@ public class SettingsGUI {
         return true;
     }
 
-    private void toggleCategory(Player player, Plot plot, String category) {
+    private void toggleCategory(Player player, Plot plot, String category, ReturnTo returnTo) {
         if (!canManageNotifications(player)) {
             playError(player);
             return;
@@ -617,7 +652,7 @@ public class SettingsGUI {
             return;
         }
         playFlip(player);
-        reopenNextTick(player, plot);
+        reopenNextTick(player, plot, returnTo);
     }
 
     private void preferenceFailure(Player player, Throwable error) {

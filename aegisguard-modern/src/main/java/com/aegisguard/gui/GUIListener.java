@@ -252,6 +252,7 @@ public class GUIListener implements Listener {
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
+        if (GUIManager.isFiller(clicked)) return;
 
         // 1.2.6: block spammy / inventory-manipulation click types
         ClickType click = e.getClick();

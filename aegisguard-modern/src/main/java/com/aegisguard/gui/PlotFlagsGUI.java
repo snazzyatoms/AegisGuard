@@ -543,9 +543,12 @@ public class PlotFlagsGUI {
                         plugin.store().setDirty(true);
                         plugin.effects().playConfirm(player);
                         for (org.bukkit.entity.Player online : org.bukkit.Bukkit.getOnlinePlayers()) {
-                            if (online != null && plot.contains(online.getLocation())) {
-                                plugin.refreshHearthVoice(online);
-                            }
+                            if (online == null) continue;
+                            plugin.runMain(online, () -> {
+                                if (plot.contains(online.getLocation())) {
+                                    plugin.refreshHearthVoice(online);
+                                }
+                            });
                         }
                         refresh = true;
                     }

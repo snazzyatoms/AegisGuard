@@ -670,6 +670,10 @@ tier_max_lore:
 - '&dDominaste completamente esta parcela.'
 - '&7¡Disfrutá de todas las bonificaciones!'
 market_gui_title: '&6✦ Mercado de Parcelas'
+market_empty_name: '&7Sin anuncios'
+market_empty_lore:
+- '&7Nada está en venta o alquiler ahora.'
+- '&7Volvé cuando un dueño liste un terreno.'
 market_sell_button: '&a💵 Vender Parcela'
 market_sell_lore:
 - '&7Poné tu parcela en venta.'
@@ -689,6 +693,10 @@ market_your_listing_lore:
 - ' '
 - '&cClic para quitar del mercado'
 auction_gui_title: '&c✦ Subastas'
+auction_empty_name: '&7Sin subastas'
+auction_empty_lore:
+- '&7No hay terrenos en subasta.'
+- '&7Los dueños pueden listar en Ajustes.'
 auction_item_name: '&6{PLOT}'
 auction_item_lore:
 - '&7Puja actual: &e{BID}'

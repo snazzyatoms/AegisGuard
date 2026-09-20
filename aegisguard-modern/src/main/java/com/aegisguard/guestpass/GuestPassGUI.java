@@ -428,6 +428,7 @@ public class GuestPassGUI implements Listener {
         for (org.bukkit.entity.Entity nearbyEntity : player.getNearbyEntities(radius, radius, radius)) {
             if (!(nearbyEntity instanceof Player nearby)) continue;
             if (nearby.equals(player)) continue;
+            if (!com.aegisguard.util.TeleportUtil.regionOwns(nearby)) continue;
             if (nearby.getWorld() == null || !nearby.getWorld().equals(player.getWorld())) continue;
             if (plot.isOwner(nearby.getUniqueId()) || Plot.SERVER_OWNER_UUID.equals(nearby.getUniqueId())) continue;
             if (plot.isBanned(nearby.getUniqueId())) continue;

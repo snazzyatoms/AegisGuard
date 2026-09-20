@@ -165,6 +165,17 @@ public class PlotAuctionGUI {
             inv.setItem(i, head);
         }
 
+        if (allPlots.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(
+                    Material.BARRIER,
+                    safeName(player, "auction_empty_name", "&7No Auctions"),
+                    safeLore(player, "auction_empty_lore", List.of(
+                            "&7There are no plots on auction.",
+                            "&7Owners can list from Claim Settings."
+                    ))
+            ));
+        }
+
         // Navigation
         if (page > 0) {
             inv.setItem(45, GUIManager.createItem(
@@ -270,12 +281,14 @@ public class PlotAuctionGUI {
         // Refund old bidder (if online)
         if (plot.getCurrentBidder() != null) {
             OfflinePlayer oldBidder = Bukkit.getOfflinePlayer(plot.getCurrentBidder());
-            if (oldBidder.getPlayer() != null) {
-                plugin.eco().deposit(oldBidder.getPlayer(), currentBid, CurrencyType.VAULT);
-                if (oldBidder.isOnline()) {
-                    plugin.msg().send(oldBidder.getPlayer(), "auction-outbid",
+            Player oldOnline = oldBidder.getPlayer();
+            if (oldOnline != null) {
+                final double refund = currentBid;
+                plugin.runMain(oldOnline, () -> {
+                    plugin.eco().deposit(oldOnline, refund, CurrencyType.VAULT);
+                    plugin.msg().send(oldOnline, "auction-outbid",
                             Map.of("PLAYER", bidder.getName()));
-                }
+                });
             }
         }
 

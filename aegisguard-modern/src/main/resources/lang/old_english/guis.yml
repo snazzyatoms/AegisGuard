@@ -1171,7 +1171,15 @@ level_reward_flag_line: '&d✦ Unlocks {FLAG}'
 level_up_fail_overlap: '&cAscension denied: the new land would overlap another claim.'
 level_up_fail_world_limit: '&cAscension denied: thou hast reached this world''s radius limit ({LIMIT}).'
 market_gui_title: '&6✦ Dominion Marketplace'
+market_empty_name: '&7No Listings'
+market_empty_lore:
+- '&7Naught is for sale or rent presently.'
+- '&7Return when an owner lists a plot.'
 auction_gui_title: '&c✦ Dominion Auctions'
+auction_empty_name: '&7No Auctions'
+auction_empty_lore:
+- '&7No plots stand at auction.'
+- '&7Owners may list from Claim Settings.'
 settings_menu_title: '&3⚙ Thine Preferences'
 ledger_title: '&6📜 Domain Registry'
 claimblocks_exchange_filler_lore: []

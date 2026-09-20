@@ -45,7 +45,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "beacon", "caravan", "chat", "frequency", "staff", "staffchat",
+            "group", "alliance", "arena", "beacon", "caravan", "gathering", "gatherings", "openhouse", "chat", "frequency", "staff", "staffchat",
             "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
@@ -360,6 +360,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             }
 
             case "caravan", "caravans" -> handleCaravan(p, args);
+
+            case "gathering", "gatherings", "openhouse" -> handleGathering(p, args);
 
             // 1.4: per-plot public arrival choice (classic vs beacon) for the plot you manage.
             case "arrival" -> handleArrival(p, args);
@@ -1076,6 +1078,11 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         String action = args[1].toLowerCase(Locale.ROOT);
         if (action.equals("undo")) {
+            Plot.RoleChange last = plot.peekLastRoleChange();
+            if (last != null && !plot.canModifyMember(p, last.target(), plugin)) {
+                sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+                return;
+            }
             if (!plot.undoLastRoleChange()) {
                 sendKey(p, "roles_undo_empty", "&cNo recent role change to undo on this plot.");
                 plugin.effects().playError(p);
@@ -1101,10 +1108,17 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
         UUID targetId = target.getUniqueId();
+        if (!plot.canModifyMember(p, targetId, plugin)) {
+            sendKey(p, "no_perm", "&cError: You do not have permission for this.");
+            return;
+        }
+        if (action.equals("lock") && !plot.getPlayerRoles().containsKey(targetId)) {
+            sendKey(p, "roles_lock_failed", "&cCould not change that member's lock.");
+            return;
+        }
         boolean changed = action.equals("lock") ? plot.lockMember(targetId) : plot.unlockMember(targetId);
         if (!changed) {
-            sendKey(p, "roles_lock_failed", "&cCould not {ACTION} that member.",
-                    Map.of("ACTION", action));
+            sendKey(p, "roles_lock_failed", "&cCould not change that member's lock.");
             plugin.effects().playError(p);
             return;
         }
@@ -1115,9 +1129,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             plugin.audit().record(com.aegisguard.audit.AuditCategory.ROLE_CHANGE, p,
                     plot.getPlotName(), action + " " + name);
         }
-        sendKey(p, "roles_lock_ok", "&aMember {PLAYER} is now {ACTION}.",
-                Map.of("PLAYER", target.getName() == null ? args[2] : target.getName(),
-                        "ACTION", action + "ed"));
+        sendKey(p, "roles_lock_ok", "&aUpdated the lock for &f{PLAYER}&a.",
+                Map.of("PLAYER", target.getName() == null ? args[2] : target.getName()));
         plugin.effects().playConfirm(p);
     }
 
@@ -2036,6 +2049,16 @@ private void handleUnsell(Player p) {
             if (!caravanMentioned) {
                 sendMsg(sender, "&e/ag caravan &7- dispatch and track trade caravans");
             }
+            boolean gatheringMentioned = false;
+            for (String line : helpLines) {
+                if (line != null && line.toLowerCase(Locale.ROOT).contains("gathering")) {
+                    gatheringMentioned = true;
+                    break;
+                }
+            }
+            if (!gatheringMentioned) {
+                sendMsg(sender, "&e/ag gathering &7- host an Open House on your plot");
+            }
             boolean chatMentioned = false;
             for (String line : helpLines) {
                 if (line != null && line.toLowerCase(Locale.ROOT).contains("/ag chat")) {
@@ -2431,6 +2454,53 @@ private void handleUnsell(Player p) {
                 }
             }
             default -> plugin.gui().caravans().open(player);
+        }
+    }
+
+    private void handleGathering(Player player, String[] args) {
+        if (plugin.gatherings() == null || !plugin.gatherings().isEnabled()
+                || plugin.gui() == null || plugin.gui().gatherings() == null) {
+            sendKey(player, "gathering_disabled", "&cOpen House is disabled on this server.");
+            return;
+        }
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "menu";
+        switch (action) {
+            case "start" -> {
+                int minutes = plugin.gatherings().defaultMinutes();
+                if (args.length >= 3) {
+                    try {
+                        minutes = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException ignored) {
+                        sendKey(player, "gathering_usage",
+                                "&eUsage: /ag gathering start [minutes] | stop | menu");
+                        return;
+                    }
+                }
+                var result = plugin.gatherings().start(player, minutes);
+                switch (result) {
+                    case NEED_PLOT -> sendKey(player, "no_plot_here", "&cStand inside your claim first.");
+                    case NEED_MANAGE -> sendKey(player, "no_perm", "&cYou cannot manage this plot.");
+                    case BAD_DURATION -> sendKey(player, "gathering_bad_duration",
+                            "&cChoose a duration within the server's Open House limits.");
+                    case SAVE_FAILED -> sendKey(player, "gathering_save_failed",
+                            "&cOpen House could not be saved. Check the server log.");
+                    case DISABLED -> sendKey(player, "gathering_disabled", "&cOpen House is disabled on this server.");
+                    default -> { }
+                }
+            }
+            case "stop", "end" -> {
+                var result = plugin.gatherings().stop(player);
+                switch (result) {
+                    case NEED_PLOT -> sendKey(player, "no_plot_here", "&cStand inside your claim first.");
+                    case NEED_MANAGE -> sendKey(player, "no_perm", "&cYou cannot manage this plot.");
+                    case NONE -> sendKey(player, "gathering_none", "&eNo Open House is running here.");
+                    case SAVE_FAILED -> sendKey(player, "gathering_save_failed",
+                            "&cOpen House could not be saved. Check the server log.");
+                    case DISABLED -> sendKey(player, "gathering_disabled", "&cOpen House is disabled on this server.");
+                    default -> { }
+                }
+            }
+            default -> plugin.gui().gatherings().open(player);
         }
     }
 
@@ -3057,6 +3127,13 @@ private void handleUnsell(Player p) {
             if (args[0].equalsIgnoreCase("caravan") || args[0].equalsIgnoreCase("caravans")) {
                 List<String> completions = new ArrayList<>();
                 StringUtil.copyPartialMatches(args[1], List.of("menu", "list", "status", "cancel"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
+            if (args[0].equalsIgnoreCase("gathering") || args[0].equalsIgnoreCase("gatherings")
+                    || args[0].equalsIgnoreCase("openhouse")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("start", "stop", "menu"), completions);
                 Collections.sort(completions);
                 return completions;
             }

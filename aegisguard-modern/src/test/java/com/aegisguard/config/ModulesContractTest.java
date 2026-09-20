@@ -23,7 +23,7 @@ class ModulesContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1311, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertTrue(modules.containsKey("guest_passes"));
         assertTrue(modules.containsKey("expansions"));
@@ -42,6 +42,7 @@ class ModulesContractTest {
         assertEquals(Boolean.TRUE, modules.get("visual_presence"));
         assertEquals(Boolean.TRUE, modules.get("succession"));
         assertEquals(Boolean.TRUE, modules.get("caravans"));
+        assertEquals(Boolean.TRUE, modules.get("gatherings"));
         Map<String, Object> expansions = (Map<String, Object>) config.get("expansions");
         assertEquals(Boolean.TRUE, expansions.get("enabled"));
         Map<String, Object> cosmetics = (Map<String, Object>) config.get("cosmetics");

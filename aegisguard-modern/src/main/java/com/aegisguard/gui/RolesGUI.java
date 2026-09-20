@@ -3,6 +3,7 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.flags.TriState;
+import com.aegisguard.guestpass.GuestPass;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -63,7 +64,7 @@ public class RolesGUI implements Listener {
     );
 
     private static final int PLOTS_PER_PAGE = 45;
-    private static final int MEMBERS_PER_PAGE = 45;
+    private static final int MEMBERS_PER_PAGE = 43;
     private static final int PLAYERS_PER_PAGE = 45;
 
     private static final int ROLES_VISIBLE = 18; // 0-17 in the manage menu
@@ -457,7 +458,7 @@ public class RolesGUI implements Listener {
 
         int slot = 0;
         for (int idx = start; idx < end; idx++) {
-            if (slot >= 45) break;
+            if (slot >= MEMBERS_PER_PAGE) break;
 
             UUID uuid = members.get(idx);
             String role = roleMap.get(uuid);
@@ -493,9 +494,8 @@ public class RolesGUI implements Listener {
                             "&7Account: &f{PLAYER}")));
                 }
                 lore.add(" ");
-
-                String clickLine = t(player, "roles_member_click_lore", "&eClick to Edit Role & Permissions");
-                lore.add(GUIManager.color(clickLine));
+                appendMemberStatusLore(player, plot, uuid, lore);
+                lore.add(GUIManager.color(t(player, "roles_member_click_lore", "&eClick to Edit Role & Permissions")));
 
                 meta.setLore(lore);
                 head.setItemMeta(meta);
@@ -536,6 +536,9 @@ public class RolesGUI implements Listener {
                         "&fInherit &7uses normal plot behavior."
                 ))
         ));
+        inv.setItem(43, GUIManager.createItem(Material.RECOVERY_COMPASS,
+                t(player, "button_roles_undo", "&eUndo Last Role Change"),
+                undoButtonLore(player, plot)));
         inv.setItem(44, GUIManager.createItem(Material.IRON_SWORD,
                 t(player, "roles_moderation_name", "&cKick / Ban"),
                 tl(player, "roles_moderation_lore", List.of(
@@ -852,7 +855,7 @@ public class RolesGUI implements Listener {
                 : t(player, "roles_unassigned", "Unassigned");
 
         // ✅ FULLY TRANSLATABLE LORE WITH {ROLE}
-        List<String> permsLore = tl(player, "role_permissions_lore",
+        List<String> permsLore = new ArrayList<>(tl(player, "role_permissions_lore",
                 Map.of("ROLE", roleDisplay),
                 List.of(
                         "&7Role: &f{ROLE}",
@@ -862,12 +865,26 @@ public class RolesGUI implements Listener {
                         " ",
                         "&eClick to open role flags"
                 )
-        );
+        ));
+        appendManageStatusLore(player, plot, target.getUniqueId(), permsLore);
 
         inv.setItem(24, GUIManager.createItem(
                 Material.BOOK,
                 t(player, "button_role_permissions", "&bEdit Role Permissions"),
                 permsLore
+        ));
+
+        boolean locked = plot.isMemberLocked(target.getUniqueId());
+        List<String> lockLore = new ArrayList<>(tl(player, locked ? "roles_unlock_button_lore" : "roles_lock_button_lore",
+                locked
+                        ? List.of("&7Allow restore and role edits", "&7to change this member again.")
+                        : List.of("&7Keep this member through restore", "&7and block silent role edits.")));
+        appendManageStatusLore(player, plot, target.getUniqueId(), lockLore);
+        inv.setItem(23, GUIManager.createItem(
+                locked ? Material.IRON_DOOR : Material.OAK_DOOR,
+                t(player, locked ? "button_roles_unlock" : "button_roles_lock",
+                        locked ? "&aUnlock Member" : "&6Lock Member"),
+                lockLore
         ));
 
         player.openInventory(inv);
@@ -953,7 +970,8 @@ public class RolesGUI implements Listener {
 
     private boolean canManagePlot(Player actor, Plot plot) {
         if (actor == null || plot == null) return false;
-        return plot.canManage(actor, plugin);
+        return plugin.store() != null && plugin.store().getPlotById(plot.getPlotId()) == plot
+                && plot.canManage(actor, plugin);
     }
 
     private boolean isProtectedRoleTarget(Plot plot, UUID uuid) {
@@ -972,6 +990,7 @@ public class RolesGUI implements Listener {
         for (org.bukkit.entity.Entity nearbyEntity : player.getNearbyEntities(radius, radius, radius)) {
             if (!(nearbyEntity instanceof Player nearby)) continue;
             if (nearby.equals(player)) continue;
+            if (!com.aegisguard.util.TeleportUtil.regionOwns(nearby)) continue;
             if (nearby.getWorld() == null || !nearby.getWorld().equals(player.getWorld())) continue;
             if (isProtectedRoleTarget(plot, nearby.getUniqueId())) continue;
             if (currentRoles.containsKey(nearby.getUniqueId())) continue;
@@ -1026,6 +1045,31 @@ public class RolesGUI implements Listener {
         }
         if (slot == 48) { plugin.gui().openMain(player); return; }
         if (slot == 50) { player.closeInventory(); return; }
+        if (slot == 43) {
+            if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
+            Plot.RoleChange last = plot.peekLastRoleChange();
+            if (last != null && !plot.canModifyMember(player, last.target(), plugin)) {
+                plugin.effects().playError(player);
+                return;
+            }
+            if (!plot.undoLastRoleChange()) {
+                player.sendMessage(GUIManager.color(t(player, "roles_undo_empty",
+                        "&cNo recent role change to undo on this plot.")));
+                plugin.effects().playError(player);
+                return;
+            }
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            if (plugin.audit() != null) {
+                plugin.audit().record(com.aegisguard.audit.AuditCategory.ROLE_CHANGE, player,
+                        plot.getPlotName(), "Undid last role change");
+            }
+            player.sendMessage(GUIManager.color(t(player, "roles_undo_ok",
+                    "&aUndid the last role change on this plot.")));
+            plugin.effects().playConfirm(player);
+            openRolesMenu(player, plot, currentPage);
+            return;
+        }
         if (slot == 44) {
             if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
             plugin.gui().moderation().open(player, plot);
@@ -1043,7 +1087,7 @@ public class RolesGUI implements Listener {
         if (slot == 46 && page > 0) { openRolesMenu(player, plot, page - 1); return; }
         if (slot == 52 && page < maxPage) { openRolesMenu(player, plot, page + 1); return; }
 
-        if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+        if (slot < MEMBERS_PER_PAGE && e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
             if (!canManagePlot(player, plot)) { plugin.effects().playError(player); return; }
 
             SkullMeta meta = (SkullMeta) e.getCurrentItem().getItemMeta();
@@ -1139,8 +1183,38 @@ public class RolesGUI implements Listener {
             return;
         }
 
+        if (slot == 23) {
+            UUID targetId = target.getUniqueId();
+            boolean locked = plot.isMemberLocked(targetId);
+            boolean changed = locked ? plot.unlockMember(targetId) : plot.lockMember(targetId);
+            if (!changed) {
+                player.sendMessage(GUIManager.color(t(player, "roles_lock_failed",
+                        "&cCould not change that member's lock.")));
+                plugin.effects().playError(player);
+                return;
+            }
+            plugin.store().savePlot(plot);
+            plugin.store().setDirty(true);
+            if (plugin.audit() != null) {
+                plugin.audit().record(com.aegisguard.audit.AuditCategory.ROLE_CHANGE, player,
+                        plot.getPlotName(), (locked ? "unlock " : "lock ") + safeName(target));
+            }
+            player.sendMessage(GUIManager.color(t(player, "roles_lock_ok",
+                    Map.of("PLAYER", safeName(target)),
+                    "&aUpdated the lock for &f{PLAYER}&a.")));
+            plugin.effects().playConfirm(player);
+            openManageMenu(player, plot, target, page);
+            return;
+        }
+
         // Remove trusted
         if (slot == 22) {
+            if (plot.isMemberLocked(target.getUniqueId())) {
+                player.sendMessage(GUIManager.color(t(player, "roles_member_locked",
+                        "&cThat member is locked. Unlock them first.")));
+                plugin.effects().playError(player);
+                return;
+            }
             // v1.2.6: Safety check - prevent owner self-removal and enforce admin override
             if (!plot.canModifyMember(player, target.getUniqueId())) {
                 if (player.getUniqueId().equals(target.getUniqueId())) {
@@ -1173,6 +1247,12 @@ public class RolesGUI implements Listener {
 
         // Role selection (0..17 on current page)
         if (slot >= 0 && slot < ROLES_VISIBLE) {
+            if (plot.isMemberLocked(target.getUniqueId())) {
+                player.sendMessage(GUIManager.color(t(player, "roles_member_locked",
+                        "&cThat member is locked. Unlock them first.")));
+                plugin.effects().playError(player);
+                return;
+            }
             int index = (page * ROLES_VISIBLE) + slot;
             if (index < 0 || index >= roles.size()) return;
 
@@ -1482,6 +1562,72 @@ public class RolesGUI implements Listener {
         }
 
         return role;
+    }
+
+    private void appendMemberStatusLore(Player player, Plot plot, UUID uuid, List<String> lore) {
+        lore.add(GUIManager.color(Bukkit.getPlayer(uuid) != null
+                ? t(player, "roles_member_online_line", "&aOnline")
+                : t(player, "roles_member_offline_line", "&7Offline")));
+        if (plot.isMemberLocked(uuid)) {
+            lore.add(GUIManager.color(t(player, "roles_member_locked_line",
+                    "&6Locked — restore and role edits keep this member.")));
+        }
+        String guestLine = guestPassStatusLine(player, plot, uuid);
+        if (guestLine != null) lore.add(GUIManager.color(guestLine));
+    }
+
+    private void appendManageStatusLore(Player player, Plot plot, UUID uuid, List<String> lore) {
+        lore.add(" ");
+        lore.add(GUIManager.color(plot.isMemberLocked(uuid)
+                ? t(player, "roles_lock_status_locked", "&6Locked")
+                : t(player, "roles_lock_status_unlocked", "&7Not locked")));
+        String guestLine = guestPassStatusLine(player, plot, uuid);
+        if (guestLine != null) lore.add(GUIManager.color(guestLine));
+    }
+
+    private String guestPassStatusLine(Player player, Plot plot, UUID uuid) {
+        GuestPass pass = plot.getActiveGuestPass(uuid);
+        if (pass == null) return null;
+        String preset = pass.getPreset() != null ? pass.getPreset().fallbackLabel() : "Guest";
+        return t(player, "roles_member_guest_pass_line",
+                Map.of("PRESET", preset, "TIME", formatPassRemaining(player, pass)),
+                "&bGuest Pass: &f{PRESET} · {TIME}");
+    }
+
+    private String formatPassRemaining(Player player, GuestPass pass) {
+        long remaining = pass.getRemainingMillis(System.currentTimeMillis());
+        if (remaining >= Long.MAX_VALUE / 2) {
+            return t(player, "roles_guest_pass_never", "No expiry");
+        }
+        long minutes = Math.max(0L, remaining / 60_000L);
+        if (minutes < 1) return t(player, "roles_guest_pass_expiring", "<1m");
+        if (minutes >= 60) {
+            return (minutes / 60) + "h " + (minutes % 60) + "m";
+        }
+        return minutes + "m";
+    }
+
+    private List<String> undoButtonLore(Player player, Plot plot) {
+        Plot.RoleChange last = plot.peekLastRoleChange();
+        if (last == null) {
+            return tl(player, "roles_undo_empty_lore", List.of("&7Nothing to undo."));
+        }
+        OfflinePlayer target = Bukkit.getOfflinePlayer(last.target());
+        String name = target.getName() != null ? target.getName() : "Unknown";
+        String unassigned = t(player, "roles_unassigned", "Unassigned");
+        String from = (last.previous() == null || last.previous().isBlank())
+                ? unassigned : getRoleDisplayName(player, last.previous());
+        String to = (last.next() == null || last.next().isBlank())
+                ? unassigned : getRoleDisplayName(player, last.next());
+        return tl(player, "roles_undo_preview_lore",
+                Map.of("PLAYER", name, "FROM", from, "TO", to),
+                List.of(
+                        "&7Restore the last role edit",
+                        "&7on this plot.",
+                        " ",
+                        "&7Last: &f{PLAYER}",
+                        "&8{FROM} → {TO}"
+                ));
     }
 
     private String configRoleKey(String role) {

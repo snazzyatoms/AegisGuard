@@ -2242,7 +2242,7 @@ settings_settlements_lore:
 - '&7dostawa na Twoje saldo.'
 visit_discover_filter_name: '&eOdkryj filtr'
 visit_discover_filter_lore:
-- '&7Cykl: Wszystkie / Polecane / Sprzedaż / Wynajem / Kategoria'
+- '&7Cykl: Wszystkie / Polecane / Na żywo / Sprzedaż / Wynajem / Kategoria'
 alliance_roster_name: '&bRoster i zaproszenia'
 alliance_roster_lore:
 - '&7Wyświetl członków i oczekujące zaproszenia.'
@@ -3957,3 +3957,56 @@ season_featured_plot_lore:
 season_featured_route_name: '&a★ Trasa {NAME}'
 season_featured_route_lore:
 - '&7Przypięte jako pierwsze w przeglądarce Tras.'
+
+# --- Open House and Roles lock/undo (1.4) ---
+visit_filter_live: '&aNa żywo'
+button_gathering: '&6Open House'
+gathering_button_lore:
+- '&7Zorganizuj ograniczony czasowo dzień otwarty.'
+- '&7Goście znajdą cię w Atlasie: Odkrywaj -> Na żywo.'
+gathering_gui_title: '&6Open House'
+gathering_status_name: '&6Open House'
+gathering_status_plot: '&7Działka: &f{PLOT}'
+gathering_status_state: '&aAktywne jeszcze przez &f{REMAINING}'
+gathering_status_idle: '&7Nieaktywne.'
+gathering_status_hint: '&7Goście znajdą cię w Atlasie: Odkrywaj -> Na żywo.'
+gathering_start_short: '&aRozpocznij {MINUTES}m'
+gathering_start_default: '&aRozpocznij {MINUTES}m'
+gathering_start_lore: '&eKliknij, aby otworzyć działkę.'
+gathering_pass_on: '&aPrzepustki dla gości: Włączone'
+gathering_pass_off: '&cPrzepustki dla gości: Wyłączone'
+gathering_pass_lore: '&7Przyznaje przybywającym gościom czasową przepustkę.'
+gathering_stop_name: '&cZakończ dzień otwarty'
+gathering_stop_lore: '&7Usuwa ogłoszenie i unieważnia przepustki gości.'
+gathering_need_manage: '&cStań na działce, którą zarządzasz'
+gathering_need_manage_lore: '&7Właściciele, współwłaściciele i zarządcy mogą gościć.'
+gathering_title: '&6Open House'
+gathering_subtitle: '&7{PLOT} · {MINUTES}m'
+button_roles_undo: '&eCofnij ostatnią zmianę roli'
+roles_undo_button_lore:
+- '&7Przywróć ostatnią zmianę roli'
+- '&7na tej działce.'
+button_roles_lock: '&6Zablokuj członka'
+button_roles_unlock: '&aOdblokuj członka'
+roles_lock_button_lore:
+- '&7Zachowaj członka podczas przywracania'
+- '&7i zablokuj ciche zmiany roli.'
+roles_unlock_button_lore:
+- '&7Pozwól przywracaniu i edycji ról'
+- '&7ponownie zmieniać tego członka.'
+roles_member_locked_line: '&6Zablokowany — przywracanie i role zachowują tego członka.'
+roles_undo_empty_lore:
+- '&7Nie ma czego cofnąć.'
+roles_undo_preview_lore:
+- '&7Przywraca ostatnią zmianę roli'
+- '&7na tej działce.'
+- ' '
+- '&7Ostatnio: &f{PLAYER}'
+- '&8{FROM} → {TO}'
+roles_member_guest_pass_line: '&bPrzepustka gościa: &f{PRESET} · {TIME}'
+roles_member_online_line: '&aOnline'
+roles_member_offline_line: '&7Offline'
+roles_lock_status_locked: '&6Zablokowany'
+roles_lock_status_unlocked: '&7Niezablokowany'
+roles_guest_pass_never: 'Bez wygaśnięcia'
+roles_guest_pass_expiring: '<1m'

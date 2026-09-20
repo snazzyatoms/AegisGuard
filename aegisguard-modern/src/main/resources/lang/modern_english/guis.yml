@@ -2256,7 +2256,7 @@ settings_settlements_lore:
 - '&7delivery to your balance.'
 visit_discover_filter_name: '&eDiscover Filter'
 visit_discover_filter_lore:
-- '&7Cycle: All / Featured / Sale / Rent / Category'
+- '&7Cycle: All / Featured / Live / Sale / Rent / Category'
 alliance_roster_name: '&bRoster & Invites'
 alliance_roster_lore:
 - '&7View members and pending invites.'
@@ -3957,3 +3957,56 @@ season_featured_plot_lore:
 season_featured_route_name: '&a★ {NAME}'
 season_featured_route_lore:
 - '&7Pinned first in the Routes browser.'
+
+# --- Open House and Roles lock/undo (1.4) ---
+visit_filter_live: '&aLive'
+button_gathering: '&6Open House'
+gathering_button_lore:
+- '&7Host a timed Open House.'
+- '&7Visitors find you on Atlas Discover -> Live.'
+gathering_gui_title: '&6Open House'
+gathering_status_name: '&6Open House'
+gathering_status_plot: '&7Plot: &f{PLOT}'
+gathering_status_state: '&aLive for &f{REMAINING}'
+gathering_status_idle: '&7Not running.'
+gathering_status_hint: '&7Visitors find you on Atlas Discover -> Live.'
+gathering_start_short: '&aStart {MINUTES}m'
+gathering_start_default: '&aStart {MINUTES}m'
+gathering_start_lore: '&eClick to open the house.'
+gathering_pass_on: '&aVisitor passes: On'
+gathering_pass_off: '&cVisitor passes: Off'
+gathering_pass_lore: '&7Issue a timed visitor Guest Pass to arrivals.'
+gathering_stop_name: '&cEnd Open House'
+gathering_stop_lore: '&7Close the listing and expire visitor passes.'
+gathering_need_manage: '&cStand in a plot you manage'
+gathering_need_manage_lore: '&7Owners, co-owners, and stewards can host.'
+gathering_title: '&6Open House'
+gathering_subtitle: '&7{PLOT} · {MINUTES}m'
+button_roles_undo: '&eUndo Last Role Change'
+roles_undo_button_lore:
+- '&7Restore the last role edit'
+- '&7on this plot.'
+button_roles_lock: '&6Lock Member'
+button_roles_unlock: '&aUnlock Member'
+roles_lock_button_lore:
+- '&7Keep this member through restore'
+- '&7and block silent role edits.'
+roles_unlock_button_lore:
+- '&7Allow restore and role edits'
+- '&7to change this member again.'
+roles_member_locked_line: '&6Locked — restore and role edits keep this member.'
+roles_undo_empty_lore:
+- '&7Nothing to undo.'
+roles_undo_preview_lore:
+- '&7Restore the last role edit'
+- '&7on this plot.'
+- ' '
+- '&7Last: &f{PLAYER}'
+- '&8{FROM} → {TO}'
+roles_member_guest_pass_line: '&bGuest Pass: &f{PRESET} · {TIME}'
+roles_member_online_line: '&aOnline'
+roles_member_offline_line: '&7Offline'
+roles_lock_status_locked: '&6Locked'
+roles_lock_status_unlocked: '&7Not locked'
+roles_guest_pass_never: 'No expiry'
+roles_guest_pass_expiring: '<1m'

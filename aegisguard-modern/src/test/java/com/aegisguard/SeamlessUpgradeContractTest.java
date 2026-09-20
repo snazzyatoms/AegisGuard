@@ -47,7 +47,7 @@ class SeamlessUpgradeContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
                 || migration.contains("CURRENT_SCHEMA = 1310")
-                || migration.contains("CURRENT_SCHEMA = 1310"));
+                || migration.contains("CURRENT_SCHEMA = 1311"));
         assertTrue(migration.contains("Existing plots were left unchanged"));
         assertTrue(migration.contains("Doctor is not required"));
         assertTrue(migration.contains("lastReport()"));

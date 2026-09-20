@@ -154,6 +154,7 @@ public class AegisGuard extends JavaPlugin {
     private com.aegisguard.beacon.BeaconService beaconService;
     private com.aegisguard.succession.SuccessionService successionService;
     private com.aegisguard.caravans.CaravanService caravanService;
+    private com.aegisguard.gatherings.GatheringService gatheringService;
     private com.aegisguard.chat.PlotChatService plotChatService;
     private com.aegisguard.chat.HearthService hearthService;
     private Object hearthVoicechatHook;
@@ -180,6 +181,7 @@ public class AegisGuard extends JavaPlugin {
     private Object automaticPlayerBackupTask;
     private Object arenaTickTask;
     private Object caravanTickTask;
+    private Object gatheringTickTask;
     private ClaimBlockTask claimBlockTaskLogic;
     private AegisCommand playerCommand;
 
@@ -274,6 +276,7 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
     public com.aegisguard.succession.SuccessionService succession() { return successionService; }
     public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
+    public com.aegisguard.gatherings.GatheringService gatherings() { return gatheringService; }
     public com.aegisguard.chat.PlotChatService plotChat() { return plotChatService; }
     public com.aegisguard.chat.HearthService hearth() { return hearthService; }
     public Object hearthVoice() { return hearthVoicechatHook; }
@@ -353,6 +356,7 @@ public class AegisGuard extends JavaPlugin {
         beaconService = new com.aegisguard.beacon.BeaconService(this);
         successionService = new com.aegisguard.succession.SuccessionService(this);
         caravanService = new com.aegisguard.caravans.CaravanService(this);
+        gatheringService = new com.aegisguard.gatherings.GatheringService(this);
         plotChatService = new com.aegisguard.chat.PlotChatService(this);
         hearthService = new com.aegisguard.chat.HearthService(this);
         flightSkillService = new com.aegisguard.protection.FlightSkillService(this);
@@ -434,6 +438,9 @@ public class AegisGuard extends JavaPlugin {
                     caravanService.resumeOverdue(System.currentTimeMillis());
                 }
             });
+            loadPersistentState("gatherings", () -> {
+                if (gatheringService != null) gatheringService.load();
+            });
             loadPersistentState("arena state", () -> {
                 if (arenaService != null) {
                     arenaService.load();
@@ -473,6 +480,7 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.routes.RouteDiscoveryListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.beacon.BeaconListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.caravans.CaravanListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new com.aegisguard.gatherings.GatheringListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.PlotChatListener(this), this);
         Bukkit.getPluginManager().registerEvents(new com.aegisguard.chat.HearthListener(this), this);
         registerHearthVoicechatHook();
@@ -503,6 +511,7 @@ public class AegisGuard extends JavaPlugin {
         startAutomaticPlayerBackupTask();
         startArenaTickTask();
         startCaravanTickTask();
+        startGatheringTickTask();
 
         // PlaceholderAPI (optional)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -614,6 +623,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
         cancelTaskReflectively(caravanTickTask);
+        cancelTaskReflectively(gatheringTickTask);
         if (snapshotManager != null) snapshotManager.shutdownOperations();
         if (plotChatService != null) plotChatService.clearAll();
         if (platformScheduler != null) platformScheduler.shutdown();
@@ -699,6 +709,12 @@ public class AegisGuard extends JavaPlugin {
             if (caravanService != null) caravanService.save();
         } catch (Throwable t) {
             getLogger().warning("Failed to save caravans: " + (t.getMessage() == null ? "" : t.getMessage()));
+        }
+
+        try {
+            if (gatheringService != null) gatheringService.save();
+        } catch (Throwable t) {
+            getLogger().warning("Failed to save gatherings: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         try {
@@ -948,6 +964,7 @@ public class AegisGuard extends JavaPlugin {
                 if (routeService != null && routeService.isDirty()) routeService.save();
                 if (beaconService != null && beaconService.isDirty()) beaconService.save();
                 if (caravanService != null && caravanService.isDirty()) caravanService.save();
+                if (gatheringService != null && gatheringService.isDirty()) gatheringService.save();
                 if (arenaService != null && arenaService.isDirty()) arenaService.save();
                 if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
                 if (messages != null) messages.savePlayerData();
@@ -1125,6 +1142,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(automaticPlayerBackupTask);
         cancelTaskReflectively(arenaTickTask);
         cancelTaskReflectively(caravanTickTask);
+        cancelTaskReflectively(gatheringTickTask);
 
         autoSaveTask = null;
         upkeepTask = null;
@@ -1138,6 +1156,7 @@ public class AegisGuard extends JavaPlugin {
         automaticPlayerBackupTask = null;
         arenaTickTask = null;
         caravanTickTask = null;
+        gatheringTickTask = null;
 
         startAutoSaver();
         startUpkeepTask();
@@ -1151,6 +1170,7 @@ public class AegisGuard extends JavaPlugin {
         startAutomaticPlayerBackupTask();
         startArenaTickTask();
         startCaravanTickTask();
+        startGatheringTickTask();
     }
 
     private void startRentalExpiryTask() {
@@ -1302,6 +1322,18 @@ public class AegisGuard extends JavaPlugin {
         }, period, period);
     }
 
+    private void startGatheringTickTask() {
+        if (gatheringService == null) return;
+        long period = Math.max(20L, getConfig().getLong("gatherings.tick_interval_ticks", 100L));
+        gatheringTickTask = runGlobalRepeating(() -> {
+            try {
+                if (gatheringService != null) gatheringService.tick();
+            } catch (Throwable t) {
+                getLogger().warning("Gathering tick error: " + (t.getMessage() == null ? "" : t.getMessage()));
+            }
+        }, period, period);
+    }
+
     private void cancelTaskReflectively(Object task) {
         if (platformScheduler != null) {
             platformScheduler.cancel(task);
@@ -1324,6 +1356,7 @@ public class AegisGuard extends JavaPlugin {
                     String hn = holder.getClass().getName();
                     if (hn.startsWith("com.aegisguard.gui")
                             || hn.startsWith("com.aegisguard.caravans")
+                            || hn.startsWith("com.aegisguard.gatherings")
                             || hn.startsWith("com.aegisguard.beacon")
                             || hn.startsWith("com.aegisguard.succession")) {
                         p.closeInventory();

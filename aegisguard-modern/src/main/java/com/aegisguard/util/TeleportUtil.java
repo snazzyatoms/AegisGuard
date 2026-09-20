@@ -226,6 +226,21 @@ public final class TeleportUtil {
     }
 
     /**
+     * True when this thread may read {@code entity} (location, inventory, teleport).
+     * Paper/Purpur/Spigot without Folia always return true.
+     */
+    public static boolean regionOwns(Entity entity) {
+        if (entity == null || !entity.isValid()) return false;
+        try {
+            return Bukkit.isOwnedByCurrentRegion(entity);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
      * Heightmap lookup that does not touch another Folia region.
      * When the current thread does not own {@code (x, z)}, returns {@code fallbackY}.
      */

@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1310
+config_schema: 1311
 
 
 # ------------------------------------------------------------------------------
@@ -97,6 +97,7 @@ modules:
   visual_presence: true
   succession: true
   caravans: true
+  gatherings: true
 
 
 # Guardian Succession: co-owners, heirs, transfer cooldown, and inactivity assume.
@@ -143,6 +144,15 @@ caravans:
   escort_ambush_divisor: 2
   delay_ms: 15000
   cancel_progress: 0.25
+
+# Open House: timed Atlas listings and optional visitor Guest Passes.
+gatherings:
+  enabled: true
+  default_minutes: 30
+  min_minutes: 10
+  max_minutes: 180
+  grant_guest_pass: true
+  tick_interval_ticks: 100
 
 
 # ==============================================================================

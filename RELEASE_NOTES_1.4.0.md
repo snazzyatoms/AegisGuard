@@ -62,7 +62,13 @@ Vanilla multiplayer is still text-only (`T`). These Aegis channels are opt-in ra
 
 Only one opt-in channel is active at a time. Public chat that is not intercepted still goes through Hearth rooms.
 
-Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the voice-hook console lines are real language keys in all nine packs. Java English is only used when a key is missing everywhere. Copy `lang/modern_english/` to add your own pack; `lang/overrides.yml` wins over every style. Language sync never overwrites a translation you already wrote.
+### Open House and Roles GUI lock/undo
+
+Owners, co-owners, and stewards can host a timed **Open House** with `/ag gathering start [minutes]` (or Explore → Open House). Live houses appear on Travel Atlas Discover under the **Live** filter. Optional visitor Guest Passes are issued to arrivals and revoked when the house ends. `modules.gatherings` can turn the system off.
+
+The Members GUI now has **Lock / Unlock** on a member and **Undo last role change** on the roster, matching `/ag roles lock|unlock|undo`.
+
+Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, Open House, and the voice-hook console lines are real language keys in all nine packs. Java English is only used when a key is missing everywhere. Copy `lang/modern_english/` to add your own pack; `lang/overrides.yml` wins over every style. Language sync never overwrites a translation you already wrote.
 
 ---
 
@@ -71,7 +77,7 @@ Hearth, Keep flags, Spawn/Hub presets, staff seasons, flight skills, and the voi
 1. Stop the server completely.
 2. Confirm the host is running **Java 21 or newer**.
 3. Replace the plugin JAR with `AegisGuard-1.4.0.jar`.
-4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1310`, with a backup). Existing plots load as-is and stay on classic arrival.
+4. Start the server. Config and language merge run on enable (`config_schema` `1294` → `1311`, with a backup). Existing plots load as-is and stay on classic arrival.
 5. Confirm with `/agadmin transition` (aliases `upgrade`, `v130`, `v140`). Doctor is optional.
 6. Do **not** use Bukkit `/reload`.
 

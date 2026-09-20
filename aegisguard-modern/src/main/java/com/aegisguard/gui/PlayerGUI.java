@@ -410,6 +410,15 @@ public class PlayerGUI {
                             "&7parties, and Lava Dungeon challenges."))
             ));
         }
+        if (ctx.showGatherings) {
+            inv.setItem(SLOT_CAT_E, GUIManager.createItem(
+                    Material.CAMPFIRE,
+                    t(player, "button_gathering", "&6Open House"),
+                    tl(player, "gathering_button_lore", List.of(
+                            "&7Host a timed Open House.",
+                            "&7Visitors find you on Atlas Discover → Live."))
+            ));
+        }
     }
 
     private void paintFooter(Player player, Inventory inv, Context ctx, boolean showBack) {
@@ -713,6 +722,11 @@ public class PlayerGUI {
                 plugin.gui().arena().open(player);
                 return true;
             }
+            case SLOT_CAT_E -> {
+                if (!mod(com.aegisguard.config.Modules.Id.GATHERINGS) || plugin.gui().gatherings() == null) return false;
+                plugin.gui().gatherings().open(player);
+                return true;
+            }
             default -> {
                 return false;
             }
@@ -825,6 +839,7 @@ public class PlayerGUI {
         final boolean showArena;
         final boolean showBeacons;
         final boolean showPlotChat;
+        final boolean showGatherings;
         final boolean showSuccession;
 
         private Context(PlayerGUI gui, Player player) {
@@ -869,6 +884,7 @@ public class PlayerGUI {
             this.showArena = gui.mod(com.aegisguard.config.Modules.Id.ARENA) && gui.plugin.gui().arena() != null;
             this.showBeacons = gui.mod(com.aegisguard.config.Modules.Id.TELEPORT_BEACONS);
             this.showPlotChat = gui.mod(com.aegisguard.config.Modules.Id.PLOT_CHAT);
+            this.showGatherings = gui.mod(com.aegisguard.config.Modules.Id.GATHERINGS);
             this.showSuccession = gui.mod(com.aegisguard.config.Modules.Id.SUCCESSION);
             this.localMarket = plot != null
                     && gui.plugin.marketBridges() != null

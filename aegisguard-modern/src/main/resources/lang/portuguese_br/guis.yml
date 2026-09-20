@@ -2243,7 +2243,7 @@ settings_settlements_lore:
 - '&7entrega no seu saldo.'
 visit_discover_filter_name: '&eFiltro de descoberta'
 visit_discover_filter_lore:
-- '&7Ciclo: Todos / Destaque / Venda / Aluguel / Categoria'
+- '&7Ciclo: Todos / Destaque / Ao vivo / Venda / Aluguel / Categoria'
 alliance_roster_name: '&bLista e convites'
 alliance_roster_lore:
 - '&7Ver membros e convites pendentes.'
@@ -3958,3 +3958,56 @@ season_featured_plot_lore:
 season_featured_route_name: '&a★ Rota {NAME}'
 season_featured_route_lore:
 - '&7Fixado primeiro no explorador de Rotas.'
+
+# --- Open House and Roles lock/undo (1.4) ---
+visit_filter_live: '&aAo vivo'
+button_gathering: '&6Open House'
+gathering_button_lore:
+- '&7Organize um Open House por tempo limitado.'
+- '&7Visitantes encontram você no Atlas Descobrir -> Ao vivo.'
+gathering_gui_title: '&6Open House'
+gathering_status_name: '&6Open House'
+gathering_status_plot: '&7Terreno: &f{PLOT}'
+gathering_status_state: '&aAo vivo por &f{REMAINING}'
+gathering_status_idle: '&7Não está ativo.'
+gathering_status_hint: '&7Visitantes encontram você no Atlas Descobrir -> Ao vivo.'
+gathering_start_short: '&aIniciar {MINUTES}m'
+gathering_start_default: '&aIniciar {MINUTES}m'
+gathering_start_lore: '&eClique para abrir o terreno.'
+gathering_pass_on: '&aPasses de visitante: Ativos'
+gathering_pass_off: '&cPasses de visitante: Inativos'
+gathering_pass_lore: '&7Concede um passe temporário a quem chegar.'
+gathering_stop_name: '&cEncerrar Open House'
+gathering_stop_lore: '&7Remove o anúncio e expira os passes de visitante.'
+gathering_need_manage: '&cFique em um terreno que você administra'
+gathering_need_manage_lore: '&7Donos, coproprietários e administradores podem sediar.'
+gathering_title: '&6Open House'
+gathering_subtitle: '&7{PLOT} · {MINUTES}m'
+button_roles_undo: '&eDesfazer última mudança de cargo'
+roles_undo_button_lore:
+- '&7Restaura a última alteração de cargo'
+- '&7neste terreno.'
+button_roles_lock: '&6Bloquear membro'
+button_roles_unlock: '&aDesbloquear membro'
+roles_lock_button_lore:
+- '&7Mantém o membro durante a restauração'
+- '&7e bloqueia mudanças silenciosas de cargo.'
+roles_unlock_button_lore:
+- '&7Permite que restaurações e mudanças de cargo'
+- '&7alterem este membro novamente.'
+roles_member_locked_line: '&6Bloqueado — restauração e cargos mantêm este membro.'
+roles_undo_empty_lore:
+- '&7Nada para desfazer.'
+roles_undo_preview_lore:
+- '&7Restaura a última alteração de cargo'
+- '&7neste terreno.'
+- ' '
+- '&7Último: &f{PLAYER}'
+- '&8{FROM} → {TO}'
+roles_member_guest_pass_line: '&bPasse de visitante: &f{PRESET} · {TIME}'
+roles_member_online_line: '&aOnline'
+roles_member_offline_line: '&7Offline'
+roles_lock_status_locked: '&6Bloqueado'
+roles_lock_status_unlocked: '&7Não bloqueado'
+roles_guest_pass_never: 'Sem expiração'
+roles_guest_pass_expiring: '<1m'

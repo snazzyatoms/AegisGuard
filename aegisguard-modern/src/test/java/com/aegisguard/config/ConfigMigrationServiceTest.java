@@ -29,6 +29,31 @@ class ConfigMigrationServiceTest {
     private static final Path SHIPPED_DEFAULTS = Path.of("src/main/resources/config.yml");
 
     @Test
+    void schema1310To1311PreservesOwnerSettingsAndAddsGatherings(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
+        File configFile = tempDir.resolve("config.yml").toFile();
+        YamlConfiguration old = new YamlConfiguration();
+        old.set("config_schema", 1310);
+        old.set("modules.guest_passes", false);
+        old.set("gatherings.enabled", false);
+        old.set("plot_discovery.max_results", 75);
+        old.set("custom_owner_key", "keep");
+        old.save(configFile);
+
+        ConfigMigrationService service = new ConfigMigrationService(null);
+        assertTrue(service.migrate(configFile, tempDir.toFile(), ConfigMigrationServiceTest::openShippedDefaults));
+        YamlConfiguration current = YamlConfiguration.loadConfiguration(configFile);
+        assertEquals(1311, current.getInt("config_schema"));
+        assertFalse(current.getBoolean("modules.gatherings"),
+                "A forward-configured disabled feature must remain disabled on migration");
+        assertEquals(30, current.getInt("gatherings.default_minutes"));
+        assertFalse(current.getBoolean("modules.guest_passes"));
+        assertEquals(75, current.getInt("plot_discovery.max_results"));
+        assertEquals("keep", current.getString("custom_owner_key"));
+        assertNotNull(service.backup());
+        assertEquals(1310, YamlConfiguration.loadConfiguration(service.backup()).getInt("config_schema"));
+    }
+
+    @Test
     void migrationRepairsUnsafeAutomaticBackupLimits(@org.junit.jupiter.api.io.TempDir Path tempDir) throws Exception {
         File configFile = tempDir.resolve("config.yml").toFile();
         YamlConfiguration old = new YamlConfiguration();

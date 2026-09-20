@@ -126,6 +126,7 @@ permissions:
       aegis.chat: true
       aegis.chat.alliance: true
       aegis.chat.group: true
+      aegis.gathering: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -363,6 +364,10 @@ permissions:
 
   aegis.chat.group:
     description: Use group chat (/ag chat group) with your group members.
+    default: true
+
+  aegis.gathering:
+    description: Host an Open House on a plot you manage (/ag gathering).
     default: true
 
   aegis.admin.staffchat:

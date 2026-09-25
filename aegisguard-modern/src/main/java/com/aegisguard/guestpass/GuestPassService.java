@@ -190,7 +190,10 @@ public class GuestPassService implements Listener {
             if (dirty) {
                 try {
                     plugin.store().savePlot(plot);
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) {
+                    plugin.getLogger().warning("Failed to save frozen guest-pass session for plot "
+                            + plot.getPlotId() + ": " + t.getMessage());
+                }
             }
         }
     }

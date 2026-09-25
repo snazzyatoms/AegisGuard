@@ -3,8 +3,7 @@ package com.aegisguard.notify;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.groups.PlotGroup;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.aegisguard.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -510,14 +509,9 @@ public class NotificationManager {
         NotificationMode mode = getMode(player.getUniqueId());
         switch (mode) {
             case CHAT -> player.sendMessage(plugin.msg().prefix() + coloredMessage);
-            case ACTION_BAR -> {
-                try {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(coloredMessage));
-                } catch (Throwable ignored) {
-                    player.sendMessage(plugin.msg().prefix() + coloredMessage);
-                }
-            }
-            case TITLE -> player.sendTitle(
+            case ACTION_BAR -> Text.actionBar(player, coloredMessage);
+            case TITLE -> Text.title(
+                    player,
                     coloredTitle == null ? ChatColor.GOLD + "AegisGuard" : coloredTitle,
                     coloredMessage,
                     10,

@@ -86,6 +86,17 @@ public class WorldRulesManager {
     public void applyDefaults(Plot plot) {
         if (plot == null) return;
 
+        // Initial seeding is not a "change" — don't fire PlotFlagChangeEvent.
+        boolean wasSuppressed = plot.isApiEventsSuppressed();
+        plot.setApiEventsSuppressed(true);
+        try {
+            applyDefaultsUnsafe(plot);
+        } finally {
+            plot.setApiEventsSuppressed(wasSuppressed);
+        }
+    }
+
+    private void applyDefaultsUnsafe(Plot plot) {
         World world = Bukkit.getWorld(plot.getWorld());
         WorldRuleSet set = getRules(world);
 

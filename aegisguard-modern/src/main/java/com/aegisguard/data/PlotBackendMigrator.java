@@ -36,8 +36,12 @@ public class PlotBackendMigrator {
         } catch (Throwable error) {
             return "Migration failed: " + safe(error.getMessage());
         } finally {
-            try { source.shutdown(); } catch (Throwable ignored) {}
-            try { target.shutdown(); } catch (Throwable ignored) {}
+            try { source.shutdown(); } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to shut down migration source store: " + t.getMessage());
+            }
+            try { target.shutdown(); } catch (Throwable t) {
+                plugin.getLogger().warning("Failed to shut down migration target store: " + t.getMessage());
+            }
         }
     }
     private void backup(String filename) throws IOException {

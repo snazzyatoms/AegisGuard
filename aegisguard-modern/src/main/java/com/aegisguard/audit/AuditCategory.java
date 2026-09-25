@@ -29,5 +29,8 @@ public enum AuditCategory {
     CARAVAN,
 
     /** Milestone 7 (Alliance Access): join/leave/disband and per-plot access toggles. */
-    ALLIANCE
+    ALLIANCE,
+
+    /** Discord account linking: staff-verified link and unlink actions. */
+    DISCORD_LINK
 }

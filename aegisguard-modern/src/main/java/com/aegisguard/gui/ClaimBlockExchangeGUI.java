@@ -3,7 +3,6 @@ package com.aegisguard.gui;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockExchangeService;
 import com.aegisguard.claimblocks.ClaimBlockManager;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -659,8 +658,7 @@ public class ClaimBlockExchangeGUI {
 
         msg = apply(msg, placeholders);
 
-        String out = GUIManager.color(prefix + msg);
-        p.spigot().sendMessage(TextComponent.fromLegacyText(out));
+        p.sendMessage(GUIManager.color(prefix + msg));
     }
 
     private String safe(String s) {

@@ -14,6 +14,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,10 +74,10 @@ public final class ProtocolLibBorderRenderer implements BorderRenderer {
         Set<BlockPosition> previous = activeFakeBlocks.getOrDefault(player.getUniqueId(), Set.of());
 
         // Restore blocks that are no longer on the new border
-        for (BlockPosition pos : previous) {
-            if (!current.contains(pos)) {
-                restoreRealBlock(player, world, pos);
-            }
+        Set<BlockPosition> stale = new HashSet<>(previous);
+        stale.removeAll(current);
+        if (!stale.isEmpty()) {
+            restoreRealBlocks(player, world, stale);
         }
 
         // Show new fake border blocks
@@ -96,9 +97,33 @@ public final class ProtocolLibBorderRenderer implements BorderRenderer {
         Set<BlockPosition> previous = activeFakeBlocks.remove(player.getUniqueId());
         if (previous == null || previous.isEmpty()) return;
 
-        World world = player.getWorld();
-        for (BlockPosition pos : previous) {
-            restoreRealBlock(player, world, pos);
+        restoreRealBlocks(player, player.getWorld(), previous);
+    }
+
+    /**
+     * Restore real block states for positions that may span multiple Folia
+     * regions. Positions are grouped by chunk and each group runs on the
+     * region thread that owns that chunk so block reads stay legal.
+     */
+    private void restoreRealBlocks(Player player, World world, Set<BlockPosition> positions) {
+        Map<Long, java.util.List<BlockPosition>> byChunk = new java.util.HashMap<>();
+        for (BlockPosition pos : positions) {
+            long key = (((long) (pos.getX() >> 4)) << 32) | ((pos.getZ() >> 4) & 0xffffffffL);
+            byChunk.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(pos);
+        }
+        for (java.util.List<BlockPosition> batch : byChunk.values()) {
+            BlockPosition first = batch.get(0);
+            Location anchor = new Location(world, first.getX(), first.getY(), first.getZ());
+            plugin.runAt(anchor, () -> {
+                if (!player.isOnline()) return;
+                for (BlockPosition pos : batch) {
+                    try {
+                        restoreRealBlock(player, world, pos);
+                    } catch (Throwable t) {
+                        plugin.getLogger().fine("Could not restore border block at " + pos + ": " + t);
+                    }
+                }
+            });
         }
     }
 
@@ -130,7 +155,9 @@ public final class ProtocolLibBorderRenderer implements BorderRenderer {
         packet.getBlockData().write(0, data);
         try {
             protocolManager.sendServerPacket(player, packet);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            plugin.getLogger().fine("Failed to send border packet to "
+                    + player.getName() + " at " + pos + ": " + e.getMessage());
         }
     }
 

@@ -3,9 +3,7 @@ package com.aegisguard.visualization;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.config.Modules;
 import com.aegisguard.data.Plot;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.ChatColor;
+import com.aegisguard.util.Text;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -42,7 +40,7 @@ public final class VisualPresence {
         int fadeIn = plugin.getConfig().getInt("titles.claim_enter_exit.fade_in", 10);
         int stay = plugin.getConfig().getInt("titles.claim_enter_exit.stay", 40);
         int fadeOut = plugin.getConfig().getInt("titles.claim_enter_exit.fade_out", 10);
-        player.sendTitle(color(title), color(subtitle), fadeIn, stay, fadeOut);
+        Text.title(player, title, subtitle, fadeIn, stay, fadeOut);
     }
 
     public static void showBorderLabel(AegisGuard plugin, Player player, Plot plot) {
@@ -53,11 +51,7 @@ public final class VisualPresence {
         if (dir == null) return;
         String label = tr(plugin, player, "presence_border_label", "&b{DIR} &7border · &f{PLOT}",
                 Map.of("DIR", dirName(plugin, player, dir), "PLOT", plotName(plot)));
-        try {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(color(label)));
-        } catch (Throwable ignored) {
-            player.sendMessage(color(label));
-        }
+        Text.actionBar(player, label);
     }
 
     public static String nearestCardinal(int x, int z, Plot plot, int reach) {
@@ -87,12 +81,12 @@ public final class VisualPresence {
         String name = plot.getPlotName();
         if (name == null || name.isBlank()) name = plot.getOwnerName();
         if (name == null || name.isBlank()) return "Plot";
-        return ChatColor.stripColor(color(name));
+        return Text.strip(name);
     }
 
     private static String ownerName(Plot plot) {
         String name = plot.getOwnerName();
-        return name == null || name.isBlank() ? "Unknown" : ChatColor.stripColor(color(name));
+        return name == null || name.isBlank() ? "Unknown" : Text.strip(name);
     }
 
     private static String formatPrice(double price) {
@@ -116,9 +110,5 @@ public final class VisualPresence {
             }
         }
         return value;
-    }
-
-    private static String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
     }
 }

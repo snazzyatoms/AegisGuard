@@ -108,6 +108,7 @@ permissions:
       aegis.admin.publicbeta.worlds: true
       aegis.admin.publicbeta.hub-protection: true
       aegis.admin.publicbeta.feedback: true
+      aegis.admin.discord: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -166,6 +167,7 @@ permissions:
       aegis.admin.publicbeta.worlds: true
       aegis.admin.publicbeta.hub-protection: true
       aegis.admin.publicbeta.feedback: true
+      aegis.admin.discord: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -186,6 +188,10 @@ permissions:
 
   aegis.admin.publicbeta.feedback:
     description: Review and manage the private Public Beta feedback inbox.
+    default: op
+
+  aegis.admin.discord:
+    description: Link, unlink, and inspect Discord account links for players.
     default: op
 
   aegis.menu:

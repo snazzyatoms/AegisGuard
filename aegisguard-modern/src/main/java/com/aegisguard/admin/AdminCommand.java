@@ -39,6 +39,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class AdminCommand implements CommandExecutor, TabCompleter {
@@ -49,7 +50,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
-            "staffchat", "sc", "publicbeta", "feedback",
+            "staffchat", "sc", "publicbeta", "feedback", "discord",
             "help"
     };
 
@@ -126,6 +127,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "audit" -> handleAudit(player);
             case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
             case "staffchat", "sc" -> handleStaffChat(player, args);
+            case "discord" -> handleDiscord(player, args);
             case "publicbeta" -> handlePublicBeta(player, args);
             case "feedback" -> {
                 if (plugin.publicBetaFeedback() == null) {
@@ -239,6 +241,19 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if ((args[0].equalsIgnoreCase("staffchat") || args[0].equalsIgnoreCase("sc")) && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("off"), new ArrayList<>());
         }
+        if (args[0].equalsIgnoreCase("discord")) {
+            if (args.length == 2) {
+                return StringUtil.copyPartialMatches(args[1], List.of("link", "unlink", "whois"), new ArrayList<>());
+            }
+            if (args.length == 3 && !args[1].equalsIgnoreCase("link")) {
+                List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+                return StringUtil.copyPartialMatches(args[2], names, new ArrayList<>());
+            }
+            if (args.length == 3) {
+                List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+                return StringUtil.copyPartialMatches(args[2], names, new ArrayList<>());
+            }
+        }
 
         return Collections.emptyList();
     }
@@ -296,6 +311,124 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     "&cStaff chat is disabled on this server.");
             default -> {
             }
+        }
+    }
+
+    private void handleDiscord(Player player, String[] args) {
+        if (!player.hasPermission("aegis.admin.discord")) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+        com.aegisguard.hooks.DiscordLinkManager links = plugin.discordLinks();
+        if (links == null || !links.isEnabled()) {
+            sendLocalized(player, "admin_discord_linking_disabled",
+                    "&cDiscord linking is disabled. Enable hooks.discord.linking in config.yml.");
+            return;
+        }
+        if (args.length < 2) {
+            sendLocalized(player, "admin_discord_usage",
+                    "&eUsage: /aegisadmin discord <link|unlink|whois> <player> [discord-id]");
+            return;
+        }
+
+        String action = args[1].toLowerCase(Locale.ROOT);
+        switch (action) {
+            case "link" -> {
+                if (args.length < 4) {
+                    sendLocalized(player, "admin_discord_link_usage",
+                            "&eUsage: /aegisadmin discord link <player> <discord-id>");
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    sendLocalized(player, "player_not_found", "&cPlayer not found or offline.");
+                    return;
+                }
+                String discordId = args[3].trim();
+                if (!discordId.matches("\\d{15,25}")) {
+                    sendLocalized(player, "admin_discord_bad_id",
+                            "&cDiscord IDs are numeric (15–25 digits). Got: " + discordId);
+                    return;
+                }
+                if (links.link(target.getUniqueId(), discordId)) {
+                    sendLocalized(player, "admin_discord_linked",
+                            "&aLinked &e{PLAYER}&a to Discord &e{ID}&a.",
+                            Map.of("PLAYER", target.getName(), "ID", discordId));
+                    if (plugin.audit() != null) {
+                        plugin.audit().record(AuditCategory.DISCORD_LINK, player, target.getName(),
+                                "Linked Discord ID " + discordId);
+                    }
+                } else {
+                    sendLocalized(player, "admin_discord_already_linked",
+                            "&e{PLAYER} is already linked to Discord {ID}.",
+                            Map.of("PLAYER", target.getName(), "ID", discordId));
+                }
+            }
+            case "unlink" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "admin_discord_unlink_usage",
+                            "&eUsage: /aegisadmin discord unlink <player>");
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    sendLocalized(player, "player_not_found", "&cPlayer not found or offline.");
+                    return;
+                }
+                if (links.unlink(target.getUniqueId())) {
+                    sendLocalized(player, "admin_discord_unlinked",
+                            "&eRemoved the Discord link for {PLAYER}.",
+                            Map.of("PLAYER", target.getName()));
+                    if (plugin.audit() != null) {
+                        plugin.audit().record(AuditCategory.DISCORD_LINK, player, target.getName(),
+                                "Removed Discord link");
+                    }
+                } else {
+                    sendLocalized(player, "admin_discord_not_linked",
+                            "&e{PLAYER} has no Discord link.",
+                            Map.of("PLAYER", target.getName()));
+                }
+            }
+            case "whois" -> {
+                if (args.length < 3) {
+                    sendLocalized(player, "admin_discord_whois_usage",
+                            "&eUsage: /aegisadmin discord whois <player|discord-id>");
+                    return;
+                }
+                String query = args[2].trim();
+                if (query.matches("\\d{15,25}")) {
+                    UUID uuid = links.getMinecraftId(query);
+                    if (uuid == null) {
+                        sendLocalized(player, "admin_discord_not_linked",
+                                "&eNo Minecraft account is linked to Discord {ID}.",
+                                Map.of("ID", query));
+                    } else {
+                        String name = Optional.ofNullable(Bukkit.getOfflinePlayer(uuid).getName())
+                                .orElse(uuid.toString());
+                        sendLocalized(player, "admin_discord_whois_result",
+                                "&eDiscord {ID} is linked to {PLAYER} ({UUID}).",
+                                Map.of("ID", query, "PLAYER", name, "UUID", uuid.toString()));
+                    }
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(query);
+                if (target == null) {
+                    sendLocalized(player, "player_not_found", "&cPlayer not found or offline.");
+                    return;
+                }
+                String linked = links.getDiscordId(target.getUniqueId());
+                if (linked == null) {
+                    sendLocalized(player, "admin_discord_not_linked",
+                            "&e{PLAYER} has no Discord link.",
+                            Map.of("PLAYER", target.getName()));
+                } else {
+                    sendLocalized(player, "admin_discord_whois_result",
+                            "&e{PLAYER} is linked to Discord {ID}.",
+                            Map.of("PLAYER", target.getName(), "ID", linked));
+                }
+            }
+            default -> sendLocalized(player, "admin_discord_usage",
+                    "&eUsage: /aegisadmin discord <link|unlink|whois> <player> [discord-id]");
         }
     }
 
@@ -857,6 +990,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_rentals", "&e/agadmin rentals <cancel|retry-settlements> ...");
         sendLocalized(player, "admin_help_bypass", "&e/agadmin bypass &8- Toggle personal protection bypass");
         sendLocalized(player, "admin_help_reload", "&e/agadmin reload &8- Reload AegisGuard");
+        sendLocalized(player, "admin_help_discord", "&e/agadmin discord <link|unlink|whois> &8- Discord account links");
         sendLocalized(player, "admin_help_transition",
                 "&e/agadmin transition &8- 1.2.7 / 1.3.x → 1.4.0 upgrade status");
         sendLocalized(player, "admin_help_season", "&e/agadmin season &8- Staff season featured plots and routes");

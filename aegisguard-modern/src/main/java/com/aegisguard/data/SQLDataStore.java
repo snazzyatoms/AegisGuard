@@ -201,7 +201,7 @@ public class SQLDataStore implements IDataStore {
 
         // During shutdown, run inline so nothing gets dropped.
         if (stopping.get()) {
-            try { job.run(); } catch (Throwable ignored) {}
+            try { job.run(); } catch (Throwable t) { logDbFailure("shutdown-inline", t); }
             return;
         }
 
@@ -210,7 +210,8 @@ public class SQLDataStore implements IDataStore {
             dbExecutor.execute(() -> {
                 try {
                     job.run();
-                } catch (Throwable ignored) {
+                } catch (Throwable t) {
+                    logDbFailure("queued", t);
                 } finally {
                     int left = pendingTasks.decrementAndGet();
                     synchronized (pendingLock) {
@@ -220,7 +221,7 @@ public class SQLDataStore implements IDataStore {
             });
         } catch (RejectedExecutionException rex) {
             // Executor is shutting down unexpectedly: run inline and fix the counter.
-            try { job.run(); } catch (Throwable ignored) {}
+            try { job.run(); } catch (Throwable t) { logDbFailure("rejected-inline", t); }
             int left = pendingTasks.decrementAndGet();
             synchronized (pendingLock) {
                 if (left <= 0) pendingLock.notifyAll();
@@ -371,6 +372,7 @@ public class SQLDataStore implements IDataStore {
                     int z2 = rs.getInt("z2");
 
                     Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2, rs.getLong("last_upkeep"));
+                    plot.setApiEventsSuppressed(true); // hydration must not fire API change-events
                     plot.setLevel(rs.getInt("level"));
                     plot.setXp(rs.getDouble("xp"));
 
@@ -395,6 +397,7 @@ public class SQLDataStore implements IDataStore {
                     String settings = rs.getString("settings");
                     if (settings != null && !settings.isEmpty()) applySettings(plot, settings);
 
+                    plot.setApiEventsSuppressed(false);
                     cachePlot(plot);
                     plotsById.put(plotId, plot);
                     plotCount++;
@@ -1523,7 +1526,9 @@ public class SQLDataStore implements IDataStore {
             flushPending(5000L);
 
             // Final sync save-all (belt + suspenders)
-            try { saveSync(); } catch (Throwable ignored) {}
+            try { saveSync(); } catch (Throwable t) {
+                plugin.getLogger().severe("Final SQL save during shutdown failed: " + t);
+            }
 
             // Stop executor
             dbExecutor.shutdown();
@@ -1531,11 +1536,22 @@ public class SQLDataStore implements IDataStore {
                 Thread.currentThread().interrupt();
             }
 
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
+            plugin.getLogger().severe("SQL data store shutdown failed: " + t);
         } finally {
             if (hikari != null && !hikari.isClosed()) {
-                try { hikari.close(); } catch (Throwable ignored) {}
+                try { hikari.close(); } catch (Throwable t) {
+                    plugin.getLogger().warning("Failed to close connection pool: " + t.getMessage());
+                }
             }
+        }
+    }
+
+    private void logDbFailure(String phase, Throwable t) {
+        try {
+            plugin.getLogger().warning("Background DB job failed (" + phase + "): " + t);
+        } catch (Throwable ignored) {
+            // Logger unavailable; nothing else we can do.
         }
     }
 }

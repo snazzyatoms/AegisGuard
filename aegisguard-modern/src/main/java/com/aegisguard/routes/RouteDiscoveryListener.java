@@ -1,6 +1,7 @@
 package com.aegisguard.routes;
 
 import com.aegisguard.AegisGuard;
+import com.aegisguard.util.Text;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -59,8 +60,8 @@ public class RouteDiscoveryListener implements Listener {
                 || !here.getWorld().equals(target.getWorld())) return;
         double distance = here.distance(target);
         if (plugin.getConfig().getBoolean("routes.guidance.action_bar", true)) {
-            player.sendActionBar(net.kyori.adventure.text.Component.text(
-                    "Next checkpoint: " + checkpoint.getName() + " (" + Math.round(distance) + " blocks)"));
+            Text.actionBar(player,
+                    "Next checkpoint: " + checkpoint.getName() + " (" + Math.round(distance) + " blocks)");
         }
         if (!plugin.getConfig().getBoolean("routes.guidance.particles", true)) return;
         Long last = lastGuidance.get(player.getUniqueId());

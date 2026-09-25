@@ -66,10 +66,21 @@ public class PlotVisualizerTask implements Runnable {
         }
     }
 
+    /**
+     * Called when the visualizer is stopped (wand unequipped or player quit)
+     * so packet-rendered borders are removed and per-player state is freed.
+     */
+    public void cleanup() {
+        if (usePacketRenderer) {
+            packetRenderer.clear(player);
+        }
+    }
+
     @Override
     public void run() {
         // Player gone? Stop this task.
         if (!player.isOnline()) {
+            cleanup();
             return;
         }
 

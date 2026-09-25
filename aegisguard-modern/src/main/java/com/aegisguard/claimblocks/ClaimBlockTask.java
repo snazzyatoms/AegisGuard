@@ -1,7 +1,7 @@
 package com.aegisguard.claimblocks;
 
 import com.aegisguard.AegisGuard;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.aegisguard.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -97,8 +97,7 @@ public class ClaimBlockTask implements Runnable, Listener {
                                 Map.of("MINUTES", String.valueOf(afkMinutes))
                         );
                         if (afkMsg != null && !afkMsg.isEmpty()) {
-                            afkMsg = ChatColor.translateAlternateColorCodes('&', afkMsg);
-                            p.spigot().sendMessage(TextComponent.fromLegacyText(afkMsg));
+                            Text.send(p, afkMsg);
                         }
                     }
                 }
@@ -124,8 +123,7 @@ public class ClaimBlockTask implements Runnable, Listener {
             );
 
             if (msg != null && !msg.isEmpty()) {
-                msg = ChatColor.translateAlternateColorCodes('&', msg);
-                p.spigot().sendMessage(TextComponent.fromLegacyText(msg));
+                Text.send(p, msg);
             }
         }
     }

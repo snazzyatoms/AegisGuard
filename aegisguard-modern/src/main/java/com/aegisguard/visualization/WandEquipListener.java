@@ -19,8 +19,11 @@ import static com.aegisguard.selection.SelectionService.SERVER_WAND_KEY;
 
 public class WandEquipListener implements Listener {
 
+    /** Task handle + runnable so cleanup (border removal) can run on stop. */
+    private record ActiveVisualizer(Object taskHandle, PlotVisualizerTask task) {}
+
     private final AegisGuard plugin;
-    private final Map<UUID, Object> activeTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, ActiveVisualizer> activeTasks = new ConcurrentHashMap<>();
 
     public WandEquipListener(AegisGuard plugin) {
         this.plugin = plugin;
@@ -71,14 +74,20 @@ public class WandEquipListener implements Listener {
         PlotVisualizerTask runnable = new PlotVisualizerTask(plugin, p);
 
         Object task = plugin.runEntityRepeating(p, runnable, 1L, 20L);
-        activeTasks.put(id, task);
+        activeTasks.put(id, new ActiveVisualizer(task, runnable));
     }
 
     private void stopVisualizer(Player p) {
         UUID id = p.getUniqueId();
-        Object task = activeTasks.remove(id);
-        if (task != null) {
-            plugin.cancelScheduledTask(task);
+        ActiveVisualizer active = activeTasks.remove(id);
+        if (active != null) {
+            try {
+                active.task().cleanup();
+            } catch (Throwable t) {
+                plugin.getLogger().fine("Visualizer cleanup failed for " + p.getName()
+                        + ": " + t.getMessage());
+            }
+            plugin.cancelScheduledTask(active.taskHandle());
         }
     }
 }

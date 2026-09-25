@@ -7,8 +7,7 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.notify.NotificationMode;
 import com.aegisguard.notify.PlayerNotificationSettings;
 import com.aegisguard.util.TeleportUtil;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.aegisguard.util.Text;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -181,13 +180,7 @@ public class PlotGreetingListener implements Listener {
     }
 
     private void sendActionBar(Player player, String msg) {
-        if (msg == null) msg = "";
-        try {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(color(msg)));
-        } catch (Throwable t) {
-            // Fallback to chat if actionbar isn't available for some reason
-            player.sendMessage(color(msg));
-        }
+        Text.actionBar(player, msg);
     }
 
     private void sendWelcome(Player player, Plot plot) {

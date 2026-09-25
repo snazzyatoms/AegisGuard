@@ -65,6 +65,13 @@ public class Plot {
     // --- CLAIM FLAGS ---
     private final Map<String, Boolean> flags = new ConcurrentHashMap<>();
 
+    /**
+     * While {@code true}, API change-events (flag/role/guest-pass) are not fired.
+     * Datastores set this during hydration and {@code WorldRulesManager} during
+     * initial flag seeding so bulk loads don't spam listeners.
+     */
+    private volatile boolean apiEventsSuppressed;
+
     // --- MEMBERS & ROLES ---
     private final Map<UUID, String> playerRoles = new ConcurrentHashMap<>();
     // Plot-local display labels only; permission tokens still come from playerRoles / config roles.
@@ -359,7 +366,33 @@ public class Plot {
 
     public void setFlag(String key, boolean value) {
         if (key == null) return;
-        flags.put(key.toLowerCase(Locale.ROOT), value);
+        String normalized = key.toLowerCase(Locale.ROOT);
+        if (canFireApiEvents()) {
+            boolean oldValue = flags.getOrDefault(normalized, false);
+            com.aegisguard.api.events.PlotFlagChangeEvent event =
+                    new com.aegisguard.api.events.PlotFlagChangeEvent(this, normalized, oldValue, value);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+            value = event.getNewValue();
+        }
+        flags.put(normalized, value);
+    }
+
+    /** Suppress/enable API change-events (used by datastores during hydration). */
+    public void setApiEventsSuppressed(boolean suppressed) {
+        this.apiEventsSuppressed = suppressed;
+    }
+
+    public boolean isApiEventsSuppressed() {
+        return apiEventsSuppressed;
+    }
+
+    /**
+     * API change-events only fire when a live server exists; plot objects are
+     * also exercised by unit tests where {@link Bukkit#getServer()} is null.
+     */
+    private boolean canFireApiEvents() {
+        return !apiEventsSuppressed && Bukkit.getServer() != null;
     }
 
     // ---------------------------------------------------------------------
@@ -393,6 +426,14 @@ public class Plot {
             return false;
         }
 
+        if (!bypassLock && canFireApiEvents()) {
+            com.aegisguard.api.events.PlotRoleChangeEvent event =
+                    new com.aegisguard.api.events.PlotRoleChangeEvent(this, playerUUID, previous,
+                            removing ? null : role);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return false;
+        }
+
         if (removing) {
             playerRoles.remove(playerUUID);
             roleNicknames.remove(playerUUID);
@@ -416,7 +457,14 @@ public class Plot {
         if (playerUUID == null) return false;
         if (isOwner(playerUUID) || SERVER_OWNER_UUID.equals(playerUUID)) return false;
         if (!bypassLock && isMemberLocked(playerUUID)) return false;
-        String previous = playerRoles.remove(playerUUID);
+        String previous = playerRoles.get(playerUUID);
+        if (!bypassLock && canFireApiEvents() && previous != null) {
+            com.aegisguard.api.events.PlotRoleChangeEvent event =
+                    new com.aegisguard.api.events.PlotRoleChangeEvent(this, playerUUID, previous, null);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return false;
+        }
+        previous = playerRoles.remove(playerUUID);
         roleNicknames.remove(playerUUID);
         if (!bypassLock && previous != null) recordRoleChange(playerUUID, previous, null);
         return true;
@@ -1357,12 +1405,23 @@ public class Plot {
     /** Issuing a new pass for a player replaces any previous pass they held on this plot. */
     public void addGuestPass(GuestPass pass) {
         if (pass == null) return;
+        if (canFireApiEvents()) {
+            com.aegisguard.api.events.GuestPassGrantEvent event =
+                    new com.aegisguard.api.events.GuestPassGrantEvent(this, pass);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+        }
         guestPasses.put(pass.getPlayerId(), pass);
     }
 
     public boolean revokeGuestPass(UUID playerUUID) {
         if (playerUUID == null) return false;
-        return guestPasses.remove(playerUUID) != null;
+        GuestPass removed = guestPasses.remove(playerUUID);
+        if (removed != null && canFireApiEvents()) {
+            Bukkit.getPluginManager().callEvent(
+                    new com.aegisguard.api.events.GuestPassRevokeEvent(this, removed));
+        }
+        return removed != null;
     }
 
     /** Every currently active (non-expired) pass, for GUI listing. */

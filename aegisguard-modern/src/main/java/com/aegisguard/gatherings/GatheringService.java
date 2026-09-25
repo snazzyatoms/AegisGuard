@@ -6,6 +6,7 @@ import com.aegisguard.data.Plot;
 import com.aegisguard.guestpass.GuestPass;
 import com.aegisguard.guestpass.GuestPassPreset;
 import com.aegisguard.util.EffectUtil;
+import com.aegisguard.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -235,15 +236,12 @@ public final class GatheringService {
             }
             EffectUtil effects = plugin.effects();
             if (effects != null) effects.playConfirm(host);
-            try {
-                host.sendTitle(
-                        plugin.gui() == null ? "Open House" : plugin.gui().tr(host, "gathering_title", "&6Open House"),
-                        plugin.gui() == null ? plot.getPlotName() : plugin.gui().tr(host, "gathering_subtitle",
-                                "&7{PLOT} · {MINUTES}m",
-                                java.util.Map.of("PLOT", plot.getPlotName(), "MINUTES", String.valueOf(minutes))),
-                        10, 40, 10);
-            } catch (Throwable ignored) {
-            }
+            Text.title(host,
+                    plugin.gui() == null ? "Open House" : plugin.gui().tr(host, "gathering_title", "&6Open House"),
+                    plugin.gui() == null ? plot.getPlotName() : plugin.gui().tr(host, "gathering_subtitle",
+                            "&7{PLOT} · {MINUTES}m",
+                            java.util.Map.of("PLOT", plot.getPlotName(), "MINUTES", String.valueOf(minutes))),
+                    10, 40, 10);
         }
         String broadcast = "&6" + gathering.plotName() + " &7is holding an Open House.";
         try {
@@ -259,8 +257,7 @@ public final class GatheringService {
         }
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (host != null && online.getUniqueId().equals(host.getUniqueId())) continue;
-            online.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                    "&8[&bAegisGuard&8]&r " + broadcast));
+            Text.send(online, "&8[&bAegisGuard&8]&r " + broadcast);
         }
     }
 }

@@ -91,6 +91,7 @@ public class YMLDataStore implements IDataStore {
                     int z2 = sec.getInt("z2");
 
                     Plot plot = new Plot(plotId, ownerId, ownerName, worldName, x1, z1, x2, z2);
+                    plot.setApiEventsSuppressed(true); // hydration must not fire API change-events
 
                     plot.setLevel(sec.getInt("level", 1));
                     plot.setXp(sec.getDouble("xp", 0.0));
@@ -392,6 +393,7 @@ public class YMLDataStore implements IDataStore {
                     }
 
                     // Cache with dedupe safety
+                    plot.setApiEventsSuppressed(false);
                     cachePlot(plot);
                     count++;
 
@@ -1028,6 +1030,8 @@ public class YMLDataStore implements IDataStore {
     @Override
     public void shutdown() {
         // YML is sync, so just force save.
-        try { saveSync(); } catch (Throwable ignored) {}
+        try { saveSync(); } catch (Throwable t) {
+            plugin.getLogger().severe("Final YML save during shutdown failed: " + t);
+        }
     }
 }

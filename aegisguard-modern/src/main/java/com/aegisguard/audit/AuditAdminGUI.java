@@ -278,6 +278,7 @@ public class AuditAdminGUI {
             case ROLE_CHANGE -> Material.NAME_TAG;
             case OWNERSHIP_TRANSFER -> Material.WRITABLE_BOOK;
             case CARAVAN -> Material.CHEST_MINECART;
+            case DISCORD_LINK -> Material.CHAIN;
         };
     }
 

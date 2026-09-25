@@ -29,3 +29,5 @@ blocks_ledger_title: '&6&lRegistro de terrenos &7({PLAYER})'
 blocks_ledger_total: '&7Capacidade total: &e{TOTAL}'
 blocks_ledger_used: '&7Terreno Usado: &c{USED}'
 blocks_ledger_available: '&7Disponível: &a{AVAILABLE}'
+
+claim_blocks_not_enough: '&c❌ Faltam &e{AMOUNT}&c ClaimBlocks.'

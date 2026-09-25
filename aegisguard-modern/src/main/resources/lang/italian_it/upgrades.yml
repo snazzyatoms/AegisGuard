@@ -29,3 +29,5 @@ blocks_ledger_title: '&6&lRegistro fondiario &7({PLAYER})'
 blocks_ledger_total: '&7Capacità totale: &e{TOTAL}'
 blocks_ledger_used: '&7Terreno usato: &c{USED}'
 blocks_ledger_available: '&7Disponibile: &a{AVAILABLE}'
+
+claim_blocks_not_enough: '&c❌ Ti mancano &e{AMOUNT}&c ClaimBlocks.'

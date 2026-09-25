@@ -4288,3 +4288,39 @@ roles_lock_status_unlocked: '&7Not locked'
 roles_guest_pass_never: 'No expiry'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Operator-only access'
+
+auction_item_lore:
+- '&7Current bid: &e{BID}'
+- '&7Top bidder: &b{BIDDER}'
+- '&7Time left: &c{TIME}'
+- ' '
+- '&eClick to bid'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cBlock exchange is unavailable right now.'
+
+error_generic: '&cSomething went wrong. Please try again.'
+
+label_free: '&aFree'
+
+label_none: 'None'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Unknown'
+
+label_unnamed: 'Unnamed zone'
+
+not_plot_owner: '&cYou cannot manage this plot.'
+
+roles_gui_title: '&e👥 Roles Management'
+
+visit_fail_no_spawn: '&cThis destination has no valid spawn point.'
+
+visit_teleport_success: '&aTeleported.'

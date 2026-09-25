@@ -27,3 +27,5 @@ blocks_ledger_title: '&6&lLand Ledger &7({PLAYER})'
 blocks_ledger_total: '&7Total Capacity: &e{TOTAL}'
 blocks_ledger_used: '&7Used Land: &c{USED}'
 blocks_ledger_available: '&7Available: &a{AVAILABLE}'
+
+claim_blocks_not_enough: '&c❌ You need &e{AMOUNT}&c more ClaimBlocks.'

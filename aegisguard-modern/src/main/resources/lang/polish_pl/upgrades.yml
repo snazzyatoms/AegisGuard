@@ -29,3 +29,5 @@ blocks_ledger_title: '&6&lKsięga wieczysta &7({PLAYER})'
 blocks_ledger_total: '&7Całkowita pojemność: &e{TOTAL}'
 blocks_ledger_used: '&7Używany grunt: &c{USED}'
 blocks_ledger_available: '&7Dostępne: &a{AVAILABLE}'
+
+claim_blocks_not_enough: '&c❌ Brakuje ci &e{AMOUNT}&c ClaimBlocks.'

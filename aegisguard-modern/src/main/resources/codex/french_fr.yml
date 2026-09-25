@@ -3959,6 +3959,18 @@ admin_help_audit: '&e/agadmin audit &8- Grand livre d''audit du personnel'
 admin_help_rentals: '&e/agadmin locations <annuler|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin bypass &8- Basculer le contournement de la protection personnelle'
 admin_help_reload: '&e/agadmin recharger &8- Recharger AegisGuard'
+admin_help_discord: '&e/agadmin discord <link|unlink|whois> &8- Liaisons de comptes Discord'
+admin_discord_linking_disabled: '&cLa liaison Discord est désactivée dans la config (hooks.discord.linking.enabled).'
+admin_discord_usage: '&eUsage : /agadmin discord <link|unlink|whois> <joueur> [discord-id]'
+admin_discord_link_usage: '&eUsage : /agadmin discord link <joueur> <discord-id>'
+admin_discord_unlink_usage: '&eUsage : /agadmin discord unlink <joueur>'
+admin_discord_whois_usage: '&eUsage : /agadmin discord whois <joueur|discord-id>'
+admin_discord_bad_id: '&cLes IDs Discord sont numériques (15–25 chiffres). Reçu : {ID}'
+admin_discord_linked: '&a✔ &f{PLAYER}&a lié à Discord &f{ID}&a.'
+admin_discord_already_linked: '&e{PLAYER} est déjà lié à Discord &f{ID}&e.'
+admin_discord_unlinked: '&a✔ Liaison Discord de &f{PLAYER}&a supprimée.'
+admin_discord_not_linked: '&e{PLAYER} n''a pas de liaison Discord.'
+admin_discord_whois_result: '&f{PLAYER}&7 est lié à Discord &f{ID}&7.'
 admin_help_transition: '&e/agadmin transition &8- État de la mise à jour 1.2.7 → 1.3.0'
 admin_transition_schema: '&7Schéma de config : &f{CURRENT} &7/ cible 1.4.0 &f{TARGET}.'
 admin_transition_plots: '&7Les parcelles se chargent telles quelles. Les fiches ne sont pas réécrites.'
@@ -4779,3 +4791,70 @@ button_plot_chat: '&bFréquence Aegis'
 plot_chat_button_lore:
 - '&7Active le chat privé de parcelle'
 - '&7pour les membres de cette claim.'
+
+admin_menu_lore:
+- '&7Accès réservé aux opérateurs'
+
+auction_item_lore:
+- '&7Enchère actuelle : &e{BID}'
+- '&7Meilleur enchérisseur : &b{BIDDER}'
+- '&7Temps restant : &c{TIME}'
+- ' '
+- '&eCliquez pour enchérir'
+
+auction_item_name: '&6{PLOT}'
+
+claim_blocks_not_enough: '&c❌ Il vous manque &e{AMOUNT}&c ClaimBlocks.'
+
+claimblocks_exchange_unavailable: '&cL''échange de blocs est indisponible pour le moment.'
+
+error_generic: '&cUne erreur est survenue. Réessayez.'
+
+help_header: '&bAide AegisGuard'
+
+help_lines:
+- '&e/aegis wand &7- Obtenez le Bâton Aegis (outil de sélection).'
+- '&e/aegis menu &7- Ouvrez le menu principal d''AegisGuard.'
+- '&e/aegis claim &7- Créez une parcelle depuis votre sélection.'
+- '&e/aegis unclaim &7- Supprimez votre parcelle actuelle.'
+- '&e/aegis rent <prix> [jours] [caution] &7- Créez une offre de location.'
+- '&e/aegis rental <status|renew|cancel> &7- Gérez un bail actif.'
+- '&e/aegis discover &7- Explorez les territoires publics.'
+- '&e/aegis activity &7- Consultez l''activité du territoire.'
+- '&e/aegis home &7- Téléportez-vous à votre parcelle.'
+- '&e/aegis setspawn &7- Définissez le point d''apparition de la parcelle.'
+- '&e/aegis welcome [msg] &7- Définissez ou effacez le message de bienvenue.'
+- '&e/aegis farewell [msg] &7- Définissez ou effacez le message d''adieu.'
+- '&e/aegis market &7- Ouvrez le marché des parcelles.'
+- '&e/aegis auction &7- Voir les enchères de parcelles actives.'
+- '&e/aegis rename <nom> &7- Renommez votre parcelle.'
+- '&e/aegis setdesc <texte> &7- Définissez une description de la parcelle.'
+- '&e/aegis stuck &7- Téléportez-vous en lieu sûr si bloqué.'
+- '&e/aegis help &7- Affichez ce menu d''aide.'
+- '&e/aegis guide &7- Rejouez le guide de première parcelle.'
+- '&e/aegis alliance &7- Créer, inviter, accepter, quitter ou dissoudre une alliance.'
+- '&e/aegis notice &7- Gérez le panneau d''affichage de la parcelle.'
+- '&e/aegis giftblocks [joueur quantité] &7- Offrez des ClaimBlocks (GUI ou commande).'
+- '&e/aegis merge &7- Fusionnez les parcelles adjacentes (si activé).'
+- '&e/aegis transfer <joueur> &7- Transférez la propriété de la parcelle actuelle.'
+- '&e/aegis settlements &7- Ouvrez votre boîte de paiements en attente.'
+
+label_free: '&aGratuit'
+
+label_none: 'Aucun'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Inconnu'
+
+label_unnamed: 'Zone sans nom'
+
+not_plot_owner: '&cVous ne pouvez pas gérer cette parcelle.'
+
+roles_gui_title: '&e👥 Gestion des rôles'
+
+visit_fail_no_spawn: '&cCette destination n''a pas de point d''apparition valide.'
+
+visit_teleport_success: '&aTéléporté.'

@@ -4289,3 +4289,39 @@ roles_lock_status_unlocked: '&7Non bloccato'
 roles_guest_pass_never: 'Nessuna scadenza'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Accesso riservato agli operatori'
+
+auction_item_lore:
+- '&7Offerta attuale: &e{BID}'
+- '&7Miglior offerente: &b{BIDDER}'
+- '&7Tempo rimanente: &c{TIME}'
+- ' '
+- '&eClicca per fare un''offerta'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cLo scambio di blocchi non è disponibile al momento.'
+
+error_generic: '&cSi è verificato un errore. Riprova.'
+
+label_free: '&aGratis'
+
+label_none: 'Nessuno'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Sconosciuto'
+
+label_unnamed: 'Zona senza nome'
+
+not_plot_owner: '&cNon puoi gestire questo lotto.'
+
+roles_gui_title: '&e👥 Gestione dei ruoli'
+
+visit_fail_no_spawn: '&cQuesta destinazione non ha un punto di spawn valido.'
+
+visit_teleport_success: '&aTeletrasportato.'

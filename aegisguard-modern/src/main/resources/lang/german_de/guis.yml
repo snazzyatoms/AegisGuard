@@ -4290,3 +4290,39 @@ roles_lock_status_unlocked: '&7Nicht gesperrt'
 roles_guest_pass_never: 'Kein Ablauf'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Nur für Operatoren'
+
+auction_item_lore:
+- '&7Aktuelles Gebot: &e{BID}'
+- '&7Höchstbietender: &b{BIDDER}'
+- '&7Verbleibende Zeit: &c{TIME}'
+- ' '
+- '&eKlicken zum Bieten'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cDer Blocktausch ist derzeit nicht verfügbar.'
+
+error_generic: '&cEin Fehler ist aufgetreten. Bitte versuche es erneut.'
+
+label_free: '&aKostenlos'
+
+label_none: 'Keine'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Unbekannt'
+
+label_unnamed: 'Unbenannte Zone'
+
+not_plot_owner: '&cDu kannst dieses Grundstück nicht verwalten.'
+
+roles_gui_title: '&e👥 Rollenverwaltung'
+
+visit_fail_no_spawn: '&cDieses Ziel hat keinen gültigen Spawnpunkt.'
+
+visit_teleport_success: '&aTeleportiert.'

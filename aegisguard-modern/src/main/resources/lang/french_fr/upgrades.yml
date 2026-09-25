@@ -29,3 +29,5 @@ blocks_ledger_title: '&6&lGrand livre foncier &7({PLAYER})'
 blocks_ledger_total: '&7Capacité totale : &e{TOTAL}'
 blocks_ledger_used: '&7Terrain utilisé : &c{USED}'
 blocks_ledger_available: '&7Disponible : &a{AVAILABLE}'
+
+claim_blocks_not_enough: '&c❌ Il vous manque &e{AMOUNT}&c ClaimBlocks.'

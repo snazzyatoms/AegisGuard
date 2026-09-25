@@ -4288,3 +4288,39 @@ roles_lock_status_unlocked: '&7Não bloqueado'
 roles_guest_pass_never: 'Sem expiração'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Acesso exclusivo de operador'
+
+auction_item_lore:
+- '&7Lance atual: &e{BID}'
+- '&7Maior licitante: &b{BIDDER}'
+- '&7Tempo restante: &c{TIME}'
+- ' '
+- '&eClique para dar um lance'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cA troca de blocos está indisponível no momento.'
+
+error_generic: '&cOcorreu um erro. Tente novamente.'
+
+label_free: '&aGrátis'
+
+label_none: 'Nenhum'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Desconhecido'
+
+label_unnamed: 'Zona sem nome'
+
+not_plot_owner: '&cVocê não pode gerenciar este terreno.'
+
+roles_gui_title: '&e👥 Gestão de Cargos'
+
+visit_fail_no_spawn: '&cEste destino não tem um ponto de spawn válido.'
+
+visit_teleport_success: '&aTeleportado.'

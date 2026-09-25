@@ -3938,6 +3938,18 @@ admin_help_audit: '&e/agadmin audit &8- Staff Audit Ledger'
 admin_help_rentals: '&e/agadmin rentals <cancel|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin bypass &8- Toggle personal protection bypass'
 admin_help_reload: '&e/agadmin reload &8- Reload AegisGuard'
+admin_help_discord: '&e/agadmin discord <link|unlink|whois> &8- Discord account links'
+admin_discord_linking_disabled: '&cDiscord linking is disabled in config (hooks.discord.linking.enabled).'
+admin_discord_usage: '&eUsage: /agadmin discord <link|unlink|whois> <player> [discord-id]'
+admin_discord_link_usage: '&eUsage: /agadmin discord link <player> <discord-id>'
+admin_discord_unlink_usage: '&eUsage: /agadmin discord unlink <player>'
+admin_discord_whois_usage: '&eUsage: /agadmin discord whois <player|discord-id>'
+admin_discord_bad_id: '&cDiscord IDs are numeric (15–25 digits). Got: {ID}'
+admin_discord_linked: '&a✔ Linked &f{PLAYER}&a to Discord &f{ID}&a.'
+admin_discord_already_linked: '&e{PLAYER} is already linked to Discord &f{ID}&e.'
+admin_discord_unlinked: '&a✔ Removed the Discord link for &f{PLAYER}&a.'
+admin_discord_not_linked: '&e{PLAYER} has no Discord link.'
+admin_discord_whois_result: '&f{PLAYER}&7 is linked to Discord &f{ID}&7.'
 admin_help_transition: '&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade status'
 admin_transition_schema: '&7Config schema: &f{CURRENT} &7/ 1.4.0 target &f{TARGET}.'
 admin_transition_plots: '&7Plots load as-is. Claim records are not rewritten.'
@@ -4732,3 +4744,70 @@ button_plot_chat: '&bAegis Frequency'
 plot_chat_button_lore:
 - '&7Toggle private plot chat'
 - '&7for members of this claim.'
+
+admin_menu_lore:
+- '&7Operator-only access'
+
+auction_item_lore:
+- '&7Current bid: &e{BID}'
+- '&7Top bidder: &b{BIDDER}'
+- '&7Time left: &c{TIME}'
+- ' '
+- '&eClick to bid'
+
+auction_item_name: '&6{PLOT}'
+
+claim_blocks_not_enough: '&c❌ You need &e{AMOUNT}&c more ClaimBlocks.'
+
+claimblocks_exchange_unavailable: '&cBlock exchange is unavailable right now.'
+
+error_generic: '&cSomething went wrong. Please try again.'
+
+help_header: '&bAegisGuard Help'
+
+help_lines:
+- '&e/aegis wand &7- Get the Aegis Wand (selection tool).'
+- '&e/aegis menu &7- Open the main AegisGuard menu.'
+- '&e/aegis claim &7- Create a plot from your current selection.'
+- '&e/aegis unclaim &7- Delete your current plot.'
+- '&e/aegis rent <price> [days] [deposit] &7- Create a rental offer.'
+- '&e/aegis rental <status|renew|cancel> &7- Manage an active lease.'
+- '&e/aegis discover &7- Browse public territories.'
+- '&e/aegis activity &7- View territory activity.'
+- '&e/aegis home &7- Teleport to your plot home.'
+- '&e/aegis setspawn &7- Set your plot spawn point.'
+- '&e/aegis welcome [msg] &7- Set or clear a welcome message.'
+- '&e/aegis farewell [msg] &7- Set or clear a farewell message.'
+- '&e/aegis market &7- Open the plot market.'
+- '&e/aegis auction &7- View active plot auctions.'
+- '&e/aegis rename <name> &7- Rename your plot.'
+- '&e/aegis setdesc <text> &7- Set a description for your plot.'
+- '&e/aegis stuck &7- Teleport to safety if you are stuck.'
+- '&e/aegis help &7- View this help menu.'
+- '&e/aegis guide &7- Replay the first-claim guide.'
+- '&e/aegis alliance &7- Create, invite, accept, leave, or dissolve an alliance.'
+- '&e/aegis notice &7- Manage the plot noticeboard.'
+- '&e/aegis giftblocks [player amount] &7- Gift ClaimBlocks (GUI or command).'
+- '&e/aegis merge &7- Merge adjacent claims (if enabled).'
+- '&e/aegis transfer <player> &7- Transfer ownership of the current plot.'
+- '&e/aegis settlements &7- Open your pending payments inbox.'
+
+label_free: '&aFree'
+
+label_none: 'None'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Unknown'
+
+label_unnamed: 'Unnamed zone'
+
+not_plot_owner: '&cYou cannot manage this plot.'
+
+roles_gui_title: '&e👥 Roles Management'
+
+visit_fail_no_spawn: '&cThis destination has no valid spawn point.'
+
+visit_teleport_success: '&aTeleported.'

@@ -4287,3 +4287,39 @@ roles_lock_status_unlocked: '&7Niezablokowany'
 roles_guest_pass_never: 'Bez wygaśnięcia'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Dostęp tylko dla operatorów'
+
+auction_item_lore:
+- '&7Aktualna oferta: &e{BID}'
+- '&7Najwyższy licytujący: &b{BIDDER}'
+- '&7Pozostały czas: &c{TIME}'
+- ' '
+- '&eKliknij, aby licytować'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cWymiana bloków jest obecnie niedostępna.'
+
+error_generic: '&cWystąpił błąd. Spróbuj ponownie.'
+
+label_free: '&aDarmowe'
+
+label_none: 'Brak'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Nieznany'
+
+label_unnamed: 'Strefa bez nazwy'
+
+not_plot_owner: '&cNie możesz zarządzać tą działką.'
+
+roles_gui_title: '&e👥 Zarządzanie rolami'
+
+visit_fail_no_spawn: '&cTo miejsce nie ma prawidłowego punktu spawnu.'
+
+visit_teleport_success: '&aTeleportowano.'

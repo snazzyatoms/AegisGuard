@@ -153,3 +153,5 @@ level_upgrade_button_blocks_lore:
   - '&7Balance: &b{BALANCE}'
   - ''
   - '&eClick to ascend'
+
+claim_blocks_not_enough: '&c❌ You need &e{AMOUNT}&c more ClaimBlocks.'

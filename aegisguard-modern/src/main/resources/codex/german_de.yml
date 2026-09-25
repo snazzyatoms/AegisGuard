@@ -3966,6 +3966,18 @@ admin_help_audit: '&e/agadmin-Prüfung &8- Personalprüfungsbuch'
 admin_help_rentals: '&e/agadmin Rentals <cancel|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin-Bypass &8 – Persönliche Schutzumgehung umschalten'
 admin_help_reload: '&e/agadmin neu laden &8- Neu laden AegisGuard'
+admin_help_discord: '&e/agadmin discord <link|unlink|whois> &8- Discord-Konto-Verknüpfungen'
+admin_discord_linking_disabled: '&cDiscord-Verknüpfung ist in der Config deaktiviert (hooks.discord.linking.enabled).'
+admin_discord_usage: '&eVerwendung: /agadmin discord <link|unlink|whois> <spieler> [discord-id]'
+admin_discord_link_usage: '&eVerwendung: /agadmin discord link <spieler> <discord-id>'
+admin_discord_unlink_usage: '&eVerwendung: /agadmin discord unlink <spieler>'
+admin_discord_whois_usage: '&eVerwendung: /agadmin discord whois <spieler|discord-id>'
+admin_discord_bad_id: '&cDiscord-IDs sind numerisch (15–25 Ziffern). Erhalten: {ID}'
+admin_discord_linked: '&a✔ &f{PLAYER}&a mit Discord &f{ID}&a verknüpft.'
+admin_discord_already_linked: '&e{PLAYER} ist bereits mit Discord &f{ID}&e verknüpft.'
+admin_discord_unlinked: '&a✔ Discord-Verknüpfung für &f{PLAYER}&a entfernt.'
+admin_discord_not_linked: '&e{PLAYER} hat keine Discord-Verknüpfung.'
+admin_discord_whois_result: '&f{PLAYER}&7 ist mit Discord &f{ID}&7 verknüpft.'
 admin_help_transition: '&e/agadmin transition &8- 1.2.7 → 1.3.0 Upgrade-Status'
 admin_transition_schema: '&7Config-Schema: &f{CURRENT} &7/ 1.4.0-Ziel &f{TARGET}.'
 admin_transition_plots: '&7Plots werden unverändert geladen. Claim-Daten werden nicht umgeschrieben.'
@@ -4786,3 +4798,70 @@ button_plot_chat: '&bAegis-Frequenz'
 plot_chat_button_lore:
 - '&7Schalte den privaten Grundstückschat'
 - '&7für Mitglieder dieses Claims um.'
+
+admin_menu_lore:
+- '&7Nur für Operatoren'
+
+auction_item_lore:
+- '&7Aktuelles Gebot: &e{BID}'
+- '&7Höchstbietender: &b{BIDDER}'
+- '&7Verbleibende Zeit: &c{TIME}'
+- ' '
+- '&eKlicken zum Bieten'
+
+auction_item_name: '&6{PLOT}'
+
+claim_blocks_not_enough: '&c❌ Dir fehlen &e{AMOUNT}&c ClaimBlocks.'
+
+claimblocks_exchange_unavailable: '&cDer Blocktausch ist derzeit nicht verfügbar.'
+
+error_generic: '&cEin Fehler ist aufgetreten. Bitte versuche es erneut.'
+
+help_header: '&bAegisGuard-Hilfe'
+
+help_lines:
+- '&e/aegis wand &7- Erhalte den Aegis-Stab (Auswahlwerkzeug).'
+- '&e/aegis menu &7- Öffne das Hauptmenü von AegisGuard.'
+- '&e/aegis claim &7- Erstelle ein Grundstück aus deiner Auswahl.'
+- '&e/aegis unclaim &7- Lösche dein aktuelles Grundstück.'
+- '&e/aegis rent <preis> [tage] [kaution] &7- Erstelle ein Mietangebot.'
+- '&e/aegis rental <status|renew|cancel> &7- Verwalte einen aktiven Mietvertrag.'
+- '&e/aegis discover &7- Erkunde öffentliche Territorien.'
+- '&e/aegis activity &7- Sieh dir die Gebietsaktivität an.'
+- '&e/aegis home &7- Teleportiere dich zu deinem Grundstück.'
+- '&e/aegis setspawn &7- Setze den Spawnpunkt deines Grundstücks.'
+- '&e/aegis welcome [msg] &7- Setze oder lösche eine Willkommensnachricht.'
+- '&e/aegis farewell [msg] &7- Setze oder lösche eine Abschiedsnachricht.'
+- '&e/aegis market &7- Öffne den Grundstücksmarkt.'
+- '&e/aegis auction &7- Sieh dir aktive Grundstücksauktionen an.'
+- '&e/aegis rename <name> &7- Benenne dein Grundstück um.'
+- '&e/aegis setdesc <text> &7- Setze eine Beschreibung für dein Grundstück.'
+- '&e/aegis stuck &7- Teleportiere dich in Sicherheit, wenn du feststeckst.'
+- '&e/aegis help &7- Zeige dieses Hilfemenü an.'
+- '&e/aegis guide &7- Wiederhole die Anleitung zum ersten Grundstück.'
+- '&e/aegis alliance &7- Allianz erstellen, einladen, annehmen, verlassen oder auflösen.'
+- '&e/aegis notice &7- Verwalte die Ansagetafel des Grundstücks.'
+- '&e/aegis giftblocks [spieler anzahl] &7- Verschenke ClaimBlocks (GUI oder Befehl).'
+- '&e/aegis merge &7- Füge benachbarte Grundstücke zusammen (falls aktiv).'
+- '&e/aegis transfer <spieler> &7- Übertrage den Besitz des aktuellen Grundstücks.'
+- '&e/aegis settlements &7- Öffne deinen Posteingang ausstehender Zahlungen.'
+
+label_free: '&aKostenlos'
+
+label_none: 'Keine'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Unbekannt'
+
+label_unnamed: 'Unbenannte Zone'
+
+not_plot_owner: '&cDu kannst dieses Grundstück nicht verwalten.'
+
+roles_gui_title: '&e👥 Rollenverwaltung'
+
+visit_fail_no_spawn: '&cDieses Ziel hat keinen gültigen Spawnpunkt.'
+
+visit_teleport_success: '&aTeleportiert.'

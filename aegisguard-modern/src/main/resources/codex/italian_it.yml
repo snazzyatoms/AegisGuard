@@ -3957,6 +3957,18 @@ admin_help_audit: '&e/agadmin audit &8- Registro degli audit del personale'
 admin_help_rentals: '&e/agadmin affitti <cancel|retry-settlements> ...'
 admin_help_bypass: '&e/esclusione agadmin &8- Attiva/disattiva il bypass della protezione personale'
 admin_help_reload: '&e/agadmin ricarica &8- Ricarica AegisGuard'
+admin_help_discord: '&e/agadmin discord <link|unlink|whois> &8- Collegamenti account Discord'
+admin_discord_linking_disabled: '&cIl collegamento Discord è disabilitato nella config (hooks.discord.linking.enabled).'
+admin_discord_usage: '&eUso: /agadmin discord <link|unlink|whois> <giocatore> [discord-id]'
+admin_discord_link_usage: '&eUso: /agadmin discord link <giocatore> <discord-id>'
+admin_discord_unlink_usage: '&eUso: /agadmin discord unlink <giocatore>'
+admin_discord_whois_usage: '&eUso: /agadmin discord whois <giocatore|discord-id>'
+admin_discord_bad_id: '&cGli ID Discord sono numerici (15–25 cifre). Ricevuto: {ID}'
+admin_discord_linked: '&a✔ &f{PLAYER}&a collegato a Discord &f{ID}&a.'
+admin_discord_already_linked: '&e{PLAYER} è già collegato a Discord &f{ID}&e.'
+admin_discord_unlinked: '&a✔ Collegamento Discord rimosso per &f{PLAYER}&a.'
+admin_discord_not_linked: '&e{PLAYER} non ha un collegamento Discord.'
+admin_discord_whois_result: '&f{PLAYER}&7 è collegato a Discord &f{ID}&7.'
 admin_help_transition: '&e/agadmin transition &8- Stato aggiornamento 1.2.7 → 1.3.0'
 admin_transition_schema: '&7Schema config: &f{CURRENT} &7/ obiettivo 1.3.0 &f{TARGET}.'
 admin_transition_plots: '&7I lotti si caricano così come sono. I record non vengono riscritti.'
@@ -4777,3 +4789,70 @@ button_plot_chat: '&bFrequenza Aegis'
 plot_chat_button_lore:
 - '&7Attiva la chat privata del lotto'
 - '&7per i membri di questa claim.'
+
+admin_menu_lore:
+- '&7Accesso riservato agli operatori'
+
+auction_item_lore:
+- '&7Offerta attuale: &e{BID}'
+- '&7Miglior offerente: &b{BIDDER}'
+- '&7Tempo rimanente: &c{TIME}'
+- ' '
+- '&eClicca per fare un''offerta'
+
+auction_item_name: '&6{PLOT}'
+
+claim_blocks_not_enough: '&c❌ Ti mancano &e{AMOUNT}&c ClaimBlocks.'
+
+claimblocks_exchange_unavailable: '&cLo scambio di blocchi non è disponibile al momento.'
+
+error_generic: '&cSi è verificato un errore. Riprova.'
+
+help_header: '&bAiuto AegisGuard'
+
+help_lines:
+- '&e/aegis wand &7- Ottieni la Bacchetta Aegis (strumento di selezione).'
+- '&e/aegis menu &7- Apri il menu principale di AegisGuard.'
+- '&e/aegis claim &7- Crea un lotto dalla selezione attuale.'
+- '&e/aegis unclaim &7- Elimina il tuo lotto attuale.'
+- '&e/aegis rent <prezzo> [giorni] [caparra] &7- Crea un''offerta di affitto.'
+- '&e/aegis rental <status|renew|cancel> &7- Gestisci un contratto attivo.'
+- '&e/aegis discover &7- Esplora i territori pubblici.'
+- '&e/aegis activity &7- Consulta l''attività del territorio.'
+- '&e/aegis home &7- Teletrasportati al tuo lotto.'
+- '&e/aegis setspawn &7- Imposta il punto di spawn del lotto.'
+- '&e/aegis welcome [msg] &7- Imposta o rimuovi il messaggio di benvenuto.'
+- '&e/aegis farewell [msg] &7- Imposta o rimuovi il messaggio di congedo.'
+- '&e/aegis market &7- Apri il mercato dei lotti.'
+- '&e/aegis auction &7- Vedi le aste di lotti attive.'
+- '&e/aegis rename <nome> &7- Rinomina il tuo lotto.'
+- '&e/aegis setdesc <testo> &7- Imposta una descrizione del lotto.'
+- '&e/aegis stuck &7- Teletrasportati in un luogo sicuro se bloccato.'
+- '&e/aegis help &7- Vedi questo menu di aiuto.'
+- '&e/aegis guide &7- Ripeti la guida del primo lotto.'
+- '&e/aegis alliance &7- Crea, invita, accetta, lascia o sciogli un''alleanza.'
+- '&e/aegis notice &7- Gestisci la bacheca del lotto.'
+- '&e/aegis giftblocks [giocatore quantità] &7- Regala ClaimBlocks (GUI o comando).'
+- '&e/aegis merge &7- Unisci lotti adiacenti (se attivo).'
+- '&e/aegis transfer <giocatore> &7- Trasferisci la proprietà del lotto attuale.'
+- '&e/aegis settlements &7- Apri la tua casella dei pagamenti in sospeso.'
+
+label_free: '&aGratis'
+
+label_none: 'Nessuno'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Sconosciuto'
+
+label_unnamed: 'Zona senza nome'
+
+not_plot_owner: '&cNon puoi gestire questo lotto.'
+
+roles_gui_title: '&e👥 Gestione dei ruoli'
+
+visit_fail_no_spawn: '&cQuesta destinazione non ha un punto di spawn valido.'
+
+visit_teleport_success: '&aTeletrasportato.'

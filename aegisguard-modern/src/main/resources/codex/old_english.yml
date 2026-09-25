@@ -3957,6 +3957,18 @@ admin_help_audit: '&e/agadmin audit &8- Staff Audit Ledger'
 admin_help_rentals: '&e/agadmin rentals <cancel|retry-settlements> ...'
 admin_help_bypass: '&e/agadmin bypass &8- Toggle personal protection bypass'
 admin_help_reload: '&e/agadmin reload &8- Reload AegisGuard'
+admin_help_discord: '&e/agadmin discord <link|unlink|whois> &8- Discord account links'
+admin_discord_linking_disabled: '&cDiscord linking is disabled in config (hooks.discord.linking.enabled).'
+admin_discord_usage: '&eUsage: /agadmin discord <link|unlink|whois> <player> [discord-id]'
+admin_discord_link_usage: '&eUsage: /agadmin discord link <player> <discord-id>'
+admin_discord_unlink_usage: '&eUsage: /agadmin discord unlink <player>'
+admin_discord_whois_usage: '&eUsage: /agadmin discord whois <player|discord-id>'
+admin_discord_bad_id: '&cDiscord IDs are numeric (15–25 digits). Got: {ID}'
+admin_discord_linked: '&a✔ Linked &f{PLAYER}&a to Discord &f{ID}&a.'
+admin_discord_already_linked: '&e{PLAYER} is already linked to Discord &f{ID}&e.'
+admin_discord_unlinked: '&a✔ Removed the Discord link for &f{PLAYER}&a.'
+admin_discord_not_linked: '&e{PLAYER} hath no Discord link.'
+admin_discord_whois_result: '&f{PLAYER}&7 is linked to Discord &f{ID}&7.'
 admin_help_transition: '&e/agadmin transition &8- 1.2.7 → 1.3.0 upgrade tidings'
 admin_transition_schema: '&7Config schema: &f{CURRENT} &7/ 1.3.0 mark &f{TARGET}.'
 admin_transition_plots: '&7Holdings load as they stand. Claim records are not rewritten.'
@@ -4773,3 +4785,36 @@ button_plot_chat: '&bAegis Frequency'
 plot_chat_button_lore:
 - '&7Open private plot speech'
 - '&7for members of this claim.'
+
+auction_item_lore:
+- '&7Current bid: &e{BID}'
+- '&7Top bidder: &b{BIDDER}'
+- '&7Time left: &c{TIME}'
+- ' '
+- '&eClick to bid'
+
+auction_item_name: '&6{PLOT}'
+
+claim_blocks_not_enough: '&c❌ You need &e{AMOUNT}&c more ClaimBlocks.'
+
+claimblocks_exchange_unavailable: '&cBlock exchange is unavailable right now.'
+
+error_generic: '&cSomething went wrong. Please try again.'
+
+label_none: 'None'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Unknown'
+
+label_unnamed: 'Unnamed zone'
+
+not_plot_owner: '&cYou cannot manage this plot.'
+
+roles_gui_title: '&e👥 Roles Management'
+
+visit_fail_no_spawn: '&cThis destination has no valid spawn point.'
+
+visit_teleport_success: '&aTeleported.'

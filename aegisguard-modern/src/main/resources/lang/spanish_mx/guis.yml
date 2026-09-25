@@ -4394,3 +4394,15 @@ roles_lock_status_unlocked: '&7Sin bloquear'
 roles_guest_pass_never: 'Sin vencimiento'
 roles_guest_pass_expiring: '<1m'
 
+
+label_free: '&aGratis'
+
+label_none: 'Ninguno'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Desconocido'
+
+label_unnamed: 'Zona sin nombre'

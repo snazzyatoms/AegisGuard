@@ -4290,3 +4290,39 @@ roles_lock_status_unlocked: '&7Non verrouillé'
 roles_guest_pass_never: 'Sans expiration'
 roles_guest_pass_expiring: '<1m'
 
+
+admin_menu_lore:
+- '&7Accès réservé aux opérateurs'
+
+auction_item_lore:
+- '&7Enchère actuelle : &e{BID}'
+- '&7Meilleur enchérisseur : &b{BIDDER}'
+- '&7Temps restant : &c{TIME}'
+- ' '
+- '&eCliquez pour enchérir'
+
+auction_item_name: '&6{PLOT}'
+
+claimblocks_exchange_unavailable: '&cL''échange de blocs est indisponible pour le moment.'
+
+error_generic: '&cUne erreur est survenue. Réessayez.'
+
+label_free: '&aGratuit'
+
+label_none: 'Aucun'
+
+label_off: 'OFF'
+
+label_on: 'ON'
+
+label_unknown: 'Inconnu'
+
+label_unnamed: 'Zone sans nom'
+
+not_plot_owner: '&cVous ne pouvez pas gérer cette parcelle.'
+
+roles_gui_title: '&e👥 Gestion des rôles'
+
+visit_fail_no_spawn: '&cCette destination n''a pas de point d''apparition valide.'
+
+visit_teleport_success: '&aTéléporté.'

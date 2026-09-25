@@ -973,6 +973,8 @@ public class AegisGuard extends JavaPlugin {
             groupManager.load();
             groupManager.cleanupMissingPlotLinks();
         }
+        if (webAdminService != null) webAdminService.reload();
+        if (discordLinkManager != null) discordLinkManager.reload();
 
         restartRecurringTasks();
 

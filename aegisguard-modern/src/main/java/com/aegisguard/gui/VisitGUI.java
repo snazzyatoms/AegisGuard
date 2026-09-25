@@ -252,8 +252,11 @@ public class VisitGUI {
                         var discovery = plugin.territoryLife().discovery(plot.getPlotId());
                         boolean seasonHit = plugin.seasons() != null && plugin.seasons().isEnabled()
                                 && plugin.seasons().isFeaturedPlot(plot.getPlotId());
-                        if (seasonHit || (!plot.isServerZone() && discovery.visible()
-                                && matchesDiscoverFilter(plot, requestedFilter, requestedCategory))) {
+                        boolean liveListing = requestedFilter == DiscoverFilter.LIVE
+                                && plugin.gatherings() != null && plugin.gatherings().isLive(plot);
+                        if ((requestedFilter != DiscoverFilter.LIVE || liveListing)
+                                && (seasonHit || (!plot.isServerZone() && (discovery.visible() || liveListing)
+                                && matchesDiscoverFilter(plot, requestedFilter, requestedCategory)))) {
                             displayPlots.add(plot);
                         }
                     }
@@ -518,7 +521,8 @@ public class VisitGUI {
             String label = discoverFilter == DiscoverFilter.CATEGORY
                     ? t(player, "visit_discover_category_filter", "Category: {CATEGORY}",
                             Map.of("CATEGORY", category == null ? "other" : category))
-                    : prettyFilter(discoverFilter);
+                    : discoverFilter == DiscoverFilter.LIVE
+                    ? t(player, "visit_filter_live", "Live") : prettyFilter(discoverFilter);
             ItemStack filter = GUIManager.createItem(Material.HOPPER,
                     t(player, "visit_discover_filter_name", "&eDiscover Filter: &f{FILTER}",
                             Map.of("FILTER", label)),
@@ -748,7 +752,10 @@ public class VisitGUI {
                 open(player, page, VisitMode.OWNED);
                 return;
             }
-        } else if (!plugin.territoryLife().discovery(plot.getPlotId()).visible() || plot.isServerZone()) {
+        } else if (plot.isServerZone()
+                || (mode == VisitMode.DISCOVER && holder.getDiscoverFilter() == DiscoverFilter.LIVE
+                    ? plugin.gatherings() == null || !plugin.gatherings().isLive(plot)
+                    : !plugin.territoryLife().discovery(plot.getPlotId()).visible())) {
             sendSystem(player, "visit_not_available", "&cThat territory is no longer publicly discoverable.");
             plugin.effects().playError(player);
             open(player, page, mode);

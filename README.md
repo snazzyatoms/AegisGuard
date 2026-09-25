@@ -60,7 +60,9 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 
-Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1310` and migration auto-merges the new keys with a timestamped backup.
+**Open House.** `/ag gathering start [minutes]` (or Explore → Open House) lists a timed house on Travel Atlas Discover → **Live**. Arrivals can receive a visitor Guest Pass that expires when the house ends. The Members GUI now has Lock / Unlock and Undo last role change, matching `/ag roles`.
+
+Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1311` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
 
@@ -176,7 +178,7 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 | Economy | Vault with a supported economy provider |
 | Maps | Dynmap, BlueMap, and Pl3xMap integration paths |
 | Extensions | PlaceholderAPI, the public AegisGuard API, and an optional Simple Voice Chat hook for Hearth rooms |
-| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1310`) |
+| Upgrade path | From AegisGuard `1.2.7`, `1.3.0`, or `1.3.5` with automatic config schema migration (`config_schema` `1294` → `1311`) |
 
 Server implementations evolve independently. Test new Minecraft server releases in a staging environment before updating a public server.
 

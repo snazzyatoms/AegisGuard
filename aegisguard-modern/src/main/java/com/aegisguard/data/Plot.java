@@ -440,9 +440,12 @@ public class Plot {
     }
 
     public boolean undoLastRoleChange() {
-        RoleChange last = roleHistory.pollLast();
+        RoleChange last = roleHistory.peekLast();
         if (last == null) return false;
-        setRole(last.target, last.previous, true);
+        if (isMemberLocked(last.target) || isOwner(last.target)
+                || !Objects.equals(playerRoles.get(last.target), last.next)) return false;
+        if (!setRole(last.target, last.previous, true)) return false;
+        roleHistory.pollLast();
         return true;
     }
 

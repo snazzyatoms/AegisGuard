@@ -1187,3 +1187,5 @@ roles_lock_failed: '&cCould not {ACTION} that member.'
 roles_lock_ok: '&aMember {PLAYER} is now {ACTION}.'
 roles_usage: '&eUsage: /ag roles <lock|unlock|undo> [player]'
 
+
+claim_conflict_external: '&c❌ That area is already protected by another plugin. AegisGuard will not claim it.'

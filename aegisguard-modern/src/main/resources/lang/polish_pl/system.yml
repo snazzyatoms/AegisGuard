@@ -1164,3 +1164,67 @@ help_lines:
 - '&e/aegis merge &7- Połącz sąsiednie działki (jeśli włączone).'
 - '&e/aegis transfer <gracz> &7- Przenieś własność bieżącej działki.'
 - '&e/aegis settlements &7- Otwórz skrzynkę oczekujących płatności.'
+
+claim_blocks_balance_available_line: '&7Dostępne: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSaldo ClaimBlocks'
+
+claim_blocks_balance_line: '&7Razem: &f{TOTAL}  &7Wydane: &f{SPENT}  &7Dostępne: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Wydane: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Razem: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ ClaimBlocks są włączone na tym serwerze.'
+
+claim_blocks_granted: '&a✔ Otrzymałeś &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ Ilość musi być dodatnia.'
+
+claim_blocks_shop_amount_too_high: '&c❌ Maksymalna ilość to &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ Minimalna ilość to &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ Sklep z ClaimBlocks jest wyłączony na tym serwerze.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Ta ilość jest nieprawidłowa.'
+
+claim_blocks_shop_no_permission: '&c❌ Nie masz uprawnień do kupowania ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Za mało pieniędzy. Wymagane: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aOtwieranie sklepu z ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Zakup nie powiódł się. Spróbuj ponownie.'
+
+claim_blocks_shop_purchase_success: '&a✔ Kupiłeś &b{BLOCKS}&a ClaimBlocks za &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault i pieniądze są niedostępne na tym serwerze.'
+
+claim_blocks_shop_world_blocked: '&c❌ Ta akcja jest niedozwolona w tym świecie.'
+
+claim_conflict_external: '&c❌ Ten obszar jest już chroniony przez inną wtyczkę. AegisGuard go nie zajmie.'
+
+claim_enter_exit_notify_already_disabled: '&7Te powiadomienia są już wyłączone.'
+
+claim_enter_exit_notify_already_enabled: '&7Te powiadomienia są już włączone.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cPowiadomienia o wejściu/wyjściu są wyłączone przez admina serwera.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cPowiadomienia o wejściu/wyjściu są dla ciebie wyłączone.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Ustawiono powiadomienia gracza {PLAYER} na: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cNie znaleziono gracza.'
+
+claim_notify_already_disabled: '&7Te powiadomienia są już wyłączone.'
+
+claim_notify_already_enabled: '&7Te powiadomienia są już włączone.'
+
+claim_notify_forced_disabled_by_server: '&cPowiadomienia o wejściu/wyjściu są wyłączone przez admina serwera.'
+
+claim_notify_forced_disabled_for_you: '&cPowiadomienia o wejściu/wyjściu są dla ciebie wyłączone.'
+
+claim_notify_set_for_other: '&a✔ Ustawiono powiadomienia gracza {PLAYER} na: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cNie znaleziono gracza.'

@@ -31,3 +31,5 @@ blocks_ledger_used: '&7Używany grunt: &c{USED}'
 blocks_ledger_available: '&7Dostępne: &a{AVAILABLE}'
 
 claim_blocks_not_enough: '&c❌ Brakuje ci &e{AMOUNT}&c ClaimBlocks.'
+
+claim_blocks_spent_simple: '&e⛏ Wydałeś &6{AMOUNT}&e bloków. &7(Pozostało: &f{BALANCE}&7)'

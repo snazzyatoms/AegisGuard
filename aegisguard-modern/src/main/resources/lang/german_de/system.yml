@@ -1179,3 +1179,67 @@ help_lines:
 - '&e/aegis merge &7- Füge benachbarte Grundstücke zusammen (falls aktiv).'
 - '&e/aegis transfer <spieler> &7- Übertrage den Besitz des aktuellen Grundstücks.'
 - '&e/aegis settlements &7- Öffne deinen Posteingang ausstehender Zahlungen.'
+
+claim_blocks_balance_available_line: '&7Verfügbar: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bClaimBlocks-Kontostand'
+
+claim_blocks_balance_line: '&7Gesamt: &f{TOTAL}  &7Ausgegeben: &f{SPENT}  &7Verfügbar: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Ausgegeben: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Gesamt: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ ClaimBlocks sind auf diesem Server aktiviert.'
+
+claim_blocks_granted: '&a✔ Dir wurden &b{AMOUNT}&a ClaimBlocks gewährt.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ Die Menge muss positiv sein.'
+
+claim_blocks_shop_amount_too_high: '&c❌ Die maximale Menge ist &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ Die minimale Menge ist &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ Der ClaimBlocks-Shop ist auf diesem Server deaktiviert.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Diese Menge ist ungültig.'
+
+claim_blocks_shop_no_permission: '&c❌ Du hast keine Berechtigung, ClaimBlocks zu kaufen.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Nicht genug Geld. Benötigt: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aÖffne den ClaimBlocks-Shop...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Kauf fehlgeschlagen. Bitte versuche es erneut.'
+
+claim_blocks_shop_purchase_success: '&a✔ Du hast &b{BLOCKS}&a ClaimBlocks für &6{COST}&a gekauft.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault und Geld sind auf diesem Server nicht verfügbar.'
+
+claim_blocks_shop_world_blocked: '&c❌ Diese Aktion ist in dieser Welt nicht erlaubt.'
+
+claim_conflict_external: '&c❌ Dieser Bereich ist bereits durch ein anderes Plugin geschützt. AegisGuard beansprucht ihn nicht.'
+
+claim_enter_exit_notify_already_disabled: '&7Diese Benachrichtigungen sind bereits aus.'
+
+claim_enter_exit_notify_already_enabled: '&7Diese Benachrichtigungen sind bereits an.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cBetret-/Verlass-Benachrichtigungen wurden vom Server-Admin deaktiviert.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cBetret-/Verlass-Benachrichtigungen sind für dich deaktiviert.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Benachrichtigungen von {PLAYER} gesetzt auf: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cSpieler nicht gefunden.'
+
+claim_notify_already_disabled: '&7Diese Benachrichtigungen sind bereits aus.'
+
+claim_notify_already_enabled: '&7Diese Benachrichtigungen sind bereits an.'
+
+claim_notify_forced_disabled_by_server: '&cBetret-/Verlass-Benachrichtigungen wurden vom Server-Admin deaktiviert.'
+
+claim_notify_forced_disabled_for_you: '&cBetret-/Verlass-Benachrichtigungen sind für dich deaktiviert.'
+
+claim_notify_set_for_other: '&a✔ Benachrichtigungen von {PLAYER} gesetzt auf: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cSpieler nicht gefunden.'

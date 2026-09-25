@@ -1161,3 +1161,67 @@ help_lines:
 - '&e/aegis merge &7- Fundir terrenos adjacentes (se ativo).'
 - '&e/aegis transfer <jogador> &7- Transferir a propriedade do terreno atual.'
 - '&e/aegis settlements &7- Abra sua caixa de pagamentos pendentes.'
+
+claim_blocks_balance_available_line: '&7Disponível: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSaldo de ClaimBlocks'
+
+claim_blocks_balance_line: '&7Total: &f{TOTAL}  &7Gastos: &f{SPENT}  &7Disponível: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Gastos: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Total: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ ClaimBlocks estão ativados neste servidor.'
+
+claim_blocks_granted: '&a✔ Você recebeu &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ A quantia deve ser positiva.'
+
+claim_blocks_shop_amount_too_high: '&c❌ A quantia máxima é &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ A quantia mínima é &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ A loja de ClaimBlocks está desativada neste servidor.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Essa quantia não é válida.'
+
+claim_blocks_shop_no_permission: '&c❌ Você não tem permissão para comprar ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Dinheiro insuficiente. Necessário: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aAbrindo a loja de ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Compra falhou. Tente novamente.'
+
+claim_blocks_shop_purchase_success: '&a✔ Você comprou &b{BLOCKS}&a ClaimBlocks por &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault e dinheiro estão indisponíveis neste servidor.'
+
+claim_blocks_shop_world_blocked: '&c❌ Esta ação não é permitida neste mundo.'
+
+claim_conflict_external: '&c❌ Essa área já está protegida por outro plugin. O AegisGuard não vai reivindicá-la.'
+
+claim_enter_exit_notify_already_disabled: '&7Essas notificações já estão desativadas.'
+
+claim_enter_exit_notify_already_enabled: '&7Essas notificações já estão ativadas.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cNotificações de entrada/saída de terreno foram desativadas pelo admin.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cNotificações de entrada/saída estão desativadas para você.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Notificações de terreno de {PLAYER} definidas para: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cJogador não encontrado.'
+
+claim_notify_already_disabled: '&7Essas notificações já estão desativadas.'
+
+claim_notify_already_enabled: '&7Essas notificações já estão ativadas.'
+
+claim_notify_forced_disabled_by_server: '&cNotificações de entrada/saída de terreno foram desativadas pelo admin.'
+
+claim_notify_forced_disabled_for_you: '&cNotificações de entrada/saída estão desativadas para você.'
+
+claim_notify_set_for_other: '&a✔ Notificações de terreno de {PLAYER} definidas para: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cJogador não encontrado.'

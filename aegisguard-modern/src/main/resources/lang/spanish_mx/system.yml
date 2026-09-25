@@ -1164,3 +1164,65 @@ admin_discord_already_linked: '&e{PLAYER} ya está vinculado a Discord &f{ID}&e.
 admin_discord_unlinked: '&a✔ Enlace de Discord eliminado para &f{PLAYER}&a.'
 admin_discord_not_linked: '&e{PLAYER} no tiene enlace de Discord.'
 admin_discord_whois_result: '&f{PLAYER}&7 está vinculado a Discord &f{ID}&7.'
+
+claim_blocks_balance_available_line: '&7Disponible: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSaldo de ClaimBlocks'
+
+claim_blocks_balance_line: '&7Total: &f{TOTAL}  &7Gastados: &f{SPENT}  &7Disponible: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Gastados: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Total: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ Los ClaimBlocks están activados en este servidor.'
+
+claim_blocks_granted: '&a✔ Recibiste &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ La cantidad debe ser positiva.'
+
+claim_blocks_shop_amount_too_high: '&c❌ La cantidad máxima es &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ La cantidad mínima es &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ La tienda de ClaimBlocks está desactivada en este servidor.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Esa cantidad no es válida.'
+
+claim_blocks_shop_no_permission: '&c❌ No tienes permiso para comprar ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Dinero insuficiente. Requerido: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aAbriendo la tienda de ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Compra fallida. Intenta de nuevo.'
+
+claim_blocks_shop_purchase_success: '&a✔ Compraste &b{BLOCKS}&a ClaimBlocks por &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault y dinero no están disponibles en este servidor.'
+
+claim_blocks_shop_world_blocked: '&c❌ Esta acción no está permitida en este mundo.'
+
+claim_enter_exit_notify_already_disabled: '&7Estas notificaciones ya están desactivadas.'
+
+claim_enter_exit_notify_already_enabled: '&7Estas notificaciones ya están activadas.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cLas notificaciones de entrada/salida están desactivadas por el admin.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cLas notificaciones de entrada/salida están desactivadas para ti.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Notificaciones de {PLAYER} definidas en: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cJugador no encontrado.'
+
+claim_notify_already_disabled: '&7Estas notificaciones ya están desactivadas.'
+
+claim_notify_already_enabled: '&7Estas notificaciones ya están activadas.'
+
+claim_notify_forced_disabled_by_server: '&cLas notificaciones de entrada/salida están desactivadas por el admin.'
+
+claim_notify_forced_disabled_for_you: '&cLas notificaciones de entrada/salida están desactivadas para ti.'
+
+claim_notify_set_for_other: '&a✔ Notificaciones de {PLAYER} definidas en: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cJugador no encontrado.'

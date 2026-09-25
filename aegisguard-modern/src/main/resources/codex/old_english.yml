@@ -4818,3 +4818,687 @@ roles_gui_title: '&e👥 Roles Management'
 visit_fail_no_spawn: '&cThis destination has no valid spawn point.'
 
 visit_teleport_success: '&aTeleported.'
+
+admin_gui_title: '&c✦ High Warden Tools'
+
+auction_create_button: '&a➕ Create Auction'
+
+auction_create_lore:
+- '&7Auction one of your plots.'
+
+auction_no_auctions: '&7No active auctions.'
+
+biome_badlands: '&cBadlands'
+
+biome_beach: '&eBeach'
+
+biome_birch_forest: '&fBirch Forest'
+
+biome_cherry_grove: '&dCherry Grove'
+
+biome_dark_forest: '&8Dark Forest'
+
+biome_deep_ocean: '&1Deep Ocean'
+
+biome_desert: '&eDesert'
+
+biome_flower_forest: '&dFlower Forest'
+
+biome_forest: '&2Forest'
+
+biome_frozen_peaks: '&bFrozen Peaks'
+
+biome_grove: '&fGrove'
+
+biome_item_lore:
+- '&7Click to set this biome.'
+
+biome_jungle: '&aJungle'
+
+biome_mangrove_swamp: '&2Mangrove Swamp'
+
+biome_meadow: '&aMeadow'
+
+biome_mushroom_fields: '&dMushroom Fields'
+
+biome_ocean: '&9Ocean'
+
+biome_old_growth_pine_taiga: '&2Old Growth Pine Taiga'
+
+biome_plains: '&aPlains'
+
+biome_river: '&bRiver'
+
+biome_savanna: '&6Savanna'
+
+biome_snowy_plains: '&fSnowy Plains'
+
+biome_swamp: '&8Swamp'
+
+biome_the_void: '&8The Void'
+
+biome_top_taiga: '&bTaiga'
+
+biome_windswept_hills: '&7Windswept Hills'
+
+bonus_claim_blocks: '&aClaim Blocks: +{AMOUNT}'
+
+bonus_fire_resistance: '&6Fire Resistance'
+
+bonus_haste: '&eHaste {LEVEL}'
+
+bonus_homes: '&dHomes: {COUNT}'
+
+bonus_jump: '&aJump {LEVEL}'
+
+bonus_members: '&eMembers: {COUNT}'
+
+bonus_night_vision: '&1Night Vision'
+
+bonus_prefix: '&a✦ '
+
+bonus_regeneration: '&dRegeneration {LEVEL}'
+
+bonus_resistance: '&9Resistance {LEVEL}'
+
+bonus_speed: '&bSpeed {LEVEL}'
+
+bonus_strength: '&cStrength {LEVEL}'
+
+bonus_water_breathing: '&3Water Breathing'
+
+claim_blocks_spent_simple: '&e⛏ You have spent &6{AMOUNT}&e Blocks. &7(Left: &f{BALANCE}&7)'
+
+claim_conflict_external: '&c❌ That area is already protected by another plugin. AegisGuard will not claim it.'
+
+codex_commands_lore:
+- '&7Full command list:'
+- ' '
+- '&b/ag help &7- Show help'
+- '&b/ag menu &7- Open main menu'
+- '&b/ag claim &7- Claim selection'
+- '&b/ag unclaim &7- Remove plot'
+- '&b/ag trust &7- Add player'
+- '&b/ag untrust &7- Remove player'
+- '&b/ag flags &7- Edit flags'
+- '&b/ag home &7- Go to your plot'
+
+codex_commands_title: '&a§lX. Commands'
+
+codex_faq_lore:
+- '&7Common questions:'
+- ' '
+- '&eHow do I grow my plot?'
+- '&7Use &b/ag expand &7or upgrade your tier.'
+- ' '
+- '&eHow do I add friends?'
+- '&7Use &b/ag trust <player>'
+- ' '
+- '&eHow do I delete my plot?'
+- '&7Use &b/ag unclaim'
+
+codex_faq_title: '&9§lIX. FAQ'
+
+codex_getting_started_lore:
+- '&7Welcome to AegisGuard!'
+- ' '
+- '&f1. &7Use &b/ag wand &7to get the tool.'
+- '&f2. &7Right-click the first corner.'
+- '&f3. &7Left-click the opposite corner.'
+- '&f4. &7Use &a/ag claim &7to claim the plot.'
+- ' '
+- '&eYour first plot is free!'
+
+codex_getting_started_title: '&e§lI. Getting Started'
+
+confirm_no: '&c✖ No, Cancel'
+
+confirm_no_lore:
+- '&7Click to cancel.'
+
+confirm_title: '&c⚠ Confirm Action'
+
+confirm_yes: '&a✔ Yes, Confirm'
+
+confirm_yes_lore:
+- '&7Click to confirm this action.'
+
+current_tier: '&6Current Tier'
+
+error_no_permission: '&cYou do not have permission for this.'
+
+error_not_enough_blocks: '&cYou do not have enough blocks.'
+
+error_not_enough_money: '&cYou do not have enough money.'
+
+error_player_not_found: '&cPlayer not found.'
+
+error_plot_not_found: '&cPlot not found.'
+
+expansion_admin_no_perm: '&c❌ You do not have permission to manage requests.'
+
+expansion_blocked_lore:
+- '&cCannot expand in this direction.'
+- '&7Claimed terrain is blocking.'
+
+expansion_broadcast_approved: '&a✔ Expansion request approved for {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Expansion request denied for {PLAYER}.'
+
+expansion_direction_east: '&aEast'
+
+expansion_direction_lore:
+- '&7Expand {BLOCKS} blocks to the {DIRECTION}.'
+- '&7Cost: &6{COST}'
+- ' '
+- '&eClick to expand'
+
+expansion_direction_north: '&bNorth'
+
+expansion_direction_south: '&6South'
+
+expansion_direction_west: '&cWest'
+
+expansion_no_requests: '&7There are currently no expansion requests.'
+
+flag_animal_damage_lore:
+- '&7Allow visitors to damage animals.'
+
+flag_animal_damage_name: '&e🐄 Animal Damage'
+
+flag_anvil_lore:
+- '&7Allow visitors to use anvils.'
+
+flag_anvil_name: '&7⚒ Anvils'
+
+flag_armorstand_lore:
+- '&7Allow editing armor stands.'
+
+flag_armorstand_name: '&7🧍 Armor Stands'
+
+flag_beacon_lore:
+- '&7Allow visitors to change beacons.'
+
+flag_beacon_name: '&b✨ Beacons'
+
+flag_bed_lore:
+- '&7Allow visitors to use beds.'
+
+flag_bed_name: '&c🛏 Beds'
+
+flag_bell_lore:
+- '&7Allow visitors to use bells.'
+
+flag_bell_name: '&6🔔 Bells'
+
+flag_brewing_lore:
+- '&7Allow visitors to use brewing stands.'
+
+flag_brewing_name: '&d🧪 Brewing'
+
+flag_button_lever_lore:
+- '&7Allow visitors to use buttons/levers.'
+
+flag_button_lever_name: '&6🔘 Buttons & Levers'
+
+flag_cake_lore:
+- '&7Allow visitors to eat cake.'
+
+flag_cake_name: '&d🎂 Cake'
+
+flag_chest_access_lore:
+- '&7Allow visitors to open chests.'
+
+flag_chest_access_name: '&6📦 Chest Access'
+
+flag_chiseled_bookshelf_lore:
+- '&7Allow use of chiseled bookshelves.'
+
+flag_chiseled_bookshelf_name: '&6📚 Chiseled Bookshelves'
+
+flag_chorus_teleport_lore:
+- '&7Allow teleporting with chorus fruit.'
+
+flag_chorus_teleport_name: '&5🔮 Chorus Teleport'
+
+flag_composter_lore:
+- '&7Allow visitors to use composters.'
+
+flag_composter_name: '&2🥬 Composters'
+
+flag_container_access_lore:
+- '&7Allow visitors to access containers.'
+
+flag_container_access_name: '&e🗃 Container Access'
+
+flag_crafting_lore:
+- '&7Allow visitors to use crafting tables.'
+
+flag_crafting_name: '&6🔨 Crafting Tables'
+
+flag_crop_growth_lore:
+- '&7Allow crops to grow.'
+
+flag_crop_growth_name: '&a🌾 Crop Growth'
+
+flag_decorated_pot_lore:
+- '&7Allow use of decorated pots.'
+
+flag_decorated_pot_name: '&6🏺 Decorated Pots'
+
+flag_disabled: '&cDisabled'
+
+flag_door_lore:
+- '&7Allow visitors to use doors.'
+
+flag_door_name: '&8🚪 Doors'
+
+flag_dragon_egg_lore:
+- '&7Allow interaction with the dragon egg.'
+
+flag_dragon_egg_name: '&5🥚 Dragon Egg'
+
+flag_dripleaf_lore:
+- '&7Allow dripleaf to tilt.'
+
+flag_dripleaf_name: '&a🌱 Dripleaf'
+
+flag_enabled: '&aEnabled'
+
+flag_enchanting_lore:
+- '&7Allow visitors to use enchanting tables.'
+
+flag_enchanting_name: '&5📖 Enchanting'
+
+flag_ender_pearl_lore:
+- '&7Allow use of ender pearls.'
+
+flag_ender_pearl_name: '&a🟢 Ender Pearls'
+
+flag_explosions_lore:
+- '&7Allow explosion damage.'
+
+flag_explosions_name: '&c💥 Explosions'
+
+flag_fire_spread_lore:
+- '&7Allow fire to spread.'
+
+flag_fire_spread_name: '&6🔥 Fire Spread'
+
+flag_furnace_lore:
+- '&7Allow visitors to use furnaces.'
+
+flag_furnace_name: '&8🔥 Furnaces'
+
+flag_gate_lore:
+- '&7Allow visitors to use gates.'
+
+flag_gate_name: '&a🚧 Gates'
+
+flag_hanging_signs_lore:
+- '&7Allow editing hanging signs.'
+
+flag_hanging_signs_name: '&6🪧 Hanging Signs'
+
+flag_ice_melt_lore:
+- '&7Allow ice to melt.'
+
+flag_ice_melt_name: '&b❄ Ice Melt'
+
+flag_item_drop_lore:
+- '&7Allow visitors to drop items.'
+
+flag_item_drop_name: '&d📤 Item Drops'
+
+flag_item_pickup_lore:
+- '&7Allow visitors to pick up items.'
+
+flag_item_pickup_name: '&d📦 Item Pickup'
+
+flag_itemframe_lore:
+- '&7Allow editing item frames.'
+
+flag_itemframe_name: '&e🖼 Item Frames'
+
+flag_jukebox_lore:
+- '&7Allow visitors to use jukeboxes.'
+
+flag_jukebox_name: '&d🎵 Jukeboxes'
+
+flag_leaf_decay_lore:
+- '&7Allow leaves to decay.'
+
+flag_leaf_decay_name: '&a🍃 Leaf Decay'
+
+flag_lectern_lore:
+- '&7Allow visitors to use lecterns.'
+
+flag_lectern_name: '&6📚 Lecterns'
+
+flag_lodestone_lore:
+- '&7Allow visitors to use lodestones.'
+
+flag_lodestone_name: '&7🧲 Lodestones'
+
+flag_mob_spawning_lore:
+- '&7Allow mobs to spawn.'
+
+flag_mob_spawning_name: '&2🐷 Mob Spawning'
+
+flag_noteblock_lore:
+- '&7Allow visitors to use note blocks.'
+
+flag_noteblock_name: '&e🎶 Note Blocks'
+
+flag_painting_lore:
+- '&7Allow placing/removing paintings.'
+
+flag_painting_name: '&6🎨 Paintings'
+
+flag_pressure_plate_lore:
+- '&7Allow activation of pressure plates.'
+
+flag_pressure_plate_name: '&7⬜ Pressure Plates'
+
+flag_pvp_lore:
+- '&7Allow player-vs-player combat.'
+
+flag_pvp_name: '&c⚔ PvP'
+
+flag_redstone_lore:
+- '&7Allow redstone to function.'
+
+flag_redstone_name: '&c⚡ Redstone'
+
+flag_respawn_anchor_lore:
+- '&7Allow visitors to use respawn anchors.'
+
+flag_respawn_anchor_name: '&5⚓ Respawn Anchors'
+
+flag_sculk_sensor_lore:
+- '&7Allow sculk sensors to function.'
+
+flag_sculk_sensor_name: '&3📡 Sculk Sensors'
+
+flag_sign_edit_lore:
+- '&7Allow visitors to edit signs.'
+
+flag_sign_edit_name: '&6✏ Sign Editing'
+
+flag_snow_fall_lore:
+- '&7Allow snow accumulation.'
+
+flag_snow_fall_name: '&f☃ Snow Fall'
+
+flag_suspicious_block_lore:
+- '&7Allow brushing suspicious blocks.'
+
+flag_suspicious_block_name: '&e🔍 Suspicious Blocks'
+
+flag_target_block_lore:
+- '&7Allow activation of target blocks.'
+
+flag_target_block_name: '&c🎯 Target Blocks'
+
+flag_toggle_lore:
+- '&7Current state: {STATUS}'
+- ' '
+- '&eClick to toggle'
+
+flag_trapdoor_lore:
+- '&7Allow visitors to use trapdoors.'
+
+flag_trapdoor_name: '&6⬜ Trapdoors'
+
+flag_tripwire_lore:
+- '&7Allow triggering tripwires.'
+
+flag_tripwire_name: '&8🪤 Tripwires'
+
+flag_turtle_egg_lore:
+- '&7Protect turtle eggs from trampling.'
+
+flag_turtle_egg_name: '&a🥚 Turtle Eggs'
+
+flag_vehicle_damage_lore:
+- '&7Allow visitors to destroy vehicles.'
+
+flag_vehicle_damage_name: '&6🚗 Vehicle Damage'
+
+flag_vehicle_use_lore:
+- '&7Allow visitors to use vehicles.'
+
+flag_vehicle_use_name: '&6🚂 Vehicle Use'
+
+flag_villager_trade_lore:
+- '&7Allow villager trading.'
+
+flag_villager_trade_name: '&a🤝 Villager Trading'
+
+flags_gui_title: '&6⚙ Plot Flags'
+
+ledger_entry_lore:
+- '&7Date: &f{DATE}'
+- '&7Action: &e{ACTION}'
+- '&7By: &b{ACTOR}'
+
+locked_bonuses: '&7Locked Bonuses'
+
+locked_tier: '&8Locked Tier'
+
+market_buy_button: '&e🛒 Buy Plots'
+
+market_buy_lore:
+- '&7View plots for sale.'
+
+market_listing_item: '&e{PLOT}'
+
+market_listing_lore:
+- '&7Seller: &b{SELLER}'
+- '&7Price: &6{PRICE}'
+- '&7Size: &a{SIZE} blocks'
+- ' '
+- '&eClick to buy'
+
+market_sell_button: '&a💵 Sell Plot'
+
+market_sell_lore:
+- '&7Put your plot up for sale.'
+
+market_your_listing: '&6Your Listing'
+
+market_your_listing_lore:
+- '&7Price: &6{PRICE}'
+- ' '
+- '&cClick to remove from market'
+
+next_tier: '&eNext Tier'
+
+no_bonuses: '&7No bonuses at this tier.'
+
+no_selection: '&cYou need to select two points first.'
+
+pending_request_item: '&e{TYPE}'
+
+pending_request_lore:
+- '&7Player: &b{PLAYER}'
+- '&7Plot: &e{PLOT}'
+- '&7Direction: &a{DIRECTION}'
+- '&7Blocks: &6{BLOCKS}'
+- ' '
+- '&aLeft-click: &7Approve'
+- '&cRight-click: &7Deny'
+
+pending_requests_title: '&6📋 Pending Requests'
+
+plot_status_flags_item: '&6🚩 Active Flags'
+
+plot_status_flags_lore:
+- '&7Flags enabled on this plot.'
+
+plot_status_info_lore:
+- '&7Owner: &e{OWNER}'
+- '&7Size: &a{SIZE} blocks'
+- '&7Tier: &b{LEVEL}'
+- '&7Members: &d{MEMBERS}'
+- ' '
+- '&7Created: &f{CREATED}'
+
+plot_status_members_item: '&e👥 Members'
+
+plot_status_members_lore:
+- '&7Trusted players on this plot.'
+
+plot_status_name_item: '&b{NAME}'
+
+plot_status_title: '&b✦ Plot Status'
+
+progression_available: '&eReady to upgrade.'
+
+progression_in_progress: '&7Progression underway...'
+
+progression_locked: '&cProgression locked. Complete prerequisites first.'
+
+progression_mastered: '&dThis progression line is fully mastered.'
+
+role_banned: '&cBanned'
+
+role_coowner: '&dCo-Owner'
+
+role_owner: '&6Owner'
+
+role_trusted: '&aTrusted'
+
+role_visitor: '&7Visitor'
+
+roles_add_button: '&a➕ Add Member'
+
+roles_add_lore:
+- '&7Add a new trusted member.'
+
+roles_member_item: '&b{PLAYER}'
+
+roles_member_lore:
+- '&7Role: &e{ROLE}'
+- ' '
+- '&eLeft-click: &7Change role'
+- '&cRight-click: &7Remove'
+
+roles_remove_button: '&c➖ Remove Member'
+
+roles_remove_lore:
+- '&7Remove someone from your plot.'
+
+status_approved: '&aApproved'
+
+status_denied: '&cDenied'
+
+status_locked: '&cLocked'
+
+status_off: '&cNo'
+
+status_on: '&aYes'
+
+status_pending: '&ePending'
+
+status_unlocked: '&aUnlocked'
+
+success_flag_toggled: '&aFlag updated.'
+
+success_generic: '&aOperation successful!'
+
+success_player_trusted: '&a{PLAYER} is now trusted.'
+
+success_player_untrusted: '&a{PLAYER} is no longer trusted.'
+
+success_plot_claimed: '&aPlot claimed successfully!'
+
+success_plot_unclaimed: '&aPlot removed.'
+
+success_settings_saved: '&aSettings saved.'
+
+tier_current_lore:
+- '&7Your plot is at this tier.'
+
+tier_current_name: '&6Current Tier'
+
+tier_description: '&7Your plot is at this tier.'
+
+tier_locked_description: '&cThis tier is not available yet.'
+
+tier_locked_lore:
+- '&cThis tier is not available yet.'
+- '&7Complete the previous tier first.'
+
+tier_locked_name: '&8Locked Tier'
+
+tier_max_lore:
+- '&dYou have fully mastered this plot.'
+- '&7Enjoy all the bonuses!'
+
+tier_max_reached: '&6★ Max Tier Reached'
+
+tier_name_1: '&7 Tier I'
+
+tier_name_10: '&6✦ Tier X ✦'
+
+tier_name_2: '&f Tier II'
+
+tier_name_3: '&a Tier III'
+
+tier_name_4: '&b Tier IV'
+
+tier_name_5: '&d Tier V'
+
+tier_name_6: '&6 Tier VI'
+
+tier_name_7: '&c Tier VII'
+
+tier_name_8: '&5 Tier VIII'
+
+tier_name_9: '&e Tier IX'
+
+tier_next_lore:
+- '&7The next tier to unlock.'
+
+tier_next_name: '&eNext Tier'
+
+tier_unlocked_lore:
+- '&aTier unlocked and active.'
+
+tier_unlocked_name: '&aUnlocked Tier'
+
+tier_upgrade_click: '&eClick to upgrade'
+
+tier_upgrade_cost: '&7Cost: &6{COST}'
+
+tier_upgrade_insufficient: '&cYou do not have enough resources.'
+
+tier_upgrade_requirements: '&7Requirements:'
+
+unlocked_bonuses: '&bUnlocked Bonuses'
+
+unlocked_tier: '&aUnlocked Tier'
+
+zone_create_button: '&a➕ Create Zone'
+
+zone_create_lore:
+- '&7Create a new sub-zone.'
+
+zone_delete_confirm: '&cDelete this zone?'
+
+zone_item_lore:
+- '&7Type: &b{TYPE}'
+- '&7Size: &a{SIZE} blocks'
+- ' '
+- '&eClick to manage'
+
+zone_type_farm: '&2Farm'
+
+zone_type_rental: '&6Rental'
+
+zone_type_restricted: '&cRestricted'
+
+zone_type_shop: '&aShop'
+
+zone_type_storage: '&7Storage'

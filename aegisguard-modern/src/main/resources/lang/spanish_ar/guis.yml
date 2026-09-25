@@ -4677,3 +4677,14 @@ roles_lock_status_unlocked: '&7Sin bloquear'
 roles_guest_pass_never: 'Sin vencimiento'
 roles_guest_pass_expiring: '<1m'
 
+
+biome_item_lore_free:
+- '&7Costo: &aGratis'
+
+biome_item_lore_set_biome:
+- '&7Establecé el bioma de tu parcela a {BIOME}.'
+- '&7Costo: {COST}'
+
+biome_item_lore_visual_only:
+- '&c[!] Solo cambio visual'
+- '&7Los bloques en sí no se reemplazan.'

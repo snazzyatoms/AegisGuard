@@ -151,3 +151,11 @@ expansion_request_denied_player: '&c✖ Your expansion request was denied.'
 expansion_request_approved_admin: '&a✔ Approved expansion request for &f{PLAYER}&a.'
 expansion_request_denied_admin: '&c✖ Denied expansion request for &f{PLAYER}&c.'
 request_expired: '&c❌ That request has expired or been handled already.'
+
+expansion_admin_no_perm: '&c❌ You do not have permission to manage requests.'
+
+expansion_broadcast_approved: '&a✔ Expansion request approved for {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Expansion request denied for {PLAYER}.'
+
+expansion_no_requests: '&7There are currently no expansion requests.'

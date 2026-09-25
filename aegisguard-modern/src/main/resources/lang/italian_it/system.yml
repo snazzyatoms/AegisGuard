@@ -1171,3 +1171,67 @@ help_lines:
 - '&e/aegis merge &7- Unisci lotti adiacenti (se attivo).'
 - '&e/aegis transfer <giocatore> &7- Trasferisci la proprietà del lotto attuale.'
 - '&e/aegis settlements &7- Apri la tua casella dei pagamenti in sospeso.'
+
+claim_blocks_balance_available_line: '&7Disponibili: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSaldo ClaimBlocks'
+
+claim_blocks_balance_line: '&7Totale: &f{TOTAL}  &7Spesi: &f{SPENT}  &7Disponibili: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Spesi: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Totale: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ I ClaimBlocks sono attivi su questo server.'
+
+claim_blocks_granted: '&a✔ Hai ricevuto &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ La quantità deve essere positiva.'
+
+claim_blocks_shop_amount_too_high: '&c❌ La quantità massima è &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ La quantità minima è &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ Il negozio di ClaimBlocks è disattivato su questo server.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Quella quantità non è valida.'
+
+claim_blocks_shop_no_permission: '&c❌ Non hai il permesso di comprare ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Denaro insufficiente. Richiesto: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aApertura del negozio di ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Acquisto fallito. Riprova.'
+
+claim_blocks_shop_purchase_success: '&a✔ Hai comprato &b{BLOCKS}&a ClaimBlocks per &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault e denaro non sono disponibili su questo server.'
+
+claim_blocks_shop_world_blocked: '&c❌ Questa azione non è permessa in questo mondo.'
+
+claim_conflict_external: '&c❌ Quellarea è già protetta da un altro plugin. AegisGuard non la reclamerà.'
+
+claim_enter_exit_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
+
+claim_enter_exit_notify_already_enabled: '&7Queste notifiche sono già attivate.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Notifiche del lotto di {PLAYER} impostate su: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cGiocatore non trovato.'
+
+claim_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
+
+claim_notify_already_enabled: '&7Queste notifiche sono già attivate.'
+
+claim_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+
+claim_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
+
+claim_notify_set_for_other: '&a✔ Notifiche del lotto di {PLAYER} impostate su: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cGiocatore non trovato.'

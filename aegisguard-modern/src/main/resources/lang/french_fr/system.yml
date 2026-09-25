@@ -1172,3 +1172,67 @@ help_lines:
 - '&e/aegis merge &7- Fusionnez les parcelles adjacentes (si activé).'
 - '&e/aegis transfer <joueur> &7- Transférez la propriété de la parcelle actuelle.'
 - '&e/aegis settlements &7- Ouvrez votre boîte de paiements en attente.'
+
+claim_blocks_balance_available_line: '&7Disponible : &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSolde de ClaimBlocks'
+
+claim_blocks_balance_line: '&7Total : &f{TOTAL}  &7Dépensés : &f{SPENT}  &7Disponibles : &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Dépensés : &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Total : &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ Les ClaimBlocks sont activés sur ce serveur.'
+
+claim_blocks_granted: '&a✔ Vous avez reçu &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ La quantité doit être positive.'
+
+claim_blocks_shop_amount_too_high: '&c❌ La quantité maximale est &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ La quantité minimale est &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ La boutique de ClaimBlocks est désactivée sur ce serveur.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Cette quantité est invalide.'
+
+claim_blocks_shop_no_permission: '&c❌ Vous navez pas la permission dacheter des ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Fonds insuffisants. Requis : &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aOuverture de la boutique de ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Achat échoué. Réessayez.'
+
+claim_blocks_shop_purchase_success: '&a✔ Vous avez acheté &b{BLOCKS}&a ClaimBlocks pour &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault et la monnaie sont indisponibles sur ce serveur.'
+
+claim_blocks_shop_world_blocked: '&c❌ Cette action est interdite dans ce monde.'
+
+claim_conflict_external: '&c❌ Cette zone est déjà protégée par un autre plugin. AegisGuard ne la réclamera pas.'
+
+claim_enter_exit_notify_already_disabled: '&7Ces notifications sont déjà désactivées.'
+
+claim_enter_exit_notify_already_enabled: '&7Ces notifications sont déjà activées.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cJoueur introuvable.'
+
+claim_notify_already_disabled: '&7Ces notifications sont déjà désactivées.'
+
+claim_notify_already_enabled: '&7Ces notifications sont déjà activées.'
+
+claim_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+
+claim_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+
+claim_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cJoueur introuvable.'

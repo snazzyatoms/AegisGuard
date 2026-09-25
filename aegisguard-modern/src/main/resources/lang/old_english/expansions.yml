@@ -146,3 +146,11 @@ open_pending_requests_lore:
 - '&7awaiting approve or deny.'
 - ' '
 - '&eClick to open.'
+
+expansion_admin_no_perm: '&c❌ You do not have permission to manage requests.'
+
+expansion_broadcast_approved: '&a✔ Expansion request approved for {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Expansion request denied for {PLAYER}.'
+
+expansion_no_requests: '&7There are currently no expansion requests.'

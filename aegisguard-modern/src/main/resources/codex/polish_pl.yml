@@ -4847,3 +4847,760 @@ roles_gui_title: '&e👥 Zarządzanie rolami'
 visit_fail_no_spawn: '&cTo miejsce nie ma prawidłowego punktu spawnu.'
 
 visit_teleport_success: '&aTeleportowano.'
+
+admin_gui_title: '&c✦ Narzędzia Wielkiego Strażnika'
+
+auction_create_button: '&a➕ Utwórz aukcję'
+
+auction_create_lore:
+- '&7Wystaw jedną ze swoich działek na aukcję.'
+
+auction_no_auctions: '&7Brak aktywnych aukcji.'
+
+biome_badlands: '&cPustkowia'
+
+biome_beach: '&ePlaża'
+
+biome_birch_forest: '&fBrzozowy las'
+
+biome_cherry_grove: '&dWiśniowy gaj'
+
+biome_dark_forest: '&8Ciemny las'
+
+biome_deep_ocean: '&1Głęboki ocean'
+
+biome_desert: '&ePustynia'
+
+biome_flower_forest: '&dKwietny las'
+
+biome_forest: '&2Las'
+
+biome_frozen_peaks: '&bZamarznięte szczyty'
+
+biome_grove: '&fGaj'
+
+biome_item_lore:
+- '&7Kliknij, aby ustawić ten biom.'
+
+biome_item_lore_free:
+- '&7Koszt: &aDarmowe'
+
+biome_item_lore_set_biome:
+- '&7Ustaw biom swojej działki na {BIOME}.'
+- '&7Koszt: {COST}'
+
+biome_item_lore_visual_only:
+- '&c[!] Tylko zmiana wizualna'
+- '&7Same bloki nie są zastępowane.'
+
+biome_jungle: '&aDżungla'
+
+biome_mangrove_swamp: '&2Namorzynowe bagno'
+
+biome_meadow: '&aŁąka'
+
+biome_mushroom_fields: '&dPola grzybów'
+
+biome_ocean: '&9Ocean'
+
+biome_old_growth_pine_taiga: '&2Tajga starych sosen'
+
+biome_plains: '&aRówniny'
+
+biome_river: '&bRzeka'
+
+biome_savanna: '&6Sawanna'
+
+biome_snowy_plains: '&fZaśnieżone równiny'
+
+biome_swamp: '&8Bagno'
+
+biome_the_void: '&8Pustka'
+
+biome_top_taiga: '&bTajga'
+
+biome_windswept_hills: '&7Wietrzne wzgórza'
+
+bonus_claim_blocks: '&aBloki działki: +{AMOUNT}'
+
+bonus_fire_resistance: '&6Odporność na ogień'
+
+bonus_haste: '&eSzybkość {LEVEL}'
+
+bonus_homes: '&dDomy: {COUNT}'
+
+bonus_jump: '&aSkok {LEVEL}'
+
+bonus_members: '&eCzłonkowie: {COUNT}'
+
+bonus_night_vision: '&1Widzenie w ciemności'
+
+bonus_prefix: '&a✦ '
+
+bonus_regeneration: '&dRegeneracja {LEVEL}'
+
+bonus_resistance: '&9Odporność {LEVEL}'
+
+bonus_speed: '&bSzybkość {LEVEL}'
+
+bonus_strength: '&cSiła {LEVEL}'
+
+bonus_water_breathing: '&3Oddychanie pod wodą'
+
+claim_blocks_balance_available_line: '&7Dostępne: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bSaldo ClaimBlocks'
+
+claim_blocks_balance_line: '&7Razem: &f{TOTAL}  &7Wydane: &f{SPENT}  &7Dostępne: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Wydane: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Razem: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ ClaimBlocks są włączone na tym serwerze.'
+
+claim_blocks_granted: '&a✔ Otrzymałeś &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ Ilość musi być dodatnia.'
+
+claim_blocks_shop_amount_too_high: '&c❌ Maksymalna ilość to &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ Minimalna ilość to &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ Sklep z ClaimBlocks jest wyłączony na tym serwerze.'
+
+claim_blocks_shop_invalid_amount: '&c❌ Ta ilość jest nieprawidłowa.'
+
+claim_blocks_shop_no_permission: '&c❌ Nie masz uprawnień do kupowania ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Za mało pieniędzy. Wymagane: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aOtwieranie sklepu z ClaimBlocks...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Zakup nie powiódł się. Spróbuj ponownie.'
+
+claim_blocks_shop_purchase_success: '&a✔ Kupiłeś &b{BLOCKS}&a ClaimBlocks za &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault i pieniądze są niedostępne na tym serwerze.'
+
+claim_blocks_shop_world_blocked: '&c❌ Ta akcja jest niedozwolona w tym świecie.'
+
+claim_blocks_spent_simple: '&e⛏ Wydałeś &6{AMOUNT}&e bloków. &7(Pozostało: &f{BALANCE}&7)'
+
+claim_conflict_external: '&c❌ Ten obszar jest już chroniony przez inną wtyczkę. AegisGuard go nie zajmie.'
+
+claim_enter_exit_notify_already_disabled: '&7Te powiadomienia są już wyłączone.'
+
+claim_enter_exit_notify_already_enabled: '&7Te powiadomienia są już włączone.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cPowiadomienia o wejściu/wyjściu są wyłączone przez admina serwera.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cPowiadomienia o wejściu/wyjściu są dla ciebie wyłączone.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Ustawiono powiadomienia gracza {PLAYER} na: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cNie znaleziono gracza.'
+
+claim_notify_already_disabled: '&7Te powiadomienia są już wyłączone.'
+
+claim_notify_already_enabled: '&7Te powiadomienia są już włączone.'
+
+claim_notify_forced_disabled_by_server: '&cPowiadomienia o wejściu/wyjściu są wyłączone przez admina serwera.'
+
+claim_notify_forced_disabled_for_you: '&cPowiadomienia o wejściu/wyjściu są dla ciebie wyłączone.'
+
+claim_notify_set_for_other: '&a✔ Ustawiono powiadomienia gracza {PLAYER} na: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cNie znaleziono gracza.'
+
+codex_commands_lore:
+- '&7Pełna lista komend:'
+- ' '
+- '&b/ag help &7- Pokaż pomoc'
+- '&b/ag menu &7- Otwórz menu główne'
+- '&b/ag claim &7- Zajmij zaznaczenie'
+- '&b/ag unclaim &7- Usuń działkę'
+- '&b/ag trust &7- Dodaj gracza'
+- '&b/ag untrust &7- Usuń gracza'
+- '&b/ag flags &7- Edytuj flagi'
+- '&b/ag home &7- Idź do swojej działki'
+
+codex_commands_title: '&a§lX. Komendy'
+
+codex_faq_lore:
+- '&7Częste pytania:'
+- ' '
+- '&eJak powiększyć działkę?'
+- '&7Użyj &b/ag expand &7lub ulepsz poziom.'
+- ' '
+- '&eJak dodać znajomych?'
+- '&7Użyj &b/ag trust <gracz>'
+- ' '
+- '&eJak usunąć działkę?'
+- '&7Użyj &b/ag unclaim'
+
+codex_faq_title: '&9§lIX. Najczęstsze pytania'
+
+codex_getting_started_lore:
+- '&7Witaj w AegisGuard!'
+- ' '
+- '&f1. &7Użyj &b/ag wand&7, aby zdobyć narzędzie.'
+- '&f2. &7Kliknij prawym na pierwszy róg.'
+- '&f3. &7Kliknij lewym na przeciwległy róg.'
+- '&f4. &7Użyj &a/ag claim&7, aby zająć działkę.'
+- ' '
+- '&eTwoja pierwsza działka jest darmowa!'
+
+codex_getting_started_title: '&e§lI. Pierwsze kroki'
+
+confirm_no: '&c✖ Nie, anuluj'
+
+confirm_no_lore:
+- '&7Kliknij, aby anulować.'
+
+confirm_title: '&c⚠ Potwierdź akcję'
+
+confirm_yes: '&a✔ Tak, potwierdź'
+
+confirm_yes_lore:
+- '&7Kliknij, aby potwierdzić tę akcję.'
+
+current_tier: '&6Aktualny poziom'
+
+error_no_permission: '&cNie masz do tego uprawnień.'
+
+error_not_enough_blocks: '&cNie masz wystarczająco bloków.'
+
+error_not_enough_money: '&cNie masz wystarczająco pieniędzy.'
+
+error_player_not_found: '&cNie znaleziono gracza.'
+
+error_plot_not_found: '&cNie znaleziono działki.'
+
+expansion_admin_no_perm: '&c❌ Nie masz uprawnień do zarządzania zgłoszeniami.'
+
+expansion_blocked_lore:
+- '&cNie można rozszerzyć w tym kierunku.'
+- '&7Zajęty teren blokuje.'
+
+expansion_broadcast_approved: '&a✔ Zatwierdzono prośbę o rozszerzenie dla {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Odrzucono prośbę o rozszerzenie dla {PLAYER}.'
+
+expansion_direction_east: '&aWschód'
+
+expansion_direction_lore:
+- '&7Rozszerz o {BLOCKS} bloków na {DIRECTION}.'
+- '&7Koszt: &6{COST}'
+- ' '
+- '&eKliknij, aby rozszerzyć'
+
+expansion_direction_north: '&bPółnoc'
+
+expansion_direction_south: '&6Południe'
+
+expansion_direction_west: '&cZachód'
+
+expansion_no_requests: '&7Obecnie nie ma próśb o rozszerzenie.'
+
+flag_animal_damage_lore:
+- '&7Pozwól odwiedzającym ranili zwierzęta.'
+
+flag_animal_damage_name: '&e🐄 Obrażenia zwierząt'
+
+flag_anvil_lore:
+- '&7Pozwól odwiedzającym używali kowadeł.'
+
+flag_anvil_name: '&7⚒ Kowadła'
+
+flag_armorstand_lore:
+- '&7Pozwól na edycję stojaków na zbroję.'
+
+flag_armorstand_name: '&7🧍 Stojaki na zbroję'
+
+flag_beacon_lore:
+- '&7Pozwól odwiedzającym zmieniali latarnie.'
+
+flag_beacon_name: '&b✨ Latarnie'
+
+flag_bed_lore:
+- '&7Pozwól odwiedzającym używali łóżek.'
+
+flag_bed_name: '&c🛏 Łóżka'
+
+flag_bell_lore:
+- '&7Pozwól odwiedzającym używali dzwonów.'
+
+flag_bell_name: '&6🔔 Dzwony'
+
+flag_brewing_lore:
+- '&7Pozwól odwiedzającym używali stojaków na mikstury.'
+
+flag_brewing_name: '&d🧪 Warzenie'
+
+flag_button_lever_lore:
+- '&7Pozwól odwiedzającym używali przycisków/dźwigni.'
+
+flag_button_lever_name: '&6🔘 Przyciski i Dźwignie'
+
+flag_cake_lore:
+- '&7Pozwól odwiedzającym jedli ciasta.'
+
+flag_cake_name: '&d🎂 Ciasta'
+
+flag_chest_access_lore:
+- '&7Pozwól odwiedzającym otwierali skrzynie.'
+
+flag_chest_access_name: '&6📦 Dostęp do skrzyń'
+
+flag_chiseled_bookshelf_lore:
+- '&7Pozwól na użycie rzeźbionych biblioteczek.'
+
+flag_chiseled_bookshelf_name: '&6📚 Rzeźbione biblioteczki'
+
+flag_chorus_teleport_lore:
+- '&7Pozwól na teleportację owocami chorus.'
+
+flag_chorus_teleport_name: '&5🔮 Teleport Chorus'
+
+flag_composter_lore:
+- '&7Pozwól odwiedzającym używali kompostowników.'
+
+flag_composter_name: '&2🥬 Kompostowniki'
+
+flag_container_access_lore:
+- '&7Pozwól odwiedzającym otwierali pojemniki.'
+
+flag_container_access_name: '&e🗃 Dostęp do pojemników'
+
+flag_crafting_lore:
+- '&7Pozwól odwiedzającym używali stołów rzemieślniczych.'
+
+flag_crafting_name: '&6🔨 Stoły rzemieślnicze'
+
+flag_crop_growth_lore:
+- '&7Pozwól na wzrost upraw.'
+
+flag_crop_growth_name: '&a🌾 Wzrost upraw'
+
+flag_decorated_pot_lore:
+- '&7Pozwól na użycie zdobionych donic.'
+
+flag_decorated_pot_name: '&6🏺 Zdobione donice'
+
+flag_disabled: '&cWyłączone'
+
+flag_door_lore:
+- '&7Pozwól odwiedzającym używali drzwi.'
+
+flag_door_name: '&8🚪 Drzwi'
+
+flag_dragon_egg_lore:
+- '&7Pozwól na interakcję z jajem smoka.'
+
+flag_dragon_egg_name: '&5🥚 Jajo smoka'
+
+flag_dripleaf_lore:
+- '&7Pozwól na pochylanie kroplików.'
+
+flag_dripleaf_name: '&a🌱 Kroplik'
+
+flag_enabled: '&aWłączone'
+
+flag_enchanting_lore:
+- '&7Pozwól odwiedzającym używali stołów do zaklęć.'
+
+flag_enchanting_name: '&5📖 Zaklinanie'
+
+flag_ender_pearl_lore:
+- '&7Pozwól na użycie pereł Endera.'
+
+flag_ender_pearl_name: '&a🟢 Perły Endera'
+
+flag_explosions_lore:
+- '&7Pozwól na obrażenia od wybuchów.'
+
+flag_explosions_name: '&c💥 Wybuchy'
+
+flag_fire_spread_lore:
+- '&7Pozwól na rozprzestrzenianie ognia.'
+
+flag_fire_spread_name: '&6🔥 Rozprzestrzenianie ognia'
+
+flag_furnace_lore:
+- '&7Pozwól odwiedzającym używali pieców.'
+
+flag_furnace_name: '&8🔥 Piece'
+
+flag_gate_lore:
+- '&7Pozwól odwiedzającym używali furtek.'
+
+flag_gate_name: '&a🚧 Furtki'
+
+flag_hanging_signs_lore:
+- '&7Pozwól na edycję wiszących tabliczek.'
+
+flag_hanging_signs_name: '&6🪧 Wiszące tabliczki'
+
+flag_ice_melt_lore:
+- '&7Pozwól na topnienie lodu.'
+
+flag_ice_melt_name: '&b❄ Topnienie lodu'
+
+flag_item_drop_lore:
+- '&7Pozwól odwiedzającym wyrzucali przedmioty.'
+
+flag_item_drop_name: '&d📤 Wyrzucanie przedmiotów'
+
+flag_item_pickup_lore:
+- '&7Pozwól odwiedzającym podnosili przedmioty.'
+
+flag_item_pickup_name: '&d📦 Podnoszenie przedmiotów'
+
+flag_itemframe_lore:
+- '&7Pozwól na edycję ram.'
+
+flag_itemframe_name: '&e🖼 Ramy na przedmioty'
+
+flag_jukebox_lore:
+- '&7Pozwól odwiedzającym używali szaf grających.'
+
+flag_jukebox_name: '&d🎵 Szafy grające'
+
+flag_leaf_decay_lore:
+- '&7Pozwól na opadanie liści.'
+
+flag_leaf_decay_name: '&a🍃 Opadanie liści'
+
+flag_lectern_lore:
+- '&7Pozwól odwiedzającym używali pulpitów.'
+
+flag_lectern_name: '&6📚 Pulpity'
+
+flag_lodestone_lore:
+- '&7Pozwól odwiedzającym używali magnetytów.'
+
+flag_lodestone_name: '&7🧲 Magnetyty'
+
+flag_mob_spawning_lore:
+- '&7Pozwól na pojawianie mobów.'
+
+flag_mob_spawning_name: '&2🐷 Pojawianie mobów'
+
+flag_noteblock_lore:
+- '&7Pozwól odwiedzającym używali bloków dźwiękowych.'
+
+flag_noteblock_name: '&e🎶 Bloki dźwiękowe'
+
+flag_painting_lore:
+- '&7Pozwól na stawianie/zdejmowanie obrazów.'
+
+flag_painting_name: '&6🎨 Obrazy'
+
+flag_pressure_plate_lore:
+- '&7Pozwól na aktywację płyt naciskowych.'
+
+flag_pressure_plate_name: '&7⬜ Płyty naciskowe'
+
+flag_pvp_lore:
+- '&7Pozwól na walkę między graczami.'
+
+flag_pvp_name: '&c⚔ PvP'
+
+flag_redstone_lore:
+- '&7Pozwól na działanie redstone.'
+
+flag_redstone_name: '&c⚡ Redstone'
+
+flag_respawn_anchor_lore:
+- '&7Pozwól odwiedzającym używali kotwic odrodzenia.'
+
+flag_respawn_anchor_name: '&5⚓ Kotwice odrodzenia'
+
+flag_sculk_sensor_lore:
+- '&7Pozwól na działanie czujników sculk.'
+
+flag_sculk_sensor_name: '&3📡 Czujniki sculk'
+
+flag_sign_edit_lore:
+- '&7Pozwól odwiedzającym edytowali tabliczki.'
+
+flag_sign_edit_name: '&6✏ Edycja tabliczek'
+
+flag_snow_fall_lore:
+- '&7Pozwól na gromadzenie śniegu.'
+
+flag_snow_fall_name: '&f☃ Opady śniegu'
+
+flag_suspicious_block_lore:
+- '&7Pozwól na czyszczenie podejrzanych bloków.'
+
+flag_suspicious_block_name: '&e🔍 Podejrzane bloki'
+
+flag_target_block_lore:
+- '&7Pozwól na aktywację bloków celu.'
+
+flag_target_block_name: '&c🎯 Bloki celu'
+
+flag_toggle_lore:
+- '&7Aktualny stan: {STATUS}'
+- ' '
+- '&eKliknij, aby przełączyć'
+
+flag_trapdoor_lore:
+- '&7Pozwól odwiedzającym używali klap.'
+
+flag_trapdoor_name: '&6⬜ Klapy'
+
+flag_tripwire_lore:
+- '&7Pozwól na aktywację linek pułapkowych.'
+
+flag_tripwire_name: '&8🪤 Linki pułapkowe'
+
+flag_turtle_egg_lore:
+- '&7Chroń jaja żółwia przed deptaniem.'
+
+flag_turtle_egg_name: '&a🥚 Jaja żółwia'
+
+flag_vehicle_damage_lore:
+- '&7Pozwól odwiedzającym niszczyli pojazdy.'
+
+flag_vehicle_damage_name: '&6🚗 Obrażenia pojazdów'
+
+flag_vehicle_use_lore:
+- '&7Pozwól odwiedzającym używali pojazdów.'
+
+flag_vehicle_use_name: '&6🚂 Używanie pojazdów'
+
+flag_villager_trade_lore:
+- '&7Pozwól handel z wieśniakami.'
+
+flag_villager_trade_name: '&a🤝 Handel z wieśniakami'
+
+flags_gui_title: '&6⚙ Flagi działki'
+
+ledger_entry_lore:
+- '&7Data: &f{DATE}'
+- '&7Akcja: &e{ACTION}'
+- '&7Przez: &b{ACTOR}'
+
+locked_bonuses: '&7Zablokowane bonusy'
+
+locked_tier: '&8Zablokowany poziom'
+
+market_buy_button: '&e🛒 Kup działki'
+
+market_buy_lore:
+- '&7Zobacz działki na sprzedaż.'
+
+market_listing_item: '&e{PLOT}'
+
+market_listing_lore:
+- '&7Sprzedawca: &b{SELLER}'
+- '&7Cena: &6{PRICE}'
+- '&7Rozmiar: &a{SIZE} bloków'
+- ' '
+- '&eKliknij, aby kupić'
+
+market_sell_button: '&a💵 Sprzedaj działkę'
+
+market_sell_lore:
+- '&7Wystaw swoją działkę na sprzedaż.'
+
+market_your_listing: '&6Twoja oferta'
+
+market_your_listing_lore:
+- '&7Cena: &6{PRICE}'
+- ' '
+- '&cKliknij, aby usunąć z rynku'
+
+next_tier: '&eNastępny poziom'
+
+no_bonuses: '&7Brak bonusów na tym poziomie.'
+
+no_selection: '&cMusisz najpierw zaznaczyć dwa punkty.'
+
+pending_request_item: '&e{TYPE}'
+
+pending_request_lore:
+- '&7Gracz: &b{PLAYER}'
+- '&7Działka: &e{PLOT}'
+- '&7Kierunek: &a{DIRECTION}'
+- '&7Bloki: &6{BLOCKS}'
+- ' '
+- '&aLewy klik: &7Zatwierdź'
+- '&cPrawy klik: &7Odrzuć'
+
+pending_requests_title: '&6📋 Oczekujące prośby'
+
+plot_status_flags_item: '&6🚩 Aktywne flagi'
+
+plot_status_flags_lore:
+- '&7Flagi włączone na tej działce.'
+
+plot_status_info_lore:
+- '&7Właściciel: &e{OWNER}'
+- '&7Rozmiar: &a{SIZE} bloków'
+- '&7Poziom: &b{LEVEL}'
+- '&7Członkowie: &d{MEMBERS}'
+- ' '
+- '&7Utworzono: &f{CREATED}'
+
+plot_status_members_item: '&e👥 Członkowie'
+
+plot_status_members_lore:
+- '&7Zaufani gracze na tej działce.'
+
+plot_status_name_item: '&b{NAME}'
+
+plot_status_title: '&b✦ Status działki'
+
+progression_available: '&eGotowe do ulepszenia.'
+
+progression_in_progress: '&7Postęp w toku...'
+
+progression_locked: '&cPostęp zablokowany. Najpierw spełnij wymagania.'
+
+progression_mastered: '&dTa linia postępu jest w pełni opanowana.'
+
+role_banned: '&cZbanowany'
+
+role_coowner: '&dWspółwłaściciel'
+
+role_owner: '&6Właściciel'
+
+role_trusted: '&aZaufany'
+
+role_visitor: '&7Gość'
+
+roles_add_button: '&a➕ Dodaj członka'
+
+roles_add_lore:
+- '&7Dodaj nowego zaufanego członka.'
+
+roles_member_item: '&b{PLAYER}'
+
+roles_member_lore:
+- '&7Rola: &e{ROLE}'
+- ' '
+- '&eLewy klik: &7Zmień rolę'
+- '&cPrawy klik: &7Usuń'
+
+roles_remove_button: '&c➖ Usuń członka'
+
+roles_remove_lore:
+- '&7Usuń kogoś ze swojej działki.'
+
+status_approved: '&aZatwierdzone'
+
+status_denied: '&cOdrzucone'
+
+status_locked: '&cZablokowane'
+
+status_off: '&cNie'
+
+status_on: '&aTak'
+
+status_pending: '&eOczekujące'
+
+status_unlocked: '&aOdblokowane'
+
+success_flag_toggled: '&aFlaga zaktualizowana.'
+
+success_generic: '&aOperacja udana!'
+
+success_player_trusted: '&a{PLAYER} jest teraz zaufany.'
+
+success_player_untrusted: '&a{PLAYER} nie jest już zaufany.'
+
+success_plot_claimed: '&aDziałka zajęta pomyślnie!'
+
+success_plot_unclaimed: '&aDziałka usunięta.'
+
+success_settings_saved: '&aUstawienia zapisane.'
+
+tier_current_lore:
+- '&7Twoja działka jest na tym poziomie.'
+
+tier_current_name: '&6Aktualny poziom'
+
+tier_description: '&7Twoja działka jest na tym poziomie.'
+
+tier_locked_description: '&cTen poziom nie jest jeszcze dostępny.'
+
+tier_locked_lore:
+- '&cTen poziom nie jest jeszcze dostępny.'
+- '&7Najpierw ukończ poprzedni poziom.'
+
+tier_locked_name: '&8Zablokowany poziom'
+
+tier_max_lore:
+- '&dW pełni opanowałeś tę działkę.'
+- '&7Korzystaj ze wszystkich bonusów!'
+
+tier_max_reached: '&6★ Osiągnięto maksymalny poziom'
+
+tier_name_1: '&7 Poziom I'
+
+tier_name_10: '&6✦ Poziom X ✦'
+
+tier_name_2: '&f Poziom II'
+
+tier_name_3: '&a Poziom III'
+
+tier_name_4: '&b Poziom IV'
+
+tier_name_5: '&d Poziom V'
+
+tier_name_6: '&6 Poziom VI'
+
+tier_name_7: '&c Poziom VII'
+
+tier_name_8: '&5 Poziom VIII'
+
+tier_name_9: '&e Poziom IX'
+
+tier_next_lore:
+- '&7Następny poziom do odblokowania.'
+
+tier_next_name: '&eNastępny poziom'
+
+tier_unlocked_lore:
+- '&aPoziom odblokowany i aktywny.'
+
+tier_unlocked_name: '&aOdblokowany poziom'
+
+tier_upgrade_click: '&eKliknij, aby ulepszyć'
+
+tier_upgrade_cost: '&7Koszt: &6{COST}'
+
+tier_upgrade_insufficient: '&cNie masz wystarczających zasobów.'
+
+tier_upgrade_requirements: '&7Wymagania:'
+
+unlocked_bonuses: '&bOdblokowane bonusy'
+
+unlocked_tier: '&aOdblokowany poziom'
+
+zone_create_button: '&a➕ Utwórz strefę'
+
+zone_create_lore:
+- '&7Utwórz nową podstrefę.'
+
+zone_delete_confirm: '&cUsunąć tę strefę?'
+
+zone_item_lore:
+- '&7Typ: &b{TYPE}'
+- '&7Rozmiar: &a{SIZE} bloków'
+- ' '
+- '&eKliknij, aby zarządzać'
+
+zone_type_farm: '&2Farma'
+
+zone_type_rental: '&6Wynajem'
+
+zone_type_restricted: '&cOgraniczona'
+
+zone_type_shop: '&aSklep'
+
+zone_type_storage: '&7Magazyn'

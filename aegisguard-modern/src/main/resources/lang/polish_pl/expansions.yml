@@ -114,3 +114,11 @@ open_pending_requests_lore:
 - '&7oczekujących na zatwierdzenie lub odrzucenie.'
 - ' '
 - '&eKliknij, aby otworzyć.'
+
+expansion_admin_no_perm: '&c❌ Nie masz uprawnień do zarządzania zgłoszeniami.'
+
+expansion_broadcast_approved: '&a✔ Zatwierdzono prośbę o rozszerzenie dla {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Odrzucono prośbę o rozszerzenie dla {PLAYER}.'
+
+expansion_no_requests: '&7Obecnie nie ma próśb o rozszerzenie.'

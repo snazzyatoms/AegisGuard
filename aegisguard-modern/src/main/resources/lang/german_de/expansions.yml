@@ -114,3 +114,11 @@ open_pending_requests_lore:
 - '&7die genehmigt oder abgelehnt werden müssen.'
 - ' '
 - '&eKlicken zum Öffnen.'
+
+expansion_admin_no_perm: '&c❌ Du hast keine Berechtigung, Anfragen zu verwalten.'
+
+expansion_broadcast_approved: '&a✔ Erweiterungsanfrage für {PLAYER} genehmigt.'
+
+expansion_broadcast_denied: '&c❌ Erweiterungsanfrage für {PLAYER} abgelehnt.'
+
+expansion_no_requests: '&7Derzeit gibt es keine Erweiterungsanfragen.'

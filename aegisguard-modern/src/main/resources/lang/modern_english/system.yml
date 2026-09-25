@@ -1157,3 +1157,67 @@ help_lines:
 - '&e/aegis merge &7- Merge adjacent claims (if enabled).'
 - '&e/aegis transfer <player> &7- Transfer ownership of the current plot.'
 - '&e/aegis settlements &7- Open your pending payments inbox.'
+
+claim_blocks_balance_available_line: '&7Available: &f{AVAILABLE}'
+
+claim_blocks_balance_header: '&bClaimBlocks Balance'
+
+claim_blocks_balance_line: '&7Total: &f{TOTAL}  &7Spent: &f{SPENT}  &7Available: &f{AVAILABLE}'
+
+claim_blocks_balance_spent_line: '&7Spent: &f{SPENT}'
+
+claim_blocks_balance_total_line: '&7Total: &f{TOTAL}'
+
+claim_blocks_enabled: '&a✔ ClaimBlocks are enabled on this server.'
+
+claim_blocks_granted: '&a✔ You have been granted &b{AMOUNT}&a ClaimBlocks.'
+
+claim_blocks_shop_amount_must_be_positive: '&c❌ The amount must be positive.'
+
+claim_blocks_shop_amount_too_high: '&c❌ The maximum amount is &e{MAX}&c.'
+
+claim_blocks_shop_amount_too_low: '&c❌ The minimum amount is &e{MIN}&c.'
+
+claim_blocks_shop_disabled: '&c❌ The ClaimBlocks shop is disabled on this server.'
+
+claim_blocks_shop_invalid_amount: '&c❌ That amount is not valid.'
+
+claim_blocks_shop_no_permission: '&c❌ You do not have permission to buy ClaimBlocks.'
+
+claim_blocks_shop_not_enough_money: '&c❌ Not enough money. Required: &e{COST}&c.'
+
+claim_blocks_shop_opening: '&aOpening the ClaimBlocks shop...'
+
+claim_blocks_shop_purchase_failed: '&c❌ Purchase failed. Please try again.'
+
+claim_blocks_shop_purchase_success: '&a✔ You bought &b{BLOCKS}&a ClaimBlocks for &6{COST}&a.'
+
+claim_blocks_shop_vault_unavailable: '&c❌ Vault and money are unavailable on this server.'
+
+claim_blocks_shop_world_blocked: '&c❌ This action is not allowed in this world.'
+
+claim_conflict_external: '&c❌ That area is already protected by another plugin. AegisGuard will not claim it.'
+
+claim_enter_exit_notify_already_disabled: '&7These notifications are already off.'
+
+claim_enter_exit_notify_already_enabled: '&7These notifications are already on.'
+
+claim_enter_exit_notify_forced_disabled_by_server: '&cClaim enter/exit notifications are disabled by the server admin.'
+
+claim_enter_exit_notify_forced_disabled_for_you: '&cClaim enter/exit notifications are disabled for you.'
+
+claim_enter_exit_notify_set_for_other: '&a✔ Set {PLAYER}s claim notifications to: &f{STATE}&a.'
+
+claim_enter_exit_notify_target_not_found: '&cPlayer not found.'
+
+claim_notify_already_disabled: '&7These notifications are already off.'
+
+claim_notify_already_enabled: '&7These notifications are already on.'
+
+claim_notify_forced_disabled_by_server: '&cClaim enter/exit notifications are disabled by the server admin.'
+
+claim_notify_forced_disabled_for_you: '&cClaim enter/exit notifications are disabled for you.'
+
+claim_notify_set_for_other: '&a✔ Set {PLAYER}s claim notifications to: &f{STATE}&a.'
+
+claim_notify_target_not_found: '&cPlayer not found.'

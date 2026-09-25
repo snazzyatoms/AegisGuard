@@ -114,3 +114,11 @@ open_pending_requests_lore:
 - '&7aguardando aprovar ou negar.'
 - ' '
 - '&eClique para abrir.'
+
+expansion_admin_no_perm: '&c❌ Você não tem permissão para gerenciar solicitações.'
+
+expansion_broadcast_approved: '&a✔ Solicitação de expansão aprovada para {PLAYER}.'
+
+expansion_broadcast_denied: '&c❌ Solicitação de expansão negada para {PLAYER}.'
+
+expansion_no_requests: '&7No momento não há solicitações de expansão.'

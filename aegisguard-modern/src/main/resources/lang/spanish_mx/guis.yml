@@ -4406,3 +4406,44 @@ label_on: 'ON'
 label_unknown: 'Desconocido'
 
 label_unnamed: 'Zona sin nombre'
+
+admin_gui_title: '&c✦ Herramientas del Alto Guardián'
+
+biome_item_lore_free:
+- '&7Costo: &aGratis'
+
+biome_item_lore_set_biome:
+- '&7Establece el bioma de tu parcela a {BIOME}.'
+- '&7Costo: {COST}'
+
+biome_item_lore_visual_only:
+- '&c[!] Solo cambio visual'
+- '&7Los bloques en sí no se reemplazan.'
+
+codex_commands_lore:
+- '&7Lista completa de comandos:'
+- ' '
+- '&b/ag help &7- Mostrar ayuda'
+- '&b/ag menu &7- Abrir menú principal'
+- '&b/ag claim &7- Reclamar selección'
+- '&b/ag unclaim &7- Eliminar parcela'
+- '&b/ag trust &7- Agregar jugador'
+- '&b/ag untrust &7- Quitar jugador'
+- '&b/ag flags &7- Editar banderas'
+- '&b/ag home &7- Ir a tu parcela'
+
+codex_commands_title: '&a§lX. Comandos'
+
+codex_faq_lore:
+- '&7Preguntas comunes:'
+- ' '
+- '&e¿Cómo agrando mi parcela?'
+- '&7Usa &b/ag expand &7o mejora tu nivel.'
+- ' '
+- '&e¿Cómo agrego amigos?'
+- '&7Usa &b/ag trust <jugador>'
+- ' '
+- '&e¿Cómo elimino mi parcela?'
+- '&7Usa &b/ag unclaim'
+
+codex_faq_title: '&9§lIX. Preguntas Frecuentes'

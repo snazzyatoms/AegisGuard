@@ -39,6 +39,7 @@ softdepend:
   - mcMMO
   - Jobs
   - voicechat
+  - ProtocolLib
 
   # Optional market / shop integrations exposed through the local market hub
   - QuickShop

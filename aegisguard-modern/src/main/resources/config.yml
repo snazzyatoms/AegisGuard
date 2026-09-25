@@ -297,6 +297,15 @@ hooks:
       # Serious recovery events only; routine successful backups never send alerts.
       restore_failure: false
       backup_warning: false
+    # Account linking foundation (requires a Discord bot in a future release).
+    # When enabled, players can link their Minecraft UUID to a Discord ID and
+    # staff can reference either identity in commands.
+    linking:
+      enabled: false
+      guild_id: ""
+      linked_role_id: ""
+      # Storage backend for links: playerdata (YAML player preferences) or sql.
+      storage: "playerdata"
 
   bluemap:
     enabled: false
@@ -371,6 +380,19 @@ storage:
     username: "root"
     password: "password"
     useSSL: false
+
+
+# ==============================================================================
+# Web admin dashboard (foundation)
+# ==============================================================================
+# Read-only JSON API over SQL storage and the audit ledger. Disabled by default.
+# Set auth_token to a strong random value before enabling. Bind to 127.0.0.1
+# unless you have a reverse proxy handling TLS and authentication.
+web_dashboard:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8080
+  auth_token: ""
 
 
 # ==============================================================================
@@ -1307,6 +1329,20 @@ visual_presence:
   for_sale_labels: true
   smart_borders: true
   border_label_distance: 3
+
+
+# ==============================================================================
+# Scepter / wand claim-border visualization
+# ==============================================================================
+# If ProtocolLib is installed, AegisGuard can send fake block-change packets only
+# to the player holding the wand, producing a solid visible border without
+# particles or real block edits. The fallback is per-player particles.
+visualization:
+  particle: FLAME
+  protocol_lib:
+    enabled: true
+    material: LIME_STAINED_GLASS
+    y_offset: 0
 
 
 # ==============================================================================

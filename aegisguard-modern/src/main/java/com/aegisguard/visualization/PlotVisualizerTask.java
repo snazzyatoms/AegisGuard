@@ -24,6 +24,8 @@ public class PlotVisualizerTask implements Runnable {
     private Plot lastPlot = null;
     private Particle particle;
     private Particle.DustOptions dustOptions;
+    private final BorderRenderer packetRenderer;
+    private final boolean usePacketRenderer;
 
     // --- Cross-version support for REDSTONE (old) vs DUST (new) ---
     private static final Particle DUST_PARTICLE_TYPE;
@@ -47,7 +49,21 @@ public class PlotVisualizerTask implements Runnable {
     public PlotVisualizerTask(AegisGuard plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
+        this.packetRenderer = createPacketRenderer();
+        this.usePacketRenderer = plugin.getConfig().getBoolean("visualization.protocol_lib.enabled", true)
+                && packetRenderer.isAvailable();
         updateParticle(null); // Initialize default
+    }
+
+    private BorderRenderer createPacketRenderer() {
+        if (org.bukkit.Bukkit.getPluginManager().getPlugin("ProtocolLib") == null) {
+            return new NoOpBorderRenderer();
+        }
+        try {
+            return new ProtocolLibBorderRenderer(plugin);
+        } catch (NoClassDefFoundError | Exception ignored) {
+            return new NoOpBorderRenderer();
+        }
     }
 
     @Override
@@ -60,16 +76,23 @@ public class PlotVisualizerTask implements Runnable {
         Plot currentPlot = plugin.store().getPlotAt(player.getLocation());
 
         if (currentPlot != null) {
-            if (!currentPlot.equals(lastPlot)) {
+            boolean plotChanged = lastPlot == null || !currentPlot.equals(lastPlot);
+            if (plotChanged) {
                 lastPlot = currentPlot;
+                if (usePacketRenderer) packetRenderer.clear(player);
             }
 
-            // Refresh cosmetic each tick in case player changes border style
-            updateParticle(currentPlot.getBorderParticle());
-            drawPlotBorders(currentPlot);
+            if (usePacketRenderer) {
+                packetRenderer.render(player, currentPlot);
+            } else {
+                // Refresh cosmetic each tick in case player changes border style
+                updateParticle(currentPlot.getBorderParticle());
+                drawPlotBorders(currentPlot);
+            }
             VisualPresence.showBorderLabel(plugin, player, currentPlot);
         } else {
             lastPlot = null;
+            if (usePacketRenderer) packetRenderer.clear(player);
         }
     }
 

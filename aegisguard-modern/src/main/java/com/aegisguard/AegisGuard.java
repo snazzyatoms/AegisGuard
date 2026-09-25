@@ -164,6 +164,8 @@ public class AegisGuard extends JavaPlugin {
     // --- HOOKS ---
     private MapHookManager mapHookManager;
     private DiscordWebhook discord;
+    private com.aegisguard.hooks.DiscordLinkManager discordLinkManager;
+    private com.aegisguard.admin.WebAdminService webAdminService;
 
     private boolean isFolia = false;
     private AegisScheduler platformScheduler;
@@ -283,7 +285,9 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
     public com.aegisguard.season.SeasonService seasons() { return seasonService; }
     public DiscordWebhook getDiscord() { return discord; }
+    public com.aegisguard.hooks.DiscordLinkManager discordLinks() { return discordLinkManager; }
     public MapHookManager getMapHooks() { return mapHookManager; }
+    public com.aegisguard.admin.WebAdminService webAdmin() { return webAdminService; }
     public boolean isFolia() { return isFolia; }
     public AegisScheduler scheduler() { return platformScheduler; }
 
@@ -385,6 +389,8 @@ public class AegisGuard extends JavaPlugin {
         protectionHooks = new ProtectionHookManager(this);
         mapHookManager = new MapHookManager(this);
         discord = new DiscordWebhook(this);
+        discordLinkManager = new com.aegisguard.hooks.DiscordLinkManager(this);
+        webAdminService = new com.aegisguard.admin.WebAdminService(this);
 
         // Vault (optional)
         vault = new VaultHook(this);
@@ -626,6 +632,7 @@ public class AegisGuard extends JavaPlugin {
         cancelTaskReflectively(gatheringTickTask);
         if (snapshotManager != null) snapshotManager.shutdownOperations();
         if (plotChatService != null) plotChatService.clearAll();
+        if (webAdminService != null) webAdminService.shutdown();
         if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
@@ -922,6 +929,8 @@ public class AegisGuard extends JavaPlugin {
             groupManager.load();
             groupManager.cleanupMissingPlotLinks();
         }
+        if (webAdminService != null) webAdminService.reload();
+        if (discordLinkManager != null) discordLinkManager.reload();
 
         restartRecurringTasks();
 

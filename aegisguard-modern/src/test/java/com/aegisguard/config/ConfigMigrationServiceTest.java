@@ -42,7 +42,7 @@ class ConfigMigrationServiceTest {
         ConfigMigrationService service = new ConfigMigrationService(null);
         assertTrue(service.migrate(configFile, tempDir.toFile(), ConfigMigrationServiceTest::openShippedDefaults));
         YamlConfiguration current = YamlConfiguration.loadConfiguration(configFile);
-        assertEquals(1311, current.getInt("config_schema"));
+        assertEquals(1312, current.getInt("config_schema"));
         assertFalse(current.getBoolean("modules.gatherings"),
                 "A forward-configured disabled feature must remain disabled on migration");
         assertEquals(30, current.getInt("gatherings.default_minutes"));

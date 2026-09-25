@@ -1,7 +1,10 @@
 package com.aegisguard.gatherings;
 
+import com.aegisguard.guestpass.GuestPass;
+
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,7 +18,7 @@ public final class Gathering {
     private final long startedAt;
     private volatile long endsAt;
     private volatile boolean grantGuestPass;
-    private final Set<UUID> issuedPasses = Collections.synchronizedSet(new LinkedHashSet<>());
+    private final Map<UUID, Long> issuedPasses = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public Gathering(UUID plotId, UUID hostId, String hostName, String plotName,
                      long startedAt, long endsAt, boolean grantGuestPass) {
@@ -40,14 +43,44 @@ public final class Gathering {
     public void setGrantGuestPass(boolean grantGuestPass) { this.grantGuestPass = grantGuestPass; }
 
     public boolean isLive(long now) {
-        return endsAt <= 0L || now < endsAt;
+        return endsAt > 0L && now < endsAt;
     }
 
-    public Set<UUID> issuedPasses() {
+    public Map<UUID, Long> issuedPasses() {
         return issuedPasses;
     }
 
+    public Set<UUID> issuedVisitors() {
+        return Set.copyOf(issuedPasses.keySet());
+    }
+
     public boolean markIssued(UUID playerId) {
-        return playerId != null && issuedPasses.add(playerId);
+        return recordIssued(playerId, System.currentTimeMillis());
+    }
+
+    public boolean recordIssued(UUID playerId, long timestamp) {
+        if (playerId == null) return false;
+        issuedPasses.put(playerId, timestamp);
+        return true;
+    }
+
+    public boolean issuedByThisGathering(GuestPass pass) {
+        if (pass == null) return false;
+        Long issuedAt = issuedPasses.get(pass.getPlayerId());
+        return issuedAt != null && issuedAt == pass.getIssuedAt();
+    }
+
+    public GuestPass renewedPass(GuestPass pass, long newIssuedAt, long newExpiresAt) {
+        if (pass == null || !issuedByThisGathering(pass)) return null;
+        return new GuestPass(
+                pass.getPlayerId(),
+                pass.getPlayerName(),
+                pass.getPreset(),
+                pass.getPermissions(),
+                hostId,
+                hostName,
+                newIssuedAt,
+                newExpiresAt
+        );
     }
 }

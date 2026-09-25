@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,8 @@ public final class GatheringService {
 
     public enum StartResult { STARTED, EXTENDED, NEED_PLOT, NEED_MANAGE, DISABLED, BAD_DURATION }
     public enum StopResult { STOPPED, NONE, NEED_PLOT, NEED_MANAGE, DISABLED }
+
+    private static final Set<String> HOST_ROLES = Set.of("owner", "co_owner", "steward");
 
     private final AegisGuard plugin;
     private final GatheringStore store;
@@ -39,6 +42,14 @@ public final class GatheringService {
         } catch (Throwable ignored) {
             return plugin.getConfig().getBoolean("gatherings.enabled", true);
         }
+    }
+
+    /** Whether {@code playerId} holds a host-level role on {@code plot}. */
+    public static boolean hostHasRole(Plot plot, UUID playerId) {
+        if (plot == null || playerId == null) return false;
+        if (plot.isOwner(playerId)) return true;
+        String role = plot.getPlayerRoles().get(playerId);
+        return role != null && HOST_ROLES.contains(role.toLowerCase());
     }
 
     public void load() { store.load(); }
@@ -108,7 +119,7 @@ public final class GatheringService {
                 existing != null ? existing.grantGuestPass() : defaultGrantGuestPass()
         );
         if (existing != null) {
-            for (UUID id : existing.issuedPasses()) gathering.markIssued(id);
+            for (UUID id : existing.issuedPasses().keySet()) gathering.markIssued(id);
         }
         store.put(gathering);
         store.save();
@@ -192,7 +203,7 @@ public final class GatheringService {
         Plot plot = plugin.store().getPlotById(gathering.plotId());
         if (plot == null) return;
         boolean changed = false;
-        for (UUID id : gathering.issuedPasses()) {
+        for (UUID id : gathering.issuedVisitors()) {
             GuestPass pass = plot.getActiveGuestPass(id);
             if (pass != null && pass.getPreset() == GuestPassPreset.VISITOR) {
                 plot.revokeGuestPass(id);

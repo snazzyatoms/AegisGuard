@@ -18,11 +18,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** YAML store for live Open House gatherings ({@code gatherings.yml}). */
 public final class GatheringStore {
 
     private final AegisGuard plugin;
+    private final Logger logger;
     private final File file;
     private final Map<UUID, Gathering> byPlot = new ConcurrentHashMap<>();
     private final Object ioLock = new Object();
@@ -30,7 +32,14 @@ public final class GatheringStore {
 
     public GatheringStore(AegisGuard plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "gatherings.yml");
+        this.logger = plugin == null ? Logger.getAnonymousLogger() : plugin.getLogger();
+        this.file = plugin == null ? null : new File(plugin.getDataFolder(), "gatherings.yml");
+    }
+
+    public GatheringStore(File file, Logger logger) {
+        this.plugin = null;
+        this.logger = logger == null ? Logger.getAnonymousLogger() : logger;
+        this.file = file;
     }
 
     public Collection<Gathering> all() {
@@ -71,8 +80,8 @@ public final class GatheringStore {
         dirty = false;
     }
 
-    public void save() {
-        if (!dirty && file.exists()) return;
+    public boolean save() {
+        if (!dirty && file.exists()) return true;
         YamlConfiguration yaml = new YamlConfiguration();
         for (Gathering gathering : byPlot.values()) {
             if (gathering == null || gathering.plotId() == null) continue;
@@ -84,8 +93,9 @@ public final class GatheringStore {
             yaml.set(path + ".ends-at", gathering.endsAt());
             yaml.set(path + ".grant-guest-pass", gathering.grantGuestPass());
             List<String> issued = new ArrayList<>();
-            for (UUID id : gathering.issuedPasses()) {
-                if (id != null) issued.add(id.toString());
+            for (Map.Entry<UUID, Long> entry : gathering.issuedPasses().entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) continue;
+                issued.add(entry.getKey() + ":" + entry.getValue());
             }
             yaml.set(path + ".issued-passes", issued);
         }
@@ -93,8 +103,8 @@ public final class GatheringStore {
             try {
                 File parent = file.getParentFile();
                 if (parent != null && !parent.exists() && !parent.mkdirs()) {
-                    plugin.getLogger().warning("Could not create gatherings data folder.");
-                    return;
+                    logger.warning("Could not create gatherings data folder.");
+                    return false;
                 }
                 Path target = file.toPath();
                 Path temp = target.resolveSibling(file.getName() + ".tmp");
@@ -105,8 +115,10 @@ public final class GatheringStore {
                     Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
                 }
                 dirty = false;
+                return true;
             } catch (IOException error) {
-                plugin.getLogger().log(Level.WARNING, "Could not save gatherings.yml", error);
+                logger.log(Level.WARNING, "Could not save gatherings.yml", error);
+                return false;
             }
         }
     }
@@ -138,8 +150,12 @@ public final class GatheringStore {
                 section.getBoolean("grant-guest-pass", true)
         );
         for (String raw : section.getStringList("issued-passes")) {
+            if (raw == null || raw.isBlank()) continue;
+            String[] parts = raw.trim().split(":");
             try {
-                gathering.markIssued(UUID.fromString(raw.trim()));
+                UUID visitorId = UUID.fromString(parts[0]);
+                long issuedAt = parts.length > 1 ? Long.parseLong(parts[1]) : System.currentTimeMillis();
+                gathering.recordIssued(visitorId, issuedAt);
             } catch (IllegalArgumentException ignored) {
             }
         }

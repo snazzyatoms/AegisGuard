@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1310;
+    public static final int CURRENT_SCHEMA = 1312;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -204,6 +204,10 @@ public final class ConfigMigrationService {
         repairInt(config, "teleport_beacons.max_per_plot", 1, 64, 3);
         repairInt(config, "teleport_beacons.max_per_server_zone", 1, 64, 8);
         repairInt(config, "plot_chat.max_message_length", 16, 256, 256);
+        repairInt(config, "gatherings.default_minutes", 1, 1440, 30);
+        repairInt(config, "gatherings.min_minutes", 1, 1440, 10);
+        repairInt(config, "gatherings.max_minutes", 1, 1440, 180);
+        repairInt(config, "gatherings.tick_interval_ticks", 20, 1200, 100);
         repairInt(config, "visual_presence.border_label_distance", 1, 16, 3);
         repairInt(config, "expansions.horizons.unlock_level", 30, 1000, 30);
         repairInt(config, "expansions.horizons.pulse_cooldown_seconds", 1, 86_400, 300);

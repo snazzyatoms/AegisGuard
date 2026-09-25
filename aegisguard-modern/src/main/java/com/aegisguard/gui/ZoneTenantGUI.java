@@ -89,7 +89,8 @@ public class ZoneTenantGUI {
         }
         candidates.sort(Comparator.comparing(uuid -> {
             Player online = Bukkit.getPlayer(uuid);
-            return online == null ? Double.MAX_VALUE : online.getLocation().distanceSquared(player.getLocation());
+            if (online == null || !com.aegisguard.util.TeleportUtil.regionOwns(online)) return Double.MAX_VALUE;
+            return online.getLocation().distanceSquared(player.getLocation());
         }));
 
         Inventory inv = Bukkit.createInventory(

@@ -446,13 +446,18 @@ public class Plot {
         return true;
     }
 
+    /** Last in-memory role edit, or {@code null} when there is nothing to undo. Does not pop history. */
+    public RoleChange peekLastRoleChange() {
+        return roleHistory.peekLast();
+    }
+
     private void recordRoleChange(UUID target, String previous, String next) {
         if (Objects.equals(previous, next)) return;
         roleHistory.addLast(new RoleChange(target, previous, next));
         while (roleHistory.size() > ROLE_HISTORY_LIMIT) roleHistory.pollFirst();
     }
 
-    private record RoleChange(UUID target, String previous, String next) {}
+    public record RoleChange(UUID target, String previous, String next) {}
 
     public Map<UUID, String> getRoleNicknames() {
         return roleNicknames;

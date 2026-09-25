@@ -40,7 +40,8 @@ class GuiNavigationContractTest {
                 "audit/AuditAdminGUI.java", "guestpass/GuestPassGUI.java", "lockdown/LockdownGUI.java",
                 "profile/RealmProfileGUI.java", "guidance/FirstClaimWalkthroughGUI.java",
                 "routes/RoutesGUI.java", "routes/RouteAdminGUI.java",
-                "alliance/AllianceAccessGUI.java");
+                "alliance/AllianceAccessGUI.java",
+                "gatherings/GatheringGUI.java");
 
         for (String relative : submenus) {
             String source = Files.readString(JAVA_ROOT.resolve(relative));
@@ -98,6 +99,22 @@ class GuiNavigationContractTest {
         }
         assertTrue(listener.contains("handleRoleFlagsClick"));
         assertTrue(listener.contains("CLICK_GUARD_NANOS"));
+        assertTrue(listener.contains("GUIManager.isFiller(clicked)"));
+    }
+
+    @Test
+    void playerMenusSkipForeignFoliaRegionsAndShowEmptyMarkets() throws Exception {
+        String moderation = Files.readString(JAVA_ROOT.resolve("gui/ModerationGUI.java"));
+        assertTrue(moderation.contains("TeleportUtil.regionOwns(online)"));
+        assertTrue(moderation.contains("plugin.runMain(target"));
+        String flags = Files.readString(JAVA_ROOT.resolve("gui/PlotFlagsGUI.java"));
+        assertTrue(flags.contains("plugin.runMain(online"));
+        assertTrue(flags.contains("refreshHearthVoice"));
+        String market = Files.readString(JAVA_ROOT.resolve("gui/PlotMarketGUI.java"));
+        assertTrue(market.contains("market_empty_name"));
+        String auction = Files.readString(JAVA_ROOT.resolve("gui/PlotAuctionGUI.java"));
+        assertTrue(auction.contains("auction_empty_name"));
+        assertTrue(auction.contains("plugin.runMain(oldOnline"));
     }
 
     @Test

@@ -49,7 +49,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
-            "staffchat", "sc",
+            "staffchat", "sc", "publicbeta", "feedback",
             "help"
     };
 
@@ -126,6 +126,14 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "audit" -> handleAudit(player);
             case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
             case "staffchat", "sc" -> handleStaffChat(player, args);
+            case "publicbeta" -> handlePublicBeta(player, args);
+            case "feedback" -> {
+                if (plugin.publicBetaFeedback() == null) {
+                    sendLocalized(player, "public_beta_feedback_unavailable", "&cPublic Beta reporting is unavailable.");
+                } else {
+                    plugin.publicBetaFeedback().openInbox(player);
+                }
+            }
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -143,6 +151,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
 
         if (args[0].equalsIgnoreCase("wand") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("server", "migration"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("publicbeta") && args.length == 2) {
+            return StringUtil.copyPartialMatches(args[1], List.of("worlds", "hubprotect"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("publicbeta") && args.length == 3
+                && args[1].equalsIgnoreCase("hubprotect")) {
+            return StringUtil.copyPartialMatches(args[2], List.of("world", "64", "256", "1024"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("publicbeta") && args.length == 4
+                && args[1].equalsIgnoreCase("hubprotect")) {
+            return StringUtil.copyPartialMatches(args[3], List.of("confirm"), new ArrayList<>());
         }
 
         if (args[0].equalsIgnoreCase("migrate")) {
@@ -843,7 +862,39 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_season", "&e/agadmin season &8- Staff season featured plots and routes");
         sendLocalized(player, "admin_help_skill", "&e/agadmin skill fly <player> [seconds] &8- Temporary flight skill");
         sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
+        sendLocalized(player, "admin_help_publicbeta", "&e/agadmin publicbeta worlds &8- Public Beta world setup wizard");
+        sendLocalized(player, "admin_help_publicbeta_feedback", "&e/agadmin feedback &8- Public Beta feedback inbox");
+        sendLocalized(player, "admin_help_publicbeta_hub",
+                "&e/agadmin publicbeta hubprotect <world|radius> confirm &8- protect the Welcome Hub");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
+    }
+
+    private void handlePublicBeta(Player player, String[] args) {
+        if (args.length < 2) {
+            sendLocalized(player, "admin_publicbeta_combined_usage",
+                    "&eUsage: /agadmin publicbeta <worlds|hubprotect <world|radius> confirm>");
+            return;
+        }
+        if (plugin.publicBeta() == null || !plugin.publicBeta().isEnabled()) {
+            plugin.msg().send(player, "no_perm");
+            return;
+        }
+        if (args[1].equalsIgnoreCase("worlds")) {
+            if (!player.hasPermission(com.aegisguard.publicbeta.PublicBetaWorldService.WORLD_PERMISSION)) {
+                plugin.msg().send(player, "no_perm");
+                return;
+            }
+            plugin.publicBeta().openWorldWizard(player);
+            return;
+        }
+        if (args[1].equalsIgnoreCase("hubprotect")) {
+            String requested = args.length >= 3 ? args[2] : "";
+            boolean confirmed = args.length >= 4 && args[3].equalsIgnoreCase("confirm");
+            plugin.publicBeta().configureHubProtection(player, requested, confirmed);
+            return;
+        }
+        sendLocalized(player, "admin_publicbeta_combined_usage",
+                "&eUsage: /agadmin publicbeta <worlds|hubprotect <world|radius> confirm>");
     }
 
     private static boolean isTransitionSubcommand(String sub) {

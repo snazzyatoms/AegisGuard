@@ -68,6 +68,8 @@ class SafeTravelContractTest {
         assertTrue(util.contains("regionOwns("),
                 "Safe destination search must skip foreign Folia regions");
         assertTrue(util.contains("Bukkit.isOwnedByCurrentRegion(location)"));
+        assertTrue(util.contains("Bukkit.isOwnedByCurrentRegion(entity)"));
+        assertTrue(util.contains("public static boolean regionOwns(Entity entity)"));
         assertTrue(util.contains("highestBlockYOr("));
         assertTrue(util.contains("return requested.clone()"),
                 "Unowned regions must fall back to the requested point instead of reading blocks");

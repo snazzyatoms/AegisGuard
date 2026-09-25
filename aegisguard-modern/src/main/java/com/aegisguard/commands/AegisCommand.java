@@ -38,14 +38,14 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private final ClaimBlockExchangeService exchange;
 
     private static final String[] SUB_COMMANDS = {
-            "wand", "menu", "claim", "quickclaim", "qc", "unclaim", "help",
+            "wand", "menu", "beta", "publicbeta", "hub", "post", "mail", "report", "feedback", "suggest", "claim", "quickclaim", "qc", "unclaim", "help",
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge",
-            "group", "alliance", "arena", "beacon", "caravan", "chat", "frequency", "staff", "staffchat",
+            "group", "alliance", "arena", "beacon", "caravan", "gathering", "gatherings", "openhouse", "chat", "frequency", "staff", "staffchat",
             "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
             // ✅ Added: reload support (Codex + config)
@@ -233,17 +233,43 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "wand" -> {
-                if (SelectionService.playerHasAnyWand(p)) {
-                    sendKey(p, "wand_already_on", "&eYou already have the Aegis Scepter in your inventory.");
-                    plugin.effects().playError(p);
-                    break;
-                }
-                p.getInventory().addItem(createScepter(p));
-                sendKey(p, "wand_given", "&a⚡ You received the Aegis Scepter.");
-                plugin.effects().playConfirm(p);
+                giveClaimWand(p, false);
             }
 
             case "menu" -> plugin.gui().openMain(p);
+
+            case "beta", "publicbeta" -> {
+                if (plugin.publicBeta() == null) {
+                    sendKey(p, "public_beta_command_unavailable",
+                            "&cThe Public Beta menu is not available on this server.");
+                    break;
+                }
+                plugin.publicBeta().openBetaMenu(p);
+            }
+
+            case "hub" -> {
+                if (plugin.publicBeta() == null) {
+                    sendKey(p, "public_beta_command_unavailable",
+                            "&cThe Public Beta menu is not available on this server.");
+                    break;
+                }
+                plugin.publicBeta().returnToHub(p);
+            }
+
+            case "post", "mail" -> {
+                if (plugin.publicBetaPost() == null) {
+                    sendKey(p, "post_unavailable", "&cAegis Post is unavailable on this server.");
+                    break;
+                }
+                plugin.publicBetaPost().open(p);
+            }
+
+            case "report" -> handleBetaFeedback(p,
+                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.PROBLEM, args);
+            case "feedback" -> handleBetaFeedback(p,
+                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.FEEDBACK, args);
+            case "suggest" -> handleBetaFeedback(p,
+                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.SUGGESTION, args);
 
             case "claim" -> handleClaim(p);
 
@@ -361,6 +387,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "caravan", "caravans" -> handleCaravan(p, args);
 
+            case "gathering", "gatherings", "openhouse" -> handleGathering(p, args);
+
             // 1.4: per-plot public arrival choice (classic vs beacon) for the plot you manage.
             case "arrival" -> handleArrival(p, args);
 
@@ -387,6 +415,18 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         return true;
+    }
+
+    private void handleBetaFeedback(Player player,
+                                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category category,
+                                    String[] args) {
+        if (plugin.publicBetaFeedback() == null) {
+            sendKey(player, "public_beta_feedback_unavailable",
+                    "&cPublic Beta reporting is not available on this server.");
+            return;
+        }
+        String message = args.length <= 1 ? "" : String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        plugin.publicBetaFeedback().startOrSubmit(player, category, message);
     }
 
     private void handleGiftBlocks(Player sender, String[] args) {
@@ -2036,6 +2076,16 @@ private void handleUnsell(Player p) {
             if (!caravanMentioned) {
                 sendMsg(sender, "&e/ag caravan &7- dispatch and track trade caravans");
             }
+            boolean gatheringMentioned = false;
+            for (String line : helpLines) {
+                if (line != null && line.toLowerCase(Locale.ROOT).contains("gathering")) {
+                    gatheringMentioned = true;
+                    break;
+                }
+            }
+            if (!gatheringMentioned) {
+                sendMsg(sender, "&e/ag gathering &7- host an Open House on your plot");
+            }
             boolean chatMentioned = false;
             for (String line : helpLines) {
                 if (line != null && line.toLowerCase(Locale.ROOT).contains("/ag chat")) {
@@ -2431,6 +2481,32 @@ private void handleUnsell(Player p) {
                 }
             }
             default -> plugin.gui().caravans().open(player);
+        }
+    }
+
+    private void handleGathering(Player player, String[] args) {
+        if (plugin.gatherings() == null || !plugin.gatherings().isEnabled()
+                || plugin.gui() == null || plugin.gui().gatherings() == null) {
+            sendKey(player, "gathering_disabled", "&cOpen House is disabled on this server.");
+            return;
+        }
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "menu";
+        switch (action) {
+            case "start" -> {
+                int minutes = plugin.gatherings().defaultMinutes();
+                if (args.length >= 3) {
+                    try {
+                        minutes = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException ignored) {
+                        sendKey(player, "gathering_usage",
+                                "&eUsage: /ag gathering start [minutes] | stop | menu");
+                        return;
+                    }
+                }
+                plugin.gatherings().start(player, minutes);
+            }
+            case "stop", "end" -> plugin.gatherings().stop(player);
+            default -> plugin.gui().gatherings().open(player);
         }
     }
 
@@ -3060,6 +3136,13 @@ private void handleUnsell(Player p) {
                 Collections.sort(completions);
                 return completions;
             }
+            if (args[0].equalsIgnoreCase("gathering") || args[0].equalsIgnoreCase("gatherings")
+                    || args[0].equalsIgnoreCase("openhouse")) {
+                List<String> completions = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], List.of("start", "stop", "menu"), completions);
+                Collections.sort(completions);
+                return completions;
+            }
 
             if (args[0].equalsIgnoreCase("chat") || args[0].equalsIgnoreCase("frequency")) {
                 List<String> completions = new ArrayList<>();
@@ -3243,6 +3326,27 @@ private void handleUnsell(Player p) {
         }
 
         return rod;
+    }
+
+    /** Gives one ordinary claim wand, shared by /ag wand and Public Beta first-arrival gifts. */
+    public boolean giveClaimWand(Player player, boolean complimentaryBetaWand) {
+        if (player == null || SelectionService.playerHasAnyWand(player)) {
+            if (player != null && !complimentaryBetaWand) {
+                sendKey(player, "wand_already_on", "&eYou already have the Aegis Scepter in your inventory.");
+                plugin.effects().playError(player);
+            }
+            return false;
+        }
+        Map<Integer, ItemStack> leftovers = player.getInventory().addItem(createScepter(player));
+        if (!leftovers.isEmpty()) {
+            leftovers.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
+        }
+        sendKey(player, complimentaryBetaWand ? "public_beta_wand_given" : "wand_given",
+                complimentaryBetaWand
+                        ? "&aYou received a complimentary Aegis Scepter for this world. It is consumed after a successful claim."
+                        : "&a⚡ You received the Aegis Scepter.");
+        plugin.effects().playConfirm(player);
+        return true;
     }
 
     // --------------------------------------------------

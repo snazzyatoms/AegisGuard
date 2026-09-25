@@ -84,10 +84,10 @@ public class AdminPlotListGUI {
                 plugin.getLogger().warning("[AdminPlotListGUI] Failed to read plots: " + t.getMessage());
             }
 
-            allPlots.sort(Comparator.comparing(
-                    p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
-                    String.CASE_INSENSITIVE_ORDER
-            ));
+            allPlots.sort(Comparator
+                    .comparing(Plot::getWorld, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+                    .thenComparing(p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
+                            String.CASE_INSENSITIVE_ORDER));
 
             int maxPages = (int) Math.ceil((double) allPlots.size() / PLOTS_PER_PAGE);
             int fixedPage = requestedPage;
@@ -117,7 +117,8 @@ public class AdminPlotListGUI {
 
         // Preload localized lore templates (with fallbacks)
         String loreIdFmt = tr(player, "admin_plot_lore_id", "&7ID: &e{ID}");
-        String loreWorldFmt = tr(player, "admin_plot_lore_world", "&7World: &f{WORLD}");
+        String loreWorldTypeFmt = tr(player, "admin_plot_lore_world_type", "&7World Type: &f{TYPE}");
+        String loreWorldFolderFmt = tr(player, "admin_plot_lore_world_folder", "&7World Folder: &f{WORLD}");
         String loreBoundsFmt = tr(player, "admin_plot_lore_bounds", "&7Bounds: &a{X1}, {Z1}");
         String loreToFmt = tr(player, "admin_plot_lore_to", "&7        to &a{X2}, {Z2}");
 
@@ -156,9 +157,13 @@ public class AdminPlotListGUI {
 
                 String shortId = plot.getPlotId().toString();
                 if (shortId.length() > 8) shortId = shortId.substring(0, 8);
+                String plotWorld = plot.getWorld() == null || plot.getWorld().isBlank()
+                        ? tr(player, "admin_plot_world_unknown", "Unknown")
+                        : plot.getWorld();
 
                 lore.add(GUIManager.color(loreIdFmt.replace("{ID}", shortId)));
-                lore.add(GUIManager.color(loreWorldFmt.replace("{WORLD}", plot.getWorld())));
+                lore.add(GUIManager.color(loreWorldTypeFmt.replace("{TYPE}", worldRoleLabel(player, plot.getWorld()))));
+                lore.add(GUIManager.color(loreWorldFolderFmt.replace("{WORLD}", plotWorld)));
                 lore.add(GUIManager.color(loreBoundsFmt
                         .replace("{X1}", String.valueOf(plot.getX1()))
                         .replace("{Z1}", String.valueOf(plot.getZ1()))
@@ -346,6 +351,25 @@ public class AdminPlotListGUI {
         int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
         if (plotIndex < 0 || plotIndex >= holder.getPlots().size()) return null;
         return holder.getPlots().get(plotIndex);
+    }
+
+    private String worldRoleLabel(Player player, String worldName) {
+        if (worldName != null && plugin.publicBetaWorlds() != null) {
+            var worlds = plugin.publicBetaWorlds();
+            if (worldName.equalsIgnoreCase(worlds.worldName(
+                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.WELCOME_HUB))) {
+                return tr(player, "admin_plot_world_role_hub", "Welcome Hub");
+            }
+            if (worldName.equalsIgnoreCase(worlds.worldName(
+                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.PLAY_WORLD))) {
+                return tr(player, "admin_plot_world_role_play", "Play World");
+            }
+            if (worldName.equalsIgnoreCase(worlds.worldName(
+                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.TEST_LAB))) {
+                return tr(player, "admin_plot_world_role_test_lab", "Test Lab");
+            }
+        }
+        return tr(player, "admin_plot_world_role_other", "Other World");
     }
 
     private void tagAction(ItemStack item, String action) {

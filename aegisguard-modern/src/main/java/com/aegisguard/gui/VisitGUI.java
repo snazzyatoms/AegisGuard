@@ -71,12 +71,13 @@ public class VisitGUI {
 
     /** Narrow the public discovery atlas without changing the other travel modes. */
     public enum DiscoverFilter {
-        ALL, FEATURED, FOR_SALE, FOR_RENT, CATEGORY;
+        ALL, FEATURED, LIVE, FOR_SALE, FOR_RENT, CATEGORY;
 
         public DiscoverFilter next() {
             return switch (this) {
                 case ALL -> FEATURED;
-                case FEATURED -> FOR_SALE;
+                case FEATURED -> LIVE;
+                case LIVE -> FOR_SALE;
                 case FOR_SALE -> FOR_RENT;
                 case FOR_RENT -> CATEGORY;
                 case CATEGORY -> ALL;
@@ -322,6 +323,7 @@ public class VisitGUI {
         return switch (filter) {
             case ALL -> true;
             case FEATURED -> discovery.featured();
+            case LIVE -> plugin.gatherings() != null && plugin.gatherings().isLive(plot);
             case FOR_SALE -> plot.isForSale();
             case FOR_RENT -> plot.isForRent()
                     || plot.getZones().stream().anyMatch(zone -> zone != null && zone.isListedForRent())
@@ -521,7 +523,7 @@ public class VisitGUI {
                     t(player, "visit_discover_filter_name", "&eDiscover Filter: &f{FILTER}",
                             Map.of("FILTER", label)),
                     tl(player, "visit_discover_filter_lore", List.of(
-                            "&7Cycle: All, Featured, For Sale,",
+                            "&7Cycle: All, Featured, Live, For Sale,",
                             "&7For Rent, and discovery categories.",
                             "&eClick to change filter."
                     )));
@@ -616,6 +618,7 @@ public class VisitGUI {
         return switch (filter) {
             case ALL -> "All";
             case FEATURED -> "Featured";
+            case LIVE -> "Live";
             case FOR_SALE -> "For Sale";
             case FOR_RENT -> "For Rent";
             case CATEGORY -> "Category";

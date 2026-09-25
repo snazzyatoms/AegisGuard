@@ -41,6 +41,8 @@ public class StarterKitListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        // Public Beta has its own ordered first-join flow and guide item.
+        if (plugin.publicBeta() != null && plugin.publicBeta().isEnabled()) return;
         if (player.hasPlayedBefore()) return;
         if (!isStarterKitEnabled()) return;
 

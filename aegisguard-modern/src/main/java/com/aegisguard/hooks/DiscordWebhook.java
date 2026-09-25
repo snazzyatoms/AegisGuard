@@ -3,6 +3,7 @@ package com.aegisguard.hooks;
 import com.aegisguard.AegisGuard;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -95,7 +96,7 @@ public class DiscordWebhook {
     }
 
     private void performRequest(String jsonPayload) throws Exception {
-        URL urlObj = new URL(configuredUrl());
+        URL urlObj = URI.create(configuredUrl()).toURL();
         HttpsURLConnection connection = (HttpsURLConnection) urlObj.openConnection();
         try {
             connection.addRequestProperty("Content-Type", "application/json; charset=UTF-8");

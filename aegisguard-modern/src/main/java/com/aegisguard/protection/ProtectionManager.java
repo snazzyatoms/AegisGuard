@@ -94,7 +94,6 @@ public class ProtectionManager implements Listener {
     );
 
     private final AegisGuard plugin;
-    private final boolean wildernessRevertEnabled; // kept for future use
 
     private final Map<UUID, Long> messageCooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> mobCleanupCooldowns = new ConcurrentHashMap<>();
@@ -102,7 +101,6 @@ public class ProtectionManager implements Listener {
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
-        this.wildernessRevertEnabled = plugin.modules().on(com.aegisguard.config.Modules.Id.WILDERNESS_REVERT);
     }
 
     // --------------------------------------------------

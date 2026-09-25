@@ -76,6 +76,15 @@ public class CodexEngine {
     private YamlConfiguration fallbackCoreBundle = new YamlConfiguration();
     private YamlConfiguration fallbackOverridesBundle = new YamlConfiguration();
 
+    // Flat leaf maps for O(1) lookups. YamlConfiguration.contains() walks
+    // MemorySection on every GUI string and can stall the server thread.
+    private Map<String, Object> primaryCoreLeaves = new HashMap<>();
+    private Map<String, Object> primaryOverrideLeaves = new HashMap<>();
+    private Map<String, Object> fallbackCoreLeaves = new HashMap<>();
+    private Map<String, Object> fallbackOverrideLeaves = new HashMap<>();
+    private final Map<String, Map<String, Object>> primaryStyleLeaves = new HashMap<>();
+    private final Map<String, Map<String, Object>> fallbackStyleLeaves = new HashMap<>();
+
     /** Per-player style cache (persisted in config.yml). */
     private final Map<UUID, String> playerStyles = new HashMap<>();
 
@@ -216,12 +225,13 @@ public class CodexEngine {
             // Load FALLBACK (codex) bundles
             fallbackStyleBundles.clear();
             loadFallbackCodexBundles(fallbackDir, fallbackIndex, bundles);
+            rebuildLeafMaps();
 
-            boolean primaryHasAnyKeys = primaryStyleBundles.values().stream()
-                    .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
+            boolean primaryHasAnyKeys = primaryStyleLeaves.values().stream()
+                    .anyMatch(leaves -> leaves != null && !leaves.isEmpty());
 
-            boolean fallbackHasAnyKeys = fallbackStyleBundles.values().stream()
-                    .anyMatch(cfg -> cfg != null && !cfg.getKeys(true).isEmpty());
+            boolean fallbackHasAnyKeys = fallbackStyleLeaves.values().stream()
+                    .anyMatch(leaves -> leaves != null && !leaves.isEmpty());
 
             plugin.getLogger().info("[Codex] Primary=" + primaryFolderName + " (bundles) styles=" + String.join(", ", availableStyles)
                     + " | keys=" + (primaryHasAnyKeys ? "yes" : "no")
@@ -358,6 +368,28 @@ public class CodexEngine {
         return colorize(applyPlaceholders(raw, placeholders));
     }
 
+    /**
+     * Translate with an explicit language style without changing or persisting a
+     * player's preference. Public-beta onboarding uses this to render the
+     * detected-language confirmation before the player accepts that language.
+     */
+    public String trStyle(String style, String key) {
+        return trStyle(style, key, Collections.emptyMap());
+    }
+
+    public String trStyle(String style, String key, Map<String, String> placeholders) {
+        final String raw;
+        rw.readLock().lock();
+        try {
+            String normalized = normalizeStyleId(style);
+            if (!availableStyles.contains(normalized)) normalized = safeDefaultStyle();
+            raw = resolve(normalized, key);
+        } finally {
+            rw.readLock().unlock();
+        }
+        return colorize(applyPlaceholders(raw, placeholders));
+    }
+
     public List<String> trList(CommandSender sender, String key) {
         return trList(sender, key, Collections.emptyMap());
     }
@@ -386,6 +418,26 @@ public class CodexEngine {
 
     public List<String> trList(Player player, String key, Map<String, String> placeholders) {
         return trList((CommandSender) player, key, placeholders);
+    }
+
+    public List<String> trListStyle(String style, String key) {
+        return trListStyle(style, key, Collections.emptyMap());
+    }
+
+    public List<String> trListStyle(String style, String key, Map<String, String> placeholders) {
+        final List<String> rawList;
+        rw.readLock().lock();
+        try {
+            String normalized = normalizeStyleId(style);
+            if (!availableStyles.contains(normalized)) normalized = safeDefaultStyle();
+            rawList = resolveList(normalized, key);
+        } finally {
+            rw.readLock().unlock();
+        }
+        if (rawList == null || rawList.isEmpty()) return Collections.emptyList();
+        List<String> out = new ArrayList<>(rawList.size());
+        for (String line : rawList) out.add(colorize(applyPlaceholders(line, placeholders)));
+        return out;
     }
 
     // Compat aliases
@@ -477,7 +529,10 @@ public class CodexEngine {
         plugin.getConfig().set(PLAYER_STYLE_PATH + "." + id, style);
 
         try {
-            plugin.runGlobalAsync(plugin::saveConfig);
+            // Bukkit's live YamlConfiguration is not safe to serialize while
+            // another thread may be reading or mutating it. Keep config saves
+            // on the server/global thread (Paper/Folia compatible).
+            plugin.runMainGlobal(plugin::saveConfig);
         } catch (Throwable ignored) {}
 
         return true;
@@ -520,189 +575,111 @@ public class CodexEngine {
     private String resolve(String style, String key) {
         if (key == null || key.isEmpty()) return "";
 
-        // 1) primary overrides
-        for (String k : keyCandidates(key)) {
-            if (primaryOverridesBundle != null && primaryOverridesBundle.contains(k)) {
-                return primaryOverridesBundle.getString(k, k);
-            }
-        }
-
-        // 2) primary style
-        for (String k : keyCandidates(key)) {
-            YamlConfiguration styleCfg = primaryStyleBundles.get(style);
-            if (styleCfg != null && styleCfg.contains(k)) return styleCfg.getString(k, k);
-        }
-
-        // Keep regional Spanish packs in Spanish when one variant has not yet
-        // overridden a newly introduced key. The requested style still wins.
-        for (String relatedStyle : relatedLanguageStyles(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration relatedCfg = primaryStyleBundles.get(relatedStyle);
-                if (relatedCfg != null && relatedCfg.contains(k)) return relatedCfg.getString(k, k);
-            }
-        }
-
-        // 3) primary core
-        for (String k : keyCandidates(key)) {
-            if (primaryCoreBundle != null && primaryCoreBundle.contains(k)) {
-                return primaryCoreBundle.getString(k, k);
-            }
-        }
-
-        // 4) primary fallback style
-        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = primaryStyleBundles.get(fallbackStyle);
-                if (fbCfg != null && fbCfg.contains(k)) return fbCfg.getString(k, k);
-            }
-        }
-
-        // 5) fallback overrides (codex)
-        for (String k : keyCandidates(key)) {
-            if (fallbackOverridesBundle != null && fallbackOverridesBundle.contains(k)) {
-                return fallbackOverridesBundle.getString(k, k);
-            }
-        }
-
-        // 6) fallback style (codex)
-        for (String k : keyCandidates(key)) {
-            YamlConfiguration fbStyleCfg = fallbackStyleBundles.get(style);
-            if (fbStyleCfg != null && fbStyleCfg.contains(k)) return fbStyleCfg.getString(k, k);
-        }
-
-        // 7) fallback fallback-style (codex)
-        if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = fallbackStyleBundles.get(fallbackStyle);
-                if (fbCfg != null && fbCfg.contains(k)) return fbCfg.getString(k, k);
-            }
-        }
-
-        // 8) fallback core (codex)
-        for (String k : keyCandidates(key)) {
-            if (fallbackCoreBundle != null && fallbackCoreBundle.contains(k)) {
-                return fallbackCoreBundle.getString(k, k);
-            }
-        }
-
-        return key;
+        Object found = lookupStringLeaf(style, key);
+        return found == null ? key : String.valueOf(found);
     }
 
     private List<String> resolveList(String style, String key) {
         if (key == null || key.isEmpty()) return Collections.emptyList();
+        Object found = lookupAnyLeaf(style, key);
+        return listFromLeaf(found);
+    }
 
-        List<String> result;
+    private Object lookupStringLeaf(String style, String key) {
+        Object found = lookupAnyLeaf(style, key);
+        if (found instanceof List<?>) return null;
+        return found;
+    }
 
-        // 1) primary overrides
-        for (String k : keyCandidates(key)) {
-            if (primaryOverridesBundle != null && primaryOverridesBundle.contains(k)) {
-                result = primaryOverridesBundle.getStringList(k);
-                if (!result.isEmpty()) return result;
+    private Object lookupAnyLeaf(String style, String key) {
+        Object found = leaf(primaryOverrideLeaves, key);
+        if (found != ABSENT) return found;
 
-                String single = primaryOverridesBundle.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
-        }
-
-        // 2) primary style
-        for (String k : keyCandidates(key)) {
-            YamlConfiguration styleCfg = primaryStyleBundles.get(style);
-            if (styleCfg != null && styleCfg.contains(k)) {
-                result = styleCfg.getStringList(k);
-                if (!result.isEmpty()) return result;
-
-                String single = styleCfg.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
-        }
+        found = leaf(primaryStyleLeaves.get(style), key);
+        if (found != ABSENT) return found;
 
         for (String relatedStyle : relatedLanguageStyles(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration relatedCfg = primaryStyleBundles.get(relatedStyle);
-                if (relatedCfg != null && relatedCfg.contains(k)) {
-                    result = relatedCfg.getStringList(k);
-                    if (!result.isEmpty()) return result;
-
-                    String single = relatedCfg.getString(k);
-                    if (single != null) return Collections.singletonList(single);
-                }
-            }
+            found = leaf(primaryStyleLeaves.get(relatedStyle), key);
+            if (found != ABSENT) return found;
         }
 
-        // 3) primary core
-        for (String k : keyCandidates(key)) {
-            if (primaryCoreBundle != null && primaryCoreBundle.contains(k)) {
-                result = primaryCoreBundle.getStringList(k);
-                if (!result.isEmpty()) return result;
+        found = leaf(primaryCoreLeaves, key);
+        if (found != ABSENT) return found;
 
-                String single = primaryCoreBundle.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
-        }
-
-        // 4) primary fallback style
         if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = primaryStyleBundles.get(fallbackStyle);
-                if (fbCfg != null && fbCfg.contains(k)) {
-                    result = fbCfg.getStringList(k);
-                    if (!result.isEmpty()) return result;
-
-                    String single = fbCfg.getString(k);
-                    if (single != null) return Collections.singletonList(single);
-                }
-            }
+            found = leaf(primaryStyleLeaves.get(fallbackStyle), key);
+            if (found != ABSENT) return found;
         }
 
-        // 5) fallback overrides
-        for (String k : keyCandidates(key)) {
-            if (fallbackOverridesBundle != null && fallbackOverridesBundle.contains(k)) {
-                result = fallbackOverridesBundle.getStringList(k);
-                if (!result.isEmpty()) return result;
+        found = leaf(fallbackOverrideLeaves, key);
+        if (found != ABSENT) return found;
 
-                String single = fallbackOverridesBundle.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
-        }
+        found = leaf(fallbackStyleLeaves.get(style), key);
+        if (found != ABSENT) return found;
 
-        // 6) fallback style
-        for (String k : keyCandidates(key)) {
-            YamlConfiguration fbStyleCfg = fallbackStyleBundles.get(style);
-            if (fbStyleCfg != null && fbStyleCfg.contains(k)) {
-                result = fbStyleCfg.getStringList(k);
-                if (!result.isEmpty()) return result;
-
-                String single = fbStyleCfg.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
-        }
-
-        // 7) fallback fallback-style
         if (fallbackStyle != null && !fallbackStyle.equalsIgnoreCase(style)) {
-            for (String k : keyCandidates(key)) {
-                YamlConfiguration fbCfg = fallbackStyleBundles.get(fallbackStyle);
-                if (fbCfg != null && fbCfg.contains(k)) {
-                    result = fbCfg.getStringList(k);
-                    if (!result.isEmpty()) return result;
-
-                    String single = fbCfg.getString(k);
-                    if (single != null) return Collections.singletonList(single);
-                }
-            }
+            found = leaf(fallbackStyleLeaves.get(fallbackStyle), key);
+            if (found != ABSENT) return found;
         }
 
-        // 8) fallback core
+        found = leaf(fallbackCoreLeaves, key);
+        return found == ABSENT ? null : found;
+    }
+
+    private static final Object ABSENT = new Object();
+
+    private Object leaf(Map<String, Object> leaves, String key) {
+        if (leaves == null || leaves.isEmpty()) return ABSENT;
         for (String k : keyCandidates(key)) {
-            if (fallbackCoreBundle != null && fallbackCoreBundle.contains(k)) {
-                result = fallbackCoreBundle.getStringList(k);
-                if (!result.isEmpty()) return result;
-
-                String single = fallbackCoreBundle.getString(k);
-                if (single != null) return Collections.singletonList(single);
-            }
+            if (leaves.containsKey(k)) return leaves.get(k);
         }
+        return ABSENT;
+    }
 
+    private List<String> listFromLeaf(Object val) {
+        if (val instanceof List<?> list) {
+            List<String> out = new ArrayList<>();
+            for (Object item : list) {
+                if (item != null) out.add(String.valueOf(item));
+            }
+            if (!out.isEmpty()) return out;
+        }
+        if (val != null) return Collections.singletonList(String.valueOf(val));
         return Collections.emptyList();
+    }
+
+    private void rebuildLeafMaps() {
+        primaryCoreLeaves = toLeaves(primaryCoreBundle);
+        primaryOverrideLeaves = toLeaves(primaryOverridesBundle);
+        fallbackCoreLeaves = toLeaves(fallbackCoreBundle);
+        fallbackOverrideLeaves = toLeaves(fallbackOverridesBundle);
+
+        primaryStyleLeaves.clear();
+        for (Map.Entry<String, YamlConfiguration> entry : primaryStyleBundles.entrySet()) {
+            primaryStyleLeaves.put(entry.getKey(), toLeaves(entry.getValue()));
+        }
+        fallbackStyleLeaves.clear();
+        for (Map.Entry<String, YamlConfiguration> entry : fallbackStyleBundles.entrySet()) {
+            fallbackStyleLeaves.put(entry.getKey(), toLeaves(entry.getValue()));
+        }
+    }
+
+    private Map<String, Object> toLeaves(YamlConfiguration cfg) {
+        Map<String, Object> leaves = new HashMap<>();
+        if (cfg == null) return leaves;
+        for (String key : cfg.getKeys(false)) {
+            Object val = cfg.get(key);
+            if (val instanceof ConfigurationSection section) {
+                for (String nested : section.getKeys(true)) {
+                    Object nestedVal = section.get(nested);
+                    if (nestedVal instanceof ConfigurationSection) continue;
+                    leaves.put(key + "." + nested, nestedVal);
+                }
+            } else {
+                leaves.put(key, val);
+            }
+        }
+        return leaves;
     }
 
     private List<String> relatedLanguageStyles(String style) {

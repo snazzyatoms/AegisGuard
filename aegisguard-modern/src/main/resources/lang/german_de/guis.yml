@@ -694,7 +694,15 @@ visit_title_trusted: '&3Vertrauenswürdige Claims'
 visit_title_owned: '&2Meine Grundstücke'
 visit_title_warps: '&6Server-Wegpunkte'
 market_gui_title: '&6✦ Immobilien'
+market_empty_name: '&7Keine Angebote'
+market_empty_lore:
+- '&7Derzeit nichts zu kaufen oder mieten.'
+- '&7Schau später wieder vorbei.'
 auction_gui_title: '&c✦ Anspruchsauktionen'
+auction_empty_name: '&7Keine Auktionen'
+auction_empty_lore:
+- '&7Keine Grundstücke in der Auktion.'
+- '&7Besitzer können sie in den Claim-Einstellungen einstellen.'
 zone_gui_title: '&3✦ Zonenmanager'
 biome_gui_title: '&a✦ Biom-Studio'
 settings_menu_title: '&3⚙ Einstellungen'
@@ -2791,6 +2799,18 @@ staff_wand_convert_ready: '&eKlicken Sie, um einen Serverplottyp auszuwählen.'
 staff_wand_admin_name: '&cStab-Tools'
 staff_wand_admin_lore:
 - '&7Öffnen Sie das vollständige Staff Command Center.'
+admin_plot_item_name: '&bBesitzer: &f{OWNER}'
+admin_plot_lore_id: '&7ID: &e{ID}'
+admin_plot_lore_world_type: '&7Welttyp: &f{TYPE}'
+admin_plot_lore_world_folder: '&7Weltordner: &f{WORLD}'
+admin_plot_lore_bounds: '&7Grenzen: &a{X1}, {Z1}'
+admin_plot_lore_to: '&7        bis &a{X2}, {Z2}'
+admin_plot_world_role_hub: 'Willkommens-Hub'
+admin_plot_world_role_play: 'Spielwelt'
+admin_plot_world_role_test_lab: 'Testlabor'
+admin_plot_world_role_other: 'Andere Welt'
+admin_plot_world_unknown: 'Unbekannt'
+admin_server_zone_tag: '&c[SERVERZONE]'
 admin_plot_actions:
 - '&eLinksklick: &7Teleportieren'
 - '&bRechtsklick: &7Konvertieren → Serverdiagramm'
@@ -3899,8 +3919,8 @@ hearth_toggle_lore:
 - '&7des Grundstücks, wenn du in keinem stehst.'
 - '&7Draußen hört man innen nicht,'
 - '&7und der Raum hört die Straße nicht.'
-- '&7Wenn Simple Voice Chat installiert ist,'
-- '&7wird die Stimme genauso getrennt.'
+- '&7Nähe-Sprache nutzt weiterhin deine Sprechtaste.'
+- '&7Keine Sprachgruppe ist nötig.'
 - '&7Markiere Häuser, Gruben und Lobbys mit'
 - '&7/ag subplot. Standardmäßig aus.'
 - '&eKlicken zum Umschalten.'
@@ -3960,3 +3980,313 @@ season_featured_plot_lore:
 season_featured_route_name: '&a★ Route {NAME}'
 season_featured_route_lore:
 - '&7Zuerst im Routen-Browser angeheftet.'
+# --- Einführung in die öffentliche Beta ---
+public_beta_language_confirm_title: '&bSprache erkannt'
+public_beta_language_continue_name: '&aMit erkannter Sprache fortfahren'
+public_beta_language_continue_lore: ['&7Diese Sprache für AegisGuard verwenden.', '&eKlicke, um fortzufahren.']
+public_beta_language_choose_name: '&bAndere Sprache wählen'
+public_beta_language_choose_lore: ['&7Die vollständige Sprachauswahl öffnen.']
+public_beta_language_unsupported: '&eDie Sprache deines Minecraft-Clients wird derzeit nicht von AegisGuard unterstützt. Bitte wähle eine andere verfügbare Sprache, die du verstehst. Du kannst sie später in den Einstellungen ändern. Weitere Sprachen können in zukünftigen Updates hinzugefügt werden.'
+public_beta_choice_title: '&bÖffentliche AegisGuard-Beta'
+public_beta_play_name: '&aSpielwelt betreten'
+public_beta_play_lore: ['&7Spiele mit Freunden, beanspruche Land,', '&7baue und lade vertrauenswürdige Spieler ein.']
+public_beta_lab_name: '&dTestlabor betreten'
+public_beta_lab_lore: ['&7Erstelle dein eigenes privates Testgrundstück.', '&7Erkunde Besitzerfunktionen sicher.', '&cDer Zugriff gilt nur für dein eigenes Land.']
+public_beta_choose_language_name: '&bSprache wählen'
+public_beta_choose_language_lore: ['&7Ändere deine AegisGuard-Sprache.']
+public_beta_decide_later_name: '&eSpäter entscheiden'
+public_beta_decide_later_lore: ['&7Bleibe im geschützten Willkommenszentrum.', '&7Rechtsklicke den Leitfaden, sobald du bereit bist.']
+public_beta_guide_name: '&bLeitfaden zur öffentlichen AegisGuard-Beta'
+public_beta_guide_book_lore: ['&7Erster Rechtsklick: Leitfaden lesen.', '&7Danach: Beta-Menü öffnen.', '&8Schleichen + Rechtsklick zum erneuten Lesen.']
+public_beta_guide_received: '&aDein Leitfaden zur öffentlichen Beta ist bereit. Halte ihn und rechtsklicke zum Lesen.'
+public_beta_welcome_title: '&bWillkommen bei AegisGuard 1.4 Beta'
+public_beta_welcome_header_name: '&bWillkommen, Beta-Spieler!'
+public_beta_welcome_header_lore: ['&7Dein Leitfaden erklärt Möglichkeiten,', '&7Einschränkungen und den Einstieg.', ' ', '&eWähle unten eine Option.']
+public_beta_welcome_read_name: '&aLeitfaden lesen'
+public_beta_welcome_read_lore: ['&7Lies Regeln, Befehle, Welten,', '&7Sprachoptionen und Testlabor-Grenzen.']
+public_beta_welcome_choices_name: '&bSpielwelt oder Testlabor wählen'
+public_beta_welcome_choices_lore: ['&7Öffne das Zielmenü der öffentlichen Beta.']
+public_beta_welcome_menu_name: '&6AegisGuard-Menü öffnen'
+public_beta_welcome_menu_lore: ['&7Kehre jederzeit mit &e/ag menu &7zurück.', '&7Wähle Öffentliche Beta im Hauptmenü.']
+public_beta_welcome_close_name: '&eSpäter entscheiden'
+public_beta_welcome_close_lore: ['&7Bleibe vorerst im Willkommenszentrum.', '&7Nutze später &e/ag menu &7oder &e/ag beta&7.']
+public_beta_menu_button_name: '&bÖffentliche AegisGuard-Beta'
+public_beta_menu_button_lore: ['&7Wähle Spielwelt oder Testlabor,', '&7Sprache oder Sprachchat-Bereich.', ' ', '&eZum Öffnen klicken.']
+public_beta_command_unavailable: '&cDas Menü der öffentlichen Beta ist für dieses Profil nicht verfügbar.'
+public_beta_guide_details: [' ', '&bErste Schritte', '&7Nutze &e/ag menu &7und wähle Öffentliche Beta für dieses Menü.', '&7Mit &e/ag beta &7öffnest du es direkt.', ' ', '&aDas darfst du', '&7Spielwelt: Land beanspruchen, bauen, Freunde einladen und normal spielen.', '&7Testlabor: Einstellungen, Rollen und Schutz auf eigenem Land testen.', '&7Ziel, Sprache und Sprachchat-Bereich lassen sich später ändern.', ' ', '&cDas darfst du nicht', '&7Du bist weder Serverteam noch Minecraft-Operator.', '&7Kein Zugriff auf Konsole, globale Konfiguration, Team-Wiederherstellung oder fremde Grundstücke.', '&7Das Testlabor umgeht niemals Landbesitz.', ' ', '&bSprachchat', '&7Nähe: halte die Sprechtaste und sprich in der Nähe. Keine Gruppe nötig.', '&7Global und Aktuelle Welt sind optionale weitere Kanäle.', '&7Simple Voice Chat wird auf Server und Client benötigt.']
+public_beta_guide_claiming: [' ', '&bSo beanspruchst du Land', '&7Beide Methoden funktionieren in Spielwelt und Testlabor.', ' ', '&aManuell beanspruchen', '&7Nutze &b/ag wand&7, um das Aegis-Zepter zu erhalten.', '&7Rechtsklicke die erste Ecke und linksklicke die gegenüberliegende Ecke.', '&7Nutze &b/ag claim&7, um das gewählte Grundstück zu bestätigen.', ' ', '&aSchnell beanspruchen', '&7Stelle dich ungefähr in die Mitte des gewünschten Landes.', '&7Nutze &b/ag quickclaim [Radius] &7oder &b/ag qc [Radius]&7.', '&7Ohne Radius wird die Standardgröße des Servers verwendet.', ' ', '&cTestlabor-Grenze', '&7Du darfst nur Testlabor-Land verwalten, das dir gehört.']
+public_beta_hub_name: '&bZum Willkommenszentrum zurückkehren'
+public_beta_hub_lore: ['&7Triff andere Spieler und wähle dein Ziel.', '&7Bauen und Grundstücke sind im Zentrum deaktiviert.']
+public_beta_entered_hub: '&aDu bist zurück im Willkommenszentrum. Nutze /ag beta für dein nächstes Ziel.'
+public_beta_hub_interaction_denied: '&cDies ist das Willkommenszentrum. Nutze /ag beta und wähle Spielwelt oder Testlabor zum Bauen.'
+public_beta_hub_claim_denied: '&cIm Willkommenszentrum können keine Grundstücke erstellt werden. Nutze /ag beta.'
+public_beta_guide_hub: [' ', '&bRückkehr zum Zentrum', '&7Nutze &b/ag hub &7oder Zum Willkommenszentrum in &b/ag beta&7.', '&7Hier triffst du Spieler und wählst ein Ziel.', '&cBauen und Grundstücke sind in der gesamten Hub-Welt deaktiviert.']
+public_beta_hub_protection_usage: '&eVerwendung: /agadmin publicbeta hubprotect <world|Radius> confirm'
+public_beta_hub_protection_confirm: '&eDies schützt {TARGET}. Wiederhole den Befehl mit &bconfirm&7.'
+public_beta_hub_protection_missing: '&cDas registrierte Willkommenszentrum oder seine AegisGuard-Serverzone ist nicht verfügbar.'
+public_beta_hub_protection_conflict: '&cErweiterung nicht möglich: Grundstück {PLOT} überschneidet den Bereich.'
+public_beta_hub_protection_success: '&aDer Schutz des Willkommenszentrums wurde aktualisiert. Radius: {RADIUS}.'
+admin_help_publicbeta_hub: '&e/agadmin publicbeta hubprotect <world|Radius> confirm &8- Hub schützen'
+admin_publicbeta_combined_usage: '&eVerwendung: /agadmin publicbeta <worlds|hubprotect <world|Radius> confirm>'
+public_beta_guide_lore:
+- '&fWillkommen auf dem Spiel- und Testserver der öffentlichen AegisGuard-Beta!'
+- ' '
+- '&aSpielwelt'
+- '&7Spiele normal mit Freunden, beanspruche Land, baue, lade vertrauenswürdige'
+- '&7Spieler ein und genieße AegisGuard in einer öffentlichen Gemeinschaft.'
+- ' '
+- '&dTestlabor'
+- '&7Erstelle dein privates Testgrundstück und erkunde Besitzerfunktionen,'
+- '&7ohne andere Spieler oder den echten Server zu beeinflussen.'
+- ' '
+- '&cDein Zugriff ist auf Land beschränkt, das dir gehört.'
+- '&cEr gewährt keine Administration und keinen Zugriff auf fremde Grundstücke.'
+- ' '
+- '&eRechtsklicke, um dein Ziel zu wählen.'
+public_beta_test_lab_denied: '&cDas Testlabor erfordert die Rolle Öffentlicher Beta-Spieler.'
+public_beta_world_unavailable: '&cDieses Ziel der öffentlichen Beta ist noch nicht verfügbar.'
+public_beta_entered_test_lab: '&aDu bist im Testlabor. Du kontrollierst nur dein eigenes Land.'
+public_beta_entered_play_world: '&aDu bist in der Spielwelt. Über den Leitfaden kannst du zurückkehren.'
+public_beta_spawn_welcome_message: '&bWillkommen! &7Dieser Ankunftsbereich ist geschützt. Gehe mindestens &f{DISTANCE} Blöcke &7in eine beliebige Richtung, bevor du dein Grundstück erstellst.'
+public_beta_spawn_claim_denied: '&cDieser Ankunftsbereich ist geschützt. Gehe mindestens {DISTANCE} Blöcke vom Spawn weg, bevor du ein Grundstück erstellst.'
+public_beta_voice_button_name: '&bReichweite des Sprachchats'
+public_beta_voice_button_lore: ['&7Nähe nutzt deine Sprechtaste und das Mikrofon.', '&7Keine Gruppe nötig, außer du willst einen weiteren Kanal', '&7oder eine private Gruppe.', ' ', '&eBenötigt den Simple-Voice-Chat-Client-Mod.', '&7Nutze Prism Launcher oder einen kompatiblen Launcher.']
+public_beta_voice_title: '&bSprache der öffentlichen Beta'
+public_beta_voice_denied: '&cDiese Wahl benötigt die Rolle Öffentlicher Beta-Spieler.'
+public_beta_voice_proximity_name: '&aNormale Nähe'
+public_beta_voice_proximity_lore: ['&7Halte die Sprechtaste und nutze dein Mikrofon.', '&7Keine Gruppe ist für Sprache in der Nähe nötig.']
+public_beta_voice_global_name: '&bGlobale öffentliche Beta'
+public_beta_voice_global_lore: ['&7Optional. Sprich zwischen Hub, Spielwelt und Testlabor.', '&7Eine Sprachgruppe gilt nur für diesen weiteren Kanal.']
+public_beta_voice_world_name: '&dNur aktuelle Welt'
+public_beta_voice_world_lore: ['&7Optional. Sprich nur in deiner aktuellen Beta-Welt.', '&7Eine Sprachgruppe gilt nur für diesen weiteren Kanal.', '&7Der Kanal wechselt beim Reisen automatisch.']
+public_beta_voice_selected: '&aAusgewählt'
+public_beta_voice_click: '&eZum Auswählen klicken.'
+public_beta_voice_unavailable_lore: '&8Sprachchat ist nicht verfügbar; die Auswahl wird gespeichert.'
+public_beta_voice_saved: '&aDeine Spracheinstellung für die öffentliche Beta wurde gespeichert.'
+public_beta_voice_back_name: '&fZurück'
+public_beta_voice_back_lore: ['&7Zum vorherigen Menü zurückkehren.']
+settings_public_beta_voice_name: '&bÖffentliche-Beta-Sprache: {MODE}'
+settings_public_beta_voice_lore: ['&7Nähe nutzt deine Sprechtaste und das Mikrofon.', '&7Keine Gruppe nötig, außer du willst einen weiteren Kanal', '&7oder eine private Gruppe.', ' ', '&eBenötigt den Simple-Voice-Chat-Client-Mod.', '&7Nutze Prism Launcher oder einen kompatiblen Launcher.']
+public_beta_destination_unavailable_name: '&cZiel noch nicht bereit'
+public_beta_destination_unavailable_lore: ['&7Der Besitzer muss die Beta-Welten fertig einrichten.', '&7Deine aktuelle Welt wird nicht geändert.']
+button_admin_public_beta_worlds: '&bWelten der öffentlichen Beta'
+admin_public_beta_worlds_lore: ['&7Nutze die Hauptwelt als Hub und', '&7bereite Spielwelt und Testlabor vor.', ' ', '&eÖffne den neustartsicheren Assistenten.']
+public_beta_worlds_title: '&cWelten der öffentlichen Beta'
+public_beta_world_hub_name: '&bHub: vorhandene Hauptwelt'
+public_beta_world_play_preview_name: '&aSpielwelt'
+public_beta_world_lab_preview_name: '&dTestlabor'
+public_beta_world_status_name: '&eStatus: {STATE}'
+public_beta_world_review_name: '&6Einrichtung prüfen'
+public_beta_world_review_lore: ['&7Prüfe alle Namen und Ordner vor', '&7der endgültigen Bestätigung.']
+public_beta_world_cancel_name: '&cAusstehende Einrichtung abbrechen'
+public_beta_world_cancel_lore: ['&7Nur vor Erstellung einer Welt möglich.', '&7Es werden keine Weltdaten gelöscht.']
+public_beta_world_confirm_title: '&4Welterstellung bestätigen'
+public_beta_world_confirm_name: '&aBestätigen und vormerken'
+public_beta_world_confirm_lore: ['&7Nutze die Hauptwelt als Hub.', '&7Erstelle Spielwelt und Testlabor beim Neustart.', '&cKeine Welt wird gelöscht oder überschrieben.']
+public_beta_world_back_name: '&cZurück'
+public_beta_world_back_lore: ['&7Keine Änderungen vornehmen.']
+public_beta_world_admin_denied: '&cDu darfst die Welten der öffentlichen Beta nicht verwalten.'
+admin_help_publicbeta: '&e/agadmin publicbeta worlds &8- Assistent für Beta-Welten'
+admin_publicbeta_usage: '&eVerwendung: /agadmin publicbeta worlds'
+
+
+# --- Posteingang für öffentliches Beta-Feedback ---
+public_beta_report_problem_name: '&cProblem melden'
+public_beta_report_problem_lore: ['&7Melde dem Team einen Fehler oder ein Problem.', '&7Welt und Position werden mitgesendet.']
+public_beta_feedback_name: '&bAllgemeine Rückmeldung'
+public_beta_feedback_lore: ['&7Teile mit, was gut war oder verbessert werden könnte.']
+public_beta_suggestion_name: '&dFunktionsvorschlag'
+public_beta_suggestion_lore: ['&7Schlage eine Idee für AegisGuard vor.']
+public_beta_back_name: '&aZurück'
+public_beta_back_lore: ['&7Zurück zum AegisGuard-Hauptmenü.']
+public_beta_exit_name: '&cBeenden'
+public_beta_exit_lore: ['&7Dieses Menü schließen.']
+public_beta_feedback_prompt: '&bSchreibe deine {CATEGORY} in den Chat. Tippe &cabbrechen&b, um aufzuhören.'
+public_beta_feedback_cancelled: '&7Eingabe abgebrochen.'
+public_beta_feedback_unavailable: '&cBeta-Meldungen sind für dieses Profil nicht verfügbar.'
+public_beta_feedback_too_short: '&cBitte gib mindestens 3 Zeichen ein.'
+public_beta_feedback_too_long: '&cBitte beschränke die Eingabe auf höchstens 500 Zeichen.'
+public_beta_feedback_cooldown: '&cBitte warte, bevor du eine weitere Eingabe sendest.'
+public_beta_feedback_submitted: '&aDanke! Deine {CATEGORY} wurde privat an den Team-Posteingang gesendet.'
+public_beta_feedback_staff_notice: '&bNeue Beta-{CATEGORY} von &f{PLAYER}&b. Öffne &f/agadmin feedback&b.'
+public_beta_feedback_inbox_title: '&bBeta-Feedback-Posteingang'
+public_beta_feedback_status_changed: '&aDer Status wurde auf {STATUS} gesetzt.'
+button_admin_public_beta_feedback: '&bPosteingang für öffentliches Beta-Feedback'
+admin_public_beta_feedback_lore: ['&7Prüfe Problemberichte, Rückmeldungen', '&7und Funktionsvorschläge der Spieler.', ' ', '&eZum Öffnen klicken.']
+admin_help_publicbeta_feedback: '&e/agadmin feedback &8- Posteingang für Beta-Rückmeldungen'
+public_beta_guide_feedback: [' ', '&bMeldungen und Rückmeldungen', '&7Nutze das Beta-Menü oder /ag menu, um ein Problem zu melden,', '&7Rückmeldung zu geben oder eine Funktion vorzuschlagen.', '&7Befehle: /ag report, /ag feedback und /ag suggest.', '&7Eingaben werden privat an das Team gesendet.']
+public_beta_wand_given: '&aDu hast für diese Welt ein kostenloses Aegis-Zepter erhalten. Es wird nach einem erfolgreichen Anspruch verbraucht.'
+public_beta_guide_wands: [' ', '&bKostenloser Anspruchsstab', '&7Beim ersten erfolgreichen Betreten der Spielwelt und des Testlabors erhältst du je einen Stab.', '&7Er wird nur nach einem erfolgreichen Anspruch verbraucht.', '&7Nutze &b/ag wand&7, wenn du einen weiteren brauchst.']
+public_beta_category_problem: 'Problemmeldung'
+public_beta_category_feedback: 'allgemeine Rückmeldung'
+public_beta_category_suggestion: 'Funktionsvorschlag'
+public_beta_status_new: 'Neu'
+public_beta_status_acknowledged: 'Zur Kenntnis genommen'
+public_beta_feedback_player_acknowledged: '&aDas Team hat deine {CATEGORY} gelesen und vermerkt. Falls Maßnahmen nötig sind, wird sie für ein zukünftiges Update berücksichtigt.'
+public_beta_feedback_player_status: '&aDas Team hat deine {CATEGORY} aktualisiert. Status: {STATUS}.'
+public_beta_my_submissions_name: '&bMeine Einsendungen'
+public_beta_my_submissions_lore: ['&7Sieh deine Meldungen, Rückmeldungen und Vorschläge', '&7mit ihrem aktuellen Teamstatus an.']
+public_beta_my_submissions_title: '&bMeine Public-Beta-Einsendungen'
+public_beta_feedback_detail_title: '&bEinsendungsdetails'
+public_beta_my_submissions_empty_name: '&7Noch keine Einsendungen'
+public_beta_my_submissions_empty_lore: '&7Deine Meldungen, Rückmeldungen und Vorschläge erscheinen hier.'
+public_beta_status_reviewing: 'In Prüfung'
+public_beta_status_resolved: 'Gelöst'
+public_beta_status_dismissed: 'Verworfen'
+public_beta_feedback_status_label: 'Status'
+public_beta_feedback_world_label: 'Welt'
+public_beta_feedback_from_label: 'Von'
+public_beta_feedback_location_label: 'Position'
+public_beta_feedback_message_label: 'Nachricht'
+public_beta_feedback_read_lore: '&eLinksklick zum Lesen im Chat.'
+public_beta_feedback_cycle_lore: '&bRechtsklick zum Ändern des Status.'
+public_beta_feedback_previous_name: '&aVorherige Seite'
+public_beta_feedback_next_name: '&aNächste Seite'
+public_beta_feedback_close_name: '&cSchließen'
+public_beta_inventory_save_failed: '&cDie Reise wurde abgebrochen, weil dein aktuelles Inventar nicht geschützt werden konnte.'
+public_beta_inventory_restore_failed: '&cAegisGuard konnte dein Zielinventar nicht sicher laden. Bitte kontaktiere das Team.'
+public_beta_inventory_switched: '&7Dein isoliertes Inventar für {SCOPE} ist jetzt aktiv.'
+public_beta_inventory_scope_hub: 'Willkommenshub'
+public_beta_inventory_scope_play: 'Spielwelt'
+public_beta_inventory_scope_lab: 'Testlabor'
+public_beta_inventory_scope_other: 'externe Welt'
+public_beta_inventory_isolation_lore: [' ', '&cGetrenntes Inventar', '&7Gegenstände, Rüstung, Endertruhe und XP,', '&7Gesundheit, Hunger, Effekte und Spielmodus bleiben getrennt', '&7zwischen Hub, Spielwelt und Testlabor.']
+public_beta_guide_inventory_isolation: [' ', '&cGetrennte Weltinventare', '&7Hub, Spielwelt und Testlabor besitzen getrennte Gegenstände, Rüstung,', '&7Endertruhe, XP, Gesundheit, Hunger, Effekte und Spielmodi.', '&7Nichts kann zwischen den Welten getragen oder über den Hub getauscht werden.', '&7Das schützt faires Spielen und hält Tests getrennt.']
+public_beta_chat_tag_hub: '&8[&bHub&8]&r '
+public_beta_chat_tag_play: '&8[&aSpielwelt&8]&r '
+public_beta_chat_tag_lab: '&8[&dTestlabor&8]&r '
+public_beta_voice_requirement_name: '&eClient-Mod erforderlich'
+public_beta_voice_requirement_lore: ['&7Halte die Sprechtaste und erlaube das Mikrofon, um in der Nähe zu sprechen.', '&7Keine Gruppe nötig, außer du wählst Global, Aktuelle Welt', '&7oder eine private Simple-Voice-Chat-Gruppe.', '&7Nutze Prism Launcher oder einen anderen Launcher,', '&7der deinen gewählten Mod-Loader unterstützt.', ' ', '&bBrauchst du Hilfe beim Finden oder Installieren?', '&7Sende dem Team eine Allgemeine Rückmeldung.']
+voice_chat_client_requirement_lore: [' ', '&eNähe-Sprache nutzt deine Sprechtaste. Keine Gruppe nötig.', '&eSimple Voice Chat wird auf Server und Client benötigt.', '&7Nutze Prism Launcher oder einen kompatiblen Launcher.', '&bBrauchst du Hilfe? Sende dem Team Allgemeine Rückmeldung.']
+
+# --- Experimentelle öffentliche Beta von Aegis Post ---
+post_menu_button_name: '&6Aegis Post &e(Beta)'
+post_menu_button_lore: ['&7Schreibe und liefere versiegelte Briefe an', '&7Online- oder Offline-Betaspieler.', ' ', '&eExperimentelle Funktion der öffentlichen Beta.', '&7Für eine spätere Version geplant, sobald sie stabil ist.']
+post_title: '&6Aegis Post'
+post_beta_name: '&eExperimentelle Public-Beta-Funktion'
+post_beta_lore: ['&7Aegis Post wird in dieser öffentlichen Beta getestet.', '&7Nach bestätigter Stabilität und Sicherheit kann es', '&7in eine spätere AegisGuard-Version aufgenommen werden.']
+post_inbox_name: '&aPosteingang'
+post_inbox_lore: ['&7Lies versiegelte Briefe, die dir gesendet wurden.', '&eKlicken zum Öffnen.']
+post_draft_name: '&bBriefentwurf erstellen'
+post_draft_lore: ['&7Erhalte einen beschreibbaren Aegis-Post-Entwurf.', '&7Schreibe ihn und kehre zum Senden zurück.']
+post_send_name: '&6Brief senden'
+post_send_lore: ['&7Wähle einen fertigen Entwurf aus deinem Inventar', '&7und übergib ihn dem Aegis-Kurier.']
+post_sent_name: '&bGesendete Post'
+post_sent_lore: ['&7Prüfe schreibgeschützte Kopien deiner Briefe.']
+post_blocked_name: '&cBlockierte Spieler'
+post_blocked_lore: ['&7Verwalte, wer dir keine Briefe senden darf.']
+post_future_name: '&bMögliche zukünftige Funktionen'
+post_future_lore: ['&7Gegenstands- oder Geldanhänge könnten erwogen werden,', '&7aber erst nach stabilen und sicheren Lieferungen.', '&8Diese Erweiterungen sind derzeit nicht versprochen.']
+post_drafts_title: '&6Versandbereite Briefe'
+post_draft_entry_name: '&f{SUBJECT}'
+post_draft_entry_lore: ['&7Seiten: &f{PAGES}', '&eKlicken, um einen Empfänger zu wählen.']
+post_no_drafts_name: '&7Keine fertigen Entwürfe'
+post_no_drafts_lore: ['&7Erstelle einen Entwurf, schreibe deinen Brief', '&7und kehre dann zum Senden zurück.']
+post_recipients_title: '&6Empfänger wählen'
+post_recipient_lore: '&eKlicken, um den Brief zu adressieren.'
+post_no_recipients_name: '&7Keine Empfänger verfügbar'
+post_no_recipients_lore: ['&7Es sind noch keine anderen Betaspieler bekannt.']
+post_confirm_title: '&6Versiegeln und senden'
+post_confirm_preview_name: '&f{SUBJECT}'
+post_confirm_preview_lore: ['&7An: &f{PLAYER}', '&7Seiten: &f{PAGES}']
+post_confirm_send_name: '&aDem Kurier übergeben'
+post_confirm_send_lore: ['&7Versiegle und sende diesen Brief jetzt.', '&cDer Entwurf verlässt dein Inventar.']
+post_confirm_cancel_name: '&cZurück'
+post_confirm_cancel_lore: ['&7Behalte den Entwurf und wähle erneut.']
+post_sent_title: '&6Gesendete Post'
+post_inbox_title: '&6Posteingang'
+post_sent_entry_name: '&f{SUBJECT}'
+post_sent_entry_lore: ['&7An: &f{PLAYER}', '&7Gesendet: &f{DATE}', '&eKlicken, um deine Kopie zu lesen.']
+post_inbox_entry_name: '&e{SUBJECT}'
+post_inbox_entry_lore: ['&7Geliefert: &f{DATE}', '&eLinksklick zum Entsiegeln und Lesen.', '&cRechtsklick zum privaten Melden.']
+post_sent_empty_name: '&7Keine gesendeten Briefe'
+post_sent_empty_lore: ['&7Gesendete Briefe erscheinen hier.']
+post_inbox_empty_name: '&7Dein Posteingang ist leer'
+post_inbox_empty_lore: ['&7Neue Briefe erscheinen hier.']
+post_blocked_title: '&cBlockierte Spieler'
+post_unblock_lore: '&eKlicken, um Post wieder zu erlauben.'
+post_blocked_empty_name: '&aNiemand ist blockiert'
+post_blocked_empty_lore: ['&7Du kannst Post von berechtigten Betaspielern erhalten.']
+post_block_player_name: '&cSpieler blockieren'
+post_block_player_lore: ['&7Gib einen Spielernamen im Chat ein.']
+post_previous_name: '&aVorherige Seite'
+post_previous_lore: ['&7Vorherige Seite anzeigen.']
+post_next_name: '&aNächste Seite'
+post_next_lore: ['&7Nächste Seite anzeigen.']
+post_draft_item_name: '&bAegis-Post-Briefentwurf'
+post_draft_item_lore: ['&7Schreibe deinen Brief, öffne dann Aegis Post', '&7und wähle Brief senden.']
+post_sealed_letter_name: '&6Versiegelter Brief'
+post_sealed_letter_lore: ['&7Ein privater Brief vom Aegis-Kurier.', '&eRechtsklick zum Entsiegeln und Lesen.']
+post_unavailable: '&cAegis Post ist nur für Spieler der öffentlichen Beta verfügbar.'
+post_draft_missing: '&cDieser Entwurf ist nicht mehr verfügbar.'
+post_send_invalid: '&cDieser Brief oder Empfänger ist nicht mehr verfügbar.'
+post_save_failed: '&cDer Kurier konnte den Brief nicht sicher speichern. Dein Entwurf wurde behalten.'
+post_already_sent: '&7Dieser Entwurf wurde bereits vom Aegis-Kurier angenommen.'
+post_inventory_full: '&cSchaffe zuerst Platz in deinem Inventar.'
+post_draft_given: '&aEin Briefentwurf wurde in dein Inventar gelegt. Rechtsklick zum Schreiben.'
+post_recipient_blocked: '&cDieser Spieler nimmt keine Briefe von dir an.'
+post_cooldown: '&cBitte warte, bevor du einen weiteren Brief sendest.'
+post_empty_letter: '&cSchreibe etwas in den Brief, bevor du ihn sendest.'
+post_sent_success: '&6Whoosh! Der Aegis-Kurier liefert deinen versiegelten Brief an &f{PLAYER}&6.'
+post_received_notice: '&6Du hast Post! &7Öffne Aegis Post, um den Absender zu entdecken.'
+post_join_notice: '&6Du hast Post! &f{COUNT} &6ungelesene(r) Brief(e) warten in Aegis Post.'
+post_letter_private: '&cDieser versiegelte Brief ist nicht an dich adressiert.'
+post_already_reported: '&7Dieser Brief wurde bereits gemeldet.'
+post_reported: '&aDer Brief wurde privat dem Public-Beta-Team gemeldet.'
+post_block_prompt: '&bGib den zu blockierenden Spielernamen ein oder &ccancel&b.'
+post_block_cancelled: '&7Blockierung abgebrochen.'
+post_player_not_found: '&cDieser berechtigte Betaspieler wurde nicht gefunden.'
+post_player_blocked: '&a{PLAYER} kann dir keine Aegis-Post mehr senden.'
+post_player_unblocked: '&aDieser Spieler darf dir wieder Briefe senden.'
+
+# --- Open House and Roles lock/undo (1.4) ---
+button_gathering: '&6Open House'
+gathering_button_lore:
+- '&7Host a timed Open House.'
+- '&7Visitors find you on Atlas Discover -> Live.'
+gathering_gui_title: '&6Open House'
+gathering_status_name: '&6Open House'
+gathering_status_plot: '&7Plot: &f{PLOT}'
+gathering_status_state: '&aLive for &f{REMAINING}'
+gathering_status_hint: '&7Visitors find you on Atlas Discover -> Live.'
+gathering_start_short: '&aStart {MINUTES}m'
+gathering_start_default: '&aStart {MINUTES}m'
+gathering_start_lore: '&eClick to open the house.'
+gathering_pass_on: '&aVisitor passes: On'
+gathering_pass_off: '&cVisitor passes: Off'
+gathering_pass_lore: '&7Issue a timed visitor Guest Pass to arrivals.'
+gathering_stop_name: '&cEnd Open House'
+gathering_stop_lore: '&7Close the listing and expire visitor passes.'
+gathering_need_manage: '&cStand in a plot you manage'
+gathering_need_manage_lore: '&7Owners, co-owners, and stewards can host.'
+gathering_title: '&6Open House'
+gathering_subtitle: '&7{PLOT} · {MINUTES}m'
+button_roles_undo: '&eUndo Last Role Change'
+roles_undo_button_lore:
+- '&7Restore the last role edit'
+- '&7on this plot.'
+button_roles_lock: '&6Lock Member'
+button_roles_unlock: '&aUnlock Member'
+roles_lock_button_lore:
+- '&7Keep this member through restore'
+- '&7and block silent role edits.'
+roles_unlock_button_lore:
+- '&7Allow restore and role edits'
+- '&7to change this member again.'
+roles_member_locked_line: '&6Gesperrt — Wiederherstellung und Rollen behalten dieses Mitglied.'
+roles_undo_empty_lore:
+- '&7Nichts zum Rückgängigmachen.'
+roles_undo_preview_lore:
+- '&7Stellt die letzte Rollenänderung'
+- '&7auf diesem Grundstück wieder her.'
+- ' '
+- '&7Zuletzt: &f{PLAYER}'
+- '&8{FROM} → {TO}'
+roles_member_guest_pass_line: '&bGäste-Pass: &f{PRESET} · {TIME}'
+roles_member_online_line: '&aOnline'
+roles_member_offline_line: '&7Offline'
+roles_lock_status_locked: '&6Gesperrt'
+roles_lock_status_unlocked: '&7Nicht gesperrt'
+roles_guest_pass_never: 'Kein Ablauf'
+roles_guest_pass_expiring: '<1m'
+

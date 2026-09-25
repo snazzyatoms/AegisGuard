@@ -48,7 +48,8 @@ public final class Modules {
         PLOT_CHAT("plot_chat", "plot_chat.enabled", true, "Aegis Frequency"),
         VISUAL_PRESENCE("visual_presence", "visual_presence.enabled", true, "Visual Presence"),
         SUCCESSION("succession", "succession.enabled", true, "Guardian Succession"),
-        CARAVANS("caravans", "caravans.enabled", true, "Caravans & Trade Routes");
+        CARAVANS("caravans", "caravans.enabled", true, "Caravans & Trade Routes"),
+        GATHERINGS("gatherings", "gatherings.enabled", true, "Open House");
 
         private final String key;
         private final String legacyPath;
@@ -117,6 +118,7 @@ public final class Modules {
             case "beacon" -> Id.TELEPORT_BEACONS;
             case "transfer", "heir", "succession" -> Id.SUCCESSION;
             case "caravan", "caravans" -> Id.CARAVANS;
+            case "gathering", "gatherings", "openhouse" -> Id.GATHERINGS;
             default -> null;
         };
     }

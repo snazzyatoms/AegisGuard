@@ -35,7 +35,7 @@ public class LanguageSelectGUI {
     }
 
     public enum ReturnTo {
-        SETTINGS, WALKTHROUGH
+        SETTINGS, WALKTHROUGH, PUBLIC_BETA
     }
 
     public static final class LanguageSelectHolder implements InventoryHolder {
@@ -164,6 +164,7 @@ public class LanguageSelectGUI {
             playError(player);
             return;
         }
+        if (plugin.publicBetaChat() != null) plugin.publicBetaChat().refresh(player);
 
         String display = formatStyle(player, style);
         player.sendMessage(plugin.gui().tr(
@@ -177,6 +178,10 @@ public class LanguageSelectGUI {
     }
 
     private void resumeAfterLanguage(Player player, Plot plot, ReturnTo dest, SettingsGUI.ReturnTo settingsReturn) {
+        if (dest == ReturnTo.PUBLIC_BETA && plugin.publicBeta() != null) {
+            plugin.publicBeta().finishLanguageSelection(player);
+            return;
+        }
         if (dest == ReturnTo.WALKTHROUGH && plugin.gui().walkthrough() != null) {
             plugin.gui().walkthrough().openAfterLanguageChoice(player);
             return;

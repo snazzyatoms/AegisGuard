@@ -28,12 +28,16 @@ class HearthVoicechatContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1312, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> hearth = (Map<String, Object>) config.get("hearth");
         assertEquals(Boolean.TRUE, hearth.get("voicechat"));
         assertEquals(Boolean.FALSE, hearth.get("voicechat_override_player_groups"));
+        Map<String, Object> beta = (Map<String, Object>) config.get("public-beta-mode");
+        Map<String, Object> voice = (Map<String, Object>) beta.get("voice-chat");
+        assertEquals(Boolean.FALSE, voice.get("hearth-isolates-proximity"));
+        assertEquals("PROXIMITY", voice.get("default-mode"));
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1310"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1312"));
     }
 
     @Test
@@ -50,7 +54,19 @@ class HearthVoicechatContractTest {
         assertTrue(hook.contains("RemoveGroupEvent"));
         assertTrue(hook.contains("voice.getGroup"));
         assertTrue(hook.contains("voice.removeGroup"));
-        assertTrue(hook.contains("lastVoiceRoom"));
+        assertTrue(hook.contains("lastVoiceTarget"));
+        assertTrue(hook.contains("JoinGroupEvent"));
+        assertTrue(hook.contains("LeaveGroupEvent"));
+        assertTrue(hook.contains("BETA_GROUP_PREFIX"));
+        assertTrue(hook.contains("PublicBetaVoiceMode.GLOBAL"));
+        assertTrue(hook.contains("PublicBetaVoiceMode.CURRENT_WORLD"));
+        assertTrue(hook.contains("hearthIsolatesVoice"));
+        assertTrue(hook.contains("hearth-isolates-proximity"));
+        assertTrue(hook.contains("if (target.kind() == TargetKind.PROXIMITY)"));
+        assertTrue(hook.contains("connection.setGroup(null)"));
+        assertTrue(hook.contains("pruneUnusedGroups"));
+        assertTrue(hook.contains("lastVoiceTarget.remove(event.getPlayer().getUniqueId())"));
+        assertTrue(hook.indexOf("current != null && !isOurs(current)") < hook.indexOf("HearthService hearth"));
         assertFalse(hook.contains("Player player = Bukkit.getPlayer(id);")
                 && hook.contains("if (player != null) refreshLater(player);")
                 && !hook.contains("plugin.runSync"));
@@ -67,6 +83,7 @@ class HearthVoicechatContractTest {
         String englishGuis = Files.readString(Path.of("src/main/resources/lang/modern_english/guis.yml"));
         String englishSystem = Files.readString(Path.of("src/main/resources/lang/modern_english/system.yml"));
         assertTrue(englishGuis.contains("hearth_toggle_lore:"));
+        assertTrue(englishGuis.contains("No voice group is required."));
         assertTrue(englishGuis.contains("button_hearth_on:"));
         assertTrue(englishSystem.contains("log_voicechat_hooked:"));
         assertTrue(englishSystem.contains("flight_skill_granted:"));

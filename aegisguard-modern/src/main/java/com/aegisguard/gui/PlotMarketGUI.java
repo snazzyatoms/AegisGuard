@@ -187,6 +187,17 @@ public class PlotMarketGUI {
             inv.setItem(i, head);
         }
 
+        if (allPlots.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(
+                    Material.BARRIER,
+                    plugin.gui().tr(player, "market_empty_name", "&7No Listings"),
+                    plugin.gui().trList(player, "market_empty_lore", List.of(
+                            "&7Nothing is for sale or rent right now.",
+                            "&7Check back after owners list a plot."
+                    ))
+            ));
+        }
+
         // 5. Navigation Buttons
 
         // Previous page

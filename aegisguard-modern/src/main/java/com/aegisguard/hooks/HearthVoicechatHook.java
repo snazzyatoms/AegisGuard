@@ -2,11 +2,15 @@ package com.aegisguard.hooks;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.chat.HearthService;
+import com.aegisguard.publicbeta.PublicBetaService;
+import com.aegisguard.publicbeta.PublicBetaVoiceMode;
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
+import de.maxhenkel.voicechat.api.events.JoinGroupEvent;
+import de.maxhenkel.voicechat.api.events.LeaveGroupEvent;
 import de.maxhenkel.voicechat.api.events.PlayerConnectedEvent;
 import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
@@ -24,15 +28,17 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Optional Simple Voice Chat hook. When the {@code voicechat} plugin is present
- * and Hearth is on, each Hearth room becomes an isolated SVC group. AegisGuard
- * still runs without Simple Voice Chat. Player-made groups are left alone unless
- * {@code hearth.voicechat_override_player_groups} is true.
+ * Optional Simple Voice Chat hook. Proximity uses ordinary positional voice
+ * with no Aegis group. Global, Current World, and (when enabled) Hearth rooms
+ * become isolated SVC groups. AegisGuard still runs without Simple Voice Chat.
+ * Player-made groups are left alone unless override is on.
  *
  * SVC network callbacks never touch Bukkit player/world APIs. Those hops go
  * through {@code runSync} / {@code runEntity} so Folia region ownership holds.
@@ -41,10 +47,11 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
     public static final String PLUGIN_ID = "aegisguard";
     public static final String GROUP_PREFIX = "AG-Hearth";
+    public static final String BETA_GROUP_PREFIX = "AG-Beta";
 
     private final AegisGuard plugin;
     private final Map<String, Group> groups = new ConcurrentHashMap<>();
-    private final Map<UUID, String> lastVoiceRoom = new ConcurrentHashMap<>();
+    private final Map<UUID, String> lastVoiceTarget = new ConcurrentHashMap<>();
     private volatile VoicechatServerApi api;
 
     public HearthVoicechatHook(AegisGuard plugin) {
@@ -52,11 +59,19 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     }
 
     public boolean isHookEnabled() {
-        return plugin.getConfig().getBoolean("hearth.voicechat", true);
+        return plugin.getConfig().getBoolean("hearth.voicechat", true)
+                || (plugin.getConfig().getBoolean("public-beta-mode.enabled", false)
+                && plugin.getConfig().getBoolean("public-beta-mode.voice-chat.enabled", true));
     }
 
     public boolean overridePlayerGroups() {
-        return plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false);
+        if (!plugin.getConfig().getBoolean("public-beta-mode.enabled", false)) {
+            return plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false);
+        }
+        boolean respect = plugin.getConfig().getBoolean(
+                "public-beta-mode.voice-chat.respect-player-groups",
+                !plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false));
+        return !respect;
     }
 
     @Override
@@ -70,7 +85,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> {
             api = null;
             groups.clear();
-            lastVoiceRoom.clear();
+            lastVoiceTarget.clear();
         });
         registration.registerEvent(PlayerConnectedEvent.class, event -> {
             UUID id = event.getConnection().getPlayer().getUuid();
@@ -80,13 +95,24 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
             });
         });
         registration.registerEvent(PlayerDisconnectedEvent.class, event ->
-                lastVoiceRoom.remove(event.getPlayerUuid()));
+                lastVoiceTarget.remove(event.getPlayerUuid()));
+        registration.registerEvent(JoinGroupEvent.class, event -> scheduleGroupRefresh(event.getConnection()));
+        registration.registerEvent(LeaveGroupEvent.class, event -> scheduleGroupRefresh(event.getConnection()));
         registration.registerEvent(RemoveGroupEvent.class, event -> {
             Group removed = event.getGroup();
             if (removed == null || removed.getId() == null) return;
             UUID id = removed.getId();
             groups.entrySet().removeIf(entry ->
                     entry.getValue() != null && id.equals(entry.getValue().getId()));
+        });
+    }
+
+    private void scheduleGroupRefresh(VoicechatConnection connection) {
+        if (connection == null || connection.getPlayer() == null) return;
+        UUID id = connection.getPlayer().getUuid();
+        plugin.runSync(() -> {
+            Player player = Bukkit.getPlayer(id);
+            if (player != null && player.isOnline()) refreshLater(player);
         });
     }
 
@@ -109,36 +135,108 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
         VoicechatServerApi voice = api;
         if (voice == null) return;
         VoicechatConnection connection = voice.getConnectionOf(player.getUniqueId());
-        if (connection == null) return;
-
-        Group current = connection.getGroup();
+        Group current = connection == null ? null : connection.getGroup();
         if (!isHookEnabled()) {
-            if (current != null && isOurs(current)) connection.setGroup(null);
-            lastVoiceRoom.remove(player.getUniqueId());
+            if (connection != null && current != null && isOurs(current)) connection.setGroup(null);
+            lastVoiceTarget.remove(player.getUniqueId());
+            pruneUnusedGroups(voice);
+            return;
+        }
+
+        VoiceTarget target = resolveTarget(player);
+        lastVoiceTarget.put(player.getUniqueId(), target.key());
+        if (connection == null) {
+            pruneUnusedGroups(voice);
             return;
         }
 
         if (current != null && !isOurs(current) && !overridePlayerGroups()) {
+            pruneUnusedGroups(voice);
             return;
         }
 
-        HearthService hearth = plugin.hearth();
-        HearthService.Room room = hearth == null ? null : hearth.roomOf(player);
-        lastVoiceRoom.put(player.getUniqueId(), roomKey(room));
-        if (room == null) {
+        if (target.kind() == TargetKind.PROXIMITY) {
             if (current != null && isOurs(current)) connection.setGroup(null);
+            pruneUnusedGroups(voice);
             return;
         }
 
-        Group target = groupFor(voice, room);
-        if (target == null) return;
-        if (current == null || current.getId() == null || !current.getId().equals(target.getId())) {
-            connection.setGroup(target);
+        Group targetGroup = groupFor(voice, target);
+        if (targetGroup == null) {
+            pruneUnusedGroups(voice);
+            return;
         }
+        if (current == null || current.getId() == null || !current.getId().equals(targetGroup.getId())) {
+            connection.setGroup(targetGroup);
+        }
+        pruneUnusedGroups(voice);
     }
 
-    private Group groupFor(VoicechatServerApi voice, HearthService.Room room) {
-        String key = roomKey(room);
+    private void pruneUnusedGroups(VoicechatServerApi voice) {
+        if (voice == null) return;
+        Set<String> live = new HashSet<>(lastVoiceTarget.values());
+        groups.entrySet().removeIf(entry -> {
+            if (entry.getKey() != null && live.contains(entry.getKey())) return false;
+            Group group = entry.getValue();
+            if (group != null && group.getId() != null) {
+                voice.removeGroup(group.getId());
+            }
+            return true;
+        });
+    }
+
+    private VoiceTarget resolveTarget(Player player) {
+        return resolveTarget(player, player.getLocation());
+    }
+
+    public boolean hearthIsolatesProximity() {
+        return plugin.getConfig().getBoolean(
+                "public-beta-mode.voice-chat.hearth-isolates-proximity", false);
+    }
+
+    private boolean hearthIsolatesVoice(Player player) {
+        PublicBetaService beta = plugin.publicBeta();
+        if (beta == null || !beta.isEnabled() || player == null
+                || !beta.hasBetaPlayerRole(player.getUniqueId())) {
+            return true;
+        }
+        if (beta.voiceMode(player.getUniqueId()) != PublicBetaVoiceMode.PROXIMITY) {
+            return true;
+        }
+        return hearthIsolatesProximity();
+    }
+
+    private VoiceTarget resolveTarget(Player player, Location location) {
+        if (plugin.getConfig().getBoolean("hearth.voicechat", true) && hearthIsolatesVoice(player)) {
+            HearthService hearth = plugin.hearth();
+            HearthService.Room room = hearth == null ? null : hearth.roomAt(location);
+            if (room != null) {
+                return new VoiceTarget(TargetKind.HEARTH, "hearth:" + roomKey(room), groupName(room));
+            }
+        }
+
+        PublicBetaService beta = plugin.publicBeta();
+        boolean betaVoice = plugin.getConfig().getBoolean("public-beta-mode.voice-chat.enabled", true);
+        if (!betaVoice || beta == null || !beta.isEnabled()
+                || !beta.hasBetaPlayerRole(player.getUniqueId())
+                || location == null || location.getWorld() == null
+                || !beta.isPublicBetaWorld(location.getWorld())) {
+            return VoiceTarget.proximity();
+        }
+        PublicBetaVoiceMode mode = beta.voiceMode(player.getUniqueId());
+        if (mode == PublicBetaVoiceMode.GLOBAL) {
+            return new VoiceTarget(TargetKind.BETA_GLOBAL, "beta:global", BETA_GROUP_PREFIX + " Global");
+        }
+        if (mode == PublicBetaVoiceMode.CURRENT_WORLD) {
+            String world = location.getWorld().getName();
+            return new VoiceTarget(TargetKind.BETA_WORLD, "beta:world:" + world,
+                    bounded(BETA_GROUP_PREFIX + " " + shortWorld(world)));
+        }
+        return VoiceTarget.proximity();
+    }
+
+    private Group groupFor(VoicechatServerApi voice, VoiceTarget target) {
+        String key = target.key();
         Group existing = groups.get(key);
         if (existing != null) {
             if (existing.getId() != null && voice.getGroup(existing.getId()) != null) {
@@ -147,7 +245,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
             groups.remove(key, existing);
         }
         Group created = voice.groupBuilder()
-                .setName(groupName(room))
+                .setName(target.name())
                 .setPersistent(false)
                 .setHidden(true)
                 .setType(Group.Type.ISOLATED)
@@ -166,7 +264,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     public static boolean isOurs(Group group) {
         if (group == null) return false;
         String name = group.getName();
-        return name != null && name.startsWith(GROUP_PREFIX);
+        return name != null && (name.startsWith(GROUP_PREFIX) || name.startsWith(BETA_GROUP_PREFIX));
     }
 
     public static String roomKey(HearthService.Room room) {
@@ -177,8 +275,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     public static String groupName(HearthService.Room room) {
         String zone = room == null || room.zoneName().isBlank() ? "yard" : room.zoneName();
         String raw = GROUP_PREFIX + " " + zone;
-        if (raw.length() <= 24) return raw;
-        return raw.substring(0, 24);
+        return bounded(raw);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -188,7 +285,8 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
+        lastVoiceTarget.remove(event.getPlayer().getUniqueId());
+        pruneUnusedGroups(api);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -197,23 +295,21 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
         Location to = event.getTo();
         if (to == null || sameBlock(from, to)) return;
         Player player = event.getPlayer();
-        HearthService hearth = plugin.hearth();
-        HearthService.Room next = hearth == null ? null : hearth.roomAt(to);
-        String key = roomKey(next);
-        if (key.equals(lastVoiceRoom.get(player.getUniqueId()))) return;
-        lastVoiceRoom.put(player.getUniqueId(), key);
+        String key = resolveTarget(player, to).key();
+        if (key.equals(lastVoiceTarget.get(player.getUniqueId()))) return;
+        lastVoiceTarget.put(player.getUniqueId(), key);
         refreshLater(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
-        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
+        lastVoiceTarget.remove(event.getPlayer().getUniqueId());
         refreshLater(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorld(PlayerChangedWorldEvent event) {
-        lastVoiceRoom.remove(event.getPlayer().getUniqueId());
+        lastVoiceTarget.remove(event.getPlayer().getUniqueId());
         refreshLater(event.getPlayer());
     }
 
@@ -223,5 +319,24 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
                 && from.getBlockZ() == to.getBlockZ()
                 && from.getWorld() != null
                 && from.getWorld().equals(to.getWorld());
+    }
+
+    private static String shortWorld(String world) {
+        if (world == null || world.isBlank()) return "World";
+        String cleaned = world.replaceAll("[^A-Za-z0-9_-]", "");
+        return cleaned.isBlank() ? "World" : cleaned;
+    }
+
+    private static String bounded(String value) {
+        if (value == null) return BETA_GROUP_PREFIX;
+        return value.length() <= 24 ? value : value.substring(0, 24);
+    }
+
+    private enum TargetKind { PROXIMITY, HEARTH, BETA_GLOBAL, BETA_WORLD }
+
+    private record VoiceTarget(TargetKind kind, String key, String name) {
+        private static VoiceTarget proximity() {
+            return new VoiceTarget(TargetKind.PROXIMITY, "proximity", "");
+        }
     }
 }

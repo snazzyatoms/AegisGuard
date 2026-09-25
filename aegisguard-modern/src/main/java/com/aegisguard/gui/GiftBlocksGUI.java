@@ -229,6 +229,7 @@ public class GiftBlocksGUI {
         List<UUID> ids = new ArrayList<>();
         for (Player other : player.getWorld().getPlayers()) {
             if (other == null || other.getUniqueId().equals(player.getUniqueId())) continue;
+            if (!com.aegisguard.util.TeleportUtil.regionOwns(other)) continue;
             if (other.getLocation().distanceSquared(player.getLocation()) > 64 * 64) continue;
             ids.add(other.getUniqueId());
         }

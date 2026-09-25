@@ -66,8 +66,7 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
                 // --- CONFIG FIX ---
                 plugin.getConfig().set("sounds.global_enabled", enable);
                 
-                // --- LAG FIX ---
-                plugin.runGlobalAsync(plugin::saveConfig);
+                plugin.runMainGlobal(plugin::saveConfig);
                 
                 sendMsg(sender, "&a✔ Global sounds " + (enable ? "enabled" : "disabled"));
             }
@@ -86,8 +85,7 @@ public class SoundCommand implements CommandExecutor, TabCompleter {
                 // --- CONFIG FIX ---
                 plugin.getConfig().set("sounds.players." + target.getUniqueId(), enable);
                 
-                // --- LAG FIX ---
-                plugin.runGlobalAsync(plugin::saveConfig);
+                plugin.runMainGlobal(plugin::saveConfig);
                 
                 sendMsg(sender, "&a✔ Sounds for " + target.getName() + " " + (enable ? "enabled" : "disabled"));
             }

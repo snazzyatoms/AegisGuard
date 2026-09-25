@@ -24,7 +24,7 @@ class Phase2RoleHardeningContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1312, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> snapshots = (Map<String, Object>) config.get("snapshots");
         Map<String, Object> restore = (Map<String, Object>) snapshots.get("restore");
         assertEquals(Boolean.TRUE, restore.get("protect_roles"));
@@ -33,7 +33,8 @@ class Phase2RoleHardeningContractTest {
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
                 || migration.contains("CURRENT_SCHEMA = 1310")
-                || migration.contains("CURRENT_SCHEMA = 1310"));
+                || migration.contains("CURRENT_SCHEMA = 1310")
+                || migration.contains("CURRENT_SCHEMA = 1312"));
     }
 
     @Test
@@ -54,6 +55,7 @@ class Phase2RoleHardeningContractTest {
         assertTrue(plot.contains("lockMember"));
         assertTrue(plot.contains("isMemberLocked"));
         assertTrue(plot.contains("undoLastRoleChange"));
+        assertTrue(plot.contains("peekLastRoleChange"));
         assertTrue(plot.contains("deserializeRoleFlags(String serialized, boolean replace)"));
         assertTrue(Files.readString(JAVA.resolve("data/YMLDataStore.java")).contains("locked-members"));
         assertTrue(Files.readString(JAVA.resolve("data/SQLDataStore.java")).contains("lockedMembers"));
@@ -65,6 +67,11 @@ class Phase2RoleHardeningContractTest {
         assertTrue(command.contains("handleRoles"));
         assertTrue(command.contains("case \"roles\""));
         assertTrue(command.contains("AuditCategory.ROLE_CHANGE"));
+        String rolesGui = Files.readString(JAVA.resolve("gui/RolesGUI.java"));
+        assertTrue(rolesGui.contains("lockMember"));
+        assertTrue(rolesGui.contains("undoLastRoleChange"));
+        assertTrue(rolesGui.contains("peekLastRoleChange"));
+        assertTrue(rolesGui.contains("MEMBERS_PER_PAGE = 43"));
         String category = Files.readString(JAVA.resolve("audit/AuditCategory.java"));
         assertTrue(category.contains("ROLE_CHANGE"));
         String gui = Files.readString(JAVA.resolve("audit/AuditAdminGUI.java"));

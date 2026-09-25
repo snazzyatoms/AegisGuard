@@ -28,7 +28,7 @@ class AllianceStaffChatContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1310, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1312, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> alliance = (Map<String, Object>) config.get("alliance_chat");
         Map<String, Object> group = (Map<String, Object>) config.get("group_chat");
         Map<String, Object> staff = (Map<String, Object>) config.get("staff_chat");
@@ -36,7 +36,7 @@ class AllianceStaffChatContractTest {
         assertEquals(Boolean.TRUE, group.get("enabled"));
         assertEquals(Boolean.TRUE, staff.get("enabled"));
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
-        assertTrue(migration.contains("CURRENT_SCHEMA = 1310"));
+        assertTrue(migration.contains("CURRENT_SCHEMA = 1312"));
     }
 
     @Test

@@ -48,7 +48,9 @@ public class ModerationGUI {
         }
         List<UUID> targets = new ArrayList<>();
         for (Player online : Bukkit.getOnlinePlayers()) {
-            if (!online.getUniqueId().equals(player.getUniqueId()) && plot.isInside(online.getLocation())) {
+            if (online.getUniqueId().equals(player.getUniqueId())) continue;
+            if (!com.aegisguard.util.TeleportUtil.regionOwns(online)) continue;
+            if (plot.isInside(online.getLocation())) {
                 targets.add(online.getUniqueId());
             }
         }
@@ -126,8 +128,10 @@ public class ModerationGUI {
         if (target.equals(actor) || plot.isOwner(target.getUniqueId()) || target.hasPermission("aegis.admin.bypass") || target.isOp()) {
             plugin.effects().playError(actor); return;
         }
-        plugin.safeTravel().travel(target, target.getWorld().getSpawnLocation(), SafeTravelService.Kind.SPAWN, false);
-        target.sendMessage(GUIManager.color(tr(target, "kicked_target", "&cYou were kicked from this plot.")));
+        plugin.runMain(target, () -> {
+            plugin.safeTravel().travel(target, target.getWorld().getSpawnLocation(), SafeTravelService.Kind.SPAWN, false);
+            target.sendMessage(GUIManager.color(tr(target, "kicked_target", "&cYou were kicked from this plot.")));
+        });
         actor.sendMessage(GUIManager.color(plugin.gui().tr(actor, "kicked_sender", "&eKicked {PLAYER}",
                 java.util.Map.of("PLAYER", target.getName()))));
         plugin.effects().playConfirm(actor);
@@ -138,8 +142,13 @@ public class ModerationGUI {
         if (id == null || id.equals(actor.getUniqueId()) || plot.isOwner(id)) { plugin.effects().playError(actor); return; }
         plot.addBan(id);
         plugin.store().savePlotSync(plot);
-        if (target.isOnline() && target.getPlayer() != null && plot.isInside(target.getPlayer().getLocation())) {
-            plugin.safeTravel().travel(target.getPlayer(), target.getPlayer().getWorld().getSpawnLocation(), SafeTravelService.Kind.SPAWN, false);
+        Player online = target.getPlayer();
+        if (online != null) {
+            plugin.runMain(online, () -> {
+                if (plot.isInside(online.getLocation())) {
+                    plugin.safeTravel().travel(online, online.getWorld().getSpawnLocation(), SafeTravelService.Kind.SPAWN, false);
+                }
+            });
         }
         plugin.effects().playConfirm(actor);
     }

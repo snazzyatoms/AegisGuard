@@ -97,7 +97,16 @@ public final class TeleportUtil {
         if (plugin instanceof AegisGuard aegis) {
             aegis.runEntity(entity, fallback);
         } else {
-            Bukkit.getScheduler().runTask(plugin, fallback);
+            // Legacy fallback for non-AegisGuard callers. On Folia this branch should
+            // not be reached because teleportAsync is the preferred path on 1.20+;
+            // if it is reached and scheduling fails, the future completes exceptionally.
+            try {
+                Bukkit.getScheduler().runTask(plugin, fallback);
+            } catch (Exception ex) {
+                plugin.getLogger().log(Level.WARNING,
+                        "[AegisGuard] Could not schedule teleport fallback: " + ex.getMessage(), ex);
+                result.completeExceptionally(ex);
+            }
         }
 
         return result;
@@ -218,6 +227,21 @@ public final class TeleportUtil {
         if (location == null || location.getWorld() == null) return false;
         try {
             return Bukkit.isOwnedByCurrentRegion(location);
+        } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * True when this thread may read {@code entity} (location, inventory, teleport).
+     * Paper/Purpur/Spigot without Folia always return true.
+     */
+    public static boolean regionOwns(Entity entity) {
+        if (entity == null || !entity.isValid()) return false;
+        try {
+            return Bukkit.isOwnedByCurrentRegion(entity);
         } catch (NoSuchMethodError | NoClassDefFoundError ignored) {
             return true;
         } catch (Throwable ignored) {

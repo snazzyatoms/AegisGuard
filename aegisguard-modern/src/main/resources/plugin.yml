@@ -39,6 +39,7 @@ softdepend:
   - mcMMO
   - Jobs
   - voicechat
+  - ProtocolLib
 
   # Optional market / shop integrations exposed through the local market hub
   - QuickShop
@@ -104,6 +105,9 @@ permissions:
       aegis.admin.fly: true
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
+      aegis.admin.publicbeta.worlds: true
+      aegis.admin.publicbeta.hub-protection: true
+      aegis.admin.publicbeta.feedback: true
       aegis.arena.admin: true
       aegis.arena.steward: true
 
@@ -126,6 +130,7 @@ permissions:
       aegis.chat: true
       aegis.chat.alliance: true
       aegis.chat.group: true
+      aegis.gathering: true
 
   aegis.admin:
     description: Recommended administrative permissions.
@@ -158,6 +163,9 @@ permissions:
       aegis.admin.fly: true
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
+      aegis.admin.publicbeta.worlds: true
+      aegis.admin.publicbeta.hub-protection: true
+      aegis.admin.publicbeta.feedback: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -167,6 +175,18 @@ permissions:
   aegis.use:
     description: Allows use of the main /aegis command.
     default: true
+
+  aegis.admin.publicbeta.worlds:
+    description: Stage and inspect isolated Public Beta world provisioning.
+    default: op
+
+  aegis.admin.publicbeta.hub-protection:
+    description: Expand or resize the protected Public Beta Welcome Hub server zone.
+    default: op
+
+  aegis.admin.publicbeta.feedback:
+    description: Review and manage the private Public Beta feedback inbox.
+    default: op
 
   aegis.menu:
     description: Allows opening the main AegisGuard player menu.
@@ -363,6 +383,10 @@ permissions:
 
   aegis.chat.group:
     description: Use group chat (/ag chat group) with your group members.
+    default: true
+
+  aegis.gathering:
+    description: Host an Open House on a plot you manage (/ag gathering).
     default: true
 
   aegis.admin.staffchat:

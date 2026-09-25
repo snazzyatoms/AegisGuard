@@ -19,6 +19,7 @@ import com.aegisguard.lockdown.LockdownGUI.LockdownOptionsHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
 import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
+import com.aegisguard.publicbeta.PublicBetaService.PublicBetaHolder;
 import com.aegisguard.guidance.FirstClaimWalkthroughGUI.WalkthroughHolder;
 import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
 import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
@@ -40,6 +41,7 @@ import com.aegisguard.beacon.BeaconGUI.LinkHolder;
 import com.aegisguard.beacon.BeaconGUI.ConfirmHolder;
 import com.aegisguard.succession.StewardshipGUI;
 import com.aegisguard.caravans.CaravanGUI;
+import com.aegisguard.gatherings.GatheringGUI;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
@@ -146,6 +148,7 @@ public class GUIListener implements Listener {
                 || holder instanceof InfoHolder
                 || holder instanceof SettingsGUIHolder
                 || holder instanceof LanguageSelectHolder
+                || holder instanceof PublicBetaHolder
                 || holder instanceof AdminHolder
                 || holder instanceof DoctorHolder
                 || holder instanceof WorldControlsHolder
@@ -180,6 +183,7 @@ public class GUIListener implements Listener {
                 || holder instanceof TransferConfirmHolder
                 || holder instanceof StewardshipGUI.Holder
                 || holder instanceof CaravanGUI.Holder
+                || holder instanceof GatheringGUI.Holder
                 || holder instanceof StaffWandHolder
                 || holder instanceof ConvertSelectHolder
                 || holder instanceof ConvertConfirmHolder
@@ -251,6 +255,7 @@ public class GUIListener implements Listener {
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
+        if (GUIManager.isFiller(clicked)) return;
 
         // 1.2.6: block spammy / inventory-manipulation click types
         ClickType click = e.getClick();
@@ -288,6 +293,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof LanguageSelectHolder castHolder) {
             plugin.gui().languageSelect().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof PublicBetaHolder castHolder) {
+            if (plugin.publicBeta() != null) plugin.publicBeta().handleClick(player, e, castHolder);
         }
         else if (holder instanceof AdminHolder) {
             plugin.gui().admin().handleClick(player, e);
@@ -363,6 +371,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof CaravanGUI.Holder castHolder) {
             plugin.gui().caravans().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof GatheringGUI.Holder castHolder) {
+            plugin.gui().gatherings().handleClick(player, e, castHolder);
         }
         else if (holder instanceof StaffWandHolder) {
             plugin.gui().convertToServer().handleStaffWandClick(player, e);

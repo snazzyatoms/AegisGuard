@@ -4862,7 +4862,7 @@ admin_gui_title: '&c✦ Strumenti del Guardiano Supremo'
 auction_create_button: '&a➕ Crea asta'
 
 auction_create_lore:
-- '&7Metti allasta uno dei tuoi lotti.'
+- '&7Metti all''asta uno dei tuoi lotti.'
 
 auction_no_auctions: '&7Nessuna asta attiva.'
 
@@ -4996,13 +4996,13 @@ claim_blocks_shop_world_blocked: '&c❌ Questa azione non è permessa in questo 
 
 claim_blocks_spent_simple: '&e⛏ Hai speso &6{AMOUNT}&e blocchi. &7(Rimanenti: &f{BALANCE}&7)'
 
-claim_conflict_external: '&c❌ Quellarea è già protetta da un altro plugin. AegisGuard non la reclamerà.'
+claim_conflict_external: '&c❌ Quell''area è già protetta da un altro plugin. AegisGuard non la reclamerà.'
 
 claim_enter_exit_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
 
 claim_enter_exit_notify_already_enabled: '&7Queste notifiche sono già attivate.'
 
-claim_enter_exit_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+claim_enter_exit_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dall''admin del server.'
 
 claim_enter_exit_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
 
@@ -5014,7 +5014,7 @@ claim_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
 
 claim_notify_already_enabled: '&7Queste notifiche sono già attivate.'
 
-claim_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+claim_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dall''admin del server.'
 
 claim_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
 
@@ -5055,7 +5055,7 @@ codex_getting_started_lore:
 - ' '
 - '&f1. &7Usa &b/ag wand &7per ottenere lo strumento.'
 - '&f2. &7Click destro sul primo angolo.'
-- '&f3. &7Click sinistro sullangolo opposto.'
+- '&f3. &7Click sinistro sull''angolo opposto.'
 - '&f4. &7Usa &a/ag claim &7per reclamare il lotto.'
 - ' '
 - '&eIl tuo primo lotto è gratis!'
@@ -5163,7 +5163,7 @@ flag_chest_access_lore:
 flag_chest_access_name: '&6📦 Accesso alle casse'
 
 flag_chiseled_bookshelf_lore:
-- '&7Consenti luso delle librerie scolpite.'
+- '&7Consenti l''uso delle librerie scolpite.'
 
 flag_chiseled_bookshelf_name: '&6📚 Librerie scolpite'
 
@@ -5193,7 +5193,7 @@ flag_crop_growth_lore:
 flag_crop_growth_name: '&a🌾 Crescita delle colture'
 
 flag_decorated_pot_lore:
-- '&7Consenti luso dei vasi decorati.'
+- '&7Consenti l''uso dei vasi decorati.'
 
 flag_decorated_pot_name: '&6🏺 Vasi decorati'
 
@@ -5205,12 +5205,12 @@ flag_door_lore:
 flag_door_name: '&8🚪 Porte'
 
 flag_dragon_egg_lore:
-- '&7Consenti linterazione con luovo di drago.'
+- '&7Consenti l''interazione con l''uovo di drago.'
 
 flag_dragon_egg_name: '&5🥚 Uovo di drago'
 
 flag_dripleaf_lore:
-- '&7Consenti linclinazione delle foglie stillanti.'
+- '&7Consenti l''inclinazione delle foglie stillanti.'
 
 flag_dripleaf_name: '&a🌱 Foglia stillante'
 
@@ -5222,7 +5222,7 @@ flag_enchanting_lore:
 flag_enchanting_name: '&5📖 Incantamenti'
 
 flag_ender_pearl_lore:
-- '&7Consenti luso delle perle di ender.'
+- '&7Consenti l''uso delle perle di ender.'
 
 flag_ender_pearl_name: '&a🟢 Perle di ender'
 
@@ -5307,7 +5307,7 @@ flag_painting_lore:
 flag_painting_name: '&6🎨 Dipinti'
 
 flag_pressure_plate_lore:
-- '&7Consenti lattivazione delle pedane a pressione.'
+- '&7Consenti l''attivazione delle pedane a pressione.'
 
 flag_pressure_plate_name: '&7⬜ Pedane a pressione'
 
@@ -5347,7 +5347,7 @@ flag_suspicious_block_lore:
 flag_suspicious_block_name: '&e🔍 Blocchi sospetti'
 
 flag_target_block_lore:
-- '&7Consenti lattivazione dei blocchi bersaglio.'
+- '&7Consenti l''attivazione dei blocchi bersaglio.'
 
 flag_target_block_name: '&c🎯 Blocchi bersaglio'
 

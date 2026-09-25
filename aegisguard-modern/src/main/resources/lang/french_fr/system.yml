@@ -658,7 +658,7 @@ admin_wand_received: '&aVous avez reçu le Sceptre du Sentinelle.'
 admin_wand_usage_hint: '&7Sélectionnez deux coins, puis utilisez &b/agadmin claim&7.'
 admin_migration_wand_unavailable: '&cLa baguette de migration est indisponible.'
 admin_wand_usage: '&eUtilisation : /aegisadmin wand <server|migration>'
-admin_claim_need_selection: '&cVous devez dabord sélectionner deux coins avec le Sceptre du Sentinelle.'
+admin_claim_need_selection: '&cVous devez d''abord sélectionner deux coins avec le Sceptre du Sentinelle.'
 admin_claim_get_wand_hint: '&7Utilisez &b/agadmin wand server &7pour l''obtenir.'
 admin_manage_need_server_zone: '&cTenez-vous dans la zone serveur que vous souhaitez gérer.'
 admin_wand_lore_authority: '&7Un outil d''autorité absolue.'
@@ -1197,7 +1197,7 @@ claim_blocks_shop_disabled: '&c❌ La boutique de ClaimBlocks est désactivée s
 
 claim_blocks_shop_invalid_amount: '&c❌ Cette quantité est invalide.'
 
-claim_blocks_shop_no_permission: '&c❌ Vous navez pas la permission dacheter des ClaimBlocks.'
+claim_blocks_shop_no_permission: '&c❌ Vous n''avez pas la permission d''acheter des ClaimBlocks.'
 
 claim_blocks_shop_not_enough_money: '&c❌ Fonds insuffisants. Requis : &e{COST}&c.'
 
@@ -1217,9 +1217,9 @@ claim_enter_exit_notify_already_disabled: '&7Ces notifications sont déjà désa
 
 claim_enter_exit_notify_already_enabled: '&7Ces notifications sont déjà activées.'
 
-claim_enter_exit_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+claim_enter_exit_notify_forced_disabled_by_server: '&cLes notifications d''entrée/sortie sont désactivées par l''admin du serveur.'
 
-claim_enter_exit_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+claim_enter_exit_notify_forced_disabled_for_you: '&cLes notifications d''entrée/sortie sont désactivées pour vous.'
 
 claim_enter_exit_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
 
@@ -1229,9 +1229,9 @@ claim_notify_already_disabled: '&7Ces notifications sont déjà désactivées.'
 
 claim_notify_already_enabled: '&7Ces notifications sont déjà activées.'
 
-claim_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+claim_notify_forced_disabled_by_server: '&cLes notifications d''entrée/sortie sont désactivées par l''admin du serveur.'
 
-claim_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+claim_notify_forced_disabled_for_you: '&cLes notifications d''entrée/sortie sont désactivées pour vous.'
 
 claim_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
 

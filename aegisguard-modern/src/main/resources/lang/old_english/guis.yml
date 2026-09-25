@@ -726,7 +726,7 @@ biome_item_lore_visual_only:
 - '&c[!] Visual change only'
 - '&7Blocks themselves are not replaced.'
 biome_item_lore_set_biome:
-- '&7Set thy claim''s biome to {BIOME}.'
+- '&7Set your claim''s biome to {BIOME}.'
 - '&7Cost: {COST}'
 biome_item_lore_free:
 - '&7Cost: &aFree'

@@ -4982,7 +4982,7 @@ claim_blocks_shop_disabled: '&c❌ La boutique de ClaimBlocks est désactivée s
 
 claim_blocks_shop_invalid_amount: '&c❌ Cette quantité est invalide.'
 
-claim_blocks_shop_no_permission: '&c❌ Vous navez pas la permission dacheter des ClaimBlocks.'
+claim_blocks_shop_no_permission: '&c❌ Vous n''avez pas la permission d''acheter des ClaimBlocks.'
 
 claim_blocks_shop_not_enough_money: '&c❌ Fonds insuffisants. Requis : &e{COST}&c.'
 
@@ -5004,9 +5004,9 @@ claim_enter_exit_notify_already_disabled: '&7Ces notifications sont déjà désa
 
 claim_enter_exit_notify_already_enabled: '&7Ces notifications sont déjà activées.'
 
-claim_enter_exit_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+claim_enter_exit_notify_forced_disabled_by_server: '&cLes notifications d''entrée/sortie sont désactivées par l''admin du serveur.'
 
-claim_enter_exit_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+claim_enter_exit_notify_forced_disabled_for_you: '&cLes notifications d''entrée/sortie sont désactivées pour vous.'
 
 claim_enter_exit_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
 
@@ -5016,9 +5016,9 @@ claim_notify_already_disabled: '&7Ces notifications sont déjà désactivées.'
 
 claim_notify_already_enabled: '&7Ces notifications sont déjà activées.'
 
-claim_notify_forced_disabled_by_server: '&cLes notifications dentrée/sortie sont désactivées par ladmin du serveur.'
+claim_notify_forced_disabled_by_server: '&cLes notifications d''entrée/sortie sont désactivées par l''admin du serveur.'
 
-claim_notify_forced_disabled_for_you: '&cLes notifications dentrée/sortie sont désactivées pour vous.'
+claim_notify_forced_disabled_for_you: '&cLes notifications d''entrée/sortie sont désactivées pour vous.'
 
 claim_notify_set_for_other: '&a✔ Notifications de parcelle de {PLAYER} définies sur : &f{STATE}&a.'
 
@@ -5027,7 +5027,7 @@ claim_notify_target_not_found: '&cJoueur introuvable.'
 codex_commands_lore:
 - '&7Liste complète des commandes :'
 - ' '
-- '&b/ag help &7- Afficher laide'
+- '&b/ag help &7- Afficher l''aide'
 - '&b/ag menu &7- Ouvrir le menu principal'
 - '&b/ag claim &7- Réclamer la sélection'
 - '&b/ag unclaim &7- Supprimer la parcelle'
@@ -5055,7 +5055,7 @@ codex_faq_title: '&9§lIX. FAQ'
 codex_getting_started_lore:
 - '&7Bienvenue sur AegisGuard !'
 - ' '
-- '&f1. &7Utilisez &b/ag wand &7pour obtenir loutil.'
+- '&f1. &7Utilisez &b/ag wand &7pour obtenir l''outil.'
 - '&f2. &7Clic droit sur le premier coin.'
 - '&f3. &7Clic gauche sur le coin opposé.'
 - '&f4. &7Utilisez &a/ag claim &7pour réclamer la parcelle.'
@@ -5069,7 +5069,7 @@ confirm_no: '&c✖ Non, annuler'
 confirm_no_lore:
 - '&7Cliquez pour annuler.'
 
-confirm_title: '&c⚠ Confirmer laction'
+confirm_title: '&c⚠ Confirmer l''action'
 
 confirm_yes: '&a✔ Oui, confirmer'
 
@@ -5078,25 +5078,25 @@ confirm_yes_lore:
 
 current_tier: '&6Niveau actuel'
 
-error_no_permission: '&cVous navez pas la permission.'
+error_no_permission: '&cVous n''avez pas la permission.'
 
-error_not_enough_blocks: '&cVous navez pas assez de blocs.'
+error_not_enough_blocks: '&cVous n''avez pas assez de blocs.'
 
-error_not_enough_money: '&cVous navez pas assez dargent.'
+error_not_enough_money: '&cVous n''avez pas assez d''argent.'
 
 error_player_not_found: '&cJoueur introuvable.'
 
 error_plot_not_found: '&cParcelle introuvable.'
 
-expansion_admin_no_perm: '&c❌ Vous navez pas la permission de gérer les demandes.'
+expansion_admin_no_perm: '&c❌ Vous n''avez pas la permission de gérer les demandes.'
 
 expansion_blocked_lore:
-- '&cImpossible dagrandir dans cette direction.'
+- '&cImpossible d''agrandir dans cette direction.'
 - '&7Un terrain réclamé bloque.'
 
-expansion_broadcast_approved: '&a✔ Demande dagrandissement approuvée pour {PLAYER}.'
+expansion_broadcast_approved: '&a✔ Demande d''agrandissement approuvée pour {PLAYER}.'
 
-expansion_broadcast_denied: '&c❌ Demande dagrandissement refusée pour {PLAYER}.'
+expansion_broadcast_denied: '&c❌ Demande d''agrandissement refusée pour {PLAYER}.'
 
 expansion_direction_east: '&aEst'
 
@@ -5112,7 +5112,7 @@ expansion_direction_south: '&6Sud'
 
 expansion_direction_west: '&cOuest'
 
-expansion_no_requests: '&7Il ny a actuellement aucune demande dagrandissement.'
+expansion_no_requests: '&7Il n''y a actuellement aucune demande d''agrandissement.'
 
 flag_animal_damage_lore:
 - '&7Autoriser les visiteurs à blesse les animaux.'
@@ -5125,7 +5125,7 @@ flag_anvil_lore:
 flag_anvil_name: '&7⚒ Enclumes'
 
 flag_armorstand_lore:
-- '&7Autoriser lédition des porte-armures.'
+- '&7Autoriser l''édition des porte-armures.'
 
 flag_armorstand_name: '&7🧍 Porte-armures'
 
@@ -5165,7 +5165,7 @@ flag_chest_access_lore:
 flag_chest_access_name: '&6📦 Accès aux coffres'
 
 flag_chiseled_bookshelf_lore:
-- '&7Autoriser lusage des bibliothèques sculptées.'
+- '&7Autoriser l''usage des bibliothèques sculptées.'
 
 flag_chiseled_bookshelf_name: '&6📚 Bibliothèques sculptées'
 
@@ -5195,7 +5195,7 @@ flag_crop_growth_lore:
 flag_crop_growth_name: '&a🌾 Pousse des cultures'
 
 flag_decorated_pot_lore:
-- '&7Autoriser lusage des pots décorés.'
+- '&7Autoriser l''usage des pots décorés.'
 
 flag_decorated_pot_name: '&6🏺 Pots décorés'
 
@@ -5207,12 +5207,12 @@ flag_door_lore:
 flag_door_name: '&8🚪 Portes'
 
 flag_dragon_egg_lore:
-- '&7Autoriser linteraction avec lœuf de dragon.'
+- '&7Autoriser l''interaction avec l''œuf de dragon.'
 
 flag_dragon_egg_name: '&5🥚 Œuf de dragon'
 
 flag_dripleaf_lore:
-- '&7Autoriser linclinaison des foliotes.'
+- '&7Autoriser l''inclinaison des foliotes.'
 
 flag_dripleaf_name: '&a🌱 Foliote'
 
@@ -5224,12 +5224,12 @@ flag_enchanting_lore:
 flag_enchanting_name: '&5📖 Enchantement'
 
 flag_ender_pearl_lore:
-- '&7Autoriser lusage des perles de lEnder.'
+- '&7Autoriser l''usage des perles de l''Ender.'
 
-flag_ender_pearl_name: '&a🟢 Perles de lEnder'
+flag_ender_pearl_name: '&a🟢 Perles de l''Ender'
 
 flag_explosions_lore:
-- '&7Autoriser les dégâts dexplosion.'
+- '&7Autoriser les dégâts d''explosion.'
 
 flag_explosions_name: '&c💥 Explosions'
 
@@ -5249,7 +5249,7 @@ flag_gate_lore:
 flag_gate_name: '&a🚧 Portails'
 
 flag_hanging_signs_lore:
-- '&7Autoriser lédition des panneaux suspendus.'
+- '&7Autoriser l''édition des panneaux suspendus.'
 
 flag_hanging_signs_name: '&6🪧 Panneaux suspendus'
 
@@ -5269,7 +5269,7 @@ flag_item_pickup_lore:
 flag_item_pickup_name: '&d📦 Ramasser des objets'
 
 flag_itemframe_lore:
-- '&7Autoriser lédition des cadres.'
+- '&7Autoriser l''édition des cadres.'
 
 flag_itemframe_name: '&e🖼 Cadres'
 
@@ -5294,7 +5294,7 @@ flag_lodestone_lore:
 flag_lodestone_name: '&7🧲 Magnétites'
 
 flag_mob_spawning_lore:
-- '&7Autoriser lapparition de mobs.'
+- '&7Autoriser l''apparition de mobs.'
 
 flag_mob_spawning_name: '&2🐷 Apparition de mobs'
 
@@ -5309,7 +5309,7 @@ flag_painting_lore:
 flag_painting_name: '&6🎨 Tableaux'
 
 flag_pressure_plate_lore:
-- '&7Autoriser lactivation des plaques de pression.'
+- '&7Autoriser l''activation des plaques de pression.'
 
 flag_pressure_plate_name: '&7⬜ Plaques de pression'
 
@@ -5339,7 +5339,7 @@ flag_sign_edit_lore:
 flag_sign_edit_name: '&6✏ Édition de panneaux'
 
 flag_snow_fall_lore:
-- '&7Autoriser laccumulation de neige.'
+- '&7Autoriser l''accumulation de neige.'
 
 flag_snow_fall_name: '&f☃ Accumulation de neige'
 
@@ -5349,7 +5349,7 @@ flag_suspicious_block_lore:
 flag_suspicious_block_name: '&e🔍 Blocs suspects'
 
 flag_target_block_lore:
-- '&7Autoriser lactivation des blocs cibles.'
+- '&7Autoriser l''activation des blocs cibles.'
 
 flag_target_block_name: '&c🎯 Blocs cibles'
 
@@ -5429,7 +5429,7 @@ next_tier: '&eNiveau suivant'
 
 no_bonuses: '&7Aucun bonus à ce niveau.'
 
-no_selection: '&cVous devez dabord sélectionner deux points.'
+no_selection: '&cVous devez d''abord sélectionner deux points.'
 
 pending_request_item: '&e{TYPE}'
 
@@ -5470,7 +5470,7 @@ progression_available: '&ePrêt à améliorer.'
 
 progression_in_progress: '&7Progression en cours...'
 
-progression_locked: '&cProgression verrouillée. Terminez dabord les prérequis.'
+progression_locked: '&cProgression verrouillée. Terminez d''abord les prérequis.'
 
 progression_mastered: '&dCette ligne de progression est pleinement maîtrisée.'
 
@@ -5500,7 +5500,7 @@ roles_member_lore:
 roles_remove_button: '&c➖ Retirer un membre'
 
 roles_remove_lore:
-- '&7Retirez quelquun de votre parcelle.'
+- '&7Retirez quelqu''un de votre parcelle.'
 
 status_approved: '&aApprouvé'
 
@@ -5522,7 +5522,7 @@ success_generic: '&aOpération réussie !'
 
 success_player_trusted: '&a{PLAYER} est désormais de confiance.'
 
-success_player_untrusted: '&a{PLAYER} nest plus de confiance.'
+success_player_untrusted: '&a{PLAYER} n''est plus de confiance.'
 
 success_plot_claimed: '&aParcelle réclamée avec succès !'
 
@@ -5537,11 +5537,11 @@ tier_current_name: '&6Niveau actuel'
 
 tier_description: '&7Votre parcelle est à ce niveau.'
 
-tier_locked_description: '&cCe niveau nest pas encore disponible.'
+tier_locked_description: '&cCe niveau n''est pas encore disponible.'
 
 tier_locked_lore:
-- '&cCe niveau nest pas encore disponible.'
-- '&7Terminez dabord le niveau précédent.'
+- '&cCe niveau n''est pas encore disponible.'
+- '&7Terminez d''abord le niveau précédent.'
 
 tier_locked_name: '&8Niveau verrouillé'
 
@@ -5585,7 +5585,7 @@ tier_upgrade_click: '&eCliquez pour améliorer'
 
 tier_upgrade_cost: '&7Coût : &6{COST}'
 
-tier_upgrade_insufficient: '&cVous navez pas assez de ressources.'
+tier_upgrade_insufficient: '&cVous n''avez pas assez de ressources.'
 
 tier_upgrade_requirements: '&7Conditions :'
 

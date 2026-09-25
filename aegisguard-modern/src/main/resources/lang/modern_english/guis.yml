@@ -4363,7 +4363,7 @@ biome_item_lore_free:
 - '&7Cost: &aFree'
 
 biome_item_lore_set_biome:
-- '&7Set your claims biome to {BIOME}.'
+- '&7Set your claim''s biome to {BIOME}.'
 - '&7Cost: {COST}'
 
 biome_item_lore_visual_only:

@@ -1210,13 +1210,13 @@ claim_blocks_shop_vault_unavailable: '&c❌ Vault e denaro non sono disponibili 
 
 claim_blocks_shop_world_blocked: '&c❌ Questa azione non è permessa in questo mondo.'
 
-claim_conflict_external: '&c❌ Quellarea è già protetta da un altro plugin. AegisGuard non la reclamerà.'
+claim_conflict_external: '&c❌ Quell''area è già protetta da un altro plugin. AegisGuard non la reclamerà.'
 
 claim_enter_exit_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
 
 claim_enter_exit_notify_already_enabled: '&7Queste notifiche sono già attivate.'
 
-claim_enter_exit_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+claim_enter_exit_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dall''admin del server.'
 
 claim_enter_exit_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
 
@@ -1228,7 +1228,7 @@ claim_notify_already_disabled: '&7Queste notifiche sono già disattivate.'
 
 claim_notify_already_enabled: '&7Queste notifiche sono già attivate.'
 
-claim_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dalladmin del server.'
+claim_notify_forced_disabled_by_server: '&cLe notifiche di entrata/uscita sono disattivate dall''admin del server.'
 
 claim_notify_forced_disabled_for_you: '&cLe notifiche di entrata/uscita sono disattivate per te.'
 

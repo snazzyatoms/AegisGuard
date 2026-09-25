@@ -4850,7 +4850,7 @@ biome_item_lore_free:
 - '&7Cost: &aFree'
 
 biome_item_lore_set_biome:
-- '&7Set your claims biome to {BIOME}.'
+- '&7Set your claim''s biome to {BIOME}.'
 - '&7Cost: {COST}'
 
 biome_item_lore_visual_only:
@@ -4961,7 +4961,7 @@ claim_enter_exit_notify_forced_disabled_by_server: '&cClaim enter/exit notificat
 
 claim_enter_exit_notify_forced_disabled_for_you: '&cClaim enter/exit notifications are disabled for you.'
 
-claim_enter_exit_notify_set_for_other: '&a✔ Set {PLAYER}s claim notifications to: &f{STATE}&a.'
+claim_enter_exit_notify_set_for_other: '&a✔ Set {PLAYER}''s claim notifications to: &f{STATE}&a.'
 
 claim_enter_exit_notify_target_not_found: '&cPlayer not found.'
 
@@ -4973,7 +4973,7 @@ claim_notify_forced_disabled_by_server: '&cClaim enter/exit notifications are di
 
 claim_notify_forced_disabled_for_you: '&cClaim enter/exit notifications are disabled for you.'
 
-claim_notify_set_for_other: '&a✔ Set {PLAYER}s claim notifications to: &f{STATE}&a.'
+claim_notify_set_for_other: '&a✔ Set {PLAYER}''s claim notifications to: &f{STATE}&a.'
 
 claim_notify_target_not_found: '&cPlayer not found.'
 

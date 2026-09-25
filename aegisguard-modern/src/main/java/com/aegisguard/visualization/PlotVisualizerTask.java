@@ -8,14 +8,16 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-
 /**
  * This task runs for a single player, showing them the borders
  * of the plot they are currently standing in while they hold
  * an Aegis wand / scepter.
+ *
+ * <p>Implements {@link Runnable} directly so it can be scheduled through
+ * the Folia-aware {@code AegisScheduler} instead of the legacy Bukkit
+ * scheduler API.</p>
  */
-public class PlotVisualizerTask extends BukkitRunnable {
+public class PlotVisualizerTask implements Runnable {
 
     private final AegisGuard plugin;
     private final Player player;

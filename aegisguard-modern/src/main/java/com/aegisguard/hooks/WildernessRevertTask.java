@@ -3,8 +3,6 @@ package com.aegisguard.hooks;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.IDataStore; // Interface
 import com.aegisguard.data.SQLDataStore;
-import org.bukkit.scheduler.BukkitRunnable;
-
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -13,8 +11,12 @@ import java.util.logging.Level;
  * - This task runs periodically to clean up the wilderness.
  * - It queries the database for block changes older than a set time
  * and reverts them if the player is offline or far away.
+ *
+ * <p>Implements {@link Runnable} directly; {@link com.aegisguard.AegisGuard}
+ * schedules this through the Folia-aware scheduler rather than Bukkit's
+ * legacy scheduler API.</p>
  */
-public class WildernessRevertTask extends BukkitRunnable {
+public class WildernessRevertTask implements Runnable {
 
     private final AegisGuard plugin;
     private final IDataStore dataStore; // Should always reference the interface

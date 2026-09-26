@@ -298,8 +298,7 @@ public final class BeaconStore {
             plugin.getLogger().log(Level.FINE, "Beacon SQL dual-write skipped: " + error.getMessage());
         }
     }
-        } catch (Exception ignored) {}
-    }
+
 
     private void bind(PreparedStatement ps, TeleportBeacon beacon) throws Exception {
         ps.setString(1, beacon.getId().toString());

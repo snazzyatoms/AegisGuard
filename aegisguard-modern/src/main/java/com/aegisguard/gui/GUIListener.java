@@ -19,7 +19,6 @@ import com.aegisguard.lockdown.LockdownGUI.LockdownOptionsHolder;
 import com.aegisguard.lockdown.LockdownGUI.LockdownConfirmHolder;
 import com.aegisguard.profile.RealmProfileGUI.RealmProfileMenuHolder;
 import com.aegisguard.profile.RealmProfileGUI.NoticeboardHolder;
-import com.aegisguard.publicbeta.PublicBetaService.PublicBetaHolder;
 import com.aegisguard.guidance.FirstClaimWalkthroughGUI.WalkthroughHolder;
 import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
 import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
@@ -148,7 +147,6 @@ public class GUIListener implements Listener {
                 || holder instanceof InfoHolder
                 || holder instanceof SettingsGUIHolder
                 || holder instanceof LanguageSelectHolder
-                || holder instanceof PublicBetaHolder
                 || holder instanceof AdminHolder
                 || holder instanceof DoctorHolder
                 || holder instanceof WorldControlsHolder
@@ -293,9 +291,6 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof LanguageSelectHolder castHolder) {
             plugin.gui().languageSelect().handleClick(player, e, castHolder);
-        }
-        else if (holder instanceof PublicBetaHolder castHolder) {
-            if (plugin.publicBeta() != null) plugin.publicBeta().handleClick(player, e, castHolder);
         }
         else if (holder instanceof AdminHolder) {
             plugin.gui().admin().handleClick(player, e);

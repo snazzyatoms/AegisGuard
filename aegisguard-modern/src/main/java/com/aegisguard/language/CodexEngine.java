@@ -370,7 +370,7 @@ public class CodexEngine {
 
     /**
      * Translate with an explicit language style without changing or persisting a
-     * player's preference. Public-beta onboarding uses this to render the
+     * player's preference. Onboarding flows use this to render the
      * detected-language confirmation before the player accepts that language.
      */
     public String trStyle(String style, String key) {

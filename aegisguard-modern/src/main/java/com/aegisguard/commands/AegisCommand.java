@@ -38,7 +38,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
     private final ClaimBlockExchangeService exchange;
 
     private static final String[] SUB_COMMANDS = {
-            "wand", "menu", "beta", "publicbeta", "hub", "post", "mail", "report", "feedback", "suggest", "claim", "quickclaim", "qc", "unclaim", "help",
+            "wand", "menu", "claim", "quickclaim", "qc", "unclaim", "help",
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
             "kick", "ban", "unban", "visit",
@@ -233,43 +233,10 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "wand" -> {
-                giveClaimWand(p, false);
+                giveClaimWand(p);
             }
 
             case "menu" -> plugin.gui().openMain(p);
-
-            case "beta", "publicbeta" -> {
-                if (plugin.publicBeta() == null) {
-                    sendKey(p, "public_beta_command_unavailable",
-                            "&cThe Public Beta menu is not available on this server.");
-                    break;
-                }
-                plugin.publicBeta().openBetaMenu(p);
-            }
-
-            case "hub" -> {
-                if (plugin.publicBeta() == null) {
-                    sendKey(p, "public_beta_command_unavailable",
-                            "&cThe Public Beta menu is not available on this server.");
-                    break;
-                }
-                plugin.publicBeta().returnToHub(p);
-            }
-
-            case "post", "mail" -> {
-                if (plugin.publicBetaPost() == null) {
-                    sendKey(p, "post_unavailable", "&cAegis Post is unavailable on this server.");
-                    break;
-                }
-                plugin.publicBetaPost().open(p);
-            }
-
-            case "report" -> handleBetaFeedback(p,
-                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.PROBLEM, args);
-            case "feedback" -> handleBetaFeedback(p,
-                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.FEEDBACK, args);
-            case "suggest" -> handleBetaFeedback(p,
-                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.SUGGESTION, args);
 
             case "claim" -> handleClaim(p);
 
@@ -415,18 +382,6 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         return true;
-    }
-
-    private void handleBetaFeedback(Player player,
-                                    com.aegisguard.publicbeta.PublicBetaFeedbackService.Category category,
-                                    String[] args) {
-        if (plugin.publicBetaFeedback() == null) {
-            sendKey(player, "public_beta_feedback_unavailable",
-                    "&cPublic Beta reporting is not available on this server.");
-            return;
-        }
-        String message = args.length <= 1 ? "" : String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        plugin.publicBetaFeedback().startOrSubmit(player, category, message);
     }
 
     private void handleGiftBlocks(Player sender, String[] args) {
@@ -3328,10 +3283,10 @@ private void handleUnsell(Player p) {
         return rod;
     }
 
-    /** Gives one ordinary claim wand, shared by /ag wand and Public Beta first-arrival gifts. */
-    public boolean giveClaimWand(Player player, boolean complimentaryBetaWand) {
+    /** Gives one ordinary claim wand. */
+    public boolean giveClaimWand(Player player) {
         if (player == null || SelectionService.playerHasAnyWand(player)) {
-            if (player != null && !complimentaryBetaWand) {
+            if (player != null) {
                 sendKey(player, "wand_already_on", "&eYou already have the Aegis Scepter in your inventory.");
                 plugin.effects().playError(player);
             }
@@ -3341,10 +3296,7 @@ private void handleUnsell(Player p) {
         if (!leftovers.isEmpty()) {
             leftovers.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
         }
-        sendKey(player, complimentaryBetaWand ? "public_beta_wand_given" : "wand_given",
-                complimentaryBetaWand
-                        ? "&aYou received a complimentary Aegis Scepter for this world. It is consumed after a successful claim."
-                        : "&a⚡ You received the Aegis Scepter.");
+        sendKey(player, "wand_given", "&a⚡ You received the Aegis Scepter.");
         plugin.effects().playConfirm(player);
         return true;
     }

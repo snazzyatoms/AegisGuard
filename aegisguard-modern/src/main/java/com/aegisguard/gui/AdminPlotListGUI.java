@@ -354,21 +354,6 @@ public class AdminPlotListGUI {
     }
 
     private String worldRoleLabel(Player player, String worldName) {
-        if (worldName != null && plugin.publicBetaWorlds() != null) {
-            var worlds = plugin.publicBetaWorlds();
-            if (worldName.equalsIgnoreCase(worlds.worldName(
-                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.WELCOME_HUB))) {
-                return tr(player, "admin_plot_world_role_hub", "Welcome Hub");
-            }
-            if (worldName.equalsIgnoreCase(worlds.worldName(
-                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.PLAY_WORLD))) {
-                return tr(player, "admin_plot_world_role_play", "Play World");
-            }
-            if (worldName.equalsIgnoreCase(worlds.worldName(
-                    com.aegisguard.publicbeta.PublicBetaWorldService.Role.TEST_LAB))) {
-                return tr(player, "admin_plot_world_role_test_lab", "Test Lab");
-            }
-        }
         return tr(player, "admin_plot_world_role_other", "Other World");
     }
 

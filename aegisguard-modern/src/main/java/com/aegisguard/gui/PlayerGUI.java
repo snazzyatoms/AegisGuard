@@ -25,17 +25,12 @@ public class PlayerGUI {
     private static final int SLOT_INFO = 4;
     private static final int SLOT_SHORTCUT_FLAGS = 20;
     private static final int SLOT_SHORTCUT_STATUS = 21;
-    private static final int SLOT_PUBLIC_BETA = 22;
     private static final int SLOT_SHORTCUT_TRAVEL = 23;
     private static final int SLOT_SHORTCUT_MARKET = 24;
     private static final int SLOT_DOOR_TERRITORY = 29;
     private static final int SLOT_DOOR_ACCESS = 30;
     private static final int SLOT_DOOR_ECONOMY = 32;
     private static final int SLOT_DOOR_EXPLORE = 33;
-    private static final int SLOT_REPORT_PROBLEM = 37;
-    private static final int SLOT_AEGIS_POST = 38;
-    private static final int SLOT_GENERAL_FEEDBACK = 40;
-    private static final int SLOT_FEATURE_SUGGESTION = 43;
     private static final int SLOT_BACK = 45;
     private static final int SLOT_SETTINGS = 47;
     private static final int SLOT_ADMIN = 49;
@@ -177,18 +172,6 @@ public class PlayerGUI {
                                 : List.of("&cStand inside a plot to view status."))
         ));
 
-        if (plugin.publicBeta() != null && plugin.publicBeta().isEnabled()
-                && plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) {
-            inv.setItem(SLOT_PUBLIC_BETA, GUIManager.createItem(
-                    Material.WRITTEN_BOOK,
-                    t(player, "public_beta_menu_button_name", "&bAegisGuard Public Beta"),
-                    tl(player, "public_beta_menu_button_lore", List.of(
-                            "&7Choose Play World or Test Lab,",
-                            "&7change language, or set voice scope.",
-                            " ", "&eClick to open."))
-            ));
-        }
-
         if (ctx.showTravel) {
             inv.setItem(SLOT_SHORTCUT_TRAVEL, GUIManager.createItem(
                     Material.COMPASS,
@@ -243,29 +226,6 @@ public class PlayerGUI {
             ));
         }
 
-        if (plugin.publicBetaFeedback() != null && plugin.publicBetaFeedback().isEnabled()
-                && plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) {
-            inv.setItem(SLOT_REPORT_PROBLEM, GUIManager.createItem(Material.REDSTONE,
-                    t(player, "public_beta_report_problem_name", "&cReport a Problem"),
-                    tl(player, "public_beta_report_problem_lore", List.of(
-                            "&7Tell staff about a bug or problem.", "&7Your world and location are included."))));
-            inv.setItem(SLOT_GENERAL_FEEDBACK, GUIManager.createItem(Material.WRITABLE_BOOK,
-                    t(player, "public_beta_feedback_name", "&bGeneral Feedback"),
-                    tl(player, "public_beta_feedback_lore", List.of("&7Share what worked or could be better."))));
-            inv.setItem(SLOT_FEATURE_SUGGESTION, GUIManager.createItem(Material.LIGHT_BLUE_DYE,
-                    t(player, "public_beta_suggestion_name", "&dFeature Suggestion"),
-                    tl(player, "public_beta_suggestion_lore", List.of("&7Suggest an idea for AegisGuard."))));
-        }
-
-        if (plugin.publicBetaPost() != null && plugin.publicBetaPost().isEnabled()
-                && plugin.publicBeta() != null
-                && plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) {
-            inv.setItem(SLOT_AEGIS_POST, GUIManager.createItem(Material.PAPER,
-                    t(player, "post_menu_button_name", "&bAegis Post &8(Beta)"),
-                    tl(player, "post_menu_button_lore", List.of(
-                            "&7Write, send, and receive letters", "&7through the experimental Post Office.",
-                            " ", "&eClick to open."))));
-        }
     }
 
     private void paintTerritory(Player player, Inventory inv, Context ctx) {
@@ -574,36 +534,6 @@ public class PlayerGUI {
             }
             case SLOT_SHORTCUT_STATUS -> {
                 openStatus(player, plot);
-                return true;
-            }
-            case SLOT_PUBLIC_BETA -> {
-                if (plugin.publicBeta() == null || !plugin.publicBeta().isEnabled()) return false;
-                plugin.publicBeta().openBetaMenu(player);
-                return true;
-            }
-            case SLOT_REPORT_PROBLEM -> {
-                if (plugin.publicBetaFeedback() == null) return false;
-                plugin.publicBetaFeedback().begin(player,
-                        com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.PROBLEM);
-                return true;
-            }
-            case SLOT_AEGIS_POST -> {
-                if (plugin.publicBetaPost() == null || !plugin.publicBetaPost().isEnabled()
-                        || plugin.publicBeta() == null
-                        || !plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) return false;
-                plugin.publicBetaPost().open(player);
-                return true;
-            }
-            case SLOT_GENERAL_FEEDBACK -> {
-                if (plugin.publicBetaFeedback() == null) return false;
-                plugin.publicBetaFeedback().begin(player,
-                        com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.FEEDBACK);
-                return true;
-            }
-            case SLOT_FEATURE_SUGGESTION -> {
-                if (plugin.publicBetaFeedback() == null) return false;
-                plugin.publicBetaFeedback().begin(player,
-                        com.aegisguard.publicbeta.PublicBetaFeedbackService.Category.SUGGESTION);
                 return true;
             }
             case SLOT_SHORTCUT_TRAVEL -> {

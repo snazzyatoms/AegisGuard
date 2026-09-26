@@ -2,8 +2,7 @@ package com.aegisguard.hooks;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.chat.HearthService;
-import com.aegisguard.publicbeta.PublicBetaService;
-import com.aegisguard.publicbeta.PublicBetaVoiceMode;
+
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
@@ -47,7 +46,6 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
 
     public static final String PLUGIN_ID = "aegisguard";
     public static final String GROUP_PREFIX = "AG-Hearth";
-    public static final String BETA_GROUP_PREFIX = "AG-Beta";
 
     private final AegisGuard plugin;
     private final Map<String, Group> groups = new ConcurrentHashMap<>();
@@ -59,19 +57,11 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     }
 
     public boolean isHookEnabled() {
-        return plugin.getConfig().getBoolean("hearth.voicechat", true)
-                || (plugin.getConfig().getBoolean("public-beta-mode.enabled", false)
-                && plugin.getConfig().getBoolean("public-beta-mode.voice-chat.enabled", true));
+        return plugin.getConfig().getBoolean("hearth.voicechat", true);
     }
 
     public boolean overridePlayerGroups() {
-        if (!plugin.getConfig().getBoolean("public-beta-mode.enabled", false)) {
-            return plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false);
-        }
-        boolean respect = plugin.getConfig().getBoolean(
-                "public-beta-mode.voice-chat.respect-player-groups",
-                !plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false));
-        return !respect;
+        return plugin.getConfig().getBoolean("hearth.voicechat_override_player_groups", false);
     }
 
     @Override
@@ -189,48 +179,13 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
         return resolveTarget(player, player.getLocation());
     }
 
-    public boolean hearthIsolatesProximity() {
-        return plugin.getConfig().getBoolean(
-                "public-beta-mode.voice-chat.hearth-isolates-proximity", false);
-    }
-
-    private boolean hearthIsolatesVoice(Player player) {
-        PublicBetaService beta = plugin.publicBeta();
-        if (beta == null || !beta.isEnabled() || player == null
-                || !beta.hasBetaPlayerRole(player.getUniqueId())) {
-            return true;
-        }
-        if (beta.voiceMode(player.getUniqueId()) != PublicBetaVoiceMode.PROXIMITY) {
-            return true;
-        }
-        return hearthIsolatesProximity();
-    }
-
     private VoiceTarget resolveTarget(Player player, Location location) {
-        if (plugin.getConfig().getBoolean("hearth.voicechat", true) && hearthIsolatesVoice(player)) {
+        if (plugin.getConfig().getBoolean("hearth.voicechat", true)) {
             HearthService hearth = plugin.hearth();
             HearthService.Room room = hearth == null ? null : hearth.roomAt(location);
             if (room != null) {
                 return new VoiceTarget(TargetKind.HEARTH, "hearth:" + roomKey(room), groupName(room));
             }
-        }
-
-        PublicBetaService beta = plugin.publicBeta();
-        boolean betaVoice = plugin.getConfig().getBoolean("public-beta-mode.voice-chat.enabled", true);
-        if (!betaVoice || beta == null || !beta.isEnabled()
-                || !beta.hasBetaPlayerRole(player.getUniqueId())
-                || location == null || location.getWorld() == null
-                || !beta.isPublicBetaWorld(location.getWorld())) {
-            return VoiceTarget.proximity();
-        }
-        PublicBetaVoiceMode mode = beta.voiceMode(player.getUniqueId());
-        if (mode == PublicBetaVoiceMode.GLOBAL) {
-            return new VoiceTarget(TargetKind.BETA_GLOBAL, "beta:global", BETA_GROUP_PREFIX + " Global");
-        }
-        if (mode == PublicBetaVoiceMode.CURRENT_WORLD) {
-            String world = location.getWorld().getName();
-            return new VoiceTarget(TargetKind.BETA_WORLD, "beta:world:" + world,
-                    bounded(BETA_GROUP_PREFIX + " " + shortWorld(world)));
         }
         return VoiceTarget.proximity();
     }
@@ -264,7 +219,7 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     public static boolean isOurs(Group group) {
         if (group == null) return false;
         String name = group.getName();
-        return name != null && (name.startsWith(GROUP_PREFIX) || name.startsWith(BETA_GROUP_PREFIX));
+        return name != null && name.startsWith(GROUP_PREFIX);
     }
 
     public static String roomKey(HearthService.Room room) {
@@ -328,11 +283,11 @@ public final class HearthVoicechatHook implements VoicechatPlugin, Listener {
     }
 
     private static String bounded(String value) {
-        if (value == null) return BETA_GROUP_PREFIX;
+        if (value == null) return GROUP_PREFIX;
         return value.length() <= 24 ? value : value.substring(0, 24);
     }
 
-    private enum TargetKind { PROXIMITY, HEARTH, BETA_GLOBAL, BETA_WORLD }
+    private enum TargetKind { PROXIMITY, HEARTH }
 
     private record VoiceTarget(TargetKind kind, String key, String name) {
         private static VoiceTarget proximity() {

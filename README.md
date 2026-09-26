@@ -56,7 +56,7 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Minecraft has no built-in voice chat.** Vanilla multiplayer only has text chat (the `T` key). Private servers that “have voice” are running a **client mod plus a matching server plugin**, almost always [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat).
 
-**Simple Voice Chat hook.** If the `voicechat` plugin is installed, Hearth rooms become isolated SVC groups. On the Public Beta server, players can additionally choose normal Proximity, Global voice across Hub/Play/Test Lab, or Current World Only. Personal SVC groups take precedence; Hearth temporarily overrides the saved beta scope, which resumes on exit. AegisGuard still starts without Simple Voice Chat and saves the preference for later. The hook is Folia-safe: SVC network threads hop through AegisGuard schedulers before touching Bukkit state. AegisGuard does not ship a microphone client.
+**Simple Voice Chat hook.** If the `voicechat` plugin is installed, Hearth rooms become isolated SVC groups. Personal SVC groups take precedence while a player is inside one. AegisGuard still starts without Simple Voice Chat. The hook is Folia-safe: SVC network threads hop through AegisGuard schedulers before touching Bukkit state. AegisGuard does not ship a microphone client.
 
 **Claim presets and staff seasons.** A successful claim opens the main preset chooser (Home / Shop / Arena / Farm, or Spawn / Hub / Shop / Arena on server plots). Presets never overwrite sanctuary flags, Hearth, or flight. `/agadmin season` pins featured plots on the Atlas and featured routes in the Routes browser.
 

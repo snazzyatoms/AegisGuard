@@ -156,12 +156,6 @@ public class AegisGuard extends JavaPlugin {
     private Object hearthVoicechatHook;
     private com.aegisguard.protection.FlightSkillService flightSkillService;
     private com.aegisguard.season.SeasonService seasonService;
-    private com.aegisguard.publicbeta.PublicBetaService publicBetaService;
-    private com.aegisguard.publicbeta.PublicBetaWorldService publicBetaWorldService;
-    private com.aegisguard.publicbeta.PublicBetaFeedbackService publicBetaFeedbackService;
-    private com.aegisguard.publicbeta.PublicBetaPostService publicBetaPostService;
-    private com.aegisguard.publicbeta.PublicBetaInventoryService publicBetaInventoryService;
-    private com.aegisguard.publicbeta.PublicBetaChatListener publicBetaChatListener;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -277,12 +271,6 @@ public class AegisGuard extends JavaPlugin {
     public com.aegisguard.alliance.AllianceManager alliances() { return allianceManager; }
     public com.aegisguard.alliance.AllianceService allianceService() { return allianceService; }
     public com.aegisguard.travel.SafeTravelService safeTravel() { return safeTravelService; }
-    public com.aegisguard.publicbeta.PublicBetaService publicBeta() { return publicBetaService; }
-    public com.aegisguard.publicbeta.PublicBetaWorldService publicBetaWorlds() { return publicBetaWorldService; }
-    public com.aegisguard.publicbeta.PublicBetaFeedbackService publicBetaFeedback() { return publicBetaFeedbackService; }
-    public com.aegisguard.publicbeta.PublicBetaPostService publicBetaPost() { return publicBetaPostService; }
-    public com.aegisguard.publicbeta.PublicBetaInventoryService publicBetaInventories() { return publicBetaInventoryService; }
-    public com.aegisguard.publicbeta.PublicBetaChatListener publicBetaChat() { return publicBetaChatListener; }
     public com.aegisguard.beacon.BeaconService beacons() { return beaconService; }
     public com.aegisguard.succession.SuccessionService succession() { return successionService; }
     public com.aegisguard.caravans.CaravanService caravans() { return caravanService; }
@@ -339,12 +327,6 @@ public class AegisGuard extends JavaPlugin {
         messages = new MessagesUtil(this);
         com.aegisguard.hooks.BedrockClients.bind(this);
 
-        // Restart-gated Public Beta worlds are created/loaded before AegisGuard
-        // starts managers and repeating tasks. No initial creation occurs until
-        // an owner explicitly stages it through the admin wizard.
-        publicBetaWorldService = new com.aegisguard.publicbeta.PublicBetaWorldService(this);
-        publicBetaWorldService.provisionAtStartup();
-
         // --- DATA STORE ---
         String backend = resolveConfiguredStorageBackend();
         if (isSqlStorageBackend(backend)) {
@@ -371,11 +353,6 @@ public class AegisGuard extends JavaPlugin {
         allianceManager = new com.aegisguard.alliance.AllianceManager(this);
         allianceService = new com.aegisguard.alliance.AllianceService(this);
         safeTravelService = new com.aegisguard.travel.SafeTravelService(this);
-        publicBetaService = new com.aegisguard.publicbeta.PublicBetaService(this);
-        publicBetaFeedbackService = new com.aegisguard.publicbeta.PublicBetaFeedbackService(this);
-        publicBetaPostService = new com.aegisguard.publicbeta.PublicBetaPostService(this);
-        publicBetaInventoryService = new com.aegisguard.publicbeta.PublicBetaInventoryService(this);
-        publicBetaChatListener = new com.aegisguard.publicbeta.PublicBetaChatListener(this);
         beaconService = new com.aegisguard.beacon.BeaconService(this);
         successionService = new com.aegisguard.succession.SuccessionService(this);
         caravanService = new com.aegisguard.caravans.CaravanService(this);
@@ -487,11 +464,6 @@ public class AegisGuard extends JavaPlugin {
         }
         Bukkit.getPluginManager().registerEvents(guestPassService, this);
         Bukkit.getPluginManager().registerEvents(safeTravelService, this);
-        Bukkit.getPluginManager().registerEvents(publicBetaService, this);
-        Bukkit.getPluginManager().registerEvents(publicBetaFeedbackService, this);
-        Bukkit.getPluginManager().registerEvents(publicBetaPostService, this);
-        Bukkit.getPluginManager().registerEvents(publicBetaInventoryService, this);
-        Bukkit.getPluginManager().registerEvents(publicBetaChatListener, this);
         Bukkit.getPluginManager().registerEvents(protection, this);
         registerSanctuaryExhaustionListener();
         registerPaperMobBoundaryListener();
@@ -523,7 +495,6 @@ public class AegisGuard extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new MarketStallListener(this), this);
         Bukkit.getPluginManager().registerEvents(new WandEquipListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BannedPlayerListener(this), this);
-        publicBetaService.validateConfiguration();
         Bukkit.getPluginManager().registerEvents(horizonService, this);
 
         // Tasks (robust + cancelable)
@@ -593,9 +564,7 @@ public class AegisGuard extends JavaPlugin {
 
     private void registerHearthVoicechatHook() {
         boolean hearthVoice = getConfig().getBoolean("hearth.voicechat", true);
-        boolean betaVoice = getConfig().getBoolean("public-beta-mode.enabled", false)
-                && getConfig().getBoolean("public-beta-mode.voice-chat.enabled", true);
-        if (!hearthVoice && !betaVoice) return;
+        if (!hearthVoice) return;
         if (Bukkit.getPluginManager().getPlugin("voicechat") == null) return;
         try {
             Class<?> serviceType = Class.forName("de.maxhenkel.voicechat.api.BukkitVoicechatService");
@@ -658,9 +627,6 @@ public class AegisGuard extends JavaPlugin {
         if (snapshotManager != null) snapshotManager.shutdownOperations();
         if (plotChatService != null) plotChatService.clearAll();
         if (webAdminService != null) webAdminService.shutdown();
-        if (publicBetaFeedbackService != null) publicBetaFeedbackService.save();
-        if (publicBetaPostService != null) publicBetaPostService.save();
-        if (publicBetaInventoryService != null) publicBetaInventoryService.saveOnlinePlayers();
         if (platformScheduler != null) platformScheduler.shutdown();
 
         // Freeze active-playtime sessions before the final save so downtime never consumes them.
@@ -789,12 +755,6 @@ public class AegisGuard extends JavaPlugin {
         } catch (Throwable t) {
             console().warning("log_save_horizons_failed", "Failed to save Horizon reward data: {ERROR}",
                     "ERROR", t.getMessage() == null ? "" : t.getMessage());
-        }
-
-        try {
-            if (publicBetaService != null) publicBetaService.save();
-        } catch (Throwable t) {
-            getLogger().warning("Failed to save Public Beta profiles: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
         // Save notification prefs
@@ -958,7 +918,6 @@ public class AegisGuard extends JavaPlugin {
         if (safeTravelService != null) safeTravelService.reload();
         if (webAdminService != null) webAdminService.reload();
         if (discordLinkManager != null) discordLinkManager.reload();
-        if (publicBetaService != null) publicBetaService.validateConfiguration();
         if (groupManager != null) {
             groupManager.load();
             groupManager.cleanupMissingPlotLinks();
@@ -1398,8 +1357,7 @@ public class AegisGuard extends JavaPlugin {
                             || hn.startsWith("com.aegisguard.caravans")
                             || hn.startsWith("com.aegisguard.gatherings")
                             || hn.startsWith("com.aegisguard.beacon")
-                            || hn.startsWith("com.aegisguard.succession")
-                            || hn.startsWith("com.aegisguard.publicbeta")) {
+                            || hn.startsWith("com.aegisguard.succession")) {
                         p.closeInventory();
                     }
                 } catch (Throwable ignored) {}

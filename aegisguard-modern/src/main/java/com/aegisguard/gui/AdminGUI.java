@@ -70,8 +70,6 @@ public class AdminGUI {
     private static final int SLOT_TOOL_ARENA          = 38;
     private static final int SLOT_TOOL_REFRESH_LANG  = 39;
     private static final int SLOT_TOOL_RELOAD_ALL    = 40;
-    private static final int SLOT_TOOL_PUBLIC_BETA_WORLDS = 43;
-    private static final int SLOT_TOOL_PUBLIC_BETA_FEEDBACK = 42;
 
     private static final int SLOT_NAV_SETTINGS = 47;
     private static final int SLOT_NAV_BACK = 48;
@@ -436,33 +434,6 @@ public class AdminGUI {
             inv.setItem(SLOT_TOOL_AUDIT_LEDGER, auditLedger);
         }
 
-        if (plugin.publicBeta() != null && plugin.publicBeta().isEnabled()
-                && player.hasPermission(com.aegisguard.publicbeta.PublicBetaWorldService.WORLD_PERMISSION)) {
-            ItemStack betaWorlds = GUIManager.createItem(
-                    Material.END_PORTAL_FRAME,
-                    plugin.gui().tr(player, "button_admin_public_beta_worlds", "&bPublic Beta Worlds"),
-                    plugin.gui().trList(player, "admin_public_beta_worlds_lore", List.of(
-                            "&7Adopt the primary world as Welcome Hub,",
-                            "&7then stage Play and Test Lab creation.",
-                            " ",
-                            "&eClick to open the restart-safe wizard.")));
-            tagAction(betaWorlds, "open_public_beta_worlds");
-            inv.setItem(SLOT_TOOL_PUBLIC_BETA_WORLDS, betaWorlds);
-        }
-
-        if (plugin.publicBetaFeedback() != null && plugin.publicBetaFeedback().isEnabled()
-                && (player.hasPermission(com.aegisguard.publicbeta.PublicBetaFeedbackService.STAFF_PERMISSION)
-                || plugin.isAdmin(player))) {
-            ItemStack betaFeedback = GUIManager.createItem(
-                    Material.LECTERN,
-                    plugin.gui().tr(player, "button_admin_public_beta_feedback", "&bPublic Beta Feedback Inbox"),
-                    plugin.gui().trList(player, "admin_public_beta_feedback_lore", List.of(
-                            "&7Review player problem reports, feedback,",
-                            "&7and feature suggestions.", " ", "&eClick to open.")));
-            tagAction(betaFeedback, "open_public_beta_feedback");
-            inv.setItem(SLOT_TOOL_PUBLIC_BETA_FEEDBACK, betaFeedback);
-        }
-
         ItemStack setSpawn = GUIManager.createItem(
                 Material.RESPAWN_ANCHOR,
                 plugin.gui().tr(player, "button_admin_set_spawn", "&aSet Current Plot as Spawn"),
@@ -653,27 +624,7 @@ public class AdminGUI {
                 }
             }
 
-            case "open_public_beta_worlds" -> {
-                if (plugin.publicBeta() != null
-                        && player.hasPermission(com.aegisguard.publicbeta.PublicBetaWorldService.WORLD_PERMISSION)) {
-                    plugin.publicBeta().openWorldWizard(player);
-                    plugin.effects().playMenuFlip(player);
-                } else {
-                    plugin.msg().send(player, "no_perm");
-                    plugin.effects().playError(player);
-                }
-            }
-            case "open_public_beta_feedback" -> {
-                if (plugin.publicBetaFeedback() != null
-                        && (player.hasPermission(com.aegisguard.publicbeta.PublicBetaFeedbackService.STAFF_PERMISSION)
-                        || plugin.isAdmin(player))) {
-                    plugin.publicBetaFeedback().openInbox(player);
-                    plugin.effects().playMenuFlip(player);
-                } else {
-                    plugin.msg().send(player, "no_perm");
-                    plugin.effects().playError(player);
-                }
-            }
+
 
             case "set_current_plot_spawn" -> setCurrentPlotAsSpawn(player);
             case "open_convert_server" -> {

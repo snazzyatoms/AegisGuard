@@ -32,10 +32,8 @@ class HearthVoicechatContractTest {
         Map<String, Object> hearth = (Map<String, Object>) config.get("hearth");
         assertEquals(Boolean.TRUE, hearth.get("voicechat"));
         assertEquals(Boolean.FALSE, hearth.get("voicechat_override_player_groups"));
-        Map<String, Object> beta = (Map<String, Object>) config.get("public-beta-mode");
-        Map<String, Object> voice = (Map<String, Object>) beta.get("voice-chat");
-        assertEquals(Boolean.FALSE, voice.get("hearth-isolates-proximity"));
-        assertEquals("PROXIMITY", voice.get("default-mode"));
+        assertFalse(config.containsKey("public-beta-mode"),
+                "Mainline config.yml must not ship the public-beta-mode section");
         String migration = Files.readString(JAVA.resolve("config/ConfigMigrationService.java"));
         assertTrue(migration.contains("CURRENT_SCHEMA = 1312"));
     }
@@ -57,11 +55,8 @@ class HearthVoicechatContractTest {
         assertTrue(hook.contains("lastVoiceTarget"));
         assertTrue(hook.contains("JoinGroupEvent"));
         assertTrue(hook.contains("LeaveGroupEvent"));
-        assertTrue(hook.contains("BETA_GROUP_PREFIX"));
-        assertTrue(hook.contains("PublicBetaVoiceMode.GLOBAL"));
-        assertTrue(hook.contains("PublicBetaVoiceMode.CURRENT_WORLD"));
-        assertTrue(hook.contains("hearthIsolatesVoice"));
-        assertTrue(hook.contains("hearth-isolates-proximity"));
+        assertFalse(hook.contains("publicbeta"),
+                "Mainline voice hook must not reference the public-beta package");
         assertTrue(hook.contains("if (target.kind() == TargetKind.PROXIMITY)"));
         assertTrue(hook.contains("connection.setGroup(null)"));
         assertTrue(hook.contains("pruneUnusedGroups"));

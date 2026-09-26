@@ -338,20 +338,6 @@ public class SettingsGUI {
                     ))));
         }
 
-        // Public Beta voice preference is profile-scoped and remains available
-        // even when the optional Simple Voice Chat plugin/client is offline.
-        if (plugin.publicBeta() != null && plugin.publicBeta().isEnabled()
-                && plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) {
-            var voiceMode = plugin.publicBeta().voiceMode(player.getUniqueId());
-            inv.setItem(40, GUIManager.createItem(Material.SCULK_SENSOR,
-                    t(player, "settings_public_beta_voice_name", "&bPublic Beta Voice: {MODE}",
-                            Map.of("MODE", voiceMode.name().replace('_', ' '))),
-                    tl(player, "settings_public_beta_voice_lore", List.of(
-                            "&7Proximity uses your talk key and microphone.",
-                            "&7No group is required unless you want a wider channel",
-                            "&7or a private party."))));
-        }
-
         // --------------------------------------------------
         // NAVIGATION (48/49) — Back returns to the menu that opened Settings
         // --------------------------------------------------
@@ -424,13 +410,6 @@ public class SettingsGUI {
                 }
                 playFlip(player);
                 plugin.runMain(player, () -> plugin.gui().languageSelect().open(player, plot, LanguageSelectGUI.ReturnTo.SETTINGS, holder.getReturnTo()));
-            }
-
-            case 40 -> {
-                if (plugin.publicBeta() == null || !plugin.publicBeta().isEnabled()
-                        || !plugin.publicBeta().hasBetaPlayerRole(player.getUniqueId())) return;
-                playFlip(player);
-                plugin.publicBeta().openVoiceMenu(player, holder.getReturnTo());
             }
 
             case 16 -> { // Notifications MODE (notifications.yml preferred)

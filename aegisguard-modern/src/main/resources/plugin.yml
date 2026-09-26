@@ -105,9 +105,6 @@ permissions:
       aegis.admin.fly: true
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
-      aegis.admin.publicbeta.worlds: true
-      aegis.admin.publicbeta.hub-protection: true
-      aegis.admin.publicbeta.feedback: true
       aegis.admin.discord: true
       aegis.arena.admin: true
       aegis.arena.steward: true
@@ -164,9 +161,6 @@ permissions:
       aegis.admin.fly: true
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
-      aegis.admin.publicbeta.worlds: true
-      aegis.admin.publicbeta.hub-protection: true
-      aegis.admin.publicbeta.feedback: true
       aegis.admin.discord: true
       aegis.notify.bypass: true
       aegis.notify.others: true
@@ -177,18 +171,6 @@ permissions:
   aegis.use:
     description: Allows use of the main /aegis command.
     default: true
-
-  aegis.admin.publicbeta.worlds:
-    description: Stage and inspect isolated Public Beta world provisioning.
-    default: op
-
-  aegis.admin.publicbeta.hub-protection:
-    description: Expand or resize the protected Public Beta Welcome Hub server zone.
-    default: op
-
-  aegis.admin.publicbeta.feedback:
-    description: Review and manage the private Public Beta feedback inbox.
-    default: op
 
   aegis.admin.discord:
     description: Link, unlink, and inspect Discord account links for players.

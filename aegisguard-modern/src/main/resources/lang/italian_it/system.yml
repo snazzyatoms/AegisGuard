@@ -66,6 +66,7 @@ items_deducted: '&e💰 Pagato &6{AMOUNT} {ITEM}&e.'
 vault_refund: '&e💰 Rimborsato &6${AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Rimborsato &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 economy_disabled: '&c❌ Economy è disabilitata su questo server.'
+realm_profiles_disabled: '&cI profili del regno sono disabilitati su questo server.'
 vault_hook_missing: '&c❌ L''economia del caveau non è disponibile. Chiedi a un amministratore di installare/configurare Vault
   + un plug-in economico.'
 vault_disabled_here: '&c❌ I pagamenti Vault sono disabilitati qui.'

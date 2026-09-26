@@ -1,12 +1,9 @@
 package com.aegisguard.listeners;
 
 import com.aegisguard.AegisGuard;
-import com.aegisguard.api.events.PlotEnterEvent;
-import com.aegisguard.api.events.PlotLeaveEvent;
 import com.aegisguard.data.Plot;
 import com.aegisguard.notify.NotificationMode;
 import com.aegisguard.notify.PlayerNotificationSettings;
-import com.aegisguard.util.TeleportUtil;
 import com.aegisguard.util.Text;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -106,19 +103,6 @@ public class PlotGreetingListener implements Listener {
         if (a.getWorld() == null || b.getWorld() == null) return false;
         if (a.getWorld() != b.getWorld()) return false;
         return a.getBlockX() == b.getBlockX() && a.getBlockZ() == b.getBlockZ();
-    }
-
-    private boolean canEnter(Player player, Plot plot) {
-        if (player == null || plot == null) return true;
-
-        // If entry is allowed, we're done.
-        if (plot.getFlag("entry", true)) return true;
-
-        // Admins and bypass can always enter.
-        if (plugin.isAdmin(player) || plugin.isBypassing(player) || player.hasPermission("aegis.bypass")) return true;
-
-        // Trusted members (roles) can enter even if entry is off.
-        return plot.isTrusted(player);
     }
 
     // ---------------------------------------------------------------------

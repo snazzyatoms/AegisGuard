@@ -65,6 +65,7 @@ items_deducted: '&e💰 Bezahlt &6{AMOUNT} {ITEM}&e.'
 vault_refund: '&e💰 Erstattet &6${AMOUNT}&e (&f{PERCENT}%&e).'
 item_refund: '&e💰 Erstattet &6{AMOUNT} {ITEM}&e (&f{PERCENT}%&e).'
 economy_disabled: '&c❌ Economy ist auf diesem Server deaktiviert.'
+realm_profiles_disabled: '&cRealm-Profile sind auf diesem Server deaktiviert.'
 vault_hook_missing: '&c❌ Tresorwirtschaft ist nicht verfügbar. Bitten Sie einen Administrator, Vault + ein Economy-Plugin
   zu installieren/konfigurieren.'
 vault_disabled_here: '&c❌ Tresorzahlungen sind hier deaktiviert.'

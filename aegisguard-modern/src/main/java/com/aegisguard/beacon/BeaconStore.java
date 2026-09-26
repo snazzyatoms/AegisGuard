@@ -298,14 +298,6 @@ public final class BeaconStore {
             plugin.getLogger().log(Level.FINE, "Beacon SQL dual-write skipped: " + error.getMessage());
         }
     }
-
-    private void deleteSql(UUID id) {
-        try (Connection conn = sqlConnection()) {
-            if (conn == null || id == null) return;
-            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM aegis_teleport_beacons WHERE beacon_id=?")) {
-                ps.setString(1, id.toString());
-                ps.executeUpdate();
-            }
         } catch (Exception ignored) {}
     }
 

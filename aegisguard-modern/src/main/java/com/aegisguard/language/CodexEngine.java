@@ -492,17 +492,28 @@ public class CodexEngine {
         String stored = plugin.getConfig().getString(PLAYER_STYLE_PATH + "." + id, null);
         stored = normalizeStyleId(stored);
 
-        rw.readLock().lock();
+        rw.writeLock().lock();
         try {
             if (!stored.isEmpty() && availableStyles.contains(stored)) {
                 playerStyles.put(id, stored);
                 return stored;
             }
         } finally {
-            rw.readLock().unlock();
+            rw.writeLock().unlock();
         }
 
         return safeDefaultStyle();
+    }
+
+    /** Drop a player's cached style on quit; the config value remains the source of truth. */
+    public void evictPlayerStyle(UUID id) {
+        if (id == null) return;
+        rw.writeLock().lock();
+        try {
+            playerStyles.remove(id);
+        } finally {
+            rw.writeLock().unlock();
+        }
     }
 
     public boolean setPlayerStyle(Player player, String style) {

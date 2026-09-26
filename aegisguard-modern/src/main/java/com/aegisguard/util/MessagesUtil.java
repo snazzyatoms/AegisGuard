@@ -7,16 +7,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.InventoryHolder;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,21 +17,15 @@ import java.util.regex.Pattern;
  * - Compatibility bridge ONLY.
  * - DOES NOT read or create messages.yml.
  * - Uses CodexEngine for text lookups.
- * - Stores player language prefs in playerdata.yml (until fully migrated into Codex profiles).
+ * - Player language prefs live in CodexEngine (config.yml localization.player_styles);
+ *   legacy playerdata.yml values are migrated forward on load.
  * - Supports hex colors (&#RRGGBB).
  */
-public class MessagesUtil implements Listener {
+public class MessagesUtil {
 
     private final AegisGuard plugin;
 
-    // Player Language Cache
-    private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
     private String defaultStyle = "old_english";
-
-    // Persistence
-    private File playerDataFile;
-    private FileConfiguration playerData;
-    private volatile boolean isPlayerDataDirty = false;
 
     // Hex Pattern
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
@@ -47,7 +33,6 @@ public class MessagesUtil implements Listener {
     public MessagesUtil(AegisGuard plugin) {
         this.plugin = plugin;
         reload();
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public void reload() {
@@ -59,7 +44,7 @@ public class MessagesUtil implements Listener {
 
         this.defaultStyle = (cfgDefault == null || cfgDefault.isBlank()) ? "old_english" : cfgDefault.trim();
 
-        loadPlayerPreferences();
+        migrateLegacyPlayerPreferences();
         plugin.console().info("log_messages_util_loaded", "[AegisGuard] MessagesUtil compat loaded (NO messages.yml). Default style: {STYLE}", "STYLE", defaultStyle);
     }
 
@@ -154,151 +139,78 @@ public class MessagesUtil implements Listener {
     }
 
     // ----------------------------
-    // Player Style System (Prefs)
+    // Player Style System (delegates to CodexEngine)
     // ----------------------------
 
     public void setPlayerStyle(Player player, String style) {
-        if (player == null) return;
+        if (player == null || plugin.codex() == null) return;
         if (style == null) style = defaultStyle;
-
-        List<String> valid = getAvailableStyles();
-        if (valid != null && !valid.isEmpty() && !valid.contains(style)) {
-            player.sendMessage(localizedOrFallback(
-                    player,
-                    "language_invalid_style",
-                    "&c⚠ Invalid language style: {STYLE}",
-                    Map.of("STYLE", style)));
-            return;
-        }
-
-        playerStyles.put(player.getUniqueId(), style);
-        savePlayerPreference(player.getUniqueId(), style);
-
-        String styleName = style.replace("_", " ");
-        if (!styleName.isEmpty()) styleName = styleName.substring(0, 1).toUpperCase() + styleName.substring(1);
-        player.sendMessage(localizedOrFallback(
-                player,
-                "language_set_to",
-                "&6🕮 Language set to: &b{STYLE}",
-                Map.of("STYLE", styleName)));
-
-        // Live GUI Refresh (if Settings open)
-        plugin.runMain(player, () -> {
-            if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null) {
-                InventoryHolder holder = player.getOpenInventory().getTopInventory().getHolder();
-                if (holder != null && holder.getClass().getName().contains("SettingsGUI")) {
-                    plugin.gui().settings().open(player);
-                }
-            }
-        });
+        plugin.codex().setPlayerStyle(player, style);
     }
 
     public String getPlayerStyle(Player player) {
-        if (player == null) return defaultStyle;
-        return playerStyles.getOrDefault(player.getUniqueId(), defaultStyle);
-    }
-
-    private List<String> getAvailableStyles() {
-        List<String> styles = plugin.getConfig().getStringList("localization.available_languages");
-        if (styles == null || styles.isEmpty()) {
-            styles = plugin.getConfig().getStringList("language_styles.available");
-        }
-        if (styles == null || styles.isEmpty()) {
-            styles = Arrays.asList(
-                    "old_english", "modern_english", "spanish_mx", "spanish_ar",
-                    "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl");
-        }
-        return styles;
+        if (player == null || plugin.codex() == null) return defaultStyle;
+        return plugin.codex().getPlayerStyle(player);
     }
 
     // ----------------------------
-    // Persistence
+    // Legacy playerdata.yml migration
     // ----------------------------
 
-    public synchronized void loadPlayerPreferences() {
-        playerDataFile = new File(plugin.getDataFolder(), "playerdata.yml");
-        if (!playerDataFile.exists()) {
-            try {
-                File parent = playerDataFile.getParentFile();
-                if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
-                    throw new IOException("Could not create plugin data directory " + parent);
-                }
-                if (!playerDataFile.createNewFile() && !playerDataFile.isFile()) {
-                    throw new IOException("Could not create " + playerDataFile);
-                }
-            } catch (IOException error) {
-                plugin.getLogger().log(Level.SEVERE,
-                        "Could not create playerdata.yml; player language preferences will not be loaded or saved.",
-                        error);
-                playerDataFile = null;
-                playerData = null;
-                return;
-            }
-        } else if (!playerDataFile.isFile() || !playerDataFile.canRead()) {
-            plugin.getLogger().severe("playerdata.yml is not a readable file; player language preferences will not be loaded or saved.");
-            playerDataFile = null;
-            playerData = null;
+    /**
+     * Copies per-player language styles stored by very old versions in
+     * {@code playerdata.yml} into CodexEngine's {@code localization.player_styles}
+     * config store. Runs at startup/reload; never overwrites an existing choice.
+     */
+    private void migrateLegacyPlayerPreferences() {
+        File legacyFile = new File(plugin.getDataFolder(), "playerdata.yml");
+        if (!legacyFile.isFile() || !legacyFile.canRead()) return;
+
+        FileConfiguration legacy;
+        try {
+            legacy = YamlConfiguration.loadConfiguration(legacyFile);
+        } catch (Throwable t) {
+            plugin.getLogger().warning("Could not read legacy playerdata.yml for language migration: "
+                    + (t.getMessage() == null ? "" : t.getMessage()));
             return;
         }
-        playerData = YamlConfiguration.loadConfiguration(playerDataFile);
 
-        ConfigurationSection section = playerData.getConfigurationSection("players");
-        if (section != null) {
-            for (String uuidStr : section.getKeys(false)) {
-                try {
-                    UUID uuid = UUID.fromString(uuidStr);
-                    String style = section.getString(uuidStr + ".language_style", defaultStyle);
-                    playerStyles.put(uuid, style);
-                } catch (IllegalArgumentException ignored) {}
+        ConfigurationSection section = legacy.getConfigurationSection("players");
+        if (section == null) return;
+
+        int migrated = 0;
+        for (String uuidStr : section.getKeys(false)) {
+            String style = section.getString(uuidStr + ".language_style", null);
+            if (style == null || style.isBlank()) continue;
+
+            String target = "localization.player_styles." + uuidStr;
+            if (plugin.getConfig().isSet(target)) continue;
+            try {
+                UUID.fromString(uuidStr); // skip malformed keys
+            } catch (IllegalArgumentException ignored) {
+                continue;
             }
+            plugin.getConfig().set(target, style);
+            migrated++;
         }
-        plugin.console().info("log_player_prefs_loaded", "[AegisGuard] Loaded {COUNT} player language preferences.", "COUNT", String.valueOf(playerStyles.size()));
-    }
 
-    private synchronized void savePlayerPreference(UUID uuid, String style) {
-        if (playerData == null) {
-            loadPlayerPreferences();
-            if (playerData == null) return;
+        if (migrated > 0) {
+            try {
+                plugin.saveConfig();
+            } catch (Throwable t) {
+                plugin.getLogger().warning("Could not save migrated language preferences: "
+                        + (t.getMessage() == null ? "" : t.getMessage()));
+            }
+            final int count = migrated;
+            plugin.console().info("log_player_prefs_loaded",
+                    "[AegisGuard] Migrated {COUNT} legacy player language preferences into localization.player_styles.",
+                    "COUNT", String.valueOf(count));
         }
-        playerData.set("players." + uuid + ".language_style", style);
-        isPlayerDataDirty = true;
-    }
-
-    public synchronized void savePlayerData() {
-        if (playerDataFile == null || playerData == null || !isPlayerDataDirty) return;
-        try {
-            playerData.save(playerDataFile);
-            isPlayerDataDirty = false;
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE,
-                    "Could not save player language preferences to playerdata.yml; changes remain dirty for a later retry.",
-                    e);
-        }
-    }
-
-    public boolean isPlayerDataDirty() { return isPlayerDataDirty; }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
-        playerStyles.putIfAbsent(e.getPlayer().getUniqueId(), defaultStyle);
     }
 
     // ----------------------------
     // Internal Helpers
     // ----------------------------
-
-    private String localizedOrFallback(Player player, String key, String fallback, Map<String, String> placeholders) {
-        String raw = fallback;
-        try {
-            if (plugin.codex() != null) {
-                String v = plugin.codex().tr(player, key, placeholders);
-                if (v != null && !v.isBlank() && !v.equalsIgnoreCase(key)) {
-                    return v;
-                }
-            }
-        } catch (Throwable ignored) {}
-        return format(applyPlaceholders(raw, placeholders));
-    }
 
     private String getRawForPlayer(Player player, String key) {
         try {

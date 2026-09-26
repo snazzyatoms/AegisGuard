@@ -72,6 +72,7 @@ public class AGConfig {
     private boolean farmDefault;
     private boolean flyDefault;
     private boolean entryDefault;
+    private boolean liquidFlowProtection;
 
     public AGConfig(AegisGuard plugin) {
         this.plugin = plugin;
@@ -216,6 +217,8 @@ public class AGConfig {
         this.farmDefault = config.getBoolean("protections.farm_protection", true);
         this.flyDefault = config.getBoolean("protections.fly", false);
         this.entryDefault = config.getBoolean("protections.entry", true);
+        this.liquidFlowProtection = config.getBoolean("protections.liquid_flow",
+                config.getBoolean("protections.block_liquid_flow", true));
     }
 
     public FileConfiguration raw() { return config; }
@@ -385,6 +388,8 @@ public class AGConfig {
 
     public boolean autoRemoveBannedPlots() { return config.getBoolean("admin.auto_remove_banned", false); }
     public boolean globalSoundsEnabled() { return config.getBoolean("sounds.global_enabled", true); }
+
+    public boolean liquidFlowProtection() { return liquidFlowProtection; }
 
     public boolean pvpProtectionDefault() { return pvpDefault; }
     public boolean noMobsInClaims() { return mobDefault; }

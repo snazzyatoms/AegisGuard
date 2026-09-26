@@ -30,6 +30,13 @@ public final class CaravanGUI {
         this.plugin = plugin;
     }
 
+    /** Drops a player's remembered cargo/insurance choices (called on quit). */
+    public void clearSession(UUID playerId) {
+        if (playerId == null) return;
+        cargoChoice.remove(playerId);
+        insureChoice.remove(playerId);
+    }
+
     public static final class Holder implements InventoryHolder {
         @Override public Inventory getInventory() { return null; }
     }

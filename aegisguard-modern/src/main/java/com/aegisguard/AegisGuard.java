@@ -53,7 +53,6 @@ import com.aegisguard.visualization.WandEquipListener;
 import com.aegisguard.world.WorldRulesManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -62,9 +61,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -131,8 +127,8 @@ public class AegisGuard extends JavaPlugin {
 
     /**
      * MessagesUtil now acts as:
-     * - playerdata.yml prefs (language choice)
-     * - legacy msg().get(...) compatibility
+     * - legacy msg().get(...) compatibility bridge over CodexEngine
+     * - one-time importer for legacy playerdata.yml language prefs
      *
      * IMPORTANT: This class must NOT depend on messages.yml anymore.
      */
@@ -440,9 +436,6 @@ public class AegisGuard extends JavaPlugin {
 
         // Load async data (safe)
         runGlobalAsync(() -> {
-            loadPersistentState("player language preferences", () -> {
-                if (messages != null) messages.loadPlayerPreferences();
-            });
             loadPersistentState("expansion requests", () -> {
                 if (expansionManager != null) expansionManager.load();
             });
@@ -804,9 +797,6 @@ public class AegisGuard extends JavaPlugin {
             getLogger().warning("Failed to save Public Beta profiles: " + (t.getMessage() == null ? "" : t.getMessage()));
         }
 
-        // Save player data
-        if (messages != null) messages.savePlayerData();
-
         // Save notification prefs
         if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
 
@@ -973,8 +963,6 @@ public class AegisGuard extends JavaPlugin {
             groupManager.load();
             groupManager.cleanupMissingPlotLinks();
         }
-        if (webAdminService != null) webAdminService.reload();
-        if (discordLinkManager != null) discordLinkManager.reload();
 
         restartRecurringTasks();
 
@@ -1020,7 +1008,6 @@ public class AegisGuard extends JavaPlugin {
                 if (gatheringService != null && gatheringService.isDirty()) gatheringService.save();
                 if (arenaService != null && arenaService.isDirty()) arenaService.save();
                 if (allianceManager != null && allianceManager.isDirty()) allianceManager.save();
-                if (messages != null) messages.savePlayerData();
                 if (notificationManager != null && notificationManager.isDirty()) notificationManager.saveData();
                 if (territoryLifeService != null && territoryLifeService.isDirty()) territoryLifeService.save();
             } catch (Throwable t) {
@@ -1533,26 +1520,4 @@ public class AegisGuard extends JavaPlugin {
         return convertedSeconds;
     }
 
-    private void ensureResource(String rel) {
-        if (rel == null || rel.isBlank()) return;
-
-        try {
-            File out = new File(getDataFolder(), rel.replace("/", File.separator));
-            if (out.exists()) return;
-
-            File parent = out.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-
-            try (InputStream in = getResource(rel)) {
-                if (in == null) return;
-                Files.copy(in, out.toPath());
-            }
-        } catch (Throwable t) {
-            console().warning("log_lang_write_failed",
-                    "Failed to write language file: {PATH} ({ERROR})",
-                    "PATH", rel, "ERROR", t.getMessage() == null ? "" : t.getMessage());
-        }
-    }
 }

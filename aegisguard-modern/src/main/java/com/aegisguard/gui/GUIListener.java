@@ -556,10 +556,20 @@ public class GUIListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        lastMenuClick.remove(event.getPlayer().getUniqueId());
-        com.aegisguard.hooks.BedrockClients.forget(event.getPlayer().getUniqueId());
+        UUID playerId = event.getPlayer().getUniqueId();
+        lastMenuClick.remove(playerId);
+        com.aegisguard.hooks.BedrockClients.forget(playerId);
         if (plugin.gui().exchange() != null) {
-            plugin.gui().exchange().closeSession(event.getPlayer().getUniqueId());
+            plugin.gui().exchange().closeSession(playerId);
+        }
+        if (plugin.gui().caravans() != null) {
+            plugin.gui().caravans().clearSession(playerId);
+        }
+        if (plugin.gui().migration() != null) {
+            plugin.gui().migration().clearSession(playerId);
+        }
+        if (plugin.codex() != null) {
+            plugin.codex().evictPlayerStyle(playerId);
         }
     }
 

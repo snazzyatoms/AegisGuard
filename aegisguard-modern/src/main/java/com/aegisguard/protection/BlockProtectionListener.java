@@ -94,9 +94,7 @@ public class BlockProtectionListener implements Listener {
      */
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onBlockFromTo(BlockFromToEvent e) {
-        boolean liquidProtection = plugin.getConfig().getBoolean("protections.liquid_flow",
-                plugin.getConfig().getBoolean("protections.block_liquid_flow", true));
-        if (!liquidProtection) return;
+        if (!plugin.cfg().liquidFlowProtection()) return;
         Block from = e.getBlock();
         Block to = e.getToBlock();
         if (from == null || to == null) return;

@@ -37,6 +37,12 @@ public class MigrationAdminGUI {
         this.plugin = plugin;
     }
 
+    /** Drops a player's in-progress migration options (called on quit). */
+    public void clearSession(UUID playerId) {
+        if (playerId == null) return;
+        optionsByPlayer.remove(playerId);
+    }
+
     public static class MigrationMainHolder implements InventoryHolder {
         private final SourcePlugin suggested;
         public MigrationMainHolder(SourcePlugin suggested) { this.suggested = suggested; }

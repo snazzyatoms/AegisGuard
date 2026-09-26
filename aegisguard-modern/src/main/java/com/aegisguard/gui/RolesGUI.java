@@ -104,58 +104,6 @@ public class RolesGUI implements Listener {
     }
 
     /**
-     * Get the icon material for a role from config.
-     * Falls back to sensible defaults based on role name.
-     *
-     * @param roleName The role ID
-     * @return Material for the role icon
-     */
-    private Material getRoleIcon(String roleName) {
-        if (roleName == null) return Material.PAPER;
-
-        // Try to read icon from config
-        String iconStr = plugin.cfg().raw().getString("roles." + roleName + ".icon");
-        if (iconStr != null && !iconStr.isEmpty()) {
-            try {
-                return Material.valueOf(iconStr.toUpperCase().replace(" ", "_"));
-            } catch (IllegalArgumentException ignored) {
-                // Invalid material, fall through to defaults
-            }
-        }
-
-        // Fallback to role-specific defaults
-        return switch (roleName.toLowerCase()) {
-            case "owner" -> Material.DIAMOND;
-            case "member" -> Material.IRON_INGOT;
-            case "visitor" -> Material.FEATHER;
-            case "moderator" -> Material.REDSTONE_TORCH;
-            case "guard" -> Material.IRON_SWORD;
-            case "steward" -> Material.GOLDEN_APPLE;
-            case "farmer" -> Material.IRON_HOE;
-            case "farmland_merchant" -> Material.WHEAT;
-            case "shopkeeper" -> Material.EMERALD;
-            case "redstone_engineer" -> Material.REDSTONE;
-            case "animal_handler" -> Material.WHEAT_SEEDS;
-            case "tenant", "resident" -> Material.OAK_DOOR;
-            case "event_host" -> Material.FIREWORK_ROCKET;
-            case "builder", "builder_plus" -> Material.DIAMOND_PICKAXE;
-            default -> Material.PAPER;
-        };
-    }
-
-    /**
-     * Get the priority of a role for sorting.
-     * Higher priority = more important role.
-     *
-     * @param roleName The role ID
-     * @return Priority value (default 50)
-     */
-    private int getRolePriority(String roleName) {
-        if (roleName == null) return 0;
-        return plugin.cfg().raw().getInt("roles." + roleName + ".priority", 50);
-    }
-
-    /**
      * Capitalize a role name for display.
      */
     private String capitalizeRole(String role) {

@@ -14,7 +14,7 @@ class ConfigSaveThreadSafetyContractTest {
     @Test
     void playerPreferenceAndSoundConfigSavesStayOffAsyncWorkers() throws Exception {
         String codex = Files.readString(JAVA.resolve("language/CodexEngine.java"));
-        String sound = Files.readString(JAVA.resolve("commands/SoundCommand.java"));
+        String sound = Files.readString(JAVA.resolve("gui/SettingsGUI.java"));
 
         assertFalse(codex.contains("runGlobalAsync(plugin::saveConfig)"),
                 "Language selection must not serialize Bukkit config asynchronously");
@@ -23,7 +23,7 @@ class ConfigSaveThreadSafetyContractTest {
         assertTrue(codex.contains("lookupAnyLeaf("));
         assertFalse(sound.contains("runGlobalAsync(plugin::saveConfig)"),
                 "Sound preferences must not serialize Bukkit config asynchronously");
-        assertTrue(sound.contains("runMainGlobal(plugin::saveConfig)"));
+        assertTrue(sound.contains("saveConfigSafe()"));
     }
 
     @Test

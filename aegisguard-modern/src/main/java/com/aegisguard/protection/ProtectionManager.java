@@ -42,6 +42,7 @@ import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.Inventory;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -147,7 +148,7 @@ public class ProtectionManager implements Listener {
             return false;
         }
 
-        String key = flagKey.toLowerCase();
+        String key = flagKey.toLowerCase(Locale.ROOT);
 
         boolean effectiveDefault = defaultValue;
 
@@ -183,7 +184,7 @@ public class ProtectionManager implements Listener {
             return false;
         }
 
-        String key = flagKey.toLowerCase();
+        String key = flagKey.toLowerCase(Locale.ROOT);
         boolean defaultValue;
 
         switch (key) {

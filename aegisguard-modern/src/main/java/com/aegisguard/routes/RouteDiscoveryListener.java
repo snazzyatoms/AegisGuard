@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Map;
 import java.util.UUID;
@@ -70,5 +71,12 @@ public class RouteDiscoveryListener implements Listener {
         org.bukkit.util.Vector direction = target.toVector().subtract(here.toVector()).normalize().multiply(1.5D);
         Location marker = here.clone().add(direction).add(0, 1.2D, 0);
         player.spawnParticle(Particle.END_ROD, marker, 3, 0.18D, 0.18D, 0.18D, 0.01D);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        UUID id = e.getPlayer().getUniqueId();
+        lastCheck.remove(id);
+        lastGuidance.remove(id);
     }
 }

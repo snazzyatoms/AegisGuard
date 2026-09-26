@@ -4,7 +4,6 @@ import com.aegisguard.AegisGuard;
 import com.aegisguard.data.MarketStall;
 import com.aegisguard.data.Plot;
 import com.aegisguard.economy.CurrencyType;
-import com.aegisguard.market.TradeStallService;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -719,19 +718,6 @@ public class StallBrowseGUI {
     private String shortenTitle(String title) {
         if (title == null || title.isBlank()) return "TradeStall";
         return title.length() <= 16 ? title : title.substring(0, 16);
-    }
-
-    private String keyForResult(TradeStallService.ResultType type) {
-        return switch (type) {
-            case NOT_LISTED -> "market_stall_not_listed_error";
-            case OUT_OF_STOCK -> "market_stall_out_of_stock";
-            case INSUFFICIENT_FUNDS -> "market_stall_insufficient_funds";
-            case CURRENCY_UNAVAILABLE -> "market_stall_currency_unavailable";
-            case STALL_INACTIVE -> "market_stall_inactive";
-            case DISABLED -> "market_stall_disabled";
-            case BUSY -> "market_stall_purchase_busy";
-            default -> "market_stall_generic_error";
-        };
     }
 
     private String tr(Player player, String key, String fallback) {

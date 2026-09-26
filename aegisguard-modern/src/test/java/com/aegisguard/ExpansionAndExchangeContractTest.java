@@ -29,7 +29,7 @@ class ExpansionAndExchangeContractTest {
 
     @Test
     void claimBlockExchangeStateStoreSavesWithFoliaSafeAsyncWrapper() throws Exception {
-        String store = Files.readString(JAVA_ROOT.resolve("claimblocks/ClaimBlockExchangeStateStore.java"));
+        String store = Files.readString(JAVA_ROOT.resolve("claimblocks/ClaimBlockExchangeService.java"));
         assertTrue(store.contains("plugin.runGlobalAsync(this::save)"),
                 "Claim-block exchange state must use AegisGuard.runGlobalAsync on Folia");
         assertFalse(store.contains("getScheduler().runTaskAsynchronously"),

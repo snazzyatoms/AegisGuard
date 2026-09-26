@@ -4035,6 +4035,7 @@ admin_lang_refreshing: '&7Actualizando paquetes de idioma...'
 admin_lang_refresh_complete: '&a✔ Paquetes de idioma actualizados.'
 admin_lang_refresh_failed: '&c❌ No se pudieron actualizar los paquetes de idioma. Revisá la consola.'
 economy_disabled: '&c❌ La economía está deshabilitada en este servidor.'
+realm_profiles_disabled: '&cLos perfiles de parcela están deshabilitados en este servidor.'
 vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pedile a un admin que instale/configure Vault y un plugin de
   economía.'
 claim_blocks_earned_playtime: '&a✦ Por jugar, ganaste &b+{AMOUNT}&a Bloques de Parcela. &7Total: &e{TOTAL}&7.'

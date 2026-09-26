@@ -3593,6 +3593,7 @@ permission_label_farm: 'La agricultura'
 permission_label_vehicles: 'El uso de vehículos'
 permission_label_other: 'Esa acción'
 economy_disabled: '&c❌ La economía está desactivada en este servidor.'
+realm_profiles_disabled: '&cLos perfiles de parcela están deshabilitados en este servidor.'
 vault_hook_missing: '&c❌ No hay economía de Vault disponible. Pídele a un admin que instale/configure Vault y un plugin de
   economía.'
 vault_disabled_here: '&c❌ Los pagos por Vault están desactivados aquí.'

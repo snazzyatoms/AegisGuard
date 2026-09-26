@@ -147,9 +147,10 @@ class InterfaceQualityContractTest {
         assertTrue(adminCommand.contains("admin_rentals_cancelled"));
         assertTrue(adminCommand.contains("queueNoticeKey"));
 
-        String notify = Files.readString(ROOT.resolve("commands/NotifyCommand.java"));
+        String notify = Files.readString(ROOT.resolve("commands/AegisCommand.java"));
         assertFalse(notify.contains("sender.sendMessage(\"Players only.\""));
-        assertTrue(notify.contains("notify_status_header"));
+        assertTrue(notify.contains("notify_status"));
+        assertTrue(notify.contains("handleNotifyStatus"));
 
         String selection = Files.readString(ROOT.resolve("selection/SelectionService.java"));
         assertTrue(selection.contains("selection_corner1"));

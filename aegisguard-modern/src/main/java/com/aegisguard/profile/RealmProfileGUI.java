@@ -105,6 +105,11 @@ public class RealmProfileGUI {
     // --------------------------------------------------
 
     public void open(Player player) {
+        if (!isEnabled()) {
+            plugin.msg().send(player, "realm_profiles_disabled");
+            plugin.effects().playError(player);
+            return;
+        }
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         if (plot == null) {
             plugin.msg().send(player, "no_plot_here");

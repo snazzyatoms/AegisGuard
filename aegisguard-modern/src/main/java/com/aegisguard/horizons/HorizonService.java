@@ -236,6 +236,7 @@ public final class HorizonService implements Listener {
             plugin.effects().playError(player);
             return;
         }
+        pruneDeadlines(pulseCooldowns, now);
         pulseCooldowns.put(player.getUniqueId(), now + cooldown);
         ceremony(player, plot, HorizonRank.STARWARD, false);
     }
@@ -354,9 +355,29 @@ public final class HorizonService implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onCombat(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Player target) recentCombat.put(target.getUniqueId(), System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        pruneIfLarge(recentCombat, COMBAT_LOCK_MILLIS);
+        if (event.getEntity() instanceof Player target) recentCombat.put(target.getUniqueId(), now);
         Player attacker = attackingPlayer(event.getDamager());
-        if (attacker != null) recentCombat.put(attacker.getUniqueId(), System.currentTimeMillis());
+        if (attacker != null) recentCombat.put(attacker.getUniqueId(), now);
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        appliedClimate.remove(event.getPlayer().getUniqueId());
+    }
+
+    /** Drops expired "deadline" entries (value <= now); expired == absent. */
+    private static void pruneDeadlines(Map<UUID, Long> map, long now) {
+        if (map.size() <= 256) return;
+        map.values().removeIf(v -> v == null || v <= now);
+    }
+
+    /** Drops last-event entries older than the horizon; expired == absent. */
+    private static void pruneIfLarge(Map<UUID, Long> map, long horizonMs) {
+        if (map.size() <= 256) return;
+        long cutoff = System.currentTimeMillis() - Math.max(horizonMs, 60_000L);
+        map.values().removeIf(ts -> ts == null || ts < cutoff);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -454,6 +475,7 @@ public final class HorizonService implements Listener {
         if (plot.getHorizonRank() < 5 || !plot.getFlag("pvp", true) || isCombatLocked(player)) return;
         long now = System.currentTimeMillis();
         if (now < heartCooldowns.getOrDefault(player.getUniqueId(), 0L)) return;
+        pruneDeadlines(heartCooldowns, now);
         heartCooldowns.put(player.getUniqueId(), now + HEART_COOLDOWN_MILLIS);
         player.setAbsorptionAmount(Math.max(player.getAbsorptionAmount(), 4.0D));
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 1, 0), 8, 0.5, 0.6, 0.5, 0.02);

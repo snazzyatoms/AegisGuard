@@ -219,6 +219,10 @@ public final class CaravanService {
         caravan.setEtaAt(now + route.travelMs());
         store.put(caravan);
         store.save();
+        if (lastDispatchAt.size() > 256) {
+            long cutoff = now - Math.max(dispatchCooldownMs(), 60_000L);
+            lastDispatchAt.values().removeIf(ts -> ts == null || ts < cutoff);
+        }
         lastDispatchAt.put(player.getUniqueId(), now);
         if (plugin.audit() != null) {
             plugin.audit().record(AuditCategory.CARAVAN, player, caravan.routeLabel(),

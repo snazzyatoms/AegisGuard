@@ -147,6 +147,7 @@ public final class BeaconService {
         }
         var leftover = player.getInventory().addItem(stack);
         leftover.values().forEach(drop -> player.getWorld().dropItemNaturally(player.getLocation(), drop));
+        pruneIfLarge(lastPadGiveAt, cooldown * 1000L);
         lastPadGiveAt.put(player.getUniqueId(), System.currentTimeMillis());
         send(player, "beacon_give_ok",
                 "&aReceived &f{COUNT}&a pad(s). Place them, then sneak-right-click to bind. Any allowed pad block also works.",
@@ -189,6 +190,7 @@ public final class BeaconService {
         beacon.setName(player.getName() + " Beacon");
         beacon.applyPreset(TeleportBeacon.Preset.PRIVATE);
         store.put(beacon);
+        pruneIfLarge(lastCreateAt, createCooldownSeconds() * 1000L);
         lastCreateAt.put(player.getUniqueId(), System.currentTimeMillis());
         return beacon;
     }
@@ -325,6 +327,7 @@ public final class BeaconService {
         long now = System.currentTimeMillis();
         Long last = lastPromptAt.get(player.getUniqueId());
         if (last != null && now - last < promptCooldownMillis()) return false;
+        pruneIfLarge(lastPromptAt, promptCooldownMillis());
         lastPromptAt.put(player.getUniqueId(), now);
         return true;
     }
@@ -595,6 +598,7 @@ public final class BeaconService {
                 charges.refund(player, cost);
                 return;
             }
+            pruneIfLarge(lastUseAt, 4000L);
             lastUseAt.put(player.getUniqueId(), System.currentTimeMillis());
             holdUntilTeleport = true;
             result.teleportFuture().whenComplete((ok, error) -> {
@@ -639,6 +643,17 @@ public final class BeaconService {
     }
 
     /**
+     * Bounds cooldown maps without touching live entries: an expired timestamp is
+     * semantically identical to absent, so pruning is free of behavior changes and
+     * cannot be bypassed by relogging.
+     */
+    private static void pruneIfLarge(Map<UUID, Long> map, long horizonMs) {
+        if (map.size() <= 256) return;
+        long cutoff = System.currentTimeMillis() - Math.max(horizonMs, 60_000L);
+        map.values().removeIf(ts -> ts == null || ts < cutoff);
+    }
+
+    /**
      * Soft, throttled end-rod sparkle on a linked pad the player may use, shown while they
      * linger inside the stand radius before the confirm opens. Folia-safe (region scheduler),
      * no chat spam. Stops naturally once they confirm or walk away (the listener stops calling).
@@ -648,6 +663,7 @@ public final class BeaconService {
         long now = System.currentTimeMillis();
         Long last = lastSparkleAt.get(player.getUniqueId());
         if (last != null && now - last < 600L) return;
+        pruneIfLarge(lastSparkleAt, 600L);
         lastSparkleAt.put(player.getUniqueId(), now);
         Location center = pad.toStandLocation();
         if (center == null || center.getWorld() == null) return;

@@ -68,6 +68,10 @@ public final class SuccessionService {
     public void recordTransfer(Plot plot, UUID previousOwner, String previousName, UUID newOwner, Player actor) {
         if (plot == null || newOwner == null) return;
         long now = System.currentTimeMillis();
+        if (lastTransferAt.size() > 256) {
+            long cutoff = now - Math.max(transferCooldownMs(), 60_000L);
+            lastTransferAt.values().removeIf(ts -> ts == null || ts < cutoff);
+        }
         lastTransferAt.put(plot.getPlotId(), now);
         pending.put(plot.getPlotId(), new PendingRollback(plot.getPlotId(), previousOwner,
                 previousName == null ? "Unknown" : previousName, newOwner, now));

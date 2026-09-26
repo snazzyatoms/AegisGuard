@@ -122,9 +122,23 @@ public final class SafeTravelService implements Listener {
         pendingConfirm.remove(player.getUniqueId());
         CompletableFuture<Boolean> future = TeleportUtil.safeTeleport(plugin, player, safe);
         if (enforcePlayerGuards && !staffBypass && settings.getCooldownSeconds() > 0) {
+            pruneIfLarge(lastTravelAt, settings.getCooldownSeconds() * 1000L);
             lastTravelAt.put(player.getUniqueId(), System.currentTimeMillis());
         }
         return SafeTravelResult.success(safe, future);
+    }
+
+    /** Bounds last-event cooldown maps: expired timestamps are indistinguishable from absent. */
+    private static void pruneIfLarge(Map<UUID, Long> map, long horizonMs) {
+        if (map.size() <= 256) return;
+        long cutoff = System.currentTimeMillis() - Math.max(horizonMs, 60_000L);
+        map.values().removeIf(ts -> ts == null || ts < cutoff);
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        UUID id = event.getPlayer().getUniqueId();
+        recentPlotIds.remove(id);
     }
 
     public void recordRecentDestination(UUID playerId, UUID plotId) {
@@ -166,7 +180,9 @@ public final class SafeTravelService implements Listener {
 
     public void markCombat(Player player) {
         if (player == null || !settings.isBlockWhileInCombat()) return;
-        long until = System.currentTimeMillis() + (settings.getCombatSeconds() * 1000L);
+        long now = System.currentTimeMillis();
+        long until = now + (settings.getCombatSeconds() * 1000L);
+        if (combatUntil.size() > 256) combatUntil.values().removeIf(v -> v == null || v <= now);
         combatUntil.put(player.getUniqueId(), until);
     }
 

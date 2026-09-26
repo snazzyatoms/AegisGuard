@@ -100,6 +100,18 @@ public class ProtectionManager implements Listener {
     private final Map<UUID, Long> mobCleanupCooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> pendingMobRemovals = new ConcurrentHashMap<>();
 
+    /** Flags forced ON inside server zones / safe zones. Superset of DEFAULT_PROTECTED_FLAGS + "explosions". */
+    private static final Set<String> SAFE_ZONE_FORCED_FLAGS = Set.of(
+            "pvp", "mobs", "animals", "containers", "piston-use", "farm", "redstone",
+            "doors", "vehicles", "tnt-damage", "fire-spread", "explosions",
+            "hopper-pipe", "liquid-flow", "teleport-ward", "storm-ward", "decor");
+
+    /** Flags that default to ON (protected) on regular plots when no explicit value exists. */
+    private static final Set<String> DEFAULT_PROTECTED_FLAGS = Set.of(
+            "pvp", "animals", "containers", "doors", "redstone", "vehicles", "farm",
+            "mobs", "tnt-damage", "fire-spread", "piston-use", "hopper-pipe",
+            "liquid-flow", "teleport-ward", "storm-ward", "decor");
+
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
     }
@@ -152,28 +164,8 @@ public class ProtectionManager implements Listener {
 
         boolean effectiveDefault = defaultValue;
 
-        if (plot.isServerZone() || plot.getFlag("safe_zone", false)) {
-            switch (key) {
-                case "pvp":
-                case "mobs":
-                case "animals":
-                case "containers":
-                case "piston-use":
-                case "farm":
-                case "redstone":
-                case "doors":
-                case "vehicles":
-                case "tnt-damage":
-                case "fire-spread":
-                case "explosions":
-                case "hopper-pipe":
-                case "liquid-flow":
-                case "teleport-ward":
-                case "storm-ward":
-                case "decor":
-                    effectiveDefault = true;
-                    break;
-            }
+        if ((plot.isServerZone() || plot.getFlag("safe_zone", false)) && SAFE_ZONE_FORCED_FLAGS.contains(key)) {
+            effectiveDefault = true;
         }
 
         return plot.getFlag(key, effectiveDefault);
@@ -185,35 +177,9 @@ public class ProtectionManager implements Listener {
         }
 
         String key = flagKey.toLowerCase(Locale.ROOT);
-        boolean defaultValue;
-
-        switch (key) {
-            case "pvp":
-            case "animals":
-            case "containers":
-            case "doors":
-            case "redstone":
-            case "vehicles":
-            case "farm":
-            case "mobs":
-            case "tnt-damage":
-            case "fire-spread":
-            case "piston-use":
-            case "hopper-pipe":
-            case "liquid-flow":
-            case "teleport-ward":
-            case "storm-ward":
-            case "decor":
-                // Safe / protected ON for missing keys on existing installs (GREEN=protected).
-                defaultValue = true;
-                break;
-            default:
-                // Includes entry (true=open) and shop-interact (opt-in) — leave unset as false.
-                defaultValue = false;
-                break;
-        }
-
-        return isProtectionActive(plot, key, defaultValue);
+        // Safe / protected ON for missing keys on existing installs (GREEN=protected).
+        // entry (true=open) and shop-interact (opt-in) intentionally default to false.
+        return isProtectionActive(plot, key, DEFAULT_PROTECTED_FLAGS.contains(key));
     }
 
     /**

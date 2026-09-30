@@ -127,17 +127,17 @@ public class AdminPlotListGUI {
     }
 
     private void buildAndOpen(Player player, List<Plot> allPlots, int page, int maxPages,
-                              java.util.UUID ownerFilter, String ownerName) {
+                              java.util.UUID ownerFilter, String filterOwnerName) {
         // ✅ Localized title + page suffix (clamped safely)
         String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
         String baseTitle = ownerFilter == null
                 ? plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry")
                 : plugin.gui().title(player, "admin_plot_list_owner_title",
-                        "&cPlots: " + (ownerName == null ? "?" : ownerName),
-                        java.util.Map.of("PLAYER", ownerName == null ? "?" : ownerName));
+                        "&cPlots: " + (filterOwnerName == null ? "?" : filterOwnerName),
+                        java.util.Map.of("PLAYER", filterOwnerName == null ? "?" : filterOwnerName));
         String title = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page, ownerFilter, ownerName), 54, title);
+        Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page, ownerFilter, filterOwnerName), 54, title);
 
         // 1.2.6: fill EVERYTHING with filler so there are no “dead” holes to click/drag into
         ItemStack filler = GUIManager.getFiller();

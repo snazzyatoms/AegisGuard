@@ -54,18 +54,37 @@ public class AdminPlotListGUI {
     public static class PlotListHolder implements InventoryHolder {
         private final int page;
         private final List<Plot> plots;
+        private final java.util.UUID ownerFilter;
+        private final String ownerName;
 
         public PlotListHolder(List<Plot> plots, int page) {
+            this(plots, page, null, null);
+        }
+
+        public PlotListHolder(List<Plot> plots, int page, java.util.UUID ownerFilter, String ownerName) {
             this.plots = plots;
             this.page = page;
+            this.ownerFilter = ownerFilter;
+            this.ownerName = ownerName;
         }
 
         public int getPage() { return page; }
         public List<Plot> getPlots() { return plots; }
+        public java.util.UUID getOwnerFilter() { return ownerFilter; }
+        public String getOwnerName() { return ownerName; }
         @Override public Inventory getInventory() { return null; }
     }
 
     public void open(Player player, int page) {
+        openFiltered(player, null, null, page);
+    }
+
+    /** Browse only the plots owned by {@code owner} (staff lookup view). */
+    public void openFor(Player player, java.util.UUID owner, String ownerName, int page) {
+        openFiltered(player, owner, ownerName, page);
+    }
+
+    private void openFiltered(Player player, java.util.UUID ownerFilter, String ownerName, int page) {
         if (!plugin.isAdmin(player)) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&',
                     plugin.gui().tr(player, "no_perm", "&cError: You do not have permission for this.")));
@@ -84,6 +103,10 @@ public class AdminPlotListGUI {
                 plugin.getLogger().warning("[AdminPlotListGUI] Failed to read plots: " + t.getMessage());
             }
 
+            if (ownerFilter != null) {
+                allPlots.removeIf(p -> p == null || !ownerFilter.equals(p.getOwner()));
+            }
+
             allPlots.sort(Comparator
                     .comparing(Plot::getWorld, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
                     .thenComparing(p -> p.getOwnerName() == null ? "" : p.getOwnerName(),
@@ -99,17 +122,22 @@ public class AdminPlotListGUI {
             final int finalPage = fixedPage;
             final int finalMaxPages = maxPages;
 
-            plugin.runMain(player, () -> buildAndOpen(player, finalPlots, finalPage, finalMaxPages));
+            plugin.runMain(player, () -> buildAndOpen(player, finalPlots, finalPage, finalMaxPages, ownerFilter, ownerName));
         });
     }
 
-    private void buildAndOpen(Player player, List<Plot> allPlots, int page, int maxPages) {
+    private void buildAndOpen(Player player, List<Plot> allPlots, int page, int maxPages,
+                              java.util.UUID ownerFilter, String ownerName) {
         // ✅ Localized title + page suffix (clamped safely)
         String suffix = GUIManager.color(" &8(" + (page + 1) + "/" + Math.max(1, maxPages) + ")");
-        String baseTitle = plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry");
+        String baseTitle = ownerFilter == null
+                ? plugin.gui().title(player, "admin_plot_list_title", "&cPlot Registry")
+                : plugin.gui().title(player, "admin_plot_list_owner_title",
+                        "&cPlots: " + (ownerName == null ? "?" : ownerName),
+                        java.util.Map.of("PLAYER", ownerName == null ? "?" : ownerName));
         String title = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page), 54, title);
+        Inventory inv = Bukkit.createInventory(new PlotListHolder(allPlots, page, ownerFilter, ownerName), 54, title);
 
         // 1.2.6: fill EVERYTHING with filler so there are no “dead” holes to click/drag into
         ItemStack filler = GUIManager.getFiller();
@@ -117,7 +145,6 @@ public class AdminPlotListGUI {
 
         // Preload localized lore templates (with fallbacks)
         String loreIdFmt = tr(player, "admin_plot_lore_id", "&7ID: &e{ID}");
-        String loreWorldTypeFmt = tr(player, "admin_plot_lore_world_type", "&7World Type: &f{TYPE}");
         String loreWorldFolderFmt = tr(player, "admin_plot_lore_world_folder", "&7World Folder: &f{WORLD}");
         String loreBoundsFmt = tr(player, "admin_plot_lore_bounds", "&7Bounds: &a{X1}, {Z1}");
         String loreToFmt = tr(player, "admin_plot_lore_to", "&7        to &a{X2}, {Z2}");
@@ -162,7 +189,6 @@ public class AdminPlotListGUI {
                         : plot.getWorld();
 
                 lore.add(GUIManager.color(loreIdFmt.replace("{ID}", shortId)));
-                lore.add(GUIManager.color(loreWorldTypeFmt.replace("{TYPE}", worldRoleLabel(player, plot.getWorld()))));
                 lore.add(GUIManager.color(loreWorldFolderFmt.replace("{WORLD}", plotWorld)));
                 lore.add(GUIManager.color(loreBoundsFmt
                         .replace("{X1}", String.valueOf(plot.getX1()))
@@ -261,8 +287,8 @@ public class AdminPlotListGUI {
         String action = getAction(clicked);
         if (action != null) {
             switch (action) {
-                case "prev_page" -> { open(player, currentPage - 1); return; }
-                case "next_page" -> { open(player, currentPage + 1); return; }
+                case "prev_page" -> { openFiltered(player, holder.getOwnerFilter(), holder.getOwnerName(), currentPage - 1); return; }
+                case "next_page" -> { openFiltered(player, holder.getOwnerFilter(), holder.getOwnerName(), currentPage + 1); return; }
                 case "back_admin" -> { plugin.gui().admin().open(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "plot_entry" -> { /* handled below */ }
@@ -276,7 +302,7 @@ public class AdminPlotListGUI {
         Plot plot = resolvePlotFromItem(clicked, holder, currentPage, e.getSlot());
         if (plot == null) {
             player.sendMessage(plugin.gui().tr(player, "admin_plot_missing", "&cPlot no longer exists."));
-            open(player, currentPage);
+            openFiltered(player, holder.getOwnerFilter(), holder.getOwnerName(), currentPage);
             return;
         }
 
@@ -289,7 +315,7 @@ public class AdminPlotListGUI {
                 }
                 plugin.msg().send(player, "admin_plot_deleted", Map.of("PLAYER", plot.getOwnerName()));
                 plugin.effects().playUnclaim(player);
-                open(player, currentPage);
+                openFiltered(player, holder.getOwnerFilter(), holder.getOwnerName(), currentPage);
             });
             return;
         }
@@ -351,10 +377,6 @@ public class AdminPlotListGUI {
         int plotIndex = (currentPage * PLOTS_PER_PAGE) + slot;
         if (plotIndex < 0 || plotIndex >= holder.getPlots().size()) return null;
         return holder.getPlots().get(plotIndex);
-    }
-
-    private String worldRoleLabel(Player player, String worldName) {
-        return tr(player, "admin_plot_world_role_other", "Other World");
     }
 
     private void tagAction(ItemStack item, String action) {

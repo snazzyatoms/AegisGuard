@@ -1222,3 +1222,13 @@ claim_notify_forced_disabled_for_you: '&cClaim enter/exit notifications are disa
 claim_notify_set_for_other: '&a✔ Set {PLAYER}''s claim notifications to: &f{STATE}&a.'
 
 claim_notify_target_not_found: '&cPlayer not found.'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_not_in_plot: '&cStand inside your claim to change its biome.'
+biome_unavailable: '&cPlot biomes are unavailable on this server.'
+biome_already_active: '&eThat biome is already active here.'
+biome_applying: '&eApplying {BIOME} to your claim...'
+biome_applied: '&aYour claim now uses the {BIOME} biome.'
+admin_plots_usage: '&eUsage: /agadmin plots <player>'
+admin_plots_none: '&e{PLAYER} has no plots.'
+admin_help_plots: '&e/agadmin plots <player> &8- Browse a player''s plots'

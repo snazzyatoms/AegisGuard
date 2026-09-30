@@ -38,6 +38,10 @@ public class StorageMigrateGUI {
         open(player, true);
     }
 
+    public void clearSession(UUID playerId) {
+        if (playerId != null) returnToDoctor.remove(playerId);
+    }
+
     public void open(Player player, boolean fromDoctor) {
         if (!plugin.isAdmin(player) && !player.hasPermission("aegis.admin.migrate")) {
             plugin.effects().playError(player);

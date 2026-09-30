@@ -1244,3 +1244,13 @@ claim_notify_forced_disabled_for_you: '&cBetret-/Verlass-Benachrichtigungen sind
 claim_notify_set_for_other: '&a✔ Benachrichtigungen von {PLAYER} gesetzt auf: &f{STATE}&a.'
 
 claim_notify_target_not_found: '&cSpieler nicht gefunden.'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_not_in_plot: '&cStehe in deinem Grundstück, um sein Biom zu ändern.'
+biome_unavailable: '&cGrundstücks-Biome sind auf diesem Server nicht verfügbar.'
+biome_already_active: '&eDieses Biom ist hier bereits aktiv.'
+biome_applying: '&e{BIOME} wird auf dein Grundstück angewendet...'
+biome_applied: '&aDein Grundstück nutzt jetzt das Biom {BIOME}.'
+admin_plots_usage: '&eVerwendung: /agadmin plots <player>'
+admin_plots_none: '&e{PLAYER} hat keine Grundstücke.'
+admin_help_plots: '&e/agadmin plots <player> &8- Grundstücke eines Spielers ansehen'

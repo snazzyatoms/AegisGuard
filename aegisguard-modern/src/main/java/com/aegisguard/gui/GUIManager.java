@@ -56,6 +56,7 @@ public class GUIManager {
     // Plot Management
     private final PlotFlagsGUI plotFlagsGUI;
     private final PlotCosmeticsGUI plotCosmeticsGUI;
+    private final BiomeGUI biomeGUI;
 
     // Economy
     private final PlotMarketGUI plotMarketGUI;
@@ -152,6 +153,7 @@ public class GUIManager {
         this.doctorRepairGUI = new DoctorRepairGUI(plugin);
         this.worldControlsGUI = new WorldControlsGUI(plugin);
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
+        this.biomeGUI = new BiomeGUI(plugin);
         this.plotMarketGUI = new PlotMarketGUI(plugin);
         this.plotAuctionGUI = new PlotAuctionGUI(plugin);
         this.localMarketGUI = new LocalMarketGUI(plugin);
@@ -298,6 +300,7 @@ public class GUIManager {
     public RolesGUI roles() { return rolesGUI; }
     public PlotFlagsGUI flags() { return plotFlagsGUI; }
     public PlotCosmeticsGUI cosmetics() { return plotCosmeticsGUI; }
+    public BiomeGUI biome() { return biomeGUI; }
     public LevelingGUI leveling() { return levelingGUI; }
     public ZoningGUI zoning() { return zoningGUI; }
     public ZoneBrowseGUI zoneBrowse() { return zoneBrowseGUI; }

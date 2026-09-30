@@ -87,7 +87,7 @@ public class MobBarrierTask implements Runnable {
 
     @Override
     public void run() {
-        if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)) {
+        if (plugin.modules() == null || !plugin.modules().on(com.aegisguard.config.Modules.Id.MOB_BARRIER)) {
             return;
         }
 

@@ -3507,7 +3507,6 @@ staff_wand_admin_lore:
 - '&7Abrir el Centro de Comandos de Staff.'
 admin_plot_item_name: '&bPropietario: &f{OWNER}'
 admin_plot_lore_id: '&7ID: &e{ID}'
-admin_plot_lore_world_type: '&7Tipo de mundo: &f{TYPE}'
 admin_plot_lore_world_folder: '&7Carpeta del mundo: &f{WORLD}'
 admin_plot_lore_bounds: '&7Límites: &a{X1}, {Z1}'
 admin_plot_lore_to: '&7        hasta &a{X2}, {Z2}'
@@ -4189,3 +4188,20 @@ codex_faq_lore:
 - '&7Usa &b/ag unclaim'
 
 codex_faq_title: '&9§lIX. Preguntas Frecuentes'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_effect_line: '&7Cambia esta parcela a &f{BIOME}'
+biome_click_apply: '&eClic izquierdo: &7Aplicar a la parcela'
+biome_relog_hint: '&8Quizá debas volver a entrar para ver los colores.'
+biome_name_plains: '&fLlanuras'
+biome_name_forest: '&fBosque'
+biome_name_desert: '&fDesierto'
+biome_name_jungle: '&fJungla'
+biome_name_taiga: '&fTaiga'
+biome_name_swamp: '&fPantano'
+biome_name_cherry_grove: '&fBosque de cerezos'
+biome_name_badlands: '&fTierras áridas'
+biome_name_mushroom_fields: '&fCampos de hongos'
+biome_name_meadow: '&fPradera'
+biome_name_lush_caves: '&fCuevas frondosas'
+admin_plot_list_owner_title: '&cParcelas: {PLAYER}'

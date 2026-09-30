@@ -1229,3 +1229,13 @@ claim_notify_forced_disabled_for_you: '&cPowiadomienia o wejściu/wyjściu są d
 claim_notify_set_for_other: '&a✔ Ustawiono powiadomienia gracza {PLAYER} na: &f{STATE}&a.'
 
 claim_notify_target_not_found: '&cNie znaleziono gracza.'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_not_in_plot: '&cStań w swojej działce, aby zmienić jej biom.'
+biome_unavailable: '&cBiomy działek są niedostępne na tym serwerze.'
+biome_already_active: '&eTen biom jest już tutaj aktywny.'
+biome_applying: '&eStosowanie biomu {BIOME} do Twojej działki...'
+biome_applied: '&aTwoja działka używa teraz biomu {BIOME}.'
+admin_plots_usage: '&eUżycie: /agadmin plots <player>'
+admin_plots_none: '&e{PLAYER} nie ma działek.'
+admin_help_plots: '&e/agadmin plots <player> &8- Przeglądaj działki gracza'

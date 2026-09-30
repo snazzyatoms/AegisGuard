@@ -118,6 +118,7 @@ public final class Modules {
             case "beacon" -> Id.TELEPORT_BEACONS;
             case "transfer", "heir", "succession" -> Id.SUCCESSION;
             case "caravan", "caravans" -> Id.CARAVANS;
+            case "biome" -> Id.BIOMES;
             case "gathering", "gatherings", "openhouse" -> Id.GATHERINGS;
             default -> null;
         };

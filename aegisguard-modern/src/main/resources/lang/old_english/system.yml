@@ -1190,3 +1190,13 @@ roles_usage: '&eUsage: /ag roles <lock|unlock|undo> [player]'
 
 
 claim_conflict_external: '&c❌ That area is already protected by another plugin. AegisGuard will not claim it.'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_not_in_plot: '&cStand within thy claim to change its biome.'
+biome_unavailable: '&cRealm biomes are forbidden on this realm.'
+biome_already_active: '&eThat biome already ruleth here.'
+biome_applying: '&eShifting thy claim to {BIOME}...'
+biome_applied: '&aThy claim now beareth the {BIOME} biome.'
+admin_plots_usage: '&eUse: /agadmin plots <player>'
+admin_plots_none: '&e{PLAYER} has no claims.'
+admin_help_plots: '&e/agadmin plots <player> &8- View a player''s claims'

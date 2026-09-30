@@ -1223,3 +1223,13 @@ claim_notify_forced_disabled_for_you: '&cLas notificaciones de entrada/salida es
 claim_notify_set_for_other: '&a✔ Notificaciones de {PLAYER} definidas en: &f{STATE}&a.'
 
 claim_notify_target_not_found: '&cJugador no encontrado.'
+
+# --- 1.4.0 plot biomes + admin plot lookup ---
+biome_not_in_plot: '&cParate dentro de tu parcela para cambiar su bioma.'
+biome_unavailable: '&cLos biomas de parcela no están disponibles en este servidor.'
+biome_already_active: '&eEse bioma ya está activo acá.'
+biome_applying: '&eAplicando {BIOME} a tu parcela...'
+biome_applied: '&aTu parcela ahora usa el bioma {BIOME}.'
+admin_plots_usage: '&eUso: /agadmin plots <player>'
+admin_plots_none: '&e{PLAYER} no tiene parcelas.'
+admin_help_plots: '&e/agadmin plots <player> &8- Ver las parcelas de un jugador'

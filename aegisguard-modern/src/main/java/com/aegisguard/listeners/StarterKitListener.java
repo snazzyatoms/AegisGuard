@@ -162,7 +162,7 @@ public class StarterKitListener implements Listener {
     }
 
     private boolean isStarterKitEnabled() {
-        return plugin.getConfig().getBoolean("starter_kit.first_join.enabled", true);
+        return plugin.modules().on(com.aegisguard.config.Modules.Id.STARTER_KIT);
     }
 
     private boolean isStarterNoteDropCleanupEnabled() {

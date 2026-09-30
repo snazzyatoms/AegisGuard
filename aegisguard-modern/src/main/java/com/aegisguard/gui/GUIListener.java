@@ -53,6 +53,7 @@ import com.aegisguard.gui.MigrationAdminGUI.MigrationPreviewHolder;
 import com.aegisguard.gui.PlayerGUI.PlayerMenuHolder;
 import com.aegisguard.gui.PlotAuctionGUI.PlotAuctionHolder;
 import com.aegisguard.gui.PlotCosmeticsGUI.CosmeticsHolder;
+import com.aegisguard.gui.BiomeGUI.BiomeHolder;
 import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsHolder;
 import com.aegisguard.gui.PlotFlagsGUI.PlotFlagsPresetConfirmHolder;
 import com.aegisguard.gui.PlotMarketGUI.PlotMarketHolder;
@@ -159,6 +160,7 @@ public class GUIListener implements Listener {
                 || holder instanceof PlotFlagsHolder
                 || holder instanceof PlotFlagsPresetConfirmHolder
                 || holder instanceof CosmeticsHolder
+                || holder instanceof BiomeHolder
                 || holder instanceof LevelingHolder
                 || holder instanceof ZoningHolder
                 || holder instanceof PlotMarketHolder
@@ -327,6 +329,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof CosmeticsHolder castHolder) {
             plugin.gui().cosmetics().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof BiomeHolder castHolder) {
+            plugin.gui().biome().handleClick(player, e, castHolder);
         }
         else if (holder instanceof LevelingHolder castHolder) {
             plugin.gui().leveling().handleClick(player, e, castHolder);
@@ -563,6 +568,10 @@ public class GUIListener implements Listener {
         if (plugin.gui().migration() != null) {
             plugin.gui().migration().clearSession(playerId);
         }
+        if (plugin.gui().storageMigrate() != null) {
+            plugin.gui().storageMigrate().clearSession(playerId);
+        }
+        com.aegisguard.guidance.DenialGuidance.evict(playerId);
         if (plugin.codex() != null) {
             plugin.codex().evictPlayerStyle(playerId);
         }
@@ -892,6 +901,10 @@ public class GUIListener implements Listener {
         }
         if (holder instanceof CosmeticsHolder) {
             if (!safeInvokeOpen(plugin.gui().cosmetics(), player, plot)) safeInvokeOpen(plugin.gui().cosmetics(), player);
+            return;
+        }
+        if (holder instanceof BiomeHolder) {
+            if (!safeInvokeOpen(plugin.gui().biome(), player, plot)) safeInvokeOpen(plugin.gui().biome(), player);
             return;
         }
         if (holder instanceof LevelingHolder) {

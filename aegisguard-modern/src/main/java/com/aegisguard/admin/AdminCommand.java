@@ -50,7 +50,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
-            "staffchat", "sc", "discord",
+            "staffchat", "sc", "discord", "plots",
             "help"
     };
 
@@ -128,6 +128,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "transition", "upgrade", "v130", "v140" -> handleTransition(player);
             case "staffchat", "sc" -> handleStaffChat(player, args);
             case "discord" -> handleDiscord(player, args);
+            case "plots" -> handleAdminPlots(player, args);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -217,6 +218,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
         if (args[0].equalsIgnoreCase("discover") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("feature", "unfeature", "show", "hide"), new ArrayList<>());
+        }
+        if (args[0].equalsIgnoreCase("plots") && args.length == 2) {
+            List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+            return StringUtil.copyPartialMatches(args[1], names, new ArrayList<>());
         }
         if ((args[0].equalsIgnoreCase("staffchat") || args[0].equalsIgnoreCase("sc")) && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("off"), new ArrayList<>());
@@ -976,6 +981,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_season", "&e/agadmin season &8- Staff season featured plots and routes");
         sendLocalized(player, "admin_help_skill", "&e/agadmin skill fly <player> [seconds] &8- Temporary flight skill");
         sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
+        sendLocalized(player, "admin_help_plots", "&e/agadmin plots <player> &8- Browse a player's plots");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 
@@ -1055,6 +1061,27 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         audit(player, "converted plot " + plot.getPlotId() + " into a server zone via /agadmin convert confirm");
+    }
+
+    private void handleAdminPlots(Player player, String[] args) {
+        if (args.length < 2) {
+            sendLocalized(player, "admin_plots_usage",
+                    "&eUsage: /agadmin plots <player>");
+            return;
+        }
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        UUID targetId = target.getUniqueId();
+        String targetName = target.getName() == null ? args[1] : target.getName();
+        boolean any = plugin.store().getAllPlots().stream()
+                .anyMatch(p -> p != null && targetId.equals(p.getOwner()));
+        if (!any) {
+            sendLocalized(player, "admin_plots_none",
+                    "&e{PLAYER} has no plots.",
+                    java.util.Map.of("PLAYER", targetName));
+            return;
+        }
+        plugin.gui().plotList().openFor(player, targetId, targetName, 0);
     }
 
     private void handleBlocks(Player player, String[] args) {

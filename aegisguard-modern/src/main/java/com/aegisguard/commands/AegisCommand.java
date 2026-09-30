@@ -44,7 +44,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "kick", "ban", "unban", "visit",
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
-            "consume", "ledger", "blocks", "giftblocks", "merge",
+            "consume", "ledger", "blocks", "giftblocks", "merge", "biome",
             "group", "alliance", "arena", "beacon", "caravan", "gathering", "gatherings", "openhouse", "chat", "frequency", "staff", "staffchat",
             "discover", "favorite", "activity",
             "transfer", "heir", "succession", "settlements", "roles",
@@ -275,6 +275,8 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             case "notice" -> handleNotice(p, args);
 
             case "profile" -> plugin.gui().realmProfile().open(p);
+
+            case "biome" -> handleBiome(p);
 
             case "guide" -> plugin.gui().walkthrough().open(p, 0);
 
@@ -1282,6 +1284,27 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
         }
 
         sendMsg(p, "&e/ag notice add <text> &7| &e/ag notice remove <#> &7| &e/ag notice list");
+    }
+
+    // --------------------------------------------------
+    // Biome
+    // --------------------------------------------------
+
+    private void handleBiome(Player p) {
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null) {
+            sendKey(p, "biome_not_in_plot", "&cStand inside your claim to change its biome.");
+            return;
+        }
+        if (!plot.canManage(p, plugin)) {
+            sendKey(p, "no_perm", "&cYou do not have permission to do that.");
+            return;
+        }
+        if (plugin.gui().biome() == null) {
+            sendKey(p, "biome_unavailable", "&cPlot biomes are unavailable on this server.");
+            return;
+        }
+        plugin.gui().biome().open(p, plot);
     }
 
     // --------------------------------------------------

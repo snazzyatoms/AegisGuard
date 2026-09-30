@@ -156,6 +156,7 @@ public class AegisGuard extends JavaPlugin {
     private Object hearthVoicechatHook;
     private com.aegisguard.protection.FlightSkillService flightSkillService;
     private com.aegisguard.season.SeasonService seasonService;
+    private com.aegisguard.biomes.BiomeService biomeService;
 
     // --- HOOKS ---
     private MapHookManager mapHookManager;
@@ -280,6 +281,7 @@ public class AegisGuard extends JavaPlugin {
     public Object hearthVoice() { return hearthVoicechatHook; }
     public com.aegisguard.protection.FlightSkillService flightSkills() { return flightSkillService; }
     public com.aegisguard.season.SeasonService seasons() { return seasonService; }
+    public com.aegisguard.biomes.BiomeService biomes() { return biomeService; }
     public DiscordWebhook getDiscord() { return discord; }
     public com.aegisguard.hooks.DiscordLinkManager discordLinks() { return discordLinkManager; }
     public MapHookManager getMapHooks() { return mapHookManager; }
@@ -361,6 +363,7 @@ public class AegisGuard extends JavaPlugin {
         hearthService = new com.aegisguard.chat.HearthService(this);
         flightSkillService = new com.aegisguard.protection.FlightSkillService(this);
         seasonService = new com.aegisguard.season.SeasonService(this);
+        biomeService = new com.aegisguard.biomes.BiomeService(this);
         pricingCalculator = new ClaimPricingCalculator(this);
         migrationManager = new MigrationManager(this);
         groupManager = new GroupManager(this);
@@ -1087,8 +1090,7 @@ public class AegisGuard extends JavaPlugin {
     }
 
     private void startMobBarrierTask() {
-        boolean enabled = getConfig().getBoolean("mob_barrier.enabled", false);
-        if (!enabled) return;
+        if (modules() == null || !modules().on(com.aegisguard.config.Modules.Id.MOB_BARRIER)) return;
 
         long intervalSeconds = getConfiguredMobBarrierIntervalSeconds();
         long intervalTicks = Math.max(20L, intervalSeconds * 20L);

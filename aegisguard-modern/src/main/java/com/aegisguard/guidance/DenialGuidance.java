@@ -88,7 +88,15 @@ public final class DenialGuidance {
         Long last = perPlayer.get(key);
         if (last != null && now - last < REPEAT_COOLDOWN_MILLIS) return true;
         perPlayer.put(key, now);
+        // Expired entries are semantically identical to absent ones; drop them so the map stays bounded.
+        perPlayer.values().removeIf(ts -> now - ts > REPEAT_COOLDOWN_MILLIS);
+        LAST_SENT.values().removeIf(Map::isEmpty);
         return false;
+    }
+
+    /** Drops all remembered denial timestamps for a player (called on quit). */
+    public static void evict(UUID playerId) {
+        if (playerId != null) LAST_SENT.remove(playerId);
     }
 
     private static String permissionLabel(AegisGuard plugin, Player player, String permission) {

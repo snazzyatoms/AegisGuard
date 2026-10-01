@@ -50,7 +50,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     private static final String[] SUB_COMMANDS = {
             "reload", "bypass", "menu", "manage", "convert", "wand", "claim", "blocks", "merge", "migrate", "doctor",
             "health", "rentals", "discover", "activity", "snapshot", "restore", "audit", "season", "skill", "transition", "upgrade", "v130", "v140",
-            "staffchat", "sc", "discord", "plots",
+            "staffchat", "sc", "discord", "plots", "inspect",
             "help"
     };
 
@@ -129,6 +129,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             case "staffchat", "sc" -> handleStaffChat(player, args);
             case "discord" -> handleDiscord(player, args);
             case "plots" -> handleAdminPlots(player, args);
+            case "inspect" -> handleAdminInspect(player, args);
             case "help" -> sendAdminHelp(player);
             default -> sendAdminHelp(player);
         }
@@ -219,7 +220,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (args[0].equalsIgnoreCase("discover") && args.length == 2) {
             return StringUtil.copyPartialMatches(args[1], List.of("feature", "unfeature", "show", "hide"), new ArrayList<>());
         }
-        if (args[0].equalsIgnoreCase("plots") && args.length == 2) {
+        if ((args[0].equalsIgnoreCase("plots") || args[0].equalsIgnoreCase("inspect")) && args.length == 2) {
             List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             return StringUtil.copyPartialMatches(args[1], names, new ArrayList<>());
         }
@@ -982,6 +983,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         sendLocalized(player, "admin_help_skill", "&e/agadmin skill fly <player> [seconds] &8- Temporary flight skill");
         sendLocalized(player, "admin_help_staffchat", "&e/agadmin staffchat &8- Toggle staff radio");
         sendLocalized(player, "admin_help_plots", "&e/agadmin plots <player> &8- Browse a player's plots");
+        sendLocalized(player, "admin_help_inspect", "&e/agadmin inspect [player] &8- Inspect a claim in detail");
         sendLocalized(player, "admin_help_more", "&7Also: wand, claim, manage, convert, blocks, merge, discover, activity");
     }
 
@@ -1082,6 +1084,53 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         plugin.gui().plotList().openFor(player, targetId, targetName, 0);
+    }
+
+    /**
+     * /agadmin inspect           -> detail card for the claim the admin is standing in.
+     * /agadmin inspect <player>  -> owner-resolved detail (single plot opens directly,
+     *                             otherwise falls back to the filtered registry).
+     */
+    private void handleAdminInspect(Player player, String[] args) {
+        if (args.length < 2) {
+            Plot plot = plugin.store().getPlotAt(player.getLocation());
+            if (plot == null) {
+                sendLocalized(player, "admin_inspect_none", "&cNot standing in a claim.");
+                return;
+            }
+            plugin.gui().adminInspect().open(player, plot);
+            return;
+        }
+
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        UUID targetId = target.getUniqueId();
+        String targetName = target.getName() == null ? args[1] : target.getName();
+
+        // Store scan is heavy on big servers — resolve async, build GUI on the player's thread.
+        plugin.runGlobalAsync(() -> {
+            java.util.List<Plot> owned = new java.util.ArrayList<>();
+            try {
+                for (Plot p : plugin.store().getAllPlots()) {
+                    if (p != null && targetId.equals(p.getOwner())) owned.add(p);
+                }
+            } catch (Throwable t) {
+                plugin.getLogger().warning("[AdminCommand] inspect plot scan failed: " + t.getMessage());
+            }
+            plugin.runMain(player, () -> {
+                if (owned.isEmpty()) {
+                    sendLocalized(player, "admin_plots_none",
+                            "&e{PLAYER} has no plots.",
+                            java.util.Map.of("PLAYER", targetName));
+                    return;
+                }
+                if (owned.size() == 1) {
+                    plugin.gui().adminInspect().open(player, owned.get(0));
+                } else {
+                    plugin.gui().plotList().openFor(player, targetId, targetName, 0);
+                }
+            });
+        });
     }
 
     private void handleBlocks(Player player, String[] args) {

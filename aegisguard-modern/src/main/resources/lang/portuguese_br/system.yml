@@ -1236,3 +1236,7 @@ biome_applied: '&aSeu terreno agora usa o bioma {BIOME}.'
 admin_plots_usage: '&eUso: /agadmin plots <player>'
 admin_plots_none: '&e{PLAYER} não tem terrenos.'
 admin_help_plots: '&e/agadmin plots <player> &8- Ver os terrenos de um jogador'
+
+grief_alert_staff: '&c[GriefWatch] &f{PLAYER} &cfoi bloqueado &f{COUNT} &cvezes em ''{PLOT}'' - possível tentativa de grief.'
+admin_help_inspect: '&e/agadmin inspect [jogador] &8- Inspecionar um terreno em detalhes'
+admin_inspect_none: '&cVocê não está dentro de um terreno.'

@@ -1239,3 +1239,7 @@ biome_applied: '&aTwoja działka używa teraz biomu {BIOME}.'
 admin_plots_usage: '&eUżycie: /agadmin plots <player>'
 admin_plots_none: '&e{PLAYER} nie ma działek.'
 admin_help_plots: '&e/agadmin plots <player> &8- Przeglądaj działki gracza'
+
+grief_alert_staff: '&c[GriefWatch] &f{PLAYER} &czostał zablokowany &f{COUNT} &crazy na ''{PLOT}'' - możliwa próba griefingu.'
+admin_help_inspect: '&e/agadmin inspect [gracz] &8- Sprawdź działkę szczegółowo'
+admin_inspect_none: '&cNie stoisz na żadnej działce.'

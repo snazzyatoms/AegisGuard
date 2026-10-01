@@ -187,7 +187,7 @@ public class AdminPlotInspectGUI {
                 if (plot.getOwner() != null) {
                     plugin.gui().plotList().openFor(player, plot.getOwner(), plot.getOwnerName(), 0);
                 } else {
-                    plugin.gui().plotList().open(player);
+                    plugin.gui().plotList().open(player, 0);
                 }
             }
             case "inspect_delete" -> {

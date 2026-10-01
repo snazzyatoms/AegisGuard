@@ -42,6 +42,7 @@ import com.aegisguard.succession.StewardshipGUI;
 import com.aegisguard.caravans.CaravanGUI;
 import com.aegisguard.gatherings.GatheringGUI;
 import com.aegisguard.gui.AdminGUI.AdminHolder;
+import com.aegisguard.gui.AdminPlotInspectGUI.InspectHolder;
 import com.aegisguard.gui.AdminPlotListGUI.PlotListHolder;
 import com.aegisguard.gui.ClaimBlockExchangeGUI.ExchangeHolder;
 import com.aegisguard.gui.DoctorRepairGUI.DoctorHolder;
@@ -152,6 +153,7 @@ public class GUIListener implements Listener {
                 || holder instanceof DoctorHolder
                 || holder instanceof WorldControlsHolder
                 || holder instanceof PlotListHolder
+                || holder instanceof InspectHolder
                 || holder instanceof PlotSelectorHolder
                 || holder instanceof RolesMenuHolder
                 || holder instanceof RoleAddHolder
@@ -305,6 +307,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof PlotListHolder castHolder) {
             plugin.gui().plotList().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof InspectHolder castHolder) {
+            plugin.gui().adminInspect().handleClick(player, e, castHolder);
         }
         else if (holder instanceof PlotSelectorHolder castHolder) {
             plugin.gui().roles().handlePlotSelectorClick(player, e, castHolder);

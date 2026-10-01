@@ -1237,3 +1237,7 @@ biome_applied: '&aTu parcela ahora usa el bioma {BIOME}.'
 admin_plots_usage: '&eUso: /agadmin plots <player>'
 admin_plots_none: '&e{PLAYER} no tiene parcelas.'
 admin_help_plots: '&e/agadmin plots <player> &8- Ver las parcelas de un jugador'
+
+grief_alert_staff: '&c[GriefWatch] &f{PLAYER} &cfue bloqueado &f{COUNT} &cveces en ''{PLOT}'' - posible intento de grief.'
+admin_help_inspect: '&e/agadmin inspect [jugador] &8- Inspeccionar una parcela en detalle'
+admin_inspect_none: '&cNo estás dentro de una parcela.'

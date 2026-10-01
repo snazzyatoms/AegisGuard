@@ -1254,3 +1254,7 @@ biome_applied: '&aDein Grundstück nutzt jetzt das Biom {BIOME}.'
 admin_plots_usage: '&eVerwendung: /agadmin plots <player>'
 admin_plots_none: '&e{PLAYER} hat keine Grundstücke.'
 admin_help_plots: '&e/agadmin plots <player> &8- Grundstücke eines Spielers ansehen'
+
+grief_alert_staff: '&c[GriefWatch] &f{PLAYER} &cwurde &f{COUNT} &cmal auf ''{PLOT}'' abgelehnt - möglicher Grief-Versuch.'
+admin_help_inspect: '&e/agadmin inspect [spieler] &8- Ein Grundstück im Detail prüfen'
+admin_inspect_none: '&cDu stehst in keinem Grundstück.'

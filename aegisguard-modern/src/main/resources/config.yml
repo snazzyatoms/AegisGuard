@@ -1670,8 +1670,16 @@ protections:
   fire-spread: true
   piston-use: true
   # Block water/lava/dragon-egg flow across claim borders (BlockFromTo).
-  # Also seeds the player-facing liquid-flow plot flag on new claims.
+  # Also blocks dispensers injecting liquid sources into claims, and seeds the
+  # player-facing liquid-flow plot flag on new claims.
   liquid_flow: true
+
+  # Staff grief-attempt alerts: after this many denied protection actions on the
+  # same claim inside the window, online staff with aegis.admin.alerts (or
+  # aegis.admin) get one rate-limited notification. Set threshold to 0 to disable.
+  grief_alert_threshold: 12
+  grief_alert_window_seconds: 60
+  grief_alert_cooldown_seconds: 120
 
   # 1.3.0 hero-pack ward defaults (GREEN=protected). Missing keys on existing
   # plots still default protected in ProtectionManager.isFlagEnabled.

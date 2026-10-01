@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
@@ -37,6 +38,7 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
@@ -109,6 +111,42 @@ public class BlockProtectionListener implements Listener {
         if (protectFrom || protectTo) {
             e.setCancelled(true);
         }
+    }
+
+    /**
+     * Block dispensers injecting liquid source blocks across claim borders. BlockFromToEvent only
+     * catches liquid that *spreads* after the source lands — a dispenser placed outside a claim and
+     * facing inward places the source block itself inside the protected region. Same-claim
+     * dispensers keep working; governed by the same liquid-flow ward and master switch as flow.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockDispense(BlockDispenseEvent e) {
+        if (!plugin.cfg().liquidFlowProtection()) return;
+
+        ItemStack item = e.getItem();
+        if (item == null || !isLiquidBucket(item.getType())) return;
+
+        Block dispenser = e.getBlock();
+        if (!(dispenser.getBlockData() instanceof org.bukkit.block.data.Directional directional)) return;
+        Block target = dispenser.getRelative(directional.getFacing());
+
+        Plot targetPlot = plugin.store().getPlotAt(target.getLocation());
+        if (targetPlot == null) return;
+
+        Plot dispenserPlot = plugin.store().getPlotAt(dispenser.getLocation());
+        if (dispenserPlot != null && dispenserPlot.getPlotId().equals(targetPlot.getPlotId())) return;
+
+        if (plugin.protection().isFlagEnabled(targetPlot, "liquid-flow")) {
+            e.setCancelled(true);
+        }
+    }
+
+    private boolean isLiquidBucket(Material type) {
+        return switch (type) {
+            case WATER_BUCKET, LAVA_BUCKET, POWDER_SNOW_BUCKET, COD_BUCKET, SALMON_BUCKET,
+                    PUFFERFISH_BUCKET, TROPICAL_FISH_BUCKET, AXOLOTL_BUCKET, TADPOLE_BUCKET -> true;
+            default -> false;
+        };
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)

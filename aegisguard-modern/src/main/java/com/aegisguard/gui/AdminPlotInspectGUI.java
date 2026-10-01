@@ -13,7 +13,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +68,7 @@ public class AdminPlotInspectGUI {
         Inventory inv = Bukkit.createInventory(holder, 54, title);
         holder.setInventory(inv);
 
-        ItemStack filler = plugin.gui().getFillerItem();
+        ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
         // Owner head
@@ -91,57 +90,63 @@ public class AdminPlotInspectGUI {
                 ? plugin.gui().tr(player, "admin_plot_world_unknown", "Unknown") : plot.getWorld();
         int sizeX = Math.abs(plot.getX2() - plot.getX1()) + 1;
         int sizeZ = Math.abs(plot.getZ2() - plot.getZ1()) + 1;
-        inv.setItem(20, item(Material.COMPASS, "admin_inspect_location", "&eLocation",
-                List.of(
-                        "&7World: &f" + world,
-                        "&7From: &a" + plot.getX1() + ", " + plot.getZ1(),
-                        "&7To: &a" + plot.getX2() + ", " + plot.getZ2(),
-                        "&7Size: &f" + sizeX + "x" + sizeZ)));
+        inv.setItem(20, card(player, Material.COMPASS, "admin_inspect_location", "&eLocation",
+                "admin_inspect_location_lore",
+                List.of("&7World: &f{WORLD}", "&7From: &a{X1}, {Z1}", "&7To: &a{X2}, {Z2}",
+                        "&7Size: &f{SIZE}"),
+                Map.of("WORLD", world, "X1", Integer.toString(plot.getX1()),
+                        "Z1", Integer.toString(plot.getZ1()), "X2", Integer.toString(plot.getX2()),
+                        "Z2", Integer.toString(plot.getZ2()), "SIZE", sizeX + "x" + sizeZ)));
 
         // Identity card
         String shortId = plot.getPlotId().toString();
         if (shortId.length() > 8) shortId = shortId.substring(0, 8);
         String biome = plot.getCustomBiome() == null || plot.getCustomBiome().isBlank()
                 ? "-" : plot.getCustomBiome();
-        inv.setItem(22, item(Material.NAME_TAG, "admin_inspect_identity", "&ePlot",
-                List.of(
-                        "&7ID: &f" + shortId,
-                        "&7Level: &b" + plot.getLevel(),
-                        "&7Biome: &f" + biome,
-                        "&7Trusted: &f" + plot.countTrustedMembers(),
-                        "&7Flags set: &f" + plot.getFlags().size())));
+        inv.setItem(22, card(player, Material.NAME_TAG, "admin_inspect_identity", "&ePlot",
+                "admin_inspect_identity_lore",
+                List.of("&7ID: &f{ID}", "&7Level: &b{LEVEL}", "&7Biome: &f{BIOME}",
+                        "&7Trusted: &f{TRUSTED}", "&7Flags set: &f{FLAGS}"),
+                Map.of("ID", shortId, "LEVEL", Integer.toString(plot.getLevel()), "BIOME", biome,
+                        "TRUSTED", Integer.toString(plot.countTrustedMembers()),
+                        "FLAGS", Integer.toString(plot.getFlags().size()))));
 
         // Status card
-        List<String> status = new ArrayList<>();
-        status.add(plot.isServerZone() ? "&cServer Zone" : "&7Player claim");
-        status.add(plot.isLockdownActive() ? "&4LOCKDOWN active" : "&7No lockdown");
-        inv.setItem(24, item(Material.OBSERVER, "admin_inspect_status", "&eStatus", status));
+        inv.setItem(24, card(player, Material.OBSERVER, "admin_inspect_status", "&eStatus",
+                "admin_inspect_status_lore",
+                List.of("{ZONE}", "{LOCKDOWN}"),
+                Map.of("ZONE", plot.isServerZone()
+                                ? plugin.gui().tr(player, "admin_inspect_zone_server", "&cServer Zone")
+                                : plugin.gui().tr(player, "admin_inspect_zone_player", "&7Player claim"),
+                        "LOCKDOWN", plot.isLockdownActive()
+                                ? plugin.gui().tr(player, "admin_inspect_lockdown_on", "&4Lockdown active")
+                                : plugin.gui().tr(player, "admin_inspect_lockdown_off", "&7No lockdown"))));
 
         // Teleport
-        inv.setItem(38, tagged(Material.ENDER_PEARL, "inspect_teleport",
-                plugin.gui().tr(player, "admin_inspect_teleport", "&aTeleport to Plot"),
-                plugin.gui().trList(player, "admin_inspect_teleport_lore",
-                        List.of("&7Teleport to this claim's center."))));
+        inv.setItem(38, actionItem(Material.ENDER_PEARL, "inspect_teleport", player,
+                "admin_inspect_teleport", "&aTeleport to Plot",
+                "admin_inspect_teleport_lore",
+                List.of("&7Teleport to this claim's center.")));
 
         // Open in registry (owner-filtered list)
-        inv.setItem(40, tagged(Material.BOOKSHELF, "inspect_registry",
-                plugin.gui().tr(player, "admin_inspect_registry", "&fOpen in Registry"),
-                plugin.gui().trList(player, "admin_inspect_registry_lore",
-                        List.of("&7Browse this owner's plots."))));
+        inv.setItem(40, actionItem(Material.BOOKSHELF, "inspect_registry", player,
+                "admin_inspect_registry", "&fOpen in Registry",
+                "admin_inspect_registry_lore",
+                List.of("&7Browse this owner's plots.")));
 
-        // Delete (destructive click)
-        inv.setItem(42, tagged(Material.TNT, "inspect_delete",
-                plugin.gui().tr(player, "admin_inspect_delete", "&cDelete Plot"),
-                plugin.gui().trList(player, "admin_inspect_delete_lore",
-                        List.of("&7Drop (Q) or sneak-click to delete.", "&cThis cannot be undone."))));
+        // Delete (destructive click only)
+        inv.setItem(42, actionItem(Material.TNT, "inspect_delete", player,
+                "admin_inspect_delete", "&cDelete Plot",
+                "admin_inspect_delete_lore",
+                List.of("&7Drop (Q) or sneak-click to delete.", "&cThis cannot be undone.")));
 
         // Footer
-        inv.setItem(49, tagged(Material.NETHER_STAR, "back_admin",
-                plugin.gui().tr(player, "button_back_admin", "&fBack to Admin"),
-                plugin.gui().trList(player, "back_admin_lore", List.of("&7Return to Admin Menu."))));
-        inv.setItem(50, tagged(Material.BARRIER, "close_menu",
-                plugin.gui().tr(player, "button_exit", "&c✖ Close"),
-                plugin.gui().trList(player, "exit_lore", List.of("&7Close this menu."))));
+        inv.setItem(49, actionItem(Material.NETHER_STAR, "back_admin", player,
+                "button_back_admin", "&fBack to Admin",
+                "back_admin_lore", List.of("&7Return to Admin Menu.")));
+        inv.setItem(50, actionItem(Material.BARRIER, "close_menu", player,
+                "button_exit", "&c✖ Close",
+                "exit_lore", List.of("&7Close this menu.")));
 
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
@@ -158,7 +163,7 @@ public class AdminPlotInspectGUI {
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
 
-        String action = actionOf(clicked);
+        String action = plugin.gui().getAction(clicked);
         if (action == null) return;
         Plot plot = holder.getPlot();
 
@@ -212,38 +217,22 @@ public class AdminPlotInspectGUI {
         }
     }
 
-    private ItemStack item(Material material, String nameKey, String fallback, List<String> loreFallback) {
-        ItemStack stack = GUIManager.createItem(material, GUIManager.color("&f" + fallback), null);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            List<String> lore = new ArrayList<>();
-            for (String line : loreFallback) lore.add(GUIManager.color(line));
-            meta.setLore(lore);
-            stack.setItemMeta(meta);
-        }
-        return stack;
+    /** Info card: localized name + localized lore with {PLACEHOLDER} substitution. */
+    private ItemStack card(Player player, Material material, String nameKey, String nameFallback,
+                           String loreKey, List<String> loreFallback, Map<String, String> vars) {
+        return GUIManager.createItem(material,
+                plugin.gui().tr(player, nameKey, nameFallback, vars),
+                plugin.gui().trList(player, loreKey, loreFallback, vars));
     }
 
-    private ItemStack tagged(Material material, String action, String name, List<String> lore) {
-        ItemStack stack = GUIManager.createItem(material, GUIManager.color(name), lore == null ? null
-                : lore.stream().map(GUIManager::color).toList());
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.getPersistentDataContainer().set(plugin.gui().getKeyAction(),
-                    org.bukkit.persistence.PersistentDataType.STRING, action);
-            stack.setItemMeta(meta);
-        }
+    /** Clickable item carrying a PDC action tag. */
+    private ItemStack actionItem(Material material, String action, Player player,
+                                 String nameKey, String nameFallback,
+                                 String loreKey, List<String> loreFallback) {
+        ItemStack stack = GUIManager.createItem(material,
+                plugin.gui().tr(player, nameKey, nameFallback),
+                plugin.gui().trList(player, loreKey, loreFallback));
+        plugin.gui().tagAction(stack, action);
         return stack;
-    }
-
-    private String actionOf(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return null;
-        try {
-            return meta.getPersistentDataContainer().get(plugin.gui().getKeyAction(),
-                    org.bukkit.persistence.PersistentDataType.STRING);
-        } catch (Throwable ignored) {
-            return null;
-        }
     }
 }

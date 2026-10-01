@@ -47,6 +47,7 @@ public class GUIManager {
     // Admin
     private final AdminGUI adminGUI;
     private final AdminPlotListGUI adminPlotListGUI;
+    private final AdminPlotInspectGUI adminPlotInspectGUI;
     private final DoctorRepairGUI doctorRepairGUI;
     private final WorldControlsGUI worldControlsGUI;
     private final ExpansionRequestGUI expansionRequestGUI;
@@ -150,6 +151,7 @@ public class GUIManager {
         this.rolesGUI = new RolesGUI(plugin);
         this.plotFlagsGUI = new PlotFlagsGUI(plugin);
         this.adminPlotListGUI = new AdminPlotListGUI(plugin);
+        this.adminPlotInspectGUI = new AdminPlotInspectGUI(plugin);
         this.doctorRepairGUI = new DoctorRepairGUI(plugin);
         this.worldControlsGUI = new WorldControlsGUI(plugin);
         this.plotCosmeticsGUI = new PlotCosmeticsGUI(plugin);
@@ -290,6 +292,7 @@ public class GUIManager {
     // Admin & Staff
     public AdminGUI admin() { return adminGUI; }
     public AdminPlotListGUI plotList() { return adminPlotListGUI; }
+    public AdminPlotInspectGUI adminInspect() { return adminPlotInspectGUI; }
     public DoctorRepairGUI doctor() { return doctorRepairGUI; }
     public WorldControlsGUI worldControls() { return worldControlsGUI; }
     public ExpansionRequestGUI expansionRequest() { return expansionRequestGUI; }

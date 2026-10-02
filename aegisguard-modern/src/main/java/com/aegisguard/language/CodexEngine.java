@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
@@ -86,7 +87,7 @@ public class CodexEngine {
     private final Map<String, Map<String, Object>> fallbackStyleLeaves = new HashMap<>();
 
     /** Per-player style cache (persisted in config.yml). */
-    private final Map<UUID, String> playerStyles = new HashMap<>();
+    private final Map<UUID, String> playerStyles = new ConcurrentHashMap<>();
 
     public CodexEngine(AegisGuard plugin) {
         this.plugin = plugin;
@@ -492,14 +493,19 @@ public class CodexEngine {
         String stored = plugin.getConfig().getString(PLAYER_STYLE_PATH + "." + id, null);
         stored = normalizeStyleId(stored);
 
-        rw.writeLock().lock();
+        // This method runs inside callers (tr/trList -> resolveStyle) that already hold the
+        // READ lock. ReentrantReadWriteLock cannot upgrade read->write, so taking writeLock
+        // here deadlocks the calling thread forever (observed hanging /ag menu). The cache
+        // map is concurrent, so the write only needs the read lock to safely consult
+        // availableStyles.
+        rw.readLock().lock();
         try {
             if (!stored.isEmpty() && availableStyles.contains(stored)) {
                 playerStyles.put(id, stored);
                 return stored;
             }
         } finally {
-            rw.writeLock().unlock();
+            rw.readLock().unlock();
         }
 
         return safeDefaultStyle();

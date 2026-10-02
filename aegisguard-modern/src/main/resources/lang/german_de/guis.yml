@@ -4816,3 +4816,39 @@ interactables_toggle_lore:
 - '&7Glocken, Plattenspieler, Notenblöcke,'
 - '&7Kerzen, Töpfe und Dekor hier nutzen.'
 - '&eKlicken zum Umschalten.'
+
+travel_hub_title: '&bReisen'
+travel_hub_header: '&bReisezentrale'
+travel_hub_header_lore:
+- '&7Alle Wege zu reisen,'
+- '&7an einem Ort.'
+travel_hub_atlas: '&eReise-Atlas'
+travel_hub_atlas_lore:
+- '&7Durchstöbere Grundstücke, Warps'
+- '&7und öffentliche Ziele.'
+travel_hub_beacons: '&bTeleport-Beacons'
+travel_hub_beacons_lore:
+- '&7Verwalte und verlinke deine'
+- '&7Teleport-Beacons.'
+travel_hub_routes: '&aErkundungsrouten'
+travel_hub_routes_lore:
+- '&7Wandere Server-Routen ab'
+- '&7und entdecke Checkpoints.'
+travel_hub_discover: '&6Grundstücke entdecken'
+travel_hub_discover_lore:
+- '&7Öffentliche Grundstücke, die'
+- '&7du jetzt besuchen kannst.'
+travel_hub_home: '&aNach Hause'
+travel_hub_home_lore:
+- '&7Teleportiert dich zu deinem Grundstück.'
+travel_hub_spawn: '&aServer-Spawn'
+travel_hub_spawn_lore:
+- '&7Teleportiert dich zum Welt-Spawn.'
+travel_hub_unstuck: '&eFreikommen'
+travel_hub_unstuck_lore:
+- '&7Verlasse ein Gebiet, in dem'
+- '&7du feststeckst.'
+admin_plot_list_empty: '&7Keine Grundstücke'
+admin_plot_list_empty_lore:
+- '&7Keine Claims passen'
+- '&7zu diesem Filter.'

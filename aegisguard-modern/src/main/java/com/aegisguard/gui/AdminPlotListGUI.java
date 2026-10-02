@@ -143,6 +143,13 @@ public class AdminPlotListGUI {
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
+        if (allPlots.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER,
+                    tr(player, "admin_plot_list_empty", "&7No Plots Found"),
+                    plugin.gui().trList(player, "admin_plot_list_empty_lore", List.of(
+                            "&7No registered claims match", "&7this filter."))));
+        }
+
         // Preload localized lore templates (with fallbacks)
         String loreIdFmt = tr(player, "admin_plot_lore_id", "&7ID: &e{ID}");
         String loreWorldFolderFmt = tr(player, "admin_plot_lore_world_folder", "&7World Folder: &f{WORLD}");

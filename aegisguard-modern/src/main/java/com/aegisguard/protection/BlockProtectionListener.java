@@ -37,6 +37,7 @@ import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockShearEntityEvent;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.block.FluidLevelChangeEvent;
 import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.world.PortalCreateEvent;
@@ -150,6 +151,40 @@ public class BlockProtectionListener implements Listener {
 
         if (plugin.protection().isFlagEnabled(targetPlot, "liquid-flow")) {
             e.setCancelled(true);
+        }
+    }
+
+    /**
+     * The reverse of the dispense fix above: a dispenser holding an empty bucket just
+     * outside a claim can drain a water/lava source inside the border. The event fires on
+     * the fluid block without naming the actor, so we scan the adjacent faces for an
+     * out-of-plot dispenser pointed at the fluid. Same-claim dispensers keep working.
+     */
+    private static final BlockFace[] DRAIN_FACES = {
+            BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST,
+            BlockFace.UP, BlockFace.DOWN
+    };
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onFluidLevelChange(FluidLevelChangeEvent e) {
+        Plot fluidPlot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (fluidPlot == null) return;
+        if (!plugin.protection().isFlagEnabled(fluidPlot, "liquid-flow")) return;
+
+        for (BlockFace face : DRAIN_FACES) {
+            Block rel = e.getBlock().getRelative(face);
+            if (rel.getType() != Material.DISPENSER) continue;
+            if (!(rel.getBlockData() instanceof org.bukkit.block.data.Directional dir)) continue;
+            // The dispenser must be facing the fluid to drain it: dispenser sits at `face`
+            // offset from the fluid, so it drains when it faces back toward the fluid.
+            if (dir.getFacing() != face.getOppositeFace()) continue;
+
+            Plot dispenserPlot = plugin.store().getPlotAt(rel.getLocation());
+            if (dispenserPlot == null
+                    || !dispenserPlot.getPlotId().equals(fluidPlot.getPlotId())) {
+                e.setCancelled(true);
+                return;
+            }
         }
     }
 

@@ -98,7 +98,7 @@ public final class Modules {
     public static Id commandModule(String subcommand) {
         if (subcommand == null || subcommand.isBlank()) return null;
         return switch (subcommand.toLowerCase(Locale.ROOT)) {
-            case "visit", "home" -> Id.TRAVEL;
+            case "visit", "home", "travel" -> Id.TRAVEL;
             case "stuck" -> Id.UNSTUCK;
             case "profile", "welcome", "farewell", "setdesc", "notice" -> Id.REALM_PROFILES;
             case "guide" -> Id.FIRST_CLAIM_WALKTHROUGH;

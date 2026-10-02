@@ -4814,3 +4814,39 @@ interactables_toggle_lore:
 - '&7campane, jukebox, blocchi musicali,'
 - '&7candele, vasi e altri decori qui.'
 - '&eClicca per attivare/disattivare.'
+
+travel_hub_title: '&bViaggi'
+travel_hub_header: '&bHub di Viaggio'
+travel_hub_header_lore:
+- '&7Tutti i modi per spostarsi,'
+- '&7in un solo posto.'
+travel_hub_atlas: '&eAtlante di Viaggio'
+travel_hub_atlas_lore:
+- '&7Sfoglia lotti, warp e'
+- '&7destinazioni pubbliche.'
+travel_hub_beacons: '&bFari di Teletrasporto'
+travel_hub_beacons_lore:
+- '&7Gestisci e collega i tuoi'
+- '&7fari di teletrasporto.'
+travel_hub_routes: '&aRotte di Esplorazione'
+travel_hub_routes_lore:
+- '&7Percorri le rotte del server'
+- '&7e scopri i checkpoint.'
+travel_hub_discover: '&6Scopri Lotti'
+travel_hub_discover_lore:
+- '&7Lotti pubblici che puoi'
+- '&7visitare subito.'
+travel_hub_home: '&aVai a Casa'
+travel_hub_home_lore:
+- '&7Teletrasportati al tuo lotto.'
+travel_hub_spawn: '&aSpawn del Server'
+travel_hub_spawn_lore:
+- '&7Teletrasportati allo spawn del mondo.'
+travel_hub_unstuck: '&eSbloccati'
+travel_hub_unstuck_lore:
+- '&7Esci da un claim in cui'
+- '&7sei rimasto bloccato.'
+admin_plot_list_empty: '&7Nessun Lotto'
+admin_plot_list_empty_lore:
+- '&7Nessun claim corrisponde'
+- '&7a questo filtro.'

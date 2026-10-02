@@ -14,6 +14,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Phantom;
@@ -34,6 +35,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityBreedEvent;
@@ -47,6 +49,7 @@ import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -479,10 +482,25 @@ public class ProtectionManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onHostileTeleport(EntityTeleportEvent e) {
+        if (e.getTo() == null) return;
+
+        // Neutral teleporters blink across claim borders regardless of the mob-barrier
+        // module — endermen and shulkers are gated under the mob-griefing ward instead.
+        EntityType teleportType = e.getEntityType();
+        if (teleportType == EntityType.ENDERMAN || teleportType == EntityType.SHULKER) {
+            Plot destination = plugin.store().getPlotAt(e.getTo());
+            if (destination == null) return;
+            Plot origin = plugin.store().getPlotAt(e.getFrom());
+            if (!isSamePlot(origin, destination)
+                    && isProtectionActive(destination, "mob-griefing", true)) {
+                e.setCancelled(true);
+            }
+            return;
+        }
+
         if (!plugin.cfg().raw().getBoolean("mob_barrier.enabled", false)
                 || !plugin.cfg().raw().getBoolean("mob_barrier.block_boundary_entry", true)
-                || !isHostileMob(e.getEntity())
-                || e.getTo() == null) {
+                || !isHostileMob(e.getEntity())) {
             return;
         }
 
@@ -1433,7 +1451,10 @@ public class ProtectionManager implements Listener {
                 || name.endsWith("_CAULDRON")
                 || name.startsWith("POTTED_")
                 || name.endsWith("_CANDLE")
-                || name.endsWith("_CANDLE_CAKE");
+                || name.endsWith("_CANDLE_CAKE")
+                // All standing/wall/hanging sign variants end in SIGN — right-clicking an
+                // unwaxed sign opens the text editor, so they belong under interactables.
+                || name.endsWith("SIGN");
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -1457,6 +1478,64 @@ public class ProtectionManager implements Listener {
             e.setCancelled(true);
             DenialGuidance.send(plugin, p, plot, "INTERACT", "cannot_interact");
             plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
+        }
+    }
+
+    /**
+     * Defense in depth behind the interactables interact check: the event fires when the
+     * sign's text is actually applied (also on placement write), so edits can't slip
+     * through even if the editor somehow opened.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onSignEdit(SignChangeEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(e.getBlock().getLocation(), p, HookAction.REDSTONE_INTERACT)) {
+            return;
+        }
+
+        if (isProtectionActive(plot, "interactables", true)
+                && !plot.canInteractAt(p, e.getBlock().getLocation(), plugin, "INTERACT")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "INTERACT", "cannot_interact");
+            plugin.effects().playEffect("redstone", "deny", p, e.getBlock().getLocation());
+        }
+    }
+
+    /**
+     * Scooping a fish/axolotl/tadpole into a bucket fires neither an interact nor a damage
+     * event — it's its own event — so it bypassed the animals ward and allowed pet theft.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBucketScoopEntity(PlayerBucketEntityEvent e) {
+        Entity target = e.getEntity();
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(target.getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(target.getLocation(), p, HookAction.ANIMAL_INTERACT)) {
+            return;
+        }
+
+        Boolean animalsOverride = plot.resolveRoleFlagOverride(p.getUniqueId(), "animals");
+        if (animalsOverride != null) {
+            if (!animalsOverride) {
+                e.setCancelled(true);
+                plugin.effects().playEffect("animals", "deny", p, target.getLocation());
+            }
+            return;
+        }
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.hasPermission(p.getUniqueId(), "ANIMALS", plugin)) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "ANIMALS", "cannot_interact");
+            plugin.effects().playEffect("animals", "deny", p, target.getLocation());
         }
     }
 }

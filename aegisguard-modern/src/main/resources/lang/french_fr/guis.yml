@@ -4818,3 +4818,39 @@ interactables_toggle_lore:
 - '&7gâteaux, cloches, jukeboxes, blocs'
 - '&7musicaux, bougies, pots et décors ici.'
 - '&eCliquez pour basculer.'
+
+travel_hub_title: '&bVoyages'
+travel_hub_header: '&bCentre de Voyage'
+travel_hub_header_lore:
+- '&7Toutes les façons de voyager,'
+- '&7en un seul endroit.'
+travel_hub_atlas: '&eAtlas de Voyage'
+travel_hub_atlas_lore:
+- '&7Parcourez parcelles, warps'
+- '&7et destinations publiques.'
+travel_hub_beacons: '&bBalises de Téléportation'
+travel_hub_beacons_lore:
+- '&7Gérez et reliez vos'
+- '&7balises de téléportation.'
+travel_hub_routes: '&aRoutes d''Exploration'
+travel_hub_routes_lore:
+- '&7Suivez les routes du serveur'
+- '&7et découvrez les étapes.'
+travel_hub_discover: '&6Découvrir des Parcelles'
+travel_hub_discover_lore:
+- '&7Parcelles publiques à'
+- '&7visiter maintenant.'
+travel_hub_home: '&aRentrer chez Soi'
+travel_hub_home_lore:
+- '&7Téléportez-vous à votre parcelle.'
+travel_hub_spawn: '&aSpawn du Serveur'
+travel_hub_spawn_lore:
+- '&7Téléportez-vous au spawn du monde.'
+travel_hub_unstuck: '&eSe Débloquer'
+travel_hub_unstuck_lore:
+- '&7Quittez un claim où vous'
+- '&7êtes coincé.'
+admin_plot_list_empty: '&7Aucune Parcelle'
+admin_plot_list_empty_lore:
+- '&7Aucun claim ne correspond'
+- '&7à ce filtre.'

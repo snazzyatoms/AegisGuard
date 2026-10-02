@@ -4494,3 +4494,39 @@ interactables_toggle_lore:
 - '&7campanas, tocadiscos, bloques de notas,'
 - '&7velas, macetas y otros bloques aquí.'
 - '&eClic para alternar.'
+
+travel_hub_title: '&bViajes'
+travel_hub_header: '&bCentro de Viajes'
+travel_hub_header_lore:
+- '&7Todas las formas de viajar,'
+- '&7en un solo lugar.'
+travel_hub_atlas: '&eAtlas de Viajes'
+travel_hub_atlas_lore:
+- '&7Explorá parcelas, warps y'
+- '&7destinos públicos.'
+travel_hub_beacons: '&bBalizas de Teleporte'
+travel_hub_beacons_lore:
+- '&7Administrá y enlazá tus'
+- '&7balizas de teletransporte.'
+travel_hub_routes: '&aRutas de Exploración'
+travel_hub_routes_lore:
+- '&7Recorré rutas del servidor'
+- '&7y descubrí puntos.'
+travel_hub_discover: '&6Descubrir Parcelas'
+travel_hub_discover_lore:
+- '&7Parcelas públicas que podés'
+- '&7visitar ahora.'
+travel_hub_home: '&aIr a Casa'
+travel_hub_home_lore:
+- '&7Teletransportate a tu parcela.'
+travel_hub_spawn: '&aSpawn del Servidor'
+travel_hub_spawn_lore:
+- '&7Teletransportate al spawn del mundo.'
+travel_hub_unstuck: '&eDesatascar'
+travel_hub_unstuck_lore:
+- '&7Salí de un claim en el que'
+- '&7estés atascado.'
+admin_plot_list_empty: '&7Sin Parcelas'
+admin_plot_list_empty_lore:
+- '&7Ningún claim coincide'
+- '&7con este filtro.'

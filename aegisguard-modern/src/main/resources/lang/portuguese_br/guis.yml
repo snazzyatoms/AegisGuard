@@ -4814,3 +4814,39 @@ interactables_toggle_lore:
 - '&7sinos, jukeboxes, blocos de notas,'
 - '&7velas, vasos e outros blocos aqui.'
 - '&eClique para alternar.'
+
+travel_hub_title: '&bViagens'
+travel_hub_header: '&bCentral de Viagens'
+travel_hub_header_lore:
+- '&7Todas as formas de viajar,'
+- '&7em um só lugar.'
+travel_hub_atlas: '&eAtlas de Viagens'
+travel_hub_atlas_lore:
+- '&7Navegue por terrenos, warps'
+- '&7e destinos públicos.'
+travel_hub_beacons: '&bBeacons de Teleporte'
+travel_hub_beacons_lore:
+- '&7Gerencie e vincule seus'
+- '&7beacons de teletransporte.'
+travel_hub_routes: '&aRotas de Exploração'
+travel_hub_routes_lore:
+- '&7Percorra rotas do servidor'
+- '&7e descubra checkpoints.'
+travel_hub_discover: '&6Descobrir Terrenos'
+travel_hub_discover_lore:
+- '&7Terrenos públicos que você'
+- '&7pode visitar agora.'
+travel_hub_home: '&aIr para Casa'
+travel_hub_home_lore:
+- '&7Teleporte para o seu terreno.'
+travel_hub_spawn: '&aSpawn do Servidor'
+travel_hub_spawn_lore:
+- '&7Teleporte para o spawn do mundo.'
+travel_hub_unstuck: '&eDestravar'
+travel_hub_unstuck_lore:
+- '&7Saia de um terreno onde'
+- '&7você está preso.'
+admin_plot_list_empty: '&7Nenhum Terreno'
+admin_plot_list_empty_lore:
+- '&7Nenhum claim corresponde'
+- '&7a este filtro.'

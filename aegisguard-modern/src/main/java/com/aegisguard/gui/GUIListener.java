@@ -24,6 +24,7 @@ import com.aegisguard.routes.RoutesGUI.RoutesMenuHolder;
 import com.aegisguard.routes.RoutesGUI.RouteDetailHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteAdminHolder;
 import com.aegisguard.routes.RouteAdminGUI.RouteEditHolder;
+import com.aegisguard.gui.TravelHubGUI.TravelHubHolder;
 import com.aegisguard.season.SeasonAdminGUI;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceMenuHolder;
 import com.aegisguard.alliance.AllianceAccessGUI.AllianceConfirmHolder;
@@ -214,6 +215,7 @@ public class GUIListener implements Listener {
                 || holder instanceof NoticeboardHolder
                 || holder instanceof WalkthroughHolder
                 || holder instanceof RoutesMenuHolder
+                || holder instanceof TravelHubHolder
                 || holder instanceof RouteDetailHolder
                 || holder instanceof RouteAdminHolder
                 || holder instanceof RouteEditHolder
@@ -494,6 +496,9 @@ public class GUIListener implements Listener {
         }
         else if (holder instanceof WalkthroughHolder castHolder) {
             plugin.gui().walkthrough().handleClick(player, e, castHolder);
+        }
+        else if (holder instanceof TravelHubHolder castHolder) {
+            plugin.gui().travelHub().handleClick(player, e, castHolder);
         }
         else if (holder instanceof RoutesMenuHolder castHolder) {
             plugin.gui().routes().handleMenuClick(player, e, castHolder);
@@ -832,6 +837,10 @@ public class GUIListener implements Listener {
             return;
         }
 
+        if (holder instanceof TravelHubHolder) {
+            plugin.gui().travelHub().open(player);
+            return;
+        }
         if (holder instanceof RoutesMenuHolder castHolder) {
             plugin.gui().routes().open(player, castHolder.getPage());
             return;

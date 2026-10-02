@@ -5691,3 +5691,63 @@ interactables_toggle_lore:
 - '&7gâteaux, cloches, jukeboxes, blocs'
 - '&7musicaux, bougies, pots et décors ici.'
 - '&eCliquez pour basculer.'
+
+travel_hub_title: '&bVoyages'
+travel_hub_header: '&bCentre de Voyage'
+travel_hub_header_lore:
+- '&7Toutes les façons de voyager,'
+- '&7en un seul endroit.'
+travel_hub_atlas: '&eAtlas de Voyage'
+travel_hub_atlas_lore:
+- '&7Parcourez parcelles, warps'
+- '&7et destinations publiques.'
+travel_hub_beacons: '&bBalises de Téléportation'
+travel_hub_beacons_lore:
+- '&7Gérez et reliez vos'
+- '&7balises de téléportation.'
+travel_hub_routes: '&aRoutes d''Exploration'
+travel_hub_routes_lore:
+- '&7Suivez les routes du serveur'
+- '&7et découvrez les étapes.'
+travel_hub_discover: '&6Découvrir des Parcelles'
+travel_hub_discover_lore:
+- '&7Parcelles publiques à'
+- '&7visiter maintenant.'
+travel_hub_home: '&aRentrer chez Soi'
+travel_hub_home_lore:
+- '&7Téléportez-vous à votre parcelle.'
+travel_hub_spawn: '&aSpawn du Serveur'
+travel_hub_spawn_lore:
+- '&7Téléportez-vous au spawn du monde.'
+travel_hub_unstuck: '&eSe Débloquer'
+travel_hub_unstuck_lore:
+- '&7Quittez un claim où vous'
+- '&7êtes coincé.'
+admin_plot_list_empty: '&7Aucune Parcelle'
+admin_plot_list_empty_lore:
+- '&7Aucun claim ne correspond'
+- '&7à ce filtre.'
+help_hint: '&7Utilisez &e/ag help <catégorie> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Commandes essentielles :'
+help_unknown_category: '&cCatégorie inconnue. Essayez : &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Rien de documenté ici — voyez &e/ag help&7.'
+help_category_claims: '&e— Claims et parcelles —'
+help_category_members: '&e— Membres et rôles —'
+help_category_flags: '&e— Drapeaux et protection —'
+help_category_economy: '&e— Économie et marché —'
+help_category_travel: '&e— Voyage et exploration —'
+help_category_social: '&e— Social et communauté —'
+help_category_admin: '&e— Administration —'
+help_lines_extra:
+- '&e/aegis roles &7- Gérez les rôles et permissions des membres.'
+- '&e/aegis ban <joueur> &7- Bannissez un joueur de votre parcelle.'
+- '&e/aegis unban <joueur> &7- Levez un bannissement.'
+- '&e/aegis kick <joueur> &7- Expulsez un visiteur de votre parcelle.'
+- '&e/aegis travel &7- Ouvrez le centre de voyage.'
+- '&e/aegis beacon &7- Gérez les balises de téléportation.'
+- '&e/aegis biome &7- Choisissez un biome pour votre parcelle.'
+- '&e/aegis level &7- Consultez le niveau de votre parcelle.'
+- '&e/aegis cost &7- Prévisualisez les coûts de claim.'
+- '&e/aegis notify &7- Gérez les notifications.'
+- '&e/aegis zone &7- Gérez les sous-zones.'
+- '&e/aegis succession &7- Gérez les héritiers de la parcelle.'

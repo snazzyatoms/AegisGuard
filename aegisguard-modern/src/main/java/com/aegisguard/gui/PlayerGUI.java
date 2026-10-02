@@ -538,7 +538,7 @@ public class PlayerGUI {
             }
             case SLOT_SHORTCUT_TRAVEL -> {
                 if (!mod(com.aegisguard.config.Modules.Id.TRAVEL)) return false;
-                plugin.gui().visit().open(player, 0, VisitGUI.VisitMode.WARPS);
+                plugin.gui().travelHub().open(player);
                 return true;
             }
             case SLOT_SHORTCUT_MARKET -> {

@@ -5343,3 +5343,63 @@ interactables_toggle_lore:
 - '&7campanas, tocadiscos, bloques de notas,'
 - '&7velas, macetas y otros bloques aquí.'
 - '&eClic para alternar.'
+
+travel_hub_title: '&bViajes'
+travel_hub_header: '&bCentro de Viajes'
+travel_hub_header_lore:
+- '&7Todas las formas de viajar,'
+- '&7en un solo lugar.'
+travel_hub_atlas: '&eAtlas de Viajes'
+travel_hub_atlas_lore:
+- '&7Explorá parcelas, warps y'
+- '&7destinos públicos.'
+travel_hub_beacons: '&bBalizas de Teleporte'
+travel_hub_beacons_lore:
+- '&7Administrá y enlazá tus'
+- '&7balizas de teletransporte.'
+travel_hub_routes: '&aRutas de Exploración'
+travel_hub_routes_lore:
+- '&7Recorré rutas del servidor'
+- '&7y descubrí puntos.'
+travel_hub_discover: '&6Descubrir Parcelas'
+travel_hub_discover_lore:
+- '&7Parcelas públicas que podés'
+- '&7visitar ahora.'
+travel_hub_home: '&aIr a Casa'
+travel_hub_home_lore:
+- '&7Teletransportate a tu parcela.'
+travel_hub_spawn: '&aSpawn del Servidor'
+travel_hub_spawn_lore:
+- '&7Teletransportate al spawn del mundo.'
+travel_hub_unstuck: '&eDesatascar'
+travel_hub_unstuck_lore:
+- '&7Salí de un claim en el que'
+- '&7estés atascado.'
+admin_plot_list_empty: '&7Sin Parcelas'
+admin_plot_list_empty_lore:
+- '&7Ningún claim coincide'
+- '&7con este filtro.'
+help_hint: '&7Usá &e/ag help <categoría> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Comandos esenciales:'
+help_unknown_category: '&cCategoría desconocida. Probá: &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Nada documentado aquí todavía — mirá &e/ag help&7.'
+help_category_claims: '&e— Claims y parcelas —'
+help_category_members: '&e— Miembros y roles —'
+help_category_flags: '&e— Flags y protección —'
+help_category_economy: '&e— Economía y mercado —'
+help_category_travel: '&e— Viajes y exploración —'
+help_category_social: '&e— Social y comunidad —'
+help_category_admin: '&e— Administración —'
+help_lines_extra:
+- '&e/aegis roles &7- Administrá roles y permisos de miembros.'
+- '&e/aegis ban <jugador> &7- Baneá a un jugador de tu parcela.'
+- '&e/aegis unban <jugador> &7- Levantá un ban.'
+- '&e/aegis kick <jugador> &7- Expulsá a un visitante de tu parcela.'
+- '&e/aegis travel &7- Abrí el centro de viajes.'
+- '&e/aegis beacon &7- Administrá balizas de teleporte.'
+- '&e/aegis biome &7- Elegí un bioma para tu parcela.'
+- '&e/aegis level &7- Mirá el nivel de tu parcela.'
+- '&e/aegis cost &7- Previsualizá costos de claim.'
+- '&e/aegis notify &7- Administrá notificaciones.'
+- '&e/aegis zone &7- Administrá subzonas.'
+- '&e/aegis succession &7- Administrá herederos de la parcela.'

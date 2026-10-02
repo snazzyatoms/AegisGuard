@@ -50,8 +50,13 @@ class Phase3TravelAtlasContractTest {
         String beaconGui = Files.readString(JAVA.resolve("beacon/BeaconGUI.java"));
         assertTrue(beaconGui.contains("openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS)"));
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
-        assertTrue(player.contains("visit().open(player, 0, VisitGUI.VisitMode.WARPS)"));
+        assertTrue(player.contains("travelHub().open(player)"),
+                "the travel shortcut now routes through the unified hub");
         assertFalse(player.contains("beacons().openManager"));
+        String hub = Files.readString(JAVA.resolve("gui/TravelHubGUI.java"));
+        assertTrue(hub.contains("visit().open(player, 0, VisitGUI.VisitMode.DISCOVER)")
+                || hub.contains("visit().open(player, 0, false)"),
+                "the hub must reach the atlas");
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("openManager"));

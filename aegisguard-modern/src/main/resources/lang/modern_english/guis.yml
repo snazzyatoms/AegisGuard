@@ -4812,3 +4812,39 @@ interactables_toggle_lore:
 - '&7jukeboxes, note blocks, candles, pots,'
 - '&7and other decor blocks here.'
 - '&eClick to toggle.'
+
+travel_hub_title: '&bTravel'
+travel_hub_header: '&bTravel Hub'
+travel_hub_header_lore:
+- '&7Every way to get around,'
+- '&7in one place.'
+travel_hub_atlas: '&eTravel Atlas'
+travel_hub_atlas_lore:
+- '&7Browse plots, warps, featured'
+- '&7and public destinations.'
+travel_hub_beacons: '&bTeleport Beacons'
+travel_hub_beacons_lore:
+- '&7Manage and link your'
+- '&7teleport beacons.'
+travel_hub_routes: '&aExploration Routes'
+travel_hub_routes_lore:
+- '&7Walk server routes and'
+- '&7discover checkpoints.'
+travel_hub_discover: '&6Discover Plots'
+travel_hub_discover_lore:
+- '&7Public plots you can'
+- '&7visit right now.'
+travel_hub_home: '&aGo Home'
+travel_hub_home_lore:
+- '&7Teleport to your plot home.'
+travel_hub_spawn: '&aServer Spawn'
+travel_hub_spawn_lore:
+- '&7Teleport to the world spawn.'
+travel_hub_unstuck: '&eUnstuck'
+travel_hub_unstuck_lore:
+- '&7Escape a claim you are'
+- '&7stuck inside of.'
+admin_plot_list_empty: '&7No Plots Found'
+admin_plot_list_empty_lore:
+- '&7No registered claims match'
+- '&7this filter.'

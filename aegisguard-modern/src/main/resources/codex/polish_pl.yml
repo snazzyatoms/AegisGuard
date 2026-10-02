@@ -5681,3 +5681,63 @@ interactables_toggle_lore:
 - '&7dzwonów, szaf grających, bloków'
 - '&7dźviękowych, świec i dekoracji.'
 - '&eKliknij, aby przełączyć.'
+
+travel_hub_title: '&bPodróże'
+travel_hub_header: '&bCentrum Podróży'
+travel_hub_header_lore:
+- '&7Wszystkie sposoby podróży,'
+- '&7w jednym miejscu.'
+travel_hub_atlas: '&eAtlas Podróży'
+travel_hub_atlas_lore:
+- '&7Przeglądaj działki, warpy'
+- '&7i publiczne cele.'
+travel_hub_beacons: '&bLatarnie Teleportacji'
+travel_hub_beacons_lore:
+- '&7Zarządzaj i łącz swoje'
+- '&7latarnie teleportacyjne.'
+travel_hub_routes: '&aTrasy Eksploracji'
+travel_hub_routes_lore:
+- '&7Przemierzaj trasy serwera'
+- '&7i odkrywaj punkty.'
+travel_hub_discover: '&6Odkryj Działki'
+travel_hub_discover_lore:
+- '&7Publiczne działki, które'
+- '&7możesz odwiedzić.'
+travel_hub_home: '&aDo Domu'
+travel_hub_home_lore:
+- '&7Teleportuj się do swojej działki.'
+travel_hub_spawn: '&aSpawn Serwera'
+travel_hub_spawn_lore:
+- '&7Teleportuj się na spawn świata.'
+travel_hub_unstuck: '&eUwolnij się'
+travel_hub_unstuck_lore:
+- '&7Wyjdź z claimu, w którym'
+- '&7utknąłeś.'
+admin_plot_list_empty: '&7Brak Działek'
+admin_plot_list_empty_lore:
+- '&7Żaden claim nie pasuje'
+- '&7do tego filtra.'
+help_hint: '&7Użyj &e/ag help <kategoria> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Podstawowe komendy:'
+help_unknown_category: '&cNieznana kategoria. Spróbuj: &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Nic tu jeszcze nie opisano — zobacz &e/ag help&7.'
+help_category_claims: '&e— Claimy i działki —'
+help_category_members: '&e— Członkowie i role —'
+help_category_flags: '&e— Flagi i ochrona —'
+help_category_economy: '&e— Ekonomia i rynek —'
+help_category_travel: '&e— Podróże i eksploracja —'
+help_category_social: '&e— Społeczność —'
+help_category_admin: '&e— Administracja —'
+help_lines_extra:
+- '&e/aegis roles &7- Zarządzaj rolami i uprawnieniami członków.'
+- '&e/aegis ban <gracz> &7- Zbanuj gracza na swojej działce.'
+- '&e/aegis unban <gracz> &7- Zdejmij bana.'
+- '&e/aegis kick <gracz> &7- Wyrzuć gościa ze swojej działki.'
+- '&e/aegis travel &7- Otwórz centrum podróży.'
+- '&e/aegis beacon &7- Zarządzaj latarniami teleportacji.'
+- '&e/aegis biome &7- Wybierz biom dla swojej działki.'
+- '&e/aegis level &7- Zobacz poziom swojej działki.'
+- '&e/aegis cost &7- Sprawdź koszt claimowania.'
+- '&e/aegis notify &7- Zarządzaj powiadomieniami.'
+- '&e/aegis zone &7- Zarządzaj podstrefami.'
+- '&e/aegis succession &7- Zarządzaj spadkobiercami działki.'

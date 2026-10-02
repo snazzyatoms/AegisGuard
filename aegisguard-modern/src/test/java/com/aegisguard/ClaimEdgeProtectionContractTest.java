@@ -120,6 +120,27 @@ class ClaimEdgeProtectionContractTest {
     }
 
     @Test
+    void residualVectorsClosed() throws Exception {
+        String bpl = Files.readString(JAVA.resolve("protection/BlockProtectionListener.java"));
+        assertTrue(bpl.contains("FluidLevelChangeEvent"),
+                "dispensers must not drain liquids across a claim border");
+        assertTrue(bpl.contains("DRAIN_FACES"),
+                "fluid drain must scan adjacent faces for the source dispenser");
+        assertTrue(bpl.contains("getOppositeFace"),
+                "only dispensers facing the fluid may drain it");
+
+        String pm = Files.readString(JAVA.resolve("protection/ProtectionManager.java"));
+        assertTrue(pm.contains("SignChangeEvent"),
+                "sign text edits inside claims must be protected");
+        assertTrue(pm.contains("endsWith(\"SIGN\")"),
+                "all sign variants must be interactables");
+        assertTrue(pm.contains("PlayerBucketEntityEvent"),
+                "bucket-scooping pets must respect the animals ward");
+        assertTrue(pm.contains("EntityType.ENDERMAN") && pm.contains("EntityType.SHULKER"),
+                "neutral teleporters must respect claim borders");
+    }
+
+    @Test
     void allLocalesHaveFlagStrings() throws Exception {
         for (String locale : LOCALES) {
             String guis = Files.readString(RES.resolve("lang/" + locale + "/guis.yml"));

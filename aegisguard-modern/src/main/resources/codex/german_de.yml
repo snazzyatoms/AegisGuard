@@ -5699,3 +5699,63 @@ interactables_toggle_lore:
 - '&7Glocken, Plattenspieler, Notenblöcke,'
 - '&7Kerzen, Töpfe und Dekor hier nutzen.'
 - '&eKlicken zum Umschalten.'
+
+travel_hub_title: '&bReisen'
+travel_hub_header: '&bReisezentrale'
+travel_hub_header_lore:
+- '&7Alle Wege zu reisen,'
+- '&7an einem Ort.'
+travel_hub_atlas: '&eReise-Atlas'
+travel_hub_atlas_lore:
+- '&7Durchstöbere Grundstücke, Warps'
+- '&7und öffentliche Ziele.'
+travel_hub_beacons: '&bTeleport-Beacons'
+travel_hub_beacons_lore:
+- '&7Verwalte und verlinke deine'
+- '&7Teleport-Beacons.'
+travel_hub_routes: '&aErkundungsrouten'
+travel_hub_routes_lore:
+- '&7Wandere Server-Routen ab'
+- '&7und entdecke Checkpoints.'
+travel_hub_discover: '&6Grundstücke entdecken'
+travel_hub_discover_lore:
+- '&7Öffentliche Grundstücke, die'
+- '&7du jetzt besuchen kannst.'
+travel_hub_home: '&aNach Hause'
+travel_hub_home_lore:
+- '&7Teleportiert dich zu deinem Grundstück.'
+travel_hub_spawn: '&aServer-Spawn'
+travel_hub_spawn_lore:
+- '&7Teleportiert dich zum Welt-Spawn.'
+travel_hub_unstuck: '&eFreikommen'
+travel_hub_unstuck_lore:
+- '&7Verlasse ein Gebiet, in dem'
+- '&7du feststeckst.'
+admin_plot_list_empty: '&7Keine Grundstücke'
+admin_plot_list_empty_lore:
+- '&7Keine Claims passen'
+- '&7zu diesem Filter.'
+help_hint: '&7Nutze &e/ag help <Kategorie> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Wichtigste Befehle:'
+help_unknown_category: '&cUnbekannte Kategorie. Versuche: &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Hier ist noch nichts dokumentiert — siehe &e/ag help&7.'
+help_category_claims: '&e— Claims & Grundstücke —'
+help_category_members: '&e— Mitglieder & Rollen —'
+help_category_flags: '&e— Flags & Schutz —'
+help_category_economy: '&e— Wirtschaft & Markt —'
+help_category_travel: '&e— Reisen & Erkundung —'
+help_category_social: '&e— Soziales & Community —'
+help_category_admin: '&e— Administration —'
+help_lines_extra:
+- '&e/aegis roles &7- Mitglieder-Rollen und Rechte verwalten.'
+- '&e/aegis ban <spieler> &7- Spieler von deinem Grundstück bannen.'
+- '&e/aegis unban <spieler> &7- Einen Bann aufheben.'
+- '&e/aegis kick <spieler> &7- Besucher von deinem Grundstück werfen.'
+- '&e/aegis travel &7- Die Reisezentrale öffnen.'
+- '&e/aegis beacon &7- Teleport-Beacons verwalten.'
+- '&e/aegis biome &7- Ein Biom für dein Grundstück wählen.'
+- '&e/aegis level &7- Das Level deines Grundstücks ansehen.'
+- '&e/aegis cost &7- Claim-Kosten anzeigen.'
+- '&e/aegis notify &7- Benachrichtigungen verwalten.'
+- '&e/aegis zone &7- Unterzonen verwalten.'
+- '&e/aegis succession &7- Erben des Grundstücks verwalten.'

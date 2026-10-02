@@ -77,7 +77,9 @@ class BeaconContractTest {
         String market = Files.readString(JAVA.resolve("gui/PlotMarketGUI.java"));
         assertTrue(market.contains("handlePublicListingTravel"));
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
-        assertTrue(player.contains("visit().open") || player.contains("openAtlas"));
+        assertTrue(player.contains("visit().open") || player.contains("openAtlas")
+                || player.contains("travelHub().open"),
+                "travel shortcut must reach the travel surface (now via the hub)");
         String visitGui = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
         assertTrue(visitGui.contains("AtlasTab"));
         assertTrue(visitGui.contains("openAtlas"));

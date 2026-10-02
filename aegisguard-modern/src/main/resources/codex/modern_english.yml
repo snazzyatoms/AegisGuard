@@ -5644,3 +5644,63 @@ interactables_toggle_lore:
 - '&7jukeboxes, note blocks, candles, pots,'
 - '&7and other decor blocks here.'
 - '&eClick to toggle.'
+
+travel_hub_title: '&bTravel'
+travel_hub_header: '&bTravel Hub'
+travel_hub_header_lore:
+- '&7Every way to get around,'
+- '&7in one place.'
+travel_hub_atlas: '&eTravel Atlas'
+travel_hub_atlas_lore:
+- '&7Browse plots, warps, featured'
+- '&7and public destinations.'
+travel_hub_beacons: '&bTeleport Beacons'
+travel_hub_beacons_lore:
+- '&7Manage and link your'
+- '&7teleport beacons.'
+travel_hub_routes: '&aExploration Routes'
+travel_hub_routes_lore:
+- '&7Walk server routes and'
+- '&7discover checkpoints.'
+travel_hub_discover: '&6Discover Plots'
+travel_hub_discover_lore:
+- '&7Public plots you can'
+- '&7visit right now.'
+travel_hub_home: '&aGo Home'
+travel_hub_home_lore:
+- '&7Teleport to your plot home.'
+travel_hub_spawn: '&aServer Spawn'
+travel_hub_spawn_lore:
+- '&7Teleport to the world spawn.'
+travel_hub_unstuck: '&eUnstuck'
+travel_hub_unstuck_lore:
+- '&7Escape a claim you are'
+- '&7stuck inside of.'
+admin_plot_list_empty: '&7No Plots Found'
+admin_plot_list_empty_lore:
+- '&7No registered claims match'
+- '&7this filter.'
+help_hint: '&7Use &e/ag help <category> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Essential commands:'
+help_unknown_category: '&cUnknown help category. Try: &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Nothing documented here yet — see &e/ag help&7 for all commands.'
+help_category_claims: '&e— Claiming & plots —'
+help_category_members: '&e— Members & roles —'
+help_category_flags: '&e— Flags & protection —'
+help_category_economy: '&e— Economy & market —'
+help_category_travel: '&e— Travel & exploration —'
+help_category_social: '&e— Social & community —'
+help_category_admin: '&e— Administration —'
+help_lines_extra:
+- '&e/aegis roles &7- Manage member roles and permissions.'
+- '&e/aegis ban <player> &7- Ban a player from your plot.'
+- '&e/aegis unban <player> &7- Lift a plot ban.'
+- '&e/aegis kick <player> &7- Kick a visitor out of your plot.'
+- '&e/aegis travel &7- Open the travel hub.'
+- '&e/aegis beacon &7- Manage teleport beacons.'
+- '&e/aegis biome &7- Pick a biome for your plot.'
+- '&e/aegis level &7- View your plot level.'
+- '&e/aegis cost &7- Preview claiming costs.'
+- '&e/aegis notify &7- Manage notification preferences.'
+- '&e/aegis zone &7- Manage sub-zones.'
+- '&e/aegis succession &7- Manage plot heirs.'

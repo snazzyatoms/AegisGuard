@@ -5689,3 +5689,63 @@ interactables_toggle_lore:
 - '&7campane, jukebox, blocchi musicali,'
 - '&7candele, vasi e altri decori qui.'
 - '&eClicca per attivare/disattivare.'
+
+travel_hub_title: '&bViaggi'
+travel_hub_header: '&bHub di Viaggio'
+travel_hub_header_lore:
+- '&7Tutti i modi per spostarsi,'
+- '&7in un solo posto.'
+travel_hub_atlas: '&eAtlante di Viaggio'
+travel_hub_atlas_lore:
+- '&7Sfoglia lotti, warp e'
+- '&7destinazioni pubbliche.'
+travel_hub_beacons: '&bFari di Teletrasporto'
+travel_hub_beacons_lore:
+- '&7Gestisci e collega i tuoi'
+- '&7fari di teletrasporto.'
+travel_hub_routes: '&aRotte di Esplorazione'
+travel_hub_routes_lore:
+- '&7Percorri le rotte del server'
+- '&7e scopri i checkpoint.'
+travel_hub_discover: '&6Scopri Lotti'
+travel_hub_discover_lore:
+- '&7Lotti pubblici che puoi'
+- '&7visitare subito.'
+travel_hub_home: '&aVai a Casa'
+travel_hub_home_lore:
+- '&7Teletrasportati al tuo lotto.'
+travel_hub_spawn: '&aSpawn del Server'
+travel_hub_spawn_lore:
+- '&7Teletrasportati allo spawn del mondo.'
+travel_hub_unstuck: '&eSbloccati'
+travel_hub_unstuck_lore:
+- '&7Esci da un claim in cui'
+- '&7sei rimasto bloccato.'
+admin_plot_list_empty: '&7Nessun Lotto'
+admin_plot_list_empty_lore:
+- '&7Nessun claim corrisponde'
+- '&7a questo filtro.'
+help_hint: '&7Usa &e/ag help <categoria> &7— &fclaims, members, flags, economy, travel, social, admin'
+help_essentials_header: '&6Comandi essenziali:'
+help_unknown_category: '&cCategoria sconosciuta. Prova: &fclaims, members, flags, economy, travel, social, admin'
+help_category_empty: '&7Nulla di documentato qui — vedi &e/ag help&7.'
+help_category_claims: '&e— Claim e lotti —'
+help_category_members: '&e— Membri e ruoli —'
+help_category_flags: '&e— Flag e protezioni —'
+help_category_economy: '&e— Economia e mercato —'
+help_category_travel: '&e— Viaggio ed esplorazione —'
+help_category_social: '&e— Social e comunità —'
+help_category_admin: '&e— Amministrazione —'
+help_lines_extra:
+- '&e/aegis roles &7- Gestisci ruoli e permessi dei membri.'
+- '&e/aegis ban <giocatore> &7- Banna un giocatore dal tuo lotto.'
+- '&e/aegis unban <giocatore> &7- Rimuovi un ban.'
+- '&e/aegis kick <giocatore> &7- Espelli un visitatore dal lotto.'
+- '&e/aegis travel &7- Apri l''hub di viaggio.'
+- '&e/aegis beacon &7- Gestisci i fari di teletrasporto.'
+- '&e/aegis biome &7- Scegli un bioma per il tuo lotto.'
+- '&e/aegis level &7- Vedi il livello del tuo lotto.'
+- '&e/aegis cost &7- Anteprima dei costi dei claim.'
+- '&e/aegis notify &7- Gestisci le notifiche.'
+- '&e/aegis zone &7- Gestisci le sottozone.'
+- '&e/aegis succession &7- Gestisci gli eredi del lotto.'

@@ -41,7 +41,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
             "wand", "menu", "claim", "quickclaim", "qc", "unclaim", "help",
             "setspawn", "home", "welcome", "farewell",
             "sell", "unsell", "rent", "unrent", "rental", "market", "auction",
-            "kick", "ban", "unban", "visit",
+            "kick", "ban", "unban", "visit", "travel",
             "level", "zone", "subplot", "subzone", "like",
             "rename", "stuck", "setdesc", "notice", "profile", "guide",
             "consume", "ledger", "blocks", "giftblocks", "merge", "biome",
@@ -205,7 +205,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 if (sub.equals("help")) {
-                    sendHelp(sender);
+                    sendHelp(sender, args.length > 1 ? args[1] : null);
                     return true;
                 }
             }
@@ -256,6 +256,14 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 plugin.gui().visit().open(p, 0, false);
+            }
+
+            case "travel" -> {
+                if (!plugin.cfg().isTravelSystemEnabled()) {
+                    sendKey(p, "travel_system_disabled", "&cTravel system is disabled.");
+                    return true;
+                }
+                plugin.gui().travelHub().open(p);
             }
 
             case "setspawn" -> handleSetSpawn(p);
@@ -378,7 +386,7 @@ public class AegisCommand implements CommandExecutor, TabCompleter {
 
             case "staff", "staffchat" -> handleStaffChat(p, args);
 
-            case "help" -> sendHelp(p);
+            case "help" -> sendHelp(p, args.length > 1 ? args[1] : null);
 
             default -> sendHelp(p);
         }
@@ -2024,58 +2032,108 @@ private void handleUnsell(Player p) {
     // Help
     // --------------------------------------------------
 
+    // Help categories — each maps to the subcommand tokens that belong to it. The codex
+    // help_lines list is filtered by extracting the "/aegis <sub>" token from each line,
+    // so per-locale packs need no restructuring; new lines categorize automatically.
+    private static final Map<String, List<String>> HELP_CATEGORIES = Map.of(
+            "claims", List.of("wand", "menu", "claim", "quickclaim", "qc", "unclaim", "expand",
+                    "merge", "transfer", "rename", "setdesc", "welcome", "farewell", "guide",
+                    "setspawn", "border", "cost", "consume"),
+            "members", List.of("trust", "untrust", "roles", "member", "members", "ban", "unban",
+                    "kick", "guest", "guestpass", "alliance", "group", "heir", "succession", "notify"),
+            "flags", List.of("flags", "flag", "preset", "biome", "zone", "subplot", "subzone", "cosmetics"),
+            "economy", List.of("market", "auction", "sell", "unsell", "rent", "unrent", "rental",
+                    "claimblocks", "blocks", "giftblocks", "exchange", "settlements", "stall", "shop", "ledger"),
+            "travel", List.of("visit", "travel", "home", "spawn", "beacon", "routes", "route",
+                    "stuck", "discover", "favorite", "activity"),
+            "social", List.of("chat", "frequency", "staff", "staffchat", "gathering", "gatherings",
+                    "openhouse", "notice", "hearth", "caravan", "caravans", "like", "level", "profile"),
+            "admin", List.of("admin", "agadmin", "doctor", "inspect", "reload", "refresh",
+                    "bypass", "import", "export", "migrate")
+    );
+
+    private static final List<String> HELP_CATEGORY_ORDER =
+            List.of("claims", "members", "flags", "economy", "travel", "social", "admin");
+
     private void sendHelp(CommandSender sender) {
+        sendHelp(sender, null);
+    }
+
+    private void sendHelp(CommandSender sender, String category) {
         sendKey(sender, "help_header", "&bAegisGuard Help");
 
-        List<String> helpLines = Collections.emptyList();
+        List<String> helpLines = new ArrayList<>();
         try {
-            if (plugin.codex() != null) helpLines = plugin.codex().trList(sender, "help_lines");
+            if (plugin.codex() != null) {
+                List<String> lines = plugin.codex().trList(sender, "help_lines");
+                if (lines != null) helpLines.addAll(lines);
+                List<String> extra = plugin.codex().trList(sender, "help_lines_extra");
+                if (extra != null) helpLines.addAll(extra);
+            }
         } catch (Throwable ignored) {}
 
-        if (helpLines != null) {
-            for (String line : helpLines) sendMsg(sender, line);
-            boolean mentioned = false;
-            for (String line : helpLines) {
-                if (line != null && line.toLowerCase(Locale.ROOT).contains("quickclaim")) {
-                    mentioned = true;
-                    break;
-                }
+        if (category != null && !category.isBlank()) {
+            String cat = category.toLowerCase(Locale.ROOT);
+            List<String> subs = HELP_CATEGORIES.get(cat);
+            if (subs == null) {
+                sendKey(sender, "help_unknown_category", "&cUnknown help category. Try: &fclaims, members, flags, economy, travel, social, admin");
+                return;
             }
-            if (!mentioned) {
-                sendMsg(sender, "&e/ag quickclaim [radius] &7- claim a square around you");
+            sendKey(sender, "help_category_" + cat, "&e— {CATEGORY} —",
+                    Map.of("CATEGORY", cat));
+            List<String> matched = filterHelpLines(helpLines, subs);
+            if (matched.isEmpty()) {
+                sendKey(sender, "help_category_empty",
+                        "&7Nothing documented here yet — see &e/ag help&7 for all commands.");
+            } else {
+                for (String line : matched) sendMsg(sender, line);
             }
-            boolean caravanMentioned = false;
-            for (String line : helpLines) {
-                if (line != null && line.toLowerCase(Locale.ROOT).contains("caravan")) {
-                    caravanMentioned = true;
-                    break;
-                }
-            }
-            if (!caravanMentioned) {
-                sendMsg(sender, "&e/ag caravan &7- dispatch and track trade caravans");
-            }
-            boolean gatheringMentioned = false;
-            for (String line : helpLines) {
-                if (line != null && line.toLowerCase(Locale.ROOT).contains("gathering")) {
-                    gatheringMentioned = true;
-                    break;
-                }
-            }
-            if (!gatheringMentioned) {
-                sendMsg(sender, "&e/ag gathering &7- host an Open House on your plot");
-            }
-            boolean chatMentioned = false;
-            for (String line : helpLines) {
-                if (line != null && line.toLowerCase(Locale.ROOT).contains("/ag chat")) {
-                    chatMentioned = true;
-                    break;
-                }
-            }
-            if (!chatMentioned) {
-                sendMsg(sender, "&e/ag chat &7- plot Frequency; &e/ag chat alliance|group &7- member radios");
-                sendMsg(sender, "&e/ag staff &7- staff chat (Bedrock-friendly)");
-            }
+            return;
         }
+
+        // Overview: category index + the essential lines (first-time commands).
+        sendKey(sender, "help_hint",
+                "&7Use &e/ag help <category> &7— &fclaims, members, flags, economy, travel, social, admin");
+        sendKey(sender, "help_essentials_header", "&6Essential commands:");
+        List<String> essentials = filterHelpLines(helpLines,
+                List.of("wand", "menu", "claim", "visit", "travel", "home", "help"));
+        if (essentials.isEmpty() && helpLines != null && !helpLines.isEmpty()) {
+            for (String line : helpLines) sendMsg(sender, line);
+            return;
+        }
+        for (String line : essentials) sendMsg(sender, line);
+    }
+
+    /**
+     * Keep only help lines whose "/aegis <sub>" (or "/ag <sub>") token belongs to the given
+     * category. Lines with no recognizable command token stay out of category views.
+     */
+    private List<String> filterHelpLines(List<String> lines, List<String> subs) {
+        List<String> out = new ArrayList<>();
+        if (lines == null) return out;
+        for (String line : lines) {
+            if (line == null) continue;
+            String token = extractHelpSubcommand(line);
+            if (token != null && subs.contains(token)) out.add(line);
+        }
+        return out;
+    }
+
+    private static String extractHelpSubcommand(String line) {
+        String plain = line.toLowerCase(Locale.ROOT);
+        int idx = plain.indexOf("/aegis ");
+        int len = 7;
+        if (idx < 0) {
+            idx = plain.indexOf("/ag ");
+            len = 4;
+        }
+        if (idx < 0) return null;
+        String rest = plain.substring(idx + len).trim();
+        int space = rest.indexOf(' ');
+        String sub = space < 0 ? rest : rest.substring(0, space);
+        // Strip any leading non-letter (e.g. "<", "[") so usage args don't leak in.
+        sub = sub.replaceAll("[^a-z]", "");
+        return sub.isEmpty() ? null : sub;
     }
 
     private void handlePlotChat(Player p, String[] args) {
@@ -3078,6 +3136,12 @@ private void handleUnsell(Player p) {
         }
 
         if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("help")) {
+                List<String> filtered = new ArrayList<>();
+                StringUtil.copyPartialMatches(args[1], HELP_CATEGORY_ORDER, filtered);
+                Collections.sort(filtered);
+                return filtered;
+            }
             if (args[0].equalsIgnoreCase("subplot") || args[0].equalsIgnoreCase("subzone")) {
                 return Arrays.asList("Market Stall", "Room", "Hotel Suite", "Storage", "Booth");
             }

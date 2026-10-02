@@ -4763,3 +4763,39 @@ interactables_toggle_lore:
 - '&7cakes, bells, jukeboxes, note blocks,'
 - '&7candles, pots, or other finery within.'
 - '&eClick to toggle this ward.'
+
+travel_hub_title: '&bTrauayle'
+travel_hub_header: '&bTrauayle Hubbe'
+travel_hub_header_lore:
+- '&7Euery wey to roame,'
+- '&7in one steade.'
+travel_hub_atlas: '&eTrauayle Atlas'
+travel_hub_atlas_lore:
+- '&7Browse plotts, warps, and'
+- '&7publicke destynacions.'
+travel_hub_beacons: '&bTeleport Beaconnes'
+travel_hub_beacons_lore:
+- '&7Gouerne and lynke thy'
+- '&7teleport beaconnes.'
+travel_hub_routes: '&aExploracioun Routez'
+travel_hub_routes_lore:
+- '&7Walke the seruers routez,'
+- '&7fynde the checkpoyntes.'
+travel_hub_discover: '&6Discouer Plotts'
+travel_hub_discover_lore:
+- '&7Publicke plotts thou mayst'
+- '&7visite forthwith.'
+travel_hub_home: '&aGoo Hoom'
+travel_hub_home_lore:
+- '&7Teleporte to thy plot home.'
+travel_hub_spawn: '&aSeruer Spawne'
+travel_hub_spawn_lore:
+- '&7Teleporte to the worldes spawne.'
+travel_hub_unstuck: '&eVnstucke'
+travel_hub_unstuck_lore:
+- '&7Escape a clayme wherein'
+- '&7thou art trapped.'
+admin_plot_list_empty: '&7No Plotts Founde'
+admin_plot_list_empty_lore:
+- '&7No claymed landes match'
+- '&7this fyltre.'

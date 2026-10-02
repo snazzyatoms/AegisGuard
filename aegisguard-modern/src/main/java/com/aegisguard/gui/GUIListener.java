@@ -230,6 +230,8 @@ public class GUIListener implements Listener {
                 || holder instanceof ArenaAdminHolder
                 || holder instanceof ArenaAdminEditHolder
                 || holder instanceof ArenaAdminRunsHolder
+                || holder instanceof ListHolder
+                || holder instanceof ArrivalHolder
                 || holder instanceof SetupHolder
                 || holder instanceof EditHolder
                 || holder instanceof LinkHolder

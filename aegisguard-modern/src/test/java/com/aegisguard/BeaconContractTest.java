@@ -17,6 +17,12 @@ class BeaconContractTest {
     private static final Path JAVA = Path.of("src/main/java/com/aegisguard");
     private static final Path LANG = Path.of("src/main/resources/lang");
 
+    private static int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        for (int i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + 1)) count++;
+        return count;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     void configShipsTeleportBeaconsOnByDefault() throws Exception {
@@ -174,6 +180,11 @@ class BeaconContractTest {
         assertFalse(router.contains("BeaconGUI.ManagerHolder"));
         assertTrue(router.contains("BeaconGUI.ListHolder"), "listener must route the beacon list");
         assertTrue(router.contains("BeaconGUI.ArrivalHolder"), "listener must route arrival rules");
+        // The holder gate (isAegisGuiHolder) must also whitelist them — dispatch alone isn't enough.
+        assertTrue(countOccurrences(router, "instanceof ListHolder") >= 2,
+                "ListHolder must be whitelisted in the gate AND dispatched");
+        assertTrue(countOccurrences(router, "instanceof ArrivalHolder") >= 2,
+                "ArrivalHolder must be whitelisted in the gate AND dispatched");
         assertTrue(gui.contains("canGuiTravel"), "beacon list must offer travel clicks");
         assertTrue(gui.contains("GuiClicks.alternate(event)"),
                 "beacon list must split manage/travel clicks");

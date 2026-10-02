@@ -4850,3 +4850,6 @@ admin_plot_list_empty: '&7Nessun Lotto'
 admin_plot_list_empty_lore:
 - '&7Nessun claim corrisponde'
 - '&7a questo filtro.'
+button_back_hub: '&fTorna al Centro di Viaggio'
+back_hub_lore:
+- '&7Ritorna al centro di viaggio.'

@@ -4854,3 +4854,6 @@ admin_plot_list_empty: '&7Aucune Parcelle'
 admin_plot_list_empty_lore:
 - '&7Aucun claim ne correspond'
 - '&7à ce filtre.'
+button_back_hub: '&fRetour au Centre de Voyage'
+back_hub_lore:
+- '&7Retournez au centre de voyage.'

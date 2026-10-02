@@ -4530,3 +4530,6 @@ admin_plot_list_empty: '&7Sin Parcelas'
 admin_plot_list_empty_lore:
 - '&7Ningún claim coincide'
 - '&7con este filtro.'
+button_back_hub: '&fVolver al Centro de Viajes'
+back_hub_lore:
+- '&7Regresa al centro de viajes.'

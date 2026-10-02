@@ -2,6 +2,7 @@ package com.aegisguard.routes;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.gui.HubOriginHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,17 +28,23 @@ public class RoutesGUI {
         this.plugin = plugin;
     }
 
-    public static class RoutesMenuHolder implements InventoryHolder {
+    public static class RoutesMenuHolder implements HubOriginHolder {
         private final int page;
+        private boolean fromHub;
         public RoutesMenuHolder(int page) { this.page = page; }
         public int getPage() { return page; }
+        @Override public boolean isFromHub() { return fromHub; }
+        @Override public void setFromHub(boolean fromHub) { this.fromHub = fromHub; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public static class RouteDetailHolder implements InventoryHolder {
+    public static class RouteDetailHolder implements HubOriginHolder {
         private final Route route;
+        private boolean fromHub;
         public RouteDetailHolder(Route route) { this.route = route; }
         public Route getRoute() { return route; }
+        @Override public boolean isFromHub() { return fromHub; }
+        @Override public void setFromHub(boolean fromHub) { this.fromHub = fromHub; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -83,7 +90,9 @@ public class RoutesGUI {
         int safePage = Math.max(0, Math.min(page, maxPages - 1));
 
         String title = plugin.gui().title(player, "routes_menu_title", "&aRoutes");
-        Inventory inv = Bukkit.createInventory(new RoutesMenuHolder(safePage), 54, title);
+        RoutesMenuHolder menuHolder = new RoutesMenuHolder(safePage);
+        menuHolder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(menuHolder, 54, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
@@ -111,9 +120,18 @@ public class RoutesGUI {
                     tl(player, "routes_next_lore", List.of("&7Next page."))));
         }
 
-        inv.setItem(48, GUIManager.createItem(Material.ARROW,
-                t(player, "button_back", "&fBack"),
-                tl(player, "back_lore", List.of("&7Return to the main menu."))));
+        if (menuHolder.isFromHub()) {
+            inv.setItem(47, GUIManager.createItem(Material.NETHER_STAR,
+                    t(player, "button_back_menu", "&fReturn to Menu"),
+                    tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))));
+            inv.setItem(48, GUIManager.createItem(Material.COMPASS,
+                    t(player, "button_back_hub", "&fBack to Travel Hub"),
+                    tl(player, "back_hub_lore", List.of("&7Return to the travel hub."))));
+        } else {
+            inv.setItem(48, GUIManager.createItem(Material.ARROW,
+                    t(player, "button_back", "&fBack"),
+                    tl(player, "back_lore", List.of("&7Return to the main menu."))));
+        }
         inv.setItem(49, GUIManager.createItem(Material.BARRIER,
                 t(player, "button_exit", "&cClose"),
                 tl(player, "exit_lore", List.of("&7Close this menu."))));
@@ -156,7 +174,9 @@ public class RoutesGUI {
         plugin.routes().setActiveRoute(player.getUniqueId(), route.getId());
 
         String title = plugin.gui().title(player, "routes_detail_title", "&aRoute Details");
-        Inventory inv = Bukkit.createInventory(new RouteDetailHolder(route), 27, title);
+        RouteDetailHolder detailHolder = new RouteDetailHolder(route);
+        detailHolder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(detailHolder, 27, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 27; i++) inv.setItem(i, filler);
 
@@ -213,7 +233,12 @@ public class RoutesGUI {
         if (e.getCurrentItem() == null) return;
 
         int slot = e.getRawSlot();
-        if (slot == 48) { plugin.gui().openMain(player); return; }
+        if (slot == 47 && holder.isFromHub()) { plugin.gui().openMain(player); return; }
+        if (slot == 48) {
+            if (holder.isFromHub()) plugin.gui().travelHub().open(player);
+            else plugin.gui().openMain(player);
+            return;
+        }
         if (slot == 49) { player.closeInventory(); return; }
         if (slot == 45) { open(player, holder.getPage() - 1); return; }
         if (slot == 53) { open(player, holder.getPage() + 1); return; }

@@ -5739,3 +5739,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Gerencie notificações.'
 - '&e/aegis zone &7- Gerencie subzonas.'
 - '&e/aegis succession &7- Gerencie herdeiros do terreno.'
+button_back_hub: '&fVoltar ao Centro de Viagens'
+back_hub_lore:
+- '&7Retorne ao centro de viagens.'

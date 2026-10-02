@@ -4848,3 +4848,6 @@ admin_plot_list_empty: '&7No Plots Found'
 admin_plot_list_empty_lore:
 - '&7No registered claims match'
 - '&7this filter.'
+button_back_hub: '&fBack to Travel Hub'
+back_hub_lore:
+- '&7Return to the travel hub.'

@@ -19,6 +19,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -550,6 +551,21 @@ public class GUIManager {
 
     public static ItemStack getFiller() {
         return FILLER_ITEM.clone();
+    }
+
+    /**
+     * True while the player's current top inventory is the travel hub itself, or a
+     * sub-screen that inherited the hub origin flag. GUI builders call this on the
+     * entity/main thread before replacing the inventory so the flag propagates
+     * through pagination, tab switches, and detail views. Callers that open a
+     * travel sub-menu from elsewhere get {@code false} and keep the normal
+     * "Return to Menu" behavior.
+     */
+    public static boolean hubOriginActive(Player player) {
+        if (player == null) return false;
+        InventoryHolder top = player.getOpenInventory().getTopInventory().getHolder();
+        return top instanceof TravelHubGUI.TravelHubHolder
+                || (top instanceof HubOriginHolder h && h.isFromHub());
     }
 
     public static boolean isFiller(ItemStack item) {

@@ -5638,3 +5638,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Gouerne thy notyficaciouns.'
 - '&e/aegis zone &7- Gouerne sub-zones.'
 - '&e/aegis succession &7- Gouerne thy plot heyres.'
+button_back_hub: '&fBack to ye Travel Hub'
+back_hub_lore:
+- '&7Return to the travel hub index.'

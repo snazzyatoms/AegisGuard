@@ -5741,3 +5741,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Zarządzaj powiadomieniami.'
 - '&e/aegis zone &7- Zarządzaj podstrefami.'
 - '&e/aegis succession &7- Zarządzaj spadkobiercami działki.'
+button_back_hub: '&fWróć do Centrum Podróży'
+back_hub_lore:
+- '&7Powrót do centrum podróży.'

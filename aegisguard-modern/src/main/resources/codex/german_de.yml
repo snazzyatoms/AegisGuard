@@ -5759,3 +5759,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Benachrichtigungen verwalten.'
 - '&e/aegis zone &7- Unterzonen verwalten.'
 - '&e/aegis succession &7- Erben des Grundstücks verwalten.'
+button_back_hub: '&fZurück zum Reisezentrum'
+back_hub_lore:
+- '&7Kehre zum Reisezentrum zurück.'

@@ -4852,3 +4852,6 @@ admin_plot_list_empty: '&7Brak Działek'
 admin_plot_list_empty_lore:
 - '&7Żaden claim nie pasuje'
 - '&7do tego filtra.'
+button_back_hub: '&fWróć do Centrum Podróży'
+back_hub_lore:
+- '&7Powrót do centrum podróży.'

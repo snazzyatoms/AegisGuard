@@ -57,6 +57,37 @@ class TravelHubAndHelpContractTest {
     }
 
     @Test
+    void travelSubMenusOfferReturnToHub() throws Exception {
+        String mgr = Files.readString(JAVA.resolve("gui/GUIManager.java"));
+        assertTrue(mgr.contains("hubOriginActive"),
+                "GUIManager must expose the hub-origin check sub-screens use");
+        assertTrue(Files.exists(JAVA.resolve("gui/HubOriginHolder.java")),
+                "HubOriginHolder interface must exist");
+
+        String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
+        assertTrue(visit.contains("VisitHolder implements HubOriginHolder"),
+                "atlas holder must carry the hub-origin flag");
+        assertTrue(visit.contains("hub_return"), "atlas needs a hub-return action");
+        assertTrue(visit.contains("travelHub().open(player)"),
+                "atlas must open the hub when returning");
+        assertTrue(visit.contains("hubOriginActive(player)"),
+                "atlas rebuilds must re-derive the flag");
+
+        String beacons = Files.readString(JAVA.resolve("beacon/BeaconGUI.java"));
+        assertTrue(beacons.contains("extends HubAwareHolder"),
+                "beacon holders must carry the hub-origin flag");
+        assertTrue(beacons.contains("travelHub().open(player)"),
+                "beacon manager must return to the hub when flagged");
+
+        String routes = Files.readString(JAVA.resolve("routes/RoutesGUI.java"));
+        assertTrue(routes.contains("RoutesMenuHolder implements HubOriginHolder")
+                && routes.contains("RouteDetailHolder implements HubOriginHolder"),
+                "route holders must carry the hub-origin flag");
+        assertTrue(routes.contains("travelHub().open(player)"),
+                "route list must return to the hub when flagged");
+    }
+
+    @Test
     void helpIsCategorized() throws Exception {
         String src = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(src.contains("HELP_CATEGORIES"), "help must define categories");
@@ -82,7 +113,7 @@ class TravelHubAndHelpContractTest {
             for (String key : List.of("travel_hub_title:", "travel_hub_atlas:",
                     "travel_hub_beacons:", "travel_hub_routes:", "travel_hub_discover:",
                     "travel_hub_home:", "travel_hub_spawn:", "travel_hub_unstuck:",
-                    "admin_plot_list_empty:")) {
+                    "admin_plot_list_empty:", "button_back_hub:", "back_hub_lore:")) {
                 assertTrue(guis.contains(key), locale + "/guis.yml missing " + key);
                 assertTrue(codex.contains(key), locale + " codex missing " + key);
             }

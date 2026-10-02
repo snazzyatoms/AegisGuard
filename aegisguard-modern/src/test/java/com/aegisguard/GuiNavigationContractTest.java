@@ -17,7 +17,7 @@ class GuiNavigationContractTest {
 
     private static final Path JAVA_ROOT = Path.of("src/main/java/com/aegisguard");
     private static final Pattern HOLDER_CLASS = Pattern.compile(
-            "static\\s+(?:final\\s+)?class\\s+(\\w+Holder)\\b");
+            "(abstract\\s+)?static\\s+(?:final\\s+)?class\\s+(\\w+Holder)\\b");
 
     @Test
     void everySubmenuSourceDeclaresBackAndExitControls() throws Exception {
@@ -84,7 +84,8 @@ class GuiNavigationContractTest {
                 String source = Files.readString(path);
                 Matcher matcher = HOLDER_CLASS.matcher(source);
                 while (matcher.find()) {
-                    String holder = matcher.group(1);
+                    if (matcher.group(1) != null) continue; // abstract bases never appear as live holders
+                    String holder = matcher.group(2);
                     if (!listener.contains("holder instanceof " + holder)
                             && !listener.contains("instanceof " + holder)) {
                         missing.add(path.getFileName() + "#" + holder);

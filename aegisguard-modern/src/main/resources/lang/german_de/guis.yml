@@ -4852,3 +4852,6 @@ admin_plot_list_empty: '&7Keine Grundstücke'
 admin_plot_list_empty_lore:
 - '&7Keine Claims passen'
 - '&7zu diesem Filter.'
+button_back_hub: '&fZurück zum Reisezentrum'
+back_hub_lore:
+- '&7Kehre zum Reisezentrum zurück.'

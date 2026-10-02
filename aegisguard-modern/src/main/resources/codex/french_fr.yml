@@ -5751,3 +5751,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Gérez les notifications.'
 - '&e/aegis zone &7- Gérez les sous-zones.'
 - '&e/aegis succession &7- Gérez les héritiers de la parcelle.'
+button_back_hub: '&fRetour au Centre de Voyage'
+back_hub_lore:
+- '&7Retournez au centre de voyage.'

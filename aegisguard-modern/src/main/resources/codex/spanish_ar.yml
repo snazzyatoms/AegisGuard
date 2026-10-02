@@ -5403,3 +5403,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Administrá notificaciones.'
 - '&e/aegis zone &7- Administrá subzonas.'
 - '&e/aegis succession &7- Administrá herederos de la parcela.'
+button_back_hub: '&fVolver al Centro de Viajes'
+back_hub_lore:
+- '&7Regresa al centro de viajes.'

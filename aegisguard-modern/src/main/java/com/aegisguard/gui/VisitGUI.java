@@ -90,13 +90,14 @@ public class VisitGUI {
         DESTINATIONS, MY_BEACONS, ARRIVAL, CARAVANS
     }
 
-    public static class VisitHolder implements InventoryHolder {
+    public static class VisitHolder implements HubOriginHolder {
         private final int page;
         private final VisitMode mode;
         private final List<Plot> plots;
         private final DiscoverFilter discoverFilter;
         private final String category;
         private final AtlasTab atlasTab;
+        private boolean fromHub;
 
         public VisitHolder(List<Plot> plots, int page, VisitMode mode, DiscoverFilter discoverFilter, String category) {
             this(plots, page, mode, discoverFilter, category, AtlasTab.DESTINATIONS);
@@ -119,6 +120,8 @@ public class VisitGUI {
         public DiscoverFilter getDiscoverFilter() { return discoverFilter; }
         public String getCategory() { return category; }
         public AtlasTab getAtlasTab() { return atlasTab; }
+        @Override public boolean isFromHub() { return fromHub; }
+        @Override public void setFromHub(boolean fromHub) { this.fromHub = fromHub; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -360,7 +363,9 @@ public class VisitGUI {
 
         String fullTitle = clampTitleWithSuffix(baseTitle, suffix);
 
-        Inventory inv = Bukkit.createInventory(new VisitHolder(displayPlots, page, mode, discoverFilter, category), 54, fullTitle);
+        VisitHolder visitHolder = new VisitHolder(displayPlots, page, mode, discoverFilter, category);
+        visitHolder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(visitHolder, 54, fullTitle);
 
         // 1.2.6: fill ALL slots
         ItemStack filler = GUIManager.getFiller();
@@ -556,6 +561,8 @@ public class VisitGUI {
             inv.setItem(45, prev);
         }
 
+        paintHubReturn(player, inv);
+
         ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 t(player, "button_back_menu", "&fReturn to Menu"),
@@ -675,6 +682,7 @@ public class VisitGUI {
                 case "atlas_arrival" -> { openAtlas(player, AtlasTab.ARRIVAL); plugin.effects().playMenuFlip(player); return; }
                 case "atlas_caravans" -> { openAtlas(player, AtlasTab.CARAVANS); plugin.effects().playMenuFlip(player); return; }
                 case "back_menu" -> { plugin.gui().openMain(player); plugin.effects().playMenuFlip(player); return; }
+                case "hub_return" -> { plugin.gui().travelHub().open(player); plugin.effects().playMenuFlip(player); return; }
                 case "close_menu" -> { player.closeInventory(); plugin.effects().playMenuClose(player); return; }
                 case "visit_empty" -> { plugin.effects().playError(player); return; }
                 case "visit_help" -> {
@@ -858,7 +866,20 @@ public class VisitGUI {
         return GUIManager.createItem(selected ? Material.LIME_DYE : icon, t(player, key, fallback), lore);
     }
 
+    /** Paints the "Back to Travel Hub" button (slot 50) only when this screen was reached from the hub. */
+    private void paintHubReturn(Player player, Inventory inv) {
+        if (!(inv.getHolder() instanceof VisitHolder holder) || !holder.isFromHub()) return;
+        ItemStack hub = GUIManager.createItem(
+                Material.COMPASS,
+                t(player, "button_back_hub", "&fBack to Travel Hub"),
+                tl(player, "back_hub_lore", List.of("&7Return to the travel hub."))
+        );
+        tagAction(hub, "hub_return");
+        inv.setItem(50, hub);
+    }
+
     private void paintVisitChrome(Player player, Inventory inv) {
+        paintHubReturn(player, inv);
         ItemStack back = GUIManager.createItem(
                 Material.NETHER_STAR,
                 t(player, "button_back_menu", "&fReturn to Menu"),
@@ -877,9 +898,9 @@ public class VisitGUI {
 
     private void buildBeaconsTab(Player player) {
         String title = plugin.gui().title(player, "atlas_title_beacons", "&bTravel Atlas · My Beacons");
-        Inventory inv = Bukkit.createInventory(
-                new VisitHolder(List.of(), 0, VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.MY_BEACONS),
-                54, title);
+        VisitHolder beaconsHolder = new VisitHolder(List.of(), 0, VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.MY_BEACONS);
+        beaconsHolder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(beaconsHolder, 54, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
         Plot plot = plugin.store().getPlotAt(player.getLocation());
@@ -921,9 +942,9 @@ public class VisitGUI {
 
     private void buildArrivalTab(Player player) {
         String title = plugin.gui().title(player, "atlas_title_arrival", "&dTravel Atlas · Arrival");
-        Inventory inv = Bukkit.createInventory(
-                new VisitHolder(List.of(), 0, VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.ARRIVAL),
-                54, title);
+        VisitHolder arrivalHolder = new VisitHolder(List.of(), 0, VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.ARRIVAL);
+        arrivalHolder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(arrivalHolder, 54, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
         Plot plot = plugin.store().getPlotAt(player.getLocation());

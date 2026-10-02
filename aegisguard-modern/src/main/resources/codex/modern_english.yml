@@ -5704,3 +5704,6 @@ help_lines_extra:
 - '&e/aegis notify &7- Manage notification preferences.'
 - '&e/aegis zone &7- Manage sub-zones.'
 - '&e/aegis succession &7- Manage plot heirs.'
+button_back_hub: '&fBack to Travel Hub'
+back_hub_lore:
+- '&7Return to the travel hub.'

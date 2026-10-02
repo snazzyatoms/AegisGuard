@@ -3,6 +3,7 @@ package com.aegisguard.beacon;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.gui.HubOriginHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -27,32 +28,35 @@ public final class BeaconGUI {
         this.plugin = plugin;
     }
 
-    public static class ManagerHolder implements InventoryHolder {
+    private abstract static class HubAwareHolder implements HubOriginHolder {
+        private boolean fromHub;
+        @Override public boolean isFromHub() { return fromHub; }
+        @Override public void setFromHub(boolean fromHub) { this.fromHub = fromHub; }
         @Override public Inventory getInventory() { return null; }
     }
 
-    public static class SetupHolder implements InventoryHolder {
+    public static class ManagerHolder extends HubAwareHolder {
+    }
+
+    public static class SetupHolder extends HubAwareHolder {
         private final UUID beaconId;
         SetupHolder(UUID beaconId) { this.beaconId = beaconId; }
         public UUID beaconId() { return beaconId; }
-        @Override public Inventory getInventory() { return null; }
     }
 
-    public static class EditHolder implements InventoryHolder {
+    public static class EditHolder extends HubAwareHolder {
         private final UUID beaconId;
         EditHolder(UUID beaconId) { this.beaconId = beaconId; }
         public UUID beaconId() { return beaconId; }
-        @Override public Inventory getInventory() { return null; }
     }
 
-    public static class LinkHolder implements InventoryHolder {
+    public static class LinkHolder extends HubAwareHolder {
         private final UUID beaconId;
         LinkHolder(UUID beaconId) { this.beaconId = beaconId; }
         public UUID beaconId() { return beaconId; }
-        @Override public Inventory getInventory() { return null; }
     }
 
-    public static class ConfirmHolder implements InventoryHolder {
+    public static class ConfirmHolder extends HubAwareHolder {
         private final UUID originId;
         private final UUID destId;
         private final boolean listingArrival;
@@ -61,10 +65,15 @@ public final class BeaconGUI {
             this.destId = destId;
             this.listingArrival = listingArrival;
         }
-        @Override public Inventory getInventory() { return null; }
     }
 
     private BeaconService svc() { return plugin.beacons(); }
+
+    /** Marks a holder with the travel-hub origin flag so sub-screens remember where they came from. */
+    private <T extends HubAwareHolder> T withOrigin(T holder, Player player) {
+        holder.setFromHub(GUIManager.hubOriginActive(player));
+        return holder;
+    }
 
     private String t(Player p, String key, String fallback) {
         return plugin.gui().tr(p, key, fallback);
@@ -85,7 +94,8 @@ public final class BeaconGUI {
     private void openManagerLegacy(Player player) {
         Plot plot = plugin.store().getPlotAt(player.getLocation());
         String title = plugin.gui().title(player, "beacon_manager_title", "&bTeleport Beacons");
-        Inventory inv = Bukkit.createInventory(new ManagerHolder(), 54, title);
+        ManagerHolder managerHolder = withOrigin(new ManagerHolder(), player);
+        Inventory inv = Bukkit.createInventory(managerHolder, 54, title);
         fill(inv);
         inv.setItem(4, GUIManager.createItem(Material.END_PORTAL_FRAME,
                 t(player, "beacon_manager_guide_name", "&bHow beacons work"),
@@ -116,7 +126,16 @@ public final class BeaconGUI {
                         "&7Place them, then sneak-right-click to bind.",
                         "&7You can also use any allowed pad you already have."))));
         plugin.gui().tagAction(inv.getItem(40), "give");
-        inv.setItem(45, back(player));
+        if (managerHolder.isFromHub()) {
+            inv.setItem(45, GUIManager.createItem(Material.COMPASS,
+                    t(player, "button_back_hub", "&fBack to Travel Hub"),
+                    tl(player, "back_hub_lore", List.of("&7Return to the travel hub."))));
+            inv.setItem(47, GUIManager.createItem(Material.NETHER_STAR,
+                    t(player, "button_back_menu", "&fReturn to Menu"),
+                    tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))));
+        } else {
+            inv.setItem(45, back(player));
+        }
         inv.setItem(49, GUIManager.createItem(Material.BARRIER, t(player, "button_exit", "&c✖ Close"),
                 tl(player, "exit_lore", List.of("&7Close this menu."))));
         player.openInventory(inv);
@@ -125,7 +144,7 @@ public final class BeaconGUI {
 
     public void openSetup(Player player, TeleportBeacon beacon) {
         String title = plugin.gui().title(player, "beacon_setup_title", "&bCreate Beacon");
-        Inventory inv = Bukkit.createInventory(new SetupHolder(beacon.getId()), 27, title);
+        Inventory inv = Bukkit.createInventory(withOrigin(new SetupHolder(beacon.getId()), player), 27, title);
         fillSmall(inv);
         inv.setItem(4, padIcon(player, beacon));
         inv.setItem(10, preset(player, TeleportBeacon.Preset.PRIVATE, Material.IRON_DOOR, "&7Private",
@@ -162,7 +181,7 @@ public final class BeaconGUI {
 
     public void openEdit(Player player, TeleportBeacon beacon) {
         String title = plugin.gui().title(player, "beacon_edit_title", "&dBeacon Rules");
-        Inventory inv = Bukkit.createInventory(new EditHolder(beacon.getId()), 54, title);
+        Inventory inv = Bukkit.createInventory(withOrigin(new EditHolder(beacon.getId()), player), 54, title);
         fill(inv);
         inv.setItem(4, padIcon(player, beacon));
         toggle(inv, player, 19, Material.IRON_DOOR, "owners", beacon.isOwners(), "&7Owners");
@@ -203,7 +222,7 @@ public final class BeaconGUI {
 
     public void openLink(Player player, TeleportBeacon origin) {
         String title = plugin.gui().title(player, "beacon_link_title", "&aLink Beacon");
-        Inventory inv = Bukkit.createInventory(new LinkHolder(origin.getId()), 54, title);
+        Inventory inv = Bukkit.createInventory(withOrigin(new LinkHolder(origin.getId()), player), 54, title);
         fill(inv);
         List<TeleportBeacon> pads = linkablePads(player, origin);
         int slot = 10;
@@ -224,7 +243,7 @@ public final class BeaconGUI {
         String destName = dest.getName();
         String title = plugin.gui().title(player, "beacon_confirm_title", "&eConfirm teleport");
         Inventory inv = Bukkit.createInventory(
-                new ConfirmHolder(origin == null ? null : origin.getId(), dest.getId(), listingArrival),
+                withOrigin(new ConfirmHolder(origin == null ? null : origin.getId(), dest.getId(), listingArrival), player),
                 27, title);
         fillSmall(inv);
         inv.setItem(13, padIcon(player, dest));
@@ -251,10 +270,16 @@ public final class BeaconGUI {
         BeaconService service = svc();
         if (service == null) return;
 
-        if (holder instanceof ManagerHolder) {
-            if (event.getSlot() == 45 || event.getSlot() == 49) {
-                if (event.getSlot() == 45) plugin.gui().openMain(player);
-                else player.closeInventory();
+        if (holder instanceof ManagerHolder manager) {
+            if (event.getSlot() == 45 || event.getSlot() == 49 || (event.getSlot() == 47 && manager.isFromHub())) {
+                if (event.getSlot() == 45) {
+                    if (manager.isFromHub()) plugin.gui().travelHub().open(player);
+                    else plugin.gui().openMain(player);
+                } else if (event.getSlot() == 47) {
+                    plugin.gui().openMain(player);
+                } else {
+                    player.closeInventory();
+                }
                 return;
             }
             if ("give".equals(action)) {

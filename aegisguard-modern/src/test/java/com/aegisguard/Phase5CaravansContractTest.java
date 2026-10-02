@@ -24,7 +24,7 @@ class Phase5CaravansContractTest {
         try (var in = Files.newInputStream(RESOURCES.resolve("config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1312, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1313, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("caravans"));
         Map<String, Object> caravans = (Map<String, Object>) config.get("caravans");
@@ -38,9 +38,9 @@ class Phase5CaravansContractTest {
         assertTrue(migration.contains("CURRENT_SCHEMA = 1306")
                 || migration.contains("CURRENT_SCHEMA = 1307")
                 || migration.contains("CURRENT_SCHEMA = 1308")
-                || migration.contains("CURRENT_SCHEMA = 1312")
-                || migration.contains("CURRENT_SCHEMA = 1312")
-                || migration.contains("CURRENT_SCHEMA = 1312"));
+                || migration.contains("CURRENT_SCHEMA = 1313")
+                || migration.contains("CURRENT_SCHEMA = 1313")
+                || migration.contains("CURRENT_SCHEMA = 1313"));
         String modulesSrc = Files.readString(JAVA.resolve("config/Modules.java"));
         assertTrue(modulesSrc.contains("CARAVANS"));
         assertTrue(modulesSrc.contains("case \"caravan\""));

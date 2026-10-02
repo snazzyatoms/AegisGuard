@@ -4743,7 +4743,6 @@ button_beacons: '&bBalizas de teletransporte'
 beacons_button_lore:
 - '&7Crea plataformas enlazadas, elige quién las usa'
 - '&7y viaja con una pantalla de confirmación.'
-beacon_manager_title: '&bBalizas de teletransporte'
 beacon_manager_guide_name: '&bCómo funcionan'
 beacon_manager_guide_lore:
 - '&7Coloca una lodestone (u otra plataforma).'
@@ -4769,7 +4768,6 @@ beacon_give_button_lore:
 - '&7Te da lodestones (o la plataforma del servidor).'
 - '&7Colócalas y luego mayús + clic derecho para vincular.'
 - '&7También sirve cualquier plataforma permitida que ya tengas.'
-beacon_need_plot_lore: '&7Las balizas pertenecen al terreno donde estás.'
 beacon_confirm_go_lore:
 - '&7Llegarás a la plataforma enlazada.'
 beacon_purpose_lore:
@@ -4778,7 +4776,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eClic para cambiar.'
 beacon_icon_purpose: '&7Propósito: &f{PURPOSE}'
-beacon_icon_linked: '&aEnlazada'
 beacon_icon_unlinked: '&cAún no enlazada'
 beacon_icon_public: '&aPública'
 beacon_icon_not_public: '&7No pública'
@@ -5181,3 +5178,37 @@ snapshot_lock_failed: '&cNo se pudo liberar el bloqueo de mantenimiento.'
 snapshot_storage_inspecting: '&eInspeccionando el almacenamiento de respaldos de forma asíncrona...'
 snapshot_storage_failed: '&cLa inspección del almacenamiento falló: {ERROR}'
 health_check_running: '&eEjecutando verificaciónes de salud de AegisGuard seguras por región...'
+
+beacon_linked_to: '&aEnlazado &7-> &f{NAME}'
+beacon_inbound: '&7Entrantes: &f{COUNT} pad(s)'
+beacon_click_legend:
+- '&eClic izq. &7gestionar · &eClic der. &7viajar'
+beacon_unbind: '&cDesvincular beacon'
+beacon_unbind_lore:
+- '&7Elimina el registro del beacon.'
+- '&7El bloque pad permanece en el mundo.'
+beacon_unbind_title: '&c¿Desvincular beacon?'
+beacon_unbind_warn_lore:
+- '&7Los pads enlazados que apuntan aquí'
+- '&7serán desvinculados.'
+beacon_unbind_inbound: '&c{COUNT} pad(s) enlazan aquí.'
+beacon_unbind_confirm: '&cDesvincular este beacon'
+beacon_travel_button: '&dViajar aquí'
+beacon_travel_lore:
+- '&7Teletransporte directo a este pad.'
+beacon_link_both_on: '&aIda y vuelta: activado'
+beacon_link_both_off: '&7Ida y vuelta: desactivado'
+beacon_link_both_lore:
+- '&7También enlaza el destino de regreso'
+- '&7si lo administras y está libre.'
+beacon_none_yet: '&cAún no tienes beacons'
+beacon_none_yet_lore:
+- '&7Párate en un terreno que administres, coloca un'
+- '&7bloque pad y haz clic derecho agachado.'
+beacon_count_lore: '&7Administras &f{COUNT}&7 pad(s) en &f{PLOTS}&7 terreno(s).'
+beacon_cap_lore: '&7Este terreno: &f{USED}&7/&f{MAX}&7 pads.'
+beacon_unbound: '&eBeacon desvinculado. Los pads enlazados aquí fueron liberados; rompe el bloque para recuperarlo.'
+beacon_link_both_done: '&aIda y vuelta enlazado: &f{NAME}&a <-> aquí.'
+beacon_link_both_denied: '&eEnlazado a &f{NAME}&e, pero ya enlaza a otro lugar — solo ida.'
+beacon_link_both_no_perms: '&eEnlazado a &f{NAME}&e. No lo administras, así que solo se aplicó la ida.'
+beacon_bind_hint: '&eAgáchate y haz clic derecho para vincular este pad como beacon.'

@@ -4624,7 +4624,6 @@ button_beacons: '&bBalises de téléportation'
 beacons_button_lore:
 - '&7Créez des dalles liées, choisissez qui peut les utiliser'
 - '&7et voyagez avec un écran de confirmation.'
-beacon_manager_title: '&bBalises de téléportation'
 beacon_manager_guide_name: '&bComment ça marche'
 beacon_manager_guide_lore:
 - '&7Placez une lodestone (ou une autre dalle).'
@@ -4650,7 +4649,6 @@ beacon_give_button_lore:
 - '&7Donne des lodestones (ou la dalle du serveur).'
 - '&7Placez-les, puis accroupissement + clic droit pour lier.'
 - '&7Toute dalle autorisée que vous avez déjà fonctionne aussi.'
-beacon_need_plot_lore: '&7Les balises appartiennent au terrain où vous êtes.'
 beacon_confirm_go_lore:
 - '&7Vous arriverez sur la dalle liée.'
 beacon_purpose_lore:
@@ -4659,7 +4657,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eCliquez pour changer.'
 beacon_icon_purpose: '&7Objectif : &f{PURPOSE}'
-beacon_icon_linked: '&aLiée'
 beacon_icon_unlinked: '&cPas encore liée'
 beacon_icon_public: '&aPublique'
 beacon_icon_not_public: '&7Pas publique'
@@ -5770,3 +5767,36 @@ snapshot_lock_failed: '&cLe verrou de maintenance n''a pas pu etre libéré.'
 snapshot_storage_inspecting: '&eInspection du stockage des sauvegardes en asynchrone...'
 snapshot_storage_failed: '&cL''inspection du stockage a échoue : {ERROR}'
 health_check_running: '&eExecution des verifications d''intégrité AegisGuard sûres par région...'
+beacon_linked_to: '&aLié &7-> &f{NAME}'
+beacon_inbound: '&7Entrant : &f{COUNT} pad(s)'
+beacon_click_legend:
+- '&eClic gauche &7gérer · &eClic droit &7voyager'
+beacon_unbind: '&cDissocier le beacon'
+beacon_unbind_lore:
+- '&7Supprime l''''enregistrement du beacon.'
+- '&7Le bloc pad reste dans le monde.'
+beacon_unbind_title: '&cDissocier le beacon ?'
+beacon_unbind_warn_lore:
+- '&7Les pads liés qui pointent ici'
+- '&7seront dissociés.'
+beacon_unbind_inbound: '&c{COUNT} pad(s) pointent ici.'
+beacon_unbind_confirm: '&cDissocier ce beacon'
+beacon_travel_button: '&dVoyager ici'
+beacon_travel_lore:
+- '&7Téléportation directe vers ce pad.'
+beacon_link_both_on: '&aAller-retour : activé'
+beacon_link_both_off: '&7Aller-retour : désactivé'
+beacon_link_both_lore:
+- '&7Lie aussi la destination en retour'
+- '&7si vous la gérez et qu''''elle est libre.'
+beacon_none_yet: '&cPas encore de beacons'
+beacon_none_yet_lore:
+- '&7Tenez-vous dans un terrain que vous gérez, placez un'
+- '&7bloc pad, puis cliquez droit accroupi.'
+beacon_count_lore: '&7Vous gérez &f{COUNT}&7 pad(s) sur &f{PLOTS}&7 terrain(s).'
+beacon_cap_lore: '&7Ce terrain : &f{USED}&7/&f{MAX}&7 pads.'
+beacon_unbound: '&eBeacon dissocié. Les pads liés ici ont été libérés ; cassez le bloc pour le récupérer.'
+beacon_link_both_done: '&aAller-retour lié : &f{NAME}&a <-> ici.'
+beacon_link_both_denied: '&eLié à &f{NAME}&e, mais il pointe déjà ailleurs — aller simple.'
+beacon_link_both_no_perms: '&eLié à &f{NAME}&e. Vous ne le gérez pas, donc aller simple uniquement.'
+beacon_bind_hint: '&eAccroupissez-vous et cliquez droit pour lier ce pad comme beacon.'

@@ -3786,7 +3786,6 @@ button_beacons: '&bTeleport-Baken'
 beacons_button_lore:
 - '&7Erstelle verknüpfte Pads, lege fest, wer sie nutzen darf,'
 - '&7und reise mit einem Bestätigungsbildschirm.'
-beacon_manager_title: '&bTeleport-Baken'
 beacon_manager_guide_name: '&bSo funktionieren sie'
 beacon_manager_guide_lore:
 - '&7Platziere einen Lodestone (oder ein anderes Pad).'
@@ -3812,7 +3811,6 @@ beacon_give_button_lore:
 - '&7Gibt Lodestones (oder das Server-Pad).'
 - '&7Platziere sie, dann Schleichen + Rechtsklick zum Binden.'
 - '&7Jedes erlaubte Pad, das du schon hast, funktioniert auch.'
-beacon_need_plot_lore: '&7Baken gehören zu dem Grundstück, auf dem du stehst.'
 beacon_confirm_go_lore:
 - '&7Du landest auf dem verknüpften Pad.'
 beacon_purpose_lore:
@@ -3821,7 +3819,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eKlicken zum Wechseln.'
 beacon_icon_purpose: '&7Zweck: &f{PURPOSE}'
-beacon_icon_linked: '&aVerknüpft'
 beacon_icon_unlinked: '&cNoch nicht verknüpft'
 beacon_icon_public: '&aÖffentlich'
 beacon_icon_not_public: '&7Nicht öffentlich'
@@ -4854,3 +4851,32 @@ admin_plot_list_empty_lore:
 button_back_hub: '&fZurück zum Reisezentrum'
 back_hub_lore:
 - '&7Kehre zum Reisezentrum zurück.'
+
+beacon_linked_to: '&aVerknüpft &7-> &f{NAME}'
+beacon_inbound: '&7Eingehend: &f{COUNT} Pad(s)'
+beacon_click_legend:
+- '&eLinksklick &7verwalten · &eRechtsklick &7reisen'
+beacon_unbind: '&cBeacon lösen'
+beacon_unbind_lore:
+- '&7Entfernt den Beacon-Eintrag.'
+- '&7Der Pad-Block bleibt in der Welt.'
+beacon_unbind_title: '&cBeacon lösen?'
+beacon_unbind_warn_lore:
+- '&7Verknüpfte Pads, die hierher zeigen,'
+- '&7werden gelöst.'
+beacon_unbind_inbound: '&c{COUNT} Pad(s) zeigen hierher.'
+beacon_unbind_confirm: '&cDiesen Beacon lösen'
+beacon_travel_button: '&dHierhin reisen'
+beacon_travel_lore:
+- '&7Direkter Teleport zu diesem Pad.'
+beacon_link_both_on: '&aHin- und Rückweg: an'
+beacon_link_both_off: '&7Hin- und Rückweg: aus'
+beacon_link_both_lore:
+- '&7Verknüpft auch das Ziel zurück hierher,'
+- '&7wenn du es verwaltest und es frei ist.'
+beacon_none_yet: '&cNoch keine Beacons'
+beacon_none_yet_lore:
+- '&7Stelle dich in ein Grundstück, das du verwaltest, platziere'
+- '&7einen Pad-Block und rechtsklicke ihn gesneakt.'
+beacon_count_lore: '&7Du verwaltest &f{COUNT}&7 Pad(s) auf &f{PLOTS}&7 Grundstück(en).'
+beacon_cap_lore: '&7Dieses Grundstück: &f{USED}&7/&f{MAX}&7 Pads.'

@@ -92,6 +92,14 @@ public final class BeaconListener implements Listener {
         if (hasBlockingInventory(player)) return;
 
         TeleportBeacon existing = service.getAt(block.getLocation());
+        // Discoverability: a manager right-clicking an unbound pad gets a hint to sneak-bind it.
+        if (existing == null && !player.isSneaking() && plot.canManage(player, plugin)
+                && plugin.getConfig().getBoolean("teleport_beacons.bind_hint", true)
+                && service.shouldShowBindHint(player)) {
+            String hint = service.getBindHint(player);
+            if (hint != null && !hint.isBlank()) com.aegisguard.util.Text.actionBar(player, hint);
+            return;
+        }
         if (player.isSneaking() && plot.canManage(player, plugin)) {
             event.setCancelled(true);
             if (existing == null) {

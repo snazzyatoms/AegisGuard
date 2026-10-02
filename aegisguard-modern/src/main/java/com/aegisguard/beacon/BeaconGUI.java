@@ -35,9 +35,6 @@ public final class BeaconGUI {
         @Override public Inventory getInventory() { return null; }
     }
 
-    public static class ManagerHolder extends HubAwareHolder {
-    }
-
     public static class SetupHolder extends HubAwareHolder {
         private final UUID beaconId;
         SetupHolder(UUID beaconId) { this.beaconId = beaconId; }
@@ -52,7 +49,16 @@ public final class BeaconGUI {
 
     public static class LinkHolder extends HubAwareHolder {
         private final UUID beaconId;
+        private boolean bothWays;
         LinkHolder(UUID beaconId) { this.beaconId = beaconId; }
+        public UUID beaconId() { return beaconId; }
+        public boolean bothWays() { return bothWays; }
+        public void setBothWays(boolean bothWays) { this.bothWays = bothWays; }
+    }
+
+    public static class UnbindHolder extends HubAwareHolder {
+        private final UUID beaconId;
+        UnbindHolder(UUID beaconId) { this.beaconId = beaconId; }
         public UUID beaconId() { return beaconId; }
     }
 
@@ -83,63 +89,9 @@ public final class BeaconGUI {
         return plugin.gui().trList(p, key, fallback);
     }
 
+    /** The beacon list lives in the atlas "My Beacons" tab (VisitGUI). */
     public void openManager(Player player) {
-        if (plugin.gui() != null && plugin.gui().visit() != null) {
-            plugin.gui().visit().openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS);
-            return;
-        }
-        openManagerLegacy(player);
-    }
-
-    private void openManagerLegacy(Player player) {
-        Plot plot = plugin.store().getPlotAt(player.getLocation());
-        String title = plugin.gui().title(player, "beacon_manager_title", "&bTeleport Beacons");
-        ManagerHolder managerHolder = withOrigin(new ManagerHolder(), player);
-        Inventory inv = Bukkit.createInventory(managerHolder, 54, title);
-        fill(inv);
-        inv.setItem(4, GUIManager.createItem(Material.END_PORTAL_FRAME,
-                t(player, "beacon_manager_guide_name", "&bHow beacons work"),
-                tl(player, "beacon_manager_guide_lore", List.of(
-                        "&7Place a lodestone (or listed pad).",
-                        "&7Sneak-click it to create a beacon.",
-                        "&71. Pick a preset  2. Link another pad",
-                        "&73. Stand on it to travel."))));
-        if (plot == null) {
-            inv.setItem(22, GUIManager.createItem(Material.BARRIER,
-                    t(player, "beacon_need_plot", "&cStand in a claim"),
-                    List.of(t(player, "beacon_need_plot_lore", "&7Beacons belong to the plot you are in."))));
-        } else {
-            List<TeleportBeacon> pads = svc().store().forPlot(plot.getPlotId());
-            int slot = 19;
-            for (TeleportBeacon beacon : pads) {
-                if (slot > 25 && slot < 28) slot = 28;
-                if (slot > 34) break;
-                ItemStack item = padIcon(player, beacon);
-                plugin.gui().tagAction(item, "open:" + beacon.getId());
-                inv.setItem(slot++, item);
-            }
-        }
-        inv.setItem(40, GUIManager.createItem(svc() == null ? Material.LODESTONE : svc().starterPadMaterial(),
-                t(player, "beacon_give_button", "&bGet pad blocks"),
-                tl(player, "beacon_give_button_lore", List.of(
-                        "&7Gives lodestones (or the server's pad).",
-                        "&7Place them, then sneak-right-click to bind.",
-                        "&7You can also use any allowed pad you already have."))));
-        plugin.gui().tagAction(inv.getItem(40), "give");
-        if (managerHolder.isFromHub()) {
-            inv.setItem(45, GUIManager.createItem(Material.COMPASS,
-                    t(player, "button_back_hub", "&fBack to Travel Hub"),
-                    tl(player, "back_hub_lore", List.of("&7Return to the travel hub."))));
-            inv.setItem(47, GUIManager.createItem(Material.NETHER_STAR,
-                    t(player, "button_back_menu", "&fReturn to Menu"),
-                    tl(player, "back_menu_lore", List.of("&7Go back to the main menu."))));
-        } else {
-            inv.setItem(45, back(player));
-        }
-        inv.setItem(49, GUIManager.createItem(Material.BARRIER, t(player, "button_exit", "&c✖ Close"),
-                tl(player, "exit_lore", List.of("&7Close this menu."))));
-        player.openInventory(inv);
-        GUIManager.playClick(player);
+        plugin.gui().visit().openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS);
     }
 
     public void openSetup(Player player, TeleportBeacon beacon) {
@@ -171,6 +123,7 @@ public final class BeaconGUI {
                 tl(player, "beacon_link_choose_lore", List.of("&7Choose the pad this one sends you to."))));
         plugin.gui().tagAction(inv.getItem(22), "link");
         inv.setItem(18, back(player));
+        if (((SetupHolder) inv.getHolder()).isFromHub()) inv.setItem(19, hubReturn(player));
         inv.setItem(26, GUIManager.createItem(Material.COMPARATOR,
                 t(player, "beacon_advanced_button", "&7Advanced rules"),
                 tl(player, "beacon_advanced_lore", List.of("&7Optional toggles for cost, confirm, and access."))));
@@ -207,10 +160,22 @@ public final class BeaconGUI {
                         : t(player, "beacon_link_status_unlinked", "&cNot linked yet."))));
         plugin.gui().tagAction(inv.getItem(40), "link");
         inv.setItem(45, back(player));
+        if (((EditHolder) inv.getHolder()).isFromHub()) inv.setItem(46, hubReturn(player));
+        if (svc().canGuiTravel(player, beacon)) {
+            inv.setItem(47, GUIManager.createItem(Material.ENDER_EYE,
+                    t(player, "beacon_travel_button", "&dTravel here"),
+                    tl(player, "beacon_travel_lore", List.of("&7Teleport straight to this pad."))));
+            plugin.gui().tagAction(inv.getItem(47), "travel");
+        }
         inv.setItem(49, GUIManager.createItem(Material.NAME_TAG,
                 t(player, "beacon_rename_button", "&bRename"),
                 tl(player, "beacon_rename_chat_lore", List.of("&7Type a name in chat."))));
         plugin.gui().tagAction(inv.getItem(49), "rename");
+        inv.setItem(51, GUIManager.createItem(Material.TNT,
+                t(player, "beacon_unbind", "&cUnbind beacon"),
+                tl(player, "beacon_unbind_lore", List.of(
+                        "&7Removes the beacon record.", "&7The pad block stays in the world."))));
+        plugin.gui().tagAction(inv.getItem(51), "unbind");
         inv.setItem(53, GUIManager.createItem(purposeIcon(beacon.getPurpose()),
                 plugin.gui().tr(player, "beacon_purpose_button", "&dPurpose: &f{PURPOSE}",
                         Map.of("PURPOSE", pretty(player, beacon.getPurpose()))),
@@ -220,9 +185,52 @@ public final class BeaconGUI {
         GUIManager.playClick(player);
     }
 
+    /** Destructive unbind confirm — warns how many pads currently link here. */
+    public void openUnbind(Player player, TeleportBeacon beacon) {
+        String title = plugin.gui().title(player, "beacon_unbind_title", "&cUnbind beacon?");
+        Inventory inv = Bukkit.createInventory(withOrigin(new UnbindHolder(beacon.getId()), player), 27, title);
+        fillSmall(inv);
+        inv.setItem(4, padIcon(player, beacon));
+        int inbound = svc().inboundLinks(beacon).size();
+        List<String> warnLore = new ArrayList<>(tl(player, "beacon_unbind_warn_lore",
+                List.of("&7Linked pads pointing here", "&7will be unlinked.")));
+        if (inbound > 0) {
+            warnLore.add(plugin.gui().tr(player, "beacon_unbind_inbound",
+                    "&c{COUNT} pad(s) link here.", Map.of("COUNT", String.valueOf(inbound))));
+        }
+        ItemStack yes = GUIManager.createItem(Material.LIME_STAINED_GLASS_PANE,
+                t(player, "beacon_unbind_confirm", "&cUnbind this beacon"), warnLore);
+        plugin.gui().tagAction(yes, "unbind_yes");
+        inv.setItem(11, yes);
+        ItemStack no = GUIManager.createItem(Material.RED_STAINED_GLASS_PANE,
+                t(player, "beacon_confirm_cancel", "&cCancel"),
+                tl(player, "beacon_confirm_cancel_lore", List.of("&7Stay where you are.")));
+        plugin.gui().tagAction(no, "stop");
+        inv.setItem(15, no);
+        player.openInventory(inv);
+        GUIManager.playClick(player);
+    }
+
+    /** Travel to a pad straight from the GUI. Foreign pads go through the public-arrival rules. */
+    public void openGuiTravel(Player player, TeleportBeacon dest) {
+        if (!svc().canGuiTravel(player, dest)) return;
+        boolean listing = !svc().canManage(player, dest);
+        if (dest.isRequireConfirm() || listing) {
+            openConfirm(player, null, dest, listing);
+        } else {
+            svc().executeTrip(player, null, dest, false);
+        }
+    }
+
     public void openLink(Player player, TeleportBeacon origin) {
+        openLink(player, origin, false);
+    }
+
+    public void openLink(Player player, TeleportBeacon origin, boolean bothWays) {
         String title = plugin.gui().title(player, "beacon_link_title", "&aLink Beacon");
-        Inventory inv = Bukkit.createInventory(withOrigin(new LinkHolder(origin.getId()), player), 54, title);
+        LinkHolder linkHolder = withOrigin(new LinkHolder(origin.getId()), player);
+        linkHolder.setBothWays(bothWays);
+        Inventory inv = Bukkit.createInventory(linkHolder, 54, title);
         fill(inv);
         List<TeleportBeacon> pads = linkablePads(player, origin);
         int slot = 10;
@@ -235,6 +243,18 @@ public final class BeaconGUI {
             inv.setItem(slot++, item);
         }
         inv.setItem(45, back(player));
+        if (linkHolder.isFromHub()) inv.setItem(47, hubReturn(player));
+        inv.setItem(48, GUIManager.createItem(
+                bothWays ? Material.SLIME_BALL : Material.GRAY_DYE,
+                plugin.gui().tr(player, "beacon_link_both" + (bothWays ? "_on" : "_off"),
+                        bothWays ? "&aRound trip: on" : "&7Round trip: off"),
+                tl(player, "beacon_link_both_lore", List.of(
+                        "&7Also link the destination back here",
+                        "&7when you manage it and it is free."))));
+        plugin.gui().tagAction(inv.getItem(48), "both_ways");
+        inv.setItem(49, GUIManager.createItem(Material.BARRIER, t(player, "button_exit", "&c✖ Close"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))));
+        plugin.gui().tagAction(inv.getItem(49), "close");
         player.openInventory(inv);
         GUIManager.playClick(player);
     }
@@ -270,26 +290,9 @@ public final class BeaconGUI {
         BeaconService service = svc();
         if (service == null) return;
 
-        if (holder instanceof ManagerHolder manager) {
-            if (event.getSlot() == 45 || event.getSlot() == 49 || (event.getSlot() == 47 && manager.isFromHub())) {
-                if (event.getSlot() == 45) {
-                    if (manager.isFromHub()) plugin.gui().travelHub().open(player);
-                    else plugin.gui().openMain(player);
-                } else if (event.getSlot() == 47) {
-                    plugin.gui().openMain(player);
-                } else {
-                    player.closeInventory();
-                }
-                return;
-            }
-            if ("give".equals(action)) {
-                service.giveStarterPads(player);
-                return;
-            }
-            if (action != null && action.startsWith("open:")) {
-                TeleportBeacon beacon = service.store().get(parseUuid(action.substring(5)));
-                if (beacon != null && service.canManage(player, beacon)) openEdit(player, beacon);
-            }
+        if ("hub_return".equals(action) && holder instanceof HubAwareHolder hub && hub.isFromHub()) {
+            player.closeInventory();
+            plugin.gui().travelHub().open(player);
             return;
         }
 
@@ -318,6 +321,8 @@ public final class BeaconGUI {
             if ("rename".equals(action)) { player.closeInventory(); service.beginRename(player, beacon); return; }
             if ("purpose".equals(action)) { service.cyclePurpose(beacon); openEdit(player, beacon); return; }
             if ("link".equals(action)) { openLink(player, beacon); return; }
+            if ("travel".equals(action)) { openGuiTravel(player, beacon); return; }
+            if ("unbind".equals(action)) { openUnbind(player, beacon); return; }
             applyEditToggle(player, event, beacon, action);
             return;
         }
@@ -326,20 +331,52 @@ public final class BeaconGUI {
             TeleportBeacon origin = service.store().get(link.beaconId());
             if (origin == null || !service.canManage(player, origin)) return;
             if (event.getSlot() == 45) { openSetup(player, origin); return; }
+            if ("close".equals(action) || event.getSlot() == 49) { player.closeInventory(); return; }
+            if ("both_ways".equals(action)) { openLink(player, origin, !link.bothWays()); return; }
             if (action != null && action.startsWith("dest:")) {
                 UUID destId = parseUuid(action.substring(5));
                 TeleportBeacon dest = destId == null ? null : service.store().get(destId);
                 if (dest != null && !service.canLinkTo(player, origin, dest)) {
                     // Social/alliance/inbound rules: never link into a stranger's private pad.
                     service.send(player, "beacon_denied", "&cYou are not allowed to link to that beacon.");
-                } else if (dest != null && service.link(origin, dest.getId())) {
-                    service.send(player, "beacon_linked",
-                            "&aLinked to &f{NAME}&a. Stand here to travel.",
-                            Map.of("NAME", dest.getName()));
+                } else if (dest != null) {
+                    BeaconService.LinkResult result = service.linkBothWays(player, origin, dest, link.bothWays());
+                    switch (result) {
+                        case LINKED_BOTH -> service.send(player, "beacon_link_both_done",
+                                "&aRound trip linked: &f{NAME}&a ↔ here.", Map.of("NAME", dest.getName()));
+                        case DEST_LINKED_ELSEWHERE -> service.send(player, "beacon_link_both_denied",
+                                "&eLinked to &f{NAME}&e, but it already links elsewhere — one-way only.",
+                                Map.of("NAME", dest.getName()));
+                        case NO_DEST_PERMS -> service.send(player, "beacon_link_both_no_perms",
+                                "&eLinked to &f{NAME}&e. You do not manage it, so only one-way was applied.",
+                                Map.of("NAME", dest.getName()));
+                        default -> service.send(player, "beacon_linked",
+                                "&aLinked to &f{NAME}&a. Stand here to travel.",
+                                Map.of("NAME", dest.getName()));
+                    }
                     openSetup(player, origin);
                 } else {
                     service.send(player, "beacon_not_linked", "&eThis beacon is not linked yet.");
                 }
+            }
+            return;
+        }
+
+        if (holder instanceof UnbindHolder unbind) {
+            if ("stop".equals(action) || event.getSlot() == 15) {
+                TeleportBeacon beacon = service.store().get(unbind.beaconId());
+                if (beacon != null && service.canManage(player, beacon)) openEdit(player, beacon);
+                else openManager(player);
+                return;
+            }
+            if ("unbind_yes".equals(action) || event.getSlot() == 11) {
+                TeleportBeacon beacon = service.store().get(unbind.beaconId());
+                if (beacon == null || !service.canManage(player, beacon)) { openManager(player); return; }
+                service.unbind(beacon.getId());
+                service.send(player, "beacon_unbound",
+                        "&eBeacon unbound. Pads that linked here were cleared; break the block to reclaim it.");
+                if (plugin.effects() != null) plugin.effects().playConfirm(player);
+                openManager(player);
             }
             return;
         }
@@ -491,9 +528,17 @@ public final class BeaconGUI {
         List<String> lore = new ArrayList<>();
         lore.add(plugin.gui().tr(player, "beacon_icon_purpose", "&7Purpose: &f{PURPOSE}",
                 Map.of("PURPOSE", pretty(player, beacon.getPurpose()))));
-        lore.add(beacon.isLinked()
-                ? t(player, "beacon_icon_linked", "&aLinked")
+        TeleportBeacon linked = beacon.getLinkedBeaconId() == null ? null
+                : svc().store().get(beacon.getLinkedBeaconId());
+        lore.add(linked != null
+                ? plugin.gui().tr(player, "beacon_linked_to", "&aLinked &7→ &f{NAME}",
+                        Map.of("NAME", linked.getName()))
                 : t(player, "beacon_icon_unlinked", "&cNot linked yet"));
+        int inbound = svc().inboundLinks(beacon).size();
+        if (inbound > 0) {
+            lore.add(plugin.gui().tr(player, "beacon_inbound", "&7Inbound: &f{COUNT} pad(s)",
+                    Map.of("COUNT", String.valueOf(inbound))));
+        }
         lore.add(beacon.isPublicAccess()
                 ? t(player, "beacon_icon_public", "&aPublic")
                 : t(player, "beacon_icon_not_public", "&7Not public"));
@@ -539,6 +584,14 @@ public final class BeaconGUI {
         ItemStack item = GUIManager.createItem(Material.ARROW, t(player, "button_back", "&e⟵ Back"),
                 tl(player, "back_lore", List.of("&7Return to the previous page.")));
         plugin.gui().tagAction(item, "back");
+        return item;
+    }
+
+    private ItemStack hubReturn(Player player) {
+        ItemStack item = GUIManager.createItem(Material.COMPASS,
+                t(player, "button_back_hub", "&bBack to Travel Hub"),
+                tl(player, "back_hub_lore", List.of("&7Return to the travel hub.")));
+        plugin.gui().tagAction(item, "hub_return");
         return item;
     }
 

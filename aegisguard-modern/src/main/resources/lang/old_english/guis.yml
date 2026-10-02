@@ -3750,7 +3750,6 @@ button_beacons: '&bTeleport Beacons'
 beacons_button_lore:
 - '&7Fashion linked pads, pick who may use them,'
 - '&7and travel with a confirm screen.'
-beacon_manager_title: '&bTeleport Beacons'
 beacon_manager_guide_name: '&bHow beacons work'
 beacon_manager_guide_lore:
 - '&7Place a lodestone (or listed pad).'
@@ -3776,7 +3775,6 @@ beacon_give_button_lore:
 - '&7Gives lodestones (or the server pad).'
 - '&7Place them, then sneak-right-click to bind.'
 - '&7Any allowed pad block you already have also works.'
-beacon_need_plot_lore: '&7Beacons belong to the plot you are in.'
 beacon_confirm_go_lore:
 - '&7You will arrive at the linked pad.'
 beacon_purpose_lore:
@@ -3785,7 +3783,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eClick to cycle.'
 beacon_icon_purpose: '&7Purpose: &f{PURPOSE}'
-beacon_icon_linked: '&aLinked'
 beacon_icon_unlinked: '&cNot linked yet'
 beacon_icon_public: '&aPublic'
 beacon_icon_not_public: '&7Not public'
@@ -4801,3 +4798,31 @@ admin_plot_list_empty_lore:
 button_back_hub: '&fBack to ye Travel Hub'
 back_hub_lore:
 - '&7Return to the travel hub index.'
+beacon_linked_to: '&aLinked &7-> &f{NAME}'
+beacon_inbound: '&7Inbound: &f{COUNT} pad(s)'
+beacon_click_legend:
+- '&eLeft-click &7to manage · &eRight-click &7to travel'
+beacon_unbind: '&cUnbind beacon'
+beacon_unbind_lore:
+- '&7Removeth the beacon record.'
+- '&7The pad block remaineth in the world.'
+beacon_unbind_title: '&cUnbind beacon?'
+beacon_unbind_warn_lore:
+- '&7Pads that point hither'
+- '&7shall be unlinked.'
+beacon_unbind_inbound: '&c{COUNT} pad(s) point hither.'
+beacon_unbind_confirm: '&cUnbind this beacon'
+beacon_travel_button: '&dTravel hither'
+beacon_travel_lore:
+- '&7Teleport straight to this pad.'
+beacon_link_both_on: '&aRound trip: aye'
+beacon_link_both_off: '&7Round trip: nay'
+beacon_link_both_lore:
+- '&7Also linketh the destination back hither'
+- '&7when thou manageth it and it is free.'
+beacon_none_yet: '&cNo beacons yet'
+beacon_none_yet_lore:
+- '&7Stand in a claim thou manageth, place a'
+- '&7pad block, then sneak-right-click it.'
+beacon_count_lore: '&7Thou manageth &f{COUNT}&7 pad(s) across &f{PLOTS}&7 claim(s).'
+beacon_cap_lore: '&7This claim: &f{USED}&7/&f{MAX}&7 pads.'

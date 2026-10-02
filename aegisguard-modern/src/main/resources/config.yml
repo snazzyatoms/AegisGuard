@@ -23,7 +23,7 @@
 # ==============================================================================
 
 # config_schema is maintained automatically; do not lower it on an existing server.
-config_schema: 1312
+config_schema: 1313
 
 
 # ------------------------------------------------------------------------------
@@ -1258,6 +1258,13 @@ teleport_beacons:
   # One create wizard at a time; minimum gap (seconds) between sneak-binding new
   # pads so a manager cannot spam duplicate rows.
   create_cooldown_seconds: 8
+  # Remote travel straight from the atlas "My Beacons" list (right-click a pad):
+  #   manage - only pads the player may manage
+  #   public - own pads plus any enabled public pad
+  #   off    - list is manage-only; travel still requires standing on a pad
+  gui_travel: public
+  # Actionbar hint when a manager right-clicks an unbound pad block in a claim.
+  bind_hint: true
   # Hand players placeable pads from /ag beacon give or the manager button.
   # They may still place any pad_materials block they already have.
   give_starter_pads: true

@@ -3783,7 +3783,6 @@ button_beacons: '&bBeacony teleportacji'
 beacons_button_lore:
 - '&7Twórz połączone pady, wybierz kto może z nich korzystać'
 - '&7i podróżuj z ekranem potwierdzenia.'
-beacon_manager_title: '&bBeacony teleportacji'
 beacon_manager_guide_name: '&bJak to działa'
 beacon_manager_guide_lore:
 - '&7Postaw lodestone (lub inny pad).'
@@ -3809,7 +3808,6 @@ beacon_give_button_lore:
 - '&7Daje lodestone (lub pad serwera).'
 - '&7Postaw je, potem kucnij + PPM, aby powiązać.'
 - '&7Działa też dowolny dozwolony pad, który już masz.'
-beacon_need_plot_lore: '&7Beacony należą do działki, na której stoisz.'
 beacon_confirm_go_lore:
 - '&7Wylądujesz na połączonym padzie.'
 beacon_purpose_lore:
@@ -3818,7 +3816,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eKliknij, aby zmienić.'
 beacon_icon_purpose: '&7Przeznaczenie: &f{PURPOSE}'
-beacon_icon_linked: '&aPołączony'
 beacon_icon_unlinked: '&cJeszcze nie połączony'
 beacon_icon_public: '&aPubliczny'
 beacon_icon_not_public: '&7Niepubliczny'
@@ -4854,3 +4851,32 @@ admin_plot_list_empty_lore:
 button_back_hub: '&fWróć do Centrum Podróży'
 back_hub_lore:
 - '&7Powrót do centrum podróży.'
+
+beacon_linked_to: '&aPołączono &7-> &f{NAME}'
+beacon_inbound: '&7Przychodzące: &f{COUNT} padów'
+beacon_click_legend:
+- '&eLewy klik &7zarządzaj · &ePrawy klik &7podróżuj'
+beacon_unbind: '&cOdłącz beacon'
+beacon_unbind_lore:
+- '&7Usuwa wpis beaconu.'
+- '&7Blok padu pozostaje w świecie.'
+beacon_unbind_title: '&cOdłączyć beacon?'
+beacon_unbind_warn_lore:
+- '&7Pady połączone, które tu wskazują,'
+- '&7zostaną odłączone.'
+beacon_unbind_inbound: '&c{COUNT} pad(ów) wskazuje tutaj.'
+beacon_unbind_confirm: '&cOdłącz ten beacon'
+beacon_travel_button: '&dPodróż tutaj'
+beacon_travel_lore:
+- '&7Bezpośredni teleport do tego padu.'
+beacon_link_both_on: '&aW obie strony: wł.'
+beacon_link_both_off: '&7W obie strony: wył.'
+beacon_link_both_lore:
+- '&7Połącz też cel z powrotem tutaj,'
+- '&7gdy nim zarządzasz i jest wolny.'
+beacon_none_yet: '&cJeszcze brak beaconów'
+beacon_none_yet_lore:
+- '&7Stań na działce, którą zarządzasz, połóż'
+- '&7blok padu i kliknij prawym kucając.'
+beacon_count_lore: '&7Zarządzasz &f{COUNT}&7 padami na &f{PLOTS}&7 działkach.'
+beacon_cap_lore: '&7Ta działka: &f{USED}&7/&f{MAX}&7 padów.'

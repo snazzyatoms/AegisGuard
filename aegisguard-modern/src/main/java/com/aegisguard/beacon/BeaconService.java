@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +34,7 @@ public final class BeaconService {
     private final Map<UUID, Long> lastPadGiveAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastCreateAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastSparkleAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastBindHintAt = new ConcurrentHashMap<>();
     private final Set<UUID> tripLocks = ConcurrentHashMap.newKeySet();
 
     public BeaconService(AegisGuard plugin) {
@@ -203,6 +205,100 @@ public final class BeaconService {
         origin.setLinkedBeaconId(destId);
         store.put(origin);
         return true;
+    }
+
+    public enum LinkResult {
+        LINKED_ONE_WAY,
+        LINKED_BOTH,
+        DEST_LINKED_ELSEWHERE,
+        NO_DEST_PERMS
+    }
+
+    /**
+     * Links A->B, and when {@code bothWays} is set also tries B->A.
+     * The reverse link is only applied when the player manages B and B has no
+     * existing route — it never steals a pad's current destination.
+     */
+    public LinkResult linkBothWays(Player player, TeleportBeacon origin, TeleportBeacon dest, boolean bothWays) {
+        if (!link(origin, dest.getId())) return LinkResult.NO_DEST_PERMS;
+        if (!bothWays) return LinkResult.LINKED_ONE_WAY;
+        if (!canManage(player, dest)) return LinkResult.NO_DEST_PERMS;
+        if (dest.isLinked()) return LinkResult.DEST_LINKED_ELSEWHERE;
+        dest.setLinkedBeaconId(origin.getId());
+        store.put(dest);
+        return LinkResult.LINKED_BOTH;
+    }
+
+    /**
+     * Removes a bound pad record and clears every pad still linked to it, so no
+     * dangling linked_id survives in the store. The world block is left in place.
+     */
+    public boolean unbind(UUID beaconId) {
+        TeleportBeacon beacon = beaconId == null ? null : store.get(beaconId);
+        if (beacon == null) return false;
+        for (TeleportBeacon other : inboundLinks(beacon)) {
+            other.setLinkedBeaconId(null);
+            store.put(other);
+        }
+        return store.remove(beaconId);
+    }
+
+    /** Pads that currently point at this beacon (cleared automatically if it is unbound). */
+    public List<TeleportBeacon> inboundLinks(TeleportBeacon beacon) {
+        if (beacon == null) return List.of();
+        List<TeleportBeacon> inbound = new ArrayList<>();
+        for (TeleportBeacon other : store.all()) {
+            if (other != null && beacon.getId().equals(other.getLinkedBeaconId())) inbound.add(other);
+        }
+        return inbound;
+    }
+
+    /** Beacons this player may manage, across every plot (used by the atlas My Beacons tab). */
+    public List<TeleportBeacon> manageableBy(Player player) {
+        if (player == null) return List.of();
+        List<TeleportBeacon> out = new ArrayList<>();
+        for (TeleportBeacon beacon : store.all()) {
+            if (beacon != null && canManage(player, beacon)) out.add(beacon);
+        }
+        return out;
+    }
+
+    /**
+     * Whether the player may teleport to this pad straight from the beacon list GUI.
+     * {@code teleport_beacons.gui_travel}: manage = own pads, public = any public pad,
+     * off = walk-up only.
+     */
+    public boolean canGuiTravel(Player player, TeleportBeacon beacon) {
+        if (player == null || beacon == null || !beacon.isEnabled()) return false;
+        String mode = plugin.getConfig().getString("teleport_beacons.gui_travel", "public");
+        if (mode == null) mode = "public";
+        mode = mode.trim().toLowerCase(Locale.ROOT);
+        if (mode.equals("off") || mode.equals("false") || mode.equals("none")) return false;
+        if (canManage(player, beacon)) return true;
+        if (mode.equals("manage") || mode.equals("own")) return false;
+        return beacon.isPublicAccess() && !beacon.isStaffOnly();
+    }
+
+    /** Throttled bind-hint gate for right-clicking an unbound pad (pairs with shouldPrompt). */
+    public boolean shouldShowBindHint(Player player) {
+        if (player == null) return false;
+        long now = System.currentTimeMillis();
+        Long last = lastBindHintAt.get(player.getUniqueId());
+        if (last != null && now - last < 4000L) return false;
+        pruneIfLarge(lastBindHintAt, 4000L);
+        lastBindHintAt.put(player.getUniqueId(), now);
+        return true;
+    }
+
+    /** Localized actionbar text for the unbound-pad hint (null-safe for Codex absence). */
+    public String getBindHint(Player player) {
+        try {
+            if (plugin.gui() != null) {
+                return plugin.gui().tr(player, "beacon_bind_hint",
+                        "&eSneak-right-click to bind this pad as a beacon.");
+            }
+        } catch (Throwable ignored) {}
+        return "&eSneak-right-click to bind this pad as a beacon.";
     }
 
     public void removeForPlot(UUID plotId) {

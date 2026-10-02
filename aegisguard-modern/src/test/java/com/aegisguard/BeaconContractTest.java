@@ -25,12 +25,14 @@ class BeaconContractTest {
         try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
             config = yaml.load(in);
         }
-        assertEquals(1312, ((Number) config.get("config_schema")).intValue());
+        assertEquals(1313, ((Number) config.get("config_schema")).intValue());
         Map<String, Object> modules = (Map<String, Object>) config.get("modules");
         assertEquals(Boolean.TRUE, modules.get("teleport_beacons"));
         Map<String, Object> section = (Map<String, Object>) config.get("teleport_beacons");
         assertEquals(Boolean.TRUE, section.get("enabled"));
         assertEquals(3, ((Number) section.get("max_per_plot")).intValue());
+        assertEquals("public", section.get("gui_travel"));
+        assertEquals(Boolean.TRUE, section.get("bind_hint"));
         assertEquals(Boolean.TRUE, section.get("give_starter_pads"));
         assertEquals("LODESTONE", section.get("starter_pad_material"));
         Map<String, Object> charges = (Map<String, Object>) section.get("charges");
@@ -59,6 +61,10 @@ class BeaconContractTest {
         assertTrue(service.contains("reassignPlot"));
         assertTrue(service.contains("tripLocks"));
         assertTrue(service.contains("clearPlayerState"));
+        assertTrue(service.contains("canGuiTravel"));
+        assertTrue(service.contains("linkBothWays"));
+        assertTrue(service.contains("inboundLinks"));
+        assertTrue(service.contains("getBindHint"));
 
         String beacon = Files.readString(JAVA.resolve("beacon/TeleportBeacon.java"));
         assertTrue(beacon.contains("owners = true"));
@@ -111,9 +117,16 @@ class BeaconContractTest {
                 assertTrue(system.contains(key), pack + " missing " + key);
             }
             String guis = Files.readString(LANG.resolve(pack).resolve("guis.yml"));
-            assertTrue(guis.contains("beacon_manager_title:"), pack + " missing beacon GUI keys");
+            assertTrue(guis.contains("beacon_unbind_title:"), pack + " missing unbind confirmation keys");
             assertTrue(guis.contains("button_beacons:"), pack + " missing beacon menu button");
-            assertTrue(guis.contains("beacon_need_plot_lore:"), pack + " missing beacon_need_plot_lore");
+            assertTrue(guis.contains("beacon_unbind_confirm:"), pack + " missing beacon_unbind_confirm");
+            assertTrue(guis.contains("beacon_link_both_on:"), pack + " missing round-trip toggle keys");
+            assertTrue(guis.contains("beacon_linked_to:"), pack + " missing linked-pad lore key");
+            assertTrue(guis.contains("beacon_inbound:"), pack + " missing inbound-link lore key");
+            assertTrue(guis.contains("beacon_click_legend:"), pack + " missing manage/travel legend");
+            assertTrue(guis.contains("beacon_none_yet:"), pack + " missing empty-state keys");
+            assertTrue(system.contains("beacon_unbound:"), pack + " missing unbind result message");
+            assertTrue(system.contains("beacon_bind_hint:"), pack + " missing bind hint message");
             assertTrue(guis.contains("{NAME}"), pack + " confirm/go should include {NAME}");
             assertTrue(guis.contains("{PURPOSE}"), pack + " purpose button should include {PURPOSE}");
             assertTrue(guis.contains("beacon_toggle_owners:"), pack + " missing toggle keys");
@@ -145,6 +158,18 @@ class BeaconContractTest {
         assertTrue(gui.contains("{NAME}"));
         assertTrue(gui.contains("canEditVaultFees"));
         assertTrue(gui.contains("confirmLore"));
+        assertTrue(gui.contains("UnbindHolder"));
+        assertTrue(gui.contains("openUnbind"));
+        assertTrue(gui.contains("linkBothWays"));
+        assertTrue(gui.contains("inboundLinks"));
+        assertFalse(gui.contains("ManagerHolder"), "legacy manager holder must be gone");
+        String router = Files.readString(JAVA.resolve("gui/GUIListener.java"));
+        assertTrue(router.contains("BeaconGUI.UnbindHolder"));
+        assertFalse(router.contains("BeaconGUI.ManagerHolder"));
+        String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
+        assertTrue(visit.contains("canGuiTravel"), "atlas beacons tab must offer travel clicks");
+        assertTrue(visit.contains("GuiClicks.alternate(e)"), "atlas beacons tab must split manage/travel clicks");
+        assertTrue(visit.contains("openGuiTravel"));
         String charges = Files.readString(JAVA.resolve("beacon/BeaconCharges.java"));
         assertTrue(charges.contains("OWNER_CHOICE"));
         assertTrue(charges.contains("pay_plot_owner"));

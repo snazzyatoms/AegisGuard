@@ -707,12 +707,23 @@ public class VisitGUI {
                 case "arrival_beacon" -> { setPlotArrival(player, Plot.ArrivalMode.BEACON); return; }
                 case "arrival_override" -> { togglePlotTravelerOverride(player); return; }
                 case "traveler_pref" -> { cycleTravelerPreference(player); return; }
+                case "beacon_prev" -> { plugin.runMain(player, () -> buildBeaconsTab(player, page - 1)); return; }
+                case "beacon_next" -> { plugin.runMain(player, () -> buildBeaconsTab(player, page + 1)); return; }
                 default -> {
                     if (action.startsWith("open:") && plugin.gui().beacons() != null && plugin.beacons() != null) {
                         UUID id = parseUuid(action.substring(5));
                         var beacon = id == null ? null : plugin.beacons().store().get(id);
-                        if (beacon != null && plugin.beacons().canManage(player, beacon)) {
+                        if (beacon == null) return;
+                        if (GuiClicks.alternate(e)) {
+                            if (plugin.beacons().canGuiTravel(player, beacon)) {
+                                plugin.gui().beacons().openGuiTravel(player, beacon);
+                            } else {
+                                plugin.effects().playError(player);
+                            }
+                        } else if (plugin.beacons().canManage(player, beacon)) {
                             plugin.gui().beacons().openEdit(player, beacon);
+                        } else if (plugin.beacons().canGuiTravel(player, beacon)) {
+                            plugin.gui().beacons().openGuiTravel(player, beacon);
                         }
                     }
                     return;
@@ -896,37 +907,107 @@ public class VisitGUI {
         inv.setItem(52, close);
     }
 
+    /** Pad grid slots for the My Beacons tab: three rows of seven. */
+    private static final int[] BEACON_PAD_SLOTS = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34
+    };
+
     private void buildBeaconsTab(Player player) {
+        buildBeaconsTab(player, 0);
+    }
+
+    /**
+     * Every beacon the player may manage, across all their claims — current-plot pads
+     * first. Replaces the old "stand in a claim" dead-end that hid beacons on other plots.
+     */
+    private void buildBeaconsTab(Player player, int page) {
         String title = plugin.gui().title(player, "atlas_title_beacons", "&bTravel Atlas · My Beacons");
-        VisitHolder beaconsHolder = new VisitHolder(List.of(), 0, VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.MY_BEACONS);
+        VisitHolder beaconsHolder = new VisitHolder(List.of(), Math.max(0, page), VisitMode.OWNED, DiscoverFilter.ALL, null, AtlasTab.MY_BEACONS);
         beaconsHolder.setFromHub(GUIManager.hubOriginActive(player));
         Inventory inv = Bukkit.createInventory(beaconsHolder, 54, title);
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
-        Plot plot = plugin.store().getPlotAt(player.getLocation());
+
+        var beacons = plugin.beacons();
+        Plot here = plugin.store().getPlotAt(player.getLocation());
+        java.util.UUID hereId = here == null ? null : here.getPlotId();
+        List<com.aegisguard.beacon.TeleportBeacon> own = beacons == null
+                ? new ArrayList<>()
+                : new ArrayList<>(beacons.manageableBy(player));
+        own.sort((a, b) -> {
+            boolean ah = hereId != null && hereId.equals(a.getPlotId());
+            boolean bh = hereId != null && hereId.equals(b.getPlotId());
+            if (ah != bh) return ah ? -1 : 1;
+            return Long.compare(a.getCreatedAt(), b.getCreatedAt());
+        });
+        // Foreign public pads follow your own when gui_travel=public (canGuiTravel gates this).
+        List<com.aegisguard.beacon.TeleportBeacon> foreign = new ArrayList<>();
+        if (beacons != null) {
+            for (var b : beacons.store().all()) {
+                if (b == null || beacons.canManage(player, b)) continue;
+                if (beacons.canGuiTravel(player, b)) foreign.add(b);
+            }
+            foreign.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        }
+        List<com.aegisguard.beacon.TeleportBeacon> pads = new ArrayList<>(own.size() + foreign.size());
+        pads.addAll(own);
+        pads.addAll(foreign);
+
+        long plots = own.stream().map(com.aegisguard.beacon.TeleportBeacon::getPlotId)
+                .filter(java.util.Objects::nonNull).distinct().count();
+        List<String> guideLore = new ArrayList<>(tl(player, "beacon_manager_guide_lore", List.of(
+                "&7Place a lodestone (or listed pad).",
+                "&7Sneak-click it to create a beacon.",
+                "&71. Pick a preset  2. Link another pad",
+                "&73. Stand on it to travel.")));
+        guideLore.add(t(player, "beacon_count_lore",
+                "&7You manage &f{COUNT}&7 pad(s) across &f{PLOTS}&7 claim(s).",
+                Map.of("COUNT", String.valueOf(own.size()), "PLOTS", String.valueOf(plots))));
+        if (here != null && beacons != null && here.canManage(player, plugin)) {
+            guideLore.add(t(player, "beacon_cap_lore", "&7This claim: &f{USED}&7/&f{MAX}&7 pads.",
+                    Map.of("USED", String.valueOf(beacons.store().forPlot(hereId).size()),
+                            "MAX", String.valueOf(beacons.maxFor(here)))));
+        }
         inv.setItem(4, GUIManager.createItem(Material.END_PORTAL_FRAME,
-                t(player, "beacon_manager_guide_name", "&bHow beacons work"),
-                tl(player, "beacon_manager_guide_lore", List.of(
-                        "&7Place a lodestone (or listed pad).",
-                        "&7Sneak-click it to create a beacon.",
-                        "&71. Pick a preset  2. Link another pad",
-                        "&73. Stand on it to travel."))));
-        if (plot == null) {
+                t(player, "beacon_manager_guide_name", "&bHow beacons work"), guideLore));
+
+        if (pads.isEmpty()) {
             inv.setItem(22, GUIManager.createItem(Material.BARRIER,
-                    t(player, "beacon_need_plot", "&cStand in a claim"),
-                    List.of(t(player, "beacon_need_plot_lore", "&7Beacons belong to the plot you are in."))));
-        } else if (plugin.beacons() != null) {
-            int slot = 19;
-            for (var beacon : plugin.beacons().store().forPlot(plot.getPlotId())) {
-                if (slot > 25 && slot < 28) slot = 28;
-                if (slot > 34) break;
+                    t(player, "beacon_none_yet", "&cNo beacons yet"),
+                    tl(player, "beacon_none_yet_lore", List.of(
+                            "&7Stand in a claim you manage, place a",
+                            "&7pad block, then sneak-right-click it."))));
+        } else {
+            int start = page * BEACON_PAD_SLOTS.length;
+            for (int i = 0; i < BEACON_PAD_SLOTS.length; i++) {
+                int idx = start + i;
+                if (idx >= pads.size()) break;
+                var beacon = pads.get(idx);
                 ItemStack item = plugin.gui().beacons().padIcon(player, beacon);
-                plugin.gui().tagAction(item, "open:" + beacon.getId());
-                inv.setItem(slot++, item);
+                appendClickLegend(player, item);
+                tagAction(item, "open:" + beacon.getId());
+                inv.setItem(BEACON_PAD_SLOTS[i], item);
+            }
+            if (page > 0) {
+                ItemStack prev = GUIManager.createItem(Material.ARROW,
+                        t(player, "button_prev_page", "&fPrevious Page"),
+                        tl(player, "prev_page_lore", List.of("&7Go to the previous page.")));
+                tagAction(prev, "beacon_prev");
+                inv.setItem(45, prev);
+            }
+            if (start + BEACON_PAD_SLOTS.length < pads.size()) {
+                ItemStack next = GUIManager.createItem(Material.ARROW,
+                        t(player, "button_next_page", "&fNext Page"),
+                        tl(player, "next_page_lore", List.of("&7Go to the next page.")));
+                tagAction(next, "beacon_next");
+                inv.setItem(53, next);
             }
         }
+
         ItemStack give = GUIManager.createItem(
-                plugin.beacons() == null ? Material.LODESTONE : plugin.beacons().starterPadMaterial(),
+                beacons == null ? Material.LODESTONE : beacons.starterPadMaterial(),
                 t(player, "beacon_give_button", "&bGet pad blocks"),
                 tl(player, "beacon_give_button_lore", List.of(
                         "&7Gives lodestones (or the server's pad).",
@@ -938,6 +1019,19 @@ public class VisitGUI {
         paintVisitChrome(player, inv);
         player.openInventory(inv);
         plugin.effects().playMenuOpen(player);
+    }
+
+    /** Adds the "left: manage · right: travel" legend to a pad icon in the My Beacons list. */
+    private void appendClickLegend(Player player, ItemStack item) {
+        if (item == null) return;
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        List<String> lore = meta.hasLore() && meta.getLore() != null
+                ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        lore.addAll(tl(player, "beacon_click_legend", List.of(
+                "&eLeft-click &7manage · &eRight-click &7travel")));
+        meta.setLore(lore);
+        item.setItemMeta(meta);
     }
 
     private void buildArrivalTab(Player player) {

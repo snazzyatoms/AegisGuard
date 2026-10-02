@@ -1291,3 +1291,8 @@ snapshot_lock_failed: '&cIl blocco di manutenzione non ha potuto essere rilascia
 snapshot_storage_inspecting: '&eIspezione dell''archivio backup in modo asincrono...'
 snapshot_storage_failed: '&cIspezione dell''archivio fallita: {ERROR}'
 health_check_running: '&eEsecuzione dei controlli di integrità AegisGuard sicuri per regione...'
+beacon_unbound: '&eBeacon scollegato. I pad collegati qui sono stati liberati; rompi il blocco per recuperarlo.'
+beacon_link_both_done: '&aAndata e ritorno collegata: &f{NAME}&a <-> qui.'
+beacon_link_both_denied: '&eCollegato a &f{NAME}&e, ma punta già altrove — solo andata.'
+beacon_link_both_no_perms: '&eCollegato a &f{NAME}&e. Non lo gestisci, quindi solo andata.'
+beacon_bind_hint: '&eAccovacciati e clicca col destro per collegare questo pad come beacon.'

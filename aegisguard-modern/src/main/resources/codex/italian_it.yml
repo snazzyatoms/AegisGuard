@@ -4622,7 +4622,6 @@ button_beacons: '&bBeacon di teletrasporto'
 beacons_button_lore:
 - '&7Crea pedane collegate, scegli chi può usarle'
 - '&7e viaggia con una schermata di conferma.'
-beacon_manager_title: '&bBeacon di teletrasporto'
 beacon_manager_guide_name: '&bCome funzionano'
 beacon_manager_guide_lore:
 - '&7Piazza una lodestone (o un''altra pedana).'
@@ -4648,7 +4647,6 @@ beacon_give_button_lore:
 - '&7Dà lodestone (o la pedana del server).'
 - '&7Piazzale, poi accovacciati + clic destro per collegare.'
 - '&7Funziona anche qualsiasi pedana consentita che hai già.'
-beacon_need_plot_lore: '&7I beacon appartengono al terreno in cui ti trovi.'
 beacon_confirm_go_lore:
 - '&7Arriverai sul pad collegato.'
 beacon_purpose_lore:
@@ -4657,7 +4655,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eClicca per cambiare.'
 beacon_icon_purpose: '&7Scopo: &f{PURPOSE}'
-beacon_icon_linked: '&aCollegato'
 beacon_icon_unlinked: '&cNon ancora collegato'
 beacon_icon_public: '&aPubblico'
 beacon_icon_not_public: '&7Non pubblico'
@@ -5768,3 +5765,36 @@ snapshot_lock_failed: '&cIl blocco di manutenzione non ha potuto essere rilascia
 snapshot_storage_inspecting: '&eIspezione dell''archivio backup in modo asincrono...'
 snapshot_storage_failed: '&cIspezione dell''archivio fallita: {ERROR}'
 health_check_running: '&eEsecuzione dei controlli di integrità AegisGuard sicuri per regione...'
+beacon_linked_to: '&aCollegato &7-> &f{NAME}'
+beacon_inbound: '&7In entrata: &f{COUNT} pad'
+beacon_click_legend:
+- '&eClick sinistro &7gestisci · &eClick destro &7viaggia'
+beacon_unbind: '&cScollega beacon'
+beacon_unbind_lore:
+- '&7Rimuove la registrazione del beacon.'
+- '&7Il blocco pad resta nel mondo.'
+beacon_unbind_title: '&cScollegare il beacon?'
+beacon_unbind_warn_lore:
+- '&7I pad collegati che puntano qui'
+- '&7saranno scollegati.'
+beacon_unbind_inbound: '&c{COUNT} pad puntano qui.'
+beacon_unbind_confirm: '&cScollega questo beacon'
+beacon_travel_button: '&dViaggia qui'
+beacon_travel_lore:
+- '&7Teletrasporto diretto a questo pad.'
+beacon_link_both_on: '&aAndata e ritorno: attivo'
+beacon_link_both_off: '&7Andata e ritorno: disattivo'
+beacon_link_both_lore:
+- '&7Collega anche la destinazione di ritorno'
+- '&7se la gestisci ed è libera.'
+beacon_none_yet: '&cAncora nessun beacon'
+beacon_none_yet_lore:
+- '&7Stai in un lotto che gestisci, posiziona un'
+- '&7blocco pad e clicca col destro accovacciato.'
+beacon_count_lore: '&7Gestisci &f{COUNT}&7 pad in &f{PLOTS}&7 lotti.'
+beacon_cap_lore: '&7Questo lotto: &f{USED}&7/&f{MAX}&7 pad.'
+beacon_unbound: '&eBeacon scollegato. I pad collegati qui sono stati liberati; rompi il blocco per recuperarlo.'
+beacon_link_both_done: '&aAndata e ritorno collegata: &f{NAME}&a <-> qui.'
+beacon_link_both_denied: '&eCollegato a &f{NAME}&e, ma punta già altrove — solo andata.'
+beacon_link_both_no_perms: '&eCollegato a &f{NAME}&e. Non lo gestisci, quindi solo andata.'
+beacon_bind_hint: '&eAccovacciati e clicca col destro per collegare questo pad come beacon.'

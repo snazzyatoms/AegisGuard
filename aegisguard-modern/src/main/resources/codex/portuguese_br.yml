@@ -4611,7 +4611,6 @@ button_beacons: '&bBeacons de teleporte'
 beacons_button_lore:
 - '&7Crie plataformas ligadas, escolha quem pode usar'
 - '&7e viaje com uma tela de confirmação.'
-beacon_manager_title: '&bBeacons de teleporte'
 beacon_manager_guide_name: '&bComo funcionam'
 beacon_manager_guide_lore:
 - '&7Coloque uma lodestone (ou outra plataforma).'
@@ -4637,7 +4636,6 @@ beacon_give_button_lore:
 - '&7Entrega lodestones (ou a plataforma do servidor).'
 - '&7Coloque e depois agache + clique direito para vincular.'
 - '&7Qualquer plataforma permitida que você já tenha também serve.'
-beacon_need_plot_lore: '&7Beacons pertencem ao terreno em que você está.'
 beacon_confirm_go_lore:
 - '&7Você chegará na plataforma ligada.'
 beacon_purpose_lore:
@@ -4646,7 +4644,6 @@ beacon_purpose_lore:
 beacon_purpose_cycle_lore:
 - '&eClique para alternar.'
 beacon_icon_purpose: '&7Propósito: &f{PURPOSE}'
-beacon_icon_linked: '&aLigada'
 beacon_icon_unlinked: '&cAinda não ligada'
 beacon_icon_public: '&aPública'
 beacon_icon_not_public: '&7Não pública'
@@ -5758,3 +5755,36 @@ snapshot_lock_failed: '&cO bloqueio de manutenção não pôde ser liberado.'
 snapshot_storage_inspecting: '&eInspecionando o armazenamento de backups de forma assíncrona...'
 snapshot_storage_failed: '&cA inspeção do armazenamento falhou: {ERROR}'
 health_check_running: '&eExecutando verificações de integridade do AegisGuard seguras por região...'
+beacon_linked_to: '&aVinculado &7-> &f{NAME}'
+beacon_inbound: '&7Entrada: &f{COUNT} pad(s)'
+beacon_click_legend:
+- '&eClique esq. &7gerenciar · &eClique dir. &7viajar'
+beacon_unbind: '&cDesvincular beacon'
+beacon_unbind_lore:
+- '&7Remove o registro do beacon.'
+- '&7O bloco pad permanece no mundo.'
+beacon_unbind_title: '&cDesvincular beacon?'
+beacon_unbind_warn_lore:
+- '&7Pads vinculados que apontam aqui'
+- '&7serão desvinculados.'
+beacon_unbind_inbound: '&c{COUNT} pad(s) vinculam aqui.'
+beacon_unbind_confirm: '&cDesvincular este beacon'
+beacon_travel_button: '&dViajar até aqui'
+beacon_travel_lore:
+- '&7Teleporte direto para este pad.'
+beacon_link_both_on: '&aIda e volta: ligado'
+beacon_link_both_off: '&7Ida e volta: desligado'
+beacon_link_both_lore:
+- '&7Também vincula o destino de volta'
+- '&7se você o gerenciar e estiver livre.'
+beacon_none_yet: '&cNenhum beacon ainda'
+beacon_none_yet_lore:
+- '&7Fique em um terreno que você gerencia, coloque um'
+- '&7bloco pad e clique direito agachado.'
+beacon_count_lore: '&7Você gerencia &f{COUNT}&7 pad(s) em &f{PLOTS}&7 terreno(s).'
+beacon_cap_lore: '&7Este terreno: &f{USED}&7/&f{MAX}&7 pads.'
+beacon_unbound: '&eBeacon desvinculado. Pads vinculados aqui foram liberados; quebre o bloco para recuperá-lo.'
+beacon_link_both_done: '&aIda e volta vinculada: &f{NAME}&a <-> aqui.'
+beacon_link_both_denied: '&eVinculado a &f{NAME}&e, mas já vincula a outro lugar — apenas ida.'
+beacon_link_both_no_perms: '&eVinculado a &f{NAME}&e. Você não o gerencia, então apenas ida foi aplicada.'
+beacon_bind_hint: '&eAgache e clique com o botão direito para vincular este pad como beacon.'

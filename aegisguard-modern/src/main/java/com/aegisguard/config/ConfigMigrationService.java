@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 public final class ConfigMigrationService {
 
-    public static final int CURRENT_SCHEMA = 1312;
+    public static final int CURRENT_SCHEMA = 1313;
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final AegisGuard plugin;
     private final List<String> changes = new ArrayList<>();
@@ -251,6 +251,12 @@ public final class ConfigMigrationService {
         repairDouble(config, "full_plot_renting.maximum_price", 0.01D, 1_000_000_000_000.0D, 1_000_000_000.0D);
         repairDouble(config, "full_plot_renting.maximum_deposit", 0.0D, 1_000_000_000.0D, 1_000_000.0D);
 
+        String guiTravel = config.getString("teleport_beacons.gui_travel", "public");
+        if (!isGuiTravelMode(guiTravel)) {
+            config.set("teleport_beacons.gui_travel", "public");
+            warnings.add("teleport_beacons.gui_travel was invalid and was reset to public.");
+        }
+
         int defaultDays = config.getInt("full_plot_renting.duration_days", 7);
         int maximumDays = config.getInt("full_plot_renting.maximum_duration_days", 90);
         if (maximumDays < defaultDays) {
@@ -309,8 +315,17 @@ public final class ConfigMigrationService {
                 && !"report_only".equalsIgnoreCase(orphanPolicy)) {
             warnings.add("snapshots.build_backup.storage.orphan_policy must be quarantine or report_only.");
         }
+        String guiTravel = config.getString("teleport_beacons.gui_travel", "public");
+        if (!isGuiTravelMode(guiTravel)) {
+            warnings.add("teleport_beacons.gui_travel must be manage, public, or off.");
+        }
         ConfigurationSection roles = config.getConfigurationSection("roles");
         if (roles == null || roles.getKeys(false).isEmpty()) warnings.add("No plot roles are configured.");
+    }
+
+    private static boolean isGuiTravelMode(String mode) {
+        return "manage".equalsIgnoreCase(mode) || "public".equalsIgnoreCase(mode)
+                || "off".equalsIgnoreCase(mode);
     }
 
     private void repairInt(YamlConfiguration config, String path, int minimum, int maximum, int fallback) {

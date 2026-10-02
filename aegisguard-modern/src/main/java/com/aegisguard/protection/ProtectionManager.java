@@ -1078,12 +1078,25 @@ public class ProtectionManager implements Listener {
     // SPLASH & LINGERING POTIONS (pvp / animals wards)
     // --------------------------------------------------
 
-    /** Potion effect categories that can be weaponized against victims inside a claim. */
-    private static final Set<PotionEffectType> HARMFUL_POTION_TYPES = Set.of(
-            PotionEffectType.HARM, PotionEffectType.POISON, PotionEffectType.WEAKNESS,
-            PotionEffectType.SLOW, PotionEffectType.SLOW_DIGGING, PotionEffectType.CONFUSION,
-            PotionEffectType.BLINDNESS, PotionEffectType.HUNGER, PotionEffectType.WITHER,
-            PotionEffectType.BAD_OMEN, PotionEffectType.UNLUCK, PotionEffectType.DARKNESS);
+    /**
+     * Potion effect categories that can be weaponized against victims inside a claim.
+     * Lazily initialized: PotionEffectType's class-init touches Bukkit.getRegistry(),
+     * which is unavailable during unit tests and plugin bootstrap.
+     */
+    private static volatile Set<PotionEffectType> HARMFUL_POTION_TYPES;
+
+    private static Set<PotionEffectType> harmfulPotionTypes() {
+        Set<PotionEffectType> set = HARMFUL_POTION_TYPES;
+        if (set == null) {
+            set = Set.of(
+                    PotionEffectType.HARM, PotionEffectType.POISON, PotionEffectType.WEAKNESS,
+                    PotionEffectType.SLOW, PotionEffectType.SLOW_DIGGING, PotionEffectType.CONFUSION,
+                    PotionEffectType.BLINDNESS, PotionEffectType.HUNGER, PotionEffectType.WITHER,
+                    PotionEffectType.BAD_OMEN, PotionEffectType.UNLUCK, PotionEffectType.DARKNESS);
+            HARMFUL_POTION_TYPES = set;
+        }
+        return set;
+    }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent e) {
@@ -1106,12 +1119,12 @@ public class ProtectionManager implements Listener {
         PotionType base = meta.getBasePotionType();
         if (base != null) {
             for (PotionEffect fx : base.getPotionEffects()) {
-                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+                if (harmfulPotionTypes().contains(fx.getType())) return true;
             }
         }
         if (meta.hasCustomEffects()) {
             for (PotionEffect fx : meta.getCustomEffects()) {
-                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+                if (harmfulPotionTypes().contains(fx.getType())) return true;
             }
         }
         return false;
@@ -1121,11 +1134,11 @@ public class ProtectionManager implements Listener {
         PotionType base = cloud.getBasePotionType();
         if (base != null) {
             for (PotionEffect fx : base.getPotionEffects()) {
-                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+                if (harmfulPotionTypes().contains(fx.getType())) return true;
             }
         }
         for (PotionEffect fx : cloud.getCustomEffects()) {
-            if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+            if (harmfulPotionTypes().contains(fx.getType())) return true;
         }
         return false;
     }

@@ -38,17 +38,21 @@ class Phase3TravelAtlasContractTest {
     }
 
     @Test
-    void visitGuiOwnsAtlasTabsAndBeaconManagerDelegates() throws Exception {
+    void atlasIsDestinationsOnlyAndBeaconManagerOwnsThePadList() throws Exception {
         String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
-        assertTrue(visit.contains("enum AtlasTab"));
-        assertTrue(visit.contains("MY_BEACONS"));
-        assertTrue(visit.contains("ARRIVAL"));
-        assertTrue(visit.contains("openAtlas"));
-        assertTrue(visit.contains("atlas_tab_destinations"));
-        assertTrue(visit.contains("atlas_arrival_cue_beacon"));
-        assertTrue(visit.contains("requiresBeaconArrival(player, plot)"));
+        assertFalse(visit.contains("AtlasTab"), "atlas top-tabs removed — atlas is destinations-only");
+        assertFalse(visit.contains("MY_BEACONS"), "beacons live in their own menu now");
+        assertFalse(visit.contains("openAtlas"));
+        assertFalse(visit.contains("buildBeaconsTab"));
+        assertFalse(visit.contains("buildArrivalTab"));
+        assertTrue(visit.contains("atlas_arrival_cue_beacon"), "destination lore keeps the arrival cue");
+        assertTrue(visit.contains("requiresBeaconArrival(player, plot)"),
+                "beacon-arrival plots still route landings through public pads");
         String beaconGui = Files.readString(JAVA.resolve("beacon/BeaconGUI.java"));
-        assertTrue(beaconGui.contains("openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS)"));
+        assertTrue(beaconGui.contains("class ListHolder"), "beacon pad list lives in BeaconGUI");
+        assertTrue(beaconGui.contains("class ArrivalHolder"), "arrival rules moved into the beacon menu");
+        assertTrue(beaconGui.contains("openArrival"));
+        assertTrue(beaconGui.contains("arrival_beacon"), "arrival tab actions ported to BeaconGUI");
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
         assertTrue(player.contains("travelHub().open(player)"),
                 "the travel shortcut now routes through the unified hub");
@@ -57,6 +61,7 @@ class Phase3TravelAtlasContractTest {
         assertTrue(hub.contains("visit().open(player, 0, VisitGUI.VisitMode.DISCOVER)")
                 || hub.contains("visit().open(player, 0, false)"),
                 "the hub must reach the atlas");
+        assertTrue(hub.contains("caravans().open(player)"), "hub exposes the caravan menu");
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("openManager"));

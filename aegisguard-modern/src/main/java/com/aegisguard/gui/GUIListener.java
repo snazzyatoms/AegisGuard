@@ -34,6 +34,8 @@ import com.aegisguard.arena.ArenaGUI.ArenaDetailHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminEditHolder;
 import com.aegisguard.arena.ArenaAdminGUI.ArenaAdminRunsHolder;
+import com.aegisguard.beacon.BeaconGUI.ListHolder;
+import com.aegisguard.beacon.BeaconGUI.ArrivalHolder;
 import com.aegisguard.beacon.BeaconGUI.UnbindHolder;
 import com.aegisguard.beacon.BeaconGUI.SetupHolder;
 import com.aegisguard.beacon.BeaconGUI.EditHolder;
@@ -533,7 +535,9 @@ public class GUIListener implements Listener {
                 || holder instanceof ArenaAdminRunsHolder) {
             if (plugin.gui().arenaAdmin() != null) plugin.gui().arenaAdmin().handleClick(e);
         }
-        else if (holder instanceof SetupHolder
+        else if (holder instanceof ListHolder
+                || holder instanceof ArrivalHolder
+                || holder instanceof SetupHolder
                 || holder instanceof EditHolder
                 || holder instanceof LinkHolder
                 || holder instanceof UnbindHolder

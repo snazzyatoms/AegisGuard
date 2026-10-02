@@ -384,23 +384,10 @@ public class SQLDataStore implements IDataStore {
                     plot.setLevel(rs.getInt("level"));
                     plot.setXp(rs.getDouble("xp"));
 
-                    String flagsStr = rs.getString("flags");
-                    if (flagsStr != null && !flagsStr.isEmpty()) {
-                        for (String part : flagsStr.split(",")) {
-                            String[] kv = part.split(":", 2);
-                            if (kv.length == 2) plot.setFlag(kv[0], Boolean.parseBoolean(kv[1]));
-                        }
-                    }
-
-                    String rolesStr = rs.getString("roles");
-                    if (rolesStr != null && !rolesStr.isEmpty()) {
-                        for (String part : rolesStr.split(",")) {
-                            String[] kv = part.split(":", 2);
-                            if (kv.length == 2) {
-                                try { plot.setRole(UUID.fromString(kv[0]), kv[1]); } catch (IllegalArgumentException ignored) {}
-                            }
-                        }
-                    }
+                    // Flags/roles columns use the canonical Plot serializers ("k=v;k=v"),
+                    // which must be read back through the matching deserializers.
+                    plot.deserializeFlags(rs.getString("flags"));
+                    plot.deserializeRoles(rs.getString("roles"));
 
                     String settings = rs.getString("settings");
                     if (settings != null && !settings.isEmpty()) applySettings(plot, settings);

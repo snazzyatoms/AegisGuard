@@ -81,10 +81,7 @@ public class RoutesGUI {
             return;
         }
 
-        List<Route> routes = plugin.routes().enabledRoutes();
-        if (plugin.seasons() != null && plugin.seasons().isEnabled()) {
-            routes = plugin.seasons().sortRoutes(routes);
-        }
+        List<Route> routes = sortedRoutes();
         int perPage = 21;
         int maxPages = Math.max(1, (int) Math.ceil(routes.size() / (double) perPage));
         int safePage = Math.max(0, Math.min(page, maxPages - 1));
@@ -140,24 +137,55 @@ public class RoutesGUI {
         plugin.effects().playMenuOpen(player);
     }
 
+    /** Single source for the displayed order — list and click-resolution must agree. */
+    private List<Route> sortedRoutes() {
+        List<Route> routes = plugin.routes().enabledRoutes();
+        if (plugin.seasons() != null && plugin.seasons().isEnabled()) {
+            routes = plugin.seasons().sortRoutes(routes);
+        }
+        return routes;
+    }
+
+    /** Ten-block progress bar, e.g. "&a■■■&7□□□□□□□". */
+    private String progressBar(int done, int total) {
+        if (total <= 0) return "";
+        int filled = Math.min(10, (int) Math.round(done * 10.0 / total));
+        return GUIManager.color("&a" + "■".repeat(filled) + "&7" + "□".repeat(10 - filled));
+    }
+
     private ItemStack buildRouteItem(Player player, Route route) {
         RouteProgress progress = plugin.routes().progressOf(player.getUniqueId(), route.getId());
-        Checkpoint next = route.nextAfter(progress.getDiscoveredCount());
+        int done = progress.getDiscoveredCount();
+        int total = route.size();
+        boolean complete = total > 0 && done >= total;
+        Checkpoint next = route.nextAfter(done);
+        Route active = plugin.routes().activeRoute(player.getUniqueId());
+        boolean tracking = active != null && active.getId().equals(route.getId());
+
         List<String> lore = new ArrayList<>();
         if (route.getDescription() != null && !route.getDescription().isBlank()) {
             lore.add(GUIManager.color("&7" + route.getDescription()));
             lore.add(" ");
         }
         lore.add(GUIManager.color(t(player, "routes_progress_line",
-                Map.of("COUNT", String.valueOf(progress.getDiscoveredCount()),
-                        "TOTAL", String.valueOf(route.size())),
-                "&7Progress: &f{COUNT}/{TOTAL}")));
+                Map.of("COUNT", String.valueOf(done), "TOTAL", String.valueOf(total)),
+                "&7Progress: &f{COUNT}/{TOTAL}"))
+                + "  " + progressBar(done, total));
+        if (tracking) {
+            lore.add(GUIManager.color(t(player, "routes_tracking_line", "&a● Tracking this route")));
+        }
         if (next != null) {
             lore.add(GUIManager.color(t(player, "routes_next_checkpoint_line",
                     Map.of("NAME", next.getName()),
                     "&7Next: &e{NAME}")));
-        } else if (route.size() > 0) {
+        } else if (complete) {
             lore.add(GUIManager.color(t(player, "routes_complete_line", "&a✔ Route complete")));
+        }
+        if (route.getRewardMoney() > 0 || route.getRewardClaimBlocks() > 0) {
+            lore.add(GUIManager.color(t(player, "routes_reward_line",
+                    Map.of("MONEY", String.valueOf(route.getRewardMoney()),
+                            "BLOCKS", String.valueOf(route.getRewardClaimBlocks())),
+                    "&7Reward: &6{MONEY} &7+ &b{BLOCKS} blocks")));
         }
         if (plugin.seasons() != null && plugin.seasons().isEnabled()
                 && plugin.seasons().isFeaturedRoute(route.getId())) {
@@ -165,8 +193,11 @@ public class RoutesGUI {
         }
         lore.add(" ");
         lore.add(GUIManager.color(t(player, "routes_click_detail", "&eClick for details.")));
-        return GUIManager.createItem(Material.FILLED_MAP,
+        Material icon = done == 0 ? Material.MAP : Material.FILLED_MAP;
+        ItemStack item = GUIManager.createItem(icon,
                 t(player, "routes_entry_name", Map.of("NAME", route.getName()), "&a🗺 {NAME}"), lore);
+        if (complete) glow(item);
+        return item;
     }
 
     public void openDetail(Player player, Route route) {
@@ -187,15 +218,38 @@ public class RoutesGUI {
         header.add(GUIManager.color(t(player, "routes_progress_line",
                 Map.of("COUNT", String.valueOf(progress.getDiscoveredCount()),
                         "TOTAL", String.valueOf(route.size())),
-                "&7Progress: &f{COUNT}/{TOTAL}")));
+                "&7Progress: &f{COUNT}/{TOTAL}"))
+                + "  " + progressBar(progress.getDiscoveredCount(), route.size()));
+        Route active = plugin.routes().activeRoute(player.getUniqueId());
+        if (active != null && active.getId().equals(route.getId())) {
+            header.add(GUIManager.color(t(player, "routes_tracking_line", "&a● Tracking this route")));
+        }
         if (route.getRewardMoney() > 0 || route.getRewardClaimBlocks() > 0) {
             header.add(GUIManager.color(t(player, "routes_reward_line",
                     Map.of("MONEY", String.valueOf(route.getRewardMoney()),
                             "BLOCKS", String.valueOf(route.getRewardClaimBlocks())),
                     "&7Reward: &6{MONEY} &7+ &b{BLOCKS} blocks")));
         }
-        inv.setItem(4, GUIManager.createItem(Material.FILLED_MAP,
-                t(player, "routes_entry_name", Map.of("NAME", route.getName()), "&a🗺 {NAME}"), header));
+        // Checkpoint checklist: ✔ discovered · ● next · ○ ahead — capped so lore stays readable.
+        if (!route.getCheckpoints().isEmpty()) {
+            header.add(" ");
+            List<Checkpoint> checkpoints = route.getCheckpoints();
+            int shown = Math.min(checkpoints.size(), 8);
+            for (int i = 0; i < shown; i++) {
+                Checkpoint cp = checkpoints.get(i);
+                String marker = progress.hasDiscovered(cp.getId()) ? "&a✔ "
+                        : cp.equals(next) ? "&e● " : "&7○ ";
+                header.add(GUIManager.color(marker + cp.getName()));
+            }
+            if (checkpoints.size() > shown) {
+                header.add(GUIManager.color(t(player, "routes_more_checkpoints",
+                        Map.of("COUNT", String.valueOf(checkpoints.size() - shown)),
+                        "&7… and {COUNT} more")));
+            }
+        }
+        ItemStack headerItem = GUIManager.createItem(Material.FILLED_MAP,
+                t(player, "routes_entry_name", Map.of("NAME", route.getName()), "&a🗺 {NAME}"), header);
+        inv.setItem(4, headerItem);
 
         if (next != null) {
             List<String> nextLore = new ArrayList<>();
@@ -243,7 +297,7 @@ public class RoutesGUI {
         if (slot == 45) { open(player, holder.getPage() - 1); return; }
         if (slot == 53) { open(player, holder.getPage() + 1); return; }
 
-        List<Route> routes = plugin.routes().enabledRoutes();
+        List<Route> routes = sortedRoutes();
         int index = holder.getPage() * 21 + slot;
         if (slot < 0 || slot >= 21 || index >= routes.size()) return;
         openDetail(player, routes.get(index));
@@ -272,5 +326,17 @@ public class RoutesGUI {
             player.closeInventory();
             plugin.msg().send(player, "routes_teleported", Map.of("NAME", next.getName()));
         }
+    }
+
+    private void glow(ItemStack item) {
+        var meta = item.getItemMeta();
+        if (meta == null) return;
+        try {
+            var ench = org.bukkit.enchantments.Enchantment.getByName("UNBREAKING");
+            if (ench == null) ench = org.bukkit.enchantments.Enchantment.getByName("DURABILITY");
+            if (ench != null) meta.addEnchant(ench, 1, true);
+        } catch (Throwable ignored) {}
+        meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+        item.setItemMeta(meta);
     }
 }

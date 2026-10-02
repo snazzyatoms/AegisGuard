@@ -3,6 +3,7 @@ package com.aegisguard.beacon;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.data.Plot;
 import com.aegisguard.gui.GUIManager;
+import com.aegisguard.gui.GuiClicks;
 import com.aegisguard.gui.HubOriginHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -73,6 +74,16 @@ public final class BeaconGUI {
         }
     }
 
+    /** Top-level beacon list — every pad the player manages plus reachable public pads. */
+    public static class ListHolder extends HubAwareHolder {
+        private final int page;
+        ListHolder(int page) { this.page = page; }
+        public int page() { return page; }
+    }
+
+    /** Arrival rules screen: per-plot landing mode, traveler override, and personal preference. */
+    public static class ArrivalHolder extends HubAwareHolder { }
+
     private BeaconService svc() { return plugin.beacons(); }
 
     /** Marks a holder with the travel-hub origin flag so sub-screens remember where they came from. */
@@ -85,13 +96,279 @@ public final class BeaconGUI {
         return plugin.gui().tr(p, key, fallback);
     }
 
+    private String t(Player p, String key, String fallback, Map<String, String> vars) {
+        return plugin.gui().tr(p, key, fallback, vars);
+    }
+
     private List<String> tl(Player p, String key, List<String> fallback) {
         return plugin.gui().trList(p, key, fallback);
     }
 
-    /** The beacon list lives in the atlas "My Beacons" tab (VisitGUI). */
+    /** Pad grid slots: three rows of seven. */
+    private static final int[] PAD_SLOTS = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34
+    };
+
+    /** Standalone "My Beacons" menu — every pad the player manages, current claim first. */
     public void openManager(Player player) {
-        plugin.gui().visit().openAtlas(player, com.aegisguard.gui.VisitGUI.AtlasTab.MY_BEACONS);
+        openList(player, 0);
+    }
+
+    public void openList(Player player, int page) {
+        String title = plugin.gui().title(player, "beacon_list_title", "&bTeleport Beacons");
+        Inventory inv = Bukkit.createInventory(withOrigin(new ListHolder(Math.max(0, page)), player), 54, title);
+        fill(inv);
+
+        BeaconService beacons = svc();
+        Plot here = plugin.store().getPlotAt(player.getLocation());
+        UUID hereId = here == null ? null : here.getPlotId();
+        List<TeleportBeacon> own = beacons == null
+                ? new ArrayList<>()
+                : new ArrayList<>(beacons.manageableBy(player));
+        own.sort((a, b) -> {
+            boolean ah = hereId != null && hereId.equals(a.getPlotId());
+            boolean bh = hereId != null && hereId.equals(b.getPlotId());
+            if (ah != bh) return ah ? -1 : 1;
+            return Long.compare(a.getCreatedAt(), b.getCreatedAt());
+        });
+        // Foreign public pads follow your own when gui_travel=public (canGuiTravel gates this).
+        List<TeleportBeacon> foreign = new ArrayList<>();
+        if (beacons != null) {
+            for (TeleportBeacon b : beacons.store().all()) {
+                if (b == null || beacons.canManage(player, b)) continue;
+                if (beacons.canGuiTravel(player, b)) foreign.add(b);
+            }
+            foreign.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        }
+        List<TeleportBeacon> pads = new ArrayList<>(own.size() + foreign.size());
+        pads.addAll(own);
+        pads.addAll(foreign);
+
+        long plots = own.stream().map(TeleportBeacon::getPlotId)
+                .filter(java.util.Objects::nonNull).distinct().count();
+        List<String> guideLore = new ArrayList<>(tl(player, "beacon_manager_guide_lore", List.of(
+                "&7Place a lodestone (or listed pad).",
+                "&7Sneak-click it to create a beacon.",
+                "&71. Pick a preset  2. Link another pad",
+                "&73. Stand on it to travel.")));
+        guideLore.add(t(player, "beacon_count_lore",
+                "&7You manage &f{COUNT}&7 pad(s) across &f{PLOTS}&7 claim(s).",
+                Map.of("COUNT", String.valueOf(own.size()), "PLOTS", String.valueOf(plots))));
+        if (here != null && beacons != null && here.canManage(player, plugin)) {
+            guideLore.add(t(player, "beacon_cap_lore", "&7This claim: &f{USED}&7/&f{MAX}&7 pads.",
+                    Map.of("USED", String.valueOf(beacons.store().forPlot(hereId).size()),
+                            "MAX", String.valueOf(beacons.maxFor(here)))));
+        }
+        inv.setItem(4, GUIManager.createItem(Material.END_PORTAL_FRAME,
+                t(player, "beacon_manager_guide_name", "&bHow beacons work"), guideLore));
+
+        if (pads.isEmpty()) {
+            inv.setItem(22, GUIManager.createItem(Material.BARRIER,
+                    t(player, "beacon_none_yet", "&cNo beacons yet"),
+                    tl(player, "beacon_none_yet_lore", List.of(
+                            "&7Stand in a claim you manage, place a",
+                            "&7pad block, then sneak-right-click it."))));
+        } else {
+            int start = page * PAD_SLOTS.length;
+            for (int i = 0; i < PAD_SLOTS.length; i++) {
+                int idx = start + i;
+                if (idx >= pads.size()) break;
+                TeleportBeacon beacon = pads.get(idx);
+                ItemStack item = padIcon(player, beacon);
+                appendClickLegend(player, item);
+                plugin.gui().tagAction(item, "open:" + beacon.getId());
+                inv.setItem(PAD_SLOTS[i], item);
+            }
+            if (page > 0) {
+                ItemStack prev = GUIManager.createItem(Material.ARROW,
+                        t(player, "button_prev_page", "&fPrevious Page"),
+                        tl(player, "prev_page_lore", List.of("&7Go to the previous page.")));
+                plugin.gui().tagAction(prev, "list_prev");
+                inv.setItem(45, prev);
+            }
+            if (start + PAD_SLOTS.length < pads.size()) {
+                ItemStack next = GUIManager.createItem(Material.ARROW,
+                        t(player, "button_next_page", "&fNext Page"),
+                        tl(player, "next_page_lore", List.of("&7Go to the next page.")));
+                plugin.gui().tagAction(next, "list_next");
+                inv.setItem(53, next);
+            }
+        }
+
+        // Arrival rules — per-plot landing mode + traveler override live with the pads they use.
+        inv.setItem(40, GUIManager.createItem(Material.ENDER_EYE,
+                t(player, "beacon_list_arrival", "&dArrival rules"),
+                tl(player, "beacon_list_arrival_lore", List.of(
+                        "&7Choose classic spawn or a public pad",
+                        "&7for visitors, plus traveler override."))));
+        plugin.gui().tagAction(inv.getItem(40), "arrival");
+
+        ItemStack give = GUIManager.createItem(
+                beacons == null ? Material.LODESTONE : beacons.starterPadMaterial(),
+                t(player, "beacon_give_button", "&bGet pad blocks"),
+                tl(player, "beacon_give_button_lore", List.of(
+                        "&7Gives lodestones (or the server's pad).",
+                        "&7Place them, then sneak-right-click to bind.",
+                        "&7You can also use any allowed pad you already have.")));
+        plugin.gui().tagAction(give, "give");
+        inv.setItem(43, give);
+
+        ListHolder listHolder = (ListHolder) inv.getHolder();
+        if (listHolder != null && listHolder.isFromHub()) {
+            inv.setItem(50, hubReturn(player));
+        }
+        ItemStack back = GUIManager.createItem(Material.NETHER_STAR,
+                t(player, "button_back_menu", "&fReturn to Menu"),
+                tl(player, "back_menu_lore", List.of("&7Go back to the main menu.")));
+        plugin.gui().tagAction(back, "back_menu");
+        inv.setItem(51, back);
+        ItemStack close = GUIManager.createItem(Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu.")));
+        plugin.gui().tagAction(close, "close");
+        inv.setItem(52, close);
+
+        player.openInventory(inv);
+        plugin.effects().playMenuOpen(player);
+    }
+
+    /** Arrival rules: how visitors land on the plot you stand in, plus your own preference. */
+    public void openArrival(Player player) {
+        String title = plugin.gui().title(player, "beacon_arrival_title", "&dArrival Rules");
+        Inventory inv = Bukkit.createInventory(withOrigin(new ArrivalHolder(), player), 27, title);
+        fillSmall(inv);
+
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        boolean manage = plot != null && plot.canManage(player, plugin);
+        if (plot == null) {
+            inv.setItem(13, GUIManager.createItem(Material.BARRIER,
+                    t(player, "beacon_need_plot", "&cStand in a claim"),
+                    List.of(t(player, "atlas_arrival_need_plot_lore",
+                            "&7Stand in a plot you manage to set arrival."))));
+        } else {
+            boolean beacon = plot.requiresBeaconArrival();
+            List<String> classicLore = new ArrayList<>(tl(player, "atlas_arrival_classic_lore", List.of(
+                    "&7Visitors land at this plot's spawn.")));
+            classicLore.add(manage
+                    ? t(player, "atlas_arrival_click_classic", "&eClick to use classic arrival.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
+            ItemStack classic = GUIManager.createItem(
+                    !beacon && manage ? Material.LIME_DYE : Material.COMPASS,
+                    t(player, "atlas_arrival_classic_name", "&aClassic spawn"),
+                    classicLore);
+            plugin.gui().tagAction(classic, "arrival_classic");
+            inv.setItem(10, classic);
+            List<String> padLore = new ArrayList<>(tl(player, "atlas_arrival_beacon_lore", List.of(
+                    "&7Visitors must land on a public pad.",
+                    "&7Fails closed if no public pad exists.")));
+            padLore.add(manage
+                    ? t(player, "atlas_arrival_click_beacon", "&eClick to require beacon arrival.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
+            ItemStack pad = GUIManager.createItem(
+                    beacon && manage ? Material.LIME_DYE : Material.END_PORTAL_FRAME,
+                    t(player, "atlas_arrival_beacon_name", "&bBeacon pad"),
+                    padLore);
+            plugin.gui().tagAction(pad, "arrival_beacon");
+            inv.setItem(12, pad);
+            boolean allow = plot.isAllowTravelerOverride();
+            List<String> overrideLore = new ArrayList<>(tl(player, "atlas_allow_override_lore", List.of(
+                    "&7When allowed, visitors may pick classic",
+                    "&7or beacon if that mode is available.")));
+            overrideLore.add(manage
+                    ? t(player, "atlas_arrival_click_override", "&eClick to toggle.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
+            ItemStack override = GUIManager.createItem(
+                    allow ? Material.LIME_DYE : Material.GRAY_DYE,
+                    t(player, allow ? "atlas_allow_override_on" : "atlas_allow_override_off",
+                            allow ? "&aTraveler override allowed" : "&7Traveler override locked"),
+                    overrideLore);
+            plugin.gui().tagAction(override, "arrival_override");
+            inv.setItem(14, override);
+        }
+        var pref = plugin.notifications() == null
+                ? com.aegisguard.notify.PlayerNotificationSettings.ArrivalPreference.OWNER_DEFAULT
+                : plugin.notifications().getSettings(player.getUniqueId()).getPreferredArrival();
+        String prefLabel = switch (pref) {
+            case CLASSIC -> t(player, "atlas_pref_classic", "&aClassic spawn");
+            case BEACON -> t(player, "atlas_pref_beacon", "&bBeacon pad");
+            default -> t(player, "atlas_pref_owner", "&7Owner default");
+        };
+        ItemStack traveler = GUIManager.createItem(Material.NAME_TAG,
+                t(player, "atlas_traveler_pref_name", "&eMy arrival preference"),
+                List.of(prefLabel,
+                        t(player, "atlas_traveler_pref_lore",
+                                "&7Used when the destination allows overrides."),
+                        t(player, "atlas_traveler_pref_click", "&eClick to cycle.")));
+        plugin.gui().tagAction(traveler, "traveler_pref");
+        inv.setItem(16, traveler);
+
+        inv.setItem(18, back(player));
+        ArrivalHolder arrivalHolder = (ArrivalHolder) inv.getHolder();
+        if (arrivalHolder != null && arrivalHolder.isFromHub()) inv.setItem(19, hubReturn(player));
+        inv.setItem(26, GUIManager.createItem(Material.BARRIER, t(player, "button_exit", "&cClose"),
+                tl(player, "exit_lore", List.of("&7Close this menu."))));
+        plugin.gui().tagAction(inv.getItem(26), "close");
+        player.openInventory(inv);
+        GUIManager.playClick(player);
+    }
+
+    private void setPlotArrival(Player player, Plot.ArrivalMode mode) {
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.canManage(player, plugin)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        plot.setArrivalMode(mode);
+        plugin.store().savePlot(plot);
+        plugin.store().setDirty(true);
+        sendSystem(player, "arrival_set",
+                "&a✔ Public arrival set to &f" + mode.name().toLowerCase(java.util.Locale.ROOT) + "&a for this plot.");
+        plugin.effects().playConfirm(player);
+        openArrival(player);
+    }
+
+    private void togglePlotTravelerOverride(Player player) {
+        Plot plot = plugin.store().getPlotAt(player.getLocation());
+        if (plot == null || !plot.canManage(player, plugin)) {
+            plugin.effects().playError(player);
+            return;
+        }
+        plot.setAllowTravelerOverride(!plot.isAllowTravelerOverride());
+        plugin.store().savePlot(plot);
+        plugin.store().setDirty(true);
+        plugin.effects().playConfirm(player);
+        openArrival(player);
+    }
+
+    private void cycleTravelerPreference(Player player) {
+        if (plugin.notifications() == null) {
+            plugin.effects().playError(player);
+            return;
+        }
+        plugin.notifications().cyclePreferredArrival(player.getUniqueId());
+        plugin.effects().playConfirm(player);
+        openArrival(player);
+    }
+
+    private void sendSystem(Player player, String key, String fallback) {
+        String msg = t(player, key, fallback);
+        if (msg == null || msg.isBlank()) return;
+        player.sendMessage(GUIManager.color(msg));
+    }
+
+    /** Adds the "left: manage · right: travel" legend to a pad icon in the list. */
+    private void appendClickLegend(Player player, ItemStack item) {
+        if (item == null) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        List<String> lore = meta.hasLore() && meta.getLore() != null
+                ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        lore.addAll(tl(player, "beacon_click_legend", List.of(
+                "&eLeft-click &7manage · &eRight-click &7travel")));
+        meta.setLore(lore);
+        item.setItemMeta(meta);
     }
 
     public void openSetup(Player player, TeleportBeacon beacon) {
@@ -293,6 +570,42 @@ public final class BeaconGUI {
         if ("hub_return".equals(action) && holder instanceof HubAwareHolder hub && hub.isFromHub()) {
             player.closeInventory();
             plugin.gui().travelHub().open(player);
+            return;
+        }
+
+        if (holder instanceof ListHolder list) {
+            if ("back_menu".equals(action)) { plugin.gui().openMain(player); return; }
+            if ("close".equals(action) || "close_menu".equals(action)) { player.closeInventory(); return; }
+            if ("arrival".equals(action)) { openArrival(player); return; }
+            if ("give".equals(action)) { service.giveStarterPads(player); return; }
+            if ("list_prev".equals(action)) { openList(player, list.page() - 1); return; }
+            if ("list_next".equals(action)) { openList(player, list.page() + 1); return; }
+            if (action != null && action.startsWith("open:")) {
+                UUID id = parseUuid(action.substring(5));
+                TeleportBeacon beacon = id == null ? null : service.store().get(id);
+                if (beacon == null) return;
+                if (GuiClicks.alternate(event)) {
+                    if (service.canGuiTravel(player, beacon)) {
+                        openGuiTravel(player, beacon);
+                    } else {
+                        plugin.effects().playError(player);
+                    }
+                } else if (service.canManage(player, beacon)) {
+                    openSetup(player, beacon);
+                } else if (service.canGuiTravel(player, beacon)) {
+                    openGuiTravel(player, beacon);
+                }
+            }
+            return;
+        }
+
+        if (holder instanceof ArrivalHolder) {
+            if (event.getSlot() == 18 || "back".equals(action)) { openManager(player); return; }
+            if ("close".equals(action) || event.getSlot() == 26) { player.closeInventory(); return; }
+            if ("arrival_classic".equals(action)) { setPlotArrival(player, Plot.ArrivalMode.CLASSIC); return; }
+            if ("arrival_beacon".equals(action)) { setPlotArrival(player, Plot.ArrivalMode.BEACON); return; }
+            if ("arrival_override".equals(action)) { togglePlotTravelerOverride(player); return; }
+            if ("traveler_pref".equals(action)) { cycleTravelerPreference(player); return; }
             return;
         }
 

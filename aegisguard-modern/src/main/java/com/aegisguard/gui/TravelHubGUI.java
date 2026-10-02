@@ -91,6 +91,13 @@ public class TravelHubGUI {
                             "&7Walk server routes and", "&7discover checkpoints."))));
         }
 
+        if (plugin.caravans() != null && plugin.caravans().isEnabled()) {
+            inv.setItem(15, GUIManager.createItem(Material.CHEST_MINECART,
+                    t(player, "travel_hub_caravans", "&6Caravans"),
+                    tl(player, "travel_hub_caravans_lore", List.of(
+                            "&7Dispatch goods along public", "&7beacon hops. Track payouts."))));
+        }
+
         inv.setItem(16, GUIManager.createItem(Material.ENDER_PEARL,
                 t(player, "travel_hub_discover", "&6Discover Plots"),
                 tl(player, "travel_hub_discover_lore", List.of(
@@ -144,6 +151,14 @@ public class TravelHubGUI {
             case 14 -> {
                 if (plugin.routes() != null && plugin.routes().isEnabled()) {
                     plugin.gui().routes().open(player);
+                } else {
+                    plugin.effects().playError(player);
+                }
+                return;
+            }
+            case 15 -> {
+                if (plugin.caravans() != null && plugin.caravans().isEnabled()) {
+                    plugin.gui().caravans().open(player);
                 } else {
                     plugin.effects().playError(player);
                 }

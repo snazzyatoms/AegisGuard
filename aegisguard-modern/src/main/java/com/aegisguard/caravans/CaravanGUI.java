@@ -2,7 +2,7 @@ package com.aegisguard.caravans;
 
 import com.aegisguard.AegisGuard;
 import com.aegisguard.gui.GUIManager;
-import com.aegisguard.gui.VisitGUI;
+import com.aegisguard.gui.HubOriginHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -37,7 +37,10 @@ public final class CaravanGUI {
         insureChoice.remove(playerId);
     }
 
-    public static final class Holder implements InventoryHolder {
+    public static final class Holder implements HubOriginHolder {
+        private boolean fromHub;
+        @Override public boolean isFromHub() { return fromHub; }
+        @Override public void setFromHub(boolean fromHub) { this.fromHub = fromHub; }
         @Override public Inventory getInventory() { return null; }
     }
 
@@ -49,8 +52,10 @@ public final class CaravanGUI {
                     + t(player, "caravans_disabled", "&cCaravans are disabled on this server.")));
             return;
         }
-        Inventory inv = Bukkit.createInventory(new Holder(), 54,
-                plugin.gui().title(player, "atlas_title_caravans", "&6Travel Atlas · Caravans"));
+        Holder holder = new Holder();
+        holder.setFromHub(GUIManager.hubOriginActive(player));
+        Inventory inv = Bukkit.createInventory(holder, 54,
+                plugin.gui().title(player, "caravan_menu_title", "&6Caravans"));
         ItemStack filler = GUIManager.getFiller();
         for (int i = 0; i < 54; i++) inv.setItem(i, filler);
 
@@ -124,9 +129,25 @@ public final class CaravanGUI {
         plugin.gui().tagAction(insure, "toggle_insure");
         inv.setItem(43, insure);
 
-        if (plugin.gui() != null && plugin.gui().visit() != null) {
-            plugin.gui().visit().attachAtlasChrome(player, inv, VisitGUI.AtlasTab.CARAVANS);
+        // Standalone nav row: hub return (when launched from the hub), menu, close.
+        if (holder.isFromHub()) {
+            ItemStack hub = GUIManager.createItem(Material.COMPASS,
+                    t(player, "button_back_hub", "&fBack to Travel Hub"),
+                    List.of(t(player, "back_hub_lore", "&7Return to the travel hub.")));
+            plugin.gui().tagAction(hub, "hub_return");
+            inv.setItem(50, hub);
         }
+        ItemStack back = GUIManager.createItem(Material.NETHER_STAR,
+                t(player, "button_back_menu", "&fReturn to Menu"),
+                List.of(t(player, "back_menu_lore", "&7Go back to the main menu.")));
+        plugin.gui().tagAction(back, "back_menu");
+        inv.setItem(51, back);
+        ItemStack close = GUIManager.createItem(Material.BARRIER,
+                t(player, "button_exit", "&cClose"),
+                List.of(t(player, "exit_lore", "&7Close this menu.")));
+        plugin.gui().tagAction(close, "close_menu");
+        inv.setItem(52, close);
+
         player.openInventory(inv);
         if (plugin.effects() != null) plugin.effects().playMenuOpen(player);
     }
@@ -140,20 +161,8 @@ public final class CaravanGUI {
         if (action == null || action.isBlank()) return;
         CaravanService service = plugin.caravans();
         switch (action) {
-            case "atlas_destinations" -> {
-                plugin.gui().visit().openAtlas(player, VisitGUI.AtlasTab.DESTINATIONS);
-                return;
-            }
-            case "atlas_beacons" -> {
-                plugin.gui().visit().openAtlas(player, VisitGUI.AtlasTab.MY_BEACONS);
-                return;
-            }
-            case "atlas_arrival" -> {
-                plugin.gui().visit().openAtlas(player, VisitGUI.AtlasTab.ARRIVAL);
-                return;
-            }
-            case "atlas_caravans" -> {
-                open(player);
+            case "hub_return" -> {
+                if (holder.isFromHub()) plugin.gui().travelHub().open(player);
                 return;
             }
             case "back_menu" -> {

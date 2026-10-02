@@ -85,6 +85,12 @@ class TravelHubAndHelpContractTest {
                 "route holders must carry the hub-origin flag");
         assertTrue(routes.contains("travelHub().open(player)"),
                 "route list must return to the hub when flagged");
+
+        String caravans = Files.readString(JAVA.resolve("caravans/CaravanGUI.java"));
+        assertTrue(caravans.contains("Holder implements HubOriginHolder"),
+                "caravan holder must carry the hub-origin flag");
+        assertTrue(caravans.contains("travelHub().open(player)"),
+                "caravan menu must return to the hub when flagged");
     }
 
     @Test

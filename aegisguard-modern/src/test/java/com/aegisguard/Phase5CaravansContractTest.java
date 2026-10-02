@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Contract coverage for 1.4 Phase 5: Caravans & Trade Routes. */
@@ -68,9 +69,15 @@ class Phase5CaravansContractTest {
         assertTrue(service.contains("scheduler().runAt(loc, fx)"),
                 "Caravan arrival particles must run on the destination region");
         String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
-        assertTrue(visit.contains("CARAVANS"));
-        assertTrue(visit.contains("atlas_tab_caravans"));
-        assertTrue(visit.contains("attachAtlasChrome"));
+        assertFalse(visit.contains("CARAVANS"), "caravans no longer live inside the atlas");
+        String caravanGui = Files.readString(JAVA.resolve("caravans/CaravanGUI.java"));
+        assertTrue(caravanGui.contains("HubOriginHolder"),
+                "caravan menu is a standalone hub-aware screen");
+        assertTrue(caravanGui.contains("caravan_menu_title"));
+        assertTrue(caravanGui.contains("hub_return"));
+        String hub = Files.readString(JAVA.resolve("gui/TravelHubGUI.java"));
+        assertTrue(hub.contains("caravans().open(player)"),
+                "hub must expose the caravan menu");
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("handleCaravan"));
         assertTrue(command.contains("case \"caravan\""));

@@ -83,12 +83,12 @@ class BeaconContractTest {
         String market = Files.readString(JAVA.resolve("gui/PlotMarketGUI.java"));
         assertTrue(market.contains("handlePublicListingTravel"));
         String player = Files.readString(JAVA.resolve("gui/PlayerGUI.java"));
-        assertTrue(player.contains("visit().open") || player.contains("openAtlas")
+        assertTrue(player.contains("visit().open")
                 || player.contains("travelHub().open"),
                 "travel shortcut must reach the travel surface (now via the hub)");
         String visitGui = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
-        assertTrue(visitGui.contains("AtlasTab"));
-        assertTrue(visitGui.contains("openAtlas"));
+        assertFalse(visitGui.contains("AtlasTab"),
+                "atlas no longer hosts beacon tabs — BeaconGUI owns the pad list");
         String command = Files.readString(JAVA.resolve("commands/AegisCommand.java"));
         assertTrue(command.contains("case \"beacon\""));
         assertTrue(command.contains("giveStarterPads"));
@@ -126,9 +126,10 @@ class BeaconContractTest {
             assertTrue(guis.contains("beacon_inbound:"), pack + " missing inbound-link lore key");
             assertTrue(guis.contains("beacon_click_legend:"), pack + " missing manage/travel legend");
             assertTrue(guis.contains("beacon_none_yet:"), pack + " missing empty-state keys");
-            assertTrue(guis.contains("atlas_tab_beacons:"), pack + " missing atlas beacon tab");
-            assertTrue(guis.contains("atlas_tab_beacons_lore:"), pack + " missing atlas tab lore");
-            assertTrue(guis.contains("atlas_title_beacons:"), pack + " missing atlas beacons title");
+            assertTrue(guis.contains("beacon_list_title:"), pack + " missing beacon list title");
+            assertTrue(guis.contains("beacon_list_arrival:"), pack + " missing arrival-rules button");
+            assertTrue(guis.contains("beacon_arrival_title:"), pack + " missing arrival screen title");
+            assertFalse(guis.contains("atlas_tab_"), pack + " still has dead atlas tab keys");
             assertTrue(guis.contains("atlas_arrival_manage_only:"), pack + " missing arrival manage-only line");
             assertTrue(system.contains("beacon_unbound:"), pack + " missing unbind result message");
             assertTrue(system.contains("beacon_bind_hint:"), pack + " missing bind hint message");
@@ -171,10 +172,12 @@ class BeaconContractTest {
         String router = Files.readString(JAVA.resolve("gui/GUIListener.java"));
         assertTrue(router.contains("BeaconGUI.UnbindHolder"));
         assertFalse(router.contains("BeaconGUI.ManagerHolder"));
-        String visit = Files.readString(JAVA.resolve("gui/VisitGUI.java"));
-        assertTrue(visit.contains("canGuiTravel"), "atlas beacons tab must offer travel clicks");
-        assertTrue(visit.contains("GuiClicks.alternate(e)"), "atlas beacons tab must split manage/travel clicks");
-        assertTrue(visit.contains("openGuiTravel"));
+        assertTrue(router.contains("BeaconGUI.ListHolder"), "listener must route the beacon list");
+        assertTrue(router.contains("BeaconGUI.ArrivalHolder"), "listener must route arrival rules");
+        assertTrue(gui.contains("canGuiTravel"), "beacon list must offer travel clicks");
+        assertTrue(gui.contains("GuiClicks.alternate(event)"),
+                "beacon list must split manage/travel clicks");
+        assertTrue(gui.contains("openGuiTravel"));
         String charges = Files.readString(JAVA.resolve("beacon/BeaconCharges.java"));
         assertTrue(charges.contains("OWNER_CHOICE"));
         assertTrue(charges.contains("pay_plot_owner"));

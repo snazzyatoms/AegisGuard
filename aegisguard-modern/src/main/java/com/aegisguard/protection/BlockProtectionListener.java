@@ -32,9 +32,15 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.block.BlockMultiPlaceEvent;
+import org.bukkit.event.block.BlockShearEntityEvent;
+import org.bukkit.event.block.CauldronLevelChangeEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.block.BlockFertilizeEvent;
+import org.bukkit.event.world.PortalCreateEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -432,6 +438,171 @@ public class BlockProtectionListener implements Listener {
             if (sourcePlotFinal != null) {
                 DenialGuidance.send(plugin, player, sourcePlotFinal, "BLOCK_PLACE", "cannot_place");
                 plugin.effects().playError(player);
+            }
+        }
+    }
+
+    /**
+     * Projectiles that hit redstone-triggerable blocks (targets, wooden buttons, pressure
+     * plates) fire no interact event, so the redstone ward never ran — an arrow shot into a
+     * claim could trip mechanisms. Player shots reuse the interact check; source-less shots
+     * (dispensers) are blocked under the ward.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onProjectileBlockHit(ProjectileHitEvent e) {
+        Block hit = e.getHitBlock();
+        if (hit == null) return;
+        if (!isProjectileTriggerable(hit.getType())) return;
+
+        Plot plot = plugin.store().getPlotAt(hit.getLocation());
+        if (plot == null) return;
+        if (!plugin.protection().isFlagEnabled(plot, "redstone")) return;
+
+        Player shooter = null;
+        if (e.getEntity() instanceof Projectile proj
+                && proj.getShooter() instanceof Player p) {
+            shooter = p;
+        }
+
+        if (shooter == null) {
+            e.setCancelled(true);
+            return;
+        }
+        if (plugin.isBypassing(shooter)) return;
+        if (plugin.protectionHooks() != null
+                && plugin.protectionHooks().shouldBypass(hit.getLocation(), shooter, HookAction.REDSTONE_INTERACT)) {
+            return;
+        }
+
+        if (!plot.canInteractAt(shooter, hit.getLocation(), plugin, "REDSTONE")
+                && !plot.canInteractAt(shooter, hit.getLocation(), plugin, "INTERACT")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, shooter, plot, "REDSTONE", "cannot_interact");
+            plugin.effects().playError(shooter);
+        }
+    }
+
+    private boolean isProjectileTriggerable(Material type) {
+        String name = type.name();
+        return type == Material.TARGET
+                || name.endsWith("_BUTTON")
+                || name.endsWith("_PRESSURE_PLATE");
+    }
+
+    /**
+     * Portal creation (nether ignition, world-gen exit portals) filters created blocks that
+     * would land inside claims the creator cannot build in — keeps portals from punching
+     * portal blocks or frames through a protected border.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onPortalCreate(PortalCreateEvent e) {
+        Player creator = e.getEntity() instanceof Player p ? p : null;
+        boolean removed = false;
+        for (Iterator<BlockState> it = e.getBlocks().iterator(); it.hasNext();) {
+            BlockState state = it.next();
+            Plot target = plugin.store().getPlotAt(state.getLocation());
+            if (target == null) continue;
+            if (creator != null) {
+                if (plugin.isBypassing(creator)) continue;
+                if (!target.canBuildAt(creator, state.getLocation(), plugin, "BLOCK_PLACE")) {
+                    it.remove();
+                    removed = true;
+                }
+            } else if (plugin.protection().isFlagEnabled(target, "mob-griefing")) {
+                it.remove();
+                removed = true;
+            }
+        }
+        if (removed && e.getBlocks().isEmpty()) {
+            e.setCancelled(true);
+            if (creator != null) {
+                plugin.effects().playError(creator);
+            }
+        }
+    }
+
+    /** Dispenser shears: a dispenser outside a claim must not shear an animal inside it. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockShearEntity(BlockShearEntityEvent e) {
+        Plot target = plugin.store().getPlotAt(e.getEntity().getLocation());
+        if (target == null) return;
+
+        Plot source = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (source != null && source.getPlotId().equals(target.getPlotId())) return;
+
+        if (plugin.protection().isFlagEnabled(target, "animals")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /**
+     * Tree/mushroom growth filters blocks that would land inside claims: bonemeal use by a
+     * player still needs build rights per block; unowned growth is stopped by mob-griefing.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onStructureGrow(StructureGrowEvent e) {
+        Player player = e.getPlayer();
+        Plot sourcePlot = plugin.store().getPlotAt(e.getLocation());
+
+        boolean[] denied = {false};
+        e.getBlocks().removeIf(state -> {
+            Plot target = plugin.store().getPlotAt(state.getLocation());
+            if (target == null) return false;
+            if (sourcePlot != null && sourcePlot.getPlotId().equals(target.getPlotId())) return false;
+
+            if (player != null) {
+                if (plugin.isBypassing(player)) return false;
+                if (!target.canBuildAt(player, state.getLocation(), plugin, "BLOCK_PLACE")) {
+                    denied[0] = true;
+                    return true;
+                }
+                return false;
+            }
+            return plugin.protection().isFlagEnabled(target, "mob-griefing");
+        });
+
+        if (denied[0] && player != null) {
+            Plot context = sourcePlot != null ? sourcePlot
+                    : e.getBlocks().stream()
+                            .map(s -> plugin.store().getPlotAt(s.getLocation()))
+                            .filter(java.util.Objects::nonNull).findFirst().orElse(null);
+            if (context != null) {
+                DenialGuidance.send(plugin, player, context, "BLOCK_PLACE", "cannot_place");
+                plugin.effects().playError(player);
+            }
+        }
+    }
+
+    /** Dispenser/entity cauldron fill and drain crossing a claim border (liquid-flow ward). */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onCauldronLevelChange(CauldronLevelChangeEvent e) {
+        if (e.getEntity() instanceof Player) return; // players are gated by the interactables ward
+
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+        if (plugin.protection().isFlagEnabled(plot, "liquid-flow")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /** Beds and other multi-block placements where the extra blocks land inside a claim. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockMultiPlace(BlockMultiPlaceEvent e) {
+        Player player = e.getPlayer();
+        if (plugin.isBypassing(player)) return;
+
+        for (BlockState state : e.getReplacedBlockStates()) {
+            Plot plot = plugin.store().getPlotAt(state.getLocation());
+            if (plot == null) continue;
+            if (plugin.protectionHooks() != null
+                    && plugin.protectionHooks().shouldBypass(state.getLocation(), player, HookAction.BLOCK_PLACE)) {
+                continue;
+            }
+            if (!plot.canBuildAt(player, state.getLocation(), plugin, "BLOCK_PLACE")) {
+                e.setCancelled(true);
+                DenialGuidance.send(plugin, player, plot, "BLOCK_PLACE", "cannot_place");
+                plugin.effects().playError(player);
+                return;
             }
         }
     }

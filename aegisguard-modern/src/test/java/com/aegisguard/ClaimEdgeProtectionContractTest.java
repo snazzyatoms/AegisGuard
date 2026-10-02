@@ -77,6 +77,40 @@ class ClaimEdgeProtectionContractTest {
     }
 
     @Test
+    void sweepTwoHandlersExist() throws Exception {
+        String blocks = Files.readString(JAVA.resolve("protection/BlockProtectionListener.java"));
+        assertTrue(blocks.contains("ProjectileHitEvent"),
+                "projectile hits on target blocks/buttons must gate the redstone ward");
+        assertTrue(blocks.contains("isProjectileTriggerable"), "triggerable-block classifier must exist");
+        assertTrue(blocks.contains("Material.TARGET"), "target blocks must be covered");
+        assertTrue(blocks.contains("PortalCreateEvent"), "portal creation must filter claim blocks");
+        assertTrue(blocks.contains("BlockShearEntityEvent"), "dispenser shears must be gated");
+        assertTrue(blocks.contains("StructureGrowEvent"), "tree/mushroom growth must be border-filtered");
+        assertTrue(blocks.contains("CauldronLevelChangeEvent"), "cauldron fill/drain must be gated");
+        assertTrue(blocks.contains("BlockMultiPlaceEvent"), "multi-block placements must be checked");
+        assertTrue(blocks.contains("getReplacedBlockStates"),
+                "multi-place must inspect every placed block state");
+    }
+
+    @Test
+    void sweepTwoEntityHandlersExist() throws Exception {
+        String src = Files.readString(JAVA.resolve("protection/ProtectionManager.java"));
+        assertTrue(src.contains("PlayerShearEntityEvent"), "player shearing must be gated");
+        assertTrue(src.contains("RaidTriggerEvent"), "raid triggers inside claims must be gated");
+        assertTrue(src.contains("e.getRaid().getLocation()"),
+                "raid check must resolve the raid center plot");
+    }
+
+    @Test
+    void alertsPermissionDeclared() throws Exception {
+        String pluginYml = Files.readString(RES.resolve("plugin.yml"));
+        assertTrue(pluginYml.contains("aegis.admin.alerts:"),
+                "the grief-alert permission node must be declared");
+        assertTrue(pluginYml.contains("aegis.admin.alerts: true"),
+                "aegis.admin.alerts must be a child of the aegis.admin bundle");
+    }
+
+    @Test
     void denialChokePointIsReused() throws Exception {
         String src = Files.readString(JAVA.resolve("protection/ProtectionManager.java"));
         assertTrue(src.contains("DenialGuidance.send"),

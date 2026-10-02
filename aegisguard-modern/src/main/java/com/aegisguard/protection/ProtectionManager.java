@@ -51,8 +51,10 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.raid.RaidTriggerEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.Inventory;
@@ -1227,6 +1229,24 @@ public class ProtectionManager implements Listener {
         }
     }
 
+    /** Shearing sheep, mooshrooms, and snow golems inside claims rides the animals ward. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerShear(PlayerShearEntityEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        Location loc = e.getEntity().getLocation();
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return;
+        if (shouldYieldToExternalProtection(loc, p, HookAction.ANIMAL_INTERACT)) return;
+
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.canInteractAt(p, loc, plugin, "ANIMALS")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "ANIMALS", "cannot_interact");
+            plugin.effects().playEffect("animals", "deny", p, loc);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityBreed(EntityBreedEvent e) {
         // Only player-triggered breeding is gated; villager/natural breeding keeps working.
@@ -1248,6 +1268,26 @@ public class ProtectionManager implements Listener {
     // --------------------------------------------------
     // LECTERN BOOK THEFT (containers ward)
     // --------------------------------------------------
+
+    /**
+     * A player carrying Bad Omen into a mob-protected claim must not start a raid there —
+     * raid spawns are already cancelled by the spawn ward, but the raid itself (bar, bells,
+     * wave bookkeeping) should never trigger inside a claim the carrier can't build in.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onRaidTrigger(RaidTriggerEvent e) {
+        Player p = e.getPlayer();
+        if (p == null || plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getRaid().getLocation());
+        if (plot == null) return;
+        if (!isProtectionActive(plot, "mobs", true)) return;
+        if (!plot.canBuildAt(p, e.getRaid().getLocation(), plugin, "MOBS")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "MOBS", "cannot_interact");
+            plugin.effects().playEffect("mobs", "deny", p, e.getRaid().getLocation());
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onLecternTakeBook(PlayerTakeLecternBookEvent e) {

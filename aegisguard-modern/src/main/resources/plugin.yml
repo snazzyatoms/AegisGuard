@@ -162,6 +162,7 @@ permissions:
       aegis.admin.hearth: true
       aegis.admin.staffchat: true
       aegis.admin.discord: true
+      aegis.admin.alerts: true
       aegis.notify.bypass: true
       aegis.notify.others: true
 
@@ -174,6 +175,10 @@ permissions:
 
   aegis.admin.discord:
     description: Link, unlink, and inspect Discord account links for players.
+    default: op
+
+  aegis.admin.alerts:
+    description: Receive rate-limited staff alerts for repeated claim-protection denials.
     default: op
 
   aegis.menu:

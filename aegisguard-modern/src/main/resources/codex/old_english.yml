@@ -2517,6 +2517,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Return to the previous staff menu.'
 storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Storage] &f{REPORT} &7Bid thy players re-check their plot flags (safe zone, entry, and such) after the backend change.'
 storage_migrate_unavailable: '&cStorage migration is unavailable.'
 doctor_delinquents_title: '&4Rental Delinquents'
 doctor_delinquents_empty_name: '&aNo Delinquent Rentals'

@@ -2476,6 +2476,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Ritorna al menu rigo precedente.'
 storage_migrate_result: '&e[Memoria] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Memoria] &f{REPORT} &7Ricorda ai giocatori di ricontrollare le flag dei lotti (zona sicura, ingresso, ecc.) dopo il cambio di archiviazione.'
 storage_migrate_unavailable: '&cLa migrazione dello spazio di archiviazione non è disponibile.'
 plot_status_upkeep_name: '&6Manutenzione'
 plot_status_upkeep_cost: '&7Costo: &6{COST}'

@@ -2477,6 +2477,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Zurück zum vorherigen Notensystemmenü.'
 storage_migrate_result: '&e[Speicher] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Speicher] &f{REPORT} &7Erinnere die Spieler daran, ihre Grundstücks-Flags (Sicherheitszone, Eintritt usw.) nach dem Speicherwechsel zu prüfen.'
 storage_migrate_unavailable: '&cSpeichermigration ist nicht verfügbar.'
 plot_status_upkeep_name: '&6Unterhalt'
 plot_status_upkeep_cost: '&7Kosten: &6{COST}'

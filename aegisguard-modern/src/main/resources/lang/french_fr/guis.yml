@@ -2477,6 +2477,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Retour au menu de portée précédent.'
 storage_migrate_result: '&e[Stockage] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Stockage] &f{REPORT} &7Rappelez aux joueurs de vérifier à nouveau les flags de leurs terrains (zone sûre, entrée, etc.) après le changement de stockage.'
 storage_migrate_unavailable: '&cLa migration du stockage n''est pas disponible.'
 plot_status_upkeep_name: '&6Entretien'
 plot_status_upkeep_cost: '&7Coût : &6{COST}'

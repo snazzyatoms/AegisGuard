@@ -2452,6 +2452,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Return to the previous staff menu.'
 storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Storage] &f{REPORT} &7Remind players to re-check plot flags (safe zone, entry, etc.) after the backend switch.'
 storage_migrate_unavailable: '&cStorage migration is unavailable.'
 plot_status_upkeep_name: '&6Upkeep'
 plot_status_upkeep_cost: '&7Cost: &6{COST}'

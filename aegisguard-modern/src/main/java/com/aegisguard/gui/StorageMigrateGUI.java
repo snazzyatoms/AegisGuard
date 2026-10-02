@@ -153,9 +153,17 @@ public class StorageMigrateGUI {
                 plugin.effects().playConfirm(player);
                 plugin.runGlobalAsync(() -> {
                     String report = new PlotBackendMigrator(plugin).migrate(direction);
-                    plugin.runMain(player, () -> player.sendMessage(GUIManager.color(
-                            tr(player, "storage_migrate_result", "&e[Storage] &f{REPORT}",
-                                    Map.of("REPORT", report == null ? "done" : report)))));
+                    String safeReport = report == null ? "done" : report;
+                    plugin.getLogger().info("Storage migration (" + direction + "): " + safeReport);
+                    plugin.runMainGlobal(() -> {
+                        String notice = GUIManager.color(tr(player, "storage_migrate_admin_notice",
+                                "&e[Storage] &f{REPORT} &7Remind players to re-check plot flags (safe zone, entry, etc.) after the backend switch.",
+                                Map.of("REPORT", safeReport)));
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            if (plugin.isAdmin(p)) p.sendMessage(notice);
+                        }
+                        if (!plugin.isAdmin(player)) player.sendMessage(notice);
+                    });
                 });
             }
             default -> { }

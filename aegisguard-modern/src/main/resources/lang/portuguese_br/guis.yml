@@ -2475,6 +2475,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Retorne ao menu de pauta anterior.'
 storage_migrate_result: '&e[Armazenamento] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Armazenamento] &f{REPORT} &7Lembre os jogadores de revisar as flags dos terrenos (zona segura, entrada, etc.) após a troca de armazenamento.'
 storage_migrate_unavailable: '&cA migração de armazenamento não está disponível.'
 plot_status_upkeep_name: '&6Manutenção'
 plot_status_upkeep_cost: '&7Custo: &6{COST}'

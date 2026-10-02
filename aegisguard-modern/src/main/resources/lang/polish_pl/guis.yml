@@ -2474,6 +2474,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Powrót do poprzedniego menu pięciolinii.'
 storage_migrate_result: '&e[Przechowywanie] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Przechowywanie] &f{REPORT} &7Przypomnij graczom, aby ponownie sprawdzili flagi działek (strefa bezpieczna, wejście itp.) po zmianie magazynu.'
 storage_migrate_unavailable: '&cMigracja pamięci jest niedostępna.'
 plot_status_upkeep_name: '&6Utrzymanie'
 plot_status_upkeep_cost: '&7Koszt: &6{COST}'

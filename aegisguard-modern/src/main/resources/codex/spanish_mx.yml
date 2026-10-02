@@ -3215,6 +3215,7 @@ storage_migrate_confirm_lore:
 storage_migrate_back_lore:
 - '&7Volver al menú de staff anterior.'
 storage_migrate_result: '&e[Storage] &f{REPORT}'
+storage_migrate_admin_notice: '&e[Storage] &f{REPORT} &7Recuerda a los jugadores revisar las flags de sus terrenos (zona segura, entrada, etc.) tras el cambio de almacenamiento.'
 storage_migrate_unavailable: '&cLa migración de almacenamiento no está disponible.'
 doctor_delinquents_title: '&4Morosos de Alquiler'
 doctor_delinquents_empty_name: '&aSin Alquileres Morosos'

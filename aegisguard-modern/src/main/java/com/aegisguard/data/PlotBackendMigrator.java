@@ -22,13 +22,26 @@ public class PlotBackendMigrator {
         if ("sql-to-yml".equalsIgnoreCase(direction)) return exportSqlToYml();
         return "Unknown migration direction. Use yml-to-sql or sql-to-yml.";
     }
-    public String exportYmlToSql() { return copy(new YMLDataStore(plugin), new SQLDataStore(plugin), "plots.yml"); }
-    public String exportSqlToYml() { return copy(new SQLDataStore(plugin), new YMLDataStore(plugin), "aegisguard.db"); }
+    public String exportYmlToSql() {
+        IDataStore live = plugin.store();
+        boolean ownsSource = !(live instanceof YMLDataStore);
+        IDataStore source = ownsSource ? new YMLDataStore(plugin) : live;
+        return copy(source, new SQLDataStore(plugin), "plots.yml", ownsSource);
+    }
+    public String exportSqlToYml() {
+        IDataStore live = plugin.store();
+        boolean ownsSource = !(live instanceof SQLDataStore);
+        IDataStore source = ownsSource ? new SQLDataStore(plugin) : live;
+        return copy(source, new YMLDataStore(plugin), "aegisguard.db", ownsSource);
+    }
 
-    private String copy(IDataStore source, IDataStore target, String backupFile) {
+    private String copy(IDataStore source, IDataStore target, String backupFile, boolean ownsSource) {
         try {
             backup(backupFile);
-            source.load();
+            if (ownsSource) source.load();
+            if (target.getClass().isInstance(plugin.store())) {
+                plugin.getLogger().warning("Live store matches the migration target; its next save may overwrite migrated data. Switch storage.backend and restart.");
+            }
             Collection<Plot> sourcePlots = new ArrayList<>(source.getAllPlots());
             for (Plot plot : sourcePlots) if (plot != null) target.addPlot(plot);
             target.saveSync();
@@ -36,8 +49,10 @@ public class PlotBackendMigrator {
         } catch (Throwable error) {
             return "Migration failed: " + safe(error.getMessage());
         } finally {
-            try { source.shutdown(); } catch (Throwable t) {
-                plugin.getLogger().warning("Failed to shut down migration source store: " + t.getMessage());
+            if (ownsSource) {
+                try { source.shutdown(); } catch (Throwable t) {
+                    plugin.getLogger().warning("Failed to shut down migration source store: " + t.getMessage());
+                }
             }
             try { target.shutdown(); } catch (Throwable t) {
                 plugin.getLogger().warning("Failed to shut down migration target store: " + t.getMessage());

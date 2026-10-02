@@ -66,6 +66,43 @@ class PlotPersistenceRoundTripTest {
     }
 
     @Test
+    void roleFlagsMultiEntryRoundTrip() {
+        // Regression: serializeRoleFlags joins entries with ';' — the SQL settings blob
+        // must escape that or entries past the first are dropped on load.
+        Plot src = new Plot(UUID.randomUUID(), UUID.randomUUID(), "Owner", "world", 0, 0, 20, 20);
+        src.setRoleFlagState("member", "build", com.aegisguard.flags.TriState.ALLOW);
+        src.setRoleFlagState("member", "interact", com.aegisguard.flags.TriState.DENY);
+        src.setRoleFlagState("guard", "pvp", com.aegisguard.flags.TriState.ALLOW);
+
+        String blob = src.serializeRoleFlags();
+        Plot dst = new Plot(UUID.randomUUID(), UUID.randomUUID(), "Owner", "world", 0, 0, 20, 20);
+        dst.deserializeRoleFlags(blob);
+        assertEquals(com.aegisguard.flags.TriState.ALLOW, dst.getRoleFlagState("member", "build"));
+        assertEquals(com.aegisguard.flags.TriState.DENY, dst.getRoleFlagState("member", "interact"));
+        assertEquals(com.aegisguard.flags.TriState.ALLOW, dst.getRoleFlagState("guard", "pvp"));
+    }
+
+    @Test
+    void sqlSettingsBlobEscapesSemicolons() throws Exception {
+        String sql = Files.readString(JAVA.resolve("data/SQLDataStore.java"));
+        assertTrue(sql.contains("splitSettings(settings)"),
+                "applySettings must split on unescaped ';' only");
+        assertTrue(sql.contains("unescapeSettingsValue"),
+                "applySettings must reverse value escapes");
+        assertTrue(sql.contains("replace(\";\", \"\\\\;\")"),
+                "serializeSettings must escape ';' inside values");
+    }
+
+    @Test
+    void sqlSettingsCoversWarpCategoryAndGroup() throws Exception {
+        String sql = Files.readString(JAVA.resolve("data/SQLDataStore.java"));
+        // YML persists warp.warp-category and group.* — SQL must not drop them.
+        for (String key : new String[]{"warpCategory", "groupEnabled", "groupTreasury", "groupId", "groupName"}) {
+            assertTrue(sql.contains("\"" + key + "\""), "settings blob missing " + key);
+        }
+    }
+
+    @Test
     void sqlLoaderUsesCanonicalDeserializers() throws Exception {
         String sql = Files.readString(JAVA.resolve("data/SQLDataStore.java"));
         assertTrue(sql.contains("plot.deserializeFlags("),

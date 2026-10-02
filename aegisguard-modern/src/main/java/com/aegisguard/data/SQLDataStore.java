@@ -758,12 +758,19 @@ public class SQLDataStore implements IDataStore {
         }
     }
 
+    /**
+     * Settings column packs "key=value" pairs joined by ';'. Values may carry
+     * player-authored text (welcome/farewell/description) or packed sub-blobs
+     * (roleFlags joins entries with ';'), so backslash-escaping is applied to
+     * values: '\' -> "\\" then ';' -> "\;". applySettings splits on unescaped
+     * ';' only and reverses the escapes.
+     */
     private String serializeSettings(Plot plot) {
         StringBuilder sb = new StringBuilder();
         java.util.function.BiConsumer<String, String> add = (k, v) -> {
             if (v == null) return;
             if (sb.length() > 0) sb.append(";");
-            sb.append(k).append("=").append(v);
+            sb.append(k).append("=").append(v.replace("\\", "\\\\").replace(";", "\\;"));
         };
 
         add.accept("maxMembers", String.valueOf(plot.getMaxMembers()));
@@ -808,6 +815,12 @@ public class SQLDataStore implements IDataStore {
         add.accept("isServerWarp", String.valueOf(plot.isServerWarp()));
         add.accept("warpName", plot.getWarpName());
         add.accept("warpIcon", plot.getWarpIcon() != null ? plot.getWarpIcon().name() : null);
+        add.accept("warpCategory", plot.getWarpCategory());
+
+        add.accept("groupEnabled", String.valueOf(plot.isGroupPlot()));
+        add.accept("groupTreasury", String.valueOf(plot.getTreasuryBalance()));
+        add.accept("groupId", plot.getGroupId() != null ? plot.getGroupId().toString() : null);
+        add.accept("groupName", plot.getGroupName());
 
         String roleFlags = plot.serializeRoleFlags();
         if (!roleFlags.isEmpty()) add.accept("roleFlags", roleFlags);
@@ -863,13 +876,16 @@ public class SQLDataStore implements IDataStore {
         String[] lockdownActivatedBy = {null};
         String[] lockdownActivatedByName = {"Unknown"};
 
-        for (String part : settings.split(";")) {
+        // Split on unescaped ';' only — values written by serializeSettings escape
+        // '\' as "\\" and ';' as "\;". Legacy rows (pre-escape) contain raw ';'
+        // inside roleFlags; those fragments stay skipped exactly as before.
+        for (String part : splitSettings(settings)) {
             if (part.isEmpty()) continue;
             String[] kv = part.split("=", 2);
             if (kv.length != 2) continue;
 
             String key = kv[0];
-            String value = kv[1];
+            String value = unescapeSettingsValue(kv[1]);
 
             try {
                 switch (key) {
@@ -933,6 +949,14 @@ public class SQLDataStore implements IDataStore {
                             catch (IllegalArgumentException ignored) {}
                         }
                     }
+                    case "warpCategory" -> plot.setWarpCategory(value);
+
+                    case "groupEnabled" -> plot.setGroupPlot(Boolean.parseBoolean(value));
+                    case "groupTreasury" -> plot.setTreasuryBalance(Double.parseDouble(value));
+                    case "groupId" -> {
+                        try { plot.setGroupId(UUID.fromString(value)); } catch (IllegalArgumentException ignored) {}
+                    }
+                    case "groupName" -> plot.setGroupName(value);
 
                     case "roleFlags" -> plot.deserializeRoleFlags(value);
                     case "roleNicknames" -> plot.deserializeRoleNicknames(value);
@@ -972,6 +996,44 @@ public class SQLDataStore implements IDataStore {
             plot.restoreLockdown(true, actorId, lockdownActivatedByName[0], lockdownActivatedAt[0],
                     lockdownExpiresAt[0], lockdownMode[0]);
         }
+    }
+
+    /** Splits the settings blob on unescaped ';' — "\;" stays inside the value. */
+    private List<String> splitSettings(String settings) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        for (int i = 0; i < settings.length(); i++) {
+            char c = settings.charAt(i);
+            if (c == '\\' && i + 1 < settings.length()) {
+                cur.append(c).append(settings.charAt(++i));
+            } else if (c == ';') {
+                parts.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        parts.add(cur.toString());
+        return parts;
+    }
+
+    /** Reverses serializeSettings escapes: "\;" -> ';', "\\" -> '\'. Unknown "\x" passes through. */
+    private String unescapeSettingsValue(String value) {
+        if (value.indexOf('\\') < 0) return value;
+        StringBuilder out = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\\' && i + 1 < value.length()) {
+                char next = value.charAt(i + 1);
+                if (next == ';' || next == '\\') {
+                    out.append(next);
+                    i++;
+                    continue;
+                }
+            }
+            out.append(c);
+        }
+        return out.toString();
     }
 
     private void cachePlot(Plot plot) {

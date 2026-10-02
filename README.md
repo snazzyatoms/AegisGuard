@@ -62,6 +62,12 @@ It runs on **Paper, Purpur, Spigot, and Folia** with **Java 21+**. **1.4.0** is 
 
 **Open House.** `/ag gathering start [minutes]` (or Explore → Open House) lists a timed house on Travel Atlas Discover → **Live**. Arrivals can receive a visitor Guest Pass that expires when the house ends. The Members GUI now has Lock / Unlock and Undo last role change, matching `/ag roles`.
 
+**Hardened protection.** The claim defense set now covers the remaining vanilla grief vectors. A **Mob Griefing** ward stops endermen, sheep, snow golems, ravagers, zombie door-breaking, frost-walker trails, turtle-egg trample, and falling blocks. An **Interactables** ward gates cake, bells, jukeboxes, note blocks, candles, flower and decorated pots, composters, cauldrons, lecterns, chiseled bookshelves, campfires, beehives, and dragon eggs. Sponges and dispenser bonemeal outside a claim can no longer alter blocks inside it, harmful splash and lingering potions are filtered under the PvP and animals wards, boats / minecarts / end crystals require build permission, leashing and breeding sit under the animals ward, and lectern book theft is covered by containers. Dispensers can no longer inject liquid sources across a claim border.
+
+**Per-plot biomes.** `/ag biome` opens a localized picker over the server's allowed list, charges an optional Vault fee, and applies the biome across the claim in batched, region-safe passes. Both new wards and the biome picker are localized in all nine packs.
+
+**Staff inspection and grief alerts.** `/agadmin inspect` opens a detail card for the claim you stand in — or resolves a player's claims — with teleport, registry, and protected delete actions. `/agadmin plots <player>` filters the registry to one owner. Repeated denied actions on a claim raise a rate-limited alert to online staff (`protections.grief_alert_*`).
+
 Upgrading from `1.3.5` (or `1.2.7` / `1.3.0`) is a JAR swap. `config_schema` moves from `1294` to `1311` and migration auto-merges the new keys with a timestamped backup.
 
 ## What Is New In 1.3.5
@@ -160,11 +166,11 @@ On a JAR swap from `1.2.7`, `1.3.0`, or `1.3.5`, config and language merge run a
 
 | System | Capabilities |
 |---|---|
-| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm wards, and boundary enforcement |
+| Protection | Claims, server zones, sub-zones, interactions, containers, entities, vehicles, hostile mob protection controls, lockdown, hopper/liquid/teleport/storm/mob-griefing/interactables wards, potion and entity-placement filtering, and boundary enforcement |
 | Progression | Plot Ascension, utility disciplines, Frontier Expansion, Expansion Horizons, Renown, and Sigils |
 | Economy | ClaimBlocks, Vault exchange, real-estate listings, auctions, local markets, TradeStalls, GiftBlocks, and rentals |
 | Community | Roles, locked members, Guest Passes, Alliance Access, group plots, Realm Profiles, Safe Travel, Teleport Beacons, Travel Atlas (destinations / beacons / arrival / caravans), Guardian Succession, trade caravans, Aegis Frequency, alliance radio, group chat, staff chat, Hearth text-chat rooms, and an optional Simple Voice Chat hook for those rooms |
-| Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
+| Administration | Doctor tools, recovery snapshots, restoration, migration, Audit Ledger, `/agadmin health`, `/agadmin inspect` plot detail cards, owner-filtered registry, grief-attempt alerts, diagnostics, world controls, bypass tools, convert-to-server, Instant Approvals vs Pending Review, and activity history |
 | Optional modules | Module switchboard (`modules:`): listed systems default **on** except wilderness revert (ships **off**, SQL-only, opt-in). Menus hide disabled modules. Arena cooperative PvE is Folia-safe (`ArenaScheduler`). Snapshots store claim data; optional WorldEdit/FAWE build copies are off by default |
 | Presentation | Direct language picker across Modern English, Old English, Mexican Spanish, Argentinian Spanish, Brazilian Portuguese, French, Italian, German, and Polish, with synced Codex fallbacks |
 
@@ -217,11 +223,14 @@ Do not use Bukkit's global `/reload` command. Use `/agadmin reload` for supporte
 /ag chat group               Toggle group chat (leader may /ag chat group name)
 /ag staff                    Toggle staff chat (aliases /ag staffchat)
 /ag alliance ...             Create, invite, accept, leave, or disband an alliance
+/ag biome                    Pick a custom biome for the plot you manage
 
 /agadmin menu                Open the Staff Command Center
 /agadmin wand server         Get the server-zone wand
 /agadmin claim               Create a server-owned protected zone
 /agadmin season              Staff season featured Atlas plots and Routes
+/agadmin inspect [player]    Inspect the claim here, or a player's claims
+/agadmin plots [player]      Registry of every claim, or one owner's
 /agadmin skill fly <player>  Grant a temporary flight skill
 /agadmin staffchat           Toggle staff radio (alias /agadmin sc)
 /agadmin transition          Confirm upgrade status from 1.2.7, 1.3.0, or 1.3.5

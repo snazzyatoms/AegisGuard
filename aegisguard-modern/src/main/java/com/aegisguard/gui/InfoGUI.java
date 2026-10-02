@@ -100,11 +100,12 @@ public class InfoGUI {
                 ))
         ));
 
-        inv.setItem(20, infoCard(player, Material.GLOWSTONE_DUST, "codex_root_whats_new_name", "&eWhat's New in 1.3.0",
+        inv.setItem(20, infoCard(player, Material.GLOWSTONE_DUST, "codex_root_whats_new_name", "&eWhat's New in 1.4.0",
                 "codex_root_whats_new_lore", List.of(
-                        "&7Guest Passes, Lockdown, Realm Profiles,",
-                        "&7Safe Travel, Routes, Alliance Access,",
-                        "&7TradeStalls, and optional Arena.",
+                        "&7Teleport Beacons, Caravans, the",
+                        "&7Travel Hub, Discover upgrades,",
+                        "&7SQL storage, Succession, Hearth,",
+                        "&7Open House, and claim presets.",
                         " ",
                         "&7Open the chapters below for details."
                 )));
@@ -393,6 +394,37 @@ public class InfoGUI {
                         " ",
                         "&7Open Routes from the main menu to",
                         "&7follow a trail or tour."
+                )));
+        inv.setItem(20, infoCard(player, Material.RECOVERY_COMPASS, "codex_travel_hub_name", "&bTravel Hub",
+                "codex_travel_hub_lore", List.of(
+                        "&7/ag travel &7opens one hub with the",
+                        "&7Atlas, Beacons, Routes, Caravans,",
+                        "&7and Discover — plus quick buttons",
+                        "&7for home, spawn, and unstuck.",
+                        " ",
+                        "&7Start here when you are not sure",
+                        "&7which travel tool you need."
+                )));
+        inv.setItem(26, infoCard(player, Material.BEACON, "codex_travel_beacon_name", "&bTeleport Beacons",
+                "codex_travel_beacon_lore", List.of(
+                        "&7Place a pad block in a claim you",
+                        "&7manage, then sneak-right-click it",
+                        "&7to bind a beacon.",
+                        " ",
+                        "&7Link pads together or open them",
+                        "&7to visitors. Owners choose whether",
+                        "&7public listings land on a pad.",
+                        " ",
+                        "&e/ag beacon &7opens your pad list."
+                )));
+        inv.setItem(34, infoCard(player, Material.CHEST_MINECART, "codex_travel_caravan_name", "&6Caravans",
+                "codex_travel_caravan_lore", List.of(
+                        "&7Caravans ship goods along public",
+                        "&7beacon hops. Pick cargo, insure it,",
+                        "&7and watch for ambushes, tolls,",
+                        "&7delays, or lucky boons on the way.",
+                        " ",
+                        "&e/ag caravan &7opens the ledger."
                 )));
     }
 

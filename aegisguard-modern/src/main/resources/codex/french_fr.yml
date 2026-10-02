@@ -1,5 +1,5 @@
 # ======================================
-# AegisGuard v1.3.0 - Codex: Français
+# AegisGuard v1.4.0 - Codex: Français
 # Language ID: french_fr
 # Fallback bundle mirrored from lang/french_fr/
 # ======================================
@@ -4443,13 +4443,14 @@ snapshot_item_lore_builds:
 
 snapshot_created_here: '&aInstantané de données enregistré. Les builds n''ont pas été copiés.'
 snapshot_created_server_zones: '&a{COUNT} instantanés de zones serveur enregistrés. Les sauvegardes complètes des builds ont été mises en file quand elles sont activées et compatibles.'
-codex_root_whats_new_name: '&eNouveautés de la 1.3.0'
+codex_root_whats_new_name: '&eNouveautés de la 1.4.0'
 codex_root_whats_new_lore:
-  - '&7Passes invités, Confinement, Profils de royaume,'
-  - '&7Voyage sûr, Itinéraires, Accès d''alliance,'
-  - '&7TradeStalls et Arena optionnelle.'
+  - '&7Balises de téléportation, caravanes,'
+  - '&7le Hub de Voyage, améliorations de'
+  - '&7Découverte, stockage SQL, Succession,'
+  - '&7Foyer, Maison Ouverte et presets.'
   - ' '
-  - '&7Ouvre les chapitres ci-dessous pour le détail.'
+  - '&7Ouvrez les chapitres pour les détails.'
 codex_travel_safe_name: '&bVoyage sûr'
 codex_travel_safe_lore:
   - '&7Le voyage sûr cherche un atterrissage clair'
@@ -4465,6 +4466,34 @@ codex_travel_routes_lore:
   - ' '
   - '&7Ouvre Itinéraires depuis le menu principal'
   - '&7pour suivre un parcours.'
+codex_travel_hub_name: '&bHub de Voyage'
+codex_travel_hub_lore:
+  - '&7/ag travel &7ouvre un hub avec'
+  - '&7l''Atlas, les Balises, les Routes,'
+  - '&7les Caravanes et Découverte — plus'
+  - '&7des raccourcis maison, spawn, déblocage.'
+  - ' '
+  - '&7Commencez ici si vous hésitez'
+  - '&7sur l''outil de voyage à utiliser.'
+codex_travel_beacon_name: '&bBalises de Téléportation'
+codex_travel_beacon_lore:
+  - '&7Posez un bloc pad dans un terrain'
+  - '&7que vous gérez, puis faites'
+  - '&7clic droit accroupi pour la lier.'
+  - ' '
+  - '&7Reliez les pads entre eux ou'
+  - '&7ouvrez-les aux visiteurs. Les gérants'
+  - '&7choisissent si les annonces y atterrissent.'
+  - ' '
+  - '&e/ag beacon &7ouvre votre liste de pads.'
+codex_travel_caravan_name: '&6Caravanes'
+codex_travel_caravan_lore:
+  - '&7Les caravanes expédient des biens via'
+  - '&7les balises publiques. Choisissez la'
+  - '&7cargaison, assurez-la et surveillez'
+  - '&7embuscades, péages, retards ou bonus.'
+  - ' '
+  - '&e/ag caravan &7ouvre le registre.'
 codex_menus_language_name: '&bChoisis ta langue'
 codex_menus_language_lore:
   - '&7Le sélecteur liste tous les packs.'

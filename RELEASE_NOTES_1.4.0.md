@@ -14,9 +14,9 @@ This document describes the `V1.4.0` source line. It is **not** a GitHub Release
 
 ## What's new
 
-### Travel Atlas
+### Travel Hub, Atlas & Beacons
 
-Visit is one travel menu with **Destinations**, **My Beacons**, **Arrival**, and **Caravans**. `/ag beacon` opens My Beacons. Plot managers still choose how public listings land:
+`/ag travel` opens one hub with the **Travel Atlas** (Warps, My Plots, Trusted, Discover, Favorites, Recent), a standalone **Beacons** menu (paginated pad list plus **Arrival Rules**), standalone **Routes** and **Caravans** browsers, and **Discover** — which gained separate filter, category, and sort controls plus live-event and market badges on entries. `/ag beacon` opens your pad list directly. Plot managers still choose how public listings land:
 
 - **classic** — Safe Travel to the plot spawn / listing point (1.3.0 style), even when pads exist.
 - **beacon** — visitors **must** land on a public arrival pad. If none exists, the trip **fails closed** (`beacon_no_public_arrival`).
@@ -112,7 +112,7 @@ API JARs (`AegisGuard-1.4.0-api.jar`, `AegisGuard-1.4.0-dev-api.jar`) are for de
 /ag menu                     Open the territory dashboard
 /ag quickclaim [radius]      Claim a square around you
 /ag visit                    Open the Travel Atlas
-/ag beacon                   Open the Atlas My Beacons tab
+/ag beacon                   Open your teleport-beacon pads
 /ag arrival <classic|beacon> Choose how visitors arrive at the plot you manage
 /ag heir [player|clear]      Name a succession heir
 /ag succession               Open Stewardship / assume / rollback

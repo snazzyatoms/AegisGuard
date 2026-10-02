@@ -472,6 +472,43 @@ class LanguageParityTest {
         }
     }
 
+    @Test
+    void guardianGuideWhatsNewIs140AndNewTravelCardsExistEverywhere() throws Exception {
+        String infoGui = Files.readString(Path.of("src/main/java/com/aegisguard/gui/InfoGUI.java"));
+        assertTrue(infoGui.contains("What's New in 1.4.0"),
+                "InfoGUI whats-new fallback must name 1.4.0");
+        assertFalse(infoGui.contains("What's New in 1.3.0"),
+                "InfoGUI whats-new fallback still says 1.3.0");
+
+        Set<String> newCardKeys = Set.of(
+                "codex_travel_hub_name", "codex_travel_hub_lore",
+                "codex_travel_beacon_name", "codex_travel_beacon_lore",
+                "codex_travel_caravan_name", "codex_travel_caravan_lore");
+        for (String key : newCardKeys) {
+            assertTrue(infoGui.contains("\"" + key + "\""),
+                    "InfoGUI must reference " + key);
+        }
+
+        for (String language : LANGUAGES) {
+            Map<String, Object> translated = loadLanguage(language);
+            Map<String, Object> codex = loadCodex(language);
+            for (String key : newCardKeys) {
+                assertTrue(translated.containsKey(key), language + " lang missing " + key);
+                assertTrue(codex.containsKey(key), "codex/" + language + " missing " + key);
+                assertFalse(isBlankValue(translated.get(key)), language + " blank " + key);
+                assertFalse(isBlankValue(codex.get(key)), "codex/" + language + " blank " + key);
+            }
+            for (Map.Entry<String, Map<String, Object>> bundle
+                    : Map.of("lang", translated, "codex", codex).entrySet()) {
+                Object name = bundle.getValue().get("codex_root_whats_new_name");
+                assertTrue(name != null && String.valueOf(name).contains("1.4.0"),
+                        () -> bundle.getKey() + "/" + language + " whats_new must say 1.4.0, got: " + name);
+                assertFalse(String.valueOf(name).contains("1.3.0"),
+                        () -> bundle.getKey() + "/" + language + " whats_new still says 1.3.0");
+            }
+        }
+    }
+
     private Set<String> extractGuideHelpStaffKeys() throws Exception {
         Set<String> keys = new HashSet<>();
         List<Path> sources = List.of(

@@ -230,17 +230,11 @@ public final class BeaconService {
     }
 
     /**
-     * Removes a bound pad record and clears every pad still linked to it, so no
-     * dangling linked_id survives in the store. The world block is left in place.
+     * Removes a bound pad record; {@link BeaconStore#remove} clears every pad still
+     * linked to it, so no dangling linked_id survives. The world block is left in place.
      */
     public boolean unbind(UUID beaconId) {
-        TeleportBeacon beacon = beaconId == null ? null : store.get(beaconId);
-        if (beacon == null) return false;
-        for (TeleportBeacon other : inboundLinks(beacon)) {
-            other.setLinkedBeaconId(null);
-            store.put(other);
-        }
-        return store.remove(beaconId);
+        return beaconId != null && store.remove(beaconId);
     }
 
     /** Pads that currently point at this beacon (cleared automatically if it is unbound). */
@@ -651,7 +645,8 @@ public final class BeaconService {
                 send(player, "beacon_denied", "&cYou are not allowed to use this beacon.");
                 return;
             }
-            if (origin != null && !origin.isAllowCombat() && plugin.safeTravel() != null && plugin.safeTravel().isInCombat(player.getUniqueId())) {
+            TeleportBeacon combatGate = origin != null ? origin : dest;
+            if (!combatGate.isAllowCombat() && plugin.safeTravel() != null && plugin.safeTravel().isInCombat(player.getUniqueId())) {
                 send(player, "travel_fail_combat", "&cYou cannot travel while in combat.");
                 return;
             }

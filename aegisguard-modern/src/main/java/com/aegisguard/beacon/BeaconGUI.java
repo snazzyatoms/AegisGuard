@@ -95,7 +95,7 @@ public final class BeaconGUI {
     }
 
     public void openSetup(Player player, TeleportBeacon beacon) {
-        String title = plugin.gui().title(player, "beacon_setup_title", "&bCreate Beacon");
+        String title = plugin.gui().title(player, "beacon_setup_title", "&bBeacon Setup");
         Inventory inv = Bukkit.createInventory(withOrigin(new SetupHolder(beacon.getId()), player), 27, title);
         fillSmall(inv);
         inv.setItem(4, padIcon(player, beacon));

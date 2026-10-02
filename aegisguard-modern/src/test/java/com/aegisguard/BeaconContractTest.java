@@ -108,7 +108,8 @@ class BeaconContractTest {
                 "beacon_arrived:",
                 "beacon_pad_gone:",
                 "beacon_travel_failed:",
-                "beacon_paid_owner:"
+                "beacon_paid_owner:",
+                "beacon_create_cooldown:"
         );
         for (String pack : List.of("modern_english", "old_english", "spanish_mx", "spanish_ar",
                 "portuguese_br", "french_fr", "italian_it", "german_de", "polish_pl")) {
@@ -125,6 +126,10 @@ class BeaconContractTest {
             assertTrue(guis.contains("beacon_inbound:"), pack + " missing inbound-link lore key");
             assertTrue(guis.contains("beacon_click_legend:"), pack + " missing manage/travel legend");
             assertTrue(guis.contains("beacon_none_yet:"), pack + " missing empty-state keys");
+            assertTrue(guis.contains("atlas_tab_beacons:"), pack + " missing atlas beacon tab");
+            assertTrue(guis.contains("atlas_tab_beacons_lore:"), pack + " missing atlas tab lore");
+            assertTrue(guis.contains("atlas_title_beacons:"), pack + " missing atlas beacons title");
+            assertTrue(guis.contains("atlas_arrival_manage_only:"), pack + " missing arrival manage-only line");
             assertTrue(system.contains("beacon_unbound:"), pack + " missing unbind result message");
             assertTrue(system.contains("beacon_bind_hint:"), pack + " missing bind hint message");
             assertTrue(guis.contains("{NAME}"), pack + " confirm/go should include {NAME}");

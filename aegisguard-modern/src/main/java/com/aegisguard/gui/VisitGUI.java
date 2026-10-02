@@ -844,7 +844,7 @@ public class VisitGUI {
         if (beaconsOn) {
             ItemStack beacons = atlasTabItem(player, Material.END_PORTAL_FRAME, selected == AtlasTab.MY_BEACONS,
                     "atlas_tab_beacons", "&bMy Beacons",
-                    List.of("&7Pads on the plot you stand in.", "&7Create, link, and give starter pads."));
+                    List.of("&7Every pad you manage, plus public", "&7pads when server travel allows it."));
             tagAction(beacons, "atlas_beacons");
             inv.setItem(39, beacons);
             ItemStack arrival = atlasTabItem(player, Material.ENDER_EYE, selected == AtlasTab.ARRIVAL,
@@ -1050,32 +1050,41 @@ public class VisitGUI {
                             "&7Stand in a plot you manage to set arrival."))));
         } else {
             boolean beacon = plot.requiresBeaconArrival();
+            List<String> classicLore = new ArrayList<>(tl(player, "atlas_arrival_classic_lore", List.of(
+                    "&7Visitors land at this plot's spawn.")));
+            classicLore.add(manage
+                    ? t(player, "atlas_arrival_click_classic", "&eClick to use classic arrival.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
             ItemStack classic = GUIManager.createItem(
                     !beacon && manage ? Material.LIME_DYE : Material.COMPASS,
                     t(player, "atlas_arrival_classic_name", "&aClassic spawn"),
-                    tl(player, "atlas_arrival_classic_lore", List.of(
-                            "&7Visitors land at this plot's spawn.",
-                            manage ? "&eClick to use classic arrival." : "&7Only managers can change this.")));
+                    classicLore);
             tagAction(classic, "arrival_classic");
             inv.setItem(20, classic);
+            List<String> padLore = new ArrayList<>(tl(player, "atlas_arrival_beacon_lore", List.of(
+                    "&7Visitors must land on a public pad.",
+                    "&7Fails closed if no public pad exists.")));
+            padLore.add(manage
+                    ? t(player, "atlas_arrival_click_beacon", "&eClick to require beacon arrival.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
             ItemStack pad = GUIManager.createItem(
                     beacon && manage ? Material.LIME_DYE : Material.END_PORTAL_FRAME,
                     t(player, "atlas_arrival_beacon_name", "&bBeacon pad"),
-                    tl(player, "atlas_arrival_beacon_lore", List.of(
-                            "&7Visitors must land on a public pad.",
-                            "&7Fails closed if no public pad exists.",
-                            manage ? "&eClick to require beacon arrival." : "&7Only managers can change this.")));
+                    padLore);
             tagAction(pad, "arrival_beacon");
             inv.setItem(22, pad);
             boolean allow = plot.isAllowTravelerOverride();
+            List<String> overrideLore = new ArrayList<>(tl(player, "atlas_allow_override_lore", List.of(
+                    "&7When allowed, visitors may pick classic",
+                    "&7or beacon if that mode is available.")));
+            overrideLore.add(manage
+                    ? t(player, "atlas_arrival_click_override", "&eClick to toggle.")
+                    : t(player, "atlas_arrival_manage_only", "&7Only managers can change this."));
             ItemStack override = GUIManager.createItem(
                     allow ? Material.LIME_DYE : Material.GRAY_DYE,
                     t(player, allow ? "atlas_allow_override_on" : "atlas_allow_override_off",
                             allow ? "&aTraveler override allowed" : "&7Traveler override locked"),
-                    tl(player, "atlas_allow_override_lore", List.of(
-                            "&7When allowed, visitors may pick classic",
-                            "&7or beacon if that mode is available.",
-                            manage ? "&eClick to toggle." : "&7Only managers can change this.")));
+                    overrideLore);
             tagAction(override, "arrival_override");
             inv.setItem(24, override);
         }

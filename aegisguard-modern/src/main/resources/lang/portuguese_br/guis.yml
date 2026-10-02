@@ -4800,3 +4800,17 @@ admin_inspect_delete_lore:
   - '&7Soltar (Q) ou sneak+clique para excluir.'
   - '&cIsso não pode ser desfeito.'
 admin_inspect_none: '&cVocê não está dentro de um terreno.'
+button_mob_griefing_on: '&a✨ Destruição por Mobs: Protegido'
+button_mob_griefing_off: '&c✨ Destruição por Mobs: Permitida'
+mob_griefing_toggle_lore:
+- '&7Impede que endermen, ovelhas, golems'
+- '&7de neve, devastadores e outros mobs'
+- '&7alterem blocos neste terreno.'
+- '&eClique para alternar.'
+button_interactables_on: '&a🧁 Interativos: Protegidos'
+button_interactables_off: '&c🧁 Interativos: Abertos'
+interactables_toggle_lore:
+- '&7Impede que visitantes usem bolos,'
+- '&7sinos, jukeboxes, blocos de notas,'
+- '&7velas, vasos e outros blocos aqui.'
+- '&eClique para alternar.'

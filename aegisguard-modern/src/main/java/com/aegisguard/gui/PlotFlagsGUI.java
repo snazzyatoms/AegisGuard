@@ -243,6 +243,7 @@ public class PlotFlagsGUI {
         addProtectionFlagButton(player, inv, plot, 10, "pvp",         Material.IRON_SWORD,      "button_pvp",   "pvp_toggle_lore",   "PvP");
         addProtectionFlagButton(player, inv, plot, 11, "tnt-damage",  Material.TNT,             "button_tnt",   "tnt_toggle_lore",   "TNT Damage");
         addProtectionFlagButton(player, inv, plot, 12, "fire-spread", Material.FLINT_AND_STEEL, "button_fire",  "fire_toggle_lore",  "Fire Spread");
+        addProtectionFlagButton(player, inv, plot, 13, "mob-griefing",Material.ENDERMAN_SPAWN_EGG, "button_mob_griefing", "mob_griefing_toggle_lore", "Mob Griefing");
         addProtectionFlagButton(player, inv, plot, 14, "mobs",        Material.ZOMBIE_HEAD,     "button_mobs",  "mob_toggle_lore",   "Mob Damage");
         addProtectionFlagButton(player, inv, plot, 15, "entry",       Material.OAK_FENCE_GATE,  "button_entry", "entry_toggle_lore", "Entry");
 
@@ -346,6 +347,8 @@ public class PlotFlagsGUI {
                 : free;
         addPaidFlagButton(player, inv, plot, 15, "shop-interact", Material.EMERALD,
                 "button_shop", "shop_toggle_lore", shopCostStr, "Shop Interact");
+        addProtectionFlagButton(player, inv, plot, 16, "interactables", Material.CAKE,
+                "button_interactables", "interactables_toggle_lore", "Interactables Ward");
 
     }
 
@@ -489,6 +492,7 @@ public class PlotFlagsGUI {
                     case 10 -> { toggleFlag(player, plot, "pvp"); refresh = true; }
                     case 11 -> { toggleFlag(player, plot, "tnt-damage"); refresh = true; }
                     case 12 -> { toggleFlag(player, plot, "fire-spread"); refresh = true; }
+                    case 13 -> { toggleFlag(player, plot, "mob-griefing"); refresh = true; }
                     case 14 -> { toggleFlag(player, plot, "mobs"); refresh = true; }
                     case 15 -> { toggleFlag(player, plot, "entry"); refresh = true; }
                     case 16 -> {
@@ -573,6 +577,7 @@ public class PlotFlagsGUI {
                     case 13 -> { toggleFlag(player, plot, "storm-ward"); refresh = true; }
                     case 14 -> { toggleFlag(player, plot, "decor"); refresh = true; }
                     case 15 -> { togglePaid(player, plot, "shop-interact", plugin.cfg().getShopInteractCost()); refresh = true; }
+                    case 16 -> { toggleFlag(player, plot, "interactables"); refresh = true; }
                 }
             }
             case PRESETS -> {

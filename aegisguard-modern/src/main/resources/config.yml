@@ -1681,6 +1681,16 @@ protections:
   grief_alert_window_seconds: 60
   grief_alert_cooldown_seconds: 120
 
+  # Vanilla gamerule-style mob griefing: endermen, sheep, snow golems, ravagers,
+  # zombies breaking doors, frost walker, falling blocks, wither, silverfish,
+  # turtle-egg trample. Also blocks dispenser bonemeal spread across borders.
+  mob_griefing: true
+
+  # Non-container interactables (cake, bells, jukeboxes, note blocks, candles,
+  # flower pots, decorated pots, composters, cauldrons, lecterns, chiseled
+  # bookshelves, campfires, beehives) inside claims.
+  interactables: true
+
   # 1.3.0 hero-pack ward defaults (GREEN=protected). Missing keys on existing
   # plots still default protected in ProtectionManager.isFlagEnabled.
   doors: true

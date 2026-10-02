@@ -5630,3 +5630,17 @@ admin_inspect_delete: '&cDelete Plot'
 admin_inspect_delete_lore:
   - '&7Drop (Q) or sneak-click to delete.'
   - '&cThis cannot be undone.'
+button_mob_griefing_on: '&a✨ Mob Griefing: Protected'
+button_mob_griefing_off: '&c✨ Mob Griefing: Allowed'
+mob_griefing_toggle_lore:
+- '&7Stops endermen, sheep, snow golems,'
+- '&7ravagers, and other mobs from'
+- '&7changing blocks in this claim.'
+- '&eClick to toggle.'
+button_interactables_on: '&a🧁 Interactables: Protected'
+button_interactables_off: '&c🧁 Interactables: Open'
+interactables_toggle_lore:
+- '&7Keeps visitors from using cake, bells,'
+- '&7jukeboxes, note blocks, candles, pots,'
+- '&7and other decor blocks here.'
+- '&eClick to toggle.'

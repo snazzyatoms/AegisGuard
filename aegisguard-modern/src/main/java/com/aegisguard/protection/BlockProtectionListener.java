@@ -27,8 +27,14 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.entity.EntityBreakDoorEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.block.SpongeAbsorbEvent;
+import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -297,6 +303,136 @@ public class BlockProtectionListener implements Listener {
     public void onPistonRetract(BlockPistonRetractEvent e) {
         if (shouldCancelPiston(e.getBlock(), e.getDirection(), e.getBlocks())) {
             e.setCancelled(true);
+        }
+    }
+
+    /**
+     * Vanilla mob-griefing ward (mirrors the gamerule players know): endermen stealing/placing
+     * blocks, sheep grazing, snow golem trails, ravagers trampling crops, silverfish infesting,
+     * the wither eating blocks, and falling sand/gravel/anvils landing inside claims all route
+     * through EntityChangeBlockEvent. Player-attributed changes get a normal build check instead.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onEntityChangeBlock(EntityChangeBlockEvent e) {
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+
+        if (e.getEntity() instanceof Player player) {
+            if (plugin.isBypassing(player)) return;
+            if (!plot.canBuildAt(player, e.getBlock().getLocation(), plugin, "BLOCK_BREAK")) {
+                e.setCancelled(true);
+                DenialGuidance.send(plugin, player, plot, "BLOCK_BREAK", "cannot_break");
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+
+        if (plugin.protection().isFlagEnabled(plot, "mob-griefing")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /** Frost Walker / snow-golem trails forming blocks inside claims. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onEntityBlockForm(EntityBlockFormEvent e) {
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+
+        if (e.getEntity() instanceof Player player) {
+            if (plugin.isBypassing(player)) return;
+            if (!plot.canBuildAt(player, e.getBlock().getLocation(), plugin, "BLOCK_PLACE")) {
+                e.setCancelled(true);
+                DenialGuidance.send(plugin, player, plot, "BLOCK_PLACE", "cannot_place");
+                plugin.effects().playError(player);
+            }
+            return;
+        }
+
+        if (plugin.protection().isFlagEnabled(plot, "mob-griefing")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /** Zombies breaking claim doors. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onEntityBreakDoor(EntityBreakDoorEvent e) {
+        Plot plot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        if (plot == null) return;
+        if (plugin.protection().isFlagEnabled(plot, "mob-griefing")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /** Mobs trampling turtle eggs / farmland inside claims. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onEntityTrample(EntityInteractEvent e) {
+        Block block = e.getBlock();
+        if (block == null) return;
+        Material type = block.getType();
+        if (type != Material.TURTLE_EGG && type != Material.FARMLAND) return;
+
+        Plot plot = plugin.store().getPlotAt(block.getLocation());
+        if (plot == null) return;
+        if (plugin.protection().isFlagEnabled(plot, "mob-griefing")) {
+            e.setCancelled(true);
+        }
+    }
+
+    /**
+     * Sponge placed outside a claim can drain water inside it (absorb radius crosses borders).
+     * Filter absorbed blocks the same way explosions are filtered: same-claim sponges work.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onSpongeAbsorb(SpongeAbsorbEvent e) {
+        Plot spongePlot = plugin.store().getPlotAt(e.getBlock().getLocation());
+        e.getBlocks().removeIf(state -> {
+            Plot target = plugin.store().getPlotAt(state.getLocation());
+            if (target == null) return false;
+            if (spongePlot != null && spongePlot.getPlotId().equals(target.getPlotId())) return false;
+            return plugin.protection().isFlagEnabled(target, "liquid-flow");
+        });
+    }
+
+    /**
+     * Bonemeal (and dispenser bonemeal) converting/spreading blocks into claims. Player use gets
+     * a per-block build check; source-less (dispenser) fertilization is blocked cross-claim via
+     * the mob-griefing ward.
+     */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onBlockFertilize(BlockFertilizeEvent e) {
+        Block source = e.getBlock();
+        Player player = e.getPlayer();
+        Plot sourcePlot = plugin.store().getPlotAt(source.getLocation());
+
+        boolean[] denied = {false};
+        e.getBlocks().removeIf(state -> {
+            Plot target = plugin.store().getPlotAt(state.getLocation());
+            if (target == null) return false;
+            if (sourcePlot != null && sourcePlot.getPlotId().equals(target.getPlotId())) return false;
+
+            if (player != null) {
+                if (plugin.isBypassing(player)) return false;
+                if (!target.canBuildAt(player, state.getLocation(), plugin, "BLOCK_PLACE")) {
+                    denied[0] = true;
+                    return true;
+                }
+                return false;
+            }
+            return plugin.protection().isFlagEnabled(target, "mob-griefing");
+        });
+
+        if (denied[0] && player != null) {
+            Plot sourcePlotFinal = sourcePlot;
+            if (sourcePlotFinal == null) {
+                // Any remaining target plot is fine for the guidance context.
+                sourcePlotFinal = e.getBlocks().stream()
+                        .map(s -> plugin.store().getPlotAt(s.getLocation()))
+                        .filter(java.util.Objects::nonNull).findFirst().orElse(null);
+            }
+            if (sourcePlotFinal != null) {
+                DenialGuidance.send(plugin, player, sourcePlotFinal, "BLOCK_PLACE", "cannot_place");
+                plugin.effects().playError(player);
+            }
         }
     }
 

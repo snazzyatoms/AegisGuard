@@ -129,6 +129,8 @@ public class WorldRulesManager {
         plot.setFlag("teleport-ward", plugin.getConfig().getBoolean("protections.teleport_ward", true));
         plot.setFlag("storm-ward", plugin.getConfig().getBoolean("protections.storm_ward", true));
         plot.setFlag("decor", plugin.getConfig().getBoolean("protections.decor", true));
+        plot.setFlag("mob-griefing", plugin.getConfig().getBoolean("protections.mob_griefing", true));
+        plot.setFlag("interactables", plugin.getConfig().getBoolean("protections.interactables", true));
         plot.setFlag("hearth", plugin.getConfig().getBoolean("protections.hearth", false));
     }
 

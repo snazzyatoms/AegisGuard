@@ -5667,3 +5667,17 @@ admin_inspect_delete: '&cUsuń działkę'
 admin_inspect_delete_lore:
   - '&7Wyrzuć (Q) lub sneak+klik, aby usunąć.'
   - '&cNieodwracalne.'
+button_mob_griefing_on: '&a✨ Niszczenie przez Moby: Chronione'
+button_mob_griefing_off: '&c✨ Niszczenie przez Moby: Dozwolone'
+mob_griefing_toggle_lore:
+- '&7Blokuje zmiany bloków przez endermany,'
+- '&7owce, bałwany, niszczyciele i inne'
+- '&7moby na tym terenie.'
+- '&eKliknij, aby przełączyć.'
+button_interactables_on: '&a🧁 Bloki Interaktywne: Chronione'
+button_interactables_off: '&c🧁 Bloki Interaktywne: Otwarte'
+interactables_toggle_lore:
+- '&7Blokuje odwiedzającym użycie tortów,'
+- '&7dzwonów, szaf grających, bloków'
+- '&7dźviękowych, świec i dekoracji.'
+- '&eKliknij, aby przełączyć.'

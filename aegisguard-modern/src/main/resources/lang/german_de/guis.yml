@@ -4802,3 +4802,17 @@ admin_inspect_delete_lore:
   - '&7Werfen (Q) oder Sneak+Klick zum Löschen.'
   - '&cUnwiderruflich.'
 admin_inspect_none: '&cDu stehst in keinem Grundstück.'
+button_mob_griefing_on: '&a✨ Mob-Zerstörung: Geschützt'
+button_mob_griefing_off: '&c✨ Mob-Zerstörung: Erlaubt'
+mob_griefing_toggle_lore:
+- '&7Verhindert, dass Endermen, Schafe,'
+- '&7Schneegolems, Verwüster und andere'
+- '&7Mobs Blöcke in diesem Gebiet ändern.'
+- '&eKlicken zum Umschalten.'
+button_interactables_on: '&a🧁 Interaktive Blöcke: Geschützt'
+button_interactables_off: '&c🧁 Interaktive Blöcke: Offen'
+interactables_toggle_lore:
+- '&7Verhindert, dass Besucher Kuchen,'
+- '&7Glocken, Plattenspieler, Notenblöcke,'
+- '&7Kerzen, Töpfe und Dekor hier nutzen.'
+- '&eKlicken zum Umschalten.'

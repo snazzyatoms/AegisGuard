@@ -5675,3 +5675,17 @@ admin_inspect_delete: '&cElimina proprietà'
 admin_inspect_delete_lore:
   - '&7Getta (Q) o sneak+clic per eliminare.'
   - '&cNon è reversibile.'
+button_mob_griefing_on: '&a✨ Danni dei Mob: Protetto'
+button_mob_griefing_off: '&c✨ Danni dei Mob: Consentiti'
+mob_griefing_toggle_lore:
+- '&7Impedisce a enderman, pecore, golem'
+- '&7di neve, devastatori e altri mob di'
+- '&7modificare blocchi in questo territorio.'
+- '&eClicca per attivare/disattivare.'
+button_interactables_on: '&a🧁 Blocchi Interattivi: Protetti'
+button_interactables_off: '&c🧁 Blocchi Interattivi: Aperti'
+interactables_toggle_lore:
+- '&7Impedisce ai visitatori di usare torte,'
+- '&7campane, jukebox, blocchi musicali,'
+- '&7candele, vasi e altri decori qui.'
+- '&eClicca per attivare/disattivare.'

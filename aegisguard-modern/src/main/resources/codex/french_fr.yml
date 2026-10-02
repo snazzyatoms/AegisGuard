@@ -5677,3 +5677,17 @@ admin_inspect_delete: '&cSupprimer la parcelle'
 admin_inspect_delete_lore:
   - '&7Jeter (Q) ou sneak+clic pour supprimer.'
   - '&cIrréversible.'
+button_mob_griefing_on: '&a✨ Griefing des Mobs : Protégé'
+button_mob_griefing_off: '&c✨ Griefing des Mobs : Autorisé'
+mob_griefing_toggle_lore:
+- '&7Empêche les endermen, moutons,'
+- '&7golems de neige, ravageurs et autres'
+- '&7mobs de modifier les blocs ici.'
+- '&eCliquez pour basculer.'
+button_interactables_on: '&a🧁 Interactifs : Protégés'
+button_interactables_off: '&c🧁 Interactifs : Ouverts'
+interactables_toggle_lore:
+- '&7Empêche les visiteurs d''utiliser'
+- '&7gâteaux, cloches, jukeboxes, blocs'
+- '&7musicaux, bougies, pots et décors ici.'
+- '&eCliquez pour basculer.'

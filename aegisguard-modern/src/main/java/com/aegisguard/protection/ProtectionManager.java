@@ -11,22 +11,35 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Slime;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.ThrownPotion;
+import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityBreedEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -34,8 +47,10 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
@@ -104,13 +119,15 @@ public class ProtectionManager implements Listener {
     private static final Set<String> SAFE_ZONE_FORCED_FLAGS = Set.of(
             "pvp", "mobs", "animals", "containers", "piston-use", "farm", "redstone",
             "doors", "vehicles", "tnt-damage", "fire-spread", "explosions",
-            "hopper-pipe", "liquid-flow", "teleport-ward", "storm-ward", "decor");
+            "hopper-pipe", "liquid-flow", "teleport-ward", "storm-ward", "decor",
+            "mob-griefing", "interactables");
 
     /** Flags that default to ON (protected) on regular plots when no explicit value exists. */
     private static final Set<String> DEFAULT_PROTECTED_FLAGS = Set.of(
             "pvp", "animals", "containers", "doors", "redstone", "vehicles", "farm",
             "mobs", "tnt-damage", "fire-spread", "piston-use", "hopper-pipe",
-            "liquid-flow", "teleport-ward", "storm-ward", "decor");
+            "liquid-flow", "teleport-ward", "storm-ward", "decor",
+            "mob-griefing", "interactables");
 
     public ProtectionManager(AegisGuard plugin) {
         this.plugin = plugin;
@@ -1053,6 +1070,241 @@ public class ProtectionManager implements Listener {
                     queueProtectedHostileRemoval(entity);
                 }
             }
+        }
+    }
+
+    // --------------------------------------------------
+    // SPLASH & LINGERING POTIONS (pvp / animals wards)
+    // --------------------------------------------------
+
+    /** Potion effect categories that can be weaponized against victims inside a claim. */
+    private static final Set<PotionEffectType> HARMFUL_POTION_TYPES = Set.of(
+            PotionEffectType.HARM, PotionEffectType.POISON, PotionEffectType.WEAKNESS,
+            PotionEffectType.SLOW, PotionEffectType.SLOW_DIGGING, PotionEffectType.CONFUSION,
+            PotionEffectType.BLINDNESS, PotionEffectType.HUNGER, PotionEffectType.WITHER,
+            PotionEffectType.BAD_OMEN, PotionEffectType.UNLUCK, PotionEffectType.DARKNESS);
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPotionSplash(PotionSplashEvent e) {
+        if (!isHarmfulPotion(e.getPotion())) return;
+        filterSplashVictims(e.getAffectedEntities(), e.getPotion().getShooter());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onLingeringCloudApply(AreaEffectCloudApplyEvent e) {
+        if (!isHarmfulPotion(e.getEntity())) return;
+        filterSplashVictims(e.getAffectedEntities(), e.getEntity().getSource());
+    }
+
+    private boolean isHarmfulPotion(ThrownPotion potion) {
+        ItemStack item = potion.getItem();
+        return item != null && item.getItemMeta() instanceof PotionMeta meta && isHarmfulPotion(meta);
+    }
+
+    private boolean isHarmfulPotion(PotionMeta meta) {
+        PotionType base = meta.getBasePotionType();
+        if (base != null) {
+            for (PotionEffect fx : base.getPotionEffects()) {
+                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+            }
+        }
+        if (meta.hasCustomEffects()) {
+            for (PotionEffect fx : meta.getCustomEffects()) {
+                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isHarmfulPotion(AreaEffectCloud cloud) {
+        PotionType base = cloud.getBasePotionType();
+        if (base != null) {
+            for (PotionEffect fx : base.getPotionEffects()) {
+                if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+            }
+        }
+        for (PotionEffect fx : cloud.getCustomEffects()) {
+            if (HARMFUL_POTION_TYPES.contains(fx.getType())) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Harmful splash/lingering effects bypass the damage-event path, so victim filtering happens
+     * here instead: protected players shed hostile effects under the pvp ward, protected animals
+     * under the animals ward, unless the thrower could legitimately fight there.
+     */
+    private void filterSplashVictims(java.util.Collection<LivingEntity> affected, ProjectileSource shooter) {
+        if (affected == null || affected.isEmpty()) return;
+        Player shooterPlayer = shooter instanceof Player p ? p : null;
+        affected.removeIf(target -> {
+            if (shooterPlayer != null && target.getUniqueId().equals(shooterPlayer.getUniqueId())) {
+                return false; // a player's own splash may still hit them
+            }
+            Plot plot = plugin.store().getPlotAt(target.getLocation());
+            if (plot == null) return false;
+
+            if (target instanceof Player victim) {
+                if (!isProtectionActive(plot, "pvp", true)) return false;
+                if (shooterPlayer == null) return true;
+                if (plugin.isAdmin(shooterPlayer) || plugin.isBypassing(shooterPlayer)) return false;
+                return !plot.canInteractAt(shooterPlayer, victim.getLocation(), plugin, "PVP");
+            }
+            if (target instanceof Animals || target instanceof Tameable) {
+                if (!isProtectionActive(plot, "animals", true)) return false;
+                if (shooterPlayer == null) return true;
+                if (plugin.isAdmin(shooterPlayer) || plugin.isBypassing(shooterPlayer)) return false;
+                return !plot.canInteractAt(shooterPlayer, target.getLocation(), plugin, "ANIMALS");
+            }
+            return false;
+        });
+    }
+
+    // --------------------------------------------------
+    // ENTITY PLACEMENT (boats, minecarts, end crystals)
+    // --------------------------------------------------
+
+    /**
+     * Vehicles and end crystals placed inside a claim are not block placements, so they bypass
+     * the build check entirely without this handler. Players need build permission; source-less
+     * placements (dispensers, plugins) are treated as cross-claim griefing.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityPlace(EntityPlaceEvent e) {
+        Location loc = e.getEntity().getLocation();
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return;
+
+        Player player = e.getPlayer();
+        if (player == null) {
+            if (isProtectionActive(plot, "mob-griefing", true)) {
+                e.setCancelled(true);
+            }
+            return;
+        }
+        if (plugin.isAdmin(player) || plugin.isBypassing(player)) return;
+        if (shouldYieldToExternalProtection(loc, player, HookAction.BLOCK_PLACE)) return;
+
+        if (!plot.canBuildAt(player, loc, plugin, "BLOCK_PLACE")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, player, plot, "BLOCK_PLACE", "cannot_place");
+            plugin.effects().playError(player);
+        }
+    }
+
+    // --------------------------------------------------
+    // ANIMAL HANDLING (leash / breed — animals ward)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerLeash(PlayerLeashEntityEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        Location loc = e.getEntity().getLocation();
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return;
+        if (shouldYieldToExternalProtection(loc, p, HookAction.ANIMAL_INTERACT)) return;
+
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.canInteractAt(p, loc, plugin, "ANIMALS")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "ANIMALS", "cannot_interact");
+            plugin.effects().playEffect("animals", "deny", p, loc);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityBreed(EntityBreedEvent e) {
+        // Only player-triggered breeding is gated; villager/natural breeding keeps working.
+        if (!(e.getBreeder() instanceof Player p)) return;
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        Location loc = e.getEntity().getLocation();
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return;
+        if (shouldYieldToExternalProtection(loc, p, HookAction.ANIMAL_INTERACT)) return;
+
+        if (isProtectionActive(plot, "animals", true)
+                && !plot.canInteractAt(p, loc, plugin, "ANIMALS")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "ANIMALS", "cannot_interact");
+            plugin.effects().playEffect("animals", "deny", p, loc);
+        }
+    }
+
+    // --------------------------------------------------
+    // LECTERN BOOK THEFT (containers ward)
+    // --------------------------------------------------
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onLecternTakeBook(PlayerTakeLecternBookEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        Location loc = e.getLectern().getLocation();
+        Plot plot = plugin.store().getPlotAt(loc);
+        if (plot == null) return;
+        if (shouldYieldToExternalProtection(loc, p, HookAction.CONTAINER_INTERACT)) return;
+
+        if (isProtectionActive(plot, "containers", true)
+                && !plot.canInteractAt(p, loc, plugin, "CONTAINERS")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "CONTAINERS", "cannot_interact");
+            plugin.effects().playEffect("containers", "deny", p, loc);
+        }
+    }
+
+    // --------------------------------------------------
+    // INTERACTABLES (cake, bells, jukeboxes, etc.)
+    // --------------------------------------------------
+
+    /**
+     * Non-container blocks that can still be consumed or triggered by visitors: cake slices,
+     * bells, jukebox discs, note-block tuning, candles, flower pots, composters, cauldrons,
+     * decorated pots, chiseled bookshelves, campfires, beehives, dragon eggs. Doors, redstone
+     * controls, and real containers are already covered by their own wards.
+     */
+    private boolean isInteractableDecoration(Material type) {
+        String name = type.name();
+        return type == Material.CAKE
+                || type == Material.BELL
+                || type == Material.JUKEBOX
+                || type == Material.NOTE_BLOCK
+                || type == Material.COMPOSTER
+                || type == Material.LECTERN
+                || type == Material.CHISELED_BOOKSHELF
+                || type == Material.CAMPFIRE
+                || type == Material.SOUL_CAMPFIRE
+                || type == Material.BEE_NEST
+                || type == Material.BEEHIVE
+                || type == Material.DECORATED_POT
+                || type == Material.FLOWER_POT
+                || type == Material.DRAGON_EGG
+                || name.endsWith("_CAULDRON")
+                || name.startsWith("POTTED_")
+                || name.endsWith("_CANDLE")
+                || name.endsWith("_CANDLE_CAKE");
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInteractablesInteract(PlayerInteractEvent e) {
+        if (e.getClickedBlock() == null) return;
+        if (e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (!isInteractableDecoration(e.getClickedBlock().getType())) return;
+
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getClickedBlock().getLocation());
+        if (plot == null) return;
+
+        if (shouldYieldToExternalProtection(e.getClickedBlock().getLocation(), p, HookAction.REDSTONE_INTERACT)) {
+            return;
+        }
+
+        if (isProtectionActive(plot, "interactables", true)
+                && !plot.canInteractAt(p, e.getClickedBlock().getLocation(), plugin, "INTERACT")) {
+            e.setCancelled(true);
+            DenialGuidance.send(plugin, p, plot, "INTERACT", "cannot_interact");
+            plugin.effects().playEffect("redstone", "deny", p, e.getClickedBlock().getLocation());
         }
     }
 }

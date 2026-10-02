@@ -5088,3 +5088,17 @@ admin_inspect_delete: '&cEliminar parcela'
 admin_inspect_delete_lore:
   - '&7Soltar (Q) o sneak+clic para eliminar.'
   - '&cNo se puede deshacer.'
+button_mob_griefing_on: '&a✨ Destrucción de Mobs: Protegido'
+button_mob_griefing_off: '&c✨ Destrucción de Mobs: Permitida'
+mob_griefing_toggle_lore:
+- '&7Evita que endermen, ovejas, gólems'
+- '&7de nieve, devastadores y otros mobs'
+- '&7modifiquen bloques en este terreno.'
+- '&eClic para alternar.'
+button_interactables_on: '&a🧁 Interactivos: Protegidos'
+button_interactables_off: '&c🧁 Interactivos: Abiertos'
+interactables_toggle_lore:
+- '&7Impide que visitantes usen pasteles,'
+- '&7campanas, tocadiscos, bloques de notas,'
+- '&7velas, macetas y otros bloques aquí.'
+- '&eClic para alternar.'

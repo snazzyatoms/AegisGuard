@@ -5564,3 +5564,17 @@ admin_inspect_delete: '&cRaze Claim'
 admin_inspect_delete_lore:
   - '&7Drop (Q) or sneak-click to raze.'
   - '&cIt cannot be undone.'
+button_mob_griefing_on: '&aMob-Grief Ward: Raised'
+button_mob_griefing_off: '&cMob-Grief Ward: Lowered'
+mob_griefing_toggle_lore:
+- '&7When raised, endermen, sheep, snow'
+- '&7golems, ravagers, and other beasts'
+- '&7cannot alter blocks within.'
+- '&eClick to toggle this ward.'
+button_interactables_on: '&aHearthcraft Ward: Raised'
+button_interactables_off: '&cHearthcraft Ward: Lowered'
+interactables_toggle_lore:
+- '&7When raised, visitors cannot use'
+- '&7cakes, bells, jukeboxes, note blocks,'
+- '&7candles, pots, or other finery within.'
+- '&eClick to toggle this ward.'

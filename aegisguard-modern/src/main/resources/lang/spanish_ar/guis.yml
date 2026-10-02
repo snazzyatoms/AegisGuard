@@ -30,8 +30,6 @@ button_next_lore:
 - '&7Ir a la página siguiente.'
 button_page: '&7Página: &f{PAGE}'
 button_exit: '&c✖ Cerrar'
-button_exit_lore:
-- '&7Cerrá este menú.'
 exit_lore:
 - '&7Cerrá este menú.'
 button_back_admin: '&fVolver a Admin'

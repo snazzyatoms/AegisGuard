@@ -44,8 +44,6 @@ button_back_menu: '&fReturn to Menu'
 back_menu_lore:
 - '&7Return to the main index.'
 button_exit: '&cDepart'
-button_exit_lore:
-- '&7Close this sacred scroll.'
 exit_lore:
 - '&7Close this sacred scroll.'
 button_prev_page: '&fPrior Page'

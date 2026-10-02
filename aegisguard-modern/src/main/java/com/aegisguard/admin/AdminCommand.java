@@ -897,8 +897,9 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
             sendLocalized(player, "admin_restore_confirm_hint",
                     "&cRun &e/agadmin restore here confirm [all|data|build|flags|members|bans|guestpasses|alliance|lockdown|noticeboard|identity] &cto continue.");
         } else {
-            player.sendMessage(ChatColor.RED + "The selected restore cannot be confirmed until preflight passes. "
-                    + "Use a data-only scope if the build backup is unavailable.");
+            sendLocalized(player, "admin_restore_blocked",
+                    "&cThe selected restore cannot be confirmed until preflight passes. "
+                            + "Use a data-only scope if the build backup is unavailable.");
         }
     }
 
@@ -936,31 +937,40 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         try {
             operationId = UUID.fromString(operationRaw);
         } catch (IllegalArgumentException error) {
-            player.sendMessage(ChatColor.RED + "Invalid restore operation ID.");
+            sendLocalized(player, "admin_restore_invalid_id", "&cInvalid restore operation ID.");
             return;
         }
         RestoreOperation operation = plugin.getSnapshotManager().getRestoreOperation(operationId);
         if (operation == null) {
-            player.sendMessage(ChatColor.RED + "Restore operation not found.");
+            sendLocalized(player, "admin_restore_not_found", "&cRestore operation not found.");
             return;
         }
         if ("release".equalsIgnoreCase(action)) {
             plugin.getSnapshotManager().releaseRestoreLockAsync(operationId).whenComplete((released, error) ->
-                    plugin.runMain(player, () -> player.sendMessage(error == null && Boolean.TRUE.equals(released)
-                            ? ChatColor.GREEN + "Maintenance lock durably released after staff review."
-                            : ChatColor.RED + "That operation could not be durably released.")));
+                    plugin.runMain(player, () -> sendLocalized(player,
+                            error == null && Boolean.TRUE.equals(released)
+                                    ? "admin_restore_released" : "admin_restore_not_released",
+                            error == null && Boolean.TRUE.equals(released)
+                                    ? "&aMaintenance lock durably released after staff review."
+                                    : "&cThat operation could not be durably released.")));
             return;
         }
         if ("retry".equalsIgnoreCase(action)) {
-            player.sendMessage(ChatColor.AQUA + "Retrying restore operation as a new transaction...");
+            sendLocalized(player, "admin_restore_retrying",
+                    "&bRetrying restore operation as a new transaction...");
             plugin.getSnapshotManager().retryRestore(operationId, player.getUniqueId()).whenComplete((result, error) ->
-                    plugin.runMain(player, () -> player.sendMessage(error == null && result != null && result.complete()
-                            ? ChatColor.GREEN + "Restore retry completed."
-                            : ChatColor.GOLD + "Restore retry needs review: "
-                                    + (result == null ? safeMessage(error) : result.detail()))));
+                    plugin.runMain(player, () -> {
+                        if (error == null && result != null && result.complete()) {
+                            sendLocalized(player, "admin_restore_retry_done", "&aRestore retry completed.");
+                        } else {
+                            sendLocalized(player, "admin_restore_retry_review",
+                                    "&6Restore retry needs review: &f{DETAIL}",
+                                    Map.of("DETAIL", result == null ? safeMessage(error) : result.detail()));
+                        }
+                    }));
             return;
         }
-        player.sendMessage(ChatColor.YELLOW + "Use retry or release.");
+        sendLocalized(player, "admin_restore_use_hint", "&eUse retry or release.");
     }
 
     private void sendAdminHelp(Player player) {

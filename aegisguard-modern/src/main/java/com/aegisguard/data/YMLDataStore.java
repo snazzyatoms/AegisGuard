@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +47,12 @@ public class YMLDataStore implements IDataStore {
 
     private volatile boolean isDirty = false;
 
+    // Bumped whenever plot membership changes; getAllPlots() rebuilds its dedupe
+    // view only when the stamp moved, instead of allocating a new map per call.
+    private final AtomicLong membershipStamp = new AtomicLong();
+    private volatile Collection<Plot> allPlotsCache = null;
+    private volatile long allPlotsCacheStamp = -1L;
+
     public YMLDataStore(AegisGuard plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "plots.yml");
@@ -60,6 +67,7 @@ public class YMLDataStore implements IDataStore {
         synchronized (ioLock) {
             plotsByOwner.clear();
             plotsByChunk.clear();
+            membershipStamp.incrementAndGet();
 
             if (!file.exists()) {
                 try {
@@ -706,12 +714,19 @@ public class YMLDataStore implements IDataStore {
 
     @Override
     public Collection<Plot> getAllPlots() {
+        Collection<Plot> cached = allPlotsCache;
+        if (cached != null && allPlotsCacheStamp == membershipStamp.get()) return cached;
+
         Map<UUID, Plot> byId = new HashMap<>();
         for (Set<Plot> set : plotsByOwner.values()) {
             if (set == null || set.isEmpty()) continue;
             for (Plot p : set) if (p != null) byId.put(p.getPlotId(), p);
         }
-        return byId.values();
+        // Stamp first, then publish: a mutation landing between the read and the
+        // write leaves the cache stamped stale, so the next call just rebuilds.
+        allPlotsCacheStamp = membershipStamp.get();
+        allPlotsCache = List.copyOf(byId.values());
+        return allPlotsCache;
     }
 
     @Override
@@ -847,6 +862,7 @@ public class YMLDataStore implements IDataStore {
         isDirty = true;
 
         Set<Plot> set = plotsByOwner.remove(owner);
+        membershipStamp.incrementAndGet();
         if (set != null) {
             synchronized (ioLock) {
                 if (config == null) config = YamlConfiguration.loadConfiguration(file);
@@ -933,6 +949,7 @@ public class YMLDataStore implements IDataStore {
 
         Set<Plot> ownerSet = plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet());
         ownerSet.add(plot);
+        membershipStamp.incrementAndGet();
 
         String w = plot.getWorld();
         int minX = plot.getX1() >> 4;
@@ -994,6 +1011,7 @@ public class YMLDataStore implements IDataStore {
                 deIndexPlot(found);
             }
         }
+        membershipStamp.incrementAndGet();
     }
 
     // ==============================================================

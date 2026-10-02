@@ -45,7 +45,8 @@ public final class CaravanGUI {
         if (player == null) return;
         CaravanService service = plugin.caravans();
         if (service == null || !service.isEnabled()) {
-            player.sendMessage(GUIManager.color("&8[&bAegisGuard&8]&r &cCaravans are disabled on this server."));
+            player.sendMessage(GUIManager.color("&8[&bAegisGuard&8]&r "
+                    + t(player, "caravans_disabled", "&cCaravans are disabled on this server.")));
             return;
         }
         Inventory inv = Bukkit.createInventory(new Holder(), 54,

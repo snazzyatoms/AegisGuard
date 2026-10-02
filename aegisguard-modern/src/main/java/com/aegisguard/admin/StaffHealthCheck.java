@@ -246,7 +246,7 @@ public final class StaffHealthCheck {
     }
 
     public static void report(AegisGuard plugin, CommandSender sender) {
-        sender.sendMessage(ChatColor.YELLOW + "Running region-safe AegisGuard health checks...");
+        plugin.msg().send(sender, "health_check_running");
         scanAsync(plugin).whenComplete((findings, error) -> {
             Runnable deliver = () -> {
                 List<Finding> safe = error == null && findings != null ? findings

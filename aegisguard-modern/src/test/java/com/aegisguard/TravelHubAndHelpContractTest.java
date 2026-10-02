@@ -119,7 +119,13 @@ class TravelHubAndHelpContractTest {
             }
             for (String key : List.of("help_hint:", "help_essentials_header:",
                     "help_unknown_category:", "help_category_empty:", "help_lines_extra:",
-                    "help_category_claims:", "help_category_admin:")) {
+                    "help_category_claims:", "help_category_admin:",
+                    "caravans_disabled:", "admin_restore_blocked:", "admin_restore_invalid_id:",
+                    "admin_restore_not_found:", "admin_restore_released:", "admin_restore_not_released:",
+                    "admin_restore_retrying:", "admin_restore_retry_done:", "admin_restore_retry_review:",
+                    "admin_restore_use_hint:", "snapshot_op_gone:", "snapshot_retry_failed:",
+                    "snapshot_lock_released:", "snapshot_lock_failed:", "snapshot_storage_inspecting:",
+                    "snapshot_storage_failed:", "health_check_running:")) {
                 assertTrue(system.contains(key), locale + "/system.yml missing " + key);
                 assertTrue(codex.contains(key), locale + " codex missing " + key);
             }

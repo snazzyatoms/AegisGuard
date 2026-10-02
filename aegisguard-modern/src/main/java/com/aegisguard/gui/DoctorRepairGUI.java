@@ -144,7 +144,7 @@ public final class DoctorRepairGUI {
         inventory.setItem(18, navigation(player, Material.ARROW, "button_back_admin", "&eBack to Admin",
                 "back_admin_lore", List.of("&7Return to the admin tools."), "doctor_back"));
         inventory.setItem(26, navigation(player, Material.BARRIER, "button_exit", "&cClose",
-                "button_exit_lore", List.of("&7Close this menu."), "doctor_exit"));
+                "exit_lore", List.of("&7Close this menu."), "doctor_exit"));
         player.openInventory(inventory);
     }
 
@@ -263,7 +263,7 @@ public final class DoctorRepairGUI {
         inventory.setItem(SLOT_BACK, navigation(player, Material.ARROW, "button_back_admin", "&eBack to Admin",
                 "back_admin_lore", List.of("&7Return to the admin tools."), "doctor_back"));
         inventory.setItem(SLOT_EXIT, navigation(player, Material.BARRIER, "button_exit", "&cClose",
-                "button_exit_lore", List.of("&7Close this menu."), "doctor_exit"));
+                "exit_lore", List.of("&7Close this menu."), "doctor_exit"));
         player.openInventory(inventory);
         plugin.effects().playMenuOpen(player);
     }
@@ -304,7 +304,7 @@ public final class DoctorRepairGUI {
         inventory.setItem(SLOT_BACK, navigation(player, Material.ARROW, "button_back_doctor", "&eBack to Doctor",
                 "doctor_back_lore", List.of("&7Return to Territory Doctor."), "doctor_scan"));
         inventory.setItem(SLOT_EXIT, navigation(player, Material.BARRIER, "button_exit", "&cClose",
-                "button_exit_lore", List.of("&7Close this menu."), "doctor_exit"));
+                "exit_lore", List.of("&7Close this menu."), "doctor_exit"));
         player.openInventory(inventory);
     }
 

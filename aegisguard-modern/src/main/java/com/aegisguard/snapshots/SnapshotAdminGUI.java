@@ -661,7 +661,8 @@ public class SnapshotAdminGUI {
         UUID operationId = getOperationId(clicked);
         RestoreOperation operation = plugin.getSnapshotManager().getRestoreOperation(operationId);
         if (operation == null) {
-            player.sendMessage(ChatColor.RED + "Restore operation no longer exists.");
+            player.sendMessage(GUIManager.color(plugin.gui().tr(player, "snapshot_op_gone",
+                    "&cRestore operation no longer exists.")));
             openOperations(player);
             return;
         }
@@ -675,7 +676,8 @@ public class SnapshotAdminGUI {
             plugin.getSnapshotManager().retryRestore(operationId, player.getUniqueId())
                     .whenComplete((restore, error) -> plugin.runMain(player, () -> {
                         if (error != null || restore == null) {
-                            player.sendMessage(ChatColor.RED + "Restore retry failed to start.");
+                            player.sendMessage(GUIManager.color(plugin.gui().tr(player, "snapshot_retry_failed",
+                                    "&cRestore retry failed to start.")));
                         } else {
                             player.sendMessage(ChatColor.YELLOW + restore.detail());
                         }
@@ -684,21 +686,25 @@ public class SnapshotAdminGUI {
         } else if (event.getClick().isRightClick()) {
             plugin.getSnapshotManager().releaseRestoreLockAsync(operationId)
                     .whenComplete((released, error) -> plugin.runMain(player, () -> {
-                        player.sendMessage(Boolean.TRUE.equals(released)
-                                ? ChatColor.GREEN + "Maintenance lock released after staff review."
-                                : ChatColor.RED + "The maintenance lock could not be released.");
+                        player.sendMessage(GUIManager.color(plugin.gui().tr(player,
+                                Boolean.TRUE.equals(released) ? "snapshot_lock_released" : "snapshot_lock_failed",
+                                Boolean.TRUE.equals(released)
+                                        ? "&aMaintenance lock released after staff review."
+                                        : "&cThe maintenance lock could not be released.")));
                         openOperations(player);
                     }));
         }
     }
 
     private void runStorageDryRun(Player player, int page, SnapshotFilter filter) {
-        player.sendMessage(ChatColor.YELLOW + "Inspecting build-backup storage asynchronously...");
+        player.sendMessage(GUIManager.color(plugin.gui().tr(player, "snapshot_storage_inspecting",
+                "&eInspecting build-backup storage asynchronously...")));
         plugin.getSnapshotManager().buildBackup().maintainStorageAsync(true)
                 .whenComplete((report, error) -> plugin.runMain(player, () -> {
                     if (error != null || report == null) {
-                        player.sendMessage(ChatColor.RED + "Backup storage inspection failed: "
-                                + (error == null ? "unknown error" : error.getMessage()));
+                        player.sendMessage(GUIManager.color(plugin.gui().tr(player, "snapshot_storage_failed",
+                                "&cBackup storage inspection failed: {ERROR}")
+                                .replace("{ERROR}", error == null ? "unknown error" : error.getMessage())));
                     } else {
                         player.sendMessage(ChatColor.AQUA + "Build storage: " + report.totalBytes()
                                 + " / " + report.configuredLimitBytes() + " bytes; manifests="

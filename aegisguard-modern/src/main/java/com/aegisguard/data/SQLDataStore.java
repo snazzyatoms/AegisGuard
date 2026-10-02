@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +40,12 @@ public class SQLDataStore implements IDataStore {
     private HikariDataSource hikari;
 
     private final Map<UUID, Set<Plot>> plotsByOwner = new ConcurrentHashMap<>();
+
+    // Bumped whenever plot membership changes; getAllPlots() rebuilds its dedupe
+    // view only when the stamp moved, instead of allocating a new map per call.
+    private final AtomicLong membershipStamp = new AtomicLong();
+    private volatile Collection<Plot> allPlotsCache = null;
+    private volatile long allPlotsCacheStamp = -1L;
     private final Map<String, Map<String, Set<Plot>>> plotsByChunk = new ConcurrentHashMap<>();
 
     private volatile boolean isDirty = false;
@@ -350,6 +357,7 @@ public class SQLDataStore implements IDataStore {
     public void load() {
         plotsByOwner.clear();
         plotsByChunk.clear();
+        membershipStamp.incrementAndGet();
 
         int plotCount = 0;
         Map<UUID, Plot> plotsById = new HashMap<>();
@@ -984,6 +992,7 @@ public class SQLDataStore implements IDataStore {
         removePlotByIdEverywhere(plot.getPlotId());
 
         plotsByOwner.computeIfAbsent(plot.getOwner(), k -> ConcurrentHashMap.newKeySet()).add(plot);
+        membershipStamp.incrementAndGet();
         indexPlot(plot);
     }
 
@@ -1003,6 +1012,7 @@ public class SQLDataStore implements IDataStore {
                 deIndexPlot(found);
             }
         }
+        membershipStamp.incrementAndGet();
     }
 
     private void indexPlot(Plot plot) {
@@ -1133,6 +1143,7 @@ public class SQLDataStore implements IDataStore {
         if (owner == null) return;
 
         Set<Plot> owned = plotsByOwner.remove(owner);
+        membershipStamp.incrementAndGet();
         if (owned != null) {
             for (Plot plot : owned) {
                 if (plot != null) {
@@ -1412,12 +1423,19 @@ public class SQLDataStore implements IDataStore {
 
     @Override
     public Collection<Plot> getAllPlots() {
+        Collection<Plot> cached = allPlotsCache;
+        if (cached != null && allPlotsCacheStamp == membershipStamp.get()) return cached;
+
         Map<UUID, Plot> byId = new HashMap<>();
         for (Set<Plot> set : plotsByOwner.values()) {
             if (set == null || set.isEmpty()) continue;
             for (Plot p : set) if (p != null) byId.put(p.getPlotId(), p);
         }
-        return byId.values();
+        // Stamp first, then publish: a mutation landing between the read and the
+        // write leaves the cache stamped stale, so the next call just rebuilds.
+        allPlotsCacheStamp = membershipStamp.get();
+        allPlotsCache = List.copyOf(byId.values());
+        return allPlotsCache;
     }
 
     @Override

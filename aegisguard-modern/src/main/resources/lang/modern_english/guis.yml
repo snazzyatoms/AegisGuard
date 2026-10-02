@@ -28,8 +28,6 @@ button_next_lore:
 - '&7Go to the next page.'
 button_page: '&7Page: &f{PAGE}'
 button_exit: '&c✖ Close'
-button_exit_lore:
-- '&7Close this menu.'
 exit_lore:
 - '&7Close this menu.'
 button_back_admin: '&fBack to Admin'

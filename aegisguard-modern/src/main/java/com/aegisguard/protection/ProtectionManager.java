@@ -49,7 +49,9 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
@@ -542,17 +544,7 @@ public class ProtectionManager implements Listener {
                 return;
             }
 
-            // Private plots deny entry unless the player has INTERACT trust OR this plot's
-            // Alliance Entry toggle is ON and the player is a member of the joined alliance.
-            // Alliance Entry defaults OFF — membership alone never opens a private plot.
-            // Role-flag ENTRY overrides (Allow/Deny) beat the plot entry flag for that role.
-            Boolean entryOverride = to.resolveRoleFlagOverride(p.getUniqueId(), "entry");
-            boolean entryDenied = entryOverride != null
-                    ? !entryOverride
-                    : (!to.getFlag("entry", true)
-                    && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)
-                    && !to.allowsAllianceEntry(p.getUniqueId(), plugin));
-            if (entryDenied) {
+            if (isEntryDenied(to, p)) {
                 e.setCancelled(true);
                 String deniedMsg = tr(
                         p,
@@ -568,6 +560,24 @@ public class ProtectionManager implements Listener {
                 purgePlotHostilesForPlayer(p, to);
             }
         }
+    }
+
+    /**
+     * Private plots deny entry unless the player has INTERACT trust OR this plot's
+     * Alliance Entry toggle is ON and the player is a member of the joined alliance.
+     * Alliance Entry defaults OFF — membership alone never opens a private plot.
+     * Role-flag ENTRY overrides (Allow/Deny) beat the plot entry flag for that role.
+     * Shared by walking, teleport, respawn, and join enforcement so every path
+     * applies identical rules.
+     */
+    private boolean isEntryDenied(Plot to, Player p) {
+        Boolean entryOverride = to.resolveRoleFlagOverride(p.getUniqueId(), "entry");
+        if (entryOverride != null) {
+            return !entryOverride;
+        }
+        return !to.getFlag("entry", true)
+                && !to.hasPermission(p.getUniqueId(), "INTERACT", plugin)
+                && !to.allowsAllianceEntry(p.getUniqueId(), plugin);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -813,6 +823,94 @@ public class ProtectionManager implements Listener {
             sendPlotMessage(p, deniedMsg);
             plugin.effects().playEffect("entry", "deny", p, e.getTo());
         }
+    }
+
+    // --------------------------------------------------
+    // ENTRY GATE (teleports / respawns / joins)
+    // --------------------------------------------------
+
+    /**
+     * Border enforcement for teleportation of every cause — the walk-in move check alone let
+     * players bypass entry flags and bans through /tpa accepts, /back, plugin /tp commands,
+     * and similar. Also fires PlotEnterEvent / PlotLeaveEvent on teleport transitions so API
+     * consumers, Hearth rooms, and territory tracking stay in sync.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onTeleportEntry(PlayerTeleportEvent e) {
+        if (e.getTo() == null) return;
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+
+        Plot from = plugin.store().getPlotAt(e.getFrom());
+        Plot to = plugin.store().getPlotAt(e.getTo());
+        if (to == null || to.equals(from)) return;
+
+        if (from != null) {
+            Bukkit.getPluginManager().callEvent(new PlotLeaveEvent(from, p));
+        }
+
+        PlotEnterEvent enter = new PlotEnterEvent(to, p);
+        Bukkit.getPluginManager().callEvent(enter);
+        if (enter.isCancelled()) {
+            e.setCancelled(true);
+            return;
+        }
+
+        if (to.isBanned(p.getUniqueId())) {
+            e.setCancelled(true);
+            sendPlotMessage(p, tr(p, "plot_banned_entry",
+                    "&c⛔ You are banned from entering this claim."));
+            return;
+        }
+
+        if (isEntryDenied(to, p)) {
+            e.setCancelled(true);
+            sendPlotMessage(p, tr(p, "plot_entry_denied",
+                    "&c⛔ Entry denied. This claim is private."));
+        }
+    }
+
+    /**
+     * Respawn points (beds, anchors) inside a claim the player may not enter are rerouted to
+     * the world spawn — respawn cannot be cancelled, only relocated.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerRespawnEntry(PlayerRespawnEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+        if (e.getRespawnLocation() == null) return;
+
+        Plot plot = plugin.store().getPlotAt(e.getRespawnLocation());
+        if (plot == null) return;
+
+        if (plot.isBanned(p.getUniqueId()) || isEntryDenied(plot, p)) {
+            e.setRespawnLocation(e.getRespawnLocation().getWorld().getSpawnLocation());
+            sendPlotMessage(p, tr(p, "plot_entry_denied",
+                    "&c⛔ Entry denied. This claim is private."));
+        }
+    }
+
+    /**
+     * A player who logs back in while banned from the claim they are standing in is ejected to
+     * the world spawn. One tick later so the login settles; runs on the player's region.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onJoinBannedEntry(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        if (plugin.isAdmin(p) || plugin.isBypassing(p)) return;
+
+        Plot plot = plugin.store().getPlotAt(p.getLocation());
+        if (plot == null || !plot.isBanned(p.getUniqueId())) return;
+
+        plugin.scheduler().runEntityLater(p, () -> {
+            if (!p.isOnline()) return;
+            Plot inside = plugin.store().getPlotAt(p.getLocation());
+            if (inside != null && inside.isBanned(p.getUniqueId())) {
+                p.teleport(p.getWorld().getSpawnLocation());
+                sendPlotMessage(p, tr(p, "plot_banned_entry",
+                        "&c⛔ You are banned from entering this claim."));
+            }
+        }, null, 1L);
     }
 
     // --------------------------------------------------

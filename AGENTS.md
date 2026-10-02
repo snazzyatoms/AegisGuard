@@ -12,7 +12,7 @@
 # Compile only
 mvn clean compile -f aegisguard-modern/pom.xml
 
-# Run the full unit-test suite (478 tests)
+# Run the full unit-test suite (482 tests)
 mvn test -f aegisguard-modern/pom.xml
 
 # Build the release JARs (produces AegisGuard-1.4.0.jar and AegisGuard-1.4.0-dev-api.jar)

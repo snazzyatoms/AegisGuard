@@ -3,6 +3,7 @@ package com.aegisguard.economy;
 import com.aegisguard.AegisGuard;
 import com.aegisguard.claimblocks.ClaimBlockManager;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -94,6 +95,21 @@ public class EconomyManager {
 
             default -> false;
         };
+    }
+
+    /**
+     * Offline-capable deposit — Vault accepts OfflinePlayer deposits, so escrow
+     * refunds (auction outbids, listing returns) reach players who are offline.
+     * Non-Vault currencies require an online player and are skipped when offline.
+     */
+    public void deposit(OfflinePlayer p, double amount, CurrencyType type) {
+        if (p == null || amount <= 0 || type == null) return;
+        if (type == CurrencyType.VAULT) {
+            if (plugin.vault() != null) plugin.vault().give(p, amount);
+            return;
+        }
+        Player online = p.getPlayer();
+        if (online != null) deposit(online, amount, type);
     }
 
     public void deposit(Player p, double amount, CurrencyType type) {

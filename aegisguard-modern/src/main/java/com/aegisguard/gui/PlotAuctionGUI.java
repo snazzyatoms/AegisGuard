@@ -278,17 +278,21 @@ public class PlotAuctionGUI {
             return;
         }
 
-        // Refund old bidder (if online)
-        if (plot.getCurrentBidder() != null) {
+        // Refund old bidder — Vault accepts OfflinePlayer deposits, so escrowed bids are
+        // never lost when the previous bidder is offline. Only the notice needs them online.
+        if (plot.getCurrentBidder() != null && currentBid > 0) {
+            final double refund = currentBid;
             OfflinePlayer oldBidder = Bukkit.getOfflinePlayer(plot.getCurrentBidder());
             Player oldOnline = oldBidder.getPlayer();
             if (oldOnline != null) {
-                final double refund = currentBid;
                 plugin.runMain(oldOnline, () -> {
                     plugin.eco().deposit(oldOnline, refund, CurrencyType.VAULT);
                     plugin.msg().send(oldOnline, "auction-outbid",
                             Map.of("PLAYER", bidder.getName()));
                 });
+            } else {
+                plugin.scheduler().runGlobal(() ->
+                        plugin.eco().deposit(oldBidder, refund, CurrencyType.VAULT));
             }
         }
 

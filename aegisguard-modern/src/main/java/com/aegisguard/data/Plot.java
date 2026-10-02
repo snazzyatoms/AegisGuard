@@ -845,7 +845,53 @@ public class Plot {
         }
 
         // Role-based permission
-        return hasPermission(editor.getUniqueId(), "MANAGE_MEMBERS", pl);
+        if (!hasPermission(editor.getUniqueId(), "MANAGE_MEMBERS", pl)) return false;
+
+        // Hierarchy: an editor may only modify members whose current role ranks strictly
+        // below the editor's own. Without this a steward could demote a co-owner or edit
+        // another steward.
+        return editorPriority(editor, pl) > rolePriority(getRole(targetUUID), pl);
+    }
+
+    /**
+     * Role hierarchy gate for role assignment — the editor's priority must strictly exceed
+     * the priority of the role being granted, so a steward cannot mint co-owners.
+     * Owner and elevated staff always pass. The "owner" role itself is never assignable.
+     */
+    public boolean canAssignRole(@Nullable Player editor, @Nullable String roleName, @Nullable Plugin plugin) {
+        if (editor == null || roleName == null || roleName.isBlank()) return false;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (roleName.equalsIgnoreCase("owner")) return false;
+        if (hasElevatedManagementAccess(editor, pl) || isOwner(editor)) return true;
+        return editorPriority(editor, pl) > rolePriority(roleName, pl);
+    }
+
+    /** Convenience overload */
+    public boolean canAssignRole(@Nullable Player editor, @Nullable String roleName) {
+        return canAssignRole(editor, roleName, AegisGuard.getInstance());
+    }
+
+    /**
+     * Configured hierarchy rank of a role (roles.<name>.priority, owner=100 … visitor=10).
+     * Unknown roles rank 0 — below every configured role.
+     */
+    public int rolePriority(@Nullable String roleName, @Nullable Plugin plugin) {
+        if (roleName == null || roleName.isBlank()) return 0;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (pl == null || pl.cfg() == null) return 0;
+        return pl.cfg().raw().getInt("roles." + roleName.toLowerCase(Locale.ROOT) + ".priority", 0);
+    }
+
+    /**
+     * Effective hierarchy rank of an editor: elevated staff outrank everything, the plot
+     * owner takes the configured owner rank, everyone else their current role's rank.
+     */
+    private int editorPriority(@Nullable Player editor, @Nullable Plugin plugin) {
+        if (editor == null) return 0;
+        AegisGuard pl = (plugin instanceof AegisGuard aegis) ? aegis : AegisGuard.getInstance();
+        if (hasElevatedManagementAccess(editor, pl)) return Integer.MAX_VALUE;
+        if (isOwner(editor.getUniqueId())) return rolePriority("owner", pl);
+        return rolePriority(getRole(editor.getUniqueId()), pl);
     }
 
     /** v1.2.6 convenience overload */

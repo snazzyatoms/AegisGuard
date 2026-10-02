@@ -1207,6 +1207,12 @@ public class RolesGUI implements Listener {
                 return;
             }
 
+            if (!plot.canAssignRole(player, newRole, plugin)) {
+                plugin.effects().playError(player);
+                plugin.msg().send(player, "role_no_permission", Map.of());
+                return;
+            }
+
             String existing = plot.getRole(target.getUniqueId());
             boolean alreadyCounted = existing != null
                     && !existing.isBlank()

@@ -17,9 +17,9 @@ public class ClaimBlockManager {
 
     private final Map<UUID, ClaimBlockData> cache = new ConcurrentHashMap<>();
 
-    /** Live view of every player id tracked by the claim-block ledger (network sync). */
-    public List<UUID> cachedPlayerIds() {
-        return new ArrayList<>(cache.keySet());
+    /** Non-creating lookup — null when the player's ledger was never loaded. */
+    public ClaimBlockData getCached(UUID uuid) {
+        return uuid == null ? null : cache.get(uuid);
     }
 
     private final File file;

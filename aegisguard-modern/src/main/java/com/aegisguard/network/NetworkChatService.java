@@ -109,7 +109,7 @@ public final class NetworkChatService {
             out.writeUTF(payload);
             byte[] body = out.toByteArray();
             for (var server : n.remoteServers()) {
-                n.forward(server.serverName(), AG_SUBCHANNEL, body);
+                n.forward(server.serverName(), NetworkService.AG_CHANNEL, body);
             }
         } catch (Throwable ignored) { }
     }
@@ -173,31 +173,32 @@ public final class NetworkChatService {
         String lbl = label == null || label.isBlank() ? channel : label;
         String sn = senderName == null ? "?" : senderName;
 
-        // Player iteration + permission checks run on the server thread
-        // (Folia requires them there).
-        plugin.runMainGlobal(() -> {
-            Set<UUID> targets = new HashSet<>();
-            if (memberCsv != null && !memberCsv.isEmpty()) {
-                for (String part : memberCsv.split(",")) {
-                    try { targets.add(UUID.fromString(part.trim())); } catch (IllegalArgumentException ignored) { }
-                }
-            } else if ("STAFF".equalsIgnoreCase(ch)) {
-                for (Player online : Bukkit.getOnlinePlayers()) {
-                    if (online.hasPermission(com.aegisguard.chat.PlotChatService.PERM_STAFF)
-                            || online.hasPermission("aegis.admin.staffchat")
-                            || online.isOp()) {
-                        targets.add(online.getUniqueId());
-                    }
-                }
+        // Roster membership resolves here; STAFF resolves per-player below.
+        final Set<UUID> targets = new HashSet<>();
+        if (memberCsv != null && !memberCsv.isEmpty()) {
+            for (String part : memberCsv.split(",")) {
+                try { targets.add(UUID.fromString(part.trim())); } catch (IllegalArgumentException ignored) { }
             }
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!targets.contains(online.getUniqueId())) continue;
+        }
+        boolean staffResolve = memberCsv == null && "STAFF".equalsIgnoreCase(ch);
+
+        // Each player is checked + messaged on their own entity thread —
+        // hasPermission/sendMessage are region-bound on Folia (same pattern
+        // PlotChatService.broadcast uses).
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            Player target = online;
+            plugin.runMain(target, () -> {
+                boolean wants = targets.contains(target.getUniqueId())
+                        || (staffResolve && (target.hasPermission(com.aegisguard.chat.PlotChatService.PERM_STAFF)
+                                || target.hasPermission("aegis.admin.staffchat")
+                                || target.isOp()));
+                if (!wants || !target.isOnline()) return;
                 String line = plugin.plotChat() != null
-                        ? plugin.plotChat().formatRelayed(ch, lbl, sn, text, online)
+                        ? plugin.plotChat().formatRelayed(ch, lbl, sn, text, target)
                         : "&8[&b" + lbl + "&8] &f" + sn + "&7: &f" + text;
-                online.sendMessage(line);
-            }
-        });
+                target.sendMessage(line);
+            });
+        }
     }
 
     // ------------------------------------------------------------------
@@ -257,6 +258,4 @@ public final class NetworkChatService {
         if (value == null) return "";
         return value.replace("\\", "\\\\").replace(";", "\\;");
     }
-
-    private static final String AG_SUBCHANNEL = "aegisguard:net";
 }

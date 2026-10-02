@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +29,13 @@ public final class NetworkPlayerDataService {
     private final Map<UUID, Map<String, String>> cache = new ConcurrentHashMap<>();
     private final Map<UUID, Long> pendingPush = new ConcurrentHashMap<>();
     private final Map<UUID, String> lastPushedBlob = new ConcurrentHashMap<>();
+    /**
+     * Players whose shared row was pulled this session — i.e. the players this
+     * backend OWNS. Writes are only allowed for these ids: pushing stale local
+     * data for a player hosted on another server would clobber live rows when
+     * bulk save loops (e.g. ClaimBlockManager.save()) push every cached id.
+     */
+    private final Set<UUID> pullReady = ConcurrentHashMap.newKeySet();
     private Object flushTask;
 
     public NetworkPlayerDataService(AegisGuard plugin) {
@@ -53,11 +59,16 @@ public final class NetworkPlayerDataService {
     }
 
     public void stop() {
+        if (flushTask != null) {
+            try { plugin.scheduler().cancel(flushTask); } catch (Throwable ignored) { }
+            flushTask = null;
+        }
         shutdownFlush();
         flushPending();
         cache.clear();
         pendingPush.clear();
         lastPushedBlob.clear();
+        pullReady.clear();
     }
 
     /**
@@ -68,19 +79,16 @@ public final class NetworkPlayerDataService {
     private void shutdownFlush() {
         if (!ready()) return;
         try {
-            Set<UUID> ids = new HashSet<>();
-            if (plugin.getClaimBlockManager() != null) {
-                ids.addAll(plugin.getClaimBlockManager().cachedPlayerIds());
-            }
-            for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
-                ids.add(player.getUniqueId());
-            }
-            for (UUID id : ids) {
+            // Only rows this backend owns — players whose shared row was pulled
+            // this session. Bulk-flushing every cached id would clobber live
+            // rows owned by other backends.
+            for (UUID id : pullReady) {
                 Map<String, String> fields = cache.computeIfAbsent(id, k -> new ConcurrentHashMap<>());
                 collect(id, fields);
                 if (!fields.isEmpty()) {
-                    net().store().savePlayerData(id, encode(fields));
-                    lastPushedBlob.put(id, encode(fields));
+                    String blob = encode(fields);
+                    net().store().savePlayerData(id, blob);
+                    lastPushedBlob.put(id, blob);
                 }
             }
         } catch (Throwable t) {
@@ -99,10 +107,14 @@ public final class NetworkPlayerDataService {
         plugin.scheduler().runAsync(() -> {
             try {
                 String blob = net().store().loadPlayerData(id);
-                if (blob == null || blob.isEmpty()) return;
-                Map<String, String> fields = decode(blob);
-                cache.put(id, new ConcurrentHashMap<>(fields));
-                applyLocal(player, fields);
+                if (blob != null && !blob.isEmpty()) {
+                    Map<String, String> fields = decode(blob);
+                    cache.put(id, new ConcurrentHashMap<>(fields));
+                    applyLocal(player, fields);
+                }
+                // Mark only after the pull resolves — writes before ownership is
+                // proven could overwrite a live row with unloaded defaults.
+                pullReady.add(id);
             } catch (Throwable t) {
                 plugin.getLogger().log(Level.FINE, "[NetworkData] pull failed for " + id + ": " + t.getMessage());
             }
@@ -172,6 +184,8 @@ public final class NetworkPlayerDataService {
         pendingPush.remove(playerId);
         cache.remove(playerId);
         lastPushedBlob.remove(playerId);
+        // No longer hosted here — later bulk saves must not rewrite this row.
+        pullReady.remove(playerId);
     }
 
     // ------------------------------------------------------------------
@@ -180,7 +194,7 @@ public final class NetworkPlayerDataService {
 
     /** Queue the player's claim-block + preference state for a network write. */
     public void push(UUID playerId) {
-        if (!ready() || playerId == null) return;
+        if (!ready() || playerId == null || !pullReady.contains(playerId)) return;
         Map<String, String> fields = cache.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>());
         collect(playerId, fields);
         // Skip the queue when nothing changed since the last write — the bulk
@@ -193,16 +207,20 @@ public final class NetworkPlayerDataService {
     private void collect(UUID playerId, Map<String, String> fields) {
         try {
             if (plugin.getClaimBlockManager() != null) {
-                ClaimBlockData data = plugin.getClaimBlockManager().getOrCreate(playerId);
-                fields.put("claim.earned", String.valueOf(data.getEarnedBlocks()));
-                fields.put("claim.bought", String.valueOf(data.getBoughtBlocks()));
-                fields.put("claim.bonus", String.valueOf(data.getBonusBlocks()));
-                fields.put("claim.spent", String.valueOf(data.getSpentBlocks()));
-                fields.put("claim.starter", String.valueOf(data.hasClaimedStarter()));
-                fields.put("claim.playtime", String.valueOf(data.isPlaytimeEarningEnabled()));
-                fields.put("claim.reconciled", String.valueOf(data.isLandSpendReconciled()));
-                List<String> lots = data.serializeLots();
-                fields.put("claim.lots", lots == null ? "" : String.join(",", lots));
+                // getCached, not getOrCreate — fabricating an empty ledger here
+                // would write zeros over a live shared row.
+                ClaimBlockData data = plugin.getClaimBlockManager().getCached(playerId);
+                if (data != null) {
+                    fields.put("claim.earned", String.valueOf(data.getEarnedBlocks()));
+                    fields.put("claim.bought", String.valueOf(data.getBoughtBlocks()));
+                    fields.put("claim.bonus", String.valueOf(data.getBonusBlocks()));
+                    fields.put("claim.spent", String.valueOf(data.getSpentBlocks()));
+                    fields.put("claim.starter", String.valueOf(data.hasClaimedStarter()));
+                    fields.put("claim.playtime", String.valueOf(data.isPlaytimeEarningEnabled()));
+                    fields.put("claim.reconciled", String.valueOf(data.isLandSpendReconciled()));
+                    List<String> lots = data.serializeLots();
+                    fields.put("claim.lots", lots == null ? "" : String.join(",", lots));
+                }
             }
         } catch (Throwable ignored) { }
 
@@ -229,7 +247,7 @@ public final class NetworkPlayerDataService {
 
     /** Immediately update one preference key + queue the write. */
     public void set(UUID playerId, String key, String value) {
-        if (!ready() || playerId == null || key == null) return;
+        if (!ready() || playerId == null || key == null || !pullReady.contains(playerId)) return;
         cache.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
                 .put(key, value == null ? "" : value);
         pendingPush.put(playerId, System.currentTimeMillis());
@@ -240,6 +258,7 @@ public final class NetworkPlayerDataService {
         Map<UUID, Long> batch = new HashMap<>(pendingPush);
         pendingPush.keySet().removeAll(batch.keySet());
         for (UUID id : batch.keySet()) {
+            if (!pullReady.contains(id)) continue;
             Map<String, String> fields = cache.get(id);
             if (fields == null) continue;
             String blob = encode(fields);
@@ -254,7 +273,7 @@ public final class NetworkPlayerDataService {
 
     /** Flush a single player immediately (e.g. before a proxy hop). */
     public void pushNow(UUID playerId) {
-        if (!ready() || playerId == null) return;
+        if (!ready() || playerId == null || !pullReady.contains(playerId)) return;
         Map<String, String> fields = cache.computeIfAbsent(playerId, k -> new ConcurrentHashMap<>());
         collect(playerId, fields);
         String blob = encode(fields);

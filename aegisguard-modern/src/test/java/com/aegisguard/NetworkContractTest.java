@@ -96,7 +96,8 @@ class NetworkContractTest {
         // Offline destination check + TTL + expiry on consume
         assertTrue(travel.contains("isServerOnline"));
         assertTrue(travel.contains("arrival_ttl_seconds"));
-        assertTrue(travel.contains("arrival.isExpired()"));
+        assertTrue(travel.contains("arrival.isExpiredAt(net().networkNow())"),
+                "arrival expiry must compare on the normalized DB clock");
         // Landing re-checks lockdown + entry + beacon-arrival rules on the destination
         assertTrue(travel.contains("isLockdownActive"));
         assertTrue(travel.contains("canEnterPlot"));
@@ -112,8 +113,10 @@ class NetworkContractTest {
                 "own events must be skipped");
         assertTrue(chat.contains("if (from < 0) return;"),
                 "poll must wait for cursor init instead of replaying the table");
-        // Receiving end delivers on the server thread (Folia: entity/global region)
-        assertTrue(chat.contains("runMainGlobal"));
+        // Receiving end delivers per-player on each target's entity thread
+        // (Folia: hasPermission/sendMessage are region-bound).
+        assertTrue(chat.contains("plugin.runMain(target"),
+                "delivery must run per-player on the target's entity thread");
     }
 
     @Test

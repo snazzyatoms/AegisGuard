@@ -44,6 +44,8 @@ public final class NetworkService implements PluginMessageListener {
     private volatile String displayName;
     private volatile List<NetworkServer> servers = List.of();
     private final AtomicBoolean nameVerified = new AtomicBoolean();
+    /** Offset between this JVM's clock and the shared DB clock, refreshed by heartbeat. */
+    private volatile long dbOffsetMs = 0L;
 
     private Object heartbeatTask;
 
@@ -170,7 +172,16 @@ public final class NetworkService implements PluginMessageListener {
 
     public boolean isServerOnline(String name) {
         NetworkServer server = findServer(name);
-        return server != null && server.isOnline(offlineAfterMillis());
+        return server != null && server.isOnlineAt(networkNow(), offlineAfterMillis());
+    }
+
+    /**
+     * "Now" on the shared database clock — the canonical time base for the
+     * network tables (last_seen, expires_at, created_at). Falls back to the
+     * local clock until the first successful heartbeat.
+     */
+    public long networkNow() {
+        return System.currentTimeMillis() + dbOffsetMs;
     }
 
     /** Whether a plot object belongs to another backend. */
@@ -193,6 +204,7 @@ public final class NetworkService implements PluginMessageListener {
             store.heartbeat(serverName, displayName,
                     plugin.getDescription().getVersion(),
                     Bukkit.getOnlinePlayers().size());
+            dbOffsetMs = store.dbNowMillis() - System.currentTimeMillis();
             List<NetworkServer> fresh = store.servers();
             if (fresh != null) servers = new CopyOnWriteArrayList<>(fresh);
             store.pruneExpiredArrivals();
@@ -247,7 +259,14 @@ public final class NetworkService implements PluginMessageListener {
             out.writeUTF(subchannel);
             out.writeShort(payload.length);
             out.write(payload);
-            carrier.sendPluginMessage(plugin, BUNGEE_CHANNEL, out.toByteArray());
+            byte[] message = out.toByteArray();
+            // The caller can be on any thread (chat relay runs on the speaker's
+            // region on Folia) — the carrier's plugin message must ride its own
+            // entity scheduler.
+            plugin.runMain(carrier, () -> {
+                try { carrier.sendPluginMessage(plugin, BUNGEE_CHANNEL, message); }
+                catch (Throwable ignored) { }
+            });
             return true;
         } catch (Throwable t) {
             return false;
@@ -340,8 +359,6 @@ public final class NetworkService implements PluginMessageListener {
         if (configured == null || configured.isBlank()) {
             configured = plugin.getConfig().getString("storage.backend", "sqlite");
         }
-        String normalized = configured == null ? "sqlite" : configured.trim().toLowerCase(Locale.ROOT);
-        if (normalized.equals("sql") || normalized.equals("yml")) return "sqlite";
-        return normalized;
+        return configured == null ? "sqlite" : configured.trim().toLowerCase(Locale.ROOT);
     }
 }

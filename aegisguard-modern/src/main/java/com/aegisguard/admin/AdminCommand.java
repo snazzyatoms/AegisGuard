@@ -1000,7 +1000,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                     sendLocalized(sender, "admin_network_empty", "&7No servers registered yet.");
                 } else {
                     for (var srv : servers) {
-                        boolean online = srv.isOnline(offlineAfter);
+                        boolean online = srv.isOnlineAt(net.networkNow(), offlineAfter);
                         boolean self = net.serverName() != null && net.serverName().equalsIgnoreCase(srv.serverName());
                         sendLocalized(sender, "admin_network_entry",
                                 "{STATE} &f{SERVER} &8(&7{PLAYERS} online, v{VERSION}{SELF}&8)",

@@ -25,6 +25,11 @@ public final class NetworkModels {
         public boolean isOnline(long offlineAfterMs) {
             return System.currentTimeMillis() - lastSeen <= Math.max(1L, offlineAfterMs);
         }
+
+        /** Online check against a normalized (DB-clock) reference time. */
+        public boolean isOnlineAt(long referenceNow, long offlineAfterMs) {
+            return referenceNow - lastSeen <= Math.max(1L, offlineAfterMs);
+        }
     }
 
     /** A pending cross-server arrival written before a proxy hop. */
@@ -48,6 +53,11 @@ public final class NetworkModels {
 
         public boolean isExpired() {
             return System.currentTimeMillis() > expiresAt;
+        }
+
+        /** Expiry check against a normalized (DB-clock) reference time. */
+        public boolean isExpiredAt(long referenceNow) {
+            return referenceNow > expiresAt;
         }
     }
 

@@ -73,57 +73,29 @@ public final class NetworkTravelService {
                 player.getLocation().getPitch(),
                 now, now + ttl);
 
-        net().store().writeArrival(arrival);
-        if (!net().sendToServer(player, targetServer)) {
-            send(player, "visit_fail_server_offline", "&cCould not reach that server.");
-            return false;
-        }
-        String label = serverLabel(targetServer);
-        send(player, "network_sending_to_server",
-                "&7Sending you to &b" + label + "&7...");
-        player.closeInventory();
+        // SQL write is async — the entity thread must not block on database
+        // latency. The Connect goes out after the arrival row is committed,
+        // ordered through the scheduler (proxy hops take far longer than this).
+        plugin.scheduler().runAsync(() -> {
+            net().store().writeArrival(arrival);
+            plugin.scheduler().runEntity(player, () -> {
+                if (!net().sendToServer(player, targetServer)) {
+                    send(player, "visit_fail_server_offline", "&cCould not reach that server.");
+                    return;
+                }
+                String label = serverLabel(targetServer);
+                send(player, "network_sending_to_server",
+                        "&7Sending you to &b" + label + "&7...");
+                player.closeInventory();
+            }, null);
+        });
         return true;
     }
 
-    /** Hop the player to another backend's arrival pad directly. */
-    public boolean sendToBeacon(Player player, TeleportBeacon beacon, Plot plot, String targetServer) {
-        if (!ready() || player == null || beacon == null || targetServer == null) return false;
-        if (!net().isServerOnline(targetServer)) {
-            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
-            return false;
-        }
-        long now = System.currentTimeMillis();
-        long ttl = Math.max(15L, plugin.getConfig().getLong("network.arrival_ttl_seconds", 90L)) * 1000L;
-        NetworkArrival arrival = new NetworkArrival(
-                player.getUniqueId(), targetServer, ArrivalKind.BEACON_PAD,
-                plot != null ? plot.getPlotId() : null,
-                beacon.getId(), beacon.getWorldName(),
-                beacon.getX() + 0.5, beacon.getY() + 1.0, beacon.getZ() + 0.5,
-                (float) beacon.getYaw(), (float) beacon.getPitch(),
-                now, now + ttl);
-        net().store().writeArrival(arrival);
-        if (!net().sendToServer(player, targetServer)) {
-            send(player, "visit_fail_server_offline", "&cCould not reach that server.");
-            return false;
-        }
-        send(player, "network_sending_to_server",
-                "&7Sending you to &b" + serverLabel(targetServer) + "&7...");
-        player.closeInventory();
-        return true;
-    }
-
-    /** Plain server hop with no plot destination (Atlas "Servers" scope). */
-    public boolean sendToServer(Player player, String targetServer) {
-        if (!ready() || player == null || targetServer == null) return false;
-        if (!net().isServerOnline(targetServer)) {
-            send(player, "visit_fail_server_offline", "&cThat server is currently offline.");
-            return false;
-        }
-        if (!net().sendToServer(player, targetServer)) return false;
-        send(player, "network_sending_to_server",
-                "&7Sending you to &b" + serverLabel(targetServer) + "&7...");
-        return true;
-    }
+    // NOTE: a remote pad's arrival is resolved ON the destination backend via
+    // the plot's own arrival mode — sendToPlot is the only producer needed.
+    // BEACON_PAD arrivals remain consumable (see landOnPad) so a row written
+    // by a different backend/version in the shared table still lands correctly.
 
     // ------------------------------------------------------------------
     // Land side — consume pending arrival on join
@@ -137,13 +109,12 @@ public final class NetworkTravelService {
         if (!ready() || player == null) return;
         UUID id = player.getUniqueId();
         plugin.scheduler().runAsync(() -> {
-            NetworkArrival arrival = net().store().consumeArrival(id);
-            if (arrival == null || arrival.isExpired()) return;
-            // Landed on the wrong backend? Don't consume someone else's arrival —
-            // requeue it for the intended server.
+            NetworkArrival arrival = net().store().consumeArrival(id, net().serverName());
+            if (arrival == null || arrival.isExpiredAt(net().networkNow())) return;
+            // A foreign-target arrival is left in the table for the correct
+            // backend — nothing to do here.
             if (net().serverName() != null
                     && !net().serverName().equalsIgnoreCase(arrival.targetServer())) {
-                net().store().writeArrival(arrival);
                 return;
             }
             plugin.scheduler().runEntity(player, () -> land(player, arrival), null);

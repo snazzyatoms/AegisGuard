@@ -489,6 +489,8 @@ public final class PlotChatService {
     private boolean relayMayHaveRemoteListeners(Player speaker) {
         try {
             return plugin.network() != null && plugin.network().isNetworked()
+                    && plugin.getConfig().getBoolean("network.chat.relay_channels", true)
+                    && plugin.networkChat() != null
                     && activeChannel(speaker.getUniqueId()) != Channel.PLOT;
         } catch (Throwable t) {
             return false;
